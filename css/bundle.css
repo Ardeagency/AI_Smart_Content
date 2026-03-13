@@ -13354,8 +13354,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   --dev-primary-light: rgba(255, 255, 255, 0.9);
   --dev-primary-dark: #e0e0e0;
   --builder-form-max-width: min(100%, 1280px);
-  --builder-input-bg: var(--dev-bg-surface);
-  --builder-input-border: rgba(255, 255, 255, 0.12);
+  --builder-input-bg: var(--glass-white-bg);
+  --builder-input-border: var(--glass-white-border);
 }
 
 /* En Builder: cards y superficies usan superficie visible (contraste con fondo) */
@@ -13363,6 +13363,27 @@ body.production-filters-in-header .living-container > .living-history-section {
 #app-container:has(.builder-footer) .builder-canvas-wrapper,
 #app-container:has(.builder-footer) .builder-tab-content {
   --bg-card: var(--dev-bg-surface);
+}
+
+/* Builder: todos los inputs, select, textarea con efecto glass-white */
+#app-container:has(.builder-footer) .builder-main input,
+#app-container:has(.builder-footer) .builder-main select,
+#app-container:has(.builder-footer) .builder-main textarea,
+#app-container:has(.builder-footer) .builder-main .form-input,
+#app-container:has(.builder-footer) .builder-main .form-select,
+#app-container:has(.builder-footer) .builder-main .form-textarea {
+  background: var(--glass-white-bg) !important;
+  border: 1px solid var(--glass-white-border) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
+}
+#app-container:has(.builder-footer) .builder-main input:focus,
+#app-container:has(.builder-footer) .builder-main select:focus,
+#app-container:has(.builder-footer) .builder-main textarea:focus {
+  outline: none;
+  border-color: var(--glass-white-border) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 /* ==========================================
@@ -14834,10 +14855,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: var(--spacing-xs);
 }
 
-/* Builder: picker con superficie visible */
+/* Builder: picker con efecto glass-white */
 .builder-main .flow-type-picker {
-  background: var(--builder-input-bg, var(--bg-secondary));
-  border-color: var(--builder-input-border, var(--border-color));
+  background: var(--builder-input-bg, var(--glass-white-bg));
+  border: 1px solid var(--builder-input-border, var(--glass-white-border));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
 }
 .flow-type-picker-option {
   display: flex;
@@ -14901,17 +14925,21 @@ body.production-filters-in-header .living-container > .living-history-section {
   word-break: break-all;
 }
 
-/* Builder: URL del flujo con misma superficie que el resto de inputs */
+/* Builder: URL del flujo con efecto glass-white */
 .builder-main .flow-url-input {
-  background: var(--builder-input-bg, var(--bg-secondary));
-  border-color: var(--builder-input-border, var(--border-color));
+  background: var(--builder-input-bg, var(--glass-white-bg));
+  border: 1px solid var(--builder-input-border, var(--glass-white-border));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
 }
 .flow-url-input::placeholder {
   color: var(--text-muted);
 }
 .flow-url-input:focus {
   outline: none;
-  border-color: var(--accent-cta);
+  border-color: var(--glass-white-border);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .field-help.block {
@@ -15301,9 +15329,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 2.25rem;
   font-size: 0.8125rem;
   color: var(--text-primary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   outline: none;
   transition: var(--transition);
 }
@@ -15313,12 +15343,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .builder-components-search:hover {
-  border-color: var(--text-muted);
+  border-color: var(--glass-white-border);
 }
 
 .builder-components-search:focus {
-  border-color: var(--dev-primary);
-  background: var(--bg-secondary);
+  border-color: var(--glass-white-border);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 /* Lista de Componentes: scroll propio */
@@ -16768,16 +16798,19 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex: 1;
   min-width: 0;
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm, 8px);
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   color: var(--text-primary);
   font-size: var(--font-size-base);
 }
 
 .technical-module-name:focus {
   outline: none;
-  border-color: var(--border-light);
+  border-color: var(--glass-white-border);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .technical-module-subtitle {
@@ -16935,22 +16968,27 @@ body.production-filters-in-header .living-container > .living-history-section {
   transition: var(--transition);
 }
 
-/* Builder: inputs con superficie y borde visibles (jerarquía, no negro sobre negro) */
+/* Builder: inputs, textarea, select con efecto glass-white */
 .builder-main .settings-field input[type="text"],
 .builder-main .settings-field input[type="number"],
 .builder-main .settings-field input[type="url"],
+.builder-main .settings-field input[type="email"],
+.builder-main .settings-field input[type="search"],
 .builder-main .settings-field textarea,
 .builder-main .settings-field select {
-  background: var(--builder-input-bg, var(--bg-secondary));
-  border-color: var(--builder-input-border, var(--border-color));
+  background: var(--builder-input-bg, var(--glass-white-bg));
+  border: 1px solid var(--builder-input-border, var(--glass-white-border));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
 }
 
 .builder-main .settings-field input:focus,
 .builder-main .settings-field textarea:focus,
 .builder-main .settings-field select:focus {
   outline: none;
-  border-color: var(--dev-primary);
-  box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.2);
+  border-color: var(--glass-white-border);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .settings-field input:focus,
