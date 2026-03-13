@@ -17,27 +17,48 @@
   DevBuilderView.EXECUTION_TYPES = EXECUTION_TYPES;
 
   P.renderTechnicalModulesList = function () {
+    const wrapEl = this.querySelector('#technicalModulesList');
     const mapEl = this.querySelector('#modulesNodeMap');
-    if (!mapEl) return;
+    if (!wrapEl || !mapEl) return;
     const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
     if (this.flowModules.length === 0) this.flowModules = mods;
-    const nodes = mods.map((m, i) => {
+
+    const nodeTypeClass = (i) => {
+      if (i === 0) return 'module-node--input';
+      if (i === mods.length - 1) return 'module-node--output';
+      return 'module-node--default';
+    };
+
+    const parts = [];
+    mods.forEach((m, i) => {
       const name = (m.name || 'Módulo ' + (i + 1)).trim() || 'Módulo ' + (i + 1);
       const removeBtn = mods.length > 1
         ? `<button type="button" class="module-node-remove" data-module-index="${i}" title="Quitar módulo" aria-label="Quitar módulo"><i class="ph ph-x"></i></button>`
         : '';
-      return `
-        <div class="module-node" data-module-index="${i}" title="Doble clic para editar">
+      parts.push(`
+        <div class="module-node ${nodeTypeClass(i)}" data-module-index="${i}" title="Doble clic para editar">
+          <span class="module-node-handle module-node-handle--left" aria-hidden="true"></span>
           <div class="module-node-inner">
             <span class="module-node-order">${i + 1}</span>
             <span class="module-node-name">${this.escapeHtml(name)}</span>
             ${removeBtn}
           </div>
+          <span class="module-node-handle module-node-handle--right" aria-hidden="true"></span>
         </div>
-        ${i < mods.length - 1 ? '<div class="module-node-connector" aria-hidden="true"></div>' : ''}
-      `;
-    }).join('');
-    mapEl.innerHTML = nodes;
+      `);
+      if (i < mods.length - 1) {
+        parts.push(`
+          <div class="module-edge" aria-hidden="true">
+            <svg class="module-edge-svg" viewBox="0 0 48 24" preserveAspectRatio="none">
+              <path class="module-edge-path" d="M 0 12 L 48 12" fill="none" stroke-width="1"/>
+            </svg>
+          </div>
+        `);
+      }
+    });
+
+    wrapEl.classList.add('modules-flow-canvas');
+    mapEl.innerHTML = parts.join('');
   };
 
   P.syncExecutionModeFromModules = function () {

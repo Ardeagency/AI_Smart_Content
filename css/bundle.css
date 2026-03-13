@@ -16841,36 +16841,64 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-bottom: var(--spacing-xl, 2rem);
 }
 
-/* Mapa de nodos: secuencia horizontal de módulos conectados */
-.modules-node-map-wrap {
+/* Mapa de módulos estilo flow (referencia Typeform/React Flow): canvas, nodos con handles, aristas */
+.modules-flow-canvas {
   margin-bottom: var(--spacing-md, 1rem);
 }
 
-.modules-node-map {
+.modules-flow-canvas .modules-node-map {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0;
-  min-height: 100px;
-  padding: var(--spacing-lg);
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
+  min-height: 180px;
+  padding: var(--spacing-xl);
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+  background-size: 12px 12px;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  position: relative;
 }
 
 .module-node {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
 }
 
 .module-node:hover {
   transform: translateY(-1px);
+}
+
+.module-node-handle {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+  box-sizing: border-box;
+  background: var(--text-muted);
+  z-index: 1;
+}
+
+.module-node-handle--left {
+  margin-right: -2px;
+}
+
+.module-node-handle--right {
+  margin-left: -2px;
+}
+
+.module-node--input .module-node-handle {
+  background: var(--dev-primary);
+}
+
+.module-node--output .module-node-handle {
+  background: var(--color-error, #e5534b);
 }
 
 .module-node-inner {
@@ -16881,26 +16909,50 @@ body.production-filters-in-header .living-container > .living-history-section {
   max-width: 200px;
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--bg-card);
-  border: 1px solid var(--glass-white-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-size: 12px;
+  text-align: center;
 }
 
-.module-node:hover .module-node-inner {
+.module-node--input .module-node-inner {
   border-color: var(--dev-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.module-node--input.selected .module-node-inner,
+.module-node--input:hover .module-node-inner {
+  box-shadow: 0 0 0 1px var(--dev-primary);
+}
+
+.module-node--default .module-node-inner {
+  border-color: var(--border-color);
+}
+
+.module-node--default.selected .module-node-inner,
+.module-node--default:hover .module-node-inner {
+  box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
+}
+
+.module-node--output .module-node-inner {
+  border-color: var(--color-error, #e5534b);
+}
+
+.module-node--output.selected .module-node-inner,
+.module-node--output:hover .module-node-inner {
+  box-shadow: 0 0 0 1px var(--color-error, #e5534b);
 }
 
 .module-node-order {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   background: var(--dev-primary);
   color: var(--bg-primary);
-  border-radius: var(--radius-sm);
+  border-radius: 3px;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -16937,13 +16989,27 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-hover);
 }
 
-.module-node-connector {
-  flex-shrink: 0;
-  width: 24px;
-  height: 2px;
-  margin: 0 4px;
-  background: var(--glass-white-border);
-  border-radius: 1px;
+/* Arista entre nodos (línea horizontal tipo React Flow) */
+.module-edge {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.module-edge-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.module-edge-path {
+  stroke: #b1b1b7;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
 .modules-node-map-actions {
