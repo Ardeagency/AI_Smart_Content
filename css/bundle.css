@@ -13897,7 +13897,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-filter-btn.active {
   background: var(--color-white, #ffffff);
   border-color: rgba(255, 255, 255, 0.4);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .dev-flows-search {
@@ -14193,7 +14193,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .pagination-btn.active {
   background: var(--color-white, #ffffff);
   border-color: rgba(255, 255, 255, 0.5);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .pagination-btn:disabled {
@@ -14367,7 +14367,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-lead-toolbar .btn-primary,
 .dev-header-actions .btn-primary {
   background: var(--color-white, #ffffff);
-  color: #000000;
+  color: #000000 !important;
   border-color: rgba(255, 255, 255, 0.5);
 }
 .dev-flows-container .btn-primary:hover:not(:disabled),
@@ -14386,7 +14386,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-lead-toolbar .btn-primary:hover:not(:disabled),
 .dev-header-actions .btn-primary:hover:not(:disabled) {
   background: #e8e8e8;
-  color: #000000;
+  color: #000000 !important;
   border-color: rgba(255, 255, 255, 0.6);
 }
 
@@ -14530,7 +14530,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: 6px;
   padding: 8px 16px;
   background: var(--color-white, #ffffff);
-  color: #000000;
+  color: #000000 !important;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
@@ -15091,7 +15091,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .btn-builder-footer.btn-primary-footer {
   background: var(--warm-1);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  color: #000000;
+  color: #000000 !important;
   font-weight: 600;
 }
 
@@ -15153,7 +15153,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .btn-builder-footer.btn-approve-publish {
   background: var(--color-white, #ffffff);
   border-color: rgba(255, 255, 255, 0.5);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .btn-builder-footer.btn-approve-publish:hover {
@@ -15479,7 +15479,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .builder-tab.active {
   background: var(--warm-1);
-  color: #000000;
+  color: #000000 !important;
   border-color: transparent;
   box-shadow: var(--shadow-card);
 }
@@ -17772,7 +17772,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-lead-tab.active {
   background: var(--color-white, #ffffff);
   border-color: rgba(255, 255, 255, 0.5);
-  color: #000000;
+  color: #000000 !important;
 }
 
 /* Toolbar y tabla Lead */
@@ -18445,7 +18445,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .env-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .webhook-info {
@@ -18570,7 +18570,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .test-tab.active {
   background: var(--dev-primary);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .tab-badge {
@@ -19589,7 +19589,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .filter-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: #000000;
+  color: #000000 !important;
 }
 
 .webhooks-search-area {
