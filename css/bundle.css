@@ -15439,11 +15439,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
-/* Lista de Componentes: scroll propio */
+/* Lista de Componentes: scroll vertical solo, sin scroll horizontal */
 .builder-components-list {
   flex: 1 1 0;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--spacing-md);
 }
 
@@ -15488,6 +15490,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  min-width: 0;
 }
 
 .component-item {
@@ -15503,6 +15506,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   cursor: grab;
   transition: var(--transition);
   min-height: 64px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .component-item:hover {
@@ -15545,12 +15550,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   text-align: center;
   line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .component-info {

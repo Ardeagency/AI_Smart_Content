@@ -71,7 +71,7 @@
                    data-template="${escapeAttr(templateJson)}"
                    data-search="${escapeAttr(searchText)}">
                 <i class="ph ph-${escapeHtml(iconName)}"></i>
-                <span class="component-name">${escapeHtml(template.name)}</span>
+                <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
                 </div>
             `;
             }).join('')}
