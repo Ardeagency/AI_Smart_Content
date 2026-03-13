@@ -792,7 +792,7 @@ class DevBuilderView extends DevBaseView {
 
     return `
       <div class="dev-flow-card-wrapper dev-flow-card-wrapper--ficha-preview">
-        <article class="flow-card flow-card--catalog flow-card--with-footer flow-card--ficha-preview" aria-hidden="true">
+        <article class="flow-card flow-card--catalog flow-card--ficha-preview" aria-hidden="true">
           <div class="flow-card-media">
             ${img}
             <div class="flow-card-media-veil" aria-hidden="true"></div>
@@ -818,12 +818,6 @@ class DevBuilderView extends DevBaseView {
                 </div>
               </div>
             </div>
-          </div>
-          <div class="flow-card-footer flow-card-footer--dev">
-            <button type="button" class="flow-card-footer-btn edit" title="Editar flujo" aria-label="Editar" disabled><i class="fas fa-edit"></i></button>
-            <button type="button" class="flow-card-footer-btn test" title="Probar flujo" aria-label="Probar" disabled><i class="fas fa-play"></i></button>
-            <button type="button" class="flow-card-footer-btn logs" title="Ver logs" aria-label="Logs" disabled><i class="fas fa-terminal"></i></button>
-            <button type="button" class="flow-card-footer-btn delete" title="Eliminar flujo" aria-label="Eliminar" disabled><i class="fas fa-trash"></i></button>
           </div>
         </article>
       </div>
