@@ -13899,8 +13899,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .dev-flows-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 200px));
+  gap: 10px;
 }
 
 .dev-flow-card {
