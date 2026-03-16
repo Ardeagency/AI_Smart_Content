@@ -282,7 +282,8 @@ class Router {
       await this.currentView.render();
 
       // Animación de entrada suave en todas las páginas (igual que landing/login). Landing y login ya usan body.entrance-done.
-      if (path !== '/' && path !== '/login' && path !== '/signin') {
+      const publicNoEntrance = ['/', '/login', '/signin', '/politica-de-privacidad', '/terminos-de-servicio'];
+      if (!publicNoEntrance.includes(path)) {
         container.classList.remove('view-enter');
         void container.offsetHeight;
         container.classList.add('view-enter');

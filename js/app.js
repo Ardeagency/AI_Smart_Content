@@ -105,6 +105,8 @@ class App {
 
     // ── Públicas (lazy) ──
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);
+    r.register('/politica-de-privacidad', this._lazy('PrivacyPolicyView', ['/js/views/PrivacyPolicyView.js']), pub);
+    r.register('/terminos-de-servicio', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
 
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {

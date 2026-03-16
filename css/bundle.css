@@ -4363,6 +4363,49 @@ svg.signin-brand-logo {
     width: 100%;
 }
 
+/* Páginas legales (privacidad, términos de servicio) */
+.legal-page-container .legal-page-card {
+    width: 100%;
+    max-width: 560px;
+}
+.legal-page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin: 0 0 0.25rem 0;
+    text-align: center;
+}
+.legal-page-updated {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #a0a0a0);
+    margin: 0 0 1.25rem 0;
+    text-align: center;
+}
+.legal-page-body {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+.legal-page-body section {
+    margin-bottom: 1rem;
+}
+.legal-page-body h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin: 0 0 0.5rem 0;
+}
+.legal-page-body p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #a0a0a0);
+    margin: 0;
+}
+.legal-page-back {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
 /* Toggle entre Iniciar sesión / Registrarse */
 .signin-toggle {
     text-align: center;
