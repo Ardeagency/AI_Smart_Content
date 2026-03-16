@@ -41,6 +41,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/ai/chat"
+  to = "/.netlify/functions/api-ai-chat"
+  status = 200
+  force = true
+
 # Netlify Functions — path directo
 [[redirects]]
   from = "/.netlify/functions/*"
