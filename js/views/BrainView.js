@@ -75,6 +75,7 @@ class BrainView extends (window.BaseView || class {}) {
     this.actionsByMessageId = {};
     this.supabase = null;
     this.userId = null;
+    this._inputOverlayRO = null;
   }
 
   async onEnter() {
@@ -193,6 +194,7 @@ class BrainView extends (window.BaseView || class {}) {
 
     await this.loadActiveConversation();
     this.bindInput();
+    this.syncInputOverlaySpace();
 
     // Si ya existe conversación con mensajes, arrancar en modo chat.
     if (this.aiState.active_conversation_id) {
@@ -204,11 +206,38 @@ class BrainView extends (window.BaseView || class {}) {
     }
   }
 
+  syncInputOverlaySpace() {
+    const root = document.getElementById('brainRoot');
+    const overlay = document.getElementById('brainInputOverlay');
+    if (!root || !overlay) return;
+
+    const apply = () => {
+      const h = Math.ceil(overlay.getBoundingClientRect().height || 0);
+      if (h > 0) root.style.setProperty('--brain-input-overlay-space', `${h}px`);
+    };
+    apply();
+
+    try {
+      if (this._inputOverlayRO) this._inputOverlayRO.disconnect();
+      this._inputOverlayRO = new ResizeObserver(() => apply());
+      this._inputOverlayRO.observe(overlay);
+      window.addEventListener('resize', apply, { passive: true });
+      this._inputOverlayRO._brainApply = apply;
+    } catch (_) {}
+  }
+
   ensureFooter() {
     // Deprecated: el input ahora vive dentro del BrainView como overlay.
   }
 
   destroy() {
+    try {
+      if (this._inputOverlayRO) {
+        const apply = this._inputOverlayRO._brainApply;
+        if (apply) window.removeEventListener('resize', apply);
+        this._inputOverlayRO.disconnect();
+      }
+    } catch (_) {}
     super.destroy();
   }
 

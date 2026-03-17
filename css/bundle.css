@@ -23741,10 +23741,12 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: flex-start;
   align-items: stretch;
   padding: 0;
+  overflow: hidden; /* importante: evitar scroll del page/app-container */
 }
 .brain-page.brain-has-chat .brain-chat {
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* el scroll vive dentro de messages-wrap */
 }
 .brain-input-overlay {
   position: absolute;
@@ -24011,6 +24013,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0; /* clave para que overflow funcione en flex */
+  overscroll-behavior: contain;
 }
 .brain-messages-wrap.brain-loading {
   pointer-events: none;
