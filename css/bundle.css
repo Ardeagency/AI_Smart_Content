@@ -23744,8 +23744,9 @@ body.production-filters-in-header .living-container > .living-history-section {
   overflow: hidden; /* importante: evitar scroll del page/app-container */
 }
 .brain-page.brain-has-chat .brain-chat {
-  display: flex;
-  flex-direction: column;
+  display: block;
+  position: absolute;
+  inset: 0;
   overflow: hidden; /* el scroll vive dentro de messages-wrap */
 }
 .brain-input-overlay {
@@ -23779,8 +23780,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0 auto;
 }
 .brain-page.brain-has-chat .brain-messages-wrap {
-  /* El scroll real ocurre aquí: necesitamos “scroll-range” extra para que el último mensaje
-     pueda quedar por encima del input flotante */
+  /* Scroll real dentro del canvas absoluto (tipo ChatGPT) */
+  height: 100%;
   padding: 18px 20px calc(var(--brain-input-overlay-space) + 64px + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(var(--brain-input-overlay-space) + 64px + env(safe-area-inset-bottom, 0px));
 }
