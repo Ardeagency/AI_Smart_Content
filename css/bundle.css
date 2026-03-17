@@ -23749,7 +23749,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   bottom: 0;
   width: 100%;
   padding: 18px 20px 22px;
-  background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));
+  background: transparent;
 }
 .brain-page.brain-has-chat .brain-prompt-bar {
   width: min(860px, 100%);
