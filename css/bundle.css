@@ -23721,12 +23721,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   position: relative;
   width: 100%;
-  /* Altura “virtual” del footer para permitir scroll completo */
-  --brain-input-overlay-space: 240px;
+  overflow: hidden;
 }
 
 .brain-chat {
-  display: none;
+  display: block;
   width: 100%;
   flex: 1;
   min-height: 0;
@@ -23736,19 +23735,14 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: flex-start;
   align-items: stretch;
   padding: 0;
-  overflow: hidden; /* importante: evitar scroll del page/app-container */
+  overflow: hidden; /* el scroll vive en #chatcontainer */
 }
 .brain-page.brain-has-chat .brain-chat {
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: var(--brain-input-overlay-space);
-  overflow: hidden; /* el scroll vive dentro de messages-wrap */
+  position: relative;
+  overflow: visible;
 }
 .brain-input-overlay {
-  position: absolute;
+  position: sticky;
   left: 0;
   right: 0;
   bottom: 0;
@@ -23774,10 +23768,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0 auto;
 }
 .brain-page.brain-has-chat .brain-messages-wrap {
-  /* Scroll real dentro del canvas absoluto (tipo ChatGPT) */
   height: 100%;
   padding: 18px 20px 24px;
-  scroll-padding-bottom: 24px;
 }
 .brain-page.brain-has-chat .brain-message-list {
   width: min(860px, 100%);
@@ -23787,6 +23779,23 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-input-wrap.brain-input-wrap--solo {
   width: min(860px, 100%);
   padding: 0;
+}
+
+/* Nueva estructura Brain chat:
+   #app-container
+   - #chatcontainer (scroll)
+     - #veraChat (contenido)
+     - #space (reserva altura del footer)
+   - #chatInputOverlay (footer sticky)
+*/
+#chatcontainer.brain-page {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#space {
+  width: 100%;
+  height: 0px; /* lo ajusta JS según altura real del footer */
+  flex: 0 0 auto;
 }
 
 .brain-minimal-hero {

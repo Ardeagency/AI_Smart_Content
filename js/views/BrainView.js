@@ -126,36 +126,33 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderHTML() {
     return `
-      <div class="brain-page" data-brain-root id="brainRoot">
-        <div class="brain-minimal-hero" id="brainHero">
-          <div class="brain-minimal-title">¿En qué estás trabajando?</div>
-        </div>
-
-        <div class="brain-chat" id="brainChat" aria-hidden="true">
+      <div class="brain-page brain-has-chat" data-chatcontainer id="chatcontainer">
+        <div class="brain-chat" id="veraChat" aria-hidden="false">
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
           </div>
         </div>
+        <div id="space" aria-hidden="true"></div>
+      </div>
 
-        <div class="brain-input-overlay" id="brainInputOverlay" aria-label="Input Vera">
-          <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
-            <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
-              <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
-                <i class="fas fa-plus"></i>
-              </button>
-              <textarea
-                class="brain-prompt-input"
-                id="brainInput"
-                placeholder="Pregunta lo que quieras"
-                rows="1"
-              ></textarea>
-              <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
-                <i class="fas fa-microphone"></i>
-              </button>
-              <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
-                <i class="fas fa-arrow-up"></i>
-              </button>
-            </div>
+      <div class="brain-input-overlay" id="chatInputOverlay" aria-label="Input Vera">
+        <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
+          <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
+            <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
+              <i class="fas fa-plus"></i>
+            </button>
+            <textarea
+              class="brain-prompt-input"
+              id="brainInput"
+              placeholder="Pregunta lo que quieras"
+              rows="1"
+            ></textarea>
+            <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
+              <i class="fas fa-arrow-up"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -164,31 +161,34 @@ class BrainView extends (window.BaseView || class {}) {
 
   async init() {
     if (!this.container) return;
-    const root = this.container.querySelector('[data-brain-root]');
+    const root = this.container.querySelector('#chatcontainer');
     if (!root) return;
 
     await this.loadActiveConversation();
     this.bindInput();
     this.syncInputOverlaySpace();
 
-    // Si ya existe conversación con mensajes, arrancar en modo chat.
+    // Si ya existe conversación con mensajes, renderizarlos.
     if (this.aiState.active_conversation_id) {
       await this.loadMessages();
       if (this.aiState.messages.length > 0) {
         this.renderMessages();
-        this.showChatStage();
       }
+    }
+    // Sin mensajes: mostrar welcome
+    if (!this.aiState.active_conversation_id || this.aiState.messages.length === 0) {
+      this.renderMessages();
     }
   }
 
   syncInputOverlaySpace() {
-    const root = document.getElementById('brainRoot');
-    const overlay = document.getElementById('brainInputOverlay');
-    if (!root || !overlay) return;
+    const space = document.getElementById('space');
+    const overlay = document.getElementById('chatInputOverlay');
+    if (!space || !overlay) return;
 
     const apply = () => {
       const h = Math.ceil(overlay.getBoundingClientRect().height || 0);
-      if (h > 0) root.style.setProperty('--brain-input-overlay-space', `${h}px`);
+      if (h > 0) space.style.height = `${h}px`;
     };
     apply();
 
@@ -213,12 +213,8 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   showChatStage() {
-    const root = document.getElementById('brainRoot');
-    if (root) root.classList.add('brain-has-chat');
-    const chat = document.getElementById('brainChat');
+    const chat = document.getElementById('veraChat');
     if (chat) chat.setAttribute('aria-hidden', 'false');
-    const hero = document.getElementById('brainHero');
-    if (hero) hero.style.display = 'none';
   }
 
   async loadActiveConversation() {
@@ -259,7 +255,7 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderMessages() {
     const list = document.getElementById('brainMessageList');
-    const wrap = document.getElementById('brainMessagesWrap');
+    const scrollEl = document.getElementById('chatcontainer') || document.getElementById('brainMessagesWrap');
     if (!list) return;
 
     if (this.aiState.messages.length === 0) {
@@ -285,7 +281,7 @@ class BrainView extends (window.BaseView || class {}) {
         `;
       })
       .join('');
-    if (wrap) wrap.scrollTop = wrap.scrollHeight;
+    if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
   }
 
   bindInput() {
@@ -380,8 +376,8 @@ class BrainView extends (window.BaseView || class {}) {
         this.renderMessages();
       }
 
-      const wrap = document.getElementById('brainMessagesWrap');
-      if (wrap) wrap.scrollTop = wrap.scrollHeight;
+      const scrollEl = document.getElementById('chatcontainer') || document.getElementById('brainMessagesWrap');
+      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
     } catch (err) {
       console.error('BrainView sendMessage:', err);
       // Feedback mínimo en UI (sin romper el diseño)
