@@ -183,32 +183,13 @@ class BrainView extends (window.BaseView || class {}) {
 
   syncInputOverlaySpace() {
     const space = document.getElementById('space');
-    const overlay = document.getElementById('chatInputOverlay');
-    if (!space || !overlay) return;
-
-    const apply = () => {
-      const h = Math.ceil(overlay.getBoundingClientRect().height || 0);
-      if (h > 0) space.style.height = `${h}px`;
-    };
-    apply();
-
-    try {
-      if (this._inputOverlayRO) this._inputOverlayRO.disconnect();
-      this._inputOverlayRO = new ResizeObserver(() => apply());
-      this._inputOverlayRO.observe(overlay);
-      window.addEventListener('resize', apply, { passive: true });
-      this._inputOverlayRO._brainApply = apply;
-    } catch (_) {}
+    if (!space) return;
+    // Espacio fijo al final del chat; no depende de la altura del footer.
+    space.style.height = '140px';
   }
 
   destroy() {
-    try {
-      if (this._inputOverlayRO) {
-        const apply = this._inputOverlayRO._brainApply;
-        if (apply) window.removeEventListener('resize', apply);
-        this._inputOverlayRO.disconnect();
-      }
-    } catch (_) {}
+    // No hay observers activos para el espacio del footer actualmente.
     super.destroy();
   }
 
