@@ -23721,7 +23721,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .brain-chat {
@@ -23735,7 +23735,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: flex-start;
   align-items: stretch;
   padding: 0;
-  overflow: hidden; /* el scroll vive en #chatcontainer */
+  overflow: visible;
 }
 .brain-page.brain-has-chat .brain-chat {
   position: relative;
@@ -23783,15 +23783,11 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Nueva estructura Brain chat:
    #app-container
-   - #chatcontainer (scroll, incluye espacio al final)
+   - #chatcontainer (contenido; scroll principal lo maneja #app-container)
      - #veraChat (contenido)
-     - #space (reserva altura del footer)
+     - #space (reserva altura del footer, scrolea con el contenido)
    - #chatInputOverlay (footer flotante encima del scroll)
 */
-#chatcontainer.brain-page {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
 #space {
   width: 100%;
   height: 0px; /* lo ajusta JS según altura real del footer */
