@@ -159,25 +159,25 @@ class BrainView extends (window.BaseView || class {}) {
         <div class="brain-chat" id="brainChat" aria-hidden="true">
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
-          </div>
-          <div class="brain-input-dock" id="brainInputOverlay" aria-label="Input Vera">
-            <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
-              <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
-                <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
-                  <i class="fas fa-plus"></i>
-                </button>
-                <textarea
-                  class="brain-prompt-input"
-                  id="brainInput"
-                  placeholder="Pregunta lo que quieras"
-                  rows="1"
-                ></textarea>
-                <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
-                  <i class="fas fa-microphone"></i>
-                </button>
-                <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
-                  <i class="fas fa-arrow-up"></i>
-                </button>
+            <div class="brain-input-dock" id="brainInputOverlay" aria-label="Input Vera">
+              <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
+                <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
+                  <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                  <textarea
+                    class="brain-prompt-input"
+                    id="brainInput"
+                    placeholder="Pregunta lo que quieras"
+                    rows="1"
+                  ></textarea>
+                  <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
+                    <i class="fas fa-microphone"></i>
+                  </button>
+                  <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
+                    <i class="fas fa-arrow-up"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

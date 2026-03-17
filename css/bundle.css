@@ -7260,7 +7260,6 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   gap: 1rem;
   background: rgba(0, 0, 0, 0.12);
 }
-.task-detail-field { }
 .task-detail-label {
   display: block;
   font-size: 0.6875rem;
@@ -9829,6 +9828,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 /* Ocultar controles nativos del number (evitar “botones blancos” duplicados) */
 .studio-programacion-row .input-stepper-input,
 .studio-schedule-card .input-stepper-input {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 .studio-programacion-row .input-stepper-input::-webkit-outer-spin-button,
@@ -23745,17 +23745,18 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .brain-page.brain-has-chat .brain-chat {
   display: block;
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: hidden; /* el scroll vive dentro de messages-wrap */
 }
 .brain-input-dock {
-  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  pointer-events: none;
   display: flex;
   justify-content: center;
-  padding: 18px 0 22px;
+  padding: 18px 0 calc(22px + env(safe-area-inset-bottom, 0px));
   background: transparent;
 }
 .brain-input-dock .brain-input-wrap--solo {
@@ -24000,7 +24001,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 20px 16px;
+  padding: 16px 20px calc(var(--brain-input-overlay-space, 120px) + 16px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 12px;
