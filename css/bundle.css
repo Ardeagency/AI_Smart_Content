@@ -627,6 +627,13 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 #app-container:has(> #chatcontainer) {
     overflow-y: hidden;
 }
+
+/* Contenedor principal del chat (scroll) */
+#chatcontainer.brain-page {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 160px; /* hace que las burbujas “desaparezcan” bajo el input */
+}
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
@@ -23745,6 +23752,11 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-page.brain-has-chat .brain-chat {
   position: relative;
   overflow: visible;
+}
+
+/* Margen extra bajo el canvas del chat para sensación de espacio muerto al final */
+#veraChat {
+  margin-bottom: 60px;
 }
 .brain-input-overlay {
   position: absolute;
