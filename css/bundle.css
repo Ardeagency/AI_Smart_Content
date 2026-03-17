@@ -23720,6 +23720,9 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-dark);
   color: var(--text-primary);
   position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* Minimal mode: solo input */
