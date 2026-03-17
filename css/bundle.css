@@ -7260,7 +7260,6 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   gap: 1rem;
   background: rgba(0, 0, 0, 0.12);
 }
-.task-detail-field { }
 .task-detail-label {
   display: block;
   font-size: 0.6875rem;
@@ -9829,6 +9828,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 /* Ocultar controles nativos del number (evitar “botones blancos” duplicados) */
 .studio-programacion-row .input-stepper-input,
 .studio-schedule-card .input-stepper-input {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 .studio-programacion-row .input-stepper-input::-webkit-outer-spin-button,
@@ -23721,13 +23721,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   position: relative;
   width: 100%;
-}
-
-/* Minimal mode: solo input */
-.brain-page.brain-minimal {
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  /* Altura “virtual” del footer para permitir scroll completo */
+  --brain-input-overlay-space: 240px;
 }
 
 .brain-chat {
@@ -23762,10 +23757,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: transparent;
 }
 
-/* Altura “virtual” del footer para permitir scroll completo */
-.brain-page {
-  --brain-input-overlay-space: 240px;
-}
 .brain-input-overlay .brain-input-wrap--solo {
   width: min(860px, calc(100% - 40px));
   padding: 0;
