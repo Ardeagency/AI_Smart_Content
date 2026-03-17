@@ -556,16 +556,25 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   async addContext(entityType, entityId) {
-    if (!this.supabase || !this.aiState.active_conversation_id) return;
+    if (!this.aiState.organization_id || !this.aiState.active_conversation_id) return;
     try {
-      await this.supabase.from('ai_chat_context').insert({
-        conversation_id: this.aiState.active_conversation_id,
-        entity_type: entityType,
-        entity_id: entityId,
-        importance_weight: 1.0
+      const token = (await this.supabase?.auth?.getSession?.())?.data?.session?.access_token;
+      await fetch(`${window.location.origin}/api/ai/context`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          organization_id: this.aiState.organization_id,
+          conversation_id: this.aiState.active_conversation_id,
+          entity_type: entityType,
+          entity_id: entityId,
+          importance_weight: 1.0
+        })
       });
     } catch (e) {
-      console.warn('BrainView addContext:', e);
+      console.warn('BrainView addContext (backend):', e);
     }
   }
 
@@ -578,25 +587,14 @@ class BrainView extends (window.BaseView || class {}) {
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-      const { data: userMsg, error: insertErr } = await this.supabase
-        .from('ai_messages')
-        .insert({
-          organization_id: this.aiState.organization_id,
-          conversation_id: this.aiState.active_conversation_id,
-          role: 'user',
-          content: text
-        })
-        .select('id, content, created_at')
-        .single();
-      if (insertErr) throw insertErr;
-
-      this.aiState.messages.push({ ...userMsg, role: 'user' });
-      this.renderMessages();
-
+      const token = (await this.supabase.auth.getSession())?.data?.session?.access_token;
       const apiBase = window.location.origin;
       const res = await fetch(`${apiBase}/api/ai/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
           conversation_id: this.aiState.active_conversation_id,
@@ -604,46 +602,10 @@ class BrainView extends (window.BaseView || class {}) {
         })
       });
       if (!res.ok) throw new Error(await res.text());
-      const json = await res.json();
-      const assistant = json.assistant_message || {};
-      const content = assistant.content || 'No pude generar una respuesta.';
-
-      const { data: assistantRow, error: assistantErr } = await this.supabase
-        .from('ai_messages')
-        .insert({
-          organization_id: this.aiState.organization_id,
-          conversation_id: this.aiState.active_conversation_id,
-          role: 'assistant',
-          content
-        })
-        .select('id, content, created_at')
-        .single();
-      if (assistantErr) throw assistantErr;
-
-      this.aiState.messages.push({ ...assistantRow, role: 'assistant' });
-      this.renderMessages();
-
-      // Persistir acciones (producto): ai_chat_actions por message_id
-      const actions = Array.isArray(assistant.actions) ? assistant.actions : [];
-      if (assistantRow?.id && actions.length > 0) {
-        const rows = actions
-          .map((a) => a?.action_type)
-          .filter(Boolean)
-          .map((action_type) => ({
-            message_id: assistantRow.id,
-            action_type,
-            status: 'completed'
-          }));
-        if (rows.length > 0) {
-          try {
-            await this.supabase.from('ai_chat_actions').insert(rows);
-          } catch (e) {
-            console.warn('BrainView insert ai_chat_actions:', e);
-          }
-        }
-      }
-
+      // Backend ya guardó user+assistant+actions. Refrescamos desde DB para UI consistente.
+      await this.loadMessages();
       await this.loadActionsForLastAssistant();
+      this.renderMessages();
       this.renderActionLayerForLastAssistant();
 
       const list = document.getElementById('brainMessageList');

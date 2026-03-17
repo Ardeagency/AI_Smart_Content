@@ -47,6 +47,18 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/ai/context"
+  to = "/.netlify/functions/api-ai-context"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ai/action"
+  to = "/.netlify/functions/api-ai-action"
+  status = 200
+  force = true
+
 # Netlify Functions — path directo
 [[redirects]]
   from = "/.netlify/functions/*"
