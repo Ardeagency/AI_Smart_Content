@@ -23742,7 +23742,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   overflow: visible;
 }
 .brain-input-overlay {
-  position: sticky;
+  position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
@@ -23783,10 +23783,10 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Nueva estructura Brain chat:
    #app-container
-   - #chatcontainer (scroll)
+   - #chatcontainer (scroll, incluye espacio al final)
      - #veraChat (contenido)
      - #space (reserva altura del footer)
-   - #chatInputOverlay (footer sticky)
+   - #chatInputOverlay (footer flotante encima del scroll)
 */
 #chatcontainer.brain-page {
   overflow-y: auto;
