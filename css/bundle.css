@@ -23745,11 +23745,27 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-direction: column;
 }
 .brain-page.brain-has-chat .brain-input-wrap.brain-input-wrap--solo {
-  position: sticky;
+  /* input ahora vive en portal fuera de app_container */
+}
+
+.brain-footer-portal {
+  position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  width: 100%;
+  z-index: 1200;
+  pointer-events: none;
   padding: 18px 20px 22px;
   background: transparent;
+}
+.brain-footer-portal .brain-input-wrap--solo {
+  width: 100%;
+  padding: 0;
+  pointer-events: auto;
+}
+.brain-footer-portal .brain-prompt-bar {
+  width: min(860px, 100%);
+  margin: 0 auto;
 }
 .brain-page.brain-has-chat .brain-prompt-bar {
   width: min(860px, 100%);
