@@ -160,6 +160,28 @@ class BrainView extends (window.BaseView || class {}) {
             <div class="brain-message-list" id="brainMessageList"></div>
           </div>
         </div>
+
+        <div class="brain-input-overlay" id="brainInputOverlay" aria-label="Input Vera">
+          <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
+            <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
+              <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
+                <i class="fas fa-plus"></i>
+              </button>
+              <textarea
+                class="brain-prompt-input"
+                id="brainInput"
+                placeholder="Pregunta lo que quieras"
+                rows="1"
+              ></textarea>
+              <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
+                <i class="fas fa-arrow-up"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -170,7 +192,6 @@ class BrainView extends (window.BaseView || class {}) {
     if (!root) return;
 
     await this.loadActiveConversation();
-    this.ensureFooter();
     this.bindInput();
 
     // Si ya existe conversación con mensajes, arrancar en modo chat.
@@ -184,40 +205,10 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   ensureFooter() {
-    const existing = document.getElementById('brainFooterPortal');
-    if (existing) return;
-    const portal = document.createElement('div');
-    portal.id = 'brainFooterPortal';
-    portal.className = 'brain-footer-portal';
-    portal.innerHTML = `
-      <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
-        <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
-          <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
-            <i class="fas fa-plus"></i>
-          </button>
-          <textarea
-            class="brain-prompt-input"
-            id="brainInput"
-            placeholder="Pregunta lo que quieras"
-            rows="1"
-          ></textarea>
-          <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
-            <i class="fas fa-microphone"></i>
-          </button>
-          <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
-            <i class="fas fa-arrow-up"></i>
-          </button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(portal);
+    // Deprecated: el input ahora vive dentro del BrainView como overlay.
   }
 
   destroy() {
-    try {
-      const portal = document.getElementById('brainFooterPortal');
-      if (portal) portal.remove();
-    } catch (_) {}
     super.destroy();
   }
 
