@@ -50,7 +50,6 @@ class BrainView extends (window.BaseView || class {}) {
     this.organizationName = '';
     this.supabase = null;
     this.userId = null;
-    this._inputOverlayRO = null;
   }
 
   async onEnter() {
@@ -104,24 +103,6 @@ class BrainView extends (window.BaseView || class {}) {
       } catch (_) {}
     }
     if (!this.organizationName) this.organizationName = 'Organización';
-  }
-
-  async getBrandContainerIdsForOrg() {
-    if (!this.supabase) return null;
-    try {
-      const orgId = this.aiState.organization_id;
-      if (!orgId) return [];
-      const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: true });
-      if (error) return [];
-      return (data || []).map((x) => x.id).filter(Boolean);
-    } catch (e) {
-      console.warn('BrainView getBrandContainerIdsForOrg:', e);
-    }
-    return [];
   }
 
   renderHTML() {
