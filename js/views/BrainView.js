@@ -150,12 +150,18 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderHTML() {
     return `
-      <div class="brain-page brain-minimal" data-brain-root>
-        <div class="brain-minimal-hero">
+      <div class="brain-page brain-stage-initial" data-brain-root id="brainRoot">
+        <div class="brain-minimal-hero" id="brainHero">
           <div class="brain-minimal-title">¿En qué estás trabajando?</div>
         </div>
 
-        <div class="brain-input-wrap brain-input-wrap--solo">
+        <div class="brain-chat" id="brainChat" aria-hidden="true">
+          <div class="brain-messages-wrap" id="brainMessagesWrap">
+            <div class="brain-message-list" id="brainMessageList"></div>
+          </div>
+        </div>
+
+        <div class="brain-input-wrap brain-input-wrap--solo" id="brainInputWrap">
           <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
             <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
               <i class="fas fa-plus"></i>
@@ -185,6 +191,24 @@ class BrainView extends (window.BaseView || class {}) {
 
     await this.loadActiveConversation();
     this.bindInput();
+
+    // Si ya existe conversación con mensajes, arrancar en modo chat.
+    if (this.aiState.active_conversation_id) {
+      await this.loadMessages();
+      if (this.aiState.messages.length > 0) {
+        this.renderMessages();
+        this.showChatStage();
+      }
+    }
+  }
+
+  showChatStage() {
+    const root = document.getElementById('brainRoot');
+    if (root) root.classList.add('brain-has-chat');
+    const chat = document.getElementById('brainChat');
+    if (chat) chat.setAttribute('aria-hidden', 'false');
+    const hero = document.getElementById('brainHero');
+    if (hero) hero.style.display = 'none';
   }
 
   async loadActiveConversation() {
@@ -505,6 +529,21 @@ class BrainView extends (window.BaseView || class {}) {
     if (sendBtn) sendBtn.disabled = true;
 
     try {
+      // Optimistic UI: mostrar chat y el mensaje del usuario inmediatamente (sin depender de RLS/SELECT).
+      if (!this.aiState.active_conversation_id) {
+        // Primera interacción: activar el modo chat visual aunque aún no haya conversation_id.
+        this.showChatStage();
+      } else {
+        this.showChatStage();
+      }
+      this.aiState.messages.push({
+        id: `local-user-${Date.now()}`,
+        role: 'user',
+        content: text,
+        created_at: new Date().toISOString()
+      });
+      this.renderMessages();
+
       const token = (await this.supabase.auth.getSession())?.data?.session?.access_token;
       const apiBase = window.location.origin;
       const res = await fetch(`${apiBase}/api/ai/chat`, {
@@ -525,8 +564,29 @@ class BrainView extends (window.BaseView || class {}) {
         this.aiState.active_conversation_id = json.conversation_id;
       }
 
+      // Renderizar respuesta del assistant directamente desde backend (sin SELECT).
+      if (json?.message) {
+        this.aiState.messages.push({
+          id: `local-assistant-${Date.now()}`,
+          role: 'assistant',
+          content: json.message,
+          created_at: new Date().toISOString()
+        });
+        this.renderMessages();
+      }
+
+      const list = document.getElementById('brainMessageList');
+      if (list) list.scrollTop = list.scrollHeight;
     } catch (err) {
       console.error('BrainView sendMessage:', err);
+      // Feedback mínimo en UI (sin romper el diseño)
+      this.aiState.messages.push({
+        id: `local-error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Lo siento, no pude enviar el mensaje. Revisa tu sesión o inténtalo de nuevo.',
+        created_at: new Date().toISOString()
+      });
+      this.renderMessages();
     } finally {
       this.aiState.isLoading = false;
       const btn = document.getElementById('brainSend');

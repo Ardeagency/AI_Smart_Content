@@ -23727,6 +23727,41 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: center;
   padding: 24px;
 }
+
+.brain-chat {
+  display: none;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.brain-page.brain-has-chat {
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 0;
+}
+.brain-page.brain-has-chat .brain-chat {
+  display: flex;
+  flex-direction: column;
+}
+.brain-page.brain-has-chat .brain-input-wrap.brain-input-wrap--solo {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 18px 20px 22px;
+  background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));
+}
+.brain-page.brain-has-chat .brain-prompt-bar {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
+.brain-page.brain-has-chat .brain-messages-wrap {
+  padding: 18px 20px 80px;
+}
+.brain-page.brain-has-chat .brain-message-list {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
 .brain-input-wrap.brain-input-wrap--solo {
   width: min(860px, 100%);
   padding: 0;
