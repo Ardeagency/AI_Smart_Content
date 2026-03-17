@@ -1,12 +1,8 @@
 /**
  * BrainView — Vera (AI Brain Interface)
  *
- * Layout: ChatGPT-style
- *  - Sidebar izquierdo: lista de sesiones/conversaciones + info de org
- *  - Main: topbar + mensajes + composer
- *
- * Principio: 1 org → 1 cerebro (OpenClaw) → múltiples contextos → UI simple.
- * El frontend NUNCA habla con OpenClaw: Frontend → Backend API → OpenClaw.
+ * Layout: área de mensajes + composer (sin sidebar ni topbar).
+ * Principio: 1 org → 1 cerebro (OpenClaw). Frontend → Backend API → OpenClaw.
  */
 
 /* ─── Helpers ─────────────────────────────────────────── */
@@ -69,23 +65,6 @@ function renderMarkdown(text) {
   }).filter(Boolean).join('');
 }
 
-function groupConvsByDate(convs) {
-  const now = Date.now();
-  const DAY = 86400000;
-  const start = (offset) => new Date(new Date().setHours(0, 0, 0, 0) - offset * DAY).getTime();
-  const today = start(0), yesterday = start(1), week = start(6), month = start(29);
-  const g = { today: [], yesterday: [], week: [], month: [], older: [] };
-  for (const c of convs) {
-    const t = new Date(c.updated_at || c.created_at).getTime();
-    if (t >= today)         g.today.push(c);
-    else if (t >= yesterday) g.yesterday.push(c);
-    else if (t >= week)      g.week.push(c);
-    else if (t >= month)     g.month.push(c);
-    else                     g.older.push(c);
-  }
-  return g;
-}
-
 /* ─── View ─────────────────────────────────────────────── */
 class BrainView extends (window.BaseView || class {}) {
   constructor() {
@@ -95,13 +74,11 @@ class BrainView extends (window.BaseView || class {}) {
       organization_id: null,
       active_conversation_id: null,
       messages: [],
-      conversations: [],
       isLoading: false
     };
     this.organizationName = '';
     this.supabase = null;
     this.userId = null;
-    this._sidebarOpen = true;
   }
 
   /* ── onEnter: auth + org data ────────────────────────── */
@@ -159,64 +136,16 @@ class BrainView extends (window.BaseView || class {}) {
       } catch (_) {}
     }
     if (!this.organizationName) this.organizationName = 'Organización';
-
-    const saved = localStorage.getItem('brain_sidebar_open');
-    this._sidebarOpen = saved !== 'false';
   }
 
   /* ── HTML skeleton ───────────────────────────────────── */
   renderHTML() {
-    const sidebarClass = this._sidebarOpen ? 'gpt-sidebar' : 'gpt-sidebar gpt-sidebar--collapsed';
     return `
       <div id="chatcontainer" class="gpt-layout">
-
-        <!-- ══ SIDEBAR ══ -->
-        <aside class="${sidebarClass}" id="gptSidebar">
-          <div class="gpt-sidebar-head">
-            <button class="gpt-icon-btn" id="gptToggleBtn" title="Alternar sidebar">
-              <i class="fas fa-bars"></i>
-            </button>
-            <button class="gpt-icon-btn" id="brainNewChat" title="Nueva sesión">
-              <i class="fas fa-pen-to-square"></i>
-            </button>
-          </div>
-
-          <nav class="gpt-conv-list" id="gptConvList">
-            <div class="gpt-conv-loading">
-              <i class="fas fa-circle-notch fa-spin"></i>
-            </div>
-          </nav>
-
-          <div class="gpt-sidebar-footer">
-            <div class="gpt-org-row">
-              <div class="gpt-org-avatar" id="gptOrgAvatar">O</div>
-              <span class="gpt-org-name" id="gptOrgName">Organización</span>
-            </div>
-          </div>
-        </aside>
-
-        <!-- ══ MAIN ══ -->
         <div class="gpt-main" id="gptMain">
-
-          <!-- Top bar -->
-          <header class="gpt-topbar">
-            <button class="gpt-icon-btn" id="gptToggleBtnMain" title="Alternar sidebar">
-              <i class="fas fa-bars"></i>
-            </button>
-            <span class="gpt-topbar-label" id="gptTopbarLabel">Vera</span>
-            <div class="gpt-topbar-right">
-              <button class="gpt-icon-btn" id="brainNewChatTop" title="Nueva sesión">
-                <i class="fas fa-pen-to-square"></i>
-              </button>
-            </div>
-          </header>
-
-          <!-- Messages area -->
           <div class="gpt-messages-scroll" id="brainMessagesWrap">
             <div class="gpt-messages-inner" id="brainMessageList"></div>
           </div>
-
-          <!-- Composer -->
           <div class="gpt-composer-wrap" id="chatInputOverlay">
             <div class="gpt-composer" id="brainInputWrap">
               <textarea
@@ -238,9 +167,8 @@ class BrainView extends (window.BaseView || class {}) {
             </div>
             <p class="gpt-composer-hint">Vera puede cometer errores. Verifica la información importante.</p>
           </div>
-
-        </div><!-- /gpt-main -->
-      </div><!-- /gpt-layout -->
+        </div>
+      </div>
     `;
   }
 
@@ -248,39 +176,9 @@ class BrainView extends (window.BaseView || class {}) {
   async init() {
     if (!this.container) return;
 
-    // Org info in sidebar
-    const orgAvatar = document.getElementById('gptOrgAvatar');
-    const orgName = document.getElementById('gptOrgName');
-    if (orgAvatar) orgAvatar.textContent = (this.organizationName || 'O').charAt(0).toUpperCase();
-    if (orgName) orgName.textContent = this.organizationName;
-
-    // Sidebar toggle (both buttons do the same)
-    const bindToggle = (id) => {
-      const btn = document.getElementById(id);
-      if (btn) this.addEventListener(btn, 'click', () => this.toggleSidebar());
-    };
-    bindToggle('gptToggleBtn');
-    bindToggle('gptToggleBtnMain');
-
-    // New chat buttons
-    const bindNewChat = (id) => {
-      const btn = document.getElementById(id);
-      if (btn) this.addEventListener(btn, 'click', () => this.newConversation());
-    };
-    bindNewChat('brainNewChat');
-    bindNewChat('brainNewChatTop');
-
-    // Input
     this.bindInput();
 
-    // Load conversations list
-    await this.loadConversations();
-    this.renderSidebar();
-
-    // Pick latest conversation
-    if (!this.aiState.active_conversation_id && this.aiState.conversations.length > 0) {
-      this.aiState.active_conversation_id = this.aiState.conversations[0].id;
-    }
+    await this.loadActiveConversation();
 
     if (this.aiState.active_conversation_id) {
       await this.loadMessages();
@@ -288,119 +186,20 @@ class BrainView extends (window.BaseView || class {}) {
     } else {
       this.renderWelcome();
     }
-
-    this.updateTopbarTitle();
-    this._syncSidebarUI();
   }
 
-  /* ── Sidebar toggle ──────────────────────────────────── */
-  toggleSidebar() {
-    this._sidebarOpen = !this._sidebarOpen;
-    localStorage.setItem('brain_sidebar_open', String(this._sidebarOpen));
-    this._syncSidebarUI();
-  }
-
-  _syncSidebarUI() {
-    const sidebar = document.getElementById('gptSidebar');
-    if (!sidebar) return;
-    if (this._sidebarOpen) {
-      sidebar.classList.remove('gpt-sidebar--collapsed');
-    } else {
-      sidebar.classList.add('gpt-sidebar--collapsed');
-    }
-  }
-
-  /* ── Conversations ───────────────────────────────────── */
-  async loadConversations() {
-    if (!this.supabase || !this.aiState.organization_id || !this.userId) {
-      this.aiState.conversations = [];
-      return;
-    }
-    try {
-      const { data, error } = await this.supabase
-        .from('ai_conversations')
-        .select('id, title, updated_at, created_at')
-        .eq('organization_id', this.aiState.organization_id)
-        .eq('user_id', this.userId)
-        .order('updated_at', { ascending: false })
-        .limit(60);
-      this.aiState.conversations = (!error && data) ? data : [];
-    } catch (_) {
-      this.aiState.conversations = [];
-    }
-  }
-
-  renderSidebar() {
-    const list = document.getElementById('gptConvList');
-    if (!list) return;
-
-    if (!this.aiState.conversations.length) {
-      list.innerHTML = `<p class="gpt-conv-empty">Sin sesiones aún.<br>Empieza una conversación.</p>`;
-      return;
-    }
-
-    const groups = groupConvsByDate(this.aiState.conversations);
-    const labels = {
-      today:     'Hoy',
-      yesterday: 'Ayer',
-      week:      'Últimos 7 días',
-      month:     'Últimos 30 días',
-      older:     'Anteriores'
-    };
-
-    let html = '';
-    for (const [key, convs] of Object.entries(groups)) {
-      if (!convs.length) continue;
-      html += `<div class="gpt-conv-group-label">${labels[key]}</div>`;
-      for (const c of convs) {
-        const active = c.id === this.aiState.active_conversation_id ? ' gpt-conv-item--active' : '';
-        const title = escapeHtml(c.title || 'Sesión sin título');
-        html += `<div class="gpt-conv-item${active}" data-conv-id="${escapeHtml(c.id)}">${title}</div>`;
-      }
-    }
-
-    list.innerHTML = html;
-
-    list.querySelectorAll('.gpt-conv-item[data-conv-id]').forEach(el => {
-      this.addEventListener(el, 'click', () => {
-        const id = el.getAttribute('data-conv-id');
-        if (id && id !== this.aiState.active_conversation_id) {
-          this.switchConversation(id);
-        }
-      });
-    });
-  }
-
-  async switchConversation(id) {
-    this.aiState.active_conversation_id = id;
-    this.aiState.messages = [];
-    this.renderSidebar();
-    this.updateTopbarTitle();
-    await this.loadMessages();
-    this.renderMessages();
-  }
-
-  updateTopbarTitle() {
-    const label = document.getElementById('gptTopbarLabel');
-    if (!label) return;
-    if (this.aiState.active_conversation_id) {
-      const conv = this.aiState.conversations.find(c => c.id === this.aiState.active_conversation_id);
-      label.textContent = conv?.title || 'Vera';
-    } else {
-      label.textContent = 'Vera';
-    }
-  }
-
-  async newConversation() {
-    this.aiState.active_conversation_id = null;
-    this.aiState.messages = [];
-    this.renderSidebar();
-    this.updateTopbarTitle();
-    this.renderWelcome();
-    const input = document.getElementById('brainInput');
-    if (input) { input.value = ''; input.style.height = 'auto'; input.focus(); }
-    const sendBtn = document.getElementById('brainSend');
-    if (sendBtn) sendBtn.disabled = true;
+  /* ── Active conversation (última sesión) ─────────────── */
+  async loadActiveConversation() {
+    if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
+    const { data } = await this.supabase
+      .from('ai_conversations')
+      .select('id')
+      .eq('organization_id', this.aiState.organization_id)
+      .eq('user_id', this.userId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.id) this.aiState.active_conversation_id = data.id;
   }
 
   /* ── Messages ────────────────────────────────────────── */
@@ -602,12 +401,8 @@ class BrainView extends (window.BaseView || class {}) {
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
 
-      // New conversation created by backend
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
-        await this.loadConversations();
-        this.renderSidebar();
-        this.updateTopbarTitle();
       }
 
       this.hideTypingIndicator();
