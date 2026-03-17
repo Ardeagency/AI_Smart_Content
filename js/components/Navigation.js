@@ -6,7 +6,7 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'brain', label: 'AI Brain', icon: 'fa-brain', route: 'brain' },
+    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', route: 'brain' },
     {
       type: 'container',
       id: 'discovery',
@@ -1230,7 +1230,7 @@ class Navigation {
       '/production': 'PRODUCTION',
       '/historial': 'PRODUCTION',
       '/living': 'PRODUCTION',
-      '/brain': 'AI BRAIN',
+      '/brain': 'VERA',
       '/dashboard': 'DASHBOARD',
       '/market-insights': 'MARKET INSIGHTS',
       '/intel-radar': 'INTEL RADAR',

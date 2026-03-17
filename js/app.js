@@ -230,7 +230,7 @@ class App {
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
-    // ── Org: AI Brain (chat conversacional) ──
+    // ── Org: Vera (chat conversacional) ──
     const brainLoader = this._lazy('BrainView', ['/js/views/BrainView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/brain', brainLoader, auth);
     r.register('/brain', brainLoader, auth);

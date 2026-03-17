@@ -1,5 +1,5 @@
 /**
- * BrainView (AIChatPage) - Chat conversacional con AI Strategic Brain
+ * BrainView (AIChatPage) - Chat conversacional con Vera
  *
  * Ruta: /org/:orgIdShort/:orgNameSlug/brain o /brain
  * Estado: organization_id, brand_container_id, conversation_id, messages, isLoading
@@ -11,7 +11,7 @@ const BRAIN_BUBBLE = '#1B1F26';
 const BRAIN_TEXT = '#FFFFFF';
 const BRAIN_ACCENT = '#4e4ad9';
 
-const WELCOME_MESSAGE = `Hola, soy el AI Brain de tu organización.
+const WELCOME_MESSAGE = `Hola, soy Vera, el AI Brain de tu organización.
 
 Puedo ayudarte a:
 
@@ -159,7 +159,7 @@ class BrainView extends (window.BaseView || class {}) {
           <div class="brain-sidebar-list" id="brainConversationList"></div>
         </aside>
         <main class="brain-main">
-          <header class="brain-header" id="brainHeader">AI Brain — ${escapeHtml(this.brandName)}</header>
+          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.brandName)}</header>
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
             <div class="brain-action-cards" id="brainActionCards"></div>
@@ -193,7 +193,7 @@ class BrainView extends (window.BaseView || class {}) {
     this.renderMessages();
     this.bindInput();
     this.bindSidebar();
-    this.updateHeaderContext('AI Brain', null, this.brandName);
+    this.updateHeaderContext('Vera', null, this.brandName);
   }
 
   async ensureConversation() {
