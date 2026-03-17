@@ -103,6 +103,7 @@ temp/
 
 # OS generated files
 .DS_Store
+**/~ai-*.tmp
 .DS_Store?
 ._*
 .Spotlight-V100

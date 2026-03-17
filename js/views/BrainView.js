@@ -1,8 +1,8 @@
 /**
- * BrainView (AIChatPage) - Chat conversacional con Vera
+ * BrainView (AIChatPage) - Chat conversacional con Vera (organization-first)
  *
  * Ruta: /org/:orgIdShort/:orgNameSlug/brain o /brain
- * Estado: organization_id, brand_container_id, conversation_id, messages, isLoading
+ * Estado: organization_id, conversation_id, messages, isLoading
  * El frontend NUNCA habla con OpenClaw; siempre Frontend → Backend API → OpenClaw.
  */
 
@@ -57,8 +57,7 @@ class BrainView extends (window.BaseView || class {}) {
     super();
     this.templatePath = null;
     this.organizationId = null;
-    this.brandContainerId = null;
-    this.brandName = '';
+    this.orgName = '';
     this.conversationId = null;
     this.conversations = [];
     this.messages = [];
@@ -106,47 +105,17 @@ class BrainView extends (window.BaseView || class {}) {
       console.warn('BrainView onEnter supabase:', e);
     }
 
-    this.brandContainerId = await this.getBrandContainerId();
-    this.brandName = await this.loadBrandName();
+    this.orgName = await this.loadOrgName();
   }
 
-  async getBrandContainerId() {
-    if (!this.supabase) return null;
-    try {
-      if (this.organizationId) {
-        const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
-      if (this.userId) {
-        const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('user_id', this.userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
-    } catch (e) {
-      console.warn('BrainView getBrandContainerId:', e);
-    }
-    return null;
-  }
-
-  async loadBrandName() {
-    if (!this.supabase || !this.brandContainerId) return 'Marca';
+  async loadOrgName() {
+    if (!this.supabase || !this.organizationId) return window.currentOrgName || 'Organización';
     const { data } = await this.supabase
-      .from('brand_containers')
-      .select('nombre_marca')
-      .eq('id', this.brandContainerId)
+      .from('organizations')
+      .select('name')
+      .eq('id', this.organizationId)
       .maybeSingle();
-    return (data && data.nombre_marca) || 'Marca';
+    return (data && data.name) || window.currentOrgName || 'Organización';
   }
 
   renderHTML() {
@@ -159,7 +128,7 @@ class BrainView extends (window.BaseView || class {}) {
           <div class="brain-sidebar-list" id="brainConversationList"></div>
         </aside>
         <main class="brain-main">
-          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.brandName)}</header>
+          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.orgName)}</header>
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
             <div class="brain-action-cards" id="brainActionCards"></div>
@@ -193,16 +162,16 @@ class BrainView extends (window.BaseView || class {}) {
     this.renderMessages();
     this.bindInput();
     this.bindSidebar();
-    this.updateHeaderContext('Vera', null, this.brandName);
+    this.updateHeaderContext('Vera', null, this.orgName);
   }
 
   async ensureConversation() {
     if (this.conversationId) return;
-    if (!this.supabase || !this.brandContainerId || !this.userId) return;
+    if (!this.supabase || !this.organizationId || !this.userId) return;
     const { data: existing } = await this.supabase
       .from('ai_conversations')
       .select('id, title')
-      .eq('brand_container_id', this.brandContainerId)
+      .eq('organization_id', this.organizationId)
       .eq('user_id', this.userId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -214,7 +183,7 @@ class BrainView extends (window.BaseView || class {}) {
     const { data: created, error } = await this.supabase
       .from('ai_conversations')
       .insert({
-        brand_container_id: this.brandContainerId,
+        organization_id: this.organizationId,
         user_id: this.userId,
         title: 'Nueva conversación'
       })
@@ -229,14 +198,14 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   async loadConversations() {
-    if (!this.supabase || !this.brandContainerId) {
+    if (!this.supabase || !this.organizationId) {
       this.conversations = [];
       return;
     }
     const { data, error } = await this.supabase
       .from('ai_conversations')
       .select('id, title, created_at')
-      .eq('brand_container_id', this.brandContainerId)
+      .eq('organization_id', this.organizationId)
       .order('created_at', { ascending: false });
     if (!error && data) this.conversations = data;
     else this.conversations = [];
@@ -357,11 +326,11 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   async createNewConversation() {
-    if (!this.supabase || !this.brandContainerId || !this.userId) return;
+    if (!this.supabase || !this.organizationId || !this.userId) return;
     const { data, error } = await this.supabase
       .from('ai_conversations')
       .insert({
-        brand_container_id: this.brandContainerId,
+        organization_id: this.organizationId,
         user_id: this.userId,
         title: 'Nueva conversación'
       })
@@ -401,6 +370,7 @@ class BrainView extends (window.BaseView || class {}) {
       const { data: userMsg, error: insertErr } = await this.supabase
         .from('ai_messages')
         .insert({
+          organization_id: this.organizationId,
           conversation_id: this.conversationId,
           role: 'user',
           content: text
@@ -418,7 +388,6 @@ class BrainView extends (window.BaseView || class {}) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           organization_id: this.organizationId,
-          brand_container_id: this.brandContainerId || undefined,
           conversation_id: this.conversationId,
           message: text
         })
@@ -431,6 +400,7 @@ class BrainView extends (window.BaseView || class {}) {
       const { data: assistantRow, error: assistantErr } = await this.supabase
         .from('ai_messages')
         .insert({
+          organization_id: this.organizationId,
           conversation_id: this.conversationId,
           role: 'assistant',
           content
