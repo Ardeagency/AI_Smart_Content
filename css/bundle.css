@@ -23716,35 +23716,37 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-page {
   display: flex;
   height: calc(100vh - var(--app-header-height, 56px));
-  background: #0F1115;
-  color: #FFFFFF;
+  background: var(--bg-dark);
+  color: var(--text-primary);
 }
 .brain-sidebar {
   width: 260px;
   min-width: 260px;
-  background: #13161c;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-divider);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .brain-sidebar-new {
   margin: 12px;
-  padding: 10px 14px;
-  background: #4e4ad9;
+  padding: 0.6rem 1.05rem;
+  background: var(--brand-gradient-dynamic, var(--brand-primary, rgba(255, 255, 255, 0.14)));
   color: #fff;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--glass-radius);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: background 0.2s, transform 0.1s;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition: filter 0.2s, transform 0.1s;
 }
 .brain-sidebar-new:hover {
-  background: #5f5be6;
+  filter: brightness(1.08);
 }
 .brain-sidebar-new:active {
   transform: scale(0.98);
@@ -23761,7 +23763,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   display: block;
   margin-bottom: 6px;
 }
@@ -23772,7 +23774,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
   transition: background 0.15s;
@@ -23781,16 +23783,17 @@ body.production-filters-in-header .living-container > .living-history-section {
   text-overflow: ellipsis;
 }
 .brain-conv-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 .brain-conv-item.brain-conv-active {
-  background: rgba(78, 74, 217, 0.2);
-  color: #fff;
+  background: var(--accent-brand-soft);
+  color: var(--text-primary);
 }
 .brain-sidebar-empty {
   padding: 12px;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 .brain-main {
   flex: 1;
@@ -23803,7 +23806,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   padding: 14px 20px;
   font-size: 1rem;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-divider);
   flex-shrink: 0;
 }
 .brain-messages-wrap {
@@ -23843,14 +23846,16 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: 0.9375rem;
 }
 .brain-bubble-user {
-  background: #4e4ad9;
+  background: var(--brand-gradient-dynamic, var(--brand-primary, rgba(255, 255, 255, 0.14)));
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 .brain-bubble-assistant {
-  background: #1B1F26;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-bottom-left-radius: 4px;
 }
 .brain-bubble-content {
@@ -23865,9 +23870,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .brain-action-card {
   padding: 8px 14px;
-  background: rgba(78, 74, 217, 0.15);
-  color: #a5a1ff;
-  border: 1px solid rgba(78, 74, 217, 0.35);
+  background: var(--accent-brand-soft);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -23875,8 +23880,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   transition: background 0.2s, border-color 0.2s;
 }
 .brain-action-card:hover {
-  background: rgba(78, 74, 217, 0.25);
-  border-color: #4e4ad9;
+  background: var(--brillo-active);
+  border-color: var(--brand-primary, var(--glass-border));
 }
 .brain-input-wrap {
   padding: 12px 20px 20px;
@@ -23886,21 +23891,23 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  background: #1B1F26;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 10px 14px;
   transition: border-color 0.2s;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 .brain-input-inner:focus-within {
-  border-color: rgba(78, 74, 217, 0.5);
-  box-shadow: 0 0 0 2px rgba(78, 74, 217, 0.15);
+  border-color: var(--brand-primary, var(--accent-brand));
+  box-shadow: 0 0 0 2px var(--accent-brand-soft);
 }
 .brain-input {
   flex: 1;
   background: transparent;
   border: none;
-  color: #FFFFFF;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   line-height: 1.5;
   resize: none;
@@ -23909,24 +23916,20 @@ body.production-filters-in-header .living-container > .living-history-section {
   outline: none;
 }
 .brain-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 .brain-send {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #4e4ad9;
+  background: var(--brand-gradient-dynamic, var(--brand-primary, rgba(255, 255, 255, 0.14)));
   color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.1s;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  transition: filter 0.2s, transform 0.1s;
   flex-shrink: 0;
 }
 .brain-send:hover {
-  background: #5f5be6;
+  filter: brightness(1.08);
 }
 .brain-send:active {
   transform: scale(0.95);

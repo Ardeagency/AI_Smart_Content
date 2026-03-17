@@ -153,7 +153,7 @@ class BrainView extends (window.BaseView || class {}) {
     return `
       <div class="brain-page" data-brain-root>
         <aside class="brain-sidebar" id="brainSidebar">
-          <button type="button" class="brain-sidebar-new" id="brainNewConversation">
+          <button type="button" class="btn brain-sidebar-new" id="brainNewConversation">
             <i class="fas fa-plus"></i> Nueva conversación
           </button>
           <div class="brain-sidebar-list" id="brainConversationList"></div>
@@ -172,7 +172,7 @@ class BrainView extends (window.BaseView || class {}) {
                 placeholder="Escribe tu mensaje... (Enter enviar, Shift+Enter nueva línea)"
                 rows="1"
               ></textarea>
-              <button type="button" class="brain-send" id="brainSend" aria-label="Enviar">
+              <button type="button" class="btn btn-icon brain-send" id="brainSend" aria-label="Enviar">
                 <i class="fas fa-arrow-up"></i>
               </button>
             </div>
