@@ -151,14 +151,18 @@ class BrainView extends (window.BaseView || class {}) {
   renderHTML() {
     return `
       <div class="brain-page brain-minimal" data-brain-root>
-        <div class="brain-input-wrap brain-input-wrap--solo">
-          <div class="brain-input-inner">
-            <textarea
-              class="brain-input"
-              id="brainInput"
-              placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
-              rows="1"
-            ></textarea>
+        <div class="video-prompt-footer-card video-prompt-footer-card-center">
+          <div class="video-prompt-footer-card-inner glass-black video-director-console">
+            <div class="video-director-console-content">
+              <textarea
+                id="brainInput"
+                class="video-director-brief-input"
+                placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
+                rows="4"
+                autocomplete="off"
+                aria-label="Escribe aquí"
+              ></textarea>
+            </div>
           </div>
         </div>
       </div>

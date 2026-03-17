@@ -23725,6 +23725,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-page.brain-minimal {
   align-items: center;
   justify-content: center;
+  background: var(--bg-primary);
   padding: 24px;
 }
 .brain-input-wrap.brain-input-wrap--solo {
