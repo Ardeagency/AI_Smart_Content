@@ -328,6 +328,7 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderMessages() {
     const list = document.getElementById('brainMessageList');
+    const wrap = document.getElementById('brainMessagesWrap');
     if (!list) return;
 
     if (this.aiState.messages.length === 0) {
@@ -353,7 +354,7 @@ class BrainView extends (window.BaseView || class {}) {
         `;
       })
       .join('');
-    list.scrollTop = list.scrollHeight;
+    if (wrap) wrap.scrollTop = wrap.scrollHeight;
   }
 
   renderContextChips() {
@@ -585,8 +586,8 @@ class BrainView extends (window.BaseView || class {}) {
         this.renderMessages();
       }
 
-      const list = document.getElementById('brainMessageList');
-      if (list) list.scrollTop = list.scrollHeight;
+      const wrap = document.getElementById('brainMessagesWrap');
+      if (wrap) wrap.scrollTop = wrap.scrollHeight;
     } catch (err) {
       console.error('BrainView sendMessage:', err);
       // Feedback mínimo en UI (sin romper el diseño)

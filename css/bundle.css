@@ -23777,8 +23777,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0 auto;
 }
 .brain-page.brain-has-chat .brain-messages-wrap {
-  padding: 18px 20px calc(var(--brain-input-overlay-space) + env(safe-area-inset-bottom, 0px));
-  scroll-padding-bottom: calc(var(--brain-input-overlay-space) + env(safe-area-inset-bottom, 0px));
+  /* El scroll real ocurre aquí: necesitamos “scroll-range” extra para que el último mensaje
+     pueda quedar por encima del input flotante */
+  padding: 18px 20px calc(var(--brain-input-overlay-space) + 64px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(var(--brain-input-overlay-space) + 64px + env(safe-area-inset-bottom, 0px));
 }
 .brain-page.brain-has-chat .brain-message-list {
   width: min(860px, 100%);
