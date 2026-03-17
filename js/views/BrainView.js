@@ -150,86 +150,17 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderHTML() {
     return `
-      <div class="brain-page" data-brain-root>
-        <header class="brain-header" id="brainHeader">
-          <div class="brain-header-title">Vera <span class="brain-header-sep">—</span> <span class="brain-header-org">${escapeHtml(this.organizationName)}</span></div>
-        </header>
-
-        <section class="brain-context" aria-label="Contexto activo">
-          <div class="brain-context-left">
-            <div class="brain-context-label">Trabajando en:</div>
-            <div class="brain-context-chips" id="brainContextChips"></div>
+      <div class="brain-page brain-minimal" data-brain-root>
+        <div class="brain-input-wrap brain-input-wrap--solo">
+          <div class="brain-input-inner">
+            <textarea
+              class="brain-input"
+              id="brainInput"
+              placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
+              rows="1"
+            ></textarea>
           </div>
-          <div class="brain-context-right">
-            <button type="button" class="btn btn-secondary btn-sm brain-context-btn" id="brainContextToggle">
-              <i class="fas fa-sliders-h"></i> Contexto
-            </button>
-          </div>
-        </section>
-
-        <section class="brain-quick" aria-label="Quick actions">
-          <div class="brain-quick-title">¿Qué quieres hacer?</div>
-          <div class="brain-quick-actions">
-            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"campaign\">Crear campaña</button>
-            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"content\">Generar contenido</button>
-            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"competitor\">Analizar competencia</button>
-            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"insights\">Revisar insights</button>
-          </div>
-        </section>
-
-        <section class="brain-context-panel glass-black" id="brainContextPanel" aria-hidden="true">
-          <div class="brain-context-panel-header">
-            <div class="brain-context-panel-title">Context Selector</div>
-            <button type="button" class="btn btn-icon btn-secondary btn-icon-sm" id="brainContextClose" aria-label="Cerrar">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <div class="brain-context-panel-body">
-            <div class="brain-context-row">
-              <label class="brain-context-row-label" for="brainSelectProduct">Producto</label>
-              <select class="brain-context-select" id="brainSelectProduct">
-                <option value="">Seleccionar…</option>
-              </select>
-            </div>
-            <div class="brain-context-row">
-              <label class="brain-context-row-label" for="brainSelectCampaign">Campaña</label>
-              <select class="brain-context-select" id="brainSelectCampaign">
-                <option value="">Seleccionar…</option>
-              </select>
-            </div>
-            <div class="brain-context-row">
-              <label class="brain-context-row-label" for="brainSelectAudience">Audiencia</label>
-              <select class="brain-context-select" id="brainSelectAudience">
-                <option value="">Seleccionar…</option>
-              </select>
-            </div>
-            <div class="brain-context-panel-hint">Esto no se muestra como chat. Alimenta el contexto invisible de Vera.</div>
-          </div>
-        </section>
-
-        <main class="brain-main">
-          <div class="brain-messages-wrap" id="brainMessagesWrap">
-            <div class="brain-message-list" id="brainMessageList"></div>
-          </div>
-
-          <section class="brain-action-layer" aria-label="Acciones">
-            <div class="brain-action-cards" id="brainActionCards"></div>
-          </section>
-
-          <div class="brain-input-wrap">
-            <div class="brain-input-inner">
-              <textarea
-                class="brain-input"
-                id="brainInput"
-                placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
-                rows="1"
-              ></textarea>
-              <button type="button" class="btn btn-icon brain-send" id="brainSend" aria-label="Enviar">
-                <i class="fas fa-arrow-up"></i>
-              </button>
-            </div>
-          </div>
-        </main>
+        </div>
       </div>
     `;
   }
@@ -239,22 +170,8 @@ class BrainView extends (window.BaseView || class {}) {
     const root = this.container.querySelector('[data-brain-root]');
     if (!root) return;
 
-    this.brandContainerIds = await this.getBrandContainerIdsForOrg();
-
     await this.loadActiveConversation();
-    await this.loadMessages();
-    await this.loadContext();
-    await this.loadActionsForLastAssistant();
-
-    this.renderContextChips();
-    this.renderMessages();
-    this.renderActionLayerForLastAssistant();
-
     this.bindInput();
-    this.bindQuickActions();
-    this.bindContextPanel();
-
-    this.updateHeaderContext('Vera', null, this.organizationName);
   }
 
   async loadActiveConversation() {
@@ -439,8 +356,7 @@ class BrainView extends (window.BaseView || class {}) {
 
   bindInput() {
     const input = document.getElementById('brainInput');
-    const sendBtn = document.getElementById('brainSend');
-    if (!input || !sendBtn) return;
+    if (!input) return;
 
     const send = () => {
       const text = (input.value || '').trim();
@@ -456,7 +372,6 @@ class BrainView extends (window.BaseView || class {}) {
         send();
       }
     });
-    this.addEventListener(sendBtn, 'click', send);
   }
 
   bindQuickActions() {

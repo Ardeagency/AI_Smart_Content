@@ -23720,6 +23720,17 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-dark);
   color: var(--text-primary);
 }
+
+/* Minimal mode: solo input */
+.brain-page.brain-minimal {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.brain-input-wrap.brain-input-wrap--solo {
+  width: min(860px, 100%);
+  padding: 0;
+}
 .brain-header {
   padding: 14px 20px 10px;
   border-bottom: 1px solid var(--border-divider);
