@@ -195,6 +195,11 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/studio/:flowSlug', studioLoader, auth);
     r.register('/studio/:flowSlug', studioLoader, auth);
 
+    // ── Org: Vera (chat conversacional) ──
+    const brainLoader = this._lazy('BrainView', ['/js/views/BrainView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/brain', brainLoader, auth);
+    r.register('/brain', brainLoader, auth);
+
     // ── Org: Audiences ──
     const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/audiences', audiencesLoader, auth);
