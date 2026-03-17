@@ -127,13 +127,21 @@ class BrainView extends (window.BaseView || class {}) {
   renderHTML() {
     return `
       <div class="brain-page" data-brain-root id="brainRoot">
-        <div class="brain-minimal-hero" id="brainHero">
-          <div class="brain-minimal-title">¿En qué estás trabajando?</div>
-        </div>
+        <div class="brain-main">
+          <header class="brain-header">
+            <span class="brain-header-title">Vera</span>
+            <span class="brain-header-sep">·</span>
+            <span class="brain-header-org">AI Smart Content</span>
+          </header>
 
-        <div class="brain-chat" id="brainChat" aria-hidden="true">
-          <div class="brain-messages-wrap" id="brainMessagesWrap">
-            <div class="brain-message-list" id="brainMessageList"></div>
+          <div class="brain-minimal-hero" id="brainHero">
+            <div class="brain-minimal-title">¿En qué estás trabajando?</div>
+          </div>
+
+          <div class="brain-chat" id="brainChat" aria-hidden="true">
+            <div class="brain-messages-wrap" id="brainMessagesWrap">
+              <div class="brain-message-list" id="brainMessageList"></div>
+            </div>
           </div>
         </div>
 
@@ -156,6 +164,9 @@ class BrainView extends (window.BaseView || class {}) {
                 <i class="fas fa-arrow-up"></i>
               </button>
             </div>
+          </div>
+          <div class="brain-footer-disclaimer">
+            Vera puede cometer errores. Verifica la información importante.
           </div>
         </div>
       </div>

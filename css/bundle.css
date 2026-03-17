@@ -23757,6 +23757,14 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: transparent;
 }
 
+.brain-footer-disclaimer {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .brain-input-overlay .brain-input-wrap--solo {
   width: min(860px, calc(100% - 40px));
   padding: 0;
