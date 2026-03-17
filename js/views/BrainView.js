@@ -111,7 +111,6 @@ class BrainView extends (window.BaseView || class {}) {
         <div class="brain-chat" id="veraChat" aria-hidden="false">
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
-            <div id="space" aria-hidden="true"></div>
           </div>
         </div>
       </div>
@@ -147,7 +146,6 @@ class BrainView extends (window.BaseView || class {}) {
 
     await this.loadActiveConversation();
     this.bindInput();
-    this.syncInputOverlaySpace();
 
     // Si ya existe conversación con mensajes, renderizarlos.
     if (this.aiState.active_conversation_id) {
@@ -160,18 +158,6 @@ class BrainView extends (window.BaseView || class {}) {
     if (!this.aiState.active_conversation_id || this.aiState.messages.length === 0) {
       this.renderMessages();
     }
-  }
-
-  syncInputOverlaySpace() {
-    const space = document.getElementById('space');
-    if (!space) return;
-    // Espacio fijo al final del chat; no depende de la altura del footer.
-    space.style.height = '140px';
-  }
-
-  destroy() {
-    // No hay observers activos para el espacio del footer actualmente.
-    super.destroy();
   }
 
   showChatStage() {
