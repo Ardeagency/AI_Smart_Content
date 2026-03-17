@@ -1,15 +1,22 @@
 /**
- * BrainView (AIChatPage) - Chat conversacional con Vera
+ * BrainView (AI Brain Interface) - Vera
  *
  * Ruta: /org/:orgIdShort/:orgNameSlug/brain o /brain
- * Estado: organization_id, brand_container_id, conversation_id, messages, isLoading
- * El frontend NUNCA habla con OpenClaw; siempre Frontend → Backend API → OpenClaw.
+ *
+ * PRINCIPIO: el frontend NO es “un chat”, es una interfaz de cerebro:
+ * - 1 organización → 1 cerebro (OpenClaw) → múltiples contextos invisibles → UI simple.
+ *
+ * Estado mínimo (frontend):
+ * aiState = { organization_id, active_conversation_id, messages: [], isLoading: false }
+ *
+ * Tablas (frontend):
+ * - ai_conversations (core): solo 1 activa (última); no sidebar tipo ChatGPT
+ * - ai_messages (core): chat visible
+ * - ai_chat_actions (producto): cards de acción por message_id
+ * - ai_chat_context (invisible): chips de contexto + selector (POST)
+ *
+ * El frontend NUNCA habla con OpenClaw: Frontend → Backend API → OpenClaw.
  */
-
-const BRAIN_BG = '#0F1115';
-const BRAIN_BUBBLE = '#1B1F26';
-const BRAIN_TEXT = '#FFFFFF';
-const BRAIN_ACCENT = '#4e4ad9';
 
 const WELCOME_MESSAGE = `Hola, soy Vera, el AI Brain de tu organización.
 
@@ -30,39 +37,42 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
-function formatConversationDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now - d;
-  if (d.toDateString() === now.toDateString()) return 'Hoy';
-  if (diff < 86400000 * 2) return 'Ayer';
-  return d.toLocaleDateString();
+function actionLabel(actionType) {
+  const map = {
+    trigger_flow: 'Ejecutar flujo',
+    update_brand_voice: 'Actualizar brand voice',
+    generate_image: 'Generar imagen',
+    analyze_competitor: 'Analizar competencia'
+  };
+  return map[actionType] || actionType;
 }
 
-function groupConversationsByDate(conversations) {
-  const groups = { Hoy: [], Ayer: [], Antes: [] };
-  const today = new Date().toDateString();
-  conversations.forEach((c) => {
-    const key = new Date(c.created_at).toDateString();
-    if (key === today) groups.Hoy.push(c);
-    else if (new Date() - new Date(c.created_at) < 86400000 * 2) groups.Ayer.push(c);
-    else groups.Antes.push(c);
-  });
-  return groups;
+function contextLabel(entityType) {
+  const map = {
+    product: 'Producto',
+    service: 'Servicio',
+    campaign: 'Campaña',
+    audience: 'Audiencia',
+    intelligence_signal: 'Señal',
+    intelligence_entity: 'Competidor'
+  };
+  return map[entityType] || entityType;
 }
 
 class BrainView extends (window.BaseView || class {}) {
   constructor() {
     super();
     this.templatePath = null;
-    this.organizationId = null;
+    this.aiState = {
+      organization_id: null,
+      active_conversation_id: null,
+      messages: [],
+      isLoading: false
+    };
     this.organizationName = '';
-    this.brandContainerId = null; // opcional: solo para enriquecer contexto, no es conector
-    this.conversationId = null;
-    this.conversations = [];
-    this.messages = [];
-    this.isLoading = false;
+    this.brandContainerIds = []; // opcional: para alimentar Context Selector (productos/campañas/audiencias)
+    this.contextItems = [];
+    this.actionsByMessageId = {};
     this.supabase = null;
     this.userId = null;
   }
@@ -78,11 +88,11 @@ class BrainView extends (window.BaseView || class {}) {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-    this.organizationId =
+    this.aiState.organization_id =
       this.routeParams?.orgId ||
       window.appState?.get('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId');
-    if (!this.organizationId) {
+    if (!this.aiState.organization_id) {
       const url =
         window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
           ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
@@ -90,8 +100,8 @@ class BrainView extends (window.BaseView || class {}) {
       if (window.router) window.router.navigate(url, true);
       return;
     }
-    if (window.appState) window.appState.set('selectedOrganizationId', this.organizationId, true);
-    localStorage.setItem('selectedOrganizationId', this.organizationId);
+    if (window.appState) window.appState.set('selectedOrganizationId', this.aiState.organization_id, true);
+    localStorage.setItem('selectedOrganizationId', this.aiState.organization_id);
 
     try {
       this.supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
@@ -107,72 +117,111 @@ class BrainView extends (window.BaseView || class {}) {
     }
 
     this.organizationName = (window.currentOrgName || '').trim();
-    if (!this.organizationName && this.supabase && this.organizationId) {
+    if (!this.organizationName && this.supabase && this.aiState.organization_id) {
       try {
         const { data } = await this.supabase
           .from('organizations')
           .select('name')
-          .eq('id', this.organizationId)
+          .eq('id', this.aiState.organization_id)
           .maybeSingle();
         this.organizationName = (data && data.name) ? String(data.name) : '';
       } catch (_) {}
     }
     if (!this.organizationName) this.organizationName = 'Organización';
-
-    // brand_container_id ahora es opcional; lo guardamos solo si existe para contexto (no bloquea)
-    this.brandContainerId = await this.getBrandContainerId();
   }
 
-  async getBrandContainerId() {
+  async getBrandContainerIdsForOrg() {
     if (!this.supabase) return null;
     try {
-      if (this.organizationId) {
-        const { data, error } = await this.supabase
+      const orgId = this.aiState.organization_id;
+      if (!orgId) return [];
+      const { data, error } = await this.supabase
           .from('brand_containers')
           .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
-      if (this.userId) {
-        const { data, error } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('user_id', this.userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (!error && data?.id) return data.id;
-      }
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: true });
+      if (error) return [];
+      return (data || []).map((x) => x.id).filter(Boolean);
     } catch (e) {
-      console.warn('BrainView getBrandContainerId:', e);
+      console.warn('BrainView getBrandContainerIdsForOrg:', e);
     }
-    return null;
+    return [];
   }
 
   renderHTML() {
     return `
       <div class="brain-page" data-brain-root>
-        <aside class="brain-sidebar" id="brainSidebar">
-          <button type="button" class="btn brain-sidebar-new" id="brainNewConversation">
-            <i class="fas fa-plus"></i> Nueva conversación
-          </button>
-          <div class="brain-sidebar-list" id="brainConversationList"></div>
-        </aside>
+        <header class="brain-header" id="brainHeader">
+          <div class="brain-header-title">Vera <span class="brain-header-sep">—</span> <span class="brain-header-org">${escapeHtml(this.organizationName)}</span></div>
+        </header>
+
+        <section class="brain-context" aria-label="Contexto activo">
+          <div class="brain-context-left">
+            <div class="brain-context-label">Trabajando en:</div>
+            <div class="brain-context-chips" id="brainContextChips"></div>
+          </div>
+          <div class="brain-context-right">
+            <button type="button" class="btn btn-secondary btn-sm brain-context-btn" id="brainContextToggle">
+              <i class="fas fa-sliders-h"></i> Contexto
+            </button>
+          </div>
+        </section>
+
+        <section class="brain-quick" aria-label="Quick actions">
+          <div class="brain-quick-title">¿Qué quieres hacer?</div>
+          <div class="brain-quick-actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"campaign\">Crear campaña</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"content\">Generar contenido</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"competitor\">Analizar competencia</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-quick=\"insights\">Revisar insights</button>
+          </div>
+        </section>
+
+        <section class="brain-context-panel glass-black" id="brainContextPanel" aria-hidden="true">
+          <div class="brain-context-panel-header">
+            <div class="brain-context-panel-title">Context Selector</div>
+            <button type="button" class="btn btn-icon btn-secondary btn-icon-sm" id="brainContextClose" aria-label="Cerrar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="brain-context-panel-body">
+            <div class="brain-context-row">
+              <label class="brain-context-row-label" for="brainSelectProduct">Producto</label>
+              <select class="brain-context-select" id="brainSelectProduct">
+                <option value="">Seleccionar…</option>
+              </select>
+            </div>
+            <div class="brain-context-row">
+              <label class="brain-context-row-label" for="brainSelectCampaign">Campaña</label>
+              <select class="brain-context-select" id="brainSelectCampaign">
+                <option value="">Seleccionar…</option>
+              </select>
+            </div>
+            <div class="brain-context-row">
+              <label class="brain-context-row-label" for="brainSelectAudience">Audiencia</label>
+              <select class="brain-context-select" id="brainSelectAudience">
+                <option value="">Seleccionar…</option>
+              </select>
+            </div>
+            <div class="brain-context-panel-hint">Esto no se muestra como chat. Alimenta el contexto invisible de Vera.</div>
+          </div>
+        </section>
+
         <main class="brain-main">
-          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.organizationName)}</header>
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
-            <div class="brain-action-cards" id="brainActionCards"></div>
           </div>
+
+          <section class="brain-action-layer" aria-label="Acciones">
+            <div class="brain-action-cards" id="brainActionCards"></div>
+          </section>
+
           <div class="brain-input-wrap">
             <div class="brain-input-inner">
               <textarea
                 class="brain-input"
                 id="brainInput"
-                placeholder="Escribe tu mensaje... (Enter enviar, Shift+Enter nueva línea)"
+                placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
                 rows="1"
               ></textarea>
               <button type="button" class="btn btn-icon brain-send" id="brainSend" aria-label="Enviar">
@@ -190,35 +239,49 @@ class BrainView extends (window.BaseView || class {}) {
     const root = this.container.querySelector('[data-brain-root]');
     if (!root) return;
 
-    await this.ensureConversation();
-    await this.loadConversations();
-    this.renderConversationList();
+    this.brandContainerIds = await this.getBrandContainerIdsForOrg();
+
+    await this.loadActiveConversation();
+    await this.loadMessages();
+    await this.loadContext();
+    await this.loadActionsForLastAssistant();
+
+    this.renderContextChips();
     this.renderMessages();
+    this.renderActionLayerForLastAssistant();
+
     this.bindInput();
-    this.bindSidebar();
+    this.bindQuickActions();
+    this.bindContextPanel();
+
     this.updateHeaderContext('Vera', null, this.organizationName);
   }
 
-  async ensureConversation() {
-    if (this.conversationId) return;
-    if (!this.supabase || !this.organizationId || !this.userId) return;
+  async loadActiveConversation() {
+    if (this.aiState.active_conversation_id) return;
+    if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
+
+    // Última conversación “activa” para la organización (no mostramos listado).
     const { data: existing } = await this.supabase
       .from('ai_conversations')
-      .select('id, title')
-      .eq('organization_id', this.organizationId)
+      .select('id, updated_at, created_at')
+      .eq('organization_id', this.aiState.organization_id)
       .eq('user_id', this.userId)
+      .order('updated_at', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (existing?.id) {
-      this.conversationId = existing.id;
+      this.aiState.active_conversation_id = existing.id;
       return;
     }
+
+    // Si no existe, crear una (contexto activo).
     const { data: created, error } = await this.supabase
       .from('ai_conversations')
       .insert({
-        organization_id: this.organizationId,
-        brand_container_id: this.brandContainerId || null,
+        organization_id: this.aiState.organization_id,
+        brand_container_id: null,
         user_id: this.userId,
         title: 'Nueva conversación'
       })
@@ -228,64 +291,97 @@ class BrainView extends (window.BaseView || class {}) {
       console.error('BrainView create conversation:', error);
       return;
     }
-    this.conversationId = created.id;
-    this.conversations.unshift({ id: created.id, title: 'Nueva conversación', created_at: new Date().toISOString() });
-  }
-
-  async loadConversations() {
-    if (!this.supabase || !this.organizationId) {
-      this.conversations = [];
-      return;
-    }
-    const { data, error } = await this.supabase
-      .from('ai_conversations')
-      .select('id, title, created_at')
-      .eq('organization_id', this.organizationId)
-      .order('created_at', { ascending: false });
-    if (!error && data) this.conversations = data;
-    else this.conversations = [];
-  }
-
-  renderConversationList() {
-    const list = document.getElementById('brainConversationList');
-    if (!list) return;
-    const groups = groupConversationsByDate(this.conversations);
-    let html = '';
-    ['Hoy', 'Ayer', 'Antes'].forEach((label) => {
-      const items = groups[label];
-      if (!items || items.length === 0) return;
-      html += `<div class="brain-sidebar-group"><span class="brain-sidebar-group-label">${escapeHtml(label)}</span>`;
-      items.forEach((c) => {
-        const active = c.id === this.conversationId ? ' brain-conv-active' : '';
-        html += `<button type="button" class="brain-conv-item${active}" data-conversation-id="${escapeHtml(c.id)}">${escapeHtml(c.title || 'Sin título')}</button>`;
-      });
-      html += '</div>';
-    });
-    if (!html) html = '<p class="brain-sidebar-empty">No hay conversaciones</p>';
-    list.innerHTML = html;
+    this.aiState.active_conversation_id = created.id;
   }
 
   async loadMessages() {
-    if (!this.supabase || !this.conversationId) {
-      this.messages = [];
+    if (!this.supabase || !this.aiState.active_conversation_id) {
+      this.aiState.messages = [];
       return;
     }
     const { data, error } = await this.supabase
       .from('ai_messages')
       .select('id, role, content, attachments, created_at')
-      .eq('conversation_id', this.conversationId)
+      .eq('conversation_id', this.aiState.active_conversation_id)
       .order('created_at', { ascending: true });
-    if (!error && data) this.messages = data;
-    else this.messages = [];
+    if (!error && data) this.aiState.messages = data;
+    else this.aiState.messages = [];
+  }
+
+  async loadContext() {
+    this.contextItems = [];
+    if (!this.supabase || !this.aiState.active_conversation_id) return;
+
+    const { data, error } = await this.supabase
+      .from('ai_chat_context')
+      .select('id, entity_type, entity_id, importance_weight, created_at')
+      .eq('conversation_id', this.aiState.active_conversation_id)
+      .order('created_at', { ascending: false });
+    if (error || !data) return;
+
+    // Resolver nombres por tipo (best-effort).
+    const resolved = [];
+    for (const row of data) {
+      const label = contextLabel(row.entity_type);
+      let name = null;
+      try {
+        if (row.entity_type === 'product') {
+          const { data: p } = await this.supabase.from('products').select('nombre_producto').eq('id', row.entity_id).maybeSingle();
+          name = p?.nombre_producto || null;
+        } else if (row.entity_type === 'service') {
+          const { data: s } = await this.supabase.from('services').select('nombre_servicio').eq('id', row.entity_id).maybeSingle();
+          name = s?.nombre_servicio || null;
+        } else if (row.entity_type === 'campaign') {
+          const { data: c } = await this.supabase.from('campaigns').select('nombre_campana').eq('id', row.entity_id).maybeSingle();
+          name = c?.nombre_campana || null;
+        } else if (row.entity_type === 'audience') {
+          const { data: a } = await this.supabase.from('audiences').select('name').eq('id', row.entity_id).maybeSingle();
+          name = a?.name || null;
+        } else if (row.entity_type === 'intelligence_entity') {
+          const { data: ie } = await this.supabase.from('intelligence_entities').select('name').eq('id', row.entity_id).maybeSingle();
+          name = ie?.name || null;
+        } else if (row.entity_type === 'intelligence_signal') {
+          const { data: isg } = await this.supabase.from('intelligence_signals').select('signal_type').eq('id', row.entity_id).maybeSingle();
+          name = isg?.signal_type || null;
+        }
+      } catch (_) {}
+
+      resolved.push({
+        id: row.id,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        label,
+        name: name || String(row.entity_id).slice(0, 8)
+      });
+    }
+    // Dedupe: solo mostrar 1 por (type,id) (la más reciente)
+    const seen = new Set();
+    this.contextItems = resolved.filter((x) => {
+      const k = `${x.entity_type}:${x.entity_id}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    }).slice(0, 6);
+  }
+
+  async loadActionsForLastAssistant() {
+    const last = [...this.aiState.messages].reverse().find((m) => m.role === 'assistant' && m.id);
+    if (!last?.id) return;
+    if (this.actionsByMessageId[last.id]) return;
+    if (!this.supabase) return;
+    const { data, error } = await this.supabase
+      .from('ai_chat_actions')
+      .select('id, action_type, status, related_flow_run_id')
+      .eq('message_id', last.id)
+      .order('id');
+    if (!error && data) this.actionsByMessageId[last.id] = data;
   }
 
   renderMessages() {
     const list = document.getElementById('brainMessageList');
-    const cards = document.getElementById('brainActionCards');
     if (!list) return;
-    if (cards) cards.innerHTML = '';
 
-    if (this.messages.length === 0) {
+    if (this.aiState.messages.length === 0) {
       list.innerHTML = `
         <div class="brain-message brain-message-assistant">
           <div class="brain-bubble brain-bubble-assistant">
@@ -296,7 +392,7 @@ class BrainView extends (window.BaseView || class {}) {
       return;
     }
 
-    list.innerHTML = this.messages
+    list.innerHTML = this.aiState.messages
       .map((m) => {
         const isUser = m.role === 'user';
         return `
@@ -311,18 +407,33 @@ class BrainView extends (window.BaseView || class {}) {
     list.scrollTop = list.scrollHeight;
   }
 
-  renderActionCards(actions) {
-    if (!actions || actions.length === 0) return;
+  renderContextChips() {
+    const wrap = document.getElementById('brainContextChips');
+    if (!wrap) return;
+    if (!this.contextItems || this.contextItems.length === 0) {
+      wrap.innerHTML = `<span class="brain-context-empty">Sin contexto seleccionado</span>`;
+      return;
+    }
+    wrap.innerHTML = this.contextItems
+      .map((c) => `<span class="brain-context-chip"><span class="brain-context-chip-type">${escapeHtml(c.label)}:</span> ${escapeHtml(c.name)}</span>`)
+      .join('');
+  }
+
+  renderActionLayerForLastAssistant() {
     const wrap = document.getElementById('brainActionCards');
     if (!wrap) return;
+    const last = [...this.aiState.messages].reverse().find((m) => m.role === 'assistant' && m.id);
+    if (!last?.id) {
+      wrap.innerHTML = '';
+      return;
+    }
+    const actions = this.actionsByMessageId[last.id] || [];
+    if (!actions.length) {
+      wrap.innerHTML = '';
+      return;
+    }
     wrap.innerHTML = actions
-      .map(
-        (a) => `
-        <button type="button" class="brain-action-card" data-action-type="${escapeHtml(a.action_type)}" data-payload="${escapeHtml(JSON.stringify(a.payload || {}))}">
-          ${a.label ? escapeHtml(a.label) : a.action_type}
-        </button>
-      `
-      )
+      .map((a) => `<button type="button" class="brain-action-card" data-action-type="${escapeHtml(a.action_type)}" data-message-id="${escapeHtml(last.id)}">${escapeHtml(actionLabel(a.action_type))}</button>`)
       .join('');
   }
 
@@ -348,55 +459,119 @@ class BrainView extends (window.BaseView || class {}) {
     this.addEventListener(sendBtn, 'click', send);
   }
 
-  bindSidebar() {
-    const newBtn = document.getElementById('brainNewConversation');
-    const list = document.getElementById('brainConversationList');
-    if (newBtn) this.addEventListener(newBtn, 'click', () => this.createNewConversation());
-    if (list) {
-      list.addEventListener('click', (e) => {
-        const id = e.target.closest('[data-conversation-id]')?.getAttribute('data-conversation-id');
-        if (id) this.selectConversation(id);
+  bindQuickActions() {
+    const root = this.container;
+    if (!root) return;
+    root.querySelectorAll('[data-quick]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => {
+        const key = btn.getAttribute('data-quick');
+        const prompts = {
+          campaign: 'Crea una campaña para esta organización. Pregúntame lo mínimo necesario y luego propón 3 opciones.',
+          content: 'Genera un plan de contenido para esta semana (ideas + formatos + hooks).',
+          competitor: 'Analiza la competencia: ¿qué están haciendo y qué oportunidades ves?',
+          insights: 'Dame un resumen de insights accionables para hoy.'
+        };
+        const msg = prompts[key] || '¿Qué puedes hacer hoy?';
+        this.sendMessage(msg);
       });
+    });
+  }
+
+  bindContextPanel() {
+    const toggle = document.getElementById('brainContextToggle');
+    const panel = document.getElementById('brainContextPanel');
+    const close = document.getElementById('brainContextClose');
+    if (!panel) return;
+
+    const open = () => {
+      panel.setAttribute('aria-hidden', 'false');
+      panel.classList.add('brain-context-panel-open');
+    };
+    const hide = () => {
+      panel.setAttribute('aria-hidden', 'true');
+      panel.classList.remove('brain-context-panel-open');
+    };
+    if (toggle) this.addEventListener(toggle, 'click', open);
+    if (close) this.addEventListener(close, 'click', hide);
+
+    // Poblar selects (best-effort)
+    this.populateContextSelector().catch(() => {});
+
+    const onSelect = async (entityType, elId) => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      this.addEventListener(el, 'change', async () => {
+        const entityId = el.value;
+        if (!entityId) return;
+        await this.addContext(entityType, entityId);
+        await this.loadContext();
+        this.renderContextChips();
+      });
+    };
+    onSelect('product', 'brainSelectProduct');
+    onSelect('campaign', 'brainSelectCampaign');
+    onSelect('audience', 'brainSelectAudience');
+  }
+
+  async populateContextSelector() {
+    if (!this.supabase) return;
+    const productSel = document.getElementById('brainSelectProduct');
+    const campaignSel = document.getElementById('brainSelectCampaign');
+    const audienceSel = document.getElementById('brainSelectAudience');
+    if (!productSel || !campaignSel || !audienceSel) return;
+
+    const containerIds = Array.isArray(this.brandContainerIds) ? this.brandContainerIds : [];
+    // Productos / campañas: directos por brand_container_id (si hay containers)
+    if (containerIds.length > 0) {
+      const [{ data: products }, { data: campaigns }] = await Promise.all([
+        this.supabase.from('products').select('id, nombre_producto, brand_container_id').in('brand_container_id', containerIds).order('created_at', { ascending: false }).limit(200),
+        this.supabase.from('campaigns').select('id, nombre_campana, brand_container_id').in('brand_container_id', containerIds).order('created_at', { ascending: false }).limit(200)
+      ]);
+      (products || []).forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nombre_producto || p.id;
+        productSel.appendChild(opt);
+      });
+      (campaigns || []).forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nombre_campana || c.id;
+        campaignSel.appendChild(opt);
+      });
+
+      // Audiencias: brands.project_id -> brand_container_id; audiences.brand_id -> brands.id
+      const { data: brands } = await this.supabase.from('brands').select('id, project_id').in('project_id', containerIds).limit(200);
+      const brandIds = (brands || []).map((b) => b.id).filter(Boolean);
+      if (brandIds.length > 0) {
+        const { data: audiences } = await this.supabase.from('audiences').select('id, name, brand_id').in('brand_id', brandIds).order('created_at', { ascending: false }).limit(200);
+        (audiences || []).forEach((a) => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = a.name || a.id;
+          audienceSel.appendChild(opt);
+        });
+      }
     }
   }
 
-  async createNewConversation() {
-    if (!this.supabase || !this.organizationId || !this.userId) return;
-    const { data, error } = await this.supabase
-      .from('ai_conversations')
-      .insert({
-        organization_id: this.organizationId,
-        brand_container_id: this.brandContainerId || null,
-        user_id: this.userId,
-        title: 'Nueva conversación'
-      })
-      .select('id, title, created_at')
-      .single();
-    if (error) {
-      console.error('BrainView create conversation:', error);
-      return;
+  async addContext(entityType, entityId) {
+    if (!this.supabase || !this.aiState.active_conversation_id) return;
+    try {
+      await this.supabase.from('ai_chat_context').insert({
+        conversation_id: this.aiState.active_conversation_id,
+        entity_type: entityType,
+        entity_id: entityId,
+        importance_weight: 1.0
+      });
+    } catch (e) {
+      console.warn('BrainView addContext:', e);
     }
-    this.conversationId = data.id;
-    this.conversations.unshift(data);
-    this.messages = [];
-    this.renderConversationList();
-    this.renderMessages();
-    const cards = document.getElementById('brainActionCards');
-    if (cards) cards.innerHTML = '';
-  }
-
-  async selectConversation(id) {
-    this.conversationId = id;
-    await this.loadMessages();
-    this.renderConversationList();
-    this.renderMessages();
-    const cards = document.getElementById('brainActionCards');
-    if (cards) cards.innerHTML = '';
   }
 
   async sendMessage(text) {
-    if (!this.organizationId || !this.conversationId || !this.supabase || this.isLoading) return;
-    this.isLoading = true;
+    if (!this.aiState.organization_id || !this.aiState.active_conversation_id || !this.supabase || this.aiState.isLoading) return;
+    this.aiState.isLoading = true;
     const wrap = document.getElementById('brainMessagesWrap');
     const sendBtn = document.getElementById('brainSend');
     if (wrap) wrap.classList.add('brain-loading');
@@ -406,8 +581,8 @@ class BrainView extends (window.BaseView || class {}) {
       const { data: userMsg, error: insertErr } = await this.supabase
         .from('ai_messages')
         .insert({
-          organization_id: this.organizationId,
-          conversation_id: this.conversationId,
+          organization_id: this.aiState.organization_id,
+          conversation_id: this.aiState.active_conversation_id,
           role: 'user',
           content: text
         })
@@ -415,7 +590,7 @@ class BrainView extends (window.BaseView || class {}) {
         .single();
       if (insertErr) throw insertErr;
 
-      this.messages.push({ ...userMsg, role: 'user' });
+      this.aiState.messages.push({ ...userMsg, role: 'user' });
       this.renderMessages();
 
       const apiBase = window.location.origin;
@@ -423,9 +598,8 @@ class BrainView extends (window.BaseView || class {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          organization_id: this.organizationId,
-          brand_container_id: this.brandContainerId || undefined,
-          conversation_id: this.conversationId,
+          organization_id: this.aiState.organization_id,
+          conversation_id: this.aiState.active_conversation_id,
           message: text
         })
       });
@@ -437,8 +611,8 @@ class BrainView extends (window.BaseView || class {}) {
       const { data: assistantRow, error: assistantErr } = await this.supabase
         .from('ai_messages')
         .insert({
-          organization_id: this.organizationId,
-          conversation_id: this.conversationId,
+          organization_id: this.aiState.organization_id,
+          conversation_id: this.aiState.active_conversation_id,
           role: 'assistant',
           content
         })
@@ -446,15 +620,37 @@ class BrainView extends (window.BaseView || class {}) {
         .single();
       if (assistantErr) throw assistantErr;
 
-      this.messages.push({ ...assistantRow, role: 'assistant' });
+      this.aiState.messages.push({ ...assistantRow, role: 'assistant' });
       this.renderMessages();
-      this.renderActionCards(assistant.actions || []);
+
+      // Persistir acciones (producto): ai_chat_actions por message_id
+      const actions = Array.isArray(assistant.actions) ? assistant.actions : [];
+      if (assistantRow?.id && actions.length > 0) {
+        const rows = actions
+          .map((a) => a?.action_type)
+          .filter(Boolean)
+          .map((action_type) => ({
+            message_id: assistantRow.id,
+            action_type,
+            status: 'completed'
+          }));
+        if (rows.length > 0) {
+          try {
+            await this.supabase.from('ai_chat_actions').insert(rows);
+          } catch (e) {
+            console.warn('BrainView insert ai_chat_actions:', e);
+          }
+        }
+      }
+
+      await this.loadActionsForLastAssistant();
+      this.renderActionLayerForLastAssistant();
 
       const list = document.getElementById('brainMessageList');
       if (list) list.scrollTop = list.scrollHeight;
     } catch (err) {
       console.error('BrainView sendMessage:', err);
-      this.messages.push({
+      this.aiState.messages.push({
         id: null,
         role: 'assistant',
         content: 'Lo siento, hubo un error. Vuelve a intentarlo.',
@@ -462,7 +658,7 @@ class BrainView extends (window.BaseView || class {}) {
       });
       this.renderMessages();
     } finally {
-      this.isLoading = false;
+      this.aiState.isLoading = false;
       if (wrap) wrap.classList.remove('brain-loading');
       const btn = document.getElementById('brainSend');
       if (btn) btn.disabled = false;
