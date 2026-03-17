@@ -230,11 +230,6 @@ class App {
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
-    // ── Org: Vera (chat conversacional) ──
-    const brainLoader = this._lazy('BrainView', ['/js/views/BrainView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/brain', brainLoader, auth);
-    r.register('/brain', brainLoader, auth);
-
     // ── Org: Discovery (Intel Radar, Signals Feed, Market Insights) ──
     const dashboardLoader = this._lazy('DashboardView', ['/js/views/DashboardView.js']);
     const intelRadarLoader = this._lazy('IntelRadarView', ['/js/views/IntelRadarView.js']);

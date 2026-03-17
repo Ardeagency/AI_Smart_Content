@@ -6,7 +6,6 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', route: 'brain' },
     {
       type: 'container',
       id: 'discovery',

@@ -134,7 +134,6 @@ class BrainView extends (window.BaseView || class {}) {
         <div class="brain-chat" id="brainChat" aria-hidden="true">
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
-            <div class="brain-messages-spacer" aria-hidden="true"></div>
           </div>
         </div>
 

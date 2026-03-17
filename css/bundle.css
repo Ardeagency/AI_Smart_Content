@@ -23741,7 +23741,10 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-page.brain-has-chat .brain-chat {
   display: block;
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--brain-input-overlay-space);
   overflow: hidden; /* el scroll vive dentro de messages-wrap */
 }
 .brain-input-overlay {
@@ -24017,10 +24020,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-direction: column;
   gap: 16px;
   min-height: 60px;
-}
-.brain-messages-spacer {
-  flex-shrink: 0;
-  height: calc(var(--brain-input-overlay-space) + 40px);
 }
 .brain-message {
   display: flex;
