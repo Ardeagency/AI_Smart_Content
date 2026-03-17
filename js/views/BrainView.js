@@ -1,8 +1,8 @@
 /**
- * BrainView (AIChatPage) - Chat conversacional con Vera (organization-first)
+ * BrainView (AIChatPage) - Chat conversacional con Vera
  *
  * Ruta: /org/:orgIdShort/:orgNameSlug/brain o /brain
- * Estado: organization_id, conversation_id, messages, isLoading
+ * Estado: organization_id, brand_container_id, conversation_id, messages, isLoading
  * El frontend NUNCA habla con OpenClaw; siempre Frontend → Backend API → OpenClaw.
  */
 
@@ -57,7 +57,8 @@ class BrainView extends (window.BaseView || class {}) {
     super();
     this.templatePath = null;
     this.organizationId = null;
-    this.orgName = '';
+    this.organizationName = '';
+    this.brandContainerId = null; // opcional: solo para enriquecer contexto, no es conector
     this.conversationId = null;
     this.conversations = [];
     this.messages = [];
@@ -105,17 +106,50 @@ class BrainView extends (window.BaseView || class {}) {
       console.warn('BrainView onEnter supabase:', e);
     }
 
-    this.orgName = await this.loadOrgName();
+    this.organizationName = (window.currentOrgName || '').trim();
+    if (!this.organizationName && this.supabase && this.organizationId) {
+      try {
+        const { data } = await this.supabase
+          .from('organizations')
+          .select('name')
+          .eq('id', this.organizationId)
+          .maybeSingle();
+        this.organizationName = (data && data.name) ? String(data.name) : '';
+      } catch (_) {}
+    }
+    if (!this.organizationName) this.organizationName = 'Organización';
+
+    // brand_container_id ahora es opcional; lo guardamos solo si existe para contexto (no bloquea)
+    this.brandContainerId = await this.getBrandContainerId();
   }
 
-  async loadOrgName() {
-    if (!this.supabase || !this.organizationId) return window.currentOrgName || 'Organización';
-    const { data } = await this.supabase
-      .from('organizations')
-      .select('name')
-      .eq('id', this.organizationId)
-      .maybeSingle();
-    return (data && data.name) || window.currentOrgName || 'Organización';
+  async getBrandContainerId() {
+    if (!this.supabase) return null;
+    try {
+      if (this.organizationId) {
+        const { data, error } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (!error && data?.id) return data.id;
+      }
+      if (this.userId) {
+        const { data, error } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('user_id', this.userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!error && data?.id) return data.id;
+      }
+    } catch (e) {
+      console.warn('BrainView getBrandContainerId:', e);
+    }
+    return null;
   }
 
   renderHTML() {
@@ -128,7 +162,7 @@ class BrainView extends (window.BaseView || class {}) {
           <div class="brain-sidebar-list" id="brainConversationList"></div>
         </aside>
         <main class="brain-main">
-          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.orgName)}</header>
+          <header class="brain-header" id="brainHeader">Vera — ${escapeHtml(this.organizationName)}</header>
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
             <div class="brain-action-cards" id="brainActionCards"></div>
@@ -162,7 +196,7 @@ class BrainView extends (window.BaseView || class {}) {
     this.renderMessages();
     this.bindInput();
     this.bindSidebar();
-    this.updateHeaderContext('Vera', null, this.orgName);
+    this.updateHeaderContext('Vera', null, this.organizationName);
   }
 
   async ensureConversation() {
@@ -184,6 +218,7 @@ class BrainView extends (window.BaseView || class {}) {
       .from('ai_conversations')
       .insert({
         organization_id: this.organizationId,
+        brand_container_id: this.brandContainerId || null,
         user_id: this.userId,
         title: 'Nueva conversación'
       })
@@ -331,6 +366,7 @@ class BrainView extends (window.BaseView || class {}) {
       .from('ai_conversations')
       .insert({
         organization_id: this.organizationId,
+        brand_container_id: this.brandContainerId || null,
         user_id: this.userId,
         title: 'Nueva conversación'
       })
@@ -388,6 +424,7 @@ class BrainView extends (window.BaseView || class {}) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           organization_id: this.organizationId,
+          brand_container_id: this.brandContainerId || undefined,
           conversation_id: this.conversationId,
           message: text
         })

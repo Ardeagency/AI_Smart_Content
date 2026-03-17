@@ -6,6 +6,7 @@
  *
  * POST body: {
  *   organization_id: string,
+ *   brand_container_id: string,
  *   conversation_id: string,
  *   message: string
  * }
@@ -48,7 +49,7 @@ exports.handler = async (event, context) => {
     };
   }
 
-  const { organization_id, conversation_id, message } = body;
+  const { organization_id, brand_container_id, conversation_id, message } = body;
   if (!organization_id || !conversation_id || typeof message !== 'string') {
     return {
       statusCode: 400,
@@ -60,7 +61,7 @@ exports.handler = async (event, context) => {
   }
 
   // Placeholder: respuesta estática hasta conectar OpenClaw.
-  // OpenClaw recibirá: organization_id, conversation_id, mensaje y contexto.
+  // OpenClaw recibirá: organization_id, brand_container_id, conversation_id, mensaje y contexto.
   const text = (message || '').trim().toLowerCase();
   let content =
     'He recibido tu mensaje. Cuando OpenClaw esté conectado, podré analizar tu organización, ejecutar flows y generar acciones.';
