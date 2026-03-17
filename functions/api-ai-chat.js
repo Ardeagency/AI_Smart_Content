@@ -74,11 +74,11 @@ exports.handler = async (event, context) => {
   }
   if (text.includes('campaña') || text.includes('campaign')) {
     content =
-      'Puedo analizar y sugerir campañas para tu marca. Cuando el AI Strategic Brain esté conectado, tendré contexto de tus campañas y audiencias.';
+      'Puedo analizar y sugerir campañas para tu marca. Cuando Vera esté conectada, tendré contexto de tus campañas y audiencias.';
   }
   if (text.includes('hola') || text.includes('ayuda') || text.length < 3) {
     content =
-      'Hola, soy el AI Brain de tu organización.\n\nPuedo ayudarte a:\n• analizar tu marca\n• crear campañas\n• generar contenido\n• analizar competidores\n• ejecutar flows\n\n¿Qué quieres hacer hoy?';
+      'Hola, soy Vera, el AI Brain de tu organización.\n\nPuedo ayudarte a:\n• analizar tu marca\n• crear campañas\n• generar contenido\n• analizar competidores\n• ejecutar flows\n\n¿Qué quieres hacer hoy?';
   }
 
   return {
