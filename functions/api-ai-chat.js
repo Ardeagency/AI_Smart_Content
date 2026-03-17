@@ -110,7 +110,7 @@ exports.handler = async (event, context) => {
   }
 
   const { organization_id, conversation_id, message } = body;
-  if (!organization_id || !conversation_id || typeof message !== 'string' || !message.trim()) {
+  if (!organization_id || typeof message !== 'string' || !message.trim()) {
     return {
       statusCode: 400,
       headers: corsHeaders(),
@@ -140,6 +140,41 @@ exports.handler = async (event, context) => {
   try {
     await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: organization_id, userId: user.id });
 
+    // Conversation: si no viene, crear una nueva (estado inicial)
+    let convId = conversation_id;
+    if (convId) {
+      // Validar que pertenece a la org (evita mezclar organizaciones)
+      const conv = await supabaseRest({
+        url: env.url,
+        serviceKey: env.serviceKey,
+        path: 'ai_conversations',
+        method: 'GET',
+        searchParams: {
+          select: 'id,organization_id',
+          id: `eq.${convId}`,
+          organization_id: `eq.${organization_id}`,
+          limit: '1'
+        }
+      });
+      if (!Array.isArray(conv) || conv.length === 0) {
+        return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Conversation not found for organization' }) };
+      }
+    } else {
+      const [createdConv] = await supabaseRest({
+        url: env.url,
+        serviceKey: env.serviceKey,
+        path: 'ai_conversations',
+        method: 'POST',
+        body: [{
+          organization_id,
+          user_id: user.id,
+          title: 'Nueva conversación'
+        }]
+      });
+      convId = createdConv?.id;
+      if (!convId) throw new Error('No se pudo crear conversación');
+    }
+
     // Guardar mensaje user (DB = memoria)
     const [userRow] = await supabaseRest({
       url: env.url,
@@ -148,7 +183,7 @@ exports.handler = async (event, context) => {
       method: 'POST',
       body: [{
         organization_id,
-        conversation_id,
+        conversation_id: convId,
         role: 'user',
         content: message
       }]
@@ -159,7 +194,7 @@ exports.handler = async (event, context) => {
       url: env.url,
       serviceKey: env.serviceKey,
       organizationId: organization_id,
-      conversationId: conversation_id
+      conversationId: convId
     });
 
     // OpenClaw (stub)
@@ -177,7 +212,7 @@ exports.handler = async (event, context) => {
       method: 'POST',
       body: [{
         organization_id,
-        conversation_id,
+        conversation_id: convId,
         role: 'assistant',
         content: oc.message
       }]
@@ -209,6 +244,7 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers: corsHeaders(),
       body: JSON.stringify({
+        conversation_id: convId,
         message: oc.message,
         actions
       })

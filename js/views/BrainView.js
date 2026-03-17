@@ -151,18 +151,27 @@ class BrainView extends (window.BaseView || class {}) {
   renderHTML() {
     return `
       <div class="brain-page brain-minimal" data-brain-root>
-        <div class="video-prompt-footer-card video-prompt-footer-card-center">
-          <div class="video-prompt-footer-card-inner glass-black video-director-console">
-            <div class="video-director-console-content">
-              <textarea
-                id="brainInput"
-                class="video-director-brief-input"
-                placeholder="Escribe aquí… (Enter enviar, Shift+Enter nueva línea)"
-                rows="4"
-                autocomplete="off"
-                aria-label="Escribe aquí"
-              ></textarea>
-            </div>
+        <div class="brain-minimal-hero">
+          <div class="brain-minimal-title">¿En qué estás trabajando?</div>
+        </div>
+
+        <div class="brain-input-wrap brain-input-wrap--solo">
+          <div class="brain-prompt-bar glass-black" role="group" aria-label="Input Vera">
+            <button type="button" class="brain-prompt-icon" id="brainPlus" aria-label="Adjuntar">
+              <i class="fas fa-plus"></i>
+            </button>
+            <textarea
+              class="brain-prompt-input"
+              id="brainInput"
+              placeholder="Pregunta lo que quieras"
+              rows="1"
+            ></textarea>
+            <button type="button" class="brain-prompt-icon" id="brainMic" aria-label="Voz (próximamente)">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button type="button" class="brain-prompt-send" id="brainSend" aria-label="Enviar">
+              <i class="fas fa-arrow-up"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -196,23 +205,8 @@ class BrainView extends (window.BaseView || class {}) {
       this.aiState.active_conversation_id = existing.id;
       return;
     }
-
-    // Si no existe, crear una (contexto activo).
-    const { data: created, error } = await this.supabase
-      .from('ai_conversations')
-      .insert({
-        organization_id: this.aiState.organization_id,
-        brand_container_id: null,
-        user_id: this.userId,
-        title: 'Nueva conversación'
-      })
-      .select('id')
-      .single();
-    if (error) {
-      console.error('BrainView create conversation:', error);
-      return;
-    }
-    this.aiState.active_conversation_id = created.id;
+    // Importante: NO crear conversación en estado vacío.
+    // La conversación se crea automáticamente al enviar el primer mensaje (backend).
   }
 
   async loadMessages() {
@@ -361,10 +355,13 @@ class BrainView extends (window.BaseView || class {}) {
   bindInput() {
     const input = document.getElementById('brainInput');
     if (!input) return;
+    const sendBtn = document.getElementById('brainSend');
+    const plusBtn = document.getElementById('brainPlus');
+    const micBtn = document.getElementById('brainMic');
 
     const send = () => {
       const text = (input.value || '').trim();
-      if (!text || this.isLoading) return;
+      if (!text || this.aiState.isLoading) return;
       this.sendMessage(text);
       input.value = '';
       input.style.height = 'auto';
@@ -376,6 +373,10 @@ class BrainView extends (window.BaseView || class {}) {
         send();
       }
     });
+
+    if (sendBtn) this.addEventListener(sendBtn, 'click', send);
+    if (plusBtn) this.addEventListener(plusBtn, 'click', () => {});
+    if (micBtn) this.addEventListener(micBtn, 'click', () => {});
   }
 
   bindQuickActions() {
@@ -498,11 +499,9 @@ class BrainView extends (window.BaseView || class {}) {
   }
 
   async sendMessage(text) {
-    if (!this.aiState.organization_id || !this.aiState.active_conversation_id || !this.supabase || this.aiState.isLoading) return;
+    if (!this.aiState.organization_id || !this.supabase || this.aiState.isLoading) return;
     this.aiState.isLoading = true;
-    const wrap = document.getElementById('brainMessagesWrap');
     const sendBtn = document.getElementById('brainSend');
-    if (wrap) wrap.classList.add('brain-loading');
     if (sendBtn) sendBtn.disabled = true;
 
     try {
@@ -516,31 +515,20 @@ class BrainView extends (window.BaseView || class {}) {
         },
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
-          conversation_id: this.aiState.active_conversation_id,
+          conversation_id: this.aiState.active_conversation_id || undefined,
           message: text
         })
       });
       if (!res.ok) throw new Error(await res.text());
-      // Backend ya guardó user+assistant+actions. Refrescamos desde DB para UI consistente.
-      await this.loadMessages();
-      await this.loadActionsForLastAssistant();
-      this.renderMessages();
-      this.renderActionLayerForLastAssistant();
+      const json = await res.json();
+      if (json?.conversation_id && !this.aiState.active_conversation_id) {
+        this.aiState.active_conversation_id = json.conversation_id;
+      }
 
-      const list = document.getElementById('brainMessageList');
-      if (list) list.scrollTop = list.scrollHeight;
     } catch (err) {
       console.error('BrainView sendMessage:', err);
-      this.aiState.messages.push({
-        id: null,
-        role: 'assistant',
-        content: 'Lo siento, hubo un error. Vuelve a intentarlo.',
-        created_at: new Date().toISOString()
-      });
-      this.renderMessages();
     } finally {
       this.aiState.isLoading = false;
-      if (wrap) wrap.classList.remove('brain-loading');
       const btn = document.getElementById('brainSend');
       if (btn) btn.disabled = false;
     }
