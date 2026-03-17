@@ -622,6 +622,11 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     box-sizing: border-box;
     padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
+
+/* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
+#app-container:has(> #chatcontainer) {
+    overflow-y: hidden;
+}
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
@@ -23721,7 +23726,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   position: relative;
   width: 100%;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .brain-chat {
@@ -23735,7 +23740,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: flex-start;
   align-items: stretch;
   padding: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 .brain-page.brain-has-chat .brain-chat {
   position: relative;
@@ -23783,11 +23788,16 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Nueva estructura Brain chat:
    #app-container
-   - #chatcontainer (contenido; scroll principal lo maneja #app-container)
+   - #chatcontainer (scroll interno del chat)
      - #veraChat (contenido)
-     - #space (reserva altura del footer, scrolea con el contenido)
+       - #brainMessagesWrap / #brainMessageList
+       - #space (reserva altura del footer, scrolea con el contenido)
    - #chatInputOverlay (footer flotante encima del scroll)
 */
+#chatcontainer.brain-page {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 #space {
   width: 100%;
   height: 0px; /* lo ajusta JS según altura real del footer */
