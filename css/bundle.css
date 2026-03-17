@@ -23721,8 +23721,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-primary);
   position: relative;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 /* Minimal mode: solo input */
@@ -23775,9 +23773,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   padding: 18px 20px 120px;
 }
 .brain-page.brain-has-chat .brain-message-list {
-  width: 100%;
-  max-width: none;
-  margin: 0;
+  width: min(860px, 100%);
+  margin: 0 auto;
 }
 .brain-input-wrap.brain-input-wrap--solo {
   width: min(860px, 100%);
