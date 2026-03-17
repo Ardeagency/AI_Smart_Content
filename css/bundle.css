@@ -23721,10 +23721,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .brain-page {
   display: flex;
   flex-direction: column;
-  /* Altura del área scrollable del chat:
-     viewport - header principal - altura aproximada del footer de Vera */
-  --vera-footer-height: 120px;
-  height: calc(100vh - var(--app-header-height, 56px) - var(--vera-footer-height));
+  height: calc(100vh - var(--app-header-height, 56px));
   background: var(--bg-dark);
   color: var(--text-primary);
   position: relative;
