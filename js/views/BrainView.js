@@ -126,7 +126,7 @@ class BrainView extends (window.BaseView || class {}) {
 
   renderHTML() {
     return `
-      <div class="brain-page brain-has-chat" data-chatcontainer id="chatcontainer">
+      <div class="brain-page brain-has-chat" id="chatcontainer">
         <div class="brain-chat" id="veraChat" aria-hidden="false">
           <div class="brain-messages-wrap" id="brainMessagesWrap">
             <div class="brain-message-list" id="brainMessageList"></div>
