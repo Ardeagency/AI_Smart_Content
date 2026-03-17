@@ -165,7 +165,6 @@ class BrainView extends (window.BaseView || class {}) {
                 </button>
               </div>
             </div>
-            <p class="gpt-composer-hint">Vera puede cometer errores. Verifica la información importante.</p>
           </div>
         </div>
       </div>
