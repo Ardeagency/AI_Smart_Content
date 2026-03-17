@@ -23745,33 +23745,25 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .brain-page.brain-has-chat .brain-chat {
   display: block;
-  position: absolute;
-  inset: 0;
-  overflow: hidden; /* el scroll vive dentro de messages-wrap */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
-.brain-input-overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  pointer-events: none;
+.brain-input-dock {
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   padding: 18px 0 22px;
   background: transparent;
 }
-
-/* Altura “virtual” del footer para permitir scroll completo */
-.brain-page {
-  --brain-input-overlay-space: 240px;
-}
-.brain-input-overlay .brain-input-wrap--solo {
+.brain-input-dock .brain-input-wrap--solo {
   width: min(860px, calc(100% - 40px));
   padding: 0;
   pointer-events: auto;
 }
-.brain-input-overlay .brain-prompt-bar {
+.brain-input-dock .brain-prompt-bar {
   width: 100%;
   margin: 0;
 }
@@ -24008,7 +24000,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 20px calc(var(--brain-input-overlay-space) + 80px + env(safe-area-inset-bottom, 0px));
+  padding: 16px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
