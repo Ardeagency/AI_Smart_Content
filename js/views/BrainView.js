@@ -406,9 +406,11 @@ function renderChartBlock(code) {
   }
 }
 
-function renderMarkdown(text) {
+function renderMarkdown(text, opts = {}) {
   const raw = String(text ?? '');
   let h = escapeHtml(raw);
+  const messageId = opts?.messageId ? String(opts.messageId) : '';
+  let taskIdx = 0;
 
   // --- URL sanitizer (prevents javascript: etc.) ---
   const sanitizeUrl = (url) => {
@@ -530,7 +532,26 @@ function renderMarkdown(text) {
         out.push('<ul>');
         listType = 'ul';
       }
-      out.push(`<li>${bullet[1]}</li>`);
+      const task = bullet[1].match(/^\[( |x|X)\]\s+([\s\S]+)$/);
+      if (task) {
+        const checked = task[1].toLowerCase() === 'x';
+        const label = task[2];
+        const idx = taskIdx++;
+        out.push(
+          `<li class="gpt-task-item">` +
+            `<label class="gpt-task-label">` +
+              `<input class="gpt-task-checkbox" type="checkbox" ${checked ? 'checked' : ''}` +
+                ` data-task-idx="${idx}"` +
+                (messageId ? ` data-message-id="${escapeHtml(messageId)}"` : '') +
+                ` data-task-text="${escapeHtml(label)}"` +
+              ` />` +
+              `<span class="gpt-task-text">${label}</span>` +
+            `</label>` +
+          `</li>`
+        );
+      } else {
+        out.push(`<li>${bullet[1]}</li>`);
+      }
     } else if (numbered) {
       if (listType !== 'ol') {
         if (listType) out.push(`</${listType}>`);
@@ -792,6 +813,47 @@ class BrainView extends (window.BaseView || class {}) {
     });
   }
 
+  _bindTaskEvents() {
+    const root = document.getElementById('brainMessageList');
+    if (!root || root.__veraTaskBound) return;
+    root.__veraTaskBound = true;
+
+    root.addEventListener('change', async (e) => {
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement)) return;
+      if (!el.classList.contains('gpt-task-checkbox')) return;
+      const idx = Number(el.getAttribute('data-task-idx') || '0');
+      const taskText = el.getAttribute('data-task-text') || '';
+      const sourceMessageId = el.getAttribute('data-message-id') || '';
+      const checked = !!el.checked;
+
+      // Persist event so Vera can see it next turn (no immediate assistant reply)
+      try {
+        const token = this.supabase
+          ? (await this.supabase.auth.getSession())?.data?.session?.access_token
+          : null;
+
+        await fetch(`${window.location.origin}/api/ai/task-event`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            organization_id: this.aiState.organization_id,
+            conversation_id: this.aiState.active_conversation_id,
+            source_message_id: sourceMessageId,
+            task_index: idx,
+            task_text: taskText,
+            checked
+          })
+        });
+      } catch (err) {
+        console.warn('Task event failed:', err);
+      }
+    });
+  }
+
   renderMessages() {
     const list = document.getElementById('brainMessageList');
     const scroll = document.getElementById('brainMessagesWrap');
@@ -804,6 +866,7 @@ class BrainView extends (window.BaseView || class {}) {
 
     list.innerHTML = this.aiState.messages.map(m => this._msgHTML(m)).join('');
     this._bindMediaHover();
+    this._bindTaskEvents();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
@@ -824,7 +887,7 @@ class BrainView extends (window.BaseView || class {}) {
         <div class="gpt-msg-avatar">
           <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" />
         </div>
-        <div class="gpt-msg-content">${renderMarkdown(m.content)}</div>
+        <div class="gpt-msg-content">${renderMarkdown(m.content, { messageId: m.id })}</div>
       </div>`;
   }
 
@@ -836,6 +899,7 @@ class BrainView extends (window.BaseView || class {}) {
     if (welcome) welcome.remove();
     list.insertAdjacentHTML('beforeend', this._msgHTML(msg));
     this._bindMediaHover();
+    this._bindTaskEvents();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 

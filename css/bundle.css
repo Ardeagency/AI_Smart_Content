@@ -23897,6 +23897,28 @@ body.production-filters-in-header .living-container > .living-history-section {
 .gpt-msg-content strong { font-weight: 600; color: #fff; }
 .gpt-msg-content em { font-style: italic; color: var(--text-secondary); }
 .gpt-msg-content del { color: var(--text-tertiary, rgba(212, 209, 216, 0.6)); }
+
+/* Task lists (checkboxes) */
+.gpt-msg-content li.gpt-task-item { list-style: none; margin-left: -1.5em; }
+.gpt-task-label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.gpt-task-checkbox {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-brand, #00e7ff);
+  flex-shrink: 0;
+}
+.gpt-task-text { color: var(--text-primary); }
+.gpt-task-checkbox:checked + .gpt-task-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
 .gpt-msg-content h1,
 .gpt-msg-content h2,
 .gpt-msg-content h3,

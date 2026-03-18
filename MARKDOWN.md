@@ -3,6 +3,7 @@
 Esta es la **referencia oficial** de Markdown para Vera. Está basada en el “Basic Syntax” de Markdown y alineada con lo que actualmente se renderiza en el chat.
 
 - Referencia: [Markdown Guide — Basic Syntax](https://www.markdownguide.org/basic-syntax/)
+- Extensiones: [Markdown Guide — Extended Syntax](https://www.markdownguide.org/extended-syntax/)
 
 ## Headings (títulos)
 
@@ -110,6 +111,22 @@ https://mi-cdn.com/demo.mp4
 ```
 
 UX de video: el video se reproduce **con hover** (y se pausa al salir).
+
+## Task Lists (checkboxes)
+
+Vera soporta **listas de tareas** (checklists) y las renderiza como **checkboxes interactivos**.
+
+### Sintaxis
+
+```text
+- [ ] Tarea pendiente
+- [x] Tarea completada
+```
+
+### Comportamiento
+
+- Cuando el usuario marca/desmarca un checkbox, el sistema guarda un **evento de tarea** en la conversación.
+- En el siguiente mensaje, Vera puede usar ese evento para saber qué pasos ya se completaron y ajustar el plan.
 
 ## Blockquote (cita)
 
