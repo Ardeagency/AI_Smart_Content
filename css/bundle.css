@@ -23867,17 +23867,21 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--brand-gradient-dynamic, linear-gradient(135deg, #ff6500, #ff0000));
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-light, #212126);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: #fff;
   flex-shrink: 0;
   margin-top: 4px;
-  letter-spacing: 0;
+  overflow: hidden;
   user-select: none;
+}
+
+.gpt-msg-avatar-img {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .gpt-msg--assistant .gpt-msg-content {

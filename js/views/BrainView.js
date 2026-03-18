@@ -65,6 +65,8 @@ function renderMarkdown(text) {
   }).filter(Boolean).join('');
 }
 
+const VERA_AVATAR_SRC = '/recursos/Recursos%20de%20Marca/Recursos/Vera.svg';
+
 /* ─── View ─────────────────────────────────────────────── */
 class BrainView extends (window.BaseView || class {}) {
   constructor() {
@@ -281,7 +283,9 @@ class BrainView extends (window.BaseView || class {}) {
 
     return `
       <div class="gpt-msg gpt-msg--assistant${isError ? ' gpt-msg--error' : ''}" data-message-id="${id}">
-        <div class="gpt-msg-avatar">V</div>
+        <div class="gpt-msg-avatar">
+          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" />
+        </div>
         <div class="gpt-msg-content">${renderMarkdown(m.content)}</div>
       </div>`;
   }
@@ -306,7 +310,9 @@ class BrainView extends (window.BaseView || class {}) {
     document.getElementById('gptTyping')?.remove();
     list.insertAdjacentHTML('beforeend', `
       <div id="gptTyping" class="gpt-msg gpt-msg--assistant gpt-msg--typing">
-        <div class="gpt-msg-avatar">V</div>
+        <div class="gpt-msg-avatar">
+          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" />
+        </div>
         <div class="gpt-msg-content">
           <div class="gpt-typing-dots"><span></span><span></span><span></span></div>
         </div>
