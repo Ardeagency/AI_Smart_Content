@@ -126,6 +126,157 @@ console.log("Hola");
 ___
 ```
 
+## Gráficos visuales (Vera Charts)
+
+Vera puede renderizar gráficos **visuales** cuando envías un bloque de código con lenguaje `chart` que contenga un **JSON**.
+
+### Sintaxis
+
+```text
+```chart
+{
+  "type": "pie",
+  "title": "Mi gráfico",
+  "data": [
+    { "label": "A", "value": 30, "color": "#ff6500" },
+    { "label": "B", "value": 70, "color": "#00e7ff" }
+  ]
+}
+```
+```
+
+### Tipos soportados
+
+- `pie` (pie chart)
+- `donut` (donut chart)
+- `bar` (bar chart)
+- `line` (line chart)
+- `progress` (progress bar)
+- `pyramid` (pyramid chart)
+
+### Ejemplos (listos para usar)
+
+#### Pie chart
+
+```text
+```chart
+{
+  "type": "pie",
+  "title": "Distribución de ventas",
+  "data": [
+    { "label": "Producto A", "value": 45, "color": "#ff6500" },
+    { "label": "Producto B", "value": 30, "color": "#00e7ff" },
+    { "label": "Producto C", "value": 25, "color": "#5b00ea" }
+  ]
+}
+```
+```
+
+#### Donut chart
+
+```text
+```chart
+{
+  "type": "donut",
+  "title": "Canales",
+  "centerLabel": "Total",
+  "innerRadius": 0.62,
+  "data": [
+    { "label": "Instagram", "value": 40, "color": "#ff0000" },
+    { "label": "TikTok", "value": 35, "color": "#ffe500" },
+    { "label": "YouTube", "value": 25, "color": "#0018ee" }
+  ]
+}
+```
+```
+
+#### Bar chart
+
+```text
+```chart
+{
+  "type": "bar",
+  "title": "Leads por canal",
+  "labels": true,
+  "gap": 12,
+  "data": [
+    { "label": "IG", "value": 120, "color": "#ff6500" },
+    { "label": "TT", "value": 180, "color": "#00d614" },
+    { "label": "YT", "value": 90,  "color": "#00e7ff" },
+    { "label": "WEB", "value": 210, "color": "#5b00ea" }
+  ]
+}
+```
+```
+
+#### Line chart
+
+```text
+```chart
+{
+  "type": "line",
+  "title": "Crecimiento semanal",
+  "stroke": "#00e7ff",
+  "labels": true,
+  "data": [
+    { "label": "Lun", "value": 12 },
+    { "label": "Mar", "value": 18 },
+    { "label": "Mié", "value": 17 },
+    { "label": "Jue", "value": 26 },
+    { "label": "Vie", "value": 31 },
+    { "label": "Sáb", "value": 24 },
+    { "label": "Dom", "value": 36 }
+  ]
+}
+```
+```
+
+#### Progress bar
+
+```text
+```chart
+{
+  "type": "progress",
+  "title": "Progreso de campaña",
+  "label": "Meta alcanzada",
+  "value": 67,
+  "fillColor": "#00d614",
+  "trackColor": "rgba(255,255,255,0.12)",
+  "barHeight": 18
+}
+```
+```
+
+#### Pyramid chart
+
+```text
+```chart
+{
+  "type": "pyramid",
+  "title": "Funnel",
+  "labels": true,
+  "data": [
+    { "label": "Awareness", "value": 1000, "color": "#00e7ff" },
+    { "label": "Interés",   "value": 600,  "color": "#ffe500" },
+    { "label": "Consider.", "value": 350,  "color": "#ff6500" },
+    { "label": "Compra",    "value": 140,  "color": "#00d614" }
+  ]
+}
+```
+```
+
+### Opciones comunes
+
+- `title`: string (opcional)
+- `legend`: boolean (default `true`)
+- `width`, `height`: números (opcional, para ajustar proporción)
+- `labels`: boolean (en `bar` y `line`)
+
+### Seguridad
+
+- Las URLs peligrosas (`javascript:`, `data:`) se bloquean.
+- El bloque `chart` **solo acepta JSON** (no HTML).
+
 ## Recomendación para prompts y respuestas
 
 ```text

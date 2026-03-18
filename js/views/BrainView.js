@@ -13,6 +13,267 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+/* ─── Vera Charts (SVG) ───────────────────────────────── */
+function clamp(n, a, b) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return a;
+  return Math.min(b, Math.max(a, x));
+}
+
+function safeColor(c, fallback = '#ffffff') {
+  const s = String(c || '').trim();
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s)) return s;
+  if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*(?:0?\.\d+|1(?:\.0)?))?\s*\)$/.test(s)) return s;
+  return fallback;
+}
+
+function parseChartSpec(jsonText) {
+  const t = String(jsonText || '').trim();
+  if (!t) throw new Error('Spec vacío');
+  const spec = JSON.parse(t);
+  if (!spec || typeof spec !== 'object') throw new Error('Spec inválido');
+  const type = String(spec.type || '').trim().toLowerCase();
+  if (!type) throw new Error('Falta spec.type');
+  return { ...spec, type };
+}
+
+function svgArcPath(cx, cy, r, startAngle, endAngle) {
+  const large = endAngle - startAngle > Math.PI ? 1 : 0;
+  const sx = cx + r * Math.cos(startAngle);
+  const sy = cy + r * Math.sin(startAngle);
+  const ex = cx + r * Math.cos(endAngle);
+  const ey = cy + r * Math.sin(endAngle);
+  return `M ${sx} ${sy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey} L ${cx} ${cy} Z`;
+}
+
+function svgDonutPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const large = endAngle - startAngle > Math.PI ? 1 : 0;
+  const sx0 = cx + rOuter * Math.cos(startAngle);
+  const sy0 = cy + rOuter * Math.sin(startAngle);
+  const ex0 = cx + rOuter * Math.cos(endAngle);
+  const ey0 = cy + rOuter * Math.sin(endAngle);
+
+  const sx1 = cx + rInner * Math.cos(endAngle);
+  const sy1 = cy + rInner * Math.sin(endAngle);
+  const ex1 = cx + rInner * Math.cos(startAngle);
+  const ey1 = cy + rInner * Math.sin(startAngle);
+
+  return [
+    `M ${sx0} ${sy0}`,
+    `A ${rOuter} ${rOuter} 0 ${large} 1 ${ex0} ${ey0}`,
+    `L ${sx1} ${sy1}`,
+    `A ${rInner} ${rInner} 0 ${large} 0 ${ex1} ${ey1}`,
+    'Z'
+  ].join(' ');
+}
+
+function renderChartSVG(spec) {
+  const type = spec.type;
+  const title = spec.title ? String(spec.title) : '';
+  const width = clamp(spec.width ?? 640, 240, 1200);
+  const height = clamp(spec.height ?? 360, 160, 900);
+
+  const bg = safeColor(spec.background || 'transparent', 'transparent');
+  const showLegend = spec.legend !== false;
+  const fontFamily = 'var(--font-family, ui-sans-serif, system-ui, sans-serif)';
+  const textColor = 'var(--text-primary, #D4D1D8)';
+  const muted = 'var(--text-muted, rgba(212,209,216,0.6))';
+  const border = 'var(--border-light, #212126)';
+
+  const pad = 16;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+
+  const data = Array.isArray(spec.data) ? spec.data : [];
+
+  const legendW = showLegend ? Math.min(220, Math.floor(width * 0.34)) : 0;
+  const plotW = innerW - legendW;
+  const plotH = innerH;
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title || type)}" xmlns="http://www.w3.org/2000/svg">`;
+  if (bg !== 'transparent') {
+    svg += `<rect x="0" y="0" width="${width}" height="${height}" rx="12" fill="${escapeHtml(bg)}" />`;
+  }
+
+  // Title (optional)
+  if (title) {
+    svg += `<text x="${pad}" y="${pad + 14}" fill="${escapeHtml(textColor)}" font-family="${fontFamily}" font-size="14" font-weight="600">${escapeHtml(title)}</text>`;
+  }
+
+  const titleOffset = title ? 22 : 0;
+  const plotX = pad;
+  const plotY = pad + titleOffset;
+  const plotH2 = plotH - titleOffset;
+
+  const legendX = pad + plotW;
+  const legendY = plotY;
+
+  const palette = [
+    '#ff6500', '#ff0000', '#ffe500', '#00d614', '#00e7ff', '#0018ee', '#5b00ea', '#900090'
+  ];
+
+  const normalized = data.map((d, i) => ({
+    label: String(d?.label ?? `Serie ${i + 1}`),
+    value: Number(d?.value ?? 0),
+    color: safeColor(d?.color, palette[i % palette.length])
+  })).filter(d => Number.isFinite(d.value));
+
+  if (type === 'pie' || type === 'donut') {
+    const total = normalized.reduce((a, b) => a + Math.max(0, b.value), 0) || 1;
+    const cx = plotX + plotW * 0.46;
+    const cy = plotY + plotH2 * 0.5;
+    const r = Math.min(plotW, plotH2) * 0.35;
+    const rOuter = r;
+    const rInner = type === 'donut' ? rOuter * clamp(spec.innerRadius ?? 0.62, 0.2, 0.85) : 0;
+
+    let a0 = -Math.PI / 2;
+    for (const seg of normalized) {
+      const frac = Math.max(0, seg.value) / total;
+      const a1 = a0 + frac * Math.PI * 2;
+      if (frac > 0) {
+        const path = (type === 'donut')
+          ? svgDonutPath(cx, cy, rOuter, rInner, a0, a1)
+          : svgArcPath(cx, cy, rOuter, a0, a1);
+        svg += `<path d="${path}" fill="${escapeHtml(seg.color)}" />`;
+      }
+      a0 = a1;
+    }
+    if (type === 'donut' && spec.centerLabel) {
+      svg += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="${escapeHtml(textColor)}" font-family="${fontFamily}" font-size="13" font-weight="600">${escapeHtml(String(spec.centerLabel))}</text>`;
+    }
+  } else if (type === 'bar') {
+    const values = normalized.map(d => d.value);
+    const maxV = Math.max(1, ...values);
+    const n = normalized.length || 1;
+    const gap = clamp(spec.gap ?? 10, 2, 28);
+    const bw = Math.max(8, Math.floor((plotW - gap * (n - 1)) / n));
+    const baseY = plotY + plotH2 - 20;
+    const topY = plotY + 12;
+    const hMax = baseY - topY;
+
+    // axis line
+    svg += `<line x1="${plotX}" y1="${baseY}" x2="${plotX + plotW - 14}" y2="${baseY}" stroke="${escapeHtml(border)}" stroke-width="1" />`;
+
+    normalized.forEach((d, i) => {
+      const x = plotX + i * (bw + gap);
+      const hBar = Math.round((Math.max(0, d.value) / maxV) * hMax);
+      const y = baseY - hBar;
+      svg += `<rect x="${x}" y="${y}" width="${bw}" height="${hBar}" rx="6" fill="${escapeHtml(d.color)}" />`;
+      if (spec.labels !== false) {
+        svg += `<text x="${x + bw / 2}" y="${baseY + 14}" text-anchor="middle" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="10">${escapeHtml(d.label)}</text>`;
+      }
+    });
+  } else if (type === 'line') {
+    const pts = normalized.map(d => d.value);
+    const maxV = Math.max(1, ...pts);
+    const minV = Math.min(0, ...pts);
+    const n = normalized.length || 1;
+    const baseY = plotY + plotH2 - 20;
+    const topY = plotY + 12;
+    const hMax = baseY - topY;
+    const wMax = plotW - 14;
+
+    const xFor = (i) => plotX + (n === 1 ? wMax / 2 : (i * (wMax / (n - 1))));
+    const yFor = (v) => baseY - ((v - minV) / (maxV - minV || 1)) * hMax;
+
+    // grid + axis
+    svg += `<line x1="${plotX}" y1="${baseY}" x2="${plotX + wMax}" y2="${baseY}" stroke="${escapeHtml(border)}" stroke-width="1" />`;
+
+    let dPath = '';
+    normalized.forEach((d, i) => {
+      const x = xFor(i);
+      const y = yFor(d.value);
+      dPath += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+
+    const stroke = safeColor(spec.stroke || '#00e7ff', '#00e7ff');
+    svg += `<path d="${dPath}" fill="none" stroke="${escapeHtml(stroke)}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+
+    normalized.forEach((d, i) => {
+      const x = xFor(i);
+      const y = yFor(d.value);
+      svg += `<circle cx="${x}" cy="${y}" r="4" fill="${escapeHtml(stroke)}" />`;
+      if (spec.labels !== false) {
+        svg += `<text x="${x}" y="${baseY + 14}" text-anchor="middle" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="10">${escapeHtml(d.label)}</text>`;
+      }
+    });
+  } else if (type === 'progress') {
+    const value = clamp(spec.value ?? 0, 0, 100);
+    const label = spec.label ? String(spec.label) : '';
+    const track = safeColor(spec.trackColor || 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.12)');
+    const fill = safeColor(spec.fillColor || '#00d614', '#00d614');
+    const x = plotX;
+    const y = plotY + plotH2 * 0.35;
+    const w = plotW - 14;
+    const hBar = clamp(spec.barHeight ?? 18, 10, 28);
+    const r = Math.min(999, Math.floor(hBar / 2));
+
+    svg += `<rect x="${x}" y="${y}" width="${w}" height="${hBar}" rx="${r}" fill="${escapeHtml(track)}" />`;
+    svg += `<rect x="${x}" y="${y}" width="${(w * value) / 100}" height="${hBar}" rx="${r}" fill="${escapeHtml(fill)}" />`;
+    const txt = label ? `${label} — ${value}%` : `${value}%`;
+    svg += `<text x="${x}" y="${y - 8}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">${escapeHtml(txt)}</text>`;
+  } else if (type === 'pyramid') {
+    // Pyramid chart as stacked trapezoids, top to bottom
+    const total = normalized.reduce((a, b) => a + Math.max(0, b.value), 0) || 1;
+    const x0 = plotX + 10;
+    const y0 = plotY + 10;
+    const w0 = plotW - 34;
+    const h0 = plotH2 - 24;
+    const cx = x0 + w0 / 2;
+
+    let y = y0;
+    normalized.forEach((seg, i) => {
+      const frac = Math.max(0, seg.value) / total;
+      const hSeg = Math.max(10, Math.round(h0 * frac));
+      const topW = w0 * (1 - (y - y0) / h0 * 0.7);
+      const botW = w0 * (1 - (y + hSeg - y0) / h0 * 0.7);
+      const xTopL = cx - topW / 2;
+      const xTopR = cx + topW / 2;
+      const xBotL = cx - botW / 2;
+      const xBotR = cx + botW / 2;
+      const path = `M ${xTopL} ${y} L ${xTopR} ${y} L ${xBotR} ${y + hSeg} L ${xBotL} ${y + hSeg} Z`;
+      svg += `<path d="${path}" fill="${escapeHtml(seg.color)}" />`;
+      if (spec.labels !== false) {
+        svg += `<text x="${cx}" y="${y + hSeg / 2 + 4}" text-anchor="middle" fill="#0b0b0b" font-family="${fontFamily}" font-size="12" font-weight="600">${escapeHtml(seg.label)}</text>`;
+      }
+      y += hSeg;
+    });
+  } else {
+    // Unknown
+    svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">Tipo de gráfico no soportado: ${escapeHtml(type)}</text>`;
+  }
+
+  // Legend
+  if (showLegend && normalized.length > 0) {
+    const lx = legendX + 12;
+    let ly = legendY + 12;
+    const maxItems = Math.min(12, normalized.length);
+    for (let i = 0; i < maxItems; i++) {
+      const item = normalized[i];
+      svg += `<rect x="${lx}" y="${ly - 10}" width="10" height="10" rx="2" fill="${escapeHtml(item.color)}" />`;
+      svg += `<text x="${lx + 16}" y="${ly - 1}" fill="${escapeHtml(textColor)}" font-family="${fontFamily}" font-size="12">${escapeHtml(item.label)}</text>`;
+      ly += 18;
+    }
+    if (normalized.length > maxItems) {
+      svg += `<text x="${lx}" y="${ly + 2}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="11">+${normalized.length - maxItems} más</text>`;
+    }
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+
+function renderChartBlock(code) {
+  try {
+    const spec = parseChartSpec(code);
+    const svg = renderChartSVG(spec);
+    return `<div class="gpt-viz">${svg}</div>`;
+  } catch (e) {
+    const msg = escapeHtml(e?.message || 'Error de chart spec');
+    return `<div class="gpt-viz gpt-viz--error"><strong>Chart inválido:</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
+  }
+}
+
 function renderMarkdown(text) {
   const raw = String(text ?? '');
   let h = escapeHtml(raw);
@@ -128,6 +389,10 @@ function renderMarkdown(text) {
     const idx = Number(idxStr);
     const item = codeBlocks[idx];
     if (!item) return '';
+    const lang = (item.lang || '').toLowerCase();
+    if (lang === 'chart' || lang === 'vera-chart' || lang === 'viz') {
+      return renderChartBlock(item.code);
+    }
     const langClass = item.lang ? ` class="language-${escapeHtml(item.lang)}"` : '';
     return `<pre><code${langClass}>${escapeHtml(item.code)}</code></pre>`;
   });
@@ -136,7 +401,7 @@ function renderMarkdown(text) {
   return joined.split(/\n{2,}/).map(p => {
     p = p.trim();
     if (!p) return '';
-    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img)/.test(p)) return p;
+    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img|div)/.test(p)) return p;
     return `<p>${p.replace(/\n/g, '<br>')}</p>`;
   }).filter(Boolean).join('');
 }

@@ -23947,6 +23947,27 @@ body.production-filters-in-header .living-container > .living-history-section {
   border-radius: 10px;
   border: 1px solid var(--border-light, #212126);
 }
+
+/* Vera Charts (```chart ...``` → SVG) */
+.gpt-viz {
+  width: 100%;
+  margin: 0.85em 0;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light, #212126);
+  background: rgba(255, 255, 255, 0.03);
+}
+.gpt-viz svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.gpt-viz--error {
+  color: var(--color-error, #ff4444);
+}
+.gpt-viz--error pre {
+  margin-top: 10px;
+}
 .gpt-msg-content code {
   background: var(--white-10);
   border: 1px solid var(--white-15);
