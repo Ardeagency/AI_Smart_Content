@@ -36,7 +36,7 @@ CREATE TABLE public.ai_chat_context (
 );
 CREATE TABLE public.ai_conversations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  brand_container_id uuid,
+  brand_container_id uuid NOT NULL,
   user_id uuid NOT NULL,
   title text DEFAULT 'Nueva Consultoría Semántica'::text,
   system_prompt_override text,
@@ -44,10 +44,9 @@ CREATE TABLE public.ai_conversations (
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  organization_id uuid NOT NULL,
   CONSTRAINT ai_conversations_pkey PRIMARY KEY (id),
-  CONSTRAINT ai_conversations_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT ai_conversations_organization_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+  CONSTRAINT ai_conversations_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT ai_conversations_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.ai_global_vectors (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -70,11 +69,9 @@ CREATE TABLE public.ai_messages (
   attachments jsonb DEFAULT '[]'::jsonb,
   tokens_used integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
-  organization_id uuid NOT NULL,
   CONSTRAINT ai_messages_pkey PRIMARY KEY (id),
   CONSTRAINT ai_messages_conv_fkey FOREIGN KEY (conversation_id) REFERENCES public.ai_conversations(id),
-  CONSTRAINT ai_messages_run_fkey FOREIGN KEY (related_flow_run_id) REFERENCES public.flow_runs(id),
-  CONSTRAINT ai_messages_organization_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+  CONSTRAINT ai_messages_run_fkey FOREIGN KEY (related_flow_run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.audiences (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

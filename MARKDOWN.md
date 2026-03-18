@@ -1,24 +1,50 @@
 # Markdown oficial (Vera / AI Smart Content)
 
-Este documento define el **formato Markdown recomendado** para escribir mensajes y respuestas dentro de Vera.
+Esta es la **referencia oficial** de Markdown para Vera. Está basada en el “Basic Syntax” de Markdown y alineada con lo que actualmente se renderiza en el chat.
 
-> Nota: el renderer actual es deliberadamente simple. Si algo no se ve como esperas, usa las alternativas sugeridas.
+- Referencia: [Markdown Guide — Basic Syntax](https://www.markdownguide.org/basic-syntax/)
 
-## Texto
+## Headings (títulos)
+
+```text
+# H1
+## H2
+### H3
+#### H4
+##### H5
+###### H6
+```
+
+## Énfasis
 
 - **Negrita**
 
 ```text
 **Texto en negrita**
+__Texto en negrita__
 ```
 
 - *Cursiva*
 
 ```text
 *Texto en cursiva*
+_Texto en cursiva_
 ```
 
-## Saltos de línea y párrafos
+- ***Negrita + cursiva***
+
+```text
+***Texto importante***
+___Texto importante___
+```
+
+- ~~Tachado~~
+
+```text
+~~Texto tachado~~
+```
+
+## Párrafos y saltos de línea
 
 - **Párrafo nuevo**: deja una línea en blanco entre bloques.
 
@@ -28,7 +54,7 @@ Primer párrafo.
 Segundo párrafo.
 ```
 
-- **Salto de línea dentro de un párrafo**: usa una nueva línea (se renderiza como `<br>`).
+- **Salto de línea**: usa una nueva línea (se renderiza como `<br>`).
 
 ```text
 Línea 1
@@ -37,12 +63,13 @@ Línea 2
 
 ## Listas
 
-- **Lista con viñetas**
+- **Lista con viñetas** (`-`, `*` o `+`)
 
 ```text
 - Item 1
 - Item 2
-  - Sub-item (recomendado: usar otro `-` con indentación)
+* Item 3
++ Item 4
 ```
 
 - **Lista numerada**
@@ -53,6 +80,28 @@ Línea 2
 3. Paso 3
 ```
 
+## Links
+
+```text
+[Texto del link](https://example.com)
+```
+
+Recomendación: usa `https://` y evita URLs raras. Vera bloquea esquemas peligrosos (por seguridad).
+
+## Imágenes
+
+```text
+![Texto alternativo](/ruta/a/imagen.png)
+![Texto alternativo](https://example.com/imagen.jpg)
+```
+
+## Blockquote (cita)
+
+```text
+> Esto es una cita.
+> Puede tener varias líneas.
+```
+
 ## Código
 
 - **Código inline**
@@ -61,9 +110,7 @@ Línea 2
 Usa `npm run dev` para iniciar el proyecto.
 ```
 
-- **Bloque de código**
-
-> Puedes indicar el lenguaje después de las tres comillas invertidas.
+- **Bloque de código (fenced)**
 
 ```text
 ```js
@@ -71,24 +118,30 @@ console.log("Hola");
 ```
 ```
 
-## Recomendaciones para prompts y respuestas
-
-- **Usa títulos cortos** en negrita para secciones:
+## Separadores (Horizontal Rules)
 
 ```text
-**Objetivo**
-- ...
-
-**Plan**
-1. ...
+---
+***
+___
 ```
 
-- **Para instrucciones**: prefiere listas numeradas.
-- **Para checks**: usa viñetas con texto claro.
+## Recomendación para prompts y respuestas
 
-## Limitaciones conocidas (por diseño)
+```text
+## Objetivo
+- ...
 
-- **No hay soporte completo** de Markdown “extendido” (tablas, footnotes, etc.).
-- **Los links** pueden mostrarse como texto normal dependiendo del contenido.
-- **Anidación compleja de listas**: mantenla simple para máxima compatibilidad.
+## Plan
+1. ...
+
+## Entregables
+- ...
+```
+
+## Limitaciones actuales (por diseño)
+
+- **No** hay soporte completo de Markdown “extendido” (tablas, footnotes, etc.).
+- **HTML embebido** no se renderiza (se escapa por seguridad).
+- Mantén **listas anidadas** simples para máxima compatibilidad.
 

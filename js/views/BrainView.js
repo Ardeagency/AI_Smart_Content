@@ -14,26 +14,92 @@ function escapeHtml(s) {
 }
 
 function renderMarkdown(text) {
-  let h = escapeHtml(text);
+  const raw = String(text ?? '');
+  let h = escapeHtml(raw);
 
-  // Bloques de código (``` ... ```)
-  h = h.replace(/```(?:[a-z]*)\n?([\s\S]*?)```/g, (_, code) =>
-    `<pre><code>${code.trim()}</code></pre>`
-  );
-  // Código inline
+  // --- URL sanitizer (prevents javascript: etc.) ---
+  const sanitizeUrl = (url) => {
+    const u = String(url || '').trim();
+    if (!u) return null;
+    const lower = u.toLowerCase();
+    if (lower.startsWith('javascript:') || lower.startsWith('data:')) return null;
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return u;
+    // allow site-relative paths (our assets) and simple relative paths
+    if (lower.startsWith('/') || lower.startsWith('./')) return u;
+    return null;
+  };
+
+  // --- Protect fenced code blocks first ---
+  const codeBlocks = [];
+  h = h.replace(/```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push({
+      lang: (lang || '').trim(),
+      code: code.trim()
+    });
+    return `@@CODEBLOCK_${idx}@@`;
+  });
+
+  // Inline code (backticks) — apply before emphasis
   h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  // Bold
-  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-  // Italic
-  h = h.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
 
-  // Listas (bullet y numeradas), procesando línea a línea
+  // Horizontal rules (---, ***, ___) on their own line
+  h = h.replace(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/gm, '<hr>');
+
+  // Headings (# to ######) on their own line
+  h = h.replace(/^(#{1,6})\s+(.+?)\s*$/gm, (_, hashes, title) => {
+    const level = Math.min(6, Math.max(1, hashes.length));
+    return `<h${level}>${title}</h${level}>`;
+  });
+
+  // Blockquotes: contiguous lines starting with >
+  h = h.replace(/(^|\n)(> .+(?:\n> .+)*)/g, (m, start, block) => {
+    const inner = block
+      .split('\n')
+      .map((l) => l.replace(/^> /, ''))
+      .join('\n')
+      .trim();
+    return `${start}<blockquote>${inner}</blockquote>`;
+  });
+
+  // Images: ![alt](url)
+  h = h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
+    const safe = sanitizeUrl(url);
+    if (!safe) return `<span>${escapeHtml(`![${alt}](${url})`)}</span>`;
+    return `<img class="gpt-md-img" src="${escapeHtml(safe)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+  });
+
+  // Links: [text](url)
+  h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+    const safe = sanitizeUrl(url);
+    if (!safe) return `<span>${escapeHtml(`[${label}](${url})`)}</span>`;
+    const isExternal = /^https?:\/\//i.test(safe);
+    const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return `<a class="gpt-md-link" href="${escapeHtml(safe)}"${attrs}>${label}</a>`;
+  });
+
+  // Strikethrough: ~~text~~
+  h = h.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+
+  // Bold+Italic: ***text*** or ___text___
+  h = h.replace(/\*\*\*([^*\n]+)\*\*\*/g, '<em><strong>$1</strong></em>');
+  h = h.replace(/___([^_\n]+)___/g, '<em><strong>$1</strong></em>');
+
+  // Bold: **text** or __text__
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+
+  // Italic: *text* or _text_
+  h = h.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  h = h.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+
+  // Lists (unordered and ordered), line-by-line
   const lines = h.split('\n');
   const out = [];
   let listType = null;
 
   for (const line of lines) {
-    const bullet = line.match(/^[•\-\*] (.+)$/);
+    const bullet = line.match(/^[•\-\*\+] (.+)$/);
     const numbered = line.match(/^\d+\. (.+)$/);
     if (bullet) {
       if (listType !== 'ul') {
@@ -56,11 +122,21 @@ function renderMarkdown(text) {
   }
   if (listType) out.push(`</${listType}>`);
 
-  // Párrafos (doble salto de línea)
-  return out.join('\n').split(/\n{2,}/).map(p => {
+  // Restore fenced code blocks
+  let joined = out.join('\n');
+  joined = joined.replace(/@@CODEBLOCK_(\d+)@@/g, (_, idxStr) => {
+    const idx = Number(idxStr);
+    const item = codeBlocks[idx];
+    if (!item) return '';
+    const langClass = item.lang ? ` class="language-${escapeHtml(item.lang)}"` : '';
+    return `<pre><code${langClass}>${escapeHtml(item.code)}</code></pre>`;
+  });
+
+  // Paragraphs (double newline). Preserve block-level tags
+  return joined.split(/\n{2,}/).map(p => {
     p = p.trim();
     if (!p) return '';
-    if (/^<(ul|ol|pre|blockquote)/.test(p)) return p;
+    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img)/.test(p)) return p;
     return `<p>${p.replace(/\n/g, '<br>')}</p>`;
   }).filter(Boolean).join('');
 }
