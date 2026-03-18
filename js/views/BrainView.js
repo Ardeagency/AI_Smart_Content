@@ -67,6 +67,27 @@ function svgDonutPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   ].join(' ');
 }
 
+function buildSmoothPath(points, tension = 0.5) {
+  // Catmull-Rom to Bezier smoothing
+  if (!Array.isArray(points) || points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  const t = clamp(tension, 0, 1);
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cp1x = p1.x + ((p2.x - p0.x) / 6) * t;
+    const cp1y = p1.y + ((p2.y - p0.y) / 6) * t;
+    const cp2x = p2.x - ((p3.x - p1.x) / 6) * t;
+    const cp2y = p2.y - ((p3.y - p1.y) / 6) * t;
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
 function renderChartSVG(spec) {
   const type = spec.type;
   const title = spec.title ? String(spec.title) : '';
@@ -117,6 +138,10 @@ function renderChartSVG(spec) {
     value: Number(d?.value ?? 0),
     color: safeColor(d?.color, palette[i % palette.length])
   })).filter(d => Number.isFinite(d.value));
+  const categories = Array.isArray(spec.categories) ? spec.categories.map((x) => String(x)) : null;
+  const series = Array.isArray(spec.series) ? spec.series : null;
+  const isMulti = Array.isArray(categories) && categories.length > 0 && Array.isArray(series) && series.length > 0;
+  const legendOverride = Array.isArray(spec.__legendSeries) ? spec.__legendSeries : null;
 
   if (type === 'pie' || type === 'donut') {
     const total = normalized.reduce((a, b) => a + Math.max(0, b.value), 0) || 1;
@@ -163,7 +188,7 @@ function renderChartSVG(spec) {
         svg += `<text x="${x + bw / 2}" y="${baseY + 14}" text-anchor="middle" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="10">${escapeHtml(d.label)}</text>`;
       }
     });
-  } else if (type === 'line') {
+  } else if (type === 'line' || type === 'spline' || type === 'area') {
     const pts = normalized.map(d => d.value);
     const maxV = Math.max(1, ...pts);
     const minV = Math.min(0, ...pts);
@@ -179,14 +204,18 @@ function renderChartSVG(spec) {
     // grid + axis
     svg += `<line x1="${plotX}" y1="${baseY}" x2="${plotX + wMax}" y2="${baseY}" stroke="${escapeHtml(border)}" stroke-width="1" />`;
 
-    let dPath = '';
-    normalized.forEach((d, i) => {
-      const x = xFor(i);
-      const y = yFor(d.value);
-      dPath += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
-    });
-
     const stroke = safeColor(spec.stroke || '#00e7ff', '#00e7ff');
+    const points = normalized.map((d, i) => ({ x: xFor(i), y: yFor(d.value) }));
+    const dPath = (type === 'spline' && points.length >= 2)
+      ? buildSmoothPath(points, spec.tension ?? 0.65)
+      : points.reduce((acc, p, i) => acc + (i === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`), '');
+
+    if (type === 'area' && points.length >= 2) {
+      const areaFill = safeColor(spec.fill || 'rgba(0,231,255,0.18)', 'rgba(0,231,255,0.18)');
+      const areaPath = `${dPath} L ${points[points.length - 1].x} ${baseY} L ${points[0].x} ${baseY} Z`;
+      svg += `<path d="${areaPath}" fill="${escapeHtml(areaFill)}" stroke="none" />`;
+    }
+
     svg += `<path d="${dPath}" fill="none" stroke="${escapeHtml(stroke)}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
 
     normalized.forEach((d, i) => {
@@ -238,24 +267,127 @@ function renderChartSVG(spec) {
       }
       y += hSeg;
     });
+  } else if (type === 'stacked_column' || type === 'stacked-column') {
+    if (!isMulti) {
+      svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">stacked_column requiere { categories:[], series:[] }</text>`;
+    } else {
+      const cat = categories;
+      const sers = series.map((s, i) => ({
+        name: String(s?.name ?? `Serie ${i + 1}`),
+        color: safeColor(s?.color, palette[i % palette.length]),
+        data: Array.isArray(s?.data) ? s.data.map((v) => Number(v ?? 0)) : []
+      }));
+      const n = cat.length;
+      const gap = clamp(spec.gap ?? 14, 4, 26);
+      const bw = Math.max(10, Math.floor((plotW - gap * (n - 1) - 14) / n));
+      const baseY = plotY + plotH2 - 20;
+      const topY = plotY + 12;
+      const hMax = baseY - topY;
+
+      const totals = cat.map((_, i) => sers.reduce((a, s) => a + Math.max(0, (s.data[i] ?? 0)), 0));
+      const maxV = Math.max(1, ...totals);
+
+      svg += `<line x1="${plotX}" y1="${baseY}" x2="${plotX + plotW - 14}" y2="${baseY}" stroke="${escapeHtml(border)}" stroke-width="1" />`;
+
+      for (let i = 0; i < n; i++) {
+        const x = plotX + i * (bw + gap);
+        let stackY = baseY;
+        for (let si = 0; si < sers.length; si++) {
+          const v = Math.max(0, sers[si].data[i] ?? 0);
+          const hSeg = Math.round((v / maxV) * hMax);
+          if (hSeg > 0) {
+            stackY -= hSeg;
+            svg += `<rect x="${x}" y="${stackY}" width="${bw}" height="${hSeg}" rx="4" fill="${escapeHtml(sers[si].color)}" />`;
+          }
+        }
+        if (spec.labels !== false) {
+          svg += `<text x="${x + bw / 2}" y="${baseY + 14}" text-anchor="middle" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="10">${escapeHtml(cat[i])}</text>`;
+        }
+      }
+
+      spec.__legendSeries = sers.map((s) => ({ label: s.name, color: s.color }));
+    }
+  } else if (type === 'polar' || type === 'radar') {
+    const cat = isMulti ? categories : normalized.map((d) => d.label);
+    const sers = isMulti
+      ? series.map((s, i) => ({
+          name: String(s?.name ?? `Serie ${i + 1}`),
+          color: safeColor(s?.color, palette[i % palette.length]),
+          data: Array.isArray(s?.data) ? s.data.map((v) => Number(v ?? 0)) : []
+        }))
+      : [{
+          name: String(spec.seriesName || 'Serie 1'),
+          color: safeColor(spec.stroke || '#00e7ff', '#00e7ff'),
+          data: normalized.map((d) => d.value)
+        }];
+
+    const n = cat.length || 1;
+    const maxV = Number.isFinite(Number(spec.max)) ? Number(spec.max) : Math.max(1, ...sers.flatMap(s => s.data.map(v => (Number.isFinite(v) ? v : 0))));
+    const levels = clamp(spec.levels ?? 4, 3, 7);
+    const cx = plotX + (plotW - 14) / 2;
+    const cy = plotY + plotH2 / 2;
+    const r = Math.min(plotW - 14, plotH2) * 0.36;
+
+    for (let l = 1; l <= levels; l++) {
+      const rr = (r * l) / levels;
+      let path = '';
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+        const x = cx + rr * Math.cos(a);
+        const y = cy + rr * Math.sin(a);
+        path += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+      }
+      path += ' Z';
+      svg += `<path d="${path}" fill="none" stroke="${escapeHtml(border)}" stroke-width="1" opacity="0.7" />`;
+    }
+
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+      const x = cx + r * Math.cos(a);
+      const y = cy + r * Math.sin(a);
+      svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${escapeHtml(border)}" stroke-width="1" opacity="0.9" />`;
+
+      const lx = cx + (r + 14) * Math.cos(a);
+      const ly = cy + (r + 14) * Math.sin(a);
+      const anchor = Math.abs(Math.cos(a)) < 0.2 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
+      svg += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="10">${escapeHtml(cat[i])}</text>`;
+    }
+
+    sers.forEach((s) => {
+      let path = '';
+      for (let i = 0; i < n; i++) {
+        const v = clamp(s.data[i] ?? 0, 0, maxV);
+        const rr = (v / (maxV || 1)) * r;
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+        const x = cx + rr * Math.cos(a);
+        const y = cy + rr * Math.sin(a);
+        path += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+      }
+      path += ' Z';
+      const fill = safeColor(s.fill || `${s.color}33`, `${s.color}33`);
+      svg += `<path d="${path}" fill="${escapeHtml(fill)}" stroke="${escapeHtml(s.color)}" stroke-width="2" />`;
+    });
+
+    spec.__legendSeries = sers.map((s) => ({ label: s.name, color: s.color }));
   } else {
     // Unknown
     svg += `<text x="${pad}" y="${plotY + 18}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="12">Tipo de gráfico no soportado: ${escapeHtml(type)}</text>`;
   }
 
   // Legend
-  if (showLegend && normalized.length > 0) {
+  const legendItems = Array.isArray(spec.__legendSeries) ? spec.__legendSeries : normalized;
+  if (showLegend && legendItems.length > 0) {
     const lx = legendX + 12;
     let ly = legendY + 12;
-    const maxItems = Math.min(12, normalized.length);
+    const maxItems = Math.min(12, legendItems.length);
     for (let i = 0; i < maxItems; i++) {
-      const item = normalized[i];
+      const item = legendItems[i];
       svg += `<rect x="${lx}" y="${ly - 10}" width="10" height="10" rx="2" fill="${escapeHtml(item.color)}" />`;
       svg += `<text x="${lx + 16}" y="${ly - 1}" fill="${escapeHtml(textColor)}" font-family="${fontFamily}" font-size="12">${escapeHtml(item.label)}</text>`;
       ly += 18;
     }
-    if (normalized.length > maxItems) {
-      svg += `<text x="${lx}" y="${ly + 2}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="11">+${normalized.length - maxItems} más</text>`;
+    if (legendItems.length > maxItems) {
+      svg += `<text x="${lx}" y="${ly + 2}" fill="${escapeHtml(muted)}" font-family="${fontFamily}" font-size="11">+${legendItems.length - maxItems} más</text>`;
     }
   }
 

@@ -151,8 +151,12 @@ Vera puede renderizar gráficos **visuales** cuando envías un bloque de código
 - `donut` (donut chart)
 - `bar` (bar chart)
 - `line` (line chart)
+- `spline` (spline graph / línea suavizada)
+- `area` (area chart)
+- `polar` / `radar` (polar chart tipo radar)
 - `progress` (progress bar)
 - `pyramid` (pyramid chart)
+- `stacked_column` (stacked column chart)
 
 ### Ejemplos (listos para usar)
 
@@ -231,6 +235,49 @@ Vera puede renderizar gráficos **visuales** cuando envías un bloque de código
 ```
 ```
 
+#### Spline graph (línea suavizada)
+
+```text
+```chart
+{
+  "type": "spline",
+  "title": "Spline graph",
+  "stroke": "#00e7ff",
+  "tension": 0.7,
+  "labels": true,
+  "data": [
+    { "label": "1", "value": 10 },
+    { "label": "2", "value": 16 },
+    { "label": "3", "value": 13 },
+    { "label": "4", "value": 22 },
+    { "label": "5", "value": 18 },
+    { "label": "6", "value": 30 }
+  ]
+}
+```
+```
+
+#### Area chart
+
+```text
+```chart
+{
+  "type": "area",
+  "title": "Area chart",
+  "stroke": "#00e7ff",
+  "fill": "rgba(0,231,255,0.18)",
+  "labels": true,
+  "data": [
+    { "label": "Ene", "value": 12 },
+    { "label": "Feb", "value": 18 },
+    { "label": "Mar", "value": 14 },
+    { "label": "Abr", "value": 26 },
+    { "label": "May", "value": 31 }
+  ]
+}
+```
+```
+
 #### Progress bar
 
 ```text
@@ -243,6 +290,26 @@ Vera puede renderizar gráficos **visuales** cuando envías un bloque de código
   "fillColor": "#00d614",
   "trackColor": "rgba(255,255,255,0.12)",
   "barHeight": 18
+}
+```
+```
+
+#### Polar chart (radar)
+
+> Recomendado para comparar categorías. Para multi-serie usa `categories` + `series`.
+
+```text
+```chart
+{
+  "type": "polar",
+  "title": "Polar / Radar",
+  "categories": ["Awareness", "Consideración", "Compra", "Retención", "Referral"],
+  "max": 100,
+  "levels": 4,
+  "series": [
+    { "name": "Actual", "color": "#00e7ff", "data": [80, 55, 40, 62, 30] },
+    { "name": "Objetivo", "color": "#ff6500", "data": [90, 70, 55, 75, 45] }
+  ]
 }
 ```
 ```
@@ -265,12 +332,34 @@ Vera puede renderizar gráficos **visuales** cuando envías un bloque de código
 ```
 ```
 
+#### Stacked column chart
+
+> Este tipo usa `categories` (eje X) + `series` (capas apiladas).
+
+```text
+```chart
+{
+  "type": "stacked_column",
+  "title": "Stacked column",
+  "categories": ["Lun", "Mar", "Mié", "Jue", "Vie"],
+  "labels": true,
+  "series": [
+    { "name": "Orgánico", "color": "#00e7ff", "data": [20, 28, 18, 35, 30] },
+    { "name": "Paid",    "color": "#ff6500", "data": [12, 14, 10, 18, 16] },
+    { "name": "Email",   "color": "#ffe500", "data": [6,  8,  7,  9,  10] }
+  ]
+}
+```
+```
+
 ### Opciones comunes
 
 - `title`: string (opcional)
 - `legend`: boolean (default `true`)
 - `width`, `height`: números (opcional, para ajustar proporción)
 - `labels`: boolean (en `bar` y `line`)
+- `categories` + `series`: para gráficos multi-serie (`stacked_column`, `polar`)
+- `tension`: (en `spline`) 0..1
 
 ### Seguridad
 
