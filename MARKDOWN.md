@@ -128,6 +128,49 @@ Vera soporta **listas de tareas** (checklists) y las renderiza como **checkboxes
 - Cuando el usuario marca/desmarca un checkbox, el sistema guarda un **evento de tarea** en la conversación.
 - En el siguiente mensaje, Vera puede usar ese evento para saber qué pasos ya se completaron y ajustar el plan.
 
+## Botones automáticos (Quick Replies)
+
+Vera puede proponer **botones de respuesta rápida** para que el usuario no tenga que escribir “confirmar”, “publicar”, etc.
+
+### Sintaxis (bloque `buttons`)
+
+```text
+```buttons
+{
+  "title": "¿Confirmas esta acción?",
+  "buttons": [
+    { "label": "Confirmar", "text": "Confirmar", "variant": "primary" },
+    { "label": "Cancelar", "text": "Cancelar", "variant": "secondary" }
+  ]
+}
+```
+```
+
+### Variantes
+
+- `primary`: acción principal (ej. Confirmar)
+- `secondary`: opción normal
+- `danger`: acción de riesgo (ej. Eliminar / No publicar)
+
+### Ejemplo: publicar / no publicar
+
+```text
+```buttons
+{
+  "title": "¿Quieres publicar esta campaña ahora?",
+  "buttons": [
+    { "label": "Publicar", "text": "Publicar", "variant": "primary" },
+    { "label": "No publicar", "text": "No publicar", "variant": "danger" }
+  ]
+}
+```
+```
+
+### Cómo se comporta
+
+- Al hacer click, el chat envía automáticamente el texto del botón como **mensaje del usuario**.
+- El grupo de botones se deshabilita después de elegir uno (evita doble-click).
+
 ## Blockquote (cita)
 
 ```text

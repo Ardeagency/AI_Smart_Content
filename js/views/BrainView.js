@@ -406,6 +406,45 @@ function renderChartBlock(code) {
   }
 }
 
+function renderButtonsBlock(code) {
+  try {
+    const t = String(code || '').trim();
+    const spec = JSON.parse(t);
+    const buttons = Array.isArray(spec?.buttons) ? spec.buttons : (Array.isArray(spec) ? spec : []);
+    if (!Array.isArray(buttons) || buttons.length === 0) {
+      throw new Error('Spec sin botones');
+    }
+    const title = spec?.title ? String(spec.title) : '';
+    const rows = buttons
+      .slice(0, 8)
+      .map((b, i) => ({
+        label: String(b?.label ?? b?.text ?? `Opción ${i + 1}`),
+        text: String(b?.text ?? b?.label ?? ''),
+        variant: String(b?.variant ?? 'secondary')
+      }))
+      .filter((b) => b.text.trim().length > 0);
+
+    if (rows.length === 0) throw new Error('Botones sin texto');
+
+    return (
+      `<div class="gpt-qr" data-qr="true">` +
+      (title ? `<div class="gpt-qr-title">${escapeHtml(title)}</div>` : '') +
+      `<div class="gpt-qr-row">` +
+      rows
+        .map(
+          (b) =>
+            `<button type="button" class="gpt-qr-btn gpt-qr-btn--${escapeHtml(b.variant)}" data-qr-text="${escapeHtml(b.text)}">${escapeHtml(b.label)}</button>`
+        )
+        .join('') +
+      `</div>` +
+      `</div>`
+    );
+  } catch (e) {
+    const msg = escapeHtml(e?.message || 'Error de buttons spec');
+    return `<div class="gpt-viz gpt-viz--error"><strong>Buttons inválido:</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
+  }
+}
+
 function renderMarkdown(text, opts = {}) {
   const raw = String(text ?? '');
   let h = escapeHtml(raw);
@@ -575,6 +614,9 @@ function renderMarkdown(text, opts = {}) {
     const lang = (item.lang || '').toLowerCase();
     if (lang === 'chart' || lang === 'vera-chart' || lang === 'viz') {
       return renderChartBlock(item.code);
+    }
+    if (lang === 'buttons' || lang === 'quickreplies' || lang === 'quick-replies' || lang === 'actions') {
+      return renderButtonsBlock(item.code);
     }
     const langClass = item.lang ? ` class="language-${escapeHtml(item.lang)}"` : '';
     return `<pre><code${langClass}>${escapeHtml(item.code)}</code></pre>`;
@@ -854,6 +896,29 @@ class BrainView extends (window.BaseView || class {}) {
     });
   }
 
+  _bindQuickReplyButtons() {
+    const root = document.getElementById('brainMessageList');
+    if (!root || root.__veraQuickRepliesBound) return;
+    root.__veraQuickRepliesBound = true;
+
+    root.addEventListener('click', (e) => {
+      const btn = e.target?.closest?.('button.gpt-qr-btn');
+      if (!btn) return;
+      const text = btn.getAttribute('data-qr-text') || '';
+      if (!text.trim()) return;
+      if (this.aiState.isLoading) return;
+
+      // Disable the whole quick reply group after selection (prevents double clicks)
+      const group = btn.closest?.('[data-qr=\"true\"]');
+      if (group) {
+        group.querySelectorAll?.('button.gpt-qr-btn')?.forEach?.((b) => (b.disabled = true));
+        group.setAttribute('data-qr-used', 'true');
+      }
+
+      this.sendMessage(text.trim());
+    });
+  }
+
   renderMessages() {
     const list = document.getElementById('brainMessageList');
     const scroll = document.getElementById('brainMessagesWrap');
@@ -867,6 +932,7 @@ class BrainView extends (window.BaseView || class {}) {
     list.innerHTML = this.aiState.messages.map(m => this._msgHTML(m)).join('');
     this._bindMediaHover();
     this._bindTaskEvents();
+    this._bindQuickReplyButtons();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
@@ -900,6 +966,7 @@ class BrainView extends (window.BaseView || class {}) {
     list.insertAdjacentHTML('beforeend', this._msgHTML(msg));
     this._bindMediaHover();
     this._bindTaskEvents();
+    this._bindQuickReplyButtons();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 

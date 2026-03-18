@@ -24000,6 +24000,52 @@ body.production-filters-in-header .living-container > .living-history-section {
 .gpt-viz--error pre {
   margin-top: 10px;
 }
+
+/* Quick replies / action buttons (```buttons``` → UI) */
+.gpt-qr {
+  width: 100%;
+  margin: 0.85em 0 0.25em;
+}
+.gpt-qr-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.gpt-qr-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gpt-qr-btn {
+  border: 1px solid var(--border-light, #212126);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s, border-color 0.15s;
+}
+.gpt-qr-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.gpt-qr-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.gpt-qr-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.gpt-qr-btn--primary {
+  background: color-mix(in oklab, var(--accent-brand, #00e7ff) 20%, rgba(255,255,255,0.04));
+  border-color: color-mix(in oklab, var(--accent-brand, #00e7ff) 30%, var(--border-light, #212126));
+}
+.gpt-qr-btn--danger {
+  background: rgba(255, 0, 0, 0.08);
+  border-color: rgba(255, 0, 0, 0.18);
+}
 .gpt-msg-content code {
   background: var(--white-10);
   border: 1px solid var(--white-15);
