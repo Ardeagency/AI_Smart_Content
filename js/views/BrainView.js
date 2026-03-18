@@ -503,10 +503,11 @@ function renderMarkdown(text, opts = {}) {
   });
 
   // Blockquotes: contiguous lines starting with >
-  h = h.replace(/(^|\n)(> .+(?:\n> .+)*)/g, (m, start, block) => {
+  // Nota: como escapamos HTML al inicio, ">" llega como "&gt;"
+  h = h.replace(/(^|\n)(&gt;\s.+(?:\n&gt;\s.+)*)/g, (m, start, block) => {
     const inner = block
       .split('\n')
-      .map((l) => l.replace(/^> /, ''))
+      .map((l) => l.replace(/^&gt;\s?/, ''))
       .join('\n')
       .trim();
     return `${start}<blockquote>${inner}</blockquote>`;
@@ -532,7 +533,7 @@ function renderMarkdown(text, opts = {}) {
   });
 
   // Bare URLs on their own line → auto-embed (image/video) or link
-  h = h.replace(/^(https?:\/\/[^\s<]+|\/[^\s<]+)\s*$/gm, (m, url) => {
+  h = h.replace(/^\s*(https?:\/\/[^\s<]+|\/[^\s<]+)\s*$/gm, (m, url) => {
     const safe = sanitizeUrl(url);
     if (!safe) return m;
     const media = renderMediaFromUrl(safe, '');
