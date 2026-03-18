@@ -160,7 +160,7 @@ async function openclawStub({ organizationId, message /* , context */ }) {
       '```',
       '',
       'Si quieres, también puedo mostrar: `pie`, `bar`, `line`, `spline`, `area`, `polar` y `progress`.',
-    ].join('\\n');
+    ].join('\n');
   }
 
   return { message: content, actions };
