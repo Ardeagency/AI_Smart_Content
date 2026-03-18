@@ -467,14 +467,20 @@ function renderMarkdown(text, opts = {}) {
   const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?.*)?$/i.test(String(url || '').trim());
 
   // Render media (img/video) from a safe URL
-  const renderMediaFromUrl = (safeUrl, alt = '') => {
+  const renderMediaFromUrl = (safeUrl, alt = '', options = {}) => {
     const u = String(safeUrl || '').trim();
     if (!u) return '';
+    const showUrl = options?.showUrl === true;
+    const caption = showUrl
+      ? `<div class="gpt-md-media-caption"><a class="gpt-md-link" href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u)}</a></div>`
+      : '';
     if (isImageUrl(u)) {
-      return `<img class="gpt-md-img" src="${escapeHtml(u)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+      const img = `<img class="gpt-md-img" src="${escapeHtml(u)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+      return showUrl ? `<figure class="gpt-md-media">${img}${caption}</figure>` : img;
     }
     if (isVideoUrl(u)) {
-      return `<video class="gpt-md-video" src="${escapeHtml(u)}" muted playsinline preload="metadata" controls></video>`;
+      const vid = `<video class="gpt-md-video" src="${escapeHtml(u)}" muted playsinline preload="metadata" controls></video>`;
+      return showUrl ? `<figure class="gpt-md-media">${vid}${caption}</figure>` : vid;
     }
     return '';
   };
@@ -536,7 +542,7 @@ function renderMarkdown(text, opts = {}) {
   h = h.replace(/^\s*(https?:\/\/[^\s<]+|\/[^\s<]+)\s*$/gm, (m, url) => {
     const safe = sanitizeUrl(url);
     if (!safe) return m;
-    const media = renderMediaFromUrl(safe, '');
+    const media = renderMediaFromUrl(safe, '', { showUrl: true });
     if (media) return media;
     const isExternal = /^https?:\/\//i.test(safe);
     const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';

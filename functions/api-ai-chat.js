@@ -97,7 +97,7 @@ async function openclawStub({ organizationId, message /* , context */ }) {
       '## Links e imágenes',
       '- Link: [Markdown Guide](https://www.markdownguide.org/basic-syntax/)',
       '- Imagen (si tu URL termina en .png/.jpg/.webp/.svg):',
-      '  https://via.placeholder.com/900x420.png?text=Vera+Image+Preview',
+      'https://picsum.photos/seed/vera_demo/900/420.jpg',
       '',
       '## Video (hover play)',
       'Pega una URL que termine en `.mp4/.webm/.ogg` para previsualizarla. Ejemplo (si tu CDN lo permite):',

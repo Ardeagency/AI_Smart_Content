@@ -23980,6 +23980,20 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: #0a0a0c;
 }
 
+.gpt-msg-content figure.gpt-md-media {
+  margin: 0.75em 0;
+}
+.gpt-msg-content figure.gpt-md-media img.gpt-md-img,
+.gpt-msg-content figure.gpt-md-media video.gpt-md-video {
+  margin: 0;
+}
+.gpt-md-media-caption {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
 /* Vera Charts (```chart ...``` → SVG) */
 .gpt-viz {
   width: 100%;
