@@ -422,6 +422,22 @@ function renderMarkdown(text) {
     return null;
   };
 
+  const isImageUrl = (url) => /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(String(url || '').trim());
+  const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?.*)?$/i.test(String(url || '').trim());
+
+  // Render media (img/video) from a safe URL
+  const renderMediaFromUrl = (safeUrl, alt = '') => {
+    const u = String(safeUrl || '').trim();
+    if (!u) return '';
+    if (isImageUrl(u)) {
+      return `<img class="gpt-md-img" src="${escapeHtml(u)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+    }
+    if (isVideoUrl(u)) {
+      return `<video class="gpt-md-video" src="${escapeHtml(u)}" muted playsinline preload="metadata" controls></video>`;
+    }
+    return '';
+  };
+
   // --- Protect fenced code blocks first ---
   const codeBlocks = [];
   h = h.replace(/```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
@@ -459,16 +475,30 @@ function renderMarkdown(text) {
   h = h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
     const safe = sanitizeUrl(url);
     if (!safe) return `<span>${escapeHtml(`![${alt}](${url})`)}</span>`;
-    return `<img class="gpt-md-img" src="${escapeHtml(safe)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+    const media = renderMediaFromUrl(safe, alt);
+    return media || `<img class="gpt-md-img" src="${escapeHtml(safe)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
   });
 
   // Links: [text](url)
   h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
     const safe = sanitizeUrl(url);
     if (!safe) return `<span>${escapeHtml(`[${label}](${url})`)}</span>`;
+    const media = renderMediaFromUrl(safe, label);
+    if (media) return media;
     const isExternal = /^https?:\/\//i.test(safe);
     const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
     return `<a class="gpt-md-link" href="${escapeHtml(safe)}"${attrs}>${label}</a>`;
+  });
+
+  // Bare URLs on their own line → auto-embed (image/video) or link
+  h = h.replace(/^(https?:\/\/[^\s<]+|\/[^\s<]+)\s*$/gm, (m, url) => {
+    const safe = sanitizeUrl(url);
+    if (!safe) return m;
+    const media = renderMediaFromUrl(safe, '');
+    if (media) return media;
+    const isExternal = /^https?:\/\//i.test(safe);
+    const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return `<a class="gpt-md-link" href="${escapeHtml(safe)}"${attrs}>${escapeHtml(safe)}</a>`;
   });
 
   // Strikethrough: ~~text~~
@@ -662,6 +692,40 @@ class BrainView extends (window.BaseView || class {}) {
     }
   }
 
+  _bindMediaHover() {
+    const root = document.getElementById('brainMessageList');
+    if (!root || root.__veraMediaHoverBound) return;
+    root.__veraMediaHoverBound = true;
+
+    root.addEventListener(
+      'mouseenter',
+      async (e) => {
+        const el = e.target?.closest?.('video.gpt-md-video');
+        if (!el) return;
+        try {
+          el.controls = false;
+          el.currentTime = 0;
+          await el.play();
+        } catch (_) {}
+      },
+      true
+    );
+
+    root.addEventListener(
+      'mouseleave',
+      (e) => {
+        const el = e.target?.closest?.('video.gpt-md-video');
+        if (!el) return;
+        try {
+          el.pause();
+          el.currentTime = 0;
+          el.controls = true;
+        } catch (_) {}
+      },
+      true
+    );
+  }
+
   /* ── Active conversation (última sesión) ─────────────── */
   async loadActiveConversation() {
     if (!this.supabase || !this.aiState.organization_id || !this.userId) return;
@@ -739,6 +803,7 @@ class BrainView extends (window.BaseView || class {}) {
     }
 
     list.innerHTML = this.aiState.messages.map(m => this._msgHTML(m)).join('');
+    this._bindMediaHover();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
@@ -770,6 +835,7 @@ class BrainView extends (window.BaseView || class {}) {
     const welcome = list.querySelector('.gpt-welcome');
     if (welcome) welcome.remove();
     list.insertAdjacentHTML('beforeend', this._msgHTML(msg));
+    this._bindMediaHover();
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 

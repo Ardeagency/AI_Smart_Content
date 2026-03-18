@@ -23948,6 +23948,16 @@ body.production-filters-in-header .living-container > .living-history-section {
   border: 1px solid var(--border-light, #212126);
 }
 
+.gpt-msg-content video.gpt-md-video {
+  max-width: 100%;
+  width: 100%;
+  display: block;
+  margin: 0.75em 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-light, #212126);
+  background: #0a0a0c;
+}
+
 /* Vera Charts (```chart ...``` → SVG) */
 .gpt-viz {
   width: 100%;

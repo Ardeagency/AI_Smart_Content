@@ -95,6 +95,22 @@ Recomendación: usa `https://` y evita URLs raras. Vera bloquea esquemas peligro
 ![Texto alternativo](https://example.com/imagen.jpg)
 ```
 
+## Auto-embed de URLs (imágenes y videos)
+
+Si pegas una **URL sola en una línea**, Vera intentará previsualizarla:
+
+- **Imagen**: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`
+- **Video**: `.mp4`, `.webm`, `.ogg`
+
+Ejemplos:
+
+```text
+https://mi-cdn.com/banner.webp
+https://mi-cdn.com/demo.mp4
+```
+
+UX de video: el video se reproduce **con hover** (y se pausa al salir).
+
 ## Blockquote (cita)
 
 ```text
