@@ -463,7 +463,18 @@ function renderMarkdown(text, opts = {}) {
     return null;
   };
 
-  const isImageUrl = (url) => /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(String(url || '').trim());
+  const isImageUrl = (url) => {
+    const s = String(url || '').trim();
+    // Standard: ends with an image extension
+    if (/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(s)) return true;
+    // Some CDNs use format as a path segment, e.g. /900x420/png?text=...
+    try {
+      const u = new URL(s, window.location.origin);
+      if (/(^|\/)(png|jpe?g|gif|webp|svg)(\/|$)/i.test(u.pathname)) return true;
+      if (/(^|&)format=(png|jpe?g|gif|webp|svg)(&|$)/i.test(u.search)) return true;
+    } catch (_) {}
+    return false;
+  };
   const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?.*)?$/i.test(String(url || '').trim());
 
   // Render media (img/video) from a safe URL
