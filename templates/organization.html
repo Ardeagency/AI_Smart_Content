@@ -73,11 +73,38 @@
             </div>
         </div>
 
-        <!-- Tab: Integraciones (placeholder) -->
+        <!-- Tab: Integraciones -->
         <div class="tab-content" id="integrationsTab" role="tabpanel">
             <div class="organization-integrations">
                 <h2>Integraciones</h2>
-                <p class="org-placeholder">Conectar servicios externos. Próximamente.</p>
+                <p class="org-section-desc">Estado de todas las integraciones conectadas a esta organización.</p>
+                <section class="org-section">
+                    <h3 class="org-integrations-subtitle">Resumen de organización</h3>
+                    <div class="org-integration-summary" id="orgIntegrationSummary">
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Estado de la organización</span>
+                            <span class="org-summary-value" id="orgSummaryStatus">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Marcas vinculadas</span>
+                            <span class="org-summary-value" id="orgSummaryBrands">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Integraciones activas</span>
+                            <span class="org-summary-value" id="orgSummaryIntegrationsActive">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Total integraciones</span>
+                            <span class="org-summary-value" id="orgSummaryIntegrationsTotal">—</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="org-section">
+                    <h3 class="org-integrations-subtitle">Plataformas</h3>
+                    <div class="org-integrations-list" id="orgIntegrationsList">
+                        <p class="org-members-empty">Cargando integraciones...</p>
+                    </div>
+                </section>
             </div>
         </div>
 

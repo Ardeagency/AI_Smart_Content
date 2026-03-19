@@ -12709,6 +12709,100 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin-top: 1rem;
 }
 
+.org-integrations-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem;
+}
+
+.org-integration-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.org-summary-item {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.4));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+}
+
+.org-summary-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.org-summary-value {
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.org-integrations-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.org-integration-card {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.4));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+}
+
+.org-integration-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.org-integration-name {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.org-integration-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.org-integration-badge.is-connected {
+    color: #7bf1a8;
+    border-color: rgba(123, 241, 168, 0.35);
+    background: rgba(123, 241, 168, 0.12);
+}
+
+.org-integration-badge.is-disconnected {
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.org-integration-meta {
+    margin: 0.45rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.org-integration-brands {
+    margin: 0.4rem 0 0;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
 .org-placeholder {
     color: var(--text-secondary);
     font-style: italic;

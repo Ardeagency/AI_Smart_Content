@@ -263,7 +263,7 @@ class Navigation {
     const path = window.location.pathname || '/';
     
     // Rutas públicas - sin navegación
-    if (path === '/' || path === '/login' || path === '/signin' || path === '/cambiar-contrasena' || path === '/politica-de-privacidad' || path === '/terminos-de-servicio' || path === '/index.html') {
+    if (path === '/' || path === '/login' || path === '/signin' || path === '/cambiar-contrasena' || path === '/politica-de-privacidad' || path === '/terminos-de-servicio' || path === '/eliminacion-de-datos' || path === '/index.html') {
       return { mode: null, showSidebar: false, showHeader: false, orgId: null, brandId: null };
     }
     

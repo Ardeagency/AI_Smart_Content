@@ -13,6 +13,9 @@ class OrganizationView extends BaseView {
     this.orgId = null;
     this.org = null;
     this.members = [];
+    this.brandContainers = [];
+    this.organizationIntegrations = [];
+    this.integrationsSummary = { active: 0, total: 0 };
     this.credits = { credits_available: 0, credits_total: 0, updated_at: null };
     this.storage = { used_mb: 0, max_mb: 0, updated_at: null };
     this.isOwner = false;
@@ -113,6 +116,35 @@ class OrganizationView extends BaseView {
       const myMember = this.members.find(m => m.user_id === this.userId);
       this.canManageMembers = this.isOwner || (myMember && ['owner', 'admin'].includes(myMember.role));
 
+      const { data: brandContainersData, error: brandContainersError } = await this.supabase
+        .from('brand_containers')
+        .select('id, nombre_marca')
+        .eq('organization_id', this.orgId)
+        .order('created_at', { ascending: true });
+
+      if (brandContainersError) throw brandContainersError;
+      this.brandContainers = brandContainersData || [];
+
+      if (this.brandContainers.length > 0) {
+        const containerIds = this.brandContainers.map(b => b.id);
+        const { data: integrationsData, error: integrationsError } = await this.supabase
+          .from('brand_integrations')
+          .select('id, brand_container_id, platform, external_account_name, is_active, updated_at, last_sync_at')
+          .in('brand_container_id', containerIds)
+          .order('platform', { ascending: true })
+          .order('updated_at', { ascending: false });
+
+        if (integrationsError) throw integrationsError;
+        this.organizationIntegrations = integrationsData || [];
+      } else {
+        this.organizationIntegrations = [];
+      }
+
+      this.integrationsSummary = {
+        active: this.organizationIntegrations.filter(i => i.is_active).length,
+        total: this.organizationIntegrations.length
+      };
+
       const userIds = [...new Set(this.members.map(m => m.user_id).filter(Boolean))];
       let profilesMap = {};
       if (userIds.length > 0) {
@@ -133,6 +165,7 @@ class OrganizationView extends BaseView {
 
       this.renderOverview();
       this.renderMembers();
+      this.renderIntegrations();
     } catch (error) {
       console.error('Error cargando organización:', error);
       this.showError(error.message || 'Error al cargar la organización.');
@@ -208,6 +241,93 @@ class OrganizationView extends BaseView {
   setText(selector, text) {
     const el = this.querySelector(selector);
     if (el) el.textContent = text;
+  }
+
+  formatPlatformLabel(platformRaw) {
+    const normalized = (platformRaw || '').toLowerCase().trim();
+    const map = {
+      google_analytics: 'Google Analytics',
+      ga4: 'Google Analytics',
+      youtube: 'YouTube',
+      google_youtube: 'YouTube',
+      google_ads: 'Google Ads',
+      meta: 'Meta',
+      facebook: 'Meta',
+      instagram: 'Instagram',
+      tiktok: 'TikTok',
+      linkedin: 'LinkedIn'
+    };
+    if (map[normalized]) return map[normalized];
+    if (!normalized) return 'Sin plataforma';
+    return normalized
+      .split('_')
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ');
+  }
+
+  renderIntegrations() {
+    const listEl = this.querySelector('#orgIntegrationsList');
+    if (!listEl) return;
+
+    const status = this.org?.deleted_at ? 'Archivada' : 'Activa';
+    const brandCount = this.brandContainers.length;
+    this.setText('#orgSummaryStatus', status);
+    this.setText('#orgSummaryBrands', String(brandCount));
+    this.setText('#orgSummaryIntegrationsActive', String(this.integrationsSummary.active));
+    this.setText('#orgSummaryIntegrationsTotal', String(this.integrationsSummary.total));
+
+    if (brandCount === 0) {
+      listEl.innerHTML = '<p class="org-members-empty">Esta organización aún no tiene marcas vinculadas.</p>';
+      return;
+    }
+
+    const integrations = this.organizationIntegrations || [];
+    if (integrations.length === 0) {
+      listEl.innerHTML = '<p class="org-members-empty">No hay integraciones conectadas todavía.</p>';
+      return;
+    }
+
+    const brandMap = Object.fromEntries((this.brandContainers || []).map(b => [b.id, b]));
+    const grouped = {};
+    integrations.forEach(item => {
+      const key = (item.platform || 'unknown').toLowerCase();
+      if (!grouped[key]) {
+        grouped[key] = {
+          label: this.formatPlatformLabel(item.platform),
+          total: 0,
+          active: 0,
+          byBrand: {}
+        };
+      }
+      grouped[key].total += 1;
+      if (item.is_active) grouped[key].active += 1;
+      const brandName = brandMap[item.brand_container_id]?.nombre_marca || 'Marca sin nombre';
+      if (!grouped[key].byBrand[brandName]) grouped[key].byBrand[brandName] = 0;
+      grouped[key].byBrand[brandName] += 1;
+    });
+
+    const rows = Object.values(grouped)
+      .sort((a, b) => a.label.localeCompare(b.label, 'es'))
+      .map(group => {
+        const byBrandSummary = Object.entries(group.byBrand)
+          .sort((a, b) => a[0].localeCompare(b[0], 'es'))
+          .map(([brand, count]) => `${this.escapeHtml(brand)} (${count})`)
+          .join(' • ');
+        const statusClass = group.active > 0 ? 'is-connected' : 'is-disconnected';
+        const statusText = group.active > 0 ? 'Conectada' : 'Sin conexión';
+        return `
+          <article class="org-integration-card">
+            <div class="org-integration-head">
+              <h4 class="org-integration-name">${this.escapeHtml(group.label)}</h4>
+              <span class="org-integration-badge ${statusClass}">${statusText}</span>
+            </div>
+            <p class="org-integration-meta">${group.active} activas de ${group.total} configuradas</p>
+            <p class="org-integration-brands">${byBrandSummary}</p>
+          </article>
+        `;
+      }).join('');
+
+    listEl.innerHTML = rows;
   }
 
   setupEventListeners() {
