@@ -852,33 +852,12 @@ class BrainView extends (window.BaseView || class {}) {
     if (!list) return;
     list.innerHTML = `
       <div class="gpt-welcome">
-        <h1 class="gpt-welcome-title">¿En qué puedo ayudarte?</h1>
-        <div class="gpt-quick-grid">
-          <button class="gpt-quick-btn" data-prompt="Analiza el estado actual de mi marca y dame un resumen">
-            <span class="gpt-quick-icon"><i class="fas fa-chart-line"></i></span>
-            <span>Analizar mi marca</span>
-          </button>
-          <button class="gpt-quick-btn" data-prompt="Ayúdame a crear una nueva campaña de marketing desde cero">
-            <span class="gpt-quick-icon"><i class="fas fa-bullhorn"></i></span>
-            <span>Crear una campaña</span>
-          </button>
-          <button class="gpt-quick-btn" data-prompt="Genera contenido para mis redes sociales esta semana">
-            <span class="gpt-quick-icon"><i class="fas fa-pen-nib"></i></span>
-            <span>Generar contenido</span>
-          </button>
-          <button class="gpt-quick-btn" data-prompt="¿Qué flows tengo disponibles y cuál me recomiendas ejecutar?">
-            <span class="gpt-quick-icon"><i class="fas fa-bolt"></i></span>
-            <span>Ejecutar un flow</span>
-          </button>
-        </div>
+        <h1 class="gpt-welcome-title">Vera está lista.</h1>
+        <p class="gpt-welcome-subtitle" style="margin: 8px 0 0; color: var(--text-muted, rgba(212,209,216,0.6));">
+          Escribe tu mensaje para comenzar.
+        </p>
       </div>
     `;
-    list.querySelectorAll('.gpt-quick-btn[data-prompt]').forEach(btn => {
-      this.addEventListener(btn, 'click', () => {
-        const prompt = btn.getAttribute('data-prompt');
-        if (prompt) this.sendMessage(prompt);
-      });
-    });
   }
 
   _bindTaskEvents() {
