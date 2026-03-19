@@ -78,21 +78,33 @@ exports.handler = async (event) => {
 
   const targetUrl = `${aiEngineBaseUrl}/chat`;
 
-  const upstream = await fetch(targetUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      organization_id,
-      conversation_id,
-      message,
-    }),
-  });
+  let upstream;
+  try {
+    upstream = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        organization_id,
+        conversation_id,
+        message,
+      }),
+    });
+  } catch (e) {
+    return {
+      statusCode: 502,
+      headers: corsHeaders(),
+      body: JSON.stringify({
+        error: "No se pudo conectar a ai-engine",
+        targetUrl,
+        details: e?.message || String(e),
+      }),
+    };
+  }
 
   const text = await upstream.text();
-  // Body puede venir JSON o texto; lo devolvemos como texto para no romper.
   return {
     statusCode: upstream.status,
     headers: corsHeaders(),
