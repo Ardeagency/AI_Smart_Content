@@ -645,6 +645,20 @@ function renderMarkdown(text, opts = {}) {
 
 const VERA_AVATAR_SRC = '/recursos/Recursos%20de%20Marca/Recursos/Vera.svg';
 
+/** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
+function getAiChatUrl() {
+  const base = (typeof window !== 'undefined' && window.AI_ENGINE_BASE_URL)
+    ? String(window.AI_ENGINE_BASE_URL).replace(/\/$/, '')
+    : '';
+  if (base) return `${base}/chat`;
+  return `${window.location.origin}/api/ai/chat`;
+}
+
+/** Task events: solo mismo origen (Netlify) salvo que definas AI_ENGINE_BASE_URL con rutas equivalentes */
+function getAiTaskEventUrl() {
+  return `${window.location.origin}/api/ai/task-event`;
+}
+
 /* ─── View ─────────────────────────────────────────────── */
 class BrainView extends (window.BaseView || class {}) {
   constructor() {
@@ -887,7 +901,7 @@ class BrainView extends (window.BaseView || class {}) {
           ? (await this.supabase.auth.getSession())?.data?.session?.access_token
           : null;
 
-        await fetch(`${window.location.origin}/api/ai/task-event`, {
+        await fetch(getAiTaskEventUrl(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1072,7 +1086,7 @@ class BrainView extends (window.BaseView || class {}) {
         ? (await this.supabase.auth.getSession())?.data?.session?.access_token
         : null;
 
-      const res = await fetch(`${window.location.origin}/api/ai/chat`, {
+      const res = await fetch(getAiChatUrl(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
