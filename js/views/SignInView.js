@@ -83,6 +83,10 @@ class SignInView extends BaseView {
     if (btnGoogle) {
       this.addEventListener(btnGoogle, 'click', () => this.handleGoogleLogin());
     }
+    const btnFacebook = this.querySelector('#btnFacebook');
+    if (btnFacebook) {
+      this.addEventListener(btnFacebook, 'click', () => this.handleFacebookLogin());
+    }
   }
 
   async handleGoogleLogin() {
@@ -95,6 +99,18 @@ class SignInView extends BaseView {
       alert(result.error || 'Error al conectar con Google.');
     }
     // Si success, el navegador redirige a Google y luego a redirectTo
+  }
+
+  async handleFacebookLogin() {
+    if (!window.authService) {
+      alert('Servicio de autenticación no disponible.');
+      return;
+    }
+    const result = await window.authService.socialLogin('facebook');
+    if (!result.success) {
+      alert(result.error || 'Error al conectar con Facebook.');
+    }
+    // Si success, el navegador redirige a Facebook y luego a redirectTo
   }
 
   toggleState() {

@@ -483,11 +483,20 @@ class AuthService {
     }
 
     try {
+      const providerName = String(provider || '').toLowerCase().trim();
+      const options = {
+        // Volvemos al home para que el router aplique redirectIfAuth.
+        redirectTo: `${window.location.origin}/`
+      };
+
+      // Facebook normalmente requiere solicitar email de forma explícita.
+      if (providerName === 'facebook') {
+        options.scopes = 'email public_profile';
+      }
+
       const { data, error } = await this.supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
+        provider: providerName,
+        options
       });
 
       if (error) {
