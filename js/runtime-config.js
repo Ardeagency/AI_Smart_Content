@@ -11,7 +11,13 @@
  */
 (function () {
   if (typeof window === "undefined") return;
+  // Permite configurar sin rebuild:
+  // 1) define window.AI_ENGINE_BASE_URL desde un snippet en el HTML
+  // 2) o guarda/consulta en localStorage bajo la misma key
   if (window.AI_ENGINE_BASE_URL === undefined) {
-    window.AI_ENGINE_BASE_URL = "";
+    const stored = (() => {
+      try { return localStorage.getItem("AI_ENGINE_BASE_URL") || ""; } catch (_) { return ""; }
+    })();
+    window.AI_ENGINE_BASE_URL = stored;
   }
 })();

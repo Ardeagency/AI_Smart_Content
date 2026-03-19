@@ -648,10 +648,14 @@ const VERA_AVATAR_SRC = '/recursos/Recursos%20de%20Marca/Recursos/Vera.svg';
 /** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
 function getAiChatUrl() {
   const base = (typeof window !== 'undefined' && window.AI_ENGINE_BASE_URL)
-    ? String(window.AI_ENGINE_BASE_URL).replace(/\/$/, '')
+    ? String(window.AI_ENGINE_BASE_URL).trim().replace(/\/+$/, '')
     : '';
-  if (base) return `${base}/chat`;
-  return `${window.location.origin}/api/ai/chat`;
+  if (!base) {
+    throw new Error(
+      'AI_ENGINE_BASE_URL no configurado. Define window.AI_ENGINE_BASE_URL para que BrainView llame directamente a ai-engine (ej: https://tu-servidor:3000).'
+    );
+  }
+  return `${base}/chat`;
 }
 
 /** Task events: solo mismo origen (Netlify) salvo que definas AI_ENGINE_BASE_URL con rutas equivalentes */
