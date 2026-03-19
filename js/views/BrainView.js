@@ -653,8 +653,14 @@ function getAiChatUrl() {
     ? String(window.AI_ENGINE_BASE_URL).trim().replace(/\/+$/, '')
     : '';
   if (!base) {
+    // Si el frontend está en HTTPS, evitamos Mixed Content usando el proxy HTTPS del mismo dominio.
+    // En ese caso, la función proxy debe tener AI_ENGINE_URL configurado en Netlify.
+    const pageIsHttps = window.location?.protocol === "https:";
+    if (pageIsHttps) {
+      return `${window.location.origin}/api/ai/engine-chat`;
+    }
     throw new Error(
-      'AI_ENGINE_BASE_URL no configurado. Define window.AI_ENGINE_BASE_URL para que BrainView llame directamente a ai-engine (ej: https://tu-servidor:3000).'
+      'AI_ENGINE_BASE_URL no configurado. Define window.AI_ENGINE_BASE_URL (ej: http://tu-servidor:3000) o usa HTTPS + proxy /api/ai/engine-chat con AI_ENGINE_URL en Netlify.'
     );
   }
 
