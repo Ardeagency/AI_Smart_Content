@@ -456,6 +456,8 @@ function renderMarkdown(text, opts = {}) {
     const u = String(url || '').trim();
     if (!u) return null;
     const lower = u.toLowerCase();
+    // Evita requests externos de demos hardcodeadas (ej: via.placeholder.com)
+    if (lower.includes('via.placeholder.com') || lower.includes('placehold.co')) return null;
     if (lower.startsWith('javascript:') || lower.startsWith('data:')) return null;
     if (lower.startsWith('http://') || lower.startsWith('https://')) return u;
     // allow site-relative paths (our assets) and simple relative paths
