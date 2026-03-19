@@ -657,6 +657,15 @@ function getAiChatUrl() {
       'AI_ENGINE_BASE_URL no configurado. Define window.AI_ENGINE_BASE_URL para que BrainView llame directamente a ai-engine (ej: https://tu-servidor:3000).'
     );
   }
+
+  // Si la página corre en HTTPS y ai-engine solo está en HTTP,
+  // el browser bloqueará el request como Mixed Content.
+  // En ese caso usamos un proxy bajo el mismo dominio.
+  const pageIsHttps = window.location?.protocol === "https:";
+  if (pageIsHttps && base.startsWith("http://")) {
+    return `${window.location.origin}/api/ai/engine-chat`;
+  }
+
   return `${base}/chat`;
 }
 
@@ -1075,7 +1084,13 @@ class BrainView extends (window.BaseView || class {}) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          // Ayuda al proxy /api/ai/engine-chat a reenviar a ai-engine
+          'X-AI-ENGINE-BASE-URL':
+            (window.AI_ENGINE_BASE_URL ||
+              (() => {
+                try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
+              })())
         },
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,

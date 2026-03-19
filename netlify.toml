@@ -48,6 +48,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/ai/engine-chat"
+  to = "/.netlify/functions/api-ai-engine-chat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/ai/context"
   to = "/.netlify/functions/api-ai-context"
   status = 200

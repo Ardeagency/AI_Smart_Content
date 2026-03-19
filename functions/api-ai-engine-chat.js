@@ -1,0 +1,102 @@
+/**
+ * Netlify Function: /api/ai/engine-chat
+ *
+ * Proxy para llamar a ai-engine sin "Mixed Content":
+ * - El frontend corre en HTTPS.
+ * - ai-engine corre típicamente en HTTP (ej: :3000).
+ * El browser bloquearía llamadas HTTP directas, así que aquí el POST
+ * se hace server-side y el browser solo consume este endpoint HTTPS.
+ */
+
+const { corsHeaders, getBearerToken } = require("./lib/ai-shared");
+
+function normalizeBase(url) {
+  const u = String(url || "").trim().replace(/\/+$/, "");
+  return u;
+}
+
+exports.handler = async (event) => {
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: corsHeaders(), body: "" };
+  }
+
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: "Método no permitido" }),
+    };
+  }
+
+  let body = {};
+  try {
+    body = typeof event.body === "string" ? JSON.parse(event.body) : event.body || {};
+  } catch (_) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: "Body JSON inválido" }),
+    };
+  }
+
+  const { organization_id, conversation_id, message } = body;
+  if (!organization_id || typeof message !== "string" || !message.trim()) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: "organization_id y message son requeridos" }),
+    };
+  }
+
+  const accessToken = getBearerToken(event);
+  if (!accessToken) {
+    return {
+      statusCode: 401,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: "Missing Authorization Bearer token" }),
+    };
+  }
+
+  // Preferimos header (procede de window.AI_ENGINE_BASE_URL) para evitar
+  // otro paso de configuración en Netlify.
+  const headerBase =
+    event.headers?.["x-ai-engine-base-url"] ||
+    event.headers?.["X-AI-ENGINE-BASE-URL"] ||
+    "";
+
+  const aiEngineBaseUrl = normalizeBase(process.env.AI_ENGINE_URL || headerBase);
+  if (!aiEngineBaseUrl) {
+    return {
+      statusCode: 500,
+      headers: corsHeaders(),
+      body: JSON.stringify({
+        error:
+          "No se pudo determinar AI_ENGINE_URL. Define AI_ENGINE_URL en Netlify o envía el header X-AI-ENGINE-BASE-URL.",
+      }),
+    };
+  }
+
+  const targetUrl = `${aiEngineBaseUrl}/chat`;
+
+  const upstream = await fetch(targetUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      organization_id,
+      conversation_id,
+      message,
+    }),
+  });
+
+  const text = await upstream.text();
+  // Body puede venir JSON o texto; lo devolvemos como texto para no romper.
+  return {
+    statusCode: upstream.status,
+    headers: corsHeaders(),
+    body: text,
+  };
+};
+
