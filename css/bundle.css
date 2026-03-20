@@ -4270,6 +4270,10 @@ svg.signin-brand-logo {
     color: var(--text-primary);
 }
 
+.signin-google-btn + .signin-google-btn {
+    margin-top: 0.5rem;
+}
+
 .signin-google-btn:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--glass-border);
