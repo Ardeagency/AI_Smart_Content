@@ -9687,6 +9687,19 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-bottom: none;
 }
 
+.living-viewer-info-rows .info-row.info-row-technical {
+    grid-template-columns: 1fr;
+    align-items: start;
+}
+
+.living-viewer-info-rows .info-value-json {
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.45;
+    width: 100%;
+}
+
 .living-viewer-info-rows .info-label,
 .living-viewer-metadata-content .info-label {
     font-size: 0.8125rem;

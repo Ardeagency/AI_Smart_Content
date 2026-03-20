@@ -1741,6 +1741,15 @@ class LivingManager {
         const run = item.run || {};
         let mediaUrl = data.imageUrl && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//')) ? data.imageUrl : '';
         if (!mediaUrl && output) mediaUrl = this.resolveOutputMediaUrl(output) || '';
+        if (!mediaUrl && output) {
+            mediaUrl = output.file_url || output.url || output.image_url || '';
+            if ((!mediaUrl || !/^https?:\/\//i.test(mediaUrl)) && output.metadata) {
+                const metaFromOutput = typeof output.metadata === 'object'
+                    ? output.metadata
+                    : (() => { try { return JSON.parse(output.metadata || '{}'); } catch (_) { return {}; } })();
+                mediaUrl = metaFromOutput.result_url || metaFromOutput.image_url || metaFromOutput.url || '';
+            }
+        }
         const outputType = (output.output_type || '').toLowerCase();
         const isVideo = !!(mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl)) || outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip');
         if (isVideo && !mediaUrl && output) {
@@ -1814,14 +1823,16 @@ class LivingManager {
         const rows = [];
         if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Fecha de producción</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
         rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
-        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
         if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
         if (output.generated_hashtags && (Array.isArray(output.generated_hashtags) ? output.generated_hashtags.length : typeof output.generated_hashtags === 'object')) {
             const tags = Array.isArray(output.generated_hashtags) ? output.generated_hashtags : (output.generated_hashtags.tags || output.generated_hashtags.values || []);
             if (tags.length) rows.push(`<div class="info-row"><span class="info-label">Hashtags</span><span class="info-value">${this.escapeHtml(tags.join(' '))}</span></div>`);
         }
         if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">creative_rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
-        if (Object.keys(technicalParams).length) rows.push(`<div class="info-row"><span class="info-label">technical_params</span><span class="info-value">${this.escapeHtml(JSON.stringify(technicalParams))}</span></div>`);
+        if (Object.keys(technicalParams).length) {
+            const technicalPretty = this.escapeHtml(JSON.stringify(technicalParams, null, 2));
+            rows.push(`<div class="info-row info-row-technical"><span class="info-label">technical_params</span><pre class="info-value info-value-json">${technicalPretty}</pre></div>`);
+        }
         if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">text_content</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
         rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Imagen'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
         if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
@@ -1920,8 +1931,6 @@ class LivingManager {
                 });
             }
         }
-        
-        this.setupViewerSeeAllButtons(modal);
         
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
