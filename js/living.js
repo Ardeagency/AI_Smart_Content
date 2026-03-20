@@ -30,6 +30,19 @@ class LivingManager {
         this._dateRangeStart = null;
         this._dateRangeEnd = null;
         this._historyFiltersSetup = false;
+        this._historyVisibleCount = 0;
+        this._historyCurrentItems = [];
+        this._historyScrollBound = false;
+        this._historyLoadingMore = false;
+        this._historySourcesLoading = false;
+        this._historyPageSize = 40;
+        this._historySourceBatchSize = 60;
+        this._flowRunsOffset = 0;
+        this._flowRunsHasMore = true;
+        this._latestGeneratedOffset = 0;
+        this._latestGeneratedHasMore = true;
+        this._systemAiOffset = 0;
+        this._systemAiHasMore = true;
         
         // Datos de la Sección 3: Tráfico y Control de Producción
         this.section3Data = {
@@ -95,20 +108,11 @@ class LivingManager {
             // Cargar datos relacionados usando Promise.allSettled para que errores no detengan todo
             await Promise.allSettled([
                 this.loadProducts(),
-                this.loadFlowRuns(),
                 this.loadCreditUsage()
             ]);
 
-            // Cargar flow outputs después de flow runs
-            if (this.flowRuns && this.flowRuns.length > 0) {
-                await this.loadFlowOutputs();
-            }
-
-            // Cargar contenido generado después de obtener brand_id
-            await this.loadLatestGeneratedContent();
-
-            // Cargar producciones de system_ai_outputs (no OpenAI)
-            await this.loadSystemAiOutputs();
+            // Historial incremental: primera tanda ligera para evitar latencia alta inicial
+            await this.loadMoreHistorySources({ reset: true });
 
             // Renderizar solo Historial (sin sección 3 ni hero)
             await this.renderAll();
@@ -219,14 +223,25 @@ class LivingManager {
         }
     }
 
-    async loadFlowRuns() {
-        if (!this.supabase || (!this.brandId && !this.userId)) { this.flowRuns = []; return; }
+    async loadFlowRuns({ reset = false } = {}) {
+        if (!this.supabase || (!this.brandId && !this.userId)) {
+            if (reset) this.flowRuns = [];
+            return [];
+        }
+        if (reset) {
+            this.flowRuns = [];
+            this._flowRunsOffset = 0;
+            this._flowRunsHasMore = true;
+        }
+        if (!this._flowRunsHasMore) return [];
         try {
+            const from = this._flowRunsOffset;
+            const to = from + this._historySourceBatchSize - 1;
             let query = this.supabase
                 .from('flow_runs')
                 .select('*, content_flows(name)')
                 .order('created_at', { ascending: false })
-                .limit(300);
+                .range(from, to);
 
             query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
             let { data, error } = await query;
@@ -234,34 +249,53 @@ class LivingManager {
             if (error) {
                 // Fallback sin join si la relación falla
                 query = this.supabase.from('flow_runs').select('*')
-                    .order('created_at', { ascending: false }).limit(300);
+                    .order('created_at', { ascending: false }).range(from, to);
                 query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
                 const res = await query;
-                this.flowRuns = res.error ? [] : (res.data || []);
-                return;
+                if (res.error) {
+                    this._flowRunsHasMore = false;
+                    return [];
+                }
+                const newRuns = res.data || [];
+                if (newRuns.length < this._historySourceBatchSize) this._flowRunsHasMore = false;
+                this._flowRunsOffset += newRuns.length;
+                const existing = new Set((this.flowRuns || []).map(r => r?.id).filter(Boolean));
+                this.flowRuns = [...(this.flowRuns || []), ...newRuns.filter(r => r?.id && !existing.has(r.id))];
+                return newRuns;
             }
-            this.flowRuns = data || [];
+            const newRuns = data || [];
+            if (newRuns.length < this._historySourceBatchSize) this._flowRunsHasMore = false;
+            this._flowRunsOffset += newRuns.length;
+            const existing = new Set((this.flowRuns || []).map(r => r?.id).filter(Boolean));
+            this.flowRuns = [...(this.flowRuns || []), ...newRuns.filter(r => r?.id && !existing.has(r.id))];
+            return newRuns;
         } catch (error) {
             console.error('❌ Error cargando flow runs:', error);
-            this.flowRuns = [];
+            this._flowRunsHasMore = false;
+            return [];
         }
     }
 
-    async loadFlowOutputs() {
-        if (!this.supabase || !this.flowRuns?.length) { this.flowOutputs = []; return; }
+    async loadFlowOutputs({ reset = false, runIds = [] } = {}) {
+        if (!this.supabase) {
+            if (reset) this.flowOutputs = [];
+            return;
+        }
+        if (reset) this.flowOutputs = [];
         try {
-            const runIds = this.flowRuns.map(r => r?.id).filter(Boolean);
-            if (!runIds.length) { this.flowOutputs = []; return; }
+            const targetRunIds = (runIds && runIds.length ? runIds : this.flowRuns.map(r => r?.id).filter(Boolean));
+            if (!targetRunIds.length) return;
 
             const { data, error } = await this.supabase
                 .from('runs_outputs').select('*')
-                .in('run_id', runIds)
+                .in('run_id', targetRunIds)
                 .order('created_at', { ascending: false });
             if (error) throw error;
-            this.flowOutputs = data || [];
+            const newOutputs = data || [];
+            const existing = new Set((this.flowOutputs || []).map(o => o?.id).filter(Boolean));
+            this.flowOutputs = [...(this.flowOutputs || []), ...newOutputs.filter(o => o?.id && !existing.has(o.id))];
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
-            this.flowOutputs = [];
         }
     }
 
@@ -318,29 +352,54 @@ class LivingManager {
         }
     }
 
-    async loadLatestGeneratedContent() {
-        if (!this.supabase || !this.brandId) { this.latestGeneratedContent = []; return; }
+    async loadLatestGeneratedContent({ reset = false } = {}) {
+        if (!this.supabase || !this.brandId) {
+            if (reset) this.latestGeneratedContent = [];
+            return;
+        }
+        if (reset) {
+            this.latestGeneratedContent = [];
+            this._latestGeneratedOffset = 0;
+            this._latestGeneratedHasMore = true;
+        }
+        if (!this._latestGeneratedHasMore) return;
 
         try {
             const { data: runs, error: runsError } = await this.supabase
                 .from('flow_runs').select('id')
                 .eq('brand_id', this.brandId)
-                .order('created_at', { ascending: false }).limit(10);
-            if (runsError || !runs?.length) { this.latestGeneratedContent = []; return; }
+                .order('created_at', { ascending: false })
+                .range(this._latestGeneratedOffset, this._latestGeneratedOffset + this._historySourceBatchSize - 1);
+            if (runsError || !runs?.length) {
+                this._latestGeneratedHasMore = false;
+                return;
+            }
 
             const runIds = runs.map(r => r.id).filter(Boolean);
-            if (!runIds.length) { this.latestGeneratedContent = []; return; }
+            if (!runIds.length) {
+                this._latestGeneratedHasMore = false;
+                return;
+            }
 
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('runs_outputs')
                 .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale')
                 .in('run_id', runIds)
-                .order('created_at', { ascending: false }).limit(10);
+                .order('created_at', { ascending: false })
+                .limit(this._historySourceBatchSize);
 
-            this.latestGeneratedContent = outputsError ? [] : (outputs || []);
+            if (outputsError) {
+                this._latestGeneratedHasMore = false;
+                return;
+            }
+            const page = outputs || [];
+            this._latestGeneratedOffset += runIds.length;
+            if (runIds.length < this._historySourceBatchSize) this._latestGeneratedHasMore = false;
+            const existing = new Set((this.latestGeneratedContent || []).map(o => o?.id).filter(Boolean));
+            this.latestGeneratedContent = [...(this.latestGeneratedContent || []), ...page.filter(o => o?.id && !existing.has(o.id))];
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
-            this.latestGeneratedContent = [];
+            this._latestGeneratedHasMore = false;
         }
     }
 
@@ -348,11 +407,17 @@ class LivingManager {
      * Carga producciones de system_ai_outputs (solo las que NO son de OpenAI).
      * Se usa brand_container_id y user_id; provider != 'openai'.
      */
-    async loadSystemAiOutputs() {
+    async loadSystemAiOutputs({ reset = false } = {}) {
         if (!this.supabase || !this.brandContainerId || !this.userId) {
-            this.systemAiOutputs = [];
+            if (reset) this.systemAiOutputs = [];
             return;
         }
+        if (reset) {
+            this.systemAiOutputs = [];
+            this._systemAiOffset = 0;
+            this._systemAiHasMore = true;
+        }
+        if (!this._systemAiHasMore) return;
         try {
             const { data, error } = await this.supabase
                 .from('system_ai_outputs')
@@ -361,16 +426,42 @@ class LivingManager {
                 .eq('user_id', this.userId)
                 .neq('provider', 'openai')
                 .order('created_at', { ascending: false })
-                .limit(500);
+                .range(this._systemAiOffset, this._systemAiOffset + this._historySourceBatchSize - 1);
             if (error) {
                 console.warn('⚠️ Error cargando system_ai_outputs:', error.message || error.code);
-                this.systemAiOutputs = [];
+                this._systemAiHasMore = false;
                 return;
             }
-            this.systemAiOutputs = data || [];
+            const page = data || [];
+            if (page.length < this._historySourceBatchSize) this._systemAiHasMore = false;
+            this._systemAiOffset += page.length;
+            const existing = new Set((this.systemAiOutputs || []).map(o => o?.id).filter(Boolean));
+            this.systemAiOutputs = [...(this.systemAiOutputs || []), ...page.filter(o => o?.id && !existing.has(o.id))];
         } catch (error) {
             console.error('❌ Error cargando system_ai_outputs:', error);
-            this.systemAiOutputs = [];
+            this._systemAiHasMore = false;
+        }
+    }
+
+    async loadMoreHistorySources({ reset = false } = {}) {
+        if (this._historySourcesLoading) return;
+        this._historySourcesLoading = true;
+        try {
+            if (reset) {
+                this._historyVisibleCount = 0;
+                this._flowRunsHasMore = true;
+                this._latestGeneratedHasMore = true;
+                this._systemAiHasMore = true;
+            }
+            const newRuns = await this.loadFlowRuns({ reset });
+            const newRunIds = (newRuns || []).map(r => r?.id).filter(Boolean);
+            await this.loadFlowOutputs({ reset, runIds: newRunIds });
+            await Promise.allSettled([
+                this.loadLatestGeneratedContent({ reset }),
+                this.loadSystemAiOutputs({ reset })
+            ]);
+        } finally {
+            this._historySourcesLoading = false;
         }
     }
 
@@ -805,13 +896,23 @@ class LivingManager {
             allItems = allItems.filter(it => this.getFlowName(it.run) === this.filterFlowName);
         }
 
+        this._historyCurrentItems = allItems;
+
         if (allItems.length === 0) {
             container.innerHTML = this.renderEmptyState();
             return;
         }
 
+        if (!this._historyVisibleCount) {
+            this._historyVisibleCount = Math.min(this._historyPageSize, allItems.length);
+        } else {
+            this._historyVisibleCount = Math.min(this._historyVisibleCount, allItems.length);
+        }
+
+        const visibleItems = allItems.slice(0, this._historyVisibleCount);
+
         const COLUMNS = 5;
-        const itemHtmls = allItems.map((item, index) => {
+        const itemHtmls = visibleItems.map((item, index) => {
             if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
                 if (!thumbnailUrl && item.output) thumbnailUrl = this.resolveOutputMediaUrl(item.output);
@@ -848,6 +949,46 @@ class LivingManager {
 
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
+        this.setupHistoryInfiniteScroll();
+    }
+
+    setupHistoryInfiniteScroll() {
+        if (this._historyScrollBound) return;
+        this._historyScrollBound = true;
+        this._onHistoryScroll = () => {
+            this.maybeLoadMoreHistoryOnScroll();
+        };
+        window.addEventListener('scroll', this._onHistoryScroll, { passive: true });
+        this.maybeLoadMoreHistoryOnScroll();
+    }
+
+    async maybeLoadMoreHistoryOnScroll() {
+        if (this._historyLoadingMore) return;
+        const container = document.getElementById('livingHistoryContent');
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const nearBottom = rect.bottom - window.innerHeight < 320;
+        if (!nearBottom) return;
+
+        this._historyLoadingMore = true;
+        try {
+            const localTotal = (this._historyCurrentItems || []).length;
+            if (this._historyVisibleCount < localTotal) {
+                this._historyVisibleCount = Math.min(this._historyVisibleCount + this._historyPageSize, localTotal);
+                await this.renderHistorySection();
+                return;
+            }
+
+            const hasMoreRemote = this._flowRunsHasMore || this._latestGeneratedHasMore || this._systemAiHasMore;
+            if (hasMoreRemote) {
+                await this.loadMoreHistorySources();
+                const newTotal = (this._historyCurrentItems || []).length;
+                this._historyVisibleCount = Math.min(this._historyVisibleCount + this._historyPageSize, newTotal || this._historyVisibleCount + this._historyPageSize);
+                await this.renderHistorySection();
+            }
+        } finally {
+            this._historyLoadingMore = false;
+        }
     }
     
     setupHistoryFilters() {
@@ -859,10 +1000,12 @@ class LivingManager {
         const flowSelect = document.getElementById('livingFilterFlow');
         if (typeSelect) typeSelect.addEventListener('change', () => {
             this.filterContentType = (typeSelect.value || '').trim();
+            this._historyVisibleCount = 0;
             this.renderHistorySection();
         });
         if (flowSelect) flowSelect.addEventListener('change', () => {
             this.filterFlowName = (flowSelect.value || '').trim();
+            this._historyVisibleCount = 0;
             this.renderHistorySection();
         });
 
@@ -946,6 +1089,7 @@ class LivingManager {
             if (valueEl) valueEl.textContent = formatDateRange();
             valueEl?.classList.toggle('has-range', !!(this.filterDateFrom || this.filterDateTo));
             renderCalendar();
+            this._historyVisibleCount = 0;
             this.renderHistorySection();
         };
         gridEl?.addEventListener('click', onGridClick);
@@ -992,6 +1136,7 @@ class LivingManager {
             if (valueEl) valueEl.textContent = 'Seleccionar';
             valueEl?.classList.remove('has-range');
             renderCalendar();
+            this._historyVisibleCount = 0;
             this.renderHistorySection();
             closeDropdown();
         });
@@ -1984,6 +2129,10 @@ class LivingManager {
             document.removeEventListener('click', this._docClickCloseDropdown);
             this._docClickCloseDropdown = null;
         }
+        if (this._onHistoryScroll) {
+            window.removeEventListener('scroll', this._onHistoryScroll);
+            this._onHistoryScroll = null;
+        }
         this.supabase = null;
         this.userId = null;
         this.userData = null;
@@ -1996,6 +2145,11 @@ class LivingManager {
         this.initialized = false;
         this.eventListenersSetup = false;
         this._historyFiltersSetup = false;
+        this._historyScrollBound = false;
+        this._historyLoadingMore = false;
+        this._historySourcesLoading = false;
+        this._historyVisibleCount = 0;
+        this._historyCurrentItems = [];
     }
 }
 
