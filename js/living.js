@@ -1791,11 +1791,19 @@ class LivingManager {
         promptEl.textContent = promptText;
         
         // runs_outputs: model, output_type, metadata, technical_params, created_at; opcionales: generated_copy, creative_rationale, generated_hashtags, text_content
-        const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model)
-            ? output.metadata.model
-            : this.getFlowName(run);
-        const flowName = this.getFlowName(run);
-        const technicalParams = output.technical_params && typeof output.technical_params === 'object' ? output.technical_params : {};
+        const technicalParams = (() => {
+            if (!output || output.technical_params == null) return {};
+            if (typeof output.technical_params === 'object') return output.technical_params;
+            if (typeof output.technical_params === 'string') {
+                try { return JSON.parse(output.technical_params); } catch (_) { return {}; }
+            }
+            return {};
+        })();
+        const modelName = (technicalParams && technicalParams.model)
+            ? String(technicalParams.model)
+            : ((output.metadata && typeof output.metadata === 'object' && output.metadata.model)
+                ? output.metadata.model
+                : this.getFlowName(run));
         const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
         const quality = technicalParams.quality || meta.quality || '';
         let creationDate = null;
@@ -1805,7 +1813,6 @@ class LivingManager {
         const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
         const rows = [];
         if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Fecha de producción</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
-        rows.push(`<div class="info-row"><span class="info-label">Flujo</span><span class="info-value">${this.escapeHtml(flowName)}</span></div>`);
         rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
         if (outputType) rows.push(`<div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
         if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);

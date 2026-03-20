@@ -94,28 +94,20 @@
                                     <div class="living-viewer-section-body living-viewer-info-rows" id="livingViewerMetadata"></div>
                                     <button type="button" class="living-viewer-see-all living-viewer-show-less" data-section="info" data-expanded="false"><span class="living-viewer-see-all-text">Ver todo</span> <i class="fas fa-chevron-down living-viewer-see-all-icon"></i></button>
                                 </section>
-                                <section class="living-viewer-section living-viewer-correction-section" id="livingViewerCorrectionSection" style="display: none;">
-                                    <div class="living-viewer-section-header">
-                                        <div class="living-viewer-section-header-left">
-                                            <i class="fas fa-wand-magic-sparkles living-viewer-section-icon"></i>
-                                            <p class="living-viewer-block-title">Corregir producción</p>
-                                        </div>
-                                    </div>
-                                    <div class="living-viewer-section-body">
-                                        <input
-                                            type="text"
-                                            id="livingViewerCorrectionInput"
-                                            class="living-viewer-correction-input"
-                                            placeholder="Ej: mejorar iluminación del producto, mantener encuadre y fondo"
-                                            maxlength="500"
-                                        />
-                                        <button type="button" id="livingViewerCorrectionBtn" class="living-viewer-correction-btn">Regenerar imagen</button>
-                                        <p class="living-viewer-correction-status" id="livingViewerCorrectionStatus" aria-live="polite"></p>
-                                    </div>
-                                </section>
                             </div>
                         </div>
                     </div>
+                    <footer class="living-viewer-right-footer living-viewer-correction-section" id="livingViewerCorrectionSection" style="display: none;">
+                        <input
+                            type="text"
+                            id="livingViewerCorrectionInput"
+                            class="living-viewer-correction-input"
+                            placeholder="Corregir producción... Ej: mejorar iluminación del producto, mantener encuadre y fondo"
+                            maxlength="500"
+                        />
+                        <button type="button" id="livingViewerCorrectionBtn" class="living-viewer-correction-btn">Regenerar imagen</button>
+                        <p class="living-viewer-correction-status" id="livingViewerCorrectionStatus" aria-live="polite"></p>
+                    </footer>
                 </div>
             </div>
         </div>
