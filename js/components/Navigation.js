@@ -44,9 +44,7 @@ const SIDEBAR_USER_CONFIG = {
     }
   ],
   footer: [
-    { label: 'Settings', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
-    { label: 'Notifications', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
-    { label: 'Credits', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
+    // Estos ítems se muestran ahora en el dropdown #userDropdown (header).
   ]
 };
 
@@ -399,16 +397,27 @@ class Navigation {
         <div class="user-dropdown-divider"></div>
         <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <i class="fas fa-cog"></i>
-          <span>Settings</span>
+          <span>Configuración de la cuenta</span>
         </a>
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
           <i class="fas fa-building"></i>
-          <span>My organization</span>
+          <span>Configuración de la organización</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
           <i class="fas fa-coins"></i>
-          <span>Credits</span>
+          <span>Créditos</span>
         </a>
+        <button
+          type="button"
+          class="user-dropdown-item nav-footer-btn"
+          data-flyout="notifications"
+          data-tooltip="Notificaciones"
+          aria-label="Notificaciones"
+          id="userDropdownNotificationsBtn"
+        >
+          <i class="fas fa-bell"></i>
+          <span>Notificaciones</span>
+        </button>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>
