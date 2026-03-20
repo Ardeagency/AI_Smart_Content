@@ -9640,27 +9640,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-radius: 2px;
 }
 
-.living-viewer-see-all {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-xs);
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    margin: 0;
-    background: none;
-    border: none;
-    border-top: 1px solid var(--border-divider);
-    color: var(--text-muted);
-    font-size: 0.8125rem;
-    cursor: pointer;
-    transition: var(--transition-fast);
-}
-
-.living-viewer-see-all:hover {
-    color: var(--text-primary);
-}
-
 /* Filas de Information (label | value) */
 .living-viewer-info-rows {
     padding: 0;

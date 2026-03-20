@@ -1829,10 +1829,6 @@ class LivingManager {
             if (tags.length) rows.push(`<div class="info-row"><span class="info-label">Hashtags</span><span class="info-value">${this.escapeHtml(tags.join(' '))}</span></div>`);
         }
         if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">creative_rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
-        if (Object.keys(technicalParams).length) {
-            const technicalPretty = this.escapeHtml(JSON.stringify(technicalParams, null, 2));
-            rows.push(`<div class="info-row info-row-technical"><span class="info-label">technical_params</span><pre class="info-value info-value-json">${technicalPretty}</pre></div>`);
-        }
         if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">text_content</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
         rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Imagen'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
         if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
@@ -2044,35 +2040,6 @@ class LivingManager {
         }
     }
     
-    setupViewerSeeAllButtons(modal) {
-        if (!modal) return;
-        const buttons = modal.querySelectorAll('.living-viewer-see-all');
-        buttons.forEach(btn => {
-            const section = btn.getAttribute('data-section');
-            const textEl = btn.querySelector('.living-viewer-see-all-text');
-            const iconEl = btn.querySelector('.living-viewer-see-all-icon');
-            let expanded = btn.getAttribute('data-expanded') === 'true';
-            const content = section === 'prompt'
-                ? modal.querySelector('.living-viewer-prompt-text')
-                : modal.querySelector('.living-viewer-info-rows');
-            const updateLabel = () => {
-                if (textEl) textEl.textContent = expanded ? 'Ver menos' : 'Ver todo';
-                if (iconEl) {
-                    iconEl.classList.remove('fa-chevron-down', 'fa-chevron-up');
-                    iconEl.classList.add(expanded ? 'fa-chevron-up' : 'fa-chevron-down');
-                }
-                btn.setAttribute('data-expanded', expanded ? 'true' : 'false');
-                if (content) content.classList.toggle('expanded', expanded);
-            };
-            updateLabel();
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                expanded = !expanded;
-                updateLabel();
-            });
-        });
-    }
-
     setupCategoryFilters() {
         const categoryBtns = document.querySelectorAll('.category-btn');
         
