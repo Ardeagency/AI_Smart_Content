@@ -19,6 +19,7 @@ class BrandsView extends BaseView {
     this.brandPlaces = [];
     this.brandAudiences = [];
     this.brandSocialLinks = [];
+    this.brandIntegrations = [];
     // Plataforma activa cuando renderizamos la configuración de integraciones (INFO > Identidad)
     this.activeBrandIntegrationPlatform = 'google';
     this.organizationMembers = [];
@@ -216,7 +217,7 @@ class BrandsView extends BaseView {
           this.brandAssets = assets || [];
         }
 
-        // Redes sociales (brand_social_links: múltiples enlaces por plataforma)
+        // Redes sociales (brand_social_links: legado / por ahora no usado en el UI de integraciones)
         const { data: socialLinks, error: socialError } = await this.supabase
           .from('brand_social_links')
           .select('*')
@@ -228,6 +229,21 @@ class BrandsView extends BaseView {
           this.brandSocialLinks = [];
         } else {
           this.brandSocialLinks = socialLinks || [];
+        }
+
+        // Integraciones (brand_integrations): por ahora solo Google + Facebook
+        const { data: integrationsData, error: integrationsError } = await this.supabase
+          .from('brand_integrations')
+          .select('id, brand_container_id, platform, external_account_id, external_account_name, is_active, updated_at, last_sync_at')
+          .eq('brand_container_id', container.id)
+          .in('platform', ['google', 'facebook'])
+          .order('updated_at', { ascending: false });
+
+        if (integrationsError) {
+          console.warn('⚠️ Error cargando integraciones:', integrationsError);
+          this.brandIntegrations = [];
+        } else {
+          this.brandIntegrations = integrationsData || [];
         }
 
         // Brand Entities (identidad estructural)
@@ -1780,14 +1796,13 @@ class BrandsView extends BaseView {
       ? this.activeBrandIntegrationPlatform
       : platforms[0].platform;
 
-    const getLink = (plat) => {
-      const links = this.brandSocialLinks || [];
-      return links.find(l => String(l?.platform || '').toLowerCase() === plat) || null;
-    };
-
     const active = platforms.find(p => p.platform === activePlatform) || platforms[0];
-    const activeLink = getLink(activePlatform);
-    const connected = !!(activeLink && String(activeLink.url || '').trim().length > 0);
+    const getIntegration = (plat) => {
+      const list = this.brandIntegrations || [];
+      return list.find(i => String(i?.platform || '').toLowerCase() === plat) || null;
+    };
+    const activeIntegration = getIntegration(activePlatform);
+    const connected = !!(activeIntegration && activeIntegration.is_active);
 
     container.innerHTML = `
       <div class="brand-integrations-picker" role="tablist" aria-label="Integraciones">
@@ -1817,17 +1832,13 @@ class BrandsView extends BaseView {
           </span>
         </div>
 
-        <div class="brand-integration-url-row">
-          <label class="sr-only" for="brandIntegrationUrlInput">URL de ${this.escapeHtml(active.label)}</label>
-          <input
-            type="url"
-            id="brandIntegrationUrlInput"
-            class="brand-integration-url-input"
-            placeholder="https://..."
-            value="${this.escapeHtml(activeLink?.url || '')}"
-          />
-          <button type="button" id="brandIntegrationSaveBtn" class="brand-integration-action-btn brand-integration-save-btn">
-            Guardar
+        <div class="brand-integration-connect-row">
+          <button
+            type="button"
+            id="brandIntegrationConnectBtn"
+            class="brand-integration-action-btn brand-integration-connect-btn"
+          >
+            ${connected ? 'Reconectar' : 'Conectar'}
           </button>
           <button
             type="button"
@@ -1840,7 +1851,7 @@ class BrandsView extends BaseView {
         </div>
 
         <div class="brand-integration-hint">
-          Por ahora guardamos la URL para que tu marca pueda usarla en las integraciones de Google/Facebook.
+          La integración se realiza por OAuth. Al completar, guardamos la data del usuario en <code>brand_integrations</code>.
         </div>
       </div>
     `;
@@ -1855,30 +1866,62 @@ class BrandsView extends BaseView {
       });
     });
 
-    const input = container.querySelector('#brandIntegrationUrlInput');
-    const saveBtn = container.querySelector('#brandIntegrationSaveBtn');
+    const connectBtn = container.querySelector('#brandIntegrationConnectBtn');
     const disconnectBtn = container.querySelector('#brandIntegrationDisconnectBtn');
 
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        const url = (input?.value || '').trim();
-        if (!url) {
-          alert('Introduce una URL válida.');
-          input?.focus?.();
-          return;
-        }
-        const existing = getLink(activePlatform);
-        if (existing?.id) await this.updateSocialLink(existing.id, url);
-        else await this.addSocialLink(activePlatform, url);
-        this.renderIntegrationsInto(container);
+    if (connectBtn) {
+      connectBtn.addEventListener('click', async () => {
+        await this.connectBrandIntegration(activePlatform);
       });
     }
 
-    if (disconnectBtn && activeLink?.id) {
+    if (disconnectBtn) {
       disconnectBtn.addEventListener('click', async () => {
-        await this.deleteSocialLink(activeLink.id);
+        await this.disconnectBrandIntegration(activePlatform);
         this.renderIntegrationsInto(container);
       });
+    }
+  }
+
+  async connectBrandIntegration(platform) {
+    if (!window.authService) {
+      alert('Servicio de autenticación no disponible.');
+      return;
+    }
+    if (!this.brandContainerData?.id) {
+      alert('No se pudo identificar la marca.');
+      return;
+    }
+
+    const brandContainerId = this.brandContainerData.id;
+    const returnTo = `${window.location.pathname}${window.location.search || ''}`;
+
+    const callbackUrl = `${window.location.origin}/brand-integration-callback` +
+      `?platform=${encodeURIComponent(platform)}` +
+      `&brand_container_id=${encodeURIComponent(brandContainerId)}` +
+      `&return_to=${encodeURIComponent(returnTo)}`;
+
+    // Lanza el OAuth de Supabase. Tras el callback guardamos la data en `brand_integrations`.
+    await window.authService.socialLogin(platform, { redirectTo: callbackUrl });
+  }
+
+  async disconnectBrandIntegration(platform) {
+    if (!this.supabase || !this.brandContainerData?.id) return;
+    const brandContainerId = this.brandContainerData.id;
+    try {
+      await this.supabase
+        .from('brand_integrations')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('brand_container_id', brandContainerId)
+        .eq('platform', platform);
+      this.brandIntegrations = (this.brandIntegrations || []).map(i => {
+        const ok = String(i?.platform || '').toLowerCase() === String(platform || '').toLowerCase();
+        if (!ok) return i;
+        return { ...i, is_active: false, updated_at: new Date().toISOString() };
+      });
+    } catch (e) {
+      console.error('disconnectBrandIntegration error:', e);
+      alert(e?.message || 'No se pudo desconectar.');
     }
   }
 

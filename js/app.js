@@ -162,6 +162,13 @@ class App {
     r.register('/brands', brandsLoader, auth);
     r.register('/brands/:brandId', brandsLoader, auth);
 
+    // ── OAuth callback para integraciones (brand_integrations) ──
+    r.register(
+      '/brand-integration-callback',
+      this._lazy('BrandIntegrationCallbackView', ['/js/views/BrandIntegrationCallbackView.js']),
+      pub
+    );
+
     // ── Org: Products ──
     const productsLoader = this._lazy('ProductsView', ['/js/products.js', '/js/views/ProductsView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:brandId/:productId', productsLoader, auth);

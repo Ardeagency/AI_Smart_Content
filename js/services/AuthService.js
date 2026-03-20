@@ -473,7 +473,7 @@ class AuthService {
   /**
    * Login social (OAuth)
    */
-  async socialLogin(provider) {
+  async socialLogin(provider, oauthOptions = {}) {
     if (!this.supabase) {
       this.supabase = await this.getSupabaseClient();
     }
@@ -485,13 +485,15 @@ class AuthService {
     try {
       const providerName = String(provider || '').toLowerCase().trim();
       const options = {
-        // Volvemos al home para que el router aplique redirectIfAuth.
-        redirectTo: `${window.location.origin}/`
+        // Default: vuelve al home para que el router aplique redirectIfAuth.
+        redirectTo: oauthOptions.redirectTo || `${window.location.origin}/`
       };
 
       // Facebook normalmente requiere solicitar email de forma explícita.
       if (providerName === 'facebook') {
-        options.scopes = 'email public_profile';
+        options.scopes = oauthOptions.scopes || 'email public_profile';
+      } else if (oauthOptions.scopes) {
+        options.scopes = oauthOptions.scopes;
       }
 
       const { data, error } = await this.supabase.auth.signInWithOAuth({

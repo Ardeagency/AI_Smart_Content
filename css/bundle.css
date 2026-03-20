@@ -6123,6 +6123,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: rgba(255, 255, 255, 0.08);
 }
 
+.brand-integration-connect-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 .brand-integration-action-btn {
     padding: 0.35rem 0.75rem;
     font-size: var(--font-size-base);
