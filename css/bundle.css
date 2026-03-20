@@ -110,9 +110,9 @@
     --glass-radius: 14px;
     --glass-blur: blur(7px);
     --glass-padding: 8px 24px;
-    /* glass-black: negro 80%, textos blancos, bordes negros (legibilidad sobre fondos claros) */
+    /* glass-black: negro 80%, textos blancos y mismo borde que glass normal */
     --glass-black-bg: rgba(0, 0, 0, 0.8);
-    --glass-black-border: rgba(255, 255, 255, 0.85);
+    --glass-black-border: var(--glass-border);
     --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
     --glass-white-bg: rgba(255, 255, 255, 0.14);
