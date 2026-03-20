@@ -383,8 +383,13 @@ class Navigation {
 
   /**
    * Dropdown de usuario (único fragmento reutilizable)
+   * @param {string} settingsHref - URL destino del botón "Mi cuenta"
    */
-  getUserDropdownHTML() {
+  getUserDropdownHTML(settingsHref = '/home') {
+    // Si hay org activa, navegar a su configuración; si no, ir al onboarding de organización.
+    const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/form_org';
+    // Si hay org activa, mostrar la tienda de créditos de esa org.
+    const creditsHref = this.currentOrgId ? this.getUserSidebarRoute('credits') : '/credits';
     return `
       <div class="user-dropdown" id="userDropdown">
         <div class="user-dropdown-header">
@@ -392,10 +397,18 @@ class Navigation {
           <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
         </div>
         <div class="user-dropdown-divider"></div>
-        <button type="button" class="user-dropdown-item" id="userDropdownSettingsLink">
+        <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <i class="fas fa-cog"></i>
-          <span>Mi cuenta</span>
-        </button>
+          <span>Settings</span>
+        </a>
+        <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
+          <i class="fas fa-building"></i>
+          <span>My organization</span>
+        </a>
+        <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
+          <i class="fas fa-coins"></i>
+          <span>Credits</span>
+        </a>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>
@@ -407,6 +420,7 @@ class Navigation {
    * HTML para Home - Solo header sin sidebar
    */
   getHomeHeaderHTML() {
+    const settingsHref = '/home'; // "Mi cuenta": fuera de org
     return `
       <header class="app-header header-only" id="appHeader">
         <div class="header-content">
@@ -420,7 +434,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML()}
+              ${this.getUserDropdownHTML(settingsHref)}
             </div>
           </div>
         </div>
@@ -544,7 +558,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML()}
+              ${this.getUserDropdownHTML('/home')}
             </div>
           </div>
         </div>
@@ -633,7 +647,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML()}
+              ${this.getUserDropdownHTML('/home')}
             </div>
           </div>
         </div>
