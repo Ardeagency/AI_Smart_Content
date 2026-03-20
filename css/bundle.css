@@ -10,7 +10,7 @@
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {
-    --bg-primary: #131418;
+    --bg-primary: #191919;
     --bg-secondary: #141517;
     --bg-card: #000000;
     --bg-tertiary: #000000;
@@ -3429,7 +3429,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     left: 0;
     width: var(--nav-width, 260px);
     height: 100vh;
-    background-color: #000000;
+    background-color: #242424;
     border-right: 1px solid var(--glass-black-border);
     display: flex;
     flex-direction: column;
@@ -3450,7 +3450,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     content: '';
     position: absolute;
     inset: 0;
-    background: #000000;
+    background: #242424;
     border-radius: 0;
     pointer-events: none;
     z-index: 0;
