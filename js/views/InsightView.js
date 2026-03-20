@@ -87,9 +87,13 @@ class InsightView extends BaseView {
 
   async _loadIntegrations() {
     if (!this.brandContainerId || !this.supabase) return;
+    // IMPORTANTE: NO seleccionamos access_token ni refresh_token.
+    // Los tokens son secretos del servidor — solo los lee la Netlify function
+    // con la service key. El frontend solo necesita saber si la integración
+    // existe y datos de display (nombre de cuenta, scopes, metadata).
     const { data, error } = await this.supabase
       .from('brand_integrations')
-      .select('id, platform, external_account_id, external_account_name, access_token, scope, metadata, token_expires_at, is_active')
+      .select('id, platform, external_account_id, external_account_name, scope, metadata, token_expires_at, is_active')
       .eq('brand_container_id', this.brandContainerId)
       .in('platform', ['facebook', 'google'])
       .eq('is_active', true);
@@ -147,11 +151,11 @@ class InsightView extends BaseView {
     this._renderMetrics();
   }
 
-  // ── API calls — directo a Meta Graph API y Google Analytics API ──────────
-  // Los tokens están en this.integrations[platform].access_token (leídos de
-  // brand_integrations vía Supabase). Se usan directamente aquí; no hay
-  // intermediario propio: la función Netlify solo se necesita para el inicio
-  // y exchange del OAuth (donde debemos proteger app secrets).
+  // ── API calls — siempre a través del backend (Netlify function) ──────────
+  // El frontend NUNCA maneja tokens de Meta ni Google directamente.
+  // Solo envía el integration_id; el backend lee el token con la service key,
+  // refresca si expiró (Google), y llama a Meta/Google APIs server-side.
+  // Esto protege los tokens de ser expuestos en el browser.
 
   async _fetchAll() {
     const promises = [];
@@ -160,58 +164,34 @@ class InsightView extends BaseView {
     await Promise.allSettled(promises);
   }
 
+  async _getSessionToken() {
+    const session = await this.supabase.auth.getSession();
+    return session?.data?.session?.access_token || null;
+  }
+
   async _fetchMeta() {
     const integ = this.integrations['facebook'];
-    if (!integ?.access_token) return;
+    if (!integ) return;
     this._loadingMeta = true;
     this._showSectionLoader('insight-meta-body');
-
-    const token = integ.access_token;
-    const GRAPH = 'https://graph.facebook.com/v20.0';
-    const presetMap = { '7d': 'last_7_d', '30d': 'last_30_d', '90d': 'last_90_d' };
-    const preset = presetMap[this.dateRange] || 'last_30_d';
-
     try {
-      // 1. Obtener cuentas publicitarias directamente desde Meta Graph API
-      const accountsRes = await fetch(
-        `${GRAPH}/me/adaccounts?fields=name,account_id,currency,account_status&limit=10&access_token=${encodeURIComponent(token)}`
-      );
-      const accountsJson = await accountsRes.json();
-      if (accountsJson.error) throw new Error(accountsJson.error.message || 'Meta API error');
-
-      const accounts = accountsJson.data || [];
-      if (accounts.length === 0) {
-        this._metaData = { accounts: [], adAccountId: null, insights: null, campaigns: [] };
-        return;
-      }
-
-      const adAccountId = accounts[0].id;
-
-      // 2. Insights de cuenta + campañas en paralelo — llamadas directas a Meta Graph API
-      const [insightsRes, campsRes] = await Promise.all([
-        fetch(
-          `${GRAPH}/${adAccountId}/insights` +
-          `?fields=impressions,reach,clicks,spend,cpc,cpm,ctr,actions` +
-          `&date_preset=${preset}&level=account` +
-          `&access_token=${encodeURIComponent(token)}`
-        ),
-        fetch(
-          `${GRAPH}/${adAccountId}/campaigns` +
-          `?fields=name,status,objective,insights.date_preset(${preset}){impressions,reach,clicks,spend}` +
-          `&limit=15` +
-          `&access_token=${encodeURIComponent(token)}`
-        )
-      ]);
-
-      const insightsJson = await insightsRes.json();
-      const campsJson = await campsRes.json();
-
-      this._metaData = {
-        accounts,
-        adAccountId,
-        insights: insightsJson.data?.[0] || null,
-        campaigns: campsJson.data || []
-      };
+      const sessionToken = await this._getSessionToken();
+      if (!sessionToken) throw new Error('Sesión no válida.');
+      const res = await fetch(`${window.location.origin}/api/insights/fetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          platform: 'facebook',
+          integration_id: integ.id,
+          date_range: this.dateRange
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
+      this._metaData = json.data;
     } catch (e) {
       console.error('_fetchMeta:', e);
       this._metaData = { _error: e?.message || 'Error al cargar métricas de Meta.' };
@@ -222,55 +202,28 @@ class InsightView extends BaseView {
 
   async _fetchGoogle() {
     const integ = this.integrations['google'];
-    if (!integ?.access_token) return;
-    if (!this._ga4PropertyId) return;
-
-    // Verificar expiración del token (los tokens de Google duran ~1 hora)
-    if (integ.token_expires_at) {
-      const expiresAt = new Date(integ.token_expires_at);
-      const bufferMs = 5 * 60 * 1000;
-      if (Date.now() >= expiresAt.getTime() - bufferMs) {
-        this._googleData = {
-          _error: 'El token de Google ha expirado. Reconecta tu cuenta de Google Analytics para actualizar los datos.',
-          _expired: true
-        };
-        return;
-      }
-    }
-
+    if (!integ || !this._ga4PropertyId) return;
     this._loadingGoogle = true;
     this._showSectionLoader('insight-google-body');
-
-    const token = integ.access_token;
-    const startDateMap = { '7d': '7daysAgo', '30d': '30daysAgo', '90d': '90daysAgo' };
-    const startDate = startDateMap[this.dateRange] || '30daysAgo';
-
     try {
-      // Llamada directa a Google Analytics Data API (GA4)
-      const res = await fetch(
-        `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(this._ga4PropertyId)}:runReport`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            dateRanges: [{ startDate, endDate: 'today' }],
-            metrics: [
-              { name: 'sessions' },
-              { name: 'activeUsers' },
-              { name: 'newUsers' },
-              { name: 'screenPageViews' },
-              { name: 'bounceRate' },
-              { name: 'averageSessionDuration' }
-            ]
-          })
-        }
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message || json.error.status || 'Google Analytics API error');
-      this._googleData = json;
+      const sessionToken = await this._getSessionToken();
+      if (!sessionToken) throw new Error('Sesión no válida.');
+      const res = await fetch(`${window.location.origin}/api/insights/fetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          platform: 'google',
+          integration_id: integ.id,
+          date_range: this.dateRange,
+          ga4_property_id: this._ga4PropertyId
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
+      this._googleData = json.data;
     } catch (e) {
       console.error('_fetchGoogle:', e);
       this._googleData = { _error: e?.message || 'Error al cargar métricas de Google Analytics.' };
@@ -542,15 +495,17 @@ class InsightView extends BaseView {
 
     if (!d) return this._skeletonHTML();
     if (d._error) {
-      const expiredBtn = d._expired
+      // Si el error contiene "token" o "auth" ofrecemos reconectar
+      const needsReconnect = /token|auth|expired|unauthorized|403|401/i.test(d._error);
+      const reconnectBtn = needsReconnect
         ? `<button class="btn btn-primary btn-sm insight-reconnect-btn" data-connect-platform="google" style="margin-top:.75rem;">
-             <i class="fas fa-redo"></i> Reconectar Google
+             <i class="fas fa-redo"></i> Reconectar Google Analytics
            </button>`
         : '';
       return `
         <div class="insight-section-error">
           <i class="fas fa-exclamation-circle"></i> ${this._esc(d._error)}
-          ${expiredBtn}
+          ${reconnectBtn}
         </div>
         ${this._buildPropertyIdEditButton()}
       `;
@@ -615,15 +570,12 @@ class InsightView extends BaseView {
         if (!val || !/^\d+$/.test(val)) { alert('Ingresa un Property ID válido (solo números, ej: 123456789).'); return; }
         this._ga4PropertyId = val;
 
-        // Guardar property ID directamente en brand_integrations via Supabase
+        // El ga4_property_id se persiste en brand_integrations.metadata via el
+        // backend cuando se hace la primera llamada a /api/insights/fetch.
+        // Actualizamos también el estado local para no perderlo entre renders.
         const integ = this.integrations['google'];
-        if (integ?.id && this.supabase) {
-          const newMeta = { ...(integ.metadata || {}), ga4_property_id: val };
-          const { error } = await this.supabase
-            .from('brand_integrations')
-            .update({ metadata: newMeta })
-            .eq('id', integ.id);
-          if (!error) integ.metadata = newMeta;
+        if (integ) {
+          integ.metadata = { ...(integ.metadata || {}), ga4_property_id: val };
         }
 
         this._googleData = null;

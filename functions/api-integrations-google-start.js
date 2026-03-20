@@ -12,14 +12,15 @@ function base64UrlEncode(obj) {
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function getOrigin(event) {
-  const proto = event.headers?.['x-forwarded-proto'] || event.headers?.['X-Forwarded-Proto'] || 'https';
-  const host = event.headers?.host || event.headers?.Host;
-  if (host) return `${proto}://${host}`;
-  const ref = event.headers?.referer || event.headers?.Referer;
-  if (ref) return new URL(ref).origin;
-  if (process.env.SITE_URL) return new URL(process.env.SITE_URL).origin;
-  return 'http://localhost';
+// SITE_URL debe estar configurada en Netlify Dashboard con el dominio exacto
+// que también está registrado en Google Cloud Console como "Authorized redirect URI".
+// Ejemplo: https://tu-app.netlify.app  o  https://app.tudominio.com
+function getRedirectUri() {
+  if (process.env.SITE_URL) {
+    return `${process.env.SITE_URL.replace(/\/$/, '')}/brand-integration-callback`;
+  }
+  // Fallback solo para desarrollo local (nunca llega a producción si SITE_URL está set)
+  return 'http://localhost:8888/brand-integration-callback';
 }
 
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
@@ -90,8 +91,7 @@ exports.handler = async (event) => {
   if (!clientId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing GOOGLE_CLIENT_ID env var' }) };
 
   const scopes = process.env.GOOGLE_OAUTH_SCOPES || 'openid email profile';
-  const origin = getOrigin(event);
-  const redirectUri = `${origin}/brand-integration-callback`;
+  const redirectUri = getRedirectUri();
 
   const state = base64UrlEncode({
     platform: 'google',

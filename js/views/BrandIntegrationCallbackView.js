@@ -64,7 +64,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       if (!code || !state) throw new Error('Faltan parámetros de OAuth (code/state).');
 
       const session = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
+      const accessToken = session?.data?.session?.access_token;
       if (!accessToken) throw new Error('Sesión no válida. Inicia sesión y vuelve a conectar.');
 
       const res = await fetch(`${window.location.origin}/api/integrations/exchange`, {

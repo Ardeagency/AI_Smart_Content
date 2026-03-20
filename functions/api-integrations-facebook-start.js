@@ -12,14 +12,14 @@ function base64UrlEncode(obj) {
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function getOrigin(event) {
-  const proto = event.headers?.['x-forwarded-proto'] || event.headers?.['X-Forwarded-Proto'] || 'https';
-  const host = event.headers?.host || event.headers?.Host;
-  if (host) return `${proto}://${host}`;
-  const ref = event.headers?.referer || event.headers?.Referer;
-  if (ref) return new URL(ref).origin;
-  if (process.env.SITE_URL) return new URL(process.env.SITE_URL).origin;
-  return 'http://localhost';
+// SITE_URL debe estar configurada en Netlify Dashboard con el dominio exacto
+// que también está registrado en Meta Developers como "Valid OAuth Redirect URI".
+// Ejemplo: https://tu-app.netlify.app  o  https://app.tudominio.com
+function getRedirectUri() {
+  if (process.env.SITE_URL) {
+    return `${process.env.SITE_URL.replace(/\/$/, '')}/brand-integration-callback`;
+  }
+  return 'http://localhost:8888/brand-integration-callback';
 }
 
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
@@ -90,8 +90,7 @@ exports.handler = async (event) => {
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
   const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'email public_profile';
-  const origin = getOrigin(event);
-  const redirectUri = `${origin}/brand-integration-callback`;
+  const redirectUri = getRedirectUri();
 
   const state = base64UrlEncode({
     platform: 'facebook',

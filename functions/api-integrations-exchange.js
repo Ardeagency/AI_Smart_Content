@@ -17,14 +17,13 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function getOrigin(event) {
-  const proto = event.headers?.['x-forwarded-proto'] || event.headers?.['X-Forwarded-Proto'] || 'https';
-  const host = event.headers?.host || event.headers?.Host;
-  if (host) return `${proto}://${host}`;
-  const ref = event.headers?.referer || event.headers?.Referer;
-  if (ref) return new URL(ref).origin;
-  if (process.env.SITE_URL) return new URL(process.env.SITE_URL).origin;
-  return 'http://localhost';
+// La redirect_uri en el exchange DEBE ser idéntica a la que se usó en el authorize.
+// Usar SITE_URL garantiza que siempre sea la misma URI registrada en Google/Meta.
+function getRedirectUri() {
+  if (process.env.SITE_URL) {
+    return `${process.env.SITE_URL.replace(/\/$/, '')}/brand-integration-callback`;
+  }
+  return 'http://localhost:8888/brand-integration-callback';
 }
 
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
@@ -150,8 +149,7 @@ exports.handler = async (event) => {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
-  const origin = getOrigin(event);
-  const redirectUri = `${origin}/brand-integration-callback`;
+  const redirectUri = getRedirectUri();
   const scopeArr = String(scopesRaw).split(/\s+/).map(s => s.trim()).filter(Boolean);
   const at = Date.now();
   const expiresIso = (sec) => sec ? new Date(at + Number(sec) * 1000).toISOString() : null;
