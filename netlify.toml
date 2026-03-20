@@ -163,4 +163,9 @@
 # - SUPABASE_ANON_KEY
 # - SUPABASE_SERVICE_ROLE_KEY (solo para backend, no se expone)
 # - SUPABASE_JWT_SECRET (solo para backend, no se expone)
+# - SITE_URL = https://aismartcontent.io  (sin barra final, determina la redirect_uri OAuth)
+# - GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+# - GOOGLE_OAUTH_SCOPES = openid email profile https://www.googleapis.com/auth/analytics.readonly
+# - META_APP_ID / META_APP_SECRET
+# - FACEBOOK_OAUTH_SCOPES = ads_read,read_insights,pages_read_engagement
 

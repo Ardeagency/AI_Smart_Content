@@ -89,7 +89,7 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'email public_profile';
+  const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'ads_read,read_insights,pages_read_engagement';
   const redirectUri = getRedirectUri();
 
   const state = base64UrlEncode({
