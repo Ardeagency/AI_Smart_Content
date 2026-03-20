@@ -407,17 +407,6 @@ class Navigation {
           <i class="fas fa-coins"></i>
           <span>Créditos</span>
         </a>
-        <button
-          type="button"
-          class="user-dropdown-item nav-footer-btn"
-          data-flyout="notifications"
-          data-tooltip="Notificaciones"
-          aria-label="Notificaciones"
-          id="userDropdownNotificationsBtn"
-        >
-          <i class="fas fa-bell"></i>
-          <span>Notificaciones</span>
-        </button>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>
@@ -440,6 +429,16 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              <button
+                type="button"
+                class="user-menu-btn nav-footer-btn"
+                data-flyout="notifications"
+                data-tooltip="Notificaciones"
+                aria-label="Notificaciones"
+                id="headerNotificationsBtn"
+              >
+                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
+              </button>
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
@@ -564,6 +563,16 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              <button
+                type="button"
+                class="user-menu-btn nav-footer-btn"
+                data-flyout="notifications"
+                data-tooltip="Notificaciones"
+                aria-label="Notificaciones"
+                id="headerNotificationsBtn"
+              >
+                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
+              </button>
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
@@ -653,6 +662,16 @@ class Navigation {
           <div class="header-center header-builder-slot" id="headerBuilderSlot" aria-hidden="true"></div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
+              <button
+                type="button"
+                class="user-menu-btn nav-footer-btn"
+                data-flyout="notifications"
+                data-tooltip="Notificaciones"
+                aria-label="Notificaciones"
+                id="headerNotificationsBtn"
+              >
+                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
+              </button>
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
