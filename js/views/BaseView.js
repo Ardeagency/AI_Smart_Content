@@ -614,7 +614,7 @@ class BaseView {
       profileItem.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (window.router) window.router.navigate('/settings');
+        if (window.router) window.router.navigate('/home');
         headerUserDropdown.classList.remove('open');
       });
     }

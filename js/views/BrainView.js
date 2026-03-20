@@ -718,7 +718,7 @@ class BrainView extends (window.BaseView || class {}) {
       const url =
         window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
           ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
-          : '/settings';
+          : '/form_org';
       if (window.router) window.router.navigate(url, true);
       return;
     }

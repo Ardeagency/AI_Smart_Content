@@ -56,7 +56,7 @@ class StudioView extends BaseView {
     if (!this.organizationId) {
       const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
         ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
-        : '/settings';
+        : '/form_org';
       window.router?.navigate(url, true);
       return;
     }

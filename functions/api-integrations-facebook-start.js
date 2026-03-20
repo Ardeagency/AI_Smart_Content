@@ -77,7 +77,7 @@ exports.handler = async (event) => {
   if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
 
   const brandContainerId = event.queryStringParameters?.brand_container_id;
-  const returnTo = event.queryStringParameters?.return_to || '/settings';
+  const returnTo = event.queryStringParameters?.return_to || '/home';
   if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
   try {

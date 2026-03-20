@@ -117,7 +117,7 @@ class App {
         const { data: { user } } = await window.supabase.auth.getUser();
         userId = user?.id;
       }
-      let url = '/settings';
+      let url = '/home';
       if (userId) {
         if (auth && typeof auth.getDefaultUserRoute === 'function') {
           url = await auth.getDefaultUserRoute(userId);
@@ -233,9 +233,6 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
-    // ── Settings ──
-    r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
-
     // ── Créditos (sin org: redirige; en org: tienda de créditos) ──
     r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
     r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']), auth);
@@ -294,7 +291,7 @@ class App {
             <h1>404 En Construcción</h1>
             <p>Esta página está en construcción. En una próxima actualización será agregada.</p>
             <div class="error-actions">
-              <button onclick="window.router.navigate('/settings')" class="btn-primary"><i class="fas fa-cog"></i> Ir a Configuración</button>
+              <button onclick="window.router.navigate('/home')" class="btn-primary"><i class="fas fa-home"></i> Ir a Inicio</button>
               <button onclick="window.history.back()" class="btn-secondary"><i class="fas fa-arrow-left"></i> Volver</button>
             </div>
           </div></div>`;

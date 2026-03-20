@@ -1,7 +1,7 @@
 /**
  * CreditsView - Redirige a la vista donde se ven los créditos.
  * Con org en contexto: /org/:id/organization (configuración incluye créditos).
- * Sin org: redirige a organización por defecto o /settings.
+ * Sin org: redirige a organización por defecto o /form_org.
  */
 class CreditsView extends BaseView {
   async onEnter() {
@@ -30,7 +30,7 @@ class CreditsView extends BaseView {
     }
     const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
       ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
-      : '/settings';
+      : '/form_org';
     if (window.router) window.router.navigate(url, true);
   }
 

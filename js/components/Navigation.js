@@ -267,8 +267,8 @@ class Navigation {
       return { mode: null, showSidebar: false, showHeader: false, orgId: null, brandId: null };
     }
     
-    // Configuración de usuario (Mi cuenta): fuera de org, solo header sin sidebar
-    if (path === '/settings' || path.startsWith('/settings?')) {
+    // Home / onboarding: solo header sin sidebar
+    if (path === '/home' || path === '/hogar' || path === '/form_org' || path.startsWith('/form_org?')) {
       return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -383,9 +383,9 @@ class Navigation {
 
   /**
    * Dropdown de usuario (único fragmento reutilizable)
-   * @param {string} settingsHref - URL de configuración de usuario (siempre /settings)
+   * @param {string} settingsHref - URL destino del botón "Mi cuenta"
    */
-  getUserDropdownHTML(settingsHref = '/settings') {
+  getUserDropdownHTML(settingsHref = '/home') {
     return `
       <div class="user-dropdown" id="userDropdown">
         <div class="user-dropdown-header">
@@ -408,7 +408,7 @@ class Navigation {
    * HTML para Home - Solo header sin sidebar
    */
   getHomeHeaderHTML() {
-    const settingsHref = '/settings'; // Mi cuenta: siempre fuera de org
+    const settingsHref = '/home'; // "Mi cuenta": fuera de org
     return `
       <header class="app-header header-only" id="appHeader">
         <div class="header-content">
@@ -439,7 +439,7 @@ class Navigation {
     const globalRoutes = {};
     if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
     if (basePath) return `${basePath}/${routeSuffix}`;
-    const legacy = { brand: '/brands', settings: '/settings' };
+    const legacy = { brand: '/brands', settings: '/home' };
     return legacy[routeSuffix] || `/${routeSuffix}`;
   }
 
@@ -546,7 +546,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML('/settings')}
+              ${this.getUserDropdownHTML('/home')}
             </div>
           </div>
         </div>
@@ -635,7 +635,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML('/settings')}
+              ${this.getUserDropdownHTML('/home')}
             </div>
           </div>
         </div>
@@ -668,7 +668,7 @@ class Navigation {
       localStorage.setItem('userViewMode', 'user');
       const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
         ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
-        : '/settings';
+        : '/home';
       window.router?.navigate(url, true);
     }
   }
@@ -1249,7 +1249,6 @@ class Navigation {
       '/content': 'IDENTITY',
       '/video': 'VIDEO',
       '/servicios': 'IDENTITY',
-      '/settings': 'SETTINGS',
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',
       '/dev/dashboard': 'DASHBOARD',
@@ -1325,7 +1324,7 @@ class Navigation {
     this.closeMobileNav();
     const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
       ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
-      : '/settings';
+      : '/home';
     if (window.router) window.router.navigate(url, true);
   }
 
@@ -1406,7 +1405,7 @@ class Navigation {
       if (mode === 'user') {
         const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
           ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
-          : '/settings';
+          : '/home';
         if (window.router) window.router.navigate(url, true);
         else window.location.href = url;
       } else {
@@ -1585,7 +1584,7 @@ class Navigation {
           if (orgId && orgId !== this.currentOrgId && typeof window.getOrgPathPrefix === 'function') {
             document.getElementById('navOrgDropdown')?.classList.remove('active');
             const prefix = window.getOrgPathPrefix(orgId, orgName);
-            window.router?.navigate(prefix ? `${prefix}/production` : '/settings');
+            window.router?.navigate(prefix ? `${prefix}/production` : '/form_org');
           }
         });
       });
@@ -1601,7 +1600,7 @@ class Navigation {
       listEl.querySelector('.nav-org-create')?.addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('navOrgDropdown')?.classList.remove('active');
-        window.router?.navigate('/settings');
+        window.router?.navigate('/form_org');
       });
     } catch (err) {
       console.error('Error loading organizations list:', err);

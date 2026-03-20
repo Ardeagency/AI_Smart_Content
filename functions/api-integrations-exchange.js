@@ -133,7 +133,7 @@ exports.handler = async (event) => {
 
   const platform = String(stateObj.platform || '').toLowerCase().trim();
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
-  const returnTo = String(stateObj.return_to || '/settings');
+  const returnTo = String(stateObj.return_to || '/home');
   const scopesRaw = stateObj.scope || '';
 
   if (!['google', 'facebook'].includes(platform)) {

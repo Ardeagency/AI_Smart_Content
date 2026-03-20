@@ -82,7 +82,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       }
 
       const json = await res.json();
-      const returnTo = json?.return_to || '/settings';
+      const returnTo = json?.return_to || '/home';
 
       if (window.router) window.router.navigate(returnTo, true);
       else window.location.href = returnTo;

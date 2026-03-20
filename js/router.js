@@ -99,7 +99,7 @@ class Router {
       if (orgSettingsMatch) {
         const query = window.location.search || '';
         this._handlingRoute = false;
-        this.navigate('/settings' + query, true);
+        this.navigate('/home' + query, true);
         return;
       }
 
@@ -159,7 +159,7 @@ class Router {
               this.navigate('/login', true);
               return;
             }
-            let defaultUrl = '/settings';
+            let defaultUrl = '/home';
             if (window.authService && window.authService.getCurrentUser()?.id) {
               defaultUrl = typeof window.authService.getDefaultUserRoute === 'function'
                 ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
@@ -351,7 +351,7 @@ class Router {
 
   async _getDefaultUserRouteFallback(userId) {
     const supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
-    if (!supabase || !userId) return '/settings';
+    if (!supabase || !userId) return '/form_org';
     try {
       const [membersRes, ownedRes] = await Promise.all([
         supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
@@ -366,16 +366,16 @@ class Router {
       (ownedRes.data || []).forEach((o) => {
         if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
       });
-      if (list.length === 0) return '/settings';
+      if (list.length === 0) return '/form_org';
       const selectedId = localStorage.getItem('selectedOrganizationId');
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/production` : '/settings';
+        return prefix ? `${prefix}/production` : '/form_org';
       }
       return `/org/${org.id}/production`;
     } catch (e) {
-      return '/settings';
+      return '/form_org';
     }
   }
 
@@ -390,7 +390,7 @@ class Router {
       if (user?.id) return await this._getDefaultUserRouteFallback(user.id);
     }
     if (localStorage.getItem('userViewMode') === 'developer') return '/dev/dashboard';
-    return '/settings';
+    return '/form_org';
   }
 
   /**
