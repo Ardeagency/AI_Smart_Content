@@ -397,11 +397,11 @@ class Navigation {
         <div class="user-dropdown-divider"></div>
         <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <i class="fas fa-cog"></i>
-          <span>Configuración de la cuenta</span>
+          <span>Settings</span>
         </a>
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
           <i class="fas fa-building"></i>
-          <span>Configuración de la organización</span>
+          <span>Organization</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
           <i class="fas fa-coins"></i>
