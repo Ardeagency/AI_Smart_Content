@@ -162,7 +162,7 @@ class App {
     r.register('/brands', brandsLoader, auth);
     r.register('/brands/:brandId', brandsLoader, auth);
 
-    // ── OAuth callback para integraciones (brand_integrations) ──
+    // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(
       '/brand-integration-callback',
       this._lazy('BrandIntegrationCallbackView', ['/js/views/BrandIntegrationCallbackView.js']),

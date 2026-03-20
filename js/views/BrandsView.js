@@ -1884,10 +1884,6 @@ class BrandsView extends BaseView {
   }
 
   async connectBrandIntegration(platform) {
-    if (!window.authService) {
-      alert('Servicio de autenticación no disponible.');
-      return;
-    }
     if (!this.brandContainerData?.id) {
       alert('No se pudo identificar la marca.');
       return;
@@ -1896,13 +1892,53 @@ class BrandsView extends BaseView {
     const brandContainerId = this.brandContainerData.id;
     const returnTo = `${window.location.pathname}${window.location.search || ''}`;
 
-    const callbackUrl = `${window.location.origin}/brand-integration-callback` +
-      `?platform=${encodeURIComponent(platform)}` +
-      `&brand_container_id=${encodeURIComponent(brandContainerId)}` +
-      `&return_to=${encodeURIComponent(returnTo)}`;
+    const supported = ['google', 'facebook'];
+    const plat = String(platform || '').toLowerCase().trim();
+    if (!supported.includes(plat)) {
+      alert('Plataforma no soportada.');
+      return;
+    }
 
-    // Lanza el OAuth de Supabase. Tras el callback guardamos la data en `brand_integrations`.
-    await window.authService.socialLogin(platform, { redirectTo: callbackUrl });
+    try {
+      if (!this.supabase && window.supabaseService?.getClient) {
+        this.supabase = await window.supabaseService.getClient();
+      }
+      if (!this.supabase?.auth?.getSession) {
+        alert('Supabase no disponible para autenticar la conexión.');
+        return;
+      }
+
+      const session = await this.supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        alert('Sesión no válida. Inicia sesión y vuelve a conectar.');
+        return;
+      }
+
+      const startUrl = `${window.location.origin}/api/integrations/${encodeURIComponent(plat)}/start` +
+        `?brand_container_id=${encodeURIComponent(brandContainerId)}` +
+        `&return_to=${encodeURIComponent(returnTo)}`;
+
+      const res = await fetch(startUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || `Error ${res.status} al iniciar conexión.`);
+      }
+
+      const json = await res.json();
+      const authorizeUrl = json?.authorize_url;
+      if (!authorizeUrl) throw new Error('No se pudo generar la URL de autorización.');
+
+      window.location.href = authorizeUrl;
+    } catch (e) {
+      console.error('connectBrandIntegration error:', e);
+      alert(e?.message || 'No se pudo conectar la integración.');
+    }
   }
 
   async disconnectBrandIntegration(platform) {
