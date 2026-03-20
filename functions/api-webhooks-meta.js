@@ -68,10 +68,14 @@ exports.handler = async (event) => {
       };
     }
 
+    const reason = !verifyToken
+      ? 'META_WEBHOOK_VERIFY_TOKEN missing in runtime'
+      : 'verify_token mismatch';
+
     return {
       statusCode: 403,
       headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Invalid webhook verification token' })
+      body: JSON.stringify({ error: 'Invalid webhook verification token', reason })
     };
   }
 
