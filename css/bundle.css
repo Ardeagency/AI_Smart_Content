@@ -9509,6 +9509,10 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .living-viewer-right-inner {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     padding: 0 var(--spacing-md) var(--spacing-md);
 }
 

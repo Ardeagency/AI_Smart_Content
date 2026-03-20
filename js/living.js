@@ -1880,10 +1880,13 @@ class LivingManager {
             });
         }
 
+        // Limpieza defensiva: eliminar cualquier botón legacy "Ver todo" si quedó en caché del DOM
+        modal.querySelectorAll('.living-viewer-see-all').forEach((el) => el.remove());
+
         if (correctionSection && correctionInput && correctionBtn && correctionStatus) {
             correctionInput.value = '';
             correctionStatus.textContent = '';
-            const showCorrection = !isVideo && !!mediaUrl;
+            const showCorrection = !isVideo;
             correctionSection.style.display = showCorrection ? '' : 'none';
 
             const newCorrectionBtn = correctionBtn.cloneNode(true);
