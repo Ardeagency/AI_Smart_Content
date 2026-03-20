@@ -89,6 +89,18 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/webhooks/meta"
+  to = "/.netlify/functions/api-webhooks-meta"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/webhooks/instagram"
+  to = "/.netlify/functions/api-webhooks-meta"
+  status = 200
+  force = true
+
 # Netlify Functions — path directo
 [[redirects]]
   from = "/.netlify/functions/*"
@@ -168,4 +180,5 @@
 # - GOOGLE_OAUTH_SCOPES = openid email profile https://www.googleapis.com/auth/analytics.readonly
 # - META_APP_ID / META_APP_SECRET
 # - FACEBOOK_OAUTH_SCOPES = ads_read,read_insights,pages_read_engagement
+# - META_WEBHOOK_VERIFY_TOKEN = token secreto para validar webhook de Meta
 
