@@ -240,20 +240,6 @@ class App {
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
-    // ── Org: Discovery (Intel Radar, Signals Feed, Market Insights) ──
-    const dashboardLoader = this._lazy('DashboardView', ['/js/views/DashboardView.js']);
-    const intelRadarLoader = this._lazy('IntelRadarView', ['/js/views/IntelRadarView.js']);
-    const signalsFeedLoader = this._lazy('SignalsFeedView', ['/js/views/SignalsFeedView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/market-insights', dashboardLoader, auth);
-    r.register('/market-insights', dashboardLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/intel-radar', intelRadarLoader, auth);
-    r.register('/intel-radar', intelRadarLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/signals-feed', signalsFeedLoader, auth);
-    r.register('/signals-feed', signalsFeedLoader, auth);
-    // Legacy: redirect dashboard → market-insights
-    r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
-    r.register('/dashboard', dashboardLoader, auth);
-
     // ── Create / Form ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);
     r.register('/form_org', this._lazy('FormRecordView', ['/js/views/FormRecordView.js']), auth);

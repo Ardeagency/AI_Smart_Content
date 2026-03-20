@@ -1,6 +1,6 @@
 /**
  * FlowCatalogView - Feed inteligente de producción creativa.
- * Dos experiencias: HOME (Discovery Feed) y VIEW POR CATEGORÍA (Contextual Feed).
+ * Dos experiencias: HOME (Feed principal) y VIEW POR CATEGORÍA (Contextual Feed).
  */
 class FlowCatalogView extends BaseView {
   constructor() {
