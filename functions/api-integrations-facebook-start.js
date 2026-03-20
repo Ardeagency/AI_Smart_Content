@@ -89,7 +89,12 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'ads_read,read_insights,pages_read_engagement';
+  // Permisos requeridos + sus dependencias según Meta Permissions Reference:
+  // - ads_read: acceso a Ads Insights API (sin dependencias)
+  // - read_insights: insights de Pages/apps (requiere pages_read_engagement + pages_show_list)
+  // - pages_read_engagement: leer contenido de la Page (requiere pages_show_list)
+  // - pages_show_list: listar Pages del usuario (sin dependencias)
+  const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'ads_read,read_insights,pages_read_engagement,pages_show_list';
   const redirectUri = getRedirectUri();
 
   const state = base64UrlEncode({
