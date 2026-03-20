@@ -2696,7 +2696,7 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
 
 /* Production: padding superior para header de dos filas (ruta+icono + filtros + paddings) */
 body.has-sidebar #app-container:has(> main.living-main-content) {
-    padding-top: 135px;
+    padding-top: 97px;
 }
 
 /* =========================================
