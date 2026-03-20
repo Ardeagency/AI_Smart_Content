@@ -1209,19 +1209,7 @@ class LivingManager {
                 
                 const cardData = card.dataset.cardInfo;
                 if (cardData) {
-                    try {
-                        let unescapedData = cardData.replace(/&quot;/g, '"');
-                        unescapedData = unescapedData
-                            .replace(/&#39;/g, "'")
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>');
-                        
-                        const data = JSON.parse(unescapedData);
-                        this.openViewerModal(data);
-                    } catch (error) {
-                        console.error('❌ Error parsing card data:', error);
-                    }
+                    return;
                 } else {
                     // Para cards de texto, redirigir a producción
                     const productionId = card.dataset.productionId;
@@ -1471,7 +1459,7 @@ class LivingManager {
             });
         });
         
-        // Agregar event listeners para abrir modal de visualización
+        // En Production no abrimos modal de previsualización al click en cards
         const cards = container.querySelectorAll('.featured-card');
         cards.forEach((card, idx) => {
             // Remover listener anterior si existe para evitar duplicados
@@ -1484,34 +1472,7 @@ class LivingManager {
                     return;
                 }
                 
-                const cardData = newCard.dataset.cardInfo;
-                if (!cardData) {
-                    console.warn('⚠️ No se encontró data-card-info en la card', newCard);
-                    return;
-                }
-                
-                try {
-                    // El navegador debería desescapar automáticamente, pero por si acaso
-                    // desescapamos manualmente las entidades HTML
-                    let unescapedData = cardData;
-                    // Si todavía tiene &quot;, desescapar
-                    if (cardData.includes('&quot;')) {
-                        unescapedData = cardData.replace(/&quot;/g, '"');
-                    }
-                    // También manejar otros escapes comunes
-                    unescapedData = unescapedData
-                        .replace(/&#39;/g, "'")
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>');
-                    
-                    const data = JSON.parse(unescapedData);
-                    this.openViewerModal(data);
-                } catch (error) {
-                    console.error('❌ Error parsing card data:', error);
-                    console.error('Raw data:', cardData);
-                    console.error('Card element:', newCard);
-                }
+                return;
             });
         });
         
