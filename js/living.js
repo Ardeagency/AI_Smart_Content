@@ -1354,7 +1354,18 @@ class LivingManager {
                 
                 const cardData = card.dataset.cardInfo;
                 if (cardData) {
-                    return;
+                    try {
+                        let unescapedData = cardData.replace(/&quot;/g, '"');
+                        unescapedData = unescapedData
+                            .replace(/&#39;/g, "'")
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>');
+                        const data = JSON.parse(unescapedData);
+                        this.openViewerModal(data);
+                    } catch (error) {
+                        console.error('❌ Error parsing card data:', error);
+                    }
                 } else {
                     // Para cards de texto, redirigir a producción
                     const productionId = card.dataset.productionId;
@@ -1604,7 +1615,7 @@ class LivingManager {
             });
         });
         
-        // En Production no abrimos modal de previsualización al click en cards
+        // Abrir modal de previsualización al click en cards
         const cards = container.querySelectorAll('.featured-card');
         cards.forEach((card, idx) => {
             // Remover listener anterior si existe para evitar duplicados
@@ -1616,8 +1627,23 @@ class LivingManager {
                 if (e.target.closest('.featured-card-download-btn')) {
                     return;
                 }
-                
-                return;
+                const cardData = newCard.dataset.cardInfo;
+                if (!cardData) return;
+                try {
+                    let unescapedData = cardData;
+                    if (cardData.includes('&quot;')) {
+                        unescapedData = cardData.replace(/&quot;/g, '"');
+                    }
+                    unescapedData = unescapedData
+                        .replace(/&#39;/g, "'")
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>');
+                    const data = JSON.parse(unescapedData);
+                    this.openViewerModal(data);
+                } catch (error) {
+                    console.error('❌ Error parsing card data:', error);
+                }
             });
         });
         
@@ -1687,6 +1713,10 @@ class LivingManager {
         const videoEl = document.getElementById('livingViewerVideo');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
+        const correctionSection = document.getElementById('livingViewerCorrectionSection');
+        const correctionInput = document.getElementById('livingViewerCorrectionInput');
+        const correctionBtn = document.getElementById('livingViewerCorrectionBtn');
+        const correctionStatus = document.getElementById('livingViewerCorrectionStatus');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         
@@ -1753,6 +1783,7 @@ class LivingManager {
         const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model)
             ? output.metadata.model
             : this.getFlowName(run);
+        const flowName = this.getFlowName(run);
         const technicalParams = output.technical_params && typeof output.technical_params === 'object' ? output.technical_params : {};
         const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
         const quality = technicalParams.quality || meta.quality || '';
@@ -1762,18 +1793,20 @@ class LivingManager {
         
         const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
         const rows = [];
+        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Fecha de producción</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
+        rows.push(`<div class="info-row"><span class="info-label">Flujo</span><span class="info-value">${this.escapeHtml(flowName)}</span></div>`);
         rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
-        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Type</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
-        rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Images'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
-        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
-        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Created</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
+        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
         if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
-        if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">Rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
-        if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">Text</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
         if (output.generated_hashtags && (Array.isArray(output.generated_hashtags) ? output.generated_hashtags.length : typeof output.generated_hashtags === 'object')) {
             const tags = Array.isArray(output.generated_hashtags) ? output.generated_hashtags : (output.generated_hashtags.tags || output.generated_hashtags.values || []);
             if (tags.length) rows.push(`<div class="info-row"><span class="info-label">Hashtags</span><span class="info-value">${this.escapeHtml(tags.join(' '))}</span></div>`);
         }
+        if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">creative_rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
+        if (Object.keys(technicalParams).length) rows.push(`<div class="info-row"><span class="info-label">technical_params</span><span class="info-value">${this.escapeHtml(JSON.stringify(technicalParams))}</span></div>`);
+        if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">text_content</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
+        rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Imagen'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
+        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
         metadataEl.innerHTML = rows.join('');
         
         modal.classList.add('active');
@@ -1821,6 +1854,54 @@ class LivingManager {
                 }
             });
         }
+
+        if (correctionSection && correctionInput && correctionBtn && correctionStatus) {
+            correctionInput.value = '';
+            correctionStatus.textContent = '';
+            const showCorrection = !isVideo && !!mediaUrl;
+            correctionSection.style.display = showCorrection ? '' : 'none';
+
+            const newCorrectionBtn = correctionBtn.cloneNode(true);
+            correctionBtn.parentNode.replaceChild(newCorrectionBtn, correctionBtn);
+            const activeCorrectionBtn = document.getElementById('livingViewerCorrectionBtn');
+            if (activeCorrectionBtn && showCorrection) {
+                activeCorrectionBtn.addEventListener('click', async () => {
+                    const correctionText = (correctionInput.value || '').trim();
+                    if (!correctionText) {
+                        correctionStatus.textContent = 'Escribe qué quieres corregir.';
+                        return;
+                    }
+                    activeCorrectionBtn.disabled = true;
+                    correctionInput.disabled = true;
+                    correctionStatus.textContent = 'Regenerando imagen...';
+                    try {
+                        const result = await this.regenerateProductionImage({
+                            sourceImageUrl: mediaUrl,
+                            prompt: promptText,
+                            correction: correctionText,
+                            output,
+                            run
+                        });
+                        if (result?.image_url) {
+                            image.src = result.image_url;
+                            image.alt = result.prompt || promptText || 'Producción regenerada';
+                            if (result.prompt) {
+                                promptEl.textContent = result.prompt;
+                            }
+                            correctionStatus.textContent = 'Imagen regenerada correctamente.';
+                            if (typeof window.showToast === 'function') window.showToast('Producción regenerada');
+                        } else {
+                            correctionStatus.textContent = 'No se pudo regenerar la imagen.';
+                        }
+                    } catch (err) {
+                        correctionStatus.textContent = `Error: ${err?.message || 'No se pudo regenerar'}`;
+                    } finally {
+                        activeCorrectionBtn.disabled = false;
+                        correctionInput.disabled = false;
+                    }
+                });
+            }
+        }
         
         this.setupViewerSeeAllButtons(modal);
         
@@ -1831,6 +1912,75 @@ class LivingManager {
             }
         };
         document.addEventListener('keydown', handleEsc);
+    }
+
+    async saveSystemAIOutput(record) {
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase)) return null;
+        try {
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (!user?.id) return null;
+            if (!this.brandContainerId && this.projectData?.id) this.brandContainerId = this.projectData.id;
+            if (!this.brandContainerId) return null;
+            const row = {
+                brand_container_id: this.brandContainerId,
+                user_id: user.id,
+                ...record,
+                updated_at: new Date().toISOString()
+            };
+            const { data, error } = await this.supabase.from('system_ai_outputs').insert(row).select('id').single();
+            if (error) return null;
+            return data?.id || null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    async regenerateProductionImage({ sourceImageUrl, prompt, correction, output, run }) {
+        const res = await fetch('/.netlify/functions/kie-image-regenerate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                image_url: sourceImageUrl,
+                prompt: prompt || '',
+                correction: correction || '',
+                flow_name: this.getFlowName(run),
+                technical_params: output?.technical_params || {},
+                metadata: output?.metadata || {}
+            })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data?.error || 'No se pudo regenerar la imagen');
+        }
+
+        const outputRecord = {
+            provider: 'kie_api',
+            output_type: 'image',
+            status: 'completed',
+            prompt_used: data.prompt || prompt || '',
+            text_content: correction,
+            metadata: {
+                source: 'kie-image-regenerate',
+                regenerated_from: sourceImageUrl,
+                flow_name: this.getFlowName(run),
+                refined_prompt: data.prompt || '',
+                result_url: data.image_url || '',
+                technical_params: output?.technical_params || {}
+            }
+        };
+        const insertedId = await this.saveSystemAIOutput(outputRecord);
+        this.systemAiOutputs.unshift({
+            id: insertedId || `local-${Date.now()}`,
+            output_type: 'image',
+            prompt_used: data.prompt || prompt || '',
+            text_content: correction,
+            metadata: outputRecord.metadata,
+            created_at: new Date().toISOString(),
+            storage_path: null,
+            storage_object_id: null,
+            file_url: data.image_url || null
+        });
+        return data;
     }
     
     /**

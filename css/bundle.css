@@ -9562,6 +9562,50 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding: var(--spacing-sm) 0 0;
 }
 
+.living-viewer-correction-input {
+    width: 100%;
+    min-height: 42px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    font-size: 13px;
+    outline: none;
+}
+
+.living-viewer-correction-input:focus {
+    border-color: var(--accent-brand, rgba(255, 255, 255, 0.35));
+}
+
+.living-viewer-correction-btn {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-viewer-correction-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.living-viewer-correction-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.living-viewer-correction-status {
+    margin: 0;
+    min-height: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
 .living-viewer-prompt-text {
     font-size: 0.8125rem;
     line-height: 1.5;
