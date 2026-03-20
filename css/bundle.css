@@ -1685,7 +1685,7 @@ body.sidebar-collapsed .main-header,
 
 /* Toggle button removido del sidebar - ahora está en el header */
 
-/* Tooltips unificados — design glass (variables) */
+/* Tooltips unificados — design glass-black */
 .nav-tooltip {
     box-sizing: border-box;
     position: fixed;
@@ -1697,13 +1697,13 @@ body.sidebar-collapsed .main-header,
     justify-content: center;
     align-items: center;
     padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--glass-black-text);
     max-width: 180px;
     white-space: nowrap;
     overflow: hidden;
