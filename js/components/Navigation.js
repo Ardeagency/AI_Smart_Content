@@ -383,9 +383,8 @@ class Navigation {
 
   /**
    * Dropdown de usuario (único fragmento reutilizable)
-   * @param {string} settingsHref - URL destino del botón "Mi cuenta"
    */
-  getUserDropdownHTML(settingsHref = '/home') {
+  getUserDropdownHTML() {
     return `
       <div class="user-dropdown" id="userDropdown">
         <div class="user-dropdown-header">
@@ -393,10 +392,10 @@ class Navigation {
           <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
         </div>
         <div class="user-dropdown-divider"></div>
-        <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
+        <button type="button" class="user-dropdown-item" id="userDropdownSettingsLink">
           <i class="fas fa-cog"></i>
           <span>Mi cuenta</span>
-        </a>
+        </button>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>
@@ -408,7 +407,6 @@ class Navigation {
    * HTML para Home - Solo header sin sidebar
    */
   getHomeHeaderHTML() {
-    const settingsHref = '/home'; // "Mi cuenta": fuera de org
     return `
       <header class="app-header header-only" id="appHeader">
         <div class="header-content">
@@ -422,7 +420,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML(settingsHref)}
+              ${this.getUserDropdownHTML()}
             </div>
           </div>
         </div>
@@ -546,7 +544,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML('/home')}
+              ${this.getUserDropdownHTML()}
             </div>
           </div>
         </div>
@@ -635,7 +633,7 @@ class Navigation {
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
-              ${this.getUserDropdownHTML('/home')}
+              ${this.getUserDropdownHTML()}
             </div>
           </div>
         </div>
