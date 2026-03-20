@@ -864,26 +864,26 @@ class Navigation {
     if (!portal) return;
     if (document.getElementById('userSettingsModal')) return;
     const html = `
-      <div class="modal" id="userSettingsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
+      <div class="modal user-settings-modal" id="userSettingsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
         <div class="modal-overlay" id="userSettingsModalOverlay"></div>
-        <div class="modal-content modal-content--lg" style="max-width:min(860px,calc(100vw - 2rem));">
+        <div class="modal-content glass-black">
           <div class="modal-header">
             <h3 id="userSettingsModalTitle">Settings</h3>
             <button type="button" class="modal-close" id="userSettingsModalClose" aria-label="Cerrar">&times;</button>
           </div>
-          <div class="modal-body" style="display:grid;grid-template-columns:220px 1fr;gap:1rem;max-height:70vh;overflow:auto;">
-            <div id="userSettingsTabs" style="display:flex;flex-direction:column;gap:.5rem;">
+          <div class="modal-body user-settings-modal-body">
+            <div id="userSettingsTabs" class="user-settings-tabs">
               <button type="button" class="btn btn-secondary" data-section="account">Cuenta</button>
               <button type="button" class="btn btn-secondary" data-section="general">General</button>
               <button type="button" class="btn btn-secondary" data-section="security">Seguridad</button>
             </div>
-            <div id="userSettingsPanels">
+            <div id="userSettingsPanels" class="user-settings-panels">
               <section data-section="account">
                 <div class="form-group"><label>Nombre</label><input type="text" class="form-input" id="settingsAccountName" readonly></div>
                 <div class="form-group"><label>Correo</label><input type="email" class="form-input" id="settingsAccountEmail" readonly></div>
                 <div class="form-group"><label>Organización</label><input type="text" class="form-input" id="settingsAccountOrg" readonly></div>
               </section>
-              <section data-section="general" style="display:none;">
+              <section data-section="general" class="is-hidden">
                 <div class="form-group">
                   <label for="settingsGeneralLanguage">Idioma</label>
                   <select id="settingsGeneralLanguage" class="form-select">
@@ -898,7 +898,7 @@ class Navigation {
                   </label>
                 </div>
               </section>
-              <section data-section="security" style="display:none;">
+              <section data-section="security" class="is-hidden">
                 <div class="form-group">
                   <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="fas fa-key"></i> Cambiar contraseña</button>
                 </div>
@@ -915,7 +915,11 @@ class Navigation {
     const modal = document.getElementById('userSettingsModal');
     const close = () => this.closeSettingsModal();
     document.getElementById('userSettingsModalOverlay')?.addEventListener('click', close);
-    document.getElementById('userSettingsModalClose')?.addEventListener('click', close);
+    document.getElementById('userSettingsModalClose')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    });
     document.getElementById('settingsSecurityChangePassword')?.addEventListener('click', () => {
       this.closeSettingsModal();
       window.router?.navigate('/cambiar-contrasena');
@@ -940,7 +944,8 @@ class Navigation {
       btn.classList.toggle('btn-secondary', !active);
     });
     root.querySelectorAll('#userSettingsPanels [data-section]').forEach((panel) => {
-      panel.style.display = panel.getAttribute('data-section') === section ? '' : 'none';
+      const active = panel.getAttribute('data-section') === section;
+      panel.classList.toggle('is-hidden', !active);
     });
   }
 

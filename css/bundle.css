@@ -3084,6 +3084,48 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     font-weight: 500;
 }
 
+/* Settings Modal (header dropdown) */
+#modals-portal .modal.user-settings-modal .modal-overlay {
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+#modals-portal .modal.user-settings-modal .modal-content {
+    width: 860px;
+    max-width: min(860px, calc(100vw - 48px));
+    min-height: 560px;
+    max-height: min(78vh, 720px);
+    border: 1px solid var(--glass-black-border);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+#modals-portal .modal.user-settings-modal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#modals-portal .modal.user-settings-modal .modal-close {
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.user-settings-modal-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1rem;
+    max-height: none;
+}
+
+.user-settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.user-settings-panels .is-hidden {
+    display: none;
+}
+
 /* =========================================
    SIDEBAR - IDENTIDAD Y ORGANIZACIÓN
    ========================================= */
