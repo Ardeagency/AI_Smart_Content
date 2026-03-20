@@ -6022,6 +6022,137 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-color: var(--glass-border);
 }
 
+/* Integraciones (INFO > Identidad): Google/Facebook */
+.brand-integrations-picker {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0 0 0.75rem;
+}
+
+.brand-integration-picker-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+}
+
+.brand-integration-picker-btn i {
+    font-size: 1rem;
+}
+
+.brand-integration-picker-btn.active {
+    border-color: rgba(0, 231, 255, 0.65);
+    box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.12);
+}
+
+.brand-integration-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.brand-integration-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.brand-integration-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.brand-integration-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.brand-integration-status.is-connected {
+    color: #7bf1a8;
+    border-color: rgba(123, 241, 168, 0.35);
+    background: rgba(123, 241, 168, 0.12);
+}
+
+.brand-integration-status.is-disconnected {
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-integration-url-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.brand-integration-url-input {
+    flex: 1;
+    min-width: 14rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.brand-integration-url-input:focus {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-integration-action-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: var(--font-size-base);
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.brand-integration-action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-integration-disconnect-btn {
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.35);
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.brand-integration-hint {
+    color: var(--text-muted, rgba(212, 209, 216, 0.6));
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;

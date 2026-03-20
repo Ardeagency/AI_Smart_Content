@@ -19,6 +19,8 @@ class BrandsView extends BaseView {
     this.brandPlaces = [];
     this.brandAudiences = [];
     this.brandSocialLinks = [];
+    // Plataforma activa cuando renderizamos la configuración de integraciones (INFO > Identidad)
+    this.activeBrandIntegrationPlatform = 'google';
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -713,8 +715,10 @@ class BrandsView extends BaseView {
         .single();
       if (error) throw error;
       this.brandSocialLinks = [...(this.brandSocialLinks || []), data];
-      const container = document.getElementById('brandLinksContainer');
-      if (container) this.renderLinksInto(container);
+      const integrationsContainer = document.getElementById('brandIntegrationsContainer');
+      const linksContainer = document.getElementById('brandLinksContainer');
+      if (integrationsContainer) this.renderIntegrationsInto(integrationsContainer);
+      else if (linksContainer) this.renderLinksInto(linksContainer);
     } catch (e) {
       console.error('Error añadiendo enlace:', e);
       alert(e?.message || 'No se pudo añadir el enlace.');
@@ -743,8 +747,10 @@ class BrandsView extends BaseView {
       const { error } = await this.supabase.from('brand_social_links').delete().eq('id', id);
       if (error) throw error;
       this.brandSocialLinks = (this.brandSocialLinks || []).filter(l => l.id !== id);
-      const container = document.getElementById('brandLinksContainer');
-      if (container) this.renderLinksInto(container);
+      const integrationsContainer = document.getElementById('brandIntegrationsContainer');
+      const linksContainer = document.getElementById('brandLinksContainer');
+      if (integrationsContainer) this.renderIntegrationsInto(integrationsContainer);
+      else if (linksContainer) this.renderLinksInto(linksContainer);
     } catch (e) {
       console.error('Error eliminando enlace:', e);
       alert(e?.message || 'No se pudo eliminar.');
@@ -1677,10 +1683,10 @@ class BrandsView extends BaseView {
       });
     }
 
-    // Redes y web (dentro de INFO, junto al logo)
-    const linksContainer = container.querySelector('#brandLinksContainer');
-    if (linksContainer) {
-      this.renderLinksInto(linksContainer);
+    // Integraciones (dentro de INFO, junto al logo)
+    const integrationsContainer = container.querySelector('#brandIntegrationsContainer');
+    if (integrationsContainer) {
+      this.renderIntegrationsInto(integrationsContainer);
     }
 
     // Campos de texto editables (schema: solo palabras_clave como texto que se convierte a array)
@@ -1752,9 +1758,128 @@ class BrandsView extends BaseView {
           <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
           <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
         </div>
-        <ul class="info-links-list" id="brandLinksContainer" aria-label="Redes y web"></ul>
+        <div class="info-integrations-container" id="brandIntegrationsContainer" aria-label="Integraciones de redes"></div>
       </div>
     `;
+  }
+
+  /**
+   * Integraciones rápidas (por ahora Google + Facebook):
+   * Sustituye el input de "Redes y web" para usar botones con iconos.
+   * Persistimos la URL en `brand_social_links` (misma tabla que ya existe).
+   */
+  renderIntegrationsInto(container) {
+    if (!container) return;
+
+    const platforms = [
+      { platform: 'google', icon: 'fab fa-google', label: 'Google' },
+      { platform: 'facebook', icon: 'fab fa-facebook', label: 'Facebook' }
+    ];
+
+    const activePlatform = platforms.some(p => p.platform === this.activeBrandIntegrationPlatform)
+      ? this.activeBrandIntegrationPlatform
+      : platforms[0].platform;
+
+    const getLink = (plat) => {
+      const links = this.brandSocialLinks || [];
+      return links.find(l => String(l?.platform || '').toLowerCase() === plat) || null;
+    };
+
+    const active = platforms.find(p => p.platform === activePlatform) || platforms[0];
+    const activeLink = getLink(activePlatform);
+    const connected = !!(activeLink && String(activeLink.url || '').trim().length > 0);
+
+    container.innerHTML = `
+      <div class="brand-integrations-picker" role="tablist" aria-label="Integraciones">
+        ${platforms.map(p => {
+          const isActive = p.platform === activePlatform;
+          return `
+            <button type="button"
+              class="brand-integration-picker-btn ${isActive ? 'active' : ''}"
+              data-platform="${this.escapeHtml(p.platform)}"
+              role="tab"
+              aria-selected="${isActive ? 'true' : 'false'}">
+              <i class="${this.escapeHtml(p.icon)}" aria-hidden="true"></i>
+              <span>${this.escapeHtml(p.label)}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      <div class="brand-integration-panel" role="tabpanel" aria-label="Configuración de la integración">
+        <div class="brand-integration-head">
+          <div class="brand-integration-title">
+            <i class="${this.escapeHtml(active.icon)}" aria-hidden="true"></i>
+            <span>${this.escapeHtml(active.label)}</span>
+          </div>
+          <span class="brand-integration-status ${connected ? 'is-connected' : 'is-disconnected'}">
+            ${connected ? 'Conectado' : 'Sin conectar'}
+          </span>
+        </div>
+
+        <div class="brand-integration-url-row">
+          <label class="sr-only" for="brandIntegrationUrlInput">URL de ${this.escapeHtml(active.label)}</label>
+          <input
+            type="url"
+            id="brandIntegrationUrlInput"
+            class="brand-integration-url-input"
+            placeholder="https://..."
+            value="${this.escapeHtml(activeLink?.url || '')}"
+          />
+          <button type="button" id="brandIntegrationSaveBtn" class="brand-integration-action-btn brand-integration-save-btn">
+            Guardar
+          </button>
+          <button
+            type="button"
+            id="brandIntegrationDisconnectBtn"
+            class="brand-integration-action-btn brand-integration-disconnect-btn"
+            ${connected ? '' : 'hidden'}
+          >
+            Desconectar
+          </button>
+        </div>
+
+        <div class="brand-integration-hint">
+          Por ahora guardamos la URL para que tu marca pueda usarla en las integraciones de Google/Facebook.
+        </div>
+      </div>
+    `;
+
+    const pickerButtons = container.querySelectorAll('.brand-integration-picker-btn');
+    pickerButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const plat = String(btn.getAttribute('data-platform') || '').toLowerCase().trim();
+        if (!plat) return;
+        this.activeBrandIntegrationPlatform = plat;
+        this.renderIntegrationsInto(container);
+      });
+    });
+
+    const input = container.querySelector('#brandIntegrationUrlInput');
+    const saveBtn = container.querySelector('#brandIntegrationSaveBtn');
+    const disconnectBtn = container.querySelector('#brandIntegrationDisconnectBtn');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        const url = (input?.value || '').trim();
+        if (!url) {
+          alert('Introduce una URL válida.');
+          input?.focus?.();
+          return;
+        }
+        const existing = getLink(activePlatform);
+        if (existing?.id) await this.updateSocialLink(existing.id, url);
+        else await this.addSocialLink(activePlatform, url);
+        this.renderIntegrationsInto(container);
+      });
+    }
+
+    if (disconnectBtn && activeLink?.id) {
+      disconnectBtn.addEventListener('click', async () => {
+        await this.deleteSocialLink(activeLink.id);
+        this.renderIntegrationsInto(container);
+      });
+    }
   }
 
   renderEssenceSection(brand) {
