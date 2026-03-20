@@ -61,6 +61,10 @@ class InsightView extends BaseView {
     }
   }
 
+  renderHTML() {
+    return this._buildShell();
+  }
+
   // ── Init helpers ─────────────────────────────────────────────────────────
 
   async _initSupabase() {
