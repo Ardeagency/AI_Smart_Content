@@ -786,6 +786,19 @@ class Navigation {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
+    // Settings en modal (no navegación de ruta)
+    const settingsBtn = document.getElementById('userDropdownSettingsLink');
+    if (settingsBtn && !settingsBtn.hasAttribute('data-settings-bound')) {
+      settingsBtn.setAttribute('data-settings-bound', '1');
+      settingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const ud = document.getElementById('userDropdown');
+        if (ud) ud.classList.remove('active');
+        this.openSettingsModal('account');
+      });
+    }
+
     // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)
     if (!this._documentClickAttached) {
       this._documentClickAttached = true;
@@ -816,7 +829,7 @@ class Navigation {
       });
     });
 
-    document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdownSettingsLink:not([data-nav-bound]), #userDropdown a[data-route]:not([data-nav-bound])').forEach((link) => {
+    document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdown a[data-route]:not(#userDropdownSettingsLink):not([data-nav-bound])').forEach((link) => {
       link.setAttribute('data-nav-bound', '1');
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -843,6 +856,119 @@ class Navigation {
 
     this.setupCollapsedTooltips();
     this.setupFlyoutCloseListeners();
+    this.ensureSettingsModal();
+  }
+
+  ensureSettingsModal() {
+    const portal = document.getElementById('modals-portal');
+    if (!portal) return;
+    if (document.getElementById('userSettingsModal')) return;
+    const html = `
+      <div class="modal" id="userSettingsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
+        <div class="modal-overlay" id="userSettingsModalOverlay"></div>
+        <div class="modal-content modal-content--lg" style="max-width:min(860px,calc(100vw - 2rem));">
+          <div class="modal-header">
+            <h3 id="userSettingsModalTitle">Settings</h3>
+            <button type="button" class="modal-close" id="userSettingsModalClose" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body" style="display:grid;grid-template-columns:220px 1fr;gap:1rem;max-height:70vh;overflow:auto;">
+            <div id="userSettingsTabs" style="display:flex;flex-direction:column;gap:.5rem;">
+              <button type="button" class="btn btn-secondary" data-section="account">Cuenta</button>
+              <button type="button" class="btn btn-secondary" data-section="general">General</button>
+              <button type="button" class="btn btn-secondary" data-section="security">Seguridad</button>
+            </div>
+            <div id="userSettingsPanels">
+              <section data-section="account">
+                <div class="form-group"><label>Nombre</label><input type="text" class="form-input" id="settingsAccountName" readonly></div>
+                <div class="form-group"><label>Correo</label><input type="email" class="form-input" id="settingsAccountEmail" readonly></div>
+                <div class="form-group"><label>Organización</label><input type="text" class="form-input" id="settingsAccountOrg" readonly></div>
+              </section>
+              <section data-section="general" style="display:none;">
+                <div class="form-group">
+                  <label for="settingsGeneralLanguage">Idioma</label>
+                  <select id="settingsGeneralLanguage" class="form-select">
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label style="display:flex;align-items:center;gap:.5rem;">
+                    <input type="checkbox" id="settingsGeneralNotifications" checked>
+                    <span>Notificaciones</span>
+                  </label>
+                </div>
+              </section>
+              <section data-section="security" style="display:none;">
+                <div class="form-group">
+                  <button type="button" class="btn btn-primary" id="settingsSecurityChangePassword"><i class="fas fa-key"></i> Cambiar contraseña</button>
+                </div>
+                <div class="form-group">
+                  <button type="button" class="btn btn-secondary" id="settingsSecurityEditEmail"><i class="fas fa-envelope"></i> Editar correo</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    portal.insertAdjacentHTML('beforeend', html);
+
+    const modal = document.getElementById('userSettingsModal');
+    const close = () => this.closeSettingsModal();
+    document.getElementById('userSettingsModalOverlay')?.addEventListener('click', close);
+    document.getElementById('userSettingsModalClose')?.addEventListener('click', close);
+    document.getElementById('settingsSecurityChangePassword')?.addEventListener('click', () => {
+      this.closeSettingsModal();
+      window.router?.navigate('/cambiar-contrasena');
+    });
+    document.getElementById('settingsSecurityEditEmail')?.addEventListener('click', () => {
+      alert('La edición de correo estará disponible pronto.');
+    });
+    document.getElementById('userSettingsTabs')?.querySelectorAll('[data-section]').forEach((btn) => {
+      btn.addEventListener('click', () => this.setSettingsSection(btn.getAttribute('data-section') || 'account'));
+    });
+    if (modal) modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeSettingsModal();
+    });
+  }
+
+  setSettingsSection(section) {
+    const root = document.getElementById('userSettingsModal');
+    if (!root) return;
+    root.querySelectorAll('#userSettingsTabs [data-section]').forEach((btn) => {
+      const active = btn.getAttribute('data-section') === section;
+      btn.classList.toggle('btn-primary', active);
+      btn.classList.toggle('btn-secondary', !active);
+    });
+    root.querySelectorAll('#userSettingsPanels [data-section]').forEach((panel) => {
+      panel.style.display = panel.getAttribute('data-section') === section ? '' : 'none';
+    });
+  }
+
+  openSettingsModal(section = 'account') {
+    this.ensureSettingsModal();
+    const modal = document.getElementById('userSettingsModal');
+    if (!modal) return;
+    const user = window.authService?.getCurrentUser();
+    const orgName = this._orgCache?.name || window.currentOrgName || 'Sin organización';
+    const name = user?.full_name || user?.user_metadata?.full_name || 'Usuario';
+    const email = user?.email || '';
+    const nameEl = modal.querySelector('#settingsAccountName');
+    const emailEl = modal.querySelector('#settingsAccountEmail');
+    const orgEl = modal.querySelector('#settingsAccountOrg');
+    if (nameEl) nameEl.value = name;
+    if (emailEl) emailEl.value = email;
+    if (orgEl) orgEl.value = orgName;
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    this.setSettingsSection(section);
+  }
+
+  closeSettingsModal() {
+    const modal = document.getElementById('userSettingsModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
   }
 
   /**
