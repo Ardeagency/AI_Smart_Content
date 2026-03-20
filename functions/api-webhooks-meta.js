@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { corsHeaders } = require('./lib/ai-shared');
 
 function getVerifyToken() {
-  return process.env.META_WEBHOOK_VERIFY_TOKEN || '';
+  return String(process.env.META_WEBHOOK_VERIFY_TOKEN || '').trim();
 }
 
 function getAppSecret() {
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
   // Meta webhook verification handshake
   if (event.httpMethod === 'GET') {
     const mode = event.queryStringParameters?.['hub.mode'];
-    const token = event.queryStringParameters?.['hub.verify_token'];
+    const token = String(event.queryStringParameters?.['hub.verify_token'] || '').trim();
     const challenge = event.queryStringParameters?.['hub.challenge'];
     const verifyToken = getVerifyToken();
 
