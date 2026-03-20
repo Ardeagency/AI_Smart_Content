@@ -318,9 +318,9 @@ class AuthService {
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/production` : '/form_org';
+        return prefix ? `${prefix}/insight` : '/form_org';
       }
-      return `/org/${org.id}/production`;
+      return `/org/${org.id}/insight`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
       return '/form_org';

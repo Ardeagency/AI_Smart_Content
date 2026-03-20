@@ -65,6 +65,30 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/insights/fetch"
+  to = "/.netlify/functions/api-insights-fetch"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/integrations/facebook/start"
+  to = "/.netlify/functions/api-integrations-facebook-start"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/integrations/google/start"
+  to = "/.netlify/functions/api-integrations-google-start"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/integrations/exchange"
+  to = "/.netlify/functions/api-integrations-exchange"
+  status = 200
+  force = true
+
 # Netlify Functions — path directo
 [[redirects]]
   from = "/.netlify/functions/*"

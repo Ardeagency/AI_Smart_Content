@@ -139,6 +139,11 @@ class App {
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
+    // ── Org: Insight (primera página tras login: métricas Meta + Google Analytics) ──
+    const insightLoader = this._lazy('InsightView', ['/js/views/InsightView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/insight', insightLoader, auth);
+    r.register('/insight', insightLoader, auth);
+
     // ── Org: Production (URL formato /org/:orgIdShort/:orgNameSlug/...) ──
     const livingLoader = this._lazy('LivingView', ['/js/views/LivingView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/production', livingLoader, auth);
