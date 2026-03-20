@@ -866,10 +866,10 @@ class Navigation {
     const html = `
       <div class="modal user-settings-modal" id="userSettingsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
         <div class="modal-overlay" id="userSettingsModalOverlay"></div>
-        <div class="modal-content glass-black">
+        <div class="modal-content glass-white">
           <div class="modal-header">
             <h3 id="userSettingsModalTitle">Settings</h3>
-            <button type="button" class="modal-close" id="userSettingsModalClose" aria-label="Cerrar">&times;</button>
+            <button type="button" class="modal-close" id="userSettingsModalClose" data-action="close-settings-modal" aria-label="Cerrar">&times;</button>
           </div>
           <div class="modal-body user-settings-modal-body">
             <div id="userSettingsTabs" class="user-settings-tabs">
@@ -914,7 +914,11 @@ class Navigation {
 
     const modal = document.getElementById('userSettingsModal');
     const close = () => this.closeSettingsModal();
-    document.getElementById('userSettingsModalOverlay')?.addEventListener('click', close);
+    document.getElementById('userSettingsModalOverlay')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    });
     document.getElementById('userSettingsModalClose')?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -933,6 +937,18 @@ class Navigation {
     if (modal) modal.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.closeSettingsModal();
     });
+    if (!this._settingsModalDelegatedCloseBound) {
+      this._settingsModalDelegatedCloseBound = true;
+      document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('[data-action="close-settings-modal"]');
+        const overlay = e.target.closest('#userSettingsModalOverlay');
+        if (closeBtn || overlay) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.closeSettingsModal();
+        }
+      });
+    }
   }
 
   setSettingsSection(section) {
@@ -964,16 +980,18 @@ class Navigation {
     if (emailEl) emailEl.value = email;
     if (orgEl) orgEl.value = orgName;
 
-    modal.classList.add('active');
+    modal.classList.add('active', 'modal-open');
     modal.setAttribute('aria-hidden', 'false');
+    modal.style.display = 'flex';
     this.setSettingsSection(section);
   }
 
   closeSettingsModal() {
     const modal = document.getElementById('userSettingsModal');
     if (!modal) return;
-    modal.classList.remove('active');
+    modal.classList.remove('active', 'modal-open');
     modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = 'none';
   }
 
   /**
