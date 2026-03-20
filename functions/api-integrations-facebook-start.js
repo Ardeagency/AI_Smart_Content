@@ -89,12 +89,19 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Permisos requeridos + sus dependencias según Meta Permissions Reference:
-  // - ads_read: acceso a Ads Insights API (sin dependencias)
-  // - read_insights: insights de Pages/apps (requiere pages_read_engagement + pages_show_list)
-  // - pages_read_engagement: leer contenido de la Page (requiere pages_show_list)
-  // - pages_show_list: listar Pages del usuario (sin dependencias)
-  const scopes = process.env.FACEBOOK_OAUTH_SCOPES || 'ads_read,read_insights,pages_read_engagement,pages_show_list';
+  // Scopes maestros — cubre analítica de Ads, Instagram insights,
+  // publicación de contenido y gestión de comentarios para la IA.
+  // Dependencias incluidas según Meta Permissions Reference:
+  //   instagram_manage_insights     → requiere instagram_basic + pages_read_engagement + pages_show_list
+  //   instagram_content_publish     → requiere instagram_basic + pages_read_engagement + pages_show_list
+  //   instagram_manage_comments     → requiere instagram_basic + pages_read_engagement + pages_show_list
+  //   read_insights                 → requiere pages_read_engagement + pages_show_list
+  //   ads_read                      → sin dependencias
+  const scopes = process.env.FACEBOOK_OAUTH_SCOPES ||
+    'public_profile,email,ads_read,read_insights,' +
+    'instagram_basic,instagram_manage_insights,' +
+    'instagram_content_publish,instagram_manage_comments,' +
+    'pages_show_list,pages_read_engagement';
   const redirectUri = getRedirectUri();
 
   const state = base64UrlEncode({
