@@ -92,6 +92,9 @@ exports.handler = async (event) => {
 
   const scopes = process.env.GOOGLE_OAUTH_SCOPES || 'openid email profile';
   const redirectUri = getRedirectUri();
+  // Log para diagnóstico — visible en Netlify Functions → Logs
+  console.log('[google-start] SITE_URL:', process.env.SITE_URL || '(no configurado)');
+  console.log('[google-start] redirect_uri que se enviará a Google:', redirectUri);
 
   const state = base64UrlEncode({
     platform: 'google',
@@ -114,7 +117,7 @@ exports.handler = async (event) => {
   return {
     statusCode: 200,
     headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ authorize_url: authorizeUrl })
+    body: JSON.stringify({ authorize_url: authorizeUrl, _debug_redirect_uri: redirectUri })
   };
 };
 
