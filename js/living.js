@@ -69,6 +69,7 @@ class LivingManager {
         if (historyContainer) {
             historyContainer.innerHTML = this.renderHistorySkeletons();
         }
+        this.ensureViewerModalInPortal();
 
         try {
         // Verificar acceso antes de continuar
@@ -674,7 +675,17 @@ class LivingManager {
     }
 
     async renderAll() {
+        this.ensureViewerModalInPortal();
         await this.renderHistorySection();
+    }
+
+    ensureViewerModalInPortal() {
+        const modal = document.getElementById('livingViewerModal');
+        const portal = document.getElementById('modals-portal');
+        if (!modal || !portal) return;
+        if (modal.parentElement !== portal) {
+            portal.appendChild(modal);
+        }
     }
 
     async renderHeroSection() {
