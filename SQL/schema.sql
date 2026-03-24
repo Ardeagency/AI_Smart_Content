@@ -1,6 +1,60 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.agent_queue_jobs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL,
+  agent_id uuid,
+  job_type text NOT NULL CHECK (job_type = ANY (ARRAY['chat'::text, 'mission'::text, 'sensor'::text, 'report'::text, 'analysis'::text, 'trigger'::text])),
+  priority integer DEFAULT 5 CHECK (priority >= 1 AND priority <= 10),
+  payload jsonb DEFAULT '{}'::jsonb,
+  status text DEFAULT 'queued'::text CHECK (status = ANY (ARRAY['queued'::text, 'assigned'::text, 'running'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])),
+  attempts integer DEFAULT 0,
+  max_attempts integer DEFAULT 3,
+  locked_by text,
+  locked_at timestamp with time zone,
+  run_after timestamp with time zone DEFAULT now(),
+  started_at timestamp with time zone,
+  completed_at timestamp with time zone,
+  result jsonb,
+  error_message text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT agent_queue_jobs_pkey PRIMARY KEY (id),
+  CONSTRAINT agent_queue_jobs_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  CONSTRAINT agent_queue_jobs_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES public.ai_agents(id)
+);
+CREATE TABLE public.ai_agent_runtime (
+  agent_id uuid NOT NULL,
+  organization_id uuid NOT NULL,
+  status text DEFAULT 'stopped'::text CHECK (status = ANY (ARRAY['starting'::text, 'ready'::text, 'busy'::text, 'idle'::text, 'degraded'::text, 'failed'::text, 'stopped'::text])),
+  current_task text,
+  current_job_id uuid,
+  process_pid integer,
+  started_at timestamp with time zone,
+  last_ping_at timestamp with time zone,
+  error_count integer DEFAULT 0,
+  consecutive_failures integer DEFAULT 0,
+  resources_snapshot jsonb DEFAULT '{}'::jsonb,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_agent_runtime_pkey PRIMARY KEY (agent_id),
+  CONSTRAINT ai_agent_runtime_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES public.ai_agents(id),
+  CONSTRAINT ai_agent_runtime_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+CREATE TABLE public.ai_agents (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL UNIQUE,
+  workspace_path text NOT NULL,
+  status text DEFAULT 'provisioned'::text CHECK (status = ANY (ARRAY['provisioning'::text, 'provisioned'::text, 'active'::text, 'idle'::text, 'degraded'::text, 'failed'::text, 'stopped'::text])),
+  config jsonb DEFAULT '{}'::jsonb,
+  memory_snapshot jsonb DEFAULT '{}'::jsonb,
+  capabilities jsonb DEFAULT '["read_brand", "read_campaigns", "read_flows"]'::jsonb,
+  tool_phase text DEFAULT 'A'::text CHECK (tool_phase = ANY (ARRAY['A'::text, 'B'::text, 'C'::text])),
+  last_active_at timestamp with time zone,
+  provisioned_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_agents_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_agents_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
 CREATE TABLE public.ai_brand_vectors (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   organization_id uuid NOT NULL,
@@ -36,7 +90,7 @@ CREATE TABLE public.ai_chat_context (
 );
 CREATE TABLE public.ai_conversations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  brand_container_id uuid NOT NULL,
+  brand_container_id uuid,
   user_id uuid NOT NULL,
   title text DEFAULT 'Nueva Consultoría Semántica'::text,
   system_prompt_override text,
@@ -44,9 +98,10 @@ CREATE TABLE public.ai_conversations (
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  organization_id uuid NOT NULL,
   CONSTRAINT ai_conversations_pkey PRIMARY KEY (id),
-  CONSTRAINT ai_conversations_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
-  CONSTRAINT ai_conversations_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+  CONSTRAINT ai_conversations_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT ai_conversations_organization_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
 CREATE TABLE public.ai_global_vectors (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -69,9 +124,11 @@ CREATE TABLE public.ai_messages (
   attachments jsonb DEFAULT '[]'::jsonb,
   tokens_used integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
+  organization_id uuid NOT NULL,
   CONSTRAINT ai_messages_pkey PRIMARY KEY (id),
   CONSTRAINT ai_messages_conv_fkey FOREIGN KEY (conversation_id) REFERENCES public.ai_conversations(id),
-  CONSTRAINT ai_messages_run_fkey FOREIGN KEY (related_flow_run_id) REFERENCES public.flow_runs(id)
+  CONSTRAINT ai_messages_run_fkey FOREIGN KEY (related_flow_run_id) REFERENCES public.flow_runs(id),
+  CONSTRAINT ai_messages_organization_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
 CREATE TABLE public.audiences (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -139,9 +196,11 @@ CREATE TABLE public.brand_containers (
   organization_id uuid,
   idiomas_contenido ARRAY DEFAULT '{}'::text[],
   mercado_objetivo ARRAY DEFAULT '{}'::text[],
+  business_unit_id uuid,
   CONSTRAINT brand_containers_pkey PRIMARY KEY (id),
   CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
-  CONSTRAINT brand_containers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+  CONSTRAINT brand_containers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT brand_containers_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id)
 );
 CREATE TABLE public.brand_entities (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -186,8 +245,10 @@ CREATE TABLE public.brand_integrations (
   encryption_iv text,
   scope ARRAY,
   last_sync_at timestamp with time zone,
+  business_unit_id uuid,
   CONSTRAINT brand_integrations_pkey PRIMARY KEY (id),
-  CONSTRAINT brand_integrations_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+  CONSTRAINT brand_integrations_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT brand_integrations_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id)
 );
 CREATE TABLE public.brand_places (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -289,6 +350,27 @@ CREATE TABLE public.brands (
   objetivos_marca ARRAY DEFAULT '{}'::text[],
   CONSTRAINT brands_pkey PRIMARY KEY (id),
   CONSTRAINT brands_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.business_unit_products (
+  business_unit_id uuid NOT NULL,
+  product_id uuid NOT NULL,
+  is_active boolean DEFAULT true,
+  local_price numeric,
+  CONSTRAINT business_unit_products_pkey PRIMARY KEY (business_unit_id, product_id),
+  CONSTRAINT business_unit_products_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id),
+  CONSTRAINT business_unit_products_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.business_units (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL,
+  name text NOT NULL,
+  country_code text,
+  timezone text DEFAULT 'UTC'::text,
+  config jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT business_units_pkey PRIMARY KEY (id),
+  CONSTRAINT business_units_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
 CREATE TABLE public.campaign_entities (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -548,6 +630,28 @@ CREATE TABLE public.intelligence_signals (
   CONSTRAINT fk_is_entity FOREIGN KEY (entity_id) REFERENCES public.intelligence_entities(id),
   CONSTRAINT fk_is_run FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
+CREATE TABLE public.mission_runs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  mission_id uuid,
+  organization_id uuid NOT NULL,
+  agent_id uuid,
+  job_id uuid,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'queued'::text, 'running'::text, 'completed'::text, 'failed'::text, 'cancelled'::text, 'timeout'::text])),
+  trigger_type text,
+  trigger_id uuid,
+  started_at timestamp with time zone,
+  completed_at timestamp with time zone,
+  duration_ms integer,
+  result jsonb DEFAULT '{}'::jsonb,
+  error_message text,
+  tokens_used integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT mission_runs_pkey PRIMARY KEY (id),
+  CONSTRAINT mission_runs_mission_id_fkey FOREIGN KEY (mission_id) REFERENCES public.body_missions(id),
+  CONSTRAINT mission_runs_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  CONSTRAINT mission_runs_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES public.ai_agents(id),
+  CONSTRAINT mission_runs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.agent_queue_jobs(id)
+);
 CREATE TABLE public.monitoring_triggers (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_container_id uuid NOT NULL,
@@ -774,6 +878,22 @@ CREATE TABLE public.system_ai_outputs (
   CONSTRAINT fk_system_brand FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT fk_system_user FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
+CREATE TABLE public.system_metrics (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  cpu_percent numeric NOT NULL,
+  ram_percent numeric NOT NULL,
+  ram_used_mb integer,
+  ram_total_mb integer,
+  disk_percent numeric,
+  disk_used_gb numeric,
+  active_agents integer DEFAULT 0,
+  queued_jobs integer DEFAULT 0,
+  running_jobs integer DEFAULT 0,
+  health_state text DEFAULT 'green'::text CHECK (health_state = ANY (ARRAY['green'::text, 'yellow'::text, 'orange'::text, 'red'::text])),
+  snapshot jsonb DEFAULT '{}'::jsonb,
+  captured_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT system_metrics_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.trend_topics (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_container_id uuid,
@@ -803,6 +923,14 @@ CREATE TABLE public.ui_component_templates (
   template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['shell'::text, 'core'::text, 'preset'::text, 'domain'::text])),
   for_flow_type text CHECK (for_flow_type IS NULL OR (for_flow_type = ANY (ARRAY['manual'::text, 'autopilot'::text, 'system'::text, 'scraping'::text]))),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.user_business_units (
+  user_id uuid NOT NULL,
+  business_unit_id uuid NOT NULL,
+  role text DEFAULT 'member'::text,
+  CONSTRAINT user_business_units_pkey PRIMARY KEY (user_id, business_unit_id),
+  CONSTRAINT user_business_units_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT user_business_units_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id)
 );
 CREATE TABLE public.user_flow_favorites (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
