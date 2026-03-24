@@ -268,93 +268,13 @@ class InsightView extends BaseView {
   _renderPlatformCards() {
     const el = document.getElementById('insightPlatforms');
     if (!el) return;
-
-    const meta = this.integrations['facebook'];
-    const google = this.integrations['google'];
-
-    el.innerHTML = `
-      <div class="insight-platform-card ${meta ? 'connected' : ''}">
-        <div class="insight-platform-logo insight-platform-meta">
-          <svg width="24" height="24" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="25" cy="25" rx="25" ry="25" fill="none"/>
-            <path d="M34.6 7C30.3 7 27.5 9.2 25.8 12.9L25 14.7L24.2 12.9C22.5 9.2 19.7 7 15.4 7C9.7 7 5 12.1 5 18.4C5 27.6 14.1 35.5 25 43C35.9 35.5 45 27.6 45 18.4C45 12.1 40.3 7 34.6 7Z" fill="currentColor"/>
-          </svg>
-        </div>
-        <div class="insight-platform-info">
-          <span class="insight-platform-name">Meta Ads</span>
-          <span class="insight-platform-account">${meta ? this._esc(meta.external_account_name || 'Conectado') : 'No conectado'}</span>
-        </div>
-        <div class="insight-platform-actions">
-          ${meta
-            ? `<span class="insight-platform-badge connected"><i class="fas fa-check-circle"></i> Activo</span>
-               <button class="insight-platform-disconnect" data-disconnect-platform="facebook" title="Desconectar">
-                 <i class="fas fa-unlink"></i>
-               </button>`
-            : `<button class="insight-connect-btn btn btn-primary btn-sm" data-connect-platform="facebook">
-                 <i class="fas fa-plug"></i> Conectar
-               </button>`
-          }
-        </div>
-      </div>
-
-      <div class="insight-platform-card ${google ? 'connected' : ''}">
-        <div class="insight-platform-logo insight-platform-google">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        </div>
-        <div class="insight-platform-info">
-          <span class="insight-platform-name">Google Analytics 4</span>
-          <span class="insight-platform-account">${google ? this._esc(google.external_account_name || 'Conectado') : 'No conectado'}</span>
-        </div>
-        <div class="insight-platform-actions">
-          ${google
-            ? `<span class="insight-platform-badge connected"><i class="fas fa-check-circle"></i> Activo</span>
-               <button class="insight-platform-disconnect" data-disconnect-platform="google" title="Desconectar">
-                 <i class="fas fa-unlink"></i>
-               </button>`
-            : `<button class="insight-connect-btn btn btn-primary btn-sm" data-connect-platform="google">
-                 <i class="fas fa-plug"></i> Conectar
-               </button>`
-          }
-        </div>
-      </div>
-    `;
-
-    el.querySelectorAll('[data-connect-platform]').forEach(btn => {
-      btn.addEventListener('click', () => this._connectPlatform(btn.dataset.connectPlatform));
-    });
-    el.querySelectorAll('[data-disconnect-platform]').forEach(btn => {
-      btn.addEventListener('click', () => this._disconnectPlatform(btn.dataset.disconnectPlatform));
-    });
+    el.innerHTML = '';
   }
 
   _renderMetrics() {
     const area = document.getElementById('insightMetricsArea');
     if (!area) return;
-
-    const hasMeta = !!this.integrations['facebook'];
-    const hasGoogle = !!this.integrations['google'];
-
-    if (!hasMeta && !hasGoogle) {
-      area.innerHTML = this._emptyStateHTML();
-      return;
-    }
-
-    // KPI strip from Meta
-    const kpiHTML = hasMeta ? this._buildKpiStrip() : '';
-
-    // Sections
-    const metaHTML = hasMeta ? this._buildMetaSection() : '';
-    const googleHTML = hasGoogle ? this._buildGoogleSection() : '';
-
-    area.innerHTML = `${kpiHTML}${metaHTML}${googleHTML}`;
-    area.querySelectorAll('.insight-reconnect-btn[data-connect-platform]').forEach(btn => {
-      btn.addEventListener('click', () => this._connectPlatform(btn.dataset.connectPlatform));
-    });
+    area.innerHTML = this._emptyStateHTML();
   }
 
   _buildKpiStrip() {
@@ -545,19 +465,10 @@ class InsightView extends BaseView {
     return `
       <div class="insight-empty-state">
         <div class="insight-empty-icon"><i class="fas fa-chart-line"></i></div>
-        <h2 class="insight-empty-title">Conecta tus cuentas para ver métricas</h2>
+        <h2 class="insight-empty-title">Estamos preparando Insight</h2>
         <p class="insight-empty-desc">
-          Vincula Meta Ads y Google Analytics 4 para obtener tus métricas de campañas,
-          alcance, conversiones y tráfico web en un solo lugar.
+          Las integraciones de Meta Ads y Google Analytics no se muestran en esta vista por ahora.
         </p>
-        <div class="insight-empty-actions">
-          <button class="btn btn-primary" data-connect-platform="facebook">
-            <i class="fas fa-plug"></i> Conectar Meta Ads
-          </button>
-          <button class="btn btn-secondary" data-connect-platform="google">
-            <i class="fas fa-plug"></i> Conectar Google Analytics
-          </button>
-        </div>
       </div>
     `;
   }
