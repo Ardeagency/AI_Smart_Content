@@ -1439,6 +1439,11 @@ class BrandsView extends BaseView {
         this.openInfoPanel();
       });
     }
+
+    if (localStorage.getItem('brands_open_info') === '1') {
+      localStorage.removeItem('brands_open_info');
+      setTimeout(() => this.openInfoPanel(), 300);
+    }
   }
 
   // ============================================

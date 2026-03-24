@@ -180,7 +180,12 @@ class InsightView extends BaseView {
 
   _bindMyBrandsEvents() {
     const btn = document.getElementById('insightGoToBrands');
-    if (btn) btn.addEventListener('click', () => window.router?.navigate('/brands'));
+    if (btn) {
+      btn.addEventListener('click', () => {
+        localStorage.setItem('brands_open_info', '1');
+        window.router?.navigate('/brands');
+      });
+    }
   }
 
   _pageComingSoon(title, icon, description) {
