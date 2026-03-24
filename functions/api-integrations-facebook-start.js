@@ -79,13 +79,27 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Permisos (formato recomendado por Meta: lista separada por espacios o comas)
-  const scopes = process.env.FACEBOOK_OAUTH_SCOPES ||
-    'public_profile email ' +
-    'pages_show_list pages_read_engagement pages_read_user_content ' +
-    'ads_read ads_management read_insights business_management ' +
-    'instagram_basic instagram_manage_insights instagram_manage_comments ' +
-    'instagram_content_publish';
+  // Permisos obligatorios para leer páginas e Instagram — siempre presentes
+  const REQUIRED_SCOPES = [
+    'public_profile',
+    'email',
+    'pages_show_list',
+    'pages_read_engagement',
+    'pages_read_user_content',
+    'instagram_basic',
+    'instagram_manage_insights',
+    'instagram_manage_comments',
+    'instagram_content_publish',
+    'read_insights',
+    'business_management'
+  ];
+
+  // Si hay un env var extra, se fusiona con los required (nunca los reemplaza)
+  const extraFromEnv = process.env.FACEBOOK_OAUTH_SCOPES
+    ? String(process.env.FACEBOOK_OAUTH_SCOPES).split(/[\s,]+/).map(s => s.trim()).filter(Boolean)
+    : [];
+  const merged = Array.from(new Set([...REQUIRED_SCOPES, ...extraFromEnv]));
+  const scopes = merged.join(',');
 
   const redirectUri = getRedirectUri();
 
