@@ -25016,3 +25016,224 @@ body.production-filters-in-header .living-container > .living-history-section {
 .insight-int-cta:hover { opacity: 0.9; transform: translateY(-1px); }
 .insight-int-cta:active { transform: translateY(0); }
 .insight-int-cta-arrow { font-size: 0.78rem; margin-left: 0.1rem; }
+
+/* ── Insight – loading / error states ──────────────────────────────────── */
+.insight-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.insight-loading i { font-size: 1.2rem; color: var(--accent-brand, #a78bfa); }
+.insight-error-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 0.875rem;
+  margin: 1rem 0;
+}
+
+/* ── Insight – Meta Dashboard ───────────────────────────────────────────── */
+.insight-meta-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 0 2rem;
+}
+
+/* Header */
+.imd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.imd-account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.imd-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(24,119,242,0.4);
+}
+.imd-avatar-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(24,119,242,0.12);
+  border: 2px solid rgba(24,119,242,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.imd-account-info { display: flex; flex-direction: column; gap: 0.15rem; }
+.imd-account-name  { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.imd-platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.imd-dot { font-size: 0.45rem; color: #22c55e; }
+
+/* Range picker */
+.imd-range-picker {
+  display: flex;
+  gap: 0.3rem;
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider);
+  border-radius: 10px;
+  padding: 0.25rem;
+}
+.imd-range-btn {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.imd-range-btn:hover  { background: var(--white-8, rgba(255,255,255,0.06)); color: var(--text-primary); }
+.imd-range-btn.active { background: rgba(24,119,242,0.2); color: #60a5fa; font-weight: 600; }
+
+/* Metrics grid */
+.imd-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.85rem;
+}
+.imd-metric-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+}
+.imd-metric-card:hover { border-color: rgba(255,255,255,0.14); }
+.imd-metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.imd-icon--meta-green  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+.imd-icon--meta-blue   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.imd-icon--meta-indigo { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+.imd-icon--meta-purple { background: rgba(168,85,247,0.15); color: #c084fc; }
+.imd-icon--meta-orange { background: rgba(249,115,22,0.15); color: #fb923c; }
+.imd-icon--meta-cyan   { background: rgba(6,182,212,0.15);  color: #22d3ee; }
+.imd-icon--meta-pink   { background: rgba(236,72,153,0.15); color: #f472b6; }
+.imd-metric-body { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.imd-metric-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.imd-metric-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* No data */
+.imd-no-data {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Campaigns */
+.imd-campaigns-section { display: flex; flex-direction: column; gap: 0.85rem; }
+.imd-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.imd-section-title i { color: var(--text-secondary); font-size: 0.85rem; }
+.imd-table-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-divider); }
+.imd-campaigns-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.imd-campaigns-table thead tr {
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border-bottom: 1px solid var(--border-divider);
+}
+.imd-campaigns-table th {
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.imd-campaigns-table tbody tr {
+  border-bottom: 1px solid var(--border-divider);
+  transition: background 0.1s;
+}
+.imd-campaigns-table tbody tr:last-child { border-bottom: none; }
+.imd-campaigns-table tbody tr:hover { background: var(--white-4, rgba(255,255,255,0.04)); }
+.imd-campaigns-table td {
+  padding: 0.65rem 1rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.imd-camp-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.imd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.imd-status--active  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+.imd-status--paused  { background: rgba(234,179,8,0.15);  color: #fbbf24; }
+.imd-status--other   { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+.imd-campaigns-wrap { display: flex; flex-direction: column; gap: 0.75rem; }
+
+@media (max-width: 600px) {
+  .imd-header { flex-direction: column; align-items: flex-start; }
+  .imd-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
