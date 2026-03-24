@@ -355,7 +355,7 @@ class InsightView extends BaseView {
       return `<div class="mbf-inline-error"><i class="fab fa-facebook"></i><span>${this._esc(data.error)}</span></div>`;
     }
 
-    const { page, pages = [], facebook_posts = [], instagram_posts = [], instagram_username } = data;
+    const { page, pages = [], facebook_posts = [], instagram_posts = [], instagram_username, hint } = data;
 
     const fbCount = facebook_posts.length;
     const igCount = instagram_posts.length;
@@ -417,9 +417,11 @@ class InsightView extends BaseView {
           ${page?.fans ? `<span class="mbf-fans"><i class="fas fa-users"></i> ${Number(page.fans).toLocaleString('es')} seguidores (página principal)</span>` : ''}
         </div>
 
-        ${fbCount === 0 && igCount === 0
-          ? `<div class="mbf-empty"><i class="fas fa-inbox"></i><span>No se encontraron publicaciones recientes.</span></div>`
-          : `<div class="mbf-sections">${fbBlock}${igBlock}</div>`}
+        ${hint && fbCount === 0 && igCount === 0
+          ? `<div class="mbf-hint-banner" role="status"><i class="fas fa-info-circle"></i><span>${this._esc(hint)}</span></div>`
+          : ''}
+
+        <div class="mbf-sections">${fbBlock}${igBlock}</div>
 
       </div>`;
   }

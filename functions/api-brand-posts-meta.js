@@ -18,8 +18,11 @@ const { metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 
 const FB_FIELDS =
   'id,message,story,created_time,full_picture,permalink_url,likes.summary(true),comments.summary(true),shares,attachments{media_type,title}';
+/** Si el lote con métricas falla en algunas cuentas, reintentar solo lectura básica */
+const FB_FIELDS_MIN = 'id,message,story,created_time,full_picture,permalink_url,attachments{media_type,title}';
 const IG_FIELDS =
   'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count';
+const IG_FIELDS_MIN = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp';
 
 function mapFbPost(p) {
   return {
@@ -117,12 +120,14 @@ exports.handler = async (event) => {
   const appSecret = process.env.META_APP_SECRET || '';
 
   try {
+    // Incluir access_token en la lista: es el token de página válido para /posts y /media.
+    // Sin él, fallback a userToken suele devolver data: [] sin error explícito.
     const pagesList = await metaGraphGetPaged(
       '/me/accounts',
       userToken,
       appSecret,
       {
-        fields: 'id,name,picture{url},fan_count,instagram_business_account{id}'
+        fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id}'
       },
       50
     );
@@ -156,25 +161,50 @@ exports.handler = async (event) => {
     const instagramRaw = [];
 
     const pageTokens = new Map();
-    async function getPageToken(pageId) {
-      if (pageTokens.has(pageId)) return pageTokens.get(pageId);
-      const d = await metaGraphGet(`/${pageId}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
-      const t = d.access_token || userToken;
-      pageTokens.set(pageId, t);
+    async function getPageToken(pg) {
+      if (pg.access_token) return pg.access_token;
+      if (pageTokens.has(pg.id)) return pageTokens.get(pg.id);
+      const d = await metaGraphGet(`/${pg.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
+      const t = d.access_token || null;
+      if (t) pageTokens.set(pg.id, t);
       return t;
     }
 
-    for (const pg of pagesList) {
-      const pageToken = await getPageToken(pg.id);
-      const needFb = Math.max(0, limit - facebookRaw.length);
-      if (needFb > 0) {
-        const batch = await metaGraphGetPaged(
-          `/${pg.id}/posts`,
+    async function fetchPagePostsEdge(pageId, pageToken, needFb) {
+      if (!pageToken) return [];
+      let batch = await metaGraphGetPaged(
+        `/${pageId}/posts`,
+        pageToken,
+        appSecret,
+        { fields: FB_FIELDS },
+        needFb
+      ).catch(() => []);
+      if (batch.length === 0) {
+        batch = await metaGraphGetPaged(
+          `/${pageId}/published_posts`,
           pageToken,
           appSecret,
           { fields: FB_FIELDS },
           needFb
-        );
+        ).catch(() => []);
+      }
+      if (batch.length === 0) {
+        batch = await metaGraphGetPaged(
+          `/${pageId}/posts`,
+          pageToken,
+          appSecret,
+          { fields: FB_FIELDS_MIN },
+          needFb
+        ).catch(() => []);
+      }
+      return batch;
+    }
+
+    for (const pg of pagesList) {
+      const pageToken = await getPageToken(pg);
+      const needFb = Math.max(0, limit - facebookRaw.length);
+      if (needFb > 0 && pageToken) {
+        const batch = await fetchPagePostsEdge(pg.id, pageToken, needFb);
         batch.forEach((p) => {
           p._page_id = pg.id;
           p._page_name = pg.name;
@@ -194,8 +224,17 @@ exports.handler = async (event) => {
     }
     const perIgLimit = Math.ceil(limit / Math.max(1, igPairs.length));
     for (const { igId, pageId } of igPairs) {
-      const pageToken = await getPageToken(pageId);
-      const media = await metaGraphGetPaged(`/${igId}/media`, pageToken, appSecret, { fields: IG_FIELDS }, perIgLimit);
+      const pg = pagesList.find((p) => p.id === pageId);
+      const pageToken = pg ? await getPageToken(pg) : null;
+      if (!pageToken) continue;
+      let media = await metaGraphGetPaged(`/${igId}/media`, pageToken, appSecret, { fields: IG_FIELDS }, perIgLimit).catch(
+        () => []
+      );
+      if (media.length === 0) {
+        media = await metaGraphGetPaged(`/${igId}/media`, pageToken, appSecret, { fields: IG_FIELDS_MIN }, perIgLimit).catch(
+          () => []
+        );
+      }
       instagramRaw.push(...media);
     }
 
@@ -207,20 +246,25 @@ exports.handler = async (event) => {
     let instagram_username = null;
     const firstIg = pagesList.find((p) => p.instagram_business_account?.id);
     if (firstIg?.instagram_business_account?.id) {
-      const igInfo = await metaGraphGet(
-        `/${firstIg.instagram_business_account.id}`,
-        (await metaGraphGet(`/${firstIg.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}))).access_token ||
-          userToken,
-        appSecret,
-        { fields: 'username' }
-      ).catch(() => ({}));
-      instagram_username = igInfo.username || null;
+      const pt = await getPageToken(firstIg);
+      if (pt) {
+        const igInfo = await metaGraphGet(
+          `/${firstIg.instagram_business_account.id}`,
+          pt,
+          appSecret,
+          { fields: 'username' }
+        ).catch(() => ({}));
+        instagram_username = igInfo.username || null;
+      }
     }
 
     const instagram_posts = instagramRaw
       .map(mapIgMedia)
       .sort((a, b) => new Date(b.created_time) - new Date(a.created_time))
       .slice(0, limit);
+
+    const noPosts =
+      facebook_posts.length === 0 && instagram_posts.length === 0 && pagesMeta.length > 0;
 
     return {
       statusCode: 200,
@@ -236,7 +280,14 @@ exports.handler = async (event) => {
         pages: pagesMeta,
         facebook_posts,
         instagram_posts,
-        instagram_username
+        instagram_username,
+        ...(noPosts
+          ? {
+              hint:
+                'Hay páginas conectadas pero no se pudieron leer publicaciones. ' +
+                'Comprueba permisos pages_read_user_content y pages_read_engagement, o vuelve a conectar Meta en Marcas.'
+            }
+          : {})
       })
     };
   } catch (e) {
