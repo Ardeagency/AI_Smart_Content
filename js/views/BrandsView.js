@@ -593,15 +593,10 @@ class BrandsView extends BaseView {
     const count = hslColors.length;
     const avgL = hslColors.reduce((acc, c) => acc + c.l, 0) / count;
     const darkCount = hslColors.filter((c) => c.l <= 35).length;
-    const lightAndSaturatedCount = hslColors.filter((c) => c.l >= 65 && c.s >= 70).length;
     const darkRatio = darkCount / count;
-    const lightAndSaturatedRatio = lightAndSaturatedCount / count;
-    const hasMixedLuminosity = darkCount > 0 && hslColors.some((c) => c.l >= 65);
 
     const isVeryDarkPalette = avgL <= 38 && darkRatio >= 0.7;
     if (isVeryDarkPalette) return 'white';
-
-    if (lightAndSaturatedRatio >= 0.5 || hasMixedLuminosity) return 'black';
     return 'black';
   }
 
@@ -657,7 +652,6 @@ class BrandsView extends BaseView {
   renderAll() {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
-    this.applyBrandCardsGlassVariant();
     this.renderBrandName();
     this.renderMarket();
     this.renderCards();

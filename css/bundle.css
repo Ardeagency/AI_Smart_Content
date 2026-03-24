@@ -110,7 +110,7 @@
     --glass-radius: 14px;
     --glass-blur: blur(7px);
     --glass-padding: 8px 24px;
-    /* glass-black: negro 80%, textos blancos y mismo borde que glass normal */
+    /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
     --glass-black-bg: rgba(0, 0, 0, 0.5);
     --glass-black-border: var(--glass-border);
     --glass-black-text: #ffffff;
@@ -1720,7 +1720,7 @@ body.sidebar-collapsed .main-header,
     visibility: visible;
 }
 
-/* Flyout (#navFlyout): glass-black — negro 60%, textos blancos, bordes negros */
+/* Flyout (#navFlyout): glass-black — textos blancos (opacidad vía --glass-black-bg) */
 .nav-flyout {
     box-sizing: border-box;
     position: fixed;
@@ -4893,19 +4893,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* Variantes dinámicas de glass para las cards de Brand según el fondo */
-#brandsListContainer.brand-cards-glass-black .brand-card,
-#brandsListContainer.brand-cards-glass-black .card-info,
-#brandsListContainer.brand-cards-glass-black .card-info.expanded,
-#brandsListContainer.brand-cards-glass-black > div.brand-card.card-info.expanded {
+#brandsListContainer.brand-cards-glass-black .brand-card {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
 }
 
-#brandsListContainer.brand-cards-glass-white .brand-card,
-#brandsListContainer.brand-cards-glass-white .card-info,
-#brandsListContainer.brand-cards-glass-white .card-info.expanded,
-#brandsListContainer.brand-cards-glass-white > div.brand-card.card-info.expanded {
+#brandsListContainer.brand-cards-glass-white .brand-card {
     background: var(--glass-white-bg);
     border: 1px solid var(--glass-white-border);
 }
@@ -5925,40 +5919,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 100%;
 }
 
-/* Sección identidad: misma lectura glass, sin duplicar padding extra del grid */
-#infoPanelContent .info-section-identity {
-    padding: 1.25rem;
-}
-
-/* Compatibilidad: mismos estilos vía clase .card-content-expanded (mismo nodo que #infoPanelContent) */
-.card-content-expanded .info-section {
-    margin-bottom: 1.25rem;
-    padding: 1.25rem;
-    border-radius: var(--glass-radius);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--text-primary);
-}
-
-.card-content-expanded .info-section:last-child {
-    margin-bottom: 0;
-}
-
-.card-content-expanded .info-section-title {
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 500;
-    margin: 0 0 1rem 0;
-}
-
-.card-content-expanded .info-section-content {
-    color: inherit;
-}
-
 /* Fila: logo + redes/web (junto al logo) */
 .card-content-expanded .info-identity-row {
     display: flex;
@@ -6371,41 +6331,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 0;
 }
 
-/* Grid de secciones (Esencia y Lenguaje) */
-.card-content-expanded .info-sections-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-    margin-bottom: 2.5rem;
-}
-
-@media (max-width: 768px) {
-    .card-content-expanded .info-sections-grid {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-    }
-}
-
-.card-content-expanded .info-identity-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.card-content-expanded .info-identity-label {
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 500;
-}
-
-.card-content-expanded .info-identity-value {
-    font-size: var(--font-size-base);
-    color: var(--text-primary);
-    line-height: 1.5;
-}
-
 .card-content-expanded .info-logo-container .info-logo-preview {
     width: 100%;
     height: 100%;
@@ -6641,11 +6566,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     .card-info.expanded .card-content-expanded,
     #infoPanelContent {
         margin-top: 0;
-    }
-
-    .card-content-expanded .info-identity-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
     }
 }
 
