@@ -67,19 +67,170 @@ class InsightView extends BaseView {
   _renderTab(tabId) {
     const body = document.getElementById('insightTabBody');
     if (!body) return;
+    if (tabId === 'my-brands') {
+      body.innerHTML = this._loadingHTML();
+      this._loadMyBrands(body);
+      return;
+    }
     const map = {
-      'my-brands':  () => this._pageMyBrands(),
-      'competence': () => this._pageComingSoon('Competence', 'fa-chess',  'Analiza a tu competencia: sus publicaciones, métricas y posicionamiento en redes sociales.'),
-      'tendencies': () => this._pageComingSoon('Tendencies', 'fa-fire',   'Descubre tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'),
-      'strategy':   () => this._pageComingSoon('Strategy',  'fa-route',   'Obtén recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'),
+      competence: () => this._pageComingSoon('Competence', 'fa-chess',  'Analiza a tu competencia: sus publicaciones, métricas y posicionamiento en redes sociales.'),
+      tendencies: () => this._pageComingSoon('Tendencies', 'fa-fire',   'Descubre tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'),
+      strategy:   () => this._pageComingSoon('Strategy',  'fa-route',   'Obtén recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'),
     };
-    body.innerHTML = (map[tabId] || map['my-brands'])();
-    if (tabId === 'my-brands') this._bindMyBrandsEvents();
+    body.innerHTML = (map[tabId] || (() => ''))();
   }
 
-  // ── Sub-páginas ────────────────────────────────────────────────────────────
+  // ── My Brands ──────────────────────────────────────────────────────────────
 
-  _pageMyBrands() {
+  async _loadMyBrands(body) {
+    try {
+      const supabase = await this.getSupabaseClient();
+      if (!supabase) throw new Error('Sin conexión a base de datos.');
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      if (!session) throw new Error('Sin sesión activa.');
+
+      const userId = session.user.id;
+      const token  = session.access_token;
+
+      // Buscar brand container del usuario
+      const { data: containers } = await supabase
+        .from('brand_containers')
+        .select('id, nombre_marca, logo_url')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const bc = containers?.[0];
+      if (!bc) {
+        body.innerHTML = this._pageConnectPrompt();
+        this._bindConnectPrompt();
+        return;
+      }
+
+      // Verificar si tiene integración Meta activa
+      const { data: integrations } = await supabase
+        .from('brand_integrations')
+        .select('id')
+        .eq('brand_container_id', bc.id)
+        .eq('platform', 'facebook')
+        .eq('is_active', true)
+        .limit(1);
+
+      if (!integrations?.length) {
+        body.innerHTML = this._pageConnectPrompt();
+        this._bindConnectPrompt();
+        return;
+      }
+
+      // Tiene integración → traer posts
+      const res = await fetch(`/api/brand/posts-meta?brand_container_id=${bc.id}&limit=20`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+      body.innerHTML = this._buildPostsFeed(data, bc);
+
+    } catch (e) {
+      body.innerHTML = this._errorHTML(e?.message || 'Error al cargar publicaciones.');
+    }
+  }
+
+  _bindConnectPrompt() {
+    const btn = document.getElementById('insightGoToBrands');
+    if (btn) btn.addEventListener('click', () => {
+      localStorage.setItem('brands_open_info', '1');
+      window.router?.navigate('/brands');
+    });
+  }
+
+  // ── Feed de posts ──────────────────────────────────────────────────────────
+
+  _buildPostsFeed(data, bc) {
+    const { page, facebook_posts = [], instagram_posts = [], instagram_username } = data;
+
+    const fbCount = facebook_posts.length;
+    const igCount = instagram_posts.length;
+
+    // Mezclar y ordenar por fecha descendente
+    const allPosts = [
+      ...facebook_posts.map(p => ({ ...p, network: 'facebook' })),
+      ...instagram_posts.map(p => ({ ...p, network: 'instagram' }))
+    ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+
+    return `
+      <div class="mbf-feed">
+
+        <!-- Header de cuenta conectada -->
+        <div class="mbf-header">
+          <div class="mbf-account">
+            ${page?.picture
+              ? `<img src="${this._esc(page.picture)}" class="mbf-page-avatar" alt="">`
+              : `<div class="mbf-page-avatar-icon"><i class="fab fa-facebook"></i></div>`}
+            <div class="mbf-account-info">
+              <span class="mbf-account-name">${this._esc(page?.name || bc.nombre_marca)}</span>
+              <div class="mbf-account-badges">
+                <span class="mbf-badge mbf-badge--fb"><i class="fab fa-facebook"></i> ${fbCount} posts</span>
+                ${igCount > 0
+                  ? `<span class="mbf-badge mbf-badge--ig"><i class="fab fa-instagram"></i> ${instagram_username ? '@' + this._esc(instagram_username) : ''} · ${igCount} posts</span>`
+                  : `<span class="mbf-badge mbf-badge--dim"><i class="fab fa-instagram"></i> Sin cuenta IG vinculada</span>`}
+              </div>
+            </div>
+          </div>
+          ${page?.fans ? `<span class="mbf-fans"><i class="fas fa-users"></i> ${Number(page.fans).toLocaleString('es')} seguidores</span>` : ''}
+        </div>
+
+        ${allPosts.length === 0
+          ? `<div class="mbf-empty"><i class="fas fa-inbox"></i><span>No se encontraron publicaciones recientes.</span></div>`
+          : `<div class="mbf-grid">${allPosts.map(p => this._postCard(p)).join('')}</div>`}
+
+      </div>`;
+  }
+
+  _postCard(post) {
+    const isFb = post.network === 'facebook';
+    const eng  = post.likes + post.comments + post.shares;
+    const date = post.created_time
+      ? new Date(post.created_time).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    const isVideo = post.media_type === 'video';
+
+    return `
+      <article class="mbf-card">
+        ${post.picture
+          ? `<div class="mbf-card-media${isVideo ? ' mbf-card-media--video' : ''}">
+               <img src="${this._esc(post.picture)}" alt="" loading="lazy">
+               ${isVideo ? `<div class="mbf-play-icon"><i class="fas fa-play-circle"></i></div>` : ''}
+             </div>`
+          : `<div class="mbf-card-media mbf-card-media--empty"><i class="fas fa-file-alt"></i></div>`}
+
+        <div class="mbf-card-body">
+          <div class="mbf-card-network">
+            <i class="fab fa-${isFb ? 'facebook mbf-icon--fb' : 'instagram mbf-icon--ig'}"></i>
+            <span class="mbf-card-date">${date}</span>
+            ${post.permalink
+              ? `<a href="${this._esc(post.permalink)}" target="_blank" rel="noopener" class="mbf-card-link" title="Ver publicación"><i class="fas fa-external-link-alt"></i></a>`
+              : ''}
+          </div>
+          ${post.message
+            ? `<p class="mbf-card-text">${this._esc(post.message.slice(0, 140))}${post.message.length > 140 ? '…' : ''}</p>`
+            : `<p class="mbf-card-text mbf-card-text--empty">Sin texto</p>`}
+          <div class="mbf-card-metrics">
+            <span><i class="fas fa-heart"></i> ${post.likes.toLocaleString('es')}</span>
+            <span><i class="fas fa-comment"></i> ${post.comments.toLocaleString('es')}</span>
+            ${post.shares > 0 ? `<span><i class="fas fa-share"></i> ${post.shares.toLocaleString('es')}</span>` : ''}
+            <span class="mbf-card-eng"><i class="fas fa-bolt"></i> ${eng.toLocaleString('es')}</span>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  _pageConnectPrompt() {
     return `
       <div class="insight-integrations-prompt">
         <div class="insight-int-platforms">
@@ -111,14 +262,6 @@ class InsightView extends BaseView {
       </div>`;
   }
 
-  _bindMyBrandsEvents() {
-    const btn = document.getElementById('insightGoToBrands');
-    if (btn) btn.addEventListener('click', () => {
-      localStorage.setItem('brands_open_info', '1');
-      window.router?.navigate('/brands');
-    });
-  }
-
   _pageComingSoon(title, icon, description) {
     return `
       <div class="insight-coming-soon">
@@ -127,6 +270,21 @@ class InsightView extends BaseView {
         <p class="insight-cs-desc">${description}</p>
         <span class="insight-cs-badge">Próximamente</span>
       </div>`;
+  }
+
+  _loadingHTML() {
+    return `<div class="insight-loading"><i class="fas fa-spinner fa-spin"></i><span>Cargando publicaciones…</span></div>`;
+  }
+
+  _errorHTML(msg) {
+    return `<div class="insight-error-state"><i class="fas fa-exclamation-triangle"></i><span>${this._esc(msg)}</span></div>`;
+  }
+
+  _esc(s) {
+    if (s == null) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
   }
 }
 

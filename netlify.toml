@@ -78,6 +78,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/brand/posts-meta"
+  to = "/.netlify/functions/api-brand-posts-meta"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/brand/sync-meta"
   to = "/.netlify/functions/api-brand-sync-meta"
   status = 200
