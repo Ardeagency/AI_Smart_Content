@@ -20,8 +20,6 @@ class BrandsView extends BaseView {
     this.brandAudiences = [];
     this.brandSocialLinks = [];
     this.brandIntegrations = [];
-    // Plataforma activa cuando renderizamos la configuración de integraciones (INFO > Identidad)
-    this.activeBrandIntegrationPlatform = 'google';
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -805,21 +803,22 @@ class BrandsView extends BaseView {
 
   renderMarket() {
     const el = document.getElementById('brandMarketLabel');
-    if (el) {
-      const mercado = this.brandContainerData?.mercado_objetivo;
-      el.setAttribute('data-field', 'mercado_objetivo');
-      el.textContent = Array.isArray(mercado) && mercado.length > 0 
-        ? mercado.join(', ') 
-        : 'Click para agregar mercado objetivo';
-      el.style.cursor = 'pointer';
-      el.style.opacity = Array.isArray(mercado) && mercado.length > 0 ? '1' : '0.6';
-      
-      el.addEventListener('click', () => {
-        this.makeEditableMultiSelect(el, 'mercado_objetivo', [], 'container', () => {
-          this.renderMarket();
-        });
+    if (!el) return;
+    const mercado = this.brandContainerData?.mercado_objetivo;
+    el.setAttribute('data-field', 'mercado_objetivo');
+    el.textContent = Array.isArray(mercado) && mercado.length > 0
+      ? mercado.join(', ')
+      : 'Click para agregar mercado objetivo';
+    el.style.cursor = 'pointer';
+    el.style.opacity = Array.isArray(mercado) && mercado.length > 0 ? '1' : '0.6';
+
+    if (el.dataset.mercadoClickBound === '1') return;
+    el.dataset.mercadoClickBound = '1';
+    el.addEventListener('click', () => {
+      this.makeEditableMultiSelect(el, 'mercado_objetivo', [], 'container', () => {
+        this.renderMarket();
       });
-    }
+    });
   }
 
   renderCards() {
@@ -1427,7 +1426,8 @@ class BrandsView extends BaseView {
     if (!container) return;
     
     const infoBtn = container.querySelector('.card-info');
-    if (infoBtn) {
+    if (infoBtn && infoBtn.dataset.brandsInfoClickBound !== '1') {
+      infoBtn.dataset.brandsInfoClickBound = '1';
       infoBtn.style.cursor = 'pointer';
       infoBtn.addEventListener('click', () => {
         this.openInfoPanel();
@@ -2501,12 +2501,14 @@ class BrandsView extends BaseView {
     }
     if (onSave) onSave();
     // Re-renderizar
+    // INFO usa #infoPanelContent; mercado_objetivo vive en #brandMarketLabel (fuera del panel).
     const panel = document.getElementById('infoPanelContent');
     const element = panel
       ? panel.querySelector(`[data-field="${fieldName}"]`)
-      : document.querySelector(`[data-field="${fieldName}"]`);
-    if (element) {
-      this.makeEditableMultiSelect(element, fieldName, [], table, onSave);
+      : null;
+    const target = element || document.querySelector(`[data-field="${fieldName}"]`);
+    if (target) {
+      this.makeEditableMultiSelect(target, fieldName, [], table, onSave);
     }
   }
 
