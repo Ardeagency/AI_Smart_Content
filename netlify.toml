@@ -72,6 +72,24 @@
   force = true
 
 [[redirects]]
+  from = "/api/insights/mybrand"
+  to = "/.netlify/functions/api-insights-mybrand"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/brand/sync-meta"
+  to = "/.netlify/functions/api-brand-sync-meta"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/brand/analyze-posts"
+  to = "/.netlify/functions/api-brand-analyze-posts"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/integrations/facebook/start"
   to = "/.netlify/functions/api-integrations-facebook-start"
   status = 200

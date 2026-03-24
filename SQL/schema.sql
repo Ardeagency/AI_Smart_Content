@@ -164,6 +164,18 @@ CREATE TABLE public.body_missions (
   CONSTRAINT body_missions_brand_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT body_missions_trigger_signal_fkey FOREIGN KEY (trigger_signal_id) REFERENCES public.intelligence_signals(id)
 );
+CREATE TABLE public.brand_analytics_snapshots (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  platform text NOT NULL,
+  period_type text NOT NULL,
+  period_start date NOT NULL,
+  period_end date NOT NULL,
+  metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
+  computed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_analytics_snapshots_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_analytics_snapshots_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
 CREATE TABLE public.brand_assets (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_container_id uuid NOT NULL,
@@ -176,6 +188,18 @@ CREATE TABLE public.brand_assets (
   metadata jsonb,
   CONSTRAINT brand_assets_pkey PRIMARY KEY (id),
   CONSTRAINT brand_files_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_audience_heatmap (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  platform text NOT NULL,
+  hour_engagement jsonb DEFAULT '{}'::jsonb,
+  day_engagement jsonb DEFAULT '{}'::jsonb,
+  best_hour integer,
+  best_day integer,
+  computed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_audience_heatmap_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_audience_heatmap_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.brand_colors (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -201,6 +225,22 @@ CREATE TABLE public.brand_containers (
   CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
   CONSTRAINT brand_containers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
   CONSTRAINT brand_containers_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id)
+);
+CREATE TABLE public.brand_content_analysis (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_post_id uuid NOT NULL UNIQUE,
+  brand_container_id uuid NOT NULL,
+  tone_detected text,
+  tone_coherence_score numeric,
+  dominant_emotion text,
+  narrative_pillar text,
+  why_it_worked jsonb DEFAULT '{}'::jsonb,
+  clarity_score numeric,
+  fatigue_risk boolean DEFAULT false,
+  analyzed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_content_analysis_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_content_analysis_post_fkey FOREIGN KEY (brand_post_id) REFERENCES public.brand_posts(id),
+  CONSTRAINT brand_content_analysis_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.brand_entities (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -249,6 +289,20 @@ CREATE TABLE public.brand_integrations (
   CONSTRAINT brand_integrations_pkey PRIMARY KEY (id),
   CONSTRAINT brand_integrations_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT brand_integrations_business_unit_id_fkey FOREIGN KEY (business_unit_id) REFERENCES public.business_units(id)
+);
+CREATE TABLE public.brand_narrative_pillars (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  pillar_name text NOT NULL,
+  pillar_type text NOT NULL DEFAULT 'active'::text,
+  post_count integer DEFAULT 0,
+  avg_engagement numeric DEFAULT 0,
+  avg_reach numeric DEFAULT 0,
+  description text,
+  last_post_at timestamp with time zone,
+  analyzed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_narrative_pillars_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_narrative_pillars_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.brand_places (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -972,4 +1026,58 @@ CREATE TABLE public.visual_references (
   bucket text DEFAULT 'visual-references'::text,
   object_path text NOT NULL,
   CONSTRAINT visual_references_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.brand_analytics_snapshots (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  platform text NOT NULL,
+  period_type text NOT NULL,
+  period_start date NOT NULL,
+  period_end date NOT NULL,
+  metrics jsonb NOT NULL DEFAULT '{}',
+  computed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_analytics_snapshots_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_analytics_snapshots_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_content_analysis (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_post_id uuid NOT NULL UNIQUE,
+  brand_container_id uuid NOT NULL,
+  tone_detected text,
+  tone_coherence_score numeric,
+  dominant_emotion text,
+  narrative_pillar text,
+  why_it_worked jsonb DEFAULT '{}',
+  clarity_score numeric,
+  fatigue_risk boolean DEFAULT false,
+  analyzed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_content_analysis_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_content_analysis_post_fkey FOREIGN KEY (brand_post_id) REFERENCES public.brand_posts(id),
+  CONSTRAINT brand_content_analysis_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_narrative_pillars (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  pillar_name text NOT NULL,
+  pillar_type text NOT NULL DEFAULT 'active',
+  post_count integer DEFAULT 0,
+  avg_engagement numeric DEFAULT 0,
+  avg_reach numeric DEFAULT 0,
+  description text,
+  last_post_at timestamp with time zone,
+  analyzed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_narrative_pillars_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_narrative_pillars_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_audience_heatmap (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  platform text NOT NULL,
+  hour_engagement jsonb DEFAULT '{}',
+  day_engagement jsonb DEFAULT '{}',
+  best_hour integer,
+  best_day integer,
+  computed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_audience_heatmap_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_audience_heatmap_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
