@@ -4888,19 +4888,25 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* Variantes dinámicas de glass para las cards de Brand según el fondo */
-#brandsListContainer.brand-cards-glass-black .brand-card,
-#brandsListContainer.brand-cards-glass-black .card-info,
-#brandsListContainer.brand-cards-glass-black .card-info.expanded {
+#brandsListContainer.brand-cards-glass-black .brand-card:not(.card-info) {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
 }
 
-#brandsListContainer.brand-cards-glass-white .brand-card,
-#brandsListContainer.brand-cards-glass-white .card-info,
-#brandsListContainer.brand-cards-glass-white .card-info.expanded {
+#brandsListContainer.brand-cards-glass-white .brand-card:not(.card-info) {
     background: var(--glass-white-bg);
     border: 1px solid var(--glass-white-border);
+}
+
+/* INFO completo en Brand: siempre glass-black (botón + panel expandido + contenido) */
+#brandsListContainer .card-info,
+#brandsListContainer .card-info.expanded,
+#brandsListContainer .card-info.expanded .card-content-expanded,
+#brandsListContainer .card-info.expanded #infoPanelContent {
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
 }
 
 /* Typography dropdown dinámico en Brand */
@@ -4919,23 +4925,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 1px solid var(--glass-white-border);
 }
 
-/* Secciones INFO dinámicas en Brand */
-#brandsListContainer.brand-cards-glass-black .card-content-expanded .info-section,
-#brandsListContainer.brand-cards-glass-black .card-content-expanded .info-section-identity,
-#brandsListContainer.brand-cards-glass-black .card-content-expanded .info-field-value.editable-field {
-    background: var(--glass-black-bg);
-    border: 1px solid var(--glass-black-border);
-    color: var(--glass-black-text);
-    border-radius: var(--glass-radius);
-}
-
-#brandsListContainer.brand-cards-glass-white .card-content-expanded .info-section,
-#brandsListContainer.brand-cards-glass-white .card-content-expanded .info-section-identity,
-#brandsListContainer.brand-cards-glass-white .card-content-expanded .info-field-value.editable-field {
-    background: var(--glass-white-bg);
-    border: 1px solid var(--glass-white-border);
-    border-radius: var(--glass-radius);
-}
 
 /* Card Header */
 .card-header {
