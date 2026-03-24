@@ -104,7 +104,7 @@ exports.handler = async (event) => {
     url: env.url, serviceKey: env.serviceKey,
     path: 'brand_integrations', method: 'GET',
     searchParams: {
-      select: 'id,access_token,token_expires_at',
+      select: 'id,access_token,token_expires_at,metadata',
       brand_container_id: `eq.${brand_container_id}`,
       platform: 'eq.facebook',
       is_active: 'eq.true',
@@ -118,6 +118,8 @@ exports.handler = async (event) => {
 
   const userToken = integ.access_token;
   const appSecret = process.env.META_APP_SECRET || '';
+  // Páginas capturadas en el momento del OAuth (fallback si /me/accounts devuelve vacío)
+  const storedPages = Array.isArray(integ.metadata?.pages) ? integ.metadata.pages : [];
 
   try {
     // Diagnóstico previo: verificar token y permisos concedidos
@@ -143,17 +145,18 @@ exports.handler = async (event) => {
       ? allNeededPerms.filter((p) => !grantedPerms.includes(p))
       : null;
 
-    // Incluir access_token en la lista: es el token de página válido para /posts y /media.
-    // Con el page token, pages_read_user_content en el user token no es necesario.
-    const pagesList = await metaGraphGetPaged(
+    // Intentar /me/accounts en vivo; si falla o devuelve vacío, usar páginas guardadas en metadata.
+    let pagesListLive = await metaGraphGetPaged(
       '/me/accounts',
       userToken,
       appSecret,
-      {
-        fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id}'
-      },
+      { fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id}' },
       50
-    );
+    ).catch(() => []);
+
+    // Fallback: páginas capturadas en el momento del OAuth
+    const usingStoredPages = pagesListLive.length === 0 && storedPages.length > 0;
+    const pagesList = usingStoredPages ? storedPages : pagesListLive;
 
     if (pagesList.length === 0) {
       let diagMessage = 'No se encontraron páginas de Facebook en esta cuenta.';
@@ -168,12 +171,10 @@ exports.handler = async (event) => {
         diagMessage = 'El token de Meta parece inválido o expirado. Reconecta Meta en Marcas.';
         diagDetail = 'invalid_token';
       } else {
-        // Token válido y pages_show_list concedido, pero sin páginas:
-        // casi siempre significa que en el diálogo de OAuth el usuario no seleccionó ninguna página.
         diagMessage =
           `La cuenta "${meInfo.name}" autorizó la app pero no compartió ninguna Página de Facebook. ` +
           'Reconecta Meta en Marcas → en el diálogo de Facebook, cuando aparezca la lista de páginas, ' +
-          'activa el toggle de "Arde Agency" (o la página que quieres conectar) antes de hacer clic en "Continuar".';
+          'activa el toggle de "Arde Agency" antes de hacer clic en "Continuar".';
         diagDetail = 'no_pages_selected';
       }
 
@@ -200,11 +201,18 @@ exports.handler = async (event) => {
       };
     }
 
+    // pg.picture puede ser string (stored) o { data: { url } } (Graph API live)
+    function resolvePicture(pic) {
+      if (!pic) return null;
+      if (typeof pic === 'string') return pic;
+      return pic?.data?.url || null;
+    }
+
     const pagesMeta = pagesList.map((pg) => ({
       id: pg.id,
       name: pg.name,
-      picture: pg.picture?.data?.url || null,
-      fans: pg.fan_count || 0,
+      picture: resolvePicture(pg.picture),
+      fans: pg.fan_count || pg.fans || 0,
       instagram_business_account_id: pg.instagram_business_account?.id || null
     }));
 
@@ -330,8 +338,8 @@ exports.handler = async (event) => {
         page: {
           id: primary.id,
           name: primary.name,
-          picture: primary.picture?.data?.url || null,
-          fans: primary.fan_count || 0
+          picture: resolvePicture(primary.picture),
+          fans: primary.fan_count || primary.fans || 0
         },
         pages: pagesMeta,
         facebook_posts,

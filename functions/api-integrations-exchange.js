@@ -254,13 +254,35 @@ exports.handler = async (event) => {
       const accessTokenFromProvider = longJson.access_token;
       const expiresAt = expiresIso(longJson.expires_in);
 
-      // Step 3: Perfil con appsecret_proof (Secure Requests)
-      const profile = await metaGraphGet(
-        '/me',
-        accessTokenFromProvider,
-        appSecret,
-        { fields: 'id,name,email,picture.type(normal)' }
-      ).catch(() => ({}));
+      // Step 3: Perfil + páginas concedidas en paralelo (mientras el token está fresco)
+      const [profile, pagesRaw] = await Promise.all([
+        metaGraphGet('/me', accessTokenFromProvider, appSecret, {
+          fields: 'id,name,email,picture.type(normal)'
+        }).catch(() => ({})),
+        // Capturamos las páginas e IGs concedidos AHORA, justo cuando el token es válido.
+        // Meta solo garantiza /me/accounts inmediatamente después del OAuth.
+        metaGraphGet('/me/accounts', accessTokenFromProvider, appSecret, {
+          fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id,name,username,profile_picture_url}'
+        }).catch(() => ({ data: [] }))
+      ]);
+
+      // Normalizar páginas concedidas y sus page tokens (nunca llegan vacíos si el usuario las seleccionó)
+      const pagesData = Array.isArray(pagesRaw?.data) ? pagesRaw.data : [];
+      const storedPages = pagesData.map((pg) => ({
+        id: pg.id,
+        name: pg.name,
+        picture: pg.picture?.data?.url || null,
+        fan_count: pg.fan_count || 0,
+        access_token: pg.access_token || null,
+        instagram_business_account: pg.instagram_business_account
+          ? {
+              id: pg.instagram_business_account.id,
+              name: pg.instagram_business_account.name || null,
+              username: pg.instagram_business_account.username || null,
+              profile_picture_url: pg.instagram_business_account.profile_picture_url || null
+            }
+          : null
+      }));
 
       await upsertBrandIntegration({
         env,
@@ -280,7 +302,10 @@ exports.handler = async (event) => {
             provider: 'facebook',
             provider_user_id: profile?.id || sessionUser.id,
             email: profile?.email || null,
-            picture: profile?.picture?.data?.url || null
+            picture: profile?.picture?.data?.url || null,
+            // Páginas concedidas en el momento del OAuth con sus tokens de página
+            pages: storedPages,
+            pages_captured_at: nowIso()
           },
           updated_at: nowIso(),
           last_sync_at: nowIso()
