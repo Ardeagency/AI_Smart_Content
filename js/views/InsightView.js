@@ -1,26 +1,16 @@
 /**
- * InsightView – Dashboard principal de métricas de redes sociales y anuncios.
- * Conecta Meta Ads (Facebook/Instagram) y Google Analytics 4.
+ * InsightView – Panel de inteligencia de marca.
  *
- * Es la primera página que ve el usuario al iniciar sesión.
- *
- * Scopes OAuth necesarios (configurar en Netlify env vars):
- *   FACEBOOK_OAUTH_SCOPES = ads_read,ads_management,read_insights,pages_read_engagement
- *   GOOGLE_OAUTH_SCOPES   = openid email profile https://www.googleapis.com/auth/analytics.readonly
+ * Sub-páginas:
+ *   my-brands   → Métricas reales de las integraciones activas de la marca
+ *   competence  → Análisis de competencia
+ *   tendencies  → Tendencias de mercado y contenido
+ *   strategy    → Estrategia y recomendaciones
  */
 class InsightView extends BaseView {
   constructor() {
     super();
-    this.supabase = null;
-    this.organizationId = null;
-    this.brandContainerId = null;
-    this.integrations = {};      // { facebook: row, google: row }
-    this.dateRange = '30d';      // '7d' | '30d' | '90d'
-    this._metaData = null;
-    this._googleData = null;
-    this._ga4PropertyId = '';
-    this._loadingMeta = false;
-    this._loadingGoogle = false;
+    this._activeTab = 'my-brands';
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -33,10 +23,6 @@ class InsightView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-    this.organizationId = this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
-      localStorage.getItem('selectedOrganizationId');
-    if (this.organizationId) localStorage.setItem('selectedOrganizationId', this.organizationId);
   }
 
   async render() {
@@ -44,496 +30,96 @@ class InsightView extends BaseView {
     this.updateHeaderContext('Insight', null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
-
     container.innerHTML = this._buildShell();
-    this._setupDateTabs();
-
-    try {
-      await this._initSupabase();
-      await this._loadBrandContainer();
-      await this._loadIntegrations();
-      this._renderPlatformCards();
-      await this._fetchAll();
-      this._renderMetrics();
-    } catch (err) {
-      console.error('InsightView render:', err);
-      this._showError(err?.message || 'Error al cargar Insight.');
-    }
+    this._setupTabs();
+    this._renderTab(this._activeTab);
   }
 
   renderHTML() {
     return this._buildShell();
   }
 
-  // ── Init helpers ─────────────────────────────────────────────────────────
-
-  async _initSupabase() {
-    if (window.supabaseService) this.supabase = await window.supabaseService.getClient();
-    else if (window.supabase) this.supabase = window.supabase;
-    if (!this.supabase) throw new Error('Supabase no disponible');
-  }
-
-  async _loadBrandContainer() {
-    if (!this.supabase) return;
-    let q = this.supabase.from('brand_containers').select('id');
-    if (this.organizationId) q = q.eq('organization_id', this.organizationId);
-    else {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (user?.id) q = q.eq('user_id', user.id);
-    }
-    const { data, error } = await q.order('created_at', { ascending: true }).limit(1).maybeSingle();
-    if (!error && data?.id) this.brandContainerId = data.id;
-  }
-
-  async _loadIntegrations() {
-    if (!this.brandContainerId || !this.supabase) return;
-    // IMPORTANTE: NO seleccionamos access_token ni refresh_token.
-    // Los tokens son secretos del servidor — solo los lee la Netlify function
-    // con la service key. El frontend solo necesita saber si la integración
-    // existe y datos de display (nombre de cuenta, scopes, metadata).
-    const { data, error } = await this.supabase
-      .from('brand_integrations')
-      .select('id, platform, external_account_id, external_account_name, scope, metadata, token_expires_at, is_active')
-      .eq('brand_container_id', this.brandContainerId)
-      .in('platform', ['facebook', 'google'])
-      .eq('is_active', true);
-    if (error || !data) return;
-    this.integrations = {};
-    data.forEach(row => { this.integrations[row.platform] = row; });
-    const googleInteg = this.integrations['google'];
-    if (googleInteg?.metadata?.ga4_property_id) {
-      this._ga4PropertyId = googleInteg.metadata.ga4_property_id;
-    }
-  }
-
-  // ── OAuth connect/disconnect ──────────────────────────────────────────────
-
-  async _connectPlatform(platform) {
-    if (!this.brandContainerId) {
-      this._showError('Crea o conecta una marca antes de integrar plataformas.');
-      return;
-    }
-    const session = await this.supabase.auth.getSession();
-    const accessToken = session?.data?.session?.access_token;
-    if (!accessToken) { alert('Sesión no válida. Inicia sesión de nuevo.'); return; }
-
-    const returnTo = window.location.pathname + (window.location.search || '');
-    const startUrl = `${window.location.origin}/api/integrations/${encodeURIComponent(platform)}/start` +
-      `?brand_container_id=${encodeURIComponent(this.brandContainerId)}` +
-      `&return_to=${encodeURIComponent(returnTo)}`;
-
-    const btn = document.querySelector(`[data-connect-platform="${platform}"]`);
-    if (btn) { btn.disabled = true; btn.innerHTML = `<span class="insight-spinner"></span> Conectando...`; }
-
-    try {
-      const res = await fetch(startUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
-      if (!res.ok) { const t = await res.text().catch(() => ''); throw new Error(t || `Error ${res.status}`); }
-      const json = await res.json();
-      if (!json.authorize_url) throw new Error('No se pudo generar la URL de autorización.');
-      window.location.href = json.authorize_url;
-    } catch (e) {
-      console.error('connectPlatform:', e);
-      alert(e?.message || 'No se pudo iniciar la conexión.');
-      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-plug"></i> Conectar`; }
-    }
-  }
-
-  async _disconnectPlatform(platform) {
-    const integ = this.integrations[platform];
-    if (!integ?.id) return;
-    if (!confirm(`¿Desconectar ${platform === 'facebook' ? 'Meta' : 'Google Analytics'}? Se eliminarán los tokens guardados.`)) return;
-    const { error } = await this.supabase.from('brand_integrations').delete().eq('id', integ.id);
-    if (error) { alert('Error al desconectar: ' + error.message); return; }
-    delete this.integrations[platform];
-    if (platform === 'facebook') this._metaData = null;
-    else this._googleData = null;
-    this._renderPlatformCards();
-    this._renderMetrics();
-  }
-
-  // ── API calls — siempre a través del backend (Netlify function) ──────────
-  // El frontend NUNCA maneja tokens de Meta ni Google directamente.
-  // Solo envía el integration_id; el backend lee el token con la service key,
-  // refresca si expiró (Google), y llama a Meta/Google APIs server-side.
-  // Esto protege los tokens de ser expuestos en el browser.
-
-  async _fetchAll() {
-    const promises = [];
-    if (this.integrations['facebook']) promises.push(this._fetchMeta());
-    if (this.integrations['google']) promises.push(this._fetchGoogle());
-    await Promise.allSettled(promises);
-  }
-
-  async _getSessionToken() {
-    const session = await this.supabase.auth.getSession();
-    return session?.data?.session?.access_token || null;
-  }
-
-  async _fetchMeta() {
-    const integ = this.integrations['facebook'];
-    if (!integ) return;
-    this._loadingMeta = true;
-    this._showSectionLoader('insight-meta-body');
-    try {
-      const sessionToken = await this._getSessionToken();
-      if (!sessionToken) throw new Error('Sesión no válida.');
-      const res = await fetch(`${window.location.origin}/api/insights/fetch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({
-          platform: 'facebook',
-          integration_id: integ.id,
-          date_range: this.dateRange
-        })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
-      this._metaData = json.data;
-    } catch (e) {
-      console.error('_fetchMeta:', e);
-      this._metaData = { _error: e?.message || 'Error al cargar métricas de Meta.' };
-    } finally {
-      this._loadingMeta = false;
-    }
-  }
-
-  async _fetchGoogle() {
-    const integ = this.integrations['google'];
-    if (!integ || !this._ga4PropertyId) return;
-    this._loadingGoogle = true;
-    this._showSectionLoader('insight-google-body');
-    try {
-      const sessionToken = await this._getSessionToken();
-      if (!sessionToken) throw new Error('Sesión no válida.');
-      const res = await fetch(`${window.location.origin}/api/insights/fetch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({
-          platform: 'google',
-          integration_id: integ.id,
-          date_range: this.dateRange,
-          ga4_property_id: this._ga4PropertyId
-        })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
-      this._googleData = json.data;
-    } catch (e) {
-      console.error('_fetchGoogle:', e);
-      this._googleData = { _error: e?.message || 'Error al cargar métricas de Google Analytics.' };
-    } finally {
-      this._loadingGoogle = false;
-    }
-  }
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Shell ─────────────────────────────────────────────────────────────────
 
   _buildShell() {
+    const tabs = [
+      { id: 'my-brands',   icon: 'fa-layer-group',  label: 'My Brands'   },
+      { id: 'competence',  icon: 'fa-chess',         label: 'Competence'  },
+      { id: 'tendencies',  icon: 'fa-fire',          label: 'Tendencies'  },
+      { id: 'strategy',    icon: 'fa-route',         label: 'Strategy'    },
+    ];
+
     return `
       <div class="insight-page page-content" id="insightPage">
-        <div class="insight-header">
-          <div class="insight-header-left">
-            <h1 class="insight-title">Insight</h1>
-            <p class="insight-subtitle">Métricas de tus campañas y canales digitales en tiempo real.</p>
-          </div>
-          <div class="insight-header-right">
-            <div class="insight-date-tabs" id="insightDateTabs">
-              <button class="insight-date-tab ${this.dateRange === '7d' ? 'active' : ''}" data-range="7d">7 días</button>
-              <button class="insight-date-tab ${this.dateRange === '30d' ? 'active' : ''}" data-range="30d">30 días</button>
-              <button class="insight-date-tab ${this.dateRange === '90d' ? 'active' : ''}" data-range="90d">90 días</button>
-            </div>
-            <button class="insight-refresh-btn" id="insightRefreshBtn" title="Actualizar datos">
-              <i class="fas fa-sync-alt"></i>
+
+        <nav class="insight-subnav" id="insightSubnav">
+          ${tabs.map(t => `
+            <button
+              class="insight-subnav-btn${this._activeTab === t.id ? ' active' : ''}"
+              data-tab="${t.id}"
+            >
+              <i class="fas ${t.icon}"></i>
+              <span>${t.label}</span>
             </button>
-          </div>
+          `).join('')}
+        </nav>
+
+        <div class="insight-tab-body" id="insightTabBody">
+          <!-- contenido de la sub-página activa -->
         </div>
 
-        <div class="insight-platforms" id="insightPlatforms">
-          <!-- Platform cards rendered by JS -->
-        </div>
-
-        <div id="insightMetricsArea">
-          <!-- KPI strip + section data rendered by JS -->
-        </div>
       </div>
     `;
   }
 
-  _renderPlatformCards() {
-    const el = document.getElementById('insightPlatforms');
-    if (!el) return;
-    el.innerHTML = '';
+  // ── Tab routing ───────────────────────────────────────────────────────────
+
+  _setupTabs() {
+    const nav = document.getElementById('insightSubnav');
+    if (!nav) return;
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      this._activeTab = btn.dataset.tab;
+      nav.querySelectorAll('.insight-subnav-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.tab === this._activeTab)
+      );
+      this._renderTab(this._activeTab);
+    });
   }
 
-  _renderMetrics() {
-    const area = document.getElementById('insightMetricsArea');
-    if (!area) return;
-    area.innerHTML = this._emptyStateHTML();
-  }
-
-  _buildKpiStrip() {
-    const d = this._metaData;
-    if (!d) return '';
-    if (d._error) return `<div class="insight-section-error"><i class="fas fa-exclamation-circle"></i> ${this._esc(d._error)}</div>`;
-
-    const ins = d.insights || {};
-    const fmt = (v) => v != null ? Number(v).toLocaleString('es-ES', { maximumFractionDigits: 2 }) : '—';
-    const fmtCurrency = (v) => v != null ? `$${Number(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
-
-    const kpis = [
-      { icon: 'fa-eye', label: 'Alcance', value: fmt(ins.reach), sub: 'personas únicas' },
-      { icon: 'fa-chart-bar', label: 'Impresiones', value: fmt(ins.impressions), sub: 'total de vistas' },
-      { icon: 'fa-mouse-pointer', label: 'Clics', value: fmt(ins.clicks), sub: `CTR ${ins.ctr ? Number(ins.ctr).toFixed(2) + '%' : '—'}` },
-      { icon: 'fa-dollar-sign', label: 'Inversión', value: fmtCurrency(ins.spend), sub: `CPC ${ins.cpc ? '$' + Number(ins.cpc).toFixed(2) : '—'}` }
-    ];
-
-    return `
-      <div class="insight-kpi-strip">
-        ${kpis.map(k => `
-          <div class="insight-kpi-card">
-            <div class="insight-kpi-icon"><i class="fas ${k.icon}"></i></div>
-            <div class="insight-kpi-body">
-              <div class="insight-kpi-value">${k.value}</div>
-              <div class="insight-kpi-label">${k.label}</div>
-              <div class="insight-kpi-sub">${k.sub}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
-  _buildMetaSection() {
-    const d = this._metaData;
-    const inner = this._buildMetaInner(d);
-    return `
-      <div class="insight-section" id="insightMetaSection">
-        <div class="insight-section-header">
-          <div class="insight-section-title">
-            <span class="insight-section-dot meta"></span>
-            <span>Meta Ads</span>
-          </div>
-          ${d && !d._error && d.accounts?.length
-            ? `<span class="insight-section-account">${this._esc(d.accounts[0]?.name || '')}</span>`
-            : ''}
-        </div>
-        <div class="insight-section-body" id="insight-meta-body">${inner}</div>
-      </div>
-    `;
-  }
-
-  _buildMetaInner(d) {
-    if (!d) return this._skeletonHTML();
-    if (d._error) return `<div class="insight-section-error"><i class="fas fa-exclamation-circle"></i> ${this._esc(d._error)}</div>`;
-    if (!d.campaigns?.length && !d.insights) {
-      return `<div class="insight-empty-small"><i class="fas fa-satellite-dish"></i><p>Sin datos para este período. Verifica que tu cuenta de anuncios tenga actividad.</p></div>`;
-    }
-
-    const ins = d.insights || {};
-    const fmtCur = (v) => v ? `$${Number(v).toFixed(2)}` : '$0.00';
-    const fmt = (v) => v ? Number(v).toLocaleString('es-ES') : '0';
-
-    const campaigns = (d.campaigns || []).map(c => {
-      const ci = c.insights?.data?.[0] || {};
-      return `
-        <tr class="insight-table-row">
-          <td class="insight-table-cell">
-            <span class="insight-campaign-name">${this._esc(c.name)}</span>
-          </td>
-          <td class="insight-table-cell">
-            <span class="insight-status-badge insight-status-${(c.status || '').toLowerCase()}">${this._esc(c.status || '—')}</span>
-          </td>
-          <td class="insight-table-cell insight-num">${fmt(ci.impressions)}</td>
-          <td class="insight-table-cell insight-num">${fmt(ci.reach)}</td>
-          <td class="insight-table-cell insight-num">${fmt(ci.clicks)}</td>
-          <td class="insight-table-cell insight-num">${fmtCur(ci.spend)}</td>
-        </tr>
-      `;
-    }).join('');
-
-    return `
-      <div class="insight-table-wrap">
-        <table class="insight-table">
-          <thead>
-            <tr>
-              <th class="insight-table-th">Campaña</th>
-              <th class="insight-table-th">Estado</th>
-              <th class="insight-table-th insight-num">Impresiones</th>
-              <th class="insight-table-th insight-num">Alcance</th>
-              <th class="insight-table-th insight-num">Clics</th>
-              <th class="insight-table-th insight-num">Inversión</th>
-            </tr>
-          </thead>
-          <tbody>${campaigns || '<tr><td colspan="6" class="insight-table-empty">Sin campañas activas en este período.</td></tr>'}</tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  _buildGoogleSection() {
-    const d = this._googleData;
-    const inner = this._buildGoogleInner(d);
-    return `
-      <div class="insight-section" id="insightGoogleSection">
-        <div class="insight-section-header">
-          <div class="insight-section-title">
-            <span class="insight-section-dot google"></span>
-            <span>Google Analytics 4</span>
-          </div>
-        </div>
-        <div class="insight-section-body" id="insight-google-body">${inner}</div>
-      </div>
-    `;
-  }
-
-  _buildGoogleInner(d) {
-    const integ = this.integrations['google'];
-    if (!integ) return '';
-
-    if (!this._ga4PropertyId) {
-      return `
-        <div class="insight-empty-small">
-          <i class="fas fa-clock"></i>
-          <p>Google Analytics conectado. Pronto verás aquí las métricas de tráfico.</p>
-        </div>
-      `;
-    }
-
-    if (!d) return this._skeletonHTML();
-    if (d._error) {
-      // Si el error contiene "token" o "auth" ofrecemos reconectar
-      const needsReconnect = /token|auth|expired|unauthorized|403|401/i.test(d._error);
-      const reconnectBtn = needsReconnect
-        ? `<button class="btn btn-primary btn-sm insight-reconnect-btn" data-connect-platform="google" style="margin-top:.75rem;">
-             <i class="fas fa-redo"></i> Reconectar Google Analytics
-           </button>`
-        : '';
-      return `
-        <div class="insight-section-error">
-          <i class="fas fa-exclamation-circle"></i> ${this._esc(d._error)}
-          ${reconnectBtn}
-        </div>
-      `;
-    }
-
-    // Extract metric values from GA4 response
-    const metricHeaders = (d.metricHeaders || []).map(h => h.name);
-    const row = d.rows?.[0]?.metricValues || [];
-    const get = (name) => {
-      const idx = metricHeaders.indexOf(name);
-      return idx >= 0 && row[idx] ? row[idx].value : null;
+  _renderTab(tabId) {
+    const body = document.getElementById('insightTabBody');
+    if (!body) return;
+    const map = {
+      'my-brands':  () => this._pageMyBrands(),
+      'competence': () => this._pageComingSoon('Competence', 'fa-chess', 'Analiza a tu competencia: sus publicaciones, métricas y posicionamiento en redes sociales.'),
+      'tendencies': () => this._pageComingSoon('Tendencies', 'fa-fire', 'Descubre tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'),
+      'strategy':   () => this._pageComingSoon('Strategy',   'fa-route', 'Obtén recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'),
     };
+    body.innerHTML = (map[tabId] || map['my-brands'])();
+  }
 
-    const fmt = (v) => v != null ? Number(v).toLocaleString('es-ES', { maximumFractionDigits: 0 }) : '—';
-    const fmtPct = (v) => v != null ? (Number(v) * 100).toFixed(1) + '%' : '—';
-    const fmtSec = (v) => {
-      if (!v) return '—';
-      const s = Math.round(Number(v));
-      const m = Math.floor(s / 60), sec = s % 60;
-      return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-    };
+  // ── Sub-páginas ───────────────────────────────────────────────────────────
 
-    const metrics = [
-      { icon: 'fa-users', label: 'Sesiones', value: fmt(get('sessions')), color: 'blue' },
-      { icon: 'fa-user', label: 'Usuarios Activos', value: fmt(get('activeUsers')), color: 'green' },
-      { icon: 'fa-user-plus', label: 'Nuevos Usuarios', value: fmt(get('newUsers')), color: 'purple' },
-      { icon: 'fa-file-alt', label: 'Páginas Vistas', value: fmt(get('screenPageViews')), color: 'orange' },
-      { icon: 'fa-arrow-left', label: 'Tasa de Rebote', value: fmtPct(get('bounceRate')), color: 'red' },
-      { icon: 'fa-clock', label: 'Duración Media', value: fmtSec(get('averageSessionDuration')), color: 'teal' }
-    ];
+  _pageMyBrands() {
+    return this._pageComingSoon('My Brands', 'fa-layer-group', 'Aquí verás en tiempo real las métricas de tus marcas conectadas: Meta Ads, Google Analytics y más.');
+  }
 
+  _pageComingSoon(title, icon, description) {
     return `
-      <div class="insight-ga4-grid">
-        ${metrics.map(m => `
-          <div class="insight-ga4-card insight-ga4-card--${m.color}">
-            <div class="insight-ga4-icon"><i class="fas ${m.icon}"></i></div>
-            <div class="insight-ga4-value">${m.value}</div>
-            <div class="insight-ga4-label">${m.label}</div>
-          </div>
-        `).join('')}
+      <div class="insight-coming-soon">
+        <div class="insight-cs-icon">
+          <i class="fas ${icon}"></i>
+        </div>
+        <h2 class="insight-cs-title">${title}</h2>
+        <p class="insight-cs-desc">${description}</p>
+        <span class="insight-cs-badge">Próximamente</span>
       </div>
     `;
   }
 
-  _emptyStateHTML() {
-    return `
-      <div class="insight-empty-state">
-        <div class="insight-empty-icon"><i class="fas fa-chart-line"></i></div>
-        <h2 class="insight-empty-title">Estamos preparando Insight</h2>
-        <p class="insight-empty-desc">
-          Las integraciones de Meta Ads y Google Analytics no se muestran en esta vista por ahora.
-        </p>
-      </div>
-    `;
-  }
-
-  _skeletonHTML() {
-    return `
-      <div class="insight-skeleton">
-        <div class="insight-skel-row">
-          <div class="insight-skel-block w60"></div><div class="insight-skel-block w30"></div>
-        </div>
-        <div class="insight-skel-row">
-          <div class="insight-skel-block w80"></div><div class="insight-skel-block w40"></div><div class="insight-skel-block w50"></div>
-        </div>
-        <div class="insight-skel-row">
-          <div class="insight-skel-block w70"></div><div class="insight-skel-block w35"></div><div class="insight-skel-block w45"></div>
-        </div>
-        <div class="insight-skel-row">
-          <div class="insight-skel-block w55"></div><div class="insight-skel-block w25"></div><div class="insight-skel-block w60"></div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── Event setup ───────────────────────────────────────────────────────────
-
-  _setupDateTabs() {
-    const tabs = document.getElementById('insightDateTabs');
-    if (tabs) {
-      tabs.addEventListener('click', async (e) => {
-        const btn = e.target.closest('[data-range]');
-        if (!btn) return;
-        this.dateRange = btn.dataset.range;
-        tabs.querySelectorAll('.insight-date-tab').forEach(t => t.classList.toggle('active', t.dataset.range === this.dateRange));
-        this._metaData = null;
-        this._googleData = null;
-        this._renderMetrics();
-        await this._fetchAll();
-        this._renderMetrics();
-      });
-    }
-    const refreshBtn = document.getElementById('insightRefreshBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', async () => {
-        refreshBtn.classList.add('spinning');
-        this._metaData = null;
-        this._googleData = null;
-        this._renderMetrics();
-        await this._fetchAll();
-        this._renderMetrics();
-        setTimeout(() => refreshBtn.classList.remove('spinning'), 600);
-      });
-    }
-  }
-
-  // ── Misc helpers ──────────────────────────────────────────────────────────
-
-  _showSectionLoader(id) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = this._skeletonHTML();
-  }
-
-  _showError(msg) {
-    const area = document.getElementById('insightMetricsArea');
-    if (area) area.innerHTML = `<div class="insight-section-error insight-section-error--large"><i class="fas fa-exclamation-triangle"></i> ${this._esc(msg)}</div>`;
-  }
+  // ── Misc ──────────────────────────────────────────────────────────────────
 
   _esc(s) {
     if (s == null) return '';
