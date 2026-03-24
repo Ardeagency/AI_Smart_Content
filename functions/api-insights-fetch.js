@@ -1,14 +1,7 @@
 /**
  * api-insights-fetch
- * Obtiene métricas de Meta (Ads) y Google Analytics 4 usando los tokens
- * almacenados en brand_integrations. Refresca el access_token de Google si expiró.
- *
- * Env vars necesarias (Netlify Dashboard):
- *   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET  – para refrescar tokens de Google
- *
- * Scopes recomendados (env vars en Netlify):
- *   FACEBOOK_OAUTH_SCOPES=ads_read,ads_management,read_insights,pages_read_engagement
- *   GOOGLE_OAUTH_SCOPES=openid email profile https://www.googleapis.com/auth/analytics.readonly
+ * Obtiene métricas de Meta (Ads/Instagram) y Google Analytics 4 / YouTube.
+ * Refresca tokens automáticamente sin requerir intervención del usuario.
  *
  * POST /api/insights/fetch
  * Body: { platform, integration_id, date_range, ga4_property_id? }
@@ -22,7 +15,9 @@ const {
   supabaseRest
 } = require('./lib/ai-shared');
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+const META_API_VERSION = 'v22.0';
+
+// ── Token refresh helpers ─────────────────────────────────────────────────────
 
 async function refreshGoogleToken(refreshToken, clientId, clientSecret) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
@@ -37,13 +32,30 @@ async function refreshGoogleToken(refreshToken, clientId, clientSecret) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error_description || json?.error || 'Google token refresh failed');
-  return json;
+  return json; // { access_token, expires_in, token_type }
 }
 
-async function fetchMetaInsights({ token, datePreset }) {
-  const GRAPH = 'https://graph.facebook.com/v20.0';
+// Meta no tiene refresh_token clásico: se renueva el long-lived token con otro fb_exchange_token.
+// Se puede hacer silenciosamente desde el servidor sin interacción del usuario.
+// Los tokens Long-Lived de Meta duran ~60 días y se pueden renovar cuando les quedan < 10 días.
+async function renewMetaToken(currentToken, appId, appSecret) {
+  const res = await fetch(
+    `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+    `grant_type=fb_exchange_token` +
+    `&client_id=${encodeURIComponent(appId)}` +
+    `&client_secret=${encodeURIComponent(appSecret)}` +
+    `&fb_exchange_token=${encodeURIComponent(currentToken)}`
+  );
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.error) throw new Error(json?.error?.message || 'Meta token renewal failed');
+  return json; // { access_token, token_type, expires_in }
+}
 
-  // 1. Get ad accounts
+// ── Meta insights ─────────────────────────────────────────────────────────────
+
+async function fetchMetaInsights({ token, datePreset }) {
+  const GRAPH = `https://graph.facebook.com/${META_API_VERSION}`;
+
   const accountsRes = await fetch(
     `${GRAPH}/me/adaccounts?fields=name,account_id,currency,account_status&limit=10&access_token=${token}`
   );
@@ -55,38 +67,31 @@ async function fetchMetaInsights({ token, datePreset }) {
 
   const adAccountId = accounts[0].id;
 
-  // 2. Account-level insights
-  const insightsUrl =
+  const insightsRes = await fetch(
     `${GRAPH}/${adAccountId}/insights` +
     `?fields=impressions,reach,clicks,spend,cpc,cpm,ctr,actions` +
-    `&date_preset=${datePreset}` +
-    `&level=account` +
-    `&access_token=${token}`;
-  const insightsRes = await fetch(insightsUrl);
+    `&date_preset=${datePreset}&level=account&access_token=${token}`
+  );
   const insightsJson = await insightsRes.json().catch(() => ({}));
   const insights = insightsJson.data?.[0] || null;
 
-  // 3. Campaigns with their insights
-  const campsUrl =
+  const campsRes = await fetch(
     `${GRAPH}/${adAccountId}/campaigns` +
     `?fields=name,status,objective,insights.date_preset(${datePreset}){impressions,reach,clicks,spend}` +
-    `&limit=15` +
-    `&access_token=${token}`;
-  const campsRes = await fetch(campsUrl);
+    `&limit=15&access_token=${token}`
+  );
   const campsJson = await campsRes.json().catch(() => ({}));
-  const campaigns = campsJson.data || [];
 
-  return { accounts, adAccountId, insights, campaigns };
+  return { accounts, adAccountId, insights, campaigns: campsJson.data || [] };
 }
+
+// ── Google Analytics ──────────────────────────────────────────────────────────
 
 async function fetchGoogleAnalytics({ token, propertyId, startDate, endDate }) {
   const url = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`;
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       dateRanges: [{ startDate, endDate }],
       metrics: [
@@ -105,16 +110,7 @@ async function fetchGoogleAnalytics({ token, propertyId, startDate, endDate }) {
   return json;
 }
 
-function shouldUseMetaTestToken(platform, body) {
-  const testToken = String(process.env.META_TEST_ACCESS_TOKEN || '').trim();
-  if (platform !== 'facebook' || !testToken) return false;
-
-  // Se habilita solo bajo solicitud explícita del cliente.
-  return body?.use_test_token === true;
-}
-
-// ── Handler ────────────────────────────────────────────────────────────────
-
+// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
   if (event.httpMethod !== 'POST') {
@@ -140,23 +136,19 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing platform or integration_id' }) };
   }
 
-  // ── Load integration row ──────────────────────────────────────────────
+  // ── Load integration row ──────────────────────────────────────────────────
   const rows = await supabaseRest({
-    url: env.url,
-    serviceKey: env.serviceKey,
-    path: 'brand_integrations',
-    method: 'GET',
+    url: env.url, serviceKey: env.serviceKey,
+    path: 'brand_integrations', method: 'GET',
     searchParams: { select: '*', id: `eq.${integration_id}`, limit: '1' }
   });
   const integration = Array.isArray(rows) ? rows[0] : null;
   if (!integration) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Integration not found' }) };
 
-  // ── Authorization: verify user owns or is member of the brand container ──
+  // ── Verify user owns or is a member of the brand container ───────────────
   const containers = await supabaseRest({
-    url: env.url,
-    serviceKey: env.serviceKey,
-    path: 'brand_containers',
-    method: 'GET',
+    url: env.url, serviceKey: env.serviceKey,
+    path: 'brand_containers', method: 'GET',
     searchParams: { select: 'id,user_id,organization_id', id: `eq.${integration.brand_container_id}`, limit: '1' }
   });
   const bc = Array.isArray(containers) ? containers[0] : null;
@@ -164,59 +156,78 @@ exports.handler = async (event) => {
 
   if (bc.user_id !== user.id) {
     const members = await supabaseRest({
-      url: env.url,
-      serviceKey: env.serviceKey,
-      path: 'organization_members',
-      method: 'GET',
-      searchParams: {
-        select: 'id',
-        organization_id: `eq.${bc.organization_id}`,
-        user_id: `eq.${user.id}`,
-        limit: '1'
-      }
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'organization_members', method: 'GET',
+      searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
     });
     if (!Array.isArray(members) || members.length === 0) {
       return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
     }
   }
 
-  // ── Token selection / refresh (Google only) ───────────────────────────
+  // ── Auto token management ─────────────────────────────────────────────────
   let token = integration.access_token;
-  if (shouldUseMetaTestToken(platform, body)) {
-    token = String(process.env.META_TEST_ACCESS_TOKEN || '').trim();
-  }
 
-  if (platform === 'google' && integration.token_expires_at && integration.refresh_token) {
-    const expiresAt = new Date(integration.token_expires_at);
-    const bufferMs = 5 * 60 * 1000;
-    if (Date.now() >= expiresAt.getTime() - bufferMs) {
-      const clientId = process.env.GOOGLE_CLIENT_ID || '';
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-      try {
-        const refreshed = await refreshGoogleToken(integration.refresh_token, clientId, clientSecret);
-        token = refreshed.access_token;
-        const newExpiry = refreshed.expires_in
-          ? new Date(Date.now() + Number(refreshed.expires_in) * 1000).toISOString()
-          : null;
-        await supabaseRest({
-          url: env.url,
-          serviceKey: env.serviceKey,
-          path: 'brand_integrations',
-          method: 'PATCH',
-          searchParams: { id: `eq.${integration_id}` },
-          body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
-        });
-      } catch (e) {
-        console.error('Token refresh failed:', e);
+  if (platform === 'google') {
+    // Auto-refresh Google token if it expires in < 5 minutes
+    const clientId = process.env.GOOGLE_CLIENT_ID || '';
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+    if (integration.token_expires_at && integration.refresh_token && clientId && clientSecret) {
+      const expiresAt = new Date(integration.token_expires_at);
+      const bufferMs = 5 * 60 * 1000;
+      if (Date.now() >= expiresAt.getTime() - bufferMs) {
+        try {
+          const refreshed = await refreshGoogleToken(integration.refresh_token, clientId, clientSecret);
+          token = refreshed.access_token;
+          const newExpiry = refreshed.expires_in
+            ? new Date(Date.now() + Number(refreshed.expires_in) * 1000).toISOString()
+            : null;
+          await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'brand_integrations', method: 'PATCH',
+            searchParams: { id: `eq.${integration_id}` },
+            body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
+          });
+        } catch (e) {
+          console.error('[insights] Google token refresh failed:', e?.message);
+        }
       }
     }
   }
 
-  // ── Date range ────────────────────────────────────────────────────────
-  const presetMap = { '7d': 'last_7_d', '30d': 'last_30_d', '90d': 'last_90_d' };
-  const gaStartMap = { '7d': '7daysAgo', '30d': '30daysAgo', '90d': '90daysAgo' };
-  const datePreset = presetMap[date_range] || 'last_30_d';
-  const gaStart = gaStartMap[date_range] || '30daysAgo';
+  if (platform === 'facebook') {
+    // Auto-renew Meta long-lived token if it expires in < 15 days (silent, no user interaction needed)
+    const appId = process.env.META_APP_ID || '';
+    const appSecret = process.env.META_APP_SECRET || '';
+    if (integration.token_expires_at && appId && appSecret) {
+      const expiresAt = new Date(integration.token_expires_at);
+      const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
+      if (Date.now() >= expiresAt.getTime() - fifteenDaysMs) {
+        try {
+          const renewed = await renewMetaToken(token, appId, appSecret);
+          token = renewed.access_token;
+          const newExpiry = renewed.expires_in
+            ? new Date(Date.now() + Number(renewed.expires_in) * 1000).toISOString()
+            : null;
+          await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'brand_integrations', method: 'PATCH',
+            searchParams: { id: `eq.${integration_id}` },
+            body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
+          });
+        } catch (e) {
+          // Log but don't fail — current token may still work
+          console.warn('[insights] Meta token renewal skipped:', e?.message);
+        }
+      }
+    }
+  }
+
+  // ── Date range mapping ────────────────────────────────────────────────────
+  const presetMap  = { '7d': 'last_7_d',    '30d': 'last_30_d',   '90d': 'last_90_d' };
+  const gaStartMap = { '7d': '7daysAgo',    '30d': '30daysAgo',   '90d': '90daysAgo' };
+  const datePreset = presetMap[date_range]  || 'last_30_d';
+  const gaStart    = gaStartMap[date_range] || '30daysAgo';
 
   try {
     let data = {};
@@ -227,15 +238,12 @@ exports.handler = async (event) => {
       if (!ga4_property_id) {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'ga4_property_id is required for Google Analytics' }) };
       }
-      // Save property ID in metadata if new
-      const existingPropId = integration.metadata?.ga4_property_id;
-      if (existingPropId !== ga4_property_id) {
+      // Persist ga4_property_id in metadata if new
+      if (integration.metadata?.ga4_property_id !== ga4_property_id) {
         const newMeta = { ...(integration.metadata || {}), ga4_property_id };
         await supabaseRest({
-          url: env.url,
-          serviceKey: env.serviceKey,
-          path: 'brand_integrations',
-          method: 'PATCH',
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'brand_integrations', method: 'PATCH',
           searchParams: { id: `eq.${integration_id}` },
           body: [{ metadata: newMeta, updated_at: new Date().toISOString() }]
         });
@@ -249,7 +257,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ ok: true, data })
     };
   } catch (e) {
-    console.error('api-insights-fetch error:', e);
+    console.error('[insights] fetch error:', e?.message);
     return {
       statusCode: 500,
       headers: corsHeaders(),

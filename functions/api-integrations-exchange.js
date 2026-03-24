@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const {
   corsHeaders,
   getSupabaseEnv,
@@ -7,75 +8,84 @@ const {
   assertOrgMember
 } = require('./lib/ai-shared');
 
-function base64UrlDecode(str) {
-  const b64 = String(str || '').replace(/-/g, '+').replace(/_/g, '/');
-  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
-  return JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
-}
+const META_API_VERSION = 'v22.0';
 
-function nowIso() {
-  return new Date().toISOString();
-}
+// ── State helpers ─────────────────────────────────────────────────────────────
 
-// La redirect_uri en el exchange DEBE ser idéntica a la que se usó en el authorize.
-// Usar SITE_URL garantiza que siempre sea la misma URI registrada en Google/Meta.
-function getRedirectUri() {
-  if (process.env.SITE_URL) {
-    return `${process.env.SITE_URL.replace(/\/$/, '')}/brand-integration-callback`;
+// Verifica la firma HMAC del state y extrae el payload.
+// El state tiene el formato: base64url(payload) + "." + HMAC-SHA256(base64url(payload), secret)
+// TTL máximo de 15 minutos para el state.
+function verifyAndDecodeState(state) {
+  const secret = process.env.OAUTH_STATE_SECRET || '';
+  if (!secret) throw Object.assign(new Error('OAUTH_STATE_SECRET env var is required'), { statusCode: 500 });
+
+  const dotIdx = state.lastIndexOf('.');
+  if (dotIdx < 1) throw Object.assign(new Error('Invalid state format'), { statusCode: 400 });
+
+  const payloadB64 = state.slice(0, dotIdx);
+  const receivedSig = state.slice(dotIdx + 1);
+
+  const expectedSig = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
+  const sigA = Buffer.from(receivedSig, 'base64url');
+  const sigB = Buffer.from(expectedSig, 'base64url');
+  if (sigA.length !== sigB.length || !crypto.timingSafeEqual(sigA, sigB)) {
+    throw Object.assign(new Error('Invalid state signature'), { statusCode: 400 });
   }
-  return 'http://localhost:8888/brand-integration-callback';
+
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+  } catch (_) {
+    throw Object.assign(new Error('Malformed state payload'), { statusCode: 400 });
+  }
+
+  const MAX_AGE_MS = 15 * 60 * 1000;
+  if (!payload.iat || Date.now() - payload.iat > MAX_AGE_MS) {
+    throw Object.assign(new Error('State expired — please start the connection again'), { statusCode: 400 });
+  }
+
+  return payload;
 }
 
+// Sanitiza return_to para evitar open redirect. Solo permite rutas internas.
+function sanitizeReturnTo(returnTo) {
+  const safe = /^\/[a-zA-Z0-9\-_/?=&%#]*$/;
+  return safe.test(returnTo) ? returnTo : '/home';
+}
+
+// ── Redirect URI ──────────────────────────────────────────────────────────────
+function getRedirectUri() {
+  const base = process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'http://localhost:8888';
+  return `${base}/brand-integration-callback`;
+}
+
+function nowIso() { return new Date().toISOString(); }
+
+// ── Brand container auth ──────────────────────────────────────────────────────
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
-  if (!user?.id) {
-    const err = new Error('Invalid session');
-    err.statusCode = 401;
-    throw err;
-  }
+  if (!user?.id) { throw Object.assign(new Error('Invalid session'), { statusCode: 401 }); }
 
   const containers = await supabaseRest({
-    url: env.url,
-    serviceKey: env.serviceKey,
-    path: 'brand_containers',
-    method: 'GET',
-    searchParams: {
-      select: 'id,user_id,organization_id',
-      id: `eq.${brandContainerId}`,
-      limit: '1'
-    }
+    url: env.url, serviceKey: env.serviceKey,
+    path: 'brand_containers', method: 'GET',
+    searchParams: { select: 'id,user_id,organization_id', id: `eq.${brandContainerId}`, limit: '1' }
   });
-
   const bc = Array.isArray(containers) ? containers[0] : null;
-  if (!bc) {
-    const err = new Error('Brand not found');
-    err.statusCode = 404;
-    throw err;
-  }
+  if (!bc) { throw Object.assign(new Error('Brand not found'), { statusCode: 404 }); }
 
   if (bc.user_id !== user.id) {
-    if (!bc.organization_id) {
-      const err = new Error('No autorizado para esta marca');
-      err.statusCode = 403;
-      throw err;
-    }
-    await assertOrgMember({
-      url: env.url,
-      serviceKey: env.serviceKey,
-      organizationId: bc.organization_id,
-      userId: user.id
-    });
+    if (!bc.organization_id) { throw Object.assign(new Error('No autorizado para esta marca'), { statusCode: 403 }); }
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: bc.organization_id, userId: user.id });
   }
-
   return { user, brand_container_id: brandContainerId };
 }
 
+// ── Upsert integration ────────────────────────────────────────────────────────
 async function upsertBrandIntegration({ env, payload }) {
   const existing = await supabaseRest({
-    url: env.url,
-    serviceKey: env.serviceKey,
-    path: 'brand_integrations',
-    method: 'GET',
+    url: env.url, serviceKey: env.serviceKey,
+    path: 'brand_integrations', method: 'GET',
     searchParams: {
       select: 'id,refresh_token',
       brand_container_id: `eq.${payload.brand_container_id}`,
@@ -83,41 +93,38 @@ async function upsertBrandIntegration({ env, payload }) {
       limit: '1'
     }
   });
-
   const row = Array.isArray(existing) ? existing[0] : null;
+
   if (row?.id) {
     const next = { ...payload };
-    // Si no llega refresh_token, preservamos el existente.
+    // Preservar refresh_token existente si no viene uno nuevo (Google)
     if (next.refresh_token == null && row.refresh_token != null) next.refresh_token = row.refresh_token;
-
     await supabaseRest({
-      url: env.url,
-      serviceKey: env.serviceKey,
-      path: 'brand_integrations',
-      method: 'PATCH',
-      searchParams: { id: `eq.${row.id}` },
-      body: [next]
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'brand_integrations', method: 'PATCH',
+      searchParams: { id: `eq.${row.id}` }, body: [next]
     });
   } else {
     await supabaseRest({
-      url: env.url,
-      serviceKey: env.serviceKey,
-      path: 'brand_integrations',
-      method: 'POST',
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'brand_integrations', method: 'POST',
       body: [payload]
     });
   }
 }
 
+// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
-  try { env = getSupabaseEnv(); } catch (e) { return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) }; }
+  try { env = getSupabaseEnv(); } catch (e) {
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+  }
 
   let body = {};
-  try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) { body = {}; }
+  try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
 
   const { code, state } = body || {};
   if (!code || !state) {
@@ -127,20 +134,25 @@ exports.handler = async (event) => {
   const accessToken = getBearerToken(event);
   if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
 
+  // ── Verify HMAC-signed state ──────────────────────────────────────────────
   let stateObj;
-  try { stateObj = base64UrlDecode(state); } catch (e) { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid state' }) }; }
+  try { stateObj = verifyAndDecodeState(state); } catch (e) {
+    return { statusCode: e.statusCode || 400, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+  }
 
   const platform = String(stateObj.platform || '').toLowerCase().trim();
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
-  const returnTo = String(stateObj.return_to || '/home');
+  const returnTo = sanitizeReturnTo(String(stateObj.return_to || '/home'));
   const scopesRaw = stateObj.scope || '';
 
   if (!['google', 'facebook'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
-  if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id in state' }) };
+  if (!brandContainerId) {
+    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id in state' }) };
+  }
 
-  // AuthZ: validar que el usuario puede operar esa marca
+  // ── Verify the authenticated user matches the one who initiated the flow ──
   let sessionUser;
   try {
     const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
@@ -149,131 +161,132 @@ exports.handler = async (event) => {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
+  // Validar que el uid del state coincida con la sesión actual (previene CSRF cross-user)
+  if (stateObj.uid && stateObj.uid !== sessionUser.id) {
+    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Session mismatch' }) };
+  }
+
   const redirectUri = getRedirectUri();
-  const scopeArr = String(scopesRaw).split(/\s+/).map(s => s.trim()).filter(Boolean);
+  const scopeArr = String(scopesRaw).split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
   const at = Date.now();
   const expiresIso = (sec) => sec ? new Date(at + Number(sec) * 1000).toISOString() : null;
 
   try {
+    // ── Google ──────────────────────────────────────────────────────────────
     if (platform === 'google') {
       const clientId = process.env.GOOGLE_CLIENT_ID || '';
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
       if (!clientId || !clientSecret) throw new Error('Missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET env vars');
 
-      // Exchange authorization code -> tokens
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          code: String(code),
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code'
+          code: String(code), client_id: clientId, client_secret: clientSecret,
+          redirect_uri: redirectUri, grant_type: 'authorization_code'
         }).toString()
       });
       const tokenJson = await tokenRes.json().catch(() => ({}));
-      if (!tokenRes.ok) {
-        throw new Error(tokenJson?.error_description || tokenJson?.error || 'Google token exchange failed');
-      }
+      if (!tokenRes.ok) throw new Error(tokenJson?.error_description || tokenJson?.error || 'Google token exchange failed');
 
       const accessTokenFromProvider = tokenJson.access_token;
       const refreshToken = tokenJson.refresh_token || null;
       const expiresAt = expiresIso(tokenJson.expires_in);
 
-      // Fetch basic profile
       const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${accessTokenFromProvider}` }
       });
       const profile = await profileRes.json().catch(() => ({}));
-      if (!profile?.id) {
-        // Fallback para no romper
-      }
 
-      const payload = {
-        brand_container_id: brandContainerId,
-        platform,
-        external_account_id: profile?.id || sessionUser.id,
-        external_account_name: profile?.email || profile?.name || profile?.id || null,
-        access_token: accessTokenFromProvider,
-        refresh_token: refreshToken,
-        token_expires_at: expiresAt,
-        is_active: true,
-        scope: scopeArr,
-        account_url: null,
-        encryption_iv: null,
-        metadata: {
-          provider: 'google',
-          provider_user_id: profile?.id || sessionUser.id,
-          email: profile?.email || null
-        },
-        updated_at: nowIso(),
-        last_sync_at: nowIso()
-      };
-
-      await upsertBrandIntegration({ env, payload });
+      await upsertBrandIntegration({
+        env,
+        payload: {
+          brand_container_id: brandContainerId,
+          platform,
+          external_account_id: profile?.id || sessionUser.id,
+          external_account_name: profile?.email || profile?.name || null,
+          access_token: accessTokenFromProvider,
+          refresh_token: refreshToken,
+          token_expires_at: expiresAt,
+          is_active: true,
+          scope: scopeArr,
+          account_url: null,
+          encryption_iv: null,
+          metadata: {
+            provider: 'google',
+            provider_user_id: profile?.id || sessionUser.id,
+            email: profile?.email || null,
+            picture: profile?.picture || null
+          },
+          updated_at: nowIso(),
+          last_sync_at: nowIso()
+        }
+      });
     }
 
+    // ── Facebook / Meta ──────────────────────────────────────────────────────
     if (platform === 'facebook') {
       const appId = process.env.META_APP_ID || '';
       const appSecret = process.env.META_APP_SECRET || '';
       if (!appId || !appSecret) throw new Error('Missing META_APP_ID/META_APP_SECRET env vars');
 
+      // Step 1: Exchange auth code for short-lived token
       const shortRes = await fetch(
-        `https://graph.facebook.com/v19.0/oauth/access_token?` +
-          `client_id=${encodeURIComponent(appId)}` +
-          `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-          `&client_secret=${encodeURIComponent(appSecret)}` +
-          `&code=${encodeURIComponent(code)}`
+        `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+        `client_id=${encodeURIComponent(appId)}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&client_secret=${encodeURIComponent(appSecret)}` +
+        `&code=${encodeURIComponent(code)}`
       );
       const shortJson = await shortRes.json().catch(() => ({}));
-      if (!shortRes.ok) {
-        throw new Error(shortJson?.error?.message || shortJson?.error_description || 'Facebook token exchange failed');
-      }
+      if (!shortRes.ok) throw new Error(shortJson?.error?.message || 'Facebook token exchange failed');
 
-      const shortAccessToken = shortJson.access_token;
+      // Step 2: Exchange short-lived for long-lived (~60 days)
       const longRes = await fetch(
-        `https://graph.facebook.com/v19.0/oauth/access_token?` +
-          `grant_type=fb_exchange_token` +
-          `&client_id=${encodeURIComponent(appId)}` +
-          `&client_secret=${encodeURIComponent(appSecret)}` +
-          `&fb_exchange_token=${encodeURIComponent(shortAccessToken)}`
+        `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+        `grant_type=fb_exchange_token` +
+        `&client_id=${encodeURIComponent(appId)}` +
+        `&client_secret=${encodeURIComponent(appSecret)}` +
+        `&fb_exchange_token=${encodeURIComponent(shortJson.access_token)}`
       );
       const longJson = await longRes.json().catch(() => ({}));
-      if (!longRes.ok) {
-        throw new Error(longJson?.error?.message || 'Facebook long-lived exchange failed');
-      }
+      if (!longRes.ok) throw new Error(longJson?.error?.message || 'Facebook long-lived exchange failed');
 
       const accessTokenFromProvider = longJson.access_token;
       const expiresAt = expiresIso(longJson.expires_in);
 
+      // Step 3: Fetch profile (id, name, email, picture)
       const profileRes = await fetch(
-        `https://graph.facebook.com/me?fields=id,name,email&access_token=${encodeURIComponent(accessTokenFromProvider)}`
+        `https://graph.facebook.com/${META_API_VERSION}/me` +
+        `?fields=id,name,email,picture.type(normal)` +
+        `&access_token=${encodeURIComponent(accessTokenFromProvider)}`
       );
       const profile = await profileRes.json().catch(() => ({}));
 
-      const payload = {
-        brand_container_id: brandContainerId,
-        platform,
-        external_account_id: profile?.id || sessionUser.id,
-        external_account_name: profile?.email || profile?.name || profile?.id || null,
-        access_token: accessTokenFromProvider,
-        refresh_token: null,
-        token_expires_at: expiresAt,
-        is_active: true,
-        scope: scopeArr,
-        account_url: null,
-        encryption_iv: null,
-        metadata: {
-          provider: 'facebook',
-          provider_user_id: profile?.id || sessionUser.id,
-          email: profile?.email || null
-        },
-        updated_at: nowIso(),
-        last_sync_at: nowIso()
-      };
-
-      await upsertBrandIntegration({ env, payload });
+      await upsertBrandIntegration({
+        env,
+        payload: {
+          brand_container_id: brandContainerId,
+          platform,
+          external_account_id: profile?.id || sessionUser.id,
+          external_account_name: profile?.name || profile?.email || profile?.id || null,
+          access_token: accessTokenFromProvider,
+          refresh_token: null,
+          token_expires_at: expiresAt,
+          is_active: true,
+          scope: scopeArr,
+          account_url: null,
+          encryption_iv: null,
+          metadata: {
+            provider: 'facebook',
+            provider_user_id: profile?.id || sessionUser.id,
+            email: profile?.email || null,
+            picture: profile?.picture?.data?.url || null
+          },
+          updated_at: nowIso(),
+          last_sync_at: nowIso()
+        }
+      });
     }
 
     return {
@@ -282,8 +295,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ ok: true, return_to: returnTo })
     };
   } catch (e) {
-    console.error('integrations exchange error:', e);
+    console.error('integrations exchange error:', e?.message);
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: e?.message || 'Token exchange failed' }) };
   }
 };
-

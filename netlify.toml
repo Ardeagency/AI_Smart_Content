@@ -90,6 +90,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/disconnect"
+  to = "/.netlify/functions/api-integrations-disconnect"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/webhooks/meta"
   to = "/.netlify/functions/api-webhooks-meta"
   status = 200
@@ -181,4 +187,5 @@
 # - META_APP_ID / META_APP_SECRET
 # - FACEBOOK_OAUTH_SCOPES = ads_read,read_insights,pages_read_engagement
 # - META_WEBHOOK_VERIFY_TOKEN = token secreto para validar webhook de Meta
+# - OAUTH_STATE_SECRET = mínimo 32 bytes aleatorios en hex (para HMAC-signed state, previene CSRF)
 

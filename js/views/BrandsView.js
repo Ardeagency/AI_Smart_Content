@@ -231,12 +231,12 @@ class BrandsView extends BaseView {
           this.brandSocialLinks = socialLinks || [];
         }
 
-        // Integraciones (brand_integrations)
+        // Integraciones (brand_integrations): por ahora solo Google + Facebook
         const { data: integrationsData, error: integrationsError } = await this.supabase
           .from('brand_integrations')
-          .select('id, brand_container_id, platform, external_account_id, external_account_name, is_active, updated_at, last_sync_at')
+          .select('id, brand_container_id, platform, external_account_id, external_account_name, is_active, updated_at, last_sync_at, token_expires_at, metadata')
           .eq('brand_container_id', container.id)
-          .in('platform', ['google', 'facebook', 'instagram', 'youtube'])
+          .in('platform', ['google', 'facebook'])
           .order('updated_at', { ascending: false });
 
         if (integrationsError) {
@@ -1821,56 +1821,47 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Integraciones por tarjetas (Info):
-   * - YouTube usa la integración Google
-   * - Facebook usa la integración Meta
-   * - Instagram usa la integración Meta
+   * Integraciones rápidas (por ahora Google + Facebook):
+   * Sustituye el input de "Redes y web" para usar botones con iconos.
+   * Persistimos la URL en `brand_social_links` (misma tabla que ya existe).
    */
   renderIntegrationsInto(container) {
     if (!container) return;
 
     const cards = [
-      {
-        id: 'youtube',
-        sourcePlatform: 'google',
-        icon: 'fab fa-youtube',
-        label: 'YouTube',
-        subtitle: 'Usa API de Google'
-      },
-      {
-        id: 'facebook',
-        sourcePlatform: 'facebook',
-        icon: 'fab fa-facebook',
-        label: 'Facebook',
-        subtitle: 'Usa API de Meta'
-      },
-      {
-        id: 'instagram',
-        sourcePlatform: 'facebook',
-        icon: 'fab fa-instagram',
-        label: 'Instagram',
-        subtitle: 'Usa API de Meta'
-      }
+      { id: 'youtube',   sourcePlatform: 'google',   icon: 'fab fa-youtube',   label: 'YouTube',   subtitle: 'API de Google' },
+      { id: 'facebook',  sourcePlatform: 'facebook',  icon: 'fab fa-facebook',  label: 'Facebook',  subtitle: 'API de Meta'   },
+      { id: 'instagram', sourcePlatform: 'facebook',  icon: 'fab fa-instagram', label: 'Instagram', subtitle: 'API de Meta'   }
     ];
 
     const getIntegration = (platformId, sourcePlatform) => {
       const list = this.brandIntegrations || [];
-      const exact = list.find(i => String(i?.platform || '').toLowerCase() === platformId);
-      if (exact) return exact;
-      return list.find(i => String(i?.platform || '').toLowerCase() === sourcePlatform) || null;
+      return list.find(i => String(i?.platform || '').toLowerCase() === platformId)
+          || list.find(i => String(i?.platform || '').toLowerCase() === sourcePlatform)
+          || null;
+    };
+
+    const expiryInfo = (integ) => {
+      if (!integ?.is_active || !integ.token_expires_at) return null;
+      const daysLeft = Math.ceil((new Date(integ.token_expires_at).getTime() - Date.now()) / 86400000);
+      if (daysLeft <= 0)  return { label: 'Token expirado',        cssClass: 'expired'       };
+      if (daysLeft <= 7)  return { label: `Expira en ${daysLeft}d`, cssClass: 'expiring-soon' };
+      return               { label: `Activo · ${daysLeft}d`,       cssClass: 'active-ok'     };
     };
 
     container.innerHTML = `
       <div class="brand-integrations-cards" aria-label="Integraciones">
         ${cards.map((card) => {
-          const integration = getIntegration(card.id, card.sourcePlatform);
-          const connected = !!(integration && integration.is_active);
-          const profileName = integration?.external_account_name
-            ? this.escapeHtml(integration.external_account_name)
-            : 'Sin perfil conectado';
+          const integ = getIntegration(card.id, card.sourcePlatform);
+          const connected = !!(integ && integ.is_active);
+          const profile = integ?.external_account_name ? this.escapeHtml(integ.external_account_name) : null;
+          const picture = integ?.metadata?.picture || null;
+          const expiry  = expiryInfo(integ);
+          const expiryIcon = expiry?.cssClass === 'expired' ? 'fa-exclamation-triangle'
+                           : expiry?.cssClass === 'expiring-soon' ? 'fa-clock' : 'fa-shield-alt';
 
           return `
-            <article class="brand-integration-card ${connected ? 'is-connected' : 'is-disconnected'}">
+            <article class="brand-integration-card ${connected ? 'is-connected' : 'is-disconnected'}${expiry ? ' expiry-' + expiry.cssClass : ''}">
               <div class="brand-integration-card-head">
                 <div class="brand-integration-title-wrap">
                   <div class="brand-integration-title">
@@ -1880,31 +1871,33 @@ class BrandsView extends BaseView {
                   <div class="brand-integration-subtitle">${this.escapeHtml(card.subtitle)}</div>
                 </div>
                 <span class="brand-integration-status ${connected ? 'is-connected' : 'is-disconnected'}">
-                  ${connected ? 'Conectado' : 'Sin conectar'}
+                  ${connected ? '<i class="fas fa-check-circle"></i> Conectado' : 'Sin conectar'}
                 </span>
               </div>
 
+              ${connected && profile ? `
               <div class="brand-integration-profile">
-                <span class="brand-integration-profile-label">Perfil:</span>
-                <span class="brand-integration-profile-name">${profileName}</span>
-              </div>
+                ${picture ? `<img src="${this.escapeHtml(picture)}" class="brand-integration-avatar" alt="">` : '<i class="fas fa-user-circle brand-integration-avatar-icon"></i>'}
+                <span class="brand-integration-profile-name">${profile}</span>
+              </div>` : ''}
+
+              ${expiry ? `
+              <div class="brand-integration-expiry brand-integration-expiry--${expiry.cssClass}">
+                <i class="fas ${expiryIcon}"></i> ${expiry.label}
+              </div>` : ''}
 
               <div class="brand-integration-connect-row">
-                <button
-                  type="button"
+                <button type="button"
                   class="brand-integration-action-btn brand-integration-connect-btn"
-                  data-connect-platform="${this.escapeHtml(card.sourcePlatform)}"
-                >
-                  ${connected ? 'Reconectar' : 'Conectar'}
+                  data-connect-platform="${this.escapeHtml(card.sourcePlatform)}">
+                  <i class="fas fa-plug"></i> ${connected ? 'Reconectar' : 'Conectar'}
                 </button>
-                <button
-                  type="button"
+                ${connected ? `
+                <button type="button"
                   class="brand-integration-action-btn brand-integration-disconnect-btn"
-                  data-disconnect-platform="${this.escapeHtml(card.sourcePlatform)}"
-                  ${connected ? '' : 'hidden'}
-                >
-                  Desconectar
-                </button>
+                  data-disconnect-platform="${this.escapeHtml(card.sourcePlatform)}">
+                  <i class="fas fa-unlink"></i> Desconectar
+                </button>` : ''}
               </div>
             </article>
           `;
@@ -1916,7 +1909,10 @@ class BrandsView extends BaseView {
       btn.addEventListener('click', async () => {
         const platform = String(btn.getAttribute('data-connect-platform') || '').toLowerCase().trim();
         if (!platform) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando...';
         await this.connectBrandIntegration(platform);
+        btn.disabled = false;
       });
     });
 
@@ -1924,6 +1920,10 @@ class BrandsView extends BaseView {
       btn.addEventListener('click', async () => {
         const platform = String(btn.getAttribute('data-disconnect-platform') || '').toLowerCase().trim();
         if (!platform) return;
+        const platformLabel = platform === 'facebook' ? 'Meta (Facebook + Instagram)' : 'Google (YouTube + Analytics)';
+        if (!confirm(`¿Desconectar ${platformLabel}?\nSe revocarán los permisos en la plataforma.`)) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         await this.disconnectBrandIntegration(platform);
         this.renderIntegrationsInto(container);
       });
@@ -1936,12 +1936,8 @@ class BrandsView extends BaseView {
       return;
     }
 
-    const brandContainerId = this.brandContainerData.id;
-    const returnTo = `${window.location.pathname}${window.location.search || ''}`;
-
-    const supported = ['google', 'facebook'];
     const plat = String(platform || '').toLowerCase().trim();
-    if (!supported.includes(plat)) {
+    if (!['google', 'facebook'].includes(plat)) {
       alert('Plataforma no soportada.');
       return;
     }
@@ -1951,57 +1947,64 @@ class BrandsView extends BaseView {
         this.supabase = await window.supabaseService.getClient();
       }
       if (!this.supabase?.auth?.getSession) {
-        alert('Supabase no disponible para autenticar la conexión.');
+        alert('Supabase no disponible.');
         return;
       }
 
-      const session = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
+      const sessionData = await this.supabase.auth.getSession();
+      const accessToken = sessionData?.data?.session?.access_token;
       if (!accessToken) {
-        alert('Sesión no válida. Inicia sesión y vuelve a conectar.');
+        alert('Sesión no válida. Recarga la página e inicia sesión de nuevo.');
         return;
       }
 
-      const startUrl = `${window.location.origin}/api/integrations/${encodeURIComponent(plat)}/start` +
-        `?brand_container_id=${encodeURIComponent(brandContainerId)}` +
+      const returnTo = `${window.location.pathname}${window.location.search || ''}`;
+      const startUrl =
+        `${window.location.origin}/api/integrations/${encodeURIComponent(plat)}/start` +
+        `?brand_container_id=${encodeURIComponent(this.brandContainerData.id)}` +
         `&return_to=${encodeURIComponent(returnTo)}`;
 
-      const res = await fetch(startUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+      const res = await fetch(startUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
         throw new Error(txt || `Error ${res.status} al iniciar conexión.`);
       }
 
       const json = await res.json();
-      const authorizeUrl = json?.authorize_url;
-      if (!authorizeUrl) throw new Error('No se pudo generar la URL de autorización.');
+      if (!json.authorize_url) throw new Error('No se pudo generar la URL de autorización.');
 
-      window.location.href = authorizeUrl;
+      window.location.href = json.authorize_url;
     } catch (e) {
       console.error('connectBrandIntegration error:', e);
-      alert(e?.message || 'No se pudo conectar la integración.');
+      alert(e?.message || 'No se pudo iniciar la conexión.');
     }
   }
 
   async disconnectBrandIntegration(platform) {
-    if (!this.supabase || !this.brandContainerData?.id) return;
-    const brandContainerId = this.brandContainerData.id;
+    if (!this.brandContainerData?.id) return;
     try {
-      await this.supabase
-        .from('brand_integrations')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq('brand_container_id', brandContainerId)
-        .eq('platform', platform);
-      this.brandIntegrations = (this.brandIntegrations || []).map(i => {
-        const ok = String(i?.platform || '').toLowerCase() === String(platform || '').toLowerCase();
-        if (!ok) return i;
-        return { ...i, is_active: false, updated_at: new Date().toISOString() };
+      if (!this.supabase && window.supabaseService?.getClient) {
+        this.supabase = await window.supabaseService.getClient();
+      }
+
+      const sessionData = await this.supabase.auth.getSession();
+      const accessToken = sessionData?.data?.session?.access_token;
+      if (!accessToken) { alert('Sesión no válida.'); return; }
+
+      const res = await fetch(`${window.location.origin}/api/integrations/disconnect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ brand_container_id: this.brandContainerData.id, platform })
       });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || `Error ${res.status} al desconectar.`);
+      }
+
+      this.brandIntegrations = (this.brandIntegrations || []).filter(
+        i => String(i?.platform || '').toLowerCase() !== String(platform || '').toLowerCase()
+      );
     } catch (e) {
       console.error('disconnectBrandIntegration error:', e);
       alert(e?.message || 'No se pudo desconectar.');

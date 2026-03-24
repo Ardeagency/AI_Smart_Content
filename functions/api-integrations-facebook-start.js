@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const {
   corsHeaders,
   getSupabaseEnv,
@@ -7,71 +8,59 @@ const {
   assertOrgMember
 } = require('./lib/ai-shared');
 
-function base64UrlEncode(obj) {
-  const b64 = Buffer.from(JSON.stringify(obj), 'utf8').toString('base64');
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
+const META_API_VERSION = 'v22.0';
 
-// SITE_URL debe estar configurada en Netlify Dashboard con el dominio exacto
-// que también está registrado en Meta Developers como "Valid OAuth Redirect URI".
-// Ejemplo: https://tu-app.netlify.app  o  https://app.tudominio.com
+// ── Redirect URI ─────────────────────────────────────────────────────────────
 function getRedirectUri() {
-  if (process.env.SITE_URL) {
-    return `${process.env.SITE_URL.replace(/\/$/, '')}/brand-integration-callback`;
-  }
-  return 'http://localhost:8888/brand-integration-callback';
+  const base = process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'http://localhost:8888';
+  return `${base}/brand-integration-callback`;
 }
 
+// ── HMAC-signed state ─────────────────────────────────────────────────────────
+// Format: base64url(payload) + "." + HMAC-SHA256(base64url(payload), OAUTH_STATE_SECRET)
+// Prevents CSRF and authorization-code injection attacks.
+// OAUTH_STATE_SECRET must be set in Netlify environment variables (min. 32 random bytes).
+function buildSignedState(payload) {
+  const secret = process.env.OAUTH_STATE_SECRET || '';
+  if (!secret) throw new Error('OAUTH_STATE_SECRET env var is required');
+  const payloadB64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
+  return `${payloadB64}.${sig}`;
+}
+
+// ── Brand container auth ──────────────────────────────────────────────────────
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
   if (!user?.id) {
-    const err = new Error('Invalid session');
-    err.statusCode = 401;
-    throw err;
+    const err = new Error('Invalid session'); err.statusCode = 401; throw err;
   }
 
   const containers = await supabaseRest({
-    url: env.url,
-    serviceKey: env.serviceKey,
-    path: 'brand_containers',
-    method: 'GET',
-    searchParams: {
-      select: 'id,user_id,organization_id',
-      id: `eq.${brandContainerId}`,
-      limit: '1'
-    }
+    url: env.url, serviceKey: env.serviceKey,
+    path: 'brand_containers', method: 'GET',
+    searchParams: { select: 'id,user_id,organization_id', id: `eq.${brandContainerId}`, limit: '1' }
   });
-
   const bc = Array.isArray(containers) ? containers[0] : null;
-  if (!bc) {
-    const err = new Error('Brand not found');
-    err.statusCode = 404;
-    throw err;
-  }
+  if (!bc) { const err = new Error('Brand not found'); err.statusCode = 404; throw err; }
 
   if (bc.user_id !== user.id) {
     if (!bc.organization_id) {
-      const err = new Error('No autorizado para esta marca');
-      err.statusCode = 403;
-      throw err;
+      const err = new Error('No autorizado para esta marca'); err.statusCode = 403; throw err;
     }
-    await assertOrgMember({
-      url: env.url,
-      serviceKey: env.serviceKey,
-      organizationId: bc.organization_id,
-      userId: user.id
-    });
+    await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: bc.organization_id, userId: user.id });
   }
-
   return { user };
 }
 
+// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
-  try { env = getSupabaseEnv(); } catch (e) { return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) }; }
+  try { env = getSupabaseEnv(); } catch (e) {
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+  }
 
   const accessToken = getBearerToken(event);
   if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
@@ -80,8 +69,10 @@ exports.handler = async (event) => {
   const returnTo = event.queryStringParameters?.return_to || '/home';
   if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
+  let user;
   try {
-    await assertBrandContainerAccess({ env, accessToken, brandContainerId });
+    const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
+    user = auth.user;
   } catch (e) {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
@@ -89,29 +80,31 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Scopes de LECTURA únicamente — analytics de Ads e Instagram.
-  // instagram_content_publish e instagram_manage_comments se agregarán
-  // cuando se implemente la funcionalidad de publicación/comentarios con
-  // su respectivo webhook, ya que Meta los requiere para esos permisos.
-  // Dependencias incluidas según Meta Permissions Reference:
-  //   instagram_manage_insights → instagram_basic + pages_read_engagement + pages_show_list
-  //   read_insights             → pages_read_engagement + pages_show_list
-  //   ads_read                  → sin dependencias
+  // Scopes de acceso a datos de marca (lectura + insights)
+  // instagram_content_publish se agrega cuando se implemente publicación automática
   const scopes = process.env.FACEBOOK_OAUTH_SCOPES ||
-    'public_profile,ads_read,read_insights,' +
+    'public_profile,email,ads_read,read_insights,' +
     'instagram_basic,instagram_manage_insights,' +
     'pages_show_list,pages_read_engagement';
+
   const redirectUri = getRedirectUri();
 
-  const state = base64UrlEncode({
-    platform: 'facebook',
-    brand_container_id: brandContainerId,
-    return_to: returnTo,
-    scope: scopes
-  });
+  let state;
+  try {
+    state = buildSignedState({
+      platform: 'facebook',
+      brand_container_id: brandContainerId,
+      return_to: returnTo,
+      scope: scopes,
+      uid: user.id,
+      iat: Date.now()
+    });
+  } catch (e) {
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+  }
 
   const authorizeUrl =
-    `https://www.facebook.com/v19.0/dialog/oauth?` +
+    `https://www.facebook.com/${META_API_VERSION}/dialog/oauth?` +
     `client_id=${encodeURIComponent(appId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&response_type=code` +
@@ -124,4 +117,3 @@ exports.handler = async (event) => {
     body: JSON.stringify({ authorize_url: authorizeUrl })
   };
 };
-
