@@ -78,6 +78,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/brand/videos-youtube"
+  to = "/.netlify/functions/api-brand-videos-youtube"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/brand/posts-meta"
   to = "/.netlify/functions/api-brand-posts-meta"
   status = 200

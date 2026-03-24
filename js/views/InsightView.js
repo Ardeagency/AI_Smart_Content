@@ -94,7 +94,6 @@ class InsightView extends BaseView {
       const userId = session.user.id;
       const token  = session.access_token;
 
-      // Buscar brand container del usuario
       const { data: containers } = await supabase
         .from('brand_containers')
         .select('id, nombre_marca, logo_url')
@@ -109,8 +108,7 @@ class InsightView extends BaseView {
         return;
       }
 
-      // Verificar si tiene integración Meta activa
-      const { data: integrations } = await supabase
+      const { data: fbRows } = await supabase
         .from('brand_integrations')
         .select('id')
         .eq('brand_container_id', bc.id)
@@ -118,25 +116,133 @@ class InsightView extends BaseView {
         .eq('is_active', true)
         .limit(1);
 
-      if (!integrations?.length) {
+      const { data: goRows } = await supabase
+        .from('brand_integrations')
+        .select('id')
+        .eq('brand_container_id', bc.id)
+        .eq('platform', 'google')
+        .eq('is_active', true)
+        .limit(1);
+
+      const hasFb = (fbRows?.length || 0) > 0;
+      const hasGo = (goRows?.length || 0) > 0;
+
+      if (!hasFb && !hasGo) {
         body.innerHTML = this._pageConnectPrompt();
         this._bindConnectPrompt();
         return;
       }
 
-      // Tiene integración → traer posts
-      const res = await fetch(`/api/brand/posts-meta?brand_container_id=${bc.id}&limit=20`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json().catch(() => ({}));
+      const authH = { Authorization: `Bearer ${token}` };
+      const [ytRes, metaRes] = await Promise.all([
+        hasGo
+          ? fetch(`/api/brand/videos-youtube?brand_container_id=${encodeURIComponent(bc.id)}&limit=25`, { headers: authH })
+          : Promise.resolve(null),
+        hasFb
+          ? fetch(`/api/brand/posts-meta?brand_container_id=${encodeURIComponent(bc.id)}&limit=20`, { headers: authH })
+          : Promise.resolve(null)
+      ]);
 
-      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+      let ytData = null;
+      if (hasGo && ytRes) {
+        ytData = await ytRes.json().catch(() => ({}));
+        if (!ytRes.ok) ytData = { error: ytData.error || `HTTP ${ytRes.status}` };
+      }
 
-      body.innerHTML = this._buildPostsFeed(data, bc);
+      let metaData = null;
+      if (hasFb && metaRes) {
+        metaData = await metaRes.json().catch(() => ({}));
+        if (!metaRes.ok) metaData = { error: metaData.error || `HTTP ${metaRes.status}` };
+      }
+
+      body.innerHTML = this._buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, metaData });
 
     } catch (e) {
-      body.innerHTML = this._errorHTML(e?.message || 'Error al cargar publicaciones.');
+      body.innerHTML = this._errorHTML(e?.message || 'Error al cargar datos.');
     }
+  }
+
+  /**
+   * Paneles apilados: YouTube (Google) y/o Meta (Facebook + Instagram).
+   */
+  _buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, metaData }) {
+    const parts = [];
+    if (hasGo) {
+      parts.push(`<section class="insight-panel insight-panel--youtube" aria-label="YouTube">${this._buildYoutubeSection(ytData, bc)}</section>`);
+    }
+    if (hasFb) {
+      parts.push(`<section class="insight-panel insight-panel--meta" aria-label="Meta">${this._buildPostsFeed(metaData, bc)}</section>`);
+    }
+    return `<div class="insight-mb-stack">${parts.join('')}</div>`;
+  }
+
+  _buildYoutubeSection(data, bc) {
+    if (!data) {
+      return `<div class="ytb-inline-error"><i class="fab fa-youtube"></i><span>Sin respuesta de YouTube.</span></div>`;
+    }
+    if (data.error) {
+      return `<div class="ytb-inline-error"><i class="fab fa-youtube"></i><span>${this._esc(data.error)}</span></div>`;
+    }
+
+    const { channel, videos = [], message } = data;
+    if (!channel) {
+      return `
+        <div class="ytb-feed">
+          <div class="ytb-empty"><i class="fab fa-youtube"></i><p>${this._esc(message || 'No se encontró canal de YouTube para esta cuenta.')}</p></div>
+        </div>`;
+    }
+
+    const vCount = videos.length;
+    return `
+      <div class="ytb-feed">
+        <div class="ytb-header">
+          <div class="ytb-account">
+            ${channel.thumbnailUrl
+              ? `<img src="${this._esc(channel.thumbnailUrl)}" class="ytb-page-avatar" alt="">`
+              : `<div class="ytb-page-avatar-icon"><i class="fab fa-youtube"></i></div>`}
+            <div class="ytb-account-info">
+              <span class="ytb-account-name">${this._esc(channel.title || bc.nombre_marca)}</span>
+              <div class="ytb-account-badges">
+                <span class="ytb-badge"><i class="fab fa-youtube"></i> ${vCount} vídeos recientes</span>
+                ${channel.subscriberCount != null
+                  ? `<span class="ytb-badge ytb-badge--muted"><i class="fas fa-users"></i> ${Number(channel.subscriberCount).toLocaleString('es')} suscriptores</span>`
+                  : ''}
+              </div>
+            </div>
+          </div>
+          ${channel.videoCount != null
+            ? `<span class="ytb-stat"><i class="fas fa-photo-video"></i> ${Number(channel.videoCount).toLocaleString('es')} en el canal</span>`
+            : ''}
+        </div>
+        ${vCount === 0
+          ? `<div class="ytb-empty"><i class="fas fa-film"></i><span>No hay vídeos en la lista de subidas.</span></div>`
+          : `<div class="ytb-grid">${videos.map(v => this._youtubeCard(v)).join('')}</div>`}
+      </div>`;
+  }
+
+  _youtubeCard(v) {
+    const date = v.publishedAt
+      ? new Date(v.publishedAt).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    return `
+      <article class="ytb-card">
+        ${v.thumbnailUrl
+          ? `<a href="${this._esc(v.videoUrl || '#')}" target="_blank" rel="noopener" class="ytb-card-media">
+               <img src="${this._esc(v.thumbnailUrl)}" alt="" loading="lazy">
+               <span class="ytb-play"><i class="fab fa-youtube"></i></span>
+             </a>`
+          : `<div class="ytb-card-media ytb-card-media--empty"><i class="fab fa-youtube"></i></div>`}
+        <div class="ytb-card-body">
+          <div class="ytb-card-meta">
+            <i class="fab fa-youtube ytb-icon"></i>
+            <span class="ytb-card-date">${date}</span>
+            ${v.videoUrl
+              ? `<a href="${this._esc(v.videoUrl)}" target="_blank" rel="noopener" class="ytb-card-link" title="Abrir en YouTube"><i class="fas fa-external-link-alt"></i></a>`
+              : ''}
+          </div>
+          <p class="ytb-card-title">${this._esc((v.title || 'Sin título').slice(0, 120))}${(v.title || '').length > 120 ? '…' : ''}</p>
+        </div>
+      </article>`;
   }
 
   _bindConnectPrompt() {
@@ -150,6 +256,10 @@ class InsightView extends BaseView {
   // ── Feed de posts ──────────────────────────────────────────────────────────
 
   _buildPostsFeed(data, bc) {
+    if (data?.error) {
+      return `<div class="mbf-inline-error"><i class="fab fa-facebook"></i><span>${this._esc(data.error)}</span></div>`;
+    }
+
     const { page, facebook_posts = [], instagram_posts = [], instagram_username } = data;
 
     const fbCount = facebook_posts.length;
@@ -273,7 +383,7 @@ class InsightView extends BaseView {
   }
 
   _loadingHTML() {
-    return `<div class="insight-loading"><i class="fas fa-spinner fa-spin"></i><span>Cargando publicaciones…</span></div>`;
+    return `<div class="insight-loading"><i class="fas fa-spinner fa-spin"></i><span>Cargando datos…</span></div>`;
   }
 
   _errorHTML(msg) {
