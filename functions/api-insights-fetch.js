@@ -105,6 +105,14 @@ async function fetchGoogleAnalytics({ token, propertyId, startDate, endDate }) {
   return json;
 }
 
+function shouldUseMetaTestToken(platform, body) {
+  const testToken = String(process.env.META_TEST_ACCESS_TOKEN || '').trim();
+  if (platform !== 'facebook' || !testToken) return false;
+
+  // Se habilita solo bajo solicitud explícita del cliente.
+  return body?.use_test_token === true;
+}
+
 // ── Handler ────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
@@ -172,8 +180,12 @@ exports.handler = async (event) => {
     }
   }
 
-  // ── Token refresh (Google only) ───────────────────────────────────────
+  // ── Token selection / refresh (Google only) ───────────────────────────
   let token = integration.access_token;
+  if (shouldUseMetaTestToken(platform, body)) {
+    token = String(process.env.META_TEST_ACCESS_TOKEN || '').trim();
+  }
+
   if (platform === 'google' && integration.token_expires_at && integration.refresh_token) {
     const expiresAt = new Date(integration.token_expires_at);
     const bufferMs = 5 * 60 * 1000;

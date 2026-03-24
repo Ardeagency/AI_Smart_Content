@@ -352,7 +352,9 @@ class InsightView extends BaseView {
     const googleHTML = hasGoogle ? this._buildGoogleSection() : '';
 
     area.innerHTML = `${kpiHTML}${metaHTML}${googleHTML}`;
-    this._setupPropertyIdForm();
+    area.querySelectorAll('.insight-reconnect-btn[data-connect-platform]').forEach(btn => {
+      btn.addEventListener('click', () => this._connectPlatform(btn.dataset.connectPlatform));
+    });
   }
 
   _buildKpiStrip() {
@@ -476,19 +478,9 @@ class InsightView extends BaseView {
 
     if (!this._ga4PropertyId) {
       return `
-        <div class="insight-property-form" id="insightPropertyForm">
-          <div class="insight-empty-small">
-            <i class="fas fa-search"></i>
-            <p>Ingresa tu <strong>Property ID de GA4</strong> para ver métricas.</p>
-            <small>Encuéntralo en <a href="https://analytics.google.com" target="_blank" rel="noopener">Google Analytics</a> → Admin → Property Settings → Property ID (formato: 123456789)</small>
-          </div>
-          <div class="insight-property-input-wrap">
-            <input type="text" class="form-input insight-property-input" id="insightGa4PropertyId"
-              placeholder="123456789" value="${this._esc(this._ga4PropertyId)}" maxlength="20">
-            <button class="btn btn-primary insight-property-save" id="insightSavePropertyId">
-              <i class="fas fa-check"></i> Aplicar
-            </button>
-          </div>
+        <div class="insight-empty-small">
+          <i class="fas fa-clock"></i>
+          <p>Google Analytics conectado. Pronto verás aquí las métricas de tráfico.</p>
         </div>
       `;
     }
@@ -507,7 +499,6 @@ class InsightView extends BaseView {
           <i class="fas fa-exclamation-circle"></i> ${this._esc(d._error)}
           ${reconnectBtn}
         </div>
-        ${this._buildPropertyIdEditButton()}
       `;
     }
 
@@ -547,56 +538,7 @@ class InsightView extends BaseView {
           </div>
         `).join('')}
       </div>
-      ${this._buildPropertyIdEditButton()}
     `;
-  }
-
-  _buildPropertyIdEditButton() {
-    return `
-      <div class="insight-property-edit-wrap">
-        <button class="insight-property-edit-btn" id="insightEditPropertyId">
-          <i class="fas fa-edit"></i> Cambiar Property ID (${this._esc(this._ga4PropertyId)})
-        </button>
-      </div>
-    `;
-  }
-
-  _setupPropertyIdForm() {
-    const saveBtn = document.getElementById('insightSavePropertyId');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        const input = document.getElementById('insightGa4PropertyId');
-        const val = (input?.value || '').trim().replace(/^properties\//, '');
-        if (!val || !/^\d+$/.test(val)) { alert('Ingresa un Property ID válido (solo números, ej: 123456789).'); return; }
-        this._ga4PropertyId = val;
-
-        // El ga4_property_id se persiste en brand_integrations.metadata via el
-        // backend cuando se hace la primera llamada a /api/insights/fetch.
-        // Actualizamos también el estado local para no perderlo entre renders.
-        const integ = this.integrations['google'];
-        if (integ) {
-          integ.metadata = { ...(integ.metadata || {}), ga4_property_id: val };
-        }
-
-        this._googleData = null;
-        this._renderMetrics();
-        await this._fetchGoogle();
-        this._renderMetrics();
-      });
-    }
-    const editBtn = document.getElementById('insightEditPropertyId');
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        this._ga4PropertyId = '';
-        this._googleData = null;
-        this._renderMetrics();
-      });
-    }
-
-    // Botón reconectar (cuando el token expiró)
-    document.querySelectorAll('.insight-reconnect-btn[data-connect-platform]').forEach(btn => {
-      btn.addEventListener('click', () => this._connectPlatform(btn.dataset.connectPlatform));
-    });
   }
 
   _emptyStateHTML() {
