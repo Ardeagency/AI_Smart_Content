@@ -1724,11 +1724,10 @@ class BrandsView extends BaseView {
           const expiryIcon = expiry?.cssClass === 'expired' ? 'fa-exclamation-triangle'
                            : expiry?.cssClass === 'expiring-soon' ? 'fa-clock' : 'fa-shield-alt';
 
-          // Selector de página para Meta (Facebook)
-          const metaPages = (card.sourcePlatform === 'facebook' && connected && Array.isArray(integ?.metadata?.pages) && integ.metadata.pages.length > 1)
-            ? integ.metadata.pages
+          // Página activa para Meta (Facebook)
+          const selectedPageName = (card.sourcePlatform === 'facebook' && connected)
+            ? (integ?.metadata?.selected_page_name || null)
             : null;
-          const selectedPageId = integ?.metadata?.selected_page_id || null;
 
           return `
             <article class="brand-integration-card ${connected ? 'is-connected' : 'is-disconnected'}${expiry ? ' expiry-' + expiry.cssClass : ''}">
@@ -1751,23 +1750,10 @@ class BrandsView extends BaseView {
                 <span class="brand-integration-profile-name">${profile}</span>
               </div>` : ''}
 
-              ${metaPages ? `
-              <div class="brand-integration-page-selector">
-                <label class="brand-integration-page-label">
-                  <i class="fab fa-facebook"></i> Página activa en Insight
-                </label>
-                <select class="brand-integration-page-select"
-                  data-integ-id="${this.escapeHtml(String(integ.id))}"
-                  data-platform="facebook">
-                  ${metaPages.map((pg) => `
-                    <option value="${this.escapeHtml(pg.id)}"
-                      ${pg.id === selectedPageId ? 'selected' : ''}>
-                      ${this.escapeHtml(pg.name)}${pg.instagram_business_account ? ' · IG vinculado' : ''}
-                    </option>`).join('')}
-                </select>
-                <span class="brand-integration-page-saved" style="display:none">
-                  <i class="fas fa-check"></i> Guardado
-                </span>
+              ${selectedPageName ? `
+              <div class="brand-integration-active-page">
+                <i class="fab fa-facebook"></i>
+                <span>${this.escapeHtml(selectedPageName)}</span>
               </div>` : ''}
 
               ${expiry ? `
@@ -1818,46 +1804,6 @@ class BrandsView extends BaseView {
       });
     });
 
-    // Selector de página activa para Meta
-    container.querySelectorAll('.brand-integration-page-select').forEach((sel) => {
-      sel.addEventListener('change', async () => {
-        const integId = sel.getAttribute('data-integ-id');
-        const pageId  = sel.value;
-        if (!integId || !pageId) return;
-
-        const savedBadge = sel.parentElement?.querySelector('.brand-integration-page-saved');
-        try {
-          if (!this.supabase && window.supabaseService?.getClient) {
-            this.supabase = await window.supabaseService.getClient();
-          }
-          // Obtener metadata actual para no sobreescribirla
-          const { data: rows } = await this.supabase
-            .from('brand_integrations')
-            .select('metadata')
-            .eq('id', integId)
-            .limit(1);
-          const existingMeta = rows?.[0]?.metadata || {};
-
-          await this.supabase
-            .from('brand_integrations')
-            .update({ metadata: { ...existingMeta, selected_page_id: pageId } })
-            .eq('id', integId);
-
-          // Actualizar en caché local
-          const localInteg = this.brandIntegrations?.find((i) => String(i.id) === String(integId));
-          if (localInteg) {
-            localInteg.metadata = { ...(localInteg.metadata || {}), selected_page_id: pageId };
-          }
-
-          if (savedBadge) {
-            savedBadge.style.display = 'inline-flex';
-            setTimeout(() => { savedBadge.style.display = 'none'; }, 2500);
-          }
-        } catch (e) {
-          console.error('Error guardando página seleccionada:', e);
-        }
-      });
-    });
   }
 
   async connectBrandIntegration(platform) {

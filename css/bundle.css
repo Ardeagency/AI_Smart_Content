@@ -6298,43 +6298,122 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-shrink: 0;
 }
 
-/* Selector de página activa (Meta) */
-.brand-integration-page-selector {
+/* Indicador de página activa (Meta) */
+.brand-integration-active-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 0.3rem 0.6rem;
+  background: rgba(24,119,242,0.1);
+  border: 1px solid rgba(24,119,242,0.25);
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+}
+.brand-integration-active-page .fab { color: #1877f2; font-size: 0.9rem; }
+
+/* ── Callback: pantalla de selección de página ── */
+.bic-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 60vh;
+  padding: 3rem 1.5rem;
+}
+.bic-spinner {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.6rem 0.75rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-}
-.brand-integration-page-label {
-  font-size: 0.78rem;
+  align-items: center;
+  gap: 1rem;
   color: var(--text-secondary);
+  font-size: 1rem;
+}
+.bic-spinner .fa-sync-alt { font-size: 2.5rem; color: var(--accent-warm, #e09145); }
+.bic-page-picker {
+  background: var(--card-bg, rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 2rem 2rem 1.5rem;
+  max-width: 500px;
+  width: 100%;
+}
+.bic-page-picker-head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.bic-fb-icon { font-size: 2rem; color: #1877f2; display: block; margin-bottom: 0.65rem; }
+.bic-page-picker-head h2 { font-size: 1.25rem; color: var(--text-primary); margin: 0 0 0.4rem; }
+.bic-page-picker-head p  { font-size: 0.88rem; color: var(--text-secondary); margin: 0; }
+.bic-page-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.bic-page-item { border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.1); transition: border-color 0.15s; }
+.bic-page-item.is-selected { border-color: #1877f2; background: rgba(24,119,242,0.08); }
+.bic-page-label {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-}
-.brand-integration-page-label .fab { color: #1877f2; }
-.brand-integration-page-select {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: var(--text-primary);
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.85rem;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
   cursor: pointer;
   width: 100%;
 }
-.brand-integration-page-select:focus { outline: none; border-color: #1877f2; }
-.brand-integration-page-saved {
-  display: none;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.78rem;
-  color: #34d399;
+.bic-page-radio { display: none; }
+.bic-page-info  { display: flex; align-items: center; gap: 0.7rem; }
+.bic-page-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
+.bic-page-avatar--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24,119,242,0.15);
+  color: #1877f2;
+  font-size: 1.2rem;
+}
+.bic-page-text { display: flex; flex-direction: column; gap: 0.15rem; }
+.bic-page-text strong { font-size: 0.92rem; color: var(--text-primary); }
+.bic-page-ig { font-size: 0.75rem; color: #e1306c; display: flex; align-items: center; gap: 0.3rem; }
+.bic-page-actions { display: flex; justify-content: center; margin-bottom: 0.75rem; }
+.bic-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  background: #1877f2;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.bic-confirm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.bic-confirm-btn:not(:disabled):hover { opacity: 0.88; }
+.bic-page-note { font-size: 0.78rem; color: var(--text-secondary); text-align: center; margin: 0; }
+.bic-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+.bic-error .fa-exclamation-triangle { font-size: 2.5rem; color: #f87171; }
+.bic-error h2 { color: var(--text-primary); margin: 0; }
+.bic-error p  { color: var(--text-secondary); margin: 0; }
 
 /* Expiry badge */
 .brand-integration-expiry {

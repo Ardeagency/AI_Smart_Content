@@ -313,10 +313,36 @@ exports.handler = async (event) => {
       });
     }
 
+    // Para Facebook, devolver pages para que el callback muestre el selector de página
+    const fbIntegRow = platform === 'facebook'
+      ? await (async () => {
+          const rows = await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'brand_integrations', method: 'GET',
+            searchParams: {
+              select: 'id,metadata',
+              brand_container_id: `eq.${brandContainerId}`,
+              platform: 'eq.facebook',
+              is_active: 'eq.true',
+              limit: '1'
+            }
+          });
+          return Array.isArray(rows) ? rows[0] : null;
+        })()
+      : null;
+
+    const fbPages = fbIntegRow?.metadata?.pages || [];
+
     return {
       statusCode: 200,
-      headers: corsHeaders(),
-      body: JSON.stringify({ ok: true, return_to: returnTo })
+      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ok: true,
+        return_to: returnTo,
+        platform,
+        integ_id: fbIntegRow?.id || null,
+        pages: platform === 'facebook' ? fbPages : undefined
+      })
     };
   } catch (e) {
     console.error('integrations exchange error:', e?.message);
