@@ -143,6 +143,11 @@ exports.handler = async (event) => {
           facebook_posts: [],
           instagram_posts: [],
           instagram_username: null,
+          instagram_profile_picture_url: null,
+          instagram_linked: false,
+          fetch_limit: limit,
+          meta_info:
+            'Sin páginas de Facebook no hay contenido Meta. Conecta una página o revisa permisos en Marcas.',
           message: 'No se encontraron páginas de Facebook en esta cuenta.'
         })
       };
@@ -244,6 +249,7 @@ exports.handler = async (event) => {
       .slice(0, limit);
 
     let instagram_username = null;
+    let instagram_profile_picture_url = null;
     const firstIg = pagesList.find((p) => p.instagram_business_account?.id);
     if (firstIg?.instagram_business_account?.id) {
       const pt = await getPageToken(firstIg);
@@ -252,11 +258,14 @@ exports.handler = async (event) => {
           `/${firstIg.instagram_business_account.id}`,
           pt,
           appSecret,
-          { fields: 'username' }
+          { fields: 'username,profile_picture_url' }
         ).catch(() => ({}));
         instagram_username = igInfo.username || null;
+        instagram_profile_picture_url = igInfo.profile_picture_url || null;
       }
     }
+
+    const instagram_linked = pagesMeta.some((p) => p.instagram_business_account_id);
 
     const instagram_posts = instagramRaw
       .map(mapIgMedia)
@@ -281,6 +290,13 @@ exports.handler = async (event) => {
         facebook_posts,
         instagram_posts,
         instagram_username,
+        instagram_profile_picture_url,
+        instagram_linked,
+        fetch_limit: limit,
+        meta_info:
+          'Meta no usa un calendario en esta vista: se piden las publicaciones más recientes que devuelve la API (hasta ' +
+          limit +
+          ' por red de Facebook y por cuenta de Instagram). No hay filtro de fechas en la aplicación.',
         ...(noPosts
           ? {
               hint:

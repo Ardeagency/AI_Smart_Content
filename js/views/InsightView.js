@@ -355,8 +355,20 @@ class InsightView extends BaseView {
       return `<div class="mbf-inline-error"><i class="fab fa-facebook"></i><span>${this._esc(data.error)}</span></div>`;
     }
 
-    const { page, pages = [], facebook_posts = [], instagram_posts = [], instagram_username, hint } = data;
+    const {
+      page,
+      pages = [],
+      facebook_posts = [],
+      instagram_posts = [],
+      instagram_username,
+      instagram_profile_picture_url,
+      instagram_linked: igLinkedRaw,
+      meta_info: metaInfo,
+      fetch_limit: fetchLimit,
+      hint
+    } = data;
 
+    const igLinked = igLinkedRaw === true;
     const fbCount = facebook_posts.length;
     const igCount = instagram_posts.length;
     const pageCount = Array.isArray(pages) ? pages.length : 0;
@@ -376,7 +388,7 @@ class InsightView extends BaseView {
           <span class="mbf-section-count">${fbCount}</span>
         </h3>
         ${fbCount === 0
-          ? `<div class="mbf-section-empty">No hay publicaciones de Facebook en este periodo.</div>`
+          ? `<div class="mbf-section-empty">No hay publicaciones de Facebook en el lote cargado (las más recientes que devuelve Meta, hasta ${this._esc(String(fetchLimit ?? 100))} ítems). Si deberías verlas, revisa permisos o reconecta en Marcas.</div>`
           : `<div class="mbf-grid">${fbSorted.map((p) => this._postCard(p)).join('')}</div>`}
       </div>`;
 
@@ -389,33 +401,50 @@ class InsightView extends BaseView {
           <span class="mbf-section-count">${igCount}</span>
         </h3>
         ${igCount === 0
-          ? `<div class="mbf-section-empty">No hay publicaciones de Instagram recientes, o la página no tiene cuenta de Instagram Business vinculada.</div>`
+          ? `<div class="mbf-section-empty">${igLinked
+            ? `No hay publicaciones de Instagram en el lote cargado (las más recientes que devuelve Meta, hasta ${this._esc(String(fetchLimit ?? 100))} ítems). Si tienes publicaciones, revisa permisos o reconecta en Marcas.`
+            : 'No hay cuenta de Instagram Business vinculada a tu página de Facebook en Meta (o no aparece en la lista de páginas conectadas).'}</div>`
           : `<div class="mbf-grid">${igSorted.map((p) => this._postCard(p)).join('')}</div>`}
       </div>`;
+
+    const igBadge =
+      igLinked
+        ? `<span class="mbf-badge mbf-badge--ig${igCount === 0 ? ' mbf-badge--ig-zero' : ''}"><i class="fab fa-instagram"></i> ${instagram_username ? '@' + this._esc(instagram_username) : 'Instagram'} · ${igCount} posts</span>`
+        : `<span class="mbf-badge mbf-badge--dim"><i class="fab fa-instagram"></i> Sin cuenta IG vinculada</span>`;
 
     return `
       <div class="mbf-feed">
 
         <div class="mbf-header">
           <div class="mbf-account">
-            ${page?.picture
-              ? `<img src="${this._esc(page.picture)}" class="mbf-page-avatar" alt="">`
-              : `<div class="mbf-page-avatar-icon"><i class="fab fa-facebook"></i></div>`}
+            <div class="mbf-account-avatars">
+              ${page?.picture
+                ? `<img src="${this._esc(page.picture)}" class="mbf-page-avatar" alt="Facebook">`
+                : `<div class="mbf-page-avatar-icon"><i class="fab fa-facebook"></i></div>`}
+              ${igLinked && instagram_profile_picture_url
+                ? `<img src="${this._esc(instagram_profile_picture_url)}" class="mbf-page-avatar mbf-ig-avatar" alt="Instagram">`
+                : igLinked
+                  ? `<div class="mbf-page-avatar-icon mbf-ig-avatar-placeholder" title="Instagram vinculado"><i class="fab fa-instagram"></i></div>`
+                  : ''}
+            </div>
             <div class="mbf-account-info">
               <span class="mbf-account-name">${this._esc(page?.name || bc.nombre_marca)}</span>
+              <span class="mbf-account-sub">${pageCount > 1 ? 'Páginas' : 'Página'} de Facebook${igLinked ? ' · Instagram Business conectado' : ''}</span>
               <div class="mbf-account-badges">
                 ${pageCount > 1
                   ? `<span class="mbf-badge mbf-badge--dim" title="Publicaciones de todas las páginas que gestionas"><i class="fas fa-layer-group"></i> ${pageCount} páginas</span>`
                   : ''}
                 <span class="mbf-badge mbf-badge--fb"><i class="fab fa-facebook"></i> ${fbCount} posts</span>
-                ${igCount > 0
-                  ? `<span class="mbf-badge mbf-badge--ig"><i class="fab fa-instagram"></i> ${instagram_username ? '@' + this._esc(instagram_username) : ''} · ${igCount} posts</span>`
-                  : `<span class="mbf-badge mbf-badge--dim"><i class="fab fa-instagram"></i> Sin cuenta IG vinculada</span>`}
+                ${igBadge}
               </div>
             </div>
           </div>
           ${page?.fans ? `<span class="mbf-fans"><i class="fas fa-users"></i> ${Number(page.fans).toLocaleString('es')} seguidores (página principal)</span>` : ''}
         </div>
+
+        ${metaInfo
+          ? `<p class="mbf-meta-note"><i class="fas fa-info-circle"></i><span>${this._esc(metaInfo)}</span></p>`
+          : ''}
 
         ${hint && fbCount === 0 && igCount === 0
           ? `<div class="mbf-hint-banner" role="status"><i class="fas fa-info-circle"></i><span>${this._esc(hint)}</span></div>`
