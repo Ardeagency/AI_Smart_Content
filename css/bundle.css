@@ -4888,25 +4888,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* Variantes dinámicas de glass para las cards de Brand según el fondo */
-#brandsListContainer.brand-cards-glass-black .brand-card:not(.card-info) {
+#brandsListContainer.brand-cards-glass-black .brand-card,
+#brandsListContainer.brand-cards-glass-black .card-info,
+#brandsListContainer.brand-cards-glass-black .card-info.expanded,
+#brandsListContainer.brand-cards-glass-black > div.brand-card.card-info.expanded {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
 }
 
-#brandsListContainer.brand-cards-glass-white .brand-card:not(.card-info) {
+#brandsListContainer.brand-cards-glass-white .brand-card,
+#brandsListContainer.brand-cards-glass-white .card-info,
+#brandsListContainer.brand-cards-glass-white .card-info.expanded,
+#brandsListContainer.brand-cards-glass-white > div.brand-card.card-info.expanded {
     background: var(--glass-white-bg);
     border: 1px solid var(--glass-white-border);
-}
-
-/* INFO completo en Brand: siempre glass-black (botón + panel expandido + contenido) */
-#brandsListContainer .card-info,
-#brandsListContainer .card-info.expanded,
-#brandsListContainer .card-info.expanded .card-content-expanded,
-#brandsListContainer .card-info.expanded #infoPanelContent {
-    background: var(--glass-black-bg);
-    border: 1px solid var(--glass-black-border);
-    color: var(--glass-black-text);
 }
 
 /* Typography dropdown dinámico en Brand */
@@ -4924,7 +4920,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: var(--glass-white-bg);
     border: 1px solid var(--glass-white-border);
 }
-
 
 /* Card Header */
 .card-header {
@@ -6099,41 +6094,50 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-color: var(--glass-border);
 }
 
-/* Integraciones (INFO > Identidad): tarjetas YouTube/Facebook/Instagram */
-.brand-integrations-cards {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(220px, 1fr));
-    gap: 0.85rem;
+/* Integraciones (INFO > Identidad): Google/Facebook */
+.brand-integrations-picker {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
     margin: 0 0 0.75rem;
 }
 
-.brand-integration-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-    padding: 0.85rem;
-    border-radius: calc(var(--glass-radius) + 4px);
+.brand-integration-picker-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--glass-radius);
     border: 1px solid var(--glass-border);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: 600;
 }
 
-.brand-integration-card.is-connected {
-    border-color: rgba(123, 241, 168, 0.25);
+.brand-integration-picker-btn i {
+    font-size: 1rem;
 }
 
-.brand-integration-card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
+.brand-integration-picker-btn.active {
+    border-color: rgba(0, 231, 255, 0.65);
+    box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.12);
 }
 
-.brand-integration-title-wrap {
+.brand-integration-panel {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.7rem;
+}
+
+.brand-integration-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
 .brand-integration-title {
@@ -6142,11 +6146,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     gap: 0.6rem;
     font-weight: 700;
     color: var(--text-primary);
-}
-
-.brand-integration-subtitle {
-    font-size: 0.74rem;
-    color: var(--text-muted, rgba(212, 209, 216, 0.64));
 }
 
 .brand-integration-status {
@@ -6172,25 +6171,28 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: rgba(255, 255, 255, 0.08);
 }
 
-.brand-integration-profile {
+.brand-integration-url-row {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    min-height: 1.1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.brand-integration-profile-label {
-    color: var(--text-muted, rgba(212, 209, 216, 0.64));
-}
-
-.brand-integration-profile-name {
+.brand-integration-url-input {
+    flex: 1;
+    min-width: 14rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--text-primary);
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    outline: none;
+}
+
+.brand-integration-url-input:focus {
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .brand-integration-connect-row {
@@ -6224,16 +6226,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: rgba(255, 107, 107, 0.1);
 }
 
-@media (max-width: 1080px) {
-    .brand-integrations-cards {
-        grid-template-columns: repeat(2, minmax(220px, 1fr));
-    }
-}
-
-@media (max-width: 720px) {
-    .brand-integrations-cards {
-        grid-template-columns: 1fr;
-    }
+.brand-integration-hint {
+    color: var(--text-muted, rgba(212, 209, 216, 0.6));
+    font-size: 0.8rem;
+    line-height: 1.4;
 }
 
 .sr-only {
