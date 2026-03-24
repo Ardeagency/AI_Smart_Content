@@ -7,8 +7,7 @@ const {
   supabaseRest,
   assertOrgMember
 } = require('./lib/ai-shared');
-
-const META_API_VERSION = 'v22.0';
+const { getMetaGraphVersion, metaGraphGet } = require('./lib/meta-graph');
 
 // ── State helpers ─────────────────────────────────────────────────────────────
 
@@ -232,7 +231,7 @@ exports.handler = async (event) => {
 
       // Step 1: Exchange auth code for short-lived token
       const shortRes = await fetch(
-        `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+        `https://graph.facebook.com/${getMetaGraphVersion()}/oauth/access_token?` +
         `client_id=${encodeURIComponent(appId)}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&client_secret=${encodeURIComponent(appSecret)}` +
@@ -243,7 +242,7 @@ exports.handler = async (event) => {
 
       // Step 2: Exchange short-lived for long-lived (~60 days)
       const longRes = await fetch(
-        `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+        `https://graph.facebook.com/${getMetaGraphVersion()}/oauth/access_token?` +
         `grant_type=fb_exchange_token` +
         `&client_id=${encodeURIComponent(appId)}` +
         `&client_secret=${encodeURIComponent(appSecret)}` +
@@ -255,13 +254,13 @@ exports.handler = async (event) => {
       const accessTokenFromProvider = longJson.access_token;
       const expiresAt = expiresIso(longJson.expires_in);
 
-      // Step 3: Fetch profile (id, name, email, picture)
-      const profileRes = await fetch(
-        `https://graph.facebook.com/${META_API_VERSION}/me` +
-        `?fields=id,name,email,picture.type(normal)` +
-        `&access_token=${encodeURIComponent(accessTokenFromProvider)}`
-      );
-      const profile = await profileRes.json().catch(() => ({}));
+      // Step 3: Perfil con appsecret_proof (Secure Requests)
+      const profile = await metaGraphGet(
+        '/me',
+        accessTokenFromProvider,
+        appSecret,
+        { fields: 'id,name,email,picture.type(normal)' }
+      ).catch(() => ({}));
 
       await upsertBrandIntegration({
         env,

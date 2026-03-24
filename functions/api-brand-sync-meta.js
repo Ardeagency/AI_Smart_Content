@@ -24,31 +24,19 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
+const { metaGraphGet } = require('./lib/meta-graph');
 
-const META_API_VERSION = 'v22.0';
-const GRAPH = `https://graph.facebook.com/${META_API_VERSION}`;
+// ── Meta helpers (meta = cliente con appsecret_proof) ─────────────────────────
 
-// ── Meta helpers ──────────────────────────────────────────────────────────────
-
-async function metaGet(path, token, params = {}) {
-  const url = new URL(`${GRAPH}${path}`);
-  url.searchParams.set('access_token', token);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  const json = await res.json().catch(() => ({}));
-  if (json.error) throw new Error(`[Meta] ${json.error.message || JSON.stringify(json.error)}`);
-  return json;
-}
-
-async function getPageToken(userToken, pageId) {
-  const data = await metaGet(`/${pageId}`, userToken, { fields: 'access_token' });
+async function getPageToken(meta, userToken, pageId) {
+  const data = await meta(`/${pageId}`, userToken, { fields: 'access_token' });
   return data.access_token || userToken;
 }
 
 // Obtiene posts de una página con métricas básicas de engagement
-async function fetchPagePosts(pageToken, pageId, since) {
+async function fetchPagePosts(meta, pageToken, pageId, since) {
   const sinceTs = Math.floor(since.getTime() / 1000);
-  const data = await metaGet(`/${pageId}/posts`, pageToken, {
+  const data = await meta(`/${pageId}/posts`, pageToken, {
     fields: 'id,message,story,created_time,permalink_url,full_picture,attachments{media_type},likes.summary(true),comments.summary(true),shares',
     since: String(sinceTs),
     limit: '50'
@@ -57,9 +45,9 @@ async function fetchPagePosts(pageToken, pageId, since) {
 }
 
 // Obtiene insights de la página para un período
-async function fetchPageInsights(pageToken, pageId, metric, period, since, until) {
+async function fetchPageInsights(meta, pageToken, pageId, metric, period, since, until) {
   try {
-    const data = await metaGet(`/${pageId}/insights`, pageToken, {
+    const data = await meta(`/${pageId}/insights`, pageToken, {
       metric,
       period,
       since: Math.floor(since.getTime() / 1000).toString(),
@@ -218,10 +206,12 @@ exports.handler = async (event) => {
 
   const userToken = integ.access_token;
   const summary   = { pages_synced: 0, posts_synced: 0, snapshots_updated: 0 };
+  const appSecret = process.env.META_APP_SECRET || '';
+  const meta = (path, token, params) => metaGraphGet(path, token, appSecret, params);
 
   try {
     // Obtener páginas gestionadas
-    const pagesData = await metaGet('/me/accounts', userToken, {
+    const pagesData = await meta('/me/accounts', userToken, {
       fields: 'id,name,fan_count,picture{url},category,link'
     });
     const pages = pagesData.data || [];
@@ -238,10 +228,10 @@ exports.handler = async (event) => {
     const ago7  = new Date(now - 7  * 86400000);
 
     for (const page of pages.slice(0, 3)) { // máximo 3 páginas
-      const pageToken = await getPageToken(userToken, page.id).catch(() => userToken);
+      const pageToken = await getPageToken(meta, userToken, page.id).catch(() => userToken);
 
       // Posts últimos 30 días
-      const posts30 = await fetchPagePosts(pageToken, page.id, ago30).catch(() => []);
+      const posts30 = await fetchPagePosts(meta, pageToken, page.id, ago30).catch(() => []);
 
       // Upsert posts en brand_posts
       for (const post of posts30) {
@@ -292,7 +282,7 @@ exports.handler = async (event) => {
 
       // Page Insights (30d)
       const pageInsights30 = await fetchPageInsights(
-        pageToken, page.id,
+        meta, pageToken, page.id,
         'page_fans,page_impressions,page_impressions_unique',
         'day', ago30, now
       ).catch(() => []);
@@ -340,7 +330,7 @@ exports.handler = async (event) => {
       // Snapshot 7d
       const posts7 = posts30.filter(p => new Date(p.created_time) >= ago7);
       const pageInsights7 = await fetchPageInsights(
-        pageToken, page.id,
+        meta, pageToken, page.id,
         'page_fans,page_impressions,page_impressions_unique',
         'day', ago7, now
       ).catch(() => []);

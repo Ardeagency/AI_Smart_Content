@@ -14,8 +14,7 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
-
-const META_API_VERSION = 'v22.0';
+const { getMetaGraphVersion, metaGraphGet } = require('./lib/meta-graph');
 
 // ── Token refresh helpers ─────────────────────────────────────────────────────
 
@@ -40,7 +39,7 @@ async function refreshGoogleToken(refreshToken, clientId, clientSecret) {
 // Los tokens Long-Lived de Meta duran ~60 días y se pueden renovar cuando les quedan < 10 días.
 async function renewMetaToken(currentToken, appId, appSecret) {
   const res = await fetch(
-    `https://graph.facebook.com/${META_API_VERSION}/oauth/access_token?` +
+    `https://graph.facebook.com/${getMetaGraphVersion()}/oauth/access_token?` +
     `grant_type=fb_exchange_token` +
     `&client_id=${encodeURIComponent(appId)}` +
     `&client_secret=${encodeURIComponent(appSecret)}` +
@@ -53,34 +52,28 @@ async function renewMetaToken(currentToken, appId, appSecret) {
 
 // ── Meta insights ─────────────────────────────────────────────────────────────
 
-async function fetchMetaInsights({ token, datePreset }) {
-  const GRAPH = `https://graph.facebook.com/${META_API_VERSION}`;
-
-  const accountsRes = await fetch(
-    `${GRAPH}/me/adaccounts?fields=name,account_id,currency,account_status&limit=10&access_token=${token}`
-  );
-  const accountsJson = await accountsRes.json().catch(() => ({}));
-  if (accountsJson.error) throw new Error(accountsJson.error.message || 'Meta API error');
+async function fetchMetaInsights({ token, datePreset, appSecret }) {
+  const accountsJson = await metaGraphGet('/me/adaccounts', token, appSecret, {
+    fields: 'name,account_id,currency,account_status',
+    limit: '10'
+  });
 
   const accounts = accountsJson.data || [];
   if (accounts.length === 0) return { accounts: [], adAccountId: null, insights: null, campaigns: [] };
 
   const adAccountId = accounts[0].id;
 
-  const insightsRes = await fetch(
-    `${GRAPH}/${adAccountId}/insights` +
-    `?fields=impressions,reach,clicks,spend,cpc,cpm,ctr,actions` +
-    `&date_preset=${datePreset}&level=account&access_token=${token}`
-  );
-  const insightsJson = await insightsRes.json().catch(() => ({}));
+  const insightsJson = await metaGraphGet(`/${adAccountId}/insights`, token, appSecret, {
+    fields: 'impressions,reach,clicks,spend,cpc,cpm,ctr,actions',
+    date_preset: datePreset,
+    level: 'account'
+  });
   const insights = insightsJson.data?.[0] || null;
 
-  const campsRes = await fetch(
-    `${GRAPH}/${adAccountId}/campaigns` +
-    `?fields=name,status,objective,insights.date_preset(${datePreset}){impressions,reach,clicks,spend}` +
-    `&limit=15&access_token=${token}`
-  );
-  const campsJson = await campsRes.json().catch(() => ({}));
+  const campsJson = await metaGraphGet(`/${adAccountId}/campaigns`, token, appSecret, {
+    fields: `name,status,objective,insights.date_preset(${datePreset}){impressions,reach,clicks,spend}`,
+    limit: '15'
+  });
 
   return { accounts, adAccountId, insights, campaigns: campsJson.data || [] };
 }
@@ -233,7 +226,8 @@ exports.handler = async (event) => {
     let data = {};
 
     if (platform === 'facebook') {
-      data = await fetchMetaInsights({ token, datePreset });
+      const appSecret = process.env.META_APP_SECRET || '';
+      data = await fetchMetaInsights({ token, datePreset, appSecret });
     } else if (platform === 'google') {
       if (!ga4_property_id) {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'ga4_property_id is required for Google Analytics' }) };

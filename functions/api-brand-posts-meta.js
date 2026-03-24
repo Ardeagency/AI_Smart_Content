@@ -23,18 +23,7 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
-
-const GRAPH = 'https://graph.facebook.com/v22.0';
-
-async function metaGet(path, token, params = {}) {
-  const url = new URL(`${GRAPH}${path}`);
-  url.searchParams.set('access_token', token);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
-  const res = await fetch(url.toString());
-  const json = await res.json().catch(() => ({}));
-  if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
-  return json;
-}
+const { metaGraphGet } = require('./lib/meta-graph');
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
@@ -99,10 +88,11 @@ exports.handler = async (event) => {
   }
 
   const userToken = integ.access_token;
+  const appSecret = process.env.META_APP_SECRET || '';
 
   try {
     // ── 1. Obtener páginas de Facebook gestionadas ──────────────────────────
-    const pagesData = await metaGet('/me/accounts', userToken, {
+    const pagesData = await metaGraphGet('/me/accounts', userToken, appSecret, {
       fields: 'id,name,picture{url},fan_count,instagram_business_account'
     });
     const pages = pagesData.data || [];
@@ -125,11 +115,11 @@ exports.handler = async (event) => {
     const page = pages[0];
 
     // Obtener page access token
-    const pageTokenData = await metaGet(`/${page.id}`, userToken, { fields: 'access_token' }).catch(() => ({}));
+    const pageTokenData = await metaGraphGet(`/${page.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
     const pageToken = pageTokenData.access_token || userToken;
 
     // ── 2. Posts de Facebook ────────────────────────────────────────────────
-    const fbPostsData = await metaGet(`/${page.id}/posts`, pageToken, {
+    const fbPostsData = await metaGraphGet(`/${page.id}/posts`, pageToken, appSecret, {
       fields: 'id,message,story,created_time,full_picture,permalink_url,likes.summary(true),comments.summary(true),shares,attachments{media_type,title}',
       limit
     }).catch(() => ({ data: [] }));
@@ -155,13 +145,13 @@ exports.handler = async (event) => {
 
     if (igAccountId) {
       // Info básica de la cuenta IG
-      const igInfo = await metaGet(`/${igAccountId}`, pageToken, {
+      const igInfo = await metaGraphGet(`/${igAccountId}`, pageToken, appSecret, {
         fields: 'id,username,profile_picture_url,followers_count'
       }).catch(() => ({}));
       instagram_username = igInfo.username || null;
 
       // Media de Instagram
-      const igMediaData = await metaGet(`/${igAccountId}/media`, pageToken, {
+      const igMediaData = await metaGraphGet(`/${igAccountId}/media`, pageToken, appSecret, {
         fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
         limit
       }).catch(() => ({ data: [] }));

@@ -7,8 +7,7 @@ const {
   supabaseRest,
   assertOrgMember
 } = require('./lib/ai-shared');
-
-const META_API_VERSION = 'v22.0';
+const { getMetaGraphVersion } = require('./lib/meta-graph');
 
 // ── Redirect URI ─────────────────────────────────────────────────────────────
 function getRedirectUri() {
@@ -80,12 +79,12 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Permisos completos de Meta: páginas, Instagram, Ads e insights
+  // Permisos (formato recomendado por Meta: lista separada por espacios o comas)
   const scopes = process.env.FACEBOOK_OAUTH_SCOPES ||
-    'public_profile,email,' +
-    'pages_show_list,pages_read_engagement,pages_read_user_content,' +
-    'ads_read,ads_management,read_insights,business_management,' +
-    'instagram_basic,instagram_manage_insights,instagram_manage_comments,' +
+    'public_profile email ' +
+    'pages_show_list pages_read_engagement pages_read_user_content ' +
+    'ads_read ads_management read_insights business_management ' +
+    'instagram_basic instagram_manage_insights instagram_manage_comments ' +
     'instagram_content_publish';
 
   const redirectUri = getRedirectUri();
@@ -105,7 +104,7 @@ exports.handler = async (event) => {
   }
 
   const authorizeUrl =
-    `https://www.facebook.com/${META_API_VERSION}/dialog/oauth?` +
+    `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
     `client_id=${encodeURIComponent(appId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&response_type=code` +

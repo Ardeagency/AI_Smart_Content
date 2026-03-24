@@ -18,8 +18,7 @@ const {
   supabaseRest,
   assertOrgMember
 } = require('./lib/ai-shared');
-
-const META_API_VERSION = 'v22.0';
+const { buildMetaGraphUrl } = require('./lib/meta-graph');
 
 // ── Brand container auth ──────────────────────────────────────────────────────
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
@@ -55,15 +54,16 @@ async function revokeGoogleToken(token) {
 }
 
 // ── Revoke Meta token ─────────────────────────────────────────────────────────
-async function revokeMetaToken(userId, token, appId, appSecret) {
+async function revokeMetaToken(userId, token, appSecret) {
   if (!userId || !token) return;
   try {
-    // Revoca todos los permisos del app para ese usuario
-    await fetch(
-      `https://graph.facebook.com/${META_API_VERSION}/${encodeURIComponent(userId)}/permissions` +
-      `?access_token=${encodeURIComponent(token)}`,
-      { method: 'DELETE' }
+    const url = buildMetaGraphUrl(
+      `/${encodeURIComponent(userId)}/permissions`,
+      token,
+      appSecret || '',
+      {}
     );
+    await fetch(url, { method: 'DELETE' });
   } catch (e) {
     console.warn('[disconnect] Meta revoke failed (token may already be expired):', e?.message);
   }
@@ -124,7 +124,7 @@ exports.handler = async (event) => {
     }
     if (platform === 'facebook') {
       const userId = integ.external_account_id || integ.metadata?.provider_user_id;
-      await revokeMetaToken(userId, integ.access_token, process.env.META_APP_ID, process.env.META_APP_SECRET);
+      await revokeMetaToken(userId, integ.access_token, process.env.META_APP_SECRET);
     }
 
     // Delete integration from DB (hard delete for clean state)
