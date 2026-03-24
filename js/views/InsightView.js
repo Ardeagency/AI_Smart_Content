@@ -134,9 +134,12 @@ class InsightView extends BaseView {
       }
 
       const authH = { Authorization: `Bearer ${token}` };
-      const [ytRes, metaRes] = await Promise.all([
+      const [ytRes, ga4Res, metaRes] = await Promise.all([
         hasGo
           ? fetch(`/api/brand/videos-youtube?brand_container_id=${encodeURIComponent(bc.id)}&limit=25`, { headers: authH })
+          : Promise.resolve(null),
+        hasGo
+          ? fetch(`/api/brand/analytics-ga4?brand_container_id=${encodeURIComponent(bc.id)}&range=30d`, { headers: authH })
           : Promise.resolve(null),
         hasFb
           ? fetch(`/api/brand/posts-meta?brand_container_id=${encodeURIComponent(bc.id)}&limit=20`, { headers: authH })
@@ -154,13 +157,24 @@ class InsightView extends BaseView {
           : raw;
       }
 
+      let ga4Data = null;
+      if (hasGo && ga4Res) {
+        const raw = await ga4Res.json().catch(() => ({}));
+        ga4Data = !ga4Res.ok
+          ? {
+              ...raw,
+              error: raw.error || `HTTP ${ga4Res.status}`
+            }
+          : raw;
+      }
+
       let metaData = null;
       if (hasFb && metaRes) {
         metaData = await metaRes.json().catch(() => ({}));
         if (!metaRes.ok) metaData = { error: metaData.error || `HTTP ${metaRes.status}` };
       }
 
-      body.innerHTML = this._buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, metaData });
+      body.innerHTML = this._buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData });
 
     } catch (e) {
       body.innerHTML = this._errorHTML(e?.message || 'Error al cargar datos.');
@@ -168,17 +182,90 @@ class InsightView extends BaseView {
   }
 
   /**
-   * Paneles apilados: YouTube (Google) y/o Meta (Facebook + Instagram).
+   * Paneles apilados: YouTube, Google Analytics 4 y/o Meta (Facebook + Instagram).
    */
-  _buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, metaData }) {
+  _buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData }) {
     const parts = [];
     if (hasGo) {
       parts.push(`<section class="insight-panel insight-panel--youtube" aria-label="YouTube">${this._buildYoutubeSection(ytData, bc)}</section>`);
+      parts.push(`<section class="insight-panel insight-panel--ga4" aria-label="Google Analytics">${this._buildGa4Section(ga4Data, bc)}</section>`);
     }
     if (hasFb) {
       parts.push(`<section class="insight-panel insight-panel--meta" aria-label="Meta">${this._buildPostsFeed(metaData, bc)}</section>`);
     }
     return `<div class="insight-mb-stack">${parts.join('')}</div>`;
+  }
+
+  _buildGa4Section(data, bc) {
+    if (!data) {
+      return `<div class="ga4-inline-error"><i class="fab fa-google"></i><span>Sin respuesta de Analytics.</span></div>`;
+    }
+    if (data.error) {
+      const help = data.help_url
+        ? `<div class="ga4-help-wrap"><a href="${this._esc(data.help_url)}" target="_blank" rel="noopener noreferrer" class="ga4-help-link">${this._esc(data.help_label || 'Abrir Google Cloud Console')}</a></div>`
+        : '';
+      return `<div class="ga4-inline-error ga4-inline-error--block"><div class="ga4-inline-error-row"><i class="fab fa-google"></i><span>${this._esc(data.error)}</span></div>${help}</div>`;
+    }
+
+    const { property, metrics, message, date_range: dr } = data;
+    if (!property || !metrics) {
+      return `
+        <div class="ga4-feed">
+          <div class="ga4-empty"><i class="fas fa-chart-line"></i><p>${this._esc(message || 'No hay datos de GA4 para mostrar.')}</p></div>
+        </div>`;
+    }
+
+    const m = metrics;
+    const bouncePct = typeof m.bounceRate === 'number' ? (m.bounceRate * 100).toFixed(1) : '—';
+    const durSec = typeof m.averageSessionDuration === 'number' ? m.averageSessionDuration : 0;
+    const durLabel = this._formatDurationSeconds(durSec);
+
+    const kpi = [
+      { key: 'sessions', label: 'Sesiones', icon: 'fa-door-open', val: this._fmtInt(m.sessions) },
+      { key: 'activeUsers', label: 'Usuarios activos', icon: 'fa-user-check', val: this._fmtInt(m.activeUsers) },
+      { key: 'newUsers', label: 'Usuarios nuevos', icon: 'fa-user-plus', val: this._fmtInt(m.newUsers) },
+      { key: 'screenPageViews', label: 'Vistas de página', icon: 'fa-eye', val: this._fmtInt(m.screenPageViews) },
+      { key: 'bounceRate', label: 'Rebote', icon: 'fa-percentage', val: `${bouncePct}%` },
+      { key: 'averageSessionDuration', label: 'Duración media', icon: 'fa-clock', val: durLabel }
+    ];
+
+    return `
+      <div class="ga4-feed">
+        <div class="ga4-header">
+          <div class="ga4-brand">
+            <div class="ga4-logo"><i class="fab fa-google"></i></div>
+            <div class="ga4-brand-text">
+              <span class="ga4-title">Google Analytics 4</span>
+              <span class="ga4-property">${this._esc(property.name || bc.nombre_marca)}</span>
+            </div>
+          </div>
+          <span class="ga4-range">${this._esc(dr?.label || 'Últimos 30 días')}</span>
+        </div>
+        <div class="ga4-kpi-grid">
+          ${kpi.map((x) => `
+            <div class="ga4-kpi">
+              <div class="ga4-kpi-icon"><i class="fas ${x.icon}"></i></div>
+              <div class="ga4-kpi-body">
+                <span class="ga4-kpi-label">${x.label}</span>
+                <span class="ga4-kpi-value">${this._esc(String(x.val))}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  _fmtInt(n) {
+    if (n == null || Number.isNaN(Number(n))) return '—';
+    return Number(n).toLocaleString('es');
+  }
+
+  _formatDurationSeconds(sec) {
+    if (!sec || sec < 0) return '—';
+    const s = Math.floor(sec);
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    if (m <= 0) return `${r}s`;
+    return `${m} min ${r}s`;
   }
 
   _buildYoutubeSection(data, bc) {

@@ -25973,3 +25973,152 @@ body.production-filters-in-header .living-container > .living-history-section {
   .ytb-grid { grid-template-columns: repeat(2, 1fr); }
   .ytb-feed { padding: 0 0.75rem; }
 }
+
+/* Google Analytics 4 (Insight My Brands) */
+.ga4-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1.25rem;
+}
+.ga4-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(66,133,244,0.12), rgba(52,168,83,0.08));
+  border: 1px solid rgba(66,133,244,0.25);
+  border-radius: 12px;
+}
+.ga4-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ga4-logo {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem;
+  color: #4285f4;
+}
+.ga4-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.ga4-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ga4-property {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ga4-range {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider);
+}
+.ga4-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+.ga4-kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: var(--white-4, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-divider);
+  border-radius: 10px;
+}
+.ga4-kpi-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: rgba(66,133,244,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: #4285f4;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.ga4-kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.ga4-kpi-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ga4-kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.ga4-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+.ga4-empty i { font-size: 2rem; color: #4285f4; opacity: 0.75; }
+.ga4-empty p { margin: 0; max-width: 440px; line-height: 1.5; }
+
+.ga4-inline-error {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(248,113,113,0.35);
+  background: rgba(248,113,113,0.08);
+  color: #fca5a5;
+  font-size: 0.88rem;
+}
+.ga4-inline-error--block {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+}
+.ga4-inline-error-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.ga4-inline-error .fab.fa-google { color: #4285f4; opacity: 0.95; }
+.ga4-help-wrap { margin-left: 1.85rem; }
+.ga4-help-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #60a5fa;
+  text-decoration: none;
+}
+.ga4-help-link:hover { text-decoration: underline; color: #93c5fd; }
+
+@media (max-width: 600px) {
+  .ga4-feed { padding: 0 0.75rem; }
+  .ga4-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
