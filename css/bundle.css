@@ -6298,6 +6298,44 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-shrink: 0;
 }
 
+/* Selector de página activa (Meta) */
+.brand-integration-page-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+.brand-integration-page-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.brand-integration-page-label .fab { color: #1877f2; }
+.brand-integration-page-select {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: 100%;
+}
+.brand-integration-page-select:focus { outline: none; border-color: #1877f2; }
+.brand-integration-page-saved {
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #34d399;
+}
+
 /* Expiry badge */
 .brand-integration-expiry {
     display: inline-flex;

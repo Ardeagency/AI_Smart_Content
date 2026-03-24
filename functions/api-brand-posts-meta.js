@@ -120,6 +120,8 @@ exports.handler = async (event) => {
   const appSecret = process.env.META_APP_SECRET || '';
   // Páginas capturadas en el momento del OAuth (fallback si /me/accounts devuelve vacío)
   const storedPages = Array.isArray(integ.metadata?.pages) ? integ.metadata.pages : [];
+  // Página seleccionada por el usuario en Marcas (si existe, filtramos a solo esa)
+  const selectedPageId = integ.metadata?.selected_page_id || null;
 
   try {
     // Diagnóstico previo: verificar token y permisos concedidos
@@ -156,7 +158,13 @@ exports.handler = async (event) => {
 
     // Fallback: páginas capturadas en el momento del OAuth
     const usingStoredPages = pagesListLive.length === 0 && storedPages.length > 0;
-    const pagesList = usingStoredPages ? storedPages : pagesListLive;
+    let pagesList = usingStoredPages ? storedPages : pagesListLive;
+
+    // Filtrar por la página seleccionada por el usuario (si eligió una en Marcas)
+    if (selectedPageId && pagesList.length > 1) {
+      const filtered = pagesList.filter((pg) => pg.id === selectedPageId);
+      if (filtered.length > 0) pagesList = filtered;
+    }
 
     if (pagesList.length === 0) {
       let diagMessage = 'No se encontraron páginas de Facebook en esta cuenta.';
