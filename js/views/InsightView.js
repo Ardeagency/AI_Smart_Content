@@ -361,16 +361,41 @@ class InsightView extends BaseView {
     const igCount = instagram_posts.length;
     const pageCount = Array.isArray(pages) ? pages.length : 0;
 
-    // Mezclar y ordenar por fecha descendente
-    const allPosts = [
-      ...facebook_posts.map(p => ({ ...p, network: 'facebook' })),
-      ...instagram_posts.map(p => ({ ...p, network: 'instagram' }))
-    ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+    const fbSorted = [...facebook_posts]
+      .map((p) => ({ ...p, network: 'facebook' }))
+      .sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+    const igSorted = [...instagram_posts]
+      .map((p) => ({ ...p, network: 'instagram' }))
+      .sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+
+    const fbBlock = `
+      <div class="mbf-section mbf-section--facebook">
+        <h3 class="mbf-section-title">
+          <i class="fab fa-facebook"></i>
+          Facebook
+          <span class="mbf-section-count">${fbCount}</span>
+        </h3>
+        ${fbCount === 0
+          ? `<div class="mbf-section-empty">No hay publicaciones de Facebook en este periodo.</div>`
+          : `<div class="mbf-grid">${fbSorted.map((p) => this._postCard(p)).join('')}</div>`}
+      </div>`;
+
+    const igBlock = `
+      <div class="mbf-section mbf-section--instagram">
+        <h3 class="mbf-section-title">
+          <i class="fab fa-instagram"></i>
+          Instagram
+          ${instagram_username ? `<span class="mbf-section-ig-user">@${this._esc(instagram_username)}</span>` : ''}
+          <span class="mbf-section-count">${igCount}</span>
+        </h3>
+        ${igCount === 0
+          ? `<div class="mbf-section-empty">No hay publicaciones de Instagram recientes, o la página no tiene cuenta de Instagram Business vinculada.</div>`
+          : `<div class="mbf-grid">${igSorted.map((p) => this._postCard(p)).join('')}</div>`}
+      </div>`;
 
     return `
       <div class="mbf-feed">
 
-        <!-- Header de cuenta conectada -->
         <div class="mbf-header">
           <div class="mbf-account">
             ${page?.picture
@@ -380,7 +405,7 @@ class InsightView extends BaseView {
               <span class="mbf-account-name">${this._esc(page?.name || bc.nombre_marca)}</span>
               <div class="mbf-account-badges">
                 ${pageCount > 1
-                  ? `<span class="mbf-badge mbf-badge--dim" title="Se combinan publicaciones de todas las páginas que gestionas"><i class="fas fa-layer-group"></i> ${pageCount} páginas</span>`
+                  ? `<span class="mbf-badge mbf-badge--dim" title="Publicaciones de todas las páginas que gestionas"><i class="fas fa-layer-group"></i> ${pageCount} páginas</span>`
                   : ''}
                 <span class="mbf-badge mbf-badge--fb"><i class="fab fa-facebook"></i> ${fbCount} posts</span>
                 ${igCount > 0
@@ -389,12 +414,12 @@ class InsightView extends BaseView {
               </div>
             </div>
           </div>
-          ${page?.fans ? `<span class="mbf-fans"><i class="fas fa-users"></i> ${Number(page.fans).toLocaleString('es')} seguidores</span>` : ''}
+          ${page?.fans ? `<span class="mbf-fans"><i class="fas fa-users"></i> ${Number(page.fans).toLocaleString('es')} seguidores (página principal)</span>` : ''}
         </div>
 
-        ${allPosts.length === 0
+        ${fbCount === 0 && igCount === 0
           ? `<div class="mbf-empty"><i class="fas fa-inbox"></i><span>No se encontraron publicaciones recientes.</span></div>`
-          : `<div class="mbf-grid">${allPosts.map(p => this._postCard(p)).join('')}</div>`}
+          : `<div class="mbf-sections">${fbBlock}${igBlock}</div>`}
 
       </div>`;
   }
