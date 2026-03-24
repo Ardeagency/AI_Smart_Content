@@ -24845,3 +24845,70 @@ body.production-filters-in-header .living-container > .living-history-section {
   .insight-subnav-btn span { display: none; }
   .insight-subnav-btn i { font-size: 1.05rem; }
 }
+
+/* ── Insight – My Brands integrations prompt ────────────────────────────── */
+.insight-integrations-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3.5rem 1.5rem 4rem;
+  gap: 1.25rem;
+}
+
+.insight-int-platforms {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.insight-int-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--white-8, rgba(255,255,255,0.06));
+  border: 1px solid var(--border-divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.insight-int-logo:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.insight-int-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.insight-int-desc {
+  font-size: 0.925rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 440px;
+  margin: 0;
+}
+
+.insight-int-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--bg-dark, #131418);
+  background: var(--accent-brand, #a78bfa);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  margin-top: 0.25rem;
+}
+.insight-int-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+.insight-int-cta:active { transform: translateY(0); }
+.insight-int-cta-arrow { font-size: 0.78rem; margin-left: 0.1rem; }
