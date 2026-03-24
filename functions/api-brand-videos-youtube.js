@@ -20,6 +20,34 @@ const {
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
+/**
+ * Error típico: API no habilitada en el proyecto OAuth. Devuelve mensaje en español + enlace.
+ */
+function humanizeYouTubeNotEnabled(message) {
+  if (!message || typeof message !== 'string') return null;
+  const lower = message.toLowerCase();
+  const looksDisabled =
+    lower.includes('has not been used') ||
+    lower.includes('is disabled') ||
+    lower.includes('youtube data api v3') ||
+    lower.includes('youtube.googleapis.com');
+  if (!looksDisabled) return null;
+
+  const m = message.match(/project[=\s]+(\d+)/i);
+  const projectId = m ? m[1] : null;
+  const helpUrl = projectId
+    ? `https://console.developers.google.com/apis/library/youtube.googleapis.com?project=${projectId}`
+    : 'https://console.developers.google.com/apis/library/youtube.googleapis.com';
+
+  return {
+    error:
+      'La API «YouTube Data API v3» no está activada en tu proyecto de Google Cloud. ' +
+      'Actívala en la consola, espera unos minutos y recarga esta página.',
+    help_url: helpUrl,
+    help_label: 'Activar YouTube Data API v3 en Google Cloud'
+  };
+}
+
 async function refreshGoogleToken(refreshToken, clientId, clientSecret) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -211,9 +239,17 @@ exports.handler = async (event) => {
     };
   } catch (e) {
     console.error('[videos-youtube]', e?.message);
+    const friendly = humanizeYouTubeNotEnabled(e?.message);
+    if (friendly) {
+      return {
+        statusCode: 503,
+        headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(friendly)
+      };
+    }
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: e?.message || 'YouTube API error' })
     };
   }

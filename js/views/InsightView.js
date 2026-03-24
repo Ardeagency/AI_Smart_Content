@@ -145,8 +145,13 @@ class InsightView extends BaseView {
 
       let ytData = null;
       if (hasGo && ytRes) {
-        ytData = await ytRes.json().catch(() => ({}));
-        if (!ytRes.ok) ytData = { error: ytData.error || `HTTP ${ytRes.status}` };
+        const raw = await ytRes.json().catch(() => ({}));
+        ytData = !ytRes.ok
+          ? {
+              ...raw,
+              error: raw.error || `HTTP ${ytRes.status}`
+            }
+          : raw;
       }
 
       let metaData = null;
@@ -181,7 +186,10 @@ class InsightView extends BaseView {
       return `<div class="ytb-inline-error"><i class="fab fa-youtube"></i><span>Sin respuesta de YouTube.</span></div>`;
     }
     if (data.error) {
-      return `<div class="ytb-inline-error"><i class="fab fa-youtube"></i><span>${this._esc(data.error)}</span></div>`;
+      const help = data.help_url
+        ? `<div class="ytb-help-wrap"><a href="${this._esc(data.help_url)}" target="_blank" rel="noopener noreferrer" class="ytb-help-link">${this._esc(data.help_label || 'Abrir Google Cloud Console')}</a></div>`
+        : '';
+      return `<div class="ytb-inline-error ytb-inline-error--block"><div class="ytb-inline-error-row"><i class="fab fa-youtube"></i><span>${this._esc(data.error)}</span></div>${help}</div>`;
     }
 
     const { channel, videos = [], message } = data;
