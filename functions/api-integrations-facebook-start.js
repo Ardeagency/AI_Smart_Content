@@ -80,12 +80,13 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Scopes de acceso a datos de marca (lectura + insights)
-  // instagram_content_publish se agrega cuando se implemente publicación automática
+  // Permisos completos de Meta: páginas, Instagram, Ads e insights
   const scopes = process.env.FACEBOOK_OAUTH_SCOPES ||
-    'public_profile,email,ads_read,read_insights,' +
-    'instagram_basic,instagram_manage_insights,' +
-    'pages_show_list,pages_read_engagement';
+    'public_profile,email,' +
+    'pages_show_list,pages_read_engagement,pages_read_user_content,' +
+    'ads_read,ads_management,read_insights,business_management,' +
+    'instagram_basic,instagram_manage_insights,instagram_manage_comments,' +
+    'instagram_content_publish';
 
   const redirectUri = getRedirectUri();
 

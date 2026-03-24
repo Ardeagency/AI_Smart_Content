@@ -76,11 +76,16 @@ exports.handler = async (event) => {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   if (!clientId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing GOOGLE_CLIENT_ID env var' }) };
 
-  // Scopes: analytics + YouTube readonly para datos de marca
+  // Permisos completos de Google: Analytics, YouTube, Ads y Business Profile
   const scopes = process.env.GOOGLE_OAUTH_SCOPES ||
     'openid email profile ' +
+    'https://www.googleapis.com/auth/analytics ' +
     'https://www.googleapis.com/auth/analytics.readonly ' +
-    'https://www.googleapis.com/auth/youtube.readonly';
+    'https://www.googleapis.com/auth/youtube ' +
+    'https://www.googleapis.com/auth/youtube.readonly ' +
+    'https://www.googleapis.com/auth/yt-analytics.readonly ' +
+    'https://www.googleapis.com/auth/adwords ' +
+    'https://www.googleapis.com/auth/business.manage';
 
   const redirectUri = getRedirectUri();
 
