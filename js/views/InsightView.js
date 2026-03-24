@@ -467,11 +467,13 @@ class InsightView extends BaseView {
   _buildMetaDiagPanel({ bc, diagDetail, diagAccount, diagMissingPerms, diagGrantedPerms, metaInfo }) {
     const iconMap = {
       missing_permissions: 'fa-lock',
+      no_pages_selected:   'fa-hand-pointer',
       no_pages_managed:    'fa-flag',
       invalid_token:       'fa-exclamation-triangle'
     };
     const colorMap = {
       missing_permissions: 'mbf-diag--warn',
+      no_pages_selected:   'mbf-diag--warn',
       no_pages_managed:    'mbf-diag--info',
       invalid_token:       'mbf-diag--error'
     };
@@ -483,16 +485,27 @@ class InsightView extends BaseView {
       const missing = Array.isArray(diagMissingPerms) ? diagMissingPerms : [];
       stepsHtml = `
         <ul class="mbf-diag-steps">
-          <li><i class="fas fa-times-circle mbf-diag-step-icon--bad"></i> Permisos faltantes: <code>${missing.join(', ')}</code></li>
-          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Ve a <strong>Marcas → Meta → Reconectar</strong> y acepta todos los permisos que solicite.</li>
-          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Si la app está en modo desarrollo, solo funcionará para admins/testers.</li>
+          <li><i class="fas fa-times-circle mbf-diag-step-icon--bad"></i> Permiso faltante: <code>${missing.join(', ')}</code></li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Ve a <strong>Marcas → Meta → Reconectar</strong>.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> En el diálogo de Facebook, cuando aparezca la lista de páginas, <strong>activa el toggle</strong> de tu Página antes de hacer clic en "Continuar".</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> No desmarques ningún permiso en la pantalla de permisos.</li>
+        </ul>`;
+    } else if (diagDetail === 'no_pages_selected') {
+      const acctName = diagAccount ? this._esc(diagAccount.name) : 'conectada';
+      stepsHtml = `
+        <ul class="mbf-diag-steps">
+          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Token válido para la cuenta <strong>${acctName}</strong>.</li>
+          <li><i class="fas fa-times-circle mbf-diag-step-icon--bad"></i> <strong>No se seleccionó ninguna Página</strong> durante el proceso de conexión — Facebook devuelve 0 páginas.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Ve a <strong>Marcas → Meta → Reconectar</strong>.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> En el diálogo de Facebook busca el paso <em>"¿A qué páginas quieres que [app] acceda?"</em> y <strong>activa el toggle de "Arde Agency"</strong>.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Si el toggle ya estaba en "Sí" la vez anterior y sigue sin funcionar, haz clic en <em>"Editar ajustes"</em> y selecciónala manualmente.</li>
         </ul>`;
     } else if (diagDetail === 'no_pages_managed') {
       stepsHtml = `
         <ul class="mbf-diag-steps">
-          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Permisos concedidos correctamente${Array.isArray(diagGrantedPerms) ? ': <code>' + diagGrantedPerms.filter(p => ['pages_show_list','pages_read_engagement','pages_read_user_content','instagram_basic'].includes(p)).join(', ') + '</code>' : ''}.</li>
-          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> La cuenta <strong>${diagAccount ? this._esc(diagAccount.name) : 'conectada'}</strong> no es Administrador de ninguna Página de Facebook.</li>
-          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Si tienes una Página, ve a <strong>Configuración de la Página → Acceso a la página → Personas</strong> y asegúrate de tener rol <em>Administrador</em>.</li>
+          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Permisos concedidos correctamente.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> La cuenta <strong>${diagAccount ? this._esc(diagAccount.name) : 'conectada'}</strong> no administra ninguna Página de Facebook.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Ve a la Página en Facebook → <strong>Configuración → Acceso a la página → Personas</strong> y confirma que tienes rol <em>Administrador</em>.</li>
           <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Luego vuelve a <strong>Marcas → Meta → Reconectar</strong>.</li>
         </ul>`;
     } else if (diagDetail === 'invalid_token') {

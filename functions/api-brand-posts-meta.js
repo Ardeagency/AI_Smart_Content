@@ -130,13 +130,21 @@ exports.handler = async (event) => {
       ? permissionsData.data.filter((p) => p.status === 'granted').map((p) => p.permission)
       : null;
 
-    const needsPerms = ['pages_show_list', 'pages_read_engagement', 'pages_read_user_content'];
+    // Solo pages_show_list es crítico para obtener la lista de páginas.
+    // pages_read_user_content NO es necesario cuando usamos el page token directamente.
+    const criticalPerms = ['pages_show_list'];
+    const missingCritical = grantedPerms
+      ? criticalPerms.filter((p) => !grantedPerms.includes(p))
+      : null;
+
+    // Info adicional de permisos (no bloquean, solo se exponen al diagnóstico)
+    const allNeededPerms = ['pages_show_list', 'pages_read_engagement', 'pages_read_user_content'];
     const missingPerms = grantedPerms
-      ? needsPerms.filter((p) => !grantedPerms.includes(p))
+      ? allNeededPerms.filter((p) => !grantedPerms.includes(p))
       : null;
 
     // Incluir access_token en la lista: es el token de página válido para /posts y /media.
-    // Sin él, fallback a userToken suele devolver data: [] sin error explícito.
+    // Con el page token, pages_read_user_content en el user token no es necesario.
     const pagesList = await metaGraphGetPaged(
       '/me/accounts',
       userToken,
@@ -151,18 +159,22 @@ exports.handler = async (event) => {
       let diagMessage = 'No se encontraron páginas de Facebook en esta cuenta.';
       let diagDetail = null;
 
-      if (missingPerms && missingPerms.length > 0) {
-        diagMessage = `Faltan permisos de página: ${missingPerms.join(', ')}. Reconecta Meta en Marcas para concederlos.`;
-        diagDetail = 'missing_permissions';
-      } else if (meInfo && grantedPerms) {
+      if (missingCritical && missingCritical.length > 0) {
         diagMessage =
-          `La cuenta @${meInfo.name || meInfo.id} tiene los permisos correctos pero no administra ninguna Página de Facebook. ` +
-          'Para ver publicaciones debes ser Administrador de al menos una Página de Facebook. ' +
-          'Si ya tienes una página, comprueba que tu rol sea Administrador y vuelve a conectar Meta.';
-        diagDetail = 'no_pages_managed';
+          `Falta el permiso crítico: ${missingCritical.join(', ')}. ` +
+          'Reconecta Meta en Marcas → cuando Facebook pida confirmar permisos, asegúrate de activar el toggle de tu Página de Facebook.';
+        diagDetail = 'missing_permissions';
       } else if (!meInfo) {
         diagMessage = 'El token de Meta parece inválido o expirado. Reconecta Meta en Marcas.';
         diagDetail = 'invalid_token';
+      } else {
+        // Token válido y pages_show_list concedido, pero sin páginas:
+        // casi siempre significa que en el diálogo de OAuth el usuario no seleccionó ninguna página.
+        diagMessage =
+          `La cuenta "${meInfo.name}" autorizó la app pero no compartió ninguna Página de Facebook. ` +
+          'Reconecta Meta en Marcas → en el diálogo de Facebook, cuando aparezca la lista de páginas, ' +
+          'activa el toggle de "Arde Agency" (o la página que quieres conectar) antes de hacer clic en "Continuar".';
+        diagDetail = 'no_pages_selected';
       }
 
       return {

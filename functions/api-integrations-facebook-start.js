@@ -117,12 +117,16 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
+  // auth_type=rerequest → fuerza a Meta a mostrar TODOS los permisos con toggles
+  // enable_profile_selector=true → obliga al usuario a seleccionar explícitamente qué página compartir
   const authorizeUrl =
     `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
     `client_id=${encodeURIComponent(appId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&response_type=code` +
     `&scope=${encodeURIComponent(scopes)}` +
+    `&auth_type=rerequest` +
+    `&enable_profile_selector=true` +
     `&state=${encodeURIComponent(state)}`;
 
   return {
