@@ -231,12 +231,12 @@ class BrandsView extends BaseView {
           this.brandSocialLinks = socialLinks || [];
         }
 
-        // Integraciones (brand_integrations): por ahora solo Google + Facebook
+        // Integraciones (brand_integrations)
         const { data: integrationsData, error: integrationsError } = await this.supabase
           .from('brand_integrations')
           .select('id, brand_container_id, platform, external_account_id, external_account_name, is_active, updated_at, last_sync_at')
           .eq('brand_container_id', container.id)
-          .in('platform', ['google', 'facebook'])
+          .in('platform', ['google', 'facebook', 'instagram', 'youtube'])
           .order('updated_at', { ascending: false });
 
         if (integrationsError) {
@@ -1821,107 +1821,113 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Integraciones rápidas (por ahora Google + Facebook):
-   * Sustituye el input de "Redes y web" para usar botones con iconos.
-   * Persistimos la URL en `brand_social_links` (misma tabla que ya existe).
+   * Integraciones por tarjetas (Info):
+   * - YouTube usa la integración Google
+   * - Facebook usa la integración Meta
+   * - Instagram usa la integración Meta
    */
   renderIntegrationsInto(container) {
     if (!container) return;
 
-    const platforms = [
-      { platform: 'google', icon: 'fab fa-google', label: 'Google' },
-      { platform: 'facebook', icon: 'fab fa-facebook', label: 'Facebook' }
+    const cards = [
+      {
+        id: 'youtube',
+        sourcePlatform: 'google',
+        icon: 'fab fa-youtube',
+        label: 'YouTube',
+        subtitle: 'Usa API de Google'
+      },
+      {
+        id: 'facebook',
+        sourcePlatform: 'facebook',
+        icon: 'fab fa-facebook',
+        label: 'Facebook',
+        subtitle: 'Usa API de Meta'
+      },
+      {
+        id: 'instagram',
+        sourcePlatform: 'facebook',
+        icon: 'fab fa-instagram',
+        label: 'Instagram',
+        subtitle: 'Usa API de Meta'
+      }
     ];
 
-    const activePlatform = platforms.some(p => p.platform === this.activeBrandIntegrationPlatform)
-      ? this.activeBrandIntegrationPlatform
-      : platforms[0].platform;
-
-    const active = platforms.find(p => p.platform === activePlatform) || platforms[0];
-    const getIntegration = (plat) => {
+    const getIntegration = (platformId, sourcePlatform) => {
       const list = this.brandIntegrations || [];
-      return list.find(i => String(i?.platform || '').toLowerCase() === plat) || null;
+      const exact = list.find(i => String(i?.platform || '').toLowerCase() === platformId);
+      if (exact) return exact;
+      return list.find(i => String(i?.platform || '').toLowerCase() === sourcePlatform) || null;
     };
-    const activeIntegration = getIntegration(activePlatform);
-    const connected = !!(activeIntegration && activeIntegration.is_active);
 
     container.innerHTML = `
-      <div class="brand-integrations-picker" role="tablist" aria-label="Integraciones">
-        ${platforms.map(p => {
-          const isActive = p.platform === activePlatform;
+      <div class="brand-integrations-cards" aria-label="Integraciones">
+        ${cards.map((card) => {
+          const integration = getIntegration(card.id, card.sourcePlatform);
+          const connected = !!(integration && integration.is_active);
+          const profileName = integration?.external_account_name
+            ? this.escapeHtml(integration.external_account_name)
+            : 'Sin perfil conectado';
+
           return `
-            <button type="button"
-              class="brand-integration-picker-btn ${isActive ? 'active' : ''}"
-              data-platform="${this.escapeHtml(p.platform)}"
-              role="tab"
-              aria-selected="${isActive ? 'true' : 'false'}">
-              <i class="${this.escapeHtml(p.icon)}" aria-hidden="true"></i>
-              <span>${this.escapeHtml(p.label)}</span>
-            </button>
+            <article class="brand-integration-card ${connected ? 'is-connected' : 'is-disconnected'}">
+              <div class="brand-integration-card-head">
+                <div class="brand-integration-title-wrap">
+                  <div class="brand-integration-title">
+                    <i class="${this.escapeHtml(card.icon)}" aria-hidden="true"></i>
+                    <span>${this.escapeHtml(card.label)}</span>
+                  </div>
+                  <div class="brand-integration-subtitle">${this.escapeHtml(card.subtitle)}</div>
+                </div>
+                <span class="brand-integration-status ${connected ? 'is-connected' : 'is-disconnected'}">
+                  ${connected ? 'Conectado' : 'Sin conectar'}
+                </span>
+              </div>
+
+              <div class="brand-integration-profile">
+                <span class="brand-integration-profile-label">Perfil:</span>
+                <span class="brand-integration-profile-name">${profileName}</span>
+              </div>
+
+              <div class="brand-integration-connect-row">
+                <button
+                  type="button"
+                  class="brand-integration-action-btn brand-integration-connect-btn"
+                  data-connect-platform="${this.escapeHtml(card.sourcePlatform)}"
+                >
+                  ${connected ? 'Reconectar' : 'Conectar'}
+                </button>
+                <button
+                  type="button"
+                  class="brand-integration-action-btn brand-integration-disconnect-btn"
+                  data-disconnect-platform="${this.escapeHtml(card.sourcePlatform)}"
+                  ${connected ? '' : 'hidden'}
+                >
+                  Desconectar
+                </button>
+              </div>
+            </article>
           `;
         }).join('')}
       </div>
-
-      <div class="brand-integration-panel" role="tabpanel" aria-label="Configuración de la integración">
-        <div class="brand-integration-head">
-          <div class="brand-integration-title">
-            <i class="${this.escapeHtml(active.icon)}" aria-hidden="true"></i>
-            <span>${this.escapeHtml(active.label)}</span>
-          </div>
-          <span class="brand-integration-status ${connected ? 'is-connected' : 'is-disconnected'}">
-            ${connected ? 'Conectado' : 'Sin conectar'}
-          </span>
-        </div>
-
-        <div class="brand-integration-connect-row">
-          <button
-            type="button"
-            id="brandIntegrationConnectBtn"
-            class="brand-integration-action-btn brand-integration-connect-btn"
-          >
-            ${connected ? 'Reconectar' : 'Conectar'}
-          </button>
-          <button
-            type="button"
-            id="brandIntegrationDisconnectBtn"
-            class="brand-integration-action-btn brand-integration-disconnect-btn"
-            ${connected ? '' : 'hidden'}
-          >
-            Desconectar
-          </button>
-        </div>
-
-        <div class="brand-integration-hint">
-          La integración se realiza por OAuth. Al completar, guardamos la data del usuario en <code>brand_integrations</code>.
-        </div>
-      </div>
     `;
 
-    const pickerButtons = container.querySelectorAll('.brand-integration-picker-btn');
-    pickerButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const plat = String(btn.getAttribute('data-platform') || '').toLowerCase().trim();
-        if (!plat) return;
-        this.activeBrandIntegrationPlatform = plat;
-        this.renderIntegrationsInto(container);
+    container.querySelectorAll('[data-connect-platform]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const platform = String(btn.getAttribute('data-connect-platform') || '').toLowerCase().trim();
+        if (!platform) return;
+        await this.connectBrandIntegration(platform);
       });
     });
 
-    const connectBtn = container.querySelector('#brandIntegrationConnectBtn');
-    const disconnectBtn = container.querySelector('#brandIntegrationDisconnectBtn');
-
-    if (connectBtn) {
-      connectBtn.addEventListener('click', async () => {
-        await this.connectBrandIntegration(activePlatform);
-      });
-    }
-
-    if (disconnectBtn) {
-      disconnectBtn.addEventListener('click', async () => {
-        await this.disconnectBrandIntegration(activePlatform);
+    container.querySelectorAll('[data-disconnect-platform]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const platform = String(btn.getAttribute('data-disconnect-platform') || '').toLowerCase().trim();
+        if (!platform) return;
+        await this.disconnectBrandIntegration(platform);
         this.renderIntegrationsInto(container);
       });
-    }
+    });
   }
 
   async connectBrandIntegration(platform) {
