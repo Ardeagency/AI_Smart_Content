@@ -4887,6 +4887,22 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transition: none;
 }
 
+/* Variantes dinámicas de glass para las cards de Brand según el fondo */
+#brandsListContainer.brand-cards-glass-black .brand-card,
+#brandsListContainer.brand-cards-glass-black .card-info,
+#brandsListContainer.brand-cards-glass-black .card-info.expanded {
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white .brand-card,
+#brandsListContainer.brand-cards-glass-white .card-info,
+#brandsListContainer.brand-cards-glass-white .card-info.expanded {
+    background: var(--glass-white-bg);
+    border: 1px solid var(--glass-white-border);
+}
+
 /* Card Header */
 .card-header {
     display: flex;

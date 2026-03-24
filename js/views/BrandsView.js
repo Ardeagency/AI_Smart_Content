@@ -578,6 +578,41 @@ class BrandsView extends BaseView {
       root.style.removeProperty('--brand-gradient-dynamic-vertical');
       this.resetBrandPrimaryBrillo();
     }
+    this.applyBrandCardsGlassVariant();
+  }
+
+  /**
+   * Decide qué variante de glass usar en las cards de Brand:
+   * - Fondo muy oscuro: usar glass-white para subir contraste.
+   * - Muy claro/saturado o mixto/neutro: usar glass-black.
+   */
+  getBrandCardsGlassMode() {
+    const hexes = this.getBrandColorsHexArray();
+    if (!hexes.length) return 'black';
+    const hslColors = hexes.map((hex) => this.hexToHSL(hex));
+    const count = hslColors.length;
+    const avgL = hslColors.reduce((acc, c) => acc + c.l, 0) / count;
+    const darkCount = hslColors.filter((c) => c.l <= 35).length;
+    const lightAndSaturatedCount = hslColors.filter((c) => c.l >= 65 && c.s >= 70).length;
+    const darkRatio = darkCount / count;
+    const lightAndSaturatedRatio = lightAndSaturatedCount / count;
+    const hasMixedLuminosity = darkCount > 0 && hslColors.some((c) => c.l >= 65);
+
+    const isVeryDarkPalette = avgL <= 38 && darkRatio >= 0.7;
+    if (isVeryDarkPalette) return 'white';
+
+    if (lightAndSaturatedRatio >= 0.5 || hasMixedLuminosity) return 'black';
+    return 'black';
+  }
+
+  /** Aplica una clase al contenedor para que CSS pinte glass-white o glass-black en las cards. */
+  applyBrandCardsGlassVariant() {
+    const container = this.container || document.getElementById('app-container');
+    const brandsRoot = (container && container.querySelector('#brandsListContainer')) || document.getElementById('brandsListContainer');
+    if (!brandsRoot) return;
+    const mode = this.getBrandCardsGlassMode();
+    brandsRoot.classList.remove('brand-cards-glass-black', 'brand-cards-glass-white');
+    brandsRoot.classList.add(mode === 'white' ? 'brand-cards-glass-white' : 'brand-cards-glass-black');
   }
 
   /** Pone en :root el color principal de la marca para hover/selected (brillo). */
@@ -622,6 +657,7 @@ class BrandsView extends BaseView {
   renderAll() {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
+    this.applyBrandCardsGlassVariant();
     this.renderBrandName();
     this.renderMarket();
     this.renderCards();
