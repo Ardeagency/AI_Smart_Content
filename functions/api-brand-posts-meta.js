@@ -120,6 +120,21 @@ exports.handler = async (event) => {
   const appSecret = process.env.META_APP_SECRET || '';
 
   try {
+    // Diagnóstico previo: verificar token y permisos concedidos
+    const [meInfo, permissionsData] = await Promise.all([
+      metaGraphGet('/me', userToken, appSecret, { fields: 'id,name' }).catch(() => null),
+      metaGraphGet('/me/permissions', userToken, appSecret, {}).catch(() => null)
+    ]);
+
+    const grantedPerms = Array.isArray(permissionsData?.data)
+      ? permissionsData.data.filter((p) => p.status === 'granted').map((p) => p.permission)
+      : null;
+
+    const needsPerms = ['pages_show_list', 'pages_read_engagement', 'pages_read_user_content'];
+    const missingPerms = grantedPerms
+      ? needsPerms.filter((p) => !grantedPerms.includes(p))
+      : null;
+
     // Incluir access_token en la lista: es el token de página válido para /posts y /media.
     // Sin él, fallback a userToken suele devolver data: [] sin error explícito.
     const pagesList = await metaGraphGetPaged(
@@ -133,6 +148,23 @@ exports.handler = async (event) => {
     );
 
     if (pagesList.length === 0) {
+      let diagMessage = 'No se encontraron páginas de Facebook en esta cuenta.';
+      let diagDetail = null;
+
+      if (missingPerms && missingPerms.length > 0) {
+        diagMessage = `Faltan permisos de página: ${missingPerms.join(', ')}. Reconecta Meta en Marcas para concederlos.`;
+        diagDetail = 'missing_permissions';
+      } else if (meInfo && grantedPerms) {
+        diagMessage =
+          `La cuenta @${meInfo.name || meInfo.id} tiene los permisos correctos pero no administra ninguna Página de Facebook. ` +
+          'Para ver publicaciones debes ser Administrador de al menos una Página de Facebook. ' +
+          'Si ya tienes una página, comprueba que tu rol sea Administrador y vuelve a conectar Meta.';
+        diagDetail = 'no_pages_managed';
+      } else if (!meInfo) {
+        diagMessage = 'El token de Meta parece inválido o expirado. Reconecta Meta en Marcas.';
+        diagDetail = 'invalid_token';
+      }
+
       return {
         statusCode: 200,
         headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
@@ -146,9 +178,12 @@ exports.handler = async (event) => {
           instagram_profile_picture_url: null,
           instagram_linked: false,
           fetch_limit: limit,
-          meta_info:
-            'Sin páginas de Facebook no hay contenido Meta. Conecta una página o revisa permisos en Marcas.',
-          message: 'No se encontraron páginas de Facebook en esta cuenta.'
+          meta_info: diagMessage,
+          diag_detail: diagDetail,
+          diag_account: meInfo ? { id: meInfo.id, name: meInfo.name } : null,
+          diag_granted_perms: grantedPerms,
+          diag_missing_perms: missingPerms,
+          message: diagMessage
         })
       };
     }

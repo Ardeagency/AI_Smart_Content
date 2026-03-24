@@ -365,8 +365,17 @@ class InsightView extends BaseView {
       instagram_linked: igLinkedRaw,
       meta_info: metaInfo,
       fetch_limit: fetchLimit,
-      hint
+      hint,
+      diag_detail: diagDetail,
+      diag_account: diagAccount,
+      diag_missing_perms: diagMissingPerms,
+      diag_granted_perms: diagGrantedPerms
     } = data;
+
+    // Si no hay páginas y tenemos diagnóstico, mostrar panel de diagnóstico
+    if (Array.isArray(pages) && pages.length === 0 && diagDetail) {
+      return this._buildMetaDiagPanel({ bc, diagDetail, diagAccount, diagMissingPerms, diagGrantedPerms, metaInfo });
+    }
 
     const igLinked = igLinkedRaw === true;
     const fbCount = facebook_posts.length;
@@ -452,6 +461,64 @@ class InsightView extends BaseView {
 
         <div class="mbf-sections">${fbBlock}${igBlock}</div>
 
+      </div>`;
+  }
+
+  _buildMetaDiagPanel({ bc, diagDetail, diagAccount, diagMissingPerms, diagGrantedPerms, metaInfo }) {
+    const iconMap = {
+      missing_permissions: 'fa-lock',
+      no_pages_managed:    'fa-flag',
+      invalid_token:       'fa-exclamation-triangle'
+    };
+    const colorMap = {
+      missing_permissions: 'mbf-diag--warn',
+      no_pages_managed:    'mbf-diag--info',
+      invalid_token:       'mbf-diag--error'
+    };
+    const icon = iconMap[diagDetail] || 'fa-info-circle';
+    const cls  = colorMap[diagDetail] || 'mbf-diag--warn';
+
+    let stepsHtml = '';
+    if (diagDetail === 'missing_permissions') {
+      const missing = Array.isArray(diagMissingPerms) ? diagMissingPerms : [];
+      stepsHtml = `
+        <ul class="mbf-diag-steps">
+          <li><i class="fas fa-times-circle mbf-diag-step-icon--bad"></i> Permisos faltantes: <code>${missing.join(', ')}</code></li>
+          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Ve a <strong>Marcas → Meta → Reconectar</strong> y acepta todos los permisos que solicite.</li>
+          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Si la app está en modo desarrollo, solo funcionará para admins/testers.</li>
+        </ul>`;
+    } else if (diagDetail === 'no_pages_managed') {
+      stepsHtml = `
+        <ul class="mbf-diag-steps">
+          <li><i class="fas fa-check-circle mbf-diag-step-icon--ok"></i> Permisos concedidos correctamente${Array.isArray(diagGrantedPerms) ? ': <code>' + diagGrantedPerms.filter(p => ['pages_show_list','pages_read_engagement','pages_read_user_content','instagram_basic'].includes(p)).join(', ') + '</code>' : ''}.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> La cuenta <strong>${diagAccount ? this._esc(diagAccount.name) : 'conectada'}</strong> no es Administrador de ninguna Página de Facebook.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Si tienes una Página, ve a <strong>Configuración de la Página → Acceso a la página → Personas</strong> y asegúrate de tener rol <em>Administrador</em>.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Luego vuelve a <strong>Marcas → Meta → Reconectar</strong>.</li>
+        </ul>`;
+    } else if (diagDetail === 'invalid_token') {
+      stepsHtml = `
+        <ul class="mbf-diag-steps">
+          <li><i class="fas fa-times-circle mbf-diag-step-icon--bad"></i> El token de acceso de Meta ha expirado o es inválido.</li>
+          <li><i class="fas fa-arrow-right mbf-diag-step-icon--info"></i> Ve a <strong>Marcas → Meta → Reconectar</strong> para renovar la conexión.</li>
+        </ul>`;
+    }
+
+    return `
+      <div class="mbf-diag ${cls}">
+        <div class="mbf-diag-header">
+          <i class="fas ${icon} mbf-diag-icon"></i>
+          <div class="mbf-diag-title">
+            <strong>Meta no pudo cargar publicaciones</strong>
+            ${diagAccount ? `<span class="mbf-diag-account"><i class="fab fa-facebook"></i> ${this._esc(diagAccount.name)}</span>` : ''}
+          </div>
+        </div>
+        <p class="mbf-diag-message">${this._esc(metaInfo || '')}</p>
+        ${stepsHtml}
+        <div class="mbf-diag-actions">
+          <button class="mbf-diag-btn" onclick="window.router?.navigate('/brands')">
+            <i class="fas fa-plug"></i> Ir a Marcas
+          </button>
+        </div>
       </div>`;
   }
 
