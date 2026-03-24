@@ -1815,9 +1815,8 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Integraciones rápidas (por ahora Google + Facebook):
-   * Sustituye el input de "Redes y web" para usar botones con iconos.
-   * Persistimos la URL en `brand_social_links` (misma tabla que ya existe).
+   * Integraciones OAuth (Google + Meta): tarjetas en grid junto al logo en INFO.
+   * Estado en `brand_integrations` (conectar / desconectar).
    */
   renderIntegrationsInto(container) {
     if (!container) return;
