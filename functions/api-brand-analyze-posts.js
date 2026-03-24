@@ -22,60 +22,13 @@ const {
   supabaseRest
 } = require('./lib/ai-shared');
 
-// ── OpenAI helper ─────────────────────────────────────────────────────────────
+// ── OpenAI DESCONECTADO ───────────────────────────────────────────────────────
+// El análisis con OpenAI está deshabilitado intencionalmente.
+// Se habilitará cuando se defina el flujo de consumo controlado de tokens.
 
-async function openAIChat(messages, model = 'gpt-4o-mini') {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.2, response_format: { type: 'json_object' } })
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.error?.message || `OpenAI HTTP ${res.status}`);
-  const content = json.choices?.[0]?.message?.content || '{}';
-  return JSON.parse(content);
-}
-
-// ── Análisis batch ────────────────────────────────────────────────────────────
-
-async function analyzeBatch(posts, brandRules) {
-  const rulesText = brandRules.map(r => `- ${r.rule_type}: ${JSON.stringify(r.rule_value)}`).join('\n') || 'Sin reglas definidas';
-
-  const postsForPrompt = posts.map((p, i) => ({
-    index: i,
-    post_id: p.id,
-    content: (p.content || '').slice(0, 500),
-    likes: p.metrics?.likes || 0,
-    comments: p.metrics?.comments || 0,
-    shares: p.metrics?.shares || 0,
-    media_type: p.media_assets?.[0]?.type || 'text',
-    posted_at: p.captured_at
-  }));
-
-  const systemPrompt = `Eres un analista de marca experto. Analizas contenido de redes sociales y devuelves un JSON estructurado.
-Reglas de voz de la marca:
-${rulesText}
-
-Para cada post analiza:
-- tone_detected: uno de [emocional, técnico, urgente, inspirador, informativo, promocional, humorístico]
-- tone_coherence_score: 0-100 (qué tan coherente es con las reglas de la marca)
-- dominant_emotion: uno de [alegría, confianza, sorpresa, ironía, ira, confusión, neutral]
-- narrative_pillar: uno de [producto, comunidad, valores, oferta, educación, entretenimiento, lifestyle]
-- clarity_score: 0-100 (qué tan claro es el mensaje para el consumidor)
-- fatigue_risk: true si el post es muy similar a los anteriores o tiene engagement bajo vs promedio del conjunto
-- why_it_worked: objeto con {hook, first_sentence_quality (0-100), visual_cue, cta_strength (0-100)}
-
-Responde con un JSON con la estructura:
-{ "analyses": [ { "index": 0, "tone_detected": "...", "tone_coherence_score": 80, ... }, ... ] }`;
-
-  const result = await openAIChat([
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: `Analiza estos ${posts.length} posts:\n${JSON.stringify(postsForPrompt)}` }
-  ]);
-
-  return result.analyses || [];
+async function analyzeBatch(_posts, _brandRules) {
+  // Retorna vacío sin llamar a OpenAI
+  return [];
 }
 
 // ── Recalcular narrative pillars ──────────────────────────────────────────────
