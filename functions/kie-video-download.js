@@ -1,7 +1,15 @@
 /**
- * Netlify Function: proxy de descarga de video desde la URL de KIE.
- * Evita CORS en el cliente. GET ?videoUrl=<url codificada> → devuelve el video en binario.
+ * Netlify Function: proxy de descarga de video/imagen desde la URL de KIE (u otros orígenes).
+ * Evita CORS en el cliente. GET ?videoUrl=<url codificada> → devuelve el binario.
+ * Algunos hosts (p. ej. tempfile.aiquickdraw.com) rechazan peticiones sin User-Agent o devuelven 502 intermitente; se reintenta.
  */
+
+const BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 function corsHeaders(contentType = 'application/json') {
   return {
@@ -9,6 +17,69 @@ function corsHeaders(contentType = 'application/json') {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, OPTIONS'
+  };
+}
+
+function upstreamHeaders(targetUrl) {
+  const h = {
+    Accept: 'image/*, video/*, application/octet-stream, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'User-Agent': BROWSER_UA,
+    'Cache-Control': 'no-cache'
+  };
+  try {
+    const u = new URL(targetUrl);
+    if (u.hostname.includes('kie.ai') || u.hostname.includes('aiquickdraw')) {
+      h.Referer = 'https://kie.ai/';
+    }
+  } catch (_) {}
+  return h;
+}
+
+async function fetchUpstreamBinary(url, maxAttempts = 3) {
+  let lastErr = null;
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const resp = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        headers: upstreamHeaders(url)
+      });
+      lastStatus = resp.status;
+      if (resp.ok) {
+        const buffer = await resp.arrayBuffer();
+        const contentType = resp.headers.get('content-type') || 'application/octet-stream';
+        return { buffer, contentType };
+      }
+      const retryable = [502, 503, 504, 429].includes(resp.status);
+      lastErr = new Error(`upstream ${resp.status}`);
+      if (retryable && attempt < maxAttempts) {
+        await sleep(400 * attempt);
+        continue;
+      }
+      return {
+        error: true,
+        status: resp.status >= 400 ? resp.status : 500,
+        message: 'No se pudo descargar el recurso desde el origen'
+      };
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) {
+        await sleep(400 * attempt);
+        continue;
+      }
+      return {
+        error: true,
+        status: 502,
+        message: err?.message || 'Error de red al descargar'
+      };
+    }
+  }
+  return {
+    error: true,
+    status: lastStatus || 502,
+    message: lastErr?.message || 'Error al descargar'
   };
 }
 
@@ -35,19 +106,15 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const resp = await fetch(videoUrl, {
-      method: 'GET',
-      headers: { 'Accept': 'image/*, video/*, */*' }
-    });
-    if (!resp.ok) {
+    const result = await fetchUpstreamBinary(videoUrl);
+    if (result.error) {
       return {
-        statusCode: resp.status >= 400 ? resp.status : 500,
+        statusCode: result.status,
         headers: corsHeaders(),
-        body: JSON.stringify({ error: 'No se pudo descargar el video', status: resp.status })
+        body: JSON.stringify({ error: result.message, status: result.status })
       };
     }
-    const contentType = resp.headers.get('content-type') || 'video/mp4';
-    const buffer = await resp.arrayBuffer();
+    const { buffer, contentType } = result;
     const base64 = Buffer.from(buffer).toString('base64');
     return {
       statusCode: 200,

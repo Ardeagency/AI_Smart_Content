@@ -2009,6 +2009,39 @@ class LivingManager {
         throw new Error('La generación superó el tiempo máximo de espera (12 min). Reintenta con un prompt más corto.');
     }
 
+    /**
+     * Descarga binario vía proxy Netlify; si falla (p. ej. 502), intenta fetch directo en el navegador si el origen envía CORS.
+     */
+    async _fetchKieAssetBlob(kieUrl) {
+        const proxyUrl = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieUrl)}`;
+        let lastStatus = 0;
+        let proxyErrMsg = '';
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+            if (attempt > 0) await new Promise((r) => setTimeout(r, 700));
+            const res = await fetch(proxyUrl);
+            lastStatus = res.status;
+            if (res.ok) {
+                const blob = await res.blob();
+                return { blob, contentType: res.headers.get('content-type') };
+            }
+            try {
+                const j = await res.json();
+                proxyErrMsg = j.error || j.message || '';
+            } catch (_) {}
+        }
+        try {
+            const direct = await fetch(kieUrl, { mode: 'cors', credentials: 'omit', cache: 'no-store' });
+            lastStatus = direct.status;
+            if (direct.ok) {
+                const blob = await direct.blob();
+                return { blob, contentType: direct.headers.get('content-type') };
+            }
+        } catch (e) {
+            console.warn('LivingManager: descarga directa no disponible (CORS o red):', e?.message || e);
+        }
+        throw new Error(proxyErrMsg || `Descarga fallida (${lastStatus}). Reintenta en unos segundos.`);
+    }
+
     async _downloadAndUploadKieNanoImage(kieImageUrl, taskId) {
         if (!this.supabase?.storage) return null;
         const { data: { user } } = await this.supabase.auth.getUser();
@@ -2018,16 +2051,10 @@ class LivingManager {
         const ext = ['png', 'jpg', 'jpeg', 'webp'].includes(extGuess) ? (extGuess === 'jpeg' ? 'jpg' : extGuess) : 'png';
         const safeTaskId = (taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || String(Date.now());
         const storagePath = `kie-nano-banana/${user.id}/${safeTaskId}.${ext}`;
-        const proxyUrl = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieImageUrl)}`;
-        const res = await fetch(proxyUrl);
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error || `Descarga fallida: ${res.status}`);
-        }
-        const blob = await res.blob();
-        const contentType = res.headers.get('content-type') || (ext === 'png' ? 'image/png' : 'image/jpeg');
+        const { blob, contentType } = await this._fetchKieAssetBlob(kieImageUrl);
+        const ct = contentType || (ext === 'png' ? 'image/png' : 'image/jpeg');
         const { error } = await this.supabase.storage.from(bucket).upload(storagePath, blob, {
-            contentType,
+            contentType: ct,
             upsert: true
         });
         if (error) throw error;
