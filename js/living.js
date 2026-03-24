@@ -1901,14 +1901,15 @@ class LivingManager {
                     }
                     activeCorrectionBtn.disabled = true;
                     correctionInput.disabled = true;
-                    correctionStatus.textContent = 'Regenerando imagen...';
+                    correctionStatus.textContent = 'Regenerando imagen…';
                     try {
                         const result = await this.regenerateProductionImage({
                             sourceImageUrl: mediaUrl,
                             prompt: promptText,
                             correction: correctionText,
                             output,
-                            run
+                            run,
+                            onStatus: (msg) => { correctionStatus.textContent = msg; }
                         });
                         if (result?.image_url) {
                             image.src = result.image_url;
@@ -1961,52 +1962,194 @@ class LivingManager {
         }
     }
 
-    async regenerateProductionImage({ sourceImageUrl, prompt, correction, output, run }) {
-        const res = await fetch('/.netlify/functions/kie-image-regenerate', {
+    async updateSystemAIOutput(id, updates) {
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !id) return;
+        try {
+            await this.supabase.from('system_ai_outputs').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+        } catch (e) {
+            console.warn('LivingManager updateSystemAIOutput:', e);
+        }
+    }
+
+    /** Mismo intervalo y máximo que VideoView (KIE). */
+    static get _NANO_POLL_INTERVAL_MS() { return 3000; }
+    static get _NANO_POLL_MAX_MS() { return 12 * 60 * 1000; }
+
+    async _pollKieNanoBananaTask(taskId) {
+        const statusUrl = `/.netlify/functions/kling-video-status?taskId=${encodeURIComponent(taskId)}`;
+        const started = Date.now();
+        while (Date.now() - started < LivingManager._NANO_POLL_MAX_MS) {
+            const res = await fetch(statusUrl);
+            let data = {};
+            try {
+                data = await res.json();
+            } catch (_) {
+                throw new Error('Respuesta no válida al consultar el estado de la tarea');
+            }
+            if (!res.ok) {
+                throw new Error(data?.error || 'Error al consultar el estado');
+            }
+            const state = data?.data?.state;
+            if (state === 'success') {
+                let resultJson = data?.data?.resultJson;
+                if (typeof resultJson === 'string') {
+                    try { resultJson = JSON.parse(resultJson); } catch (_) { resultJson = {}; }
+                }
+                const urls = resultJson?.resultUrls;
+                const kieUrl = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
+                if (!kieUrl) throw new Error('No se encontró URL de imagen en la respuesta');
+                return { kieUrl, resultUrls: urls };
+            }
+            if (state === 'fail' || state === 'failed') {
+                const rawMsg = data?.data?.failMsg || data?.data?.failCode || 'La generación falló';
+                throw new Error(rawMsg);
+            }
+            await new Promise((r) => setTimeout(r, LivingManager._NANO_POLL_INTERVAL_MS));
+        }
+        throw new Error('La generación superó el tiempo máximo de espera (12 min). Reintenta con un prompt más corto.');
+    }
+
+    async _downloadAndUploadKieNanoImage(kieImageUrl, taskId) {
+        if (!this.supabase?.storage) return null;
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (!user?.id) return null;
+        const bucket = 'production-outputs';
+        const extGuess = (kieImageUrl.split('.').pop() || 'png').split('?')[0].toLowerCase() || 'png';
+        const ext = ['png', 'jpg', 'jpeg', 'webp'].includes(extGuess) ? (extGuess === 'jpeg' ? 'jpg' : extGuess) : 'png';
+        const safeTaskId = (taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || String(Date.now());
+        const storagePath = `kie-nano-banana/${user.id}/${safeTaskId}.${ext}`;
+        const proxyUrl = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieImageUrl)}`;
+        const res = await fetch(proxyUrl);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Descarga fallida: ${res.status}`);
+        }
+        const blob = await res.blob();
+        const contentType = res.headers.get('content-type') || (ext === 'png' ? 'image/png' : 'image/jpeg');
+        const { error } = await this.supabase.storage.from(bucket).upload(storagePath, blob, {
+            contentType,
+            upsert: true
+        });
+        if (error) throw error;
+        const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
+        return { publicUrl: urlData?.publicUrl || null, storagePath };
+    }
+
+    async regenerateProductionImage({ sourceImageUrl, prompt, correction, output, run, onStatus }) {
+        const setStatus = typeof onStatus === 'function' ? onStatus : () => {};
+        const flowName = this.getFlowName(run);
+        const technicalParams = output?.technical_params && typeof output.technical_params === 'object' ? output.technical_params : {};
+        const metadata = output?.metadata && typeof output.metadata === 'object' ? output.metadata : {};
+
+        setStatus('Creando tarea de generación…');
+        const createRes = await fetch('/.netlify/functions/kie-nano-banana-create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 image_url: sourceImageUrl,
                 prompt: prompt || '',
                 correction: correction || '',
-                flow_name: this.getFlowName(run),
-                technical_params: output?.technical_params || {},
-                metadata: output?.metadata || {}
+                flow_name: flowName,
+                technical_params: technicalParams,
+                metadata
             })
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            throw new Error(data?.error || 'No se pudo regenerar la imagen');
+        let createData = {};
+        try {
+            createData = await createRes.json();
+        } catch (_) {
+            throw new Error('El servidor respondió con un formato inválido. ¿Está desplegada kie-nano-banana-create?');
+        }
+        if (!createRes.ok) {
+            const serverMsg = (createData.kieBody && (createData.kieBody.msg || createData.kieBody.message)) || createData.error || createData.failMsg || 'Error al crear la tarea';
+            throw new Error(serverMsg);
+        }
+        const taskId = createData.taskId;
+        const refinedPrompt = createData.prompt || '';
+        if (!taskId) {
+            throw new Error('No se recibió taskId del servidor');
         }
 
-        const outputRecord = {
+        let outputId = await this.saveSystemAIOutput({
             provider: 'kie_api',
             output_type: 'image',
-            status: 'completed',
-            prompt_used: data.prompt || prompt || '',
+            status: 'processing',
+            external_job_id: taskId,
+            prompt_used: refinedPrompt || prompt || '',
             text_content: correction,
             metadata: {
-                source: 'kie-image-regenerate',
+                source: 'kie-nano-banana-pro',
+                flow_name: flowName,
                 regenerated_from: sourceImageUrl,
-                flow_name: this.getFlowName(run),
-                refined_prompt: data.prompt || '',
-                result_url: data.image_url || '',
-                technical_params: output?.technical_params || {}
+                refined_prompt: refinedPrompt,
+                technical_params: technicalParams,
+                model: createData.model || 'nano-banana-pro'
             }
-        };
-        const insertedId = await this.saveSystemAIOutput(outputRecord);
-        this.systemAiOutputs.unshift({
-            id: insertedId || `local-${Date.now()}`,
-            output_type: 'image',
-            prompt_used: data.prompt || prompt || '',
-            text_content: correction,
-            metadata: outputRecord.metadata,
-            created_at: new Date().toISOString(),
-            storage_path: null,
-            storage_object_id: null,
-            file_url: data.image_url || null
         });
-        return data;
+
+        try {
+            setStatus('Generando imagen (Nano Banana Pro). Esto puede tardar unos minutos…');
+            const { kieUrl, resultUrls } = await this._pollKieNanoBananaTask(taskId);
+
+            setStatus('Descargando y guardando en tu cuenta…');
+            const uploaded = await this._downloadAndUploadKieNanoImage(kieUrl, taskId);
+            if (!uploaded?.publicUrl) {
+                throw new Error('No se pudo guardar la imagen en tu cuenta');
+            }
+
+            if (outputId) {
+                await this.updateSystemAIOutput(outputId, {
+                    status: 'completed',
+                    storage_path: uploaded.storagePath,
+                    metadata: {
+                        source: 'kie-nano-banana-pro',
+                        flow_name: flowName,
+                        regenerated_from: sourceImageUrl,
+                        refined_prompt: refinedPrompt,
+                        resultUrls,
+                        image_url: uploaded.publicUrl,
+                        kie_source_url: kieUrl,
+                        technical_params: technicalParams,
+                        model: createData.model || 'nano-banana-pro'
+                    },
+                    error_message: null
+                });
+            }
+
+            this.systemAiOutputs.unshift({
+                id: outputId || `local-${Date.now()}`,
+                output_type: 'image',
+                prompt_used: refinedPrompt || prompt || '',
+                text_content: correction,
+                metadata: {
+                    source: 'kie-nano-banana-pro',
+                    flow_name: flowName,
+                    regenerated_from: sourceImageUrl,
+                    refined_prompt: refinedPrompt,
+                    result_url: uploaded.publicUrl,
+                    technical_params: technicalParams
+                },
+                created_at: new Date().toISOString(),
+                storage_path: uploaded.storagePath,
+                storage_object_id: null,
+                file_url: uploaded.publicUrl
+            });
+
+            return {
+                image_url: uploaded.publicUrl,
+                prompt: refinedPrompt,
+                task_id: taskId,
+                storage_path: uploaded.storagePath
+            };
+        } catch (err) {
+            if (outputId) {
+                await this.updateSystemAIOutput(outputId, {
+                    status: 'failed',
+                    error_message: err?.message || 'Error en regeneración'
+                });
+            }
+            throw err;
+        }
     }
     
     /**

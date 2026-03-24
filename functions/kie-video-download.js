@@ -37,7 +37,7 @@ exports.handler = async (event, context) => {
   try {
     const resp = await fetch(videoUrl, {
       method: 'GET',
-      headers: { 'Accept': 'video/*, */*' }
+      headers: { 'Accept': 'image/*, video/*, */*' }
     });
     if (!resp.ok) {
       return {

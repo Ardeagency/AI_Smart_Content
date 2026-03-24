@@ -42,6 +42,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/kie-nano-banana-create"
+  to = "/.netlify/functions/kie-nano-banana-create"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/ai/chat"
   to = "/.netlify/functions/api-ai-chat"
   status = 200
