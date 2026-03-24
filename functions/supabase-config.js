@@ -31,6 +31,8 @@ exports.handler = async (event, context) => {
     }
 
     // Retornar configuración (solo las variables seguras para el cliente)
+    // META_APP_ID es seguro de exponer: es un identificador público que aparece
+    // en cada llamada al SDK de Facebook y es visible para cualquier usuario.
     return {
         statusCode: 200,
         headers: {
@@ -40,7 +42,9 @@ exports.handler = async (event, context) => {
         },
         body: JSON.stringify({
             url: supabaseUrl,
-            anonKey: supabaseAnonKey
+            anonKey: supabaseAnonKey,
+            metaAppId: process.env.META_APP_ID || '',
+            metaApiVersion: process.env.META_API_VERSION || 'v19.0'
         })
     };
 };
