@@ -5854,14 +5854,92 @@ h1.brand-name-large[contenteditable="true"]:hover,
    CONTENIDO EXPANDIDO DE INFO
    ============================================ */
 
-/* Secciones del contenido expandido */
-/* Secciones tipo Esencia: sin fondo ni borde (solo espaciado) */
+/*
+ * Scope con #infoPanelContent (id) para ganar a .info-section global (content.css)
+ * y recuperar cards, grid y variantes glass dinámicas de Brand.
+ */
+#infoPanelContent .info-section {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--glass-radius);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section {
+    background: var(--glass-black-bg);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section {
+    background: var(--glass-white-bg);
+    border-color: var(--glass-white-border);
+}
+
+#infoPanelContent .info-section:last-child {
+    margin-bottom: 0;
+}
+
+#infoPanelContent .info-section-title {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin: 0 0 1rem 0;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section-title {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+#infoPanelContent .info-section-content {
+    color: inherit;
+}
+
+#infoPanelContent .info-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+    #infoPanelContent .info-fields-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+#infoPanelContent .info-fields-grid .info-field {
+    margin-bottom: 0;
+}
+
+#infoPanelContent .editable-multiselect {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+/* Sección identidad: misma lectura glass, sin duplicar padding extra del grid */
+#infoPanelContent .info-section-identity {
+    padding: 1.25rem;
+}
+
+/* Compatibilidad: mismos estilos vía clase .card-content-expanded (mismo nodo que #infoPanelContent) */
 .card-content-expanded .info-section {
-    margin-bottom: 2.5rem;
-    background: transparent;
-    border: none;
-    padding: 0;
-    border-radius: 0;
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--glass-radius);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
 }
 
 .card-content-expanded .info-section:last-child {
@@ -5874,19 +5952,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 500;
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 1rem 0;
 }
 
 .card-content-expanded .info-section-content {
-    color: var(--text-primary);
-}
-
-/* Sección de identidad - sin fondo, sin bordes */
-.card-content-expanded .info-section-identity {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin-bottom: 2.5rem;
+    color: inherit;
 }
 
 /* Fila: logo + redes/web (junto al logo) */

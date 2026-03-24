@@ -2040,7 +2040,7 @@ class BrandsView extends BaseView {
     html += `<div class="info-field"><div class="info-field-label">Nicho de mercado</div><div class="info-field-value" data-multiselect="nicho_mercado" data-field="nicho_mercado"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Arquetipo / personalidad</div><div class="info-field-value" data-multiselect="arquetipo_personalidad" data-field="arquetipo_personalidad"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Enfoque de marca</div><div class="info-field-value" data-multiselect="enfoque_marca" data-field="enfoque_marca"></div></div>`;
-    return html;
+    return `<div class="info-fields-grid">${html}</div>`;
   }
 
   renderLanguageSection(brand) {
@@ -2055,7 +2055,7 @@ class BrandsView extends BaseView {
     html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Tono de comunicación</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Estilo de escritura</div><div class="info-field-value" data-multiselect="estilo_escritura" data-field="estilo_escritura"></div></div>`;
-    return html;
+    return `<div class="info-fields-grid">${html}</div>`;
   }
 
   /**
@@ -2070,7 +2070,7 @@ class BrandsView extends BaseView {
     html += `<div class="info-field"><div class="info-field-label">Estilo publicidad</div><div class="info-field-value" data-multiselect="estilo_publicidad" data-field="estilo_publicidad"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Transmitir visualmente</div><div class="info-field-value" data-multiselect="transmitir_visualmente" data-field="transmitir_visualmente"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Evitar visualmente</div><div class="info-field-value" data-multiselect="evitar_visualmente" data-field="evitar_visualmente"></div></div>`;
-    return html;
+    return `<div class="info-fields-grid">${html}</div>`;
   }
 
   renderCreativeRulesSection(brand, rulesByType) {
@@ -2459,19 +2459,11 @@ class BrandsView extends BaseView {
       const tag = document.createElement('span');
       tag.className = 'editable-tag';
       tag.textContent = val;
-      tag.style.padding = '0.25rem 0.5rem';
-      tag.style.background = 'rgba(212, 184, 150, 0.2)';
-      tag.style.border = '1px solid rgba(212, 184, 150, 0.3)';
-      tag.style.borderRadius = '4px';
-      tag.style.fontSize = '0.75rem';
-      tag.style.color = 'var(--brand-text-gold, #D4B896)';
-      tag.style.cursor = 'pointer';
-      tag.style.position = 'relative';
 
       const removeBtn = document.createElement('span');
+      removeBtn.className = 'editable-tag-remove';
       removeBtn.innerHTML = ' ×';
-      removeBtn.style.cursor = 'pointer';
-      removeBtn.style.marginLeft = '0.25rem';
+      removeBtn.setAttribute('aria-label', 'Quitar');
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const newValues = currentValues.filter(v => v !== val);
@@ -2516,7 +2508,10 @@ class BrandsView extends BaseView {
     }
     if (onSave) onSave();
     // Re-renderizar
-    const element = document.querySelector(`[data-field="${fieldName}"]`);
+    const panel = document.getElementById('infoPanelContent');
+    const element = panel
+      ? panel.querySelector(`[data-field="${fieldName}"]`)
+      : document.querySelector(`[data-field="${fieldName}"]`);
     if (element) {
       this.makeEditableMultiSelect(element, fieldName, [], table, onSave);
     }
