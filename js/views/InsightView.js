@@ -14,6 +14,7 @@ class InsightView extends BaseView {
     this.userId       = null;
     this.sessionToken = null;
     this.brandContainer = null;
+    this._syncDone    = false; // evita bucle infinito de sync
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -168,11 +169,14 @@ class InsightView extends BaseView {
     body.innerHTML = this._buildDashboard(res);
     this._bindDashboardEvents(body, bc, res);
 
-    // Si datos están desactualizados, lanzar sync en background
-    if (res.stale) this._triggerBackgroundSync(bc.id, token, body);
+    // Si datos están desactualizados, lanzar sync UNA SOLA VEZ en background
+    if (res.stale && !this._syncDone) this._triggerBackgroundSync(bc.id, token, body);
   }
 
   async _triggerBackgroundSync(brandContainerId, token, body) {
+    if (this._syncDone) return; // guardia anti-bucle
+    this._syncDone = true;
+
     const badge = body.querySelector('#insightStaleBadge');
     if (badge) badge.style.display = 'flex';
     try {
@@ -182,21 +186,21 @@ class InsightView extends BaseView {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ brand_container_id: brandContainerId })
       });
-      // 2. Analizar posts nuevos con OpenAI → brand_content_analysis
+      // 2. Marcar análisis de posts (no llama a OpenAI, es no-op por ahora)
       await fetch('/api/brand/analyze-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ brand_container_id: brandContainerId })
       });
-      // 3. Recargar datos frescos
+      // 3. Recargar datos frescos UNA SOLA VEZ
       if (badge) badge.style.display = 'none';
       const tabBody = document.getElementById('insightTabBody');
       if (tabBody) {
         tabBody.innerHTML = this._loadingHTML('Actualizando datos…');
-        this._loadMyBrands(tabBody);
+        await this._loadMyBrands(tabBody);  // _syncDone=true, no volverá a hacer sync
       }
     } catch (e) {
-      if (badge) { badge.textContent = 'Error al sincronizar'; }
+      if (badge) badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error al sincronizar';
       console.warn('[InsightView] background sync error:', e?.message);
     }
   }
@@ -217,6 +221,7 @@ class InsightView extends BaseView {
       syncBtn.addEventListener('click', async () => {
         syncBtn.disabled = true;
         syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        this._syncDone = false; // permite un nuevo sync manual
         const token = await this._getSessionToken();
         await this._triggerBackgroundSync(bc.id, token, body);
         syncBtn.disabled = false;
