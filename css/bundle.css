@@ -25731,6 +25731,14 @@ body.production-filters-in-header .living-container > .living-history-section {
 .mbf-icon--fb { color: #1877f2; }
 .mbf-icon--ig { color: #e1306c; }
 .mbf-card-date { flex: 1; }
+.mbf-card-page {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .mbf-card-link {
   color: var(--text-muted);
   text-decoration: none;

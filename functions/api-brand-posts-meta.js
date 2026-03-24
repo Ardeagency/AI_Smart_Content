@@ -1,19 +1,10 @@
 /**
  * api-brand-posts-meta
- * Devuelve las publicaciones recientes de Facebook e Instagram
- * usando la integración Meta del brand container.
+ * Publicaciones de Facebook e Instagram vía Graph API (todas las páginas
+ * gestionadas + paginación de cursores para no quedarse en el primer lote).
  *
- * GET /api/brand/posts-meta?brand_container_id=...&limit=12
+ * GET /api/brand/posts-meta?brand_container_id=...&limit=50
  * Auth: Bearer <supabase-session-token>
- *
- * Respuesta:
- * {
- *   ok: true,
- *   page: { id, name, picture },
- *   facebook_posts: [...],
- *   instagram_posts: [...],
- *   instagram_username: string | null
- * }
  */
 
 const {
@@ -23,7 +14,44 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
-const { metaGraphGet } = require('./lib/meta-graph');
+const { metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
+
+const FB_FIELDS =
+  'id,message,story,created_time,full_picture,permalink_url,likes.summary(true),comments.summary(true),shares,attachments{media_type,title}';
+const IG_FIELDS =
+  'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count';
+
+function mapFbPost(p) {
+  return {
+    id: p.id,
+    network: 'facebook',
+    message: p.message || p.story || '',
+    created_time: p.created_time,
+    picture: p.full_picture || null,
+    permalink: p.permalink_url || null,
+    media_type: p.attachments?.data?.[0]?.media_type || 'text',
+    likes: p.likes?.summary?.total_count || 0,
+    comments: p.comments?.summary?.total_count || 0,
+    shares: p.shares?.count || 0,
+    page_id: p._page_id || null,
+    page_name: p._page_name || null
+  };
+}
+
+function mapIgMedia(m) {
+  return {
+    id: m.id,
+    network: 'instagram',
+    message: m.caption || '',
+    created_time: m.timestamp,
+    picture: m.media_url || m.thumbnail_url || null,
+    permalink: m.permalink || null,
+    media_type: (m.media_type || 'IMAGE').toLowerCase(),
+    likes: m.like_count || 0,
+    comments: m.comments_count || 0,
+    shares: 0
+  };
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
@@ -44,13 +72,12 @@ exports.handler = async (event) => {
 
   const qs = event.queryStringParameters || {};
   const { brand_container_id } = qs;
-  const limit = Math.min(Number(qs.limit) || 12, 30);
+  const limit = Math.min(Math.max(Number(qs.limit) || 50, 1), 100);
 
   if (!brand_container_id) {
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
   }
 
-  // Verificar acceso al brand container
   const containers = await supabaseRest({
     url: env.url, serviceKey: env.serviceKey,
     path: 'brand_containers', method: 'GET',
@@ -70,7 +97,6 @@ exports.handler = async (event) => {
     }
   }
 
-  // Leer integración Meta activa
   const integRows = await supabaseRest({
     url: env.url, serviceKey: env.serviceKey,
     path: 'brand_integrations', method: 'GET',
@@ -91,19 +117,24 @@ exports.handler = async (event) => {
   const appSecret = process.env.META_APP_SECRET || '';
 
   try {
-    // ── 1. Obtener páginas de Facebook gestionadas ──────────────────────────
-    const pagesData = await metaGraphGet('/me/accounts', userToken, appSecret, {
-      fields: 'id,name,picture{url},fan_count,instagram_business_account'
-    });
-    const pages = pagesData.data || [];
+    const pagesList = await metaGraphGetPaged(
+      '/me/accounts',
+      userToken,
+      appSecret,
+      {
+        fields: 'id,name,picture{url},fan_count,instagram_business_account{id}'
+      },
+      50
+    );
 
-    if (pages.length === 0) {
+    if (pagesList.length === 0) {
       return {
         statusCode: 200,
         headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ok: true,
           page: null,
+          pages: [],
           facebook_posts: [],
           instagram_posts: [],
           instagram_username: null,
@@ -112,63 +143,84 @@ exports.handler = async (event) => {
       };
     }
 
-    const page = pages[0];
-
-    // Obtener page access token
-    const pageTokenData = await metaGraphGet(`/${page.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
-    const pageToken = pageTokenData.access_token || userToken;
-
-    // ── 2. Posts de Facebook ────────────────────────────────────────────────
-    const fbPostsData = await metaGraphGet(`/${page.id}/posts`, pageToken, appSecret, {
-      fields: 'id,message,story,created_time,full_picture,permalink_url,likes.summary(true),comments.summary(true),shares,attachments{media_type,title}',
-      limit
-    }).catch(() => ({ data: [] }));
-
-    const facebook_posts = (fbPostsData.data || []).map(p => ({
-      id:           p.id,
-      network:      'facebook',
-      message:      p.message || p.story || '',
-      created_time: p.created_time,
-      picture:      p.full_picture || null,
-      permalink:    p.permalink_url || null,
-      media_type:   p.attachments?.data?.[0]?.media_type || 'text',
-      likes:        p.likes?.summary?.total_count    || 0,
-      comments:     p.comments?.summary?.total_count || 0,
-      shares:       p.shares?.count                  || 0
+    const pagesMeta = pagesList.map((pg) => ({
+      id: pg.id,
+      name: pg.name,
+      picture: pg.picture?.data?.url || null,
+      fans: pg.fan_count || 0,
+      instagram_business_account_id: pg.instagram_business_account?.id || null
     }));
 
-    // ── 3. Posts de Instagram (si hay cuenta IG vinculada) ──────────────────
-    let instagram_posts    = [];
-    let instagram_username = null;
+    const primary = pagesList[0];
+    const facebookRaw = [];
+    const instagramRaw = [];
 
-    const igAccountId = page.instagram_business_account?.id;
-
-    if (igAccountId) {
-      // Info básica de la cuenta IG
-      const igInfo = await metaGraphGet(`/${igAccountId}`, pageToken, appSecret, {
-        fields: 'id,username,profile_picture_url,followers_count'
-      }).catch(() => ({}));
-      instagram_username = igInfo.username || null;
-
-      // Media de Instagram
-      const igMediaData = await metaGraphGet(`/${igAccountId}/media`, pageToken, appSecret, {
-        fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
-        limit
-      }).catch(() => ({ data: [] }));
-
-      instagram_posts = (igMediaData.data || []).map(m => ({
-        id:           m.id,
-        network:      'instagram',
-        message:      m.caption || '',
-        created_time: m.timestamp,
-        picture:      m.media_url || m.thumbnail_url || null,
-        permalink:    m.permalink || null,
-        media_type:   (m.media_type || 'IMAGE').toLowerCase(),
-        likes:        m.like_count    || 0,
-        comments:     m.comments_count || 0,
-        shares:       0
-      }));
+    const pageTokens = new Map();
+    async function getPageToken(pageId) {
+      if (pageTokens.has(pageId)) return pageTokens.get(pageId);
+      const d = await metaGraphGet(`/${pageId}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
+      const t = d.access_token || userToken;
+      pageTokens.set(pageId, t);
+      return t;
     }
+
+    for (const pg of pagesList) {
+      const pageToken = await getPageToken(pg.id);
+      const needFb = Math.max(0, limit - facebookRaw.length);
+      if (needFb > 0) {
+        const batch = await metaGraphGetPaged(
+          `/${pg.id}/posts`,
+          pageToken,
+          appSecret,
+          { fields: FB_FIELDS },
+          needFb
+        );
+        batch.forEach((p) => {
+          p._page_id = pg.id;
+          p._page_name = pg.name;
+        });
+        facebookRaw.push(...batch);
+      }
+    }
+
+    const igPairs = [];
+    const seenIg = new Set();
+    for (const pg of pagesList) {
+      const igId = pg.instagram_business_account?.id;
+      if (igId && !seenIg.has(igId)) {
+        seenIg.add(igId);
+        igPairs.push({ igId, pageId: pg.id });
+      }
+    }
+    const perIgLimit = Math.ceil(limit / Math.max(1, igPairs.length));
+    for (const { igId, pageId } of igPairs) {
+      const pageToken = await getPageToken(pageId);
+      const media = await metaGraphGetPaged(`/${igId}/media`, pageToken, appSecret, { fields: IG_FIELDS }, perIgLimit);
+      instagramRaw.push(...media);
+    }
+
+    const facebook_posts = facebookRaw
+      .map(mapFbPost)
+      .sort((a, b) => new Date(b.created_time) - new Date(a.created_time))
+      .slice(0, limit);
+
+    let instagram_username = null;
+    const firstIg = pagesList.find((p) => p.instagram_business_account?.id);
+    if (firstIg?.instagram_business_account?.id) {
+      const igInfo = await metaGraphGet(
+        `/${firstIg.instagram_business_account.id}`,
+        (await metaGraphGet(`/${firstIg.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}))).access_token ||
+          userToken,
+        appSecret,
+        { fields: 'username' }
+      ).catch(() => ({}));
+      instagram_username = igInfo.username || null;
+    }
+
+    const instagram_posts = instagramRaw
+      .map(mapIgMedia)
+      .sort((a, b) => new Date(b.created_time) - new Date(a.created_time))
+      .slice(0, limit);
 
     return {
       statusCode: 200,
@@ -176,17 +228,17 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         ok: true,
         page: {
-          id:       page.id,
-          name:     page.name,
-          picture:  page.picture?.data?.url || null,
-          fans:     page.fan_count || 0
+          id: primary.id,
+          name: primary.name,
+          picture: primary.picture?.data?.url || null,
+          fans: primary.fan_count || 0
         },
+        pages: pagesMeta,
         facebook_posts,
         instagram_posts,
         instagram_username
       })
     };
-
   } catch (e) {
     console.error('[brand-posts-meta] error:', e?.message);
     return {

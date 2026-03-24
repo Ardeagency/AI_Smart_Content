@@ -142,7 +142,7 @@ class InsightView extends BaseView {
           ? fetch(`/api/brand/analytics-ga4?brand_container_id=${encodeURIComponent(bc.id)}&range=30d`, { headers: authH })
           : Promise.resolve(null),
         hasFb
-          ? fetch(`/api/brand/posts-meta?brand_container_id=${encodeURIComponent(bc.id)}&limit=20`, { headers: authH })
+          ? fetch(`/api/brand/posts-meta?brand_container_id=${encodeURIComponent(bc.id)}&limit=100`, { headers: authH })
           : Promise.resolve(null)
       ]);
 
@@ -355,10 +355,11 @@ class InsightView extends BaseView {
       return `<div class="mbf-inline-error"><i class="fab fa-facebook"></i><span>${this._esc(data.error)}</span></div>`;
     }
 
-    const { page, facebook_posts = [], instagram_posts = [], instagram_username } = data;
+    const { page, pages = [], facebook_posts = [], instagram_posts = [], instagram_username } = data;
 
     const fbCount = facebook_posts.length;
     const igCount = instagram_posts.length;
+    const pageCount = Array.isArray(pages) ? pages.length : 0;
 
     // Mezclar y ordenar por fecha descendente
     const allPosts = [
@@ -378,6 +379,9 @@ class InsightView extends BaseView {
             <div class="mbf-account-info">
               <span class="mbf-account-name">${this._esc(page?.name || bc.nombre_marca)}</span>
               <div class="mbf-account-badges">
+                ${pageCount > 1
+                  ? `<span class="mbf-badge mbf-badge--dim" title="Se combinan publicaciones de todas las páginas que gestionas"><i class="fas fa-layer-group"></i> ${pageCount} páginas</span>`
+                  : ''}
                 <span class="mbf-badge mbf-badge--fb"><i class="fab fa-facebook"></i> ${fbCount} posts</span>
                 ${igCount > 0
                   ? `<span class="mbf-badge mbf-badge--ig"><i class="fab fa-instagram"></i> ${instagram_username ? '@' + this._esc(instagram_username) : ''} · ${igCount} posts</span>`
@@ -416,6 +420,9 @@ class InsightView extends BaseView {
           <div class="mbf-card-network">
             <i class="fab fa-${isFb ? 'facebook mbf-icon--fb' : 'instagram mbf-icon--ig'}"></i>
             <span class="mbf-card-date">${date}</span>
+            ${isFb && post.page_name
+              ? `<span class="mbf-card-page">${this._esc(post.page_name)}</span>`
+              : ''}
             ${post.permalink
               ? `<a href="${this._esc(post.permalink)}" target="_blank" rel="noopener" class="mbf-card-link" title="Ver publicación"><i class="fas fa-external-link-alt"></i></a>`
               : ''}

@@ -53,10 +53,38 @@ async function metaGraphGet(path, accessToken, appSecret, params = {}) {
   return json;
 }
 
+/**
+ * Sigue cursores `paging.cursors.after` hasta reunir hasta maxItems filas en el edge.
+ * Ver: https://developers.facebook.com/docs/graph-api/results
+ */
+async function metaGraphGetPaged(path, accessToken, appSecret, params = {}, maxItems = 100) {
+  const out = [];
+  let after = null;
+  const pageLimit = 50;
+
+  while (out.length < maxItems) {
+    const batchLimit = Math.min(pageLimit, maxItems - out.length);
+    const q = {
+      ...params,
+      limit: String(batchLimit)
+    };
+    if (after) q.after = after;
+
+    const json = await metaGraphGet(path, accessToken, appSecret, q);
+    const data = json.data || [];
+    out.push(...data);
+    const nextAfter = json.paging?.cursors?.after;
+    if (!nextAfter || data.length === 0) break;
+    after = nextAfter;
+  }
+  return out;
+}
+
 module.exports = {
   getMetaGraphVersion,
   getGraphBase,
   appSecretProof,
   buildMetaGraphUrl,
-  metaGraphGet
+  metaGraphGet,
+  metaGraphGetPaged
 };
