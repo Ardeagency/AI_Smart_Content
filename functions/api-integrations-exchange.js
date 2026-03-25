@@ -313,14 +313,14 @@ exports.handler = async (event) => {
       });
     }
 
-    // Para Facebook, devolver pages para que el callback muestre el selector de página
-    const fbIntegRow = platform === 'facebook'
+    // Obtener el id de la integración recién guardada para devolverlo al callback
+    const savedIntegRow = platform === 'facebook'
       ? await (async () => {
           const rows = await supabaseRest({
             url: env.url, serviceKey: env.serviceKey,
             path: 'brand_integrations', method: 'GET',
             searchParams: {
-              select: 'id,metadata',
+              select: 'id',
               brand_container_id: `eq.${brandContainerId}`,
               platform: 'eq.facebook',
               is_active: 'eq.true',
@@ -331,8 +331,6 @@ exports.handler = async (event) => {
         })()
       : null;
 
-    const fbPages = fbIntegRow?.metadata?.pages || [];
-
     return {
       statusCode: 200,
       headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
@@ -340,8 +338,11 @@ exports.handler = async (event) => {
         ok: true,
         return_to: returnTo,
         platform,
-        integ_id: fbIntegRow?.id || null,
-        pages: platform === 'facebook' ? fbPages : undefined
+        // Para Facebook: devolver pages y integ_id para que el callback muestre el selector
+        ...(platform === 'facebook' ? {
+          integ_id: savedIntegRow?.id || null,
+          pages: storedPages
+        } : {})
       })
     };
   } catch (e) {
