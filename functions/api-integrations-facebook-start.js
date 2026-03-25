@@ -9,16 +9,11 @@ const {
 } = require('./lib/ai-shared');
 const { getMetaGraphVersion } = require('./lib/meta-graph');
 
-// ── Redirect URI ─────────────────────────────────────────────────────────────
 function getRedirectUri() {
   const base = process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'http://localhost:8888';
   return `${base}/brand-integration-callback`;
 }
 
-// ── HMAC-signed state ─────────────────────────────────────────────────────────
-// Format: base64url(payload) + "." + HMAC-SHA256(base64url(payload), OAUTH_STATE_SECRET)
-// Prevents CSRF and authorization-code injection attacks.
-// OAUTH_STATE_SECRET must be set in Netlify environment variables (min. 32 random bytes).
 function buildSignedState(payload) {
   const secret = process.env.OAUTH_STATE_SECRET || '';
   if (!secret) throw new Error('OAUTH_STATE_SECRET env var is required');
@@ -27,7 +22,6 @@ function buildSignedState(payload) {
   return `${payloadB64}.${sig}`;
 }
 
-// ── Brand container auth ──────────────────────────────────────────────────────
 async function assertBrandContainerAccess({ env, accessToken, brandContainerId }) {
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
   if (!user?.id) {
@@ -51,7 +45,6 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
   return { user };
 }
 
-// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -79,29 +72,8 @@ exports.handler = async (event) => {
   const appId = process.env.META_APP_ID || '';
   if (!appId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing META_APP_ID env var' }) };
 
-  // Permisos obligatorios para leer páginas e Instagram — siempre presentes
-  const REQUIRED_SCOPES = [
-    'public_profile',
-    'email',
-    'pages_show_list',
-    'pages_read_engagement',
-    'pages_read_user_content',
-    'instagram_basic',
-    'instagram_manage_insights',
-    'instagram_manage_comments',
-    'instagram_content_publish',
-    'read_insights',
-    'business_management'
-  ];
-
-  // Si hay un env var extra, se fusiona con los required (nunca los reemplaza)
-  const extraFromEnv = process.env.FACEBOOK_OAUTH_SCOPES
-    ? String(process.env.FACEBOOK_OAUTH_SCOPES).split(/[\s,]+/).map(s => s.trim()).filter(Boolean)
-    : [];
-  const merged = Array.from(new Set([...REQUIRED_SCOPES, ...extraFromEnv]));
-  const scopes = merged.join(',');
-
   const redirectUri = getRedirectUri();
+  const configId    = process.env.FACEBOOK_LOGIN_CONFIG_ID || null;
 
   let state;
   try {
@@ -109,7 +81,6 @@ exports.handler = async (event) => {
       platform: 'facebook',
       brand_container_id: brandContainerId,
       return_to: returnTo,
-      scope: scopes,
       uid: user.id,
       iat: Date.now()
     });
@@ -117,12 +88,9 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
-  const configId = process.env.FACEBOOK_LOGIN_CONFIG_ID || null;
-
   let authorizeUrl;
   if (configId) {
     // Facebook Login for Business — config_id define permisos y selección de página de forma nativa.
-    // No se usa scope, auth_type ni enable_profile_selector: el diálogo de Meta lo gestiona todo.
     authorizeUrl =
       `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
       `client_id=${encodeURIComponent(appId)}` +
@@ -131,7 +99,14 @@ exports.handler = async (event) => {
       `&config_id=${encodeURIComponent(configId)}` +
       `&state=${encodeURIComponent(state)}`;
   } else {
-    // Flujo clásico: scope explícito + forzar re-solicitud de permisos y selector de página
+    // Flujo clásico (fallback sin config_id)
+    const scopes = [
+      'public_profile', 'email', 'pages_show_list', 'pages_read_engagement',
+      'pages_read_user_content', 'instagram_basic', 'instagram_manage_insights',
+      'instagram_manage_comments', 'instagram_content_publish', 'read_insights',
+      'business_management'
+    ].join(',');
+
     authorizeUrl =
       `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
       `client_id=${encodeURIComponent(appId)}` +

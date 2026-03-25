@@ -1,10 +1,11 @@
 /**
  * api-brand-posts-meta
- * Publicaciones de Facebook e Instagram para la página seleccionada.
+ * Publicaciones de Facebook e Instagram para la página seleccionada por el usuario.
  *
- * Usa la página guardada en metadata.selected_page_id (elegida por el usuario
- * durante el flujo de conexión). Si no hay selected_page_id toma la primera
- * de metadata.pages. Nunca llama /me/accounts en producción normal.
+ * Prioridad para resolver la página activa:
+ *   1. metadata.selected_page_id  (elegida en el picker post-OAuth)
+ *   2. metadata.pages[0]          (primera de la lista guardada)
+ *   3. /me/accounts en vivo       (fallback si no hay páginas en metadata)
  *
  * GET /api/brand/posts-meta?brand_container_id=...&limit=50
  * Auth: Bearer <supabase-session-token>
@@ -20,6 +21,7 @@ const {
 const { metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 
 // ── Campos de Graph API ───────────────────────────────────────────────────────
+
 const FB_FIELDS =
   'id,message,story,created_time,full_picture,permalink_url,' +
   'likes.summary(true),comments.summary(true),shares,attachments{media_type,title}';
@@ -31,6 +33,7 @@ const IG_FIELDS_MIN =
   'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp';
 
 // ── Normalización ─────────────────────────────────────────────────────────────
+
 function resolvePic(pic) {
   if (!pic) return null;
   if (typeof pic === 'string') return pic;
@@ -39,37 +42,36 @@ function resolvePic(pic) {
 
 function mapFbPost(p) {
   return {
-    id:          p.id,
-    network:     'facebook',
-    message:     p.message || p.story || '',
+    id:           p.id,
+    network:      'facebook',
+    message:      p.message || p.story || '',
     created_time: p.created_time,
-    picture:     p.full_picture || null,
-    permalink:   p.permalink_url || null,
-    media_type:  p.attachments?.data?.[0]?.media_type || 'text',
-    likes:       p.likes?.summary?.total_count || 0,
-    comments:    p.comments?.summary?.total_count || 0,
-    shares:      p.shares?.count || 0,
-    page_id:     p._page_id || null,
-    page_name:   p._page_name || null
+    picture:      p.full_picture || null,
+    permalink:    p.permalink_url || null,
+    media_type:   p.attachments?.data?.[0]?.media_type || 'text',
+    likes:        p.likes?.summary?.total_count || 0,
+    comments:     p.comments?.summary?.total_count || 0,
+    shares:       p.shares?.count || 0,
+    page_id:      p._page_id || null,
+    page_name:    p._page_name || null
   };
 }
 
 function mapIgMedia(m) {
   return {
-    id:          m.id,
-    network:     'instagram',
-    message:     m.caption || '',
+    id:           m.id,
+    network:      'instagram',
+    message:      m.caption || '',
     created_time: m.timestamp,
-    picture:     m.media_url || m.thumbnail_url || null,
-    permalink:   m.permalink || null,
-    media_type:  (m.media_type || 'IMAGE').toLowerCase(),
-    likes:       m.like_count || 0,
-    comments:    m.comments_count || 0,
-    shares:      0
+    picture:      m.media_url || m.thumbnail_url || null,
+    permalink:    m.permalink || null,
+    media_type:   (m.media_type || 'IMAGE').toLowerCase(),
+    likes:        m.like_count || 0,
+    comments:     m.comments_count || 0,
+    shares:       0
   };
 }
 
-// ── JSON de respuesta cuando no hay páginas ───────────────────────────────────
 function noPageResponse({ limit, detail, message, account }) {
   return {
     statusCode: 200,
@@ -81,7 +83,7 @@ function noPageResponse({ limit, detail, message, account }) {
       instagram_username: null, instagram_profile_picture_url: null,
       instagram_linked: false,
       fetch_limit: limit,
-      meta_info: message,
+      meta_info:   message,
       diag_detail: detail,
       diag_account: account || null,
       message
@@ -90,6 +92,7 @@ function noPageResponse({ limit, detail, message, account }) {
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
   if (event.httpMethod !== 'GET')
@@ -108,9 +111,9 @@ exports.handler = async (event) => {
   if (!user?.id)
     return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
 
-  const qs = event.queryStringParameters || {};
+  const qs                = event.queryStringParameters || {};
   const { brand_container_id } = qs;
-  const limit = Math.min(Math.max(Number(qs.limit) || 50, 1), 100);
+  const limit             = Math.min(Math.max(Number(qs.limit) || 50, 1), 100);
 
   if (!brand_container_id)
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
@@ -142,8 +145,8 @@ exports.handler = async (event) => {
     searchParams: {
       select: 'id,access_token,metadata',
       brand_container_id: `eq.${brand_container_id}`,
-      platform: 'eq.facebook',
-      is_active: 'eq.true',
+      platform:   'eq.facebook',
+      is_active:  'eq.true',
       limit: '1'
     }
   });
@@ -159,8 +162,8 @@ exports.handler = async (event) => {
 
   try {
     // ── Resolver la página activa ─────────────────────────────────────────
-    // Prioridad: página seleccionada explícitamente > primera de la lista guardada
     let activePage = null;
+
     if (selectedId) {
       activePage = allPages.find((p) => p.id === selectedId) || null;
     }
@@ -168,13 +171,12 @@ exports.handler = async (event) => {
       activePage = allPages[0];
     }
 
-    // Si no hay páginas guardadas todavía, intentar /me/accounts una vez
+    // Fallback: llamar /me/accounts si no hay páginas en metadata todavía
     if (!activePage) {
-      const liveData = await metaGraphGet('/me/accounts', userToken, appSecret, {
+      const livePages = await metaGraphGetPaged('/me/accounts', userToken, appSecret, {
         fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id,username,profile_picture_url}'
-      }).catch(() => null);
+      }, 100).catch(() => []);
 
-      const livePages = Array.isArray(liveData?.data) ? liveData.data : [];
       if (livePages.length > 0) {
         activePage = selectedId
           ? (livePages.find((p) => p.id === selectedId) || livePages[0])
@@ -182,7 +184,7 @@ exports.handler = async (event) => {
       }
     }
 
-    // Sin página: mostrar diagnóstico
+    // Sin página activa: diagnóstico
     if (!activePage) {
       const meInfo = await metaGraphGet('/me', userToken, appSecret, { fields: 'id,name' }).catch(() => null);
       if (!meInfo) {
@@ -191,20 +193,16 @@ exports.handler = async (event) => {
       }
       return noPageResponse({ limit, detail: 'no_pages_selected',
         account: { id: meInfo.id, name: meInfo.name },
-        message:
-          `La cuenta "${meInfo.name}" no tiene páginas disponibles. ` +
-          'Reconecta Meta en Marcas y en el diálogo de Facebook activa el toggle de la página que quieres usar.'
+        message: `La cuenta "${meInfo.name}" no tiene páginas disponibles. Reconecta Meta en Marcas y selecciona la página que quieres usar.`
       });
     }
 
     // ── Page token ───────────────────────────────────────────────────────
-    // El page token está guardado en metadata; si no, pedirlo a Graph API
     let pageToken = activePage.access_token || null;
     if (!pageToken) {
       const d = await metaGraphGet(`/${activePage.id}`, userToken, appSecret, { fields: 'access_token' }).catch(() => ({}));
       pageToken = d.access_token || null;
     }
-
     if (!pageToken) {
       return noPageResponse({ limit, detail: 'no_page_token',
         message: 'No se pudo obtener el token de página. Reconecta Meta en Marcas.' });
@@ -228,9 +226,9 @@ exports.handler = async (event) => {
     fbRaw.forEach((p) => { p._page_id = activePage.id; p._page_name = activePage.name; });
 
     // ── Posts de Instagram ───────────────────────────────────────────────
-    const igId = activePage.instagram_business_account?.id || null;
-    let igRaw = [];
-    let igUsername = activePage.instagram_business_account?.username || null;
+    const igId      = activePage.instagram_business_account?.id || null;
+    let igRaw       = [];
+    let igUsername  = activePage.instagram_business_account?.username || null;
     let igProfilePic = activePage.instagram_business_account?.profile_picture_url || null;
 
     if (igId) {
@@ -244,17 +242,16 @@ exports.handler = async (event) => {
         ).catch(() => []);
       }
 
-      // Obtener username/foto si no estaban en metadata
       if (!igUsername || !igProfilePic) {
         const igInfo = await metaGraphGet(`/${igId}`, pageToken, appSecret, {
           fields: 'username,profile_picture_url'
         }).catch(() => ({}));
-        igUsername   = igInfo.username || igUsername;
+        igUsername   = igInfo.username   || igUsername;
         igProfilePic = igInfo.profile_picture_url || igProfilePic;
       }
     }
 
-    // ── Respuesta final ──────────────────────────────────────────────────
+    // ── Respuesta ────────────────────────────────────────────────────────
     const facebook_posts = fbRaw.map(mapFbPost)
       .sort((a, b) => new Date(b.created_time) - new Date(a.created_time))
       .slice(0, limit);
@@ -277,10 +274,10 @@ exports.handler = async (event) => {
           fans:    activePage.fan_count || activePage.fans || 0
         },
         pages: [{
-          id:     activePage.id,
-          name:   activePage.name,
+          id:      activePage.id,
+          name:    activePage.name,
           picture: resolvePic(activePage.picture),
-          fans:   activePage.fan_count || activePage.fans || 0,
+          fans:    activePage.fan_count || activePage.fans || 0,
           instagram_business_account_id: igId
         }],
         facebook_posts,
@@ -289,13 +286,9 @@ exports.handler = async (event) => {
         instagram_profile_picture_url: igProfilePic,
         instagram_linked:              !!igId,
         fetch_limit:                   limit,
-        meta_info:
-          'Se muestran las publicaciones más recientes de la página conectada ' +
-          `(hasta ${limit} por red). Meta no usa un calendario en esta vista.`,
+        meta_info: `Se muestran las publicaciones más recientes de "${activePage.name}" (hasta ${limit} por red).`,
         ...(noPosts ? {
-          hint:
-            'La página está conectada pero no se encontraron publicaciones. ' +
-            'Verifica que la página tenga posts públicos y que los permisos estén correctos.'
+          hint: 'La página está conectada pero no se encontraron publicaciones. Verifica que la página tenga posts públicos y que los permisos estén correctos.'
         } : {})
       })
     };
