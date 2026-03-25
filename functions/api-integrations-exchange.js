@@ -224,6 +224,7 @@ exports.handler = async (event) => {
     }
 
     // ── Facebook / Meta ──────────────────────────────────────────────────────
+    let storedPages = [];
     if (platform === 'facebook') {
       const appId = process.env.META_APP_ID || '';
       const appSecret = process.env.META_APP_SECRET || '';
@@ -268,7 +269,7 @@ exports.handler = async (event) => {
 
       console.log(`[exchange] /me/accounts devolvió ${pagesData.length} páginas para ${profile?.name || 'usuario'}`);
 
-      const storedPages = pagesData.map((pg) => ({
+      storedPages = pagesData.map((pg) => ({
         id: pg.id,
         name: pg.name,
         picture: pg.picture?.data?.url || (typeof pg.picture === 'string' ? pg.picture : null),
