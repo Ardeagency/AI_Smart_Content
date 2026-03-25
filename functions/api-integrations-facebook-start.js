@@ -117,28 +117,30 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
-  // Si está configurado un config_id de "Facebook Login for Business", se usa ese
-  // en lugar de scope — permite al usuario seleccionar páginas de forma nativa en el
-  // diálogo de Meta sin necesidad de App Review para permisos de página.
-  // Configurar: Meta App Dashboard → Facebook Login for Business → Configurations → obtener config_id
-  // Luego añadir FACEBOOK_LOGIN_CONFIG_ID al env de Netlify.
   const configId = process.env.FACEBOOK_LOGIN_CONFIG_ID || null;
 
-  let authorizeUrl =
-    `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
-    `client_id=${encodeURIComponent(appId)}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-    `&response_type=code` +
-    `&auth_type=rerequest` +
-    `&enable_profile_selector=true` +
-    `&state=${encodeURIComponent(state)}`;
-
+  let authorizeUrl;
   if (configId) {
-    // Facebook Login for Business: config_id reemplaza scope
-    authorizeUrl += `&config_id=${encodeURIComponent(configId)}`;
+    // Facebook Login for Business — config_id define permisos y selección de página de forma nativa.
+    // No se usa scope, auth_type ni enable_profile_selector: el diálogo de Meta lo gestiona todo.
+    authorizeUrl =
+      `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
+      `client_id=${encodeURIComponent(appId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&config_id=${encodeURIComponent(configId)}` +
+      `&state=${encodeURIComponent(state)}`;
   } else {
-    // Fallback: scope estándar con todos los permisos requeridos
-    authorizeUrl += `&scope=${encodeURIComponent(scopes)}`;
+    // Flujo clásico: scope explícito + forzar re-solicitud de permisos y selector de página
+    authorizeUrl =
+      `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
+      `client_id=${encodeURIComponent(appId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&scope=${encodeURIComponent(scopes)}` +
+      `&auth_type=rerequest` +
+      `&enable_profile_selector=true` +
+      `&state=${encodeURIComponent(state)}`;
   }
 
   return {

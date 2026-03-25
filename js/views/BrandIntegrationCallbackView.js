@@ -214,14 +214,14 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         <i class="fas fa-flag"></i>
         <h2>No se encontraron páginas</h2>
         <p>
-          Tu cuenta no tiene acceso a ninguna Página de Facebook, o no seleccionaste
-          ninguna durante el proceso de autorización.
+          Tu cuenta de Facebook no devolvió ninguna Página. Puede ocurrir si no seleccionaste
+          ninguna en el paso de autorización de Meta.
         </p>
-        <ul style="text-align:left;font-size:.88rem;line-height:1.6;color:var(--text-secondary);max-width:420px;margin:0 auto 1.25rem">
-          <li>Reconecta Meta en <strong>Marcas</strong>.</li>
-          <li>En el diálogo de Facebook, cuando aparezca la lista de páginas,
-              <strong>activa el toggle</strong> de la página que quieres conectar.</li>
-          <li>Si no eres Administrador de ninguna Página, primero crea una o pide acceso.</li>
+        <ul style="text-align:left;font-size:.88rem;line-height:1.6;color:var(--text-secondary);max-width:440px;margin:0 auto 1.25rem">
+          <li>Haz clic en <strong>Volver</strong> y vuelve a conectar Meta.</li>
+          <li>En el diálogo de Facebook, en el paso <em>"Elige qué páginas conectar"</em>,
+              asegúrate de seleccionar al menos una página antes de continuar.</li>
+          <li>Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.</li>
         </ul>
         <button onclick="window.router?.navigate('${returnTo}')" class="bic-confirm-btn">
           <i class="fas fa-arrow-left"></i> Volver
