@@ -134,7 +134,7 @@ class InsightView extends BaseView {
       }
 
       const authH = { Authorization: `Bearer ${token}` };
-      const [ytRes, ga4Res, metaRes] = await Promise.all([
+      const [ytRes, ga4Res, metaRes, metaProbeRes] = await Promise.all([
         hasGo
           ? fetch(`/api/brand/videos-youtube?brand_container_id=${encodeURIComponent(bc.id)}&limit=25`, { headers: authH })
           : Promise.resolve(null),
@@ -143,6 +143,9 @@ class InsightView extends BaseView {
           : Promise.resolve(null),
         hasFb
           ? fetch(`/api/brand/posts-meta?brand_container_id=${encodeURIComponent(bc.id)}&limit=100`, { headers: authH })
+          : Promise.resolve(null),
+        hasFb
+          ? fetch(`/api/brand/meta-permissions-test?brand_container_id=${encodeURIComponent(bc.id)}`, { headers: authH })
           : Promise.resolve(null)
       ]);
 
@@ -174,7 +177,19 @@ class InsightView extends BaseView {
         if (!metaRes.ok) metaData = { error: metaData.error || `HTTP ${metaRes.status}` };
       }
 
-      body.innerHTML = this._buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData });
+      let metaProbe = null;
+      if (hasFb && metaProbeRes) {
+        metaProbe = await metaProbeRes.json().catch(() => ({}));
+        if (!metaProbeRes.ok) {
+          metaProbe = {
+            ok: false,
+            fetch_error: true,
+            error: metaProbe.error || `HTTP ${metaProbeRes.status}`
+          };
+        }
+      }
+
+      body.innerHTML = this._buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData, metaProbe });
 
     } catch (e) {
       body.innerHTML = this._errorHTML(e?.message || 'Error al cargar datos.');
@@ -184,14 +199,14 @@ class InsightView extends BaseView {
   /**
    * Paneles apilados: YouTube, Google Analytics 4 y/o Meta (Facebook + Instagram).
    */
-  _buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData }) {
+  _buildMyBrandsPanels({ bc, hasGo, hasFb, ytData, ga4Data, metaData, metaProbe }) {
     const parts = [];
     if (hasGo) {
       parts.push(`<section class="insight-panel insight-panel--youtube" aria-label="YouTube">${this._buildYoutubeSection(ytData, bc)}</section>`);
       parts.push(`<section class="insight-panel insight-panel--ga4" aria-label="Google Analytics">${this._buildGa4Section(ga4Data, bc)}</section>`);
     }
     if (hasFb) {
-      parts.push(`<section class="insight-panel insight-panel--meta" aria-label="Meta">${this._buildPostsFeed(metaData, bc)}</section>`);
+      parts.push(`<section class="insight-panel insight-panel--meta" aria-label="Meta">${this._buildMetaInsightSection(metaData, bc, metaProbe)}</section>`);
     }
     return `<div class="insight-mb-stack">${parts.join('')}</div>`;
   }
@@ -346,6 +361,128 @@ class InsightView extends BaseView {
       localStorage.setItem('brands_open_info', '1');
       window.router?.navigate('/brands');
     });
+  }
+
+  /**
+   * Panel Meta: test de permisos (Graph) + feed de publicaciones.
+   */
+  _buildMetaInsightSection(metaData, bc, metaProbe) {
+    const probeHtml = this._buildMetaPermissionProbe(metaProbe);
+    if (!metaData) {
+      return `${probeHtml}<div class="mbf-inline-error"><i class="fab fa-facebook"></i><span>Sin respuesta de publicaciones Meta.</span></div>`;
+    }
+    return `${probeHtml}${this._buildPostsFeed(metaData, bc)}`;
+  }
+
+  /**
+   * Muestra matriz OAuth vs lectura API para validar integración (entorno de pruebas).
+   */
+  _buildMetaPermissionProbe(probe) {
+    if (!probe) return '';
+    if (probe.fetch_error) {
+      return `
+        <div class="mbf-probe mbf-probe--error" role="region" aria-label="Test de permisos Meta">
+          <div class="mbf-probe-header">
+            <i class="fas fa-flask"></i>
+            <strong>Test de permisos Meta</strong>
+          </div>
+          <p class="mbf-probe-note">No se pudo cargar el diagnóstico: ${this._esc(probe.error)}</p>
+        </div>`;
+    }
+    if (probe.error === 'no_active_page' || probe.error === 'no_page_token') {
+      return `
+        <div class="mbf-probe mbf-probe--warn" role="region" aria-label="Test de permisos Meta">
+          <div class="mbf-probe-header">
+            <i class="fas fa-flask"></i>
+            <strong>Test de permisos Meta</strong>
+          </div>
+          <p class="mbf-probe-note">${this._esc(probe.message || 'Sin página activa.')}</p>
+        </div>`;
+    }
+    const rows = Array.isArray(probe.permission_matrix) ? probe.permission_matrix : [];
+    if (rows.length === 0) {
+      return `
+        <div class="mbf-probe mbf-probe--warn" role="region" aria-label="Test de permisos Meta">
+          <div class="mbf-probe-header">
+            <i class="fas fa-flask"></i>
+            <strong>Test de permisos Meta</strong>
+          </div>
+          <p class="mbf-probe-note">Sin filas de matriz en la respuesta del servidor.</p>
+        </div>`;
+    }
+
+    const groupTitles = {
+      insight: 'Motor de insights (contenido orgánico)',
+      ads: 'Motor de Ads (campañas y ROI)',
+      audience: 'Audiencia y comentarios'
+    };
+
+    const byGroup = { insight: [], ads: [], audience: [] };
+    rows.forEach((r) => {
+      const g = r.group && byGroup[r.group] != null ? r.group : 'insight';
+      byGroup[g].push(r);
+    });
+
+    const fmtDetail = (d) => {
+      if (d == null) return '';
+      try {
+        const s = JSON.stringify(d, null, 2);
+        const max = 1400;
+        return s.length > max ? `${s.slice(0, max)}…` : s;
+      } catch {
+        return String(d);
+      }
+    };
+
+    const renderRow = (r) => {
+      const gCls = r.granted ? 'ok' : 'bad';
+      const aCls = r.api_ok ? 'ok' : 'bad';
+      const dj = fmtDetail(r.detail);
+      return `
+        <div class="mbf-probe-row">
+          <div class="mbf-probe-row-head">
+            <code class="mbf-probe-code">${this._esc(r.label)}</code>
+            <div class="mbf-probe-flags">
+              <span class="mbf-probe-flag mbf-probe-flag--${gCls}" title="Concedido en OAuth"><i class="fas fa-${r.granted ? 'check' : 'times'}"></i> OAuth</span>
+              <span class="mbf-probe-flag mbf-probe-flag--${aCls}" title="Lectura API"><i class="fas fa-${r.api_ok ? 'check' : 'times'}"></i> API</span>
+            </div>
+          </div>
+          ${r.description ? `<p class="mbf-probe-desc">${this._esc(r.description)}</p>` : ''}
+          ${dj ? `<pre class="mbf-probe-json">${this._esc(dj)}</pre>` : ''}
+        </div>`;
+    };
+
+    const renderGroup = (gid) => {
+      const list = byGroup[gid];
+      if (!list || list.length === 0) return '';
+      return `
+        <div class="mbf-probe-group">
+          <h4 class="mbf-probe-group-title">${this._esc(groupTitles[gid] || gid)}</h4>
+          ${list.map(renderRow).join('')}
+        </div>`;
+    };
+
+    const grantedStr = Array.isArray(probe.granted_permissions) ? probe.granted_permissions.join(', ') : '';
+
+    return `
+      <div class="mbf-probe" role="region" aria-label="Test de permisos Meta">
+        <div class="mbf-probe-header">
+          <i class="fas fa-flask"></i>
+          <div class="mbf-probe-header-text">
+            <strong>Test de permisos Meta</strong>
+            <p class="mbf-probe-sub">Vista temporal: contrasta permiso OAuth (check) con una llamada real a Graph (API). Incluye muestras mínimas de datos.</p>
+          </div>
+        </div>
+        ${probe.page
+          ? `<p class="mbf-probe-page"><i class="fab fa-facebook"></i> Página activa: <strong>${this._esc(probe.page.name)}</strong> <span class="mbf-probe-id">${this._esc(probe.page.id)}</span>${probe.page.instagram_business_account_id ? ` · IG: <span class="mbf-probe-id">${this._esc(probe.page.instagram_business_account_id)}</span>` : ''}</p>`
+          : ''}
+        ${grantedStr
+          ? `<div class="mbf-probe-granted"><span class="mbf-probe-granted-label">Permisos concedidos (token)</span><code class="mbf-probe-granted-code">${this._esc(grantedStr)}</code></div>`
+          : ''}
+        ${renderGroup('insight')}
+        ${renderGroup('ads')}
+        ${renderGroup('audience')}
+      </div>`;
   }
 
   // ── Feed de posts ──────────────────────────────────────────────────────────
