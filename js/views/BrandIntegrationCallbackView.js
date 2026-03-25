@@ -50,6 +50,21 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       if (error) throw new Error(error);
       if (!code || !state) throw new Error('Faltan parámetros de OAuth (code/state).');
 
+      // Evitar doble envío del mismo código OAuth (el código solo puede usarse UNA vez en Facebook)
+      const usedKey = `oauth_code_used_${code}`;
+      if (sessionStorage.getItem(usedKey)) {
+        // Ya procesado — si el exchange anterior fue exitoso, simplemente redirigir
+        const savedReturn = sessionStorage.getItem('oauth_return_to') || '/brands';
+        this._redirect(savedReturn);
+        return;
+      }
+      sessionStorage.setItem(usedKey, '1');
+
+      // Limpiar la URL para que no se reintente si el router re-renderiza
+      if (window.history?.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
       const session = await this.supabase.auth.getSession();
       const accessToken = session?.data?.session?.access_token;
       if (!accessToken) throw new Error('Sesión no válida. Inicia sesión y vuelve a conectar.');
@@ -72,6 +87,9 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       const returnTo = json?.return_to || '/home';
       const pages    = Array.isArray(json?.pages) ? json.pages : [];
       const integId  = json?.integ_id || null;
+
+      // Guardar return_to por si el componente se monta dos veces
+      sessionStorage.setItem('oauth_return_to', returnTo);
 
       // Si Facebook devuelve varias páginas → mostrar selector antes de continuar
       if (json?.platform === 'facebook' && pages.length > 1 && integId) {
