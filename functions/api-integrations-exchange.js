@@ -7,7 +7,7 @@ const {
   supabaseRest,
   assertOrgMember
 } = require('./lib/ai-shared');
-const { getMetaGraphVersion, metaGraphGet } = require('./lib/meta-graph');
+const { getMetaGraphVersion, metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 
 // ── State helpers ─────────────────────────────────────────────────────────────
 
@@ -254,24 +254,24 @@ exports.handler = async (event) => {
       const accessTokenFromProvider = longJson.access_token;
       const expiresAt = expiresIso(longJson.expires_in);
 
-      // Step 3: Perfil + páginas concedidas en paralelo (mientras el token está fresco)
-      const [profile, pagesRaw] = await Promise.all([
+      // Step 3: Perfil + TODAS las páginas concedidas en paralelo (token fresco)
+      // IMPORTANTE: usar metaGraphGetPaged (no metaGraphGet) para obtener TODAS las páginas
+      // sin truncar en el primer batch (defecto ~10-25 páginas en Graph API).
+      const [profile, pagesData] = await Promise.all([
         metaGraphGet('/me', accessTokenFromProvider, appSecret, {
           fields: 'id,name,email,picture.type(normal)'
         }).catch(() => ({})),
-        // Capturamos las páginas e IGs concedidos AHORA, justo cuando el token es válido.
-        // Meta solo garantiza /me/accounts inmediatamente después del OAuth.
-        metaGraphGet('/me/accounts', accessTokenFromProvider, appSecret, {
+        metaGraphGetPaged('/me/accounts', accessTokenFromProvider, appSecret, {
           fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id,name,username,profile_picture_url}'
-        }).catch(() => ({ data: [] }))
+        }, 100).catch(() => [])
       ]);
 
-      // Normalizar páginas concedidas y sus page tokens (nunca llegan vacíos si el usuario las seleccionó)
-      const pagesData = Array.isArray(pagesRaw?.data) ? pagesRaw.data : [];
+      console.log(`[exchange] /me/accounts devolvió ${pagesData.length} páginas para ${profile?.name || 'usuario'}`);
+
       const storedPages = pagesData.map((pg) => ({
         id: pg.id,
         name: pg.name,
-        picture: pg.picture?.data?.url || null,
+        picture: pg.picture?.data?.url || (typeof pg.picture === 'string' ? pg.picture : null),
         fan_count: pg.fan_count || 0,
         access_token: pg.access_token || null,
         instagram_business_account: pg.instagram_business_account

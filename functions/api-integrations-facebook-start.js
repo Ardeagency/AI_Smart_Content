@@ -117,17 +117,29 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
   }
 
-  // auth_type=rerequest → fuerza a Meta a mostrar TODOS los permisos con toggles
-  // enable_profile_selector=true → obliga al usuario a seleccionar explícitamente qué página compartir
-  const authorizeUrl =
+  // Si está configurado un config_id de "Facebook Login for Business", se usa ese
+  // en lugar de scope — permite al usuario seleccionar páginas de forma nativa en el
+  // diálogo de Meta sin necesidad de App Review para permisos de página.
+  // Configurar: Meta App Dashboard → Facebook Login for Business → Configurations → obtener config_id
+  // Luego añadir FACEBOOK_LOGIN_CONFIG_ID al env de Netlify.
+  const configId = process.env.FACEBOOK_LOGIN_CONFIG_ID || null;
+
+  let authorizeUrl =
     `https://www.facebook.com/${getMetaGraphVersion()}/dialog/oauth?` +
     `client_id=${encodeURIComponent(appId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&response_type=code` +
-    `&scope=${encodeURIComponent(scopes)}` +
     `&auth_type=rerequest` +
     `&enable_profile_selector=true` +
     `&state=${encodeURIComponent(state)}`;
+
+  if (configId) {
+    // Facebook Login for Business: config_id reemplaza scope
+    authorizeUrl += `&config_id=${encodeURIComponent(configId)}`;
+  } else {
+    // Fallback: scope estándar con todos los permisos requeridos
+    authorizeUrl += `&scope=${encodeURIComponent(scopes)}`;
+  }
 
   return {
     statusCode: 200,
