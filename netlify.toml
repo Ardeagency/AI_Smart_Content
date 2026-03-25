@@ -102,12 +102,6 @@
   force = true
 
 [[redirects]]
-  from = "/api/brand/meta-permissions-test"
-  to = "/.netlify/functions/api-brand-meta-permissions-test"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/api/brand/sync-meta"
   to = "/.netlify/functions/api-brand-sync-meta"
   status = 200
