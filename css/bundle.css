@@ -1248,6 +1248,11 @@ body.sidebar-collapsed .main-header,
     border-radius: var(--radius-md);
 }
 
+/* Ítems que intencionalmente no muestran label (ej. Vera: el texto viene en el ícono) */
+.nav-link.nav-link--no-label {
+    gap: 0;
+}
+
 .side-navigation.collapsed .nav-icon {
     margin: 0;
 }

@@ -7,7 +7,7 @@ const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'insight', label: 'Insight', icon: 'fa-chart-line', iconSrc: '/recursos/icons/insight.svg', route: 'insight' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/Recursos%20de%20Marca/Recursos/Vera-2.svg', route: 'brain' },
+    { type: 'page', id: 'brain', label: 'Vera', hideLabel: true, icon: 'fa-brain', iconSrc: '/recursos/Recursos%20de%20Marca/Recursos/Vera-2.svg', route: 'brain' },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -493,11 +493,12 @@ class Navigation {
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
       if (item.type === 'page') {
         const href = full(item.route);
+        const hideLabel = !!item.hideLabel;
         return `
           <div class="nav-item">
-            <a href="${href}" class="nav-link nav-main-link" data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link nav-main-link ${hideLabel ? 'nav-link--no-label' : ''}" data-route="${href}" data-tooltip="${item.label}">
               ${iconHTML(item)}
-              <span class="nav-text">${item.label}</span>
+              ${hideLabel ? '' : `<span class="nav-text">${item.label}</span>`}
             </a>
           </div>`;
       }
