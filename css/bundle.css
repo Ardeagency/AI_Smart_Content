@@ -2252,19 +2252,9 @@ body.sidebar-collapsed .main-header,
     border-radius: 0 2px 2px 0;
 }
 
-/* Sin flechas visibles siempre - solo cuando está abierto */
-.nav-link-parent::after {
-    display: none;
-}
-
-/* Ocultar submenús cuando el sidebar está colapsado */
-.side-navigation.collapsed .nav-submenu {
-    display: none;
-}
-
-.side-navigation.collapsed .nav-item-has-submenu.active .nav-link-parent {
-    background: var(--bg-interactive);
-}
+/* Legacy (BaseView antiguo):
+   estas reglas se eliminaron aquí para no duplicar ni competir con
+   el sidebar actual basado en .nav-mode-user/.nav-mode-developer. */
 
 /* El aire comunica estructura - espacios reales entre dominios */
 
