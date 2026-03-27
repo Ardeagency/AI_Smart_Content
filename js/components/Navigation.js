@@ -742,6 +742,9 @@ class Navigation {
    * Ajusta nombre de organización:
    * 1) una línea con reducción controlada
    * 2) si no cabe, fallback a 2 líneas (primera palabra + resto)
+   *
+   * Importante: con text-overflow:ellipsis, scrollWidth suele igualar clientWidth aunque
+   * el texto esté truncado; la comprobación debe usar ancho de texto medido, no scrollWidth.
    */
   _renderAdaptiveOrgName(name) {
     const nameEl = document.getElementById('navOrgName');
@@ -751,43 +754,47 @@ class Navigation {
     if (!raw) return;
 
     const MAX_SIZE = 32;
-    const MIN_SIZE = 20;
-    const tryLayout = () => {
+    const MIN_SIZE = 16;
+
+    const layoutOnce = () => {
       nameEl.classList.remove('nav-org-title--two-lines');
       nameEl.style.removeProperty('--nav-org-title-size');
       nameEl.textContent = raw;
 
-      let fitted = false;
+      const avail = nameEl.clientWidth;
+      if (avail < 8) return false;
+
+      let chosenSize = null;
       for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
-        nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
-        if (nameEl.scrollWidth <= nameEl.clientWidth + 1) {
-          fitted = true;
+        const w = this._measureOrgTitleLineWidth(raw, size, nameEl);
+        if (w <= avail + 1) {
+          chosenSize = size;
           break;
         }
       }
 
-      if (fitted && this._isOrgNameTruncated(nameEl)) fitted = false;
-      if (!fitted) this._applyTwoLineOrgName(nameEl, raw, MAX_SIZE);
+      if (chosenSize != null) {
+        nameEl.style.setProperty('--nav-org-title-size', `${chosenSize}px`);
+        return true;
+      }
+
+      this._applyTwoLineOrgName(nameEl, raw, MAX_SIZE);
+      return true;
     };
 
-    tryLayout();
+    const run = () => {
+      if (!layoutOnce()) {
+        requestAnimationFrame(() => {
+          layoutOnce();
+          requestAnimationFrame(() => layoutOnce());
+        });
+      }
+    };
 
-    // Revalidar en el siguiente frame por cambios tardíos de layout.
-    requestAnimationFrame(() => {
-      const current = document.getElementById('navOrgName');
-      if (!current) return;
-      if (!this._isOrgNameTruncated(current)) return;
-      this._applyTwoLineOrgName(current, raw, MAX_SIZE);
-    });
-
-    // Revalidar cuando las fuentes web ya terminaron de cargar.
+    run();
+    requestAnimationFrame(run);
     if (document.fonts && typeof document.fonts.ready?.then === 'function') {
-      document.fonts.ready.then(() => {
-        const current = document.getElementById('navOrgName');
-        if (!current) return;
-        if (!this._isOrgNameTruncated(current)) return;
-        this._applyTwoLineOrgName(current, raw, MAX_SIZE);
-      }).catch(() => {});
+      document.fonts.ready.then(run).catch(() => {});
     }
   }
 
@@ -796,9 +803,15 @@ class Navigation {
     nameEl.classList.add('nav-org-title--two-lines');
     const maxWidth = Math.max(1, nameEl.clientWidth);
     const words = raw.split(/\s+/).filter(Boolean);
-    let chosen = _formatOrgNameTwoLines(raw);
 
-    for (let size = maxSize; size >= 18; size -= 1) {
+    if (words.length < 2) {
+      nameEl.style.setProperty('--nav-org-title-size', `${Math.min(maxSize, 22)}px`);
+      nameEl.innerHTML = _escapeHtml(raw);
+      return;
+    }
+
+    let chosen = _formatOrgNameTwoLines(raw);
+    for (let size = maxSize; size >= 16; size -= 1) {
       nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
       const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
       if (lines && lines[0] && lines[1]) {
@@ -812,8 +825,13 @@ class Navigation {
   }
 
   _isOrgNameTruncated(el) {
-    if (!el) return false;
-    return (el.scrollWidth - el.clientWidth) > 1;
+    if (!el || el.classList.contains('nav-org-title--two-lines')) return false;
+    const raw = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!raw) return false;
+    const sizeStr = el.style.getPropertyValue('--nav-org-title-size');
+    const cs = window.getComputedStyle(el);
+    const size = sizeStr ? parseFloat(sizeStr) : (parseFloat(cs.fontSize) || 22);
+    return this._measureOrgTitleLineWidth(raw, size, el) > el.clientWidth + 1;
   }
 
   _getBestTwoLineSplit(words, maxWidth, fontSizePx, nameEl) {

@@ -1249,6 +1249,9 @@ body.sidebar-collapsed .main-header,
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
+    /* Alineado con .nav-menu (padding horizontal) para que el ancho útil del título coincida con el menú */
+    padding: 12px 10px 8px;
+    box-sizing: border-box;
 }
 
 /* Botón abrir/cerrar sidebar (icono colapsado) */
@@ -1384,7 +1387,8 @@ body.sidebar-collapsed .main-header,
 
 .nav-org-title.nav-org-title--two-lines {
     white-space: normal;
-    overflow: hidden;
+    /* Evita recortes/artefactos al envolver; el recorte lo hace el header con overflow:hidden */
+    overflow: visible;
     text-overflow: unset;
     overflow-wrap: anywhere;
     word-break: break-word;
