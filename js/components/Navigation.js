@@ -394,7 +394,7 @@ class Navigation {
         </div>
         <div class="user-dropdown-divider"></div>
         <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
-          <i class="fas fa-cog"></i>
+          <img src="/recursos/icons/settings.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Settings</span>
         </a>
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
@@ -402,7 +402,7 @@ class Navigation {
           <span>Organization</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
-          <i class="fas fa-coins"></i>
+          <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Créditos</span>
         </a>
         <button class="user-dropdown-item" id="logoutBtn">
