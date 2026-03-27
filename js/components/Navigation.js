@@ -754,7 +754,7 @@ class Navigation {
     if (!raw) return;
 
     const MAX_SIZE = 32;
-    const MIN_SIZE = 24;
+    const MIN_SIZE = 20;
     let fitted = false;
     for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
       nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
@@ -766,9 +766,61 @@ class Navigation {
 
     if (!fitted) {
       nameEl.classList.add('nav-org-title--two-lines');
-      nameEl.style.removeProperty('--nav-org-title-size');
-      nameEl.innerHTML = _formatOrgNameTwoLines(raw);
+      const maxWidth = Math.max(1, nameEl.clientWidth);
+      let chosen = _formatOrgNameTwoLines(raw);
+      const words = raw.split(/\s+/).filter(Boolean);
+      for (let size = MAX_SIZE; size >= 18; size -= 1) {
+        nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
+        const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
+        if (lines && lines[0] && lines[1]) {
+          const line1W = this._measureOrgTitleLineWidth(lines[0], size, nameEl);
+          const line2W = this._measureOrgTitleLineWidth(lines[1], size, nameEl);
+          chosen = `${_escapeHtml(lines[0])}<br>${_escapeHtml(lines[1])}`;
+          if (line1W <= maxWidth + 1 && line2W <= maxWidth + 1) {
+            break;
+          }
+        }
+      }
+      nameEl.innerHTML = chosen;
     }
+  }
+
+  _getBestTwoLineSplit(words, maxWidth, fontSizePx, nameEl) {
+    if (!Array.isArray(words) || words.length < 2) return null;
+    let best = null;
+    for (let i = 1; i < words.length; i += 1) {
+      const line1 = words.slice(0, i).join(' ');
+      const line2 = words.slice(i).join(' ');
+      const w1 = this._measureOrgTitleLineWidth(line1, fontSizePx, nameEl);
+      const w2 = this._measureOrgTitleLineWidth(line2, fontSizePx, nameEl);
+      const maxLine = Math.max(w1, w2);
+      const balance = Math.abs(w1 - w2);
+      const overflowPenalty = (w1 > maxWidth ? (w1 - maxWidth) : 0) + (w2 > maxWidth ? (w2 - maxWidth) : 0);
+      const score = (overflowPenalty * 10) + maxLine + (balance * 0.2);
+      if (!best || score < best.score) {
+        best = { line1, line2, score };
+      }
+    }
+    return best ? [best.line1, best.line2] : null;
+  }
+
+  _measureOrgTitleLineWidth(text, fontSizePx, sourceEl) {
+    if (!text) return 0;
+    const measurer = document.createElement('span');
+    const cs = window.getComputedStyle(sourceEl);
+    measurer.style.position = 'fixed';
+    measurer.style.visibility = 'hidden';
+    measurer.style.pointerEvents = 'none';
+    measurer.style.whiteSpace = 'nowrap';
+    measurer.style.fontFamily = cs.fontFamily || 'Inter, system-ui, sans-serif';
+    measurer.style.fontWeight = cs.fontWeight || '700';
+    measurer.style.fontSize = `${fontSizePx}px`;
+    measurer.style.letterSpacing = cs.letterSpacing || 'normal';
+    measurer.textContent = text;
+    document.body.appendChild(measurer);
+    const width = measurer.getBoundingClientRect().width;
+    measurer.remove();
+    return width;
   }
 
   /**

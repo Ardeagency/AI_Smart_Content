@@ -1384,7 +1384,7 @@ body.sidebar-collapsed .main-header,
 
 .nav-org-title.nav-org-title--two-lines {
     white-space: normal;
-    overflow: visible;
+    overflow: hidden;
     text-overflow: unset;
     overflow-wrap: anywhere;
     word-break: break-word;
