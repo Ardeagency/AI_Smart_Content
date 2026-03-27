@@ -1248,9 +1248,11 @@ body.sidebar-collapsed .main-header,
     gap: 10px;
     min-width: 0;
     max-width: 100%;
-    overflow: hidden;
-    /* Alineado con .nav-menu (padding horizontal) para que el ancho útil del título coincida con el menú */
-    padding: 12px 10px 8px;
+    /* No recortar descendentes (g, y, etc.); el ancho lo limitan el flex + el título */
+    overflow: visible;
+    min-height: min-content;
+    /* Alineado con .nav-menu (padding horizontal) + aire inferior para descendentes */
+    padding: 12px 10px 14px;
     box-sizing: border-box;
 }
 
@@ -1371,12 +1373,13 @@ body.sidebar-collapsed .main-header,
     font-family: Inter, system-ui, sans-serif;
     font-size: var(--nav-org-title-size, clamp(22px, 2.2vw, 32px));
     font-weight: 700;
-    line-height: 1.05;
+    /* Interlineado suficiente para descendentes; 1.05 recortaba g/y con overflow+ellipsis */
+    line-height: 1.22;
     letter-spacing: normal;
     color: #FFFFFF;
     text-align: left;
     margin: 0;
-    padding: 0;
+    padding: 0.06em 0 0.12em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1387,12 +1390,12 @@ body.sidebar-collapsed .main-header,
 
 .nav-org-title.nav-org-title--two-lines {
     white-space: normal;
-    /* Evita recortes/artefactos al envolver; el recorte lo hace el header con overflow:hidden */
     overflow: visible;
     text-overflow: unset;
     overflow-wrap: anywhere;
     word-break: break-word;
-    line-height: 1.02;
+    line-height: 1.2;
+    padding: 0.04em 0 0.1em;
 }
 
 .nav-org-type {
