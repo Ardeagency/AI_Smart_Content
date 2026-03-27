@@ -1094,63 +1094,7 @@ body.sidebar-collapsed .main-header,
     font-size: 10px;
 }
 
-/* Dropdown de usuario — design glass (variables) */
-.header-user-dropdown {
-    box-sizing: border-box;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
-    padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
-    z-index: 1000;
-    display: none;
-    overflow: hidden;
-    min-width: 180px;
-}
-
-.header-user-dropdown.open {
-    display: flex;
-}
-
-.header-user-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: var(--nav-transition);
-    color: var(--text-secondary);
-    font-size: var(--font-size-base);
-    font-weight: 400;
-}
-
-.header-user-dropdown-item:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.header-user-dropdown-item i {
-    width: 20px;
-    text-align: center;
-    font-size: 14px;
-}
-
-.header-user-dropdown-item.header-user-logout:hover {
-    color: var(--color-error);
-    background: var(--color-error-bg);
-}
-
-.header-user-dropdown-item.header-user-logout:hover i {
-    color: var(--color-error);
-}
+/* Dropdown de usuario (legacy + actual) unificado en el bloque glass-black de navegación */
 
 /* Botón hamburguesa - solo móvil */
 .hamburger-menu {
@@ -2987,7 +2931,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 /* User Dropdown — glass-black, anclado al botón. Solo display para mostrar/ocultar (evitar conflictos con visibility/opacity). */
 #userDropdown,
 #userDropdown.user-dropdown,
-.app-header .user-dropdown {
+.app-header .user-dropdown,
+#headerUserDropdown,
+.app-header .header-user-dropdown {
     box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
@@ -3011,7 +2957,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 /* Visible solo con .active; especificidad alta para que nada lo pise */
 #userDropdown.active,
 #userDropdown.user-dropdown.active,
-.app-header .header-user-menu-wrap .user-dropdown.active {
+.app-header .header-user-menu-wrap .user-dropdown.active,
+#headerUserDropdown.open,
+.app-header .header-user-dropdown.open {
     display: flex !important;
 }
 
@@ -3038,7 +2986,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     margin: 0;
 }
 
-.user-dropdown-item {
+.user-dropdown-item,
+.header-user-dropdown-item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -3053,14 +3002,25 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     transition: var(--transition);
 }
 
-.user-dropdown-item:hover {
+.user-dropdown-item:hover,
+.header-user-dropdown-item:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--glass-black-text);
 }
 
-.user-dropdown-item i {
+.user-dropdown-item i,
+.header-user-dropdown-item i {
     width: 18px;
     font-size: 14px;
+}
+
+.header-user-dropdown-item.header-user-logout:hover {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+}
+
+.header-user-dropdown-item.header-user-logout:hover i {
+    color: var(--color-error);
 }
 
 /* Switcher Consumidor / Desarrollador (solo para usuarios con is_developer) */
