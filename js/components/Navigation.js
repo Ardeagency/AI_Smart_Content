@@ -764,6 +764,12 @@ class Navigation {
       }
     }
 
+    // Validación extra: aunque la primera medición "parezca" caber,
+    // confirmamos que no esté realmente truncado con ellipsis.
+    if (fitted && this._isOrgNameTruncated(nameEl)) {
+      fitted = false;
+    }
+
     if (!fitted) {
       nameEl.classList.add('nav-org-title--two-lines');
       const maxWidth = Math.max(1, nameEl.clientWidth);
@@ -783,6 +789,23 @@ class Navigation {
       }
       nameEl.innerHTML = chosen;
     }
+
+    // Segunda verificación en el siguiente frame por cambios tardíos de layout/fuente.
+    requestAnimationFrame(() => {
+      const current = document.getElementById('navOrgName');
+      if (!current) return;
+      if (current.classList.contains('nav-org-title--two-lines')) return;
+      if (!this._isOrgNameTruncated(current)) return;
+
+      current.classList.add('nav-org-title--two-lines');
+      current.style.removeProperty('--nav-org-title-size');
+      current.innerHTML = _formatOrgNameTwoLines(raw);
+    });
+  }
+
+  _isOrgNameTruncated(el) {
+    if (!el) return false;
+    return (el.scrollWidth - el.clientWidth) > 1;
   }
 
   _getBestTwoLineSplit(words, maxWidth, fontSizePx, nameEl) {
