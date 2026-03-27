@@ -186,16 +186,20 @@ class Navigation {
    * Lee créditos desde la tabla organization_credits (BD) y actualiza el DOM del sidebar.
    * Siempre hace una petición a la BD; no usa valor en memoria.
    * @param {string|null} [organizationId] - Si se pasa (ej. desde Studio), se usa esta org para la consulta.
+   * @param {{ silent?: boolean }} [options] - `silent` (default true): no vaciar el DOM a "…"/0% antes del fetch (evita parpadeo al navegar o en polling).
    */
-  async loadCreditsFromDb(organizationId) {
+  async loadCreditsFromDb(organizationId, options = {}) {
+    const silent = options.silent !== false;
     const orgId = organizationId || this.currentOrgId;
     if (!orgId) return;
     const supabase = await this.getSupabase();
     if (!supabase) return;
     const tokensEl = document.getElementById('navTokensValue');
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
-    if (tokensEl) tokensEl.textContent = '…';
-    if (barFill) barFill.style.width = '0%';
+    if (!silent) {
+      if (tokensEl) tokensEl.textContent = '…';
+      if (barFill) barFill.style.width = '0%';
+    }
     try {
       const { data, error } = await supabase
         .from('organization_credits')
@@ -209,12 +213,14 @@ class Navigation {
       }
       const available = data != null ? (data.credits_available ?? 0) : 0;
       const total = data != null ? (data.credits_total ?? 0) : 0;
-      if (tokensEl) {
-        tokensEl.textContent = this._formatCreditsDisplay(available);
+      const nextLabel = this._formatCreditsDisplay(available);
+      const pct = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
+      const nextWidth = `${pct}%`;
+      if (tokensEl && tokensEl.textContent !== nextLabel) {
+        tokensEl.textContent = nextLabel;
       }
-      if (barFill) {
-        const pct = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
-        barFill.style.width = `${pct}%`;
+      if (barFill && barFill.style.width !== nextWidth) {
+        barFill.style.width = nextWidth;
       }
       if (this._orgCache && this._orgCacheId === orgId) {
         this._orgCache.credits = available;
