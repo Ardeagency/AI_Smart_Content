@@ -2935,9 +2935,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 #headerUserDropdown,
 .app-header .header-user-dropdown {
     box-sizing: border-box;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
+    position: fixed;
+    top: 56px;
+    right: 12px;
     width: 240px;
     flex-direction: column;
     justify-content: flex-start;

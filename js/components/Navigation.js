@@ -801,11 +801,13 @@ class Navigation {
         e.preventDefault();
         e.stopPropagation();
         const willOpen = !userDropdown.classList.contains('active');
+        if (willOpen) this.positionUserDropdown(userMenuBtn, userDropdown);
         userDropdown.classList.toggle('active');
         if (willOpen) {
           requestAnimationFrame(() => {
             const dd = document.getElementById('userDropdown');
             if (dd && !dd.classList.contains('active')) return;
+            this.positionUserDropdown(userMenuBtn, dd);
             dd.classList.add('active');
           });
         }
@@ -885,6 +887,17 @@ class Navigation {
         this.updateHeaderTitle();
       });
     }
+    if (!this._userDropdownPositionAttached) {
+      this._userDropdownPositionAttached = true;
+      const reposition = () => {
+        const btn = document.getElementById('userMenuBtn');
+        const dd = document.getElementById('userDropdown');
+        if (!btn || !dd || !dd.classList.contains('active')) return;
+        this.positionUserDropdown(btn, dd);
+      };
+      window.addEventListener('resize', reposition);
+      window.addEventListener('scroll', reposition, true);
+    }
     if (!this._orgNameResizeAttached) {
       this._orgNameResizeAttached = true;
       window.addEventListener('resize', () => {
@@ -897,6 +910,22 @@ class Navigation {
     this.setupCollapsedTooltips();
     this.setupFlyoutCloseListeners();
     this.ensureSettingsModal();
+  }
+
+  /**
+   * Posiciona #userDropdown en fixed, desacoplado del header para preservar blur real.
+   */
+  positionUserDropdown(triggerBtn, dropdownEl) {
+    if (!triggerBtn || !dropdownEl) return;
+    const rect = triggerBtn.getBoundingClientRect();
+    const GAP = 8;
+    const MARGIN = 12;
+    const width = dropdownEl.offsetWidth || 240;
+    const top = Math.max(MARGIN, rect.bottom + GAP);
+    const left = Math.min(window.innerWidth - width - MARGIN, Math.max(MARGIN, rect.right - width));
+    dropdownEl.style.top = `${top}px`;
+    dropdownEl.style.left = `${left}px`;
+    dropdownEl.style.right = 'auto';
   }
 
   ensureSettingsModal() {
