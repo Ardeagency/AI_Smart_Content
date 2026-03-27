@@ -743,7 +743,7 @@ class Navigation {
    * 1) una línea con reducción controlada
    * 2) si no cabe, fallback a 2 líneas (primera palabra + resto)
    */
-  _renderAdaptiveOrgName(name, deferFontCheck = true) {
+  _renderAdaptiveOrgName(name) {
     const nameEl = document.getElementById('navOrgName');
     if (!nameEl) return;
 
@@ -754,7 +754,7 @@ class Navigation {
     if (!raw) return;
 
     const MAX_SIZE = 32;
-    const MIN_SIZE = 18;
+    const MIN_SIZE = 24;
     let fitted = false;
     for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
       nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
@@ -768,16 +768,6 @@ class Navigation {
       nameEl.classList.add('nav-org-title--two-lines');
       nameEl.style.removeProperty('--nav-org-title-size');
       nameEl.innerHTML = _formatOrgNameTwoLines(raw);
-    }
-
-    // Recalcular cuando terminen de cargar fuentes web (Inter), para evitar
-    // casos donde al cargar la fuente el texto crece y vuelve a desbordarse.
-    if (deferFontCheck && document.fonts && typeof document.fonts.ready?.then === 'function') {
-      document.fonts.ready.then(() => {
-        const current = document.getElementById('navOrgName');
-        if (!current) return;
-        this._renderAdaptiveOrgName(raw, false);
-      }).catch(() => {});
     }
   }
 
