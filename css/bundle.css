@@ -2958,6 +2958,19 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: flex !important;
 }
 
+/* Capa glass dedicada del dropdown principal:
+   evita que el backdrop se "aplane" por el contexto visual del header. */
+#userDropdown.glass-black,
+#userDropdown.user-dropdown.glass-black,
+.app-header .header-user-menu-wrap .user-dropdown.glass-black {
+    background: rgba(0, 0, 0, 0.34) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+    isolation: isolate;
+    will-change: backdrop-filter;
+}
+
 .user-dropdown-header {
     padding: 16px;
     border-bottom: 1px solid var(--glass-black-border);
