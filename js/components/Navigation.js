@@ -797,6 +797,14 @@ class Navigation {
     const userMenuBtn = document.getElementById('userMenuBtn');
     const userDropdown = document.getElementById('userDropdown');
     if (userMenuBtn && userDropdown) {
+      // Portal del dropdown al body para evitar que el contexto glass del header "aplane" el backdrop-filter.
+      document.querySelectorAll('#userDropdown').forEach((el) => {
+        if (el !== userDropdown) el.remove();
+      });
+      if (userDropdown.parentElement !== document.body) {
+        document.body.appendChild(userDropdown);
+      }
+
       userMenuBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();

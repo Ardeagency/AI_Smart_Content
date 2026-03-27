@@ -2967,8 +2967,6 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
     backdrop-filter: blur(18px) saturate(160%) !important;
     -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-    isolation: isolate;
-    will-change: backdrop-filter;
 }
 
 .user-dropdown-header {
