@@ -47,6 +47,14 @@ function _escapeHtml(s) {
   return div.innerHTML;
 }
 
+function _formatOrgNameTwoLines(name) {
+  const raw = (name || '').trim();
+  if (!raw) return '';
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return _escapeHtml(raw);
+  return `${_escapeHtml(parts[0])}<br>${_escapeHtml(parts.slice(1).join(' '))}`;
+}
+
 function _formatNotificationDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -1646,7 +1654,7 @@ class Navigation {
       }
       const nameEl = document.getElementById('navOrgName');
       const typeEl = document.getElementById('navOrgType');
-      if (nameEl && this._orgCache) nameEl.textContent = this._orgCache.name || '';
+      if (nameEl && this._orgCache) nameEl.innerHTML = _formatOrgNameTwoLines(this._orgCache.name || '');
       if (typeEl && this._orgCache) typeEl.textContent = this._orgCache.plan || '';
 
       // Siempre leer créditos desde la BD (tabla organization_credits) para mostrar el valor real
@@ -1681,7 +1689,7 @@ class Navigation {
     const typeEl = document.getElementById('navOrgType');
     const tokensEl = document.getElementById('navTokensValue');
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
-    if (nameEl) nameEl.textContent = this._orgCache.name || '';
+    if (nameEl) nameEl.innerHTML = _formatOrgNameTwoLines(this._orgCache.name || '');
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
     const credits = this._orgCache.credits != null ? this._orgCache.credits : 0;
     if (tokensEl) {
