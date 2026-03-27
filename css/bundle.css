@@ -1384,11 +1384,14 @@ body.sidebar-collapsed .main-header,
 
 .nav-org-title.nav-org-title--two-lines {
     white-space: normal;
-    overflow: visible;
+    overflow: hidden;
     text-overflow: unset;
     overflow-wrap: anywhere;
     word-break: break-word;
     line-height: 1.02;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .nav-org-type {
