@@ -801,14 +801,12 @@ class Navigation {
         e.preventDefault();
         e.stopPropagation();
         const willOpen = !userDropdown.classList.contains('active');
-        if (willOpen) this.positionUserDropdown(userMenuBtn, userDropdown);
         userDropdown.classList.toggle('active');
         if (willOpen) {
           requestAnimationFrame(() => {
             const dd = document.getElementById('userDropdown');
-            if (dd && !dd.classList.contains('active')) return;
+            if (!dd || !dd.classList.contains('active')) return;
             this.positionUserDropdown(userMenuBtn, dd);
-            dd.classList.add('active');
           });
         }
       });
@@ -920,12 +918,11 @@ class Navigation {
     const rect = triggerBtn.getBoundingClientRect();
     const GAP = 8;
     const MARGIN = 12;
-    const width = dropdownEl.offsetWidth || 240;
     const top = Math.max(MARGIN, rect.bottom + GAP);
-    const left = Math.min(window.innerWidth - width - MARGIN, Math.max(MARGIN, rect.right - width));
+    const right = Math.max(MARGIN, window.innerWidth - rect.right);
     dropdownEl.style.top = `${top}px`;
-    dropdownEl.style.left = `${left}px`;
-    dropdownEl.style.right = 'auto';
+    dropdownEl.style.right = `${right}px`;
+    dropdownEl.style.left = 'auto';
   }
 
   ensureSettingsModal() {
