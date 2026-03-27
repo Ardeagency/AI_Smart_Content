@@ -104,28 +104,65 @@ class VideoView extends BaseView {
           <div class="video-content-row">
             <main class="video-main">
               <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
-                <div class="video-status-area" id="videoStatusArea" style="display: none;">
-                  <div class="video-status-card" id="videoStatusCard">
-                    <p class="video-status-text" id="videoStatusText">—</p>
-                    <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+
+                <div class="video-canvas-topbar" aria-hidden="true">
+                  <div class="video-canvas-topbar-left">
+                    <span class="video-canvas-model-badge">KLING 3.0</span>
+                    <span class="video-canvas-topbar-title">Production Canvas</span>
+                  </div>
+                  <div class="video-canvas-topbar-right">
+                    <span class="video-canvas-topbar-tag"><i class="fas fa-circle-dot"></i> AI Video Generation</span>
                   </div>
                 </div>
+
+                <div class="video-canvas-idle" id="videoCanvasIdle">
+                  <div class="video-canvas-idle-content">
+                    <div class="video-canvas-idle-icon"><i class="fas fa-clapperboard"></i></div>
+                    <p class="video-canvas-idle-title">Production Ready</p>
+                    <p class="video-canvas-idle-hint">Configure context → write your brief → generate prompt → produce</p>
+                    <div class="video-canvas-idle-steps">
+                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">01</span>Context</span>
+                      <span class="video-canvas-idle-step-arrow">→</span>
+                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">02</span>Cine</span>
+                      <span class="video-canvas-idle-step-arrow">→</span>
+                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">03</span>Brief</span>
+                      <span class="video-canvas-idle-step-arrow">→</span>
+                      <span class="video-canvas-idle-step video-canvas-idle-step-cta"><span class="video-canvas-idle-step-num">04</span>Produce</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="video-status-area" id="videoStatusArea" style="display: none;">
+                  <div class="video-status-card" id="videoStatusCard">
+                    <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+                    <p class="video-status-text" id="videoStatusText">—</p>
+                  </div>
+                </div>
+
                 <div class="video-result-area" id="videoResultArea" style="display: none;">
                   <div class="video-result-card">
-                    <h2 class="video-result-title">Video generado</h2>
+                    <div class="video-result-card-header">
+                      <span class="video-result-output-badge">OUTPUT</span>
+                      <h2 class="video-result-title">Video generado</h2>
+                    </div>
                     <div class="video-result-player-wrap">
                       <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
                     </div>
-                    <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                      <i class="fas fa-download"></i> Descargar
-                    </a>
+                    <div class="video-result-actions">
+                      <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                        <i class="fas fa-download"></i> Descargar
+                      </a>
+                    </div>
                   </div>
                 </div>
+
                 <div class="video-error-area" id="videoErrorArea" style="display: none;">
                   <div class="video-error-card">
+                    <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
                     <p class="video-error-text" id="videoErrorText">—</p>
                   </div>
                 </div>
+
                 <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
                   <div class="video-productions-panel-card">
                     <div class="video-productions-panel-header">
@@ -135,37 +172,43 @@ class VideoView extends BaseView {
                     <div class="video-productions-gallery" id="videoProductionsGallery"></div>
                   </div>
                 </div>
+
               </section>
             </main>
+
             <aside class="video-sidebar-console" aria-label="Sidebar — configuraciones predefinidas">
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner glass-black video-sidebar-inner">
+
                   <div class="video-sidebar-section">
-                    <h3 class="video-section-label">Production Context</h3>
+                    <div class="video-sidebar-section-header">
+                      <span class="video-sidebar-section-num">01</span>
+                      <h3 class="video-section-label">Production Context</h3>
+                    </div>
                     <div class="video-escenas-block">
                       <div class="video-escenas-header">
-                        <h4 class="video-prompt-panel-title">Escenas</h4>
-                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="All production">All production</button>
+                        <h4 class="video-prompt-panel-title">Scenes</h4>
+                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="All production">All</button>
                       </div>
                       <div class="video-escenas-carousel-wrap">
                         <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
                       </div>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Campaña</h4>
+                      <h4 class="video-prompt-panel-title">Campaign</h4>
                       <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Campaña">
-                        <option value="">— Ninguna</option>
+                        <option value="">— None</option>
                       </select>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Audiencia</h4>
+                      <h4 class="video-prompt-panel-title">Audience</h4>
                       <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia">
-                        <option value="">— Ninguna</option>
+                        <option value="">— None</option>
                       </select>
                     </div>
                     <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
                       <h4 class="video-prompt-panel-title">Asset Stack</h4>
-                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">Producto = referencia (el video no debe cambiar el producto)</p>
+                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">Product = reference lock (el video no debe cambiar el producto)</p>
                       <div class="video-asset-scope-wrap">
                         <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
                           <option value="product">Product</option>
@@ -182,8 +225,12 @@ class VideoView extends BaseView {
                       </select>
                     </div>
                   </div>
+
                   <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
-                    <h3 class="video-prompt-panel-title">Cinematography</h3>
+                    <div class="video-sidebar-section-header">
+                      <span class="video-sidebar-section-num">02</span>
+                      <h3 class="video-section-label">Cinematography</h3>
+                    </div>
                     <div class="video-cine-preset-wrap">
                       <label class="video-cine-label">Production Preset</label>
                       <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
@@ -223,7 +270,7 @@ class VideoView extends BaseView {
                         </div>
                       </div>
                       <div class="video-cine-block" data-block="mood">
-                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood</span><i class="fas fa-chevron-down"></i></button>
+                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood & Color</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
@@ -232,15 +279,26 @@ class VideoView extends BaseView {
                       </div>
                     </div>
                   </div>
+
                 </div>
               </div>
             </aside>
           </div>
+
           <footer class="video-app-footer" role="contentinfo" aria-label="Footer de la app — Director Console">
             <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
-            <div class="video-prompt-footer-card video-prompt-footer-card-center">
-              <div class="video-prompt-footer-card-inner glass-black video-director-console">
+              <div class="video-prompt-footer-card video-prompt-footer-card-center">
+                <div class="video-prompt-footer-card-inner glass-black video-director-console">
+
                   <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+
+                  <div class="video-console-header-row" aria-hidden="true">
+                    <span class="video-console-dot"></span>
+                    <span class="video-console-label-text">Director Console</span>
+                    <span class="video-console-sep">·</span>
+                    <span class="video-console-model-text">Kling 3.0</span>
+                  </div>
+
                   <div class="video-director-top-row">
                     <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
                     <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
@@ -277,12 +335,13 @@ class VideoView extends BaseView {
                       <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                     </div>
                     <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
-                    <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Volver a producir</span></button>
+                    <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
                   </div>
                   <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
                     <h4 class="video-storyboard-title">Storyboard</h4>
                     <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
                   </div>
+
                 </div>
               </div>
             </section>
@@ -312,6 +371,7 @@ class VideoView extends BaseView {
       this.promptInput.style.minHeight = '120px';
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
+    this.idleArea = this.container.querySelector('#videoCanvasIdle');
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
     this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
@@ -1188,6 +1248,7 @@ class VideoView extends BaseView {
   }
 
   hideAllFeedback() {
+    if (this.idleArea) this.idleArea.style.display = 'flex';
     if (this.statusArea) this.statusArea.style.display = 'none';
     if (this.resultArea) this.resultArea.style.display = 'none';
     if (this.errorArea) this.errorArea.style.display = 'none';
@@ -1195,6 +1256,7 @@ class VideoView extends BaseView {
 
   showStatus(message, showSpinner = true) {
     this.hideAllFeedback();
+    if (this.idleArea) this.idleArea.style.display = 'none';
     if (this.statusArea) this.statusArea.style.display = 'block';
     if (this.statusText) this.statusText.textContent = message;
     if (this.statusSpinner) this.statusSpinner.style.display = showSpinner ? 'block' : 'none';
@@ -1202,6 +1264,7 @@ class VideoView extends BaseView {
 
   showResult(url) {
     this.hideAllFeedback();
+    if (this.idleArea) this.idleArea.style.display = 'none';
     if (this.resultArea) this.resultArea.style.display = 'block';
     if (this.resultPlayer) {
       this.resultPlayer.src = url;
@@ -1253,6 +1316,7 @@ class VideoView extends BaseView {
 
   showError(message) {
     this.hideAllFeedback();
+    if (this.idleArea) this.idleArea.style.display = 'none';
     if (this.errorArea) this.errorArea.style.display = 'block';
     if (this.errorText) this.errorText.textContent = message;
   }

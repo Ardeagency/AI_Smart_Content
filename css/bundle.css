@@ -23824,6 +23824,296 @@ body.production-filters-in-header .living-container > .living-history-section {
     color: var(--accent-warm, var(--color-warning));
 }
 
+/* ========== Video — Design Enhancements ========== */
+
+/* Make canvas a flex column so content fills the space */
+.video-main .video-canvas,
+.video-main .video-canva-view {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Canvas top bar */
+.video-canvas-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    min-height: 36px;
+}
+.video-canvas-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+.video-canvas-topbar-right {
+    display: flex;
+    align-items: center;
+}
+.video-canvas-model-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--spacing-xs);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--color-info);
+    border-radius: var(--radius-xs);
+    line-height: 1.5;
+}
+.video-canvas-topbar-title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.video-canvas-topbar-tag {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+}
+.video-canvas-topbar-tag i {
+    font-size: 0.55rem;
+    color: var(--color-success);
+    animation: video-pulse-dot 2s ease-in-out infinite;
+}
+@keyframes video-pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Canvas idle state */
+.video-canvas-idle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    padding: var(--spacing-xl);
+}
+.video-canvas-idle-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    text-align: center;
+    max-width: 380px;
+}
+.video-canvas-idle-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--white-8);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    font-size: 1.4rem;
+    margin-bottom: var(--spacing-xs);
+}
+.video-canvas-idle-title {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.video-canvas-idle-hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+.video-canvas-idle-steps {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.video-canvas-idle-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 3px var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--white-5);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.video-canvas-idle-step-num {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--color-info);
+    letter-spacing: 0.02em;
+}
+.video-canvas-idle-step-cta {
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+.video-canvas-idle-step-arrow {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Status card — override for new layout */
+.video-status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+}
+.video-status-spinner {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--white-15);
+    border-top-color: var(--color-info);
+    border-radius: 50%;
+    animation: video-spin 0.8s linear infinite;
+}
+.video-status-text {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    margin: 0;
+}
+
+/* Result card header */
+.video-result-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+.video-result-output-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--spacing-xs);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--color-success);
+    border-radius: var(--radius-xs);
+    flex-shrink: 0;
+}
+.video-result-actions {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Error card — icon + message */
+.video-error-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+}
+.video-error-icon-wrap {
+    font-size: 1.5rem;
+    color: var(--color-error);
+    opacity: 0.9;
+}
+
+/* Sidebar section headers with numbered badges */
+.video-sidebar-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+.video-sidebar-section-header .video-section-label {
+    margin: 0;
+}
+.video-sidebar-section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #000;
+    background: var(--color-info);
+    border-radius: var(--radius-xs);
+    flex-shrink: 0;
+}
+
+/* Director Console header row */
+.video-console-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-bottom: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--glass-border);
+}
+.video-console-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-info);
+    flex-shrink: 0;
+    animation: video-pulse-dot 2s ease-in-out infinite;
+}
+.video-console-label-text {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+.video-console-sep {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+.video-console-model-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+/* Status/result/error areas — full height within canvas */
+.video-status-area,
+.video-result-area,
+.video-error-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    margin-top: 0;
+}
+
 /* ---- Form Record Enhancements ---- */
 .form-org-card .step-subtitle {
   color: var(--text-secondary, #a0a0a0);
