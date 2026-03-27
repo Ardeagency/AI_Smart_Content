@@ -1097,7 +1097,7 @@ class Navigation {
   }
 
   /**
-   * Abrir panel flyout (sidebar colapsado): Header (icono + nombre) | Body (tree) | Footer (CTA).
+   * Abrir panel flyout (sidebar colapsado): Header (icono + nombre) | Body (tree).
    * Posiciona el flyout centrado verticalmente con el icono del container.
    */
   openFlyout(containerEl) {
@@ -1124,19 +1124,12 @@ class Navigation {
       bodyHtml += `<a href="${route}" class="nav-flyout-link${active ? ' active' : ''}" data-route="${route}" ${active ? ' aria-current="page"' : ''}>${itemLabel}</a>`;
     });
     bodyHtml += '</div></div>';
-    const footerHtml = `
-      <div class="nav-flyout-footer">
-        <button type="button" class="nav-flyout-cta" data-action="open-module">
-          ${label} <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>`;
 
     flyout.innerHTML = `
       <div class="nav-flyout-bridge" aria-hidden="true"></div>
       <div class="nav-flyout-inner">
         ${headerHtml}
         ${bodyHtml}
-        ${footerHtml}
       </div>`;
     flyout.classList.add('open');
     flyout.setAttribute('aria-hidden', 'false');
@@ -1150,7 +1143,7 @@ class Navigation {
         this.closeFlyout();
       });
     });
-    flyout.querySelector('.nav-flyout-cta')?.addEventListener('click', () => this.closeFlyout());
+    // CTA removido: evitaba duplicar el nombre del módulo en el footer del flyout.
 
     this._bindFlyoutHoverClose();
 
