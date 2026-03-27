@@ -2994,15 +2994,17 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     right: 0;
     width: 240px;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: stretch;
-    padding: var(--glass-padding);
+    padding: 0;
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
     border-radius: var(--glass-radius);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
     z-index: 9999;
     display: none;
 }
