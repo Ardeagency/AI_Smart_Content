@@ -1298,6 +1298,8 @@ body.sidebar-collapsed .main-header,
     align-items: center;
     gap: 10px;
     min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* Botón abrir/cerrar sidebar (icono colapsado) */
@@ -1415,7 +1417,7 @@ body.sidebar-collapsed .main-header,
 /* Título único del header del sidebar (solo nombre de la organización) */
 .nav-org-title {
     font-family: Inter, system-ui, sans-serif;
-    font-size: clamp(22px, 2.2vw, 32px);
+    font-size: var(--nav-org-title-size, clamp(22px, 2.2vw, 32px));
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: normal;
@@ -1423,13 +1425,21 @@ body.sidebar-collapsed .main-header,
     text-align: left;
     margin: 0;
     padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.nav-org-title.nav-org-title--two-lines {
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
     overflow-wrap: anywhere;
     word-break: break-word;
-    flex: 1;
-    min-width: 0;
+    line-height: 1.02;
 }
 
 .nav-org-type {

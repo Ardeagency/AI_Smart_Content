@@ -738,6 +738,39 @@ class Navigation {
   }
 
   /**
+   * Ajusta nombre de organización:
+   * 1) una línea con reducción controlada
+   * 2) si no cabe, fallback a 2 líneas (primera palabra + resto)
+   */
+  _renderAdaptiveOrgName(name) {
+    const nameEl = document.getElementById('navOrgName');
+    if (!nameEl) return;
+
+    const raw = String(name || '').trim();
+    nameEl.classList.remove('nav-org-title--two-lines');
+    nameEl.style.removeProperty('--nav-org-title-size');
+    nameEl.textContent = raw;
+    if (!raw) return;
+
+    const MAX_SIZE = 32;
+    const MIN_SIZE = 24;
+    let fitted = false;
+    for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
+      nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
+      if (nameEl.scrollWidth <= nameEl.clientWidth + 1) {
+        fitted = true;
+        break;
+      }
+    }
+
+    if (!fitted) {
+      nameEl.classList.add('nav-org-title--two-lines');
+      nameEl.style.removeProperty('--nav-org-title-size');
+      nameEl.innerHTML = _formatOrgNameTwoLines(raw);
+    }
+  }
+
+  /**
    * Configurar event listeners
    */
   setupEventListeners() {
@@ -849,6 +882,14 @@ class Navigation {
       window.addEventListener('routechange', () => {
         this.updateActiveLink();
         this.updateHeaderTitle();
+      });
+    }
+    if (!this._orgNameResizeAttached) {
+      this._orgNameResizeAttached = true;
+      window.addEventListener('resize', () => {
+        if (this.currentMode !== 'user') return;
+        const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
+        this._renderAdaptiveOrgName(name);
       });
     }
 
@@ -1469,6 +1510,10 @@ class Navigation {
     document.body.classList.toggle('sidebar-collapsed', this.isCollapsed);
     localStorage.setItem('sidebarCollapsed', this.isCollapsed ? 'true' : 'false');
     this.updateSidebarToggleIcon();
+    if (!this.isCollapsed && this.currentMode === 'user') {
+      const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
+      requestAnimationFrame(() => this._renderAdaptiveOrgName(name));
+    }
   }
 
   /**
@@ -1622,10 +1667,9 @@ class Navigation {
 
     try {
       if (!this.currentOrgId) {
-        const nameEl = document.getElementById('navOrgName');
         const typeEl = document.getElementById('navOrgType');
         const tokensEl = document.getElementById('navTokensValue');
-        if (nameEl) nameEl.textContent = 'Seleccionar organización';
+        this._renderAdaptiveOrgName('Seleccionar organización');
         if (typeEl) typeEl.textContent = '';
         if (tokensEl) tokensEl.textContent = '—';
         const barFill = document.querySelector('.nav-org-credits-bar-fill');
@@ -1652,9 +1696,8 @@ class Navigation {
         this._orgCacheId = this.currentOrgId;
         this._orgCacheTime = Date.now();
       }
-      const nameEl = document.getElementById('navOrgName');
       const typeEl = document.getElementById('navOrgType');
-      if (nameEl && this._orgCache) nameEl.innerHTML = _formatOrgNameTwoLines(this._orgCache.name || '');
+      if (this._orgCache) this._renderAdaptiveOrgName(this._orgCache.name || '');
       if (typeEl && this._orgCache) typeEl.textContent = this._orgCache.plan || '';
 
       // Siempre leer créditos desde la BD (tabla organization_credits) para mostrar el valor real
@@ -1685,11 +1728,10 @@ class Navigation {
 
   _applyOrgCache() {
     if (!this._orgCache) return;
-    const nameEl = document.getElementById('navOrgName');
     const typeEl = document.getElementById('navOrgType');
     const tokensEl = document.getElementById('navTokensValue');
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
-    if (nameEl) nameEl.innerHTML = _formatOrgNameTwoLines(this._orgCache.name || '');
+    this._renderAdaptiveOrgName(this._orgCache.name || '');
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
     const credits = this._orgCache.credits != null ? this._orgCache.credits : 0;
     if (tokensEl) {
