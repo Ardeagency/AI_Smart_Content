@@ -387,7 +387,7 @@ class Navigation {
     // Si hay org activa, mostrar la tienda de créditos de esa org.
     const creditsHref = this.currentOrgId ? this.getUserSidebarRoute('credits') : '/credits';
     return `
-      <div class="user-dropdown" id="userDropdown">
+      <div class="user-dropdown glass-black" id="userDropdown">
         <div class="user-dropdown-header">
           <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
           <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
@@ -904,7 +904,7 @@ class Navigation {
     if (!portal) return;
     if (document.getElementById('userSettingsModal')) return;
     const html = `
-      <div class="modal user-settings-modal" id="userSettingsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
+      <div class="modal user-settings-modal" id="userSettingsModal" aria-hidden="true" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="userSettingsModalTitle">
         <div class="modal-overlay" id="userSettingsModalOverlay"></div>
         <div class="modal-content glass-white">
           <div class="modal-header">
