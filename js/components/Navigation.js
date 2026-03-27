@@ -748,59 +748,67 @@ class Navigation {
     if (!nameEl) return;
 
     const raw = String(name || '').trim();
-    nameEl.classList.remove('nav-org-title--two-lines');
-    nameEl.style.removeProperty('--nav-org-title-size');
-    nameEl.textContent = raw;
     if (!raw) return;
 
     const MAX_SIZE = 32;
     const MIN_SIZE = 20;
-    let fitted = false;
-    for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
-      nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
-      if (nameEl.scrollWidth <= nameEl.clientWidth + 1) {
-        fitted = true;
-        break;
-      }
-    }
+    const tryLayout = () => {
+      nameEl.classList.remove('nav-org-title--two-lines');
+      nameEl.style.removeProperty('--nav-org-title-size');
+      nameEl.textContent = raw;
 
-    // Validación extra: aunque la primera medición "parezca" caber,
-    // confirmamos que no esté realmente truncado con ellipsis.
-    if (fitted && this._isOrgNameTruncated(nameEl)) {
-      fitted = false;
-    }
-
-    if (!fitted) {
-      nameEl.classList.add('nav-org-title--two-lines');
-      const maxWidth = Math.max(1, nameEl.clientWidth);
-      let chosen = _formatOrgNameTwoLines(raw);
-      const words = raw.split(/\s+/).filter(Boolean);
-      for (let size = MAX_SIZE; size >= 18; size -= 1) {
+      let fitted = false;
+      for (let size = MAX_SIZE; size >= MIN_SIZE; size -= 1) {
         nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
-        const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
-        if (lines && lines[0] && lines[1]) {
-          const line1W = this._measureOrgTitleLineWidth(lines[0], size, nameEl);
-          const line2W = this._measureOrgTitleLineWidth(lines[1], size, nameEl);
-          chosen = `${_escapeHtml(lines[0])}<br>${_escapeHtml(lines[1])}`;
-          if (line1W <= maxWidth + 1 && line2W <= maxWidth + 1) {
-            break;
-          }
+        if (nameEl.scrollWidth <= nameEl.clientWidth + 1) {
+          fitted = true;
+          break;
         }
       }
-      nameEl.innerHTML = chosen;
-    }
 
-    // Segunda verificación en el siguiente frame por cambios tardíos de layout/fuente.
+      if (fitted && this._isOrgNameTruncated(nameEl)) fitted = false;
+      if (!fitted) this._applyTwoLineOrgName(nameEl, raw, MAX_SIZE);
+    };
+
+    tryLayout();
+
+    // Revalidar en el siguiente frame por cambios tardíos de layout.
     requestAnimationFrame(() => {
       const current = document.getElementById('navOrgName');
       if (!current) return;
-      if (current.classList.contains('nav-org-title--two-lines')) return;
       if (!this._isOrgNameTruncated(current)) return;
-
-      current.classList.add('nav-org-title--two-lines');
-      current.style.removeProperty('--nav-org-title-size');
-      current.innerHTML = _formatOrgNameTwoLines(raw);
+      this._applyTwoLineOrgName(current, raw, MAX_SIZE);
     });
+
+    // Revalidar cuando las fuentes web ya terminaron de cargar.
+    if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+      document.fonts.ready.then(() => {
+        const current = document.getElementById('navOrgName');
+        if (!current) return;
+        if (!this._isOrgNameTruncated(current)) return;
+        this._applyTwoLineOrgName(current, raw, MAX_SIZE);
+      }).catch(() => {});
+    }
+  }
+
+  _applyTwoLineOrgName(nameEl, raw, maxSize = 32) {
+    if (!nameEl) return;
+    nameEl.classList.add('nav-org-title--two-lines');
+    const maxWidth = Math.max(1, nameEl.clientWidth);
+    const words = raw.split(/\s+/).filter(Boolean);
+    let chosen = _formatOrgNameTwoLines(raw);
+
+    for (let size = maxSize; size >= 18; size -= 1) {
+      nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
+      const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
+      if (lines && lines[0] && lines[1]) {
+        const line1W = this._measureOrgTitleLineWidth(lines[0], size, nameEl);
+        const line2W = this._measureOrgTitleLineWidth(lines[1], size, nameEl);
+        chosen = `${_escapeHtml(lines[0])}<br>${_escapeHtml(lines[1])}`;
+        if (line1W <= maxWidth + 1 && line2W <= maxWidth + 1) break;
+      }
+    }
+    nameEl.innerHTML = chosen;
   }
 
   _isOrgNameTruncated(el) {
