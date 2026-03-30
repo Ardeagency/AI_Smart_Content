@@ -19,6 +19,15 @@ exports.handler = async (event) => {
     };
   }
 
+  const user = await shared.requireAuth(event);
+  if (!user) {
+    return {
+      statusCode: 401,
+      headers: shared.corsHeaders(),
+      body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
+    };
+  }
+
   const headers = shared.getKieAuthHeaders();
   if (!headers) {
     return {

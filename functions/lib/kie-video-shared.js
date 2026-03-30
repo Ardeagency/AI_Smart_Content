@@ -214,9 +214,12 @@ async function handleStatus(taskId, headers) {
   return { statusCode: 200, headers: c, body: JSON.stringify(normalized) };
 }
 
+const { requireAuth } = require('./ai-shared');
+
 module.exports = {
   corsHeaders,
   getKieAuthHeaders,
   handleCreate,
-  handleStatus
+  handleStatus,
+  requireAuth
 };

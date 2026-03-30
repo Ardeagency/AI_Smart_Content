@@ -1,6 +1,7 @@
 /**
  * Netlify Function: genera prompt(s) cinematográficos para KIE/Kling usando OpenAI.
  * Pipeline: IDEA → INTERPRETATION (shot design) → PROMPT(s). Salida siempre en inglés.
+ * Requiere Authorization: Bearer <token> de Supabase.
  *
  * - System: director de video (camera behavior, motion, lens; no describir escena). Con imagen: solo comportamiento de cámara.
  * - Cinematografía en narrativa (no metadatos). Brand tone/energy para coherencia visual.
@@ -10,11 +11,13 @@
  * Respuesta: { prompt: string } o { multi_prompts: string[] } — siempre en inglés.
  */
 
+const { requireAuth } = require('./lib/ai-shared');
+
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 }
@@ -121,6 +124,15 @@ exports.handler = async (event, context) => {
       statusCode: 405,
       headers: corsHeaders(),
       body: JSON.stringify({ error: 'Método no permitido' })
+    };
+  }
+
+  const user = await requireAuth(event);
+  if (!user) {
+    return {
+      statusCode: 401,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
 

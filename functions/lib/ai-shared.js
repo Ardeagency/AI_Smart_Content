@@ -99,11 +99,27 @@ async function assertOrgMember({ url, serviceKey, organizationId, userId }) {
   throw err;
 }
 
+/**
+ * Valida que el Bearer token sea de un usuario activo en Supabase.
+ * Retorna el objeto de usuario si es válido, o null si el token es inválido/ausente.
+ */
+async function requireAuth(event) {
+  const accessToken = getBearerToken(event);
+  if (!accessToken) return null;
+  try {
+    const { url, anonKey } = getSupabaseEnv();
+    return await fetchSupabaseUser({ url, anonKey, accessToken });
+  } catch (_) {
+    return null;
+  }
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
   getBearerToken,
   fetchSupabaseUser,
+  requireAuth,
   supabaseRest,
   assertOrgMember
 };

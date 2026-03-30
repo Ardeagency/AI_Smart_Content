@@ -1,16 +1,19 @@
 /**
  * Netlify Function: genera o mejora un prompt de video usando OpenAI con contexto de marca.
  * Requiere OPENAI_API_KEY en variables de entorno de Netlify.
+ * Requiere Authorization: Bearer <token> de Supabase.
  *
  * POST body: { prompt?: string, brand_context?: { entities?, products?, audiences?, campaigns? } }
  * Respuesta: { prompt: string } o { error: string }
  */
 
+const { requireAuth } = require('./lib/ai-shared');
+
 function corsHeaders() {
   return {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 }
@@ -43,6 +46,15 @@ exports.handler = async (event, context) => {
       statusCode: 405,
       headers: corsHeaders(),
       body: JSON.stringify({ error: 'Método no permitido' })
+    };
+  }
+
+  const user = await requireAuth(event);
+  if (!user) {
+    return {
+      statusCode: 401,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
 

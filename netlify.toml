@@ -186,11 +186,12 @@
   to = "/favicons/:splat"
   status = 200
 
-# SQL files - servir directamente
+# SQL files - bloqueado: no exponer esquema de base de datos públicamente
 [[redirects]]
   from = "/SQL/*"
-  to = "/SQL/:splat"
-  status = 200
+  to = "/index.html"
+  status = 404
+  force = true
 
 # SPA Fallback - todas las demás rutas van a index.html (/.netlify/* ya cubierto arriba)
 [[redirects]]
@@ -198,12 +199,34 @@
   to = "/index.html"
   status = 200
 
+# Cabeceras de seguridad globales para todos los recursos
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cabeceras de seguridad adicionales para HTML
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self' https: data:; media-src 'self' blob: https:; frame-ancestors 'none'; object-src 'none';"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self' https: data:; media-src 'self' blob: https:; frame-ancestors 'none'; object-src 'none';"
+
 # Headers para las funciones
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Hub-Signature-256"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 
 # Headers para templates (cache)
@@ -249,7 +272,11 @@
 # - GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 # - GOOGLE_OAUTH_SCOPES = openid email profile https://www.googleapis.com/auth/analytics.readonly
 # - META_APP_ID / META_APP_SECRET
-# - FACEBOOK_OAUTH_SCOPES = ads_read,read_insights,pages_read_engagement
+# - FACEBOOK_OAUTH_SCOPES = pages_show_list,pages_read_engagement,pages_read_user_content,instagram_basic,instagram_manage_insights,read_insights,pages_manage_metadata
+#   ↑ pages_manage_metadata es obligatorio para suscribirse a webhooks de página
+#   ↑ instagram_manage_insights para webhooks de Instagram Business
+#   ↑ pages_read_user_content para leer posts y comentarios orgánicos
+#   (ads_read solo para campañas de pago — no aplica para contenido orgánico)
 # - META_WEBHOOK_VERIFY_TOKEN = token secreto para validar webhook de Meta
 # - OAUTH_STATE_SECRET = mínimo 32 bytes aleatorios en hex (para HMAC-signed state, previene CSRF)
 

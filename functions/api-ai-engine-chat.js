@@ -57,21 +57,13 @@ exports.handler = async (event) => {
     };
   }
 
-  // Preferimos header (procede de window.AI_ENGINE_BASE_URL) para evitar
-  // otro paso de configuración en Netlify.
-  const headerBase =
-    event.headers?.["x-ai-engine-base-url"] ||
-    event.headers?.["X-AI-ENGINE-BASE-URL"] ||
-    "";
-
-  const aiEngineBaseUrl = normalizeBase(process.env.AI_ENGINE_URL || headerBase);
+  const aiEngineBaseUrl = normalizeBase(process.env.AI_ENGINE_URL || "");
   if (!aiEngineBaseUrl) {
     return {
       statusCode: 500,
       headers: corsHeaders(),
       body: JSON.stringify({
-        error:
-          "No se pudo determinar AI_ENGINE_URL. Define AI_ENGINE_URL en Netlify o envía el header X-AI-ENGINE-BASE-URL.",
+        error: "AI_ENGINE_URL no configurada. Define la variable de entorno en Netlify Dashboard.",
       }),
     };
   }
@@ -97,8 +89,7 @@ exports.handler = async (event) => {
       statusCode: 502,
       headers: corsHeaders(),
       body: JSON.stringify({
-        error: "No se pudo conectar a ai-engine",
-        targetUrl,
+        error: "No se pudo conectar al motor de IA",
         details: e?.message || String(e),
       }),
     };

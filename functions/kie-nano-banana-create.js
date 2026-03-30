@@ -4,6 +4,8 @@
  * Doc: modelo nano-banana-pro, input.prompt + input.image_input (URLs).
  */
 
+const { requireAuth } = require('./lib/ai-shared');
+
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
 const CREATE_PATH = '/api/v1/jobs/createTask';
 const DEFAULT_MODEL = process.env.KIE_NANOBANANA_MODEL || 'nano-banana-pro';
@@ -74,6 +76,15 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: c, body: JSON.stringify({ error: 'Método no permitido' }) };
+  }
+
+  const user = await requireAuth(event);
+  if (!user) {
+    return {
+      statusCode: 401,
+      headers: c,
+      body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
+    };
   }
 
   const headers = getKieAuthHeaders();

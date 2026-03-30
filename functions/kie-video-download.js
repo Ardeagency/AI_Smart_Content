@@ -2,10 +2,36 @@
  * Netlify Function: proxy de descarga de video/imagen desde la URL de KIE (u otros orígenes).
  * Evita CORS en el cliente. GET ?videoUrl=<url codificada> → devuelve el binario.
  * Algunos hosts (p. ej. tempfile.aiquickdraw.com) rechazan peticiones sin User-Agent o devuelven 502 intermitente; se reintenta.
+ *
+ * SEGURIDAD: solo se permiten URLs de dominios KIE autorizados para evitar SSRF.
  */
 
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
+// Dominios permitidos para el proxy de descarga
+const ALLOWED_DOMAINS = [
+  'kie.ai',
+  'aiquickdraw.com',
+  'cdn.kie.ai',
+  'tempfile.aiquickdraw.com',
+  'api.kie.ai',
+  'storage.googleapis.com',
+  'kling-files.klingai.com',
+  'klingfiles.klingai.com'
+];
+
+function isAllowedUrl(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    if (u.protocol !== 'https:') return false;
+    return ALLOWED_DOMAINS.some(
+      (d) => u.hostname === d || u.hostname.endsWith('.' + d)
+    );
+  } catch (_) {
+    return false;
+  }
+}
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -97,11 +123,19 @@ exports.handler = async (event, context) => {
   }
 
   const videoUrl = event.queryStringParameters?.videoUrl;
-  if (!videoUrl || typeof videoUrl !== 'string' || !videoUrl.startsWith('http')) {
+  if (!videoUrl || typeof videoUrl !== 'string') {
     return {
       statusCode: 400,
       headers: corsHeaders(),
       body: JSON.stringify({ error: 'Falta o es inválido el parámetro videoUrl' })
+    };
+  }
+
+  if (!isAllowedUrl(videoUrl)) {
+    return {
+      statusCode: 403,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'Dominio no autorizado para descarga' })
     };
   }
 
