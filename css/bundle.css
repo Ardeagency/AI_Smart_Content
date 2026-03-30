@@ -27079,6 +27079,79 @@ body.production-filters-in-header .living-container > .living-history-section {
 .mb-empty-sm i { font-size: 1.5rem; opacity: 0.4; }
 .mb-empty-sm p { margin: 0; }
 
+/* ── Live indicator ── */
+.mb-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.6rem;
+  background: var(--white-5, rgba(255,255,255,0.05));
+  border: 1px solid var(--white-10, rgba(255,255,255,0.1));
+  border-radius: 20px;
+}
+.mb-live-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary, rgba(212,209,216,0.55));
+}
+.mb-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mb-live-dot--live {
+  background: #6bcf7f;
+  box-shadow: 0 0 0 0 rgba(107,207,127,0.6);
+  animation: mbLivePulse 2s ease-in-out infinite;
+}
+.mb-live-dot--connecting {
+  background: #facc15;
+  opacity: 0.8;
+}
+.mb-live-dot--poll {
+  background: #60a5fa;
+}
+.mb-live-dot--error {
+  background: #fb923c;
+}
+@keyframes mbLivePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(107,207,127,0.55); }
+  50%       { box-shadow: 0 0 0 5px rgba(107,207,127,0); }
+}
+
+/* ── Sync toast ── */
+.mb-sync-toast {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: #c4b5fd;
+  white-space: nowrap;
+}
+.mb-sync-toast i { font-size: 0.7rem; }
+
+/* ── Last sync label ── */
+.mb-last-sync-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.mb-last-sync {
+  font-size: 0.72rem;
+  color: var(--text-secondary, rgba(212,209,216,0.4));
+  white-space: nowrap;
+}
+
+/* ── Spin animation (shared) ── */
+.mb-spin {
+  animation: mbSpin 0.7s linear infinite;
+}
+
 /* ── Buttons ── */
 .mb-btn-primary {
   display: inline-flex;

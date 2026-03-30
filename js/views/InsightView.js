@@ -1,17 +1,35 @@
 /**
  * InsightView – Panel de inteligencia de marca.
  * Sub-páginas: My Brands · Competence · Tendencies · Strategy
+ *
+ * My Brands:
+ *  - Supabase Realtime en brand_posts + brand_analytics_snapshots
+ *  - Auto-sync en background cuando stale=true
+ *  - Polling cada 5 min + Page Visibility API
+ *  - Indicador live + última sincronización
  */
 class InsightView extends BaseView {
   constructor() {
     super();
-    this._activeTab = 'my-brands';
-    this._supabase   = null;
-    this._brandContainerId = null;
-    this._brandContainers  = [];
-    this._period     = '30d';
-    this._chartInstances = {};
+    this._activeTab         = 'my-brands';
+    this._supabase          = null;
+    this._brandContainerId  = null;
+    this._brandContainers   = [];
+    this._period            = '30d';
+    this._chartInstances    = {};
+
+    // Live / realtime state
+    this._realtimeChannel   = null;
+    this._pollTimer         = null;
+    this._labelTimer        = null;
+    this._refreshTimer      = null;
+    this._visibilityHandler = null;
+    this._lastSyncTime      = null;
+    this._syncing           = false;
+    this._liveReady         = false;
   }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   async onEnter() {
     if (window.authService) {
@@ -21,6 +39,10 @@ class InsightView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
+  }
+
+  onLeave() {
+    this._teardownLive();
   }
 
   async render() {
@@ -62,7 +84,9 @@ class InsightView extends BaseView {
     nav.addEventListener('click', e => {
       const btn = e.target.closest('[data-tab]');
       if (!btn) return;
-      this._activeTab = btn.dataset.tab;
+      const newTab = btn.dataset.tab;
+      if (newTab !== 'my-brands') this._teardownLive();
+      this._activeTab = newTab;
       nav.querySelectorAll('.insight-subnav-btn')
         .forEach(b => b.classList.toggle('active', b.dataset.tab === this._activeTab));
       this._renderTab(this._activeTab);
@@ -109,7 +133,6 @@ class InsightView extends BaseView {
       return;
     }
 
-    // Load brand containers for the user
     const { data: containers } = await this._supabase
       .from('brand_containers')
       .select('id,nombre_marca,logo_url')
@@ -124,7 +147,6 @@ class InsightView extends BaseView {
       return;
     }
 
-    // Restore last selected brand
     const saved = localStorage.getItem('mb_selected_brand');
     if (saved && this._brandContainers.find(b => b.id === saved)) {
       this._brandContainerId = saved;
@@ -132,14 +154,21 @@ class InsightView extends BaseView {
       this._brandContainerId = this._brandContainers[0].id;
     }
 
-    await this._loadAndRenderDashboard();
+    await this._loadAndRenderDashboard(false);
   }
 
-  async _loadAndRenderDashboard() {
+  /**
+   * Carga y renderiza el dashboard completo.
+   * @param {boolean} isLiveRefresh - Si true, no re-subscribe a realtime
+   */
+  async _loadAndRenderDashboard(isLiveRefresh = false) {
+    if (this._syncing && isLiveRefresh) return; // evitar renders concurrentes en live
     const body = document.getElementById('insightTabBody');
     if (!body) return;
 
-    body.innerHTML = this._myBrandsLoadingSkeleton();
+    if (!isLiveRefresh) {
+      body.innerHTML = this._myBrandsLoadingSkeleton();
+    }
 
     const { data: { session } } = await this._supabase.auth.getSession();
     const token = session?.access_token;
@@ -160,9 +189,221 @@ class InsightView extends BaseView {
       }).then(r => r.json()).catch(() => ({ ok: false }))
     ]);
 
+    this._destroyCharts();
     body.innerHTML = this._myBrandsDashboardHTML(insightRes, postsRes);
     this._setupDashboardEvents(insightRes, postsRes);
     this._renderCharts(insightRes, postsRes);
+    this._lastSyncTime = Date.now();
+    this._updateLastSyncLabel();
+
+    // Primera carga: setup live
+    if (!isLiveRefresh) {
+      this._liveReady = false;
+      this._setupLive(insightRes);
+    } else {
+      // Actualizar indicador sin re-suscribir
+      this._updateLiveIndicator(this._liveReady ? 'SUBSCRIBED' : 'CONNECTING');
+    }
+
+    // Auto-sync si datos desactualizados y Meta está conectada
+    if (insightRes?.stale && postsRes?.ok !== false && !isLiveRefresh) {
+      this._triggerBackgroundSync(token, bcId);
+    }
+  }
+
+  // ── Live: Realtime + Polling + Visibility ─────────────────────────────────
+
+  _setupLive(insightRes) {
+    this._setupRealtimeSubscription();
+    this._setupPolling();
+    this._setupVisibilityListener();
+    this._setupLabelInterval();
+  }
+
+  _teardownLive() {
+    this._clearPolling();
+    this._clearLabelInterval();
+    this._removeVisibilityListener();
+    this._clearRefreshTimer();
+    if (this._realtimeChannel && this._supabase) {
+      try { this._supabase.removeChannel(this._realtimeChannel); } catch (_) {}
+      this._realtimeChannel = null;
+    }
+    this._liveReady = false;
+  }
+
+  async _setupRealtimeSubscription() {
+    if (!this._supabase || !this._brandContainerId) return;
+
+    // Limpiar canal anterior
+    if (this._realtimeChannel) {
+      try { await this._supabase.removeChannel(this._realtimeChannel); } catch (_) {}
+      this._realtimeChannel = null;
+    }
+
+    const bcId = this._brandContainerId;
+    this._updateLiveIndicator('CONNECTING');
+
+    try {
+      this._realtimeChannel = this._supabase
+        .channel(`mb-live-${bcId}-${Date.now()}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'brand_posts',
+          filter: `brand_container_id=eq.${bcId}`
+        }, () => this._scheduleRefresh('realtime:posts'))
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'brand_analytics_snapshots',
+          filter: `brand_container_id=eq.${bcId}`
+        }, () => this._scheduleRefresh('realtime:snapshots'))
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'brand_audience_heatmap',
+          filter: `brand_container_id=eq.${bcId}`
+        }, () => this._scheduleRefresh('realtime:heatmap'))
+        .subscribe(status => {
+          this._liveReady = (status === 'SUBSCRIBED');
+          this._updateLiveIndicator(status);
+        });
+    } catch (e) {
+      console.warn('[InsightView] Realtime unavailable, using polling only:', e.message);
+      this._updateLiveIndicator('POLLING');
+    }
+  }
+
+  _setupPolling() {
+    this._clearPolling();
+    this._pollTimer = setInterval(async () => {
+      if (document.visibilityState !== 'visible') return;
+      if (this._syncing || this._activeTab !== 'my-brands') return;
+      const elapsed = Date.now() - (this._lastSyncTime || 0);
+      if (elapsed >= 5 * 60 * 1000) {
+        await this._scheduleRefresh('poll');
+      }
+    }, 60 * 1000); // Check cada minuto, pero sólo ejecuta si han pasado 5 min
+  }
+
+  _clearPolling() {
+    if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
+  }
+
+  _setupVisibilityListener() {
+    this._removeVisibilityListener();
+    this._visibilityHandler = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
+      const elapsed = Date.now() - (this._lastSyncTime || 0);
+      if (elapsed >= 5 * 60 * 1000) {
+        this._scheduleRefresh('visibility');
+      }
+    };
+    document.addEventListener('visibilitychange', this._visibilityHandler);
+  }
+
+  _removeVisibilityListener() {
+    if (this._visibilityHandler) {
+      document.removeEventListener('visibilitychange', this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
+  }
+
+  _setupLabelInterval() {
+    this._clearLabelInterval();
+    this._labelTimer = setInterval(() => this._updateLastSyncLabel(), 30 * 1000);
+  }
+
+  _clearLabelInterval() {
+    if (this._labelTimer) { clearInterval(this._labelTimer); this._labelTimer = null; }
+  }
+
+  _clearRefreshTimer() {
+    if (this._refreshTimer) { clearTimeout(this._refreshTimer); this._refreshTimer = null; }
+  }
+
+  /** Debounce de 1.5s para no disparar renders en ráfaga */
+  _scheduleRefresh(source) {
+    this._clearRefreshTimer();
+    this._refreshTimer = setTimeout(async () => {
+      this._refreshTimer = null;
+      if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
+      await this._loadAndRenderDashboard(true);
+    }, 1500);
+  }
+
+  /** Llama a /api/brand/sync-meta en background y dispara refresh al terminar */
+  async _triggerBackgroundSync(token, bcId) {
+    if (this._syncing) return;
+    this._syncing = true;
+    this._setSyncToast(true);
+
+    try {
+      const res = await fetch('/api/brand/sync-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ brand_container_id: bcId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.ok) {
+        this._lastSyncTime = Date.now();
+        // Realtime debería disparar el refresh automáticamente,
+        // pero como fallback programamos uno explícito
+        this._scheduleRefresh('sync-complete');
+      }
+    } catch (e) {
+      console.warn('[InsightView] Background sync failed:', e.message);
+    } finally {
+      this._syncing = false;
+      this._setSyncToast(false);
+    }
+  }
+
+  // ── Live indicators ────────────────────────────────────────────────────────
+
+  _updateLiveIndicator(status) {
+    const dot   = document.getElementById('mbLiveDot');
+    const label = document.getElementById('mbLiveLabel');
+    if (!dot || !label) return;
+
+    dot.className = 'mb-live-dot';
+    if (status === 'SUBSCRIBED') {
+      dot.classList.add('mb-live-dot--live');
+      label.textContent = 'En vivo';
+    } else if (status === 'POLLING') {
+      dot.classList.add('mb-live-dot--poll');
+      label.textContent = 'Actualización automática';
+    } else if (status === 'TIMED_OUT' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+      dot.classList.add('mb-live-dot--error');
+      label.textContent = 'Reconectando…';
+      // Reintentar después de 10s
+      setTimeout(() => this._setupRealtimeSubscription(), 10000);
+    } else {
+      dot.classList.add('mb-live-dot--connecting');
+      label.textContent = 'Conectando…';
+    }
+  }
+
+  _updateLastSyncLabel() {
+    const el = document.getElementById('mbLastSync');
+    if (!el || !this._lastSyncTime) return;
+    const mins = Math.floor((Date.now() - this._lastSyncTime) / 60000);
+    el.textContent = mins === 0 ? 'Ahora' : `Hace ${mins} min`;
+  }
+
+  _setSyncToast(visible) {
+    const el = document.getElementById('mbSyncToast');
+    if (!el) return;
+    el.style.display = visible ? 'flex' : 'none';
+    if (visible) {
+      const btn = document.getElementById('mbRefreshBtn');
+      if (btn) btn.querySelector('i')?.classList.add('mb-spin');
+    } else {
+      const btn = document.getElementById('mbRefreshBtn');
+      if (btn) btn.querySelector('i')?.classList.remove('mb-spin');
+    }
   }
 
   // ── My Brands: HTML builders ───────────────────────────────────────────────
@@ -207,8 +448,10 @@ class InsightView extends BaseView {
     const timeSeries    = this._buildTimeSeries(allPosts, parseInt(this._period) || 30);
     const contentTypes  = this._buildContentTypes(allPosts);
     const topPosts      = this._getTopPosts(insight, allPosts);
-    const autoInsights  = this._generateInsights(kpis, timeSeries, contentTypes, topPosts);
-    const brandName     = insight?.brand?.nombre_marca || this._brandContainers.find(b => b.id === this._brandContainerId)?.nombre_marca || 'Mi Marca';
+    const autoInsights  = this._generateInsights(kpis, timeSeries, contentTypes);
+    const brandName     = insight?.brand?.nombre_marca
+      || this._brandContainers.find(b => b.id === this._brandContainerId)?.nombre_marca
+      || 'Mi Marca';
 
     return `
       <div class="mb-dashboard" id="mbDashboard">
@@ -224,15 +467,35 @@ class InsightView extends BaseView {
                   </option>`).join('')}
               </select>
             ` : `<span class="mb-brand-name">${this._esc(brandName)}</span>`}
+
+            <!-- Indicador live -->
+            <div class="mb-live-indicator">
+              <span class="mb-live-dot mb-live-dot--connecting" id="mbLiveDot"></span>
+              <span class="mb-live-label" id="mbLiveLabel">Conectando…</span>
+            </div>
           </div>
+
           <div class="mb-header-right">
+            <!-- Sync toast inline -->
+            <div class="mb-sync-toast" id="mbSyncToast" style="display:none">
+              <i class="fas fa-sync-alt mb-spin"></i>
+              <span>Sincronizando…</span>
+            </div>
+
+            <!-- Última actualización -->
+            <div class="mb-last-sync-wrap">
+              <i class="fas fa-clock" style="font-size:0.7rem;opacity:0.4"></i>
+              <span class="mb-last-sync" id="mbLastSync">Ahora</span>
+            </div>
+
             <div class="mb-period-tabs" id="mbPeriodTabs">
               ${['7d','30d','90d'].map(p => `
                 <button class="mb-period-btn${this._period === p ? ' active' : ''}" data-period="${p}">
-                  ${p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+                  ${p === '7d' ? '7d' : p === '30d' ? '30d' : '90d'}
                 </button>`).join('')}
             </div>
-            <button class="mb-refresh-btn" id="mbRefreshBtn" title="Actualizar datos">
+
+            <button class="mb-refresh-btn" id="mbRefreshBtn" title="Sincronizar ahora">
               <i class="fas fa-sync-alt"></i>
             </button>
           </div>
@@ -241,17 +504,10 @@ class InsightView extends BaseView {
         ${!metaConnected ? `
           <div class="mb-connect-banner">
             <i class="fab fa-facebook-square"></i>
-            <span>Conecta Meta para ver métricas de Instagram y Facebook.</span>
+            <span>Conecta Meta para ver métricas de Instagram y Facebook en tiempo real.</span>
             <a href="${window.currentOrgPath ? window.currentOrgPath + '/brand' : '/brands'}" class="mb-connect-link">
               Conectar ahora →
             </a>
-          </div>
-        ` : ''}
-
-        ${insight?.stale ? `
-          <div class="mb-stale-banner">
-            <i class="fas fa-clock"></i>
-            <span>Los datos pueden estar desactualizados.</span>
           </div>
         ` : ''}
 
@@ -274,27 +530,20 @@ class InsightView extends BaseView {
         <!-- Grid 2: Top Posts + Content Type -->
         <div class="mb-grid-2">
 
-          <!-- BLOQUE 3: Mejores Posts -->
           <div class="mb-section">
             <div class="mb-section-header">
               <h3 class="mb-section-title"><span class="mb-dot mb-dot--orange"></span>Mejores posts</h3>
             </div>
             ${topPosts.length ? this._buildTopPostsHTML(topPosts) : `
-              <div class="mb-empty-sm">
-                <i class="fas fa-images"></i>
-                <p>Sin posts disponibles</p>
-              </div>`}
+              <div class="mb-empty-sm"><i class="fas fa-images"></i><p>Sin posts disponibles</p></div>`}
           </div>
 
-          <!-- BLOQUE 6: Tipo de Contenido -->
           <div class="mb-section">
             <div class="mb-section-header">
               <h3 class="mb-section-title"><span class="mb-dot mb-dot--purple"></span>Tipo de Contenido</h3>
             </div>
             ${contentTypes.length ? `
-              <div class="mb-chart-wrap-sm">
-                <canvas id="mbContentChart"></canvas>
-              </div>
+              <div class="mb-chart-wrap-sm"><canvas id="mbContentChart"></canvas></div>
               <div class="mb-content-legend" id="mbContentLegend"></div>
             ` : `<div class="mb-empty-sm"><i class="fas fa-chart-pie"></i><p>Sin datos</p></div>`}
           </div>
@@ -305,7 +554,7 @@ class InsightView extends BaseView {
         <div class="mb-section">
           <div class="mb-section-header">
             <h3 class="mb-section-title"><span class="mb-dot mb-dot--blue"></span>Engagement Rate</h3>
-            <span class="mb-section-sub">Interacciones ÷ reach por post</span>
+            <span class="mb-section-sub">Interacciones por post a lo largo del tiempo</span>
           </div>
           <div class="mb-chart-wrap">
             <canvas id="mbEngRateChart"></canvas>
@@ -315,7 +564,6 @@ class InsightView extends BaseView {
         <!-- Grid 2: Heatmap + Tono -->
         <div class="mb-grid-2">
 
-          <!-- BLOQUE 5: Audiencia activa (heatmap) -->
           <div class="mb-section">
             <div class="mb-section-header">
               <h3 class="mb-section-title"><span class="mb-dot mb-dot--yellow"></span>Audiencia activa</h3>
@@ -324,15 +572,12 @@ class InsightView extends BaseView {
             ${this._buildHeatmapHTML(allPosts, insight?.dimensions?.A_activity?.heatmap)}
           </div>
 
-          <!-- Tono de contenido (narrativa) -->
           <div class="mb-section">
             <div class="mb-section-header">
               <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Tono de Contenido</h3>
             </div>
             ${(insight?.dimensions?.B_narrative?.top_tones?.length) ? `
-              <div class="mb-chart-wrap-sm">
-                <canvas id="mbToneChart"></canvas>
-              </div>
+              <div class="mb-chart-wrap-sm"><canvas id="mbToneChart"></canvas></div>
             ` : `<div class="mb-empty-sm"><i class="fas fa-comment-alt"></i><p>Analiza posts para ver el tono de tu contenido.</p></div>`}
           </div>
 
@@ -343,42 +588,16 @@ class InsightView extends BaseView {
 
   _buildKPIRow(kpis) {
     const cards = [
-      {
-        icon: 'fa-file-alt',
-        color: 'green',
-        value: this._fmt(kpis.totalPosts),
-        label: 'Posts',
-        sub: kpis.totalPosts > 0 ? `${kpis.totalLikes} likes · ${kpis.totalComments} comentarios` : 'Sin publicaciones',
-      },
-      {
-        icon: 'fa-eye',
-        color: 'blue',
-        value: this._fmt(kpis.reach),
-        label: 'Reach',
-        sub: kpis.reach > 0 ? 'Personas alcanzadas' : 'Sin datos de reach',
-      },
-      {
-        icon: 'fa-heart',
-        color: 'orange',
-        value: this._fmt(kpis.totalEngagement),
-        label: 'Engagement',
-        sub: `${kpis.totalLikes} likes · ${kpis.totalShares} compartidos`,
-      },
-      {
-        icon: 'fa-percentage',
-        color: 'purple',
-        value: kpis.engRate + '%',
-        label: 'Eng. Rate',
-        sub: kpis.reach > 0 ? 'Sobre reach total' : 'Sobre interacciones',
-      },
+      { icon: 'fa-file-alt',   color: 'green',  value: this._fmt(kpis.totalPosts),      label: 'Posts',        sub: kpis.totalPosts > 0 ? `${kpis.totalLikes} likes · ${kpis.totalComments} comentarios` : 'Sin publicaciones' },
+      { icon: 'fa-eye',        color: 'blue',   value: this._fmt(kpis.reach),            label: 'Reach',        sub: kpis.reach > 0 ? 'Personas alcanzadas' : 'Sin datos de reach' },
+      { icon: 'fa-heart',      color: 'orange', value: this._fmt(kpis.totalEngagement),  label: 'Engagement',   sub: `${kpis.totalLikes} likes · ${kpis.totalShares} compartidos` },
+      { icon: 'fa-percentage', color: 'purple', value: kpis.engRate + '%',               label: 'Eng. Rate',    sub: kpis.reach > 0 ? 'Sobre reach total' : 'Sobre interacciones' },
     ];
     return `
       <div class="mb-kpi-row">
         ${cards.map(c => `
           <div class="mb-kpi-card">
-            <div class="mb-kpi-icon mb-kpi-icon--${c.color}">
-              <i class="fas ${c.icon}"></i>
-            </div>
+            <div class="mb-kpi-icon mb-kpi-icon--${c.color}"><i class="fas ${c.icon}"></i></div>
             <div class="mb-kpi-body">
               <div class="mb-kpi-value">${c.value}</div>
               <div class="mb-kpi-label">${c.label}</div>
@@ -392,13 +611,13 @@ class InsightView extends BaseView {
     return `
       <div class="mb-top-posts">
         ${topPosts.slice(0, 5).map((p, i) => {
-          const eng = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+          const eng     = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
           const preview = (p.message || p.content_preview || '').slice(0, 100);
           const dateStr = p.created_time || p.captured_at || '';
-          const date = dateStr ? new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '';
-          const pic = p.picture || null;
+          const date    = dateStr ? new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '';
+          const pic     = p.picture || null;
           const network = p.network || 'facebook';
-          const icon = network === 'instagram' ? 'fa-instagram fab' : 'fa-facebook-square fab';
+          const icon    = network === 'instagram' ? 'fa-instagram fab' : 'fa-facebook-square fab';
           return `
             <div class="mb-post-card">
               <div class="mb-post-rank">${i + 1}</div>
@@ -434,76 +653,56 @@ class InsightView extends BaseView {
   }
 
   _buildHeatmapHTML(allPosts, apiHeatmap) {
-    const days  = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const startH = 6, endH = 23;
-    const hours = endH - startH + 1;
+    const days   = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const startH = 6, endH = 23, hours = endH - startH + 1;
 
-    // Build 7×24 matrix from posts
     const matrix = Array.from({ length: 7 }, () => Array(24).fill(0));
     allPosts.forEach(p => {
       const d = new Date(p.created_time);
       if (isNaN(d)) return;
-      const day  = d.getDay();
-      const hour = d.getHours();
-      const eng  = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
-      matrix[day][hour] += Math.max(1, eng);
+      matrix[d.getDay()][d.getHours()] += Math.max(1, (p.likes || 0) + (p.comments || 0) + (p.shares || 0));
     });
 
-    // Fall back to apiHeatmap if no posts
-    const hasData = matrix.flat().some(v => v > 0);
-    const hourSums  = Array(24).fill(0);
-    const daySums   = Array(7).fill(0);
+    const hasData  = matrix.flat().some(v => v > 0);
+    const hourSums = Array(24).fill(0);
+    const daySums  = Array(7).fill(0);
     matrix.forEach((row, d) => row.forEach((v, h) => { hourSums[h] += v; daySums[d] += v; }));
 
     let bestHour = hourSums.indexOf(Math.max(...hourSums));
     let bestDay  = daySums.indexOf(Math.max(...daySums));
-
-    // Override with API heatmap if no posts
-    if (!hasData && apiHeatmap) {
-      bestHour = apiHeatmap.best_hour ?? bestHour;
-      bestDay  = apiHeatmap.best_day  ?? bestDay;
-    }
+    if (!hasData && apiHeatmap) { bestHour = apiHeatmap.best_hour ?? bestHour; bestDay = apiHeatmap.best_day ?? bestDay; }
 
     const max = Math.max(...matrix.flat(), 1);
-
     let cells = '';
     for (let d = 0; d < 7; d++) {
       for (let h = startH; h <= endH; h++) {
-        const val       = matrix[d][h];
-        const intensity = val / max;
-        const alpha     = 0.06 + intensity * 0.8;
-        const isBest    = d === bestDay && h === bestHour;
+        const val      = matrix[d][h];
+        const alpha    = 0.06 + (val / max) * 0.8;
+        const isBest   = d === bestDay && h === bestHour;
         cells += `<div class="mb-hm-cell${isBest ? ' mb-hm-cell--best' : ''}"
           style="background:rgba(107,207,127,${alpha.toFixed(2)})"
           title="${days[d]} ${h}:00${val > 0 ? ' — ' + val + ' interacciones' : ''}"></div>`;
       }
     }
 
-    const bh = bestHour >= 12
-      ? `${bestHour === 12 ? 12 : bestHour - 12}pm`
-      : `${bestHour === 0 ? 12 : bestHour}am`;
-    const bd = days[bestDay] || '';
-
-    const hourLabels = Array.from({ length: hours }, (_, i) => {
-      const h = i + startH;
-      return `<div class="mb-hm-h-label">${h % 6 === 0 ? h + 'h' : ''}</div>`;
-    }).join('');
+    const bh = bestHour >= 12 ? `${bestHour === 12 ? 12 : bestHour - 12}pm` : `${bestHour === 0 ? 12 : bestHour}am`;
 
     return `
       <div class="mb-heatmap-wrap">
         <div class="mb-heatmap">
-          <div class="mb-hm-days">
-            ${days.map(d => `<div class="mb-hm-d-label">${d}</div>`).join('')}
+          <div class="mb-hm-days">${days.map(d => `<div class="mb-hm-d-label">${d}</div>`).join('')}</div>
+          <div class="mb-hm-grid" style="--hm-cols:${hours}">${cells}</div>
+          <div class="mb-hm-hours" style="--hm-cols:${hours}">
+            ${Array.from({ length: hours }, (_, i) => {
+              const h = i + startH;
+              return `<div class="mb-hm-h-label">${h % 6 === 0 ? h + 'h' : ''}</div>`;
+            }).join('')}
           </div>
-          <div class="mb-hm-grid" style="--hm-cols:${hours}">
-            ${cells}
-          </div>
-          <div class="mb-hm-hours">${hourLabels}</div>
         </div>
         ${(hasData || apiHeatmap) ? `
           <div class="mb-hm-insight">
             <i class="fas fa-lightbulb"></i>
-            Tu audiencia responde mejor los <strong>${bd}</strong> a las <strong>${bh}</strong>
+            Tu audiencia responde mejor los <strong>${days[bestDay]}</strong> a las <strong>${bh}</strong>
           </div>` : `
           <div class="mb-empty-sm" style="margin-top:0.75rem">
             <p>Publica más contenido para ver el heatmap de audiencia.</p>
@@ -514,37 +713,40 @@ class InsightView extends BaseView {
   // ── My Brands: interactions ────────────────────────────────────────────────
 
   _setupDashboardEvents(insightRes, postsRes) {
-    // Brand selector
     const sel = document.getElementById('mbBrandSelect');
     if (sel) {
       sel.addEventListener('change', async () => {
+        this._teardownLive();
         this._brandContainerId = sel.value;
         localStorage.setItem('mb_selected_brand', sel.value);
-        await this._loadAndRenderDashboard();
+        await this._loadAndRenderDashboard(false);
       });
     }
 
-    // Period tabs
     const periodTabs = document.getElementById('mbPeriodTabs');
     if (periodTabs) {
       periodTabs.addEventListener('click', async e => {
         const btn = e.target.closest('[data-period]');
-        if (!btn) return;
+        if (!btn || btn.dataset.period === this._period) return;
+        this._teardownLive();
         this._period = btn.dataset.period;
-        periodTabs.querySelectorAll('.mb-period-btn').forEach(b =>
-          b.classList.toggle('active', b.dataset.period === this._period)
-        );
-        await this._loadAndRenderDashboard();
+        await this._loadAndRenderDashboard(false);
       });
     }
 
-    // Refresh
     const refreshBtn = document.getElementById('mbRefreshBtn');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
-        refreshBtn.classList.add('spinning');
-        await this._loadAndRenderDashboard();
-        refreshBtn.classList.remove('spinning');
+        if (this._syncing) return;
+        refreshBtn.querySelector('i')?.classList.add('mb-spin');
+        const { data: { session } } = await this._supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          await this._triggerBackgroundSync(token, this._brandContainerId);
+        } else {
+          await this._loadAndRenderDashboard(true);
+        }
+        refreshBtn.querySelector('i')?.classList.remove('mb-spin');
       });
     }
   }
@@ -553,18 +755,13 @@ class InsightView extends BaseView {
 
   _renderCharts(insight, posts) {
     if (!window.Chart) return;
+    Chart.defaults.color       = 'rgba(212,209,216,0.55)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.font.size   = 11;
 
-    // Global Chart.js defaults (dark theme)
-    Chart.defaults.color          = 'rgba(212,209,216,0.55)';
-    Chart.defaults.borderColor    = 'rgba(255,255,255,0.07)';
-    Chart.defaults.font.family    = 'Inter, sans-serif';
-    Chart.defaults.font.size      = 11;
-
-    const allPosts = [
-      ...(posts?.facebook_posts || []),
-      ...(posts?.instagram_posts || [])
-    ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
-
+    const allPosts   = [...(posts?.facebook_posts || []), ...(posts?.instagram_posts || [])]
+      .sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
     const days       = parseInt(this._period) || 30;
     const timeSeries = this._buildTimeSeries(allPosts, days);
     const content    = this._buildContentTypes(allPosts);
@@ -584,51 +781,18 @@ class InsightView extends BaseView {
       data: {
         labels: ts.labels,
         datasets: [
-          {
-            label: 'Posts',
-            data: ts.posts,
-            yAxisID: 'yPosts',
-            borderColor: '#6bcf7f',
-            backgroundColor: 'rgba(107,207,127,0.08)',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: true,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-          },
-          {
-            label: 'Engagement',
-            data: ts.engagement,
-            yAxisID: 'yEng',
-            borderColor: '#a78bfa',
-            backgroundColor: 'rgba(167,139,250,0.08)',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: false,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-          },
+          { label: 'Posts', data: ts.posts, yAxisID: 'yPosts', borderColor: '#6bcf7f', backgroundColor: 'rgba(107,207,127,0.08)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3, pointHoverRadius: 5 },
+          { label: 'Engagement', data: ts.engagement, yAxisID: 'yEng', borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.08)', borderWidth: 2, tension: 0.4, fill: false, pointRadius: 3, pointHoverRadius: 5 },
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: true, position: 'top', align: 'end' },
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8 },
-        },
+        plugins: { legend: { display: true, position: 'top', align: 'end' }, tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8 } },
         scales: {
           x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
-          yPosts: {
-            type: 'linear', position: 'left',
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { stepSize: 1, precision: 0 },
-          },
-          yEng: {
-            type: 'linear', position: 'right',
-            grid: { drawOnChartArea: false },
-          },
+          yPosts: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1, precision: 0 } },
+          yEng:   { type: 'linear', position: 'right', grid: { drawOnChartArea: false } },
         }
       }
     });
@@ -637,54 +801,20 @@ class InsightView extends BaseView {
   _renderEngRateChart(allPosts, days) {
     const el = document.getElementById('mbEngRateChart');
     if (!el) return;
-
-    const now    = new Date();
-    const cutoff = new Date(now - days * 86400000);
-
-    // Build per-post engagement rate sorted by date
-    const filtered = allPosts
-      .filter(p => p.created_time && new Date(p.created_time) >= cutoff)
-      .slice(-30); // max 30 data points
-
-    const labels = filtered.map(p =>
-      new Date(p.created_time).toLocaleDateString('es', { day: 'numeric', month: 'short' })
-    );
-    const engRates = filtered.map(p => {
-      const eng   = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
-      // Without per-post reach, use engagement/100 as proxy percentage
+    const cutoff   = new Date(Date.now() - days * 86400000);
+    const filtered = allPosts.filter(p => p.created_time && new Date(p.created_time) >= cutoff).slice(-30);
+    const labels   = filtered.map(p => new Date(p.created_time).toLocaleDateString('es', { day: 'numeric', month: 'short' }));
+    const vals     = filtered.map(p => {
+      const eng = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
       return parseFloat((eng / Math.max(1, eng + 100) * 100).toFixed(2));
     });
-
     this._chartInstances.engRate = new Chart(el, {
       type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Engagement',
-          data: engRates,
-          borderColor: '#60a5fa',
-          backgroundColor: 'rgba(96,165,250,0.12)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-        }]
-      },
+      data: { labels, datasets: [{ label: 'Engagement', data: vals, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.12)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3, pointHoverRadius: 5 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
-            callbacks: { label: ctx => `Engagement índice: ${ctx.parsed.y}` }
-          },
-        },
-        scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
-          y: { grid: { color: 'rgba(255,255,255,0.05)' } }
-        }
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8, callbacks: { label: ctx => `Índice: ${ctx.parsed.y}` } } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
       }
     });
   }
@@ -692,39 +822,17 @@ class InsightView extends BaseView {
   _renderContentChart(contentTypes) {
     const el = document.getElementById('mbContentChart');
     if (!el) return;
-
     const colors = ['#6bcf7f','#60a5fa','#a78bfa','#fb923c','#f472b6','#2dd4bf'];
     const labels = contentTypes.map(c => c.label);
     const data   = contentTypes.map(c => c.count);
-
     this._chartInstances.content = new Chart(el, {
       type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors.slice(0, labels.length),
-          borderColor: 'rgba(0,0,0,0.3)',
-          borderWidth: 2,
-          hoverOffset: 4,
-        }]
-      },
+      data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderColor: 'rgba(0,0,0,0.3)', borderWidth: 2, hoverOffset: 4 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
-            callbacks: {
-              label: ctx => ` ${ctx.label}: ${ctx.parsed} posts (${Math.round(ctx.parsed / data.reduce((a,b)=>a+b,0) * 100)}%)`
-            }
-          },
-        },
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8 } }
       },
       plugins: [{
-        // Custom legend in DOM
         afterRender: () => {
           const legendEl = document.getElementById('mbContentLegend');
           if (!legendEl || legendEl.dataset.built) return;
@@ -743,42 +851,15 @@ class InsightView extends BaseView {
   _renderToneChart(tones) {
     const el = document.getElementById('mbToneChart');
     if (!el) return;
-
-    const toneColors = {
-      positivo: '#6bcf7f', inspirador: '#60a5fa', educativo: '#a78bfa',
-      urgente: '#fb923c', neutral: '#87868B', emocional: '#f472b6',
-      informativo: '#2dd4bf', humorístico: '#facc15',
-    };
-
+    const toneColors = { positivo: '#6bcf7f', inspirador: '#60a5fa', educativo: '#a78bfa', urgente: '#fb923c', neutral: '#87868B', emocional: '#f472b6', informativo: '#2dd4bf', humorístico: '#facc15' };
     const colors = tones.map(t => toneColors[t.tone?.toLowerCase()] || '#87868B');
-
     this._chartInstances.tone = new Chart(el, {
       type: 'bar',
-      data: {
-        labels: tones.map(t => t.tone),
-        datasets: [{
-          data: tones.map(t => t.pct || t.count),
-          backgroundColor: colors.map(c => c + 'CC'),
-          borderColor: colors,
-          borderWidth: 1,
-          borderRadius: 5,
-        }]
-      },
+      data: { labels: tones.map(t => t.tone), datasets: [{ data: tones.map(t => t.pct || t.count), backgroundColor: colors.map(c => c + 'CC'), borderColor: colors, borderWidth: 1, borderRadius: 5 }] },
       options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
-            callbacks: { label: ctx => ` ${ctx.parsed.x}%` }
-          },
-        },
-        scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } },
-          y: { grid: { display: false } }
-        }
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8, callbacks: { label: ctx => ` ${ctx.parsed.x}%` } } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } }
       }
     });
   }
@@ -786,40 +867,29 @@ class InsightView extends BaseView {
   // ── Data processing ────────────────────────────────────────────────────────
 
   _computeKPIs(insight, postsData) {
-    const allPosts = [
-      ...(postsData?.facebook_posts || []),
-      ...(postsData?.instagram_posts || [])
-    ];
-    const totalPosts      = allPosts.length;
+    const allPosts        = [...(postsData?.facebook_posts || []), ...(postsData?.instagram_posts || [])];
     const totalLikes      = allPosts.reduce((s, p) => s + (p.likes    || 0), 0);
     const totalComments   = allPosts.reduce((s, p) => s + (p.comments || 0), 0);
     const totalShares     = allPosts.reduce((s, p) => s + (p.shares   || 0), 0);
     const totalEngagement = totalLikes + totalComments + totalShares;
-
-    const snap      = insight?.dimensions?.A_activity?.snapshot;
-    const reach     = snap?.reach || snap?.total_reach || 0;
-    const followers = snap?.followers || snap?.fan_count || postsData?.page?.fans || 0;
-    const engRate   = reach > 0
+    const totalPosts      = allPosts.length;
+    const snap            = insight?.dimensions?.A_activity?.snapshot;
+    const reach           = snap?.reach || snap?.total_reach || 0;
+    const engRate         = reach > 0
       ? ((totalEngagement / reach) * 100).toFixed(1)
-      : totalPosts > 0
-        ? ((totalEngagement / totalPosts)).toFixed(1)
-        : '0.0';
-
-    return { totalPosts, totalLikes, totalComments, totalShares, totalEngagement, reach, followers, engRate };
+      : totalPosts > 0 ? (totalEngagement / totalPosts).toFixed(1) : '0.0';
+    return { totalPosts, totalLikes, totalComments, totalShares, totalEngagement, reach, engRate };
   }
 
   _buildTimeSeries(allPosts, days = 30) {
-    const now    = new Date();
-    const labels = [];
+    const now     = new Date();
+    const labels  = [];
     const dateMap = {};
-
     for (let i = days - 1; i >= 0; i--) {
-      const d   = new Date(now - i * 86400000);
-      const key = d.toISOString().slice(0, 10);
+      const key = new Date(now - i * 86400000).toISOString().slice(0, 10);
       labels.push(key);
       dateMap[key] = { posts: 0, engagement: 0 };
     }
-
     allPosts.forEach(p => {
       if (!p.created_time) return;
       const key = new Date(p.created_time).toISOString().slice(0, 10);
@@ -827,30 +897,22 @@ class InsightView extends BaseView {
       dateMap[key].posts++;
       dateMap[key].engagement += (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
     });
-
     return {
-      labels: labels.map(l => {
-        const d = new Date(l + 'T12:00:00');
-        return d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
-      }),
+      labels:     labels.map(l => new Date(l + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' })),
       posts:      labels.map(l => dateMap[l].posts),
       engagement: labels.map(l => dateMap[l].engagement),
     };
   }
 
   _buildContentTypes(allPosts) {
-    const counts = {};
-    const engMap = {};
+    const counts = {}, engMap = {};
     allPosts.forEach(p => {
       let type = (p.media_type || 'IMAGE').toUpperCase();
       if (type === 'CAROUSEL_ALBUM') type = 'CARRUSEL';
-      if (type === 'IMAGE')          type = 'IMAGEN';
-      if (type === 'VIDEO')          type = 'VIDEO';
-      if (type === 'REEL')           type = 'REEL';
-      if (type === 'TEXT' || type === 'LINK') type = 'TEXTO';
+      else if (type === 'IMAGE')     type = 'IMAGEN';
+      else if (type === 'TEXT' || type === 'LINK') type = 'TEXTO';
       counts[type] = (counts[type] || 0) + 1;
-      const eng = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
-      engMap[type] = (engMap[type] || 0) + eng;
+      engMap[type] = (engMap[type] || 0) + (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
     });
     return Object.entries(counts)
       .map(([label, count]) => ({ label, count, avgEng: Math.round((engMap[label] || 0) / count) }))
@@ -858,10 +920,8 @@ class InsightView extends BaseView {
   }
 
   _getTopPosts(insight, allPosts) {
-    // Prefer insight's analyzed top posts, supplement with live posts
     const analyzed = insight?.dimensions?.D_sentiment?.top_posts || [];
     if (analyzed.length >= 3) return analyzed;
-
     return [...allPosts]
       .map(p => ({ ...p, _eng: (p.likes || 0) + (p.comments || 0) + (p.shares || 0) }))
       .sort((a, b) => b._eng - a._eng)
@@ -871,50 +931,35 @@ class InsightView extends BaseView {
   _generateInsights(kpis, timeSeries, contentTypes) {
     const insights = [];
     const { posts: ps, engagement: engs } = timeSeries;
-    const mid = Math.floor(ps.length / 2);
+    const mid      = Math.floor(ps.length / 2);
+    const rPosts   = ps.slice(mid).reduce((a, b) => a + b, 0);
+    const oPosts   = ps.slice(0, mid).reduce((a, b) => a + b, 0);
+    const rEng     = engs.slice(mid).reduce((a, b) => a + b, 0);
+    const oEng     = engs.slice(0, mid).reduce((a, b) => a + b, 0);
 
-    const recentPosts = ps.slice(mid).reduce((a, b) => a + b, 0);
-    const olderPosts  = ps.slice(0, mid).reduce((a, b) => a + b, 0);
-    const recentEng   = engs.slice(mid).reduce((a, b) => a + b, 0);
-    const olderEng    = engs.slice(0, mid).reduce((a, b) => a + b, 0);
-
-    if (recentPosts > olderPosts * 1.4 && recentEng < olderEng * 0.9 && recentPosts > 0) {
-      insights.push({
-        type: 'warning',
-        icon: 'fa-exclamation-triangle',
-        text: 'Publicaste más recientemente, pero el engagement bajó. Menos puede ser más.'
-      });
+    if (rPosts > oPosts * 1.4 && rEng < oEng * 0.9 && rPosts > 0) {
+      insights.push({ type: 'warning', icon: 'fa-exclamation-triangle', text: 'Publicaste más recientemente, pero el engagement bajó. Menos puede ser más.' });
     }
-
     if (contentTypes.length >= 2) {
       const sorted = [...contentTypes].sort((a, b) => b.avgEng - a.avgEng);
       const best = sorted[0], worst = sorted[sorted.length - 1];
       if (best.avgEng > worst.avgEng * 1.5) {
-        const ratio = Math.round(best.avgEng / Math.max(1, worst.avgEng));
-        insights.push({
-          type: 'tip',
-          icon: 'fa-lightbulb',
-          text: `Los posts de <strong>${best.label}</strong> generan ${ratio}x más engagement que los de ${worst.label.toLowerCase()}.`
-        });
+        insights.push({ type: 'tip', icon: 'fa-lightbulb', text: `Los posts de <strong>${best.label}</strong> generan ${Math.round(best.avgEng / Math.max(1, worst.avgEng))}x más engagement que los de ${worst.label.toLowerCase()}.` });
       }
     }
-
     const er = parseFloat(kpis.engRate);
     if (!isNaN(er) && kpis.reach > 0) {
-      if (er >= 5) {
-        insights.push({ type: 'success', icon: 'fa-trophy', text: `Engagement rate de <strong>${er}%</strong>. Excelente — top tier >5%.` });
-      } else if (er < 1) {
-        insights.push({ type: 'warning', icon: 'fa-chart-line', text: `Engagement rate de <strong>${er}%</strong>. El objetivo es superar el 3%.` });
-      }
+      if (er >= 5)  insights.push({ type: 'success', icon: 'fa-trophy',     text: `Engagement rate de <strong>${er}%</strong>. Excelente — top tier >5%.` });
+      else if (er < 1) insights.push({ type: 'warning', icon: 'fa-chart-line', text: `Engagement rate de <strong>${er}%</strong>. El objetivo es superar el 3%.` });
     }
-
     return insights;
   }
 
   // ── Formatters ─────────────────────────────────────────────────────────────
 
   _fmt(n) {
-    if (n == null || isNaN(n) || n === 0) return n === 0 ? '0' : '—';
+    if (n == null || isNaN(n)) return '—';
+    if (n === 0) return '0';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
     return String(n);
