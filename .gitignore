@@ -134,3 +134,9 @@ dist/
 
 # Fondos: solo local, no subir al repo
 recursos/Recursos de Marca/Fondos/
+
+# Esquemas de base de datos y migraciones SQL: no exponer estructura interna
+SQL/
+
+# Documentación interna sensible (arquitectura, seguridad, RLS)
+docs/SEGURIDAD_RLS_MAPA_PAGINAS.md

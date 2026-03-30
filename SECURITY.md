@@ -1,36 +1,29 @@
-# Seguridad: Git y credenciales
+# Seguridad
 
-## Token de GitHub (PAT)
+## Reglas generales
 
-Si en algún momento el remoto `origin` incluía el PAT en la URL  
-(`https://x-access-token:TOKEN@github.com/...`), ese token debe considerarse **comprometido**.
+- Nunca incluyas tokens, claves ni credenciales en el código o mensajes de commit.
+- Configura todos los secretos exclusivamente como variables de entorno en el panel de despliegue.
+- Revisa `.gitignore` antes de cada commit para evitar subir archivos sensibles.
 
-1. GitHub → **Settings** → **Developer settings** → **Personal access tokens**
-2. **Revocar** el token afectado
-3. Crear uno **nuevo** solo si lo necesitas, con el **mínimo alcance** (por ejemplo `repo` solo para repos privados)
+## Variables de entorno requeridas
 
-## Remoto limpio (recomendado)
+Configurar en el panel de despliegue (no en el repositorio):
+- `SUPABASE_DATABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_JWT_SECRET`
+- `OPENAI_API_KEY`
+- `KIE_API_KEY`
+- `META_APP_ID` / `META_APP_SECRET`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `AI_ENGINE_URL`
+- `OAUTH_STATE_SECRET`
+- `META_WEBHOOK_VERIFY_TOKEN`
 
-El remoto no debe llevar credenciales embebidas:
+## Archivos excluidos del repositorio
 
-```bash
-git remote set-url origin https://github.com/Ardeagency/AI_Smart_Content.git
-```
-
-## Cómo autenticarte al hacer `git push`
-
-- **GitHub CLI:** `gh auth login`
-- **SSH:** clave en tu cuenta GitHub y remoto  
-  `git@github.com:Ardeagency/AI_Smart_Content.git`
-- **Credential helper** del sistema o caché tras configurar credenciales
-
-No guardes el PAT dentro de `.git/config` ni en scripts del repositorio.
-
-## Secretos de la aplicación
-
-No subas `.env` con `SUPABASE_SERVICE_ROLE_KEY`, claves de OpenAI, etc.  
-Revisa `.gitignore` antes de cada commit.
-
-## Vera / ai-engine
-
-La URL del motor (`AI_ENGINE_BASE_URL`) es configuración de **despliegue**, no debe hardcodearse con secretos. Usa variables de entorno o `runtime-config.js` solo con URLs públicas del API.
+Los siguientes tipos de archivos nunca deben subirse al repositorio:
+- Archivos `.env` con valores reales
+- Directorio `SQL/` (esquemas de base de datos)
+- Documentos internos de arquitectura de seguridad

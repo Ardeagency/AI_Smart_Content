@@ -1,44 +1,65 @@
 /**
- * Netlify Function para servir la configuración de Supabase
- * 
- * Esta función expone de forma segura las variables de entorno de Netlify
- * al frontend. Solo expone SUPABASE_URL y SUPABASE_ANON_KEY (seguras para el cliente).
- * 
+ * Netlify Function para servir la configuración de Supabase al frontend propio.
+ * Solo expone SUPABASE_URL y SUPABASE_ANON_KEY (valores diseñados para el cliente).
+ * El acceso se restringe al dominio de producción para evitar extracción cross-origin.
+ *
  * Endpoint: /.netlify/functions/supabase-config
  */
 
+const ALLOWED_ORIGINS = [
+    'https://aismartcontent.io',
+    'https://www.aismartcontent.io'
+];
+
 exports.handler = async (event, context) => {
-    // Solo permitir GET requests
-    if (event.httpMethod !== 'GET') {
+    const origin = event.headers?.origin || event.headers?.Origin || '';
+
+    // Solo permitir GET y OPTIONS
+    if (event.httpMethod === 'OPTIONS') {
+        if (!ALLOWED_ORIGINS.includes(origin)) {
+            return { statusCode: 403, body: '' };
+        }
         return {
-            statusCode: 405,
-            body: JSON.stringify({ error: 'Method not allowed' })
+            statusCode: 204,
+            headers: {
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Methods': 'GET',
+                'Vary': 'Origin'
+            },
+            body: ''
         };
     }
 
-    // Obtener variables de entorno de Netlify
+    if (event.httpMethod !== 'GET') {
+        return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
+    // En producción, restringir al dominio autorizado.
+    // En localhost (preview/dev) se permite para facilitar el desarrollo local.
+    const isLocalhost = !origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
+    if (!isLocalhost && !ALLOWED_ORIGINS.includes(origin)) {
+        return { statusCode: 403, body: JSON.stringify({ error: 'Forbidden' }) };
+    }
+
     const supabaseUrl = process.env.SUPABASE_DATABASE_URL || '';
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 
-    // Validar que las variables estén configuradas
     if (!supabaseUrl || !supabaseAnonKey) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ 
-                error: 'Supabase configuration missing in server environment variables' 
-            })
+            body: JSON.stringify({ error: 'Configuración del servidor incompleta' })
         };
     }
 
-    // Retornar configuración (solo las variables seguras para el cliente)
-    // META_APP_ID es seguro de exponer: es un identificador público que aparece
-    // en cada llamada al SDK de Facebook y es visible para cualquier usuario.
+    const corsOrigin = isLocalhost ? (origin || '*') : origin;
+
     return {
         statusCode: 200,
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // Permitir CORS
-            'Cache-Control': 'public, max-age=3600' // Cache por 1 hora
+            'Access-Control-Allow-Origin': corsOrigin,
+            'Vary': 'Origin',
+            'Cache-Control': 'private, no-store'
         },
         body: JSON.stringify({
             url: supabaseUrl,
