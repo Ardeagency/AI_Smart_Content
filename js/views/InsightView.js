@@ -2,13 +2,28 @@
  * InsightView – Panel de inteligencia de marca.
  * Sub-páginas: My Brands · Competence · Tendencies · Strategy
  *
- * My Brands:
- *  - Supabase Realtime en brand_posts + brand_analytics_snapshots
- *  - Auto-sync en background cuando stale=true
- *  - Polling cada 5 min + Page Visibility API
- *  - Indicador live + última sincronización
+ * My Brands — arquitectura event-driven (sin polling/cron):
+ *
+ *  EVENTO               ACCIÓN
+ *  ─────────────────────────────────────────────────────────
+ *  mount                fetch DB → si stale → sync Meta
+ *  realtime push        solo re-fetch DB (no re-sync Meta)
+ *  visibilitychange     si >MIN_REFETCH → re-fetch;
+ *                       si además stale → sync Meta
+ *  user: refresh btn    sync Meta + re-fetch
+ *  user: brand/period   sync Meta + re-fetch
+ *
+ *  Guards:
+ *  - _syncing flag         → un solo sync a la vez
+ *  - MIN_SYNC_INTERVAL     → mínimo 2 min entre syncs a Meta
+ *  - MIN_REFETCH_INTERVAL  → mínimo 30s entre re-fetches
+ *  - debounce 1.5s en Realtime → absorbe ráfagas de cambios
  */
 class InsightView extends BaseView {
+
+  static MIN_SYNC_INTERVAL   = 2 * 60 * 1000;  // 2 min entre syncs Meta
+  static MIN_REFETCH_INTERVAL = 30 * 1000;       // 30s entre re-fetches DB
+
   constructor() {
     super();
     this._activeTab         = 'my-brands';
@@ -18,13 +33,13 @@ class InsightView extends BaseView {
     this._period            = '30d';
     this._chartInstances    = {};
 
-    // Live / realtime state
+    // Event-driven live state (sin polling/cron)
     this._realtimeChannel   = null;
-    this._pollTimer         = null;
-    this._labelTimer        = null;
-    this._refreshTimer      = null;
+    this._labelTimer        = null;   // único timer: actualizar "hace X min" label
+    this._refreshTimer      = null;   // debounce Realtime
     this._visibilityHandler = null;
-    this._lastSyncTime      = null;
+    this._lastFetchTime     = null;   // último re-fetch de DB
+    this._lastSyncTime      = null;   // último sync con Meta API
     this._syncing           = false;
     this._liveReady         = false;
   }
@@ -193,35 +208,32 @@ class InsightView extends BaseView {
     body.innerHTML = this._myBrandsDashboardHTML(insightRes, postsRes);
     this._setupDashboardEvents(insightRes, postsRes);
     this._renderCharts(insightRes, postsRes);
-    this._lastSyncTime = Date.now();
+    this._lastFetchTime = Date.now();  // timestamp del último re-fetch de DB
     this._updateLastSyncLabel();
 
-    // Primera carga: setup live
+    // Primera carga: setup live (sin polling)
     if (!isLiveRefresh) {
       this._liveReady = false;
-      this._setupLive(insightRes);
+      this._setupLive();
     } else {
-      // Actualizar indicador sin re-suscribir
       this._updateLiveIndicator(this._liveReady ? 'SUBSCRIBED' : 'CONNECTING');
     }
 
-    // Auto-sync si datos desactualizados y Meta está conectada
+    // Evento MOUNT/BRAND-CHANGE: auto-sync Meta si stale
     if (insightRes?.stale && postsRes?.ok !== false && !isLiveRefresh) {
       this._triggerBackgroundSync(token, bcId);
     }
   }
 
-  // ── Live: Realtime + Polling + Visibility ─────────────────────────────────
+  // ── Live: event-driven (sin polling/cron) ────────────────────────────────
 
-  _setupLive(insightRes) {
-    this._setupRealtimeSubscription();
-    this._setupPolling();
-    this._setupVisibilityListener();
-    this._setupLabelInterval();
+  _setupLive() {
+    this._setupRealtimeSubscription();  // evento: DB change (WebSocket)
+    this._setupVisibilityListener();    // evento: tab focus
+    this._setupLabelInterval();         // único timer: label "hace X min"
   }
 
   _teardownLive() {
-    this._clearPolling();
     this._clearLabelInterval();
     this._removeVisibilityListener();
     this._clearRefreshTimer();
@@ -275,30 +287,27 @@ class InsightView extends BaseView {
     }
   }
 
-  _setupPolling() {
-    this._clearPolling();
-    this._pollTimer = setInterval(async () => {
-      if (document.visibilityState !== 'visible') return;
-      if (this._syncing || this._activeTab !== 'my-brands') return;
-      const elapsed = Date.now() - (this._lastSyncTime || 0);
-      if (elapsed >= 5 * 60 * 1000) {
-        await this._scheduleRefresh('poll');
-      }
-    }, 60 * 1000); // Check cada minuto, pero sólo ejecuta si han pasado 5 min
-  }
-
-  _clearPolling() {
-    if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
-  }
-
   _setupVisibilityListener() {
     this._removeVisibilityListener();
-    this._visibilityHandler = () => {
+    this._visibilityHandler = async () => {
       if (document.visibilityState !== 'visible') return;
       if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
-      const elapsed = Date.now() - (this._lastSyncTime || 0);
-      if (elapsed >= 5 * 60 * 1000) {
-        this._scheduleRefresh('visibility');
+
+      const sinceFetch = Date.now() - (this._lastFetchTime || 0);
+      const sinceSyncc = Date.now() - (this._lastSyncTime  || 0);
+
+      // Solo re-fetch si han pasado más de MIN_REFETCH_INTERVAL
+      if (sinceFetch < InsightView.MIN_REFETCH_INTERVAL) return;
+
+      // Re-fetch de DB (evento: usuario vuelve al tab)
+      await this._dbRefresh();
+
+      // Adicionalmente, si el último sync fue hace más de MIN_SYNC_INTERVAL → sync Meta
+      if (sinceSyncc >= InsightView.MIN_SYNC_INTERVAL) {
+        const { data: { session } } = await this._supabase.auth.getSession();
+        if (session?.access_token) {
+          this._triggerBackgroundSync(session.access_token, this._brandContainerId);
+        }
       }
     };
     document.addEventListener('visibilitychange', this._visibilityHandler);
@@ -324,19 +333,37 @@ class InsightView extends BaseView {
     if (this._refreshTimer) { clearTimeout(this._refreshTimer); this._refreshTimer = null; }
   }
 
-  /** Debounce de 1.5s para no disparar renders en ráfaga */
+  /**
+   * Re-fetch solo desde DB (evento: Realtime push).
+   * NO llama a Meta API. Debounce 1.5s para absorber ráfagas.
+   */
   _scheduleRefresh(source) {
     this._clearRefreshTimer();
     this._refreshTimer = setTimeout(async () => {
       this._refreshTimer = null;
       if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
-      await this._loadAndRenderDashboard(true);
+      // Guard: no re-fetch si ya se hizo hace menos de MIN_REFETCH_INTERVAL
+      if (Date.now() - (this._lastFetchTime || 0) < InsightView.MIN_REFETCH_INTERVAL) return;
+      await this._dbRefresh();
     }, 1500);
   }
 
-  /** Llama a /api/brand/sync-meta en background y dispara refresh al terminar */
+  /**
+   * Re-fetch de DB sin sync Meta. Actualiza UI.
+   */
+  async _dbRefresh() {
+    await this._loadAndRenderDashboard(true);
+  }
+
+  /**
+   * Llama a /api/brand/sync-meta (Meta API) en background.
+   * Guard: solo un sync a la vez + mínimo MIN_SYNC_INTERVAL entre syncs.
+   */
   async _triggerBackgroundSync(token, bcId) {
     if (this._syncing) return;
+    const sinceLast = Date.now() - (this._lastSyncTime || 0);
+    if (sinceLast < InsightView.MIN_SYNC_INTERVAL) return; // rate-limit
+
     this._syncing = true;
     this._setSyncToast(true);
 
@@ -349,8 +376,8 @@ class InsightView extends BaseView {
       const data = await res.json().catch(() => ({}));
       if (data.ok) {
         this._lastSyncTime = Date.now();
-        // Realtime debería disparar el refresh automáticamente,
-        // pero como fallback programamos uno explícito
+        // Realtime dispara el refresh cuando la DB cambia.
+        // Si Realtime no está disponible, _scheduleRefresh actúa como fallback.
         this._scheduleRefresh('sync-complete');
       }
     } catch (e) {
@@ -388,8 +415,10 @@ class InsightView extends BaseView {
 
   _updateLastSyncLabel() {
     const el = document.getElementById('mbLastSync');
-    if (!el || !this._lastSyncTime) return;
-    const mins = Math.floor((Date.now() - this._lastSyncTime) / 60000);
+    if (!el) return;
+    const ref = this._lastFetchTime;
+    if (!ref) { el.textContent = 'Ahora'; return; }
+    const mins = Math.floor((Date.now() - ref) / 60000);
     el.textContent = mins === 0 ? 'Ahora' : `Hace ${mins} min`;
   }
 
@@ -742,9 +771,11 @@ class InsightView extends BaseView {
         const { data: { session } } = await this._supabase.auth.getSession();
         const token = session?.access_token;
         if (token) {
+          // Evento USER: bypass rate-limit del MIN_SYNC_INTERVAL
+          this._lastSyncTime = null;
           await this._triggerBackgroundSync(token, this._brandContainerId);
         } else {
-          await this._loadAndRenderDashboard(true);
+          await this._dbRefresh();
         }
         refreshBtn.querySelector('i')?.classList.remove('mb-spin');
       });
