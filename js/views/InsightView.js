@@ -1,12 +1,16 @@
 /**
  * InsightView – Panel de inteligencia de marca.
  * Sub-páginas: My Brands · Competence · Tendencies · Strategy
- * (Contenido en estado «próximamente»; sin llamadas a APIs externas.)
  */
 class InsightView extends BaseView {
   constructor() {
     super();
     this._activeTab = 'my-brands';
+    this._supabase   = null;
+    this._brandContainerId = null;
+    this._brandContainers  = [];
+    this._period     = '30d';
+    this._chartInstances = {};
   }
 
   async onEnter() {
@@ -30,6 +34,8 @@ class InsightView extends BaseView {
   }
 
   renderHTML() { return this._buildShell(); }
+
+  // ── Shell ──────────────────────────────────────────────────────────────────
 
   _buildShell() {
     const tabs = [
@@ -66,29 +72,859 @@ class InsightView extends BaseView {
   _renderTab(tabId) {
     const body = document.getElementById('insightTabBody');
     if (!body) return;
+    this._destroyCharts();
     const map = {
-      'my-brands': () => this._pageComingSoon(
-        'My Brands',
-        'fa-layer-group',
-        'Aquí verás métricas y contenido de tus marcas en un solo panel. Estamos preparando esta experiencia.'
-      ),
-      competence: () => this._pageComingSoon(
-        'Competence',
-        'fa-chess',
-        'Analiza a tu competencia: publicaciones, métricas y posicionamiento en redes sociales.'
-      ),
-      tendencies: () => this._pageComingSoon(
-        'Tendencies',
-        'fa-fire',
-        'Tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'
-      ),
-      strategy: () => this._pageComingSoon(
-        'Strategy',
-        'fa-route',
-        'Recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'
-      ),
+      'my-brands':  () => { body.innerHTML = this._myBrandsLoadingSkeleton(); this._renderMyBrands(); },
+      competence:   () => { body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'Analiza a tu competencia: publicaciones, métricas y posicionamiento en redes sociales.'); },
+      tendencies:   () => { body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'Tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'); },
+      strategy:     () => { body.innerHTML = this._pageComingSoon('Strategy', 'fa-route', 'Recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'); },
     };
-    body.innerHTML = (map[tabId] || (() => ''))();
+    (map[tabId] || (() => {}))();
+  }
+
+  _destroyCharts() {
+    Object.values(this._chartInstances).forEach(c => { try { c.destroy(); } catch (_) {} });
+    this._chartInstances = {};
+  }
+
+  // ── My Brands: init & data loading ────────────────────────────────────────
+
+  async _renderMyBrands() {
+    try {
+      if (window.supabaseService) {
+        this._supabase = await window.supabaseService.getClient();
+      } else if (window.supabase) {
+        this._supabase = window.supabase;
+      }
+    } catch (e) { console.error('[InsightView] Supabase init:', e); }
+
+    if (!this._supabase) {
+      document.getElementById('insightTabBody').innerHTML = this._myBrandsError('No se pudo conectar con la base de datos.');
+      return;
+    }
+
+    const { data: { user } } = await this._supabase.auth.getUser();
+    if (!user) {
+      document.getElementById('insightTabBody').innerHTML = this._myBrandsError('Sesión no válida. Recarga la página.');
+      return;
+    }
+
+    // Load brand containers for the user
+    const { data: containers } = await this._supabase
+      .from('brand_containers')
+      .select('id,nombre_marca,logo_url')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    this._brandContainers = containers || [];
+
+    if (!this._brandContainers.length) {
+      document.getElementById('insightTabBody').innerHTML = this._myBrandsNoBrands();
+      return;
+    }
+
+    // Restore last selected brand
+    const saved = localStorage.getItem('mb_selected_brand');
+    if (saved && this._brandContainers.find(b => b.id === saved)) {
+      this._brandContainerId = saved;
+    } else {
+      this._brandContainerId = this._brandContainers[0].id;
+    }
+
+    await this._loadAndRenderDashboard();
+  }
+
+  async _loadAndRenderDashboard() {
+    const body = document.getElementById('insightTabBody');
+    if (!body) return;
+
+    body.innerHTML = this._myBrandsLoadingSkeleton();
+
+    const { data: { session } } = await this._supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      body.innerHTML = this._myBrandsError('Sesión expirada. Recarga la página.');
+      return;
+    }
+
+    const bcId = this._brandContainerId;
+
+    const [insightRes, postsRes] = await Promise.all([
+      fetch(`/api/insights/mybrand?brand_container_id=${bcId}&period=${this._period}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.json()).catch(e => ({ ok: false, error: e.message })),
+
+      fetch(`/api/brand/posts-meta?brand_container_id=${bcId}&limit=50`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.json()).catch(() => ({ ok: false }))
+    ]);
+
+    body.innerHTML = this._myBrandsDashboardHTML(insightRes, postsRes);
+    this._setupDashboardEvents(insightRes, postsRes);
+    this._renderCharts(insightRes, postsRes);
+  }
+
+  // ── My Brands: HTML builders ───────────────────────────────────────────────
+
+  _myBrandsLoadingSkeleton() {
+    return `
+      <div class="mb-loading-wrap">
+        <div class="mb-loading-spinner"></div>
+        <p class="mb-loading-text">Cargando datos de tu marca…</p>
+      </div>`;
+  }
+
+  _myBrandsNoBrands() {
+    return `
+      <div class="insight-coming-soon">
+        <div class="insight-cs-icon"><i class="fas fa-layer-group"></i></div>
+        <h2 class="insight-cs-title">Sin marcas configuradas</h2>
+        <p class="insight-cs-desc">Crea tu primera marca para comenzar a ver métricas e insights de rendimiento.</p>
+        <a href="${window.currentOrgPath ? window.currentOrgPath + '/brand' : '/brands'}" class="mb-btn-primary">
+          <i class="fas fa-plus"></i> Crear marca
+        </a>
+      </div>`;
+  }
+
+  _myBrandsError(msg) {
+    return `
+      <div class="insight-coming-soon">
+        <div class="insight-cs-icon"><i class="fas fa-exclamation-circle" style="color:#fb923c"></i></div>
+        <h2 class="insight-cs-title">Error</h2>
+        <p class="insight-cs-desc">${this._esc(msg)}</p>
+      </div>`;
+  }
+
+  _myBrandsDashboardHTML(insight, posts) {
+    const allPosts = [
+      ...(posts?.facebook_posts || []),
+      ...(posts?.instagram_posts || [])
+    ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+
+    const metaConnected = posts?.ok && (posts.facebook_posts?.length > 0 || posts.instagram_posts?.length > 0);
+    const kpis          = this._computeKPIs(insight, posts);
+    const timeSeries    = this._buildTimeSeries(allPosts, parseInt(this._period) || 30);
+    const contentTypes  = this._buildContentTypes(allPosts);
+    const topPosts      = this._getTopPosts(insight, allPosts);
+    const autoInsights  = this._generateInsights(kpis, timeSeries, contentTypes, topPosts);
+    const brandName     = insight?.brand?.nombre_marca || this._brandContainers.find(b => b.id === this._brandContainerId)?.nombre_marca || 'Mi Marca';
+
+    return `
+      <div class="mb-dashboard" id="mbDashboard">
+
+        <!-- Header -->
+        <div class="mb-header">
+          <div class="mb-header-left">
+            ${this._brandContainers.length > 1 ? `
+              <select class="mb-brand-select" id="mbBrandSelect">
+                ${this._brandContainers.map(b => `
+                  <option value="${this._esc(b.id)}" ${b.id === this._brandContainerId ? 'selected' : ''}>
+                    ${this._esc(b.nombre_marca)}
+                  </option>`).join('')}
+              </select>
+            ` : `<span class="mb-brand-name">${this._esc(brandName)}</span>`}
+          </div>
+          <div class="mb-header-right">
+            <div class="mb-period-tabs" id="mbPeriodTabs">
+              ${['7d','30d','90d'].map(p => `
+                <button class="mb-period-btn${this._period === p ? ' active' : ''}" data-period="${p}">
+                  ${p === '7d' ? '7 días' : p === '30d' ? '30 días' : '90 días'}
+                </button>`).join('')}
+            </div>
+            <button class="mb-refresh-btn" id="mbRefreshBtn" title="Actualizar datos">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        ${!metaConnected ? `
+          <div class="mb-connect-banner">
+            <i class="fab fa-facebook-square"></i>
+            <span>Conecta Meta para ver métricas de Instagram y Facebook.</span>
+            <a href="${window.currentOrgPath ? window.currentOrgPath + '/brand' : '/brands'}" class="mb-connect-link">
+              Conectar ahora →
+            </a>
+          </div>
+        ` : ''}
+
+        ${insight?.stale ? `
+          <div class="mb-stale-banner">
+            <i class="fas fa-clock"></i>
+            <span>Los datos pueden estar desactualizados.</span>
+          </div>
+        ` : ''}
+
+        <!-- BLOQUE 1: KPIs -->
+        ${this._buildKPIRow(kpis)}
+
+        ${autoInsights.length ? this._buildInsightsHTML(autoInsights) : ''}
+
+        <!-- BLOQUE 2: Actividad (línea) -->
+        <div class="mb-section">
+          <div class="mb-section-header">
+            <h3 class="mb-section-title"><span class="mb-dot mb-dot--green"></span>Actividad</h3>
+            <span class="mb-section-sub">Posts y engagement por día</span>
+          </div>
+          <div class="mb-chart-wrap">
+            <canvas id="mbActivityChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Grid 2: Top Posts + Content Type -->
+        <div class="mb-grid-2">
+
+          <!-- BLOQUE 3: Mejores Posts -->
+          <div class="mb-section">
+            <div class="mb-section-header">
+              <h3 class="mb-section-title"><span class="mb-dot mb-dot--orange"></span>Mejores posts</h3>
+            </div>
+            ${topPosts.length ? this._buildTopPostsHTML(topPosts) : `
+              <div class="mb-empty-sm">
+                <i class="fas fa-images"></i>
+                <p>Sin posts disponibles</p>
+              </div>`}
+          </div>
+
+          <!-- BLOQUE 6: Tipo de Contenido -->
+          <div class="mb-section">
+            <div class="mb-section-header">
+              <h3 class="mb-section-title"><span class="mb-dot mb-dot--purple"></span>Tipo de Contenido</h3>
+            </div>
+            ${contentTypes.length ? `
+              <div class="mb-chart-wrap-sm">
+                <canvas id="mbContentChart"></canvas>
+              </div>
+              <div class="mb-content-legend" id="mbContentLegend"></div>
+            ` : `<div class="mb-empty-sm"><i class="fas fa-chart-pie"></i><p>Sin datos</p></div>`}
+          </div>
+
+        </div>
+
+        <!-- BLOQUE 4: Engagement Rate -->
+        <div class="mb-section">
+          <div class="mb-section-header">
+            <h3 class="mb-section-title"><span class="mb-dot mb-dot--blue"></span>Engagement Rate</h3>
+            <span class="mb-section-sub">Interacciones ÷ reach por post</span>
+          </div>
+          <div class="mb-chart-wrap">
+            <canvas id="mbEngRateChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Grid 2: Heatmap + Tono -->
+        <div class="mb-grid-2">
+
+          <!-- BLOQUE 5: Audiencia activa (heatmap) -->
+          <div class="mb-section">
+            <div class="mb-section-header">
+              <h3 class="mb-section-title"><span class="mb-dot mb-dot--yellow"></span>Audiencia activa</h3>
+              <span class="mb-section-sub">Días y horas con más actividad</span>
+            </div>
+            ${this._buildHeatmapHTML(allPosts, insight?.dimensions?.A_activity?.heatmap)}
+          </div>
+
+          <!-- Tono de contenido (narrativa) -->
+          <div class="mb-section">
+            <div class="mb-section-header">
+              <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Tono de Contenido</h3>
+            </div>
+            ${(insight?.dimensions?.B_narrative?.top_tones?.length) ? `
+              <div class="mb-chart-wrap-sm">
+                <canvas id="mbToneChart"></canvas>
+              </div>
+            ` : `<div class="mb-empty-sm"><i class="fas fa-comment-alt"></i><p>Analiza posts para ver el tono de tu contenido.</p></div>`}
+          </div>
+
+        </div>
+
+      </div>`;
+  }
+
+  _buildKPIRow(kpis) {
+    const cards = [
+      {
+        icon: 'fa-file-alt',
+        color: 'green',
+        value: this._fmt(kpis.totalPosts),
+        label: 'Posts',
+        sub: kpis.totalPosts > 0 ? `${kpis.totalLikes} likes · ${kpis.totalComments} comentarios` : 'Sin publicaciones',
+      },
+      {
+        icon: 'fa-eye',
+        color: 'blue',
+        value: this._fmt(kpis.reach),
+        label: 'Reach',
+        sub: kpis.reach > 0 ? 'Personas alcanzadas' : 'Sin datos de reach',
+      },
+      {
+        icon: 'fa-heart',
+        color: 'orange',
+        value: this._fmt(kpis.totalEngagement),
+        label: 'Engagement',
+        sub: `${kpis.totalLikes} likes · ${kpis.totalShares} compartidos`,
+      },
+      {
+        icon: 'fa-percentage',
+        color: 'purple',
+        value: kpis.engRate + '%',
+        label: 'Eng. Rate',
+        sub: kpis.reach > 0 ? 'Sobre reach total' : 'Sobre interacciones',
+      },
+    ];
+    return `
+      <div class="mb-kpi-row">
+        ${cards.map(c => `
+          <div class="mb-kpi-card">
+            <div class="mb-kpi-icon mb-kpi-icon--${c.color}">
+              <i class="fas ${c.icon}"></i>
+            </div>
+            <div class="mb-kpi-body">
+              <div class="mb-kpi-value">${c.value}</div>
+              <div class="mb-kpi-label">${c.label}</div>
+              <div class="mb-kpi-sub">${c.sub}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _buildTopPostsHTML(topPosts) {
+    return `
+      <div class="mb-top-posts">
+        ${topPosts.slice(0, 5).map((p, i) => {
+          const eng = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+          const preview = (p.message || p.content_preview || '').slice(0, 100);
+          const dateStr = p.created_time || p.captured_at || '';
+          const date = dateStr ? new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '';
+          const pic = p.picture || null;
+          const network = p.network || 'facebook';
+          const icon = network === 'instagram' ? 'fa-instagram fab' : 'fa-facebook-square fab';
+          return `
+            <div class="mb-post-card">
+              <div class="mb-post-rank">${i + 1}</div>
+              ${pic ? `<img class="mb-post-thumb" src="${this._esc(pic)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+              <div class="mb-post-content">
+                <div class="mb-post-meta">
+                  <i class="${icon}" style="font-size:0.75rem;opacity:0.6"></i>
+                  ${date ? `<span class="mb-post-date">${date}</span>` : ''}
+                </div>
+                ${preview ? `<p class="mb-post-preview">${this._esc(preview)}</p>` : ''}
+                <div class="mb-post-stats">
+                  <span><i class="fas fa-heart"></i> ${this._fmt(p.likes || 0)}</span>
+                  <span><i class="fas fa-comment"></i> ${this._fmt(p.comments || 0)}</span>
+                  ${(p.shares || 0) > 0 ? `<span><i class="fas fa-share"></i> ${this._fmt(p.shares)}</span>` : ''}
+                  <span class="mb-post-eng-badge">${this._fmt(eng)} eng</span>
+                </div>
+                ${p.analysis?.why_it_worked ? `<p class="mb-post-why">"${this._esc(p.analysis.why_it_worked)}"</p>` : ''}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  _buildInsightsHTML(insights) {
+    return `
+      <div class="mb-insights-row">
+        ${insights.map(ins => `
+          <div class="mb-insight-pill mb-insight-pill--${ins.type}">
+            <i class="fas ${ins.icon}"></i>
+            <span>${ins.text}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _buildHeatmapHTML(allPosts, apiHeatmap) {
+    const days  = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const startH = 6, endH = 23;
+    const hours = endH - startH + 1;
+
+    // Build 7×24 matrix from posts
+    const matrix = Array.from({ length: 7 }, () => Array(24).fill(0));
+    allPosts.forEach(p => {
+      const d = new Date(p.created_time);
+      if (isNaN(d)) return;
+      const day  = d.getDay();
+      const hour = d.getHours();
+      const eng  = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+      matrix[day][hour] += Math.max(1, eng);
+    });
+
+    // Fall back to apiHeatmap if no posts
+    const hasData = matrix.flat().some(v => v > 0);
+    const hourSums  = Array(24).fill(0);
+    const daySums   = Array(7).fill(0);
+    matrix.forEach((row, d) => row.forEach((v, h) => { hourSums[h] += v; daySums[d] += v; }));
+
+    let bestHour = hourSums.indexOf(Math.max(...hourSums));
+    let bestDay  = daySums.indexOf(Math.max(...daySums));
+
+    // Override with API heatmap if no posts
+    if (!hasData && apiHeatmap) {
+      bestHour = apiHeatmap.best_hour ?? bestHour;
+      bestDay  = apiHeatmap.best_day  ?? bestDay;
+    }
+
+    const max = Math.max(...matrix.flat(), 1);
+
+    let cells = '';
+    for (let d = 0; d < 7; d++) {
+      for (let h = startH; h <= endH; h++) {
+        const val       = matrix[d][h];
+        const intensity = val / max;
+        const alpha     = 0.06 + intensity * 0.8;
+        const isBest    = d === bestDay && h === bestHour;
+        cells += `<div class="mb-hm-cell${isBest ? ' mb-hm-cell--best' : ''}"
+          style="background:rgba(107,207,127,${alpha.toFixed(2)})"
+          title="${days[d]} ${h}:00${val > 0 ? ' — ' + val + ' interacciones' : ''}"></div>`;
+      }
+    }
+
+    const bh = bestHour >= 12
+      ? `${bestHour === 12 ? 12 : bestHour - 12}pm`
+      : `${bestHour === 0 ? 12 : bestHour}am`;
+    const bd = days[bestDay] || '';
+
+    const hourLabels = Array.from({ length: hours }, (_, i) => {
+      const h = i + startH;
+      return `<div class="mb-hm-h-label">${h % 6 === 0 ? h + 'h' : ''}</div>`;
+    }).join('');
+
+    return `
+      <div class="mb-heatmap-wrap">
+        <div class="mb-heatmap">
+          <div class="mb-hm-days">
+            ${days.map(d => `<div class="mb-hm-d-label">${d}</div>`).join('')}
+          </div>
+          <div class="mb-hm-grid" style="--hm-cols:${hours}">
+            ${cells}
+          </div>
+          <div class="mb-hm-hours">${hourLabels}</div>
+        </div>
+        ${(hasData || apiHeatmap) ? `
+          <div class="mb-hm-insight">
+            <i class="fas fa-lightbulb"></i>
+            Tu audiencia responde mejor los <strong>${bd}</strong> a las <strong>${bh}</strong>
+          </div>` : `
+          <div class="mb-empty-sm" style="margin-top:0.75rem">
+            <p>Publica más contenido para ver el heatmap de audiencia.</p>
+          </div>`}
+      </div>`;
+  }
+
+  // ── My Brands: interactions ────────────────────────────────────────────────
+
+  _setupDashboardEvents(insightRes, postsRes) {
+    // Brand selector
+    const sel = document.getElementById('mbBrandSelect');
+    if (sel) {
+      sel.addEventListener('change', async () => {
+        this._brandContainerId = sel.value;
+        localStorage.setItem('mb_selected_brand', sel.value);
+        await this._loadAndRenderDashboard();
+      });
+    }
+
+    // Period tabs
+    const periodTabs = document.getElementById('mbPeriodTabs');
+    if (periodTabs) {
+      periodTabs.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-period]');
+        if (!btn) return;
+        this._period = btn.dataset.period;
+        periodTabs.querySelectorAll('.mb-period-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.period === this._period)
+        );
+        await this._loadAndRenderDashboard();
+      });
+    }
+
+    // Refresh
+    const refreshBtn = document.getElementById('mbRefreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.classList.add('spinning');
+        await this._loadAndRenderDashboard();
+        refreshBtn.classList.remove('spinning');
+      });
+    }
+  }
+
+  // ── My Brands: charts ──────────────────────────────────────────────────────
+
+  _renderCharts(insight, posts) {
+    if (!window.Chart) return;
+
+    // Global Chart.js defaults (dark theme)
+    Chart.defaults.color          = 'rgba(212,209,216,0.55)';
+    Chart.defaults.borderColor    = 'rgba(255,255,255,0.07)';
+    Chart.defaults.font.family    = 'Inter, sans-serif';
+    Chart.defaults.font.size      = 11;
+
+    const allPosts = [
+      ...(posts?.facebook_posts || []),
+      ...(posts?.instagram_posts || [])
+    ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
+
+    const days       = parseInt(this._period) || 30;
+    const timeSeries = this._buildTimeSeries(allPosts, days);
+    const content    = this._buildContentTypes(allPosts);
+    const tones      = insight?.dimensions?.B_narrative?.top_tones || [];
+
+    this._renderActivityChart(timeSeries);
+    this._renderEngRateChart(allPosts, days);
+    if (content.length) this._renderContentChart(content);
+    if (tones.length)   this._renderToneChart(tones);
+  }
+
+  _renderActivityChart(ts) {
+    const el = document.getElementById('mbActivityChart');
+    if (!el) return;
+    this._chartInstances.activity = new Chart(el, {
+      type: 'line',
+      data: {
+        labels: ts.labels,
+        datasets: [
+          {
+            label: 'Posts',
+            data: ts.posts,
+            yAxisID: 'yPosts',
+            borderColor: '#6bcf7f',
+            backgroundColor: 'rgba(107,207,127,0.08)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: 'Engagement',
+            data: ts.engagement,
+            yAxisID: 'yEng',
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(167,139,250,0.08)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: false,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top', align: 'end' },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8 },
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
+          yPosts: {
+            type: 'linear', position: 'left',
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { stepSize: 1, precision: 0 },
+          },
+          yEng: {
+            type: 'linear', position: 'right',
+            grid: { drawOnChartArea: false },
+          },
+        }
+      }
+    });
+  }
+
+  _renderEngRateChart(allPosts, days) {
+    const el = document.getElementById('mbEngRateChart');
+    if (!el) return;
+
+    const now    = new Date();
+    const cutoff = new Date(now - days * 86400000);
+
+    // Build per-post engagement rate sorted by date
+    const filtered = allPosts
+      .filter(p => p.created_time && new Date(p.created_time) >= cutoff)
+      .slice(-30); // max 30 data points
+
+    const labels = filtered.map(p =>
+      new Date(p.created_time).toLocaleDateString('es', { day: 'numeric', month: 'short' })
+    );
+    const engRates = filtered.map(p => {
+      const eng   = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+      // Without per-post reach, use engagement/100 as proxy percentage
+      return parseFloat((eng / Math.max(1, eng + 100) * 100).toFixed(2));
+    });
+
+    this._chartInstances.engRate = new Chart(el, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Engagement',
+          data: engRates,
+          borderColor: '#60a5fa',
+          backgroundColor: 'rgba(96,165,250,0.12)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
+            callbacks: { label: ctx => `Engagement índice: ${ctx.parsed.y}` }
+          },
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxTicksLimit: 8 } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  }
+
+  _renderContentChart(contentTypes) {
+    const el = document.getElementById('mbContentChart');
+    if (!el) return;
+
+    const colors = ['#6bcf7f','#60a5fa','#a78bfa','#fb923c','#f472b6','#2dd4bf'];
+    const labels = contentTypes.map(c => c.label);
+    const data   = contentTypes.map(c => c.count);
+
+    this._chartInstances.content = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderColor: 'rgba(0,0,0,0.3)',
+          borderWidth: 2,
+          hoverOffset: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} posts (${Math.round(ctx.parsed / data.reduce((a,b)=>a+b,0) * 100)}%)`
+            }
+          },
+        },
+      },
+      plugins: [{
+        // Custom legend in DOM
+        afterRender: () => {
+          const legendEl = document.getElementById('mbContentLegend');
+          if (!legendEl || legendEl.dataset.built) return;
+          legendEl.dataset.built = '1';
+          legendEl.innerHTML = contentTypes.map((c, i) => `
+            <div class="mb-legend-item">
+              <span class="mb-legend-dot" style="background:${colors[i]}"></span>
+              <span>${c.label}</span>
+              <span class="mb-legend-count">${c.count}</span>
+            </div>`).join('');
+        }
+      }]
+    });
+  }
+
+  _renderToneChart(tones) {
+    const el = document.getElementById('mbToneChart');
+    if (!el) return;
+
+    const toneColors = {
+      positivo: '#6bcf7f', inspirador: '#60a5fa', educativo: '#a78bfa',
+      urgente: '#fb923c', neutral: '#87868B', emocional: '#f472b6',
+      informativo: '#2dd4bf', humorístico: '#facc15',
+    };
+
+    const colors = tones.map(t => toneColors[t.tone?.toLowerCase()] || '#87868B');
+
+    this._chartInstances.tone = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: tones.map(t => t.tone),
+        datasets: [{
+          data: tones.map(t => t.pct || t.count),
+          backgroundColor: colors.map(c => c + 'CC'),
+          borderColor: colors,
+          borderWidth: 1,
+          borderRadius: 5,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.parsed.x}%` }
+          },
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── Data processing ────────────────────────────────────────────────────────
+
+  _computeKPIs(insight, postsData) {
+    const allPosts = [
+      ...(postsData?.facebook_posts || []),
+      ...(postsData?.instagram_posts || [])
+    ];
+    const totalPosts      = allPosts.length;
+    const totalLikes      = allPosts.reduce((s, p) => s + (p.likes    || 0), 0);
+    const totalComments   = allPosts.reduce((s, p) => s + (p.comments || 0), 0);
+    const totalShares     = allPosts.reduce((s, p) => s + (p.shares   || 0), 0);
+    const totalEngagement = totalLikes + totalComments + totalShares;
+
+    const snap      = insight?.dimensions?.A_activity?.snapshot;
+    const reach     = snap?.reach || snap?.total_reach || 0;
+    const followers = snap?.followers || snap?.fan_count || postsData?.page?.fans || 0;
+    const engRate   = reach > 0
+      ? ((totalEngagement / reach) * 100).toFixed(1)
+      : totalPosts > 0
+        ? ((totalEngagement / totalPosts)).toFixed(1)
+        : '0.0';
+
+    return { totalPosts, totalLikes, totalComments, totalShares, totalEngagement, reach, followers, engRate };
+  }
+
+  _buildTimeSeries(allPosts, days = 30) {
+    const now    = new Date();
+    const labels = [];
+    const dateMap = {};
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d   = new Date(now - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      labels.push(key);
+      dateMap[key] = { posts: 0, engagement: 0 };
+    }
+
+    allPosts.forEach(p => {
+      if (!p.created_time) return;
+      const key = new Date(p.created_time).toISOString().slice(0, 10);
+      if (!dateMap[key]) return;
+      dateMap[key].posts++;
+      dateMap[key].engagement += (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+    });
+
+    return {
+      labels: labels.map(l => {
+        const d = new Date(l + 'T12:00:00');
+        return d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+      }),
+      posts:      labels.map(l => dateMap[l].posts),
+      engagement: labels.map(l => dateMap[l].engagement),
+    };
+  }
+
+  _buildContentTypes(allPosts) {
+    const counts = {};
+    const engMap = {};
+    allPosts.forEach(p => {
+      let type = (p.media_type || 'IMAGE').toUpperCase();
+      if (type === 'CAROUSEL_ALBUM') type = 'CARRUSEL';
+      if (type === 'IMAGE')          type = 'IMAGEN';
+      if (type === 'VIDEO')          type = 'VIDEO';
+      if (type === 'REEL')           type = 'REEL';
+      if (type === 'TEXT' || type === 'LINK') type = 'TEXTO';
+      counts[type] = (counts[type] || 0) + 1;
+      const eng = (p.likes || 0) + (p.comments || 0) + (p.shares || 0);
+      engMap[type] = (engMap[type] || 0) + eng;
+    });
+    return Object.entries(counts)
+      .map(([label, count]) => ({ label, count, avgEng: Math.round((engMap[label] || 0) / count) }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  _getTopPosts(insight, allPosts) {
+    // Prefer insight's analyzed top posts, supplement with live posts
+    const analyzed = insight?.dimensions?.D_sentiment?.top_posts || [];
+    if (analyzed.length >= 3) return analyzed;
+
+    return [...allPosts]
+      .map(p => ({ ...p, _eng: (p.likes || 0) + (p.comments || 0) + (p.shares || 0) }))
+      .sort((a, b) => b._eng - a._eng)
+      .slice(0, 5);
+  }
+
+  _generateInsights(kpis, timeSeries, contentTypes) {
+    const insights = [];
+    const { posts: ps, engagement: engs } = timeSeries;
+    const mid = Math.floor(ps.length / 2);
+
+    const recentPosts = ps.slice(mid).reduce((a, b) => a + b, 0);
+    const olderPosts  = ps.slice(0, mid).reduce((a, b) => a + b, 0);
+    const recentEng   = engs.slice(mid).reduce((a, b) => a + b, 0);
+    const olderEng    = engs.slice(0, mid).reduce((a, b) => a + b, 0);
+
+    if (recentPosts > olderPosts * 1.4 && recentEng < olderEng * 0.9 && recentPosts > 0) {
+      insights.push({
+        type: 'warning',
+        icon: 'fa-exclamation-triangle',
+        text: 'Publicaste más recientemente, pero el engagement bajó. Menos puede ser más.'
+      });
+    }
+
+    if (contentTypes.length >= 2) {
+      const sorted = [...contentTypes].sort((a, b) => b.avgEng - a.avgEng);
+      const best = sorted[0], worst = sorted[sorted.length - 1];
+      if (best.avgEng > worst.avgEng * 1.5) {
+        const ratio = Math.round(best.avgEng / Math.max(1, worst.avgEng));
+        insights.push({
+          type: 'tip',
+          icon: 'fa-lightbulb',
+          text: `Los posts de <strong>${best.label}</strong> generan ${ratio}x más engagement que los de ${worst.label.toLowerCase()}.`
+        });
+      }
+    }
+
+    const er = parseFloat(kpis.engRate);
+    if (!isNaN(er) && kpis.reach > 0) {
+      if (er >= 5) {
+        insights.push({ type: 'success', icon: 'fa-trophy', text: `Engagement rate de <strong>${er}%</strong>. Excelente — top tier >5%.` });
+      } else if (er < 1) {
+        insights.push({ type: 'warning', icon: 'fa-chart-line', text: `Engagement rate de <strong>${er}%</strong>. El objetivo es superar el 3%.` });
+      }
+    }
+
+    return insights;
+  }
+
+  // ── Formatters ─────────────────────────────────────────────────────────────
+
+  _fmt(n) {
+    if (n == null || isNaN(n) || n === 0) return n === 0 ? '0' : '—';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  _esc(s) {
+    if (s == null) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
   }
 
   _pageComingSoon(title, icon, description) {
@@ -99,13 +935,6 @@ class InsightView extends BaseView {
         <p class="insight-cs-desc">${this._esc(description)}</p>
         <span class="insight-cs-badge">Próximamente</span>
       </div>`;
-  }
-
-  _esc(s) {
-    if (s == null) return '';
-    const d = document.createElement('div');
-    d.textContent = String(s);
-    return d.innerHTML;
   }
 }
 
