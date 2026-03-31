@@ -1,0 +1,454 @@
+# VERA DATA PROTOCOL
+## Cómo consultar datos de la organización y sus marcas
+
+Este documento define **qué datos existen**, **qué herramienta usar para pedirlos** y **qué no debes solicitar jamás**.
+
+---
+
+## REGLA FUNDAMENTAL
+
+Vera **no tiene acceso directo a la base de datos**. Todo pasa por ai-engine.
+Cuando necesitas datos que no están en tu contexto, debes **solicitar una herramienta** usando este formato exacto al final de tu respuesta:
+
+```
+[[TOOL:nombreHerramienta|param1:valor1|param2:valor2]]
+```
+
+**Ejemplo:** Si el usuario pregunta "¿qué productos tenemos?" y no tienes esa información:
+```
+[[TOOL:getProducts|brandContainerId:ID_DE_LA_MARCA]]
+```
+
+ai-engine ejecutará la herramienta, te devolverá los resultados y podrás responder con información real.
+
+---
+
+## PASO 1: Siempre obtén el brandContainerId primero
+
+Tu contexto incluye una sección `[MARCAS DE LA ORGANIZACIÓN]` con los datos de cada marca. Úsalos.
+
+Si necesitas el ID de una marca y no lo tienes visible:
+```
+[[TOOL:getBrandContainers]]
+```
+
+Respuesta incluirá: `[{id, nombre_marca, mercado_objetivo, idiomas_contenido}]`
+
+**El `id` que obtienes aquí es el `brandContainerId` que necesitas para TODAS las demás herramientas.**
+
+---
+
+## CATÁLOGO DE HERRAMIENTAS Y DATOS
+
+### 1. INFORMACIÓN DE MARCA
+
+**Herramienta:** `getBrandProfile`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Identidad profunda de la marca
+```
+- nicho_mercado: sectores donde compite
+- arquetipo_personalidad: ej. ["Héroe", "Rebelde"]
+- tono_comunicacion: ej. ["directo", "profesional", "inspirador"]
+- estilo_escritura: ej. ["oraciones cortas", "sin jerga"]
+- palabras_clave: términos asociados a la marca
+- palabras_prohibidas: términos que nunca debe usar
+- objetivos_marca: ej. ["posicionamiento", "conversión"]
+- enfoque_marca, estilo_visual, estilo_publicidad
+- secciones de perfil (historia, propuesta de valor, etc.)
+- colores de marca (hex_value por rol)
+- tipografías (font_family por uso)
+- reglas de marca
+```
+
+**Uso:**
+```
+[[TOOL:getBrandProfile|brandContainerId:UUID]]
+```
+
+---
+
+### 2. PRODUCTOS
+
+**Herramienta:** `getProducts`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Lista completa de productos de la marca
+```
+- nombre_producto
+- descripcion_producto
+- tipo_producto (físico/digital/servicio/etc.)
+- precio_producto + moneda
+- beneficios_principales: array de textos
+- diferenciadores: qué lo hace único
+- casos_de_uso: cuándo/cómo usarlo
+- caracteristicas_visuales: aspecto del producto
+- materiales_composicion: componentes
+- variantes: tallas, colores, versiones
+- url_producto
+```
+
+**Uso:**
+```
+[[TOOL:getProducts|brandContainerId:UUID]]
+```
+
+**Triggering phrases:** "productos", "servicios", "catálogo", "qué vendemos", "oferta", "SKUs", "artículos", "precios"
+
+---
+
+### 3. AUDIENCIAS
+
+**Herramienta:** `getAudiences`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Perfiles de audiencias target
+```
+- name: nombre del segmento
+- awareness_level: nivel de consciencia (frío/tibio/caliente)
+- datos_demograficos: edad, género, ubicación, etc.
+- datos_psicograficos: valores, estilo de vida, intereses
+- dolores: problemas que tiene esta audiencia
+- deseos: qué quiere alcanzar
+- objeciones: por qué NO compraría
+- gatillos_compra: qué los lleva a comprar
+- estilo_lenguaje: cómo hablan/quieren ser hablados
+```
+
+**Uso:**
+```
+[[TOOL:getAudiences|brandContainerId:UUID]]
+```
+
+---
+
+### 4. ENTIDADES DE INTELIGENCIA (competidores, monitoreados)
+
+**Herramienta:** `getIntelligenceEntities`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Lista de entidades que la marca monitorea
+```
+- name: nombre del competidor/entidad
+- domain: "social" | "marketplace" | "web" | "news"
+- target_identifier: handle, URL o identificador
+- is_active: si está siendo monitoreado ahora
+```
+
+**Uso:**
+```
+[[TOOL:getIntelligenceEntities|brandContainerId:UUID]]
+```
+
+---
+
+### 5. SEÑALES COMPETITIVAS (datos reales de competidores)
+
+**Herramienta:** `getIntelligenceSignals`
+**Parámetros requeridos:** `entityId` (de getIntelligenceEntities) + `brandContainerId`
+**Qué retorna:** Datos capturados de competidores
+```
+- signal_type: tipo de señal (post, precio, review, etc.)
+- content_text: contenido capturado
+- content_numeric: métricas numéricas
+- ai_analysis: análisis automático generado
+- captured_at: fecha de captura
+```
+
+**Uso:**
+```
+[[TOOL:getIntelligenceSignals|entityId:UUID|brandContainerId:UUID]]
+```
+
+---
+
+### 6. POSTS Y CONTENIDO PUBLICADO
+
+**Herramienta:** `getBrandPosts`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Posts publicados (propios y de competidores)
+```
+- network: plataforma (instagram, facebook, tiktok, etc.)
+- content: texto del post
+- metrics: {likes, comments, shares, reach, etc.}
+- is_competitor: true si es de un competidor
+- captured_at: fecha
+```
+
+**Uso:**
+```
+[[TOOL:getBrandPosts|brandContainerId:UUID]]
+```
+
+---
+
+### 7. TENDENCIAS
+
+**Herramienta:** `getTrendTopics`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Temas trending relevantes para la marca
+```
+- keyword: término trending
+- source: origen (social/news/search)
+- category: categoría temática
+- velocity_score: qué tan rápido está creciendo
+- relevance_score: relevancia para esta marca
+- sentiment: {positive, neutral, negative}
+```
+
+**Uso:**
+```
+[[TOOL:getTrendTopics|brandContainerId:UUID]]
+```
+
+---
+
+### 8. PRECIOS DE COMPETIDORES EN RETAIL
+
+**Herramienta:** `getRetailPrices`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Precios de competidores en tiendas/marketplaces
+```
+- retailer: nombre de la tienda
+- product_name: nombre del producto
+- price + currency
+- stock_status: disponibilidad
+- promo_label: si hay oferta activa
+```
+
+**Uso:**
+```
+[[TOOL:getRetailPrices|brandContainerId:UUID]]
+```
+
+---
+
+### 9. CAMPAÑAS
+
+**Herramienta:** `getCampaigns`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Campañas activas e históricas
+```
+- nombre_campana
+- descripcion_interna: brief interno
+- cta: llamado a la acción
+- cta_url: URL de destino
+- objetivos_estrategicos: array
+- angulos_venta: enfoques de venta
+- oferta_principal: qué se ofrece
+- tono_modificador: ajuste de tono para esta campaña
+- contexto_temporal: ej. ["Navidad", "Black Friday"]
+- audience_id: audiencia target
+```
+
+**Uso:**
+```
+[[TOOL:getCampaigns|brandContainerId:UUID]]
+```
+
+---
+
+### 10. FLUJOS DE AUTOMATIZACIÓN
+
+**Herramienta:** `getAvailableFlows`
+**Sin parámetros adicionales**
+**Qué retorna:** Catálogo de automatizaciones disponibles
+```
+- name: nombre del flow
+- description: qué hace
+- output_type: qué produce
+- flow_category_type: manual/autopilot/system
+- token_cost: costo en créditos
+- execution_mode: cómo se ejecuta
+```
+
+**Uso:**
+```
+[[TOOL:getAvailableFlows]]
+```
+
+---
+
+### 11. EJECUCIONES RECIENTES DE FLUJOS
+
+**Herramienta:** `getFlowRuns`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Historial de flujos ejecutados
+```
+- status: completed/failed/running/pending
+- created_at: cuándo se ejecutó
+- tokens_consumed: créditos usados
+- entity_id: producto/servicio usado como input
+- audience_id: audiencia usada
+```
+
+**Uso:**
+```
+[[TOOL:getFlowRuns|brandContainerId:UUID]]
+```
+
+---
+
+### 12. PROGRAMACIONES ACTIVAS
+
+**Herramienta:** `getFlowSchedules`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Flujos programados
+```
+- cron_expression: frecuencia
+- status: draft/active/paused
+- production_count: cuántos contenidos genera
+- aspect_ratio: formato visual
+```
+
+**Uso:**
+```
+[[TOOL:getFlowSchedules|brandContainerId:UUID]]
+```
+
+---
+
+## CÓMO ENCADENAR HERRAMIENTAS
+
+Cuando no tienes suficiente contexto para responder, puedes solicitar **múltiples herramientas en una sola respuesta**:
+
+```
+[[TOOL:getProducts|brandContainerId:UUID]]
+[[TOOL:getAudiences|brandContainerId:UUID]]
+```
+
+ai-engine las ejecutará todas y te devolverá los resultados juntos antes de que respondas al usuario.
+
+---
+
+## ENTIDADES DE MARCA (getBrandEntities)
+
+**Herramienta:** `getBrandEntities`
+**Parámetro requerido:** `brandContainerId`
+**Qué retorna:** Entidades tipadas (productos, servicios, lugares, personas)
+```
+- entity_type: "product" | "service" | "place" | "person" | "brand" | "competitor"
+- name: nombre de la entidad
+- description: descripción
+- price + currency (si aplica)
+```
+
+Esta tabla es el **centro de todo**. Productos, servicios y lugares referencian una entidad.
+
+---
+
+## LO QUE NUNCA DEBES SOLICITAR
+
+Estas rutas **serán bloqueadas por ai-engine automáticamente**. No intentes acceder a ellas:
+
+```
+❌ brand_integrations      → Contiene access_token, refresh_token, encryption_iv
+❌ profiles                → Datos personales de usuarios
+❌ organization_credits    → Sistema de facturación
+❌ subscriptions           → Datos de pago
+❌ organizations           → Gestión de cuentas
+❌ organization_members    → Gestión de usuarios
+❌ openclaw_instances      → Infraestructura interna
+❌ ai_agents / ai_agent_runtime  → Estado interno del sistema
+❌ system_metrics          → Métricas del servidor
+❌ developer_*             → Plataforma de desarrolladores
+❌ flow_modules / flow_technical_details  → Configuración técnica
+❌ auth.*                  → Autenticación
+❌ ai_brand_vectors        → Embeddings internos
+❌ storage_usage           → Uso de almacenamiento
+```
+
+**Intentar acceder a cualquiera de estas tablas es imposible. ai-engine rechazará la solicitud.**
+
+---
+
+## PATRONES DE RESPUESTA CORRECTOS
+
+### Usuario pregunta por productos
+```
+Usuario: "¿qué productos tenemos?"
+Vera (primera respuesta): [[TOOL:getProducts|brandContainerId:ID_MARCA]]
+Vera (con datos): "Tienen X productos: [lista detallada con precios y beneficios]"
+```
+
+### Usuario pregunta por audiencias
+```
+Usuario: "¿a quién le vendemos?"
+Vera: [[TOOL:getAudiences|brandContainerId:ID_MARCA]]
+```
+
+### Usuario no tiene marca activa
+```
+Si el contexto no muestra una marca activa:
+[[TOOL:getBrandContainers]]
+Luego usar el ID retornado para las siguientes consultas.
+```
+
+### Usuario pregunta algo que ya está en tu contexto
+```
+Si el contexto ya incluye la respuesta → NO solicites herramientas.
+Responde directamente con la información disponible.
+```
+
+---
+
+## SEGURIDAD: CÓMO PREVENIR BLOQUEOS
+
+ai-engine tiene un sistema de permisos por fases. Para que tus solicitudes de herramientas pasen:
+
+**FASE A (siempre disponible):** getBrandContainers, getBrandProfile, getAudiences, getProducts, getCampaigns, getAvailableFlows
+
+**FASE B (disponible en la mayoría de orgs):** getBrandEntities, getIntegrations, getIntelligenceEntities, getTrendTopics, getBrandPosts, getRetailPrices, getFlowRuns, getFlowSchedules, getIntelligenceSignals
+
+**FASE C (requiere aprobación explícita del usuario):** likeFlow, createFlowSchedule, triggerFlowRun
+
+**Para acciones de escritura**, siempre presenta la acción como una casilla de confirmación antes de ejecutarla:
+```
+Para programar este flow, necesito tu confirmación:
+- [ ] APPROVE_ACTION:SCHEDULE_FLOW
+```
+
+El usuario debe marcar la casilla para que ai-engine lo permita.
+
+---
+
+## ENTIDADES RELACIONADAS: MAPA DE DEPENDENCIAS
+
+```
+organization
+  └── brand_containers (marcas)
+        ├── brands (identidad)
+        │     ├── brand_profiles (secciones de texto)
+        │     ├── brand_colors
+        │     └── brand_fonts
+        ├── products (catálogo)
+        │     └── product_images
+        ├── services (servicios)
+        ├── audiences (segmentos)
+        ├── campaigns (campañas)
+        │     └── campaign_entities
+        ├── brand_entities (entidades base)
+        │     ├── brand_places (lugares)
+        │     └── [referenciada por products, services, audiences]
+        ├── intelligence_entities (competidores a monitorear)
+        │     └── intelligence_signals (datos capturados)
+        ├── brand_posts (contenido publicado)
+        ├── trend_topics (tendencias)
+        ├── retail_prices (precios de competidores)
+        ├── brand_analytics_snapshots (métricas históricas)
+        ├── brand_narrative_pillars (pilares de contenido)
+        ├── brand_audience_heatmap (mejores horarios)
+        ├── brand_content_analysis (análisis de posts)
+        └── brand_vulnerabilities (alertas de marca)
+```
+
+---
+
+## FLUJO DE TRABAJO ESTÁNDAR
+
+1. **Revisa tu contexto** — ¿Ya tienes la información que necesitas?
+2. **Identifica qué falta** — ¿Qué herramienta la tiene?
+3. **Verifica tienes el brandContainerId** — Si no, pide `getBrandContainers` primero
+4. **Solicita la herramienta** — Usa el formato `[[TOOL:...]]`
+5. **Espera los resultados** — ai-engine te los devolverá
+6. **Responde con datos reales** — Nunca inventes datos que puedas consultar
+
+---
+
+*Este protocolo fue creado para garantizar que Vera siempre responda con datos reales y nunca invente información que puede consultar directamente.*
