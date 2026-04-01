@@ -791,6 +791,7 @@ class BrainView extends (window.BaseView || class {}) {
     if (!this.container) return;
 
     this.bindInput();
+    this._requestNotificationPermission();
 
     await this.loadActiveConversation();
 
@@ -1031,6 +1032,71 @@ class BrainView extends (window.BaseView || class {}) {
     document.getElementById('gptTyping')?.remove();
   }
 
+  /**
+   * Reproduce un chime de dos tonos usando Web Audio API.
+   * No requiere archivos de audio — sintetizado en el navegador.
+   * Solo suena si el tiempo de espera fue suficientemente largo (tareas en background).
+   */
+  _playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      const playTone = (freq, startAt, duration, gainValue) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type      = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
+
+        gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
+        gain.gain.linearRampToValueAtTime(gainValue, ctx.currentTime + startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
+
+        osc.start(ctx.currentTime + startAt);
+        osc.stop(ctx.currentTime + startAt + duration);
+      };
+
+      // Chime de dos tonos — ascendente: Do5 → Mi5
+      playTone(523.25, 0,    0.35, 0.25);  // Do5
+      playTone(659.25, 0.18, 0.45, 0.20);  // Mi5
+
+      // Cerrar el contexto después de que termine
+      setTimeout(() => ctx.close().catch(() => {}), 900);
+    } catch (_) {
+      // Web Audio no disponible — ignorar silenciosamente
+    }
+  }
+
+  /**
+   * Solicita permiso de notificaciones del navegador (llamar una vez al iniciar).
+   */
+  async _requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission().catch(() => {});
+    }
+  }
+
+  /**
+   * Muestra una notificación del sistema si la pestaña no tiene foco.
+   */
+  _showBrowserNotification(text) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.hasFocus()) return; // Solo si el usuario está en otra pestaña
+
+    try {
+      const notif = new Notification('Vera terminó de trabajar', {
+        body: text ? text.slice(0, 100) : 'Tu solicitud está lista.',
+        icon: '/img/vera-avatar.png',
+        badge: '/img/vera-avatar.png',
+        tag: 'vera-response', // Reemplaza notificaciones anteriores
+      });
+      notif.onclick = () => { window.focus(); notif.close(); };
+      setTimeout(() => notif.close(), 8000);
+    } catch (_) {}
+  }
+
   /* ── Input binding ───────────────────────────────────── */
   bindInput() {
     const input = document.getElementById('brainInput');
@@ -1174,6 +1240,8 @@ class BrainView extends (window.BaseView || class {}) {
   async _waitForAsyncResponse(conversationId, token) {
     return new Promise((resolve) => {
       const startTime = Date.now();
+      // Mínimo para considerar que fue una tarea larga y merece notificación
+      const NOTIFY_AFTER_MS = 5_000;
       // Tiempo máximo de espera: 12 minutos (OpenClaw puede tardar ~10 min)
       const MAX_WAIT_MS   = 12 * 60 * 1000;
       // Intervalo del ticker de UI (actualiza el mensaje de espera)
@@ -1207,6 +1275,12 @@ class BrainView extends (window.BaseView || class {}) {
           };
           this.aiState.messages.push(displayMsg);
           this.appendMessage(displayMsg);
+
+          // Notificar al usuario solo si la tarea fue larga (background real)
+          if (!isError && Date.now() - startTime >= NOTIFY_AFTER_MS) {
+            this._playNotificationSound();
+            this._showBrowserNotification(msg.content);
+          }
         }
 
         resolve();
