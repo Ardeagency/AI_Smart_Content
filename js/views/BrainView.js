@@ -1257,8 +1257,9 @@ class BrainView extends (window.BaseView || class {}) {
       // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas
       const MAX_WAIT_MS  = 12 * 60 * 1000;
       const TICK_MS      = 5_000;
-      // Polling de respaldo: consulta la DB cada N ms si Realtime no entrega
-      const POLL_INTERVAL_MS = 8_000;
+      // Polling de respaldo: primer check a los 5s, luego cada 6s
+      const POLL_FIRST_MS    = 5_000;
+      const POLL_INTERVAL_MS = 6_000;
 
       let resolved     = false;
       let lastStatusAt = Date.now();
@@ -1362,8 +1363,8 @@ class BrainView extends (window.BaseView || class {}) {
         }
       }, TICK_MS);
 
-      // Arrancar polling de respaldo inmediatamente (primer check a los 8s)
-      pollInterval = setInterval(doPoll, POLL_INTERVAL_MS);
+      // Primer poll a los 5s, luego cada 6s — cubre casos donde Realtime no entrega
+      setTimeout(() => { doPoll(); pollInterval = setInterval(doPoll, POLL_INTERVAL_MS); }, POLL_FIRST_MS);
 
       // ── Supabase Realtime — entrega instantánea ───────────────────────────
       if (!this.supabase) {
