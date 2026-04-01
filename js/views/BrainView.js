@@ -859,8 +859,9 @@ class BrainView extends (window.BaseView || class {}) {
     try {
       const { data, error } = await this.supabase
         .from('ai_messages')
-        .select('id, role, content, created_at')
+        .select('id, role, content, created_at, metadata')
         .eq('conversation_id', this.aiState.active_conversation_id)
+        .in('role', ['user', 'assistant', 'error'])
         .order('created_at', { ascending: true });
       this.aiState.messages = (!error && data) ? data : [];
     } catch (_) {
@@ -996,8 +997,8 @@ class BrainView extends (window.BaseView || class {}) {
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
-  /* ── Typing indicator ────────────────────────────────── */
-  showTypingIndicator() {
+  /* ── Typing / Activity indicator ────────────────────── */
+  showTypingIndicator(statusText) {
     const list = document.getElementById('brainMessageList');
     const scroll = document.getElementById('brainMessagesWrap');
     if (!list) return;
@@ -1011,9 +1012,18 @@ class BrainView extends (window.BaseView || class {}) {
         </div>
         <div class="gpt-msg-content">
           <div class="gpt-typing-dots"><span></span><span></span><span></span></div>
+          <div class="gpt-typing-status" id="veraStatusText">${statusText ? escapeHtml(statusText) : ''}</div>
         </div>
       </div>
     `);
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  updateTypingStatus(text) {
+    const el = document.getElementById('veraStatusText');
+    if (el) el.textContent = text || '';
+    // Auto-scroll suave
+    const scroll = document.getElementById('brainMessagesWrap');
     if (scroll) scroll.scrollTop = scroll.scrollHeight;
   }
 
@@ -1070,7 +1080,7 @@ class BrainView extends (window.BaseView || class {}) {
     const input = document.getElementById('brainInput');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Optimistic: append user message immediately
+    // Mostrar mensaje del usuario inmediatamente (optimistic UI)
     const userMsg = {
       id: `local-user-${Date.now()}`,
       role: 'user',
@@ -1091,12 +1101,9 @@ class BrainView extends (window.BaseView || class {}) {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          // Ayuda al proxy /api/ai/engine-chat a reenviar a ai-engine
-          'X-AI-ENGINE-BASE-URL':
-            (window.AI_ENGINE_BASE_URL ||
-              (() => {
-                try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
-              })())
+          'X-AI-ENGINE-BASE-URL': (window.AI_ENGINE_BASE_URL || (() => {
+            try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
+          })())
         },
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
@@ -1108,22 +1115,34 @@ class BrainView extends (window.BaseView || class {}) {
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
 
+      // Guardar conversation_id si es nuevo
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
       }
 
-      this.hideTypingIndicator();
+      const convId = json?.conversation_id || this.aiState.active_conversation_id;
 
-      if (json?.message) {
-        const assistantMsg = {
-          id: `local-assistant-${Date.now()}`,
-          role: 'assistant',
-          content: json.message,
-          created_at: new Date().toISOString()
-        };
-        this.aiState.messages.push(assistantMsg);
-        this.appendMessage(assistantMsg);
+      if (json?.status === 'processing') {
+        // ── Modo async: Vera procesa en background ──────────────────────────
+        // El servidor respondió inmediatamente. Esperamos la respuesta real
+        // vía Supabase Realtime (con polling como fallback).
+        await this._waitForAsyncResponse(convId, token);
+
+      } else {
+        // ── Modo sync (legacy / fallback) ───────────────────────────────────
+        this.hideTypingIndicator();
+        if (json?.message) {
+          const assistantMsg = {
+            id: `local-assistant-${Date.now()}`,
+            role: 'assistant',
+            content: json.message,
+            created_at: new Date().toISOString()
+          };
+          this.aiState.messages.push(assistantMsg);
+          this.appendMessage(assistantMsg);
+        }
       }
+
     } catch (err) {
       console.error('BrainView sendMessage:', err);
       this.hideTypingIndicator();
@@ -1139,6 +1158,160 @@ class BrainView extends (window.BaseView || class {}) {
       this.aiState.isLoading = false;
       if (sendBtn) sendBtn.disabled = !(input?.value || '').trim();
     }
+  }
+
+  /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
+  _getWaitMessage(elapsedMs) {
+    if (elapsedMs < 15_000)  return 'Vera está pensando…';
+    if (elapsedMs < 40_000)  return 'Vera está procesando tu solicitud…';
+    if (elapsedMs < 90_000)  return 'Vera está trabajando en segundo plano…';
+    if (elapsedMs < 180_000) return 'Vera está realizando tareas complejas — puede tardar unos minutos…';
+    if (elapsedMs < 360_000) return 'Vera sigue activa — procesando en background…';
+    return 'Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.';
+  }
+
+  /* ── Espera la respuesta async via Realtime + polling fallback ───────────── */
+  async _waitForAsyncResponse(conversationId, token) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      // Tiempo máximo de espera: 12 minutos (OpenClaw puede tardar ~10 min)
+      const MAX_WAIT_MS   = 12 * 60 * 1000;
+      // Intervalo del ticker de UI (actualiza el mensaje de espera)
+      const TICK_MS       = 5_000;
+      // Intervalo de polling fallback (cuando Realtime no entrega actualizaciones)
+      const POLL_MS       = 8_000;
+
+      let resolved       = false;
+      let realtimeActive = false;
+      let lastStatusAt   = Date.now();
+      let tickInterval   = null;
+      let pollInterval   = null;
+      let channel        = null;
+
+      const finish = (msg) => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(tickInterval);
+        clearInterval(pollInterval);
+        try { channel?.unsubscribe(); } catch (_) {}
+
+        this.hideTypingIndicator();
+
+        if (msg) {
+          const isError = msg.role === 'error' || msg.metadata?.error;
+          const displayMsg = {
+            id: msg.id || `local-${Date.now()}`,
+            role: isError ? 'error' : 'assistant',
+            content: msg.content,
+            created_at: msg.created_at || new Date().toISOString()
+          };
+          this.aiState.messages.push(displayMsg);
+          this.appendMessage(displayMsg);
+        }
+
+        resolve();
+      };
+
+      const handleIncomingMessage = (msg) => {
+        if (!msg?.role || !msg?.content) return;
+
+        if (msg.role === 'status') {
+          // Status real del backend: herramienta que realmente ejecutó
+          lastStatusAt = Date.now();
+          this.updateTypingStatus(msg.content);
+          return;
+        }
+
+        if (msg.role === 'assistant' || msg.role === 'error') {
+          finish(msg);
+        }
+      };
+
+      // ── Ticker de UI: actualiza el mensaje de espera ─────────────────────
+      tickInterval = setInterval(() => {
+        if (resolved) return;
+        const elapsed = Date.now() - startTime;
+
+        if (elapsed >= MAX_WAIT_MS) {
+          clearInterval(tickInterval);
+          clearInterval(pollInterval);
+          try { channel?.unsubscribe(); } catch (_) {}
+          if (!resolved) {
+            resolved = true;
+            this.hideTypingIndicator();
+            const timeoutMsg = {
+              id: `local-timeout-${Date.now()}`,
+              role: 'error',
+              content: 'La solicitud tardó demasiado tiempo. OpenClaw puede seguir trabajando en background — intenta enviar el mensaje de nuevo en unos minutos.',
+              created_at: new Date().toISOString()
+            };
+            this.aiState.messages.push(timeoutMsg);
+            this.appendMessage(timeoutMsg);
+            resolve();
+          }
+          return;
+        }
+
+        // Solo actualizar el ticker si el backend no envió un status reciente (< 10s)
+        const timeSinceStatus = Date.now() - lastStatusAt;
+        if (timeSinceStatus > 10_000) {
+          this.updateTypingStatus(this._getWaitMessage(elapsed));
+        }
+      }, TICK_MS);
+
+      // ── Supabase Realtime ─────────────────────────────────────────────────
+      if (this.supabase) {
+        try {
+          channel = this.supabase
+            .channel(`vera-activity-${conversationId}-${Date.now()}`)
+            .on('postgres_changes', {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'ai_messages',
+              filter: `conversation_id=eq.${conversationId}`,
+            }, (payload) => {
+              realtimeActive = true;
+              handleIncomingMessage(payload.new);
+            })
+            .subscribe((status) => {
+              if (status === 'SUBSCRIBED') realtimeActive = true;
+            });
+        } catch (e) {
+          console.warn('BrainView: Realtime no disponible, usando polling:', e.message);
+        }
+      }
+
+      // ── Polling fallback (se activa siempre; cuando Realtime funciona,
+      //    la respuesta ya llegó y el poll no hace nada extra) ────────────────
+      const pollFn = async () => {
+        if (resolved) return;
+        try {
+          const url = getAiChatUrl().replace('/chat', '')
+            + `/chat/conversation/${conversationId}/status`
+            + `?organization_id=${encodeURIComponent(this.aiState.organization_id)}`;
+
+          const r = await fetch(url, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          if (!r.ok) return;
+          const data = await r.json();
+
+          if (data.status === 'done' || data.status === 'error') {
+            handleIncomingMessage({
+              role: data.status === 'error' ? 'error' : 'assistant',
+              content: data.message,
+              created_at: data.created_at
+            });
+          }
+        } catch (_) {}
+      };
+
+      // Primer poll a los 10s (da tiempo al Realtime de conectar)
+      setTimeout(() => {
+        if (!resolved) pollFn();
+        pollInterval = setInterval(pollFn, POLL_MS);
+      }, 10_000);
+    });
   }
 }
 
