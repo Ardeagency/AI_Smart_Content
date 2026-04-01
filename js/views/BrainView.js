@@ -1236,33 +1236,37 @@ class BrainView extends (window.BaseView || class {}) {
     return 'Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.';
   }
 
-  /* ── Espera la respuesta async via Realtime + polling fallback ───────────── */
+  /* ── Espera la respuesta async SOLO via Supabase Realtime ───────────────── */
+  //
+  // Diseño intencional:
+  //   - SIN polling: no se consulta "el último mensaje por fecha" para evitar
+  //     que un mensaje anterior aparezca mientras Vera procesa el nuevo.
+  //   - SOLO Realtime: escucha INSERTs en ai_messages filtrados por
+  //     conversation_id (server-side, Supabase lo garantiza).
+  //   - El mensaje se muestra ÚNICAMENTE cuando entra en tiempo real con el
+  //     conversation_id exacto de esta conversación.
+  //   - Si el tiempo de espera se agota, se avisa al usuario que recargue —
+  //     nunca se carga el historial para "adivinar" la respuesta.
+  //
   async _waitForAsyncResponse(conversationId, token) {
     return new Promise((resolve) => {
       const startTime = Date.now();
-      // Mínimo para considerar que fue una tarea larga y merece notificación
       const NOTIFY_AFTER_MS = 5_000;
-      // Tiempo máximo de espera: 12 minutos (OpenClaw puede tardar ~10 min)
-      const MAX_WAIT_MS   = 12 * 60 * 1000;
-      // Intervalo del ticker de UI (actualiza el mensaje de espera)
-      const TICK_MS       = 5_000;
-      // Intervalo de polling fallback (cuando Realtime no entrega actualizaciones)
-      const POLL_MS       = 8_000;
+      // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas
+      const MAX_WAIT_MS = 12 * 60 * 1000;
+      const TICK_MS     = 5_000;
 
-      let resolved       = false;
-      let realtimeActive = false;
-      let lastStatusAt   = Date.now();
-      let tickInterval   = null;
-      let pollInterval   = null;
-      let channel        = null;
+      let resolved     = false;
+      let lastStatusAt = Date.now();
+      let tickInterval = null;
+      let channel      = null;
 
+      // ── Cierra la espera y muestra el mensaje ─────────────────────────────
       const finish = (msg) => {
         if (resolved) return;
         resolved = true;
         clearInterval(tickInterval);
-        clearInterval(pollInterval);
         try { channel?.unsubscribe(); } catch (_) {}
-
         this.hideTypingIndicator();
 
         if (msg) {
@@ -1276,21 +1280,23 @@ class BrainView extends (window.BaseView || class {}) {
           this.aiState.messages.push(displayMsg);
           this.appendMessage(displayMsg);
 
-          // Notificar al usuario solo si la tarea fue larga (background real)
           if (!isError && Date.now() - startTime >= NOTIFY_AFTER_MS) {
             this._playNotificationSound();
             this._showBrowserNotification(msg.content);
           }
         }
-
         resolve();
       };
 
-      const handleIncomingMessage = (msg) => {
+      // ── Procesa cada INSERT que llega por Realtime ────────────────────────
+      const handleRealtimeInsert = (msg) => {
         if (!msg?.role || !msg?.content) return;
 
+        // Guardia de seguridad: solo mensajes de ESTA conversación
+        // (la suscripción Realtime ya filtra server-side, pero doble verificación)
+        if (msg.conversation_id && msg.conversation_id !== conversationId) return;
+
         if (msg.role === 'status') {
-          // Status real del backend: herramienta que realmente ejecutó
           lastStatusAt = Date.now();
           this.updateTypingStatus(msg.content);
           return;
@@ -1301,22 +1307,21 @@ class BrainView extends (window.BaseView || class {}) {
         }
       };
 
-      // ── Ticker de UI: actualiza el mensaje de espera ─────────────────────
+      // ── Ticker de UI ──────────────────────────────────────────────────────
       tickInterval = setInterval(() => {
         if (resolved) return;
         const elapsed = Date.now() - startTime;
 
         if (elapsed >= MAX_WAIT_MS) {
           clearInterval(tickInterval);
-          clearInterval(pollInterval);
-          try { channel?.unsubscribe(); } catch (_) {}
           if (!resolved) {
             resolved = true;
+            try { channel?.unsubscribe(); } catch (_) {}
             this.hideTypingIndicator();
             const timeoutMsg = {
               id: `local-timeout-${Date.now()}`,
               role: 'error',
-              content: 'La solicitud tardó demasiado tiempo. OpenClaw puede seguir trabajando en background — intenta enviar el mensaje de nuevo en unos minutos.',
+              content: 'Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.',
               created_at: new Date().toISOString()
             };
             this.aiState.messages.push(timeoutMsg);
@@ -1326,65 +1331,45 @@ class BrainView extends (window.BaseView || class {}) {
           return;
         }
 
-        // Solo actualizar el ticker si el backend no envió un status reciente (< 10s)
-        const timeSinceStatus = Date.now() - lastStatusAt;
-        if (timeSinceStatus > 10_000) {
+        // Mostrar ticker solo si no hay actividad reciente del backend
+        if (Date.now() - lastStatusAt > 10_000) {
           this.updateTypingStatus(this._getWaitMessage(elapsed));
         }
       }, TICK_MS);
 
-      // ── Supabase Realtime ─────────────────────────────────────────────────
-      if (this.supabase) {
-        try {
-          channel = this.supabase
-            .channel(`vera-activity-${conversationId}-${Date.now()}`)
-            .on('postgres_changes', {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'ai_messages',
-              filter: `conversation_id=eq.${conversationId}`,
-            }, (payload) => {
-              realtimeActive = true;
-              handleIncomingMessage(payload.new);
-            })
-            .subscribe((status) => {
-              if (status === 'SUBSCRIBED') realtimeActive = true;
-            });
-        } catch (e) {
-          console.warn('BrainView: Realtime no disponible, usando polling:', e.message);
-        }
+      // ── Supabase Realtime — única fuente de verdad ────────────────────────
+      if (!this.supabase) {
+        // Sin cliente Supabase no podemos escuchar — informar al usuario
+        finish({
+          role: 'error',
+          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+        });
+        return;
       }
 
-      // ── Polling fallback: consulta Supabase directamente ─────────────────
-      // No pasa por Netlify/Lambda ni por ai-engine — es una query directa
-      // a la DB. Así el fallback funciona igual en proxy HTTPS que en directo.
-      // IMPORTANTE: se filtra por created_at > startIso para NO devolver el
-      // mensaje anterior de la conversación (que daría el efecto de "repetición").
-      const startIso = new Date(startTime).toISOString();
-      const pollFn = async () => {
-        if (resolved || !this.supabase) return;
-        try {
-          const { data } = await this.supabase
-            .from('ai_messages')
-            .select('id, role, content, created_at')
-            .eq('conversation_id', conversationId)
-            .in('role', ['assistant', 'error'])
-            .gt('created_at', startIso)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (data?.role === 'assistant' || data?.role === 'error') {
-            handleIncomingMessage(data);
-          }
-        } catch (_) {}
-      };
-
-      // Primer poll a los 10s (da tiempo al Realtime de conectar)
-      setTimeout(() => {
-        if (!resolved) pollFn();
-        pollInterval = setInterval(pollFn, POLL_MS);
-      }, 10_000);
+      try {
+        channel = this.supabase
+          .channel(`vera-msg-${conversationId}-${Date.now()}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ai_messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          }, (payload) => {
+            handleRealtimeInsert(payload.new);
+          })
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              console.warn('BrainView Realtime: canal con error, estado:', status);
+            }
+          });
+      } catch (e) {
+        console.warn('BrainView: Realtime no disponible:', e.message);
+        finish({
+          role: 'error',
+          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+        });
+      }
     });
   }
 }
