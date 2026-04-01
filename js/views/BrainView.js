@@ -1250,15 +1250,20 @@ class BrainView extends (window.BaseView || class {}) {
   //
   async _waitForAsyncResponse(conversationId, token) {
     return new Promise((resolve) => {
-      const startTime = Date.now();
+      const startTime    = Date.now();
+      // ISO del momento exacto en que el usuario envió el mensaje — filtra mensajes anteriores
+      const startIso     = new Date().toISOString();
       const NOTIFY_AFTER_MS = 5_000;
       // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas
-      const MAX_WAIT_MS = 12 * 60 * 1000;
-      const TICK_MS     = 5_000;
+      const MAX_WAIT_MS  = 12 * 60 * 1000;
+      const TICK_MS      = 5_000;
+      // Polling de respaldo: consulta la DB cada N ms si Realtime no entrega
+      const POLL_INTERVAL_MS = 8_000;
 
       let resolved     = false;
       let lastStatusAt = Date.now();
       let tickInterval = null;
+      let pollInterval = null;
       let channel      = null;
 
       // ── Cierra la espera y muestra el mensaje ─────────────────────────────
@@ -1266,6 +1271,7 @@ class BrainView extends (window.BaseView || class {}) {
         if (resolved) return;
         resolved = true;
         clearInterval(tickInterval);
+        clearInterval(pollInterval);
         try { channel?.unsubscribe(); } catch (_) {}
         this.hideTypingIndicator();
 
@@ -1288,12 +1294,11 @@ class BrainView extends (window.BaseView || class {}) {
         resolve();
       };
 
-      // ── Procesa cada INSERT que llega por Realtime ────────────────────────
-      const handleRealtimeInsert = (msg) => {
+      // ── Procesa cada mensaje recibido (Realtime o polling) ────────────────
+      const handleMsg = (msg) => {
         if (!msg?.role || !msg?.content) return;
 
-        // Guardia de seguridad: solo mensajes de ESTA conversación
-        // (la suscripción Realtime ya filtra server-side, pero doble verificación)
+        // Solo mensajes de ESTA conversación
         if (msg.conversation_id && msg.conversation_id !== conversationId) return;
 
         if (msg.role === 'status') {
@@ -1307,6 +1312,25 @@ class BrainView extends (window.BaseView || class {}) {
         }
       };
 
+      // ── Polling de respaldo: busca mensajes NUEVOS (> startIso) ──────────
+      // Garantiza que si Realtime falla, igual mostramos la respuesta.
+      // El filtro created_at > startIso previene cargar el mensaje anterior.
+      const doPoll = async () => {
+        if (resolved || !this.supabase) return;
+        try {
+          const { data } = await this.supabase
+            .from('ai_messages')
+            .select('id, role, content, created_at, conversation_id')
+            .eq('conversation_id', conversationId)
+            .in('role', ['assistant', 'error'])
+            .gt('created_at', startIso)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (data?.length) handleMsg(data[0]);
+        } catch (_) {}
+      };
+
       // ── Ticker de UI ──────────────────────────────────────────────────────
       tickInterval = setInterval(() => {
         if (resolved) return;
@@ -1314,6 +1338,7 @@ class BrainView extends (window.BaseView || class {}) {
 
         if (elapsed >= MAX_WAIT_MS) {
           clearInterval(tickInterval);
+          clearInterval(pollInterval);
           if (!resolved) {
             resolved = true;
             try { channel?.unsubscribe(); } catch (_) {}
@@ -1337,7 +1362,10 @@ class BrainView extends (window.BaseView || class {}) {
         }
       }, TICK_MS);
 
-      // ── Supabase Realtime — única fuente de verdad ────────────────────────
+      // Arrancar polling de respaldo inmediatamente (primer check a los 8s)
+      pollInterval = setInterval(doPoll, POLL_INTERVAL_MS);
+
+      // ── Supabase Realtime — entrega instantánea ───────────────────────────
       if (!this.supabase) {
         // Sin cliente Supabase no podemos escuchar — informar al usuario
         finish({
@@ -1356,7 +1384,7 @@ class BrainView extends (window.BaseView || class {}) {
             table: 'ai_messages',
             filter: `conversation_id=eq.${conversationId}`,
           }, (payload) => {
-            handleRealtimeInsert(payload.new);
+            handleMsg(payload.new);
           })
           .subscribe((status) => {
             if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
