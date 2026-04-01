@@ -1281,27 +1281,23 @@ class BrainView extends (window.BaseView || class {}) {
         }
       }
 
-      // ── Polling fallback (se activa siempre; cuando Realtime funciona,
-      //    la respuesta ya llegó y el poll no hace nada extra) ────────────────
+      // ── Polling fallback: consulta Supabase directamente ─────────────────
+      // No pasa por Netlify/Lambda ni por ai-engine — es una query directa
+      // a la DB. Así el fallback funciona igual en proxy HTTPS que en directo.
       const pollFn = async () => {
-        if (resolved) return;
+        if (resolved || !this.supabase) return;
         try {
-          const url = getAiChatUrl().replace('/chat', '')
-            + `/chat/conversation/${conversationId}/status`
-            + `?organization_id=${encodeURIComponent(this.aiState.organization_id)}`;
+          const { data } = await this.supabase
+            .from('ai_messages')
+            .select('id, role, content, created_at')
+            .eq('conversation_id', conversationId)
+            .in('role', ['assistant', 'error'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-          const r = await fetch(url, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {}
-          });
-          if (!r.ok) return;
-          const data = await r.json();
-
-          if (data.status === 'done' || data.status === 'error') {
-            handleIncomingMessage({
-              role: data.status === 'error' ? 'error' : 'assistant',
-              content: data.message,
-              created_at: data.created_at
-            });
+          if (data?.role === 'assistant' || data?.role === 'error') {
+            handleIncomingMessage(data);
           }
         } catch (_) {}
       };

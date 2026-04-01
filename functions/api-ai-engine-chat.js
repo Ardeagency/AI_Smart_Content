@@ -70,29 +70,36 @@ exports.handler = async (event) => {
 
   const targetUrl = `${aiEngineBaseUrl}/chat`;
 
+  // ai-engine ahora responde inmediatamente con { status: "processing" } — < 1s.
+  // El timeout de 10s es un margen de seguridad para absorber latencia de red
+  // o un arranque lento del servidor. La Lambda nunca debería bloquearse aquí.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
   let upstream;
   try {
     upstream = await fetch(targetUrl, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        organization_id,
-        conversation_id,
-        message,
-      }),
+      body: JSON.stringify({ organization_id, conversation_id, message }),
     });
   } catch (e) {
+    const isTimeout = e?.name === "AbortError";
     return {
-      statusCode: 502,
+      statusCode: isTimeout ? 504 : 502,
       headers: corsHeaders(),
       body: JSON.stringify({
-        error: "No se pudo conectar al motor de IA",
-        details: e?.message || String(e),
+        error: isTimeout
+          ? "El motor de IA tardó demasiado en responder. Intenta de nuevo."
+          : "No se pudo conectar al motor de IA. Verifica que el servidor esté activo.",
       }),
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const text = await upstream.text();
