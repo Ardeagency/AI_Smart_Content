@@ -1358,6 +1358,9 @@ class BrainView extends (window.BaseView || class {}) {
       // ── Polling fallback: consulta Supabase directamente ─────────────────
       // No pasa por Netlify/Lambda ni por ai-engine — es una query directa
       // a la DB. Así el fallback funciona igual en proxy HTTPS que en directo.
+      // IMPORTANTE: se filtra por created_at > startIso para NO devolver el
+      // mensaje anterior de la conversación (que daría el efecto de "repetición").
+      const startIso = new Date(startTime).toISOString();
       const pollFn = async () => {
         if (resolved || !this.supabase) return;
         try {
@@ -1366,6 +1369,7 @@ class BrainView extends (window.BaseView || class {}) {
             .select('id, role, content, created_at')
             .eq('conversation_id', conversationId)
             .in('role', ['assistant', 'error'])
+            .gt('created_at', startIso)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
