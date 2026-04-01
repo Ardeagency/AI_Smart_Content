@@ -70,11 +70,12 @@ exports.handler = async (event) => {
 
   const targetUrl = `${aiEngineBaseUrl}/chat`;
 
-  // ai-engine ahora responde inmediatamente con { status: "processing" } — < 1s.
-  // El timeout de 10s es un margen de seguridad para absorber latencia de red
-  // o un arranque lento del servidor. La Lambda nunca debería bloquearse aquí.
+  // ai-engine responde con { status: "processing" } tras auth + 4 llamadas a Supabase.
+  // En condiciones normales tarda 1-3s, pero con Supabase lento puede llegar a ~15s.
+  // Usamos 25s — justo por debajo del límite de Lambda de Netlify (~26s) — para
+  // garantizar que el error sea nuestro mensaje amigable y no un 502 crudo.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  const timeoutId = setTimeout(() => controller.abort(), 25_000);
 
   let upstream;
   try {
