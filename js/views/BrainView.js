@@ -859,7 +859,7 @@ class BrainView extends (window.BaseView || class {}) {
     try {
       const { data, error } = await this.supabase
         .from('ai_messages')
-        .select('id, role, content, created_at, metadata')
+        .select('id, role, content, created_at')
         .eq('conversation_id', this.aiState.active_conversation_id)
         .in('role', ['user', 'assistant', 'error'])
         .order('created_at', { ascending: true });
