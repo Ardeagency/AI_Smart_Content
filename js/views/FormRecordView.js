@@ -1,5 +1,5 @@
 /**
- * FormRecordView - Vista del formulario de registro (nombre organización + URL web).
+ * FormRecordView - Ruta legacy. Redirige a /create.
  */
 class FormRecordView extends BaseView {
   constructor() {
@@ -9,6 +9,11 @@ class FormRecordView extends BaseView {
   }
 
   async onEnter() {
+    if (window.router) {
+      window.router.navigate('/create', true);
+      return;
+    }
+
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
@@ -26,24 +31,10 @@ class FormRecordView extends BaseView {
   }
 
   async init() {
-    if (window.appNavigation && !window.appNavigation.initialized) {
-      await window.appNavigation.render();
+    const container = document.getElementById('app-container');
+    if (container) {
+      container.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
     }
-
-    if (!window.FormRecord) {
-      await this.loadScript('js/form-record.js', 'FormRecord');
-    }
-
-    if (!window.FormRecord) {
-      console.error('❌ No se pudo cargar FormRecord');
-      return;
-    }
-
-    const supabase = await this.getSupabaseClient();
-    const existingInstance = window.formRecordInstance instanceof window.FormRecord ? window.formRecordInstance : null;
-    this.formRecord = existingInstance || new window.FormRecord();
-    this.formRecord.supabase = supabase;
-    await this.formRecord.init();
   }
 
   async checkAuthentication() {

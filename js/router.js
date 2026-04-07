@@ -351,7 +351,7 @@ class Router {
 
   async _getDefaultUserRouteFallback(userId) {
     const supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
-    if (!supabase || !userId) return '/form_org';
+    if (!supabase || !userId) return '/create';
     try {
       const [membersRes, ownedRes] = await Promise.all([
         supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
@@ -366,16 +366,16 @@ class Router {
       (ownedRes.data || []).forEach((o) => {
         if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
       });
-      if (list.length === 0) return '/form_org';
+      if (list.length === 0) return '/create';
       const selectedId = localStorage.getItem('selectedOrganizationId');
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/insight` : '/form_org';
+        return prefix ? `${prefix}/insight` : '/create';
       }
       return `/org/${org.id}/insight`;
     } catch (e) {
-      return '/form_org';
+      return '/create';
     }
   }
 
@@ -390,7 +390,7 @@ class Router {
       if (user?.id) return await this._getDefaultUserRouteFallback(user.id);
     }
     if (localStorage.getItem('userViewMode') === 'developer') return '/dev/dashboard';
-    return '/form_org';
+    return '/create';
   }
 
   /**

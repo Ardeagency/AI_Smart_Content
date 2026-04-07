@@ -275,10 +275,10 @@ class AuthService {
 
   /**
    * Determinar ruta de redirección para usuario autenticado.
-   * Según modo: developer → /dev/dashboard, user → primera organización (Production) o onboarding (/form_org).
+   * Según modo: developer → /dev/dashboard, user → primera organización o /create.
    */
   async determineRedirectRoute(userId) {
-    if (!userId) return '/form_org';
+    if (!userId) return '/create';
 
     try {
       const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
@@ -288,17 +288,17 @@ class AuthService {
       return await this.getDefaultUserRoute(userId);
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/form_org';
+      return '/create';
     }
   }
 
   /**
-   * Obtener ruta por defecto para usuario consumidor: primera org (Production) o /form_org si no tiene org.
+   * Obtener ruta por defecto para usuario consumidor: primera org (Insight) o /create si no tiene org.
    * @param {string} userId - ID del usuario
-   * @returns {Promise<string>} /org/:id/production o /form_org
+   * @returns {Promise<string>} /org/:id/insight o /create
    */
   async getDefaultUserRoute(userId) {
-    if (!this.supabase || !userId) return '/form_org';
+    if (!this.supabase || !userId) return '/create';
     try {
       const selectedId = localStorage.getItem('selectedOrganizationId') || window.appState?.get?.('selectedOrganizationId');
       const [membersRes, ownedRes] = await Promise.all([
@@ -314,16 +314,16 @@ class AuthService {
       (ownedRes.data || []).forEach((o) => {
         if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
       });
-      if (list.length === 0) return '/form_org';
+      if (list.length === 0) return '/create';
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/insight` : '/form_org';
+        return prefix ? `${prefix}/insight` : '/create';
       }
       return `/org/${org.id}/insight`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
-      return '/form_org';
+      return '/create';
     }
   }
 
