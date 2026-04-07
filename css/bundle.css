@@ -24771,7 +24771,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   padding: 15px;
   max-width: 1280px;
   margin: 0 auto;
-  padding-top: calc(48px + 20px);
+  padding-top: 15px;
 }
 
 /* Header */
