@@ -23,6 +23,10 @@ class VideoView extends BaseView {
   /** Doc KIE: empezar polling 2-3s; dejar de hacer polling a los 10-15 min. Usamos 3s y máximo 12 min. */
   static get POLL_INTERVAL_MS() { return 3000; }
   static get POLL_MAX_DURATION_MS() { return 12 * 60 * 1000; }
+  /** Tope del textarea del Director Console (px); no debe comerse el canvas. */
+  static get DIRECTOR_BRIEF_MAX_HEIGHT_PX() { return 200; }
+  /** Tope adicional como fracción del alto de ventana (el menor con DIRECTOR_BRIEF_MAX_HEIGHT_PX gana). */
+  static get DIRECTOR_BRIEF_MAX_VIEWPORT_FRAC() { return 0.26; }
 
   constructor() {
     super();
@@ -475,7 +479,10 @@ class VideoView extends BaseView {
   resizeDirectorBriefInput() {
     const ta = this.promptInput;
     if (!ta || ta.tagName !== 'TEXTAREA') return;
-    const maxPx = Math.min(360, Math.floor(window.innerHeight * 0.5));
+    const maxPx = Math.min(
+      VideoView.DIRECTOR_BRIEF_MAX_HEIGHT_PX,
+      Math.floor(window.innerHeight * VideoView.DIRECTOR_BRIEF_MAX_VIEWPORT_FRAC)
+    );
     const minPx = 44;
     ta.style.height = '0px';
     const sh = ta.scrollHeight;
