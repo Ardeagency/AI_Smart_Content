@@ -55,7 +55,7 @@ class VideoView extends BaseView {
       colorTemp: '',
       energyLevel: ''
     };
-    this.cineBlocksCollapsed = { camera: false, movement: false, lighting: false, mood: false };
+    this.cineBlocksCollapsed = { camera: true, movement: true, lighting: true, mood: true };
     this.assetScope = 'product';
     this.selectedAssetId = '';
     this.storyboardScenes = [{ brief: '', duration: '5' }, { brief: '', duration: '5' }];
@@ -281,8 +281,8 @@ class VideoView extends BaseView {
                     <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
                     <div class="video-cine-blocks">
                       <div class="video-cine-block" data-block="camera">
-                        <button type="button" class="video-cine-block-header" aria-expanded="true"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
-                        <div class="video-cine-block-content">
+                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
+                        <div class="video-cine-block-content video-cine-block-collapsed">
                           <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>

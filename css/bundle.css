@@ -23350,8 +23350,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .video-cinematography-panel .video-cine-block:hover {
     border-color: var(--color-info);
-    box-shadow: 0 0 14px var(--color-info-light);
-    background: var(--black-40);
+    box-shadow: none;
 }
 /* Cabeceras de acordeón: mismo tono oscuro que el bloque, texto claro (evitar estilo por defecto del botón) */
 .video-cinematography-panel .video-cine-block-header,
@@ -23375,7 +23374,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .video-cinematography-panel .video-cine-block-header:hover,
 .video-sidebar-cine .video-cine-block-header:hover {
-    background: var(--white-8);
+    background: transparent;
     color: var(--glass-black-text);
 }
 .video-cinematography-panel .video-cine-block-header i,
@@ -24184,7 +24183,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     border: 1px solid transparent;
     box-shadow: none;
     background:
-        linear-gradient(var(--black-40), var(--black-40)) padding-box,
+        linear-gradient(var(--black-20), var(--black-20)) padding-box,
         var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
     background-origin: border-box;
     background-clip: padding-box, border-box;
