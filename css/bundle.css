@@ -22317,6 +22317,19 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console:focus-within {
     border-color: rgba(255, 255, 255, 0.18);
 }
+/* Textarea: fondo negro era del .video-director-brief-input (p. ej. rgba(0,0,0,0.8) vía .video-prompt-wrap), no del contenedor. Alineado a Brain .gpt-composer-textarea. */
+.video-view-container .video-main-director .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input,
+.video-view-container .video-main-director .video-director-console-content .video-director-brief-input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    box-shadow: none;
+    padding: 0;
+}
+.video-view-container .video-main-director .video-director-console-content .video-director-brief-input:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
 .video-sidebar-inner {
     display: flex;
     flex-direction: column;
