@@ -22384,6 +22384,11 @@ body.production-filters-in-header .living-container > .living-history-section {
     0% { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
 }
+/* Dos capas: capa interior fija + degradado de marca animado (bordes / anillos en Video) */
+@keyframes video-accent-gradient-shift {
+    0% { background-position: 0 0, 0% 50%; }
+    100% { background-position: 0 0, 200% 50%; }
+}
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
@@ -24146,6 +24151,107 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-size: var(--font-size-xs);
     color: var(--text-muted);
     letter-spacing: 0.02em;
+}
+
+/* Video: acentos celeste/azul (--color-info, anillos, hovers cine) → --brand-gradient-dynamic + animación de card */
+.video-view-container .video-sidebar-section-num,
+.video-view-container .video-console-dot,
+.video-view-container .video-canvas-model-badge {
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    animation: video-card-gradient-border 6s linear infinite;
+}
+.video-view-container .video-prompt-preview-score {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: transparent;
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: video-card-gradient-border 6s linear infinite;
+}
+.video-view-container .video-asset-card-locks .fa-check {
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: video-card-gradient-border 6s linear infinite;
+}
+.video-view-container .video-cinematography-panel .video-cine-block:hover {
+    border: 1px solid transparent;
+    box-shadow: none;
+    background:
+        linear-gradient(var(--black-40), var(--black-40)) padding-box,
+        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    background-position: 0 0, 0% 50%;
+    animation: video-accent-gradient-shift 6s linear infinite;
+}
+.video-view-container .video-escena-item.is-selected {
+    box-shadow: none;
+    border: 2px solid transparent;
+    background:
+        linear-gradient(var(--black-40), var(--black-40)) padding-box,
+        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    background-position: 0 0, 0% 50%;
+    animation: video-accent-gradient-shift 6s linear infinite;
+}
+.video-view-container .video-asset-product-item.is-selected {
+    box-shadow: none;
+    border: 2px solid transparent;
+    background:
+        linear-gradient(var(--black-40), var(--black-40)) padding-box,
+        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    background-position: 0 0, 0% 50%;
+    animation: video-accent-gradient-shift 6s linear infinite;
+}
+.video-view-container .video-production-item.is-selected {
+    border: 2px solid transparent;
+    box-shadow: none;
+    background:
+        linear-gradient(var(--bg-secondary), var(--bg-secondary)) padding-box,
+        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    background-position: 0 0, 0% 50%;
+    animation: video-accent-gradient-shift 6s linear infinite;
+}
+.video-view-container .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle.active {
+    border: 1px solid transparent;
+    background-image:
+        linear-gradient(var(--brand-primary-brillo-strong, var(--brillo-active)), var(--brand-primary-brillo-strong, var(--brillo-active))) padding-box,
+        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 200% 100%;
+    background-position: 0 0, 0% 50%;
+    animation: video-accent-gradient-shift 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .video-view-container .video-sidebar-section-num,
+    .video-view-container .video-console-dot,
+    .video-view-container .video-canvas-model-badge,
+    .video-view-container .video-prompt-preview-score,
+    .video-view-container .video-asset-card-locks .fa-check,
+    .video-view-container .video-cinematography-panel .video-cine-block:hover,
+    .video-view-container .video-escena-item.is-selected,
+    .video-view-container .video-asset-product-item.is-selected,
+    .video-view-container .video-production-item.is-selected,
+    .video-view-container .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-toggle.active {
+        animation: none;
+    }
 }
 
 /* Status/result/error areas — full height within canvas */
