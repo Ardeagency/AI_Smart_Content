@@ -22330,6 +22330,17 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-color: transparent;
     box-shadow: none;
 }
+.video-view-container .video-director-console-content {
+    min-height: 0;
+}
+.video-view-container .video-main-director .video-director-console-content .video-director-brief-input,
+.video-view-container .video-main-director .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input {
+    min-height: 0;
+    max-height: none;
+    resize: none;
+    line-height: 1.5;
+    overflow-y: hidden;
+}
 .video-sidebar-inner {
     display: flex;
     flex-direction: column;

@@ -173,7 +173,7 @@ class VideoView extends BaseView {
                         id="videoPromptInput"
                         class="video-director-brief-input"
                         placeholder="Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca."
-                        rows="4"
+                        rows="1"
                         autocomplete="off"
                         aria-label="Tu idea (la IA genera el prompt final)"
                       ></textarea>
@@ -341,8 +341,7 @@ class VideoView extends BaseView {
 
     this.promptInput = this.container.querySelector('#videoPromptInput');
     if (this.promptInput && this.promptInput.tagName === 'TEXTAREA') {
-      this.promptInput.setAttribute('rows', '4');
-      this.promptInput.style.minHeight = '120px';
+      this.promptInput.setAttribute('rows', '1');
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
@@ -385,8 +384,13 @@ class VideoView extends BaseView {
         const len = (this.promptInput.value || '').trim().length;
         timeoutHint.style.display = len > 450 ? 'block' : 'none';
       };
-      this.promptInput.addEventListener('input', updateTimeoutHint);
+      const onPromptFieldInput = () => {
+        updateTimeoutHint();
+        this.scheduleResizeDirectorBriefInput();
+      };
+      this.promptInput.addEventListener('input', onPromptFieldInput);
       this.promptInput.addEventListener('change', updateTimeoutHint);
+      this.promptInput.addEventListener('paste', () => this.scheduleResizeDirectorBriefInput());
       updateTimeoutHint();
     }
     const addBtn = this.container.querySelector('#videoPromptAdd');
@@ -452,6 +456,32 @@ class VideoView extends BaseView {
       if (!this.multiShotEnabled) this.multiPrompts = [];
     }
     this.updatePromptButtonState(false);
+    this.scheduleResizeDirectorBriefInput();
+    this._resizeDirectorBriefOnWin = () => this.scheduleResizeDirectorBriefInput();
+    window.addEventListener('resize', this._resizeDirectorBriefOnWin);
+  }
+
+  /** Altura del textarea según contenido (vacío ≈ una línea; crece hasta un máximo). */
+  scheduleResizeDirectorBriefInput() {
+    if (this._resizeDirectorBriefRaf) {
+      cancelAnimationFrame(this._resizeDirectorBriefRaf);
+    }
+    this._resizeDirectorBriefRaf = requestAnimationFrame(() => {
+      this._resizeDirectorBriefRaf = null;
+      this.resizeDirectorBriefInput();
+    });
+  }
+
+  resizeDirectorBriefInput() {
+    const ta = this.promptInput;
+    if (!ta || ta.tagName !== 'TEXTAREA') return;
+    const maxPx = Math.min(360, Math.floor(window.innerHeight * 0.5));
+    const minPx = 44;
+    ta.style.height = '0px';
+    const sh = ta.scrollHeight;
+    const next = Math.min(Math.max(sh, minPx), maxPx);
+    ta.style.height = `${next}px`;
+    ta.style.overflowY = sh > maxPx ? 'auto' : 'hidden';
   }
 
   clearAssetSelection() {
@@ -1001,6 +1031,7 @@ class VideoView extends BaseView {
     if (tags.length === 0) {
       el.innerHTML = '';
       el.style.display = 'none';
+      this.scheduleResizeDirectorBriefInput();
       return;
     }
     el.style.display = 'flex';
@@ -1021,6 +1052,7 @@ class VideoView extends BaseView {
         }
       });
     });
+    this.scheduleResizeDirectorBriefInput();
   }
 
   /**
@@ -1133,6 +1165,7 @@ class VideoView extends BaseView {
     if (this.klingElements.length === 0) {
       listEl.innerHTML = '';
       listEl.style.display = 'none';
+      this.scheduleResizeDirectorBriefInput();
       return;
     }
     listEl.style.display = 'flex';
@@ -1219,6 +1252,7 @@ class VideoView extends BaseView {
         }
       });
     });
+    this.scheduleResizeDirectorBriefInput();
   }
 
   hideAllFeedback() {
@@ -1480,6 +1514,7 @@ class VideoView extends BaseView {
     } finally {
       if (sendBtn) sendBtn.disabled = false;
       if (regenerateBtn) regenerateBtn.disabled = false;
+      this.scheduleResizeDirectorBriefInput();
     }
   }
 
@@ -1829,10 +1864,18 @@ class VideoView extends BaseView {
 
   onLeave() {
     this.stopPolling();
+    if (this._resizeDirectorBriefOnWin) {
+      window.removeEventListener('resize', this._resizeDirectorBriefOnWin);
+      this._resizeDirectorBriefOnWin = null;
+    }
   }
 
   destroy() {
     this.stopPolling();
+    if (this._resizeDirectorBriefOnWin) {
+      window.removeEventListener('resize', this._resizeDirectorBriefOnWin);
+      this._resizeDirectorBriefOnWin = null;
+    }
   }
 }
 
