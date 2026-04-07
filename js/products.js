@@ -1071,7 +1071,7 @@ if (typeof window.ProductsManager === 'undefined') {
                         Agregar nueva imagen
                     </label>
                     <div class="upload-zone-small" onclick="document.getElementById('${inputId}').click()" 
-                         style="border: 2px dashed #1B1D1F; border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #121416;">
+                         style="border: 2px dashed var(--border-divider); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--bg-secondary);">
                         <input type="file" id="${inputId}" accept="image/*" style="display: none;" 
                                onchange="productsManager.handleNewImageUpload(event, '${productId}')" multiple>
                         <i class="fas fa-plus" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
