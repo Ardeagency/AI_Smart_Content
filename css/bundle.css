@@ -24265,7 +24265,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
-  background: var(--bg-secondary, #141517);
+  background: var(--bg-primary, #191919);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
