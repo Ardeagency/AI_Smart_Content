@@ -22207,7 +22207,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 .video-main .video-canvas,
 .video-main .video-canva-view {
@@ -22229,6 +22230,9 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     max-width: 100%;
     padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+}
+.video-main .video-main-director {
+    padding: 0;
 }
 .video-director-console-zone .video-prompt-footer-card,
 .video-director-wrap .video-prompt-footer-card {

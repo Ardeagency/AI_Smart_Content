@@ -149,6 +149,66 @@ class VideoView extends BaseView {
                 </div>
 
               </section>
+
+              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
+                <div class="video-prompt-footer-card video-prompt-footer-card-center">
+                  <div class="video-prompt-footer-card-inner video-director-console">
+
+                    <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+
+                    <div class="video-console-header-row" aria-hidden="true">
+                      <span class="video-console-dot"></span>
+                      <span class="video-console-label-text">Director Console</span>
+                      <span class="video-console-sep">·</span>
+                      <span class="video-console-model-text">Kling 3.0</span>
+                    </div>
+
+                    <div class="video-director-top-row">
+                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                      <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                    </div>
+                    <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
+                    <div class="video-director-console-content">
+                      <textarea
+                        id="videoPromptInput"
+                        class="video-director-brief-input"
+                        placeholder="Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca."
+                        rows="4"
+                        autocomplete="off"
+                        aria-label="Tu idea (la IA genera el prompt final)"
+                      ></textarea>
+                      <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.</p>
+                    </div>
+                    <div class="video-director-separator" aria-hidden="true"></div>
+                    <div class="video-director-controls">
+                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                      <div class="video-prompt-mode-wrap">
+                        <select id="videoMode" class="video-director-select" aria-label="Modo (Estándar reduce riesgo de timeout)">
+                          <option value="std" selected>Estándar</option>
+                          <option value="pro">Pro</option>
+                        </select>
+                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                      </div>
+                      <div class="video-prompt-aspect-wrap">
+                        <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                      </div>
+                      <div class="video-prompt-duration-wrap">
+                        <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
+                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                      </div>
+                      <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
+                      <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
+                    </div>
+                    <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
+                      <h4 class="video-storyboard-title">Storyboard</h4>
+                      <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
+                    </div>
+
+                  </div>
+                </div>
+              </section>
             </main>
 
             <aside class="video-sidebar-console" aria-label="Sidebar — configuraciones predefinidas">
@@ -260,67 +320,6 @@ class VideoView extends BaseView {
             </aside>
           </div>
 
-          <footer class="video-app-footer" role="contentinfo" aria-label="Footer de la app — Director Console">
-            <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
-              <div class="video-prompt-footer-card video-prompt-footer-card-center">
-                <div class="video-prompt-footer-card-inner video-director-console">
-
-                  <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-
-                  <div class="video-console-header-row" aria-hidden="true">
-                    <span class="video-console-dot"></span>
-                    <span class="video-console-label-text">Director Console</span>
-                    <span class="video-console-sep">·</span>
-                    <span class="video-console-model-text">Kling 3.0</span>
-                  </div>
-
-                  <div class="video-director-top-row">
-                    <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                    <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                  </div>
-                  <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
-                  <div class="video-director-console-content">
-                    <textarea
-                      id="videoPromptInput"
-                      class="video-director-brief-input"
-                      placeholder="Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca."
-                      rows="4"
-                      autocomplete="off"
-                      aria-label="Tu idea (la IA genera el prompt final)"
-                    ></textarea>
-                    <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.</p>
-                  </div>
-                  <div class="video-director-separator" aria-hidden="true"></div>
-                  <div class="video-director-controls">
-                    <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
-                    <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
-                    <div class="video-prompt-mode-wrap">
-                      <select id="videoMode" class="video-director-select" aria-label="Modo (Estándar reduce riesgo de timeout)">
-                        <option value="std" selected>Estándar</option>
-                        <option value="pro">Pro</option>
-                      </select>
-                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                    </div>
-                    <div class="video-prompt-aspect-wrap">
-                      <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
-                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                    </div>
-                    <div class="video-prompt-duration-wrap">
-                      <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
-                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                    </div>
-                    <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
-                    <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Re-prompt</span></button>
-                  </div>
-                  <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
-                    <h4 class="video-storyboard-title">Storyboard</h4>
-                    <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
-                  </div>
-
-                </div>
-              </div>
-            </section>
-          </footer>
         </div>
       </div>
     `;
