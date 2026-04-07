@@ -24179,17 +24179,34 @@ body.production-filters-in-header .living-container > .living-history-section {
     color: transparent;
     animation: video-card-gradient-border 6s linear infinite;
 }
+/* Acordeón cine: solo borde con degradado (máscara); el truco de dos capas en background rellenaba todo el bloque */
+.video-view-container .video-cinematography-panel .video-cine-block {
+    position: relative;
+}
 .video-view-container .video-cinematography-panel .video-cine-block:hover {
-    border: 1px solid transparent;
+    border-color: transparent;
     box-shadow: none;
-    background:
-        linear-gradient(var(--black-20), var(--black-20)) padding-box,
-        var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    background-size: 100% 100%, 200% 100%;
-    background-position: 0 0, 0% 50%;
-    animation: video-accent-gradient-shift 6s linear infinite;
+    background: var(--black-20);
+}
+.video-view-container .video-cinematography-panel .video-cine-block:hover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 0;
+    padding: 1px;
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    animation: video-card-gradient-border 6s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+.video-view-container .video-cinematography-panel .video-cine-block > * {
+    position: relative;
+    z-index: 1;
 }
 .video-view-container .video-escena-item.is-selected {
     box-shadow: none;
@@ -24244,7 +24261,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     .video-view-container .video-canvas-model-badge,
     .video-view-container .video-prompt-preview-score,
     .video-view-container .video-asset-card-locks .fa-check,
-    .video-view-container .video-cinematography-panel .video-cine-block:hover,
+    .video-view-container .video-cinematography-panel .video-cine-block:hover::before,
     .video-view-container .video-escena-item.is-selected,
     .video-view-container .video-asset-product-item.is-selected,
     .video-view-container .video-production-item.is-selected,
