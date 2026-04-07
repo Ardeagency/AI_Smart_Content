@@ -23893,10 +23893,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     align-items: center;
     justify-content: center;
     min-height: 0;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: none;
+    background-size: auto;
     padding: var(--spacing-xl);
 }
 .video-canvas-idle-content {
