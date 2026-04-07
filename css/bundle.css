@@ -22279,6 +22279,23 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     border-radius: var(--glass-radius);
 }
+/* Production Context: mismo shell visual que Brain #brainInputWrap (.gpt-composer), sin max-width del chat */
+.video-view-container .video-sidebar-console .video-prompt-footer-card.video-sidebar-card {
+    padding: 0;
+    background: transparent;
+    border-radius: 16px;
+}
+.video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light, #212126);
+    border-radius: 16px;
+    padding: 12px 12px 14px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.15s;
+}
+.video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner:focus-within {
+    border-color: rgba(255, 255, 255, 0.18);
+}
 .video-sidebar-inner {
     display: flex;
     flex-direction: column;
