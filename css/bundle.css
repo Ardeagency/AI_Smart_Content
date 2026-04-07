@@ -22252,15 +22252,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-view-container .video-prompt-footer-card {
     box-shadow: none;
 }
-.video-view-container .video-prompt-footer-card::after {
-    animation: none;
-    background-position: 0% 50%;
-    opacity: 0.85;
-}
+.video-view-container .video-prompt-footer-card::after,
 .video-view-container .video-prompt-footer-card::before {
-    animation: none;
-    background-position: 0% 50%;
-    opacity: 0.28;
+    content: none;
 }
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
@@ -22338,7 +22332,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
-    padding: 2px;
+    padding: 1px;
     border-radius: var(--glass-radius);
     background: transparent;
     transition: box-shadow 0.2s ease, opacity 0.2s ease;
@@ -22346,48 +22340,47 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: none;
 }
 .video-prompt-footer-card::after {
-    content: "";
+    content: none;
     position: absolute;
     inset: 0;
     z-index: 0;
     border-radius: inherit;
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
-    background-size: 200% 100%;
-    animation: video-card-gradient-border 6s linear infinite;
-    opacity: 0.5;
+    background: transparent;
+    animation: none;
+    opacity: 0;
     pointer-events: none;
 }
 /* Brillo de fondo = degradado dinámico muy discreto (10% opacidad) */
 .video-prompt-footer-card::before {
-    content: "";
+    content: none;
     position: absolute;
     inset: -14px;
     z-index: -1;
     border-radius: inherit;
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
-    background-size: 200% 100%;
-    animation: video-card-gradient-border 6s linear infinite;
-    opacity: 0.1;
-    filter: blur(20px);
+    background: transparent;
+    animation: none;
+    opacity: 0;
+    filter: none;
     pointer-events: none;
 }
-/* Interior = negro 80% opacidad (tokens glass-black) */
+/* Interior plano: sin glass, sin blur */
+.video-prompt-footer-card-inner,
 .video-prompt-footer-card-inner.glass-black {
     position: relative;
     z-index: 1;
     margin: 0;
     padding: var(--spacing-sm) var(--spacing-md);
-    border: none;
+    border: 1px solid var(--white-10);
     border-radius: calc(var(--glass-radius) - 2px);
     box-shadow: none;
     min-height: 100%;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--glass-black-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--glass-black-text);
+    background: var(--bg-tertiary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: var(--text-primary);
 }
 .video-director-console {
     display: flex;

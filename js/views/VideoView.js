@@ -105,32 +105,7 @@ class VideoView extends BaseView {
             <main class="video-main">
               <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
 
-                <div class="video-canvas-topbar" aria-hidden="true">
-                  <div class="video-canvas-topbar-left">
-                    <span class="video-canvas-model-badge">KLING 3.0</span>
-                    <span class="video-canvas-topbar-title">Production Canvas</span>
-                  </div>
-                  <div class="video-canvas-topbar-right">
-                    <span class="video-canvas-topbar-tag"><i class="fas fa-circle-dot"></i> AI Video Generation</span>
-                  </div>
-                </div>
-
-                <div class="video-canvas-idle" id="videoCanvasIdle">
-                  <div class="video-canvas-idle-content">
-                    <div class="video-canvas-idle-icon"><i class="fas fa-clapperboard"></i></div>
-                    <p class="video-canvas-idle-title">Production Ready</p>
-                    <p class="video-canvas-idle-hint">Configure context → write your brief → generate prompt → produce</p>
-                    <div class="video-canvas-idle-steps">
-                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">01</span>Context</span>
-                      <span class="video-canvas-idle-step-arrow">→</span>
-                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">02</span>Cine</span>
-                      <span class="video-canvas-idle-step-arrow">→</span>
-                      <span class="video-canvas-idle-step"><span class="video-canvas-idle-step-num">03</span>Brief</span>
-                      <span class="video-canvas-idle-step-arrow">→</span>
-                      <span class="video-canvas-idle-step video-canvas-idle-step-cta"><span class="video-canvas-idle-step-num">04</span>Produce</span>
-                    </div>
-                  </div>
-                </div>
+                <div class="video-canvas-idle" id="videoCanvasIdle"></div>
 
                 <div class="video-status-area" id="videoStatusArea" style="display: none;">
                   <div class="video-status-card" id="videoStatusCard">
@@ -178,7 +153,7 @@ class VideoView extends BaseView {
 
             <aside class="video-sidebar-console" aria-label="Sidebar — configuraciones predefinidas">
               <div class="video-prompt-footer-card video-sidebar-card">
-                <div class="video-prompt-footer-card-inner glass-black video-sidebar-inner">
+                <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
@@ -288,7 +263,7 @@ class VideoView extends BaseView {
           <footer class="video-app-footer" role="contentinfo" aria-label="Footer de la app — Director Console">
             <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
               <div class="video-prompt-footer-card video-prompt-footer-card-center">
-                <div class="video-prompt-footer-card-inner glass-black video-director-console">
+                <div class="video-prompt-footer-card-inner video-director-console">
 
                   <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
 
