@@ -24613,8 +24613,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--color-error, #ff4444);
 }
 
-/* Typing indicator */
-.gpt-msg--typing .gpt-msg-content { padding-top: 6px; }
+/* Typing / Activity indicator */
+.gpt-msg--typing .gpt-msg-content {
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .gpt-typing-dots {
   display: flex;
   align-items: center;
@@ -24633,6 +24638,24 @@ body.production-filters-in-header .living-container > .living-history-section {
 @keyframes gptTypingPulse {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
   30%           { transform: translateY(-5px); opacity: 1; }
+}
+/* Texto de estado en tiempo real */
+.gpt-typing-status {
+  font-size: 11px;
+  color: var(--text-muted, rgba(212,209,216,0.55));
+  font-style: italic;
+  min-height: 14px;
+  transition: opacity 0.3s ease;
+  animation: gptStatusFadeIn 0.4s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.gpt-typing-status:empty { display: none; }
+@keyframes gptStatusFadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* === COMPOSER === */

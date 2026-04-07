@@ -791,6 +791,7 @@ class BrainView extends (window.BaseView || class {}) {
     if (!this.container) return;
 
     this.bindInput();
+    this._requestNotificationPermission();
 
     await this.loadActiveConversation();
 
@@ -861,6 +862,7 @@ class BrainView extends (window.BaseView || class {}) {
         .from('ai_messages')
         .select('id, role, content, created_at')
         .eq('conversation_id', this.aiState.active_conversation_id)
+        .in('role', ['user', 'assistant', 'error'])
         .order('created_at', { ascending: true });
       this.aiState.messages = (!error && data) ? data : [];
     } catch (_) {
@@ -996,8 +998,8 @@ class BrainView extends (window.BaseView || class {}) {
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
-  /* ── Typing indicator ────────────────────────────────── */
-  showTypingIndicator() {
+  /* ── Typing / Activity indicator ────────────────────── */
+  showTypingIndicator(statusText) {
     const list = document.getElementById('brainMessageList');
     const scroll = document.getElementById('brainMessagesWrap');
     if (!list) return;
@@ -1011,14 +1013,88 @@ class BrainView extends (window.BaseView || class {}) {
         </div>
         <div class="gpt-msg-content">
           <div class="gpt-typing-dots"><span></span><span></span><span></span></div>
+          <div class="gpt-typing-status" id="veraStatusText">${statusText ? escapeHtml(statusText) : ''}</div>
         </div>
       </div>
     `);
     if (scroll) scroll.scrollTop = scroll.scrollHeight;
   }
 
+  updateTypingStatus(text) {
+    const el = document.getElementById('veraStatusText');
+    if (el) el.textContent = text || '';
+    // Auto-scroll suave
+    const scroll = document.getElementById('brainMessagesWrap');
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  }
+
   hideTypingIndicator() {
     document.getElementById('gptTyping')?.remove();
+  }
+
+  /**
+   * Reproduce un chime de dos tonos usando Web Audio API.
+   * No requiere archivos de audio — sintetizado en el navegador.
+   * Solo suena si el tiempo de espera fue suficientemente largo (tareas en background).
+   */
+  _playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      const playTone = (freq, startAt, duration, gainValue) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type      = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
+
+        gain.gain.setValueAtTime(0, ctx.currentTime + startAt);
+        gain.gain.linearRampToValueAtTime(gainValue, ctx.currentTime + startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + duration);
+
+        osc.start(ctx.currentTime + startAt);
+        osc.stop(ctx.currentTime + startAt + duration);
+      };
+
+      // Chime de dos tonos — ascendente: Do5 → Mi5
+      playTone(523.25, 0,    0.35, 0.25);  // Do5
+      playTone(659.25, 0.18, 0.45, 0.20);  // Mi5
+
+      // Cerrar el contexto después de que termine
+      setTimeout(() => ctx.close().catch(() => {}), 900);
+    } catch (_) {
+      // Web Audio no disponible — ignorar silenciosamente
+    }
+  }
+
+  /**
+   * Solicita permiso de notificaciones del navegador (llamar una vez al iniciar).
+   */
+  async _requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission().catch(() => {});
+    }
+  }
+
+  /**
+   * Muestra una notificación del sistema si la pestaña no tiene foco.
+   */
+  _showBrowserNotification(text) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.hasFocus()) return; // Solo si el usuario está en otra pestaña
+
+    try {
+      const notif = new Notification('Vera terminó de trabajar', {
+        body: text ? text.slice(0, 100) : 'Tu solicitud está lista.',
+        icon: '/img/vera-avatar.png',
+        badge: '/img/vera-avatar.png',
+        tag: 'vera-response', // Reemplaza notificaciones anteriores
+      });
+      notif.onclick = () => { window.focus(); notif.close(); };
+      setTimeout(() => notif.close(), 8000);
+    } catch (_) {}
   }
 
   /* ── Input binding ───────────────────────────────────── */
@@ -1070,7 +1146,7 @@ class BrainView extends (window.BaseView || class {}) {
     const input = document.getElementById('brainInput');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Optimistic: append user message immediately
+    // Mostrar mensaje del usuario inmediatamente (optimistic UI)
     const userMsg = {
       id: `local-user-${Date.now()}`,
       role: 'user',
@@ -1091,12 +1167,9 @@ class BrainView extends (window.BaseView || class {}) {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          // Ayuda al proxy /api/ai/engine-chat a reenviar a ai-engine
-          'X-AI-ENGINE-BASE-URL':
-            (window.AI_ENGINE_BASE_URL ||
-              (() => {
-                try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
-              })())
+          'X-AI-ENGINE-BASE-URL': (window.AI_ENGINE_BASE_URL || (() => {
+            try { return localStorage.getItem('AI_ENGINE_BASE_URL') || ''; } catch (_) { return ''; }
+          })())
         },
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
@@ -1108,22 +1181,34 @@ class BrainView extends (window.BaseView || class {}) {
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
 
+      // Guardar conversation_id si es nuevo
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
       }
 
-      this.hideTypingIndicator();
+      const convId = json?.conversation_id || this.aiState.active_conversation_id;
 
-      if (json?.message) {
-        const assistantMsg = {
-          id: `local-assistant-${Date.now()}`,
-          role: 'assistant',
-          content: json.message,
-          created_at: new Date().toISOString()
-        };
-        this.aiState.messages.push(assistantMsg);
-        this.appendMessage(assistantMsg);
+      if (json?.status === 'processing') {
+        // ── Modo async: Vera procesa en background ──────────────────────────
+        // El servidor respondió inmediatamente. Esperamos la respuesta real
+        // vía Supabase Realtime (con polling como fallback).
+        await this._waitForAsyncResponse(convId, token);
+
+      } else {
+        // ── Modo sync (legacy / fallback) ───────────────────────────────────
+        this.hideTypingIndicator();
+        if (json?.message) {
+          const assistantMsg = {
+            id: `local-assistant-${Date.now()}`,
+            role: 'assistant',
+            content: json.message,
+            created_at: new Date().toISOString()
+          };
+          this.aiState.messages.push(assistantMsg);
+          this.appendMessage(assistantMsg);
+        }
       }
+
     } catch (err) {
       console.error('BrainView sendMessage:', err);
       this.hideTypingIndicator();
@@ -1139,6 +1224,182 @@ class BrainView extends (window.BaseView || class {}) {
       this.aiState.isLoading = false;
       if (sendBtn) sendBtn.disabled = !(input?.value || '').trim();
     }
+  }
+
+  /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
+  _getWaitMessage(elapsedMs) {
+    if (elapsedMs < 15_000)  return 'Vera está pensando…';
+    if (elapsedMs < 40_000)  return 'Vera está procesando tu solicitud…';
+    if (elapsedMs < 90_000)  return 'Vera está trabajando en segundo plano…';
+    if (elapsedMs < 180_000) return 'Vera está realizando tareas complejas — puede tardar unos minutos…';
+    if (elapsedMs < 360_000) return 'Vera sigue activa — procesando en background…';
+    return 'Vera lleva un buen rato trabajando. Si hay algo urgente, puedes enviar otro mensaje.';
+  }
+
+  /* ── Espera la respuesta async SOLO via Supabase Realtime ───────────────── */
+  //
+  // Diseño intencional:
+  //   - SIN polling: no se consulta "el último mensaje por fecha" para evitar
+  //     que un mensaje anterior aparezca mientras Vera procesa el nuevo.
+  //   - SOLO Realtime: escucha INSERTs en ai_messages filtrados por
+  //     conversation_id (server-side, Supabase lo garantiza).
+  //   - El mensaje se muestra ÚNICAMENTE cuando entra en tiempo real con el
+  //     conversation_id exacto de esta conversación.
+  //   - Si el tiempo de espera se agota, se avisa al usuario que recargue —
+  //     nunca se carga el historial para "adivinar" la respuesta.
+  //
+  async _waitForAsyncResponse(conversationId, token) {
+    return new Promise((resolve) => {
+      const startTime    = Date.now();
+      // ISO del momento exacto en que el usuario envió el mensaje — filtra mensajes anteriores
+      const startIso     = new Date().toISOString();
+      const NOTIFY_AFTER_MS = 5_000;
+      // 12 minutos — OpenClaw puede tardar hasta 10 min en tareas complejas
+      const MAX_WAIT_MS  = 12 * 60 * 1000;
+      const TICK_MS      = 5_000;
+      // Polling de respaldo: primer check a los 5s, luego cada 6s
+      const POLL_FIRST_MS    = 5_000;
+      const POLL_INTERVAL_MS = 6_000;
+
+      let resolved     = false;
+      let lastStatusAt = Date.now();
+      let tickInterval = null;
+      let pollInterval = null;
+      let channel      = null;
+
+      // ── Cierra la espera y muestra el mensaje ─────────────────────────────
+      const finish = (msg) => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(tickInterval);
+        clearInterval(pollInterval);
+        try { channel?.unsubscribe(); } catch (_) {}
+        this.hideTypingIndicator();
+
+        if (msg) {
+          const isError = msg.role === 'error' || msg.metadata?.error;
+          const displayMsg = {
+            id: msg.id || `local-${Date.now()}`,
+            role: isError ? 'error' : 'assistant',
+            content: msg.content,
+            created_at: msg.created_at || new Date().toISOString()
+          };
+          this.aiState.messages.push(displayMsg);
+          this.appendMessage(displayMsg);
+
+          if (!isError && Date.now() - startTime >= NOTIFY_AFTER_MS) {
+            this._playNotificationSound();
+            this._showBrowserNotification(msg.content);
+          }
+        }
+        resolve();
+      };
+
+      // ── Procesa cada mensaje recibido (Realtime o polling) ────────────────
+      const handleMsg = (msg) => {
+        if (!msg?.role || !msg?.content) return;
+
+        // Solo mensajes de ESTA conversación
+        if (msg.conversation_id && msg.conversation_id !== conversationId) return;
+
+        if (msg.role === 'status') {
+          lastStatusAt = Date.now();
+          this.updateTypingStatus(msg.content);
+          return;
+        }
+
+        if (msg.role === 'assistant' || msg.role === 'error') {
+          finish(msg);
+        }
+      };
+
+      // ── Polling de respaldo: busca mensajes NUEVOS (> startIso) ──────────
+      // Garantiza que si Realtime falla, igual mostramos la respuesta.
+      // El filtro created_at > startIso previene cargar el mensaje anterior.
+      const doPoll = async () => {
+        if (resolved || !this.supabase) return;
+        try {
+          const { data } = await this.supabase
+            .from('ai_messages')
+            .select('id, role, content, created_at, conversation_id')
+            .eq('conversation_id', conversationId)
+            .in('role', ['assistant', 'error'])
+            .gt('created_at', startIso)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (data?.length) handleMsg(data[0]);
+        } catch (_) {}
+      };
+
+      // ── Ticker de UI ──────────────────────────────────────────────────────
+      tickInterval = setInterval(() => {
+        if (resolved) return;
+        const elapsed = Date.now() - startTime;
+
+        if (elapsed >= MAX_WAIT_MS) {
+          clearInterval(tickInterval);
+          clearInterval(pollInterval);
+          if (!resolved) {
+            resolved = true;
+            try { channel?.unsubscribe(); } catch (_) {}
+            this.hideTypingIndicator();
+            const timeoutMsg = {
+              id: `local-timeout-${Date.now()}`,
+              role: 'error',
+              content: 'Vera sigue trabajando en segundo plano. Recarga la página cuando quieras ver su respuesta.',
+              created_at: new Date().toISOString()
+            };
+            this.aiState.messages.push(timeoutMsg);
+            this.appendMessage(timeoutMsg);
+            resolve();
+          }
+          return;
+        }
+
+        // Mostrar ticker solo si no hay actividad reciente del backend
+        if (Date.now() - lastStatusAt > 10_000) {
+          this.updateTypingStatus(this._getWaitMessage(elapsed));
+        }
+      }, TICK_MS);
+
+      // Primer poll a los 5s, luego cada 6s — cubre casos donde Realtime no entrega
+      setTimeout(() => { doPoll(); pollInterval = setInterval(doPoll, POLL_INTERVAL_MS); }, POLL_FIRST_MS);
+
+      // ── Supabase Realtime — entrega instantánea ───────────────────────────
+      if (!this.supabase) {
+        // Sin cliente Supabase no podemos escuchar — informar al usuario
+        finish({
+          role: 'error',
+          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+        });
+        return;
+      }
+
+      try {
+        channel = this.supabase
+          .channel(`vera-msg-${conversationId}-${Date.now()}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ai_messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          }, (payload) => {
+            handleMsg(payload.new);
+          })
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              console.warn('BrainView Realtime: canal con error, estado:', status);
+            }
+          });
+      } catch (e) {
+        console.warn('BrainView: Realtime no disponible:', e.message);
+        finish({
+          role: 'error',
+          content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
+        });
+      }
+    });
   }
 }
 

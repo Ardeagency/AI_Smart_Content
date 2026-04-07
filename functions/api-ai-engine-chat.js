@@ -70,29 +70,37 @@ exports.handler = async (event) => {
 
   const targetUrl = `${aiEngineBaseUrl}/chat`;
 
+  // ai-engine responde con { status: "processing" } tras auth + 4 llamadas a Supabase.
+  // En condiciones normales tarda 1-3s, pero con Supabase lento puede llegar a ~15s.
+  // Usamos 25s — justo por debajo del límite de Lambda de Netlify (~26s) — para
+  // garantizar que el error sea nuestro mensaje amigable y no un 502 crudo.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25_000);
+
   let upstream;
   try {
     upstream = await fetch(targetUrl, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        organization_id,
-        conversation_id,
-        message,
-      }),
+      body: JSON.stringify({ organization_id, conversation_id, message }),
     });
   } catch (e) {
+    const isTimeout = e?.name === "AbortError";
     return {
-      statusCode: 502,
+      statusCode: isTimeout ? 504 : 502,
       headers: corsHeaders(),
       body: JSON.stringify({
-        error: "No se pudo conectar al motor de IA",
-        details: e?.message || String(e),
+        error: isTimeout
+          ? "El motor de IA tardó demasiado en responder. Intenta de nuevo."
+          : "No se pudo conectar al motor de IA. Verifica que el servidor esté activo.",
       }),
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const text = await upstream.text();
