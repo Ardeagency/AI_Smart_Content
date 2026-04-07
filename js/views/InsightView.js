@@ -37,6 +37,8 @@ class InsightView extends BaseView {
     this._realtimeChannel   = null;
     this._labelTimer        = null;   // único timer: actualizar "hace X min" label
     this._refreshTimer      = null;   // debounce Realtime
+    this._reconnectTimer    = null;   // reintento controlado de Realtime
+    this._reconnectAttempts = 0;      // backoff exponencial
     this._visibilityHandler = null;
     this._lastFetchTime     = null;   // último re-fetch de DB
     this._lastSyncTime      = null;   // último sync con Meta API
@@ -237,6 +239,7 @@ class InsightView extends BaseView {
     this._clearLabelInterval();
     this._removeVisibilityListener();
     this._clearRefreshTimer();
+    this._clearReconnectTimer();
     if (this._realtimeChannel && this._supabase) {
       try { this._supabase.removeChannel(this._realtimeChannel); } catch (_) {}
       this._realtimeChannel = null;
@@ -279,11 +282,16 @@ class InsightView extends BaseView {
         }, () => this._scheduleRefresh('realtime:heatmap'))
         .subscribe(status => {
           this._liveReady = (status === 'SUBSCRIBED');
+          if (this._liveReady) {
+            this._reconnectAttempts = 0;
+            this._clearReconnectTimer();
+          }
           this._updateLiveIndicator(status);
         });
     } catch (e) {
       console.warn('[InsightView] Realtime unavailable, using polling only:', e.message);
       this._updateLiveIndicator('POLLING');
+      this._scheduleRealtimeReconnect('exception');
     }
   }
 
@@ -331,6 +339,25 @@ class InsightView extends BaseView {
 
   _clearRefreshTimer() {
     if (this._refreshTimer) { clearTimeout(this._refreshTimer); this._refreshTimer = null; }
+  }
+
+  _clearReconnectTimer() {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
+  }
+
+  _scheduleRealtimeReconnect(source) {
+    if (this._reconnectTimer) return; // evita múltiples timers concurrentes
+    if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
+    this._reconnectAttempts += 1;
+    const delay = Math.min(60000, 5000 * (2 ** Math.max(0, this._reconnectAttempts - 1)));
+    this._reconnectTimer = setTimeout(() => {
+      this._reconnectTimer = null;
+      if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
+      this._setupRealtimeSubscription();
+    }, delay);
   }
 
   /**
@@ -405,8 +432,7 @@ class InsightView extends BaseView {
     } else if (status === 'TIMED_OUT' || status === 'CLOSED' || status === 'CHANNEL_ERROR') {
       dot.classList.add('mb-live-dot--error');
       label.textContent = 'Reconectando…';
-      // Reintentar después de 10s
-      setTimeout(() => this._setupRealtimeSubscription(), 10000);
+      this._scheduleRealtimeReconnect(status);
     } else {
       dot.classList.add('mb-live-dot--connecting');
       label.textContent = 'Conectando…';
