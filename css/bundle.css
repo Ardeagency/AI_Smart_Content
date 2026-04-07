@@ -22275,6 +22275,10 @@ body.production-filters-in-header .living-container > .living-history-section {
     -webkit-overflow-scrolling: touch;
     border-left: 1px solid var(--glass-black-border);
 }
+/* Video page: sin borde en el aside de Production Context */
+.video-view-container .video-sidebar-console {
+    border-left: none;
+}
 .video-sidebar-console .video-sidebar-card {
     width: 100%;
     border-radius: var(--glass-radius);
@@ -22294,6 +22298,23 @@ body.production-filters-in-header .living-container > .living-history-section {
     transition: border-color 0.15s;
 }
 .video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner:focus-within {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+/* Director Console: mismo shell que Brain .gpt-composer / Production Context */
+.video-view-container .video-main-director .video-prompt-footer-card.video-prompt-footer-card-center {
+    padding: 0;
+    background: transparent;
+    border-radius: 16px;
+}
+.video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light, #212126);
+    border-radius: 16px;
+    padding: 12px 12px 14px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.15s;
+}
+.video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console:focus-within {
     border-color: rgba(255, 255, 255, 0.18);
 }
 .video-sidebar-inner {
