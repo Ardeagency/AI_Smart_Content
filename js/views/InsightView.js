@@ -499,28 +499,36 @@ class InsightView extends BaseView {
     ].sort((a, b) => new Date(b.created_time) - new Date(a.created_time));
 
     const metaConnected = posts?.ok && (posts.facebook_posts?.length > 0 || posts.instagram_posts?.length > 0);
-    const kpis          = this._computeKPIs(insight, posts);
-    const timeSeries    = this._buildTimeSeries(allPosts, parseInt(this._period) || 30);
-    const contentTypes  = this._buildContentTypes(allPosts);
-    const topPosts      = this._getTopPosts(insight, allPosts);
-    const autoInsights  = this._generateInsights(kpis, timeSeries, contentTypes, insight);
-    const brandName     = insight?.brand?.nombre_marca
+    const kpis         = this._computeKPIs(insight, posts);
+    const timeSeries   = this._buildTimeSeries(allPosts, parseInt(this._period) || 30);
+    const contentTypes = this._buildContentTypes(allPosts);
+    const topPosts     = this._getTopPosts(insight, allPosts);
+    const autoInsights = this._generateInsights(kpis, timeSeries, contentTypes, insight);
+    const brandName    = insight?.brand?.nombre_marca
       || this._brandContainers.find(b => b.id === this._brandContainerId)?.nombre_marca
       || 'Mi Marca';
 
-    const snap        = insight?.dimensions?.A_activity?.snapshot || {};
-    const apiTS       = insight?.dimensions?.A_activity?.time_series || null;
-    const audience    = insight?.dimensions?.C_audience || null;
-    const stories     = insight?.dimensions?.D_stories  || null;
-    const video       = insight?.dimensions?.E_video    || null;
+    const snap       = insight?.dimensions?.A_activity?.snapshot || {};
+    const apiTS      = insight?.dimensions?.A_activity?.time_series || null;
+    const audience   = insight?.dimensions?.C_audience || null;
+    const stories    = insight?.dimensions?.D_stories  || null;
+    const video      = insight?.dimensions?.E_video    || null;
+    const narrative  = insight?.dimensions?.B_narrative || {};
+    const sentiment  = insight?.dimensions?.G_sentiment || {};
+    const diagnostic = insight?.dimensions?.H_diagnostic || {};
     const hasGrowthTS = apiTS && apiTS.dates?.length > 1;
 
-    return `
-      <div class="mb-dashboard" id="mbDashboard">
+    const vera = this._computeVERAScore(insight, kpis, timeSeries, contentTypes);
+    const roas = this._computeOrgROAS(kpis);
 
-        <!-- Header -->
-        <div class="mb-header">
-          <div class="mb-header-left">
+    const orgPath = window.currentOrgPath || '';
+
+    return `
+      <div class="mb-chef-dashboard" id="mbDashboard">
+
+        <!-- ── HEADER ── -->
+        <div class="mb-chef-header">
+          <div class="mb-chef-header-left">
             ${this._brandContainers.length > 1 ? `
               <select class="mb-brand-select" id="mbBrandSelect">
                 ${this._brandContainers.map(b => `
@@ -528,35 +536,24 @@ class InsightView extends BaseView {
                     ${this._esc(b.nombre_marca)}
                   </option>`).join('')}
               </select>
-            ` : `<span class="mb-brand-name">${this._esc(brandName)}</span>`}
-
-            <!-- Indicador live -->
+            ` : `<span class="mb-chef-brand-name">${this._esc(brandName)}</span>`}
             <div class="mb-live-indicator">
               <span class="mb-live-dot mb-live-dot--connecting" id="mbLiveDot"></span>
               <span class="mb-live-label" id="mbLiveLabel">Conectando…</span>
             </div>
           </div>
-
-          <div class="mb-header-right">
-            <!-- Sync toast inline -->
+          <div class="mb-chef-header-right">
             <div class="mb-sync-toast" id="mbSyncToast" style="display:none">
-              <i class="fas fa-sync-alt mb-spin"></i>
-              <span>Sincronizando…</span>
+              <i class="fas fa-sync-alt mb-spin"></i><span>Sincronizando…</span>
             </div>
-
-            <!-- Última actualización -->
             <div class="mb-last-sync-wrap">
               <i class="fas fa-clock" style="font-size:0.7rem;opacity:0.4"></i>
               <span class="mb-last-sync" id="mbLastSync">Ahora</span>
             </div>
-
             <div class="mb-period-tabs" id="mbPeriodTabs">
               ${['7d','30d','90d'].map(p => `
-                <button class="mb-period-btn${this._period === p ? ' active' : ''}" data-period="${p}">
-                  ${p === '7d' ? '7d' : p === '30d' ? '30d' : '90d'}
-                </button>`).join('')}
+                <button class="mb-period-btn${this._period === p ? ' active' : ''}" data-period="${p}">${p}</button>`).join('')}
             </div>
-
             <button class="mb-refresh-btn" id="mbRefreshBtn" title="Sincronizar ahora">
               <i class="fas fa-sync-alt"></i>
             </button>
@@ -567,143 +564,636 @@ class InsightView extends BaseView {
           <div class="mb-connect-banner">
             <i class="fab fa-facebook-square"></i>
             <span>Conecta Meta para ver métricas de Instagram y Facebook en tiempo real.</span>
-            <a href="${window.currentOrgPath ? window.currentOrgPath + '/brand' : '/brands'}" class="mb-connect-link">
-              Conectar ahora →
-            </a>
+            <a href="${orgPath ? orgPath + '/brand' : '/brands'}" class="mb-connect-link">Conectar ahora →</a>
           </div>
         ` : ''}
 
-        <!-- BLOQUE 1: KPIs principales -->
-        ${this._buildKPIRow(kpis, snap)}
-
-        ${autoInsights.length ? this._buildInsightsHTML(autoInsights) : ''}
-
-        <!-- BLOQUE 2: Actividad (posts/engagement por día) -->
-        <div class="mb-section">
-          <div class="mb-section-header">
-            <h3 class="mb-section-title"><span class="mb-dot mb-dot--green"></span>Actividad</h3>
-            <span class="mb-section-sub">Posts y engagement por día</span>
+        <!-- ══════════════════════════════════════════
+             COCINA 1 · EL PULSO
+             ¿Cómo está mi marca en este momento?
+        ══════════════════════════════════════════ -->
+        <div class="mb-cocina" id="cocina1">
+          <div class="mb-cocina-header">
+            <div class="mb-cocina-badge">
+              <span class="mb-cocina-num">01</span>
+              <div>
+                <div class="mb-cocina-title">El Pulso</div>
+                <div class="mb-cocina-question">¿Cómo está mi marca en este momento?</div>
+              </div>
+            </div>
           </div>
-          <div class="mb-chart-wrap">
-            <canvas id="mbActivityChart"></canvas>
+          <div class="mb-vera-layout">
+            ${this._buildVERAScoreHTML(vera)}
+            <div class="mb-kpi-grid">
+              ${this._buildKPICards(kpis, snap, roas)}
+            </div>
           </div>
         </div>
 
-        <!-- BLOQUE 3: Crecimiento (reach + impressions desde API) -->
-        ${hasGrowthTS ? `
-        <div class="mb-section">
-          <div class="mb-section-header">
-            <h3 class="mb-section-title"><span class="mb-dot mb-dot--blue"></span>Crecimiento</h3>
-            <span class="mb-section-sub">Reach e impresiones diarias de cuenta</span>
+        <!-- ══════════════════════════════════════════
+             COCINA 2 · TU AUDIENCIA
+             ¿A quién le estás hablando y cuándo escucha?
+        ══════════════════════════════════════════ -->
+        <div class="mb-cocina" id="cocina2">
+          <div class="mb-cocina-header">
+            <div class="mb-cocina-badge">
+              <span class="mb-cocina-num">02</span>
+              <div>
+                <div class="mb-cocina-title">Tu Audiencia</div>
+                <div class="mb-cocina-question">¿A quién le hablas y cuándo está disponible?</div>
+              </div>
+            </div>
           </div>
-          <div class="mb-chart-wrap">
-            <canvas id="mbGrowthChart"></canvas>
+          <div class="mb-cocina-body">
+            <div class="mb-widget mb-widget--wide">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(250,204,21,0.15);color:#facc21">
+                  <i class="fas fa-fire"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Horas de Máximo Impacto</div>
+                  <div class="mb-widget-desc">El momento exacto en que tu audiencia responde — publica aquí y multiplica tu alcance</div>
+                </div>
+              </div>
+              ${this._buildHeatmapHTML(allPosts, insight?.dimensions?.A_activity?.heatmap)}
+            </div>
+            ${audience?.has_data ? `
+            <div class="mb-widget">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(244,114,182,0.15);color:#f472b6">
+                  <i class="fas fa-user-friends"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Quién es tu Audiencia</div>
+                  <div class="mb-widget-desc">Género, edad y geografía de tus seguidores actuales</div>
+                </div>
+              </div>
+              <div class="mb-chart-wrap-sm"><canvas id="mbGenderChart"></canvas></div>
+              ${audience.top_countries?.length ? `
+                <div class="mb-widget-divider"></div>
+                <div class="mb-widget-sublabel">Top países</div>
+                <div style="height:130px"><canvas id="mbCountriesChart"></canvas></div>
+              ` : ''}
+            </div>
+            ` : ''}
           </div>
         </div>
-        ` : ''}
 
-        <!-- Grid 2: Top Posts + Content Type -->
-        <div class="mb-grid-2">
-
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--orange"></span>Mejores posts</h3>
+        <!-- ══════════════════════════════════════════
+             COCINA 3 · TU CONTENIDO
+             ¿Qué funciona y qué crear mañana?
+        ══════════════════════════════════════════ -->
+        <div class="mb-cocina" id="cocina3">
+          <div class="mb-cocina-header">
+            <div class="mb-cocina-badge">
+              <span class="mb-cocina-num">03</span>
+              <div>
+                <div class="mb-cocina-title">Tu Contenido</div>
+                <div class="mb-cocina-question">¿Qué está funcionando y qué deberías crear mañana?</div>
+              </div>
             </div>
-            ${topPosts.length ? this._buildTopPostsHTML(topPosts) : `
-              <div class="mb-empty-sm"><i class="fas fa-images"></i><p>Sin posts disponibles</p></div>`}
           </div>
+          <div class="mb-cocina-body mb-cocina-body--stack">
 
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--purple"></span>Tipo de Contenido</h3>
+            <div class="mb-widget mb-widget--full">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(107,207,127,0.15);color:#6bcf7f">
+                  <i class="fas fa-wave-square"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Ritmo de Publicación</div>
+                  <div class="mb-widget-desc">Correlación entre frecuencia de posts y engagement — ¿publicar más ayuda o satura?</div>
+                </div>
+              </div>
+              <div class="mb-chart-wrap"><canvas id="mbActivityChart"></canvas></div>
             </div>
-            ${contentTypes.length ? `
-              <div class="mb-chart-wrap-sm"><canvas id="mbContentChart"></canvas></div>
-              <div class="mb-content-legend" id="mbContentLegend"></div>
-            ` : `<div class="mb-empty-sm"><i class="fas fa-chart-pie"></i><p>Sin datos</p></div>`}
-          </div>
 
+            ${hasGrowthTS ? `
+            <div class="mb-widget mb-widget--full">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(96,165,250,0.15);color:#60a5fa">
+                  <i class="fas fa-chart-area"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Crecimiento Orgánico</div>
+                  <div class="mb-widget-desc">Reach e impresiones reales de tu cuenta${roas ? ` · <strong style="color:#6bcf7f">Valor equivalente en paid ads: ${roas.label} USD</strong>` : ''}</div>
+                </div>
+              </div>
+              <div class="mb-chart-wrap"><canvas id="mbGrowthChart"></canvas></div>
+            </div>
+            ` : ''}
+
+            <div class="mb-cocina-row">
+              <div class="mb-widget">
+                <div class="mb-widget-header">
+                  <span class="mb-widget-icon" style="background:rgba(167,139,250,0.15);color:#a78bfa">
+                    <i class="fas fa-trophy"></i>
+                  </span>
+                  <div>
+                    <div class="mb-widget-title">Top Posts del Período</div>
+                    <div class="mb-widget-desc">Los que más conectaron — aprende de ellos</div>
+                  </div>
+                </div>
+                ${topPosts.length ? this._buildTopPostsHTML(topPosts) : `<div class="mb-empty-sm"><i class="fas fa-images"></i><p>Sin posts disponibles</p></div>`}
+              </div>
+              <div class="mb-widget">
+                <div class="mb-widget-header">
+                  <span class="mb-widget-icon" style="background:rgba(251,146,60,0.15);color:#fb923c">
+                    <i class="fas fa-layer-group"></i>
+                  </span>
+                  <div>
+                    <div class="mb-widget-title">¿Qué Formato Funciona Más?</div>
+                    <div class="mb-widget-desc">Engagement promedio por tipo de contenido publicado</div>
+                  </div>
+                </div>
+                ${contentTypes.length ? `
+                  <div class="mb-chart-wrap-sm" style="height:150px"><canvas id="mbContentChart"></canvas></div>
+                  <div class="mb-content-legend" id="mbContentLegend"></div>
+                  <div class="mb-eng-bars-wrap">
+                    ${(() => {
+                      const colors = ['#6bcf7f','#60a5fa','#a78bfa','#fb923c','#f472b6','#2dd4bf'];
+                      const maxEng = Math.max(...contentTypes.map(x => x.avgEng), 1);
+                      return contentTypes.slice(0, 4).map((c, i) => `
+                        <div class="mb-eng-bar-row">
+                          <span class="mb-eng-bar-label">${c.label}</span>
+                          <div class="mb-eng-bar-track">
+                            <div class="mb-eng-bar-fill" style="width:${(c.avgEng/maxEng*100).toFixed(0)}%;background:${colors[i]}"></div>
+                          </div>
+                          <span class="mb-eng-bar-val">${this._fmt(c.avgEng)}</span>
+                        </div>`).join('');
+                    })()}
+                  </div>
+                ` : `<div class="mb-empty-sm"><i class="fas fa-chart-pie"></i><p>Sin datos de formato</p></div>`}
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <!-- BLOQUE 4: Engagement Rate -->
-        <div class="mb-section">
-          <div class="mb-section-header">
-            <h3 class="mb-section-title"><span class="mb-dot mb-dot--blue"></span>Engagement Rate</h3>
-            <span class="mb-section-sub">Interacciones por post a lo largo del tiempo</span>
+        <!-- ══════════════════════════════════════════
+             COCINA 4 · EL SENTIMIENTO
+             ¿Qué emociones genera tu marca?
+        ══════════════════════════════════════════ -->
+        <div class="mb-cocina" id="cocina4">
+          <div class="mb-cocina-header">
+            <div class="mb-cocina-badge">
+              <span class="mb-cocina-num">04</span>
+              <div>
+                <div class="mb-cocina-title">El Sentimiento</div>
+                <div class="mb-cocina-question">¿Qué emociones genera tu marca en las personas?</div>
+              </div>
+            </div>
           </div>
-          <div class="mb-chart-wrap">
-            <canvas id="mbEngRateChart"></canvas>
+          <div class="mb-cocina-body">
+
+            <div class="mb-widget mb-widget--wide">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(45,212,191,0.15);color:#2dd4bf">
+                  <i class="fas fa-heartbeat"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Espectro Emocional</div>
+                  <div class="mb-widget-desc">Qué emociones genera tu contenido — lo que ningún dashboard de Meta te muestra</div>
+                </div>
+              </div>
+              ${this._buildEmotionSpectrumHTML(narrative, sentiment)}
+            </div>
+
+            <div class="mb-widget">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(244,114,182,0.15);color:#f472b6">
+                  <i class="fas fa-comments"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Tono de tu Marca</div>
+                  <div class="mb-widget-desc">Cómo suena tu marca según el contenido analizado por IA</div>
+                </div>
+              </div>
+              ${narrative.top_tones?.length ? `
+                <div class="mb-chart-wrap-sm" style="height:160px"><canvas id="mbToneChart"></canvas></div>
+              ` : `<div class="mb-empty-sm"><i class="fas fa-comment-alt"></i><p>Analiza más contenido para ver el tono de tu marca.</p></div>`}
+              ${narrative.pillars_active?.length ? `
+                <div class="mb-widget-divider"></div>
+                <div class="mb-widget-sublabel">Pilares activos</div>
+                <div class="mb-pillars-list">
+                  ${narrative.pillars_active.slice(0, 4).map(p => `
+                    <div class="mb-pillar-tag mb-pillar-tag--active">
+                      <i class="fas fa-check-circle"></i> ${this._esc(p.pillar_name || p.name || '')}
+                    </div>`).join('')}
+                </div>
+                ${narrative.pillars_orphan?.length ? `
+                  <div class="mb-widget-sublabel mb-widget-sublabel--warn" style="margin-top:0.75rem">
+                    <i class="fas fa-exclamation-circle"></i> Sin actividad reciente
+                  </div>
+                  <div class="mb-pillars-list">
+                    ${narrative.pillars_orphan.slice(0, 3).map(p => `
+                      <div class="mb-pillar-tag mb-pillar-tag--orphan">${this._esc(p.pillar_name || p.name || '')}</div>`).join('')}
+                  </div>
+                ` : ''}
+              ` : ''}
+            </div>
+
+            ${stories ? `
+            <div class="mb-widget">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(244,114,182,0.15);color:#f472b6">
+                  <i class="fas fa-circle-notch"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Stories</div>
+                  <div class="mb-widget-desc">Últimas ${stories.count} stories publicadas</div>
+                </div>
+              </div>
+              ${this._buildStoriesHTML(stories, video)}
+            </div>
+            ` : video ? `
+            <div class="mb-widget">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon" style="background:rgba(251,146,60,0.15);color:#fb923c">
+                  <i class="fas fa-film"></i>
+                </span>
+                <div>
+                  <div class="mb-widget-title">Video / Reels</div>
+                  <div class="mb-widget-desc">${video.count} videos publicados en el período</div>
+                </div>
+              </div>
+              <div class="mb-video-summary">
+                <div class="mb-video-kpi">
+                  <div class="mb-video-kpi-val">${this._fmt(video.total_views)}</div>
+                  <div class="mb-video-kpi-lbl">Views totales</div>
+                </div>
+                <div class="mb-video-kpi">
+                  <div class="mb-video-kpi-val">${video.avg_watch_time_s > 0 ? video.avg_watch_time_s + 's' : '—'}</div>
+                  <div class="mb-video-kpi-lbl">Watch time prom.</div>
+                </div>
+                <div class="mb-video-kpi">
+                  <div class="mb-video-kpi-val">${video.count}</div>
+                  <div class="mb-video-kpi-lbl">Videos</div>
+                </div>
+              </div>
+            </div>
+            ` : ''}
+
           </div>
         </div>
 
-        <!-- BLOQUE 5: Audiencia demographics (nuevo) -->
-        ${audience?.has_data ? `
-        <div class="mb-grid-2">
-
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Audiencia por Género/Edad</h3>
-              <span class="mb-section-sub">Distribución de seguidores</span>
+        <!-- ══════════════════════════════════════════
+             COCINA 5 · TU PRÓXIMO PASO
+             ¿Qué hago mañana con todo esto?
+        ══════════════════════════════════════════ -->
+        <div class="mb-cocina mb-cocina--last" id="cocina5">
+          <div class="mb-cocina-header">
+            <div class="mb-cocina-badge">
+              <span class="mb-cocina-num">05</span>
+              <div>
+                <div class="mb-cocina-title">Tu Próximo Paso</div>
+                <div class="mb-cocina-question">¿Qué hago mañana para mejorar mi marca?</div>
+              </div>
             </div>
-            <div class="mb-chart-wrap-sm"><canvas id="mbGenderChart"></canvas></div>
           </div>
-
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--teal"></span>Top Países</h3>
-              <span class="mb-section-sub">Países de tu audiencia</span>
-            </div>
-            ${audience.top_countries?.length ? `
-              <div class="mb-chart-wrap-sm"><canvas id="mbCountriesChart"></canvas></div>
-            ` : `<div class="mb-empty-sm"><p>Sin datos de ubicación</p></div>`}
+          <div class="mb-rec-grid">
+            ${this._buildChefRecommendations(autoInsights, diagnostic, vera, kpis, contentTypes, narrative)}
           </div>
-
         </div>
-        ` : ''}
-
-        <!-- Grid 2: Heatmap + Tono / Stories -->
-        <div class="mb-grid-2">
-
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--yellow"></span>Audiencia activa</h3>
-              <span class="mb-section-sub">Días y horas con más actividad</span>
-            </div>
-            ${this._buildHeatmapHTML(allPosts, insight?.dimensions?.A_activity?.heatmap)}
-          </div>
-
-          ${stories ? `
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Stories</h3>
-              <span class="mb-section-sub">Últimas ${stories.count} stories publicadas</span>
-            </div>
-            ${this._buildStoriesHTML(stories, video)}
-          </div>
-          ` : `
-          <div class="mb-section">
-            <div class="mb-section-header">
-              <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Tono de Contenido</h3>
-            </div>
-            ${(insight?.dimensions?.B_narrative?.top_tones?.length) ? `
-              <div class="mb-chart-wrap-sm"><canvas id="mbToneChart"></canvas></div>
-            ` : `<div class="mb-empty-sm"><i class="fas fa-comment-alt"></i><p>Analiza posts para ver el tono de tu contenido.</p></div>`}
-          </div>
-          `}
-
-        </div>
-
-        ${stories && insight?.dimensions?.B_narrative?.top_tones?.length ? `
-        <div class="mb-section">
-          <div class="mb-section-header">
-            <h3 class="mb-section-title"><span class="mb-dot mb-dot--pink"></span>Tono de Contenido</h3>
-          </div>
-          <div class="mb-chart-wrap-sm" style="max-height:180px"><canvas id="mbToneChart"></canvas></div>
-        </div>
-        ` : ''}
 
       </div>`;
   }
+
+  // ── Score VERA™ ───────────────────────────────────────────────────────────
+
+  _computeVERAScore(insight, kpis, timeSeries, contentTypes) {
+    const snap       = insight?.dimensions?.A_activity?.snapshot || {};
+    const narrative  = insight?.dimensions?.B_narrative || {};
+    const stories    = insight?.dimensions?.D_stories;
+    const video      = insight?.dimensions?.E_video;
+    const diagnostic = insight?.dimensions?.H_diagnostic || {};
+    let score = 0;
+
+    // 1. Engagement rate (0-15 pts)
+    const er = parseFloat(kpis.engRate);
+    const erPts = !isNaN(er) && kpis.reach > 0 ? Math.min(15, er * 3) : 0;
+    score += erPts;
+
+    // 2. Reach (0-10 pts)
+    const reachPts = kpis.reach > 50000 ? 10 : kpis.reach > 10000 ? 8 : kpis.reach > 1000 ? 5 : kpis.reach > 0 ? 2 : 0;
+    score += reachPts;
+
+    // 3. Posting frequency (0-10 pts)
+    const days = parseInt(this._period) || 30;
+    const freqPerWeek = (kpis.totalPosts / days) * 7;
+    const freqPts = freqPerWeek >= 5 ? 10 : freqPerWeek >= 3 ? 8 : freqPerWeek >= 1 ? 5 : freqPerWeek > 0 ? 2 : 0;
+    score += freqPts;
+
+    // 4. Content diversity (0-8 pts)
+    const divPts = contentTypes.length >= 3 ? 8 : contentTypes.length === 2 ? 5 : contentTypes.length === 1 ? 2 : 0;
+    score += divPts;
+
+    // 5. Tone coherence (0-10 pts)
+    const coherence = diagnostic.coherence_avg || narrative.coherence_avg;
+    const cohPts = coherence ? Math.min(10, Math.round(coherence / 10)) : 0;
+    score += cohPts;
+
+    // 6. Clarity score (0-10 pts)
+    const clarity = diagnostic.clarity_avg;
+    const claPts = clarity ? Math.min(10, Math.round(clarity / 10)) : 0;
+    score += claPts;
+
+    // 7. Saves rate (0-8 pts)
+    const savedPct = snap.total_engagement > 0 ? (snap.total_saved / snap.total_engagement) * 100 : 0;
+    const savePts = savedPct >= 20 ? 8 : savedPct >= 10 ? 5 : savedPct > 0 ? 2 : 0;
+    score += savePts;
+
+    // 8. Stories exit rate (0-8 pts)
+    const storyPts = stories
+      ? (stories.exit_rate < 20 ? 8 : stories.exit_rate < 35 ? 5 : 2)
+      : 0;
+    score += storyPts;
+
+    // 9. Video retention (0-8 pts)
+    const videoPts = video?.avg_watch_time_s > 0
+      ? (video.avg_watch_time_s >= 15 ? 8 : video.avg_watch_time_s >= 5 ? 5 : 2)
+      : 0;
+    score += videoPts;
+
+    // 10. Followers baseline (0-8 pts)
+    const followers = kpis.followers;
+    const followerPts = followers >= 50000 ? 8 : followers >= 10000 ? 6 : followers >= 1000 ? 4 : followers > 0 ? 2 : 0;
+    score += followerPts;
+
+    // 11. Vulnerability penalty
+    const vulnCount = diagnostic.vulnerabilities?.length || 0;
+    score = Math.max(0, score - Math.min(10, vulnCount * 2));
+
+    // 12. Engagement trend bonus (0-5 pts)
+    const ps = timeSeries.engagement || [];
+    const mid = Math.floor(ps.length / 2);
+    const recentEng = ps.slice(mid).reduce((a, b) => a + b, 0);
+    const oldEng    = ps.slice(0, mid).reduce((a, b) => a + b, 0);
+    const trendPts  = recentEng > oldEng * 1.1 ? 5 : recentEng > oldEng * 0.9 ? 2 : 0;
+    score += trendPts;
+
+    const finalScore = Math.min(100, Math.round(score));
+    let label, color;
+    if (finalScore >= 80)      { label = 'Excelente';          color = '#6bcf7f'; }
+    else if (finalScore >= 65) { label = 'Bien';               color = '#60a5fa'; }
+    else if (finalScore >= 45) { label = 'En proceso';         color = '#facc15'; }
+    else                       { label = 'Necesita atención';  color = '#fb923c'; }
+
+    const factors = [
+      { label: 'Engagement', pts: erPts,      max: 15 },
+      { label: 'Frecuencia', pts: freqPts,    max: 10 },
+      { label: 'Coherencia', pts: cohPts,     max: 10 },
+      { label: 'Reach',      pts: reachPts,   max: 10 },
+      { label: 'Diversidad', pts: divPts,     max: 8  },
+      { label: 'Guardados',  pts: savePts,    max: 8  },
+      { label: 'Video',      pts: videoPts,   max: 8  },
+      { label: 'Stories',    pts: storyPts,   max: 8  },
+    ].map(f => ({ ...f, pct: Math.round((f.pts / f.max) * 100) }))
+     .sort((a, b) => b.pts - a.pts);
+
+    return { score: finalScore, label, color, factors, trendUp: trendPts > 0 };
+  }
+
+  _computeOrgROAS(kpis) {
+    const CPM  = 7; // USD avg CPM
+    const reach = kpis.reach || 0;
+    if (reach === 0) return null;
+    const val   = (reach / 1000) * CPM;
+    const label = val >= 1000 ? `$${(val / 1000).toFixed(1)}K` : `$${Math.round(val)}`;
+    return { reach, value: Math.round(val), cpm: CPM, label };
+  }
+
+  _buildVERAScoreHTML(vera) {
+    const { score, label, color, factors } = vera;
+    // SVG half-arc gauge
+    const r = 54, circumference = Math.PI * r;
+    const offset = (circumference - (score / 100) * circumference).toFixed(2);
+    return `
+      <div class="mb-vera-card">
+        <div class="mb-vera-gauge-wrap">
+          <svg class="mb-vera-gauge" viewBox="0 0 128 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10 72 A ${r} ${r} 0 0 1 118 72"
+              stroke="rgba(255,255,255,0.08)" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <path d="M 10 72 A ${r} ${r} 0 0 1 118 72"
+              stroke="${color}" stroke-width="10" fill="none" stroke-linecap="round"
+              stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${offset}"
+              class="mb-vera-arc"/>
+          </svg>
+          <div class="mb-vera-score-inner">
+            <div class="mb-vera-number" style="color:${color}">${score}</div>
+            <div class="mb-vera-label">${label}</div>
+          </div>
+        </div>
+        <div class="mb-vera-title">Score VERA™</div>
+        <div class="mb-vera-sub">Salud de marca · ${this._period}</div>
+        <div class="mb-vera-factors">
+          ${factors.slice(0, 4).map(f => `
+            <div class="mb-vera-factor">
+              <span class="mb-vera-factor-name">${f.label}</span>
+              <div class="mb-vera-factor-track">
+                <div class="mb-vera-factor-fill" style="width:${f.pct}%;background:${f.pct >= 70 ? color : f.pct >= 40 ? '#facc15' : '#fb923c44'}"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  _buildKPICards(kpis, snap, roas) {
+    const followers  = snap.followers_ig || snap.fans_fb || kpis.followers || 0;
+    const impressions = snap.impressions || kpis.impressions || 0;
+    const saved       = snap.total_saved || kpis.totalSaved || 0;
+    const er          = parseFloat(kpis.engRate);
+    const erTier      = !isNaN(er) ? (er >= 5 ? 'top' : er >= 3 ? 'good' : er > 0 ? 'low' : null) : null;
+
+    const cards = [
+      { icon: 'fa-users',      color: 'teal',   value: this._fmt(followers),            label: 'Seguidores',  sub: snap.followers_ig > 0 ? 'Instagram' : snap.fans_fb > 0 ? 'Facebook' : 'Total' },
+      { icon: 'fa-eye',        color: 'blue',   value: this._fmt(kpis.reach),           label: 'Reach',       sub: `${this._fmt(impressions)} impresiones`, highlight: roas ? `≈ ${roas.label} en ads` : null },
+      { icon: 'fa-heart',      color: 'orange', value: this._fmt(kpis.totalEngagement), label: 'Engagement',  sub: `${this._fmt(kpis.totalLikes)} likes · ${this._fmt(kpis.totalComments)} comentarios` },
+      { icon: 'fa-percentage', color: 'purple', value: kpis.engRate + '%',              label: 'Eng. Rate',   sub: kpis.reach > 0 ? 'Sobre reach total' : 'Sobre interacciones', tier: erTier },
+      { icon: 'fa-bookmark',   color: 'pink',   value: this._fmt(saved),               label: 'Guardados',   sub: snap.ig_posts_count > 0 ? `${snap.ig_posts_count} posts IG` : 'Total saves' },
+      { icon: 'fa-file-alt',   color: 'green',  value: this._fmt(kpis.totalPosts),     label: 'Posts',       sub: `${this._fmt(kpis.totalLikes)} likes · ${this._fmt(kpis.totalShares)} shares` },
+    ];
+
+    const tierLabel = { top: 'top tier', good: 'buen nivel', low: 'mejorable' };
+    const tierColor = { top: '#6bcf7f', good: '#60a5fa', low: '#fb923c' };
+
+    return cards.map(c => `
+      <div class="mb-kpi2-card">
+        <div class="mb-kpi-icon mb-kpi-icon--${c.color}"><i class="fas ${c.icon}"></i></div>
+        <div class="mb-kpi-body">
+          <div class="mb-kpi-value">${c.value}</div>
+          <div class="mb-kpi-label">${c.label}</div>
+          <div class="mb-kpi-sub">${c.sub}</div>
+          ${c.highlight ? `<div class="mb-kpi-highlight"><i class="fas fa-coins"></i> ${c.highlight}</div>` : ''}
+          ${c.tier ? `<span class="mb-kpi-tier" style="background:${tierColor[c.tier]}22;color:${tierColor[c.tier]}">${tierLabel[c.tier]}</span>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Espectro Emocional ──────────────────────────────────────────────────────
+
+  _buildEmotionSpectrumHTML(narrative, sentiment) {
+    const emotions = narrative?.emotion_distribution || sentiment?.emotion_distribution || [];
+    if (!emotions.length) {
+      return `<div class="mb-empty-sm"><i class="fas fa-heartbeat" style="opacity:0.3"></i><p>Analiza más contenido para ver el espectro emocional de tu audiencia.</p></div>`;
+    }
+
+    const emotionCfg = {
+      alegría:     { color: '#facc15', icon: '😊', label: 'Alegría' },
+      joy:         { color: '#facc15', icon: '😊', label: 'Alegría' },
+      inspiración: { color: '#6bcf7f', icon: '✨', label: 'Inspiración' },
+      inspiration: { color: '#6bcf7f', icon: '✨', label: 'Inspiración' },
+      confianza:   { color: '#2dd4bf', icon: '🤝', label: 'Confianza' },
+      trust:       { color: '#2dd4bf', icon: '🤝', label: 'Confianza' },
+      entusiasmo:  { color: '#a78bfa', icon: '🔥', label: 'Entusiasmo' },
+      enthusiasm:  { color: '#a78bfa', icon: '🔥', label: 'Entusiasmo' },
+      confusión:   { color: '#fb923c', icon: '🤔', label: 'Confusión' },
+      confusion:   { color: '#fb923c', icon: '🤔', label: 'Confusión' },
+      ira:         { color: '#ef4444', icon: '😡', label: 'Ira' },
+      anger:       { color: '#ef4444', icon: '😡', label: 'Ira' },
+      tristeza:    { color: '#60a5fa', icon: '😢', label: 'Tristeza' },
+      sadness:     { color: '#60a5fa', icon: '😢', label: 'Tristeza' },
+      sorpresa:    { color: '#f472b6', icon: '😮', label: 'Sorpresa' },
+      surprise:    { color: '#f472b6', icon: '😮', label: 'Sorpresa' },
+      ironía:      { color: '#87868B', icon: '😏', label: 'Ironía' },
+      irony:       { color: '#87868B', icon: '😏', label: 'Ironía' },
+      neutral:     { color: '#555', icon: '😐', label: 'Neutral' },
+    };
+
+    const total   = emotions.reduce((s, e) => s + e.count, 0) || 1;
+    const maxCount = Math.max(...emotions.map(e => e.count), 1);
+    const top6    = emotions.slice(0, 6);
+
+    return `
+      <div class="mb-emotion-spectrum">
+        <div class="mb-emotion-bars">
+          ${top6.map(e => {
+            const key = (e.emotion || '').toLowerCase();
+            const cfg = emotionCfg[key] || { color: '#87868B', icon: '💬', label: e.emotion || key };
+            const pct = Math.round((e.count / total) * 100);
+            return `
+              <div class="mb-emotion-item">
+                <span class="mb-emotion-emoji">${cfg.icon}</span>
+                <div class="mb-emotion-track">
+                  <div class="mb-emotion-fill" style="width:${(e.count/maxCount*100).toFixed(0)}%;background:${cfg.color}"></div>
+                </div>
+                <div class="mb-emotion-meta">
+                  <span class="mb-emotion-name">${cfg.label}</span>
+                  <span class="mb-emotion-pct" style="color:${cfg.color}">${pct}%</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+        <div class="mb-emotion-donut">
+          <canvas id="mbEmotionChart"></canvas>
+        </div>
+      </div>`;
+  }
+
+  // ── Chef Recommendations ────────────────────────────────────────────────────
+
+  _buildChefRecommendations(autoInsights, diagnostic, vera, kpis, contentTypes, narrative) {
+    const recs = [];
+    const orgPath = window.currentOrgPath || '';
+    const pathMap = {
+      production: orgPath ? `${orgPath}/production` : '/production',
+      insight:    orgPath ? `${orgPath}/insight`    : '/insight',
+    };
+
+    // Auto-insights convertidos a recomendaciones accionables
+    autoInsights.forEach(ins => {
+      recs.push({ type: ins.type, icon: ins.icon, title: ins.type === 'success' ? '¿Qué está funcionando?' : ins.type === 'warning' ? 'Atención detectada' : 'Consejo del chef', text: ins.text, cta: null });
+    });
+
+    // Área débil del Score VERA
+    if (vera.score < 65 && vera.factors.length) {
+      const weak = vera.factors[vera.factors.length - 1];
+      recs.push({
+        type: 'tip', icon: 'fa-route',
+        title: 'Área de mejora clave',
+        text: `Tu <strong>${weak.label}</strong> está por debajo del potencial. Mejorar este factor puede subir tu Score VERA significativamente.`,
+        cta: { label: 'Crear contenido estratégico', href: pathMap.production }
+      });
+    }
+
+    // Formato ganador
+    if (contentTypes.length >= 2) {
+      const sorted = [...contentTypes].sort((a, b) => b.avgEng - a.avgEng);
+      const best = sorted[0], worst = sorted[sorted.length - 1];
+      if (best.avgEng > worst.avgEng * 1.5) {
+        recs.push({
+          type: 'tip', icon: 'fa-lightbulb',
+          title: 'Dobla la apuesta en este formato',
+          text: `Los posts de tipo <strong>${best.label}</strong> generan ${Math.round(best.avgEng / Math.max(1, worst.avgEng))}x más engagement que los de ${worst.label.toLowerCase()}. Crea más de este formato esta semana.`,
+          cta: { label: 'Crear contenido', href: pathMap.production }
+        });
+      }
+    }
+
+    // Pilares huérfanos
+    if (narrative?.pillars_orphan?.length > 0) {
+      const orphan = narrative.pillars_orphan[0];
+      recs.push({
+        type: 'warning', icon: 'fa-exclamation-circle',
+        title: 'Pilar narrativo sin actividad',
+        text: `El pilar <strong>"${this._esc(orphan.pillar_name || orphan.name || 'Sin nombre')}"</strong> no tiene publicaciones recientes. Tu audiencia puede perder la narrativa central de tu marca.`,
+        cta: { label: 'Publicar para este pilar', href: pathMap.production }
+      });
+    }
+
+    // Vulnerabilidades críticas
+    const critVulns = diagnostic?.vulnerabilities?.filter(v => v.severity === 'high' || v.severity === 'critical') || [];
+    critVulns.slice(0, 2).forEach(v => {
+      recs.push({
+        type: 'critical', icon: 'fa-shield-alt',
+        title: `Vulnerabilidad: ${this._esc(v.title || 'Sin título')}`,
+        text: this._esc(v.description || 'Requiere atención inmediata.'),
+        cta: null
+      });
+    });
+
+    // ER bajo
+    const er = parseFloat(kpis.engRate);
+    if (!isNaN(er) && er < 1 && kpis.reach > 0) {
+      recs.push({
+        type: 'warning', icon: 'fa-chart-line',
+        title: 'Engagement rate por debajo del objetivo',
+        text: `Tu ER actual es <strong>${er}%</strong>. El objetivo para tu tamaño de audiencia es superar el 3%. Prueba publicar en las horas de máximo impacto del mapa de calor.`,
+        cta: null
+      });
+    }
+
+    if (!recs.length) {
+      recs.push({
+        type: 'success', icon: 'fa-check-circle',
+        title: 'Tu marca está en buen camino',
+        text: 'Estás publicando con consistencia. Mantén el ritmo y sigue explorando los formatos de mayor engagement.',
+        cta: null
+      });
+    }
+
+    const typeCfg = {
+      success:  { border: '#6bcf7f', bg: 'rgba(107,207,127,0.05)', iconColor: '#6bcf7f' },
+      warning:  { border: '#facc15', bg: 'rgba(250,204,21,0.05)',  iconColor: '#facc15' },
+      tip:      { border: '#60a5fa', bg: 'rgba(96,165,250,0.05)',  iconColor: '#60a5fa' },
+      critical: { border: '#ef4444', bg: 'rgba(239,68,68,0.06)',   iconColor: '#ef4444' },
+    };
+
+    return recs.slice(0, 6).map(r => {
+      const cfg = typeCfg[r.type] || typeCfg.tip;
+      return `
+        <div class="mb-rec-card" style="border-left-color:${cfg.border};background:${cfg.bg}">
+          <div class="mb-rec-icon" style="color:${cfg.iconColor}"><i class="fas ${r.icon}"></i></div>
+          <div class="mb-rec-body">
+            <div class="mb-rec-title">${r.title}</div>
+            <p class="mb-rec-text">${r.text}</p>
+            ${r.cta ? `<a href="${r.cta.href}" class="mb-rec-cta">${r.cta.label} <i class="fas fa-arrow-right"></i></a>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── KPI Row legacy (kept for compatibility) ────────────────────────────────
 
   _buildKPIRow(kpis, snap = {}) {
     const followers  = snap.followers_ig || snap.fans_fb || kpis.followers || 0;
@@ -958,16 +1448,54 @@ class InsightView extends BaseView {
     const tones      = insight?.dimensions?.B_narrative?.top_tones || [];
     const apiTS      = insight?.dimensions?.A_activity?.time_series;
     const audience   = insight?.dimensions?.C_audience;
+    const narrative  = insight?.dimensions?.B_narrative;
+    const sentiment  = insight?.dimensions?.G_sentiment;
+    const emotions   = narrative?.emotion_distribution || sentiment?.emotion_distribution || [];
 
     this._renderActivityChart(timeSeries);
-    this._renderEngRateChart(allPosts, days);
     if (content.length) this._renderContentChart(content);
     if (tones.length)   this._renderToneChart(tones);
+    if (emotions.length) this._renderEmotionChart(emotions);
 
-    // Nuevos gráficos con data enriquecida de API
+    // Gráficos enriquecidos de API
     if (apiTS?.dates?.length > 1)          this._renderGrowthChart(apiTS);
     if (audience?.gender_groups)           this._renderAudienceGenderChart(audience.gender_groups);
     if (audience?.top_countries?.length)   this._renderAudienceCountriesChart(audience.top_countries);
+  }
+
+  _renderEmotionChart(emotions) {
+    const el = document.getElementById('mbEmotionChart');
+    if (!el) return;
+    const emotionColors = {
+      alegría: '#facc15', joy: '#facc15',
+      inspiración: '#6bcf7f', inspiration: '#6bcf7f',
+      confianza: '#2dd4bf', trust: '#2dd4bf',
+      entusiasmo: '#a78bfa', enthusiasm: '#a78bfa',
+      confusión: '#fb923c', confusion: '#fb923c',
+      ira: '#ef4444', anger: '#ef4444',
+      tristeza: '#60a5fa', sadness: '#60a5fa',
+      sorpresa: '#f472b6', surprise: '#f472b6',
+      ironía: '#87868B', irony: '#87868B',
+      neutral: '#555',
+    };
+    const total  = emotions.reduce((s, e) => s + e.count, 0) || 1;
+    const top6   = emotions.slice(0, 6);
+    const labels = top6.map(e => e.emotion || '');
+    const data   = top6.map(e => Math.round((e.count / total) * 100));
+    const colors = labels.map(l => emotionColors[l.toLowerCase()] || '#87868B');
+
+    this._chartInstances.emotion = new Chart(el, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'rgba(0,0,0,0.3)', borderWidth: 2, hoverOffset: 8 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '55%',
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+        }
+      }
+    });
   }
 
   _renderActivityChart(ts) {

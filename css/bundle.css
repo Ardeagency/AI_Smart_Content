@@ -27302,3 +27302,498 @@ body.production-filters-in-header .living-container > .living-history-section {
   .mb-hm-grid { grid-template-rows: repeat(7, 10px); }
   .mb-stories-kpis { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MY BRAND — CHEF DASHBOARD
+   Arquitectura 5 cocinas: Pulso · Audiencia · Contenido · Sentimiento · Próximo paso
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard shell ── */
+.mb-chef-dashboard {
+  padding: 0 0 3rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Header ── */
+.mb-chef-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0 1.25rem 0;
+  flex-wrap: wrap;
+}
+.mb-chef-header-left  { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.mb-chef-header-right { display: flex; align-items: center; gap: 0.5rem;  flex-wrap: wrap; }
+.mb-chef-brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+  letter-spacing: -0.01em;
+}
+
+/* ── Cocina (kitchen section) ── */
+.mb-cocina {
+  margin-bottom: 2.5rem;
+}
+.mb-cocina--last { margin-bottom: 0; }
+
+.mb-cocina-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+.mb-cocina-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.mb-cocina-num {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: rgba(212,209,216,0.25);
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.mb-cocina-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.mb-cocina-question {
+  font-size: 0.78rem;
+  color: rgba(212,209,216,0.45);
+  margin-top: 0.15rem;
+  line-height: 1.3;
+}
+
+/* ── Cocina body layouts ── */
+.mb-cocina-body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.mb-cocina-body--stack {
+  flex-direction: column;
+}
+.mb-cocina-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+.mb-widget--wide { flex: 2; min-width: 0; }
+.mb-widget { flex: 1; min-width: 0; }
+.mb-widget--full { width: 100%; }
+
+/* ── Widget card ── */
+.mb-widget {
+  background: var(--bg-card, #000);
+  border: 1px solid var(--white-8, rgba(255,255,255,0.08));
+  border-radius: 12px;
+  padding: 1.125rem;
+}
+.mb-widget-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.mb-widget-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.mb-widget-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+  line-height: 1.3;
+}
+.mb-widget-desc {
+  font-size: 0.72rem;
+  color: rgba(212,209,216,0.45);
+  margin-top: 0.2rem;
+  line-height: 1.4;
+}
+.mb-widget-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin: 0.875rem 0;
+}
+.mb-widget-sublabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(212,209,216,0.35);
+  margin-bottom: 0.5rem;
+}
+.mb-widget-sublabel--warn { color: #fb923c; }
+
+/* ── VERA Score Card ── */
+.mb-vera-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.mb-vera-card {
+  background: var(--bg-card, #000);
+  border: 1px solid var(--white-8, rgba(255,255,255,0.08));
+  border-radius: 12px;
+  padding: 1.25rem;
+  min-width: 220px;
+  max-width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.mb-vera-gauge-wrap {
+  position: relative;
+  width: 128px;
+  height: 82px;
+  margin-bottom: 0.25rem;
+}
+.mb-vera-gauge {
+  width: 128px;
+  height: 82px;
+}
+.mb-vera-arc {
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.mb-vera-score-inner {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+.mb-vera-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.mb-vera-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(212,209,216,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.15rem;
+}
+.mb-vera-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+  letter-spacing: 0.02em;
+}
+.mb-vera-sub {
+  font-size: 0.68rem;
+  color: rgba(212,209,216,0.35);
+}
+.mb-vera-factors {
+  width: 100%;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mb-vera-factor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mb-vera-factor-name {
+  font-size: 0.68rem;
+  color: rgba(212,209,216,0.5);
+  min-width: 70px;
+}
+.mb-vera-factor-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mb-vera-factor-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.19, 1, 0.22, 1);
+  min-width: 2px;
+}
+
+/* ── KPI grid (en VERA layout) ── */
+.mb-kpi-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+}
+.mb-kpi2-card {
+  background: var(--bg-card, #000);
+  border: 1px solid var(--white-8, rgba(255,255,255,0.08));
+  border-radius: 10px;
+  padding: 0.875rem 0.875rem 0.75rem;
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  transition: border-color 0.15s;
+}
+.mb-kpi2-card:hover { border-color: rgba(255,255,255,0.16); }
+.mb-kpi-highlight {
+  font-size: 0.67rem;
+  color: #6bcf7f;
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+.mb-kpi-tier {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-top: 0.3rem;
+}
+
+/* ── Emotion Spectrum ── */
+.mb-emotion-spectrum {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+}
+.mb-emotion-bars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.mb-emotion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.mb-emotion-emoji {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.mb-emotion-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.mb-emotion-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s cubic-bezier(0.19, 1, 0.22, 1);
+  min-width: 3px;
+}
+.mb-emotion-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  min-width: 110px;
+}
+.mb-emotion-name {
+  font-size: 0.73rem;
+  color: rgba(212,209,216,0.65);
+}
+.mb-emotion-pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+.mb-emotion-donut {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+/* ── Engagement bars (formato de contenido) ── */
+.mb-eng-bars-wrap {
+  margin-top: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mb-eng-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mb-eng-bar-label {
+  font-size: 0.7rem;
+  color: rgba(212,209,216,0.55);
+  min-width: 70px;
+}
+.mb-eng-bar-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.mb-eng-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.9s cubic-bezier(0.19, 1, 0.22, 1);
+  min-width: 2px;
+}
+.mb-eng-bar-val {
+  font-size: 0.68rem;
+  color: rgba(212,209,216,0.45);
+  min-width: 58px;
+  text-align: right;
+}
+
+/* ── Pillars ── */
+.mb-pillars-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+.mb-pillar-tag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.mb-pillar-tag--active {
+  background: rgba(107,207,127,0.1);
+  color: #6bcf7f;
+  border: 1px solid rgba(107,207,127,0.2);
+}
+.mb-pillar-tag--orphan {
+  background: rgba(251,146,60,0.08);
+  color: #fb923c;
+  border: 1px solid rgba(251,146,60,0.2);
+}
+
+/* ── Video summary ── */
+.mb-video-summary {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.mb-video-kpi { flex: 1; text-align: center; }
+.mb-video-kpi-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+}
+.mb-video-kpi-lbl {
+  font-size: 0.68rem;
+  color: rgba(212,209,216,0.4);
+  margin-top: 0.15rem;
+}
+
+/* ── Chef Recommendations (Cocina 5) ── */
+.mb-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+}
+.mb-rec-card {
+  border-left: 3px solid;
+  border-radius: 8px;
+  padding: 1rem 1rem 0.875rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.mb-rec-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.mb-rec-icon {
+  font-size: 1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+.mb-rec-body { flex: 1; min-width: 0; }
+.mb-rec-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #d4d1d8);
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+.mb-rec-text {
+  font-size: 0.75rem;
+  color: rgba(212,209,216,0.6);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.5;
+}
+.mb-rec-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #60a5fa;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.mb-rec-cta:hover { opacity: 0.75; }
+
+/* ── Responsive — Chef Dashboard ── */
+@media (max-width: 1200px) {
+  .mb-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .mb-rec-grid  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1000px) {
+  .mb-vera-layout { flex-direction: column; }
+  .mb-vera-card   { max-width: 100%; width: 100%; flex-direction: row; align-items: center; }
+  .mb-vera-gauge-wrap { width: 110px; height: 72px; flex-shrink: 0; }
+  .mb-vera-factors { flex-direction: row; flex-wrap: wrap; }
+  .mb-vera-factor { min-width: 45%; }
+  .mb-kpi-grid    { grid-template-columns: repeat(3, 1fr); }
+  .mb-cocina-body { flex-wrap: wrap; }
+  .mb-widget--wide { flex: 1 1 100%; }
+  .mb-widget       { flex: 1 1 calc(50% - 0.5rem); }
+}
+@media (max-width: 768px) {
+  .mb-kpi-grid    { grid-template-columns: repeat(2, 1fr); }
+  .mb-rec-grid    { grid-template-columns: 1fr; }
+  .mb-cocina-row  { grid-template-columns: 1fr; }
+  .mb-emotion-spectrum { flex-direction: column; }
+  .mb-emotion-donut    { width: 100%; height: 160px; }
+  .mb-chef-header { flex-direction: column; align-items: flex-start; }
+  .mb-chef-header-right { width: 100%; }
+}
+@media (max-width: 500px) {
+  .mb-kpi-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .mb-kpi2-card { padding: 0.625rem; }
+  .mb-vera-card { flex-direction: column; align-items: center; max-width: 220px; margin: 0 auto; }
+}
