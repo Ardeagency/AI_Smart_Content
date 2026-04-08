@@ -143,18 +143,11 @@
             <div class="landing-threads__fan">
                 <svg class="landing-threads__svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     <defs>
-                        <linearGradient id="lt-trunk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.65)"/>
-                            <stop offset="55%" stop-color="#ffffff"/>
-                            <stop offset="100%" stop-color="rgba(255,255,255,0.95)"/>
+                        <linearGradient id="lt-trunk-grad" gradientUnits="userSpaceOnUse" x1="4" y1="50" x2="34" y2="50">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.72)"/>
+                            <stop offset="50%" stop-color="#ffffff"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.92)"/>
                         </linearGradient>
-                        <filter id="lt-trunk-glow" x="-30%" y="-30%" width="160%" height="160%">
-                            <feGaussianBlur stdDeviation="0.45" result="blur"/>
-                            <feMerge>
-                                <feMergeNode in="blur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
                         <!-- Gradientes por trazo (mismo lenguaje visual que .landing-threads__stem-h: blanco → color → sombra) -->
                         <linearGradient id="lt-stem-1" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="90" y2="4.167"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ff3a60"/><stop offset="58%" stop-color="#ff1744"/><stop offset="100%" stop-color="#d11338"/></linearGradient>
                         <linearGradient id="lt-stem-2" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="90" y2="12.5"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ff7c26"/><stop offset="58%" stop-color="#ff6500"/><stop offset="100%" stop-color="#d15300"/></linearGradient>
@@ -181,7 +174,8 @@
                     <path class="landing-threads__curve" pathLength="100" fill="none" stroke-width="0.55" stroke-linecap="round" stroke="url(#lt-stem-10)" d="M 34 50 C 40 50, 56.62 62.250, 90 79.167"/>
                     <path class="landing-threads__curve" pathLength="100" fill="none" stroke-width="0.55" stroke-linecap="round" stroke="url(#lt-stem-11)" d="M 34 50 C 40 50, 57.00 65.750, 90 87.500"/>
                     <path class="landing-threads__curve" pathLength="100" fill="none" stroke-width="0.55" stroke-linecap="round" stroke="url(#lt-stem-12)" d="M 34 50 C 40 50, 57.38 69.250, 90 95.833"/>
-                    <line class="landing-threads__trunk-h" pathLength="100" x1="4" y1="50" x2="34" y2="50" stroke="url(#lt-trunk-grad)" stroke-width="0.78" stroke-linecap="round" filter="url(#lt-trunk-glow)"/>
+                    <!-- path (no <line>): pathLength + dashoffset es fiable en Safari; el trazo va encima de las curvas -->
+                    <path class="landing-threads__trunk-h" pathLength="100" fill="none" d="M 4 50 L 34 50" stroke="url(#lt-trunk-grad)" stroke-width="1.15" stroke-linecap="round" shape-rendering="geometricPrecision"/>
                 </svg>
                 <ul class="landing-threads__stack landing-threads__stack--overlay">
                     <li class="landing-threads__row"><span class="landing-threads__bubble">fotografía</span></li>

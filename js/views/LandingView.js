@@ -33,8 +33,12 @@ class LandingView extends BaseView {
     const el = document.getElementById('landing-after-pillars');
     if (!el) return;
 
-    if (typeof IntersectionObserver === 'undefined') {
+    const reveal = () => {
       el.classList.add('landing-threads--visible');
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      reveal();
       return;
     }
 
@@ -42,15 +46,27 @@ class LandingView extends BaseView {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('landing-threads--visible');
+            reveal();
             io.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.14, rootMargin: '0px 0px -6% 0px' }
+      { threshold: 0.06, rootMargin: '0px 0px -2% 0px' }
     );
 
     io.observe(el);
+
+    const checkAlreadyVisible = () => {
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.bottom > 0 && r.top < vh * 0.98) {
+        reveal();
+        io.unobserve(el);
+      }
+    };
+    requestAnimationFrame(checkAlreadyVisible);
+    setTimeout(checkAlreadyVisible, 120);
+
     this.threadsRevealCleanup = () => {
       io.disconnect();
     };
