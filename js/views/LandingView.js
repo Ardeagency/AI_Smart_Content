@@ -22,7 +22,7 @@ class LandingView extends BaseView {
   /**
    * Pilares: carrusel vertical (derecha) sincronizado con el scroll dentro de
    * `.landing-pillars__scroll-track`. Sin clic.
-   * Si el track es más bajo que el viewport, usa un recorrido mínimo de scroll para seguir repartiendo los pasos.
+   * Progreso 0→1 con (vh - trackTop) / (trackHeight + vh) para que avance al entrar el track en pantalla.
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -58,6 +58,8 @@ class LandingView extends BaseView {
       });
     };
 
+    const appContainer = document.getElementById('app-container');
+
     let ticking = false;
     const updateFromScroll = () => {
       if (ticking) return;
@@ -66,15 +68,12 @@ class LandingView extends BaseView {
         ticking = false;
         const vh = window.innerHeight;
         const rect = scrollTrack.getBoundingClientRect();
-        const trackTopPage = window.scrollY + rect.top;
         const trackHeight = scrollTrack.offsetHeight;
-        const rawScrollable = trackHeight - vh;
-        const fallbackScrollable = Math.max(140, (count - 1) * 44);
-        const scrollable =
-          rawScrollable > 0 ? rawScrollable : fallbackScrollable;
-        let scrolledIn = window.scrollY - trackTopPage;
-        scrolledIn = Math.max(0, Math.min(scrollable, scrolledIn));
-        const p = scrollable > 0 ? scrolledIn / scrollable : 0;
+        // Progreso 0→1 mientras el track atraviesa el viewport (no exige rect.top < 0).
+        // Misma lógica con scroll en window o en #app-container.
+        const scrollRange = Math.max(1, trackHeight + vh);
+        let p = (vh - rect.top) / scrollRange;
+        p = Math.max(0, Math.min(1, p));
         const index = Math.min(count - 1, Math.floor(p * count));
         activate(index);
       });
@@ -82,11 +81,17 @@ class LandingView extends BaseView {
 
     window.addEventListener('scroll', updateFromScroll, { passive: true });
     window.addEventListener('resize', updateFromScroll, { passive: true });
+    if (appContainer) {
+      appContainer.addEventListener('scroll', updateFromScroll, { passive: true });
+    }
     updateFromScroll();
 
     this.pillarScrollCleanup = () => {
       window.removeEventListener('scroll', updateFromScroll);
       window.removeEventListener('resize', updateFromScroll);
+      if (appContainer) {
+        appContainer.removeEventListener('scroll', updateFromScroll);
+      }
     };
   }
 

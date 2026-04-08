@@ -3974,13 +3974,17 @@ body.entrance-done .landing-header {
 
 .landing-pillars__scroll-track {
     --pillar-count: 4;
-    /* Recorrido total de scroll más corto; el hueco “vacío” ya no es un bloque negro continuo */
+    /* Recorrido de scroll + altura mínima ≈ viewport para centrar el bloque sticky en pantalla */
     --pillar-scroll-unit: min(14vh, 104px);
     position: relative;
-    height: calc(var(--pillar-count) * var(--pillar-scroll-unit));
+    min-height: max(
+        calc(var(--pillar-count) * var(--pillar-scroll-unit)),
+        calc(100svh - 92px)
+    );
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     box-sizing: border-box;
     background: transparent;
 }
@@ -3996,6 +4000,7 @@ body.entrance-done .landing-header {
     box-sizing: border-box;
     background: #000000;
     border-radius: 16px;
+    align-self: center;
 }
 
 .landing-pillars__layout {
@@ -4161,7 +4166,10 @@ body.entrance-done .landing-header {
 @media (max-width: 768px) {
     .landing-pillars__scroll-track {
         --pillar-scroll-unit: min(16vh, 92px);
-        height: calc(var(--pillar-count, 4) * var(--pillar-scroll-unit));
+        min-height: max(
+            calc(var(--pillar-count, 4) * var(--pillar-scroll-unit)),
+            calc(100svh - 72px)
+        );
     }
 
     .landing-pillars__sticky {
