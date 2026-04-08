@@ -20,8 +20,9 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pilares: carrusel vertical (derecha) sincronizado con el scroll de página dentro de
-   * `.landing-pillars__scroll-track` (altura N×viewport). Sin clic.
+   * Pilares: carrusel vertical (derecha) sincronizado con el scroll dentro de
+   * `.landing-pillars__scroll-track`. Sin clic.
+   * Si el track es más bajo que el viewport, usa un recorrido mínimo de scroll para seguir repartiendo los pasos.
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -67,7 +68,10 @@ class LandingView extends BaseView {
         const rect = scrollTrack.getBoundingClientRect();
         const trackTopPage = window.scrollY + rect.top;
         const trackHeight = scrollTrack.offsetHeight;
-        const scrollable = Math.max(0, trackHeight - vh);
+        const rawScrollable = trackHeight - vh;
+        const fallbackScrollable = Math.max(140, (count - 1) * 44);
+        const scrollable =
+          rawScrollable > 0 ? rawScrollable : fallbackScrollable;
         let scrolledIn = window.scrollY - trackTopPage;
         scrolledIn = Math.max(0, Math.min(scrollable, scrolledIn));
         const p = scrollable > 0 ? scrolledIn / scrollable : 0;

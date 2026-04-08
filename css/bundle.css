@@ -3963,24 +3963,26 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical */
+/* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical.
+   Fondo negro solo en .landing-pillars__sticky: el tramo de scroll extra no pinta negro (se ve el gradiente fijo de .landing-background). */
 .landing-pillars {
     position: relative;
     z-index: 3;
-    background: #000000;
+    background: transparent;
     color: rgba(255, 255, 255, 0.92);
 }
 
 .landing-pillars__scroll-track {
     --pillar-count: 4;
-    /* Recorrido total de scroll ≈ N × unidad (no 100vh por paso → menos hueco vacío) */
-    --pillar-scroll-unit: min(28vh, 200px);
+    /* Recorrido total de scroll más corto; el hueco “vacío” ya no es un bloque negro continuo */
+    --pillar-scroll-unit: min(14vh, 104px);
     position: relative;
     height: calc(var(--pillar-count) * var(--pillar-scroll-unit));
     display: flex;
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
+    background: transparent;
 }
 
 .landing-pillars__sticky {
@@ -3992,6 +3994,8 @@ body.entrance-done .landing-header {
     margin-left: auto;
     margin-right: auto;
     box-sizing: border-box;
+    background: #000000;
+    border-radius: 16px;
 }
 
 .landing-pillars__layout {
@@ -4156,7 +4160,7 @@ body.entrance-done .landing-header {
 
 @media (max-width: 768px) {
     .landing-pillars__scroll-track {
-        --pillar-scroll-unit: min(22vh, 150px);
+        --pillar-scroll-unit: min(16vh, 92px);
         height: calc(var(--pillar-count, 4) * var(--pillar-scroll-unit));
     }
 
