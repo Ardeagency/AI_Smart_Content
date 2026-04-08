@@ -2,7 +2,7 @@
 
 <header class="landing-header">
     <a href="/" class="landing-header-brand" aria-label="AI Smart Content Home">
-        <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo">
+    <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo">
     </a>
 
     <nav class="landing-header-nav" aria-label="Primary">
@@ -37,12 +37,11 @@
 
 <section class="landing-pillars" id="value-pillars" aria-labelledby="value-pillars-heading">
     <h2 id="value-pillars-heading" class="sr-only">How AISmartContent works</h2>
-    <!-- Altura de scroll (~4 pantallas): el interior queda sticky; el carrusel de la derecha avanza con el scroll -->
-    <div class="landing-pillars__scroll-scope">
-        <div class="landing-pillars__sticky-wrap">
+    <!-- Altura = N×100vh: el scroll de página avanza los pilares; el bloque sticky mantiene títulos + carrusel -->
+    <div class="landing-pillars__scroll-track" style="--pillar-count: 4">
+        <div class="landing-pillars__sticky">
             <div class="landing-pillars__layout">
         <nav class="landing-pillars__nav" aria-label="Value pillars">
-            <div class="landing-pillars__nav-sticky">
                 <ul class="landing-pillars__nav-list">
                     <li class="landing-pillars__nav-item">
                         <div class="landing-pillars__nav-btn is-active" data-pillar="0" aria-current="true">
@@ -81,61 +80,56 @@
                         </div>
                     </li>
                 </ul>
-            </div>
         </nav>
         <div class="landing-pillars__carousel" aria-live="polite">
-            <div class="landing-pillars__carousel-viewport">
-                <div class="landing-pillars__carousel-track">
-                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-0" data-pillar="0" aria-labelledby="pillar-title-0">
-                        <h3 id="pillar-title-0" class="landing-pillars__panel-title sr-only">Muévete antes</h3>
-                        <div class="landing-pillars__panel-body">
-                            <p>El mercado cambia en tiempo real.</p>
-                            <p>Las oportunidades no esperan a que tu equipo las vea.</p>
-                            <p>AISmartContent detecta señales antes de que se vuelvan tendencia.</p>
-                            <p>Analiza comportamiento, competencia y contexto para anticipar el movimiento.</p>
-                            <p class="landing-pillars__emphasis">No reaccionas.</p>
-                            <p class="landing-pillars__emphasis">Te adelantas.</p>
-                        </div>
-                    </article>
-                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-1" data-pillar="1" aria-labelledby="pillar-title-1">
-                        <h3 id="pillar-title-1" class="landing-pillars__panel-title sr-only">Decide mejor</h3>
-                        <div class="landing-pillars__panel-body">
-                            <p>No es falta de información.</p>
-                            <p>Es falta de claridad.</p>
-                            <p>AISmartContent cruza datos, tendencias, ADN de marca y performance para convertir todo en decisiones accionables.</p>
-                            <p>Sabes qué hacer.</p>
-                            <p>Cuándo hacerlo.</p>
-                            <p>Y por qué hacerlo.</p>
-                            <p>Decisiones basadas en contexto real.</p>
-                            <p>No en intuición.</p>
-                        </div>
-                    </article>
-                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-2" data-pillar="2" aria-labelledby="pillar-title-2">
-                        <h3 id="pillar-title-2" class="landing-pillars__panel-title sr-only">Ejecuta en minutos</h3>
-                        <div class="landing-pillars__panel-body">
-                            <p>Entre la idea y la ejecución es donde se pierde todo.</p>
-                            <p>AISmartContent elimina esa fricción.</p>
-                            <p>Transforma la decisión en contenido listo para salir.</p>
-                            <p>Imágenes, videos, copies.</p>
-                            <p>Todo alineado, todo listo.</p>
-                            <p>Sin procesos largos.</p>
-                            <p>Sin cuellos de botella.</p>
-                        </div>
-                    </article>
-                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-3" data-pillar="3" aria-labelledby="pillar-title-3">
-                        <h3 id="pillar-title-3" class="landing-pillars__panel-title sr-only">Crece más rápido</h3>
-                        <div class="landing-pillars__panel-body">
-                            <p>El crecimiento no viene de hacer más.</p>
-                            <p>Viene de hacer mejor, en el momento correcto.</p>
-                            <p>AISmartContent optimiza cada acción en función de lo que realmente funciona.</p>
-                            <p>Más impacto.</p>
-                            <p>Más relevancia.</p>
-                            <p>Más velocidad.</p>
-                            <p>Mientras otros intentan entender el mercado,<br>tú ya estás creciendo dentro de él.</p>
-                        </div>
-                    </article>
+            <article class="landing-pillars__panel is-active" id="landing-pillar-0" data-pillar="0" aria-labelledby="pillar-title-0">
+                <h3 id="pillar-title-0" class="landing-pillars__panel-title sr-only">Muévete antes</h3>
+                <div class="landing-pillars__panel-body">
+                    <p>El mercado cambia en tiempo real.</p>
+                    <p>Las oportunidades no esperan a que tu equipo las vea.</p>
+                    <p>AISmartContent detecta señales antes de que se vuelvan tendencia.</p>
+                    <p>Analiza comportamiento, competencia y contexto para anticipar el movimiento.</p>
+                    <p class="landing-pillars__emphasis">No reaccionas.</p>
+                    <p class="landing-pillars__emphasis">Te adelantas.</p>
                 </div>
-            </div>
+            </article>
+            <article class="landing-pillars__panel" id="landing-pillar-1" data-pillar="1" aria-labelledby="pillar-title-1" aria-hidden="true">
+                <h3 id="pillar-title-1" class="landing-pillars__panel-title sr-only">Decide mejor</h3>
+                <div class="landing-pillars__panel-body">
+                    <p>No es falta de información.</p>
+                    <p>Es falta de claridad.</p>
+                    <p>AISmartContent cruza datos, tendencias, ADN de marca y performance para convertir todo en decisiones accionables.</p>
+                    <p>Sabes qué hacer.</p>
+                    <p>Cuándo hacerlo.</p>
+                    <p>Y por qué hacerlo.</p>
+                    <p>Decisiones basadas en contexto real.</p>
+                    <p>No en intuición.</p>
+                </div>
+            </article>
+            <article class="landing-pillars__panel" id="landing-pillar-2" data-pillar="2" aria-labelledby="pillar-title-2" aria-hidden="true">
+                <h3 id="pillar-title-2" class="landing-pillars__panel-title sr-only">Ejecuta en minutos</h3>
+                <div class="landing-pillars__panel-body">
+                    <p>Entre la idea y la ejecución es donde se pierde todo.</p>
+                    <p>AISmartContent elimina esa fricción.</p>
+                    <p>Transforma la decisión en contenido listo para salir.</p>
+                    <p>Imágenes, videos, copies.</p>
+                    <p>Todo alineado, todo listo.</p>
+                    <p>Sin procesos largos.</p>
+                    <p>Sin cuellos de botella.</p>
+                </div>
+            </article>
+            <article class="landing-pillars__panel" id="landing-pillar-3" data-pillar="3" aria-labelledby="pillar-title-3" aria-hidden="true">
+                <h3 id="pillar-title-3" class="landing-pillars__panel-title sr-only">Crece más rápido</h3>
+                <div class="landing-pillars__panel-body">
+                    <p>El crecimiento no viene de hacer más.</p>
+                    <p>Viene de hacer mejor, en el momento correcto.</p>
+                    <p>AISmartContent optimiza cada acción en función de lo que realmente funciona.</p>
+                    <p>Más impacto.</p>
+                    <p>Más relevancia.</p>
+                    <p>Más velocidad.</p>
+                    <p>Mientras otros intentan entender el mercado,<br>tú ya estás creciendo dentro de él.</p>
+                </div>
+            </article>
         </div>
             </div>
         </div>
