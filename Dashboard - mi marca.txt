@@ -1,0 +1,57 @@
+﻿1. Categoría: Mi Marca (El ADN en Tiempo Real)
+El objetivo aquí es la transparencia total. Saber quiénes somos ante el mundo en este preciso segundo.
+1. Actividad y Salud Orgánica: Conteo de publicaciones (mes/semana/día), análisis de sentimiento individual por post y curva de fatiga de contenido (cuándo el público deja de reaccionar).
+2. Mapa de Narrativa (Temas): Identificación de los pilares de conversación y detección de "Temas Huérfanos" (cosas de las que deberías hablar y no estás haciendo).
+3. Auditoría de Tono: Análisis de coherencia entre el manual de marca y lo que la IA publica. ¿Estamos siendo muy técnicos o muy emocionales? Impacto de cada tono en el CTR.
+4. Matriz de Frecuencia Óptima: OpenClaw analiza en qué micro-momento del día tu audiencia está más receptiva, ajustando la publicación automáticamente.
+5. Crecimiento Compuesto: Comparativa dinámica de KPIs entre periodos, con análisis de causalidad (¿Crecimos por un post específico o por un evento externo?).
+6. Virtudes y Vulnerabilidades (SWOT Dinámico): OpenClaw detecta qué estamos haciendo bien y dónde estamos siendo "golpeados" por la opinión pública o la competencia.
+7. Análisis de "Destacados": Por qué funcionó ese post. ¿Fue el color? ¿Fue la primera frase? ¿Fue el audio?
+8. Efectividad de Comunicación: Puntuación de claridad del mensaje. ¿El público entiende lo que vendemos?
+9. Influencia y Opinión Social: Mapeo de quiénes están hablando de nosotros (micro-influencers, detractores) y el análisis semántico de sus comentarios.
+10. Impacto de Ofertas (Retailer Mapping): La joya de la corona. OpenClaw rastrea tus precios en cada plataforma (Amazon, Mercado Libre, Webs propias, Retailers). Detecta disparidades de precios, quién está quemando tu marca con descuentos no autorizados y dónde vendes más caro/barato para equilibrar la fuerza de venta.
+Gemini ha dicho
+Para que AISmartContent sea percibida como la plataforma de inteligencia de marca más potente del mundo, la categoría "Mi Marca" no puede ser un simple resumen de métricas; debe ser el espejo de la consciencia de la empresa.
+Aquí tienes el desglose ultra-detallado de esta categoría. Cada punto está diseñado para que un directivo de Disney, Newell Brands o Bimbo sienta que tiene el control total de su activo más valioso.
+________________
+
+
+1. Categoría: Mi Marca (El ADN en Tiempo Real)
+Esta sección representa la "Salud Biométrica" de la empresa. OpenClaw actúa aquí como un auditor interno que nunca duerme.
+A. Dimensión de Operatividad y Pulso (Actividad)
+1. Ritmo de Publicación y Latencia: No solo cuántos posts, sino la brecha de tiempo entre un evento del mercado y nuestra respuesta.
+   * Razón: Mide la agilidad de la marca. Una marca lenta es una marca que pierde relevancia.
+2. Mapa de Calor de Interacción Horaria: OpenClaw analiza en qué micro-segundos del día la audiencia de la marca está "hambrienta" de contenido, ajustando la frecuencia automáticamente.
+3. Auditoría de Formatos Dominantes: Análisis de qué formato (video corto, carrusel, texto largo) está moviendo la aguja hoy, no ayer.
+B. Dimensión de Identidad y Narrativa (Tema y Tono)
+4. Dominio de Pilares Narrativos: Clasificación de cada contenido en los pilares estratégicos de la marca.
+   * Razón: Evita que la marca se vuelva un "vendedor de ofertas" y pierda su esencia narrativa.
+5. Análisis de Desviación de Tono (Brand Soul Guard): OpenClaw detecta si un post o un comentario se aleja del tono entrenado (ej. si Sharpie suena demasiado formal cuando debería ser creativo).
+   * Razón: Garantiza que la marca sea una sola voz en todo el mundo.
+6. Semántica de Impacto: Identificación de las palabras clave y conceptos que generan mayor "resonancia emocional" en la audiencia actual.
+C. Dimensión Comercial y Distribución (Impacto Ofertas & Retail)
+7. Monitor de Cumplimiento de Precios (MAP Monitor): OpenClaw rastrea todos los retailers (Amazon, Walmart, Mercado Libre, etc.). Detecta si alguien está bajando el precio por debajo de lo acordado o si hay sobreprecios que dañan la imagen.
+   * Razón: Protege el margen y el valor de la marca frente a los distribuidores.
+8. Mapa de Disponibilidad y Stock Digital: ¿Aparece nuestro producto como "Agotado" en plataformas clave? OpenClaw avisa para que la comunicación se detenga o se desvíe a otro producto disponible.
+9. Análisis de Ofertas Dinámicas: Comparativa de efectividad de promociones: ¿Funciona mejor el "2x1" o el "20% de descuento" en este retailer específico hoy?
+D. Dimensión Social y Percepción (Sentimiento e Influencia)
+10. Sentimiento Biométrico y Micro-reacciones: Más allá del "positivo/negativo", analiza emociones específicas (alegría, confusión, ironía, ira).
+   * Razón: Permite pivotar la comunicación si un mensaje está siendo malinterpretado.
+11. Rastreo de "Shadow Mentions" (Menciones en la Sombra): OpenClaw busca en foros, comentarios de blogs y comunidades nicho donde la gente habla de la marca sin etiquetarla.
+   * Razón: Aquí es donde reside la opinión más honesta y cruda del consumidor.
+12. Índice de Influencia Real: Quiénes son las personas que realmente mueven la opinión de la marca hoy (no solo influencers pagados, sino clientes reales con autoridad).
+E. Dimensión Diagnóstica (Virtudes y Vulnerabilidades)
+13. Mapa de Puntos Ciegos (Blind Spots): Cosas que la marca está haciendo bien pero que no está comunicando.
+   * Razón: Revela oportunidades de contenido que la empresa estaba ignorando.
+14. Análisis de Fuga de Audiencia: ¿En qué momento exacto del video o del artículo el usuario deja de prestar atención?
+15. Detección de "Crisis de Baja Intensidad": OpenClaw identifica patrones de quejas pequeñas que, de no atenderse, explotarán en una crisis de reputación en 48 horas.
+________________
+
+
+¿Cómo opera OpenClaw de manera autónoma para "Mi Marca"?
+El agente no es un espectador, es un analista proactivo. Su autonomía en esta categoría funciona así:
+1. Auditoría Continua: OpenClaw entra a los sitios de los retailers y redes sociales de la marca cada 15 minutos.
+2. Cruce de Datos: Si detecta que en Amazon el producto de Oster tiene 5 quejas nuevas sobre el mismo tema (vulnerabilidad) y que el precio subió (impacto ofertas), el agente no solo te avisa en el dashboard.
+3. Acción Inmediata: * Instruye a AISmartContent para generar un video corto aclaratorio o un post de "Garantía de Calidad".
+   * Actualiza el dashboard con una "Misión Cumplida": "Detectada vulnerabilidad de precio/calidad; contenido de mitigación lanzado".
+4. Re-entrenamiento: El agente guarda esa experiencia. Si el post de mitigación funciona, la próxima vez lo hará más rápido.
