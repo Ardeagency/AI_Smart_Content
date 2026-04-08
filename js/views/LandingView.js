@@ -216,8 +216,14 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pilares: al llegar a la sección el scroll principal se fija; la rueda/touch avanza
-   * cada pilar; al completar el último (o subir desde el primero) se libera y sigue la página.
+   * Pilares: intercepción de wheel/touch para avanzar pilares sin jitter.
+   *
+   * Diseño:
+   *  - NUNCA se llama setScrollY desde un evento 'scroll' (ese loop era la
+   *    causa del jitter: scroll→setScrollY→scroll→scroll…).
+   *  - Solo wheel y touchmove controlan entrada, avance y salida del lock.
+   *  - La salida usa scrollBy({ behavior:'smooth' }) para transición fluida.
+   *  - Soporta entrada desde arriba (scroll↓) y desde abajo (scroll↑).
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -235,41 +241,50 @@ class LandingView extends BaseView {
     if (!scrollTrack || !count || panels.length !== count) return;
 
     const appContainer = document.getElementById('app-container');
-
     const stickyTopPx = () => (window.matchMedia('(max-width: 768px)').matches ? 72 : 92);
-
     const usesAppScroll = () =>
       appContainer && appContainer.scrollHeight > appContainer.clientHeight + 2;
-
-    const getScrollY = () => {
-      if (usesAppScroll()) return appContainer.scrollTop;
-      return window.scrollY || document.documentElement.scrollTop || 0;
-    };
-
+    const getScrollY = () =>
+      usesAppScroll()
+        ? appContainer.scrollTop
+        : window.scrollY || document.documentElement.scrollTop || 0;
     const setScrollY = (y) => {
-      if (usesAppScroll()) {
-        appContainer.scrollTop = y;
-      } else {
-        window.scrollTo({ top: y, left: 0, behavior: 'auto' });
-      }
+      if (usesAppScroll()) appContainer.scrollTop = y;
+      else window.scrollTo({ top: y, left: 0, behavior: 'auto' });
     };
+    const smoothScrollBy = (delta) => {
+      const target = usesAppScroll() ? appContainer : window;
+      target.scrollBy({ top: delta, behavior: 'smooth' });
+    };
+    const lockScrollYFromTrack = () =>
+      getScrollY() + scrollTrack.getBoundingClientRect().top - stickyTopPx();
 
-    const lockScrollYFromTrack = () => {
-      const top = scrollTrack.getBoundingClientRect().top;
-      return getScrollY() + top - stickyTopPx();
+    /* ── Estado ── */
+    let locked = false;
+    let lockScrollY = 0;
+    let pillarIndex = 0;
+    let wheelAccum = 0;
+    let touchStartY = null;
+    let suppressLock = false;
+    let suppressTimer = null;
+
+    const WHEEL_THRESHOLD = 80;
+    const ENTER_ZONE = 54;
+
+    /* ── Helpers ── */
+    const normalizeWheelDeltaY = (e) => {
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;
+      if (e.deltaMode === 2) dy *= window.innerHeight;
+      return dy;
     };
 
     const activate = (index) => {
-      const i = Number.parseInt(String(index), 10);
-      if (Number.isNaN(i) || i < 0 || i >= count) return;
+      const i = Math.max(0, Math.min(count - 1, index));
       indicators.forEach((el, j) => {
         const active = j === i;
         el.classList.toggle('is-active', active);
-        if (active) {
-          el.setAttribute('aria-current', 'true');
-        } else {
-          el.removeAttribute('aria-current');
-        }
+        active ? el.setAttribute('aria-current', 'true') : el.removeAttribute('aria-current');
       });
       panels.forEach((panel, j) => {
         const active = j === i;
@@ -278,206 +293,148 @@ class LandingView extends BaseView {
       });
     };
 
-    let locked = false;
-    let lockScrollY = 0;
-    let pillarIndex = 0;
-    let wheelAccum = 0;
-    let prevScrollY = getScrollY();
-    let suppressPillarLock = false;
-    const WHEEL_THRESHOLD = 88;
-    const ENTER_ZONE_PX = 28;
+    const scheduleClearSuppress = () => {
+      if (suppressTimer) clearTimeout(suppressTimer);
+      suppressTimer = setTimeout(() => {
+        suppressLock = false;
+        suppressTimer = null;
+      }, 1100);
+    };
 
-    const refreshSuppressPillarLock = () => {
-      if (!suppressPillarLock) return;
+    /* Entra al lock: fija la posición de scroll una sola vez y activa el pilar */
+    const enterLock = (fromBottom) => {
+      lockScrollY = lockScrollYFromTrack();
+      setScrollY(lockScrollY);
+      locked = true;
+      wheelAccum = 0;
+      pillarIndex = fromBottom ? count - 1 : 0;
+      activate(pillarIndex);
+    };
+
+    /* Sale del lock hacia abajo con scroll suave */
+    const exitDown = () => {
+      locked = false;
+      suppressLock = true;
+      wheelAccum = 0;
       const tr = scrollTrack.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (tr.bottom < 0) {
-        suppressPillarLock = false;
-        return;
+      const delta = Math.max(260, tr.bottom - window.innerHeight + stickyTopPx() + 48);
+      smoothScrollBy(delta);
+      scheduleClearSuppress();
+    };
+
+    /* Sale del lock hacia arriba con scroll suave */
+    const exitUp = () => {
+      locked = false;
+      suppressLock = true;
+      wheelAccum = 0;
+      const tr = scrollTrack.getBoundingClientRect();
+      const delta = Math.max(260, window.innerHeight - tr.top + stickyTopPx() + 48);
+      smoothScrollBy(-delta);
+      scheduleClearSuppress();
+    };
+
+    /* Avanza o retrocede un pilar; sale del lock al rebasar los extremos */
+    const advancePillar = (forward) => {
+      wheelAccum = 0;
+      if (forward) {
+        if (pillarIndex < count - 1) { pillarIndex += 1; activate(pillarIndex); }
+        else exitDown();
+      } else {
+        if (pillarIndex > 0) { pillarIndex -= 1; activate(pillarIndex); }
+        else exitUp();
       }
-      if (tr.top > vh - 24) {
-        suppressPillarLock = false;
-      }
     };
 
-    const canEnterPillarLock = () => {
-      refreshSuppressPillarLock();
-      return !suppressPillarLock;
-    };
-
-    const normalizeWheelDeltaY = (e) => {
-      let dy = e.deltaY;
-      if (e.deltaMode === 1) dy *= 16;
-      if (e.deltaMode === 2) dy *= window.innerHeight;
-      return dy;
-    };
-
-    const scrollPastSectionDown = () => {
-      suppressPillarLock = true;
-      const vh = window.innerHeight;
-      const tr = scrollTrack.getBoundingClientRect();
-      const delta = Math.max(280, tr.bottom - vh + 120);
-      setScrollY(getScrollY() + delta);
-    };
-
-    const scrollPastSectionUp = () => {
-      const tr = scrollTrack.getBoundingClientRect();
-      const delta = Math.max(160, window.innerHeight - tr.top + 48);
-      setScrollY(getScrollY() - delta);
-    };
-
-    const tryEnterLock = (e) => {
-      if (!canEnterPillarLock()) return false;
+    /**
+     * Intenta entrar al lock basándose en la dirección del delta y la posición
+     * del scrollTrack respecto al sticky offset.
+     *
+     * Condición de entrada (ambas direcciones):
+     *   trTop ≈ stickyTopPx()
+     *   — scroll↓ (dy>0): entrada desde arriba → pilar 0
+     *   — scroll↑ (dy<0): entrada desde abajo → pilar count-1
+     */
+    const tryEnter = (dy, preventDefault) => {
+      if (suppressLock) return false;
       const trTop = scrollTrack.getBoundingClientRect().top;
       const st = stickyTopPx();
-      if (
-        e.deltaY > 0 &&
-        trTop <= st + ENTER_ZONE_PX &&
-        trTop >= st - ENTER_ZONE_PX * 2
-      ) {
-        e.preventDefault();
-        lockScrollY = lockScrollYFromTrack();
-        setScrollY(lockScrollY);
-        locked = true;
-        pillarIndex = 0;
-        wheelAccum = 0;
-        activate(0);
+      const dist = trTop - st;
+
+      if (dy > 0 && dist <= ENTER_ZONE && dist > -ENTER_ZONE * 1.5) {
+        preventDefault();
+        enterLock(false);
+        return true;
+      }
+      if (dy < 0 && Math.abs(dist) <= ENTER_ZONE) {
+        preventDefault();
+        enterLock(true);
         return true;
       }
       return false;
     };
 
+    /* ── Wheel ─────────────────────────────────────────────────────────── */
     const onWheel = (e) => {
       if (locked) {
         e.preventDefault();
-        const dy = normalizeWheelDeltaY(e);
-        wheelAccum += dy;
-
-        if (wheelAccum > WHEEL_THRESHOLD) {
-          wheelAccum = 0;
-          if (pillarIndex < count - 1) {
-            pillarIndex += 1;
-            activate(pillarIndex);
-          } else {
-            locked = false;
-            activate(count - 1);
-            wheelAccum = 0;
-            scrollPastSectionDown();
-          }
-        } else if (wheelAccum < -WHEEL_THRESHOLD) {
-          wheelAccum = 0;
-          if (pillarIndex > 0) {
-            pillarIndex -= 1;
-            activate(pillarIndex);
-          } else {
-            locked = false;
-            scrollPastSectionUp();
-          }
-        }
+        wheelAccum += normalizeWheelDeltaY(e);
+        if (wheelAccum >= WHEEL_THRESHOLD) advancePillar(true);
+        else if (wheelAccum <= -WHEEL_THRESHOLD) advancePillar(false);
         return;
       }
-
-      tryEnterLock(e);
+      tryEnter(normalizeWheelDeltaY(e), () => e.preventDefault());
     };
 
-    const onScrollUnified = () => {
-      if (locked) {
-        const y = getScrollY();
-        if (Math.abs(y - lockScrollY) > 4) {
-          setScrollY(lockScrollY);
-        }
-        return;
-      }
-      const y = getScrollY();
-      const scrollingDown = y > prevScrollY + 1;
-      prevScrollY = y;
-      if (!canEnterPillarLock()) return;
-      const trTop = scrollTrack.getBoundingClientRect().top;
-      const st = stickyTopPx();
-      if (
-        scrollingDown &&
-        trTop <= st + 22 &&
-        trTop >= st - 42
-      ) {
-        lockScrollY = lockScrollYFromTrack();
-        setScrollY(lockScrollY);
-        locked = true;
-        pillarIndex = 0;
-        wheelAccum = 0;
-        activate(0);
-      }
-    };
-
-    let touchStartY = null;
+    /* ── Touch ─────────────────────────────────────────────────────────── */
     const onTouchStart = (e) => {
-      if (!locked || !e.touches || !e.touches[0]) return;
+      if (!e.touches?.[0]) return;
       touchStartY = e.touches[0].clientY;
+      if (locked) wheelAccum = 0;
     };
 
     const onTouchMove = (e) => {
-      if (!locked || touchStartY == null || !e.touches || !e.touches[0]) return;
-      const dy = touchStartY - e.touches[0].clientY;
-      if (Math.abs(dy) < 6) return;
-      e.preventDefault();
-      wheelAccum += dy * 1.2;
+      if (touchStartY == null || !e.touches?.[0]) return;
+      const rawDy = touchStartY - e.touches[0].clientY;
+      if (Math.abs(rawDy) < 5) return;
       touchStartY = e.touches[0].clientY;
 
-      if (wheelAccum > WHEEL_THRESHOLD) {
-        wheelAccum = 0;
-        if (pillarIndex < count - 1) {
-          pillarIndex += 1;
-          activate(pillarIndex);
-        } else {
-          locked = false;
-          activate(count - 1);
-          touchStartY = null;
-          scrollPastSectionDown();
-        }
-      } else if (wheelAccum < -WHEEL_THRESHOLD) {
-        wheelAccum = 0;
-        if (pillarIndex > 0) {
-          pillarIndex -= 1;
-          activate(pillarIndex);
-        } else {
-          locked = false;
-          touchStartY = null;
-          scrollPastSectionUp();
-        }
+      if (locked) {
+        e.preventDefault();
+        wheelAccum += rawDy * 1.4;
+        if (wheelAccum >= WHEEL_THRESHOLD) advancePillar(true);
+        else if (wheelAccum <= -WHEEL_THRESHOLD) advancePillar(false);
+        return;
       }
+      tryEnter(rawDy, () => e.preventDefault());
     };
 
     const onTouchEnd = () => {
       touchStartY = null;
+      if (!locked) wheelAccum = 0;
     };
 
+    /* ── Resize ────────────────────────────────────────────────────────── */
     const onResize = () => {
-      prevScrollY = getScrollY();
       if (locked) {
         lockScrollY = lockScrollYFromTrack();
         setScrollY(lockScrollY);
       }
     };
 
+    /* Sin listener 'scroll': elimina el loop scroll→setScrollY→scroll que causaba jitter */
     window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('scroll', onScrollUnified, { passive: true });
-    if (appContainer) {
-      appContainer.addEventListener('scroll', onScrollUnified, { passive: true });
-    }
-    window.addEventListener('resize', onResize, { passive: true });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
 
     this.pillarScrollCleanup = () => {
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('scroll', onScrollUnified);
-      if (appContainer) {
-        appContainer.removeEventListener('scroll', onScrollUnified);
-      }
-      window.removeEventListener('resize', onResize);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('resize', onResize);
+      if (suppressTimer) clearTimeout(suppressTimer);
     };
   }
 
