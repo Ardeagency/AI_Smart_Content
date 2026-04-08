@@ -3841,7 +3841,7 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Login: Rectangle 3 — relleno #000, trazo degradado 1.5px (Figma), blur, radio 20px */
+/* Login: Rectangle 3 — relleno #000; trazo: cónic + velo negro arriba (borde inferior a color) */
 .landing-header-login-btn {
     --landing-login-fill: #000000;
     box-sizing: border-box;
@@ -3852,8 +3852,14 @@ body.entrance-done .landing-header {
     padding: 0 10px;
     border: 1.5px solid transparent;
     border-radius: 20px;
-    background:
-        linear-gradient(var(--landing-login-fill), var(--landing-login-fill)) padding-box,
+    background-image:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.92) 0%,
+            rgba(0, 0, 0, 0.72) 32%,
+            rgba(0, 0, 0, 0.28) 48%,
+            rgba(0, 0, 0, 0) 64%
+        ),
         conic-gradient(
             from 45deg at 50% 50%,
             #ff6500 0deg,
@@ -3861,9 +3867,10 @@ body.entrance-done .landing-header {
             #2979ff 180deg,
             #00e7ff 270deg,
             #ff6500 360deg
-        ) border-box;
-    background-origin: padding-box, border-box;
-    background-clip: padding-box, border-box;
+        ),
+        linear-gradient(var(--landing-login-fill), var(--landing-login-fill));
+    background-origin: border-box, border-box, padding-box;
+    background-clip: border-box, border-box, padding-box;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     opacity: 1;
