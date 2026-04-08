@@ -3894,7 +3894,7 @@ body.entrance-done .landing-header {
 
 .landing-hero-left img {
     display: block;
-    width: clamp(200px, 39vw, 470px);
+    width: clamp(170px, 27vw, 320px);
     height: auto;
 }
 
@@ -3954,13 +3954,37 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero-left img {
-        width: min(62vw, 290px);
+        width: min(48vw, 220px);
     }
 
     .landing-hero-right {
         width: min(30vw, 140px);
         height: min(46vw, 210px);
     }
+}
+
+.landing-footer-bar {
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    background: #191919;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.landing-footer-bar-content {
+    width: min(1200px, calc(100% - 24px));
+    margin: 0 auto;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.landing-footer-bar-logo {
+    display: block;
+    width: auto;
+    height: 24px;
+    max-width: 220px;
 }
 
 
