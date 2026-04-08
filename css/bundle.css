@@ -4277,11 +4277,6 @@ body.entrance-done .landing-header {
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 6px rgba(200, 235, 255, 0.45));
 }
 
-.landing-threads__tip {
-    pointer-events: none;
-    filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.35));
-}
-
 .landing-threads__trunk-dash,
 .landing-threads__trunk-h {
     stroke-dasharray: 100;
@@ -4291,6 +4286,7 @@ body.entrance-done .landing-header {
     filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.48)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.14));
 }
 
+/* Sin pathLength (evita cortes en curvas); trazo >= longitud real del path */
 .landing-threads__curve {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
@@ -4314,18 +4310,19 @@ body.entrance-done .landing-header {
 
 .landing-threads__stack--overlay {
     position: absolute;
-    /* A partir del 34% no tapa el tronco (termina en x=34 del viewBox) */
-    left: 34%;
+    /* Tronco SVG ~0–34%; hilos hasta ~73%; burbujas desde ~76% con hueco respecto al fin del trazo */
+    left: 76%;
     right: 0;
     top: 0;
     bottom: 0;
     width: auto;
     margin: 0;
-    padding: 1% 3% 1% 1%;
+    padding: 1% max(3%, 0.75rem) 1% 0;
     list-style: none;
     display: grid;
     grid-template-rows: repeat(12, 1fr);
     align-items: center;
+    justify-items: start;
     pointer-events: none;
     z-index: 2;
 }
@@ -4334,8 +4331,9 @@ body.entrance-done .landing-header {
     --line-color: var(--warm-1);
     --delay: 0.55s;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
+    width: 100%;
     opacity: 0;
 }
 
@@ -4349,6 +4347,7 @@ body.entrance-done .landing-header {
     font-weight: 600;
     letter-spacing: 0.03em;
     white-space: nowrap;
+    text-align: left;
     color: #ffffff;
     border: 1.5px solid var(--line-color);
     background: #000000;
@@ -4403,19 +4402,6 @@ body.entrance-done .landing-header {
     animation-delay: 0.72s;
 }
 
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(15) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 0.98s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(16) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.03s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(17) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.08s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(18) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.13s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(19) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.18s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(20) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.23s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(21) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.28s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(22) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.33s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(23) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.38s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(24) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.43s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(25) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.48s; }
-.landing-threads--visible .landing-threads__svg > circle.landing-threads__tip:nth-child(26) { animation: landing-threads-tip-in 0.4s ease forwards; animation-delay: 1.53s; }
-
 .landing-threads--visible .landing-threads__curve {
     animation: landing-threads-curve-draw 1.1s cubic-bezier(0.18, 0.88, 0.2, 1) forwards;
 }
@@ -4463,15 +4449,6 @@ body.entrance-done .landing-header {
     }
 }
 
-@keyframes landing-threads-tip-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.95;
-    }
-}
-
 @keyframes landing-threads-trunk-draw {
     to {
         stroke-dashoffset: 0;
@@ -4510,7 +4487,6 @@ body.entrance-done .landing-header {
     .landing-threads__curve,
     .landing-threads__junction-field,
     .landing-threads__junction-core,
-    .landing-threads__tip,
     .landing-threads__stack--overlay .landing-threads__row,
     .landing-threads__bubble {
         animation: none !important;
@@ -4531,10 +4507,6 @@ body.entrance-done .landing-header {
         transform: none;
     }
 
-    .landing-threads--visible .landing-threads__tip {
-        opacity: 0.95;
-    }
-
     .landing-threads--visible .landing-threads__stack--overlay .landing-threads__row {
         opacity: 1;
     }
@@ -4553,15 +4525,15 @@ body.entrance-done .landing-header {
     }
 
     .landing-threads__stack--overlay {
-        left: 32%;
-        padding: 2% 2% 2% 1%;
+        left: 72%;
+        padding: 2% max(2%, 0.5rem) 2% 0;
     }
 
     .landing-threads__bubble {
         font-size: 0.68rem;
         padding: 0.34rem 0.52rem;
         white-space: normal;
-        text-align: center;
+        text-align: left;
         max-width: 10.5rem;
     }
 }
