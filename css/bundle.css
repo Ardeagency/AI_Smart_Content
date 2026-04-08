@@ -3760,14 +3760,6 @@ body.entrance-done .landing-header {
     overflow: hidden;
 }
 
-.landing-header-brand::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.30);
-    pointer-events: none;
-}
-
 .landing-header-logo {
     width: auto;
     height: 32px;
@@ -3858,6 +3850,15 @@ body.entrance-done .landing-header {
     background: url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113558/Fondos-08_wpaag0.jpg") center center / cover no-repeat;
 }
 
+.landing-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 1;
+}
+
 .landing-hero::after {
     content: "";
     position: absolute;
@@ -3868,12 +3869,12 @@ body.entrance-done .landing-header {
     min-height: 180px;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.64) 34%, rgba(0, 0, 0, 0) 100%);
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
 }
 
 .landing-hero-content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     width: min(900px, 100%);
     max-width: 900px;
     color: var(--color-white);
