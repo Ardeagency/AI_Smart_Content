@@ -15,6 +15,46 @@ class LandingView extends BaseView {
 
   async init() {
     this.initHeroWordsCarousel();
+    this.initValuePillarsNav();
+  }
+
+  /**
+   * Navegación de pilares: clic para alternar copy (el scroll-driven highlight llegará después).
+   */
+  initValuePillarsNav() {
+    const section = document.querySelector('.landing-pillars');
+    if (!section) return;
+
+    const buttons = section.querySelectorAll('.landing-pillars__nav-btn');
+    const panels = section.querySelectorAll('.landing-pillars__panel');
+    if (!buttons.length || !panels.length) return;
+
+    const activate = (index) => {
+      const i = Number.parseInt(String(index), 10);
+      if (Number.isNaN(i) || i < 0 || i >= panels.length) return;
+
+      buttons.forEach((btn, j) => {
+        const active = j === i;
+        btn.classList.toggle('is-active', active);
+        if (active) {
+          btn.setAttribute('aria-current', 'true');
+        } else {
+          btn.removeAttribute('aria-current');
+        }
+      });
+
+      panels.forEach((panel, j) => {
+        const active = j === i;
+        panel.classList.toggle('is-active', active);
+        panel.toggleAttribute('hidden', !active);
+      });
+    };
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activate(btn.dataset.pillar);
+      });
+    });
   }
 
   initHeroWordsCarousel() {

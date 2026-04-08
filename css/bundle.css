@@ -3963,6 +3963,132 @@ body.entrance-done .landing-header {
     }
 }
 
+/* Landing — value pillars (scroll-driven panels; nav + copy layout) */
+.landing-pillars {
+    position: relative;
+    z-index: 3;
+    background: #000000;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.landing-pillars__inner {
+    width: min(1120px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: clamp(3.5rem, 8vw, 6rem) 0;
+    display: grid;
+    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+}
+
+.landing-pillars__nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-pillars__nav-item + .landing-pillars__nav-item {
+    margin-top: 6px;
+}
+
+.landing-pillars__nav-btn {
+    display: block;
+    width: 100%;
+    padding: 14px 0 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+    line-height: 1.25;
+    color: rgba(255, 255, 255, 0.34);
+    font-weight: 500;
+    transition: color 0.25s ease, font-weight 0.2s ease;
+}
+
+.landing-pillars__nav-btn::before {
+    content: "\2198";
+    display: inline-block;
+    margin-right: 0.55em;
+    font-size: 0.78em;
+    vertical-align: 0.08em;
+    opacity: 0.55;
+    transition: opacity 0.2s ease;
+}
+
+.landing-pillars__nav-btn:hover {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.landing-pillars__nav-btn.is-active {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.landing-pillars__nav-btn.is-active::before {
+    content: "\2192";
+    opacity: 1;
+}
+
+.landing-pillars__nav-btn.is-active::after {
+    content: "";
+    display: block;
+    height: 2px;
+    width: 100%;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #6d28d9 0%, #ea580c 52%, #fbbf24 100%);
+}
+
+.landing-pillars__panels {
+    position: relative;
+    min-height: 12rem;
+}
+
+.landing-pillars__panel {
+    margin: 0;
+}
+
+.landing-pillars__panel-body {
+    max-width: 42rem;
+}
+
+.landing-pillars__panel-body p {
+    margin: 0 0 1rem;
+    font-size: clamp(0.95rem, 1.15vw, 1.0625rem);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.landing-pillars__panel-body p:first-child {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.landing-pillars__panel-body p:last-child {
+    margin-bottom: 0;
+}
+
+.landing-pillars__emphasis {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 768px) {
+    .landing-pillars__inner {
+        width: calc(100% - 32px);
+        grid-template-columns: 1fr;
+        padding: 2.75rem 0 3.25rem;
+        gap: 2rem;
+    }
+
+    .landing-pillars__nav-btn {
+        font-size: 1.05rem;
+        padding: 10px 0 12px;
+    }
+}
+
 /* Landing footer — multi-column layout (reference: product marketing footers) */
 .landing-footer {
     position: relative;
