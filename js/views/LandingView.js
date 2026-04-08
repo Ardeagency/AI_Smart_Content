@@ -87,8 +87,28 @@ class LandingView extends BaseView {
     let pillarIndex = 0;
     let wheelAccum = 0;
     let prevScrollY = getScrollY();
+    /** Evita re-enganchar al instante tras completar los pilares hacia abajo (bucle). */
+    let suppressPillarLock = false;
     const WHEEL_THRESHOLD = 88;
     const ENTER_ZONE_PX = 28;
+
+    const refreshSuppressPillarLock = () => {
+      if (!suppressPillarLock) return;
+      const tr = scrollTrack.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (tr.bottom < 0) {
+        suppressPillarLock = false;
+        return;
+      }
+      if (tr.top > vh - 24) {
+        suppressPillarLock = false;
+      }
+    };
+
+    const canEnterPillarLock = () => {
+      refreshSuppressPillarLock();
+      return !suppressPillarLock;
+    };
 
     const normalizeWheelDeltaY = (e) => {
       let dy = e.deltaY;
@@ -98,9 +118,10 @@ class LandingView extends BaseView {
     };
 
     const scrollPastSectionDown = () => {
+      suppressPillarLock = true;
       const vh = window.innerHeight;
       const tr = scrollTrack.getBoundingClientRect();
-      const delta = Math.max(160, tr.bottom - vh + 48);
+      const delta = Math.max(280, tr.bottom - vh + 120);
       setScrollY(getScrollY() + delta);
     };
 
@@ -111,6 +132,7 @@ class LandingView extends BaseView {
     };
 
     const tryEnterLock = (e) => {
+      if (!canEnterPillarLock()) return false;
       const trTop = scrollTrack.getBoundingClientRect().top;
       const st = stickyTopPx();
       if (
@@ -174,6 +196,7 @@ class LandingView extends BaseView {
       const y = getScrollY();
       const scrollingDown = y > prevScrollY + 1;
       prevScrollY = y;
+      if (!canEnterPillarLock()) return;
       const trTop = scrollTrack.getBoundingClientRect().top;
       const st = stickyTopPx();
       if (
@@ -252,9 +275,9 @@ class LandingView extends BaseView {
 
     this.pillarScrollCleanup = () => {
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('scroll', enforceLockPosition);
+      window.removeEventListener('scroll', onScrollUnified);
       if (appContainer) {
-        appContainer.removeEventListener('scroll', enforceLockPosition);
+        appContainer.removeEventListener('scroll', onScrollUnified);
       }
       window.removeEventListener('resize', onResize);
       window.removeEventListener('touchstart', onTouchStart);

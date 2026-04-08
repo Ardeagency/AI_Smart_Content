@@ -4195,6 +4195,14 @@ body.entrance-done .landing-header {
     }
 }
 
+/* Placeholder entre pilares y footer (pruebas de scroll) */
+.landing-after-pillars {
+    position: relative;
+    z-index: 2;
+    min-height: 70vh;
+    background: transparent;
+}
+
 /* Landing footer — multi-column layout (reference: product marketing footers) */
 .landing-footer {
     position: relative;
