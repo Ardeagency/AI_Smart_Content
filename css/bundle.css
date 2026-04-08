@@ -3764,7 +3764,7 @@ body.entrance-done .landing-header {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.30);
     pointer-events: none;
 }
 
@@ -3917,7 +3917,7 @@ body.entrance-done .landing-header {
     height: clamp(44px, 6vw, 68px);
     display: flex;
     align-items: center;
-    opacity: 0.6;
+    opacity: 0.47;
     transition: opacity 300ms ease, transform 300ms ease;
 }
 
