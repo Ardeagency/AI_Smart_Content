@@ -10,6 +10,7 @@ class LandingView extends BaseView {
     this.pillarScrollCleanup = null;
     this.threadsRevealCleanup = null;
     this.landingHeaderScrollCleanup = null;
+    this.whyCarouselCleanup = null;
   }
 
   async onEnter() {
@@ -21,6 +22,7 @@ class LandingView extends BaseView {
     this.initValuePillarsNav();
     this.initLandingThreadsReveal();
     this.initLandingHeaderScrollState();
+    this.initLandingWhyCarousel();
   }
 
   /**
@@ -462,6 +464,10 @@ class LandingView extends BaseView {
     if (typeof this.landingHeaderScrollCleanup === 'function') {
       this.landingHeaderScrollCleanup();
       this.landingHeaderScrollCleanup = null;
+    }
+    if (typeof this.whyCarouselCleanup === 'function') {
+      this.whyCarouselCleanup();
+      this.whyCarouselCleanup = null;
     }
   }
 }
