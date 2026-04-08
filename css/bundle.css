@@ -636,6 +636,11 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
+/* El hero deja ver palabras SVG alineadas; el overflow-x del contenedor las cortaba (p. ej. “ads”). */
+body.route-landing #app-container > main,
+body.route-landing #app-container > div {
+    overflow-x: visible;
+}
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }
 #app-container > main {
     padding: 0;
@@ -3995,6 +4000,8 @@ body.entrance-done .landing-header {
     width: 100%;
     flex: 1 1 auto;
     min-width: 0;
+    padding-left: clamp(8px, 1.2vw, 14px);
+    box-sizing: border-box;
     will-change: transform;
     transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
