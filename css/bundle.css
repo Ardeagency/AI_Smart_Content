@@ -3978,8 +3978,8 @@ body.entrance-done .landing-header {
     position: relative;
     z-index: 2;
     flex: 0 0 auto;
-    /* Ancho extra para palabras largas (images, videos, brand); antes ~220px cortaba bordes */
-    width: clamp(168px, 24vw, 270px);
+    /* Ancho generoso para palabras largas (images, videos, brand) sin tocar el borde */
+    width: clamp(196px, 29vw, 318px);
     min-width: 0;
     /* Más alto = menos recorte vertical del carrusel (speed/focus arriba y abajo) */
     height: clamp(272px, 38vw, 420px);
@@ -3989,6 +3989,8 @@ body.entrance-done .landing-header {
     align-items: stretch;
     isolation: isolate;
     box-sizing: border-box;
+    /* Reserva aire a la derecha del bloque (además del padding del track) */
+    padding-right: clamp(4px, 0.8vw, 10px);
 }
 
 .landing-hero-vertical-track {
@@ -3997,6 +3999,9 @@ body.entrance-done .landing-header {
     align-items: stretch;
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
+    /* Margen derecho explícito para que la última letra no roce overflow:hidden */
+    padding-right: clamp(6px, 1vw, 14px);
     gap: clamp(4px, 0.55vw, 8px);
     will-change: transform;
     transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -4052,8 +4057,13 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero-right {
-        width: min(46vw, 200px);
+        width: min(54vw, 230px);
         height: min(56vw, 260px);
+        padding-right: clamp(4px, 1.5vw, 10px);
+    }
+
+    .landing-hero-vertical-track {
+        padding-right: clamp(4px, 1.5vw, 12px);
     }
 
     .landing-hero-word-item {
