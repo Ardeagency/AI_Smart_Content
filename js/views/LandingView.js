@@ -113,6 +113,78 @@ class LandingView extends BaseView {
   }
 
   /**
+   * Carrusel "Por qué…": viewport con scroll-snap; prev/next y flechas en el teclado.
+   */
+  initLandingWhyCarousel() {
+    if (typeof this.whyCarouselCleanup === 'function') {
+      this.whyCarouselCleanup();
+      this.whyCarouselCleanup = null;
+    }
+
+    const viewport = document.getElementById('landing-why-viewport');
+    const prevBtn = document.getElementById('landing-why-prev');
+    const nextBtn = document.getElementById('landing-why-next');
+    const track = viewport?.querySelector('.landing-why__track');
+    const wraps = viewport ? viewport.querySelectorAll('.landing-why__card-wrap') : [];
+    if (!viewport || !prevBtn || !nextBtn || !track || wraps.length === 0) return;
+
+    const getStep = () => {
+      const first = wraps[0];
+      const gapRaw = window.getComputedStyle(track).gap || window.getComputedStyle(track).columnGap || '0';
+      const gap = Number.parseFloat(gapRaw) || 0;
+      return first.offsetWidth + gap;
+    };
+
+    const EDGE_PX = 3;
+
+    const updateButtons = () => {
+      const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      const x = viewport.scrollLeft;
+      prevBtn.disabled = x <= EDGE_PX;
+      nextBtn.disabled = x >= maxScroll - EDGE_PX;
+    };
+
+    const go = (direction) => {
+      viewport.scrollBy({ left: direction * getStep(), behavior: 'smooth' });
+    };
+
+    const onPrev = () => {
+      go(-1);
+    };
+    const onNext = () => {
+      go(1);
+    };
+
+    const onKeydown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onPrev();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onNext();
+      }
+    };
+
+    prevBtn.addEventListener('click', onPrev);
+    nextBtn.addEventListener('click', onNext);
+    viewport.addEventListener('scroll', updateButtons, { passive: true });
+    viewport.addEventListener('keydown', onKeydown);
+
+    const onResize = () => updateButtons();
+    window.addEventListener('resize', onResize, { passive: true });
+
+    updateButtons();
+
+    this.whyCarouselCleanup = () => {
+      prevBtn.removeEventListener('click', onPrev);
+      nextBtn.removeEventListener('click', onNext);
+      viewport.removeEventListener('scroll', updateButtons);
+      viewport.removeEventListener('keydown', onKeydown);
+      window.removeEventListener('resize', onResize);
+    };
+  }
+
+  /**
    * Pilares: al llegar a la sección el scroll principal se fija; la rueda/touch avanza
    * cada pilar; al completar el último (o subir desde el primero) se libera y sigue la página.
    */
