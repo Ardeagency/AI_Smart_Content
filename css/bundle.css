@@ -3755,6 +3755,17 @@ body.entrance-done .landing-header {
 .landing-header-brand {
     display: inline-flex;
     align-items: center;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.landing-header-brand::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    pointer-events: none;
 }
 
 .landing-header-logo {
@@ -3906,7 +3917,7 @@ body.entrance-done .landing-header {
     height: clamp(44px, 6vw, 68px);
     display: flex;
     align-items: center;
-    opacity: 0.8;
+    opacity: 0.6;
     transition: opacity 300ms ease, transform 300ms ease;
 }
 
