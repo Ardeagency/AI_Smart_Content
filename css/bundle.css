@@ -3841,7 +3841,7 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Login: relleno #000, trazo 1.5px negro arriba → blanco abajo, blur, radio 20px */
+/* Login: trazo 1.5px degradado vertical negro arriba → blanco abajo */
 .landing-header-login-btn {
     --landing-login-fill: #000000;
     position: relative;
@@ -3980,12 +3980,17 @@ body.entrance-done .landing-header {
     width: clamp(140px, 18vw, 220px);
     height: clamp(240px, 31vw, 360px);
     overflow: hidden;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .landing-hero-vertical-track {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: clamp(2px, 0.4vw, 6px);
+    width: 100%;
+    min-width: 0;
     will-change: transform;
     transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -4001,10 +4006,12 @@ body.entrance-done .landing-header {
 }
 
 .landing-hero-word-item img {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     height: 100%;
     object-fit: contain;
     object-position: left center;
+    display: block;
 }
 
 .landing-hero-word-item.is-active {
