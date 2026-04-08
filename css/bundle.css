@@ -3900,11 +3900,12 @@ body.entrance-done .landing-header {
     background: url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113558/Fondos-08_wpaag0.jpg") center center / cover no-repeat;
 }
 
+/* Capa sobre la imagen del hero (diseño Rectangle 4: rgba 0,0,0,0.6); inset 0 cubre todo el viewport */
 .landing-hero::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.6);
     pointer-events: none;
     z-index: 1;
 }
