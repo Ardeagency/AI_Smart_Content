@@ -3712,7 +3712,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     min-width: 100vw;
     opacity: 0;
     overflow: hidden;
-    background: linear-gradient(180deg, #000000 0%, #050505 72%, #191919 100%);
+    background: #000000;
 }
 
 /* Fondo de la landing: solo visible en ruta / (index.html) */
