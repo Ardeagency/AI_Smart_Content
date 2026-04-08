@@ -3958,12 +3958,14 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
+    gap: clamp(12px, 2.5vw, 28px);
     width: 100%;
 }
 
 .landing-hero-left {
     flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .landing-hero-left img {
@@ -3974,6 +3976,7 @@ body.entrance-done .landing-header {
 
 .landing-hero-right {
     position: relative;
+    z-index: 2;
     flex: 0 0 auto;
     width: clamp(140px, 18vw, 220px);
     min-width: 0;
@@ -3982,6 +3985,7 @@ body.entrance-done .landing-header {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    isolation: isolate;
 }
 
 .landing-hero-vertical-track {
@@ -4037,7 +4041,7 @@ body.entrance-done .landing-header {
 
     .landing-hero-lockup {
         align-items: flex-end;
-        gap: 0;
+        gap: clamp(8px, 2vw, 16px);
     }
 
     .landing-hero-left img {
