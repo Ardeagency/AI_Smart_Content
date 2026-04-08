@@ -3712,7 +3712,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     min-width: 100vw;
     opacity: 0;
     overflow: hidden;
-    background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg) center/cover no-repeat;
+    background: linear-gradient(180deg, #000000 0%, #050505 72%, #191919 100%);
 }
 
 /* Fondo de la landing: solo visible en ruta / (index.html) */
@@ -3724,13 +3724,6 @@ body:not(.route-landing) #landing-background-wrap {
 
 body.entrance-done.route-landing #landing-background-wrap {
     animation: landing-fade-in 0.5s ease-out forwards;
-}
-
-@media (max-width: 768px) {
-    .landing-background {
-        background-attachment: scroll;
-        background-position: center 25%;
-    }
 }
 
 /* Overlay quitado temporalmente; contenedor se mantiene para volver a ponerlo */
