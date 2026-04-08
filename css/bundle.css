@@ -3744,13 +3744,15 @@ body.entrance-done.route-landing #landing-background-wrap {
 .landing-header {
     position: fixed;
     top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 8px;
+    right: 8px;
     z-index: 999;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: min(1200px, calc(100% - 16px));
+    width: auto;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 6px 10px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 14px;
@@ -3822,7 +3824,9 @@ body.entrance-done .landing-header {
 @media (max-width: 768px) {
     .landing-header {
         top: 8px;
-        width: calc(100% - 12px);
+        left: 6px;
+        right: 6px;
+        width: auto;
         padding: 6px;
         gap: 6px;
         flex-wrap: wrap;
