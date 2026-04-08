@@ -3974,17 +3974,97 @@ body.entrance-done .landing-header {
 .landing-footer-bar-content {
     width: min(1200px, calc(100% - 24px));
     margin: 0 auto;
-    min-height: 56px;
+    min-height: 90px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
 }
 
 .landing-footer-bar-logo {
     display: block;
     width: auto;
+    height: 42px;
+    max-width: 360px;
+}
+
+.landing-footer-left {
+    flex: 0 0 auto;
+}
+
+.landing-footer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    margin-left: auto;
+    text-align: right;
+}
+
+.landing-footer-privacy-link,
+.landing-footer-signature,
+.landing-footer-contact-link {
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    transition: opacity 0.2s ease;
+}
+
+.landing-footer-privacy-link:hover,
+.landing-footer-signature:hover,
+.landing-footer-contact-link:hover {
+    opacity: 1;
+}
+
+.landing-footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.landing-footer-social-link {
+    width: 24px;
     height: 24px;
-    max-width: 220px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-footer-social-link:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.landing-footer-social-link i {
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .landing-footer-bar-content {
+        align-items: flex-start;
+        flex-direction: column;
+        min-height: 0;
+        padding: 12px 0;
+    }
+
+    .landing-footer-bar-logo {
+        height: 34px;
+    }
+
+    .landing-footer-right {
+        align-items: flex-start;
+        margin-left: 0;
+        text-align: left;
+    }
 }
 
 
