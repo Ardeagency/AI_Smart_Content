@@ -4314,9 +4314,9 @@ body.entrance-done .landing-header {
     color: var(--color-white);
     overflow: hidden;
     background:
-        radial-gradient(ellipse 120% 80% at 20% 30%, rgba(120, 90, 180, 0.07) 0%, transparent 45%),
-        radial-gradient(ellipse 90% 70% at 85% 75%, rgba(40, 120, 200, 0.06) 0%, transparent 42%),
-        radial-gradient(ellipse 55% 45% at 32% 52%, rgba(255, 255, 255, 0.045) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 85% at 72% 50%, rgba(50, 80, 220, 0.14) 0%, transparent 56%),
+        radial-gradient(ellipse 65% 55% at 90% 50%, rgba(90, 40, 200, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 42% 38% at 66% 50%, rgba(180, 210, 255, 0.07) 0%, transparent 55%),
         var(--bg-black, #030303);
 }
 
@@ -4347,14 +4347,14 @@ body.entrance-done .landing-header {
     height: min(720px, 92vh);
     background:
         radial-gradient(
-            ellipse 48% 42% at 34% 48%,
+            ellipse 48% 42% at 66% 48%,
             rgba(255, 255, 255, 0.11) 0%,
             rgba(255, 255, 255, 0.03) 38%,
             transparent 64%
         ),
         radial-gradient(
-            ellipse 28% 22% at 34% 50%,
-            rgba(200, 215, 255, 0.06) 0%,
+            ellipse 28% 22% at 66% 50%,
+            rgba(200, 215, 255, 0.07) 0%,
             transparent 70%
         );
     pointer-events: none;
@@ -4426,21 +4426,21 @@ body.entrance-done .landing-header {
 .landing-threads__svg .landing-threads__curve:nth-of-type(11) { filter: drop-shadow(0 0 3px rgba(191, 54, 12, 0.28)); }
 .landing-threads__svg .landing-threads__curve:nth-of-type(12) { filter: drop-shadow(0 0 3px rgba(0, 191, 165, 0.28)); }
 
+/* Burbujas en la IZQUIERDA: items~0–26%; fan converge hacia la derecha */
 .landing-threads__stack--overlay {
     position: absolute;
-    /* Tronco SVG ~0–34%; hilos hasta ~73%; burbujas desde ~76% con hueco respecto al fin del trazo */
-    left: 76%;
-    right: 0;
+    left: 0;
+    right: auto;
     top: 0;
     bottom: 0;
-    width: auto;
+    width: 26%;
     margin: 0;
-    padding: 1% max(3%, 0.75rem) 1% 0;
+    padding: 1% 0 1% max(1.5%, 0.5rem);
     list-style: none;
     display: grid;
     grid-template-rows: repeat(12, 1fr);
     align-items: center;
-    justify-items: start;
+    justify-items: end;
     pointer-events: none;
     z-index: 2;
 }
@@ -4450,11 +4450,11 @@ body.entrance-done .landing-header {
     --delay: 0.55s;
     --fan-deg: 0deg;
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
     width: 100%;
     opacity: 0;
-    transform-origin: left center;
+    transform-origin: right center;
 }
 
 .landing-threads__bubble {
@@ -4603,12 +4603,46 @@ body.entrance-done .landing-header {
 @keyframes landing-threads-bubble {
     from {
         opacity: 0;
-        transform: translateX(-8px) scale(0.94);
+        transform: translateX(-10px) scale(0.93);
     }
     to {
         opacity: 1;
         transform: translateX(0) scale(1);
     }
+}
+
+/* Nodo de convergencia — logo a la derecha */
+.landing-threads__node {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.landing-threads--visible .landing-threads__node {
+    animation: landing-threads-node-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 1.15s;
+}
+
+@keyframes landing-threads-node-in {
+    from { opacity: 0; transform: translateY(-50%) translateX(10px); }
+    to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.landing-threads__node-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 148px;
+    filter: brightness(1.05) drop-shadow(0 0 16px rgba(180, 210, 255, 0.35));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4617,7 +4651,8 @@ body.entrance-done .landing-header {
     .landing-threads__junction-field,
     .landing-threads__junction-core,
     .landing-threads__stack--overlay .landing-threads__row,
-    .landing-threads__bubble {
+    .landing-threads__bubble,
+    .landing-threads__node {
         animation: none !important;
     }
 
@@ -4644,6 +4679,11 @@ body.entrance-done .landing-header {
         opacity: 1;
         transform: none;
     }
+
+    .landing-threads--visible .landing-threads__node {
+        opacity: 1;
+        transform: translateY(-50%);
+    }
 }
 
 @media (max-width: 900px) {
@@ -4654,8 +4694,13 @@ body.entrance-done .landing-header {
     }
 
     .landing-threads__stack--overlay {
-        left: 72%;
-        padding: 2% max(2%, 0.5rem) 2% 0;
+        left: 0;
+        width: 28%;
+        padding: 2% 0 2% max(1.5%, 0.4rem);
+    }
+
+    .landing-threads__node {
+        width: 20%;
     }
 
     .landing-threads__bubble {

@@ -129,53 +129,61 @@
     </div>
 </section>
 
-<!-- Línea blanca horizontal → fragmentación en curvas de color → burbujas en columna (SVG) -->
+<!-- Burbujas izquierda → curvas de color → convergencia derecha (logo) -->
 <section class="landing-threads" id="landing-after-pillars" aria-label="Capacidades">
     <div class="landing-threads__inner">
         <div class="landing-threads__viz landing-threads__viz--column">
             <div class="landing-threads__fan">
                 <svg class="landing-threads__svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     <defs>
-                        <radialGradient id="lt-junction-radial" gradientUnits="userSpaceOnUse" cx="34" cy="50" r="11">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.42)"/>
-                            <stop offset="35%" stop-color="rgba(180, 220, 255, 0.14)"/>
-                            <stop offset="70%" stop-color="rgba(255,255,255,0.04)"/>
+                        <!-- Halo radial en el punto de convergencia (derecha) -->
+                        <radialGradient id="lt-junction-radial" gradientUnits="userSpaceOnUse" cx="66" cy="50" r="11">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.48)"/>
+                            <stop offset="30%" stop-color="rgba(200, 220, 255, 0.18)"/>
+                            <stop offset="65%" stop-color="rgba(255,255,255,0.05)"/>
                             <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
                         </radialGradient>
-                        <linearGradient id="lt-trunk-grad" gradientUnits="userSpaceOnUse" x1="4" y1="50" x2="34" y2="50">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.55)"/>
-                            <stop offset="45%" stop-color="rgba(255,255,255,0.95)"/>
-                            <stop offset="100%" stop-color="rgba(255,255,255,0.78)"/>
+                        <!-- Tronco va de la convergencia (66) hacia el nodo-logo (94) -->
+                        <linearGradient id="lt-trunk-grad" gradientUnits="userSpaceOnUse" x1="66" y1="50" x2="94" y2="50">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.95)"/>
+                            <stop offset="52%" stop-color="rgba(255,255,255,0.88)"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.42)"/>
                         </linearGradient>
-                        <linearGradient id="lt-stem-1" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="4.167"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ff3a60"/><stop offset="58%" stop-color="#ff1744"/><stop offset="100%" stop-color="#d11338"/></linearGradient>
-                        <linearGradient id="lt-stem-2" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="12.5"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ff7c26"/><stop offset="58%" stop-color="#ff6500"/><stop offset="100%" stop-color="#d15300"/></linearGradient>
-                        <linearGradient id="lt-stem-3" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="20.833"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ffe926"/><stop offset="58%" stop-color="#ffe500"/><stop offset="100%" stop-color="#d1bc00"/></linearGradient>
-                        <linearGradient id="lt-stem-4" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="29.167"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ceea2f"/><stop offset="58%" stop-color="#c5e60a"/><stop offset="100%" stop-color="#a2bd08"/></linearGradient>
-                        <linearGradient id="lt-stem-5" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="37.5"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#26dc37"/><stop offset="58%" stop-color="#00d614"/><stop offset="100%" stop-color="#00af10"/></linearGradient>
-                        <linearGradient id="lt-stem-6" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="45.833"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#26ebff"/><stop offset="58%" stop-color="#00e7ff"/><stop offset="100%" stop-color="#00bdd1"/></linearGradient>
-                        <linearGradient id="lt-stem-7" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="54.167"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#498dff"/><stop offset="58%" stop-color="#2979ff"/><stop offset="100%" stop-color="#2263d1"/></linearGradient>
-                        <linearGradient id="lt-stem-8" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="62.5"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#7426ed"/><stop offset="58%" stop-color="#5b00ea"/><stop offset="100%" stop-color="#4b00c0"/></linearGradient>
-                        <linearGradient id="lt-stem-9" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="70.833"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#db26fa"/><stop offset="58%" stop-color="#d500f9"/><stop offset="100%" stop-color="#af00cc"/></linearGradient>
-                        <linearGradient id="lt-stem-10" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="79.167"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#ed26c2"/><stop offset="58%" stop-color="#ea00b7"/><stop offset="100%" stop-color="#c00096"/></linearGradient>
-                        <linearGradient id="lt-stem-11" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="87.5"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#c95430"/><stop offset="58%" stop-color="#bf360c"/><stop offset="100%" stop-color="#9d2c0a"/></linearGradient>
-                        <linearGradient id="lt-stem-12" gradientUnits="userSpaceOnUse" x1="34" y1="50" x2="73" y2="95.833"><stop offset="0%" stop-color="#ffffff"/><stop offset="24%" stop-color="#26c9b3"/><stop offset="58%" stop-color="#00bfa5"/><stop offset="100%" stop-color="#009d87"/></linearGradient>
+                        <!-- Gradientes de hilos: COLOR en la izquierda → BLANCO en convergencia -->
+                        <linearGradient id="lt-stem-1"  gradientUnits="userSpaceOnUse" x1="27" y1="4.167"  x2="66" y2="50"><stop offset="0%" stop-color="#d11338"/><stop offset="32%" stop-color="#ff1744"/><stop offset="72%" stop-color="#ff3a60"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-2"  gradientUnits="userSpaceOnUse" x1="27" y1="12.5"   x2="66" y2="50"><stop offset="0%" stop-color="#d15300"/><stop offset="32%" stop-color="#ff6500"/><stop offset="72%" stop-color="#ff7c26"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-3"  gradientUnits="userSpaceOnUse" x1="27" y1="20.833" x2="66" y2="50"><stop offset="0%" stop-color="#d1bc00"/><stop offset="32%" stop-color="#ffe500"/><stop offset="72%" stop-color="#ffe926"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-4"  gradientUnits="userSpaceOnUse" x1="27" y1="29.167" x2="66" y2="50"><stop offset="0%" stop-color="#a2bd08"/><stop offset="32%" stop-color="#c5e60a"/><stop offset="72%" stop-color="#ceea2f"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-5"  gradientUnits="userSpaceOnUse" x1="27" y1="37.5"   x2="66" y2="50"><stop offset="0%" stop-color="#00af10"/><stop offset="32%" stop-color="#00d614"/><stop offset="72%" stop-color="#26dc37"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-6"  gradientUnits="userSpaceOnUse" x1="27" y1="45.833" x2="66" y2="50"><stop offset="0%" stop-color="#00bdd1"/><stop offset="32%" stop-color="#00e7ff"/><stop offset="72%" stop-color="#26ebff"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-7"  gradientUnits="userSpaceOnUse" x1="27" y1="54.167" x2="66" y2="50"><stop offset="0%" stop-color="#2263d1"/><stop offset="32%" stop-color="#2979ff"/><stop offset="72%" stop-color="#498dff"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-8"  gradientUnits="userSpaceOnUse" x1="27" y1="62.5"   x2="66" y2="50"><stop offset="0%" stop-color="#4b00c0"/><stop offset="32%" stop-color="#5b00ea"/><stop offset="72%" stop-color="#7426ed"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-9"  gradientUnits="userSpaceOnUse" x1="27" y1="70.833" x2="66" y2="50"><stop offset="0%" stop-color="#af00cc"/><stop offset="32%" stop-color="#d500f9"/><stop offset="72%" stop-color="#db26fa"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-10" gradientUnits="userSpaceOnUse" x1="27" y1="79.167" x2="66" y2="50"><stop offset="0%" stop-color="#c00096"/><stop offset="32%" stop-color="#ea00b7"/><stop offset="72%" stop-color="#ed26c2"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-11" gradientUnits="userSpaceOnUse" x1="27" y1="87.5"   x2="66" y2="50"><stop offset="0%" stop-color="#9d2c0a"/><stop offset="32%" stop-color="#bf360c"/><stop offset="72%" stop-color="#c95430"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
+                        <linearGradient id="lt-stem-12" gradientUnits="userSpaceOnUse" x1="27" y1="95.833" x2="66" y2="50"><stop offset="0%" stop-color="#009d87"/><stop offset="32%" stop-color="#00bfa5"/><stop offset="72%" stop-color="#26c9b3"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
                     </defs>
-                    <circle class="landing-threads__junction-field" cx="34" cy="50" r="10.5" fill="url(#lt-junction-radial)" opacity="0"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-1)" d="M 34 50 C 40 50, 51.2 30.75, 73 4.167"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-2)" d="M 34 50 C 40 50, 51.5 34.25, 73 12.5"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-3)" d="M 34 50 C 40 50, 51.8 37.75, 73 20.833"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-4)" d="M 34 50 C 40 50, 52.1 41.25, 73 29.167"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-5)" d="M 34 50 C 40 50, 52.4 44.75, 73 37.5"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-6)" d="M 34 50 C 40 50, 52.7 48.25, 73 45.833"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-7)" d="M 34 50 C 40 50, 53 51.75, 73 54.167"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-8)" d="M 34 50 C 40 50, 53.3 55.25, 73 62.5"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-9)" d="M 34 50 C 40 50, 53.6 58.75, 73 70.833"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-10)" d="M 34 50 C 40 50, 53.9 62.25, 73 79.167"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-11)" d="M 34 50 C 40 50, 54.2 65.75, 73 87.5"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-12)" d="M 34 50 C 40 50, 54.5 69.25, 73 95.833"/>
-                    <path class="landing-threads__trunk-h" fill="none" d="M 4 50 L 34 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
-                    <circle class="landing-threads__junction-core" cx="34" cy="50" r="0.52" fill="#ffffff" opacity="0"/>
+                    <!-- Halo de convergencia (derecha) -->
+                    <circle class="landing-threads__junction-field" cx="66" cy="50" r="10.5" fill="url(#lt-junction-radial)" opacity="0"/>
+                    <!-- 12 curvas: desde (27, y_i) hacia la convergencia (66, 50) -->
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-1)"  d="M 27 4.167  C 44 4.167,  56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-2)"  d="M 27 12.5   C 44 12.5,   56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-3)"  d="M 27 20.833 C 44 20.833, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-4)"  d="M 27 29.167 C 44 29.167, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-5)"  d="M 27 37.5   C 44 37.5,   56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-6)"  d="M 27 45.833 C 44 45.833, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-7)"  d="M 27 54.167 C 44 54.167, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-8)"  d="M 27 62.5   C 44 62.5,   56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-9)"  d="M 27 70.833 C 44 70.833, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-10)" d="M 27 79.167 C 44 79.167, 56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-11)" d="M 27 87.5   C 44 87.5,   56 50, 66 50"/>
+                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-12)" d="M 27 95.833 C 44 95.833, 56 50, 66 50"/>
+                    <!-- Tronco: de la convergencia al nodo-logo -->
+                    <path class="landing-threads__trunk-h" fill="none" d="M 66 50 L 94 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
+                    <!-- Núcleo brillante en convergencia -->
+                    <circle class="landing-threads__junction-core" cx="66" cy="50" r="0.52" fill="#ffffff" opacity="0"/>
                 </svg>
+                <!-- Burbujas de capacidades — izquierda -->
                 <ul class="landing-threads__stack landing-threads__stack--overlay">
                     <li class="landing-threads__row"><span class="landing-threads__bubble">fotografía</span></li>
                     <li class="landing-threads__row"><span class="landing-threads__bubble">scraping</span></li>
@@ -190,6 +198,10 @@
                     <li class="landing-threads__row"><span class="landing-threads__bubble">competencia</span></li>
                     <li class="landing-threads__row"><span class="landing-threads__bubble">campañas</span></li>
                 </ul>
+                <!-- Nodo de convergencia — logo derecha -->
+                <div class="landing-threads__node" aria-hidden="true">
+                    <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="" class="landing-threads__node-logo">
+                </div>
             </div>
         </div>
     </div>
