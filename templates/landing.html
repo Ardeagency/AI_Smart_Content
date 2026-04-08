@@ -182,9 +182,8 @@
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-10)" d="M 34 50 C 40 50, 53.9 62.25, 73 79.167"/>
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-11)" d="M 34 50 C 40 50, 54.2 65.75, 73 87.5"/>
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-12)" d="M 34 50 C 40 50, 54.5 69.25, 73 95.833"/>
-                    <!-- Entrada discontinua + tramo sólido al nodo (ref. imagen 2) -->
-                    <path class="landing-threads__trunk-dash" pathLength="100" fill="none" d="M 4 50 L 10.5 50 M 13.5 50 L 20.5 50 M 23.5 50 L 29.5 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
-                    <path class="landing-threads__trunk-h" pathLength="100" fill="none" d="M 29.5 50 L 34 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
+                    <!-- Tronco único continuo (sin dash ni subtrazos = sin cortes) -->
+                    <path class="landing-threads__trunk-h" fill="none" d="M 4 50 L 34 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
                     <!-- Núcleo brillante del nodo -->
                     <circle class="landing-threads__junction-core" cx="34" cy="50" r="0.52" fill="#ffffff" opacity="0"/>
                 </svg>

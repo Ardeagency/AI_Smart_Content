@@ -4259,8 +4259,7 @@ body.entrance-done .landing-header {
     pointer-events: none;
 }
 
-/* Grosor estable en px; tronco ~1.5× los hilos */
-.landing-threads__svg .landing-threads__trunk-dash,
+/* Grosor estable en px; tronco ~1.35× los hilos */
 .landing-threads__svg .landing-threads__trunk-h,
 .landing-threads__svg .landing-threads__curve {
     vector-effect: non-scaling-stroke;
@@ -4277,21 +4276,16 @@ body.entrance-done .landing-header {
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 6px rgba(200, 235, 255, 0.45));
 }
 
-.landing-threads__trunk-dash,
+/* Sin stroke-dash: el patrón dash/gap es lo que generaba tramos “en secuencia” */
 .landing-threads__trunk-h {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    opacity: 1;
-    stroke-width: 0.95px;
+    opacity: 0;
+    stroke-width: 1.35px;
     filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.48)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.14));
 }
 
-/* Sin pathLength (evita cortes en curvas); trazo >= longitud real del path */
 .landing-threads__curve {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    opacity: 1;
-    stroke-width: 0.65px;
+    opacity: 0;
+    stroke-width: 1.05px;
 }
 
 /* Halo muy suave por hilo (energía sin ensanchar el trazo) */
@@ -4330,11 +4324,13 @@ body.entrance-done .landing-header {
 .landing-threads__stack--overlay .landing-threads__row {
     --line-color: var(--warm-1);
     --delay: 0.55s;
+    --fan-deg: 0deg;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     width: 100%;
     opacity: 0;
+    transform-origin: left center;
 }
 
 .landing-threads__bubble {
@@ -4370,31 +4366,27 @@ body.entrance-done .landing-header {
     }
 }
 
-.landing-threads__row:nth-child(1) { --line-color: #ff1744; --delay: 0.58s; }
-.landing-threads__row:nth-child(2) { --line-color: #ff6500; --delay: 0.63s; }
-.landing-threads__row:nth-child(3) { --line-color: #ffe500; --delay: 0.68s; }
-.landing-threads__row:nth-child(4) { --line-color: #c5e60a; --delay: 0.73s; }
-.landing-threads__row:nth-child(5) { --line-color: #00d614; --delay: 0.78s; }
-.landing-threads__row:nth-child(6) { --line-color: #00e7ff; --delay: 0.83s; }
-.landing-threads__row:nth-child(7) { --line-color: #2979ff; --delay: 0.88s; }
-.landing-threads__row:nth-child(8) { --line-color: #5b00ea; --delay: 0.93s; }
-.landing-threads__row:nth-child(9) { --line-color: #d500f9; --delay: 0.98s; }
-.landing-threads__row:nth-child(10) { --line-color: #ea00b7; --delay: 1.03s; }
-.landing-threads__row:nth-child(11) { --line-color: #bf360c; --delay: 1.08s; }
-.landing-threads__row:nth-child(12) { --line-color: #00bfa5; --delay: 1.13s; }
+.landing-threads__row:nth-child(1) { --line-color: #ff1744; --delay: 0.58s; --fan-deg: -1deg; }
+.landing-threads__row:nth-child(2) { --line-color: #ff6500; --delay: 0.63s; --fan-deg: -0.82deg; }
+.landing-threads__row:nth-child(3) { --line-color: #ffe500; --delay: 0.68s; --fan-deg: -0.64deg; }
+.landing-threads__row:nth-child(4) { --line-color: #c5e60a; --delay: 0.73s; --fan-deg: -0.45deg; }
+.landing-threads__row:nth-child(5) { --line-color: #00d614; --delay: 0.78s; --fan-deg: -0.25deg; }
+.landing-threads__row:nth-child(6) { --line-color: #00e7ff; --delay: 0.83s; --fan-deg: -0.08deg; }
+.landing-threads__row:nth-child(7) { --line-color: #2979ff; --delay: 0.88s; --fan-deg: 0.08deg; }
+.landing-threads__row:nth-child(8) { --line-color: #5b00ea; --delay: 0.93s; --fan-deg: 0.25deg; }
+.landing-threads__row:nth-child(9) { --line-color: #d500f9; --delay: 0.98s; --fan-deg: 0.45deg; }
+.landing-threads__row:nth-child(10) { --line-color: #ea00b7; --delay: 1.03s; --fan-deg: 0.64deg; }
+.landing-threads__row:nth-child(11) { --line-color: #bf360c; --delay: 1.08s; --fan-deg: 0.82deg; }
+.landing-threads__row:nth-child(12) { --line-color: #00bfa5; --delay: 1.13s; --fan-deg: 1deg; }
 
 .landing-threads--visible .landing-threads__junction-field {
     animation: landing-threads-junction-field 1.05s ease forwards;
     animation-delay: 0.12s;
 }
 
-.landing-threads--visible .landing-threads__trunk-dash,
 .landing-threads--visible .landing-threads__trunk-h {
-    animation: landing-threads-trunk-draw 0.88s cubic-bezier(0.2, 0.85, 0.28, 1) forwards;
-}
-
-.landing-threads--visible .landing-threads__trunk-h {
-    animation-delay: 0.22s;
+    animation: landing-threads-trunk-fade 0.55s ease forwards;
+    animation-delay: 0.08s;
 }
 
 .landing-threads--visible .landing-threads__junction-core {
@@ -4403,7 +4395,7 @@ body.entrance-done .landing-header {
 }
 
 .landing-threads--visible .landing-threads__curve {
-    animation: landing-threads-curve-draw 1.1s cubic-bezier(0.18, 0.88, 0.2, 1) forwards;
+    animation: landing-threads-curve-fade 0.85s ease forwards;
 }
 
 .landing-threads--visible .landing-threads__svg > path:nth-of-type(1) { animation-delay: 0.34s; }
@@ -4422,6 +4414,7 @@ body.entrance-done .landing-header {
 .landing-threads--visible .landing-threads__stack--overlay .landing-threads__row {
     animation: landing-threads-row-in 0.35s ease forwards;
     animation-delay: var(--delay);
+    transform: rotate(var(--fan-deg));
 }
 
 .landing-threads--visible .landing-threads__bubble {
@@ -4449,15 +4442,21 @@ body.entrance-done .landing-header {
     }
 }
 
-@keyframes landing-threads-trunk-draw {
+@keyframes landing-threads-trunk-fade {
+    from {
+        opacity: 0;
+    }
     to {
-        stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
-@keyframes landing-threads-curve-draw {
+@keyframes landing-threads-curve-fade {
+    from {
+        opacity: 0;
+    }
     to {
-        stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
@@ -4482,7 +4481,6 @@ body.entrance-done .landing-header {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .landing-threads__trunk-dash,
     .landing-threads__trunk-h,
     .landing-threads__curve,
     .landing-threads__junction-field,
@@ -4492,10 +4490,9 @@ body.entrance-done .landing-header {
         animation: none !important;
     }
 
-    .landing-threads--visible .landing-threads__trunk-dash,
     .landing-threads--visible .landing-threads__trunk-h,
     .landing-threads--visible .landing-threads__curve {
-        stroke-dashoffset: 0;
+        opacity: 1;
     }
 
     .landing-threads--visible .landing-threads__junction-field {
@@ -4509,6 +4506,7 @@ body.entrance-done .landing-header {
 
     .landing-threads--visible .landing-threads__stack--overlay .landing-threads__row {
         opacity: 1;
+        transform: rotate(var(--fan-deg));
     }
 
     .landing-threads--visible .landing-threads__bubble {
