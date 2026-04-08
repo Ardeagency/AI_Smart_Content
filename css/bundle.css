@@ -3963,46 +3963,45 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Landing — value pillars (encapsulated sticky block + scroll-driven index) */
+/* Landing — value pillars: scroll-scope + sticky block + carrusel vertical a la derecha */
 .landing-pillars {
     position: relative;
     z-index: 3;
     background: #000000;
     color: rgba(255, 255, 255, 0.92);
+    --pillar-carousel-h: min(72vh, 640px);
 }
 
-/* ~4 viewports of scroll while the shell stays pinned */
-.landing-pillars__track {
-    min-height: 400vh;
+.landing-pillars__scroll-scope {
     position: relative;
+    height: 400vh;
 }
 
-.landing-pillars__shell {
+.landing-pillars__sticky-wrap {
     position: sticky;
     top: 0;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: clamp(1rem, 4vh, 2rem) 0;
     box-sizing: border-box;
-    padding: clamp(1.25rem, 4vw, 2.5rem);
 }
 
 .landing-pillars__layout {
-    width: min(1040px, calc(100vw - 32px));
+    width: min(1120px, calc(100% - 48px));
     margin: 0 auto;
-    padding: clamp(1.75rem, 3vw, 2.75rem) clamp(1.25rem, 2.5vw, 2rem);
+    padding: 0;
     display: grid;
-    grid-template-columns: minmax(200px, 320px) minmax(0, 1fr);
-    gap: clamp(1.5rem, 4vw, 3.5rem);
+    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
     align-items: center;
-    justify-items: stretch;
-    background: rgba(12, 12, 12, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+}
+
+.landing-pillars__nav-sticky {
+    position: relative;
+    top: auto;
+    align-self: start;
 }
 
 .landing-pillars__nav-list {
@@ -4055,11 +4054,6 @@ body.entrance-done .landing-header {
     object-fit: contain;
 }
 
-/* Inactivos: misma flecha base leída como “<” (espejo) frente al activo “>” */
-.landing-pillars__nav-btn:not(.is-active) .landing-pillars__nav-arrow--idle {
-    transform: translateY(-50%) scaleX(-1);
-}
-
 .landing-pillars__nav-arrow--idle {
     width: 24px;
     max-height: 24px;
@@ -4101,27 +4095,33 @@ body.entrance-done .landing-header {
     background: linear-gradient(90deg, #6d28d9 0%, #ea580c 52%, #fbbf24 100%);
 }
 
-.landing-pillars__copy {
-    position: relative;
+.landing-pillars__carousel {
     min-width: 0;
-    min-height: min(52vh, 520px);
+    width: 100%;
 }
 
-.landing-pillars__copy .landing-pillars__panel {
+.landing-pillars__carousel-viewport {
+    height: var(--pillar-carousel-h);
+    overflow: hidden;
+    position: relative;
+}
+
+.landing-pillars__carousel-track {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-pillars__carousel-slide {
+    flex: 0 0 var(--pillar-carousel-h);
+    height: var(--pillar-carousel-h);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     margin: 0;
-}
-
-.landing-pillars__copy .landing-pillars__panel.is-active {
-    animation: landing-pillar-fade 0.4s ease-out;
-}
-
-@keyframes landing-pillar-fade {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    padding: 0;
 }
 
 .landing-pillars__panel-body {
@@ -4150,29 +4150,23 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 768px) {
-    .landing-pillars__shell {
-        padding: 1rem;
-        align-items: flex-start;
+    .landing-pillars {
+        --pillar-carousel-h: min(58vh, 520px);
+    }
+
+    .landing-pillars__scroll-scope {
+        height: 380vh;
     }
 
     .landing-pillars__layout {
-        width: 100%;
+        width: calc(100% - 32px);
         grid-template-columns: 1fr;
         gap: 1.5rem;
-        padding: 1.35rem 1.1rem;
     }
 
     .landing-pillars__nav-btn {
         font-size: 1.05rem;
         padding: 10px 0 12px;
-    }
-
-    .landing-pillars__copy {
-        min-height: 0;
-    }
-
-    .landing-pillars__track {
-        min-height: 380vh;
     }
 }
 

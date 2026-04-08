@@ -20,8 +20,8 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pilares: bloque encapsulado sticky; el scroll dentro del track (~4× viewport) avanza el índice
-   * (título activo con flecha > + descripción a la derecha; el resto con flecha <).
+   * Pilares: bloque encapsulado con scroll largo; títulos a la izquierda, carrusel vertical de textos a la derecha.
+   * El avance del carrusel y el estado activo de la nave van ligados al progreso del scroll dentro de la sección.
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -30,23 +30,33 @@ class LandingView extends BaseView {
     }
 
     const section = document.querySelector('.landing-pillars');
-    if (!section) return;
+    const scrollScope = section?.querySelector('.landing-pillars__scroll-scope');
+    const carouselTrack = section?.querySelector('.landing-pillars__carousel-track');
+    const slides = section?.querySelectorAll('.landing-pillars__carousel-slide');
+    const indicators = section?.querySelectorAll('.landing-pillars__nav-btn');
+    if (!section || !scrollScope || !carouselTrack || !slides?.length || !indicators?.length) return;
 
-    const track = section.querySelector('.landing-pillars__track');
-    const indicators = section.querySelectorAll('.landing-pillars__nav-btn');
-    const panels = section.querySelectorAll('.landing-pillars__copy .landing-pillars__panel');
-    if (!track || !indicators.length || !panels.length) return;
+    const slideCount = slides.length;
 
-    let lastIndex = -1;
+    const updateFromScroll = () => {
+      const scopeRect = scrollScope.getBoundingClientRect();
+      const scopeTop = scopeRect.top + window.scrollY;
+      const scopeHeight = scrollScope.offsetHeight;
+      const vh = window.innerHeight;
+      const scrollY = window.scrollY;
+      const start = scopeTop;
+      const end = scopeTop + scopeHeight - vh;
+      const range = Math.max(1, end - start);
+      let t = (scrollY - start) / range;
+      t = Math.max(0, Math.min(1, t));
 
-    const activate = (index) => {
-      const i = Number.parseInt(String(index), 10);
-      if (Number.isNaN(i) || i < 0 || i >= indicators.length) return;
-      if (i === lastIndex) return;
-      lastIndex = i;
+      const idx = Math.min(slideCount - 1, Math.floor(t * slideCount + 1e-9));
+
+      const slideH = slides[0].offsetHeight;
+      carouselTrack.style.transform = `translate3d(0, -${idx * slideH}px, 0)`;
 
       indicators.forEach((el, j) => {
-        const active = j === i;
+        const active = j === idx;
         el.classList.toggle('is-active', active);
         if (active) {
           el.setAttribute('aria-current', 'true');
@@ -54,39 +64,25 @@ class LandingView extends BaseView {
           el.removeAttribute('aria-current');
         }
       });
-
-      panels.forEach((panel, j) => {
-        const active = j === i;
-        panel.classList.toggle('is-active', active);
-        panel.toggleAttribute('hidden', !active);
-      });
     };
 
     let ticking = false;
-    const updateFromScroll = () => {
+    const onScrollOrResize = () => {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
         ticking = false;
-        const h = window.innerHeight || 1;
-        const rect = track.getBoundingClientRect();
-        if (rect.bottom <= 0 || rect.top >= h) {
-          return;
-        }
-
-        const scrolledPast = Math.max(0, -rect.top);
-        let idx = Math.min(3, Math.max(0, Math.floor(scrolledPast / h + 0.18)));
-        activate(idx);
+        updateFromScroll();
       });
     };
 
-    window.addEventListener('scroll', updateFromScroll, { passive: true });
-    window.addEventListener('resize', updateFromScroll, { passive: true });
-    updateFromScroll();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    onScrollOrResize();
 
     this.pillarScrollCleanup = () => {
-      window.removeEventListener('scroll', updateFromScroll);
-      window.removeEventListener('resize', updateFromScroll);
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
     };
   }
 

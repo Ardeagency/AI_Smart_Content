@@ -37,51 +37,56 @@
 
 <section class="landing-pillars" id="value-pillars" aria-labelledby="value-pillars-heading">
     <h2 id="value-pillars-heading" class="sr-only">How AISmartContent works</h2>
-    <div class="landing-pillars__track">
-        <div class="landing-pillars__shell">
+    <!-- Altura de scroll (~4 pantallas): el interior queda sticky; el carrusel de la derecha avanza con el scroll -->
+    <div class="landing-pillars__scroll-scope">
+        <div class="landing-pillars__sticky-wrap">
             <div class="landing-pillars__layout">
-                <nav class="landing-pillars__nav" aria-label="Value pillars">
-                    <ul class="landing-pillars__nav-list">
-                        <li class="landing-pillars__nav-item">
-                            <div class="landing-pillars__nav-btn is-active" data-pillar="0" aria-current="true">
-                                <span class="landing-pillars__nav-arrows" aria-hidden="true">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
-                                </span>
-                                <span class="landing-pillars__nav-label">Muévete antes</span>
-                            </div>
-                        </li>
-                        <li class="landing-pillars__nav-item">
-                            <div class="landing-pillars__nav-btn" data-pillar="1">
-                                <span class="landing-pillars__nav-arrows" aria-hidden="true">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
-                                </span>
-                                <span class="landing-pillars__nav-label">Decide mejor</span>
-                            </div>
-                        </li>
-                        <li class="landing-pillars__nav-item">
-                            <div class="landing-pillars__nav-btn" data-pillar="2">
-                                <span class="landing-pillars__nav-arrows" aria-hidden="true">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
-                                </span>
-                                <span class="landing-pillars__nav-label">Ejecuta en minutos</span>
-                            </div>
-                        </li>
-                        <li class="landing-pillars__nav-item">
-                            <div class="landing-pillars__nav-btn" data-pillar="3">
-                                <span class="landing-pillars__nav-arrows" aria-hidden="true">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
-                                    <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
-                                </span>
-                                <span class="landing-pillars__nav-label">Crece más rápido</span>
-                            </div>
-                        </li>
-                    </ul>
-                </nav>
-                <div class="landing-pillars__copy">
-                    <article class="landing-pillars__panel is-active" id="landing-pillar-panel-0" data-pillar="0" aria-labelledby="pillar-title-0">
+        <nav class="landing-pillars__nav" aria-label="Value pillars">
+            <div class="landing-pillars__nav-sticky">
+                <ul class="landing-pillars__nav-list">
+                    <li class="landing-pillars__nav-item">
+                        <div class="landing-pillars__nav-btn is-active" data-pillar="0" aria-current="true">
+                            <span class="landing-pillars__nav-arrows" aria-hidden="true">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
+                            </span>
+                            <span class="landing-pillars__nav-label">Muévete antes</span>
+                        </div>
+                    </li>
+                    <li class="landing-pillars__nav-item">
+                        <div class="landing-pillars__nav-btn" data-pillar="1">
+                            <span class="landing-pillars__nav-arrows" aria-hidden="true">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
+                            </span>
+                            <span class="landing-pillars__nav-label">Decide mejor</span>
+                        </div>
+                    </li>
+                    <li class="landing-pillars__nav-item">
+                        <div class="landing-pillars__nav-btn" data-pillar="2">
+                            <span class="landing-pillars__nav-arrows" aria-hidden="true">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
+                            </span>
+                            <span class="landing-pillars__nav-label">Ejecuta en minutos</span>
+                        </div>
+                    </li>
+                    <li class="landing-pillars__nav-item">
+                        <div class="landing-pillars__nav-btn" data-pillar="3">
+                            <span class="landing-pillars__nav-arrows" aria-hidden="true">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--idle" src="/recursos/icons/Flecha%20landing%201%20-%20seccion%202.svg" width="24" height="24" alt="">
+                                <img class="landing-pillars__nav-arrow landing-pillars__nav-arrow--active" src="/recursos/icons/Flecha%20landing%202%20-%20seccion%202.svg" width="32" height="32" alt="">
+                            </span>
+                            <span class="landing-pillars__nav-label">Crece más rápido</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="landing-pillars__carousel" aria-live="polite">
+            <div class="landing-pillars__carousel-viewport">
+                <div class="landing-pillars__carousel-track">
+                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-0" data-pillar="0" aria-labelledby="pillar-title-0">
                         <h3 id="pillar-title-0" class="landing-pillars__panel-title sr-only">Muévete antes</h3>
                         <div class="landing-pillars__panel-body">
                             <p>El mercado cambia en tiempo real.</p>
@@ -92,7 +97,7 @@
                             <p class="landing-pillars__emphasis">Te adelantas.</p>
                         </div>
                     </article>
-                    <article class="landing-pillars__panel" id="landing-pillar-panel-1" data-pillar="1" aria-labelledby="pillar-title-1" hidden>
+                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-1" data-pillar="1" aria-labelledby="pillar-title-1">
                         <h3 id="pillar-title-1" class="landing-pillars__panel-title sr-only">Decide mejor</h3>
                         <div class="landing-pillars__panel-body">
                             <p>No es falta de información.</p>
@@ -105,7 +110,7 @@
                             <p>No en intuición.</p>
                         </div>
                     </article>
-                    <article class="landing-pillars__panel" id="landing-pillar-panel-2" data-pillar="2" aria-labelledby="pillar-title-2" hidden>
+                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-2" data-pillar="2" aria-labelledby="pillar-title-2">
                         <h3 id="pillar-title-2" class="landing-pillars__panel-title sr-only">Ejecuta en minutos</h3>
                         <div class="landing-pillars__panel-body">
                             <p>Entre la idea y la ejecución es donde se pierde todo.</p>
@@ -117,7 +122,7 @@
                             <p>Sin cuellos de botella.</p>
                         </div>
                     </article>
-                    <article class="landing-pillars__panel" id="landing-pillar-panel-3" data-pillar="3" aria-labelledby="pillar-title-3" hidden>
+                    <article class="landing-pillars__carousel-slide landing-pillars__panel" id="landing-step-3" data-pillar="3" aria-labelledby="pillar-title-3">
                         <h3 id="pillar-title-3" class="landing-pillars__panel-title sr-only">Crece más rápido</h3>
                         <div class="landing-pillars__panel-body">
                             <p>El crecimiento no viene de hacer más.</p>
@@ -130,6 +135,8 @@
                         </div>
                     </article>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
