@@ -20,7 +20,8 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pilares: resalta el ítem de nave según el bloque cuyo centro está más cerca del centro del viewport (scroll).
+   * Pilares: bloque encapsulado sticky; el scroll dentro del track (~4× viewport) avanza el índice
+   * (título activo con flecha > + descripción a la derecha; el resto con flecha <).
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -31,13 +32,19 @@ class LandingView extends BaseView {
     const section = document.querySelector('.landing-pillars');
     if (!section) return;
 
+    const track = section.querySelector('.landing-pillars__track');
     const indicators = section.querySelectorAll('.landing-pillars__nav-btn');
-    const steps = section.querySelectorAll('.landing-pillars__step');
-    if (!indicators.length || !steps.length) return;
+    const panels = section.querySelectorAll('.landing-pillars__copy .landing-pillars__panel');
+    if (!track || !indicators.length || !panels.length) return;
+
+    let lastIndex = -1;
 
     const activate = (index) => {
       const i = Number.parseInt(String(index), 10);
       if (Number.isNaN(i) || i < 0 || i >= indicators.length) return;
+      if (i === lastIndex) return;
+      lastIndex = i;
+
       indicators.forEach((el, j) => {
         const active = j === i;
         el.classList.toggle('is-active', active);
@@ -47,6 +54,12 @@ class LandingView extends BaseView {
           el.removeAttribute('aria-current');
         }
       });
+
+      panels.forEach((panel, j) => {
+        const active = j === i;
+        panel.classList.toggle('is-active', active);
+        panel.toggleAttribute('hidden', !active);
+      });
     };
 
     let ticking = false;
@@ -55,21 +68,15 @@ class LandingView extends BaseView {
       ticking = true;
       window.requestAnimationFrame(() => {
         ticking = false;
-        const vh = window.innerHeight;
-        const centerY = vh * 0.42;
-        let bestI = 0;
-        let bestDist = Infinity;
-        steps.forEach((step, i) => {
-          const r = step.getBoundingClientRect();
-          if (r.bottom < 32 || r.top > vh - 32) return;
-          const stepMid = r.top + r.height / 2;
-          const dist = Math.abs(stepMid - centerY);
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestI = i;
-          }
-        });
-        activate(bestI);
+        const h = window.innerHeight || 1;
+        const rect = track.getBoundingClientRect();
+        if (rect.bottom <= 0 || rect.top >= h) {
+          return;
+        }
+
+        const scrolledPast = Math.max(0, -rect.top);
+        let idx = Math.min(3, Math.max(0, Math.floor(scrolledPast / h + 0.18)));
+        activate(idx);
       });
     };
 
