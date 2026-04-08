@@ -3872,7 +3872,7 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(14px, 2vw, 28px);
+    gap: 0;
     width: 100%;
 }
 
@@ -3890,38 +3890,36 @@ body.entrance-done .landing-header {
     position: relative;
     flex: 0 0 auto;
     width: clamp(140px, 18vw, 220px);
-    height: clamp(56px, 8vw, 90px);
+    height: clamp(240px, 31vw, 360px);
+    overflow: hidden;
 }
 
-.landing-hero-rotating-item {
-    position: absolute;
-    inset: 0;
-    margin: auto 0;
+.landing-hero-vertical-track {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2px, 0.4vw, 6px);
+    will-change: transform;
+    transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.landing-hero-word-item {
+    height: clamp(44px, 6vw, 68px);
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.landing-hero-word-item img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     object-position: left center;
-    opacity: 0;
-    animation: landing-hero-rotate 27s linear infinite;
 }
 
-.landing-hero-rotating-item:nth-child(1) { animation-delay: 0s; }
-.landing-hero-rotating-item:nth-child(2) { animation-delay: 3s; }
-.landing-hero-rotating-item:nth-child(3) { animation-delay: 6s; }
-.landing-hero-rotating-item:nth-child(4) { animation-delay: 9s; }
-.landing-hero-rotating-item:nth-child(5) { animation-delay: 12s; }
-.landing-hero-rotating-item:nth-child(6) { animation-delay: 15s; }
-.landing-hero-rotating-item:nth-child(7) { animation-delay: 18s; }
-.landing-hero-rotating-item:nth-child(8) { animation-delay: 21s; }
-.landing-hero-rotating-item:nth-child(9) { animation-delay: 24s; }
-
-@keyframes landing-hero-rotate {
-    0%, 8% {
-        opacity: 1;
-    }
-    11%, 100% {
-        opacity: 0;
-    }
+.landing-hero-word-item.is-active {
+    opacity: 1;
+    transform: scale(1.02);
 }
 
 @media (max-width: 768px) {
@@ -3940,7 +3938,7 @@ body.entrance-done .landing-header {
 
     .landing-hero-lockup {
         align-items: flex-end;
-        gap: 10px;
+        gap: 0;
     }
 
     .landing-hero-left img {
@@ -3949,7 +3947,7 @@ body.entrance-done .landing-header {
 
     .landing-hero-right {
         width: min(30vw, 140px);
-        height: min(12vw, 56px);
+        height: min(46vw, 210px);
     }
 }
 
