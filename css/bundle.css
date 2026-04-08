@@ -3821,9 +3821,6 @@ body.entrance-done .landing-header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 30px;
-    padding: 0 8px;
-    border-radius: 9px;
     color: var(--color-white);
     text-decoration: none;
     font-size: 0.85rem;
@@ -3833,6 +3830,9 @@ body.entrance-done .landing-header {
 }
 
 .landing-header-link {
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 9px;
     opacity: 0.88;
 }
 
@@ -3841,14 +3841,29 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
+/* Login: diseño Rectangle 3 (Figma) — 100×35, negro, blur, radio 20px */
 .landing-header-login-btn {
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    background: rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    width: 100px;
+    min-width: 100px;
+    height: 35px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 20px;
+    background: #000000;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     opacity: 1;
 }
 
 .landing-header-login-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: #0a0a0a;
+}
+
+.landing-header-login-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.45);
+    outline-offset: 2px;
 }
 
 @media (max-width: 768px) {
@@ -3881,10 +3896,13 @@ body.entrance-done .landing-header {
         flex-wrap: wrap;
     }
 
-    .landing-header-link,
-    .landing-header-login-btn {
+    .landing-header-link {
         flex: 1 1 auto;
         min-width: 120px;
+        font-size: 0.8rem;
+    }
+
+    .landing-header-login-btn {
         font-size: 0.8rem;
     }
 }
