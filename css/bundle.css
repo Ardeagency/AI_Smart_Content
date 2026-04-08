@@ -3841,9 +3841,11 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Login: relleno #000, trazo 1.5px negro arriba → degradado marca abajo (misma gama que tarjetas Por qué), blur */
+/* Login: trazo con color en la curva inferior (radial abajo + elipse ancha ≈ arcoíris horizontal); arriba cae a negro sin “banda” vertical rara */
 .landing-header-login-btn {
     --landing-login-fill: #000000;
+    position: relative;
+    z-index: 0;
     box-sizing: border-box;
     flex: 0 0 auto;
     width: 100px;
@@ -3854,15 +3856,15 @@ body.entrance-done .landing-header {
     border-radius: 20px;
     background:
         linear-gradient(var(--landing-login-fill), var(--landing-login-fill)) padding-box,
-        linear-gradient(
-            to bottom,
-            #000000 0%,
-            #000000 38%,
-            #ff6500 52%,
-            #c44dff 68%,
-            #2979ff 82%,
-            #00e7ff 96%,
-            #ff6500 100%
+        radial-gradient(
+            ellipse 135% 220% at 50% 100%,
+            #00e7ff 0%,
+            #c44dff 14%,
+            #ff6500 28%,
+            #c44dff 42%,
+            #00e7ff 54%,
+            #1a1a1a 72%,
+            #000000 100%
         ) border-box;
     background-origin: padding-box, border-box;
     background-clip: padding-box, border-box;
