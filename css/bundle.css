@@ -5362,6 +5362,113 @@ body.entrance-done .landing-header {
     cursor: not-allowed;
 }
 
+/* ─── Landing: “Lo que pasa cuando…” (fondo blanco, dos columnas) ─── */
+.landing-different {
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    background: #ffffff;
+    color: #0a0a0b;
+    padding: clamp(3rem, 7vw, 5rem) 0;
+    box-sizing: border-box;
+}
+
+.landing-different__inner {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.05fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.landing-different__title {
+    margin: 0;
+    font-size: clamp(1.65rem, 3.4vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    color: #0a0a0b;
+    max-width: 14em;
+}
+
+.landing-different__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.landing-different__item {
+    margin: 0;
+    padding: 0;
+}
+
+.landing-different__row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: clamp(1rem, 3vw, 2.5rem);
+    padding: clamp(1rem, 2vw, 1.35rem) 0;
+}
+
+.landing-different__label {
+    flex: 0 1 auto;
+    font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+    font-weight: 600;
+    color: #0a0a0b;
+    letter-spacing: -0.01em;
+}
+
+.landing-different__desc {
+    flex: 0 1 auto;
+    text-align: right;
+    font-size: clamp(0.875rem, 1.05vw, 1rem);
+    font-weight: 400;
+    line-height: 1.45;
+    color: rgba(10, 10, 11, 0.68);
+    max-width: min(20rem, 55vw);
+}
+
+.landing-different__divider {
+    height: 1px;
+    width: 100%;
+    border-radius: 1px;
+    background: linear-gradient(
+        90deg,
+        #ffe500 0%,
+        #ff9500 18%,
+        #00e7ff 48%,
+        #7c4dff 78%,
+        #b946d8 100%
+    );
+    opacity: 0.95;
+}
+
+@media (max-width: 800px) {
+    .landing-different__inner {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: clamp(1.75rem, 4vw, 2.5rem);
+    }
+
+    .landing-different__title {
+        max-width: none;
+    }
+
+    .landing-different__row {
+        flex-wrap: wrap;
+        gap: 0.35rem 1rem;
+    }
+
+    .landing-different__desc {
+        text-align: left;
+        max-width: none;
+        width: 100%;
+    }
+}
+
 /* Landing footer — multi-column layout (reference: product marketing footers) */
 .landing-footer {
     position: relative;
