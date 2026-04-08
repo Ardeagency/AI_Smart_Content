@@ -3728,6 +3728,8 @@ body.entrance-done.route-landing #landing-background-wrap {
 
 /* Landing header: arriba del todo, ancho completo y sin cristal; al hacer scroll → .landing-header--floating */
 .landing-header {
+    --landing-header-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --landing-header-duration: 0.58s;
     position: fixed;
     top: 0;
     left: 0;
@@ -3741,24 +3743,35 @@ body.entrance-done.route-landing #landing-background-wrap {
     max-width: none;
     margin: 0;
     padding: 14px 20px;
-    border: none;
+    /* Borde invisible mismo grosor que el estado flotante → transición de contorno sin salto */
+    border: 1px solid rgba(255, 255, 255, 0);
     border-radius: 0;
     background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
     opacity: 0;
     transition:
-        top 0.32s ease,
-        left 0.32s ease,
-        right 0.32s ease,
-        padding 0.32s ease,
-        max-width 0.32s ease,
-        border-radius 0.32s ease,
-        background 0.32s ease,
-        border-color 0.32s ease,
-        box-shadow 0.32s ease,
-        backdrop-filter 0.32s ease;
+        top var(--landing-header-duration) var(--landing-header-ease),
+        left var(--landing-header-duration) var(--landing-header-ease),
+        right var(--landing-header-duration) var(--landing-header-ease),
+        width var(--landing-header-duration) var(--landing-header-ease),
+        max-width var(--landing-header-duration) var(--landing-header-ease),
+        margin var(--landing-header-duration) var(--landing-header-ease),
+        padding var(--landing-header-duration) var(--landing-header-ease),
+        border-radius var(--landing-header-duration) var(--landing-header-ease),
+        background calc(var(--landing-header-duration) * 0.92) var(--landing-header-ease),
+        border-color calc(var(--landing-header-duration) * 0.92) var(--landing-header-ease),
+        box-shadow var(--landing-header-duration) var(--landing-header-ease),
+        backdrop-filter calc(var(--landing-header-duration) * 0.85) var(--landing-header-ease),
+        -webkit-backdrop-filter calc(var(--landing-header-duration) * 0.85) var(--landing-header-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-header {
+        --landing-header-duration: 0.12s;
+        --landing-header-ease: ease-out;
+    }
 }
 
 .landing-header.landing-header--floating {
