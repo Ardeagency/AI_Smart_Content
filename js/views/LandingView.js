@@ -20,9 +20,8 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pilares: carrusel vertical (derecha) sincronizado con el scroll dentro de
-   * `.landing-pillars__scroll-track`. Sin clic.
-   * Progreso 0→1 con (vh - trackTop) / (trackHeight + vh) para que avance al entrar el track en pantalla.
+   * Pilares: al llegar a la sección el scroll principal se fija; la rueda/touch avanza
+   * cada pilar; al completar el último (o subir desde el primero) se libera y sigue la página.
    */
   initValuePillarsNav() {
     if (typeof this.pillarScrollCleanup === 'function') {
@@ -38,6 +37,31 @@ class LandingView extends BaseView {
     const panels = section.querySelectorAll('.landing-pillars__carousel .landing-pillars__panel');
     const count = indicators.length;
     if (!scrollTrack || !count || panels.length !== count) return;
+
+    const appContainer = document.getElementById('app-container');
+
+    const stickyTopPx = () => (window.matchMedia('(max-width: 768px)').matches ? 72 : 92);
+
+    const usesAppScroll = () =>
+      appContainer && appContainer.scrollHeight > appContainer.clientHeight + 2;
+
+    const getScrollY = () => {
+      if (usesAppScroll()) return appContainer.scrollTop;
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    };
+
+    const setScrollY = (y) => {
+      if (usesAppScroll()) {
+        appContainer.scrollTop = y;
+      } else {
+        window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+      }
+    };
+
+    const lockScrollYFromTrack = () => {
+      const top = scrollTrack.getBoundingClientRect().top;
+      return getScrollY() + top - stickyTopPx();
+    };
 
     const activate = (index) => {
       const i = Number.parseInt(String(index), 10);
@@ -58,40 +82,184 @@ class LandingView extends BaseView {
       });
     };
 
-    const appContainer = document.getElementById('app-container');
+    let locked = false;
+    let lockScrollY = 0;
+    let pillarIndex = 0;
+    let wheelAccum = 0;
+    let prevScrollY = getScrollY();
+    const WHEEL_THRESHOLD = 88;
+    const ENTER_ZONE_PX = 28;
 
-    let ticking = false;
-    const updateFromScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(() => {
-        ticking = false;
-        const vh = window.innerHeight;
-        const rect = scrollTrack.getBoundingClientRect();
-        const trackHeight = scrollTrack.offsetHeight;
-        // Progreso 0→1 mientras el track atraviesa el viewport (no exige rect.top < 0).
-        // Misma lógica con scroll en window o en #app-container.
-        const scrollRange = Math.max(1, trackHeight + vh);
-        let p = (vh - rect.top) / scrollRange;
-        p = Math.max(0, Math.min(1, p));
-        const index = Math.min(count - 1, Math.floor(p * count));
-        activate(index);
-      });
+    const normalizeWheelDeltaY = (e) => {
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;
+      if (e.deltaMode === 2) dy *= window.innerHeight;
+      return dy;
     };
 
-    window.addEventListener('scroll', updateFromScroll, { passive: true });
-    window.addEventListener('resize', updateFromScroll, { passive: true });
+    const scrollPastSectionDown = () => {
+      const vh = window.innerHeight;
+      const tr = scrollTrack.getBoundingClientRect();
+      const delta = Math.max(160, tr.bottom - vh + 48);
+      setScrollY(getScrollY() + delta);
+    };
+
+    const scrollPastSectionUp = () => {
+      const tr = scrollTrack.getBoundingClientRect();
+      const delta = Math.max(160, window.innerHeight - tr.top + 48);
+      setScrollY(getScrollY() - delta);
+    };
+
+    const tryEnterLock = (e) => {
+      const trTop = scrollTrack.getBoundingClientRect().top;
+      const st = stickyTopPx();
+      if (
+        e.deltaY > 0 &&
+        trTop <= st + ENTER_ZONE_PX &&
+        trTop >= st - ENTER_ZONE_PX * 2
+      ) {
+        e.preventDefault();
+        lockScrollY = lockScrollYFromTrack();
+        setScrollY(lockScrollY);
+        locked = true;
+        pillarIndex = 0;
+        wheelAccum = 0;
+        activate(0);
+        return true;
+      }
+      return false;
+    };
+
+    const onWheel = (e) => {
+      if (locked) {
+        e.preventDefault();
+        const dy = normalizeWheelDeltaY(e);
+        wheelAccum += dy;
+
+        if (wheelAccum > WHEEL_THRESHOLD) {
+          wheelAccum = 0;
+          if (pillarIndex < count - 1) {
+            pillarIndex += 1;
+            activate(pillarIndex);
+          } else {
+            locked = false;
+            activate(count - 1);
+            wheelAccum = 0;
+            scrollPastSectionDown();
+          }
+        } else if (wheelAccum < -WHEEL_THRESHOLD) {
+          wheelAccum = 0;
+          if (pillarIndex > 0) {
+            pillarIndex -= 1;
+            activate(pillarIndex);
+          } else {
+            locked = false;
+            scrollPastSectionUp();
+          }
+        }
+        return;
+      }
+
+      tryEnterLock(e);
+    };
+
+    const onScrollUnified = () => {
+      if (locked) {
+        const y = getScrollY();
+        if (Math.abs(y - lockScrollY) > 4) {
+          setScrollY(lockScrollY);
+        }
+        return;
+      }
+      const y = getScrollY();
+      const scrollingDown = y > prevScrollY + 1;
+      prevScrollY = y;
+      const trTop = scrollTrack.getBoundingClientRect().top;
+      const st = stickyTopPx();
+      if (
+        scrollingDown &&
+        trTop <= st + 22 &&
+        trTop >= st - 42
+      ) {
+        lockScrollY = lockScrollYFromTrack();
+        setScrollY(lockScrollY);
+        locked = true;
+        pillarIndex = 0;
+        wheelAccum = 0;
+        activate(0);
+      }
+    };
+
+    let touchStartY = null;
+    const onTouchStart = (e) => {
+      if (!locked || !e.touches || !e.touches[0]) return;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const onTouchMove = (e) => {
+      if (!locked || touchStartY == null || !e.touches || !e.touches[0]) return;
+      const dy = touchStartY - e.touches[0].clientY;
+      if (Math.abs(dy) < 6) return;
+      e.preventDefault();
+      wheelAccum += dy * 1.2;
+      touchStartY = e.touches[0].clientY;
+
+      if (wheelAccum > WHEEL_THRESHOLD) {
+        wheelAccum = 0;
+        if (pillarIndex < count - 1) {
+          pillarIndex += 1;
+          activate(pillarIndex);
+        } else {
+          locked = false;
+          activate(count - 1);
+          touchStartY = null;
+          scrollPastSectionDown();
+        }
+      } else if (wheelAccum < -WHEEL_THRESHOLD) {
+        wheelAccum = 0;
+        if (pillarIndex > 0) {
+          pillarIndex -= 1;
+          activate(pillarIndex);
+        } else {
+          locked = false;
+          touchStartY = null;
+          scrollPastSectionUp();
+        }
+      }
+    };
+
+    const onTouchEnd = () => {
+      touchStartY = null;
+    };
+
+    const onResize = () => {
+      prevScrollY = getScrollY();
+      if (locked) {
+        lockScrollY = lockScrollYFromTrack();
+        setScrollY(lockScrollY);
+      }
+    };
+
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('scroll', onScrollUnified, { passive: true });
     if (appContainer) {
-      appContainer.addEventListener('scroll', updateFromScroll, { passive: true });
+      appContainer.addEventListener('scroll', onScrollUnified, { passive: true });
     }
-    updateFromScroll();
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     this.pillarScrollCleanup = () => {
-      window.removeEventListener('scroll', updateFromScroll);
-      window.removeEventListener('resize', updateFromScroll);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('scroll', enforceLockPosition);
       if (appContainer) {
-        appContainer.removeEventListener('scroll', updateFromScroll);
+        appContainer.removeEventListener('scroll', enforceLockPosition);
       }
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }
 
