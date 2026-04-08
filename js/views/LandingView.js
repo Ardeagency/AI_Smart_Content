@@ -42,30 +42,27 @@ class LandingView extends BaseView {
       return;
     }
 
+    /** Solo revelar cuando una parte clara de la sección está en vista (evita animación ya terminada al llegar). */
+    const MIN_RATIO = 0.14;
     const io = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          if (entry.intersectionRatio >= MIN_RATIO) {
             reveal();
             io.unobserve(entry.target);
+            break;
           }
-        });
+        }
       },
-      { threshold: 0.06, rootMargin: '0px 0px -2% 0px' }
+      {
+        root: null,
+        rootMargin: '0px 0px -14% 0px',
+        threshold: [0, 0.05, 0.1, 0.14, 0.15, 0.2, 0.25, 0.35, 0.5, 0.75, 1],
+      }
     );
 
     io.observe(el);
-
-    const checkAlreadyVisible = () => {
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      if (r.bottom > 0 && r.top < vh * 0.98) {
-        reveal();
-        io.unobserve(el);
-      }
-    };
-    requestAnimationFrame(checkAlreadyVisible);
-    setTimeout(checkAlreadyVisible, 120);
 
     this.threadsRevealCleanup = () => {
       io.disconnect();

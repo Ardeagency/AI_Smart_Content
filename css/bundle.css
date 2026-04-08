@@ -4193,14 +4193,18 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Línea horizontal blanca (SVG, permanece) + curvas tipo fragmentación + columna de burbujas */
+/* Línea horizontal blanca (SVG) + curvas + burbujas — acabado premium */
 .landing-threads {
     position: relative;
     z-index: 3;
     width: 100%;
-    background: var(--bg-black, #000000);
     color: var(--color-white);
     overflow: hidden;
+    background:
+        radial-gradient(ellipse 120% 80% at 20% 30%, rgba(120, 90, 180, 0.07) 0%, transparent 45%),
+        radial-gradient(ellipse 90% 70% at 85% 75%, rgba(40, 120, 200, 0.06) 0%, transparent 42%),
+        radial-gradient(ellipse 55% 45% at 32% 52%, rgba(255, 255, 255, 0.045) 0%, transparent 55%),
+        var(--bg-black, #030303);
 }
 
 .landing-threads__inner {
@@ -4226,14 +4230,20 @@ body.entrance-done .landing-header {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: min(480px, 92vw);
-    height: min(680px, 90vh);
-    background: radial-gradient(
-        ellipse 44% 38% at 34% 50%,
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(255, 255, 255, 0.02) 42%,
-        transparent 68%
-    );
+    width: min(520px, 96vw);
+    height: min(720px, 92vh);
+    background:
+        radial-gradient(
+            ellipse 48% 42% at 34% 48%,
+            rgba(255, 255, 255, 0.11) 0%,
+            rgba(255, 255, 255, 0.03) 38%,
+            transparent 64%
+        ),
+        radial-gradient(
+            ellipse 28% 22% at 34% 50%,
+            rgba(200, 215, 255, 0.06) 0%,
+            transparent 70%
+        );
     pointer-events: none;
     z-index: 0;
 }
@@ -4273,14 +4283,16 @@ body.entrance-done .landing-header {
     pointer-events: none;
     transform-origin: center;
     transform-box: fill-box;
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 6px rgba(200, 235, 255, 0.45));
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.35))
+        drop-shadow(0 0 18px rgba(190, 210, 255, 0.22));
 }
 
 /* Sin stroke-dash: el patrón dash/gap es lo que generaba tramos “en secuencia” */
 .landing-threads__trunk-h {
     opacity: 0;
     stroke-width: 1.35px;
-    filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.48)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.14));
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.65)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.22))
+        drop-shadow(0 0 14px rgba(220, 230, 255, 0.12));
 }
 
 .landing-threads__curve {
@@ -4288,19 +4300,18 @@ body.entrance-done .landing-header {
     stroke-width: 1.05px;
 }
 
-/* Halo muy suave por hilo (energía sin ensanchar el trazo) */
-.landing-threads__svg .landing-threads__curve:nth-of-type(1) { filter: drop-shadow(0 0 2px rgba(255, 23, 68, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(2) { filter: drop-shadow(0 0 2px rgba(255, 101, 0, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(3) { filter: drop-shadow(0 0 2px rgba(255, 229, 0, 0.32)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(4) { filter: drop-shadow(0 0 2px rgba(197, 230, 10, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(5) { filter: drop-shadow(0 0 2px rgba(0, 214, 20, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(6) { filter: drop-shadow(0 0 2px rgba(0, 231, 255, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(7) { filter: drop-shadow(0 0 2px rgba(41, 121, 255, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(8) { filter: drop-shadow(0 0 2px rgba(91, 0, 234, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(9) { filter: drop-shadow(0 0 2px rgba(213, 0, 249, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(10) { filter: drop-shadow(0 0 2px rgba(234, 0, 183, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(11) { filter: drop-shadow(0 0 2px rgba(191, 54, 12, 0.35)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(12) { filter: drop-shadow(0 0 2px rgba(0, 191, 165, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(1) { filter: drop-shadow(0 0 3px rgba(255, 23, 68, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(2) { filter: drop-shadow(0 0 3px rgba(255, 101, 0, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(3) { filter: drop-shadow(0 0 3px rgba(255, 229, 0, 0.26)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(4) { filter: drop-shadow(0 0 3px rgba(197, 230, 10, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(5) { filter: drop-shadow(0 0 3px rgba(0, 214, 20, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(6) { filter: drop-shadow(0 0 3px rgba(0, 231, 255, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(7) { filter: drop-shadow(0 0 3px rgba(41, 121, 255, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(8) { filter: drop-shadow(0 0 3px rgba(91, 0, 234, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(9) { filter: drop-shadow(0 0 3px rgba(213, 0, 249, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(10) { filter: drop-shadow(0 0 3px rgba(234, 0, 183, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(11) { filter: drop-shadow(0 0 3px rgba(191, 54, 12, 0.28)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(12) { filter: drop-shadow(0 0 3px rgba(0, 191, 165, 0.28)); }
 
 .landing-threads__stack--overlay {
     position: absolute;
@@ -4337,79 +4348,86 @@ body.entrance-done .landing-header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.4rem 0.82rem;
-    border-radius: var(--radius-pill);
-    font-size: clamp(0.65rem, 1.02vw, 0.78rem);
-    font-weight: 600;
-    letter-spacing: 0.03em;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    font-size: clamp(0.66rem, 1.05vw, 0.8rem);
+    font-weight: 500;
+    letter-spacing: 0.07em;
     white-space: nowrap;
     text-align: left;
-    color: #ffffff;
-    border: 1.5px solid var(--line-color);
-    background: #000000;
+    color: rgba(255, 255, 255, 0.96);
+    border: 1px solid color-mix(in srgb, var(--line-color) 72%, rgba(255, 255, 255, 0.12));
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 42%, rgba(0, 0, 0, 0.25) 100%),
+        rgba(6, 6, 8, 0.72);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 4px 18px rgba(0, 0, 0, 0.55),
-        0 0 12px color-mix(in srgb, var(--line-color) 28%, transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+        inset 0 1px 0 rgba(255, 255, 255, 0.11),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+        0 2px 4px rgba(0, 0, 0, 0.45),
+        0 12px 36px rgba(0, 0, 0, 0.42),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 22px color-mix(in srgb, var(--line-color) 22%, transparent);
+    backdrop-filter: blur(16px) saturate(1.25);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
     opacity: 0;
-    transform: translateX(-4px) scale(0.97);
+    transform: translateX(-6px) scale(0.97);
     text-rendering: geometricPrecision;
 }
 
 @supports not (color-mix(in srgb, red, blue)) {
     .landing-threads__bubble {
+        border-color: var(--line-color);
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.06),
-            0 4px 18px rgba(0, 0, 0, 0.55);
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            0 12px 32px rgba(0, 0, 0, 0.5),
+            0 0 18px rgba(255, 255, 255, 0.04);
     }
 }
 
-.landing-threads__row:nth-child(1) { --line-color: #ff1744; --delay: 0.58s; --fan-deg: -1deg; }
-.landing-threads__row:nth-child(2) { --line-color: #ff6500; --delay: 0.63s; --fan-deg: -0.82deg; }
-.landing-threads__row:nth-child(3) { --line-color: #ffe500; --delay: 0.68s; --fan-deg: -0.64deg; }
-.landing-threads__row:nth-child(4) { --line-color: #c5e60a; --delay: 0.73s; --fan-deg: -0.45deg; }
+.landing-threads__row:nth-child(1) { --line-color: #ff1744; --delay: 0.62s; --fan-deg: -1deg; }
+.landing-threads__row:nth-child(2) { --line-color: #ff6500; --delay: 0.66s; --fan-deg: -0.82deg; }
+.landing-threads__row:nth-child(3) { --line-color: #ffe500; --delay: 0.7s; --fan-deg: -0.64deg; }
+.landing-threads__row:nth-child(4) { --line-color: #c5e60a; --delay: 0.74s; --fan-deg: -0.45deg; }
 .landing-threads__row:nth-child(5) { --line-color: #00d614; --delay: 0.78s; --fan-deg: -0.25deg; }
-.landing-threads__row:nth-child(6) { --line-color: #00e7ff; --delay: 0.83s; --fan-deg: -0.08deg; }
-.landing-threads__row:nth-child(7) { --line-color: #2979ff; --delay: 0.88s; --fan-deg: 0.08deg; }
-.landing-threads__row:nth-child(8) { --line-color: #5b00ea; --delay: 0.93s; --fan-deg: 0.25deg; }
-.landing-threads__row:nth-child(9) { --line-color: #d500f9; --delay: 0.98s; --fan-deg: 0.45deg; }
-.landing-threads__row:nth-child(10) { --line-color: #ea00b7; --delay: 1.03s; --fan-deg: 0.64deg; }
-.landing-threads__row:nth-child(11) { --line-color: #bf360c; --delay: 1.08s; --fan-deg: 0.82deg; }
-.landing-threads__row:nth-child(12) { --line-color: #00bfa5; --delay: 1.13s; --fan-deg: 1deg; }
+.landing-threads__row:nth-child(6) { --line-color: #00e7ff; --delay: 0.82s; --fan-deg: -0.08deg; }
+.landing-threads__row:nth-child(7) { --line-color: #2979ff; --delay: 0.86s; --fan-deg: 0.08deg; }
+.landing-threads__row:nth-child(8) { --line-color: #5b00ea; --delay: 0.9s; --fan-deg: 0.25deg; }
+.landing-threads__row:nth-child(9) { --line-color: #d500f9; --delay: 0.94s; --fan-deg: 0.45deg; }
+.landing-threads__row:nth-child(10) { --line-color: #ea00b7; --delay: 0.98s; --fan-deg: 0.64deg; }
+.landing-threads__row:nth-child(11) { --line-color: #bf360c; --delay: 1.02s; --fan-deg: 0.82deg; }
+.landing-threads__row:nth-child(12) { --line-color: #00bfa5; --delay: 1.06s; --fan-deg: 1deg; }
 
 .landing-threads--visible .landing-threads__junction-field {
-    animation: landing-threads-junction-field 1.05s ease forwards;
-    animation-delay: 0.12s;
+    animation: landing-threads-junction-field 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0s;
 }
 
 .landing-threads--visible .landing-threads__trunk-h {
-    animation: landing-threads-trunk-fade 0.55s ease forwards;
-    animation-delay: 0.08s;
+    animation: landing-threads-trunk-fade 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.06s;
 }
 
 .landing-threads--visible .landing-threads__junction-core {
-    animation: landing-threads-junction-core 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: 0.72s;
+    animation: landing-threads-junction-core 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.55s;
 }
 
 .landing-threads--visible .landing-threads__curve {
-    animation: landing-threads-curve-fade 0.85s ease forwards;
+    animation: landing-threads-curve-fade 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(1) { animation-delay: 0.34s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(2) { animation-delay: 0.39s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(3) { animation-delay: 0.44s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(4) { animation-delay: 0.49s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(5) { animation-delay: 0.54s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(6) { animation-delay: 0.59s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(7) { animation-delay: 0.64s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(8) { animation-delay: 0.69s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(9) { animation-delay: 0.74s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(10) { animation-delay: 0.79s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(11) { animation-delay: 0.84s; }
-.landing-threads--visible .landing-threads__svg > path:nth-of-type(12) { animation-delay: 0.89s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(1) { animation-delay: 0.12s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(2) { animation-delay: 0.16s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(3) { animation-delay: 0.2s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(4) { animation-delay: 0.24s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(5) { animation-delay: 0.28s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(6) { animation-delay: 0.32s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(7) { animation-delay: 0.36s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(8) { animation-delay: 0.4s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(9) { animation-delay: 0.44s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(10) { animation-delay: 0.48s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(11) { animation-delay: 0.52s; }
+.landing-threads--visible .landing-threads__svg > path:nth-of-type(12) { animation-delay: 0.56s; }
 
 .landing-threads--visible .landing-threads__stack--overlay .landing-threads__row {
     animation: landing-threads-row-in 0.35s ease forwards;
@@ -4418,8 +4436,8 @@ body.entrance-done .landing-header {
 }
 
 .landing-threads--visible .landing-threads__bubble {
-    animation: landing-threads-bubble 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: calc(var(--delay) + 0.2s);
+    animation: landing-threads-bubble 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--delay) + 0.12s);
 }
 
 @keyframes landing-threads-junction-field {
@@ -4427,7 +4445,7 @@ body.entrance-done .landing-header {
         opacity: 0;
     }
     to {
-        opacity: 0.62;
+        opacity: 0.58;
     }
 }
 
@@ -4496,7 +4514,7 @@ body.entrance-done .landing-header {
     }
 
     .landing-threads--visible .landing-threads__junction-field {
-        opacity: 0.62;
+        opacity: 0.58;
     }
 
     .landing-threads--visible .landing-threads__junction-core {
