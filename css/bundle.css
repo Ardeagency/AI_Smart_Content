@@ -3841,7 +3841,7 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Login: relleno #000, trazo 1.5px degradado vertical (negro arriba → blanco abajo), blur, radio 20px */
+/* Login: relleno #000, trazo 1.5px negro arriba → degradado marca abajo (misma gama que tarjetas Por qué), blur */
 .landing-header-login-btn {
     --landing-login-fill: #000000;
     box-sizing: border-box;
@@ -3854,7 +3854,16 @@ body.entrance-done .landing-header {
     border-radius: 20px;
     background:
         linear-gradient(var(--landing-login-fill), var(--landing-login-fill)) padding-box,
-        linear-gradient(to bottom, #000000 0%, #ffffff 100%) border-box;
+        linear-gradient(
+            to bottom,
+            #000000 0%,
+            #000000 38%,
+            #ff6500 52%,
+            #c44dff 68%,
+            #2979ff 82%,
+            #00e7ff 96%,
+            #ff6500 100%
+        ) border-box;
     background-origin: padding-box, border-box;
     background-clip: padding-box, border-box;
     backdrop-filter: blur(10px);
