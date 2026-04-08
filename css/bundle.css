@@ -4259,33 +4259,40 @@ body.entrance-done .landing-header {
     pointer-events: none;
 }
 
+/* Grosor estable en px (ref. fina tipo imagen 2); tronco ~1.5× los hilos */
+.landing-threads__svg .landing-threads__trunk-h,
+.landing-threads__svg .landing-threads__curve {
+    vector-effect: non-scaling-stroke;
+}
+
 .landing-threads__trunk-h {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
     opacity: 1;
-    /* Brillo del tronco en CSS (evita bug filtro SVG + dash en WebKit) */
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.65)) drop-shadow(0 0 14px rgba(255, 255, 255, 0.28));
+    stroke-width: 1.05px;
+    filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.16));
 }
 
 .landing-threads__curve {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
     opacity: 1;
+    stroke-width: 0.7px;
 }
 
-/* Brillo por color (equivalente al box-shadow de .landing-threads__stem-h) */
-.landing-threads__svg .landing-threads__curve:nth-of-type(1) { filter: drop-shadow(0 0 5px rgba(255, 23, 68, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(2) { filter: drop-shadow(0 0 5px rgba(255, 101, 0, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(3) { filter: drop-shadow(0 0 5px rgba(255, 229, 0, 0.45)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(4) { filter: drop-shadow(0 0 5px rgba(197, 230, 10, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(5) { filter: drop-shadow(0 0 5px rgba(0, 214, 20, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(6) { filter: drop-shadow(0 0 5px rgba(0, 231, 255, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(7) { filter: drop-shadow(0 0 5px rgba(41, 121, 255, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(8) { filter: drop-shadow(0 0 5px rgba(91, 0, 234, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(9) { filter: drop-shadow(0 0 5px rgba(213, 0, 249, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(10) { filter: drop-shadow(0 0 5px rgba(234, 0, 183, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(11) { filter: drop-shadow(0 0 5px rgba(191, 54, 12, 0.5)); }
-.landing-threads__svg .landing-threads__curve:nth-of-type(12) { filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
+/* Halo muy suave por hilo (energía sin ensanchar el trazo) */
+.landing-threads__svg .landing-threads__curve:nth-of-type(1) { filter: drop-shadow(0 0 2px rgba(255, 23, 68, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(2) { filter: drop-shadow(0 0 2px rgba(255, 101, 0, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(3) { filter: drop-shadow(0 0 2px rgba(255, 229, 0, 0.32)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(4) { filter: drop-shadow(0 0 2px rgba(197, 230, 10, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(5) { filter: drop-shadow(0 0 2px rgba(0, 214, 20, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(6) { filter: drop-shadow(0 0 2px rgba(0, 231, 255, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(7) { filter: drop-shadow(0 0 2px rgba(41, 121, 255, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(8) { filter: drop-shadow(0 0 2px rgba(91, 0, 234, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(9) { filter: drop-shadow(0 0 2px rgba(213, 0, 249, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(10) { filter: drop-shadow(0 0 2px rgba(234, 0, 183, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(11) { filter: drop-shadow(0 0 2px rgba(191, 54, 12, 0.35)); }
+.landing-threads__svg .landing-threads__curve:nth-of-type(12) { filter: drop-shadow(0 0 2px rgba(0, 191, 165, 0.35)); }
 
 .landing-threads__stack--overlay {
     position: absolute;
