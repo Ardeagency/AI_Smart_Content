@@ -3963,7 +3963,7 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Landing — value pillars (scroll-driven panels; nav + copy layout) */
+/* Landing — value pillars (scroll-synced nav + stacked steps) */
 .landing-pillars {
     position: relative;
     z-index: 3;
@@ -3971,7 +3971,7 @@ body.entrance-done .landing-header {
     color: rgba(255, 255, 255, 0.92);
 }
 
-.landing-pillars__inner {
+.landing-pillars__layout {
     width: min(1120px, calc(100% - 48px));
     margin: 0 auto;
     padding: clamp(3.5rem, 8vw, 6rem) 0;
@@ -3979,6 +3979,12 @@ body.entrance-done .landing-header {
     grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
+}
+
+.landing-pillars__nav-sticky {
+    position: sticky;
+    top: max(100px, 14vh);
+    align-self: start;
 }
 
 .landing-pillars__nav-list {
@@ -3992,12 +3998,15 @@ body.entrance-done .landing-header {
 }
 
 .landing-pillars__nav-btn {
-    display: block;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 12px;
     width: 100%;
     padding: 14px 0 16px;
     border: none;
     background: transparent;
-    cursor: pointer;
     text-align: left;
     font-family: inherit;
     font-size: clamp(1.05rem, 1.8vw, 1.35rem);
@@ -4005,20 +4014,55 @@ body.entrance-done .landing-header {
     color: rgba(255, 255, 255, 0.34);
     font-weight: 500;
     transition: color 0.25s ease, font-weight 0.2s ease;
+    pointer-events: none;
+    user-select: none;
 }
 
-.landing-pillars__nav-btn::before {
-    content: "\2198";
-    display: inline-block;
-    margin-right: 0.55em;
-    font-size: 0.78em;
-    vertical-align: 0.08em;
-    opacity: 0.55;
-    transition: opacity 0.2s ease;
+.landing-pillars__nav-arrows {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    order: 1;
 }
 
-.landing-pillars__nav-btn:hover {
-    color: rgba(255, 255, 255, 0.55);
+.landing-pillars__nav-arrow {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: block;
+    height: auto;
+    object-fit: contain;
+}
+
+.landing-pillars__nav-arrow--idle {
+    width: 24px;
+    max-height: 24px;
+}
+
+.landing-pillars__nav-arrow--active {
+    width: 32px;
+    max-height: 32px;
+}
+
+.landing-pillars__nav-arrow--active {
+    display: none;
+}
+
+.landing-pillars__nav-btn.is-active .landing-pillars__nav-arrow--idle {
+    display: none;
+}
+
+.landing-pillars__nav-btn.is-active .landing-pillars__nav-arrow--active {
+    display: block;
+}
+
+.landing-pillars__nav-label {
+    flex: 1;
+    min-width: 0;
+    order: 2;
 }
 
 .landing-pillars__nav-btn.is-active {
@@ -4026,28 +4070,29 @@ body.entrance-done .landing-header {
     font-weight: 700;
 }
 
-.landing-pillars__nav-btn.is-active::before {
-    content: "\2192";
-    opacity: 1;
-}
-
 .landing-pillars__nav-btn.is-active::after {
     content: "";
-    display: block;
-    height: 2px;
+    flex: 0 0 100%;
     width: 100%;
-    margin-top: 14px;
+    order: 3;
+    height: 2px;
+    margin-top: 2px;
     border-radius: 999px;
     background: linear-gradient(90deg, #6d28d9 0%, #ea580c 52%, #fbbf24 100%);
 }
 
-.landing-pillars__panels {
-    position: relative;
-    min-height: 12rem;
+.landing-pillars__steps {
+    min-width: 0;
 }
 
-.landing-pillars__panel {
+.landing-pillars__step {
     margin: 0;
+    min-height: min(100vh, 920px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(2.5rem, 6vh, 4rem) 0;
+    box-sizing: border-box;
 }
 
 .landing-pillars__panel-body {
@@ -4076,16 +4121,25 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 768px) {
-    .landing-pillars__inner {
+    .landing-pillars__layout {
         width: calc(100% - 32px);
         grid-template-columns: 1fr;
         padding: 2.75rem 0 3.25rem;
         gap: 2rem;
     }
 
+    .landing-pillars__nav-sticky {
+        position: relative;
+        top: auto;
+    }
+
     .landing-pillars__nav-btn {
         font-size: 1.05rem;
         padding: 10px 0 12px;
+    }
+
+    .landing-pillars__step {
+        min-height: min(85vh, 720px);
     }
 }
 

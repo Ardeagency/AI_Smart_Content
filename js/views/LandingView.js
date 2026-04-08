@@ -7,6 +7,7 @@ class LandingView extends BaseView {
     super();
     this.templatePath = 'landing.html';
     this.heroWordsTimer = null;
+    this.pillarScrollCleanup = null;
   }
 
   async onEnter() {
@@ -19,42 +20,67 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Navegación de pilares: clic para alternar copy (el scroll-driven highlight llegará después).
+   * Pilares: resalta el ítem de nave según el bloque cuyo centro está más cerca del centro del viewport (scroll).
    */
   initValuePillarsNav() {
+    if (typeof this.pillarScrollCleanup === 'function') {
+      this.pillarScrollCleanup();
+      this.pillarScrollCleanup = null;
+    }
+
     const section = document.querySelector('.landing-pillars');
     if (!section) return;
 
-    const buttons = section.querySelectorAll('.landing-pillars__nav-btn');
-    const panels = section.querySelectorAll('.landing-pillars__panel');
-    if (!buttons.length || !panels.length) return;
+    const indicators = section.querySelectorAll('.landing-pillars__nav-btn');
+    const steps = section.querySelectorAll('.landing-pillars__step');
+    if (!indicators.length || !steps.length) return;
 
     const activate = (index) => {
       const i = Number.parseInt(String(index), 10);
-      if (Number.isNaN(i) || i < 0 || i >= panels.length) return;
-
-      buttons.forEach((btn, j) => {
+      if (Number.isNaN(i) || i < 0 || i >= indicators.length) return;
+      indicators.forEach((el, j) => {
         const active = j === i;
-        btn.classList.toggle('is-active', active);
+        el.classList.toggle('is-active', active);
         if (active) {
-          btn.setAttribute('aria-current', 'true');
+          el.setAttribute('aria-current', 'true');
         } else {
-          btn.removeAttribute('aria-current');
+          el.removeAttribute('aria-current');
         }
-      });
-
-      panels.forEach((panel, j) => {
-        const active = j === i;
-        panel.classList.toggle('is-active', active);
-        panel.toggleAttribute('hidden', !active);
       });
     };
 
-    buttons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        activate(btn.dataset.pillar);
+    let ticking = false;
+    const updateFromScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        const vh = window.innerHeight;
+        const centerY = vh * 0.42;
+        let bestI = 0;
+        let bestDist = Infinity;
+        steps.forEach((step, i) => {
+          const r = step.getBoundingClientRect();
+          if (r.bottom < 32 || r.top > vh - 32) return;
+          const stepMid = r.top + r.height / 2;
+          const dist = Math.abs(stepMid - centerY);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestI = i;
+          }
+        });
+        activate(bestI);
       });
-    });
+    };
+
+    window.addEventListener('scroll', updateFromScroll, { passive: true });
+    window.addEventListener('resize', updateFromScroll, { passive: true });
+    updateFromScroll();
+
+    this.pillarScrollCleanup = () => {
+      window.removeEventListener('scroll', updateFromScroll);
+      window.removeEventListener('resize', updateFromScroll);
+    };
   }
 
   initHeroWordsCarousel() {
@@ -130,6 +156,10 @@ class LandingView extends BaseView {
     if (this.heroWordsTimer) {
       window.clearInterval(this.heroWordsTimer);
       this.heroWordsTimer = null;
+    }
+    if (typeof this.pillarScrollCleanup === 'function') {
+      this.pillarScrollCleanup();
+      this.pillarScrollCleanup = null;
     }
   }
 }
