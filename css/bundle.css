@@ -3844,6 +3844,7 @@ body.entrance-done .landing-header {
     justify-content: center;
     padding: 96px 20px 72px;
     z-index: 1;
+    background: url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113558/Fondos-08_wpaag0.jpg") center center / cover no-repeat;
 }
 
 .landing-hero::after {
