@@ -11,6 +11,7 @@ class LandingView extends BaseView {
     this.threadsRevealCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
+    this.scrollRevealCleanup = null;
   }
 
   async onEnter() {
@@ -23,10 +24,11 @@ class LandingView extends BaseView {
     this.initLandingThreadsReveal();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
+    this.initScrollReveal();
   }
 
   /**
-   * Header: sin “pastilla” al inicio (transparente, ancho completo, pegado arriba);
+   * Header: sin "pastilla" al inicio (transparente, ancho completo, pegado arriba);
    * al hacer scroll recupera el estilo flotante con blur y bordes.
    */
   initLandingHeaderScrollState() {
@@ -55,12 +57,11 @@ class LandingView extends BaseView {
 
     update();
 
-    const onScroll = () => update();
     const scrollTarget = usesAppScroll() ? appContainer : window;
-    scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+    scrollTarget.addEventListener('scroll', update, { passive: true });
 
     this.landingHeaderScrollCleanup = () => {
-      scrollTarget.removeEventListener('scroll', onScroll);
+      scrollTarget.removeEventListener('scroll', update);
     };
   }
 
@@ -85,7 +86,6 @@ class LandingView extends BaseView {
       return;
     }
 
-    /** Solo revelar cuando una parte clara de la sección está en vista (evita animación ya terminada al llegar). */
     const MIN_RATIO = 0.14;
     const io = new IntersectionObserver(
       (entries) => {
@@ -108,6 +108,43 @@ class LandingView extends BaseView {
     io.observe(el);
 
     this.threadsRevealCleanup = () => {
+      io.disconnect();
+    };
+  }
+
+  /**
+   * Scroll-reveal: aplica .is-visible a elementos .sr-reveal cuando entran en viewport.
+   * Los delays de transición están controlados desde CSS con .sr-reveal--d1/d2/…
+   */
+  initScrollReveal() {
+    if (typeof this.scrollRevealCleanup === 'function') {
+      this.scrollRevealCleanup();
+      this.scrollRevealCleanup = null;
+    }
+
+    const els = document.querySelectorAll('.sr-reveal');
+    if (!els.length) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      els.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -4% 0px' }
+    );
+
+    els.forEach((el) => io.observe(el));
+
+    this.scrollRevealCleanup = () => {
       io.disconnect();
     };
   }
@@ -148,12 +185,8 @@ class LandingView extends BaseView {
       viewport.scrollBy({ left: direction * getStep(), behavior: 'smooth' });
     };
 
-    const onPrev = () => {
-      go(-1);
-    };
-    const onNext = () => {
-      go(1);
-    };
+    const onPrev = () => go(-1);
+    const onNext = () => go(1);
 
     const onKeydown = (e) => {
       if (e.key === 'ArrowLeft') {
@@ -169,9 +202,7 @@ class LandingView extends BaseView {
     nextBtn.addEventListener('click', onNext);
     viewport.addEventListener('scroll', updateButtons, { passive: true });
     viewport.addEventListener('keydown', onKeydown);
-
-    const onResize = () => updateButtons();
-    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('resize', updateButtons, { passive: true });
 
     updateButtons();
 
@@ -180,7 +211,7 @@ class LandingView extends BaseView {
       nextBtn.removeEventListener('click', onNext);
       viewport.removeEventListener('scroll', updateButtons);
       viewport.removeEventListener('keydown', onKeydown);
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', updateButtons);
     };
   }
 
@@ -252,7 +283,6 @@ class LandingView extends BaseView {
     let pillarIndex = 0;
     let wheelAccum = 0;
     let prevScrollY = getScrollY();
-    /** Evita re-enganchar al instante tras completar los pilares hacia abajo (bucle). */
     let suppressPillarLock = false;
     const WHEEL_THRESHOLD = 88;
     const ENTER_ZONE_PX = 28;
@@ -540,6 +570,10 @@ class LandingView extends BaseView {
     if (typeof this.whyCarouselCleanup === 'function') {
       this.whyCarouselCleanup();
       this.whyCarouselCleanup = null;
+    }
+    if (typeof this.scrollRevealCleanup === 'function') {
+      this.scrollRevealCleanup();
+      this.scrollRevealCleanup = null;
     }
   }
 }

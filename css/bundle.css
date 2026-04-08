@@ -3950,7 +3950,6 @@ body.entrance-done .landing-header {
     position: relative;
     z-index: 3;
     width: min(900px, 100%);
-    max-width: 900px;
     color: var(--color-white);
 }
 
@@ -4737,12 +4736,12 @@ body.entrance-done .landing-header {
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
-    padding: 30px 20.2667px;
-    gap: 21.33px;
+    padding: 30px 20px;
+    gap: 21px;
     width: 100%;
     min-width: 0;
     max-width: 500px;
-    min-height: 221.87px;
+    min-height: 222px;
     height: auto;
     justify-self: center;
     border-radius: 20px;
@@ -4752,6 +4751,12 @@ body.entrance-done .landing-header {
     background: var(--bento-bg, linear-gradient(180deg, rgba(0, 231, 255, 0) 0%, rgba(0, 231, 255, 0.3) 100%));
     flex: 1 1 auto;
     margin: 0 auto;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.landing-bento__card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 .landing-bento__card-main {
@@ -4878,6 +4883,12 @@ body.entrance-done .landing-header {
     -webkit-backdrop-filter: blur(8px);
     background: linear-gradient(180deg, rgba(0, 231, 255, 0) 0%, rgba(0, 231, 255, 0.12) 100%),
         linear-gradient(165deg, rgba(24, 26, 30, 0.75) 0%, rgba(10, 11, 14, 0.88) 100%);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s ease;
+}
+
+.landing-signal__card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.26);
 }
 
 .landing-signal__card--featured {
@@ -5293,6 +5304,12 @@ body.entrance-done .landing-header {
     border-radius: 26px;
     background: #ffffff;
     box-sizing: border-box;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.landing-why__card-wrap:hover .landing-why__card {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 52px rgba(15, 15, 20, 0.14);
 }
 
 .landing-why__card-body {
@@ -5429,6 +5446,12 @@ body.entrance-done .landing-header {
 .landing-different__item {
     margin: 0;
     padding: 0;
+    transition: opacity 0.2s ease;
+}
+
+.landing-different__item:hover .landing-different__label {
+    color: #7c4dff;
+    transition: color 0.2s ease;
 }
 
 .landing-different__row {
@@ -5704,6 +5727,34 @@ body.entrance-done .landing-header {
     }
 }
 
+
+/* ─── Landing: scroll-reveal (entrada fluida de secciones) ─── */
+.sr-reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sr-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sr-reveal--d1 { transition-delay: 0.1s; }
+.sr-reveal--d2 { transition-delay: 0.2s; }
+.sr-reveal--d3 { transition-delay: 0.3s; }
+.sr-reveal--d4 { transition-delay: 0.4s; }
+.sr-reveal--d5 { transition-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sr-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
 
 /* ========== signin.css – Login (misma animación que landing, botones alineados) ========== */
 
