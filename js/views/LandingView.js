@@ -9,6 +9,7 @@ class LandingView extends BaseView {
     this.heroWordsTimer = null;
     this.pillarScrollCleanup = null;
     this.threadsRevealCleanup = null;
+    this.landingHeaderScrollCleanup = null;
   }
 
   async onEnter() {
@@ -19,6 +20,46 @@ class LandingView extends BaseView {
     this.initHeroWordsCarousel();
     this.initValuePillarsNav();
     this.initLandingThreadsReveal();
+    this.initLandingHeaderScrollState();
+  }
+
+  /**
+   * Header: sin “pastilla” al inicio (transparente, ancho completo, pegado arriba);
+   * al hacer scroll recupera el estilo flotante con blur y bordes.
+   */
+  initLandingHeaderScrollState() {
+    if (typeof this.landingHeaderScrollCleanup === 'function') {
+      this.landingHeaderScrollCleanup();
+      this.landingHeaderScrollCleanup = null;
+    }
+
+    const header = document.querySelector('.landing-header');
+    if (!header) return;
+
+    const appContainer = document.getElementById('app-container');
+    const SCROLL_THRESHOLD_PX = 32;
+
+    const usesAppScroll = () =>
+      appContainer && appContainer.scrollHeight > appContainer.clientHeight + 2;
+
+    const getScrollY = () => {
+      if (usesAppScroll()) return appContainer.scrollTop;
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    };
+
+    const update = () => {
+      header.classList.toggle('landing-header--floating', getScrollY() > SCROLL_THRESHOLD_PX);
+    };
+
+    update();
+
+    const onScroll = () => update();
+    const scrollTarget = usesAppScroll() ? appContainer : window;
+    scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+
+    this.landingHeaderScrollCleanup = () => {
+      scrollTarget.removeEventListener('scroll', onScroll);
+    };
   }
 
   /**
@@ -417,6 +458,10 @@ class LandingView extends BaseView {
     if (typeof this.threadsRevealCleanup === 'function') {
       this.threadsRevealCleanup();
       this.threadsRevealCleanup = null;
+    }
+    if (typeof this.landingHeaderScrollCleanup === 'function') {
+      this.landingHeaderScrollCleanup();
+      this.landingHeaderScrollCleanup = null;
     }
   }
 }
