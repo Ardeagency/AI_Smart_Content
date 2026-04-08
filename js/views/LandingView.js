@@ -8,6 +8,7 @@ class LandingView extends BaseView {
     this.templatePath = 'landing.html';
     this.heroWordsTimer = null;
     this.pillarScrollCleanup = null;
+    this.threadsRevealCleanup = null;
   }
 
   async onEnter() {
@@ -17,6 +18,42 @@ class LandingView extends BaseView {
   async init() {
     this.initHeroWordsCarousel();
     this.initValuePillarsNav();
+    this.initLandingThreadsReveal();
+  }
+
+  /**
+   * Sección de línea / fragmentos / burbujas: animación al entrar en viewport.
+   */
+  initLandingThreadsReveal() {
+    if (typeof this.threadsRevealCleanup === 'function') {
+      this.threadsRevealCleanup();
+      this.threadsRevealCleanup = null;
+    }
+
+    const el = document.getElementById('landing-after-pillars');
+    if (!el) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      el.classList.add('landing-threads--visible');
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('landing-threads--visible');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.14, rootMargin: '0px 0px -6% 0px' }
+    );
+
+    io.observe(el);
+    this.threadsRevealCleanup = () => {
+      io.disconnect();
+    };
   }
 
   /**
@@ -363,6 +400,10 @@ class LandingView extends BaseView {
     if (typeof this.pillarScrollCleanup === 'function') {
       this.pillarScrollCleanup();
       this.pillarScrollCleanup = null;
+    }
+    if (typeof this.threadsRevealCleanup === 'function') {
+      this.threadsRevealCleanup();
+      this.threadsRevealCleanup = null;
     }
   }
 }
