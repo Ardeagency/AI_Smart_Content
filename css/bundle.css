@@ -4090,15 +4090,12 @@ body.entrance-done .landing-header {
     flex-shrink: 0;
 }
 
-.landing-footer-col--contact .landing-footer-contact-list {
-    margin-bottom: 20px;
-}
-
 .landing-footer-credit {
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.45);
+    text-align: right;
 }
 
 .landing-footer-credit-link {
@@ -4115,11 +4112,18 @@ body.entrance-done .landing-header {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.landing-footer-copy {
-    display: block;
+.landing-footer-bottom-inner {
     width: min(1200px, calc(100% - 48px));
     margin: 0 auto;
     padding: 18px 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    flex-wrap: wrap;
+}
+
+.landing-footer-copy {
     font-size: 0.75rem;
     letter-spacing: 0.02em;
     color: rgba(255, 255, 255, 0.38);
@@ -4154,9 +4158,16 @@ body.entrance-done .landing-header {
         padding-top: 0;
     }
 
-    .landing-footer-copy {
+    .landing-footer-bottom-inner {
         width: calc(100% - 32px);
         padding: 14px 0 20px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .landing-footer-credit {
+        align-self: flex-end;
+        text-align: right;
     }
 }
 
