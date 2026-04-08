@@ -3973,8 +3973,14 @@ body.entrance-done .landing-header {
 
 .landing-pillars__scroll-track {
     --pillar-count: 4;
+    /* Recorrido total de scroll ≈ N × unidad (no 100vh por paso → menos hueco vacío) */
+    --pillar-scroll-unit: min(28vh, 200px);
     position: relative;
-    height: calc(var(--pillar-count) * 100vh);
+    height: calc(var(--pillar-count) * var(--pillar-scroll-unit));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
 }
 
 .landing-pillars__sticky {
@@ -3982,17 +3988,21 @@ body.entrance-done .landing-header {
     top: 92px;
     z-index: 2;
     width: 100%;
+    max-width: min(1120px, calc(100% - 48px));
+    margin-left: auto;
+    margin-right: auto;
     box-sizing: border-box;
 }
 
 .landing-pillars__layout {
-    width: min(1120px, calc(100% - 48px));
-    margin: 0 auto;
-    padding: clamp(1.75rem, 4vw, 2.75rem) 0;
+    width: 100%;
+    margin: 0;
+    padding: clamp(1.25rem, 3vw, 2rem) clamp(0.5rem, 2vw, 1rem);
     display: grid;
-    grid-template-columns: minmax(200px, 340px) minmax(0, 1fr);
-    gap: clamp(1.5rem, 4vw, 3rem);
-    align-items: start;
+    grid-template-columns: minmax(180px, 300px) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    align-items: center;
+    justify-items: stretch;
 }
 
 .landing-pillars__nav-list {
@@ -4010,9 +4020,9 @@ body.entrance-done .landing-header {
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
-    padding: 14px 0 16px;
+    padding: 10px 0 12px;
     border: none;
     background: transparent;
     text-align: left;
@@ -4091,7 +4101,9 @@ body.entrance-done .landing-header {
     display: grid;
     grid-template: 1fr / 1fr;
     min-width: 0;
-    align-self: start;
+    width: 100%;
+    align-self: center;
+    justify-self: center;
 }
 
 .landing-pillars__carousel > .landing-pillars__panel {
@@ -4116,7 +4128,9 @@ body.entrance-done .landing-header {
 }
 
 .landing-pillars__panel-body {
-    max-width: 42rem;
+    max-width: 38rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .landing-pillars__panel-body p {
@@ -4142,24 +4156,30 @@ body.entrance-done .landing-header {
 
 @media (max-width: 768px) {
     .landing-pillars__scroll-track {
-        height: calc(var(--pillar-count, 4) * 85vh);
-        min-height: calc(var(--pillar-count, 4) * 85dvh);
+        --pillar-scroll-unit: min(22vh, 150px);
+        height: calc(var(--pillar-count, 4) * var(--pillar-scroll-unit));
     }
 
     .landing-pillars__sticky {
         top: 72px;
+        max-width: calc(100% - 32px);
     }
 
     .landing-pillars__layout {
-        width: calc(100% - 32px);
         grid-template-columns: 1fr;
-        padding: 1.5rem 0 2rem;
-        gap: 1.5rem;
+        padding: 1rem 0 1.25rem;
+        gap: 1.25rem;
+        align-items: start;
     }
 
     .landing-pillars__nav-btn {
         font-size: 1.05rem;
-        padding: 10px 0 12px;
+        padding: 8px 0 10px;
+    }
+
+    .landing-pillars__panel-body {
+        margin-left: 0;
+        margin-right: 0;
     }
 }
 
