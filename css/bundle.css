@@ -7792,6 +7792,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 100%;
 }
 
+#infoPanelContent .brand-niche-row--single .brand-niche-single-select {
+    width: 100%;
+    max-width: 100%;
+}
+
 #infoPanelContent .brand-niche-add-select,
 #infoPanelContent .brand-subnicho-add-select {
     min-width: min(100%, 16rem);
@@ -7804,7 +7809,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.875rem;
 }
 
-#infoPanelContent .brand-niche-tags,
 #infoPanelContent .brand-subnicho-tags {
     display: flex;
     flex-wrap: wrap;
@@ -7813,7 +7817,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-width: 0;
 }
 
-#infoPanelContent .brand-niche-tag,
 #infoPanelContent .brand-subnicho-tag {
     display: inline-flex;
     align-items: center;
@@ -7821,7 +7824,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.2rem 0.45rem 0.2rem 0.55rem;
 }
 
-#infoPanelContent .brand-niche-tag-remove,
 #infoPanelContent .brand-subnicho-tag-remove {
     appearance: none;
     border: none;
@@ -7835,7 +7837,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 4px;
 }
 
-#infoPanelContent .brand-niche-tag-remove:hover,
 #infoPanelContent .brand-subnicho-tag-remove:hover {
     opacity: 1;
     background: rgba(255, 255, 255, 0.08);

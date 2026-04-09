@@ -1272,7 +1272,7 @@ class BrandsView extends BaseView {
     return Array.isArray(window.BRAND_NICHES_DIRECTORY) ? window.BRAND_NICHES_DIRECTORY : [];
   }
 
-  /** Unión de sub-nichos permitidos para las categorías seleccionadas. */
+  /** Unión de sub-nichos permitidos para las categorías dadas (en UI solo hay 1 categoría principal). */
   getAllowedSubnichosForNichos(nichos, directory) {
     const set = new Set();
     const dir = directory || this.getNicheDirectory();
@@ -1283,6 +1283,13 @@ class BrandsView extends BaseView {
     return Array.from(set);
   }
 
+  /** `nicho_mercado` en BD es text[] pero la UI solo permite 1 categoría → como máximo 1 string en el array. */
+  normalizeNichoMercadoForDb(nichos) {
+    if (!Array.isArray(nichos) || nichos.length === 0) return [];
+    const first = String(nichos[0] || '').trim();
+    return first ? [first] : [];
+  }
+
   /**
    * Guarda `nicho_mercado` y `sub_nicho` en un solo PATCH (o INSERT si aún no hay fila en brands).
    */
@@ -1291,7 +1298,7 @@ class BrandsView extends BaseView {
     const saveKey = 'brand_niche_bundle';
     if (this.savingFields.has(saveKey)) return;
     this.savingFields.add(saveKey);
-    const n = Array.isArray(nichos) ? nichos : [];
+    const n = this.normalizeNichoMercadoForDb(Array.isArray(nichos) ? nichos : []);
     const s = Array.isArray(subnichos) ? subnichos : [];
     const wasNew = !this.brandData?.id;
     try {
@@ -1330,7 +1337,8 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Selectores de nicho (lista cerrada) + sub-nicho (filtrado por categorías elegidas).
+   * Nicho: un solo <select> (se persiste como text[] con 0 o 1 elemento).
+   * Sub-nicho: <select> multivalor vía tags (dropdown + chips), text[].
    */
   setupBrandNicheEditors(container, onRefreshPanel) {
     const block = container.querySelector('[data-brand-niche-block="1"]');
@@ -1346,60 +1354,47 @@ class BrandsView extends BaseView {
     }
 
     const paint = () => {
-      const nichos = Array.isArray(this.brandData?.nicho_mercado) ? [...this.brandData.nicho_mercado] : [];
+      const rawNichos = Array.isArray(this.brandData?.nicho_mercado) ? [...this.brandData.nicho_mercado] : [];
+      const primaryNicho = rawNichos[0] || '';
+      const nichoArr = primaryNicho ? [primaryNicho] : [];
       const subs = Array.isArray(this.brandData?.sub_nicho) ? [...this.brandData.sub_nicho] : [];
-      const allowed = this.getAllowedSubnichosForNichos(nichos, directory);
+      const allowed = this.getAllowedSubnichosForNichos(nichoArr, directory);
       const allowedSet = new Set(allowed);
 
       nicheRoot.innerHTML = '';
       const rowN = document.createElement('div');
-      rowN.className = 'brand-niche-row';
+      rowN.className = 'brand-niche-row brand-niche-row--single';
       const selN = document.createElement('select');
-      selN.className = 'brand-niche-add-select';
-      selN.setAttribute('aria-label', 'Añadir categoría de nicho');
+      selN.className = 'brand-niche-add-select brand-niche-single-select';
+      selN.setAttribute('aria-label', 'Categoría de nicho de mercado');
       const optEmptyN = document.createElement('option');
       optEmptyN.value = '';
-      optEmptyN.textContent = 'Elegir categoría…';
+      optEmptyN.textContent = 'Seleccionar categoría…';
       selN.appendChild(optEmptyN);
-      directory
-        .map(d => d.nicho)
-        .filter(name => !nichos.includes(name))
-        .forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = name;
-          selN.appendChild(opt);
-        });
-      const tagsN = document.createElement('div');
-      tagsN.className = 'brand-niche-tags';
-      nichos.forEach(nichoName => {
-        const tag = document.createElement('span');
-        tag.className = 'editable-tag brand-niche-tag';
-        tag.textContent = nichoName;
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.className = 'brand-niche-tag-remove';
-        rm.setAttribute('aria-label', 'Quitar categoría');
-        rm.textContent = '×';
-        rm.addEventListener('click', async () => {
-          const nextN = nichos.filter(x => x !== nichoName);
-          const allowedNext = new Set(this.getAllowedSubnichosForNichos(nextN, directory));
-          const nextS = subs.filter(x => allowedNext.has(x));
-          await this.saveBrandNicheBundle(nextN, nextS, onRefreshPanel);
-          paint();
-        });
-        tag.appendChild(rm);
-        tagsN.appendChild(tag);
+      const inDirectory = primaryNicho && directory.some(d => d.nicho === primaryNicho);
+      if (primaryNicho && !inDirectory) {
+        const optLegacy = document.createElement('option');
+        optLegacy.value = primaryNicho;
+        optLegacy.textContent = primaryNicho;
+        optLegacy.selected = true;
+        selN.appendChild(optLegacy);
+      }
+      directory.forEach(({ nicho: name }) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (inDirectory && name === primaryNicho) opt.selected = true;
+        selN.appendChild(opt);
       });
       selN.addEventListener('change', async () => {
-        const v = selN.value;
-        if (!v) return;
-        const nextN = [...nichos, v];
-        await this.saveBrandNicheBundle(nextN, subs, onRefreshPanel);
+        const v = selN.value.trim();
+        const nextN = v ? [v] : [];
+        const allowedNext = new Set(this.getAllowedSubnichosForNichos(nextN, directory));
+        const nextS = nextN.length === 0 ? [] : subs.filter(x => allowedNext.has(x));
+        await this.saveBrandNicheBundle(nextN, nextS, onRefreshPanel);
         paint();
       });
       rowN.appendChild(selN);
-      rowN.appendChild(tagsN);
       nicheRoot.appendChild(rowN);
 
       subRoot.innerHTML = '';
@@ -1408,10 +1403,10 @@ class BrandsView extends BaseView {
       const selS = document.createElement('select');
       selS.className = 'brand-subnicho-add-select';
       selS.setAttribute('aria-label', 'Añadir sub-nicho');
-      selS.disabled = nichos.length === 0;
+      selS.disabled = !primaryNicho;
       const optEmptyS = document.createElement('option');
       optEmptyS.value = '';
-      optEmptyS.textContent = nichos.length === 0 ? 'Primero elige al menos un nicho…' : 'Elegir sub-nicho…';
+      optEmptyS.textContent = primaryNicho ? 'Elegir sub-nicho…' : 'Primero elige una categoría de nicho…';
       selS.appendChild(optEmptyS);
       allowed.filter(sub => !subs.includes(sub)).forEach(sub => {
         const opt = document.createElement('option');
@@ -1432,7 +1427,7 @@ class BrandsView extends BaseView {
         rm.textContent = '×';
         rm.addEventListener('click', async () => {
           const nextS = subs.filter(x => x !== sub);
-          await this.saveBrandNicheBundle(nichos, nextS, onRefreshPanel);
+          await this.saveBrandNicheBundle(nichoArr, nextS, onRefreshPanel);
           paint();
         });
         tag.appendChild(rm);
@@ -1443,7 +1438,7 @@ class BrandsView extends BaseView {
         if (!v) return;
         if (!allowedSet.has(v)) return;
         const nextS = [...subs, v];
-        await this.saveBrandNicheBundle(nichos, nextS, onRefreshPanel);
+        await this.saveBrandNicheBundle(nichoArr, nextS, onRefreshPanel);
         paint();
       });
       rowS.appendChild(selS);
@@ -2065,7 +2060,7 @@ class BrandsView extends BaseView {
         <div class="brand-niche-editor-root info-field-value" aria-live="polite"></div>
         <div class="info-field-label brand-subnicho-label">Sub-nicho</div>
         <div class="brand-subnicho-editor-root info-field-value" aria-live="polite"></div>
-        <p class="brand-niche-hint">Elige una o más categorías; los sub-nichos disponibles dependen de las categorías seleccionadas.</p>
+        <p class="brand-niche-hint">Una sola categoría principal. Los sub-nichos se eligen del directorio (varios permitidos) y dependen de esa categoría.</p>
       </div>`;
     if (!brand) {
       return `
