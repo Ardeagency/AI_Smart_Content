@@ -417,153 +417,12 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Multi-select con pills y dropdown de opciones predefinidas.
-   * Reutilizable para nicho_mercado y sub_nicho.
-   * @param {Element} element - contenedor donde renderizar
-   * @param {string} fieldName - campo en brands
-   * @param {string[]} options - opciones disponibles
-   * @param {Function} [onSave] - callback tras guardar
+   * <select> nativo (mismo estilo que makeEditableSelect) para columnas text[] en brands
+   * donde guardamos un solo valor como array de un elemento.
    */
-  _makePredefinedMultiSelect(element, fieldName, options, onSave) {
+  _makeNativeSelectForBrandArrayField(element, fieldName, optionLabels, placeholder, onSave) {
     if (!element) return;
-
-    // Limpiar listener anterior de cierre externo
-    if (element._pmsClearOutside) element._pmsClearOutside();
-
-    const currentValues = Array.isArray(this.brandData?.[fieldName])
-      ? [...this.brandData[fieldName]]
-      : [];
-
-    element.innerHTML = '';
-    const wrap = document.createElement('div');
-    wrap.className = 'predefined-multiselect';
-    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center;position:relative;';
-
-    // Pills de valores seleccionados
-    currentValues.forEach((val, i) => {
-      const tag = document.createElement('span');
-      tag.className = 'editable-tag';
-      tag.textContent = val;
-      const rm = document.createElement('span');
-      rm.className = 'editable-tag-remove';
-      rm.innerHTML = ' ×';
-      rm.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const next = currentValues.filter((_, idx) => idx !== i);
-        await this.saveBrandField(fieldName, next);
-        if (onSave) onSave();
-      });
-      tag.appendChild(rm);
-      wrap.appendChild(tag);
-    });
-
-    const available = options.filter(o => !currentValues.includes(o));
-    if (available.length > 0) {
-      const triggerBtn = document.createElement('button');
-      triggerBtn.type = 'button';
-      triggerBtn.className = 'editable-tag-input';
-      triggerBtn.style.cssText = 'cursor:pointer;min-width:70px;padding:0.2rem 0.6rem;';
-      triggerBtn.textContent = '+ Agregar';
-
-      const dropdown = document.createElement('div');
-      dropdown.style.cssText = [
-        'position:absolute;top:calc(100% + 6px);left:0;z-index:9999;',
-        'background:var(--surface-2,#1c1c1c);border:1px solid rgba(255,255,255,0.12);',
-        'border-radius:10px;padding:0.5rem;min-width:240px;max-height:250px;',
-        'box-shadow:0 8px 28px rgba(0,0,0,0.5);display:none;flex-direction:column;gap:0;'
-      ].join('');
-
-      const searchInput = document.createElement('input');
-      searchInput.type = 'text';
-      searchInput.placeholder = 'Buscar…';
-      searchInput.style.cssText = [
-        'width:100%;padding:0.35rem 0.6rem;margin-bottom:0.4rem;',
-        'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);',
-        'border-radius:6px;color:inherit;font-size:0.82rem;outline:none;'
-      ].join('');
-
-      const listEl = document.createElement('div');
-      listEl.style.cssText = 'overflow-y:auto;max-height:175px;';
-
-      const renderList = (filter = '') => {
-        listEl.innerHTML = '';
-        const filtered = available.filter(o =>
-          !filter || o.toLowerCase().includes(filter.toLowerCase())
-        );
-        if (!filtered.length) {
-          const empty = document.createElement('div');
-          empty.textContent = 'Sin resultados';
-          empty.style.cssText = 'padding:0.35rem 0.5rem;opacity:0.45;font-size:0.8rem;';
-          listEl.appendChild(empty);
-          return;
-        }
-        filtered.forEach(opt => {
-          const item = document.createElement('div');
-          item.textContent = opt;
-          item.style.cssText = 'padding:0.35rem 0.6rem;cursor:pointer;border-radius:6px;font-size:0.83rem;transition:background 0.12s;';
-          item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,255,255,0.09)'; });
-          item.addEventListener('mouseleave', () => { item.style.background = ''; });
-          item.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            const next = [...currentValues, opt];
-            dropdown.style.display = 'none';
-            isOpen = false;
-            await this.saveBrandField(fieldName, next);
-            if (onSave) onSave();
-          });
-          listEl.appendChild(item);
-        });
-      };
-
-      searchInput.addEventListener('input', () => renderList(searchInput.value));
-      dropdown.appendChild(searchInput);
-      dropdown.appendChild(listEl);
-
-      let isOpen = false;
-      const closeDropdown = () => {
-        dropdown.style.display = 'none';
-        isOpen = false;
-      };
-
-      triggerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        isOpen = !isOpen;
-        if (isOpen) {
-          dropdown.style.display = 'flex';
-          dropdown.style.flexDirection = 'column';
-          searchInput.value = '';
-          renderList();
-          searchInput.focus();
-        } else {
-          closeDropdown();
-        }
-      });
-
-      const outsideClose = (e) => {
-        if (!document.body.contains(wrap)) {
-          document.removeEventListener('click', outsideClose);
-          return;
-        }
-        if (!wrap.contains(e.target)) closeDropdown();
-      };
-      document.addEventListener('click', outsideClose);
-      element._pmsClearOutside = () => document.removeEventListener('click', outsideClose);
-
-      wrap.appendChild(triggerBtn);
-      wrap.appendChild(dropdown);
-    }
-
-    element.appendChild(wrap);
-  }
-
-  /**
-   * Selector de nicho principal: <select> simple con las 20 categorías.
-   * Guarda como array de un elemento en nicho_mercado (columna text[]).
-   */
-  makeNichoCategorySelect(element, onSave) {
-    if (!element) return;
-    const categories = Object.keys(BrandsView.NICHO_CATALOG);
-    const raw = this.brandData?.nicho_mercado;
+    const raw = this.brandData?.[fieldName];
     const currentValue = Array.isArray(raw) ? (raw[0] || '') : (raw || '');
 
     const select = document.createElement('select');
@@ -572,14 +431,14 @@ class BrandsView extends BaseView {
 
     const blank = document.createElement('option');
     blank.value = '';
-    blank.textContent = '— Seleccionar —';
+    blank.textContent = placeholder;
     select.appendChild(blank);
 
-    categories.forEach(cat => {
+    (optionLabels || []).forEach(label => {
       const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      if (cat === currentValue) opt.selected = true;
+      opt.value = label;
+      opt.textContent = label;
+      if (label === currentValue) opt.selected = true;
       select.appendChild(opt);
     });
 
@@ -588,14 +447,25 @@ class BrandsView extends BaseView {
 
     select.addEventListener('change', async () => {
       const val = select.value;
-      await this.saveBrandField('nicho_mercado', val ? [val] : []);
+      await this.saveBrandField(fieldName, val ? [val] : []);
       if (onSave) onSave();
     });
   }
 
+  /** Nicho principal: dropdown nativo (catálogo). Guarda nicho_mercado como text[] de 1 elemento. */
+  makeNichoCategorySelect(element, onSave) {
+    this._makeNativeSelectForBrandArrayField(
+      element,
+      'nicho_mercado',
+      Object.keys(BrandsView.NICHO_CATALOG),
+      '— Seleccionar nicho —',
+      onSave
+    );
+  }
+
   /**
-   * Selector de sub-nicho: opciones filtradas por los nichos seleccionados.
-   * Si no hay nicho seleccionado, muestra todos los sub-nichos disponibles.
+   * Sub-nicho: mismo formato de dropdown que el nicho.
+   * Opciones filtradas por el nicho elegido; si aún no hay nicho, lista todos los sub-nichos del catálogo.
    */
   makeSubNichoSelect(element, onSave) {
     const selectedNichos = Array.isArray(this.brandData?.nicho_mercado)
@@ -607,7 +477,13 @@ class BrandsView extends BaseView {
     source.forEach(nicho => {
       (catalog[nicho] || []).forEach(s => { if (!subcats.includes(s)) subcats.push(s); });
     });
-    this._makePredefinedMultiSelect(element, 'sub_nicho', subcats, onSave);
+    this._makeNativeSelectForBrandArrayField(
+      element,
+      'sub_nicho',
+      subcats,
+      '— Seleccionar sub-nicho —',
+      onSave
+    );
   }
 
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
