@@ -408,9 +408,39 @@ class BrandsView extends BaseView {
     this.brandAssets = data || [];
   }
 
+  /** Opciones del desplegable `nicho_core` (valor guardado = `value`). */
+  static NICHO_CORE_OPTIONS = [
+    { value: '', label: 'Seleccionar nicho' },
+    { value: 'tecnologia_saas', label: 'Tecnología / SaaS' },
+    { value: 'ecommerce_retail', label: 'E-commerce / Retail' },
+    { value: 'salud_bienestar', label: 'Salud y bienestar' },
+    { value: 'fitness_deporte', label: 'Fitness y deporte' },
+    { value: 'alimentacion', label: 'Alimentación y gastronomía' },
+    { value: 'educacion', label: 'Educación y formación' },
+    { value: 'inmobiliaria', label: 'Inmobiliaria' },
+    { value: 'servicios_profesionales', label: 'Servicios profesionales' },
+    { value: 'marketing_agencia', label: 'Marketing y agencias' },
+    { value: 'entretenimiento', label: 'Entretenimiento y medios' },
+    { value: 'moda_belleza', label: 'Moda y belleza' },
+    { value: 'turismo', label: 'Turismo y hospitalidad' },
+    { value: 'finanzas', label: 'Finanzas y seguros' },
+    { value: 'industrial_b2b', label: 'Industrial / B2B' },
+    { value: 'sostenibilidad', label: 'Sostenibilidad e impacto' },
+    { value: 'arte_cultura', label: 'Arte y cultura' },
+    { value: 'hogar_lifestyle', label: 'Hogar y lifestyle' },
+    { value: 'otro', label: 'Otro' }
+  ];
+
+  static getNichoCoreLabel(storedValue) {
+    const v = storedValue == null ? '' : String(storedValue);
+    const row = BrandsView.NICHO_CORE_OPTIONS.find((o) => o.value === v);
+    if (row) return row.label;
+    return v.trim() ? v : 'Seleccionar nicho';
+  }
+
   /** Esquema `public.brands` (panel INFO derecho): orden y tipo de editor. */
   static BRAND_SCHEMA_BLOCKS = [
-    { field: 'nicho_core', label: 'Nicho core', type: 'text' },
+    { field: 'nicho_core', label: 'Nicho core', type: 'select' },
     { field: 'sub_nichos', label: 'Sub-nichos', type: 'array' },
     { field: 'arquetipo', label: 'Arquetipo', type: 'text' },
     { field: 'propuesta_valor', label: 'Propuesta de valor', type: 'textarea' },
@@ -1671,7 +1701,32 @@ class BrandsView extends BaseView {
       const f = this.escapeHtml(field);
       const lab = this.escapeHtml(label);
       let control = '';
-      if (type === 'text') {
+      if (type === 'select' && field === 'nicho_core') {
+        const cur = this.brandData?.nicho_core != null ? String(this.brandData.nicho_core) : '';
+        const catalog = BrandsView.NICHO_CORE_OPTIONS;
+        const hasInCatalog = catalog.some((o) => o.value === cur);
+        let optRows = [...catalog];
+        if (cur && !hasInCatalog) {
+          optRows = [{ value: cur, label: `${cur} (actual)` }, ...catalog.filter((o) => o.value !== '')];
+        }
+        const optionsHtml = optRows
+          .map((o) => {
+            const sel = o.value === cur ? ' is-selected' : '';
+            const valAttr = o.value === '' ? '' : this.escapeHtml(o.value);
+            const label = this.escapeHtml(o.label);
+            return `<li role="option" class="info-brand-select__option${sel}" data-value="${valAttr}">${label}</li>`;
+          })
+          .join('');
+        const shown = this.escapeHtml(BrandsView.getNichoCoreLabel(cur));
+        control = `
+        <div class="info-brand-select info-brand-select--nicho" data-field="${f}" data-editor-type="select">
+          <button type="button" class="info-brand-select__trigger" aria-expanded="false" aria-haspopup="listbox" aria-label="Nicho core, lista desplegable">
+            <span class="info-brand-select__value">${shown}</span>
+            <span class="info-brand-select__caret" aria-hidden="true"></span>
+          </button>
+          <ul class="info-brand-select__panel" role="listbox" hidden>${optionsHtml}</ul>
+        </div>`;
+      } else if (type === 'text') {
         control = `<div class="info-brand-text-editor info-brand-field-value" data-field="${f}" data-editor-type="text"></div>`;
       } else if (type === 'textarea') {
         control = `<textarea class="info-brand-field-value info-brand-textarea" data-field="${f}" data-editor-type="textarea" rows="4" spellcheck="true"></textarea>`;
@@ -1839,6 +1894,82 @@ class BrandsView extends BaseView {
       const field = el.getAttribute('data-field');
       if (!field) return;
       this.makeEditableMultiSelect(el, field, [], 'brand', null);
+    });
+
+    container.querySelectorAll('.info-brand-select[data-editor-type="select"]').forEach((wrap) => {
+      this._bindInfoBrandNichoSelect(wrap);
+    });
+  }
+
+  /**
+   * Desplegable custom para nicho_core (estilo pill + lista, sin depender de &lt;select&gt; nativo).
+   */
+  _bindInfoBrandNichoSelect(wrap) {
+    const field = wrap.getAttribute('data-field');
+    if (field !== 'nicho_core' || wrap.dataset.nichoSelectBound === '1') return;
+    wrap.dataset.nichoSelectBound = '1';
+
+    const trigger = wrap.querySelector('.info-brand-select__trigger');
+    const panel = wrap.querySelector('.info-brand-select__panel');
+    const valueEl = wrap.querySelector('.info-brand-select__value');
+    if (!trigger || !panel || !valueEl) return;
+
+    const getOptions = () => panel.querySelectorAll('.info-brand-select__option');
+
+    const setOpen = (open) => {
+      if (wrap._nichoDocCloser) {
+        document.removeEventListener('click', wrap._nichoDocCloser, true);
+        wrap._nichoDocCloser = null;
+      }
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.hidden = !open;
+      wrap.classList.toggle('is-open', open);
+      if (open) {
+        wrap._nichoDocCloser = (ev) => {
+          if (!wrap.contains(ev.target)) setOpen(false);
+        };
+        setTimeout(() => document.addEventListener('click', wrap._nichoDocCloser, true), 0);
+      }
+    };
+
+    const syncSelectionClasses = () => {
+      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
+      getOptions().forEach((li) => {
+        const v = li.getAttribute('data-value') != null ? li.getAttribute('data-value') : '';
+        li.classList.toggle('is-selected', v === cur);
+      });
+    };
+
+    const refreshLabel = () => {
+      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
+      valueEl.textContent = BrandsView.getNichoCoreLabel(cur);
+    };
+
+    refreshLabel();
+    syncSelectionClasses();
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(panel.hidden);
+    });
+
+    panel.addEventListener('click', async (e) => {
+      const li = e.target.closest('.info-brand-select__option');
+      if (!li || !panel.contains(li)) return;
+      e.stopPropagation();
+      const v = li.getAttribute('data-value') != null ? li.getAttribute('data-value') : '';
+      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
+      if (v !== cur) await this.saveBrandField(field, v);
+      refreshLabel();
+      syncSelectionClasses();
+      setOpen(false);
+    });
+
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && wrap.classList.contains('is-open')) {
+        e.preventDefault();
+        setOpen(false);
+      }
     });
   }
 

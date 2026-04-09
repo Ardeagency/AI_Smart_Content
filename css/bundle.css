@@ -7819,6 +7819,133 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.8;
 }
 
+/* Nicho core: desplegable estilo pill (referencia UI azul) */
+#infoPanelContent .info-brand-select--nicho {
+    --ib-nicho-blue: #2563eb;
+    --ib-nicho-blue-soft: #e8f1ff;
+    --ib-nicho-panel-border: #c7d7f5;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+#infoPanelContent .info-brand-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.65rem 1rem 0.65rem 1.15rem;
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    text-align: left;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.96);
+    border: 2px solid var(--ib-nicho-blue);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__trigger {
+    background: rgba(15, 23, 42, 0.55);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+#infoPanelContent .info-brand-select__trigger:hover {
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.2);
+}
+
+#infoPanelContent .info-brand-select.is-open .info-brand-select__trigger {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+#infoPanelContent .info-brand-select__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#infoPanelContent .info-brand-select__caret {
+    flex-shrink: 0;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--ib-nicho-blue);
+    margin-top: 2px;
+    transition: transform 0.2s ease;
+}
+
+#infoPanelContent .info-brand-select.is-open .info-brand-select__caret {
+    transform: rotate(180deg);
+}
+
+#infoPanelContent .info-brand-select__panel {
+    list-style: none;
+    margin: 0.35rem 0 0;
+    padding: 0.35rem 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid var(--ib-nicho-panel-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.12);
+    max-height: min(280px, 50vh);
+    overflow-y: auto;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__panel {
+    background: rgba(30, 41, 59, 0.98);
+    border-color: rgba(129, 161, 255, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+#infoPanelContent .info-brand-select__option {
+    padding: 0.7rem 1.1rem;
+    margin: 0 0.35rem;
+    border-radius: 8px;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: #0f172a;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+#infoPanelContent .info-brand-select__option:hover,
+#infoPanelContent .info-brand-select__option:focus {
+    outline: none;
+    background: var(--ib-nicho-blue-soft);
+    color: var(--ib-nicho-blue);
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option:hover,
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option:focus {
+    background: rgba(37, 99, 235, 0.22);
+    color: #93c5fd;
+}
+
+#infoPanelContent .info-brand-select__option.is-selected {
+    background: var(--ib-nicho-blue-soft);
+    color: var(--ib-nicho-blue);
+    font-weight: 600;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-select__option.is-selected {
+    background: rgba(37, 99, 235, 0.25);
+    color: #bfdbfe;
+}
+
 #infoPanelContent .info-brand-text-editor.editable-field {
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;
