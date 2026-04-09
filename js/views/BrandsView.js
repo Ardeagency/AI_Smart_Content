@@ -214,17 +214,37 @@ class BrandsView extends BaseView {
           this.brandIntegrations = integRows || [];
         }
         
-        // Brand
+        // Brand — auto-crea la fila si no existe (p.ej. tras DROP TABLE brands en migración)
         const { data: brand, error: brandError } = await this.supabase
-        .from('brands')
-        .select('*')
+          .from('brands')
+          .select('*')
           .eq('project_id', container.id)
           .maybeSingle();
-        
+
         if (brandError) {
           console.warn('⚠️ Error cargando brand:', brandError);
+          this.brandData = null;
+        } else if (brand) {
+          this.brandData = brand;
         } else {
-          this.brandData = brand || null;
+          // No existe fila en brands → auto-crear con valores vacíos
+          try {
+            const { data: newBrand, error: createErr } = await this.supabase
+              .from('brands')
+              .insert({ project_id: container.id, nicho_core: '' })
+              .select()
+              .single();
+            if (createErr) {
+              console.warn('⚠️ No se pudo auto-crear brands row:', createErr);
+              this.brandData = null;
+            } else {
+              this.brandData = newBrand;
+              console.info('✅ brands row auto-creado para container', container.id);
+            }
+          } catch (e) {
+            console.warn('⚠️ Error auto-creando brands:', e);
+            this.brandData = null;
+          }
         }
 
         if (!this.brandData?.id) {
