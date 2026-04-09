@@ -143,3 +143,6 @@ docs/SEGURIDAD_RLS_MAPA_PAGINAS.md
 
 # Local Netlify folder
 .netlify
+
+# Claude / Cursor worktrees locales (no versionar; rompen checkout en CI sin .gitmodules)
+.claude/
