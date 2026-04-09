@@ -966,7 +966,13 @@ class VideoView extends BaseView {
     if (!this.supabase || !this.brandContainerId) return;
     try {
       const bcId = this.brandContainerId;
-      const { data: brandRow } = await this.supabase.from('brands').select('id, tono_comunicacion, estilo_publicidad, estilo_escritura, palabras_clave, palabras_prohibidas, arquetipo_personalidad, enfoque_marca, estilo_visual, transmitir_visualmente, evitar_visualmente, objetivos_marca').eq('project_id', bcId).maybeSingle();
+      const { data: brandRow } = await this.supabase
+        .from('brands')
+        .select(
+          'id, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos'
+        )
+        .eq('project_id', bcId)
+        .maybeSingle();
       const brandId = brandRow?.id || null;
       this.dbData.brand = brandRow || null;
       this.dbData.brandProfiles = [];
@@ -1373,19 +1379,19 @@ class VideoView extends BaseView {
     const d = this.dbData || {};
     const brand = d.brand || {};
     const arr = (v) => (Array.isArray(v) ? v : []);
+    const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
     return {
       brand_voice: {
-        tono_comunicacion: arr(brand.tono_comunicacion),
-        estilo_publicidad: arr(brand.estilo_publicidad),
-        estilo_escritura: arr(brand.estilo_escritura),
+        nicho_core: brand.nicho_core || '',
+        sub_nichos: arr(brand.sub_nichos),
+        arquetipo: brand.arquetipo || null,
+        propuesta_valor: brand.propuesta_valor || null,
+        mision_vision: brand.mision_vision || null,
+        verbal_dna: obj(brand.verbal_dna),
+        visual_dna: obj(brand.visual_dna),
         palabras_clave: arr(brand.palabras_clave),
         palabras_prohibidas: arr(brand.palabras_prohibidas),
-        arquetipo_personalidad: arr(brand.arquetipo_personalidad),
-        enfoque_marca: arr(brand.enfoque_marca),
-        estilo_visual: arr(brand.estilo_visual),
-        transmitir_visualmente: arr(brand.transmitir_visualmente),
-        evitar_visualmente: arr(brand.evitar_visualmente),
-        objetivos_marca: arr(brand.objetivos_marca)
+        objetivos_estrategicos: arr(brand.objetivos_estrategicos)
       },
       brand_profiles: (d.brandProfiles || []).map((p) => ({ section: p.section, content: p.content })),
       entities: (d.entities || []).map((e) => ({ name: e.name, entity_type: e.entity_type, description: e.description })),

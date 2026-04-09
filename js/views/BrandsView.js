@@ -408,22 +408,35 @@ class BrandsView extends BaseView {
     this.brandAssets = data || [];
   }
 
-  /** Campos `text[]` de `public.brands` (orden del panel INFO derecho). */
-  static BRAND_SCHEMA_ARRAY_FIELDS = [
-    ['objetivos_marca', 'Objetivos de marca'],
-    ['nicho_mercado', 'Nicho de mercado'],
-    ['sub_nicho', 'Sub-nicho'],
-    ['arquetipo_personalidad', 'Arquetipo / personalidad'],
-    ['enfoque_marca', 'Enfoque de marca'],
-    ['estilo_visual', 'Estilo visual'],
-    ['estilo_publicidad', 'Estilo de publicidad'],
-    ['transmitir_visualmente', 'Transmitir visualmente'],
-    ['evitar_visualmente', 'Evitar visualmente'],
-    ['tono_comunicacion', 'Tono de comunicación'],
-    ['estilo_escritura', 'Estilo de escritura'],
-    ['palabras_clave', 'Palabras clave'],
-    ['palabras_prohibidas', 'Palabras prohibidas']
+  /** Esquema `public.brands` (panel INFO derecho): orden y tipo de editor. */
+  static BRAND_SCHEMA_BLOCKS = [
+    { field: 'nicho_core', label: 'Nicho core', type: 'text' },
+    { field: 'sub_nichos', label: 'Sub-nichos', type: 'array' },
+    { field: 'arquetipo', label: 'Arquetipo', type: 'text' },
+    { field: 'propuesta_valor', label: 'Propuesta de valor', type: 'textarea' },
+    { field: 'mision_vision', label: 'Misión y visión', type: 'textarea' },
+    { field: 'verbal_dna', label: 'ADN verbal (JSON)', type: 'json' },
+    { field: 'visual_dna', label: 'ADN visual (JSON)', type: 'json' },
+    { field: 'palabras_clave', label: 'Palabras clave', type: 'array' },
+    { field: 'palabras_prohibidas', label: 'Palabras prohibidas', type: 'array' },
+    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos', type: 'array' }
   ];
+
+  static get BRAND_ARRAY_FIELDS() {
+    return BrandsView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
+  }
+
+  static get BRAND_JSON_FIELDS() {
+    return BrandsView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'json').map((b) => b.field);
+  }
+
+  static get BRAND_TEXT_FIELDS() {
+    return BrandsView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'text').map((b) => b.field);
+  }
+
+  static get BRAND_TEXTAREA_FIELDS() {
+    return BrandsView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'textarea').map((b) => b.field);
+  }
 
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
   static TYPOGRAPHY_FONTS = [
@@ -1654,19 +1667,32 @@ class BrandsView extends BaseView {
   }
 
   renderBrandSchemaAsideHtml() {
-    const arrayBlocks = BrandsView.BRAND_SCHEMA_ARRAY_FIELDS.map(([field, label]) => `
-      <div class="info-brand-field">
-        <div class="info-brand-field-label">${this.escapeHtml(label)}</div>
-        <div class="info-brand-array-editor" data-field="${this.escapeHtml(field)}"></div>
-      </div>
-    `).join('');
+    const blocks = BrandsView.BRAND_SCHEMA_BLOCKS.map(({ field, label, type }) => {
+      const f = this.escapeHtml(field);
+      const lab = this.escapeHtml(label);
+      let control = '';
+      if (type === 'text') {
+        control = `<div class="info-brand-text-editor info-brand-field-value" data-field="${f}" data-editor-type="text"></div>`;
+      } else if (type === 'textarea') {
+        control = `<textarea class="info-brand-field-value info-brand-textarea" data-field="${f}" data-editor-type="textarea" rows="4" spellcheck="true"></textarea>`;
+      } else if (type === 'array') {
+        control = `<div class="info-brand-array-editor" data-field="${f}" data-editor-type="array"></div>`;
+      } else if (type === 'json') {
+        control = `<textarea class="info-brand-field-value info-brand-json-textarea" data-field="${f}" data-editor-type="json" rows="8" spellcheck="false" autocomplete="off"></textarea>`;
+      }
+      return `
+      <div class="info-brand-field" data-brand-field="${f}">
+        <div class="info-brand-field-label">${lab}</div>
+        ${control}
+      </div>`;
+    }).join('');
 
     return `
       <div class="info-brand-aside-inner">
         <h3 class="info-section-title" id="infoBrandSchemaHeading">Ficha de marca</h3>
-        <p class="info-brand-aside-lead">Editá cada bloque con etiquetas; el primer guardado crea la ficha si aún no existe.</p>
+        <p class="info-brand-aside-lead">Nicho core es obligatorio en base de datos; el primer guardado crea la fila si no existe (se usa nicho vacío hasta que lo completes).</p>
         <div class="info-brand-fields">
-          ${arrayBlocks}
+          ${blocks}
         </div>
       </div>
     `;
@@ -1705,6 +1731,110 @@ class BrandsView extends BaseView {
         if (e.target.files[0]) this.uploadLogo(e.target.files[0]);
       });
     }
+    this.setupInfoBrandFieldEditors(container);
+  }
+
+  /**
+   * Normaliza valores para insert/update en `brands` según tipo de columna.
+   * @param {string} fieldName
+   * @param {*} value
+   * @returns {string|string[]|object}
+   */
+  _normalizeBrandFieldForDb(fieldName, value) {
+    const jsonFields = BrandsView.BRAND_JSON_FIELDS;
+    const arrFields = BrandsView.BRAND_ARRAY_FIELDS;
+
+    if (jsonFields.includes(fieldName)) {
+      if (value == null || value === '') return {};
+      if (typeof value === 'string') {
+        try {
+          const o = JSON.parse(value);
+          return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
+        } catch (_) {
+          return {};
+        }
+      }
+      if (typeof value === 'object' && !Array.isArray(value)) return value;
+      return {};
+    }
+
+    if (arrFields.includes(fieldName)) {
+      return Array.isArray(value) ? value : [];
+    }
+
+    if (fieldName === 'nicho_core') {
+      return String(value ?? '').trim();
+    }
+
+    if (BrandsView.BRAND_TEXTAREA_FIELDS.includes(fieldName) || BrandsView.BRAND_TEXT_FIELDS.includes(fieldName)) {
+      const s = value == null ? '' : String(value).trim();
+      return s === '' ? null : s;
+    }
+
+    return value;
+  }
+
+  setupInfoBrandFieldEditors(container) {
+    const brand = this.brandData;
+
+    container.querySelectorAll('[data-editor-type="text"]').forEach((el) => {
+      const field = el.getAttribute('data-field');
+      if (!field) return;
+      const raw = brand?.[field];
+      el.textContent = raw != null ? String(raw) : '';
+      this.makeEditableText(el, field, 'brand', null);
+    });
+
+    container.querySelectorAll('[data-editor-type="textarea"]').forEach((el) => {
+      const field = el.getAttribute('data-field');
+      if (!field) return;
+      const raw = brand?.[field];
+      el.value = raw != null ? String(raw) : '';
+      if (el.dataset.brandTextareaBound === '1') return;
+      el.dataset.brandTextareaBound = '1';
+      el.addEventListener('blur', async () => {
+        const v = el.value.trim();
+        const cur = this.brandData?.[field] != null ? String(this.brandData[field]).trim() : '';
+        if (v !== cur) await this.saveBrandField(field, v === '' ? null : v);
+      });
+    });
+
+    container.querySelectorAll('[data-editor-type="json"]').forEach((el) => {
+      const field = el.getAttribute('data-field');
+      if (!field) return;
+      const raw = brand?.[field];
+      if (raw && typeof raw === 'object') {
+        el.value = JSON.stringify(raw, null, 2);
+      } else if (typeof raw === 'string') {
+        el.value = raw;
+      } else {
+        el.value = '{}';
+      }
+      if (el.dataset.brandJsonBound === '1') return;
+      el.dataset.brandJsonBound = '1';
+      el.addEventListener('blur', async () => {
+        let parsed = {};
+        const t = el.value.trim();
+        if (t) {
+          try {
+            parsed = JSON.parse(t);
+          } catch (_) {
+            alert(`JSON no válido en ${field}. Revisá la sintaxis.`);
+            el.focus();
+            return;
+          }
+        }
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          alert('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).');
+          return;
+        }
+        const prev = JSON.stringify(this.brandData?.[field] || {});
+        const next = JSON.stringify(parsed);
+        if (prev !== next) await this.saveBrandField(field, parsed);
+        el.value = JSON.stringify(this.brandData?.[field] || {}, null, 2);
+      });
+    });
+
     container.querySelectorAll('.info-brand-array-editor[data-field]').forEach((el) => {
       const field = el.getAttribute('data-field');
       if (!field) return;
@@ -1768,18 +1898,23 @@ class BrandsView extends BaseView {
 
   async saveBrandField(fieldName, value) {
     if (!this.supabase || !this.brandData) {
-      // Si no existe brand, crearlo
       if (!this.brandContainerData) return;
-      
+
+      let v = value;
+      if (BrandsView.BRAND_ARRAY_FIELDS.includes(fieldName) && typeof v === 'string') {
+        v = v.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+      }
+
+      const row = {
+        project_id: this.brandContainerData.id,
+        nicho_core: fieldName === 'nicho_core' ? this._normalizeBrandFieldForDb('nicho_core', v) : ''
+      };
+      if (fieldName !== 'nicho_core') {
+        row[fieldName] = this._normalizeBrandFieldForDb(fieldName, v);
+      }
+
       try {
-        const { data: newBrand, error } = await this.supabase
-          .from('brands')
-          .insert({
-            project_id: this.brandContainerData.id,
-            [fieldName]: value || null
-          })
-          .select()
-          .single();
+        const { data: newBrand, error } = await this.supabase.from('brands').insert(row).select().single();
 
         if (error) throw error;
         this.brandData = newBrand;
@@ -1801,15 +1936,14 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
-    // mercado_objetivo vive en brand_containers (saveContainerField), no en brands
-    const brandArrayFields = BrandsView.BRAND_SCHEMA_ARRAY_FIELDS.map(([f]) => f);
-    let payloadValue = value;
-    if (fieldName === 'palabras_clave' && typeof value === 'string') {
-      payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    let v = value;
+    if (BrandsView.BRAND_ARRAY_FIELDS.includes(fieldName) && typeof v === 'string') {
+      v = v.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
     }
-    const isEmpty = payloadValue === '' || (Array.isArray(payloadValue) && payloadValue.length === 0);
-    if (isEmpty) {
-      payloadValue = brandArrayFields.includes(fieldName) ? [] : null;
+
+    let payloadValue = this._normalizeBrandFieldForDb(fieldName, v);
+    if (BrandsView.BRAND_ARRAY_FIELDS.includes(fieldName)) {
+      if (!Array.isArray(payloadValue)) payloadValue = [];
     }
 
     try {

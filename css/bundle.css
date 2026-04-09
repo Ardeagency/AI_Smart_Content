@@ -7819,6 +7819,48 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.8;
 }
 
+#infoPanelContent .info-brand-text-editor.editable-field {
+    min-height: 2.5rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.08);
+    outline: none;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-text-editor.editable-field {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+#infoPanelContent .info-brand-textarea,
+#infoPanelContent .info-brand-json-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.08);
+    color: inherit;
+    resize: vertical;
+    min-height: 4rem;
+}
+
+#infoPanelContent .info-brand-json-textarea {
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-textarea,
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-textarea {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.25);
+}
+
 #infoPanelContent .info-brand-array-editor .editable-multiselect {
     width: 100%;
 }

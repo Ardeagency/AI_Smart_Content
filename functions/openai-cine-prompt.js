@@ -30,17 +30,20 @@ function buildBrandVoiceText(brandContext) {
   const voice = brandContext?.brand_voice || {};
   const profiles = arr(brandContext?.brand_profiles);
   const parts = [];
-  if (voice.tono_comunicacion?.length) parts.push('Tono de comunicación: ' + voice.tono_comunicacion.join(', '));
-  if (voice.estilo_publicidad?.length) parts.push('Estilo publicidad: ' + voice.estilo_publicidad.join(', '));
-  if (voice.estilo_escritura?.length) parts.push('Estilo de escritura: ' + voice.estilo_escritura.join(', '));
-  if (voice.palabras_clave?.length) parts.push('Palabras clave: ' + voice.palabras_clave.join(', '));
-  if (voice.palabras_prohibidas?.length) parts.push('Palabras a evitar: ' + voice.palabras_prohibidas.join(', '));
-  if (voice.arquetipo_personalidad?.length) parts.push('Arquetipo / personalidad: ' + voice.arquetipo_personalidad.join(', '));
-  if (voice.enfoque_marca?.length) parts.push('Enfoque de marca: ' + voice.enfoque_marca.join(', '));
-  if (voice.estilo_visual?.length) parts.push('Estilo visual: ' + voice.estilo_visual.join(', '));
-  if (voice.transmitir_visualmente?.length) parts.push('Transmitir visualmente: ' + voice.transmitir_visualmente.join(', '));
-  if (voice.evitar_visualmente?.length) parts.push('Evitar visualmente: ' + voice.evitar_visualmente.join(', '));
-  if (voice.objetivos_marca?.length) parts.push('Objetivos de marca: ' + voice.objetivos_marca.join(', '));
+  if (voice.nicho_core && String(voice.nicho_core).trim()) parts.push('Nicho core: ' + String(voice.nicho_core).trim());
+  if (arr(voice.sub_nichos).length) parts.push('Sub-nichos: ' + arr(voice.sub_nichos).join(', '));
+  if (voice.arquetipo && String(voice.arquetipo).trim()) parts.push('Arquetipo: ' + String(voice.arquetipo).trim());
+  if (voice.propuesta_valor && String(voice.propuesta_valor).trim()) parts.push('Propuesta de valor: ' + String(voice.propuesta_valor).trim());
+  if (voice.mision_vision && String(voice.mision_vision).trim()) parts.push('Misión y visión: ' + String(voice.mision_vision).trim());
+  if (voice.verbal_dna && typeof voice.verbal_dna === 'object' && Object.keys(voice.verbal_dna).length) {
+    parts.push('ADN verbal: ' + JSON.stringify(voice.verbal_dna));
+  }
+  if (voice.visual_dna && typeof voice.visual_dna === 'object' && Object.keys(voice.visual_dna).length) {
+    parts.push('ADN visual: ' + JSON.stringify(voice.visual_dna));
+  }
+  if (arr(voice.palabras_clave).length) parts.push('Palabras clave: ' + arr(voice.palabras_clave).join(', '));
+  if (arr(voice.palabras_prohibidas).length) parts.push('Palabras a evitar: ' + arr(voice.palabras_prohibidas).join(', '));
+  if (arr(voice.objetivos_estrategicos).length) parts.push('Objetivos estratégicos: ' + arr(voice.objetivos_estrategicos).join(', '));
   profiles.forEach((p) => {
     if (p.section && p.content) parts.push(`[${p.section}] ${p.content}`);
   });
@@ -104,13 +107,14 @@ function buildCinematographyNarrative(cine) {
 function buildBrandToneForPrompt(brandContext) {
   const voice = brandContext?.brand_voice || {};
   const parts = [];
-  if (voice.estilo_publicidad?.length) parts.push(`Tone: ${voice.estilo_publicidad.join(', ')}`);
-  if (voice.estilo_visual?.length) parts.push(`Visual style: ${voice.estilo_visual.join(', ')}`);
-  if (voice.arquetipo_personalidad?.length) parts.push(`Brand personality: ${voice.arquetipo_personalidad.join(', ')}`);
-  if (voice.transmitir_visualmente?.length) parts.push(`Convey visually: ${voice.transmitir_visualmente.join(', ')}`);
-  const energyRaw = voice.objetivos_marca;
-  const energy = Array.isArray(energyRaw) && energyRaw.length ? energyRaw.join(', ') : (typeof energyRaw === 'string' ? energyRaw : '');
-  if (energy) parts.push(`Energy: ${energy}`);
+  if (voice.arquetipo && String(voice.arquetipo).trim()) parts.push(`Brand personality: ${String(voice.arquetipo).trim()}`);
+  if (arr(voice.objetivos_estrategicos).length) parts.push(`Strategic goals: ${arr(voice.objetivos_estrategicos).join(', ')}`);
+  if (voice.visual_dna && typeof voice.visual_dna === 'object' && Object.keys(voice.visual_dna).length) {
+    parts.push(`Visual DNA: ${JSON.stringify(voice.visual_dna)}`);
+  }
+  if (voice.verbal_dna && typeof voice.verbal_dna === 'object' && Object.keys(voice.verbal_dna).length) {
+    parts.push(`Verbal DNA: ${JSON.stringify(voice.verbal_dna)}`);
+  }
   return parts.length ? parts.join('. ') : '';
 }
 
