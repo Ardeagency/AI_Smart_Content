@@ -1848,7 +1848,7 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- LENGUAJE (schema: palabras_clave, palabras_prohibidas, tono_comunicacion, estilo_escritura) -->
+      <!-- LENGUAJE: etiqueta "Tono de voz" → columna tono_comunicacion (text[]) -->
       <section class="info-section">
         <h3 class="info-section-title">Lenguaje</h3>
         <div class="info-section-content">
@@ -2208,7 +2208,7 @@ class BrandsView extends BaseView {
     let html = '';
     html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasClaveStr)}</div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Tono de comunicación</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
+    html += `<div class="info-field" title="Se guarda en la columna tono_comunicacion (Supabase)."><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Estilo de escritura</div><div class="info-field-value" data-multiselect="estilo_escritura" data-field="estilo_escritura"></div></div>`;
     return `<div class="info-fields-grid">${html}</div>`;
   }
