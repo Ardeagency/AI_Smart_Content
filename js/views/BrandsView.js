@@ -556,10 +556,41 @@ class BrandsView extends BaseView {
     element.appendChild(wrap);
   }
 
-  /** Selector de nicho principal usando NICHO_CATALOG (guarda en nicho_mercado). */
+  /**
+   * Selector de nicho principal: <select> simple con las 20 categorías.
+   * Guarda como array de un elemento en nicho_mercado (columna text[]).
+   */
   makeNichoCategorySelect(element, onSave) {
+    if (!element) return;
     const categories = Object.keys(BrandsView.NICHO_CATALOG);
-    this._makePredefinedMultiSelect(element, 'nicho_mercado', categories, onSave);
+    const raw = this.brandData?.nicho_mercado;
+    const currentValue = Array.isArray(raw) ? (raw[0] || '') : (raw || '');
+
+    const select = document.createElement('select');
+    select.className = 'editable-select';
+    select.style.width = '100%';
+
+    const blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— Seleccionar —';
+    select.appendChild(blank);
+
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      if (cat === currentValue) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    element.innerHTML = '';
+    element.appendChild(select);
+
+    select.addEventListener('change', async () => {
+      const val = select.value;
+      await this.saveBrandField('nicho_mercado', val ? [val] : []);
+      if (onSave) onSave();
+    });
   }
 
   /**
