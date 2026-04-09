@@ -7036,6 +7036,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
     max-height: none;
 }
 
+/* Panel INFO: el grid rellena el alto; scroll en columnas (desktop) */
+#brandsListContainer > div.brand-card.card-info.expanded #infoPanelContent {
+    overflow: hidden;
+    gap: 0;
+}
+
 .card-info.expanded .card-content-expanded::-webkit-scrollbar {
     width: 8px;
 }
@@ -7744,13 +7750,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: inherit;
 }
 
-/* Panel INFO: dos columnas (primaria = logo + integraciones; secundaria = ayuda) */
+/* Panel INFO: dos columnas (primaria = logo + integraciones; secundaria = ficha brands con scroll) */
 #infoPanelContent .info-panel-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1.5rem 2rem;
     width: 100%;
-    align-items: start;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+    grid-auto-rows: minmax(0, 1fr);
 }
 
 #infoPanelContent .info-panel-grid__primary {
@@ -7758,23 +7767,113 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-direction: column;
     gap: 1.25rem;
     min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.25rem;
+    scrollbar-width: thin;
 }
 
 #infoPanelContent .info-panel-grid__secondary {
     min-width: 0;
-    padding: 0.5rem 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0.25rem 0.5rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--icon-button) transparent;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 1.25rem;
 }
 
-#infoPanelContent .info-panel-secondary-hint {
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-panel-grid__secondary {
+    border-left-color: rgba(0, 0, 0, 0.08);
+}
+
+#infoPanelContent .info-brand-aside-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: min-content;
+}
+
+#infoPanelContent .info-brand-aside-sub {
+    font-weight: 400;
+    opacity: 0.65;
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 0.85em;
+}
+
+#infoPanelContent .info-brand-aside-lead {
     margin: 0;
     font-size: var(--font-size-sm);
-    line-height: 1.5;
-    color: inherit;
+    line-height: 1.45;
     opacity: 0.85;
 }
 
-#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-panel-secondary-hint {
+#infoPanelContent .info-brand-aside-lead code {
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-aside-lead code {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+#infoPanelContent .info-brand-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: var(--font-size-xs);
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-meta {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+#infoPanelContent .info-brand-meta-row {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0.5rem;
+    align-items: baseline;
+    word-break: break-all;
+}
+
+#infoPanelContent .info-brand-meta-k {
+    opacity: 0.65;
+    font-weight: 500;
+}
+
+#infoPanelContent .info-brand-meta-v {
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+}
+
+#infoPanelContent .info-brand-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+#infoPanelContent .info-brand-field-label {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
     opacity: 0.8;
+}
+
+#infoPanelContent .info-brand-array-editor .editable-multiselect {
+    width: 100%;
 }
 
 /* Lista compacta tipo “En la web” (sin glass extra; borde suave sobre el panel) */
@@ -7872,8 +7971,23 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 @media (max-width: 768px) {
+    #brandsListContainer > div.brand-card.card-info.expanded #infoPanelContent {
+        overflow-y: auto;
+    }
+
     #infoPanelContent .info-panel-grid {
         grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+        flex: none;
+        min-height: auto;
+    }
+
+    #infoPanelContent .info-panel-grid__primary,
+    #infoPanelContent .info-panel-grid__secondary {
+        overflow-y: visible;
+        max-height: none;
+        border-left: none;
+        padding-left: 0;
     }
 }
 

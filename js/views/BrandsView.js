@@ -408,6 +408,23 @@ class BrandsView extends BaseView {
     this.brandAssets = data || [];
   }
 
+  /** Campos `text[]` de `public.brands` (orden del panel INFO derecho). */
+  static BRAND_SCHEMA_ARRAY_FIELDS = [
+    ['objetivos_marca', 'Objetivos de marca'],
+    ['nicho_mercado', 'Nicho de mercado'],
+    ['sub_nicho', 'Sub-nicho'],
+    ['arquetipo_personalidad', 'Arquetipo / personalidad'],
+    ['enfoque_marca', 'Enfoque de marca'],
+    ['estilo_visual', 'Estilo visual'],
+    ['estilo_publicidad', 'Estilo de publicidad'],
+    ['transmitir_visualmente', 'Transmitir visualmente'],
+    ['evitar_visualmente', 'Evitar visualmente'],
+    ['tono_comunicacion', 'Tono de comunicación'],
+    ['estilo_escritura', 'Estilo de escritura'],
+    ['palabras_clave', 'Palabras clave'],
+    ['palabras_prohibidas', 'Palabras prohibidas']
+  ];
+
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
   static TYPOGRAPHY_FONTS = [
     { value: 'Inter', label: 'Inter' },
@@ -1636,6 +1653,48 @@ class BrandsView extends BaseView {
     `;
   }
 
+  _formatBrandIsoDate(iso) {
+    if (!iso) return '—';
+    try {
+      return new Date(iso).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' });
+    } catch (_) {
+      return String(iso);
+    }
+  }
+
+  renderBrandSchemaAsideHtml() {
+    const b = this.brandData;
+    const metaId = b?.id ? this.escapeHtml(b.id) : '—';
+    const metaProject = b?.project_id
+      ? this.escapeHtml(b.project_id)
+      : (this.brandContainerData?.id ? this.escapeHtml(this.brandContainerData.id) : '—');
+    const metaCreated = this._formatBrandIsoDate(b?.created_at);
+    const metaUpdated = this._formatBrandIsoDate(b?.updated_at);
+
+    const arrayBlocks = BrandsView.BRAND_SCHEMA_ARRAY_FIELDS.map(([field, label]) => `
+      <div class="info-brand-field">
+        <div class="info-brand-field-label">${this.escapeHtml(label)}</div>
+        <div class="info-brand-array-editor" data-field="${this.escapeHtml(field)}"></div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="info-brand-aside-inner">
+        <h3 class="info-section-title" id="infoBrandSchemaHeading">Ficha de marca <span class="info-brand-aside-sub">(tabla brands)</span></h3>
+        <p class="info-brand-aside-lead">Editá cada bloque con etiquetas; el primer guardado crea la fila en <code>brands</code> si aún no existe.</p>
+        <div class="info-brand-meta">
+          <div class="info-brand-meta-row"><span class="info-brand-meta-k">id</span><span class="info-brand-meta-v">${metaId}</span></div>
+          <div class="info-brand-meta-row"><span class="info-brand-meta-k">project_id</span><span class="info-brand-meta-v">${metaProject}</span></div>
+          <div class="info-brand-meta-row"><span class="info-brand-meta-k">created_at</span><span class="info-brand-meta-v">${this.escapeHtml(metaCreated)}</span></div>
+          <div class="info-brand-meta-row"><span class="info-brand-meta-k">updated_at</span><span class="info-brand-meta-v">${this.escapeHtml(metaUpdated)}</span></div>
+        </div>
+        <div class="info-brand-fields">
+          ${arrayBlocks}
+        </div>
+      </div>
+    `;
+  }
+
   renderInfoPanelContent(container) {
     if (!container) return;
     const brandContainer = this.brandContainerData;
@@ -1649,8 +1708,8 @@ class BrandsView extends BaseView {
           </section>
           ${this.renderInfoIntegrationsCompactHtml()}
         </div>
-        <aside class="info-panel-grid__secondary" aria-label="Espacio reservado">
-          <p class="info-panel-secondary-hint">Las conexiones se gestionan en <strong>Insight</strong>. Usa los accesos de la lista para abrir cada plataforma o ir a Insight si falta alguna.</p>
+        <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandSchemaHeading">
+          ${this.renderBrandSchemaAsideHtml()}
         </aside>
       </div>
     `;
@@ -1669,6 +1728,11 @@ class BrandsView extends BaseView {
         if (e.target.files[0]) this.uploadLogo(e.target.files[0]);
       });
     }
+    container.querySelectorAll('.info-brand-array-editor[data-field]').forEach((el) => {
+      const field = el.getAttribute('data-field');
+      if (!field) return;
+      this.makeEditableMultiSelect(el, field, [], 'brand', null);
+    });
   }
 
   renderIdentitySection(brandContainer) {
@@ -1743,6 +1807,7 @@ class BrandsView extends BaseView {
         if (error) throw error;
         this.brandData = newBrand;
         console.log(`✅ Brand creado y ${fieldName} guardado`);
+        this._refreshInfoPanelIfOpen();
         return;
       } catch (error) {
         console.error(`❌ Error al crear brand:`, error);
@@ -1760,7 +1825,7 @@ class BrandsView extends BaseView {
     this.savingFields.add(saveKey);
 
     // mercado_objetivo vive en brand_containers (saveContainerField), no en brands
-    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
+    const brandArrayFields = BrandsView.BRAND_SCHEMA_ARRAY_FIELDS.map(([f]) => f);
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
