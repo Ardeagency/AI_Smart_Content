@@ -394,6 +394,28 @@ class BrandsView extends BaseView {
     await this.loadData();
   }
 
+  /** Recarga solo brand_colors desde Supabase (evita recargar todo loadData en operaciones de color). */
+  async _reloadColors() {
+    if (!this.supabase || !this.brandData?.id) return;
+    const { data } = await this.supabase
+      .from('brand_colors')
+      .select('*')
+      .eq('brand_id', this.brandData.id);
+    this.brandColors = data || [];
+  }
+
+  /** Recarga solo brand_assets desde Supabase (evita recargar todo loadData al subir archivos). */
+  async _reloadAssets() {
+    if (!this.supabase || !this.brandContainerData?.id) return;
+    const { data } = await this.supabase
+      .from('brand_assets')
+      .select('*')
+      .eq('brand_container_id', this.brandContainerData.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    this.brandAssets = data || [];
+  }
+
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
   static TYPOGRAPHY_FONTS = [
     { value: 'Inter', label: 'Inter' },
@@ -957,7 +979,7 @@ class BrandsView extends BaseView {
         .update({ hex_value: `#${hex}` })
         .eq('id', colorId);
       if (error) throw error;
-      await this.loadData();
+      await this._reloadColors();
       this.renderCards();
       this.applyBrandBackgroundGradient(true);
     } catch (error) {
@@ -1011,7 +1033,7 @@ class BrandsView extends BaseView {
           hex_value: hexNorm
         });
       if (error) throw error;
-      await this.loadData();
+      await this._reloadColors();
       this.renderCards();
       this.applyBrandBackgroundGradient(true);
     } catch (error) {
@@ -1178,32 +1200,6 @@ class BrandsView extends BaseView {
       console.error('Error al guardar tipografía:', e);
       alert('No se pudo guardar la tipografía. Intenta de nuevo.');
     }
-  }
-
-  renderVisualStatus() {
-    const container = (this.container && this.container.querySelector('#visualStatus')) ||
-                      document.getElementById('visualStatus');
-    if (!container) {
-      if (!this._containerWarned.visualStatus) {
-        this._containerWarned.visualStatus = true;
-        console.warn('⚠️ visualStatus no encontrado');
-      }
-      return;
-    }
-
-    const colorCount = (this.brandColors || []).length;
-    // Según schema: buscar rule_type === 'typography'
-    const hasTypography = (this.brandRules || []).some(rule => 
-      rule.rule_type === 'typography' || 
-      rule.rule_type?.toLowerCase() === 'typography'
-    );
-    const fontCount = hasTypography ? 1 : 0;
-    
-    container.innerHTML = `
-      <div class="visual-status-synced">
-        ${colorCount} Colors • ${fontCount} Font • Synced
-        </div>
-    `;
   }
 
   renderIdentityFiles() {
@@ -1544,7 +1540,7 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- LENGUAJE (schema: tono_voz, palabras_clave, palabras_prohibidas, tono_comunicacion, estilo_escritura) -->
+      <!-- LENGUAJE (schema: palabras_clave, palabras_prohibidas, tono_comunicacion, estilo_escritura) -->
       <section class="info-section">
         <h3 class="info-section-title">Lenguaje</h3>
         <div class="info-section-content">
@@ -1623,21 +1619,6 @@ class BrandsView extends BaseView {
       this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
 
-    // Tono de voz: siempre dropdown (estado 2 único)
-    const tonoVozWrap = container.querySelector('.info-field-value[data-select="tono_voz"]');
-    if (tonoVozWrap) {
-      const tonoOptions = [
-        { value: 'formal', label: 'Formal' },
-        { value: 'informal', label: 'Informal' },
-        { value: 'profesional', label: 'Profesional' },
-        { value: 'amigable', label: 'Amigable' },
-        { value: 'técnico', label: 'Técnico' },
-        { value: 'creativo', label: 'Creativo' },
-        { value: 'empático', label: 'Empático' },
-        { value: 'directo', label: 'Directo' }
-      ];
-      this.makeEditableSelect(tonoVozWrap, 'tono_voz', tonoOptions, 'brand', onRefreshPanel);
-    }
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -1906,7 +1887,6 @@ class BrandsView extends BaseView {
     const palabrasClave = brand.palabras_clave;
     const palabrasClaveStr = Array.isArray(palabrasClave) ? palabrasClave.join(', ') : (palabrasClave || '');
     let html = '';
-    html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-select="tono_voz"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasClaveStr)}</div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Tono de comunicación</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
@@ -2001,8 +1981,7 @@ class BrandsView extends BaseView {
           .from('brands')
           .insert({
             project_id: this.brandContainerData.id,
-            [fieldName]: value || null,
-            tono_voz: 'formal' // Valor por defecto requerido
+            [fieldName]: value || null
           })
           .select()
           .single();
@@ -2026,7 +2005,7 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
-    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
+    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas', 'mercado_objetivo'];
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
@@ -2065,8 +2044,7 @@ class BrandsView extends BaseView {
 
       if (error) throw error;
 
-      // Recargar colores y actualizar degradado de fondo
-      await this.loadData();
+      await this._reloadColors();
       this.renderCards();
       this.applyBrandBackgroundGradient(true);
       console.log(`✅ Color eliminado`);
@@ -2109,16 +2087,14 @@ class BrandsView extends BaseView {
 
       await this.saveContainerField('logo_url', publicUrl);
       this.brandContainerData.logo_url = publicUrl;
-      await this.loadData();
       this.renderAll();
       // Actualizar el panel INFO si está abierto para que se vea el nuevo logo
-      const container = this.container || document.getElementById('app-container');
       const infoCard = container?.querySelector('.card-info.expanded');
       if (infoCard) {
         const content = infoCard.querySelector('.card-content-expanded');
         if (content) this.renderInfoPanelContent(content);
       }
-      const logoInput = container?.querySelector('.info-logo-container input[type="file"]');
+      const logoInput = (this.container || document.getElementById('app-container'))?.querySelector('.info-logo-container input[type="file"]');
       if (logoInput) logoInput.value = '';
       console.log(`✅ Logo subido correctamente`);
     } catch (error) {
@@ -2163,8 +2139,8 @@ class BrandsView extends BaseView {
 
       if (insertError) throw insertError;
 
-      await this.loadData();
-      this.renderCards();
+      await this._reloadAssets();
+      this.renderIdentityFiles();
       console.log(`✅ Archivo subido correctamente`);
     } catch (error) {
       console.error(`❌ Error al subir archivo:`, error);
@@ -2212,51 +2188,6 @@ class BrandsView extends BaseView {
         element.blur();
       }
     });
-  }
-
-  makeEditableTextarea(element, fieldName, table = 'brand', onSave = null) {
-    if (!element) return;
-
-    const originalValue = table === 'container' 
-      ? (this.brandContainerData?.[fieldName] || '')
-      : (this.brandData?.[fieldName] || '');
-
-    const textarea = document.createElement('textarea');
-    textarea.value = originalValue;
-    textarea.className = 'editable-textarea';
-    textarea.style.width = '100%';
-    textarea.style.minHeight = '80px';
-    textarea.style.padding = '0.5rem';
-    textarea.style.background = 'rgba(255, 255, 255, 0.05)';
-    textarea.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-    textarea.style.borderRadius = '6px';
-    textarea.style.color = 'var(--text-primary, #F2F3F5)';
-    textarea.style.fontSize = '0.875rem';
-    textarea.style.fontFamily = 'inherit';
-    textarea.style.resize = 'vertical';
-
-    element.innerHTML = '';
-    element.appendChild(textarea);
-
-    textarea.addEventListener('blur', async () => {
-      const value = textarea.value.trim();
-      if (value !== originalValue) {
-        if (table === 'container') {
-          await this.saveContainerField(fieldName, value);
-        } else {
-          await this.saveBrandField(fieldName, value);
-        }
-        if (onSave) onSave();
-        // Restaurar visualización
-        element.innerHTML = value || '<span style="opacity: 0.5;">Sin contenido</span>';
-        this.makeEditableTextarea(element, fieldName, table, onSave);
-      } else {
-        element.innerHTML = originalValue || '<span style="opacity: 0.5;">Sin contenido</span>';
-        this.makeEditableTextarea(element, fieldName, table, onSave);
-      }
-    });
-
-    textarea.focus();
   }
 
   makeEditableSelect(element, fieldName, options, table = 'brand', onSave = null) {
