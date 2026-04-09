@@ -1793,14 +1793,15 @@ class BrandsView extends BaseView {
         if (content) this.renderInfoPanelContent(content);
       }
     };
+    this.setupBrandNicheEditors(container, onRefreshPanel);
+
     container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
+      if (wrap.closest('[data-brand-niche-block="1"]')) return;
       const fieldName = wrap.getAttribute('data-multiselect');
       const schemaField = wrap.getAttribute('data-field') || (fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName);
       if (!fieldName) return;
       this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
-
-    this.setupBrandNicheEditors(container, onRefreshPanel);
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -2056,11 +2057,11 @@ class BrandsView extends BaseView {
     }
     const nicheBlock = `
       <div class="info-field info-field-niche-block" data-brand-niche-block="1">
-        <div class="info-field-label">Nicho de mercado</div>
-        <div class="brand-niche-editor-root info-field-value" aria-live="polite"></div>
-        <div class="info-field-label brand-subnicho-label">Sub-nicho</div>
-        <div class="brand-subnicho-editor-root info-field-value" aria-live="polite"></div>
-        <p class="brand-niche-hint">Una sola categoría principal. Los sub-nichos se eligen del directorio (varios permitidos) y dependen de esa categoría.</p>
+        <div class="info-field-label">Nicho de mercado <span class="info-field-sublabel">(una categoría)</span></div>
+        <div class="brand-niche-editor-root brand-niche-field" aria-live="polite"></div>
+        <div class="info-field-label brand-subnicho-label">Sub-nicho <span class="info-field-sublabel">(varias del directorio)</span></div>
+        <div class="brand-subnicho-editor-root brand-subnicho-field" aria-live="polite"></div>
+        <p class="brand-niche-hint">Categoría: un solo desplegable. Sub-nichos: otro desplegable y chips (no es el multiselect de texto libre con “+ Agregar”).</p>
       </div>`;
     if (!brand) {
       return `

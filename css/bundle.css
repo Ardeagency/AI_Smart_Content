@@ -7783,6 +7783,34 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: var(--text-muted, rgba(255, 255, 255, 0.55));
 }
 
+.card-content-expanded .info-field-niche-block .info-field-sublabel {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    opacity: 0.72;
+    font-size: 0.78em;
+}
+
+.card-content-expanded .brand-niche-field,
+.card-content-expanded .brand-subnicho-field {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.card-content-expanded .brand-niche-field select,
+.card-content-expanded .brand-subnicho-field select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+}
+
 #infoPanelContent .brand-niche-row,
 #infoPanelContent .brand-subnicho-row {
     display: flex;
