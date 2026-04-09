@@ -150,6 +150,10 @@ class BrandsView extends BaseView {
    * brand_entities(brand_container_id), brand_places(entity_id), audiences(brand_id),
    * brand_colors(brand_id), brand_fonts(brand_id),
    * products(brand_container_id), organization_members, organization_credits, credit_usage.
+   *
+   * Resolución de contenedor (alineada con StudioView.getBrandContainerId):
+   * 1) brand_containers.organization_id = window.currentOrgId (si hay org activa)
+   * 2) Si no hay fila, fallback por user_id (más reciente primero)
    */
   async loadData() {
     if (!this.supabase || !this.userId) {
@@ -158,19 +162,41 @@ class BrandsView extends BaseView {
     }
 
     try {
-      // brand_containers (user_id, organization_id, nombre_marca, mercado_objetivo, ...)
-      const { data: container, error: containerError } = await this.supabase
-        .from('brand_containers')
-        .select('*')
-        .eq('user_id', this.userId)
-        .limit(1)
-        .maybeSingle();
-      
-      if (containerError) {
-        console.warn('⚠️ Error cargando brand container:', containerError);
-        return;
+      let container = null;
+      const orgId = typeof window !== 'undefined' ? window.currentOrgId : null;
+
+      if (orgId) {
+        const { data: byOrg, error: errOrg } = await this.supabase
+          .from('brand_containers')
+          .select('*')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (errOrg && errOrg.code !== 'PGRST116') {
+          console.warn('⚠️ Error cargando brand container (organización):', errOrg);
+        }
+        if (byOrg) container = byOrg;
       }
-      
+
+      if (!container) {
+        const { data: byUser, error: containerError } = await this.supabase
+          .from('brand_containers')
+          .select('*')
+          .eq('user_id', this.userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (containerError && containerError.code !== 'PGRST116') {
+          console.warn('⚠️ Error cargando brand container:', containerError);
+          this._dataLoaded = true;
+          if (this.isActive) this._refreshInfoPanelIfOpen();
+          return;
+        }
+        container = byUser || null;
+      }
+
       if (container) {
         this.brandContainerData = container;
 
@@ -197,6 +223,13 @@ class BrandsView extends BaseView {
           console.warn('⚠️ Error cargando brand:', brandError);
         } else {
           this.brandData = brand || null;
+        }
+
+        if (!this.brandData?.id) {
+          this.brandColors = [];
+          this.brandFonts = [];
+          this.brandRules = [];
+          this.brandAudiences = [];
         }
 
         // Productos
@@ -277,26 +310,10 @@ class BrandsView extends BaseView {
           }
         }
 
-        // Colores y fuentes
+        // Colores y fuentes (brands.id; fallback legacy si brand_id guardó brand_container.id)
         if (this.brandData?.id) {
-          const [colorsResult, fontsResult] = await Promise.allSettled([
-            this.supabase.from('brand_colors').select('*').eq('brand_id', this.brandData.id),
-            this.supabase.from('brand_fonts').select('*').eq('brand_id', this.brandData.id)
-          ]);
-          
-          if (colorsResult.status === 'fulfilled' && !colorsResult.value.error) {
-            this.brandColors = colorsResult.value.data || [];
-          } else {
-            console.warn('⚠️ Error cargando colores:', colorsResult.reason || colorsResult.value?.error);
-            this.brandColors = [];
-          }
-          
-          if (fontsResult.status === 'fulfilled' && !fontsResult.value.error) {
-            this.brandFonts = fontsResult.value.data || [];
-          } else {
-            console.warn('⚠️ Error cargando fuentes:', fontsResult.reason || fontsResult.value?.error);
-            this.brandFonts = [];
-          }
+          this.brandColors = await this._queryBrandColorsRows();
+          this.brandFonts = await this._queryBrandFontsRows();
           this.brandRules = [];
         }
 
@@ -372,6 +389,18 @@ class BrandsView extends BaseView {
             this.creditUsage = [];
           }
         }
+      } else {
+        this.brandContainerData = null;
+        this.brandData = null;
+        this.brandColors = [];
+        this.brandFonts = [];
+        this.brandRules = [];
+        this.products = [];
+        this.brandAssets = [];
+        this.brandEntities = [];
+        this.brandPlaces = [];
+        this.brandAudiences = [];
+        this.brandIntegrations = [];
       }
     } catch (error) {
       console.error('❌ Error crítico cargando datos:', error);
@@ -386,14 +415,57 @@ class BrandsView extends BaseView {
     await this.loadData();
   }
 
-  /** Recarga solo brand_colors desde Supabase (evita recargar todo loadData en operaciones de color). */
-  async _reloadColors() {
-    if (!this.supabase || !this.brandData?.id) return;
-    const { data } = await this.supabase
+  /**
+   * Filas de brand_colors: primero por brands.id; si no hay filas, intenta brand_id = brand_container.id
+   * (datos antiguos mal enlazados).
+   */
+  async _queryBrandColorsRows() {
+    if (!this.supabase || !this.brandData?.id) return [];
+    const { data, error } = await this.supabase
       .from('brand_colors')
       .select('*')
       .eq('brand_id', this.brandData.id);
-    this.brandColors = data || [];
+    if (error) {
+      console.warn('⚠️ Error cargando colores (brand_id → brands.id):', error);
+      return [];
+    }
+    let rows = data || [];
+    if (rows.length === 0 && this.brandContainerData?.id) {
+      const { data: legacy, error: errLeg } = await this.supabase
+        .from('brand_colors')
+        .select('*')
+        .eq('brand_id', this.brandContainerData.id);
+      if (!errLeg && legacy && legacy.length) rows = legacy;
+    }
+    return rows;
+  }
+
+  /** Igual que colores: brands.id primero, fallback por container.id. */
+  async _queryBrandFontsRows() {
+    if (!this.supabase || !this.brandData?.id) return [];
+    const { data, error } = await this.supabase
+      .from('brand_fonts')
+      .select('*')
+      .eq('brand_id', this.brandData.id);
+    if (error) {
+      console.warn('⚠️ Error cargando fuentes (brand_id → brands.id):', error);
+      return [];
+    }
+    let rows = data || [];
+    if (rows.length === 0 && this.brandContainerData?.id) {
+      const { data: legacy, error: errLeg } = await this.supabase
+        .from('brand_fonts')
+        .select('*')
+        .eq('brand_id', this.brandContainerData.id);
+      if (!errLeg && legacy && legacy.length) rows = legacy;
+    }
+    return rows;
+  }
+
+  /** Recarga solo brand_colors desde Supabase (evita recargar todo loadData en operaciones de color). */
+  async _reloadColors() {
+    if (!this.supabase || !this.brandData?.id) return;
+    this.brandColors = await this._queryBrandColorsRows();
   }
 
   /** Recarga solo brand_assets desde Supabase (evita recargar todo loadData al subir archivos). */
