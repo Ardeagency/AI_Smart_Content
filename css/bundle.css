@@ -7708,61 +7708,19 @@ h1.brand-name-large[contenteditable="true"]:hover,
    ============================================ */
 
 /*
- * Scope con #infoPanelContent (id) para ganar a .info-section global (content.css)
- * y recuperar cards, grid y variantes glass dinámicas de Brand.
+ * #infoPanelContent: solo el shell (.card-info.expanded) usa glass dinámico.
+ * Las secciones internas NO repiten glass (fondo/borde/blur) — heredan el aspecto del panel.
  */
 #infoPanelContent .info-section {
     margin-bottom: 0;
-    padding: 1.25rem 1.35rem;
-    border-radius: var(--glass-radius);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    /* Fondo más opaco que el shell para que se lean como “sub-cards” */
-    background: rgba(0, 0, 0, 0.32);
-    color: var(--text-primary);
-    border: 1px solid transparent;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 2px 14px rgba(0, 0, 0, 0.18);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Borde no permanente: solo al hover/focus-within (accesible teclado) */
-#infoPanelContent .info-section:hover,
-#infoPanelContent .info-section:focus-within {
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.09),
-        0 4px 20px rgba(0, 0, 0, 0.22);
-}
-
-#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section {
-    background: rgba(0, 0, 0, 0.58);
-    color: var(--glass-black-text);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
-        0 3px 18px rgba(0, 0, 0, 0.35);
-}
-
-#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section:hover,
-#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section:focus-within {
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section {
-    background: rgba(255, 255, 255, 0.38);
-    color: var(--text-primary);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.55),
-        0 2px 14px rgba(0, 0, 0, 0.1);
-}
-
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section:hover,
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section:focus-within {
-    border-color: rgba(0, 0, 0, 0.14);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
-        0 4px 18px rgba(0, 0, 0, 0.12);
+    padding: 1.25rem 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: inherit;
 }
 
 #infoPanelContent .info-section:last-child {
