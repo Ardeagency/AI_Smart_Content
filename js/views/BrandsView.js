@@ -1268,6 +1268,192 @@ class BrandsView extends BaseView {
     return div.innerHTML;
   }
 
+  getNicheDirectory() {
+    return Array.isArray(window.BRAND_NICHES_DIRECTORY) ? window.BRAND_NICHES_DIRECTORY : [];
+  }
+
+  /** Unión de sub-nichos permitidos para las categorías seleccionadas. */
+  getAllowedSubnichosForNichos(nichos, directory) {
+    const set = new Set();
+    const dir = directory || this.getNicheDirectory();
+    for (const name of nichos || []) {
+      const row = dir.find(d => d.nicho === name);
+      (row?.subs || []).forEach(s => set.add(s));
+    }
+    return Array.from(set);
+  }
+
+  /**
+   * Guarda `nicho_mercado` y `sub_nicho` en un solo PATCH (o INSERT si aún no hay fila en brands).
+   */
+  async saveBrandNicheBundle(nichos, subnichos, onRefreshPanel) {
+    if (!this.supabase || !this.brandContainerData) return;
+    const saveKey = 'brand_niche_bundle';
+    if (this.savingFields.has(saveKey)) return;
+    this.savingFields.add(saveKey);
+    const n = Array.isArray(nichos) ? nichos : [];
+    const s = Array.isArray(subnichos) ? subnichos : [];
+    const wasNew = !this.brandData?.id;
+    try {
+      if (wasNew) {
+        const { data, error } = await this.supabase
+          .from('brands')
+          .insert({
+            project_id: this.brandContainerData.id,
+            nicho_mercado: n,
+            sub_nicho: s
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        this.brandData = data;
+      } else {
+        const { error } = await this.supabase
+          .from('brands')
+          .update({
+            nicho_mercado: n,
+            sub_nicho: s,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', this.brandData.id);
+        if (error) throw error;
+        this.brandData.nicho_mercado = n;
+        this.brandData.sub_nicho = s;
+      }
+      if (wasNew && typeof onRefreshPanel === 'function') onRefreshPanel();
+    } catch (e) {
+      console.error('saveBrandNicheBundle', e);
+      alert('No se pudo guardar nicho / sub-nicho. Intenta de nuevo.');
+    } finally {
+      this.savingFields.delete(saveKey);
+    }
+  }
+
+  /**
+   * Selectores de nicho (lista cerrada) + sub-nicho (filtrado por categorías elegidas).
+   */
+  setupBrandNicheEditors(container, onRefreshPanel) {
+    const block = container.querySelector('[data-brand-niche-block="1"]');
+    if (!block) return;
+    const nicheRoot = block.querySelector('.brand-niche-editor-root');
+    const subRoot = block.querySelector('.brand-subnicho-editor-root');
+    if (!nicheRoot || !subRoot) return;
+
+    const directory = this.getNicheDirectory();
+    if (!directory.length) {
+      nicheRoot.textContent = 'No se cargó el directorio de nichos (brandNichesDirectory.js).';
+      return;
+    }
+
+    const paint = () => {
+      const nichos = Array.isArray(this.brandData?.nicho_mercado) ? [...this.brandData.nicho_mercado] : [];
+      const subs = Array.isArray(this.brandData?.sub_nicho) ? [...this.brandData.sub_nicho] : [];
+      const allowed = this.getAllowedSubnichosForNichos(nichos, directory);
+      const allowedSet = new Set(allowed);
+
+      nicheRoot.innerHTML = '';
+      const rowN = document.createElement('div');
+      rowN.className = 'brand-niche-row';
+      const selN = document.createElement('select');
+      selN.className = 'brand-niche-add-select';
+      selN.setAttribute('aria-label', 'Añadir categoría de nicho');
+      const optEmptyN = document.createElement('option');
+      optEmptyN.value = '';
+      optEmptyN.textContent = 'Elegir categoría…';
+      selN.appendChild(optEmptyN);
+      directory
+        .map(d => d.nicho)
+        .filter(name => !nichos.includes(name))
+        .forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          selN.appendChild(opt);
+        });
+      const tagsN = document.createElement('div');
+      tagsN.className = 'brand-niche-tags';
+      nichos.forEach(nichoName => {
+        const tag = document.createElement('span');
+        tag.className = 'editable-tag brand-niche-tag';
+        tag.textContent = nichoName;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'brand-niche-tag-remove';
+        rm.setAttribute('aria-label', 'Quitar categoría');
+        rm.textContent = '×';
+        rm.addEventListener('click', async () => {
+          const nextN = nichos.filter(x => x !== nichoName);
+          const allowedNext = new Set(this.getAllowedSubnichosForNichos(nextN, directory));
+          const nextS = subs.filter(x => allowedNext.has(x));
+          await this.saveBrandNicheBundle(nextN, nextS, onRefreshPanel);
+          paint();
+        });
+        tag.appendChild(rm);
+        tagsN.appendChild(tag);
+      });
+      selN.addEventListener('change', async () => {
+        const v = selN.value;
+        if (!v) return;
+        const nextN = [...nichos, v];
+        await this.saveBrandNicheBundle(nextN, subs, onRefreshPanel);
+        paint();
+      });
+      rowN.appendChild(selN);
+      rowN.appendChild(tagsN);
+      nicheRoot.appendChild(rowN);
+
+      subRoot.innerHTML = '';
+      const rowS = document.createElement('div');
+      rowS.className = 'brand-subnicho-row';
+      const selS = document.createElement('select');
+      selS.className = 'brand-subnicho-add-select';
+      selS.setAttribute('aria-label', 'Añadir sub-nicho');
+      selS.disabled = nichos.length === 0;
+      const optEmptyS = document.createElement('option');
+      optEmptyS.value = '';
+      optEmptyS.textContent = nichos.length === 0 ? 'Primero elige al menos un nicho…' : 'Elegir sub-nicho…';
+      selS.appendChild(optEmptyS);
+      allowed.filter(sub => !subs.includes(sub)).forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.textContent = sub;
+        selS.appendChild(opt);
+      });
+      const tagsS = document.createElement('div');
+      tagsS.className = 'brand-subnicho-tags';
+      subs.forEach(sub => {
+        const tag = document.createElement('span');
+        tag.className = 'editable-tag brand-subnicho-tag';
+        tag.textContent = sub;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'brand-subnicho-tag-remove';
+        rm.setAttribute('aria-label', 'Quitar sub-nicho');
+        rm.textContent = '×';
+        rm.addEventListener('click', async () => {
+          const nextS = subs.filter(x => x !== sub);
+          await this.saveBrandNicheBundle(nichos, nextS, onRefreshPanel);
+          paint();
+        });
+        tag.appendChild(rm);
+        tagsS.appendChild(tag);
+      });
+      selS.addEventListener('change', async () => {
+        const v = selS.value;
+        if (!v) return;
+        if (!allowedSet.has(v)) return;
+        const nextS = [...subs, v];
+        await this.saveBrandNicheBundle(nichos, nextS, onRefreshPanel);
+        paint();
+      });
+      rowS.appendChild(selS);
+      rowS.appendChild(tagsS);
+      subRoot.appendChild(rowS);
+    };
+
+    paint();
+  }
+
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
@@ -1532,7 +1718,7 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, arquetipo_personalidad, enfoque_marca) -->
+      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, sub_nicho, arquetipo_personalidad, enfoque_marca) -->
       <section class="info-section">
         <h3 class="info-section-title">Esencia</h3>
         <div class="info-section-content">
@@ -1619,6 +1805,7 @@ class BrandsView extends BaseView {
       this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
 
+    this.setupBrandNicheEditors(container, onRefreshPanel);
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -1869,12 +2056,25 @@ class BrandsView extends BaseView {
   }
 
   renderEssenceSection(brand) {
-    if (!brand) {
+    if (!this.brandContainerData) {
       return '<p class="info-empty">No hay información de esencia disponible.</p>';
+    }
+    const nicheBlock = `
+      <div class="info-field info-field-niche-block" data-brand-niche-block="1">
+        <div class="info-field-label">Nicho de mercado</div>
+        <div class="brand-niche-editor-root info-field-value" aria-live="polite"></div>
+        <div class="info-field-label brand-subnicho-label">Sub-nicho</div>
+        <div class="brand-subnicho-editor-root info-field-value" aria-live="polite"></div>
+        <p class="brand-niche-hint">Elige una o más categorías; los sub-nichos disponibles dependen de las categorías seleccionadas.</p>
+      </div>`;
+    if (!brand) {
+      return `
+        <p class="info-empty info-empty--compact">Aún no existe el perfil de marca. Elige al menos un nicho de mercado para crearlo.</p>
+        <div class="info-fields-grid">${nicheBlock}</div>`;
     }
     let html = '';
     html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Nicho de mercado</div><div class="info-field-value" data-multiselect="nicho_mercado" data-field="nicho_mercado"></div></div>`;
+    html += nicheBlock;
     html += `<div class="info-field"><div class="info-field-label">Arquetipo / personalidad</div><div class="info-field-value" data-multiselect="arquetipo_personalidad" data-field="arquetipo_personalidad"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Enfoque de marca</div><div class="info-field-value" data-multiselect="enfoque_marca" data-field="enfoque_marca"></div></div>`;
     return `<div class="info-fields-grid">${html}</div>`;
@@ -2005,7 +2205,7 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
-    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas', 'mercado_objetivo'];
+    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
