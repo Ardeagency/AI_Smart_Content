@@ -167,9 +167,13 @@
     return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];
   }
 
+  /** ID de la última org aplicada (para detectar cambio de org y limpiar estado previo). */
+  let lastAppliedOrgId = null;
+
   /** Quita todas las variables de tema de marca en :root */
   function clearOrgBrandTheme() {
     lastAppliedHexes = [];
+    lastAppliedOrgId = null;
     root.style.removeProperty('--brand-primary');
     root.style.removeProperty('--brand-primary-rgb');
     root.style.removeProperty('--brand-primary-brillo');
@@ -188,12 +192,22 @@
       clearOrgBrandTheme();
       return;
     }
-    const hexes = await getOrganizationBrandColors(organizationId);
-    lastAppliedHexes = hexes && hexes.length ? hexes.slice(0, 4) : [];
-    if (hexes.length === 0) {
+    // Si cambiamos de org, limpiar colores previos antes de cargar los nuevos.
+    if (lastAppliedOrgId && lastAppliedOrgId !== organizationId) {
       clearOrgBrandTheme();
+    }
+    lastAppliedOrgId = organizationId;
+    const hexes = await getOrganizationBrandColors(organizationId);
+    if (hexes.length === 0) {
+      // Si el query no devolvió colores (puede ser fallo temporal de DB, RLS, o marca sin colores)
+      // NO borramos el tema — si ya había colores aplicados, los mantenemos para evitar flash.
+      // Solo limpiamos si no había colores previos (primera carga o cambio de org).
+      if (lastAppliedHexes.length === 0) {
+        clearOrgBrandTheme();
+      }
       return;
     }
+    lastAppliedHexes = hexes.slice(0, 4);
     const gradient = buildBrandGradientCss(hexes, 135);
     const gradientVertical = buildBrandGradientCss(hexes, 180);
     root.style.setProperty('--brand-gradient-dynamic', gradient);

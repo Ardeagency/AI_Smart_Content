@@ -48,6 +48,8 @@ class BrandsView extends BaseView {
 
   onLeave() {
     this.isActive = false;
+    // resetBrandPrimaryBrillo ya no toca --brand-gradient-dynamic (lo gestiona OrgBrandTheme),
+    // por lo que la llamada aquí solo limpia --brand-primary* y no afecta otras vistas.
     this.resetBrandPrimaryBrillo();
     if (window.currentOrgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
       window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
@@ -704,8 +706,8 @@ class BrandsView extends BaseView {
     } else {
       gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
-      root.style.removeProperty('--brand-gradient-dynamic');
-      root.style.removeProperty('--brand-gradient-dynamic-vertical');
+      // NO borrar --brand-gradient-dynamic* aquí: esas vars las gestiona OrgBrandTheme
+      // para toda la plataforma. Solo reseteamos el elemento visual y los vars de brillo.
       this.resetBrandPrimaryBrillo();
     }
     this.applyBrandCardsGlassVariant();
@@ -764,15 +766,15 @@ class BrandsView extends BaseView {
     root.style.setProperty('--brand-primary-brillo-strong', this.hexToRgba(palette.primary, 0.18));
   }
 
-  /** Vuelve al brillo por defecto (cuando no hay marca o se sale de brands). */
+  /** Vuelve al brillo por defecto (cuando no hay marca o se sale de brands).
+   *  SOLO borra las vars --brand-primary*; las vars --brand-gradient-dynamic* las gestiona
+   *  exclusivamente OrgBrandTheme para no borrar el tema de toda la plataforma. */
   resetBrandPrimaryBrillo() {
     const root = document.documentElement;
     root.style.removeProperty('--brand-primary');
     root.style.removeProperty('--brand-primary-rgb');
     root.style.removeProperty('--brand-primary-brillo');
     root.style.removeProperty('--brand-primary-brillo-strong');
-    root.style.removeProperty('--brand-gradient-dynamic');
-    root.style.removeProperty('--brand-gradient-dynamic-vertical');
   }
 
   // ============================================
