@@ -19,6 +19,8 @@ class BrandsView extends BaseView {
     this.brandPlaces = [];
     this.brandAudiences = [];
     this.brandSocialLinks = [];
+    /** @type {Array<object>} filas de brand_integrations para el panel INFO */
+    this.brandIntegrations = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -171,6 +173,18 @@ class BrandsView extends BaseView {
       
       if (container) {
         this.brandContainerData = container;
+
+        const { data: integRows, error: integError } = await this.supabase
+          .from('brand_integrations')
+          .select('id, platform, is_active, token_expires_at, metadata, external_account_name')
+          .eq('brand_container_id', container.id)
+          .order('updated_at', { ascending: false });
+        if (integError && integError.code !== 'PGRST116') {
+          console.warn('⚠️ Error cargando integraciones:', integError);
+          this.brandIntegrations = [];
+        } else {
+          this.brandIntegrations = integRows || [];
+        }
         
         // Brand
         const { data: brand, error: brandError } = await this.supabase
@@ -363,6 +377,7 @@ class BrandsView extends BaseView {
       console.error('❌ Error crítico cargando datos:', error);
     } finally {
       this._dataLoaded = true;
+      if (this.isActive) this._refreshInfoPanelIfOpen();
     }
   }
 
@@ -1485,17 +1500,164 @@ class BrandsView extends BaseView {
     }, 500); // Tiempo de animación de salida (sincronizado con CSS)
   }
 
+  _refreshInfoPanelIfOpen() {
+    const root = this.container || document.getElementById('app-container');
+    const infoCard = root?.querySelector('.card-info.expanded');
+    if (!infoCard) return;
+    const content = infoCard.querySelector('#infoPanelContent');
+    if (content) {
+      this.renderInfoPanelContent(content);
+    }
+  }
+
+  /** Ruta Insight (conexiones / métricas) respetando prefijo de org si existe. */
+  getOrgInsightHref() {
+    const orgId = window.currentOrgId || this.brandContainerData?.organization_id;
+    const name = (window.currentOrgName || '').trim();
+    if (orgId && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, name);
+      if (prefix) return `${prefix}/insight`;
+    }
+    return '/insight';
+  }
+
+  _pickBrandIntegration(platform) {
+    const rows = this.brandIntegrations || [];
+    const active = rows.filter((r) => r && String(r.platform).toLowerCase() === platform && r.is_active);
+    if (active.length) return active[0];
+    const any = rows.find((r) => r && String(r.platform).toLowerCase() === platform);
+    return any || null;
+  }
+
+  _integrationTokenExpired(row) {
+    if (!row?.token_expires_at) return false;
+    return new Date(row.token_expires_at) < new Date();
+  }
+
+  /** Integración utilizable: activa y token no vencido. */
+  _integrationUsable(row) {
+    return !!(row && row.is_active && !this._integrationTokenExpired(row));
+  }
+
+  /**
+   * Filas fijas YouTube / Facebook / Instagram / Analytics a partir de brand_integrations.
+   * Meta (facebook) cubre Facebook + Instagram; Google cubre YouTube + GA4.
+   */
+  buildInfoIntegrationRows() {
+    const insight = this.getOrgInsightHref();
+    const google = this._pickBrandIntegration('google');
+    const facebook = this._pickBrandIntegration('facebook');
+    const gOk = this._integrationUsable(google);
+    const fOk = this._integrationUsable(facebook);
+    let meta = google?.metadata;
+    if (meta && typeof meta === 'string') {
+      try {
+        meta = JSON.parse(meta);
+      } catch (_) {
+        meta = {};
+      }
+    }
+    if (!meta || typeof meta !== 'object') meta = {};
+    const ga4Id = meta.ga4_property_id || meta.ga4PropertyId || '';
+
+    return [
+      {
+        key: 'youtube',
+        label: 'YouTube',
+        iconClass: 'fab fa-youtube',
+        connected: gOk,
+        actionHref: gOk ? 'https://www.youtube.com/' : insight,
+        actionExternal: gOk,
+        hint: ''
+      },
+      {
+        key: 'facebook',
+        label: 'Facebook',
+        iconClass: 'fab fa-facebook-f',
+        connected: fOk,
+        actionHref: fOk ? 'https://www.facebook.com/' : insight,
+        actionExternal: fOk,
+        hint: ''
+      },
+      {
+        key: 'instagram',
+        label: 'Instagram',
+        iconClass: 'fab fa-instagram',
+        connected: fOk,
+        actionHref: fOk ? 'https://www.instagram.com/' : insight,
+        actionExternal: fOk,
+        hint: ''
+      },
+      {
+        key: 'analytics',
+        label: 'Analytics',
+        iconClass: 'fas fa-chart-line',
+        connected: gOk && !!String(ga4Id).trim(),
+        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : insight,
+        actionExternal: gOk && !!String(ga4Id).trim(),
+        hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
+      }
+    ];
+  }
+
+  renderInfoIntegrationsCompactHtml() {
+    const rows = this.buildInfoIntegrationRows();
+    const items = rows
+      .map((row) => {
+        const linkAttrs = row.actionExternal
+          ? `href="${row.actionHref}" target="_blank" rel="noopener noreferrer"`
+          : `href="${row.actionHref}"`;
+        const linkedIcon = row.connected
+          ? '<span class="info-connect-linked" title="Conectado" aria-hidden="true"><i class="fas fa-link"></i></span>'
+          : '';
+        const hint = row.hint
+          ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
+          : '';
+        return `
+          <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
+            <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(row.iconClass)}"></i></span>
+            <div class="info-connect-main">
+              <span class="info-connect-label">${this.escapeHtml(row.label)}</span>
+              ${hint}
+            </div>
+            ${linkedIcon}
+            <a class="info-connect-external" ${linkAttrs} aria-label="${row.actionExternal ? `Abrir ${row.label}` : `Ir a Insight para conectar ${row.label}`}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </li>`;
+      })
+      .join('');
+
+    return `
+      <section class="info-section info-section-connect" aria-labelledby="infoConnectHeading">
+        <h3 class="info-section-title" id="infoConnectHeading">En la web</h3>
+        <ul class="info-connect-list" role="list">
+          ${items}
+        </ul>
+      </section>
+    `;
+  }
+
   renderInfoPanelContent(container) {
     if (!container) return;
     const brandContainer = this.brandContainerData;
     container.innerHTML = `
-      <section class="info-section info-section-identity">
-        <div class="info-section-content">
-          ${this.renderIdentitySection(brandContainer)}
+      <div class="info-panel-grid">
+        <div class="info-panel-grid__primary">
+          <section class="info-section info-section-identity">
+            <div class="info-section-content">
+              ${this.renderIdentitySection(brandContainer)}
+            </div>
+          </section>
+          ${this.renderInfoIntegrationsCompactHtml()}
         </div>
-      </section>
+        <aside class="info-panel-grid__secondary" aria-label="Espacio reservado">
+          <p class="info-panel-secondary-hint">Las conexiones se gestionan en <strong>Insight</strong>. Usa los accesos de la lista para abrir cada plataforma o ir a Insight si falta alguna.</p>
+        </aside>
+      </div>
     `;
     this.setupInfoPanelEditables(container);
+    if (typeof this.updateLinksForRouter === 'function') {
+      this.updateLinksForRouter();
+    }
   }
 
   setupInfoPanelEditables(container) {
