@@ -6985,6 +6985,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
                 transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
 }
 
+/* Mismo glass dinámico que el resto de .brand-card (el panel no debe quedarse solo en --glass-bg) */
+#brandsListContainer.brand-cards-glass-black > div.brand-card.card-info.expanded,
+.brand-dashboard-container.brand-cards-glass-black.info-mode-secondary > .card-info.expanded {
+    background: var(--glass-black-bg);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white > div.brand-card.card-info.expanded,
+.brand-dashboard-container.brand-cards-glass-white.info-mode-secondary > .card-info.expanded {
+    background: var(--glass-white-bg);
+    border-color: var(--glass-white-border);
+    color: var(--text-primary);
+}
+
 /* #brandsListContainer es el mismo nodo que .brand-dashboard-container: hijo directo .brand-card.expanded */
 .brand-dashboard-container.info-mode-secondary:has(.card-info.expanded) > .brand-card.card-info.expanded {
     align-self: stretch;
@@ -7000,6 +7015,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 #infoPanelContent {
     display: flex;
     flex-direction: column;
+    gap: 1rem;
     flex: 1 1 auto;
     margin-top: 0;
     opacity: 0;
@@ -7696,25 +7712,57 @@ h1.brand-name-large[contenteditable="true"]:hover,
  * y recuperar cards, grid y variantes glass dinámicas de Brand.
  */
 #infoPanelContent .info-section {
-    margin-bottom: 1.25rem;
-    padding: 1.25rem;
+    margin-bottom: 0;
+    padding: 1.25rem 1.35rem;
     border-radius: var(--glass-radius);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
+    /* Fondo más opaco que el shell para que se lean como “sub-cards” */
+    background: rgba(0, 0, 0, 0.32);
     color: var(--text-primary);
+    border: 1px solid transparent;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 2px 14px rgba(0, 0, 0, 0.18);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Borde no permanente: solo al hover/focus-within (accesible teclado) */
+#infoPanelContent .info-section:hover,
+#infoPanelContent .info-section:focus-within {
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 4px 20px rgba(0, 0, 0, 0.22);
 }
 
 #brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section {
-    background: var(--glass-black-bg);
-    border-color: var(--glass-black-border);
+    background: rgba(0, 0, 0, 0.58);
     color: var(--glass-black-text);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 3px 18px rgba(0, 0, 0, 0.35);
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section:hover,
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-section:focus-within {
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 #brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section {
-    background: var(--glass-white-bg);
-    border-color: var(--glass-white-border);
+    background: rgba(255, 255, 255, 0.38);
+    color: var(--text-primary);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 2px 14px rgba(0, 0, 0, 0.1);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section:hover,
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-section:focus-within {
+    border-color: rgba(0, 0, 0, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        0 4px 18px rgba(0, 0, 0, 0.12);
 }
 
 #infoPanelContent .info-section:last-child {
