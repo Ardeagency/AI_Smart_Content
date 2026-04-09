@@ -9,7 +9,6 @@ class LandingView extends BaseView {
     this.heroWordsTimer = null;
     this.pillarScrollCleanup = null;
     this.threadsRevealCleanup = null;
-    this.threadsInteractionCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
     this.scrollRevealCleanup = null;
@@ -23,7 +22,6 @@ class LandingView extends BaseView {
     this.initHeroWordsCarousel();
     this.initValuePillarsNav();
     this.initLandingThreadsReveal();
-    this.initThreadsInteraction();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
     this.initScrollReveal();
@@ -64,211 +62,6 @@ class LandingView extends BaseView {
 
     this.landingHeaderScrollCleanup = () => {
       scrollTarget.removeEventListener('scroll', update);
-    };
-  }
-
-  /**
-   * Threads: burbujas interactivas — drag que mueve la línea SVG en tiempo real
-   * + click para seleccionar (highlight / dim) y mostrar panel de detalle.
-   */
-  initThreadsInteraction() {
-    if (typeof this.threadsInteractionCleanup === 'function') {
-      this.threadsInteractionCleanup();
-      this.threadsInteractionCleanup = null;
-    }
-
-    const section = document.getElementById('landing-after-pillars');
-    if (!section) return;
-
-    const fan    = section.querySelector('.landing-threads__fan');
-    const svgEl  = section.querySelector('.landing-threads__svg');
-    const rows   = [...section.querySelectorAll('.landing-threads__row')];
-    const curves = [...section.querySelectorAll('.landing-threads__curve')];
-    const detail = section.querySelector('.landing-threads__detail');
-    if (!fan || !svgEl || !rows.length || !curves.length || !detail) return;
-
-    // Contenido de cada capacidad (mismo orden que los rows del HTML)
-    const PILLARS = [
-      { title: 'Fotografía',   color: '#ff1744', desc: 'Captura y optimiza imágenes automáticamente para cada plataforma. Ajusta encuadres, formatos y estética visual según tu identidad de marca.' },
-      { title: 'Scraping',     color: '#ff6500', desc: 'Extrae tendencias, precios y contenido relevante de la competencia en tiempo real para informar y acelerar tu estrategia.' },
-      { title: 'Reels',        color: '#ffe500', desc: 'Guiones, edición y publicación de Reels de alto impacto, optimizados para el algoritmo de cada red social.' },
-      { title: 'Historias',    color: '#c5e60a', desc: 'Historias diarias coherentes con tu ADN de marca, sin esfuerzo ni inconsistencias visuales.' },
-      { title: 'Marketing',    color: '#00d614', desc: 'Estrategias de marketing inteligentes basadas en datos reales, no en suposiciones. Cada decisión tiene un porqué.' },
-      { title: 'Monitoreo',    color: '#00e7ff', desc: 'Vigilancia 24/7 de tu presencia digital y la de tu competencia. Alertas en tiempo real ante cambios y oportunidades.' },
-      { title: 'Análisis',     color: '#2979ff', desc: 'Insights profundos sobre rendimiento, audiencia y oportunidades de contenido. Datos que se convierten en decisiones claras.' },
-      { title: 'Estrategia',   color: '#5b00ea', desc: 'Planificación de contenido mensual alineada con tus objetivos de negocio y los patrones de consumo de tu audiencia.' },
-      { title: 'Post',         color: '#d500f9', desc: 'Posts optimizados para cada plataforma con captions que generan engagement real y conversiones medibles.' },
-      { title: 'ADN de marca', color: '#ea00b7', desc: 'Tu voz, tus colores y tu esencia codificados en la IA. Cada pieza de contenido es auténticamente tuya.' },
-      { title: 'Competencia',  color: '#bf360c', desc: 'Benchmarking automático y análisis de brechas para mantenerte siempre un paso adelante del mercado.' },
-      { title: 'Campañas',     color: '#00bfa5', desc: 'Campañas completas de principio a fin: desde la idea inicial hasta los resultados medibles y el aprendizaje.' },
-    ];
-
-    // Punto de convergencia SVG (fijo)
-    const CX = 66, CY = 50;
-    // Posiciones Y por defecto de cada burbuja en el espacio SVG
-    const DEFAULT_SVG_Y = [4.167, 12.5, 20.833, 29.167, 37.5, 45.833, 54.167, 62.5, 70.833, 79.167, 87.5, 95.833];
-    const DEFAULT_SVG_X = 27;
-
-    // Construye el atributo `d` para una curva desde (sx, sy) a (CX, CY)
-    function buildPath(sx, sy) {
-      const cp1x = Math.min(sx + 17, CX - 8);
-      return `M ${sx.toFixed(2)} ${sy.toFixed(2)} C ${cp1x.toFixed(2)} ${sy.toFixed(2)}, 56 ${CY}, ${CX} ${CY}`;
-    }
-
-    // Convierte coordenadas de página al espacio SVG
-    function pageToSvg(px, py) {
-      const pt  = svgEl.createSVGPoint();
-      pt.x = px; pt.y = py;
-      const ctm = svgEl.getScreenCTM();
-      return ctm ? pt.matrixTransform(ctm.inverse()) : null;
-    }
-
-    // Animación JS para path SVG (easing cubic-out, ~420ms)
-    function animatePath(pathEl, x0, y0, x1, y1, dur) {
-      const t0 = performance.now();
-      const ease = (t) => 1 - Math.pow(1 - t, 3);
-      function frame(now) {
-        const p  = Math.min(1, (now - t0) / dur);
-        const ep = ease(p);
-        pathEl.setAttribute('d', buildPath(x0 + (x1 - x0) * ep, y0 + (y1 - y0) * ep));
-        if (p < 1) requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-    }
-
-    // ── Estado de selección ──────────────────────────────────────────────────
-    let activeIdx = -1;
-
-    function clearSelection() {
-      activeIdx = -1;
-      rows.forEach((r)   => r.classList.remove('is-active', 'is-dimmed'));
-      curves.forEach((c) => c.classList.remove('is-curve-active', 'is-curve-dimmed'));
-      detail.classList.remove('is-open');
-    }
-
-    function selectBubble(idx) {
-      if (activeIdx === idx) { clearSelection(); return; }
-      activeIdx = idx;
-      rows.forEach((r, i) => {
-        r.classList.toggle('is-active', i === idx);
-        r.classList.toggle('is-dimmed', i !== idx);
-      });
-      curves.forEach((c, i) => {
-        c.classList.toggle('is-curve-active',  i === idx);
-        c.classList.toggle('is-curve-dimmed',  i !== idx);
-      });
-      const p = PILLARS[idx];
-      detail.querySelector('.landing-threads__detail-title').textContent = p.title;
-      detail.querySelector('.landing-threads__detail-desc').textContent  = p.desc;
-      detail.style.setProperty('--detail-color', p.color);
-      detail.classList.add('is-open');
-    }
-
-    // ── Drag interactivo ─────────────────────────────────────────────────────
-    const DRAG_THRESH = 5;
-    const listeners   = [];
-
-    function on(el, type, fn, opts) {
-      el.addEventListener(type, fn, opts);
-      listeners.push({ el, type, fn, opts });
-    }
-
-    rows.forEach((row, i) => {
-      const bubble = row.querySelector('.landing-threads__bubble');
-      if (!bubble) return;
-
-      let dragging = false, moved = false;
-      let startCX = 0, startCY = 0;   // clientX/Y al inicio
-      let defPX = 0, defPY = 0;        // centro de burbuja en página al inicio
-      let curSvgX = DEFAULT_SVG_X, curSvgY = DEFAULT_SVG_Y[i]; // posición SVG actual
-
-      on(bubble, 'pointerdown', (e) => {
-        if (e.button !== 0 && e.pointerType === 'mouse') return;
-        e.preventDefault();
-        const r = bubble.getBoundingClientRect();
-        defPX   = r.left + r.width  / 2;
-        defPY   = r.top  + r.height / 2;
-        startCX = e.clientX;
-        startCY = e.clientY;
-        curSvgX = DEFAULT_SVG_X;
-        curSvgY = DEFAULT_SVG_Y[i];
-        dragging = true; moved = false;
-        bubble.setPointerCapture(e.pointerId);
-        row.style.zIndex = '10';
-      }, { passive: false });
-
-      on(bubble, 'pointermove', (e) => {
-        if (!dragging) return;
-        const dx = e.clientX - startCX;
-        const dy = e.clientY - startCY;
-        if (!moved && (Math.abs(dx) > DRAG_THRESH || Math.abs(dy) > DRAG_THRESH)) {
-          moved = true;
-          row.classList.add('is-dragging');
-          bubble.style.transition = 'none';
-        }
-        if (!moved) return;
-
-        bubble.style.transform = `translate(${dx}px,${dy}px) scale(1.09)`;
-
-        // Convierte nuevo centro a SVG y actualiza la curva
-        const sp = pageToSvg(defPX + dx, defPY + dy);
-        if (sp) {
-          curSvgX = Math.max(2,  Math.min(50, sp.x));
-          curSvgY = Math.max(1,  Math.min(99, sp.y));
-          curves[i].setAttribute('d', buildPath(curSvgX, curSvgY));
-        }
-      }, { passive: true });
-
-      on(bubble, 'pointerup', (e) => {
-        if (!dragging) return;
-        dragging = false;
-
-        if (!moved) {
-          // Es un click: seleccionar
-          row.style.zIndex = '';
-          selectBubble(i);
-          return;
-        }
-
-        // Snap-back animado: burbuja y curva vuelven a su posición
-        row.classList.remove('is-dragging');
-        row.style.zIndex = '';
-        bubble.style.transition = 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)';
-        bubble.style.transform  = '';
-        animatePath(curves[i], curSvgX, curSvgY, DEFAULT_SVG_X, DEFAULT_SVG_Y[i], 420);
-        setTimeout(() => { bubble.style.transition = ''; }, 450);
-        moved = false;
-      });
-
-      on(bubble, 'pointercancel', () => {
-        if (!dragging) return;
-        dragging = false; moved = false;
-        row.classList.remove('is-dragging');
-        row.style.zIndex = '';
-        bubble.style.transition = 'transform 0.35s ease';
-        bubble.style.transform  = '';
-        setTimeout(() => { bubble.style.transition = ''; }, 380);
-        curves[i].setAttribute('d', buildPath(DEFAULT_SVG_X, DEFAULT_SVG_Y[i]));
-      });
-
-      // Soporte teclado (Enter / Space sobre el bubble)
-      on(bubble, 'keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectBubble(i); }
-      });
-    });
-
-    // Botón de cierre del panel
-    const closeBtn = detail.querySelector('.landing-threads__detail-close');
-    if (closeBtn) on(closeBtn, 'click', clearSelection);
-
-    // Click fuera del fan → cerrar
-    on(document, 'pointerdown', (e) => {
-      if (activeIdx >= 0 && !fan.contains(e.target)) clearSelection();
-    }, { passive: true });
-
-    this.threadsInteractionCleanup = () => {
-      listeners.forEach(({ el, type, fn, opts }) => el.removeEventListener(type, fn, opts));
-      clearSelection();
     };
   }
 
@@ -726,10 +519,6 @@ class LandingView extends BaseView {
     if (typeof this.threadsRevealCleanup === 'function') {
       this.threadsRevealCleanup();
       this.threadsRevealCleanup = null;
-    }
-    if (typeof this.threadsInteractionCleanup === 'function') {
-      this.threadsInteractionCleanup();
-      this.threadsInteractionCleanup = null;
     }
     if (typeof this.landingHeaderScrollCleanup === 'function') {
       this.landingHeaderScrollCleanup();
