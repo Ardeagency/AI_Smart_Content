@@ -7770,6 +7770,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-wrap: wrap;
 }
 
+/* INFO solo logo (sin integraciones ni más secciones) */
+.card-content-expanded .info-identity-row--logo-only {
+    justify-content: center;
+    width: 100%;
+}
+
 /* Contenedor de logo - circular, input encima para subir */
 .card-content-expanded .info-identity-row .info-logo-container {
     position: relative;

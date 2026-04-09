@@ -19,7 +19,6 @@ class BrandsView extends BaseView {
     this.brandPlaces = [];
     this.brandAudiences = [];
     this.brandSocialLinks = [];
-    this.brandIntegrations = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -147,7 +146,7 @@ class BrandsView extends BaseView {
    * Carga datos según schema.sql:
    * brand_containers, brands(project_id→container), brand_assets(brand_container_id),
    * brand_entities(brand_container_id), brand_places(entity_id), audiences(brand_id),
-   * brand_colors(brand_id), brand_rules(brand_id, rule_type, rule_value),
+   * brand_colors(brand_id), brand_fonts(brand_id),
    * products(brand_container_id), organization_members, organization_credits, credit_usage.
    */
   async loadData() {
@@ -215,21 +214,6 @@ class BrandsView extends BaseView {
           this.brandAssets = assets || [];
         }
 
-        // Integraciones (brand_integrations): por ahora solo Google + Facebook
-        const { data: integrationsData, error: integrationsError } = await this.supabase
-          .from('brand_integrations')
-          .select('id, brand_container_id, platform, external_account_id, external_account_name, is_active, updated_at, last_sync_at, token_expires_at, metadata')
-          .eq('brand_container_id', container.id)
-          .in('platform', ['google', 'facebook'])
-          .order('updated_at', { ascending: false });
-
-        if (integrationsError) {
-          console.warn('⚠️ Error cargando integraciones:', integrationsError);
-          this.brandIntegrations = [];
-        } else {
-          this.brandIntegrations = integrationsData || [];
-        }
-
         // Brand Entities (identidad estructural)
         const { data: entities, error: entitiesError } = await this.supabase
           .from('brand_entities')
@@ -279,12 +263,11 @@ class BrandsView extends BaseView {
           }
         }
 
-        // Colores, fuentes y reglas
+        // Colores y fuentes
         if (this.brandData?.id) {
-          const [colorsResult, fontsResult, rulesResult] = await Promise.allSettled([
+          const [colorsResult, fontsResult] = await Promise.allSettled([
             this.supabase.from('brand_colors').select('*').eq('brand_id', this.brandData.id),
-            this.supabase.from('brand_fonts').select('*').eq('brand_id', this.brandData.id),
-            this.supabase.from('brand_rules').select('*').eq('brand_id', this.brandData.id)
+            this.supabase.from('brand_fonts').select('*').eq('brand_id', this.brandData.id)
           ]);
           
           if (colorsResult.status === 'fulfilled' && !colorsResult.value.error) {
@@ -300,13 +283,7 @@ class BrandsView extends BaseView {
             console.warn('⚠️ Error cargando fuentes:', fontsResult.reason || fontsResult.value?.error);
             this.brandFonts = [];
           }
-          
-          if (rulesResult.status === 'fulfilled' && !rulesResult.value.error) {
-            this.brandRules = rulesResult.value.data || [];
-          } else {
-            console.warn('⚠️ Error cargando reglas:', rulesResult.reason || rulesResult.value?.error);
-            this.brandRules = [];
-          }
+          this.brandRules = [];
         }
 
         // Organización
@@ -416,76 +393,6 @@ class BrandsView extends BaseView {
     this.brandAssets = data || [];
   }
 
-  /**
-   * <select> nativo (mismo estilo que makeEditableSelect) para columnas text[] en brands
-   * donde guardamos un solo valor como array de un elemento.
-   */
-  _makeNativeSelectForBrandArrayField(element, fieldName, optionLabels, placeholder, onSave) {
-    if (!element) return;
-    const raw = this.brandData?.[fieldName];
-    const currentValue = Array.isArray(raw) ? (raw[0] || '') : (raw || '');
-
-    const select = document.createElement('select');
-    select.className = 'editable-select';
-    select.style.width = '100%';
-
-    const blank = document.createElement('option');
-    blank.value = '';
-    blank.textContent = placeholder;
-    select.appendChild(blank);
-
-    (optionLabels || []).forEach(label => {
-      const opt = document.createElement('option');
-      opt.value = label;
-      opt.textContent = label;
-      if (label === currentValue) opt.selected = true;
-      select.appendChild(opt);
-    });
-
-    element.innerHTML = '';
-    element.appendChild(select);
-
-    select.addEventListener('change', async () => {
-      const val = select.value;
-      await this.saveBrandField(fieldName, val ? [val] : []);
-      if (onSave) onSave();
-    });
-  }
-
-  /** Nicho principal: dropdown nativo (catálogo). Guarda nicho_mercado como text[] de 1 elemento. */
-  makeNichoCategorySelect(element, onSave) {
-    this._makeNativeSelectForBrandArrayField(
-      element,
-      'nicho_mercado',
-      Object.keys(BrandsView.NICHO_CATALOG),
-      '— Seleccionar nicho —',
-      onSave
-    );
-  }
-
-  /**
-   * Sub-nicho: mismo formato de dropdown que el nicho.
-   * Opciones filtradas por el nicho elegido; si aún no hay nicho, lista todos los sub-nichos del catálogo.
-   */
-  makeSubNichoSelect(element, onSave) {
-    const selectedNichos = Array.isArray(this.brandData?.nicho_mercado)
-      ? this.brandData.nicho_mercado
-      : [];
-    const catalog = BrandsView.NICHO_CATALOG;
-    const subcats = [];
-    const source = selectedNichos.length > 0 ? selectedNichos : Object.keys(catalog);
-    source.forEach(nicho => {
-      (catalog[nicho] || []).forEach(s => { if (!subcats.includes(s)) subcats.push(s); });
-    });
-    this._makeNativeSelectForBrandArrayField(
-      element,
-      'sub_nicho',
-      subcats,
-      '— Seleccionar sub-nicho —',
-      onSave
-    );
-  }
-
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
   static TYPOGRAPHY_FONTS = [
     { value: 'Inter', label: 'Inter' },
@@ -503,120 +410,6 @@ class BrandsView extends BaseView {
     { value: 'Work Sans', label: 'Work Sans' },
     { value: 'DM Sans', label: 'DM Sans' },
   ];
-
-  /** Directorio de 20 categorías principales con sus sub-nichos. */
-  static NICHO_CATALOG = {
-    'Salud y Bienestar': [
-      'Suplementos nutricionales', 'Medicina alternativa', 'Salud mental y terapia',
-      'Fitness y ejercicio', 'Pérdida de peso', 'Nutrición y dietas', 'Yoga y meditación',
-      'Bienestar hormonal', 'Salud femenina', 'Salud masculina', 'Sueño y descanso',
-      'Rehabilitación física', 'Odontología estética', 'Cuidado de la visión', 'Dermatología y piel'
-    ],
-    'Belleza y Cuidado Personal': [
-      'Maquillaje y cosméticos', 'Skincare y anti-edad', 'Cuidado del cabello',
-      'Fragancias y perfumes', 'Uñas y nail art', 'Depilación y laser',
-      'Barberías y grooming', 'Spa y estética', 'Bronceado artificial',
-      'Tatuajes y piercings', 'Salud capilar', 'Microblading y semipermanente'
-    ],
-    'Moda y Vestuario': [
-      'Moda femenina', 'Moda masculina', 'Moda infantil', 'Moda sostenible',
-      'Ropa deportiva', 'Lencería y ropa interior', 'Calzado', 'Accesorios y joyería',
-      'Moda de tallas grandes', 'Moda vintage y segunda mano', 'Uniformes y workwear', 'Moda de lujo'
-    ],
-    'Tecnología y Gadgets': [
-      'Smartphones y accesorios', 'Computadoras y laptops', 'Wearables',
-      'Smart home y domotica', 'Drones', 'Gaming y videojuegos', 'Impresión 3D',
-      'Realidad virtual/aumentada', 'Accesorios para autos tech', 'Fotografía y cámaras',
-      'Audio y auriculares', 'Software y apps'
-    ],
-    'Finanzas y Dinero': [
-      'Inversión y bolsa', 'Criptomonedas y Web3', 'Finanzas personales',
-      'Crédito y préstamos', 'Seguros', 'Bienes raíces', 'Jubilación y pensiones',
-      'Educación financiera', 'Fintech', 'Contabilidad y fiscalidad', 'Crowdfunding', 'Dinero pasivo'
-    ],
-    'Educación y Aprendizaje': [
-      'Cursos online', 'Idiomas', 'Preparación de exámenes', 'Educación infantil',
-      'Habilidades digitales', 'Coaching y mentoría', 'E-learning B2B',
-      'Formación corporativa', 'Tutorías académicas', 'Educación STEM',
-      'Certificaciones profesionales', 'Habilidades blandas'
-    ],
-    'Negocios y Emprendimiento': [
-      'Startups y funding', 'Consultoría empresarial', 'Franquicias', 'Negocios online',
-      'Dropshipping', 'E-commerce', 'Marketing digital', 'Automatización de negocios',
-      'SaaS y software', 'Propiedad intelectual', 'Importación y exportación', 'Modelos de suscripción'
-    ],
-    'Marketing y Publicidad': [
-      'SEO y posicionamiento', 'Publicidad en redes sociales', 'Email marketing',
-      'Marketing de contenidos', 'Influencer marketing', 'Branding',
-      'Publicidad programática', 'Video marketing', 'Marketing de afiliados',
-      'Growth hacking', 'CRO y UX', 'Marketing local'
-    ],
-    'Alimentación y Gastronomía': [
-      'Comida saludable', 'Vegana y vegetariana', 'Snacks y confitería',
-      'Bebidas artesanales', 'Café y té', 'Cocina étnica', 'Suplementos deportivos',
-      'Dietas especiales (keto, gluten free)', 'Catering y eventos', 'Delivery de comida',
-      'Kits de cocina', 'Alimentos orgánicos'
-    ],
-    'Mascotas': [
-      'Comida para mascotas', 'Accesorios y juguetes', 'Veterinaria y salud',
-      'Grooming y estética', 'Entrenamiento', 'Seguros de mascotas',
-      'Mascotas exóticas', 'Hospedaje y guardería', 'Adopción y rescate', 'Fotografía de mascotas'
-    ],
-    'Viajes y Turismo': [
-      'Turismo de aventura', 'Turismo de lujo', 'Viajes de mochilero',
-      'Turismo gastronómico', 'Ecoturismo', 'Turismo cultural', 'Viajes en familia',
-      'Nómadas digitales', 'Cruceros', 'Turismo médico', 'Turismo de bienestar', 'Airbnb y alojamiento'
-    ],
-    'Hogar y Decoración': [
-      'Diseño de interiores', 'Muebles y decoración', 'Jardín y plantas',
-      'Organización del hogar', 'Limpieza e higiene', 'Herramientas y bricolaje',
-      'Electrodomésticos', 'Iluminación', 'Colchones y descanso',
-      'Arte y cuadros', 'Almacenamiento', 'Reformas y construcción'
-    ],
-    'Deportes y Actividad Física': [
-      'Equipamiento deportivo', 'Nutrición deportiva', 'Crossfit y calistenia',
-      'Running y trail', 'Ciclismo', 'Natación', 'Deportes de montaña',
-      'Deportes acuáticos', 'Deportes de combate', 'Fútbol y deportes de equipo',
-      'Golf', 'Pádel y tenis'
-    ],
-    'Entretenimiento y Medios': [
-      'Streaming y contenido', 'Podcasting', 'Gaming', 'Música y producción',
-      'Libros y lectura', 'Cine y series', 'Eventos en vivo', 'Humor y comedia',
-      'Coleccionables', 'Juegos de mesa', 'Juegos de rol', 'Cómics y manga'
-    ],
-    'Arte y Creatividad': [
-      'Diseño gráfico', 'Fotografía', 'Ilustración digital', 'Pintura y dibujo',
-      'Cerámica y artesanía', 'Música y composición', 'Escritura creativa',
-      'Danza', 'Teatro', 'Escultura', 'Joyería artesanal', 'Tipografía y lettering'
-    ],
-    'Bebés y Maternidad': [
-      'Ropa de bebé', 'Juguetes educativos', 'Lactancia', 'Nutrición infantil',
-      'Seguridad del hogar para bebés', 'Sillas de auto', 'Cochecitos',
-      'Cuidado piel de bebés', 'Embarazo y parto', 'Fertilidad',
-      'Crianza y parenting', 'Estimulación temprana'
-    ],
-    'Sostenibilidad y Medio Ambiente': [
-      'Energía solar', 'Productos ecológicos', 'Moda sostenible', 'Alimentación orgánica',
-      'Reciclaje y upcycling', 'Movilidad eléctrica', 'Ecoturismo',
-      'Arquitectura sostenible', 'Activismo ambiental', 'Cero residuos'
-    ],
-    'Automovilismo y Movilidad': [
-      'Compra y venta de autos', 'Accesorios para vehículos', 'Tuning y personalización',
-      'Motocicletas', 'Vehículos eléctricos', 'Talleres y mantenimiento',
-      'Seguros de auto', 'Flotas y logística', 'Movilidad urbana', 'Carsharing'
-    ],
-    'Legal y Asesoría': [
-      'Derecho laboral', 'Derecho de familia', 'Derecho inmobiliario',
-      'Migración y visas', 'Derecho corporativo', 'Propiedad intelectual',
-      'Protección de datos', 'Mediación', 'Derecho penal', 'Asesoría para startups'
-    ],
-    'Recursos Humanos y Trabajo': [
-      'Reclutamiento', 'Trabajo remoto', 'Freelancing', 'Outplacement',
-      'Formación corporativa', 'Bienestar laboral', 'Gestión del talento',
-      'Empleo para jóvenes', 'Headhunting', 'Plataformas de trabajo',
-      'Diversidad e inclusión', 'Salarios y compensación'
-    ]
-  };
 
   // ============================================
   // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)
@@ -1694,140 +1487,37 @@ class BrandsView extends BaseView {
 
   renderInfoPanelContent(container) {
     if (!container) return;
-    
     const brandContainer = this.brandContainerData;
-    const brand = this.brandData;
-    
-    // Agrupar reglas por tipo
-    const rulesByType = {};
-    (this.brandRules || []).forEach(rule => {
-      const type = rule.rule_type || 'other';
-      if (!rulesByType[type]) {
-        rulesByType[type] = [];
-      }
-      rulesByType[type].push(rule);
-    });
-    
     container.innerHTML = `
-      <!-- IDENTIDAD - Solo logo -->
       <section class="info-section info-section-identity">
         <div class="info-section-content">
-          ${this.renderIdentitySection(brandContainer, brand)}
-        </div>
-      </section>
-
-      <!-- ESENCIA: nicho_mercado/sub_nicho en brands (catálogo). mercado_objetivo del container es solo en esquina inferior, no se repite aquí. -->
-      <section class="info-section">
-        <h3 class="info-section-title">Esencia</h3>
-        <div class="info-section-content">
-          ${this.renderEssenceSection(brand)}
-        </div>
-      </section>
-
-      <!-- LENGUAJE: etiqueta "Tono de voz" → columna tono_comunicacion (text[]) -->
-      <section class="info-section">
-        <h3 class="info-section-title">Lenguaje</h3>
-        <div class="info-section-content">
-          ${this.renderLanguageSection(brand)}
-        </div>
-      </section>
-
-      <!-- ESTILO VISUAL (schema: estilo_visual, estilo_publicidad, transmitir_visualmente, evitar_visualmente) -->
-      <section class="info-section">
-        <h3 class="info-section-title">Estilo visual</h3>
-        <div class="info-section-content">
-          ${this.renderVisualStyleSection(brand)}
-        </div>
-      </section>
-
-      <!-- REGLAS CREATIVAS -->
-      <section class="info-section">
-        <h3 class="info-section-title">Reglas Creativas</h3>
-        <div class="info-section-content">
-          ${this.renderCreativeRulesSection(brand, rulesByType)}
+          ${this.renderIdentitySection(brandContainer)}
         </div>
       </section>
     `;
-
     this.setupInfoPanelEditables(container);
   }
 
   setupInfoPanelEditables(container) {
     if (!container) return;
-
-    // Logo upload
     const logoInput = container.querySelector('.info-logo-container input[type="file"]');
-    if (logoInput) {
+    if (logoInput && logoInput.dataset.infoLogoBound !== '1') {
+      logoInput.dataset.infoLogoBound = '1';
       logoInput.addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-          this.uploadLogo(e.target.files[0]);
-        }
+        if (e.target.files[0]) this.uploadLogo(e.target.files[0]);
       });
     }
-
-    // Integraciones (dentro de INFO, junto al logo)
-    const integrationsContainer = container.querySelector('#brandIntegrationsContainer');
-    if (integrationsContainer) {
-      this.renderIntegrationsInto(integrationsContainer);
-    }
-
-    // Solo "Palabras a usar" (contenteditable). No tocar nicho/sub-nicho ni data-multiselect (tienen su propio init).
-    container.querySelectorAll('.info-field-value').forEach(field => {
-      if (field.hasAttribute('data-multiselect') || field.hasAttribute('data-nicho-select') || field.hasAttribute('data-sub-nicho-select')) return;
-      const label = field.previousElementSibling;
-      if (!label || !label.classList.contains('info-field-label')) return;
-      const labelText = label.textContent.trim();
-      if (labelText === 'Palabras a usar') {
-        field.classList.add('info-editable');
-        this.makeEditableText(field, 'palabras_clave', 'brand', () => {
-          const infoCard = document.querySelector('.card-info.expanded');
-          if (infoCard) {
-            const content = infoCard.querySelector('.card-content-expanded');
-            if (content) this.renderInfoPanelContent(content);
-          }
-        });
-      }
-    });
-
-    // Callback que re-renderiza el panel completo (necesario para refrescar sub-nichos al cambiar nicho)
-    const onRefreshPanel = () => {
-      const infoCard = document.querySelector('.card-info.expanded');
-      if (infoCard) {
-        const content = infoCard.querySelector('.card-content-expanded');
-        if (content) this.renderInfoPanelContent(content);
-      }
-    };
-
-    // Nicho de mercado: dropdown con categorías predefinidas del catálogo
-    const nichoEl = container.querySelector('[data-nicho-select]');
-    if (nichoEl) this.makeNichoCategorySelect(nichoEl, onRefreshPanel);
-
-    // Sub-nicho: dropdown filtrado por nichos seleccionados
-    const subNichoEl = container.querySelector('[data-sub-nicho-select]');
-    if (subNichoEl) this.makeSubNichoSelect(subNichoEl, onRefreshPanel);
-
-    // Campos multi-select genéricos (objetivos, arquetipo, palabras, estilos, etc.)
-    container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
-      const fieldName = wrap.getAttribute('data-multiselect');
-      const schemaField = wrap.getAttribute('data-field') || (fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName);
-      if (!fieldName) return;
-      this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
-    });
-
   }
 
-  renderIdentitySection(brandContainer, brand) {
+  renderIdentitySection(brandContainer) {
     const logoUrl = brandContainer?.logo_url;
-    const nombreMarca = brandContainer?.nombre_marca || 'Sin nombre';
-    
-    // Validar URL del logo antes de renderizar
-    const isValidLogoUrl = logoUrl && 
-      (logoUrl.startsWith('http://') || 
-       logoUrl.startsWith('https://') || 
+    const isValidLogoUrl = logoUrl &&
+      (logoUrl.startsWith('http://') ||
+       logoUrl.startsWith('https://') ||
        logoUrl.startsWith('/'));
-    
+
     return `
-      <div class="info-identity-row">
+      <div class="info-identity-row info-identity-row--logo-only">
         <div class="info-logo-container">
           ${isValidLogoUrl
             ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
@@ -1836,302 +1526,8 @@ class BrandsView extends BaseView {
           <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
           <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
         </div>
-        <div class="info-integrations-container" id="brandIntegrationsContainer" aria-label="Integraciones de redes"></div>
       </div>
     `;
-  }
-
-  /**
-   * Integraciones OAuth (Google + Meta): tarjetas en grid junto al logo en INFO.
-   * Estado en `brand_integrations` (conectar / desconectar).
-   */
-  renderIntegrationsInto(container) {
-    if (!container) return;
-
-    const cards = [
-      {
-        id: 'google',
-        sourcePlatform: 'google',
-        icon: null,
-        label: 'Google',
-        subtitle: 'Analytics · YouTube · Ads',
-        svgIcon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>`
-      },
-      {
-        id: 'facebook',
-        sourcePlatform: 'facebook',
-        icon: null,
-        label: 'Meta',
-        subtitle: 'Facebook · Instagram · Ads',
-        svgIcon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" fill="#1877F2"/>
-        </svg>`
-      }
-    ];
-
-    const getIntegration = (platformId, sourcePlatform) => {
-      const list = this.brandIntegrations || [];
-      return list.find(i => String(i?.platform || '').toLowerCase() === platformId)
-          || list.find(i => String(i?.platform || '').toLowerCase() === sourcePlatform)
-          || null;
-    };
-
-    const expiryInfo = (integ) => {
-      if (!integ?.is_active || !integ.token_expires_at) return null;
-      const daysLeft = Math.ceil((new Date(integ.token_expires_at).getTime() - Date.now()) / 86400000);
-      if (daysLeft <= 0)  return { label: 'Token expirado',        cssClass: 'expired'       };
-      if (daysLeft <= 7)  return { label: `Expira en ${daysLeft}d`, cssClass: 'expiring-soon' };
-      return               { label: `Activo · ${daysLeft}d`,       cssClass: 'active-ok'     };
-    };
-
-    container.innerHTML = `
-      <div class="brand-integrations-cards" aria-label="Integraciones">
-        ${cards.map((card) => {
-          const integ = getIntegration(card.id, card.sourcePlatform);
-          const connected = !!(integ && integ.is_active);
-          const profile = integ?.external_account_name ? this.escapeHtml(integ.external_account_name) : null;
-          const picture = integ?.metadata?.picture || null;
-          const expiry  = expiryInfo(integ);
-          const expiryIcon = expiry?.cssClass === 'expired' ? 'fa-exclamation-triangle'
-                           : expiry?.cssClass === 'expiring-soon' ? 'fa-clock' : 'fa-shield-alt';
-
-          // Página activa para Meta (Facebook)
-          const selectedPageName = (card.sourcePlatform === 'facebook' && connected)
-            ? (integ?.metadata?.selected_page_name || null)
-            : null;
-
-          return `
-            <article class="brand-integration-card ${connected ? 'is-connected' : 'is-disconnected'}${expiry ? ' expiry-' + expiry.cssClass : ''}">
-              <div class="brand-integration-card-head">
-                <div class="brand-integration-title-wrap">
-                  <div class="brand-integration-title">
-                    ${card.svgIcon || `<i class="${this.escapeHtml(card.icon || '')}" aria-hidden="true"></i>`}
-                    <span>${this.escapeHtml(card.label)}</span>
-                  </div>
-                  <div class="brand-integration-subtitle">${this.escapeHtml(card.subtitle)}</div>
-                </div>
-                <span class="brand-integration-status ${connected ? 'is-connected' : 'is-disconnected'}">
-                  ${connected ? '<i class="fas fa-check-circle"></i> Conectado' : 'Sin conectar'}
-                </span>
-              </div>
-
-              ${connected && profile ? `
-              <div class="brand-integration-profile">
-                ${picture ? `<img src="${this.escapeHtml(picture)}" class="brand-integration-avatar" alt="">` : '<i class="fas fa-user-circle brand-integration-avatar-icon"></i>'}
-                <span class="brand-integration-profile-name">${profile}</span>
-              </div>` : ''}
-
-              ${selectedPageName ? `
-              <div class="brand-integration-active-page">
-                <i class="fab fa-facebook"></i>
-                <span>${this.escapeHtml(selectedPageName)}</span>
-              </div>` : ''}
-
-              ${expiry ? `
-              <div class="brand-integration-expiry brand-integration-expiry--${expiry.cssClass}">
-                <i class="fas ${expiryIcon}"></i> ${expiry.label}
-              </div>` : ''}
-
-              <div class="brand-integration-connect-row">
-                <button type="button"
-                  class="brand-integration-action-btn brand-integration-connect-btn"
-                  data-connect-platform="${this.escapeHtml(card.sourcePlatform)}">
-                  <i class="fas fa-plug"></i> ${connected ? 'Reconectar' : 'Conectar'}
-                </button>
-                ${connected ? `
-                <button type="button"
-                  class="brand-integration-action-btn brand-integration-disconnect-btn"
-                  data-disconnect-platform="${this.escapeHtml(card.sourcePlatform)}">
-                  <i class="fas fa-unlink"></i> Desconectar
-                </button>` : ''}
-              </div>
-            </article>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    container.querySelectorAll('[data-connect-platform]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const platform = String(btn.getAttribute('data-connect-platform') || '').toLowerCase().trim();
-        if (!platform) return;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando...';
-        await this.connectBrandIntegration(platform);
-        btn.disabled = false;
-      });
-    });
-
-    container.querySelectorAll('[data-disconnect-platform]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const platform = String(btn.getAttribute('data-disconnect-platform') || '').toLowerCase().trim();
-        if (!platform) return;
-        const platformLabel = platform === 'facebook' ? 'Meta (Facebook + Instagram)' : 'Google (YouTube + Analytics)';
-        if (!confirm(`¿Desconectar ${platformLabel}?\nSe revocarán los permisos en la plataforma.`)) return;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        await this.disconnectBrandIntegration(platform);
-        this.renderIntegrationsInto(container);
-      });
-    });
-
-  }
-
-  async connectBrandIntegration(platform) {
-    if (!this.brandContainerData?.id) {
-      alert('No se pudo identificar la marca.');
-      return;
-    }
-
-    const plat = String(platform || '').toLowerCase().trim();
-    if (!['google', 'facebook'].includes(plat)) {
-      alert('Plataforma no soportada.');
-      return;
-    }
-
-    try {
-      if (!this.supabase && window.supabaseService?.getClient) {
-        this.supabase = await window.supabaseService.getClient();
-      }
-      if (!this.supabase?.auth?.getSession) {
-        alert('Supabase no disponible.');
-        return;
-      }
-
-      const sessionData = await this.supabase.auth.getSession();
-      const accessToken = sessionData?.data?.session?.access_token;
-      if (!accessToken) {
-        alert('Sesión no válida. Recarga la página e inicia sesión de nuevo.');
-        return;
-      }
-
-      const returnTo = `${window.location.pathname}${window.location.search || ''}`;
-      const startUrl =
-        `${window.location.origin}/api/integrations/${encodeURIComponent(plat)}/start` +
-        `?brand_container_id=${encodeURIComponent(this.brandContainerData.id)}` +
-        `&return_to=${encodeURIComponent(returnTo)}`;
-
-      const res = await fetch(startUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        throw new Error(txt || `Error ${res.status} al iniciar conexión.`);
-      }
-
-      const json = await res.json();
-      if (!json.authorize_url) throw new Error('No se pudo generar la URL de autorización.');
-
-      window.location.href = json.authorize_url;
-    } catch (e) {
-      console.error('connectBrandIntegration error:', e);
-      alert(e?.message || 'No se pudo iniciar la conexión.');
-    }
-  }
-
-  async disconnectBrandIntegration(platform) {
-    if (!this.brandContainerData?.id) return;
-    try {
-      if (!this.supabase && window.supabaseService?.getClient) {
-        this.supabase = await window.supabaseService.getClient();
-      }
-
-      const sessionData = await this.supabase.auth.getSession();
-      const accessToken = sessionData?.data?.session?.access_token;
-      if (!accessToken) { alert('Sesión no válida.'); return; }
-
-      const res = await fetch(`${window.location.origin}/api/integrations/disconnect`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ brand_container_id: this.brandContainerData.id, platform })
-      });
-
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        throw new Error(txt || `Error ${res.status} al desconectar.`);
-      }
-
-      this.brandIntegrations = (this.brandIntegrations || []).filter(
-        i => String(i?.platform || '').toLowerCase() !== String(platform || '').toLowerCase()
-      );
-    } catch (e) {
-      console.error('disconnectBrandIntegration error:', e);
-      alert(e?.message || 'No se pudo desconectar.');
-    }
-  }
-
-  renderEssenceSection(brand) {
-    if (!brand) {
-      return '<p class="info-empty">No hay información de esencia disponible.</p>';
-    }
-    let html = '';
-    html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Nicho de mercado</div><div class="info-field-value" data-nicho-select></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Sub-nicho</div><div class="info-field-value" data-sub-nicho-select></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Arquetipo / personalidad</div><div class="info-field-value" data-multiselect="arquetipo_personalidad" data-field="arquetipo_personalidad"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Enfoque de marca</div><div class="info-field-value" data-multiselect="enfoque_marca" data-field="enfoque_marca"></div></div>`;
-    return `<div class="info-fields-grid">${html}</div>`;
-  }
-
-  renderLanguageSection(brand) {
-    if (!brand) {
-      return '<p class="info-empty">No hay información de lenguaje disponible.</p>';
-    }
-    const palabrasClave = brand.palabras_clave;
-    const palabrasClaveStr = Array.isArray(palabrasClave) ? palabrasClave.join(', ') : (palabrasClave || '');
-    let html = '';
-    html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasClaveStr)}</div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
-    html += `<div class="info-field" title="Se guarda en la columna tono_comunicacion (Supabase)."><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Estilo de escritura</div><div class="info-field-value" data-multiselect="estilo_escritura" data-field="estilo_escritura"></div></div>`;
-    return `<div class="info-fields-grid">${html}</div>`;
-  }
-
-  /**
-   * Sección Estilo visual (schema: estilo_visual, estilo_publicidad, transmitir_visualmente, evitar_visualmente)
-   */
-  renderVisualStyleSection(brand) {
-    if (!brand) {
-      return '<p class="info-empty">No hay información de estilo visual.</p>';
-    }
-    let html = '';
-    html += `<div class="info-field"><div class="info-field-label">Estilo visual</div><div class="info-field-value" data-multiselect="estilo_visual" data-field="estilo_visual"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Estilo publicidad</div><div class="info-field-value" data-multiselect="estilo_publicidad" data-field="estilo_publicidad"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Transmitir visualmente</div><div class="info-field-value" data-multiselect="transmitir_visualmente" data-field="transmitir_visualmente"></div></div>`;
-    html += `<div class="info-field"><div class="info-field-label">Evitar visualmente</div><div class="info-field-value" data-multiselect="evitar_visualmente" data-field="evitar_visualmente"></div></div>`;
-    return `<div class="info-fields-grid">${html}</div>`;
-  }
-
-  renderCreativeRulesSection(brand, rulesByType) {
-    const hasRules = Object.keys(rulesByType).length > 0;
-    if (!hasRules) {
-      return '<p class="info-empty">No hay reglas creativas definidas.</p>';
-    }
-    let html = '';
-    // Renderizar reglas desde brand_rules
-    Object.entries(rulesByType).forEach(([type, rules]) => {
-      if (type === 'typography') return; // Ya se muestra en Visual de marca
-      
-      rules.forEach(rule => {
-        const ruleValue = rule.rule_value || {};
-        const ruleName = ruleValue.name || ruleValue.title || type;
-        const ruleContent = ruleValue.content || ruleValue.description || ruleValue.value || '';
-        
-        if (ruleContent) {
-          html += `
-            <div class="info-field">
-              <div class="info-field-label">${this.escapeHtml(String(ruleName))}</div>
-              <div class="info-field-value">${this.escapeHtml(String(ruleContent))}</div>
-            </div>
-          `;
-        }
-      });
-    });
-    
-    return html || '<p class="info-empty">No hay reglas creativas definidas.</p>';
   }
 
   // ============================================
@@ -2383,41 +1779,6 @@ class BrandsView extends BaseView {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         element.blur();
-      }
-    });
-  }
-
-  makeEditableSelect(element, fieldName, options, table = 'brand', onSave = null) {
-    if (!element) return;
-
-    const originalValue = table === 'container' 
-      ? (this.brandContainerData?.[fieldName] || '')
-      : (this.brandData?.[fieldName] || '');
-
-    const select = document.createElement('select');
-    select.className = 'editable-select';
-    select.style.width = '100%';
-
-    options.forEach(opt => {
-      const option = document.createElement('option');
-      option.value = opt.value;
-      option.textContent = opt.label;
-      if (opt.value === originalValue) option.selected = true;
-      select.appendChild(option);
-    });
-
-    element.innerHTML = '';
-    element.appendChild(select);
-
-    select.addEventListener('change', async () => {
-      const value = select.value;
-      if (value !== originalValue) {
-        if (table === 'container') {
-          await this.saveContainerField(fieldName, value);
-        } else {
-          await this.saveBrandField(fieldName, value);
-        }
-        if (onSave) onSave();
       }
     });
   }
