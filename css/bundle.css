@@ -7797,64 +7797,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-height: min-content;
 }
 
-#infoPanelContent .info-brand-aside-sub {
-    font-weight: 400;
-    opacity: 0.65;
-    text-transform: none;
-    letter-spacing: normal;
-    font-size: 0.85em;
-}
-
 #infoPanelContent .info-brand-aside-lead {
     margin: 0;
     font-size: var(--font-size-sm);
     line-height: 1.45;
     opacity: 0.85;
-}
-
-#infoPanelContent .info-brand-aside-lead code {
-    font-size: 0.9em;
-    padding: 0.1em 0.35em;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-aside-lead code {
-    background: rgba(0, 0, 0, 0.06);
-}
-
-#infoPanelContent .info-brand-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    font-size: var(--font-size-xs);
-    padding: 0.65rem 0.75rem;
-    border-radius: var(--radius-sm);
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-meta {
-    background: rgba(255, 255, 255, 0.35);
-    border-color: rgba(0, 0, 0, 0.06);
-}
-
-#infoPanelContent .info-brand-meta-row {
-    display: grid;
-    grid-template-columns: 6.5rem 1fr;
-    gap: 0.5rem;
-    align-items: baseline;
-    word-break: break-all;
-}
-
-#infoPanelContent .info-brand-meta-k {
-    opacity: 0.65;
-    font-weight: 500;
-}
-
-#infoPanelContent .info-brand-meta-v {
-    font-family: ui-monospace, monospace;
-    font-size: 0.8rem;
 }
 
 #infoPanelContent .info-brand-fields {

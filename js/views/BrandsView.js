@@ -1653,24 +1653,7 @@ class BrandsView extends BaseView {
     `;
   }
 
-  _formatBrandIsoDate(iso) {
-    if (!iso) return '—';
-    try {
-      return new Date(iso).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' });
-    } catch (_) {
-      return String(iso);
-    }
-  }
-
   renderBrandSchemaAsideHtml() {
-    const b = this.brandData;
-    const metaId = b?.id ? this.escapeHtml(b.id) : '—';
-    const metaProject = b?.project_id
-      ? this.escapeHtml(b.project_id)
-      : (this.brandContainerData?.id ? this.escapeHtml(this.brandContainerData.id) : '—');
-    const metaCreated = this._formatBrandIsoDate(b?.created_at);
-    const metaUpdated = this._formatBrandIsoDate(b?.updated_at);
-
     const arrayBlocks = BrandsView.BRAND_SCHEMA_ARRAY_FIELDS.map(([field, label]) => `
       <div class="info-brand-field">
         <div class="info-brand-field-label">${this.escapeHtml(label)}</div>
@@ -1680,14 +1663,8 @@ class BrandsView extends BaseView {
 
     return `
       <div class="info-brand-aside-inner">
-        <h3 class="info-section-title" id="infoBrandSchemaHeading">Ficha de marca <span class="info-brand-aside-sub">(tabla brands)</span></h3>
-        <p class="info-brand-aside-lead">Editá cada bloque con etiquetas; el primer guardado crea la fila en <code>brands</code> si aún no existe.</p>
-        <div class="info-brand-meta">
-          <div class="info-brand-meta-row"><span class="info-brand-meta-k">id</span><span class="info-brand-meta-v">${metaId}</span></div>
-          <div class="info-brand-meta-row"><span class="info-brand-meta-k">project_id</span><span class="info-brand-meta-v">${metaProject}</span></div>
-          <div class="info-brand-meta-row"><span class="info-brand-meta-k">created_at</span><span class="info-brand-meta-v">${this.escapeHtml(metaCreated)}</span></div>
-          <div class="info-brand-meta-row"><span class="info-brand-meta-k">updated_at</span><span class="info-brand-meta-v">${this.escapeHtml(metaUpdated)}</span></div>
-        </div>
+        <h3 class="info-section-title" id="infoBrandSchemaHeading">Ficha de marca</h3>
+        <p class="info-brand-aside-lead">Editá cada bloque con etiquetas; el primer guardado crea la ficha si aún no existe.</p>
         <div class="info-brand-fields">
           ${arrayBlocks}
         </div>
