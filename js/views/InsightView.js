@@ -406,6 +406,8 @@ class InsightView extends BaseView {
         // Realtime dispara el refresh cuando la DB cambia.
         // Si Realtime no está disponible, _scheduleRefresh actúa como fallback.
         this._scheduleRefresh('sync-complete');
+      } else if (!res.ok) {
+        console.warn('[InsightView] sync-meta:', res.status, data?.error || '', data?.meta || '');
       }
     } catch (e) {
       console.warn('[InsightView] Background sync failed:', e.message);

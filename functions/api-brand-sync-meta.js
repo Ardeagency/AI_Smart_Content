@@ -320,12 +320,14 @@ function buildSnapshot({ fbPosts, fbInsights, igMedia, igPostInsights, igTimeSer
     samples:         igStories.slice(0, 5)
   } : null;
 
-  // Video posts metrics
-  const videoPosts = igMedia.filter(m => ['VIDEO', 'REEL'].includes(m.media_type));
-  const videoMetrics = videoPosts.length > 0 ? {
-    count:            videoPosts.length,
-    total_views:      igPostInsights.reduce((s, pi) => s + (pi.video_views || 0), 0),
-    avg_watch_time_ms: igPostInsights.reduce((s, pi) => s + (pi.avg_watch_time_ms || 0), 0) / Math.max(1, videoPosts.length),
+  // Video posts metrics (insights alineados por índice con igMedia)
+  const videoPostsIndexed = igMedia
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }) => ['VIDEO', 'REEL'].includes(m.media_type));
+  const videoMetrics = videoPostsIndexed.length > 0 ? {
+    count:            videoPostsIndexed.length,
+    total_views:      videoPostsIndexed.reduce((s, { i }) => s + (igPostInsights[i]?.video_views || 0), 0),
+    avg_watch_time_ms: videoPostsIndexed.reduce((s, { i }) => s + (igPostInsights[i]?.avg_watch_time_ms || 0), 0) / videoPostsIndexed.length,
   } : null;
 
   // Time series: merge IG daily data + follower delta
@@ -539,38 +541,50 @@ exports.handler = async (event) => {
   if (!brand_container_id)
     return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
-  // Verificar acceso
-  const containers = await supabaseRest({
-    url: env.url, serviceKey: env.serviceKey,
-    path: 'brand_containers', method: 'GET',
-    searchParams: { select: 'id,user_id,organization_id', id: `eq.${brand_container_id}`, limit: '1' }
-  });
-  const bc = Array.isArray(containers) ? containers[0] : null;
-  if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
-
-  if (bc.user_id !== user.id) {
-    const members = await supabaseRest({
+  // Verificar acceso + integración Meta (errores de Supabase → JSON claro, no 500 genérico sin contexto)
+  let bc;
+  let integ;
+  try {
+    const containers = await supabaseRest({
       url: env.url, serviceKey: env.serviceKey,
-      path: 'organization_members', method: 'GET',
-      searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
+      path: 'brand_containers', method: 'GET',
+      searchParams: { select: 'id,user_id,organization_id', id: `eq.${brand_container_id}`, limit: '1' }
     });
-    if (!Array.isArray(members) || members.length === 0)
-      return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+    bc = Array.isArray(containers) ? containers[0] : null;
+    if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
+
+    if (bc.user_id !== user.id) {
+      const members = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'organization_members', method: 'GET',
+        searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
+      });
+      if (!Array.isArray(members) || members.length === 0)
+        return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+    }
+
+    const integRows = await supabaseRest({
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'brand_integrations', method: 'GET',
+      searchParams: {
+        select: 'id,access_token,token_expires_at,external_account_id,metadata',
+        brand_container_id: `eq.${brand_container_id}`,
+        platform: 'eq.facebook',
+        is_active: 'eq.true',
+        limit: '1'
+      }
+    });
+    integ = Array.isArray(integRows) ? integRows[0] : null;
+  } catch (e) {
+    console.error('[brand-sync-meta] setup/db:', e?.message, e?.details || '');
+    const code = e.statusCode >= 400 && e.statusCode < 600 ? e.statusCode : 500;
+    return {
+      statusCode: code,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: e?.message || 'Database error' })
+    };
   }
 
-  // Obtener integración Meta activa
-  const integRows = await supabaseRest({
-    url: env.url, serviceKey: env.serviceKey,
-    path: 'brand_integrations', method: 'GET',
-    searchParams: {
-      select: 'id,access_token,token_expires_at,external_account_id,metadata',
-      brand_container_id: `eq.${brand_container_id}`,
-      platform: 'eq.facebook',
-      is_active: 'eq.true',
-      limit: '1'
-    }
-  });
-  const integ = Array.isArray(integRows) ? integRows[0] : null;
   if (!integ)
     return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'No active Meta integration found' }) };
 
@@ -718,10 +732,16 @@ exports.handler = async (event) => {
         ago30.toISOString().slice(0, 10), now.toISOString().slice(0, 10));
       summary.snapshots_updated++;
 
-      // 7d snapshot (subconjunto de posts)
+      // 7d snapshot (subconjunto de posts; insights alineados por índice con igMedia)
       const fbPosts7  = fbPosts.filter(p => new Date(p.created_time) >= ago7);
-      const igMedia7  = igMedia.filter(m => new Date(m.timestamp)    >= ago7);
-      const igPI7     = igMedia.map((_, i) => igMedia[i] >= ago7 ? igPostInsights[i] : null).filter(Boolean);
+      const igMedia7 = [];
+      const igPI7 = [];
+      for (let i = 0; i < igMedia.length; i++) {
+        if (new Date(igMedia[i].timestamp) >= ago7) {
+          igMedia7.push(igMedia[i]);
+          igPI7.push(igPostInsights[i] || {});
+        }
+      }
       const fbPageInsights7 = await fetchFbPageInsights(pageToken, page.id, 'page_fans,page_impressions,page_impressions_unique', 'day', ago7, now);
       const snap7 = buildSnapshot({ fbPosts: fbPosts7, fbInsights: fbPageInsights7, igMedia: igMedia7, igPostInsights: igPI7, igTimeSeries, igFollowerSeries, igProfile, igStories, period: '7d', pageInfo: page });
       await upsertSnapshot(env, brand_container_id, '7d', { ...snap7, page_id: page.id, page_name: page.name },
@@ -749,10 +769,22 @@ exports.handler = async (event) => {
 
   } catch (e) {
     console.error('[brand-sync-meta] error:', e?.message);
+    if (e?.stack) console.error(e.stack);
+
+    const metaErr = e?.metaError;
+    let statusCode = 500;
+    if (e?.statusCode >= 400 && e?.statusCode < 600) statusCode = e.statusCode;
+    else if (metaErr && (metaErr.code === 190 || metaErr.code === 102 || metaErr.code === 104))
+      statusCode = 401;
+
+    const payload = { error: e?.message || 'Sync failed' };
+    if (metaErr && (metaErr.code != null || metaErr.type))
+      payload.meta = { code: metaErr.code, type: metaErr.type };
+
     return {
-      statusCode: 500,
+      statusCode,
       headers: corsHeaders(),
-      body: JSON.stringify({ error: e?.message || 'Sync failed' })
+      body: JSON.stringify(payload)
     };
   }
 };

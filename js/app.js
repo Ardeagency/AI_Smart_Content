@@ -6,6 +6,10 @@
  * - Organización: /org/:org_id/... (sidebar SaaS); tras login el usuario entra directo a su org
  * - Desarrollador: /dev/... (sidebar PaaS)
  */
+
+/** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
+const APP_LAZY_SCRIPT_VER = '20260409-2';
+
 class App {
   constructor() {
     this.initialized = false;
@@ -14,12 +18,17 @@ class App {
   }
 
   _loadScript(src) {
-    if (this._loadedScripts.has(src)) return Promise.resolve();
+    let url = src;
+    if (typeof src === 'string' && src.startsWith('/') && !/^https?:\/\//i.test(src)) {
+      const base = src.split(/[?#]/)[0];
+      url = `${base}?v=${APP_LAZY_SCRIPT_VER}`;
+    }
+    if (this._loadedScripts.has(url)) return Promise.resolve();
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = src;
-      s.onload = () => { this._loadedScripts.add(src); resolve(); };
-      s.onerror = () => reject(new Error(`Failed to load ${src}`));
+      s.src = url;
+      s.onload = () => { this._loadedScripts.add(url); resolve(); };
+      s.onerror = () => reject(new Error(`Failed to load ${url}`));
       document.head.appendChild(s);
     });
   }
