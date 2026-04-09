@@ -416,6 +416,169 @@ class BrandsView extends BaseView {
     this.brandAssets = data || [];
   }
 
+  /**
+   * Multi-select con pills y dropdown de opciones predefinidas.
+   * Reutilizable para nicho_mercado y sub_nicho.
+   * @param {Element} element - contenedor donde renderizar
+   * @param {string} fieldName - campo en brands
+   * @param {string[]} options - opciones disponibles
+   * @param {Function} [onSave] - callback tras guardar
+   */
+  _makePredefinedMultiSelect(element, fieldName, options, onSave) {
+    if (!element) return;
+
+    // Limpiar listener anterior de cierre externo
+    if (element._pmsClearOutside) element._pmsClearOutside();
+
+    const currentValues = Array.isArray(this.brandData?.[fieldName])
+      ? [...this.brandData[fieldName]]
+      : [];
+
+    element.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'predefined-multiselect';
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center;position:relative;';
+
+    // Pills de valores seleccionados
+    currentValues.forEach((val, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'editable-tag';
+      tag.textContent = val;
+      const rm = document.createElement('span');
+      rm.className = 'editable-tag-remove';
+      rm.innerHTML = ' ×';
+      rm.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const next = currentValues.filter((_, idx) => idx !== i);
+        await this.saveBrandField(fieldName, next);
+        if (onSave) onSave();
+      });
+      tag.appendChild(rm);
+      wrap.appendChild(tag);
+    });
+
+    const available = options.filter(o => !currentValues.includes(o));
+    if (available.length > 0) {
+      const triggerBtn = document.createElement('button');
+      triggerBtn.type = 'button';
+      triggerBtn.className = 'editable-tag-input';
+      triggerBtn.style.cssText = 'cursor:pointer;min-width:70px;padding:0.2rem 0.6rem;';
+      triggerBtn.textContent = '+ Agregar';
+
+      const dropdown = document.createElement('div');
+      dropdown.style.cssText = [
+        'position:absolute;top:calc(100% + 6px);left:0;z-index:9999;',
+        'background:var(--surface-2,#1c1c1c);border:1px solid rgba(255,255,255,0.12);',
+        'border-radius:10px;padding:0.5rem;min-width:240px;max-height:250px;',
+        'box-shadow:0 8px 28px rgba(0,0,0,0.5);display:none;flex-direction:column;gap:0;'
+      ].join('');
+
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.placeholder = 'Buscar…';
+      searchInput.style.cssText = [
+        'width:100%;padding:0.35rem 0.6rem;margin-bottom:0.4rem;',
+        'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);',
+        'border-radius:6px;color:inherit;font-size:0.82rem;outline:none;'
+      ].join('');
+
+      const listEl = document.createElement('div');
+      listEl.style.cssText = 'overflow-y:auto;max-height:175px;';
+
+      const renderList = (filter = '') => {
+        listEl.innerHTML = '';
+        const filtered = available.filter(o =>
+          !filter || o.toLowerCase().includes(filter.toLowerCase())
+        );
+        if (!filtered.length) {
+          const empty = document.createElement('div');
+          empty.textContent = 'Sin resultados';
+          empty.style.cssText = 'padding:0.35rem 0.5rem;opacity:0.45;font-size:0.8rem;';
+          listEl.appendChild(empty);
+          return;
+        }
+        filtered.forEach(opt => {
+          const item = document.createElement('div');
+          item.textContent = opt;
+          item.style.cssText = 'padding:0.35rem 0.6rem;cursor:pointer;border-radius:6px;font-size:0.83rem;transition:background 0.12s;';
+          item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,255,255,0.09)'; });
+          item.addEventListener('mouseleave', () => { item.style.background = ''; });
+          item.addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            const next = [...currentValues, opt];
+            dropdown.style.display = 'none';
+            isOpen = false;
+            await this.saveBrandField(fieldName, next);
+            if (onSave) onSave();
+          });
+          listEl.appendChild(item);
+        });
+      };
+
+      searchInput.addEventListener('input', () => renderList(searchInput.value));
+      dropdown.appendChild(searchInput);
+      dropdown.appendChild(listEl);
+
+      let isOpen = false;
+      const closeDropdown = () => {
+        dropdown.style.display = 'none';
+        isOpen = false;
+      };
+
+      triggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isOpen = !isOpen;
+        if (isOpen) {
+          dropdown.style.display = 'flex';
+          dropdown.style.flexDirection = 'column';
+          searchInput.value = '';
+          renderList();
+          searchInput.focus();
+        } else {
+          closeDropdown();
+        }
+      });
+
+      const outsideClose = (e) => {
+        if (!document.body.contains(wrap)) {
+          document.removeEventListener('click', outsideClose);
+          return;
+        }
+        if (!wrap.contains(e.target)) closeDropdown();
+      };
+      document.addEventListener('click', outsideClose);
+      element._pmsClearOutside = () => document.removeEventListener('click', outsideClose);
+
+      wrap.appendChild(triggerBtn);
+      wrap.appendChild(dropdown);
+    }
+
+    element.appendChild(wrap);
+  }
+
+  /** Selector de nicho principal usando NICHO_CATALOG (guarda en nicho_mercado). */
+  makeNichoCategorySelect(element, onSave) {
+    const categories = Object.keys(BrandsView.NICHO_CATALOG);
+    this._makePredefinedMultiSelect(element, 'nicho_mercado', categories, onSave);
+  }
+
+  /**
+   * Selector de sub-nicho: opciones filtradas por los nichos seleccionados.
+   * Si no hay nicho seleccionado, muestra todos los sub-nichos disponibles.
+   */
+  makeSubNichoSelect(element, onSave) {
+    const selectedNichos = Array.isArray(this.brandData?.nicho_mercado)
+      ? this.brandData.nicho_mercado
+      : [];
+    const catalog = BrandsView.NICHO_CATALOG;
+    const subcats = [];
+    const source = selectedNichos.length > 0 ? selectedNichos : Object.keys(catalog);
+    source.forEach(nicho => {
+      (catalog[nicho] || []).forEach(s => { if (!subcats.includes(s)) subcats.push(s); });
+    });
+    this._makePredefinedMultiSelect(element, 'sub_nicho', subcats, onSave);
+  }
+
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
   static TYPOGRAPHY_FONTS = [
     { value: 'Inter', label: 'Inter' },
@@ -433,6 +596,120 @@ class BrandsView extends BaseView {
     { value: 'Work Sans', label: 'Work Sans' },
     { value: 'DM Sans', label: 'DM Sans' },
   ];
+
+  /** Directorio de 20 categorías principales con sus sub-nichos. */
+  static NICHO_CATALOG = {
+    'Salud y Bienestar': [
+      'Suplementos nutricionales', 'Medicina alternativa', 'Salud mental y terapia',
+      'Fitness y ejercicio', 'Pérdida de peso', 'Nutrición y dietas', 'Yoga y meditación',
+      'Bienestar hormonal', 'Salud femenina', 'Salud masculina', 'Sueño y descanso',
+      'Rehabilitación física', 'Odontología estética', 'Cuidado de la visión', 'Dermatología y piel'
+    ],
+    'Belleza y Cuidado Personal': [
+      'Maquillaje y cosméticos', 'Skincare y anti-edad', 'Cuidado del cabello',
+      'Fragancias y perfumes', 'Uñas y nail art', 'Depilación y laser',
+      'Barberías y grooming', 'Spa y estética', 'Bronceado artificial',
+      'Tatuajes y piercings', 'Salud capilar', 'Microblading y semipermanente'
+    ],
+    'Moda y Vestuario': [
+      'Moda femenina', 'Moda masculina', 'Moda infantil', 'Moda sostenible',
+      'Ropa deportiva', 'Lencería y ropa interior', 'Calzado', 'Accesorios y joyería',
+      'Moda de tallas grandes', 'Moda vintage y segunda mano', 'Uniformes y workwear', 'Moda de lujo'
+    ],
+    'Tecnología y Gadgets': [
+      'Smartphones y accesorios', 'Computadoras y laptops', 'Wearables',
+      'Smart home y domotica', 'Drones', 'Gaming y videojuegos', 'Impresión 3D',
+      'Realidad virtual/aumentada', 'Accesorios para autos tech', 'Fotografía y cámaras',
+      'Audio y auriculares', 'Software y apps'
+    ],
+    'Finanzas y Dinero': [
+      'Inversión y bolsa', 'Criptomonedas y Web3', 'Finanzas personales',
+      'Crédito y préstamos', 'Seguros', 'Bienes raíces', 'Jubilación y pensiones',
+      'Educación financiera', 'Fintech', 'Contabilidad y fiscalidad', 'Crowdfunding', 'Dinero pasivo'
+    ],
+    'Educación y Aprendizaje': [
+      'Cursos online', 'Idiomas', 'Preparación de exámenes', 'Educación infantil',
+      'Habilidades digitales', 'Coaching y mentoría', 'E-learning B2B',
+      'Formación corporativa', 'Tutorías académicas', 'Educación STEM',
+      'Certificaciones profesionales', 'Habilidades blandas'
+    ],
+    'Negocios y Emprendimiento': [
+      'Startups y funding', 'Consultoría empresarial', 'Franquicias', 'Negocios online',
+      'Dropshipping', 'E-commerce', 'Marketing digital', 'Automatización de negocios',
+      'SaaS y software', 'Propiedad intelectual', 'Importación y exportación', 'Modelos de suscripción'
+    ],
+    'Marketing y Publicidad': [
+      'SEO y posicionamiento', 'Publicidad en redes sociales', 'Email marketing',
+      'Marketing de contenidos', 'Influencer marketing', 'Branding',
+      'Publicidad programática', 'Video marketing', 'Marketing de afiliados',
+      'Growth hacking', 'CRO y UX', 'Marketing local'
+    ],
+    'Alimentación y Gastronomía': [
+      'Comida saludable', 'Vegana y vegetariana', 'Snacks y confitería',
+      'Bebidas artesanales', 'Café y té', 'Cocina étnica', 'Suplementos deportivos',
+      'Dietas especiales (keto, gluten free)', 'Catering y eventos', 'Delivery de comida',
+      'Kits de cocina', 'Alimentos orgánicos'
+    ],
+    'Mascotas': [
+      'Comida para mascotas', 'Accesorios y juguetes', 'Veterinaria y salud',
+      'Grooming y estética', 'Entrenamiento', 'Seguros de mascotas',
+      'Mascotas exóticas', 'Hospedaje y guardería', 'Adopción y rescate', 'Fotografía de mascotas'
+    ],
+    'Viajes y Turismo': [
+      'Turismo de aventura', 'Turismo de lujo', 'Viajes de mochilero',
+      'Turismo gastronómico', 'Ecoturismo', 'Turismo cultural', 'Viajes en familia',
+      'Nómadas digitales', 'Cruceros', 'Turismo médico', 'Turismo de bienestar', 'Airbnb y alojamiento'
+    ],
+    'Hogar y Decoración': [
+      'Diseño de interiores', 'Muebles y decoración', 'Jardín y plantas',
+      'Organización del hogar', 'Limpieza e higiene', 'Herramientas y bricolaje',
+      'Electrodomésticos', 'Iluminación', 'Colchones y descanso',
+      'Arte y cuadros', 'Almacenamiento', 'Reformas y construcción'
+    ],
+    'Deportes y Actividad Física': [
+      'Equipamiento deportivo', 'Nutrición deportiva', 'Crossfit y calistenia',
+      'Running y trail', 'Ciclismo', 'Natación', 'Deportes de montaña',
+      'Deportes acuáticos', 'Deportes de combate', 'Fútbol y deportes de equipo',
+      'Golf', 'Pádel y tenis'
+    ],
+    'Entretenimiento y Medios': [
+      'Streaming y contenido', 'Podcasting', 'Gaming', 'Música y producción',
+      'Libros y lectura', 'Cine y series', 'Eventos en vivo', 'Humor y comedia',
+      'Coleccionables', 'Juegos de mesa', 'Juegos de rol', 'Cómics y manga'
+    ],
+    'Arte y Creatividad': [
+      'Diseño gráfico', 'Fotografía', 'Ilustración digital', 'Pintura y dibujo',
+      'Cerámica y artesanía', 'Música y composición', 'Escritura creativa',
+      'Danza', 'Teatro', 'Escultura', 'Joyería artesanal', 'Tipografía y lettering'
+    ],
+    'Bebés y Maternidad': [
+      'Ropa de bebé', 'Juguetes educativos', 'Lactancia', 'Nutrición infantil',
+      'Seguridad del hogar para bebés', 'Sillas de auto', 'Cochecitos',
+      'Cuidado piel de bebés', 'Embarazo y parto', 'Fertilidad',
+      'Crianza y parenting', 'Estimulación temprana'
+    ],
+    'Sostenibilidad y Medio Ambiente': [
+      'Energía solar', 'Productos ecológicos', 'Moda sostenible', 'Alimentación orgánica',
+      'Reciclaje y upcycling', 'Movilidad eléctrica', 'Ecoturismo',
+      'Arquitectura sostenible', 'Activismo ambiental', 'Cero residuos'
+    ],
+    'Automovilismo y Movilidad': [
+      'Compra y venta de autos', 'Accesorios para vehículos', 'Tuning y personalización',
+      'Motocicletas', 'Vehículos eléctricos', 'Talleres y mantenimiento',
+      'Seguros de auto', 'Flotas y logística', 'Movilidad urbana', 'Carsharing'
+    ],
+    'Legal y Asesoría': [
+      'Derecho laboral', 'Derecho de familia', 'Derecho inmobiliario',
+      'Migración y visas', 'Derecho corporativo', 'Propiedad intelectual',
+      'Protección de datos', 'Mediación', 'Derecho penal', 'Asesoría para startups'
+    ],
+    'Recursos Humanos y Trabajo': [
+      'Reclutamiento', 'Trabajo remoto', 'Freelancing', 'Outplacement',
+      'Formación corporativa', 'Bienestar laboral', 'Gestión del talento',
+      'Empleo para jóvenes', 'Headhunting', 'Plataformas de trabajo',
+      'Diversidad e inclusión', 'Salarios y compensación'
+    ]
+  };
 
   // ============================================
   // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)
@@ -1268,187 +1545,6 @@ class BrandsView extends BaseView {
     return div.innerHTML;
   }
 
-  getNicheDirectory() {
-    return Array.isArray(window.BRAND_NICHES_DIRECTORY) ? window.BRAND_NICHES_DIRECTORY : [];
-  }
-
-  /** Unión de sub-nichos permitidos para las categorías dadas (en UI solo hay 1 categoría principal). */
-  getAllowedSubnichosForNichos(nichos, directory) {
-    const set = new Set();
-    const dir = directory || this.getNicheDirectory();
-    for (const name of nichos || []) {
-      const row = dir.find(d => d.nicho === name);
-      (row?.subs || []).forEach(s => set.add(s));
-    }
-    return Array.from(set);
-  }
-
-  /** `nicho_mercado` en BD es text[] pero la UI solo permite 1 categoría → como máximo 1 string en el array. */
-  normalizeNichoMercadoForDb(nichos) {
-    if (!Array.isArray(nichos) || nichos.length === 0) return [];
-    const first = String(nichos[0] || '').trim();
-    return first ? [first] : [];
-  }
-
-  /**
-   * Guarda `nicho_mercado` y `sub_nicho` en un solo PATCH (o INSERT si aún no hay fila en brands).
-   */
-  async saveBrandNicheBundle(nichos, subnichos, onRefreshPanel) {
-    if (!this.supabase || !this.brandContainerData) return;
-    const saveKey = 'brand_niche_bundle';
-    if (this.savingFields.has(saveKey)) return;
-    this.savingFields.add(saveKey);
-    const n = this.normalizeNichoMercadoForDb(Array.isArray(nichos) ? nichos : []);
-    const s = Array.isArray(subnichos) ? subnichos : [];
-    const wasNew = !this.brandData?.id;
-    try {
-      if (wasNew) {
-        const { data, error } = await this.supabase
-          .from('brands')
-          .insert({
-            project_id: this.brandContainerData.id,
-            nicho_mercado: n,
-            sub_nicho: s
-          })
-          .select()
-          .single();
-        if (error) throw error;
-        this.brandData = data;
-      } else {
-        const { error } = await this.supabase
-          .from('brands')
-          .update({
-            nicho_mercado: n,
-            sub_nicho: s,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', this.brandData.id);
-        if (error) throw error;
-        this.brandData.nicho_mercado = n;
-        this.brandData.sub_nicho = s;
-      }
-      if (wasNew && typeof onRefreshPanel === 'function') onRefreshPanel();
-    } catch (e) {
-      console.error('saveBrandNicheBundle', e);
-      alert('No se pudo guardar nicho / sub-nicho. Intenta de nuevo.');
-    } finally {
-      this.savingFields.delete(saveKey);
-    }
-  }
-
-  /**
-   * Nicho: un solo <select> (se persiste como text[] con 0 o 1 elemento).
-   * Sub-nicho: <select> multivalor vía tags (dropdown + chips), text[].
-   */
-  setupBrandNicheEditors(container, onRefreshPanel) {
-    const block = container.querySelector('[data-brand-niche-block="1"]');
-    if (!block) return;
-    const nicheRoot = block.querySelector('.brand-niche-editor-root');
-    const subRoot = block.querySelector('.brand-subnicho-editor-root');
-    if (!nicheRoot || !subRoot) return;
-
-    const directory = this.getNicheDirectory();
-    if (!directory.length) {
-      nicheRoot.textContent = 'No se cargó el directorio de nichos (brandNichesDirectory.js).';
-      return;
-    }
-
-    const paint = () => {
-      const rawNichos = Array.isArray(this.brandData?.nicho_mercado) ? [...this.brandData.nicho_mercado] : [];
-      const primaryNicho = rawNichos[0] || '';
-      const nichoArr = primaryNicho ? [primaryNicho] : [];
-      const subs = Array.isArray(this.brandData?.sub_nicho) ? [...this.brandData.sub_nicho] : [];
-      const allowed = this.getAllowedSubnichosForNichos(nichoArr, directory);
-      const allowedSet = new Set(allowed);
-
-      nicheRoot.innerHTML = '';
-      const rowN = document.createElement('div');
-      rowN.className = 'brand-niche-row brand-niche-row--single';
-      const selN = document.createElement('select');
-      selN.className = 'brand-niche-add-select brand-niche-single-select';
-      selN.setAttribute('aria-label', 'Categoría de nicho de mercado');
-      const optEmptyN = document.createElement('option');
-      optEmptyN.value = '';
-      optEmptyN.textContent = 'Seleccionar categoría…';
-      selN.appendChild(optEmptyN);
-      const inDirectory = primaryNicho && directory.some(d => d.nicho === primaryNicho);
-      if (primaryNicho && !inDirectory) {
-        const optLegacy = document.createElement('option');
-        optLegacy.value = primaryNicho;
-        optLegacy.textContent = primaryNicho;
-        optLegacy.selected = true;
-        selN.appendChild(optLegacy);
-      }
-      directory.forEach(({ nicho: name }) => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        if (inDirectory && name === primaryNicho) opt.selected = true;
-        selN.appendChild(opt);
-      });
-      selN.addEventListener('change', async () => {
-        const v = selN.value.trim();
-        const nextN = v ? [v] : [];
-        const allowedNext = new Set(this.getAllowedSubnichosForNichos(nextN, directory));
-        const nextS = nextN.length === 0 ? [] : subs.filter(x => allowedNext.has(x));
-        await this.saveBrandNicheBundle(nextN, nextS, onRefreshPanel);
-        paint();
-      });
-      rowN.appendChild(selN);
-      nicheRoot.appendChild(rowN);
-
-      subRoot.innerHTML = '';
-      const rowS = document.createElement('div');
-      rowS.className = 'brand-subnicho-row';
-      const selS = document.createElement('select');
-      selS.className = 'brand-subnicho-add-select';
-      selS.setAttribute('aria-label', 'Añadir sub-nicho');
-      selS.disabled = !primaryNicho;
-      const optEmptyS = document.createElement('option');
-      optEmptyS.value = '';
-      optEmptyS.textContent = primaryNicho ? 'Elegir sub-nicho…' : 'Primero elige una categoría de nicho…';
-      selS.appendChild(optEmptyS);
-      allowed.filter(sub => !subs.includes(sub)).forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub;
-        opt.textContent = sub;
-        selS.appendChild(opt);
-      });
-      const tagsS = document.createElement('div');
-      tagsS.className = 'brand-subnicho-tags';
-      subs.forEach(sub => {
-        const tag = document.createElement('span');
-        tag.className = 'editable-tag brand-subnicho-tag';
-        tag.textContent = sub;
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.className = 'brand-subnicho-tag-remove';
-        rm.setAttribute('aria-label', 'Quitar sub-nicho');
-        rm.textContent = '×';
-        rm.addEventListener('click', async () => {
-          const nextS = subs.filter(x => x !== sub);
-          await this.saveBrandNicheBundle(nichoArr, nextS, onRefreshPanel);
-          paint();
-        });
-        tag.appendChild(rm);
-        tagsS.appendChild(tag);
-      });
-      selS.addEventListener('change', async () => {
-        const v = selS.value;
-        if (!v) return;
-        if (!allowedSet.has(v)) return;
-        const nextS = [...subs, v];
-        await this.saveBrandNicheBundle(nichoArr, nextS, onRefreshPanel);
-        paint();
-      });
-      rowS.appendChild(selS);
-      rowS.appendChild(tagsS);
-      subRoot.appendChild(rowS);
-    };
-
-    paint();
-  }
-
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
@@ -1713,7 +1809,7 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, sub_nicho, arquetipo_personalidad, enfoque_marca) -->
+      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, arquetipo_personalidad, enfoque_marca) -->
       <section class="info-section">
         <h3 class="info-section-title">Esencia</h3>
         <div class="info-section-content">
@@ -1785,23 +1881,31 @@ class BrandsView extends BaseView {
       }
     });
 
-    // Objetivos y Palabras a evitar: siempre formato tags + input (estado 2 único)
+    // Callback que re-renderiza el panel completo (necesario para refrescar sub-nichos al cambiar nicho)
     const onRefreshPanel = () => {
-            const infoCard = document.querySelector('.card-info.expanded');
-            if (infoCard) {
-              const content = infoCard.querySelector('.card-content-expanded');
+      const infoCard = document.querySelector('.card-info.expanded');
+      if (infoCard) {
+        const content = infoCard.querySelector('.card-content-expanded');
         if (content) this.renderInfoPanelContent(content);
       }
     };
-    this.setupBrandNicheEditors(container, onRefreshPanel);
 
+    // Nicho de mercado: dropdown con categorías predefinidas del catálogo
+    const nichoEl = container.querySelector('[data-nicho-select]');
+    if (nichoEl) this.makeNichoCategorySelect(nichoEl, onRefreshPanel);
+
+    // Sub-nicho: dropdown filtrado por nichos seleccionados
+    const subNichoEl = container.querySelector('[data-sub-nicho-select]');
+    if (subNichoEl) this.makeSubNichoSelect(subNichoEl, onRefreshPanel);
+
+    // Campos multi-select genéricos (objetivos, arquetipo, palabras, estilos, etc.)
     container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
-      if (wrap.closest('[data-brand-niche-block="1"]')) return;
       const fieldName = wrap.getAttribute('data-multiselect');
       const schemaField = wrap.getAttribute('data-field') || (fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName);
       if (!fieldName) return;
       this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
+
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -2052,25 +2156,13 @@ class BrandsView extends BaseView {
   }
 
   renderEssenceSection(brand) {
-    if (!this.brandContainerData) {
-      return '<p class="info-empty">No hay información de esencia disponible.</p>';
-    }
-    const nicheBlock = `
-      <div class="info-field info-field-niche-block" data-brand-niche-block="1">
-        <div class="info-field-label">Nicho de mercado <span class="info-field-sublabel">(una categoría)</span></div>
-        <div class="brand-niche-editor-root brand-niche-field" aria-live="polite"></div>
-        <div class="info-field-label brand-subnicho-label">Sub-nicho <span class="info-field-sublabel">(varias del directorio)</span></div>
-        <div class="brand-subnicho-editor-root brand-subnicho-field" aria-live="polite"></div>
-        <p class="brand-niche-hint">Categoría: un solo desplegable. Sub-nichos: otro desplegable y chips (no es el multiselect de texto libre con “+ Agregar”).</p>
-      </div>`;
     if (!brand) {
-      return `
-        <p class="info-empty info-empty--compact">Aún no existe el perfil de marca. Elige al menos un nicho de mercado para crearlo.</p>
-        <div class="info-fields-grid">${nicheBlock}</div>`;
+      return '<p class="info-empty">No hay información de esencia disponible.</p>';
     }
     let html = '';
     html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
-    html += nicheBlock;
+    html += `<div class="info-field"><div class="info-field-label">Nicho de mercado</div><div class="info-field-value" data-nicho-select></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Sub-nicho</div><div class="info-field-value" data-sub-nicho-select></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Arquetipo / personalidad</div><div class="info-field-value" data-multiselect="arquetipo_personalidad" data-field="arquetipo_personalidad"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Enfoque de marca</div><div class="info-field-value" data-multiselect="enfoque_marca" data-field="enfoque_marca"></div></div>`;
     return `<div class="info-fields-grid">${html}</div>`;
@@ -2201,7 +2293,7 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
-    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
+    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas', 'mercado_objetivo'];
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);

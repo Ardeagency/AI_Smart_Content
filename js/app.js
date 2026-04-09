@@ -161,7 +161,7 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Brand ──
-    const brandsLoader = this._lazy('BrandsView', ['/js/data/brandNichesDirectory.js', '/js/views/BrandsView.js']);
+    const brandsLoader = this._lazy('BrandsView', ['/js/views/BrandsView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandsLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandsLoader, auth);
     r.register('/brands', brandsLoader, auth);

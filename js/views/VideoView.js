@@ -966,7 +966,7 @@ class VideoView extends BaseView {
     if (!this.supabase || !this.brandContainerId) return;
     try {
       const bcId = this.brandContainerId;
-      const { data: brandRow } = await this.supabase.from('brands').select('id, tono_comunicacion, estilo_publicidad, estilo_escritura, palabras_clave, palabras_prohibidas, arquetipo_personalidad, enfoque_marca, estilo_visual, transmitir_visualmente, evitar_visualmente, objetivos_marca, nicho_mercado, sub_nicho').eq('project_id', bcId).maybeSingle();
+      const { data: brandRow } = await this.supabase.from('brands').select('id, tono_comunicacion, estilo_publicidad, estilo_escritura, palabras_clave, palabras_prohibidas, arquetipo_personalidad, enfoque_marca, estilo_visual, transmitir_visualmente, evitar_visualmente, objetivos_marca').eq('project_id', bcId).maybeSingle();
       const brandId = brandRow?.id || null;
       this.dbData.brand = brandRow || null;
       this.dbData.brandProfiles = [];
