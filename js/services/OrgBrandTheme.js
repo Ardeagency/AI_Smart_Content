@@ -3,65 +3,128 @@
  * Carga brand_colors de las marcas de la organización y setea en :root
  * --brand-gradient-dynamic, --brand-gradient-dynamic-vertical, --brand-primary, etc.
  * para que production, products, flows, identity, settings usen el mismo resaltado.
+ *
+ * Cadena de resolución robusta (múltiples fallbacks):
+ *   1. brand_containers WHERE organization_id = orgId
+ *   2. Si vacío → brand_containers via organization_members (user_id IN members)
+ *   3. brand_colors WHERE brand_id IN (brands.id para esos containers)
+ *   4. Si vacío → brand_colors WHERE brand_id IN (container_ids) [legacy]
  */
 (function () {
   'use strict';
 
   const root = document.documentElement;
-  /** Hexes usados en el último applyOrgBrandTheme (para gráficos con degradado dinámico) */
   let lastAppliedHexes = [];
+  let lastAppliedOrgId = null;
 
   function getSupabase() {
     return window.supabase || null;
   }
 
-  /** IDs de brand_containers de una organización */
+  /**
+   * IDs de brand_containers de una organización.
+   * Intenta por organization_id; si no hay filas, intenta por user_ids de los miembros.
+   */
   async function getBrandContainerIds(organizationId) {
     const supabase = getSupabase();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase
+      // Intento 1: por organization_id directo
+      const { data: byOrg, error: e1 } = await supabase
         .from('brand_containers')
         .select('id')
         .eq('organization_id', organizationId);
-      if (error) throw error;
-      return data ? data.map(b => b.id) : [];
+
+      if (!e1 && byOrg && byOrg.length > 0) {
+        return byOrg.map(b => b.id);
+      }
+
+      // Intento 2: brand_containers cuyo user_id está en organization_members
+      const { data: members, error: e2 } = await supabase
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', organizationId);
+
+      if (e2 || !members || members.length === 0) return [];
+
+      const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
+      if (userIds.length === 0) return [];
+
+      const { data: byUser, error: e3 } = await supabase
+        .from('brand_containers')
+        .select('id')
+        .in('user_id', userIds);
+
+      if (e3 || !byUser) return [];
+      return byUser.map(b => b.id);
     } catch (e) {
       console.error('OrgBrandTheme: error getBrandContainerIds', e);
       return [];
     }
   }
 
-  /** Hexes de brand_colors de la org (hasta 4, sin duplicados). Misma lógica que BrandsView. */
+  /**
+   * Normaliza y deduplica un array de filas {hex_value} → array de strings '#rrggbb' (máx 4).
+   */
+  function normalizeHexRows(rows) {
+    const seen = new Set();
+    const hexes = [];
+    for (const row of (rows || [])) {
+      const raw = (row.hex_value || '').trim().replace(/^#/, '');
+      if (!raw || !/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
+      const normalized = '#' + raw;
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      hexes.push(normalized);
+      if (hexes.length >= 4) break;
+    }
+    return hexes;
+  }
+
+  /**
+   * Hexes de brand_colors de la org (hasta 4, sin duplicados).
+   * Fallbacks:
+   *  - containers por organization_id → fallback por members
+   *  - brand_colors por brands.id → fallback por brand_container.id (legacy)
+   */
   async function getOrganizationBrandColors(organizationId) {
     const supabase = getSupabase();
     if (!supabase) return [];
+
     const brandContainerIds = await getBrandContainerIds(organizationId);
-    if (brandContainerIds.length === 0) return [];
+    if (brandContainerIds.length === 0) {
+      console.warn('OrgBrandTheme: no brand_containers para org', organizationId);
+      return [];
+    }
+
     try {
-      const { data: brands } = await supabase
+      // Intento A: brand_colors por brands.id (patrón nuevo)
+      const { data: brandsRows } = await supabase
         .from('brands')
         .select('id')
         .in('project_id', brandContainerIds);
-      const brandIds = brands ? brands.map(b => b.id) : [];
-      if (brandIds.length === 0) return [];
-      const { data: colors } = await supabase
+
+      const brandIds = brandsRows ? brandsRows.map(b => b.id).filter(Boolean) : [];
+
+      if (brandIds.length > 0) {
+        const { data: colors } = await supabase
+          .from('brand_colors')
+          .select('hex_value')
+          .in('brand_id', brandIds);
+        const hexes = normalizeHexRows(colors);
+        if (hexes.length > 0) return hexes;
+      }
+
+      // Intento B: brand_colors por brand_container.id (patrón legacy)
+      const { data: legacyColors } = await supabase
         .from('brand_colors')
         .select('hex_value')
-        .in('brand_id', brandIds);
-      if (!colors || colors.length === 0) return [];
-      const seen = new Set();
-      const hexes = [];
-      for (const row of colors) {
-        const raw = (row.hex_value || '').trim().replace(/^#/, '');
-        if (!raw || !/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
-        const normalized = '#' + raw;
-        if (seen.has(normalized)) continue;
-        seen.add(normalized);
-        hexes.push(normalized);
-        if (hexes.length >= 4) break;
-      }
-      return hexes;
+        .in('brand_id', brandContainerIds);
+      const legacyHexes = normalizeHexRows(legacyColors);
+      if (legacyHexes.length > 0) return legacyHexes;
+
+      console.warn('OrgBrandTheme: sin colores para containers', brandContainerIds);
+      return [];
     } catch (e) {
       console.error('OrgBrandTheme: error getOrganizationBrandColors', e);
       return [];
@@ -150,7 +213,6 @@
     return { primary, secondary };
   }
 
-  /** Mismo formato que BrandsView.buildBrandGradientCss */
   function buildBrandGradientCss(hexes, angle) {
     angle = angle === undefined ? 135 : angle;
     if (!hexes || hexes.length === 0) return '';
@@ -162,15 +224,10 @@
     return 'linear-gradient(' + angle + 'deg, ' + stops.join(', ') + ')';
   }
 
-  /** Devuelve los hexes de marca del último applyOrgBrandTheme (para degradados en gráficos). */
   function getLastBrandHexes() {
     return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];
   }
 
-  /** ID de la última org aplicada (para detectar cambio de org y limpiar estado previo). */
-  let lastAppliedOrgId = null;
-
-  /** Quita todas las variables de tema de marca en :root */
   function clearOrgBrandTheme() {
     lastAppliedHexes = [];
     lastAppliedOrgId = null;
@@ -184,8 +241,6 @@
 
   /**
    * Carga brand_colors de la organización y aplica en :root el degradado y color principal.
-   * Para que production, products, flows, identity, settings tengan el mismo resaltado.
-   * @param {string} organizationId - UUID de la organización
    */
   async function applyOrgBrandTheme(organizationId) {
     if (!organizationId) {
@@ -197,16 +252,16 @@
       clearOrgBrandTheme();
     }
     lastAppliedOrgId = organizationId;
+
     const hexes = await getOrganizationBrandColors(organizationId);
     if (hexes.length === 0) {
-      // Si el query no devolvió colores (puede ser fallo temporal de DB, RLS, o marca sin colores)
-      // NO borramos el tema — si ya había colores aplicados, los mantenemos para evitar flash.
-      // Solo limpiamos si no había colores previos (primera carga o cambio de org).
+      // Mantener colores previos si los había (evita flash en navegación); limpiar solo en primera carga.
       if (lastAppliedHexes.length === 0) {
         clearOrgBrandTheme();
       }
       return;
     }
+
     lastAppliedHexes = hexes.slice(0, 4);
     const gradient = buildBrandGradientCss(hexes, 135);
     const gradientVertical = buildBrandGradientCss(hexes, 180);
