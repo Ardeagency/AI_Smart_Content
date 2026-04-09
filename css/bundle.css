@@ -4611,14 +4611,15 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Nodo logo — centrado sobre el punto de convergencia, encima del tronco vertical */
+/* Nodo logo — flotando ENCIMA de la línea blanca horizontal (tronco en y=50%) */
 .landing-threads__node {
     position: absolute;
-    left: 66%;
-    top: 0;
+    left: 80%;
+    bottom: calc(50% + 12px);
+    top: auto;
     right: auto;
     transform: translateX(-50%);
-    width: 40%;
+    width: 32%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -4633,7 +4634,7 @@ body.entrance-done .landing-header {
 }
 
 @keyframes landing-threads-node-in {
-    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
@@ -4641,7 +4642,7 @@ body.entrance-done .landing-header {
     display: block;
     width: 100%;
     height: auto;
-    max-width: 210px;
+    max-width: 200px;
     filter: brightness(1.05) drop-shadow(0 0 20px rgba(180, 210, 255, 0.38));
 }
 
@@ -4817,7 +4818,7 @@ body.entrance-done .landing-header {
 
     .landing-threads--visible .landing-threads__node {
         opacity: 1;
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(0);
     }
 
     .landing-threads__detail {
@@ -4839,7 +4840,8 @@ body.entrance-done .landing-header {
     }
 
     .landing-threads__node {
-        width: 48%;
+        width: 40%;
+        left: 76%;
     }
 
     .landing-threads__detail {

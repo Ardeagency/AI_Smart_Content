@@ -140,3 +140,6 @@ SQL/
 
 # Documentación interna sensible (arquitectura, seguridad, RLS)
 docs/SEGURIDAD_RLS_MAPA_PAGINAS.md
+
+# Local Netlify folder
+.netlify

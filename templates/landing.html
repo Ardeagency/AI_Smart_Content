@@ -143,11 +143,11 @@
                             <stop offset="65%" stop-color="rgba(255,255,255,0.05)"/>
                             <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
                         </radialGradient>
-                        <!-- Tronco vertical: de convergencia (y=50) hacia el logo arriba (y=10) -->
-                        <linearGradient id="lt-trunk-grad" gradientUnits="userSpaceOnUse" x1="66" y1="50" x2="66" y2="10">
+                        <!-- Tronco horizontal: de convergencia (66) hacia la derecha (94) -->
+                        <linearGradient id="lt-trunk-grad" gradientUnits="userSpaceOnUse" x1="66" y1="50" x2="94" y2="50">
                             <stop offset="0%" stop-color="rgba(255,255,255,0.95)"/>
-                            <stop offset="52%" stop-color="rgba(255,255,255,0.85)"/>
-                            <stop offset="100%" stop-color="rgba(255,255,255,0.36)"/>
+                            <stop offset="52%" stop-color="rgba(255,255,255,0.88)"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0.42)"/>
                         </linearGradient>
                         <!-- Gradientes de hilos: COLOR en la izquierda → BLANCO en convergencia -->
                         <linearGradient id="lt-stem-1"  gradientUnits="userSpaceOnUse" x1="27" y1="4.167"  x2="66" y2="50"><stop offset="0%" stop-color="#d11338"/><stop offset="32%" stop-color="#ff1744"/><stop offset="72%" stop-color="#ff3a60"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
@@ -178,8 +178,8 @@
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-10)" d="M 27 79.167 C 44 79.167, 56 50, 66 50"/>
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-11)" d="M 27 87.5   C 44 87.5,   56 50, 66 50"/>
                     <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-12)" d="M 27 95.833 C 44 95.833, 56 50, 66 50"/>
-                    <!-- Tronco vertical: sube desde la convergencia hasta el logo -->
-                    <path class="landing-threads__trunk-h" fill="none" d="M 66 50 L 66 10" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
+                    <!-- Tronco horizontal: desde la convergencia hacia la derecha -->
+                    <path class="landing-threads__trunk-h" fill="none" d="M 66 50 L 94 50" stroke="url(#lt-trunk-grad)" stroke-linecap="round" shape-rendering="geometricPrecision"/>
                     <!-- Núcleo brillante en convergencia -->
                     <circle class="landing-threads__junction-core" cx="66" cy="50" r="0.52" fill="#ffffff" opacity="0"/>
                 </svg>
