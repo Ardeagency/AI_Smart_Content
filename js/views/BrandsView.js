@@ -865,7 +865,7 @@ class BrandsView extends BaseView {
     el.setAttribute('data-field', 'mercado_objetivo');
     el.textContent = Array.isArray(mercado) && mercado.length > 0
       ? mercado.join(', ')
-      : 'Click para agregar mercado objetivo';
+      : 'Etiquetas de mercado (libre). Nicho del catálogo: INFO';
     el.style.cursor = 'pointer';
     el.style.opacity = Array.isArray(mercado) && mercado.length > 0 ? '1' : '0.6';
 
@@ -1716,7 +1716,7 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, arquetipo_personalidad, enfoque_marca) -->
+      <!-- ESENCIA: nicho_mercado/sub_nicho en brands (catálogo). mercado_objetivo del container es solo en esquina inferior, no se repite aquí. -->
       <section class="info-section">
         <h3 class="info-section-title">Esencia</h3>
         <div class="info-section-content">
@@ -1771,8 +1771,9 @@ class BrandsView extends BaseView {
       this.renderIntegrationsInto(integrationsContainer);
     }
 
-    // Campos de texto editables (schema: solo palabras_clave como texto que se convierte a array)
+    // Solo "Palabras a usar" (contenteditable). No tocar nicho/sub-nicho ni data-multiselect (tienen su propio init).
     container.querySelectorAll('.info-field-value').forEach(field => {
+      if (field.hasAttribute('data-multiselect') || field.hasAttribute('data-nicho-select') || field.hasAttribute('data-sub-nicho-select')) return;
       const label = field.previousElementSibling;
       if (!label || !label.classList.contains('info-field-label')) return;
       const labelText = label.textContent.trim();
@@ -2200,7 +2201,8 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
-    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas', 'mercado_objetivo'];
+    // mercado_objetivo vive en brand_containers (saveContainerField), no en brands
+    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'sub_nicho', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
