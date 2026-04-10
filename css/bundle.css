@@ -4741,11 +4741,14 @@ body.entrance-done .landing-header {
     text-transform: uppercase;
 }
 
-/* ── Filas ── */
+/* ── Filas (solo contenido; visuales SVG retirados de la landing) ── */
+.lpf__inner > .lpf__row:first-child {
+    border-top: none;
+    padding-top: 48px;
+}
+
 .lpf__row {
-    display: flex;
-    align-items: center;
-    gap: 64px;
+    display: block;
     padding: 72px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
@@ -4754,26 +4757,9 @@ body.entrance-done .landing-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-/* ── Columna visual (izquierda) ── */
-.lpf__visual {
-    flex: 0 0 36%;
-    max-width: 36%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.lpf__visual svg {
-    width: 100%;
-    max-width: 340px;
-    height: auto;
-    display: block;
-}
-
-/* ── Columna de contenido (derecha) ── */
+/* ── Columna de contenido ── */
 .lpf__content {
-    flex: 1;
-    min-width: 0;
+    max-width: min(640px, 100%);
 }
 
 .lpf__title {
@@ -4784,12 +4770,22 @@ body.entrance-done .landing-header {
     margin: 0 0 24px;
 }
 
+/* Acentos alineados a tokens :root y tarjetas landing-bento */
+.lpf__title--pillar-1 { color: var(--color-info); }
+.lpf__title--pillar-2 { color: var(--warm-1); }
+.lpf__title--pillar-3 { color: #b388ff; }
+.lpf__title--pillar-4 { color: #00e676; }
+
 .lpf__text {
     font-size: clamp(1rem, 1.3vw, 1.15rem);
     color: #b4b4b4;
     line-height: 1.65;
-    margin: 0 0 32px;
-    max-width: 500px;
+    margin: 0 0 1.1rem;
+    max-width: none;
+}
+
+.lpf__content > .lpf__text:last-of-type {
+    margin-bottom: 32px;
 }
 
 .lpf__cta {
@@ -4820,15 +4816,11 @@ body.entrance-done .landing-header {
     .lpf__heading-wrap { padding-bottom: 56px; }
 
     .lpf__row {
-        flex-direction: column;
-        gap: 36px;
         padding: 56px 0;
     }
 
-    .lpf__visual {
-        flex: none;
-        max-width: 240px;
-        width: 100%;
+    .lpf__inner > .lpf__row:first-child {
+        padding-top: 36px;
     }
 }
 
@@ -4836,8 +4828,8 @@ body.entrance-done .landing-header {
     .lpf { padding: 48px 0 64px; }
     .lpf__inner { padding: 0 16px; }
     .lpf__heading-wrap { padding-bottom: 40px; }
-    .lpf__row { padding: 40px 0; gap: 28px; }
-    .lpf__visual { max-width: 180px; }
+    .lpf__row { padding: 40px 0; }
+    .lpf__inner > .lpf__row:first-child { padding-top: 28px; }
     .lpf__title { font-size: 2.5rem; }
 }
 
