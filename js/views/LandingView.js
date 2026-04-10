@@ -251,49 +251,39 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: prisma de partículas con espectro de color de la plataforma ─
+// ── Hero canvas: orbe de luz prismática — mezcla aditiva como luz real ───────
 class HeroParticleCanvas {
+  // Espectro del prisma: mismos valores que --brand-gradient del sistema
+  static PRISM = [
+    { r: 255, g:   0, b:   0 },  // rojo
+    { r: 255, g: 101, b:   0 },  // naranja
+    { r: 255, g: 229, b:   0 },  // amarillo
+    { r: 154, g: 204, b:   0 },  // lima
+    { r:   0, g: 214, b:  20 },  // verde
+    { r:   0, g: 231, b: 255 },  // cian
+    { r:   0, g:  24, b: 238 },  // azul
+    { r:  91, g:   0, b: 234 },  // violeta
+    { r: 144, g:   0, b: 144 },  // magenta
+  ];
+
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx    = canvas.getContext('2d');
-    this.particles = [];
-    this.mouse  = { x: -9999, y: -9999 };
     this.raf    = null;
     this._dpr   = Math.min(window.devicePixelRatio || 1, 2);
     this._w     = 0;
     this._h     = 0;
-    this._idle  = 0; // fase para la animación autónoma
+    this._idle  = 0;   // fase Lissajous
+    this._rot   = 0;   // rotación lenta de los orbes
+    this.mouse  = { x: -9999, y: -9999 };
+    this._cx    = null; // posición lerpeada X
+    this._cy    = null; // posición lerpeada Y
 
     this._onMove   = this._onMove.bind(this);
     this._onLeave  = this._onLeave.bind(this);
     this._onTouch  = this._onTouch.bind(this);
     this._onResize = this._onResize.bind(this);
-
     this._init();
-  }
-
-  // Espectro de prisma: coincide exactamente con --brand-gradient de la plataforma
-  _prismColor(t) {
-    const stops = [
-      [255,   0,   0],  // 0.000  rojo
-      [255, 101,   0],  // 0.125  naranja
-      [255, 229,   0],  // 0.250  amarillo
-      [154, 204,   0],  // 0.375  lima
-      [  0, 214,  20],  // 0.500  verde
-      [  0, 231, 255],  // 0.625  cian
-      [  0,  24, 238],  // 0.750  azul
-      [ 91,   0, 234],  // 0.875  violeta
-      [144,   0, 144],  // 1.000  magenta
-    ];
-    const n = stops.length - 1;
-    const i = Math.min(Math.floor(t * n), n - 1);
-    const f = t * n - i;
-    const a = stops[i], b = stops[i + 1];
-    return [
-      Math.round(a[0] + (b[0] - a[0]) * f),
-      Math.round(a[1] + (b[1] - a[1]) * f),
-      Math.round(a[2] + (b[2] - a[2]) * f),
-    ];
   }
 
   _init() {
@@ -308,123 +298,100 @@ class HeroParticleCanvas {
 
   _resize() {
     const dpr = this._dpr;
-    const w = this.canvas.offsetWidth;
-    const h = this.canvas.offsetHeight;
+    const w   = this.canvas.offsetWidth;
+    const h   = this.canvas.offsetHeight;
     this.canvas.width  = w * dpr;
     this.canvas.height = h * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
     this._h = h;
-    this._buildGrid();
-  }
-
-  _buildGrid() {
-    const GAP  = 30;
-    const cols = Math.ceil(this._w / GAP) + 1;
-    const rows = Math.ceil(this._h / GAP) + 1;
-    const offX = (this._w % GAP) / 2;
-    const offY = (this._h % GAP) / 2;
-    this.particles = [];
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const ox = offX + c * GAP;
-        const oy = offY + r * GAP;
-        // Mapeo diagonal suave: 80% horizontal, 20% vertical → eje del prisma
-        const t = Math.max(0, Math.min(1, ox / this._w * 0.82 + oy / this._h * 0.18));
-        const [cr, cg, cb] = this._prismColor(t);
-        this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0, cr, cg, cb });
-      }
-    }
+    if (this._cx === null) { this._cx = w / 2; this._cy = h / 2; }
   }
 
   _onMove(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = e.clientX - rect.left;
-    this.mouse.y = e.clientY - rect.top;
+    const r = this.canvas.getBoundingClientRect();
+    this.mouse.x = e.clientX - r.left;
+    this.mouse.y = e.clientY - r.top;
   }
-
-  _onLeave() { this.mouse.x = -9999; this.mouse.y = -9999; }
-
+  _onLeave()  { this.mouse.x = -9999; this.mouse.y = -9999; }
   _onTouch(e) {
     if (!e.touches?.[0]) return;
-    const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = e.touches[0].clientX - rect.left;
-    this.mouse.y = e.touches[0].clientY - rect.top;
+    const r = this.canvas.getBoundingClientRect();
+    this.mouse.x = e.touches[0].clientX - r.left;
+    this.mouse.y = e.touches[0].clientY - r.top;
   }
-
   _onResize() { this._resize(); }
 
   _update() {
+    this._rot += 0.007; // rotación continua del espectro
+
+    // Destino: cursor real o Lissajous 1:2 en figura-8
     const hasMouse = this.mouse.x !== -9999;
-    let mx, my;
-
+    let tx, ty;
     if (hasMouse) {
-      mx = this.mouse.x;
-      my = this.mouse.y;
+      tx = this.mouse.x;
+      ty = this.mouse.y;
     } else {
-      // Lissajous 1:2 — figura-8 que recorre el canvas cuando no hay cursor
-      this._idle += 0.006;
+      this._idle += 0.005;
       const ph = this._idle;
-      mx = this._w * 0.5 + Math.cos(ph)       * this._w * 0.38;
-      my = this._h * 0.5 + Math.sin(ph * 2)   * this._h * 0.26;
+      tx = this._w * 0.5 + Math.cos(ph)     * this._w * 0.34;
+      ty = this._h * 0.5 + Math.sin(ph * 2) * this._h * 0.23;
     }
 
-    const RADIUS  = 150;
-    const SPRING  = 0.07;
-    const DAMPING = 0.78;
-    const FORCE   = hasMouse ? 7 : 4;
-
-    for (const p of this.particles) {
-      const dx     = p.x - mx;
-      const dy     = p.y - my;
-      const distSq = dx * dx + dy * dy;
-
-      if (distSq < RADIUS * RADIUS) {
-        const dist  = Math.sqrt(distSq) || 1;
-        const ratio = (RADIUS - dist) / RADIUS;
-        p.vx += (dx / dist) * ratio * FORCE;
-        p.vy += (dy / dist) * ratio * FORCE;
-      }
-
-      p.vx += (p.ox - p.x) * SPRING;
-      p.vy += (p.oy - p.y) * SPRING;
-      p.vx *= DAMPING;
-      p.vy *= DAMPING;
-      p.x  += p.vx;
-      p.y  += p.vy;
-    }
+    // Lerp: más rápido cuando el ratón está activo, más lento en idle
+    const ease = hasMouse ? 0.1 : 0.035;
+    this._cx += (tx - this._cx) * ease;
+    this._cy += (ty - this._cy) * ease;
   }
 
   _draw() {
-    const ctx = this.ctx;
+    const ctx    = this.ctx;
+    const cx     = this._cx;
+    const cy     = this._cy;
+    const prism  = HeroParticleCanvas.PRISM;
+    const n      = prism.length;
+
     ctx.clearRect(0, 0, this._w, this._h);
 
-    for (const p of this.particles) {
-      const dx   = p.x - p.ox;
-      const dy   = p.y - p.oy;
-      const disp = Math.sqrt(dx * dx + dy * dy);
-      const t    = Math.min(disp / 55, 1);
+    // 'screen' = mezcla aditiva de luz: donde se solapan los colores se suman
+    // hacia blanco, igual que prismas y luces de color reales
+    ctx.globalCompositeOperation = 'screen';
 
-      if (t < 0.004) continue; // partícula en reposo: omitir
+    const BASE  = Math.min(this._w, this._h) * 0.30; // radio base del orbe
+    const DRIFT = Math.min(this._w, this._h) * 0.06; // desplazamiento del centro
 
-      const radius = 1.4 + t * 2.8;
-      const alpha  = 0.04 + t * 0.82;
-      const { cr, cg, cb } = p;
+    for (let i = 0; i < n; i++) {
+      const c     = prism[i];
+      const angle = (i / n) * Math.PI * 2 + this._rot;
+      const ox    = cx + Math.cos(angle) * DRIFT;
+      const oy    = cy + Math.sin(angle) * DRIFT;
 
-      // Halo de luz (bloom) — solo cuando hay desplazamiento notable
-      if (t > 0.06) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, radius * 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${cr},${cg},${cb},${(alpha * 0.18).toFixed(2)})`;
-        ctx.fill();
-      }
+      // Cuerpo del orbe: gradiente radial muy suave
+      const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, BASE);
+      g.addColorStop(0,    `rgba(${c.r},${c.g},${c.b},0.60)`);
+      g.addColorStop(0.30, `rgba(${c.r},${c.g},${c.b},0.28)`);
+      g.addColorStop(0.70, `rgba(${c.r},${c.g},${c.b},0.06)`);
+      g.addColorStop(1,    'rgba(0,0,0,0)');
 
-      // Núcleo del punto
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(2)})`;
+      ctx.arc(ox, oy, BASE, 0, Math.PI * 2);
+      ctx.fillStyle = g;
       ctx.fill();
     }
+
+    // Núcleo blanco: simula la fuente de luz detrás del prisma
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, BASE * 0.42);
+    core.addColorStop(0,    'rgba(255,255,255,0.95)');
+    core.addColorStop(0.20, 'rgba(255,255,255,0.60)');
+    core.addColorStop(0.55, 'rgba(255,255,255,0.15)');
+    core.addColorStop(1,    'rgba(0,0,0,0)');
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, BASE * 0.42, 0, Math.PI * 2);
+    ctx.fillStyle = core;
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   _loop() {
