@@ -294,18 +294,28 @@ class LandingView extends BaseView {
       window.requestAnimationFrame(() => update(false));
     };
 
+    /** Hasta que los SVG tengan altura (layout), el carrusel no puede centrar; reintenta unos frames. */
+    const runUpdateWhenSized = (attemptsLeft = 20) => {
+      const first = allItems[0];
+      if (first && first.offsetHeight > 0) {
+        update(false);
+        return;
+      }
+      if (attemptsLeft <= 0) return;
+      window.requestAnimationFrame(() => runUpdateWhenSized(attemptsLeft - 1));
+    };
+
     track.querySelectorAll('img').forEach((img) => {
       img.addEventListener('load', scheduleUpdate, { passive: true });
     });
 
-    scheduleUpdate();
+    runUpdateWhenSized();
 
     const onResize = () => update(false);
     window.addEventListener('resize', onResize, { passive: true });
 
     if (reduceMotion) {
       currentIndex = baseLength;
-      update(false);
       this.heroWordsRotatorCleanup = () => {
         window.removeEventListener('resize', onResize);
       };

@@ -43,12 +43,18 @@ class BaseView {
 
     try {
       let url = `/templates/${this.templatePath}`;
-      const skipCache = this.templatePath === 'signin.html' || this.templatePath === 'tasks.html';
+      /* landing.html: no cachear en memoria (evita HTML antiguo sin hero lockup tras deploy). */
+      const skipCache =
+        this.templatePath === 'signin.html' ||
+        this.templatePath === 'tasks.html' ||
+        this.templatePath === 'landing.html';
       if (!skipCache && BaseView._templateCache.has(this.templatePath)) {
         return BaseView._templateCache.get(this.templatePath);
       }
       if (skipCache) {
-        url += this.templatePath === 'signin.html' ? '?v=logo02' : '?v=edit';
+        if (this.templatePath === 'signin.html') url += '?v=logo02';
+        else if (this.templatePath === 'tasks.html') url += '?v=edit';
+        else if (this.templatePath === 'landing.html') url += '?v=20260410-hero';
       }
       const response = await fetch(url);
       

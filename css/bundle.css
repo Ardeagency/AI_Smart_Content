@@ -3911,11 +3911,13 @@ body.entrance-done .landing-header {
 /* ─── Landing Hero: líneas verticales + aurora glass + imagen de fondo ─── */
 .landing-hero {
     position: relative;
+    isolation: isolate;
     min-height: 100vh;
     background: url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg') center center / cover no-repeat;
     overflow: hidden;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Capa oscura que oscurece la foto para que líneas y texto sean legibles */
@@ -4040,18 +4042,18 @@ body.entrance-done .landing-header {
     z-index: 3;
 }
 
-/* Texto e interacciones */
+/* Texto e interacciones (por encima de ::after, orbes y canvas) */
 .landing-hero__content {
     position: relative;
-    z-index: 4;
+    z-index: 10;
     width: 100%;
     max-width: 100%;
-    padding: 0 52px 72px;
+    padding: clamp(88px, 14vh, 140px) 52px clamp(56px, 10vh, 100px);
     box-sizing: border-box;
     pointer-events: none;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
 }
 
 /* Lockup: smart + palabra rotativa pegadas (sin columna “1fr” que abre hueco) */
@@ -4092,6 +4094,7 @@ body.entrance-done .landing-header {
 
 .landing-hero__words-viewport {
     width: max-content;
+    min-width: min(280px, 72vw);
     max-width: min(340px, 42vw);
     height: clamp(280px, 48vh, 520px);
     overflow: hidden;
@@ -4171,7 +4174,9 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 768px) {
-    .landing-hero__content { padding: 0 24px 56px; }
+    .landing-hero__content {
+        padding: clamp(80px, 20vw, 120px) 24px clamp(40px, 12vw, 72px);
+    }
 
     .landing-hero__lockup {
         flex-direction: column;
