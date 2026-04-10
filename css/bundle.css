@@ -5447,8 +5447,9 @@ body.entrance-done .landing-header {
 }
 
 .vera-modules__logo {
-    width: 48px;
-    height: 48px;
+    width: auto;
+    height: 40px;
+    display: block;
 }
 
 .vera-modules__title {
@@ -5503,8 +5504,8 @@ body.entrance-done .landing-header {
     background: radial-gradient(ellipse 80% 70% at 60% 30%, rgba(0, 231, 255, 0.18) 0%, rgba(0, 24, 238, 0.12) 48%, transparent 80%), #0a0a0d;
 }
 
-/* Brain: violeta-índigo */
-.vera-modules__card--brain .vera-modules__card-bg {
+/* Strategy: violeta-índigo */
+.vera-modules__card--strategy .vera-modules__card-bg {
     background: radial-gradient(ellipse 80% 70% at 40% 30%, rgba(91, 0, 234, 0.22) 0%, rgba(144, 0, 144, 0.1) 50%, transparent 80%), #0a0a0d;
 }
 
@@ -5554,22 +5555,23 @@ body.entrance-done .landing-header {
 /* Logo + nombre del módulo */
 .vera-modules__card-logo {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .vera-modules__card-logo img {
-    width: 28px;
-    height: 28px;
+    width: auto;
+    height: 20px;
     flex-shrink: 0;
+    display: block;
 }
 
 .vera-modules__card-name {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* Lista de capacidades */
