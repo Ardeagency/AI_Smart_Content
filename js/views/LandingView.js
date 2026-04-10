@@ -6,7 +6,6 @@ class LandingView extends BaseView {
   constructor() {
     super();
     this.templatePath = 'landing.html';
-    this.heroCanvasCleanup = null;
     this.heroWordsRotatorCleanup = null;
     this.flowTabsCleanup = null;
     this.landingHeaderScrollCleanup = null;
@@ -19,7 +18,6 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    this.initHeroCanvas();
     this.initHeroWordsRotator();
     this.initLandingFlowTabs();
     this.initLandingHeaderScrollState();
@@ -212,17 +210,6 @@ class LandingView extends BaseView {
   }
 
 
-  initHeroCanvas() {
-    if (typeof this.heroCanvasCleanup === 'function') {
-      this.heroCanvasCleanup();
-      this.heroCanvasCleanup = null;
-    }
-    const canvas = document.querySelector('.landing-hero__canvas');
-    if (!canvas) return;
-    const instance = new HeroParticleCanvas(canvas);
-    this.heroCanvasCleanup = () => instance.destroy();
-  }
-
   /**
    * Hero: columna derecha — carrusel vertical (SVG banner) que avanza cada 2 s.
    */
@@ -346,10 +333,6 @@ class LandingView extends BaseView {
   }
 
   onLeave() {
-    if (typeof this.heroCanvasCleanup === 'function') {
-      this.heroCanvasCleanup();
-      this.heroCanvasCleanup = null;
-    }
     if (typeof this.heroWordsRotatorCleanup === 'function') {
       this.heroWordsRotatorCleanup();
       this.heroWordsRotatorCleanup = null;
@@ -379,224 +362,3 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: agua suave — sin bordes duros, sin lupa visible ─────────────
-// Efecto: el área bajo el cursor se ilumina gradualmente (revela la foto sin
-// la capa oscura) con un falloff radial suave + zoom sutil en un canvas
-// offscreen enmascarado. Las ondas se expanden como en la superficie del agua.
-class HeroParticleCanvas {
-  constructor(canvas) {
-    this.canvas  = canvas;
-    this.ctx     = canvas.getContext('2d');
-    this.mouse   = { x: -9999, y: -9999 };
-    this._gX     = -9999; // posición suavizada (spring)
-    this._gY     = -9999;
-    this.raf     = null;
-    this._dpr    = Math.min(window.devicePixelRatio || 1, 2);
-    this._w = 0;
-    this._h = 0;
-
-    this._bgImage   = null;
-    this._offCanvas = null; // canvas offscreen para el lente suave
-    this._offCtx    = null;
-    this._ripples   = [];
-    this._prevMX    = -9999;
-    this._prevMY    = -9999;
-
-    this._LENS_R = 170;  // radio del lente (bordes se desvanecen gradualmente)
-    this._ZOOM   = 1.45; // zoom sutil — casi imperceptible como lupa, muy natural
-
-    this._onMove   = this._onMove.bind(this);
-    this._onLeave  = this._onLeave.bind(this);
-    this._onTouch  = this._onTouch.bind(this);
-    this._onResize = this._onResize.bind(this);
-
-    this._loadBg();
-    this._init();
-  }
-
-  // ── Carga imagen y crea el canvas offscreen ────────────────────────────────
-  _loadBg() {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      this._bgImage = img;
-      this._buildOffscreen();
-    };
-    img.src = 'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg';
-  }
-
-  _buildOffscreen() {
-    const D = this._LENS_R * 2;
-    const oc = document.createElement('canvas');
-    oc.width = D; oc.height = D;
-    this._offCanvas = oc;
-    this._offCtx    = oc.getContext('2d');
-  }
-
-  // ── Parámetros CSS background: center/cover ───────────────────────────────
-  _bgCover() {
-    if (!this._bgImage) return null;
-    const iw = this._bgImage.naturalWidth;
-    const ih = this._bgImage.naturalHeight;
-    const scale = Math.max(this._w / iw, this._h / ih);
-    const dw = iw * scale;
-    const dh = ih * scale;
-    return { dx: (this._w - dw) / 2, dy: (this._h - dh) / 2, dw, dh, iw, ih };
-  }
-
-  // ── Ciclo de vida ──────────────────────────────────────────────────────────
-  _init() {
-    this._resize();
-    window.addEventListener('resize', this._onResize, { passive: true });
-    this.canvas.addEventListener('mousemove', this._onMove);
-    this.canvas.addEventListener('mouseleave', this._onLeave);
-    this.canvas.addEventListener('touchmove', this._onTouch, { passive: true });
-    this.canvas.addEventListener('touchend', this._onLeave, { passive: true });
-    this._loop();
-  }
-
-  _resize() {
-    const dpr = this._dpr;
-    const w = this.canvas.offsetWidth;
-    const h = this.canvas.offsetHeight;
-    this.canvas.width  = w * dpr;
-    this.canvas.height = h * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this._w = w;
-    this._h = h;
-  }
-
-  // ── Eventos ────────────────────────────────────────────────────────────────
-  _onMove(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const nx = e.clientX - rect.left;
-    const ny = e.clientY - rect.top;
-
-    // Emite onda cada ~10px de movimiento
-    if (Math.hypot(nx - this._prevMX, ny - this._prevMY) > 10) {
-      this._ripples.push({ x: nx, y: ny, r: 6, life: 1.0 });
-      this._prevMX = nx;
-      this._prevMY = ny;
-    }
-
-    this.mouse.x = nx;
-    this.mouse.y = ny;
-  }
-
-  _onLeave() {
-    this.mouse.x = this._prevMX = -9999;
-    this.mouse.y = this._prevMY = -9999;
-  }
-
-  _onTouch(e) {
-    if (!e.touches?.[0]) return;
-    const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = e.touches[0].clientX - rect.left;
-    this.mouse.y = e.touches[0].clientY - rect.top;
-  }
-
-  _onResize() { this._resize(); }
-
-  // ── Física ─────────────────────────────────────────────────────────────────
-  _update() {
-    // Spring suave: el efecto "flota" tras el cursor
-    if (this.mouse.x !== -9999) {
-      if (this._gX === -9999) { this._gX = this.mouse.x; this._gY = this.mouse.y; }
-      else {
-        this._gX += (this.mouse.x - this._gX) * 0.11;
-        this._gY += (this.mouse.y - this._gY) * 0.11;
-      }
-    } else {
-      this._gX = this._gY = -9999;
-    }
-
-    // Ondas: crecen y se desvanecen
-    for (const rip of this._ripples) {
-      rip.r    += 3.2;
-      rip.life  = Math.max(0, 1 - (rip.r - 6) / 240);
-    }
-    this._ripples = this._ripples.filter(r => r.life > 0);
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-  _draw() {
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, this._w, this._h);
-
-    const mx = this._gX;
-    const my = this._gY;
-
-    // ── 1. Ondas expansivas (sobre el fondo CSS) ──────────────────────────
-    for (const rip of this._ripples) {
-      ctx.beginPath();
-      ctx.arc(rip.x, rip.y, rip.r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255,255,255,${(rip.life * 0.16).toFixed(2)})`;
-      ctx.lineWidth   = 1;
-      ctx.stroke();
-    }
-
-    if (mx === -9999 || !this._bgImage || !this._offCanvas) return;
-
-    const bg = this._bgCover();
-    const R  = this._LENS_R;
-    const Z  = this._ZOOM;
-
-    // ── 2. Lente suave: imagen ampliada en canvas offscreen + máscara radial ─
-    // Sin ctx.clip() → sin borde duro. La máscara desvanece los bordes.
-    const oc = this._offCtx;
-    const D  = R * 2;
-    oc.clearRect(0, 0, D, D);
-
-    // Dibuja porción ampliada de la imagen
-    const imgPerPx = bg.iw / bg.dw;
-    const imgCX    = (mx - bg.dx) * imgPerPx;
-    const imgCY    = (my - bg.dy) * imgPerPx;
-    const srcHalf  = (R * imgPerPx) / Z; // más pequeño = más zoom
-
-    oc.drawImage(
-      this._bgImage,
-      imgCX - srcHalf, imgCY - srcHalf, srcHalf * 2, srcHalf * 2,
-      0, 0, D, D
-    );
-
-    // Máscara radial: sólida en el centro, transparente en el borde
-    // → elimina cualquier borde duro, parece que la imagen "emerge" del agua
-    oc.globalCompositeOperation = 'destination-in';
-    const mask = oc.createRadialGradient(R, R, 0, R, R, R);
-    mask.addColorStop(0.00, 'rgba(0,0,0,1)');
-    mask.addColorStop(0.45, 'rgba(0,0,0,0.95)');
-    mask.addColorStop(0.72, 'rgba(0,0,0,0.60)');
-    mask.addColorStop(0.90, 'rgba(0,0,0,0.20)');
-    mask.addColorStop(1.00, 'rgba(0,0,0,0)');
-    oc.fillStyle = mask;
-    oc.fillRect(0, 0, D, D);
-    oc.globalCompositeOperation = 'source-over';
-
-    // Composita el lente suave sobre el canvas principal
-    ctx.drawImage(this._offCanvas, mx - R, my - R);
-
-    // ── 3. Halo de luz en la superficie del agua ──────────────────────────
-    // Simula el brillo que hace el agua cuando la luz toca su superficie
-    const glow = ctx.createRadialGradient(mx, my, 0, mx, my, R * 0.75);
-    glow.addColorStop(0,   'rgba(255,255,255,0.07)');
-    glow.addColorStop(0.5, 'rgba(255,255,255,0.02)');
-    glow.addColorStop(1,   'rgba(255,255,255,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(mx - R, my - R, D, D);
-  }
-
-  _loop() {
-    this._update();
-    this._draw();
-    this.raf = requestAnimationFrame(() => this._loop());
-  }
-
-  destroy() {
-    if (this.raf) cancelAnimationFrame(this.raf);
-    window.removeEventListener('resize', this._onResize);
-    this.canvas.removeEventListener('mousemove', this._onMove);
-    this.canvas.removeEventListener('mouseleave', this._onLeave);
-    this.canvas.removeEventListener('touchmove', this._onTouch);
-    this.canvas.removeEventListener('touchend', this._onLeave);
-  }
-}

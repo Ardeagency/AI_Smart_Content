@@ -3930,17 +3930,7 @@ body.entrance-done .landing-header {
     z-index: 0;
 }
 
-/* Canvas: efecto agua suave, transparente → la foto CSS se ve por debajo */
-.landing-hero__canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    z-index: 1;
-}
-
-/* Orbes glass: sobre las líneas, bajo el fade y el texto */
+/* Orbes glass: bajo el fade y el texto */
 .landing-hero__aurora {
     position: absolute;
     inset: 0;
