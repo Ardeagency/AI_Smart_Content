@@ -5424,20 +5424,23 @@ body.entrance-done .landing-header {
 /* ═══════════════════════════════════════════════════════════════
    VERA MODULES — 4 tarjetas tipo "proveedor" (Framer-style)
    ═══════════════════════════════════════════════════════════════ */
-.vera-modules {
+/* ─────────────────────────────────────────
+   VERA BENTO — grid 6 tarjetas tipo bento
+───────────────────────────────────────── */
+.vbento {
     background: #000000;
     color: #ffffff;
     padding: 0 0 clamp(64px, 10vw, 120px);
 }
 
-.vera-modules__inner {
+.vbento__inner {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 clamp(20px, 4vw, 52px);
 }
 
 /* ── Header ── */
-.vera-modules__header {
+.vbento__header {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -5446,13 +5449,13 @@ body.entrance-done .landing-header {
     margin-bottom: clamp(40px, 6vw, 72px);
 }
 
-.vera-modules__logo {
+.vbento__logo {
     width: auto;
     height: 40px;
     display: block;
 }
 
-.vera-modules__title {
+.vbento__title {
     margin: 0;
     font-size: clamp(1.6rem, 3.2vw, 2.6rem);
     font-weight: 700;
@@ -5460,190 +5463,211 @@ body.entrance-done .landing-header {
     line-height: 1.15;
 }
 
-.vera-modules__sub {
+.vbento__sub {
     margin: 0;
     max-width: 52ch;
     font-size: clamp(0.88rem, 1.3vw, 1rem);
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.52);
 }
 
-/* ── Grid: 2×2 igual altura ── */
-.vera-modules__grid {
+/* ── Grid bento: 3 columnas, 3 filas ── */
+.vbento__grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 420px);
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 280px 260px 280px;
+    gap: 12px;
 }
+
+/* Posiciones de cada tarjeta */
+.vbento__card--hero      { grid-column: 1 / 3; grid-row: 1; }        /* horizontal top */
+.vbento__card--reading   { grid-column: 3;     grid-row: 1; }        /* square top-right */
+.vbento__card--decision  { grid-column: 1;     grid-row: 2; }        /* square mid-left */
+.vbento__card--content   { grid-column: 2;     grid-row: 2; }        /* square mid-center */
+.vbento__card--connected { grid-column: 3;     grid-row: 2 / 4; }   /* vertical right */
+.vbento__card--improve   { grid-column: 1 / 3; grid-row: 3; }        /* horizontal bottom */
 
 /* ── Tarjeta base ── */
-.vera-modules__card {
+.vbento__card {
     position: relative;
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0d0d0f;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: border-color 0.35s ease, transform 0.35s ease;
-    cursor: default;
-}
-
-.vera-modules__card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-}
-
-/* ── Fondo con blob de color por módulo ── */
-.vera-modules__card-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-}
-
-/* Insight: azul-cian */
-.vera-modules__card--insight .vera-modules__card-bg {
-    background:
-        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(0, 180, 255, 0.22) 0%, rgba(0, 40, 220, 0.14) 50%, transparent 80%),
-        #0a0a0d;
-}
-
-/* Strategy: violeta */
-.vera-modules__card--strategy .vera-modules__card-bg {
-    background:
-        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(110, 0, 255, 0.25) 0%, rgba(160, 0, 160, 0.12) 50%, transparent 80%),
-        #0a0a0d;
-}
-
-/* Studio: naranja-ámbar */
-.vera-modules__card--studio .vera-modules__card-bg {
-    background:
-        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(255, 90, 0, 0.22) 0%, rgba(255, 200, 0, 0.1) 50%, transparent 80%),
-        #0a0a0d;
-}
-
-/* Campaigns: verde */
-.vera-modules__card--campaigns .vera-modules__card-bg {
-    background:
-        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(0, 220, 30, 0.2) 0%, rgba(120, 210, 0, 0.1) 50%, transparent 80%),
-        #0a0a0d;
-}
-
-/* ── Shine: destello diagonal arriba-izq ── */
-.vera-modules__card-shine {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    border-radius: 24px;
-    background: linear-gradient(140deg, rgba(255,255,255,0.07) 0%, transparent 45%);
-}
-
-/* ── Header de la tarjeta: ocupa la parte superior ── */
-.vera-modules__card-header {
-    position: relative;
-    z-index: 3;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     justify-content: flex-end;
-    padding: 32px 32px 24px;
+    transition: border-color 0.3s ease, transform 0.3s ease;
 }
 
-/* Wordmark grande (como el logo del proveedor en Framer) */
-.vera-modules__wordmark {
+.vbento__card:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+}
+
+/* Shine diagonal */
+.vbento__card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.045) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ── Visual hero: logo centrado con anillos ── */
+.vbento__card-visual {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+
+.vbento__hero-logo {
     display: block;
     width: auto;
-    height: clamp(28px, 3.6vw, 42px);
-    max-width: 60%;
+    height: clamp(32px, 4vw, 48px);
     filter: brightness(0) invert(1);
-}
-
-/* Etiqueta del módulo bajo el logo */
-.vera-modules__module-tag {
-    margin-top: 10px;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.38);
-}
-
-/* ── Footer de la tarjeta: lista de capacidades ── */
-.vera-modules__card-footer {
     position: relative;
-    z-index: 3;
-    flex-shrink: 0;
-    padding: 64px 28px 28px;
+    z-index: 2;
 }
 
-/* Gradiente que oscurece desde abajo hacia arriba (legibilidad) */
-.vera-modules__card-gradient {
+/* Anillo orbital decorativo */
+.vbento__orbit {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.78) 38%, rgba(0, 0, 0, 0.94) 100%);
-    z-index: 0;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* ── Lista de capacidades ── */
-.vera-modules__feat-list {
+.vbento__orbit::before,
+.vbento__orbit::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vbento__orbit::before { width: 200px; height: 200px; }
+.vbento__orbit::after  { width: 320px; height: 320px; }
+
+/* Puntos orbitales */
+.vbento__orbit-dot {
+    position: absolute;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vbento__orbit-dot--a { top: 18%; left: 50%; transform: translateX(-50%); }
+.vbento__orbit-dot--b { top: 50%; left: 16%; transform: translateY(-50%); }
+.vbento__orbit-dot--c { top: 50%; right: 16%; transform: translateY(-50%); }
+
+/* Iconos SVG inline en los puntos */
+.vbento__orbit-dot--a::after {
+    content: '';
+    width: 16px; height: 16px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='1.5'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2'/%3E%3Cpath d='M2 12h20M12 2c-2.76 4-2.76 16 0 20M12 2c2.76 4 2.76 16 0 20'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.vbento__orbit-dot--b::after {
+    content: '';
+    width: 16px; height: 16px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='1.5'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.vbento__orbit-dot--c::after {
+    content: '';
+    width: 16px; height: 16px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='1.5'%3E%3Cpath d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* ── Cuerpo de texto de la tarjeta ── */
+.vbento__card-body {
     position: relative;
-    z-index: 1;
-    list-style: none;
+    z-index: 2;
+    padding: 22px 24px 24px;
+}
+
+/* Gradiente ascendente para legibilidad en tarjeta hero */
+.vbento__card--hero .vbento__card-body::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 160px;
+    margin-bottom: -24px;
+    background: linear-gradient(to top, #0d0d0f 40%, transparent);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.vbento__card-title {
+    margin: 0 0 6px;
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.vbento__card-desc {
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.vera-modules__feat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.vera-modules__feat-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.vera-modules__feat-title {
-    font-size: clamp(0.8rem, 1vw, 0.9rem);
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.35;
-}
-
-.vera-modules__feat-desc {
-    font-size: clamp(0.7rem, 0.85vw, 0.78rem);
+    font-size: clamp(0.78rem, 1vw, 0.88rem);
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.45);
-    line-height: 1.45;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.48);
 }
+
+/* ── Colores de fondo sutiles por tarjeta ── */
+.vbento__card--hero      { background: #0d0d0f; }
+.vbento__card--reading   { background: #0d0d10; }
+.vbento__card--decision  { background: #0d0d0f; }
+.vbento__card--content   { background: #0e0d0f; }
+.vbento__card--connected { background: #0d0e0f; }
+.vbento__card--improve   { background: #0d0d0f; }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
-    .vera-modules__grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: none;
+@media (max-width: 900px) {
+    .vbento__grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: 280px 260px 260px 280px;
+        gap: 10px;
     }
-    .vera-modules__card {
-        min-height: 380px;
-    }
+    .vbento__card--hero      { grid-column: 1 / 3; grid-row: 1; }
+    .vbento__card--reading   { grid-column: 1;     grid-row: 2; }
+    .vbento__card--decision  { grid-column: 2;     grid-row: 2; }
+    .vbento__card--content   { grid-column: 1;     grid-row: 3; }
+    .vbento__card--connected { grid-column: 2;     grid-row: 3; }
+    .vbento__card--improve   { grid-column: 1 / 3; grid-row: 4; }
 }
 
-@media (max-width: 480px) {
-    .vera-modules__card-header {
-        padding: 28px 24px 20px;
+@media (max-width: 560px) {
+    .vbento__grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        gap: 10px;
     }
-    .vera-modules__card-footer {
-        padding: 52px 24px 24px;
+    .vbento__card--hero,
+    .vbento__card--reading,
+    .vbento__card--decision,
+    .vbento__card--content,
+    .vbento__card--connected,
+    .vbento__card--improve {
+        grid-column: 1;
+        grid-row: auto;
+        min-height: 220px;
     }
+    .vbento__card--hero      { min-height: 280px; }
+    .vbento__card--connected { min-height: 280px; }
+    .vbento__card--improve   { min-height: 280px; }
 }
 
 /* ─── Landing: De la señal a la acción (3 tarjetas + CTA) ─── */
