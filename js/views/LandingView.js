@@ -7,7 +7,7 @@ class LandingView extends BaseView {
     super();
     this.templatePath = 'landing.html';
     this.heroWordsRotatorCleanup = null;
-    this.flowTabsCleanup = null;
+    this.lfwScrollCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
     this.scrollRevealCleanup = null;
@@ -64,46 +64,70 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Categorías de flujos: activa la categoría en función del scroll.
-   * Al llegar a la zona de cada ítem en la columna izquierda, resalta
-   * la categoría correspondiente con .lfw__cat--active.
+   * GSAP ScrollTrigger: la sección #landing-after-pillars se pina y a medida
+   * que el usuario hace scroll cada ítem de la lista se activa en color,
+   * la barra de progreso crece, y el slide correspondiente hace fade-in.
    */
-  initLandingFlowTabs() {
-    if (typeof this.flowTabsCleanup === 'function') {
-      this.flowTabsCleanup();
-      this.flowTabsCleanup = null;
+  initLfwScrollAnimation() {
+    if (typeof this.lfwScrollCleanup === 'function') {
+      this.lfwScrollCleanup();
+      this.lfwScrollCleanup = null;
     }
 
-    const cats = Array.from(document.querySelectorAll('.lfw__cat'));
-    if (!cats.length) return;
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
-    const activate = (idx) => {
-      cats.forEach((c, i) => c.classList.toggle('lfw__cat--active', i === idx));
+    gsap.registerPlugin(ScrollTrigger);
+
+    const section  = document.querySelector('#landing-after-pillars');
+    if (!section) return;
+
+    const list      = section.querySelector('.lfw__list');
+    const fill      = section.querySelector('.lfw__fill');
+    const listItems = list ? gsap.utils.toArray('li', list) : [];
+    const slides    = gsap.utils.toArray('.lfw__slide', section);
+
+    if (!listItems.length || !slides.length) return;
+
+    const ACTIVE_COLOR   = '#ff6500';
+    const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
+
+    gsap.set(fill, { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: '+=' + listItems.length * 50 + '%',
+        pin: true,
+        scrub: true,
+      },
+    });
+
+    listItems.forEach((item, i) => {
+      const prevItem = listItems[i - 1];
+      if (prevItem) {
+        tl.set(item, { color: ACTIVE_COLOR }, 0.5 * i)
+          .to(slides[i],    { autoAlpha: 1, duration: 0.2 }, '<')
+          .set(prevItem,    { color: INACTIVE_COLOR },        '<')
+          .to(slides[i - 1], { autoAlpha: 0, duration: 0.2 }, '<');
+      } else {
+        gsap.set(item,     { color: ACTIVE_COLOR });
+        gsap.set(slides[i], { autoAlpha: 1 });
+      }
+    });
+
+    tl.to(fill, {
+      scaleY: 1,
+      transformOrigin: 'top left',
+      ease: 'none',
+      duration: tl.duration(),
+    }, 0).to({}, {});
+
+    this.lfwScrollCleanup = () => {
+      ScrollTrigger.getAll().forEach((st) => {
+        if (st.trigger === section) st.kill();
+      });
     };
-
-    // En desktop usamos IntersectionObserver sobre cada ítem de categoría.
-    // Cuando un ítem entra en la banda central del viewport se activa.
-    if (typeof IntersectionObserver !== 'undefined') {
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              activate(cats.indexOf(entry.target));
-            }
-          }
-        },
-        {
-          rootMargin: '-35% 0px -35% 0px',
-          threshold: 0,
-        }
-      );
-      cats.forEach((c) => io.observe(c));
-      this.flowTabsCleanup = () => io.disconnect();
-    } else {
-      // Fallback sin IntersectionObserver
-      activate(0);
-      this.flowTabsCleanup = null;
-    }
   }
 
   /**
@@ -233,6 +257,9 @@ class LandingView extends BaseView {
     const cloneItem = (item) => {
       const clone = item.cloneNode(true);
       clone.dataset.realIndex = item.dataset.realIndex || '0';
+      clone.querySelectorAll('img').forEach((img) => {
+        img.loading = 'eager';
+      });
       return clone;
     };
 
@@ -261,9 +288,13 @@ class LandingView extends BaseView {
 
     const update = (withTransition = true) => {
       const first = allItems[0];
-      if (!first || !first.offsetHeight) return;
-      const stepHeight = first.offsetHeight + getTrackGap();
-      const centerOffset = (viewport.clientHeight - first.offsetHeight) / 2;
+      if (!first) return;
+      const h =
+        first.offsetHeight ||
+        Math.round(first.getBoundingClientRect().height) ||
+        56;
+      const stepHeight = h + getTrackGap();
+      const centerOffset = (viewport.clientHeight - h) / 2;
       const targetY = centerOffset - currentIndex * stepHeight;
 
       track.style.transition = withTransition
@@ -282,13 +313,16 @@ class LandingView extends BaseView {
     };
 
     /** Hasta que los SVG tengan altura (layout), el carrusel no puede centrar; reintenta unos frames. */
-    const runUpdateWhenSized = (attemptsLeft = 20) => {
+    const runUpdateWhenSized = (attemptsLeft = 45) => {
       const first = allItems[0];
-      if (first && first.offsetHeight > 0) {
+      if (first && (first.offsetHeight > 0 || first.getBoundingClientRect().height > 0)) {
         update(false);
         return;
       }
-      if (attemptsLeft <= 0) return;
+      if (attemptsLeft <= 0) {
+        update(false);
+        return;
+      }
       window.requestAnimationFrame(() => runUpdateWhenSized(attemptsLeft - 1));
     };
 
@@ -337,9 +371,9 @@ class LandingView extends BaseView {
       this.heroWordsRotatorCleanup();
       this.heroWordsRotatorCleanup = null;
     }
-    if (typeof this.flowTabsCleanup === 'function') {
-      this.flowTabsCleanup();
-      this.flowTabsCleanup = null;
+    if (typeof this.lfwScrollCleanup === 'function') {
+      this.lfwScrollCleanup();
+      this.lfwScrollCleanup = null;
     }
     if (typeof this.landingHeaderScrollCleanup === 'function') {
       this.landingHeaderScrollCleanup();

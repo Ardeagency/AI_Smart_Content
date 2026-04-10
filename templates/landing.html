@@ -31,20 +31,21 @@
                     alt="AI Smart Content"
                     width="480"
                     height="200"
+                    loading="eager"
                     fetchpriority="high"
                 >
             </div>
             <div class="landing-hero__words" aria-hidden="true">
                 <div class="landing-hero__words-viewport">
                     <div class="landing-hero__words-track">
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/ads.svg" alt="" fetchpriority="high" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/brand.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/day.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/focus.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/images.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/sales.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/speed.svg" alt="" loading="lazy" width="280" height="80"></div>
-                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/videos.svg" alt="" loading="lazy" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/ads.svg" alt="" loading="eager" fetchpriority="high" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/brand.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/day.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/focus.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/images.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/sales.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/speed.svg" alt="" loading="eager" width="280" height="80"></div>
+                        <div class="landing-hero__words-item"><img src="/recursos/Recursos%20de%20Marca/Recursos/banner/videos.svg" alt="" loading="eager" width="280" height="80"></div>
                     </div>
                 </div>
             </div>
@@ -94,125 +95,51 @@
 
 <!-- Featured Workflows: flujo generativo con nodos de video -->
 <section class="lfw" id="landing-after-pillars" aria-label="Flujos generativos">
-
-    <!-- Video de fondo a nivel de sección -->
-    <div class="lfw__bg" aria-hidden="true">
-        <video preload="metadata" autoplay loop muted playsinline>
-            <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="lfw__bg-overlay" aria-hidden="true"></div>
-
     <div class="lfw__inner">
 
-        <!-- COLUMNA IZQUIERDA: header + categorías scrolleables -->
+        <!-- Columna izquierda: título + barra de progreso + lista -->
         <div class="lfw__left">
-
-            <!-- Header fijo al inicio de la columna -->
             <div class="lfw__header">
-                <h2 class="lfw__title">Flujos generativos que escalan.</h2>
-                <h3 class="lfw__subtitle">Marcas desde <span class="lfw__em">startups</span> hasta <span class="lfw__em">grandes empresas</span> usan <span class="lfw__em">Vera</span> para explorar posibilidades y amplificar su producción de contenido.</h3>
-                <div class="lfw__ctas">
-                    <a href="/" class="lfw__btn-ghost">Ver todos los flujos</a>
-                </div>
+                <h2 class="lfw__title">Flujos generativos<br>que escalan.</h2>
+                <p class="lfw__subtitle">Marcas desde <strong>startups</strong> hasta <strong>grandes empresas</strong> usan <strong>Vera</strong> para amplificar su producción de contenido.</p>
             </div>
 
-            <!-- Lista de categorías: se activan por scroll -->
-            <nav class="lfw__cats" aria-label="Categorías de flujos">
-                <button class="lfw__cat lfw__cat--active" type="button" data-cat="0">Fotografía</button>
-                <button class="lfw__cat" type="button" data-cat="1">Reels</button>
-                <button class="lfw__cat" type="button" data-cat="2">Campañas</button>
-                <button class="lfw__cat" type="button" data-cat="3">Estrategia</button>
-                <button class="lfw__cat" type="button" data-cat="4">Análisis</button>
-                <button class="lfw__cat" type="button" data-cat="5">ADN de Marca</button>
-                <button class="lfw__cat" type="button" data-cat="6">Motion</button>
-                <button class="lfw__cat" type="button" data-cat="7">Competencia</button>
-            </nav>
+            <!-- Barra lateral de progreso (GSAP la anima) -->
+            <div class="lfw__fill" aria-hidden="true"></div>
 
-        </div><!-- /.lfw__left -->
+            <ul class="lfw__list">
+                <li>Estrategia</li>
+                <li>Análisis</li>
+                <li>Monitoreo</li>
+                <li>Scraping</li>
+                <li>Marketing</li>
+                <li>Competencia</li>
+                <li>Fotografía</li>
+                <li>Post</li>
+                <li>Reels</li>
+                <li>Historias</li>
+                <li>Copys</li>
+            </ul>
 
-        <!-- COLUMNA DERECHA: sticky — card del grafo + pie -->
-        <div class="lfw__right">
-            <div class="lfw__sticky">
-
-                <!-- Tarjeta del grafo de nodos -->
-                <div class="lfw__graph-card">
-                    <!-- Textura de puntos -->
-                    <div class="lfw__graph-tex" aria-hidden="true"></div>
-
-                    <!-- Canvas del grafo (proporciones 469×512) -->
-                    <div class="lfw__graph">
-                        <!-- Líneas de conexión SVG -->
-                        <svg class="lfw__graph-svg" viewBox="0 0 469 512" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                            <path d="M 130 256 C 206 256, 244 256, 320 256" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
-                            <path d="M 130 256 C 206 256, 244 412, 320 412" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
-                            <path d="M 130 256 C 206 256, 244 100, 320 100"  stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
-                        </svg>
-
-                        <!-- Nodo de entrada (izquierda) -->
-                        <div class="lfw__node lfw__node--input" style="--nx:34;--ny:256">
-                            <p class="lfw__node-label">Prompt inicial</p>
-                            <div class="lfw__node-card">
-                                <video preload="metadata" autoplay loop muted playsinline>
-                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/man%20walking%20on%20a%20trail.webm/ik-video.mp4" type="video/mp4">
-                                </video>
-                            </div>
-                        </div>
-
-                        <!-- Nodo de salida: centro -->
-                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:256">
-                            <div class="lfw__node-meta">
-                                <p class="lfw__node-label">Robot humanoide</p>
-                                <p class="lfw__node-source">Vera</p>
-                            </div>
-                            <div class="lfw__node-card">
-                                <video preload="metadata" autoplay loop muted playsinline>
-                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/humanoid%20robot.webm/ik-video.mp4" type="video/mp4">
-                                </video>
-                            </div>
-                        </div>
-
-                        <!-- Nodo de salida: abajo -->
-                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:412">
-                            <div class="lfw__node-meta">
-                                <p class="lfw__node-label">Escena invernal</p>
-                                <p class="lfw__node-source">Vera</p>
-                            </div>
-                            <div class="lfw__node-card">
-                                <video preload="metadata" autoplay loop muted playsinline>
-                                    <source src="https://ik.imagekit.io/ff5bkg98p/node-inputs/2025/9/8/10/04a31140-e53d-49ff-9568-4b851d2c7a17_D1mMSdMuj.mp4" type="video/mp4">
-                                </video>
-                            </div>
-                        </div>
-
-                        <!-- Nodo de salida: arriba -->
-                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:100">
-                            <div class="lfw__node-meta">
-                                <p class="lfw__node-label">Ciudad en llamas</p>
-                                <p class="lfw__node-source">Vera</p>
-                            </div>
-                            <div class="lfw__node-card">
-                                <video preload="metadata" autoplay loop muted playsinline>
-                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/smoldering%20city.webm/ik-video.mp4" type="video/mp4">
-                                </video>
+            <a href="/register" class="lfw__cta">Ver todos los flujos</a>
         </div>
+
+        <!-- Columna derecha: slides vacíos, aparecen por scroll -->
+        <div class="lfw__slides">
+            <div class="lfw__slide lfw__slide--1" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--2" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--3" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--4" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--5" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--6" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--7" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--8" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--9" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--10" aria-hidden="true"></div>
+            <div class="lfw__slide lfw__slide--11" aria-hidden="true"></div>
+        </div>
+
     </div>
-                    </div><!-- /.lfw__graph -->
-                </div><!-- /.lfw__graph-card -->
-
-                <!-- Pie: descripción + CTA -->
-                <div class="lfw__footer">
-                    <div class="lfw__footer-text">
-                        <h3 class="lfw__footer-title">Transformación de Contenido Visual</h3>
-                        <p class="lfw__footer-desc">Cambia personajes y fondos, añade o elimina objetos, y reimagina escenas enteras con IA generativa.</p>
-                    </div>
-                    <a href="/register" class="lfw__btn-outline">Explorar este flujo</a>
-                </div>
-
-            </div><!-- /.lfw__sticky -->
-        </div><!-- /.lfw__right -->
-
-    </div><!-- /.lfw__inner -->
 </section>
 
 <!-- Bento: Todo en un solo lugar -->
