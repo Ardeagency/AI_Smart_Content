@@ -3928,7 +3928,7 @@ body.entrance-done .landing-header {
 
 .landing-hero__content {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     padding: 0 52px 72px;
     pointer-events: none;
 }
@@ -3982,14 +3982,103 @@ body.entrance-done .landing-header {
     right: 0;
     bottom: 0;
     height: 36vh;
-    background: linear-gradient(to top, rgba(15, 13, 18, 1) 0%, rgba(15, 13, 18, 0.5) 52%, rgba(15, 13, 18, 0) 100%);
+    background: linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.55) 52%, rgba(10, 10, 10, 0) 100%);
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
+}
+
+/* ── Orbes de luz ambiental: glass / aurora ─────────────────────────────── */
+.landing-hero__aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1; /* sobre el canvas, bajo el degradado y el texto */
+}
+
+.landing-hero__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.32;
+    will-change: transform;
+}
+
+/* Naranja — top-left */
+.landing-hero__orb--1 {
+    width: clamp(320px, 55vw, 700px);
+    height: clamp(320px, 55vw, 700px);
+    background: radial-gradient(circle, #ff6500 0%, transparent 68%);
+    top: -15%;
+    left: -8%;
+    animation: hero-orb-1 16s ease-in-out infinite alternate;
+}
+
+/* Rojo — top-right */
+.landing-hero__orb--2 {
+    width: clamp(280px, 48vw, 620px);
+    height: clamp(280px, 48vw, 620px);
+    background: radial-gradient(circle, #ff0000 0%, transparent 68%);
+    top: 5%;
+    right: -6%;
+    animation: hero-orb-2 20s ease-in-out infinite alternate;
+}
+
+/* Cian — bottom-right */
+.landing-hero__orb--3 {
+    width: clamp(300px, 52vw, 660px);
+    height: clamp(300px, 52vw, 660px);
+    background: radial-gradient(circle, #00e7ff 0%, transparent 68%);
+    bottom: -10%;
+    right: 8%;
+    animation: hero-orb-3 18s ease-in-out infinite alternate;
+}
+
+/* Azul índigo — centro */
+.landing-hero__orb--4 {
+    width: clamp(260px, 42vw, 560px);
+    height: clamp(260px, 42vw, 560px);
+    background: radial-gradient(circle, #0018ee 0%, transparent 68%);
+    top: 35%;
+    left: 30%;
+    animation: hero-orb-4 22s ease-in-out infinite alternate;
+}
+
+/* Violeta — bottom-left */
+.landing-hero__orb--5 {
+    width: clamp(280px, 45vw, 580px);
+    height: clamp(280px, 45vw, 580px);
+    background: radial-gradient(circle, #5b00ea 0%, transparent 68%);
+    bottom: 0%;
+    left: -4%;
+    animation: hero-orb-5 24s ease-in-out infinite alternate;
+}
+
+@keyframes hero-orb-1 {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    100% { transform: translate(6vw,  10vh) scale(1.12); }
+}
+@keyframes hero-orb-2 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(-7vw, 7vh) scale(0.92); }
+}
+@keyframes hero-orb-3 {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    100% { transform: translate(-5vw,-8vh)  scale(1.08); }
+}
+@keyframes hero-orb-4 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(8vw,-5vh)  scale(1.15); }
+}
+@keyframes hero-orb-5 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(5vw,-7vh)  scale(0.95); }
 }
 
 @media (max-width: 768px) {
     .landing-hero__content { padding: 0 24px 56px; }
     .landing-hero__title { font-size: clamp(2.8rem, 13vw, 4rem); }
+    .landing-hero__orb { filter: blur(60px); opacity: 0.28; }
 }
 
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
