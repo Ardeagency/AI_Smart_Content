@@ -8,7 +8,7 @@ class LandingView extends BaseView {
     this.templatePath = 'landing.html';
     this.heroWordsTimer = null;
     this.pillarScrollCleanup = null;
-    this.threadsRevealCleanup = null;
+    this.flowTabsCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
     this.scrollRevealCleanup = null;
@@ -21,7 +21,7 @@ class LandingView extends BaseView {
   async init() {
     this.initHeroWordsCarousel();
     this.initValuePillarsNav();
-    this.initLandingThreadsReveal();
+    this.initLandingFlowTabs();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
     this.initScrollReveal();
@@ -66,50 +66,26 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Sección de línea / fragmentos / burbujas: animación al entrar en viewport.
+   * Pestañas de categoría de flujos: activa la clase --active al hacer clic.
    */
-  initLandingThreadsReveal() {
-    if (typeof this.threadsRevealCleanup === 'function') {
-      this.threadsRevealCleanup();
-      this.threadsRevealCleanup = null;
+  initLandingFlowTabs() {
+    if (typeof this.flowTabsCleanup === 'function') {
+      this.flowTabsCleanup();
+      this.flowTabsCleanup = null;
     }
 
-    const el = document.getElementById('landing-after-pillars');
-    if (!el) return;
+    const nav = document.querySelector('.lfw__tabs');
+    if (!nav) return;
 
-    const reveal = () => {
-      el.classList.add('landing-threads--visible');
+    const onClick = (e) => {
+      const btn = e.target.closest('.lfw__tab');
+      if (!btn) return;
+      nav.querySelectorAll('.lfw__tab').forEach((t) => t.classList.remove('lfw__tab--active'));
+      btn.classList.add('lfw__tab--active');
     };
 
-    if (typeof IntersectionObserver === 'undefined') {
-      reveal();
-      return;
-    }
-
-    const MIN_RATIO = 0.14;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          if (entry.intersectionRatio >= MIN_RATIO) {
-            reveal();
-            io.unobserve(entry.target);
-            break;
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: '0px 0px -14% 0px',
-        threshold: [0, 0.05, 0.1, 0.14, 0.15, 0.2, 0.25, 0.35, 0.5, 0.75, 1],
-      }
-    );
-
-    io.observe(el);
-
-    this.threadsRevealCleanup = () => {
-      io.disconnect();
-    };
+    nav.addEventListener('click', onClick);
+    this.flowTabsCleanup = () => nav.removeEventListener('click', onClick);
   }
 
   /**
@@ -516,9 +492,9 @@ class LandingView extends BaseView {
       this.pillarScrollCleanup();
       this.pillarScrollCleanup = null;
     }
-    if (typeof this.threadsRevealCleanup === 'function') {
-      this.threadsRevealCleanup();
-      this.threadsRevealCleanup = null;
+    if (typeof this.flowTabsCleanup === 'function') {
+      this.flowTabsCleanup();
+      this.flowTabsCleanup = null;
     }
     if (typeof this.landingHeaderScrollCleanup === 'function') {
       this.landingHeaderScrollCleanup();

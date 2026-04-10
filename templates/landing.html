@@ -129,78 +129,121 @@
     </div>
 </section>
 
-<!-- Burbujas izquierda → curvas de color → convergencia derecha (logo) -->
-<section class="landing-threads" id="landing-after-pillars" aria-label="Capacidades">
-    <div class="landing-threads__inner">
-        <div class="landing-threads__viz landing-threads__viz--column">
-            <div class="landing-threads__fan">
-                <svg class="landing-threads__svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                    <defs>
-                        <!-- Halo radial en el punto de convergencia (derecha) -->
-                        <radialGradient id="lt-junction-radial" gradientUnits="userSpaceOnUse" cx="66" cy="50" r="11">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.48)"/>
-                            <stop offset="30%" stop-color="rgba(200, 220, 255, 0.18)"/>
-                            <stop offset="65%" stop-color="rgba(255,255,255,0.05)"/>
-                            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-                        </radialGradient>
-                        <!-- Gradientes de hilos: COLOR en la izquierda → BLANCO en convergencia -->
-                        <linearGradient id="lt-stem-1"  gradientUnits="userSpaceOnUse" x1="27" y1="4.167"  x2="66" y2="50"><stop offset="0%" stop-color="#d11338"/><stop offset="32%" stop-color="#ff1744"/><stop offset="72%" stop-color="#ff3a60"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-2"  gradientUnits="userSpaceOnUse" x1="27" y1="12.5"   x2="66" y2="50"><stop offset="0%" stop-color="#d15300"/><stop offset="32%" stop-color="#ff6500"/><stop offset="72%" stop-color="#ff7c26"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-3"  gradientUnits="userSpaceOnUse" x1="27" y1="20.833" x2="66" y2="50"><stop offset="0%" stop-color="#d1bc00"/><stop offset="32%" stop-color="#ffe500"/><stop offset="72%" stop-color="#ffe926"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-4"  gradientUnits="userSpaceOnUse" x1="27" y1="29.167" x2="66" y2="50"><stop offset="0%" stop-color="#a2bd08"/><stop offset="32%" stop-color="#c5e60a"/><stop offset="72%" stop-color="#ceea2f"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-5"  gradientUnits="userSpaceOnUse" x1="27" y1="37.5"   x2="66" y2="50"><stop offset="0%" stop-color="#00af10"/><stop offset="32%" stop-color="#00d614"/><stop offset="72%" stop-color="#26dc37"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-6"  gradientUnits="userSpaceOnUse" x1="27" y1="45.833" x2="66" y2="50"><stop offset="0%" stop-color="#00bdd1"/><stop offset="32%" stop-color="#00e7ff"/><stop offset="72%" stop-color="#26ebff"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-7"  gradientUnits="userSpaceOnUse" x1="27" y1="54.167" x2="66" y2="50"><stop offset="0%" stop-color="#2263d1"/><stop offset="32%" stop-color="#2979ff"/><stop offset="72%" stop-color="#498dff"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-8"  gradientUnits="userSpaceOnUse" x1="27" y1="62.5"   x2="66" y2="50"><stop offset="0%" stop-color="#4b00c0"/><stop offset="32%" stop-color="#5b00ea"/><stop offset="72%" stop-color="#7426ed"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-9"  gradientUnits="userSpaceOnUse" x1="27" y1="70.833" x2="66" y2="50"><stop offset="0%" stop-color="#af00cc"/><stop offset="32%" stop-color="#d500f9"/><stop offset="72%" stop-color="#db26fa"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-10" gradientUnits="userSpaceOnUse" x1="27" y1="79.167" x2="66" y2="50"><stop offset="0%" stop-color="#c00096"/><stop offset="32%" stop-color="#ea00b7"/><stop offset="72%" stop-color="#ed26c2"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-11" gradientUnits="userSpaceOnUse" x1="27" y1="87.5"   x2="66" y2="50"><stop offset="0%" stop-color="#9d2c0a"/><stop offset="32%" stop-color="#bf360c"/><stop offset="72%" stop-color="#c95430"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                        <linearGradient id="lt-stem-12" gradientUnits="userSpaceOnUse" x1="27" y1="95.833" x2="66" y2="50"><stop offset="0%" stop-color="#009d87"/><stop offset="32%" stop-color="#00bfa5"/><stop offset="72%" stop-color="#26c9b3"/><stop offset="100%" stop-color="rgba(255,255,255,0.9)"/></linearGradient>
-                    </defs>
-                    <!-- Halo de convergencia (derecha) -->
-                    <circle class="landing-threads__junction-field" cx="66" cy="50" r="10.5" fill="url(#lt-junction-radial)" opacity="0"/>
-                    <!-- 12 curvas: desde (27, y_i) hacia la convergencia (66, 50) -->
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-1)"  d="M 27 4.167  C 44 4.167,  56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-2)"  d="M 27 12.5   C 44 12.5,   56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-3)"  d="M 27 20.833 C 44 20.833, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-4)"  d="M 27 29.167 C 44 29.167, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-5)"  d="M 27 37.5   C 44 37.5,   56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-6)"  d="M 27 45.833 C 44 45.833, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-7)"  d="M 27 54.167 C 44 54.167, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-8)"  d="M 27 62.5   C 44 62.5,   56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-9)"  d="M 27 70.833 C 44 70.833, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-10)" d="M 27 79.167 C 44 79.167, 56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-11)" d="M 27 87.5   C 44 87.5,   56 50, 66 50"/>
-                    <path class="landing-threads__curve" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="url(#lt-stem-12)" d="M 27 95.833 C 44 95.833, 56 50, 66 50"/>
-                    <!-- Tronco blanco horizontal: ver .landing-threads__trunk-bar (CSS, siempre horizontal en px) -->
-                    <!-- Núcleo brillante en convergencia -->
-                    <circle class="landing-threads__junction-core" cx="66" cy="50" r="0.52" fill="#ffffff" opacity="0"/>
-                </svg>
-                <!-- Tronco horizontal real (no SVG stroke): evita que el trazo se perciba como vertical -->
-                <div class="landing-threads__trunk-bar" aria-hidden="true"></div>
-                <!-- Burbujas de capacidades — izquierda -->
-                <ul class="landing-threads__stack landing-threads__stack--overlay">
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">fotografía</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">scraping</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">reels</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">historias</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">marketing</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">monitoreo</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">análisis</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">estrategia</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">post</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">ADN de marca</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">competencia</span></li>
-                    <li class="landing-threads__row"><span class="landing-threads__bubble">campañas</span></li>
-                </ul>
-                <!-- Logo encima + línea blanca horizontal (alinea con tronco SVG en y=50%) -->
-                <div class="landing-threads__node" aria-hidden="true">
-                    <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="" class="landing-threads__node-logo">
-                    <span class="landing-threads__node-line"></span>
-                </div>
+<!-- Featured Workflows: flujo generativo con nodos de video -->
+<section class="lfw" id="landing-after-pillars" aria-label="Flujos generativos">
+    <div class="lfw__inner">
+
+        <!-- Cabecera: título + botones -->
+        <div class="lfw__top">
+            <div class="lfw__header-text">
+                <h2 class="lfw__title">Flujos generativos que escalan.</h2>
+                <h3 class="lfw__subtitle">Marcas desde <span class="lfw__em">startups</span> hasta <span class="lfw__em">grandes empresas</span> usan <span class="lfw__em">Vera</span> para explorar posibilidades y amplificar su producción de contenido.</h3>
+            </div>
+            <div class="lfw__ctas">
+                <a href="/register" class="lfw__btn-primary">Comenzar gratis</a>
+                <a href="/" class="lfw__btn-ghost">Ver todos los flujos</a>
             </div>
         </div>
-    </div>
+
+        <!-- Cuerpo: tabs izquierda + grafo derecha -->
+        <div class="lfw__body">
+
+            <!-- Pestañas de categoría -->
+            <nav class="lfw__tabs" aria-label="Categorías de flujos">
+                <button class="lfw__tab lfw__tab--active" type="button">Fotografía</button>
+                <button class="lfw__tab" type="button">Reels</button>
+                <button class="lfw__tab" type="button">Campañas</button>
+                <button class="lfw__tab" type="button">Estrategia</button>
+                <button class="lfw__tab" type="button">Análisis</button>
+                <button class="lfw__tab" type="button">ADN de Marca</button>
+                <button class="lfw__tab" type="button">Motion</button>
+                <button class="lfw__tab" type="button">Competencia</button>
+            </nav>
+
+            <!-- Columna derecha: tarjeta de grafo + pie -->
+            <div class="lfw__right">
+
+                <!-- Tarjeta principal con el grafo de nodos -->
+                <div class="lfw__graph-card">
+                    <div class="lfw__graph-tex" aria-hidden="true"></div>
+                    <div class="lfw__graph-vbg" aria-hidden="true">
+                        <video preload="metadata" autoplay loop muted playsinline>
+                            <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4" type="video/mp4">
+                        </video>
+                    </div>
+
+                    <!-- Canvas del grafo (469×512 viewbox) -->
+                    <div class="lfw__graph">
+                        <!-- Líneas de conexión SVG -->
+                        <svg class="lfw__graph-svg" viewBox="0 0 469 512" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                            <path d="M 130 256 C 206 256, 244 256, 320 256" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+                            <path d="M 130 256 C 206 256, 244 412, 320 412" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+                            <path d="M 130 256 C 206 256, 244 100, 320 100" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+                        </svg>
+
+                        <!-- Nodo de entrada (izquierda) -->
+                        <div class="lfw__node lfw__node--input" style="--nx:34;--ny:256">
+                            <p class="lfw__node-label">Prompt inicial</p>
+                            <div class="lfw__node-card">
+                                <video preload="metadata" autoplay loop muted playsinline>
+                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/man%20walking%20on%20a%20trail.webm/ik-video.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+
+                        <!-- Nodo de salida: centro -->
+                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:256">
+                            <div class="lfw__node-meta">
+                                <p class="lfw__node-label">Transformación</p>
+                                <p class="lfw__node-source">Vera</p>
+                            </div>
+                            <div class="lfw__node-card">
+                                <video preload="metadata" autoplay loop muted playsinline>
+                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/humanoid%20robot.webm/ik-video.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+
+                        <!-- Nodo de salida: abajo -->
+                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:412">
+                            <div class="lfw__node-meta">
+                                <p class="lfw__node-label">Escena invernal</p>
+                                <p class="lfw__node-source">Vera</p>
+                            </div>
+                            <div class="lfw__node-card">
+                                <video preload="metadata" autoplay loop muted playsinline>
+                                    <source src="https://ik.imagekit.io/ff5bkg98p/node-inputs/2025/9/8/10/04a31140-e53d-49ff-9568-4b851d2c7a17_D1mMSdMuj.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+
+                        <!-- Nodo de salida: arriba -->
+                        <div class="lfw__node lfw__node--output" style="--nx:416;--ny:100">
+                            <div class="lfw__node-meta">
+                                <p class="lfw__node-label">Ciudad en llamas</p>
+                                <p class="lfw__node-source">Vera</p>
+                            </div>
+                            <div class="lfw__node-card">
+                                <video preload="metadata" autoplay loop muted playsinline>
+                                    <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/smoldering%20city.webm/ik-video.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pie: descripción + CTA -->
+                <div class="lfw__footer">
+                    <div class="lfw__footer-text">
+                        <h3 class="lfw__footer-title">Transformación de Contenido Visual</h3>
+                        <p class="lfw__footer-desc">Cambia personajes y fondos, añade o elimina objetos, y reimagina escenas enteras con IA generativa.</p>
+                    </div>
+                    <a href="/register" class="lfw__btn-outline">Explorar este flujo</a>
+                </div>
+
+            </div><!-- /.lfw__right -->
+        </div><!-- /.lfw__body -->
+    </div><!-- /.lfw__inner -->
 </section>
 
 <!-- Bento: Todo en un solo lugar -->
