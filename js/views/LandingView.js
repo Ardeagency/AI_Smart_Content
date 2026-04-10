@@ -19,7 +19,7 @@ class LandingView extends BaseView {
 
   async init() {
     this.initHeroWordsRotator();
-    this.initLandingFlowTabs();
+    this.initLfwScrollAnimation();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
     this.initScrollReveal();
