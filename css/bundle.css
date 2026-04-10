@@ -5062,22 +5062,18 @@ body.entrance-done .landing-header {
 .lfw {
     position: relative;
     width: 100%;
-    height: 650vh;   /* 100vh visible + 11 items × 50vh */
+    height: 100vh;
     background: #0a0a0d;
+    overflow: hidden;
 }
 
 .lfw__inner {
-    /* JS aplica translateY para simular el pin — CSS sticky falla
-       porque #app-container > div tiene overflow-x: hidden */
-    position: relative;
-    height: 100vh;
     width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     box-sizing: border-box;
-    will-change: transform;
 }
 
 /* Dos columnas */

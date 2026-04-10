@@ -64,14 +64,15 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Scroll-list animado: el efecto visual del CodePen pomvabo sin GSAP.
+   * Scroll-lock para #landing-after-pillars.
    *
-   * Cómo funciona:
-   * - .lfw tiene height: 650vh → crea el espacio de scroll necesario
-   * - .lfw__inner NO usa sticky (overflow-x:hidden del wrapper lo rompería)
-   * - JS aplica translateY al inner para mantenerlo visible mientras
-   *   el usuario scrollea dentro de la sección (simula el "pin")
-   * - Progreso 0→1 dispara: color activo en lista, slide visible, barra fill
+   * Motor portado de initValuePillarsNav (que funcionaba en #value-pillars):
+   *  - Wheel y touch interceptan el scroll cuando la sección llega al viewport.
+   *  - Mientras está "locked" el scroll de la página se congela y los eventos
+   *    de wheel/touch avanzan/retroceden los ítems de la lista.
+   *  - Al agotar todos los ítems (o retroceder al primero) sale del lock con
+   *    scrollBy smooth para continuar normalmente.
+   *  - NUNCA usa listener 'scroll' para escribir scrollTop (evita jitter).
    */
   initLfwScrollAnimation() {
     if (typeof this.lfwScrollCleanup === 'function') {
@@ -79,85 +80,198 @@ class LandingView extends BaseView {
       this.lfwScrollCleanup = null;
     }
 
-    const scrollEl = document.getElementById('app-container');
-    if (!scrollEl) return;
-
     const section   = document.querySelector('#landing-after-pillars');
     if (!section) return;
 
-    const inner     = section.querySelector('.lfw__inner');
     const listEl    = section.querySelector('.lfw__list');
     const fill      = section.querySelector('.lfw__fill');
     const listItems = listEl ? Array.from(listEl.querySelectorAll('li')) : [];
     const slides    = Array.from(section.querySelectorAll('.lfw__slide'));
 
-    if (!inner || !listItems.length || !slides.length) return;
+    if (!listItems.length || !slides.length) return;
 
-    const N              = listItems.length;
+    const count          = listItems.length;
     const ACTIVE_COLOR   = '#ff6500';
     const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
 
-    // Estado inicial
-    listItems.forEach((item, i) => {
-      item.style.color = i === 0 ? ACTIVE_COLOR : INACTIVE_COLOR;
-    });
-    slides.forEach((slide, i) => {
-      slide.style.opacity    = i === 0 ? '1' : '0';
-      slide.style.visibility = i === 0 ? 'visible' : 'hidden';
-    });
-    if (fill) fill.style.transform = `scaleY(${1 / N})`;
+    /* ── Helpers de scroll ── */
+    const appContainer  = document.getElementById('app-container');
+    const usesAppScroll = () =>
+      appContainer && appContainer.scrollHeight > appContainer.clientHeight + 2;
+    const getScrollY  = () =>
+      usesAppScroll() ? appContainer.scrollTop
+        : (window.scrollY || document.documentElement.scrollTop || 0);
+    const setScrollY  = (y) => {
+      if (usesAppScroll()) appContainer.scrollTop = y;
+      else window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+    };
+    const smoothScrollBy = (delta) => {
+      const target = usesAppScroll() ? appContainer : window;
+      target.scrollBy({ top: delta, behavior: 'smooth' });
+    };
 
-    let lastActive = 0;
+    /* Posición de scroll que pone la sección al tope del viewport */
+    const lockScrollYFromSection = () =>
+      getScrollY() + section.getBoundingClientRect().top;
 
-    const onScroll = () => {
-      const sectionTop = section.offsetTop;
-      const sectionH   = section.offsetHeight;   // 650vh
-      const viewportH  = scrollEl.clientHeight;
-      const scrollTop  = scrollEl.scrollTop;
-      const maxScroll  = sectionH - viewportH;
+    /* ── Estado ── */
+    let locked        = false;
+    let lockScrollY   = 0;
+    let pillarIndex   = 0;
+    let wheelAccum    = 0;
+    let touchStartY   = null;
+    let suppressLock  = false;
+    let suppressTimer = null;
 
-      // Cuánto hemos scrolleado DENTRO de la sección
-      const into = scrollTop - sectionTop;
-      // Clampear: 0 antes de entrar, maxScroll después de salir
-      const pinned = Math.max(0, Math.min(maxScroll, into));
+    const WHEEL_THRESHOLD = 80;
+    const ENTER_ZONE      = 60;
 
-      // Mover el inner hacia abajo para que permanezca en pantalla
-      inner.style.transform = `translateY(${pinned}px)`;
+    /* ── Activar ítem ── */
+    const activate = (index) => {
+      const i = Math.max(0, Math.min(count - 1, index));
+      listItems.forEach((item, j) => {
+        item.style.color = j === i ? ACTIVE_COLOR : INACTIVE_COLOR;
+      });
+      slides.forEach((slide, j) => {
+        const on = j === i;
+        slide.style.opacity    = on ? '1' : '0';
+        slide.style.visibility = on ? 'visible' : 'hidden';
+      });
+      if (fill) fill.style.transform = `scaleY(${(i + 1) / count})`;
+    };
 
-      // Progreso 0 → 1
-      const progress = maxScroll > 0 ? pinned / maxScroll : 0;
+    const scheduleClearSuppress = () => {
+      if (suppressTimer) clearTimeout(suppressTimer);
+      suppressTimer = setTimeout(() => {
+        suppressLock = false;
+        suppressTimer = null;
+      }, 1100);
+    };
 
-      // Barra de progreso
-      if (fill) {
-        fill.style.transform = `scaleY(${1 / N + progress * (1 - 1 / N)})`;
-      }
+    /* Entra al lock */
+    const enterLock = (fromBottom) => {
+      lockScrollY   = lockScrollYFromSection();
+      setScrollY(lockScrollY);
+      locked        = true;
+      wheelAccum    = 0;
+      pillarIndex   = fromBottom ? count - 1 : 0;
+      activate(pillarIndex);
+    };
 
-      // Ítem y slide activo
-      const activeIndex = Math.min(N - 1, Math.floor(progress * N));
-      if (activeIndex !== lastActive) {
-        listItems[lastActive].style.color   = INACTIVE_COLOR;
-        slides[lastActive].style.opacity    = '0';
-        slides[lastActive].style.visibility = 'hidden';
+    /* Sale del lock hacia abajo */
+    const exitDown = () => {
+      locked       = false;
+      suppressLock = true;
+      wheelAccum   = 0;
+      smoothScrollBy(Math.round(window.innerHeight * 0.65));
+      scheduleClearSuppress();
+    };
 
-        listItems[activeIndex].style.color   = ACTIVE_COLOR;
-        slides[activeIndex].style.opacity    = '1';
-        slides[activeIndex].style.visibility = 'visible';
+    /* Sale del lock hacia arriba */
+    const exitUp = () => {
+      locked       = false;
+      suppressLock = true;
+      wheelAccum   = 0;
+      smoothScrollBy(-Math.round(window.innerHeight * 0.65));
+      scheduleClearSuppress();
+    };
 
-        lastActive = activeIndex;
+    /* Avanza o retrocede un ítem; sale del lock al agotar los extremos */
+    const advanceItem = (forward) => {
+      wheelAccum = 0;
+      if (forward) {
+        if (pillarIndex < count - 1) { pillarIndex += 1; activate(pillarIndex); }
+        else exitDown();
+      } else {
+        if (pillarIndex > 0) { pillarIndex -= 1; activate(pillarIndex); }
+        else exitUp();
       }
     };
 
-    scrollEl.addEventListener('scroll', onScroll, { passive: true });
-    onScroll(); // calcular estado inicial al montar
+    /* Intenta entrar al lock cuando la sección llega al viewport */
+    const tryEnter = (dy, preventDefault) => {
+      if (suppressLock) return false;
+      const dist = section.getBoundingClientRect().top;   // 0 = sección en tope
+      if (dy > 0 && dist <= ENTER_ZONE && dist > -ENTER_ZONE * 1.5) {
+        preventDefault();
+        enterLock(false);
+        return true;
+      }
+      if (dy < 0 && Math.abs(dist) <= ENTER_ZONE) {
+        preventDefault();
+        enterLock(true);
+        return true;
+      }
+      return false;
+    };
+
+    const normalizeWheelDeltaY = (e) => {
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;
+      if (e.deltaMode === 2) dy *= window.innerHeight;
+      return dy;
+    };
+
+    /* ── Wheel ── */
+    const onWheel = (e) => {
+      if (locked) {
+        e.preventDefault();
+        wheelAccum += normalizeWheelDeltaY(e);
+        if (wheelAccum >= WHEEL_THRESHOLD) advanceItem(true);
+        else if (wheelAccum <= -WHEEL_THRESHOLD) advanceItem(false);
+        return;
+      }
+      tryEnter(normalizeWheelDeltaY(e), () => e.preventDefault());
+    };
+
+    /* ── Touch ── */
+    const onTouchStart = (e) => {
+      if (!e.touches?.[0]) return;
+      touchStartY = e.touches[0].clientY;
+      if (locked) wheelAccum = 0;
+    };
+    const onTouchMove = (e) => {
+      if (touchStartY == null || !e.touches?.[0]) return;
+      const rawDy = touchStartY - e.touches[0].clientY;
+      if (Math.abs(rawDy) < 5) return;
+      touchStartY = e.touches[0].clientY;
+      if (locked) {
+        e.preventDefault();
+        wheelAccum += rawDy * 1.4;
+        if (wheelAccum >= WHEEL_THRESHOLD) advanceItem(true);
+        else if (wheelAccum <= -WHEEL_THRESHOLD) advanceItem(false);
+        return;
+      }
+      tryEnter(rawDy, () => e.preventDefault());
+    };
+    const onTouchEnd = () => {
+      touchStartY = null;
+      if (!locked) wheelAccum = 0;
+    };
+
+    /* ── Resize ── */
+    const onResize = () => {
+      if (locked) { lockScrollY = lockScrollYFromSection(); setScrollY(lockScrollY); }
+    };
+
+    /* Estado inicial (primer ítem visible) */
+    activate(0);
+
+    window.addEventListener('wheel',      onWheel,      { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true  });
+    window.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    window.addEventListener('touchend',   onTouchEnd,   { passive: true  });
+    window.addEventListener('resize',     onResize,     { passive: true  });
 
     this.lfwScrollCleanup = () => {
-      scrollEl.removeEventListener('scroll', onScroll);
-      if (inner) inner.style.transform = '';
+      window.removeEventListener('wheel',      onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove',  onTouchMove);
+      window.removeEventListener('touchend',   onTouchEnd);
+      window.removeEventListener('resize',     onResize);
+      if (suppressTimer) clearTimeout(suppressTimer);
       listItems.forEach(item => { item.style.color = ''; });
-      slides.forEach(slide => {
-        slide.style.opacity    = '';
-        slide.style.visibility = '';
-      });
+      slides.forEach(slide => { slide.style.opacity = ''; slide.style.visibility = ''; });
       if (fill) fill.style.transform = '';
     };
   }
