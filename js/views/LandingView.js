@@ -251,24 +251,49 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: partículas magnéticas con repulsión de cursor ──────────────
+// ── Hero canvas: prisma de partículas con espectro de color de la plataforma ─
 class HeroParticleCanvas {
   constructor(canvas) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    this.ctx    = canvas.getContext('2d');
     this.particles = [];
-    this.mouse = { x: -9999, y: -9999 };
-    this.raf = null;
-    this._dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this._w = 0;
-    this._h = 0;
+    this.mouse  = { x: -9999, y: -9999 };
+    this.raf    = null;
+    this._dpr   = Math.min(window.devicePixelRatio || 1, 2);
+    this._w     = 0;
+    this._h     = 0;
+    this._idle  = 0; // fase para la animación autónoma
 
-    this._onMove  = this._onMove.bind(this);
-    this._onLeave = this._onLeave.bind(this);
-    this._onTouch = this._onTouch.bind(this);
+    this._onMove   = this._onMove.bind(this);
+    this._onLeave  = this._onLeave.bind(this);
+    this._onTouch  = this._onTouch.bind(this);
     this._onResize = this._onResize.bind(this);
 
     this._init();
+  }
+
+  // Espectro de prisma: coincide exactamente con --brand-gradient de la plataforma
+  _prismColor(t) {
+    const stops = [
+      [255,   0,   0],  // 0.000  rojo
+      [255, 101,   0],  // 0.125  naranja
+      [255, 229,   0],  // 0.250  amarillo
+      [154, 204,   0],  // 0.375  lima
+      [  0, 214,  20],  // 0.500  verde
+      [  0, 231, 255],  // 0.625  cian
+      [  0,  24, 238],  // 0.750  azul
+      [ 91,   0, 234],  // 0.875  violeta
+      [144,   0, 144],  // 1.000  magenta
+    ];
+    const n = stops.length - 1;
+    const i = Math.min(Math.floor(t * n), n - 1);
+    const f = t * n - i;
+    const a = stops[i], b = stops[i + 1];
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * f),
+      Math.round(a[1] + (b[1] - a[1]) * f),
+      Math.round(a[2] + (b[2] - a[2]) * f),
+    ];
   }
 
   _init() {
@@ -285,7 +310,7 @@ class HeroParticleCanvas {
     const dpr = this._dpr;
     const w = this.canvas.offsetWidth;
     const h = this.canvas.offsetHeight;
-    this.canvas.width = w * dpr;
+    this.canvas.width  = w * dpr;
     this.canvas.height = h * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
@@ -294,7 +319,7 @@ class HeroParticleCanvas {
   }
 
   _buildGrid() {
-    const GAP = 30;
+    const GAP  = 30;
     const cols = Math.ceil(this._w / GAP) + 1;
     const rows = Math.ceil(this._h / GAP) + 1;
     const offX = (this._w % GAP) / 2;
@@ -304,7 +329,10 @@ class HeroParticleCanvas {
       for (let c = 0; c < cols; c++) {
         const ox = offX + c * GAP;
         const oy = offY + r * GAP;
-        this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0 });
+        // Mapeo diagonal suave: 80% horizontal, 20% vertical → eje del prisma
+        const t = Math.max(0, Math.min(1, ox / this._w * 0.82 + oy / this._h * 0.18));
+        const [cr, cg, cb] = this._prismColor(t);
+        this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0, cr, cg, cb });
       }
     }
   }
@@ -315,10 +343,7 @@ class HeroParticleCanvas {
     this.mouse.y = e.clientY - rect.top;
   }
 
-  _onLeave() {
-    this.mouse.x = -9999;
-    this.mouse.y = -9999;
-  }
+  _onLeave() { this.mouse.x = -9999; this.mouse.y = -9999; }
 
   _onTouch(e) {
     if (!e.touches?.[0]) return;
@@ -330,20 +355,32 @@ class HeroParticleCanvas {
   _onResize() { this._resize(); }
 
   _update() {
-    const RADIUS = 150;
-    const SPRING = 0.07;
+    const hasMouse = this.mouse.x !== -9999;
+    let mx, my;
+
+    if (hasMouse) {
+      mx = this.mouse.x;
+      my = this.mouse.y;
+    } else {
+      // Lissajous 1:2 — figura-8 que recorre el canvas cuando no hay cursor
+      this._idle += 0.006;
+      const ph = this._idle;
+      mx = this._w * 0.5 + Math.cos(ph)       * this._w * 0.38;
+      my = this._h * 0.5 + Math.sin(ph * 2)   * this._h * 0.26;
+    }
+
+    const RADIUS  = 150;
+    const SPRING  = 0.07;
     const DAMPING = 0.78;
-    const FORCE  = 7;
-    const mx = this.mouse.x;
-    const my = this.mouse.y;
+    const FORCE   = hasMouse ? 7 : 4;
 
     for (const p of this.particles) {
-      const dx = p.x - mx;
-      const dy = p.y - my;
+      const dx     = p.x - mx;
+      const dy     = p.y - my;
       const distSq = dx * dx + dy * dy;
 
       if (distSq < RADIUS * RADIUS) {
-        const dist = Math.sqrt(distSq) || 1;
+        const dist  = Math.sqrt(distSq) || 1;
         const ratio = (RADIUS - dist) / RADIUS;
         p.vx += (dx / dist) * ratio * FORCE;
         p.vy += (dy / dist) * ratio * FORCE;
@@ -363,16 +400,29 @@ class HeroParticleCanvas {
     ctx.clearRect(0, 0, this._w, this._h);
 
     for (const p of this.particles) {
-      const dx = p.x - p.ox;
-      const dy = p.y - p.oy;
+      const dx   = p.x - p.ox;
+      const dy   = p.y - p.oy;
       const disp = Math.sqrt(dx * dx + dy * dy);
-      const t = Math.min(disp / 55, 1);
-      const r = 1.4 + t * 2.2;
-      const a = 0.09 + t * 0.72;
+      const t    = Math.min(disp / 55, 1);
 
+      if (t < 0.004) continue; // partícula en reposo: omitir
+
+      const radius = 1.4 + t * 2.8;
+      const alpha  = 0.04 + t * 0.82;
+      const { cr, cg, cb } = p;
+
+      // Halo de luz (bloom) — solo cuando hay desplazamiento notable
+      if (t > 0.06) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius * 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${(alpha * 0.18).toFixed(2)})`;
+        ctx.fill();
+      }
+
+      // Núcleo del punto
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(2)})`;
       ctx.fill();
     }
   }
