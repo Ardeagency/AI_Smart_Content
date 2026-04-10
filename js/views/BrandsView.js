@@ -87,12 +87,15 @@ class BrandsView extends BaseView {
       const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
       const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
       if (brandColorsEl && typographyEl) {
+        // Primer render inmediato con lo que haya (puede ser vacío)
         this.renderAll();
         const root = container.querySelector('#brandsListContainer');
         if (root) root.classList.add('brands-ready');
         (async () => {
           await this.ensureDataLoaded();
           if (!this.isActive) return;
+          // Re-renderizar con datos reales una vez que cargaron
+          this.renderAll();
           this.applyBrandBackgroundGradient();
           if (root) root.classList.add('brands-background-ready');
         })();
@@ -183,25 +186,25 @@ class BrandsView extends BaseView {
 
       if (!container) {
         const { data: byUser, error: containerError } = await this.supabase
-          .from('brand_containers')
-          .select('*')
-          .eq('user_id', this.userId)
+        .from('brand_containers')
+        .select('*')
+        .eq('user_id', this.userId)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
+        .limit(1)
+        .maybeSingle();
+      
         if (containerError && containerError.code !== 'PGRST116') {
-          console.warn('⚠️ Error cargando brand container:', containerError);
+        console.warn('⚠️ Error cargando brand container:', containerError);
           this._dataLoaded = true;
           if (this.isActive) this._refreshInfoPanelIfOpen();
-          return;
+        return;
         }
         container = byUser || null;
       }
-
+      
       if (container) {
         this.brandContainerData = container;
-
+        
         const { data: integRows, error: integError } = await this.supabase
           .from('brand_integrations')
           .select('id, platform, is_active, token_expires_at, metadata, external_account_name')
@@ -216,11 +219,11 @@ class BrandsView extends BaseView {
         
         // Brand — auto-crea la fila si no existe (p.ej. tras DROP TABLE brands en migración)
         const { data: brand, error: brandError } = await this.supabase
-          .from('brands')
-          .select('*')
+        .from('brands')
+        .select('*')
           .eq('project_id', container.id)
           .maybeSingle();
-
+        
         if (brandError) {
           console.warn('⚠️ Error cargando brand:', brandError);
           this.brandData = null;
@@ -336,7 +339,7 @@ class BrandsView extends BaseView {
         if (this.brandData?.id) {
           this.brandColors = await this._queryBrandColorsRows();
           this.brandFonts = await this._queryBrandFontsRows();
-          this.brandRules = [];
+            this.brandRules = [];
         }
 
         // Organización
@@ -1836,14 +1839,14 @@ class BrandsView extends BaseView {
       </div>`;
     }).join('');
 
-    return `
+          return `
       <div class="info-brand-aside-inner">
         <h3 class="info-section-title" id="infoBrandSchemaHeading">Ficha de marca</h3>
         <p class="info-brand-aside-lead">Nicho core es obligatorio en base de datos; el primer guardado crea la fila si no existe (se usa nicho vacío hasta que lo completes).</p>
         <div class="info-brand-fields">
           ${blocks}
-        </div>
-      </div>
+                  </div>
+                </div>
     `;
   }
 
@@ -1856,7 +1859,7 @@ class BrandsView extends BaseView {
           <section class="info-section info-section-identity">
             <div class="info-section-content">
               ${this.renderIdentitySection(brandContainer)}
-            </div>
+              </div>
           </section>
           ${this.renderInfoIntegrationsCompactHtml()}
         </div>
@@ -2124,14 +2127,14 @@ class BrandsView extends BaseView {
   async saveBrandField(fieldName, value) {
     if (!this.supabase || !this.brandData) {
       if (!this.brandContainerData) return;
-
+      
       let v = value;
       if (BrandsView.BRAND_ARRAY_FIELDS.includes(fieldName) && typeof v === 'string') {
         v = v.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
       }
 
       const row = {
-        project_id: this.brandContainerData.id,
+            project_id: this.brandContainerData.id,
         nicho_core: fieldName === 'nicho_core' ? this._normalizeBrandFieldForDb('nicho_core', v) : ''
       };
       if (fieldName !== 'nicho_core') {

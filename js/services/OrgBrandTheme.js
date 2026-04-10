@@ -36,8 +36,11 @@
         .eq('organization_id', organizationId);
 
       if (!e1 && byOrg && byOrg.length > 0) {
+        console.info('[OrgBrandTheme] containers por org_id:', byOrg.length);
         return byOrg.map(b => b.id);
       }
+
+      console.info('[OrgBrandTheme] sin containers por org_id, intentando por members...');
 
       // Intento 2: brand_containers cuyo user_id está en organization_members
       const { data: members, error: e2 } = await supabase
@@ -45,7 +48,10 @@
         .select('user_id')
         .eq('organization_id', organizationId);
 
-      if (e2 || !members || members.length === 0) return [];
+      if (e2 || !members || members.length === 0) {
+        console.warn('[OrgBrandTheme] sin members para org', organizationId);
+        return [];
+      }
 
       const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
       if (userIds.length === 0) return [];
@@ -56,6 +62,7 @@
         .in('user_id', userIds);
 
       if (e3 || !byUser) return [];
+      console.info('[OrgBrandTheme] containers por user_id:', byUser.length);
       return byUser.map(b => b.id);
     } catch (e) {
       console.error('OrgBrandTheme: error getBrandContainerIds', e);
