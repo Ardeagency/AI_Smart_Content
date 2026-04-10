@@ -64,9 +64,12 @@ class LandingView extends BaseView {
   }
 
   /**
-   * GSAP ScrollTrigger: la sección #landing-after-pillars se pina y a medida
-   * que el usuario hace scroll cada ítem de la lista se activa en color,
-   * la barra de progreso crece, y el slide correspondiente hace fade-in.
+   * GSAP ScrollTrigger pin-list: idéntico al CodePen pomvabo de GreenSock,
+   * adaptado para que el scroller sea #app-container en vez de window.
+   *
+   * Clave: pinType:'transform' — en lugar de position:fixed (que solo
+   * funciona con window), GSAP usa translateY() para mantener la sección
+   * visible mientras dura el scroll de la animación.
    */
   initLfwScrollAnimation() {
     if (typeof this.lfwScrollCleanup === 'function') {
@@ -78,7 +81,10 @@ class LandingView extends BaseView {
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const section  = document.querySelector('#landing-after-pillars');
+    const scrollEl = document.getElementById('app-container');
+    if (!scrollEl) return;
+
+    const section   = document.querySelector('#landing-after-pillars');
     if (!section) return;
 
     const list      = section.querySelector('.lfw__list');
@@ -91,33 +97,30 @@ class LandingView extends BaseView {
     const ACTIVE_COLOR   = '#ff6500';
     const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
 
-    gsap.set(fill, { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
+    // Primer ítem y primer slide siempre visibles al entrar
+    gsap.set(fill,     { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
+    gsap.set(listItems[0], { color: ACTIVE_COLOR });
+    gsap.set(slides[0],    { autoAlpha: 1 });
 
-    // El scroller real de la app es #app-container, no window
-    const scroller = document.getElementById('app-container') || window;
-
-    // Sin pin:true — el pin lo hace CSS position:sticky en .lfw__inner.
-    // GSAP solo controla el progreso de la animación via scrub.
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: section,
-        scroller,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.5,
+        trigger:  section,
+        scroller: scrollEl,
+        start:    'top top',
+        end:      '+=' + listItems.length * 50 + '%',
+        pin:      true,
+        pinType:  'transform',   // obligatorio con scroller no-window
+        scrub:    true,
       },
     });
 
     listItems.forEach((item, i) => {
       const prevItem = listItems[i - 1];
       if (prevItem) {
-        tl.set(item, { color: ACTIVE_COLOR }, 0.5 * i)
-          .to(slides[i],    { autoAlpha: 1, duration: 0.2 }, '<')
-          .set(prevItem,    { color: INACTIVE_COLOR },        '<')
+        tl.set(item,       { color: ACTIVE_COLOR },   0.5 * i)
+          .to(slides[i],   { autoAlpha: 1, duration: 0.2 }, '<')
+          .set(prevItem,   { color: INACTIVE_COLOR }, '<')
           .to(slides[i - 1], { autoAlpha: 0, duration: 0.2 }, '<');
-      } else {
-        gsap.set(item,     { color: ACTIVE_COLOR });
-        gsap.set(slides[i], { autoAlpha: 1 });
       }
     });
 
@@ -126,7 +129,9 @@ class LandingView extends BaseView {
       transformOrigin: 'top left',
       ease: 'none',
       duration: tl.duration(),
-    }, 0).to({}, {});
+    }, 0).to({}, {});   // pequeña pausa al final antes de despinar
+
+    ScrollTrigger.refresh();
 
     this.lfwScrollCleanup = () => {
       ScrollTrigger.getAll().forEach((st) => {

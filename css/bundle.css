@@ -5063,34 +5063,32 @@ body.entrance-done .landing-header {
 /* ═══════════════════════════════════════════════════════════════
    LANDING FL
 /* ══════════════════════════════════════════════════════════
-   #landing-after-pillars — CSS sticky + GSAP scrub list
+   #landing-after-pillars — GSAP pin:true + pinType:transform
+   (scroller: #app-container, no window)
    ══════════════════════════════════════════════════════════ */
 
 /*
- * La sección es más alta que el viewport para permitir el scroll.
- * .lfw__inner es sticky → permanece visible mientras scrolleas dentro de .lfw
+ * GSAP agrega el espaciado de pin automáticamente.
+ * La sección solo necesita height: 100vh en CSS.
  */
 .lfw {
     position: relative;
     width: 100%;
-    /* 100vh viewable + 50vh × 11 items para el scroll */
-    height: calc(100vh + 550vh);
+    height: 100vh;
     background: #0a0a0d;
+    overflow: hidden;
 }
 
+/* Contenedor flex full-height (GSAP lo envuelve en un spacer al hacer pin) */
 .lfw__inner {
-    position: sticky;
-    top: 0;
-    height: 100vh;
     width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    box-sizing: border-box;
 }
 
-/* Wrapper interior con max-width y layout de columnas */
+/* Wrapper de las dos columnas */
 .lfw__content-wrap {
     width: 100%;
     max-width: 1200px;
@@ -5133,7 +5131,7 @@ body.entrance-done .landing-header {
     font-weight: 600;
 }
 
-/* Barra de progreso lateral */
+/* Barra de progreso lateral — GSAP anima scaleY */
 .lfw__fill {
     position: absolute;
     top: 0;
@@ -5208,7 +5206,7 @@ body.entrance-done .landing-header {
     visibility: hidden;
 }
 
-/* Colores por flujo */
+/* Colores radiales por flujo */
 .lfw__slide--1 {
     background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,0,0,0.18) 0%, rgba(255,0,0,0.06) 50%, transparent 80%), #0a0a0d;
     border-color: rgba(255,0,0,0.22);
@@ -5254,7 +5252,7 @@ body.entrance-done .landing-header {
     border-color: rgba(255,101,0,0.22);
 }
 
-/* ── Responsive ── */
+/* ── Responsive: en móvil desactivamos el pin ── */
 @media (max-width: 900px) {
     .lfw__content-wrap {
         flex-direction: column;
@@ -5270,15 +5268,6 @@ body.entrance-done .landing-header {
     }
     .lfw__list li {
         font-size: 1rem;
-    }
-    .lfw {
-        height: auto;
-        min-height: 100vh;
-    }
-    .lfw__inner {
-        position: relative;
-        height: auto;
-        min-height: 100vh;
     }
 }
 
