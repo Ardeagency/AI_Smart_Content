@@ -4765,6 +4765,157 @@ body.entrance-done .landing-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   LANDING PILLAR FEATURES (lpf)
+   ═══════════════════════════════════════════════════════════════ */
+
+.lpf {
+    background: var(--bg-dark, #0F0D12);
+    padding: 96px 0 112px;
+}
+
+.lpf__inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+/* ── Heading con llaves ── */
+.lpf__heading-wrap {
+    text-align: center;
+    padding-bottom: 80px;
+}
+
+.lpf__heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.lpf__brace {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    opacity: 0.7;
+}
+
+.lpf__brace svg {
+    height: 36px;
+    width: auto;
+}
+
+.lpf__brace--flip {
+    transform: rotate(180deg);
+}
+
+.lpf__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: #cccccc;
+    text-transform: uppercase;
+}
+
+/* ── Filas ── */
+.lpf__row {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    padding: 72px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lpf__row:last-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ── Columna visual (izquierda) ── */
+.lpf__visual {
+    flex: 0 0 36%;
+    max-width: 36%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lpf__visual svg {
+    width: 100%;
+    max-width: 340px;
+    height: auto;
+    display: block;
+}
+
+/* ── Columna de contenido (derecha) ── */
+.lpf__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.lpf__title {
+    font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0 0 24px;
+}
+
+.lpf__text {
+    font-size: clamp(1rem, 1.3vw, 1.15rem);
+    color: #b4b4b4;
+    line-height: 1.65;
+    margin: 0 0 32px;
+    max-width: 500px;
+}
+
+.lpf__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #eeeeee;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.25s, border-color 0.25s;
+    white-space: nowrap;
+}
+
+.lpf__cta:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .lpf { padding: 64px 0 80px; }
+    .lpf__inner { padding: 0 28px; }
+    .lpf__heading-wrap { padding-bottom: 56px; }
+
+    .lpf__row {
+        flex-direction: column;
+        gap: 36px;
+        padding: 56px 0;
+    }
+
+    .lpf__visual {
+        flex: none;
+        max-width: 240px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .lpf { padding: 48px 0 64px; }
+    .lpf__inner { padding: 0 16px; }
+    .lpf__heading-wrap { padding-bottom: 40px; }
+    .lpf__row { padding: 40px 0; gap: 28px; }
+    .lpf__visual { max-width: 180px; }
+    .lpf__title { font-size: 2.5rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    LANDING FLOW WORKFLOWS (lfw)
    ═══════════════════════════════════════════════════════════════ */
 
