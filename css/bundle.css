@@ -3915,7 +3915,8 @@ body.entrance-done .landing-header {
     background: #0a0a0a;
     overflow: hidden;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
 }
 
 .landing-hero__canvas {
@@ -3929,8 +3930,79 @@ body.entrance-done .landing-header {
 .landing-hero__content {
     position: relative;
     z-index: 3;
-    padding: 0 52px 72px;
+    width: 100%;
+    max-width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: clamp(80px, 14vh, 140px) 52px clamp(48px, 7vh, 80px);
+    box-sizing: border-box;
     pointer-events: none;
+}
+
+/* Lockup: smart.svg + carrusel vertical de palabras */
+.landing-hero__lockup {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: center;
+    gap: clamp(28px, 5vw, 72px);
+    width: 100%;
+}
+
+.landing-hero__smart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-hero__smart-img {
+    display: block;
+    width: 100%;
+    max-width: min(440px, 46vw);
+    height: auto;
+}
+
+.landing-hero__words {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.landing-hero__words-viewport {
+    width: 100%;
+    max-width: min(340px, 38vw);
+    height: clamp(280px, 48vh, 520px);
+    overflow: hidden;
+    position: relative;
+}
+
+.landing-hero__words-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 2.2vh, 28px);
+    will-change: transform;
+}
+
+.landing-hero__words-item {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.32;
+    transform: scale(0.9);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.landing-hero__words-item.is-active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.landing-hero__words-item img {
+    display: block;
+    width: 100%;
+    max-width: min(300px, 32vw);
+    height: auto;
 }
 
 .landing-hero__eyebrow {
@@ -4076,7 +4148,28 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 768px) {
-    .landing-hero__content { padding: 0 24px 56px; }
+    .landing-hero__content {
+        padding: clamp(72px, 18vw, 100px) 24px clamp(40px, 10vw, 64px);
+    }
+
+    .landing-hero__lockup {
+        grid-template-columns: 1fr;
+        gap: clamp(20px, 6vw, 40px);
+    }
+
+    .landing-hero__smart-img {
+        max-width: min(320px, 78vw);
+    }
+
+    .landing-hero__words-viewport {
+        max-width: min(280px, 72vw);
+        height: clamp(240px, 42vh, 400px);
+    }
+
+    .landing-hero__words-item img {
+        max-width: min(260px, 70vw);
+    }
+
     .landing-hero__title { font-size: clamp(2.8rem, 13vw, 4rem); }
     .landing-hero__orb { filter: blur(60px); opacity: 0.28; }
 }

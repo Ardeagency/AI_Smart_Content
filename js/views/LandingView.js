@@ -7,6 +7,7 @@ class LandingView extends BaseView {
     super();
     this.templatePath = 'landing.html';
     this.heroCanvasCleanup = null;
+    this.heroWordsRotatorCleanup = null;
     this.flowTabsCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
@@ -19,6 +20,7 @@ class LandingView extends BaseView {
 
   async init() {
     this.initHeroCanvas();
+    this.initHeroWordsRotator();
     this.initLandingFlowTabs();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
@@ -221,10 +223,126 @@ class LandingView extends BaseView {
     this.heroCanvasCleanup = () => instance.destroy();
   }
 
+  /**
+   * Hero: columna derecha — carrusel vertical (SVG banner) que avanza cada 2 s.
+   */
+  initHeroWordsRotator() {
+    if (typeof this.heroWordsRotatorCleanup === 'function') {
+      this.heroWordsRotatorCleanup();
+      this.heroWordsRotatorCleanup = null;
+    }
+
+    const viewport = document.querySelector('.landing-hero__words-viewport');
+    const track = viewport?.querySelector('.landing-hero__words-track');
+    if (!viewport || !track) return;
+
+    const originalItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
+    if (!originalItems.length) return;
+
+    const reduceMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const cloneItem = (item) => {
+      const clone = item.cloneNode(true);
+      clone.dataset.realIndex = item.dataset.realIndex || '0';
+      return clone;
+    };
+
+    originalItems.forEach((item, index) => {
+      item.dataset.realIndex = String(index);
+    });
+
+    track.innerHTML = '';
+    const before = originalItems.map(cloneItem);
+    const middle = originalItems.map(cloneItem);
+    const after = originalItems.map(cloneItem);
+    [...before, ...middle, ...after].forEach((item) => track.appendChild(item));
+
+    const allItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
+    const baseLength = originalItems.length;
+    let currentIndex = baseLength;
+    let heroWordsTimer = null;
+    let jumpTimer = null;
+
+    const getTrackGap = () => {
+      const styles = window.getComputedStyle(track);
+      const gapValue = styles.rowGap || styles.gap || '0';
+      const parsed = Number.parseFloat(gapValue);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const update = (withTransition = true) => {
+      const first = allItems[0];
+      if (!first || !first.offsetHeight) return;
+      const stepHeight = first.offsetHeight + getTrackGap();
+      const centerOffset = (viewport.clientHeight - first.offsetHeight) / 2;
+      const targetY = centerOffset - currentIndex * stepHeight;
+
+      track.style.transition = withTransition
+        ? 'transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1)'
+        : 'none';
+      track.style.transform = `translateY(${targetY}px)`;
+
+      allItems.forEach((item) => item.classList.remove('is-active'));
+      if (allItems[currentIndex]) {
+        allItems[currentIndex].classList.add('is-active');
+      }
+    };
+
+    const scheduleUpdate = () => {
+      window.requestAnimationFrame(() => update(false));
+    };
+
+    track.querySelectorAll('img').forEach((img) => {
+      img.addEventListener('load', scheduleUpdate, { passive: true });
+    });
+
+    scheduleUpdate();
+
+    const onResize = () => update(false);
+    window.addEventListener('resize', onResize, { passive: true });
+
+    if (reduceMotion) {
+      currentIndex = baseLength;
+      update(false);
+      this.heroWordsRotatorCleanup = () => {
+        window.removeEventListener('resize', onResize);
+      };
+      return;
+    }
+
+    heroWordsTimer = window.setInterval(() => {
+      currentIndex += 1;
+      update(true);
+
+      if (currentIndex >= baseLength * 2) {
+        if (jumpTimer) window.clearTimeout(jumpTimer);
+        jumpTimer = window.setTimeout(() => {
+          currentIndex = baseLength;
+          update(false);
+          jumpTimer = null;
+        }, 520);
+      }
+    }, 2000);
+
+    this.heroWordsRotatorCleanup = () => {
+      window.removeEventListener('resize', onResize);
+      if (heroWordsTimer) window.clearInterval(heroWordsTimer);
+      if (jumpTimer) window.clearTimeout(jumpTimer);
+      heroWordsTimer = null;
+      jumpTimer = null;
+    };
+  }
+
   onLeave() {
     if (typeof this.heroCanvasCleanup === 'function') {
       this.heroCanvasCleanup();
       this.heroCanvasCleanup = null;
+    }
+    if (typeof this.heroWordsRotatorCleanup === 'function') {
+      this.heroWordsRotatorCleanup();
+      this.heroWordsRotatorCleanup = null;
     }
     if (typeof this.flowTabsCleanup === 'function') {
       this.flowTabsCleanup();
