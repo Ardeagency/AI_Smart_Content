@@ -93,17 +93,18 @@ class LandingView extends BaseView {
 
     gsap.set(fill, { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
 
+    // El scroller real de la app es #app-container, no window
     const scroller = document.getElementById('app-container') || window;
 
+    // Sin pin:true — el pin lo hace CSS position:sticky en .lfw__inner.
+    // GSAP solo controla el progreso de la animación via scrub.
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
         scroller,
         start: 'top top',
-        end: '+=' + listItems.length * 50 + '%',
-        pin: true,
-        scrub: true,
-        pinSpacing: true,
+        end: 'bottom bottom',
+        scrub: 0.5,
       },
     });
 

@@ -5063,28 +5063,42 @@ body.entrance-done .landing-header {
 /* ═══════════════════════════════════════════════════════════════
    LANDING FL
 /* ══════════════════════════════════════════════════════════
-   #landing-after-pillars — GSAP ScrollTrigger pin list
+   #landing-after-pillars — CSS sticky + GSAP scrub list
    ══════════════════════════════════════════════════════════ */
+
+/*
+ * La sección es más alta que el viewport para permitir el scroll.
+ * .lfw__inner es sticky → permanece visible mientras scrolleas dentro de .lfw
+ */
 .lfw {
     position: relative;
     width: 100%;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* 100vh viewable + 50vh × 11 items para el scroll */
+    height: calc(100vh + 550vh);
     background: #0a0a0d;
-    overflow: hidden;
 }
 
 .lfw__inner {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Wrapper interior con max-width y layout de columnas */
+.lfw__content-wrap {
     width: 100%;
     max-width: 1200px;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     padding: 0 48px;
-    position: relative;
     gap: 64px;
+    box-sizing: border-box;
 }
 
 /* ── Columna izquierda ── */
@@ -5157,7 +5171,6 @@ body.entrance-done .landing-header {
     line-height: 1.35;
     letter-spacing: -0.01em;
     padding: 3px 0;
-    transition: color 0.08s;
 }
 
 .lfw__cta {
@@ -5243,7 +5256,7 @@ body.entrance-done .landing-header {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-    .lfw__inner {
+    .lfw__content-wrap {
         flex-direction: column;
         padding: 40px 24px;
         gap: 40px;
@@ -5258,6 +5271,15 @@ body.entrance-done .landing-header {
     .lfw__list li {
         font-size: 1rem;
     }
+    .lfw {
+        height: auto;
+        min-height: 100vh;
+    }
+    .lfw__inner {
+        position: relative;
+        height: auto;
+        min-height: 100vh;
+    }
 }
 
 @media (max-width: 600px) {
@@ -5268,13 +5290,7 @@ body.entrance-done .landing-header {
         height: 220px;
     }
 }
-,
-    .lfw__node-source { font-size: 7px; }
 
-    .lfw__footer { flex-direction: column; }
-}
-
-/* ─── Landing Bento (referencia Bento 02) ─── */
 .landing-bento {
     position: relative;
     z-index: 3;
