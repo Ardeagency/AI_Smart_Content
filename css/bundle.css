@@ -5422,133 +5422,189 @@ body.entrance-done .landing-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LANDING VERA BENTO — 6 tarjetas del sistema
+   VERA MODULES — 4 tarjetas tipo "proveedor" (Framer-style)
    ═══════════════════════════════════════════════════════════════ */
-.landing-vera-bento {
+.vera-modules {
     background: #000000;
     color: #ffffff;
     padding: 0 0 clamp(64px, 10vw, 120px);
 }
 
-.landing-vera-bento__inner {
-    max-width: 1100px;
+.vera-modules__inner {
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 clamp(20px, 4vw, 52px);
 }
 
-/* Grid de 2 columnas; la tarjeta "featured" ocupa 2 filas a la izquierda */
-.landing-vera-bento__grid {
+/* Header */
+.vera-modules__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    margin-bottom: clamp(40px, 6vw, 72px);
+}
+
+.vera-modules__logo {
+    width: 48px;
+    height: 48px;
+}
+
+.vera-modules__title {
+    margin: 0;
+    font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+}
+
+.vera-modules__sub {
+    margin: 0;
+    max-width: 52ch;
+    font-size: clamp(0.88rem, 1.3vw, 1rem);
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Grid 2×2 */
+.vera-modules__grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+/* Tarjeta base */
+.vera-modules__card {
+    position: relative;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.3s ease;
+}
+
+.vera-modules__card:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Fondo con gradiente de color por módulo */
+.vera-modules__card-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Insight: azul-cian */
+.vera-modules__card--insight .vera-modules__card-bg {
+    background: radial-gradient(ellipse 80% 70% at 60% 30%, rgba(0, 231, 255, 0.18) 0%, rgba(0, 24, 238, 0.12) 48%, transparent 80%), #0a0a0d;
+}
+
+/* Brain: violeta-índigo */
+.vera-modules__card--brain .vera-modules__card-bg {
+    background: radial-gradient(ellipse 80% 70% at 40% 30%, rgba(91, 0, 234, 0.22) 0%, rgba(144, 0, 144, 0.1) 50%, transparent 80%), #0a0a0d;
+}
+
+/* Studio: naranja-amarillo */
+.vera-modules__card--studio .vera-modules__card-bg {
+    background: radial-gradient(ellipse 80% 70% at 55% 25%, rgba(255, 101, 0, 0.2) 0%, rgba(255, 229, 0, 0.08) 48%, transparent 80%), #0a0a0d;
+}
+
+/* Campaigns: verde */
+.vera-modules__card--campaigns .vera-modules__card-bg {
+    background: radial-gradient(ellipse 80% 70% at 50% 30%, rgba(0, 214, 20, 0.18) 0%, rgba(154, 204, 0, 0.08) 50%, transparent 80%), #0a0a0d;
+}
+
+/* Efecto shine (destello diagonal arriba-izquierda) */
+.vera-modules__card-shine {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%);
+    border-radius: 24px;
+}
+
+/* Blur fade en la parte inferior (oscurece para que el texto sea legible) */
+.vera-modules__card-blur {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+}
+
+/* Contenido */
+.vera-modules__card-content {
+    position: relative;
+    z-index: 3;
+    margin-top: auto;
+    padding: 24px 28px 28px;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
 }
 
-.landing-vera-bento__card {
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    background: rgba(255, 255, 255, 0.03);
-    padding: 28px 28px 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-height: 180px;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Tarjeta grande: ocupa 2 filas en la primera columna */
-.landing-vera-bento__card--featured {
-    grid-row: span 2;
-    min-height: 360px;
-    justify-content: space-between;
-}
-
-/* Tarjeta central (fila 2, col 2): acento de texto más grande */
-.landing-vera-bento__card--center {
-    min-height: 200px;
-}
-.landing-vera-bento__card--center .landing-vera-bento__card-title {
-    font-size: clamp(1.2rem, 2vw, 1.7rem);
-    font-weight: 700;
-}
-
-.landing-vera-bento__card-title {
-    margin: 0 0 10px;
-    font-size: clamp(0.95rem, 1.4vw, 1.1rem);
-    font-weight: 600;
-    color: #ffffff;
-    line-height: 1.25;
-}
-
-.landing-vera-bento__card-text {
-    margin: 0;
-    font-size: clamp(0.8rem, 1.1vw, 0.9rem);
-    line-height: 1.55;
-    color: rgba(255, 255, 255, 0.62);
-}
-
-/* Card featured: sección de texto arriba */
-.landing-vera-bento__card-text { flex: 0 0 auto; }
-.landing-vera-bento__card--featured .landing-vera-bento__card-title {
-    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
-}
-
-/* Ilustración Vera dentro de la tarjeta grande */
-.landing-vera-bento__vera-illo {
-    position: relative;
-    margin-top: auto;
-    height: 140px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-}
-
-.landing-vera-bento__arc {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 220px;
-    height: 110px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 110px 110px 0 0;
-    border-bottom: none;
-}
-
-.landing-vera-bento__vera-logo {
-    position: relative;
-    z-index: 1;
-    width: 100px;
-    height: auto;
-    margin-bottom: 8px;
-    opacity: 0.85;
-    filter: invert(1);
-}
-
-.landing-vera-bento__ico {
-    position: absolute;
+/* Logo + nombre del módulo */
+.vera-modules__card-logo {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 1rem;
-    color: rgba(255,255,255,0.7);
+    gap: 10px;
 }
-.landing-vera-bento__ico--1 { top: 8px;  left: 20%; }
-.landing-vera-bento__ico--2 { top: 18px; right: 18%; }
-.landing-vera-bento__ico--3 { bottom: 24px; left: 12%; }
+
+.vera-modules__card-logo img {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.vera-modules__card-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Lista de capacidades */
+.vera-modules__feat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vera-modules__feat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.vera-modules__feat-title {
+    font-size: clamp(0.82rem, 1.1vw, 0.93rem);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.35;
+}
+
+.vera-modules__feat-desc {
+    font-size: clamp(0.72rem, 0.9vw, 0.8rem);
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.48);
+    line-height: 1.45;
+}
 
 @media (max-width: 720px) {
-    .landing-vera-bento__grid {
+    .vera-modules__grid {
         grid-template-columns: 1fr;
-    }
-    .landing-vera-bento__card--featured {
-        grid-row: span 1;
     }
 }
 
