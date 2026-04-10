@@ -251,7 +251,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: partículas magnéticas con degradado de paleta de marca ──────
+// ── Hero canvas: partículas magnéticas con --brand-gradient horizontal ────────
 class HeroParticleCanvas {
   constructor(canvas) {
     this.canvas = canvas;
@@ -268,41 +268,52 @@ class HeroParticleCanvas {
     this._onTouch  = this._onTouch.bind(this);
     this._onResize = this._onResize.bind(this);
 
-    // Lee las variables CSS de la paleta una sola vez
-    this._readPalette();
+    // Construye el sampler de color leyendo --brand-gradient del CSS
+    this._buildGradientSampler();
     this._init();
   }
 
-  // ── Paleta ─────────────────────────────────────────────────────────────────
-  _readPalette() {
-    const s = getComputedStyle(document.documentElement);
-    const get = (v, fallback) => s.getPropertyValue(v).trim() || fallback;
-    // Tres paradas del degradado diagonal: naranja → rojo → cian
-    this._c0 = this._hex2rgb(get('--warm-1',      '#ff6500')); // top-left
-    this._c1 = this._hex2rgb(get('--warm-2',      '#ff0055')); // centro
-    this._c2 = this._hex2rgb(get('--color-info',  '#00e7ff')); // bottom-right
+  // ── Sampler de degradado ────────────────────────────────────────────────────
+  // Lee --brand-gradient del CSS, lo renderiza en un canvas 1×512 y
+  // extrae los píxeles para muestrear colores exactos por posición X.
+  _buildGradientSampler() {
+    const css = getComputedStyle(document.documentElement);
+    let raw = css.getPropertyValue('--brand-gradient').trim();
+
+    // Fallback con los 9 stops de la paleta si el var no está disponible
+    if (!raw) {
+      raw = 'linear-gradient(90deg,#ff0000 0%,#ff6500 12.5%,#ffe500 25%,#9acc00 37.5%,#00d614 50%,#00e7ff 62.5%,#0018ee 75%,#5b00ea 87.5%,#900090 100%)';
+    }
+
+    // Extrae los stops con regex: captura color hexadecimal y su posición %
+    const stopRe = /(#[0-9a-fA-F]{3,8})\s+([\d.]+)%/g;
+    const stops = [];
+    let m;
+    while ((m = stopRe.exec(raw)) !== null) {
+      stops.push({ color: m[1], t: parseFloat(m[2]) / 100 });
+    }
+
+    // Renderiza el degradado en un canvas de 1px de alto para muestrear
+    const W = 512;
+    const oc  = document.createElement('canvas');
+    oc.width  = W;
+    oc.height = 1;
+    const octx = oc.getContext('2d');
+    const grad = octx.createLinearGradient(0, 0, W, 0);
+    stops.forEach(({ color, t }) => {
+      try { grad.addColorStop(t, color); } catch (_) { /* ignora stops inválidos */ }
+    });
+    octx.fillStyle = grad;
+    octx.fillRect(0, 0, W, 1);
+
+    this._gradPx = octx.getImageData(0, 0, W, 1).data; // Uint8ClampedArray RGBA
+    this._gradW  = W;
   }
 
-  _hex2rgb(hex) {
-    const h = hex.replace(/^#/, '');
-    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
-  }
-
-  _lerpRgb(a, b, t) {
-    return {
-      r: Math.round(a.r + (b.r - a.r) * t),
-      g: Math.round(a.g + (b.g - a.g) * t),
-      b: Math.round(a.b + (b.b - a.b) * t),
-    };
-  }
-
-  // Color de cada partícula según su posición diagonal (0 → top-left, 1 → bottom-right)
-  _particleColor(ox, oy) {
-    const norm = (ox / (this._w || 1) + oy / (this._h || 1)) / 2; // 0..1
-    const t = Math.max(0, Math.min(1, norm));
-    return t < 0.5
-      ? this._lerpRgb(this._c0, this._c1, t * 2)
-      : this._lerpRgb(this._c1, this._c2, (t - 0.5) * 2);
+  // Devuelve { r, g, b } para un valor normalizado t ∈ [0, 1]
+  _sample(t) {
+    const i = Math.min(Math.floor(t * (this._gradW - 1)), this._gradW - 1) * 4;
+    return { r: this._gradPx[i], g: this._gradPx[i + 1], b: this._gradPx[i + 2] };
   }
 
   // ── Ciclo de vida ──────────────────────────────────────────────────────────
@@ -339,7 +350,8 @@ class HeroParticleCanvas {
       for (let c = 0; c < cols; c++) {
         const ox = offX + c * GAP;
         const oy = offY + r * GAP;
-        const { r: pr, g: pg, b: pb } = this._particleColor(ox, oy);
+        // Color según posición horizontal: izquierda = rojo, derecha = violeta
+        const { r: pr, g: pg, b: pb } = this._sample(ox / (this._w || 1));
         this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0, pr, pg, pb });
       }
     }
@@ -402,10 +414,10 @@ class HeroParticleCanvas {
       const dx   = p.x - p.ox;
       const dy   = p.y - p.oy;
       const disp = Math.sqrt(dx * dx + dy * dy);
-      const t    = Math.min(disp / 55, 1);     // 0 = en reposo, 1 = máx. desplazamiento
+      const t    = Math.min(disp / 55, 1); // 0 = reposo, 1 = máx. desplazamiento
 
-      const radius = 1.4 + t * 2.2;            // crece con el desplazamiento
-      const alpha  = 0.08 + t * 0.74;          // casi invisible en reposo, vívido al moverse
+      const radius = 1.4 + t * 2.2;        // crece al desplazarse
+      const alpha  = 0.08 + t * 0.74;      // casi invisible en reposo, vívido al moverse
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
