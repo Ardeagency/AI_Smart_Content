@@ -5175,51 +5175,41 @@ body.entrance-done .landing-header {
     color: #ffffff;
 }
 
-/* Imagen anclada al viewport: al hacer scroll el contenido se mueve y el fondo parece fijo */
+/*
+ * Fondo anclado al viewport: degradado + imagen en la MISMA capa (multi-background).
+ * Un ::after con gradient + background-attachment:fixed suele no pintarse bien (cover + linear-gradient).
+ */
 .landing-bento__bg {
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-image: url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1775848278/image_24_tmzsde.png");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
-
-/* Mismo attachment que la foto para que el degradado no “se despegue” al scroll */
-.landing-bento__bg::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: linear-gradient(
-        to bottom,
-        #0a0a0d 0%,
-        rgba(10, 10, 13, 0) 24%,
-        transparent 32%,
-        transparent 68%,
-        rgba(0, 0, 0, 0) 76%,
-        #000000 100%
-    );
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     pointer-events: none;
+    background-image:
+        linear-gradient(
+            to bottom,
+            #0a0a0d 0%,
+            rgba(10, 10, 13, 0) 24%,
+            transparent 32%,
+            transparent 68%,
+            rgba(0, 0, 0, 0) 76%,
+            #000000 100%
+        ),
+        url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1775848278/image_24_tmzsde.png");
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+    background-attachment: fixed, fixed;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .landing-bento__bg,
-    .landing-bento__bg::after {
-        background-attachment: scroll;
+    .landing-bento__bg {
+        background-attachment: scroll, scroll;
     }
 }
 
-/* En pantallas táctiles background-attachment:fixed suele ir mal; mantener scroll */
 @media (hover: none), (pointer: coarse) {
-    .landing-bento__bg,
-    .landing-bento__bg::after {
-        background-attachment: scroll;
+    .landing-bento__bg {
+        background-attachment: scroll, scroll;
     }
 }
 
