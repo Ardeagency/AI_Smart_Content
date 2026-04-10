@@ -121,14 +121,17 @@ class LandingView extends BaseView {
     /* ── Estado ── */
     let locked        = false;
     let lockScrollY   = 0;
-    let pillarIndex   = 0;
-    let wheelAccum    = 0;
-    let touchStartY   = null;
-    let suppressLock  = false;
-    let suppressTimer = null;
+    let pillarIndex     = 0;
+    let wheelAccum      = 0;
+    let touchStartY     = null;
+    let suppressLock    = false;
+    let suppressTimer   = null;
+    let lastAdvanceTime = 0;
 
-    const WHEEL_THRESHOLD = 80;
-    const ENTER_ZONE      = 60;
+    const WHEEL_THRESHOLD   = 120;  // mayor threshold para tablets
+    const ENTER_ZONE        = 60;
+    const ADVANCE_COOLDOWN  = 420;  // ms mínimos entre avances de ítem
+    const PER_EVENT_CAP     = 60;   // clamp de delta por evento (evita saltos bruscos)
 
     /* ── Activar ítem ── */
     const leftCol = section.querySelector('.lfw__left');
@@ -215,6 +218,9 @@ class LandingView extends BaseView {
     /* Avanza o retrocede un ítem; sale del lock al agotar los extremos */
     const advanceItem = (forward) => {
       wheelAccum = 0;
+      const now = Date.now();
+      if (now - lastAdvanceTime < ADVANCE_COOLDOWN) return; // cooldown para tablets
+      lastAdvanceTime = now;
       if (forward) {
         if (pillarIndex < count - 1) { pillarIndex += 1; activate(pillarIndex); }
         else exitDown();
@@ -245,7 +251,9 @@ class LandingView extends BaseView {
       let dy = e.deltaY;
       if (e.deltaMode === 1) dy *= 16;
       if (e.deltaMode === 2) dy *= window.innerHeight;
-      return dy;
+      // Clamp por evento: evita que tablets/trackpads disparen saltos de varios ítems
+      const sign = dy >= 0 ? 1 : -1;
+      return sign * Math.min(Math.abs(dy), PER_EVENT_CAP);
     };
 
     /* ── Wheel ── */
