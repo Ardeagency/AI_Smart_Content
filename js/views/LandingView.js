@@ -93,13 +93,17 @@ class LandingView extends BaseView {
 
     gsap.set(fill, { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
 
+    const scroller = document.getElementById('app-container') || window;
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
+        scroller,
         start: 'top top',
         end: '+=' + listItems.length * 50 + '%',
         pin: true,
         scrub: true,
+        pinSpacing: true,
       },
     });
 
@@ -125,7 +129,7 @@ class LandingView extends BaseView {
 
     this.lfwScrollCleanup = () => {
       ScrollTrigger.getAll().forEach((st) => {
-        if (st.trigger === section) st.kill();
+        if (st.vars && st.vars.trigger === section) st.kill();
       });
     };
   }
