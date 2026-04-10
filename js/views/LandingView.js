@@ -6,7 +6,7 @@ class LandingView extends BaseView {
   constructor() {
     super();
     this.templatePath = 'landing.html';
-    this.heroWordsTimer = null;
+    this.heroCanvasCleanup = null;
     this.flowTabsCleanup = null;
     this.landingHeaderScrollCleanup = null;
     this.whyCarouselCleanup = null;
@@ -18,7 +18,7 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    this.initHeroWordsCarousel();
+    this.initHeroCanvas();
     this.initLandingFlowTabs();
     this.initLandingHeaderScrollState();
     this.initLandingWhyCarousel();
@@ -210,79 +210,21 @@ class LandingView extends BaseView {
   }
 
 
-  initHeroWordsCarousel() {
-    const rightColumn = document.querySelector('.landing-hero-right');
-    const track = rightColumn?.querySelector('.landing-hero-vertical-track');
-    if (!rightColumn || !track) return;
-
-    const originalItems = Array.from(track.querySelectorAll('.landing-hero-word-item'));
-    if (!originalItems.length) return;
-
-    if (this.heroWordsTimer) {
-      window.clearInterval(this.heroWordsTimer);
-      this.heroWordsTimer = null;
+  initHeroCanvas() {
+    if (typeof this.heroCanvasCleanup === 'function') {
+      this.heroCanvasCleanup();
+      this.heroCanvasCleanup = null;
     }
-
-    const cloneWord = (item) => {
-      const clone = item.cloneNode(true);
-      clone.dataset.realIndex = item.dataset.realIndex || '0';
-      return clone;
-    };
-
-    originalItems.forEach((item, index) => {
-      item.dataset.realIndex = String(index);
-    });
-
-    track.innerHTML = '';
-    const before = originalItems.map(cloneWord);
-    const middle = originalItems.map(cloneWord);
-    const after = originalItems.map(cloneWord);
-    [...before, ...middle, ...after].forEach((item) => track.appendChild(item));
-
-    const allItems = Array.from(track.querySelectorAll('.landing-hero-word-item'));
-    const baseLength = originalItems.length;
-    let currentIndex = baseLength;
-
-    const update = (withTransition = true) => {
-      const stepHeight = allItems[0].offsetHeight + this.getTrackGap(track);
-      const centerOffset = (rightColumn.clientHeight - allItems[0].offsetHeight) / 2;
-      const targetY = centerOffset - (currentIndex * stepHeight);
-
-      track.style.transition = withTransition ? 'transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none';
-      track.style.transform = `translateY(${targetY}px)`;
-
-      allItems.forEach((item) => item.classList.remove('is-active'));
-      if (allItems[currentIndex]) {
-        allItems[currentIndex].classList.add('is-active');
-      }
-    };
-
-    update(false);
-
-    this.heroWordsTimer = window.setInterval(() => {
-      currentIndex += 1;
-      update(true);
-
-      if (currentIndex >= (baseLength * 2)) {
-        window.setTimeout(() => {
-          currentIndex = baseLength;
-          update(false);
-        }, 520);
-      }
-    }, 3000);
-  }
-
-  getTrackGap(track) {
-    const styles = window.getComputedStyle(track);
-    const gapValue = styles.rowGap || styles.gap || '0';
-    const parsed = Number.parseFloat(gapValue);
-    return Number.isFinite(parsed) ? parsed : 0;
+    const canvas = document.querySelector('.landing-hero__canvas');
+    if (!canvas) return;
+    const instance = new HeroParticleCanvas(canvas);
+    this.heroCanvasCleanup = () => instance.destroy();
   }
 
   onLeave() {
-    if (this.heroWordsTimer) {
-      window.clearInterval(this.heroWordsTimer);
-      this.heroWordsTimer = null;
+    if (typeof this.heroCanvasCleanup === 'function') {
+      this.heroCanvasCleanup();
+      this.heroCanvasCleanup = null;
     }
     if (typeof this.flowTabsCleanup === 'function') {
       this.flowTabsCleanup();
@@ -307,4 +249,146 @@ window.LandingView = LandingView;
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
+}
+
+// ── Hero canvas: partículas magnéticas con repulsión de cursor ──────────────
+class HeroParticleCanvas {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.particles = [];
+    this.mouse = { x: -9999, y: -9999 };
+    this.raf = null;
+    this._dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this._w = 0;
+    this._h = 0;
+
+    this._onMove  = this._onMove.bind(this);
+    this._onLeave = this._onLeave.bind(this);
+    this._onTouch = this._onTouch.bind(this);
+    this._onResize = this._onResize.bind(this);
+
+    this._init();
+  }
+
+  _init() {
+    this._resize();
+    window.addEventListener('resize', this._onResize, { passive: true });
+    this.canvas.addEventListener('mousemove', this._onMove);
+    this.canvas.addEventListener('mouseleave', this._onLeave);
+    this.canvas.addEventListener('touchmove', this._onTouch, { passive: true });
+    this.canvas.addEventListener('touchend', this._onLeave, { passive: true });
+    this._loop();
+  }
+
+  _resize() {
+    const dpr = this._dpr;
+    const w = this.canvas.offsetWidth;
+    const h = this.canvas.offsetHeight;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this._w = w;
+    this._h = h;
+    this._buildGrid();
+  }
+
+  _buildGrid() {
+    const GAP = 30;
+    const cols = Math.ceil(this._w / GAP) + 1;
+    const rows = Math.ceil(this._h / GAP) + 1;
+    const offX = (this._w % GAP) / 2;
+    const offY = (this._h % GAP) / 2;
+    this.particles = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const ox = offX + c * GAP;
+        const oy = offY + r * GAP;
+        this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0 });
+      }
+    }
+  }
+
+  _onMove(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = e.clientX - rect.left;
+    this.mouse.y = e.clientY - rect.top;
+  }
+
+  _onLeave() {
+    this.mouse.x = -9999;
+    this.mouse.y = -9999;
+  }
+
+  _onTouch(e) {
+    if (!e.touches?.[0]) return;
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = e.touches[0].clientX - rect.left;
+    this.mouse.y = e.touches[0].clientY - rect.top;
+  }
+
+  _onResize() { this._resize(); }
+
+  _update() {
+    const RADIUS = 150;
+    const SPRING = 0.07;
+    const DAMPING = 0.78;
+    const FORCE  = 7;
+    const mx = this.mouse.x;
+    const my = this.mouse.y;
+
+    for (const p of this.particles) {
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const distSq = dx * dx + dy * dy;
+
+      if (distSq < RADIUS * RADIUS) {
+        const dist = Math.sqrt(distSq) || 1;
+        const ratio = (RADIUS - dist) / RADIUS;
+        p.vx += (dx / dist) * ratio * FORCE;
+        p.vy += (dy / dist) * ratio * FORCE;
+      }
+
+      p.vx += (p.ox - p.x) * SPRING;
+      p.vy += (p.oy - p.y) * SPRING;
+      p.vx *= DAMPING;
+      p.vy *= DAMPING;
+      p.x  += p.vx;
+      p.y  += p.vy;
+    }
+  }
+
+  _draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this._w, this._h);
+
+    for (const p of this.particles) {
+      const dx = p.x - p.ox;
+      const dy = p.y - p.oy;
+      const disp = Math.sqrt(dx * dx + dy * dy);
+      const t = Math.min(disp / 55, 1);
+      const r = 1.4 + t * 2.2;
+      const a = 0.09 + t * 0.72;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+      ctx.fill();
+    }
+  }
+
+  _loop() {
+    this._update();
+    this._draw();
+    this.raf = requestAnimationFrame(() => this._loop());
+  }
+
+  destroy() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    window.removeEventListener('resize', this._onResize);
+    this.canvas.removeEventListener('mousemove', this._onMove);
+    this.canvas.removeEventListener('mouseleave', this._onLeave);
+    this.canvas.removeEventListener('touchmove', this._onTouch);
+    this.canvas.removeEventListener('touchend', this._onLeave);
+  }
 }

@@ -3912,162 +3912,88 @@ body.entrance-done .landing-header {
     }
 }
 
+/* ─── Landing Hero: canvas interactivo con partículas ─── */
 .landing-hero {
     position: relative;
     min-height: 100vh;
+    background: #0a0a0a;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 96px 20px 72px;
-    z-index: 1;
-    background: url("https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113558/Fondos-08_wpaag0.jpg") center center / cover no-repeat;
+    align-items: flex-end;
 }
 
-/* Capa sobre la imagen del hero (diseño Rectangle 4: rgba 0,0,0,0.6); inset 0 cubre todo el viewport */
-.landing-hero::before {
-    content: "";
+.landing-hero__canvas {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    pointer-events: none;
-    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
+.landing-hero__content {
+    position: relative;
+    z-index: 2;
+    padding: 0 52px 72px;
+    pointer-events: none;
+}
+
+.landing-hero__eyebrow {
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+    margin: 0 0 14px;
+}
+
+.landing-hero__title {
+    font-size: clamp(3.4rem, 9vw, 8rem);
+    font-weight: 700;
+    color: #ededed;
+    letter-spacing: -0.035em;
+    line-height: 0.93;
+    margin: 0 0 36px;
+}
+
+.landing-hero__cta {
+    pointer-events: all;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    color: #ededed;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.025em;
+    transition: background 0.25s, border-color 0.25s;
+}
+
+.landing-hero__cta:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.26);
+}
+
+/* Degradado suave hacia abajo para fundir con la sección siguiente */
 .landing-hero::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    height: 38vh;
-    min-height: 180px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.64) 34%, rgba(0, 0, 0, 0) 100%);
+    height: 36vh;
+    background: linear-gradient(to top, rgba(15, 13, 18, 1) 0%, rgba(15, 13, 18, 0.5) 52%, rgba(15, 13, 18, 0) 100%);
     pointer-events: none;
-    z-index: 2;
-}
-
-.landing-hero-content {
-    position: relative;
-    z-index: 3;
-    width: min(900px, 100%);
-    color: var(--color-white);
-}
-
-.landing-hero-lockup {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(12px, 2.5vw, 28px);
-    width: 100%;
-}
-
-.landing-hero-left {
-    flex: 0 0 auto;
-    position: relative;
     z-index: 1;
 }
 
-.landing-hero-left img {
-    display: block;
-    width: clamp(170px, 27vw, 320px);
-    height: auto;
-}
-
-.landing-hero-right {
-    position: relative;
-    z-index: 2;
-    flex: 0 0 auto;
-    /* Ancho generoso para palabras largas (images, videos, brand) sin tocar el borde */
-    width: clamp(196px, 29vw, 318px);
-    min-width: 0;
-    /* Más alto = menos recorte vertical del carrusel (speed/focus arriba y abajo) */
-    height: clamp(272px, 38vw, 420px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    isolation: isolate;
-    box-sizing: border-box;
-    /* Reserva aire a la derecha del bloque (además del padding del track) */
-    padding-right: clamp(4px, 0.8vw, 10px);
-}
-
-.landing-hero-vertical-track {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    /* Margen derecho explícito para que la última letra no roce overflow:hidden */
-    padding-right: clamp(6px, 1vw, 14px);
-    gap: clamp(4px, 0.55vw, 8px);
-    will-change: transform;
-    transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.landing-hero-word-item {
-    /* Altura de fila mayor = el SVG encaja con contain sin recortar ascendentes/descendentes */
-    height: clamp(52px, 7.5vw, 80px);
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 100%;
-    min-width: 0;
-    opacity: 0.47;
-    transition: opacity 300ms ease, filter 300ms ease;
-}
-
-/* width 100%: encaja toda la palabra en la columna; width:auto recortaba por overflow (p. ej. “images” → barra + fragmentos) */
-.landing-hero-word-item img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: left center;
-}
-
-.landing-hero-word-item.is-active {
-    opacity: 1;
-    filter: brightness(1.06);
-}
-
 @media (max-width: 768px) {
-    .landing-hero {
-        align-items: flex-end;
-        padding: 88px 16px 54px;
-    }
-
-    .landing-hero::after {
-        height: 44vh;
-    }
-
-    .landing-hero-content {
-        width: 100%;
-    }
-
-    .landing-hero-lockup {
-        align-items: flex-end;
-        gap: clamp(8px, 2vw, 16px);
-    }
-
-    .landing-hero-left img {
-        width: min(48vw, 220px);
-    }
-
-    .landing-hero-right {
-        width: min(54vw, 230px);
-        height: min(56vw, 260px);
-        padding-right: clamp(4px, 1.5vw, 10px);
-    }
-
-    .landing-hero-vertical-track {
-        padding-right: clamp(4px, 1.5vw, 12px);
-    }
-
-    .landing-hero-word-item {
-        height: clamp(48px, 11vw, 72px);
-    }
+    .landing-hero__content { padding: 0 24px 56px; }
+    .landing-hero__title { font-size: clamp(2.8rem, 13vw, 4rem); }
 }
 
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
