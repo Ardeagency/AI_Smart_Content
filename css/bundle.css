@@ -5436,7 +5436,7 @@ body.entrance-done .landing-header {
     padding: 0 clamp(20px, 4vw, 52px);
 }
 
-/* Header */
+/* ── Header ── */
 .vera-modules__header {
     display: flex;
     flex-direction: column;
@@ -5468,21 +5468,15 @@ body.entrance-done .landing-header {
     color: rgba(255, 255, 255, 0.55);
 }
 
-/* Grid masonry — 3 columnas con filas de altura variable */
+/* ── Grid: 2×2 igual altura ── */
 .vera-modules__grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 280px 280px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 420px);
     gap: 14px;
 }
 
-/* Posicionamiento masonry de cada tarjeta */
-.vera-modules__card--insight   { grid-column: 1; grid-row: 1 / 3; }   /* col 1, alto (2 filas) */
-.vera-modules__card--strategy  { grid-column: 2; grid-row: 1;     }   /* col 2, fila 1 */
-.vera-modules__card--studio    { grid-column: 3; grid-row: 1 / 3; }   /* col 3, alto (2 filas) */
-.vera-modules__card--campaigns { grid-column: 2; grid-row: 2;     }   /* col 2, fila 2 */
-
-/* Tarjeta base */
+/* ── Tarjeta base ── */
 .vera-modules__card {
     position: relative;
     border-radius: 24px;
@@ -5490,14 +5484,16 @@ body.entrance-done .landing-header {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.35s ease, transform 0.35s ease;
+    cursor: default;
 }
 
 .vera-modules__card:hover {
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
 }
 
-/* Fondo con gradiente de color por módulo */
+/* ── Fondo con blob de color por módulo ── */
 .vera-modules__card-bg {
     position: absolute;
     inset: 0;
@@ -5507,134 +5503,146 @@ body.entrance-done .landing-header {
 
 /* Insight: azul-cian */
 .vera-modules__card--insight .vera-modules__card-bg {
-    background: radial-gradient(ellipse 80% 70% at 60% 30%, rgba(0, 231, 255, 0.18) 0%, rgba(0, 24, 238, 0.12) 48%, transparent 80%), #0a0a0d;
+    background:
+        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(0, 180, 255, 0.22) 0%, rgba(0, 40, 220, 0.14) 50%, transparent 80%),
+        #0a0a0d;
 }
 
-/* Strategy: violeta-índigo */
+/* Strategy: violeta */
 .vera-modules__card--strategy .vera-modules__card-bg {
-    background: radial-gradient(ellipse 80% 70% at 40% 30%, rgba(91, 0, 234, 0.22) 0%, rgba(144, 0, 144, 0.1) 50%, transparent 80%), #0a0a0d;
+    background:
+        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(110, 0, 255, 0.25) 0%, rgba(160, 0, 160, 0.12) 50%, transparent 80%),
+        #0a0a0d;
 }
 
-/* Studio: naranja-amarillo */
+/* Studio: naranja-ámbar */
 .vera-modules__card--studio .vera-modules__card-bg {
-    background: radial-gradient(ellipse 80% 70% at 55% 25%, rgba(255, 101, 0, 0.2) 0%, rgba(255, 229, 0, 0.08) 48%, transparent 80%), #0a0a0d;
+    background:
+        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(255, 90, 0, 0.22) 0%, rgba(255, 200, 0, 0.1) 50%, transparent 80%),
+        #0a0a0d;
 }
 
 /* Campaigns: verde */
 .vera-modules__card--campaigns .vera-modules__card-bg {
-    background: radial-gradient(ellipse 80% 70% at 50% 30%, rgba(0, 214, 20, 0.18) 0%, rgba(154, 204, 0, 0.08) 50%, transparent 80%), #0a0a0d;
+    background:
+        radial-gradient(ellipse 90% 75% at 50% 20%, rgba(0, 220, 30, 0.2) 0%, rgba(120, 210, 0, 0.1) 50%, transparent 80%),
+        #0a0a0d;
 }
 
-/* Efecto shine (destello diagonal arriba-izquierda) */
+/* ── Shine: destello diagonal arriba-izq ── */
 .vera-modules__card-shine {
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%);
     border-radius: 24px;
+    background: linear-gradient(140deg, rgba(255,255,255,0.07) 0%, transparent 45%);
 }
 
-/* Blur fade en la parte inferior (oscurece para que el texto sea legible) */
-.vera-modules__card-blur {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 70%;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
-}
-
-/* Contenido */
-.vera-modules__card-content {
+/* ── Header de la tarjeta: ocupa la parte superior ── */
+.vera-modules__card-header {
     position: relative;
     z-index: 3;
-    margin-top: auto;
-    padding: 24px 28px 28px;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 32px 32px 24px;
 }
 
-/* Logo + nombre del módulo */
-.vera-modules__card-logo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.vera-modules__card-logo img {
-    width: auto;
-    height: 20px;
-    flex-shrink: 0;
+/* Wordmark grande (como el logo del proveedor en Framer) */
+.vera-modules__wordmark {
     display: block;
+    width: auto;
+    height: clamp(28px, 3.6vw, 42px);
+    max-width: 60%;
+    filter: brightness(0) invert(1);
 }
 
-.vera-modules__card-name {
-    font-size: 0.7rem;
+/* Etiqueta del módulo bajo el logo */
+.vera-modules__module-tag {
+    margin-top: 10px;
+    font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.38);
 }
 
-/* Lista de capacidades */
+/* ── Footer de la tarjeta: lista de capacidades ── */
+.vera-modules__card-footer {
+    position: relative;
+    z-index: 3;
+    flex-shrink: 0;
+    padding: 64px 28px 28px;
+}
+
+/* Gradiente que oscurece desde abajo hacia arriba (legibilidad) */
+.vera-modules__card-gradient {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.78) 38%, rgba(0, 0, 0, 0.94) 100%);
+    z-index: 0;
+}
+
+/* ── Lista de capacidades ── */
 .vera-modules__feat-list {
+    position: relative;
+    z-index: 1;
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .vera-modules__feat-item {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.vera-modules__feat-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .vera-modules__feat-title {
-    font-size: clamp(0.82rem, 1.1vw, 0.93rem);
+    font-size: clamp(0.8rem, 1vw, 0.9rem);
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.9);
     line-height: 1.35;
 }
 
 .vera-modules__feat-desc {
-    font-size: clamp(0.72rem, 0.9vw, 0.8rem);
+    font-size: clamp(0.7rem, 0.85vw, 0.78rem);
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.45);
     line-height: 1.45;
 }
 
-/* Tablet: 2 columnas, columna central se redistribuye */
-@media (max-width: 900px) {
-    .vera-modules__grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: 300px 300px 300px;
-    }
-    .vera-modules__card--insight   { grid-column: 1; grid-row: 1 / 3; }
-    .vera-modules__card--strategy  { grid-column: 2; grid-row: 1;     }
-    .vera-modules__card--campaigns { grid-column: 2; grid-row: 2;     }
-    .vera-modules__card--studio    { grid-column: 1 / 3; grid-row: 3; }
-}
-
-/* Móvil: columna única */
-@media (max-width: 540px) {
+/* ── Responsive ── */
+@media (max-width: 768px) {
     .vera-modules__grid {
         grid-template-columns: 1fr;
         grid-template-rows: none;
     }
-    .vera-modules__card--insight,
-    .vera-modules__card--strategy,
-    .vera-modules__card--studio,
-    .vera-modules__card--campaigns {
-        grid-column: 1;
-        grid-row: auto;
-        min-height: 300px;
+    .vera-modules__card {
+        min-height: 380px;
+    }
+}
+
+@media (max-width: 480px) {
+    .vera-modules__card-header {
+        padding: 28px 24px 20px;
+    }
+    .vera-modules__card-footer {
+        padding: 52px 24px 24px;
     }
 }
 
