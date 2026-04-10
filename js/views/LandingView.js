@@ -369,53 +369,56 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: líneas verticales con efecto prisma + --brand-gradient ──────
+// ── Hero canvas: lupa de agua con ondas y efecto glass ───────────────────────
+// El canvas es transparente excepto dentro del lente: la imagen de fondo se
+// amplía (zoom) dentro de un círculo que sigue el cursor con inercia suave,
+// revelando la foto sin la capa oscura ::before. Las ondas se expanden al mover.
 class HeroParticleCanvas {
   constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx    = canvas.getContext('2d');
-    this.lines  = [];
-    this.mouse  = { x: -9999, y: -9999 };
-    this.raf    = null;
-    this._dpr   = Math.min(window.devicePixelRatio || 1, 2);
+    this.canvas  = canvas;
+    this.ctx     = canvas.getContext('2d');
+    this.mouse   = { x: -9999, y: -9999 };
+    this._lensX  = -9999; // posición suavizada del lente
+    this._lensY  = -9999;
+    this.raf     = null;
+    this._dpr    = Math.min(window.devicePixelRatio || 1, 2);
     this._w = 0;
     this._h = 0;
+
+    this._bgImage  = null;    // imagen de fondo cargada
+    this._ripples  = [];      // ondas expansivas
+    this._prevMX   = -9999;
+    this._prevMY   = -9999;
+
+    this._LENS_R   = 125;     // radio del lente en px CSS
+    this._ZOOM     = 2.4;     // factor de ampliación
 
     this._onMove   = this._onMove.bind(this);
     this._onLeave  = this._onLeave.bind(this);
     this._onTouch  = this._onTouch.bind(this);
     this._onResize = this._onResize.bind(this);
 
-    this._buildGradientSampler();
+    this._loadBg();
     this._init();
   }
 
-  // ── Sampler: lee --brand-gradient, renderiza en canvas 512×1, guarda pixels ──
-  _buildGradientSampler() {
-    const css = getComputedStyle(document.documentElement);
-    let raw = css.getPropertyValue('--brand-gradient').trim();
-    if (!raw) raw = 'linear-gradient(90deg,#ff0000 0%,#ff6500 12.5%,#ffe500 25%,#9acc00 37.5%,#00d614 50%,#00e7ff 62.5%,#0018ee 75%,#5b00ea 87.5%,#900090 100%)';
-
-    const stopRe = /(#[0-9a-fA-F]{3,8})\s+([\d.]+)%/g;
-    const stops  = [];
-    let m;
-    while ((m = stopRe.exec(raw)) !== null) stops.push({ color: m[1], t: parseFloat(m[2]) / 100 });
-
-    const W = 512;
-    const oc = document.createElement('canvas');
-    oc.width = W; oc.height = 1;
-    const octx = oc.getContext('2d');
-    const grad = octx.createLinearGradient(0, 0, W, 0);
-    stops.forEach(({ color, t }) => { try { grad.addColorStop(t, color); } catch (_) {} });
-    octx.fillStyle = grad;
-    octx.fillRect(0, 0, W, 1);
-    this._gradPx = octx.getImageData(0, 0, W, 1).data;
-    this._gradW  = W;
+  // ── Carga la imagen de fondo (misma URL que el CSS) ────────────────────────
+  _loadBg() {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { this._bgImage = img; };
+    img.src = 'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg';
   }
 
-  _sample(t) {
-    const i = Math.min(Math.floor(t * (this._gradW - 1)), this._gradW - 1) * 4;
-    return { r: this._gradPx[i], g: this._gradPx[i + 1], b: this._gradPx[i + 2] };
+  // ── Parámetros para replicar CSS background: center/cover ─────────────────
+  _bgCover() {
+    if (!this._bgImage) return null;
+    const iw = this._bgImage.naturalWidth;
+    const ih = this._bgImage.naturalHeight;
+    const scale = Math.max(this._w / iw, this._h / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    return { dx: (this._w - dw) / 2, dy: (this._h - dh) / 2, dw, dh, iw, ih };
   }
 
   // ── Ciclo de vida ──────────────────────────────────────────────────────────
@@ -438,31 +441,29 @@ class HeroParticleCanvas {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
     this._h = h;
-    this._buildLines();
-  }
-
-  // Crea una línea vertical por cada GAP píxeles horizontales.
-  // Cada línea almacena su posición origen, velocidad y color del degradado.
-  _buildLines() {
-    const GAP   = 14;
-    const count = Math.ceil(this._w / GAP) + 2;
-    const offX  = (this._w % GAP) / 2;
-    this.lines  = [];
-    for (let i = 0; i < count; i++) {
-      const ox            = offX + i * GAP;
-      const { r, g, b }   = this._sample(ox / (this._w || 1));
-      this.lines.push({ ox, x: ox, vx: 0, r, g, b });
-    }
   }
 
   // ── Eventos ────────────────────────────────────────────────────────────────
   _onMove(e) {
     const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = e.clientX - rect.left;
-    this.mouse.y = e.clientY - rect.top;
+    const nx = e.clientX - rect.left;
+    const ny = e.clientY - rect.top;
+
+    // Emite onda cuando el cursor se mueve lo suficiente
+    if (Math.hypot(nx - this._prevMX, ny - this._prevMY) > 14) {
+      this._ripples.push({ x: nx, y: ny, r: 0, life: 1.0 });
+      this._prevMX = nx;
+      this._prevMY = ny;
+    }
+
+    this.mouse.x = nx;
+    this.mouse.y = ny;
   }
 
-  _onLeave() { this.mouse.x = -9999; this.mouse.y = -9999; }
+  _onLeave() {
+    this.mouse.x = this._prevMX = -9999;
+    this.mouse.y = this._prevMY = -9999;
+  }
 
   _onTouch(e) {
     if (!e.touches?.[0]) return;
@@ -473,49 +474,100 @@ class HeroParticleCanvas {
 
   _onResize() { this._resize(); }
 
-  // ── Física en eje X (las líneas solo se desplazan horizontalmente) ─────────
+  // ── Física: inercia suave del lente + avance de ondas ─────────────────────
   _update() {
-    const RADIUS  = 180;
-    const SPRING  = 0.055;
-    const DAMPING = 0.80;
-    const FORCE   = 14;
-    const mx = this.mouse.x;
-
-    for (const l of this.lines) {
-      const dx   = l.x - mx;
-      const dist = Math.abs(dx);
-
-      if (dist < RADIUS) {
-        const ratio = (RADIUS - dist) / RADIUS;
-        // Empuja la línea en la dirección que se aleja del cursor
-        l.vx += (dist === 0 ? 1 : Math.sign(dx)) * ratio * FORCE;
+    // Spring follow: el lente "flota" tras el cursor como agua
+    if (this.mouse.x !== -9999) {
+      if (this._lensX === -9999) {
+        this._lensX = this.mouse.x;
+        this._lensY = this.mouse.y;
+      } else {
+        this._lensX += (this.mouse.x - this._lensX) * 0.14;
+        this._lensY += (this.mouse.y - this._lensY) * 0.14;
       }
-
-      l.vx += (l.ox - l.x) * SPRING; // muelle hacia origen
-      l.vx *= DAMPING;                // amortiguación
-      l.x  += l.vx;
+    } else {
+      this._lensX = this._lensY = -9999;
     }
+
+    // Ondas: radio crece, opacidad baja
+    for (const rip of this._ripples) {
+      rip.r    += 2.6;
+      rip.life  = Math.max(0, 1 - rip.r / 220);
+    }
+    this._ripples = this._ripples.filter(r => r.life > 0);
   }
 
-  // ── Render: líneas verticales con grosor y opacidad según desplazamiento ───
+  // ── Render ─────────────────────────────────────────────────────────────────
   _draw() {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this._w, this._h);
 
-    for (const l of this.lines) {
-      const disp  = Math.abs(l.x - l.ox);
-      const t     = Math.min(disp / 65, 1); // 0 = reposo, 1 = máx desplazamiento
-
-      const lw    = 0.7 + t * 2.0;          // 0.7 px en reposo → 2.7 px en movimiento
-      const alpha = 0.08 + t * 0.76;        // casi invisible en reposo, vívido al moverse
-
+    // Ondas (visibles sobre el fondo CSS)
+    for (const rip of this._ripples) {
       ctx.beginPath();
-      ctx.moveTo(l.x, 0);
-      ctx.lineTo(l.x, this._h);
-      ctx.lineWidth   = lw;
-      ctx.strokeStyle = `rgba(${l.r},${l.g},${l.b},${alpha.toFixed(2)})`;
+      ctx.arc(rip.x, rip.y, rip.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,255,255,${(rip.life * 0.20).toFixed(2)})`;
+      ctx.lineWidth   = 1;
       ctx.stroke();
     }
+
+    const mx = this._lensX;
+    const my = this._lensY;
+    if (mx === -9999 || !this._bgImage) return;
+
+    const bg = this._bgCover();
+    const R  = this._LENS_R;
+    const Z  = this._ZOOM;
+
+    // ── 1. Imagen ampliada dentro del lente ───────────────────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(mx, my, R, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Convierte canvas px → píxeles de imagen, luego ajusta el zoom
+    const imgPerPx = bg.iw / bg.dw;
+    const imgCX    = (mx - bg.dx) * imgPerPx;
+    const imgCY    = (my - bg.dy) * imgPerPx;
+    const srcHalf  = (R * imgPerPx) / Z; // región fuente más pequeña = más zoom
+
+    ctx.drawImage(
+      this._bgImage,
+      imgCX - srcHalf, imgCY - srcHalf, srcHalf * 2, srcHalf * 2, // fuente
+      mx - R, my - R, R * 2, R * 2                                  // destino
+    );
+    ctx.restore();
+
+    // ── 2. Brillo glass interior (reflejo superior-izquierda) ─────────────
+    ctx.save();
+    const shine = ctx.createRadialGradient(
+      mx - R * 0.28, my - R * 0.32, R * 0.04,
+      mx, my, R
+    );
+    shine.addColorStop(0.00, 'rgba(255,255,255,0.18)');
+    shine.addColorStop(0.42, 'rgba(255,255,255,0.03)');
+    shine.addColorStop(1.00, 'rgba(0,0,0,0.10)');
+    ctx.beginPath();
+    ctx.arc(mx, my, R, 0, Math.PI * 2);
+    ctx.fillStyle = shine;
+    ctx.fill();
+    ctx.restore();
+
+    // ── 3. Borde del lente ────────────────────────────────────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(mx, my, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+
+    // Halo exterior difuso (segunda pasada, más gruesa y más tenue)
+    ctx.beginPath();
+    ctx.arc(mx, my, R + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth   = 8;
+    ctx.stroke();
+    ctx.restore();
   }
 
   _loop() {

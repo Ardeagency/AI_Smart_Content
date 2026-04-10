@@ -3928,7 +3928,7 @@ body.entrance-done .landing-header {
     z-index: 0;
 }
 
-/* Canvas: líneas verticales interactivas, fondo transparente → la foto se ve */
+/* Canvas: lente de agua, transparente → la foto CSS se ve por debajo */
 .landing-hero__canvas {
     position: absolute;
     inset: 0;
@@ -3936,6 +3936,7 @@ body.entrance-done .landing-header {
     height: 100%;
     display: block;
     z-index: 1;
+    cursor: none; /* el lente ES el cursor */
 }
 
 /* Orbes glass: sobre las líneas, bajo el fade y el texto */
