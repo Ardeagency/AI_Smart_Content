@@ -102,14 +102,19 @@ class LandingView extends BaseView {
     gsap.set(listItems[0], { color: ACTIVE_COLOR });
     gsap.set(slides[0],    { autoAlpha: 1 });
 
+    // Con scroller personalizado, % se calcula sobre la altura total scrollable
+    // (no sobre el viewport). Usamos px explícito: 50vh × N items.
+    const viewportH = scrollEl.clientHeight || window.innerHeight;
+    const pinDist   = Math.round(listItems.length * 0.5 * viewportH);
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger:  section,
         scroller: scrollEl,
         start:    'top top',
-        end:      '+=' + listItems.length * 50 + '%',
+        end:      '+=' + pinDist + 'px',
         pin:      true,
-        pinType:  'transform',   // obligatorio con scroller no-window
+        pinType:  'transform',
         scrub:    true,
       },
     });
