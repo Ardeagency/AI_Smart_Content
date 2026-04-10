@@ -64,11 +64,14 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Efecto scroll-list (pin lateral) con CSS sticky + listener nativo.
-   * No usa GSAP pin para evitar incompatibilidades con #app-container.
+   * Scroll-list animado: el efecto visual del CodePen pomvabo sin GSAP.
    *
-   * CSS:  .lfw { height: 650vh }  .lfw__inner { position: sticky; top:0 }
-   * JS:   calcula progreso 0→1 por scrollTop y actualiza colores/slides/fill.
+   * Cómo funciona:
+   * - .lfw tiene height: 650vh → crea el espacio de scroll necesario
+   * - .lfw__inner NO usa sticky (overflow-x:hidden del wrapper lo rompería)
+   * - JS aplica translateY al inner para mantenerlo visible mientras
+   *   el usuario scrollea dentro de la sección (simula el "pin")
+   * - Progreso 0→1 dispara: color activo en lista, slide visible, barra fill
    */
   initLfwScrollAnimation() {
     if (typeof this.lfwScrollCleanup === 'function') {
@@ -82,18 +85,19 @@ class LandingView extends BaseView {
     const section   = document.querySelector('#landing-after-pillars');
     if (!section) return;
 
+    const inner     = section.querySelector('.lfw__inner');
     const listEl    = section.querySelector('.lfw__list');
     const fill      = section.querySelector('.lfw__fill');
     const listItems = listEl ? Array.from(listEl.querySelectorAll('li')) : [];
     const slides    = Array.from(section.querySelectorAll('.lfw__slide'));
 
-    if (!listItems.length || !slides.length) return;
+    if (!inner || !listItems.length || !slides.length) return;
 
     const N              = listItems.length;
     const ACTIVE_COLOR   = '#ff6500';
     const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
 
-    // Estado inicial: primer ítem y primer slide activos
+    // Estado inicial
     listItems.forEach((item, i) => {
       item.style.color = i === 0 ? ACTIVE_COLOR : INACTIVE_COLOR;
     });
@@ -107,29 +111,36 @@ class LandingView extends BaseView {
 
     const onScroll = () => {
       const sectionTop = section.offsetTop;
-      const sectionH   = section.offsetHeight;       // ≈ 650vh
+      const sectionH   = section.offsetHeight;   // 650vh
       const viewportH  = scrollEl.clientHeight;
       const scrollTop  = scrollEl.scrollTop;
+      const maxScroll  = sectionH - viewportH;
 
-      // progress 0 → 1 mientras la sección está "pinned"
-      const progress = Math.max(0, Math.min(1,
-        (scrollTop - sectionTop) / (sectionH - viewportH)
-      ));
+      // Cuánto hemos scrolleado DENTRO de la sección
+      const into = scrollTop - sectionTop;
+      // Clampear: 0 antes de entrar, maxScroll después de salir
+      const pinned = Math.max(0, Math.min(maxScroll, into));
 
-      // Barra de progreso: crece de 1/N → 1
+      // Mover el inner hacia abajo para que permanezca en pantalla
+      inner.style.transform = `translateY(${pinned}px)`;
+
+      // Progreso 0 → 1
+      const progress = maxScroll > 0 ? pinned / maxScroll : 0;
+
+      // Barra de progreso
       if (fill) {
         fill.style.transform = `scaleY(${1 / N + progress * (1 - 1 / N)})`;
       }
 
-      // Ítem activo basado en progreso
+      // Ítem y slide activo
       const activeIndex = Math.min(N - 1, Math.floor(progress * N));
       if (activeIndex !== lastActive) {
-        listItems[lastActive].style.color  = INACTIVE_COLOR;
-        slides[lastActive].style.opacity   = '0';
+        listItems[lastActive].style.color   = INACTIVE_COLOR;
+        slides[lastActive].style.opacity    = '0';
         slides[lastActive].style.visibility = 'hidden';
 
-        listItems[activeIndex].style.color  = ACTIVE_COLOR;
-        slides[activeIndex].style.opacity   = '1';
+        listItems[activeIndex].style.color   = ACTIVE_COLOR;
+        slides[activeIndex].style.opacity    = '1';
         slides[activeIndex].style.visibility = 'visible';
 
         lastActive = activeIndex;
@@ -137,13 +148,14 @@ class LandingView extends BaseView {
     };
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
-    onScroll(); // estado inicial correcto
+    onScroll(); // calcular estado inicial al montar
 
     this.lfwScrollCleanup = () => {
       scrollEl.removeEventListener('scroll', onScroll);
+      if (inner) inner.style.transform = '';
       listItems.forEach(item => { item.style.color = ''; });
       slides.forEach(slide => {
-        slide.style.opacity = '';
+        slide.style.opacity    = '';
         slide.style.visibility = '';
       });
       if (fill) fill.style.transform = '';

@@ -5080,8 +5080,9 @@ body.entrance-done .landing-header {
 }
 
 .lfw__inner {
-    position: sticky;
-    top: 0;
+    /* JS aplica translateY para simular el pin — CSS sticky falla
+       porque #app-container > div tiene overflow-x: hidden */
+    position: relative;
     height: 100vh;
     width: 100%;
     display: flex;
@@ -5089,6 +5090,7 @@ body.entrance-done .landing-header {
     justify-content: center;
     overflow: hidden;
     box-sizing: border-box;
+    will-change: transform;
 }
 
 /* Dos columnas */
