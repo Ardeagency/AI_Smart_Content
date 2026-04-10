@@ -66,7 +66,9 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Pestañas de categoría de flujos: activa la clase --active al hacer clic.
+   * Categorías de flujos: activa la categoría en función del scroll.
+   * Al llegar a la zona de cada ítem en la columna izquierda, resalta
+   * la categoría correspondiente con .lfw__cat--active.
    */
   initLandingFlowTabs() {
     if (typeof this.flowTabsCleanup === 'function') {
@@ -74,18 +76,36 @@ class LandingView extends BaseView {
       this.flowTabsCleanup = null;
     }
 
-    const nav = document.querySelector('.lfw__tabs');
-    if (!nav) return;
+    const cats = Array.from(document.querySelectorAll('.lfw__cat'));
+    if (!cats.length) return;
 
-    const onClick = (e) => {
-      const btn = e.target.closest('.lfw__tab');
-      if (!btn) return;
-      nav.querySelectorAll('.lfw__tab').forEach((t) => t.classList.remove('lfw__tab--active'));
-      btn.classList.add('lfw__tab--active');
+    const activate = (idx) => {
+      cats.forEach((c, i) => c.classList.toggle('lfw__cat--active', i === idx));
     };
 
-    nav.addEventListener('click', onClick);
-    this.flowTabsCleanup = () => nav.removeEventListener('click', onClick);
+    // En desktop usamos IntersectionObserver sobre cada ítem de categoría.
+    // Cuando un ítem entra en la banda central del viewport se activa.
+    if (typeof IntersectionObserver !== 'undefined') {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              activate(cats.indexOf(entry.target));
+            }
+          }
+        },
+        {
+          rootMargin: '-35% 0px -35% 0px',
+          threshold: 0,
+        }
+      );
+      cats.forEach((c) => io.observe(c));
+      this.flowTabsCleanup = () => io.disconnect();
+    } else {
+      // Fallback sin IntersectionObserver
+      activate(0);
+      this.flowTabsCleanup = null;
+    }
   }
 
   /**

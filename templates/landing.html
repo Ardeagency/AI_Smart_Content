@@ -131,54 +131,60 @@
 
 <!-- Featured Workflows: flujo generativo con nodos de video -->
 <section class="lfw" id="landing-after-pillars" aria-label="Flujos generativos">
+
+    <!-- Video de fondo a nivel de sección -->
+    <div class="lfw__bg" aria-hidden="true">
+        <video preload="metadata" autoplay loop muted playsinline>
+            <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="lfw__bg-overlay" aria-hidden="true"></div>
+
     <div class="lfw__inner">
 
-        <!-- Cabecera: título + botones -->
-        <div class="lfw__top">
-            <div class="lfw__header-text">
+        <!-- COLUMNA IZQUIERDA: header + categorías scrolleables -->
+        <div class="lfw__left">
+
+            <!-- Header fijo al inicio de la columna -->
+            <div class="lfw__header">
                 <h2 class="lfw__title">Flujos generativos que escalan.</h2>
                 <h3 class="lfw__subtitle">Marcas desde <span class="lfw__em">startups</span> hasta <span class="lfw__em">grandes empresas</span> usan <span class="lfw__em">Vera</span> para explorar posibilidades y amplificar su producción de contenido.</h3>
+                <div class="lfw__ctas">
+                    <a href="/register" class="lfw__btn-primary">Comenzar gratis</a>
+                    <a href="/" class="lfw__btn-ghost">Ver todos los flujos</a>
+                </div>
             </div>
-            <div class="lfw__ctas">
-                <a href="/register" class="lfw__btn-primary">Comenzar gratis</a>
-                <a href="/" class="lfw__btn-ghost">Ver todos los flujos</a>
-            </div>
-        </div>
 
-        <!-- Cuerpo: tabs izquierda + grafo derecha -->
-        <div class="lfw__body">
-
-            <!-- Pestañas de categoría -->
-            <nav class="lfw__tabs" aria-label="Categorías de flujos">
-                <button class="lfw__tab lfw__tab--active" type="button">Fotografía</button>
-                <button class="lfw__tab" type="button">Reels</button>
-                <button class="lfw__tab" type="button">Campañas</button>
-                <button class="lfw__tab" type="button">Estrategia</button>
-                <button class="lfw__tab" type="button">Análisis</button>
-                <button class="lfw__tab" type="button">ADN de Marca</button>
-                <button class="lfw__tab" type="button">Motion</button>
-                <button class="lfw__tab" type="button">Competencia</button>
+            <!-- Lista de categorías: se activan por scroll -->
+            <nav class="lfw__cats" aria-label="Categorías de flujos">
+                <button class="lfw__cat lfw__cat--active" type="button" data-cat="0">Fotografía</button>
+                <button class="lfw__cat" type="button" data-cat="1">Reels</button>
+                <button class="lfw__cat" type="button" data-cat="2">Campañas</button>
+                <button class="lfw__cat" type="button" data-cat="3">Estrategia</button>
+                <button class="lfw__cat" type="button" data-cat="4">Análisis</button>
+                <button class="lfw__cat" type="button" data-cat="5">ADN de Marca</button>
+                <button class="lfw__cat" type="button" data-cat="6">Motion</button>
+                <button class="lfw__cat" type="button" data-cat="7">Competencia</button>
             </nav>
 
-            <!-- Columna derecha: tarjeta de grafo + pie -->
-            <div class="lfw__right">
+        </div><!-- /.lfw__left -->
 
-                <!-- Tarjeta principal con el grafo de nodos -->
+        <!-- COLUMNA DERECHA: sticky — card del grafo + pie -->
+        <div class="lfw__right">
+            <div class="lfw__sticky">
+
+                <!-- Tarjeta del grafo de nodos -->
                 <div class="lfw__graph-card">
+                    <!-- Textura de puntos -->
                     <div class="lfw__graph-tex" aria-hidden="true"></div>
-                    <div class="lfw__graph-vbg" aria-hidden="true">
-                        <video preload="metadata" autoplay loop muted playsinline>
-                            <source src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4" type="video/mp4">
-                        </video>
-                    </div>
 
-                    <!-- Canvas del grafo (469×512 viewbox) -->
+                    <!-- Canvas del grafo (proporciones 469×512) -->
                     <div class="lfw__graph">
                         <!-- Líneas de conexión SVG -->
                         <svg class="lfw__graph-svg" viewBox="0 0 469 512" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                            <path d="M 130 256 C 206 256, 244 256, 320 256" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
-                            <path d="M 130 256 C 206 256, 244 412, 320 412" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
-                            <path d="M 130 256 C 206 256, 244 100, 320 100" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+                            <path d="M 130 256 C 206 256, 244 256, 320 256" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
+                            <path d="M 130 256 C 206 256, 244 412, 320 412" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
+                            <path d="M 130 256 C 206 256, 244 100, 320 100"  stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
                         </svg>
 
                         <!-- Nodo de entrada (izquierda) -->
@@ -194,7 +200,7 @@
                         <!-- Nodo de salida: centro -->
                         <div class="lfw__node lfw__node--output" style="--nx:416;--ny:256">
                             <div class="lfw__node-meta">
-                                <p class="lfw__node-label">Transformación</p>
+                                <p class="lfw__node-label">Robot humanoide</p>
                                 <p class="lfw__node-source">Vera</p>
                             </div>
                             <div class="lfw__node-card">
@@ -229,8 +235,8 @@
                                 </video>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /.lfw__graph -->
+                </div><!-- /.lfw__graph-card -->
 
                 <!-- Pie: descripción + CTA -->
                 <div class="lfw__footer">
@@ -241,8 +247,9 @@
                     <a href="/register" class="lfw__btn-outline">Explorar este flujo</a>
                 </div>
 
-            </div><!-- /.lfw__right -->
-        </div><!-- /.lfw__body -->
+            </div><!-- /.lfw__sticky -->
+        </div><!-- /.lfw__right -->
+
     </div><!-- /.lfw__inner -->
 </section>
 
