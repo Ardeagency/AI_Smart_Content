@@ -269,132 +269,50 @@ class LandingView extends BaseView {
   /**
    * Hero: columna derecha — carrusel vertical (SVG banner) que avanza cada 2 s.
    */
+  /**
+   * Hero words rotator — versión simple y robusta.
+   * Cada palabra tiene position:absolute dentro del viewport.
+   * Solo se alterna la clase .is-active; CSS maneja el fade/slide.
+   * Sin clones, sin cálculos de translateY, sin dependencia del tamaño.
+   */
   initHeroWordsRotator() {
     if (typeof this.heroWordsRotatorCleanup === 'function') {
       this.heroWordsRotatorCleanup();
       this.heroWordsRotatorCleanup = null;
     }
 
-    const viewport = document.querySelector('.landing-hero__words-viewport');
-    const track = viewport?.querySelector('.landing-hero__words-track');
-    if (!viewport || !track) return;
+    const items = Array.from(
+      document.querySelectorAll('.landing-hero__words-item')
+    );
+    if (!items.length) return;
 
-    const originalItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
-    if (!originalItems.length) return;
+    let current = 0;
+
+    const activate = (idx) => {
+      items.forEach((item, i) => {
+        item.classList.toggle('is-active', i === idx);
+      });
+    };
+
+    // Mostrar la primera palabra de inmediato
+    activate(0);
 
     const reduceMotion =
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const cloneItem = (item) => {
-      const clone = item.cloneNode(true);
-      clone.dataset.realIndex = item.dataset.realIndex || '0';
-      clone.querySelectorAll('img').forEach((img) => {
-        img.loading = 'eager';
-      });
-      return clone;
-    };
-
-    originalItems.forEach((item, index) => {
-      item.dataset.realIndex = String(index);
-    });
-
-    track.innerHTML = '';
-    const before = originalItems.map(cloneItem);
-    const middle = originalItems.map(cloneItem);
-    const after = originalItems.map(cloneItem);
-    [...before, ...middle, ...after].forEach((item) => track.appendChild(item));
-
-    const allItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
-    const baseLength = originalItems.length;
-    let currentIndex = baseLength;
-    let heroWordsTimer = null;
-    let jumpTimer = null;
-
-    const getTrackGap = () => {
-      const styles = window.getComputedStyle(track);
-      const gapValue = styles.rowGap || styles.gap || '0';
-      const parsed = Number.parseFloat(gapValue);
-      return Number.isFinite(parsed) ? parsed : 0;
-    };
-
-    const update = (withTransition = true) => {
-      const first = allItems[0];
-      if (!first) return;
-      const h =
-        first.offsetHeight ||
-        Math.round(first.getBoundingClientRect().height) ||
-        56;
-      const stepHeight = h + getTrackGap();
-      const centerOffset = (viewport.clientHeight - h) / 2;
-      const targetY = centerOffset - currentIndex * stepHeight;
-
-      track.style.transition = withTransition
-        ? 'transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1)'
-        : 'none';
-      track.style.transform = `translateY(${targetY}px)`;
-
-      allItems.forEach((item) => item.classList.remove('is-active'));
-      if (allItems[currentIndex]) {
-        allItems[currentIndex].classList.add('is-active');
-      }
-    };
-
-    const scheduleUpdate = () => {
-      window.requestAnimationFrame(() => update(false));
-    };
-
-    /** Hasta que los SVG tengan altura (layout), el carrusel no puede centrar; reintenta unos frames. */
-    const runUpdateWhenSized = (attemptsLeft = 45) => {
-      const first = allItems[0];
-      if (first && (first.offsetHeight > 0 || first.getBoundingClientRect().height > 0)) {
-        update(false);
-        return;
-      }
-      if (attemptsLeft <= 0) {
-        update(false);
-        return;
-      }
-      window.requestAnimationFrame(() => runUpdateWhenSized(attemptsLeft - 1));
-    };
-
-    track.querySelectorAll('img').forEach((img) => {
-      img.addEventListener('load', scheduleUpdate, { passive: true });
-    });
-
-    runUpdateWhenSized();
-
-    const onResize = () => update(false);
-    window.addEventListener('resize', onResize, { passive: true });
-
     if (reduceMotion) {
-      currentIndex = baseLength;
-      this.heroWordsRotatorCleanup = () => {
-        window.removeEventListener('resize', onResize);
-      };
+      this.heroWordsRotatorCleanup = () => {};
       return;
     }
 
-    heroWordsTimer = window.setInterval(() => {
-      currentIndex += 1;
-      update(true);
-
-      if (currentIndex >= baseLength * 2) {
-        if (jumpTimer) window.clearTimeout(jumpTimer);
-        jumpTimer = window.setTimeout(() => {
-          currentIndex = baseLength;
-          update(false);
-          jumpTimer = null;
-        }, 520);
-      }
+    const timer = window.setInterval(() => {
+      current = (current + 1) % items.length;
+      activate(current);
     }, 2000);
 
     this.heroWordsRotatorCleanup = () => {
-      window.removeEventListener('resize', onResize);
-      if (heroWordsTimer) window.clearInterval(heroWordsTimer);
-      if (jumpTimer) window.clearTimeout(jumpTimer);
-      heroWordsTimer = null;
-      jumpTimer = null;
+      window.clearInterval(timer);
     };
   }
 
