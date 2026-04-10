@@ -251,19 +251,25 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: orbe de luz prismática — mezcla aditiva como luz real ───────
+// ── Hero canvas: sistema orbital prismático ───────────────────────────────────
+// 9 orbes del espectro orbitan el cursor en planos inclinados distintos
+// (como un átomo/giróscopo) con colas de cometa y expansión por velocidad.
 class HeroParticleCanvas {
-  // Espectro del prisma: mismos valores que --brand-gradient del sistema
-  static PRISM = [
-    { r: 255, g:   0, b:   0 },  // rojo
-    { r: 255, g: 101, b:   0 },  // naranja
-    { r: 255, g: 229, b:   0 },  // amarillo
-    { r: 154, g: 204, b:   0 },  // lima
-    { r:   0, g: 214, b:  20 },  // verde
-    { r:   0, g: 231, b: 255 },  // cian
-    { r:   0, g:  24, b: 238 },  // azul
-    { r:  91, g:   0, b: 234 },  // violeta
-    { r: 144, g:   0, b: 144 },  // magenta
+
+  // orR = radio de órbita base (px a escala 900px)
+  // spd = velocidad angular (+ horario, - antihorario)
+  // ph  = fase inicial distribuida para evitar clusters
+  // tY  = factor de compresión vertical (< 1 = órbita más plana = efecto 3D)
+  static SPECTRUM = [
+    { cr: 255, cg:   0, cb:   0, orR:  75, spd:  0.015, ph: 0.00, tY: 0.28 }, // rojo
+    { cr: 255, cg: 101, cb:   0, orR: 115, spd: -0.010, ph: 0.70, tY: 0.72 }, // naranja
+    { cr: 255, cg: 229, cb:   0, orR: 142, spd:  0.008, ph: 1.40, tY: 0.35 }, // amarillo
+    { cr: 154, cg: 204, cb:   0, orR:  95, spd: -0.013, ph: 2.10, tY: 0.88 }, // lima
+    { cr:   0, cg: 214, cb:  20, orR: 162, spd:  0.007, ph: 2.80, tY: 0.52 }, // verde
+    { cr:   0, cg: 231, cb: 255, orR: 128, spd: -0.009, ph: 3.50, tY: 0.38 }, // cian
+    { cr:   0, cg:  24, cb: 238, orR: 178, spd:  0.005, ph: 4.20, tY: 0.82 }, // azul
+    { cr:  91, cg:   0, cb: 234, orR: 108, spd: -0.011, ph: 4.90, tY: 0.62 }, // violeta
+    { cr: 144, cg:   0, cb: 144, orR:  82, spd:  0.016, ph: 5.60, tY: 0.90 }, // magenta
   ];
 
   constructor(canvas) {
@@ -271,13 +277,15 @@ class HeroParticleCanvas {
     this.ctx    = canvas.getContext('2d');
     this.raf    = null;
     this._dpr   = Math.min(window.devicePixelRatio || 1, 2);
-    this._w     = 0;
-    this._h     = 0;
-    this._idle  = 0;   // fase Lissajous
-    this._rot   = 0;   // rotación lenta de los orbes
+    this._w = 0; this._h = 0;
+    this._idle  = 0;
     this.mouse  = { x: -9999, y: -9999 };
-    this._cx    = null; // posición lerpeada X
-    this._cy    = null; // posición lerpeada Y
+    this._cx    = null; this._cy = null; // centro lerpeado
+    this._px    = 0;   this._py = 0;    // posición previa (para velocidad)
+    this._vel   = 0;                    // magnitud de velocidad suavizada
+    // Estado individual por orbe
+    this._phases = HeroParticleCanvas.SPECTRUM.map(o => o.ph);
+    this._trails  = HeroParticleCanvas.SPECTRUM.map(() => []); // colas de cometa
 
     this._onMove   = this._onMove.bind(this);
     this._onLeave  = this._onLeave.bind(this);
@@ -292,7 +300,7 @@ class HeroParticleCanvas {
     this.canvas.addEventListener('mousemove', this._onMove);
     this.canvas.addEventListener('mouseleave', this._onLeave);
     this.canvas.addEventListener('touchmove', this._onTouch, { passive: true });
-    this.canvas.addEventListener('touchend', this._onLeave, { passive: true });
+    this.canvas.addEventListener('touchend',  this._onLeave, { passive: true });
     this._loop();
   }
 
@@ -303,8 +311,7 @@ class HeroParticleCanvas {
     this.canvas.width  = w * dpr;
     this.canvas.height = h * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this._w = w;
-    this._h = h;
+    this._w = w; this._h = h;
     if (this._cx === null) { this._cx = w / 2; this._cy = h / 2; }
   }
 
@@ -323,71 +330,112 @@ class HeroParticleCanvas {
   _onResize() { this._resize(); }
 
   _update() {
-    this._rot += 0.007; // rotación continua del espectro
-
-    // Destino: cursor real o Lissajous 1:2 en figura-8
     const hasMouse = this.mouse.x !== -9999;
     let tx, ty;
+
     if (hasMouse) {
-      tx = this.mouse.x;
-      ty = this.mouse.y;
+      tx = this.mouse.x; ty = this.mouse.y;
     } else {
-      this._idle += 0.005;
+      // Lissajous 1:2 autónomo cuando no hay cursor
+      this._idle += 0.004;
       const ph = this._idle;
-      tx = this._w * 0.5 + Math.cos(ph)     * this._w * 0.34;
-      ty = this._h * 0.5 + Math.sin(ph * 2) * this._h * 0.23;
+      tx = this._w * 0.5 + Math.cos(ph)     * this._w * 0.28;
+      ty = this._h * 0.5 + Math.sin(ph * 2) * this._h * 0.18;
     }
 
-    // Lerp: más rápido cuando el ratón está activo, más lento en idle
-    const ease = hasMouse ? 0.1 : 0.035;
+    // Lerp del centro: rápido con cursor, lento en idle
+    this._px = this._cx; this._py = this._cy;
+    const ease = hasMouse ? 0.10 : 0.035;
     this._cx += (tx - this._cx) * ease;
     this._cy += (ty - this._cy) * ease;
+
+    // Velocidad suavizada → controla cuánto se expanden las órbitas
+    const dvx = this._cx - this._px;
+    const dvy = this._cy - this._py;
+    const spd = Math.sqrt(dvx * dvx + dvy * dvy);
+    this._vel += (spd - this._vel) * 0.12;
+
+    const spec   = HeroParticleCanvas.SPECTRUM;
+    const SCALE  = Math.min(this._w, this._h) / 900;
+    const SPREAD = 1 + Math.min(this._vel / 25, 0.85); // expansión por velocidad
+
+    for (let i = 0; i < spec.length; i++) {
+      this._phases[i] += spec[i].spd;
+      const o     = spec[i];
+      const angle = this._phases[i];
+      const orR   = o.orR * SCALE * SPREAD;
+      // tY comprime el eje Y → da el efecto de plano inclinado (sensación 3D)
+      const ox = this._cx + Math.cos(angle) * orR;
+      const oy = this._cy + Math.sin(angle) * orR * o.tY;
+
+      const trail = this._trails[i];
+      trail.push({ x: ox, y: oy });
+      if (trail.length > 10) trail.shift(); // cola de 10 fotogramas
+    }
   }
 
   _draw() {
-    const ctx    = this.ctx;
-    const cx     = this._cx;
-    const cy     = this._cy;
-    const prism  = HeroParticleCanvas.PRISM;
-    const n      = prism.length;
+    const ctx  = this.ctx;
+    const spec = HeroParticleCanvas.SPECTRUM;
+    // BASE = tamaño del gradiente de cada orbe, proporcional al viewport
+    const BASE = Math.min(this._w, this._h) * 0.16;
 
     ctx.clearRect(0, 0, this._w, this._h);
-
-    // 'screen' = mezcla aditiva de luz: donde se solapan los colores se suman
-    // hacia blanco, igual que prismas y luces de color reales
+    // 'screen' = mezcla aditiva de luz: los colores se suman como luz real
     ctx.globalCompositeOperation = 'screen';
 
-    const BASE  = Math.min(this._w, this._h) * 0.30; // radio base del orbe
-    const DRIFT = Math.min(this._w, this._h) * 0.06; // desplazamiento del centro
+    // ── Colas de cometa (atrás de cada orbe) ──
+    for (let i = 0; i < spec.length; i++) {
+      const o     = spec[i];
+      const trail = this._trails[i];
+      for (let j = 0; j < trail.length - 1; j++) {
+        const tp = trail[j];
+        const t  = (j + 1) / trail.length; // 0 = más antiguo, 1 = más reciente
+        const r  = BASE * (0.12 + t * 0.38);
+        const a  = t * 0.18;
+        const g  = ctx.createRadialGradient(tp.x, tp.y, 0, tp.x, tp.y, r);
+        g.addColorStop(0, `rgba(${o.cr},${o.cg},${o.cb},${a.toFixed(2)})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.beginPath();
+        ctx.arc(tp.x, tp.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+    }
 
-    for (let i = 0; i < n; i++) {
-      const c     = prism[i];
-      const angle = (i / n) * Math.PI * 2 + this._rot;
-      const ox    = cx + Math.cos(angle) * DRIFT;
-      const oy    = cy + Math.sin(angle) * DRIFT;
+    // ── Orbes (posición actual = cabeza de la cola) ──
+    for (let i = 0; i < spec.length; i++) {
+      const o     = spec[i];
+      const trail = this._trails[i];
+      if (!trail.length) continue;
+      const pos = trail[trail.length - 1];
 
-      // Cuerpo del orbe: gradiente radial muy suave
-      const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, BASE);
-      g.addColorStop(0,    `rgba(${c.r},${c.g},${c.b},0.60)`);
-      g.addColorStop(0.30, `rgba(${c.r},${c.g},${c.b},0.28)`);
-      g.addColorStop(0.70, `rgba(${c.r},${c.g},${c.b},0.06)`);
+      // Pulso sutil de tamaño basado en la fase orbital de cada orbe
+      const pulse = 1 + Math.sin(this._phases[i] * 0.35) * 0.07;
+      const sz    = BASE * pulse;
+
+      const g = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, sz);
+      g.addColorStop(0,    `rgba(${o.cr},${o.cg},${o.cb},0.72)`);
+      g.addColorStop(0.28, `rgba(${o.cr},${o.cg},${o.cb},0.34)`);
+      g.addColorStop(0.65, `rgba(${o.cr},${o.cg},${o.cb},0.09)`);
       g.addColorStop(1,    'rgba(0,0,0,0)');
-
       ctx.beginPath();
-      ctx.arc(ox, oy, BASE, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, sz, 0, Math.PI * 2);
       ctx.fillStyle = g;
       ctx.fill();
     }
 
-    // Núcleo blanco: simula la fuente de luz detrás del prisma
-    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, BASE * 0.42);
-    core.addColorStop(0,    'rgba(255,255,255,0.95)');
-    core.addColorStop(0.20, 'rgba(255,255,255,0.60)');
-    core.addColorStop(0.55, 'rgba(255,255,255,0.15)');
+    // ── Núcleo blanco en el centro anclado al cursor ──
+    const cx    = this._cx;
+    const cy    = this._cy;
+    const coreR = Math.min(this._w, this._h) * 0.09;
+    const core  = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+    core.addColorStop(0,    'rgba(255,255,255,0.96)');
+    core.addColorStop(0.20, 'rgba(255,255,255,0.62)');
+    core.addColorStop(0.58, 'rgba(255,255,255,0.15)');
     core.addColorStop(1,    'rgba(0,0,0,0)');
-
     ctx.beginPath();
-    ctx.arc(cx, cy, BASE * 0.42, 0, Math.PI * 2);
+    ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
     ctx.fillStyle = core;
     ctx.fill();
 
@@ -406,6 +454,6 @@ class HeroParticleCanvas {
     this.canvas.removeEventListener('mousemove', this._onMove);
     this.canvas.removeEventListener('mouseleave', this._onLeave);
     this.canvas.removeEventListener('touchmove', this._onTouch);
-    this.canvas.removeEventListener('touchend', this._onLeave);
+    this.canvas.removeEventListener('touchend',  this._onLeave);
   }
 }
