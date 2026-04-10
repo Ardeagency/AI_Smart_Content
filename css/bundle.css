@@ -4043,8 +4043,89 @@ body.entrance-done .landing-header {
 .landing-hero__content {
     position: relative;
     z-index: 4;
+    width: 100%;
+    max-width: 100%;
     padding: 0 52px 72px;
+    box-sizing: border-box;
     pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+/* Lockup: smart + palabra rotativa pegadas (sin columna “1fr” que abre hueco) */
+.landing-hero__lockup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.landing-hero__smart {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.landing-hero__smart-img {
+    display: block;
+    width: auto;
+    max-width: min(440px, 46vw);
+    height: auto;
+}
+
+.landing-hero__words {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    /* Une visualmente con “smart” si el SVG trae respiro tipográfico */
+    margin-left: clamp(-10px, -0.6vw, -2px);
+}
+
+.landing-hero__words-viewport {
+    width: max-content;
+    max-width: min(340px, 42vw);
+    height: clamp(280px, 48vh, 520px);
+    overflow: hidden;
+    position: relative;
+}
+
+.landing-hero__words-track {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(14px, 2.2vh, 28px);
+    will-change: transform;
+}
+
+.landing-hero__words-item {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    opacity: 0.32;
+    transform: scale(0.9);
+    transform-origin: left center;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.landing-hero__words-item.is-active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.landing-hero__words-item img {
+    display: block;
+    width: auto;
+    max-width: min(300px, 36vw);
+    height: auto;
 }
 
 .landing-hero__eyebrow {
@@ -4090,6 +4171,43 @@ body.entrance-done .landing-header {
 
 @media (max-width: 768px) {
     .landing-hero__content { padding: 0 24px 56px; }
+
+    .landing-hero__lockup {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .landing-hero__smart {
+        justify-content: center;
+    }
+
+    .landing-hero__words {
+        margin-left: 0;
+        justify-content: center;
+    }
+
+    .landing-hero__words-viewport {
+        height: clamp(240px, 42vh, 400px);
+    }
+
+    .landing-hero__words-track {
+        align-items: center;
+    }
+
+    .landing-hero__words-item {
+        justify-content: center;
+        transform-origin: center center;
+    }
+
+    .landing-hero__smart-img {
+        max-width: min(320px, 78vw);
+    }
+
+    .landing-hero__words-item img {
+        max-width: min(260px, 72vw);
+    }
+
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
     .landing-hero__orb     { filter: blur(60px); opacity: 0.18; }
 }
