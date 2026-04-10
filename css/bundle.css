@@ -5185,11 +5185,20 @@ body.entrance-done .landing-header {
     background-repeat: no-repeat;
 }
 
+/* Capa sobre la imagen: arriba #0a0a0d, abajo negro; centro transparente para ver el fondo */
 .landing-bento__bg::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.5) 100%);
+    background: linear-gradient(
+        to bottom,
+        #0a0a0d 0%,
+        rgba(10, 10, 13, 0) 24%,
+        transparent 32%,
+        transparent 68%,
+        rgba(0, 0, 0, 0) 76%,
+        #000000 100%
+    );
     pointer-events: none;
 }
 
