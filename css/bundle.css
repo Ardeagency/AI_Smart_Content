@@ -4898,7 +4898,8 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lpf {
-    background: #000000;
+    /* Arriba negro (continuidad con hero); abajo #0a0a0d (misma base que #landing-after-pillars) */
+    background: linear-gradient(to bottom, #000000 0%, #0a0a0d 100%);
     padding: 96px 0 112px;
 }
 
