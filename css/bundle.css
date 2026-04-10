@@ -3930,7 +3930,7 @@ body.entrance-done .landing-header {
     z-index: 0;
 }
 
-/* Canvas: lente de agua, transparente → la foto CSS se ve por debajo */
+/* Canvas: efecto agua suave, transparente → la foto CSS se ve por debajo */
 .landing-hero__canvas {
     position: absolute;
     inset: 0;
@@ -3938,7 +3938,6 @@ body.entrance-done .landing-header {
     height: 100%;
     display: block;
     z-index: 1;
-    cursor: none; /* el lente ES el cursor */
 }
 
 /* Orbes glass: sobre las líneas, bajo el fade y el texto */
@@ -4916,7 +4915,14 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lpf {
-    background: var(--bg-dark, #0F0D12);
+    /* Transición suave desde el hero (negro) hacia el tono morado oscuro del bloque */
+    background: linear-gradient(
+        180deg,
+        #000000 0%,
+        #060508 22%,
+        var(--bg-dark, #0F0D12) 58%,
+        var(--bg-dark, #0F0D12) 100%
+    );
     padding: 96px 0 112px;
 }
 
