@@ -91,8 +91,12 @@ class LandingView extends BaseView {
     if (!listItems.length || !slides.length) return;
 
     const count          = listItems.length;
-    const ACTIVE_COLOR   = '#ff6500';
-    const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
+    // Colores de paleta — uno por ítem (cycling)
+    const ITEM_COLORS = [
+      '#ff0000','#ff6500','#ffe500','#9acc00','#00d614',
+      '#00e7ff','#0018ee','#5b00ea','#900090','#ff0000','#ff6500',
+    ];
+    const INACTIVE_COLOR = 'rgba(212,209,216,0.15)';
 
     /* ── Helpers de scroll ── */
     const appContainer  = document.getElementById('app-container');
@@ -127,11 +131,37 @@ class LandingView extends BaseView {
     const ENTER_ZONE      = 60;
 
     /* ── Activar ítem ── */
+    const leftCol = section.querySelector('.lfw__left');
+
+    // Posiciona el carrusel según el ítem activo
+    const positionCarousel = (activeI, animate = true) => {
+      const h       = leftCol ? leftCol.clientHeight : window.innerHeight;
+      const centerY = h * 0.40;   // ítem activo al 40% del alto
+      const step    = h * 0.13;   // distancia visual entre ítems
+
+      listItems.forEach((item, j) => {
+        const offset = j - activeI;
+        const absOff = Math.abs(offset);
+        const y       = centerY + offset * step;
+        const scale   = Math.max(0.28, 1 - absOff * 0.20);
+        const opacity = Math.max(0.04, 1 - absOff * 0.26);
+        const color   = offset === 0
+          ? ITEM_COLORS[activeI % ITEM_COLORS.length]
+          : INACTIVE_COLOR;
+
+        if (!animate) item.style.transition = 'none';
+        else          item.style.transition = '';
+
+        item.style.transform = `translateY(${y}px) scale(${scale})`;
+        item.style.opacity   = opacity;
+        item.style.color     = color;
+      });
+    };
+
+    // Activación visual: carrusel + slides + fill bar
     const activate = (index) => {
       const i = Math.max(0, Math.min(count - 1, index));
-      listItems.forEach((item, j) => {
-        item.style.color = j === i ? ACTIVE_COLOR : INACTIVE_COLOR;
-      });
+      positionCarousel(i, true);
       slides.forEach((slide, j) => {
         const on = j === i;
         slide.style.opacity    = on ? '1' : '0';
@@ -139,6 +169,12 @@ class LandingView extends BaseView {
       });
       if (fill) fill.style.transform = `scaleY(${(i + 1) / count})`;
     };
+
+    // Posición inicial sin animación (evita flash)
+    positionCarousel(0, false);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      listItems.forEach(item => { item.style.transition = ''; });
+    }));
 
     const scheduleClearSuppress = () => {
       if (suppressTimer) clearTimeout(suppressTimer);
@@ -252,6 +288,7 @@ class LandingView extends BaseView {
     /* ── Resize ── */
     const onResize = () => {
       if (locked) { lockScrollY = lockScrollYFromSection(); setScrollY(lockScrollY); }
+      positionCarousel(pillarIndex, false);
     };
 
     /* Estado inicial (primer ítem visible) */
