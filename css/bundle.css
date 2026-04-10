@@ -3908,101 +3908,143 @@ body.entrance-done .landing-header {
     }
 }
 
-/* ─── Landing Hero: canvas interactivo con partículas ─── */
+/* ─── Landing Hero: líneas verticales + aurora glass + imagen de fondo ─── */
 .landing-hero {
     position: relative;
     min-height: 100vh;
-    background: #0a0a0a;
+    background: url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg') center center / cover no-repeat;
     overflow: hidden;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
 }
 
+/* Capa oscura que oscurece la foto para que líneas y texto sean legibles */
+.landing-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.50);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Canvas: líneas verticales interactivas, fondo transparente → la foto se ve */
 .landing-hero__canvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     display: block;
+    z-index: 1;
 }
 
-.landing-hero__content {
-    position: relative;
-    z-index: 3;
-    width: 100%;
-    max-width: min(1180px, 100%);
-    margin: 0 auto;
-    padding: clamp(80px, 14vh, 140px) 52px clamp(48px, 7vh, 80px);
-    box-sizing: border-box;
-    pointer-events: none;
-}
-
-/* Lockup: smart.svg + carrusel vertical de palabras */
-.landing-hero__lockup {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    align-items: center;
-    gap: clamp(28px, 5vw, 72px);
-    width: 100%;
-}
-
-.landing-hero__smart {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.landing-hero__smart-img {
-    display: block;
-    width: 100%;
-    max-width: min(440px, 46vw);
-    height: auto;
-}
-
-.landing-hero__words {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-}
-
-.landing-hero__words-viewport {
-    width: 100%;
-    max-width: min(340px, 38vw);
-    height: clamp(280px, 48vh, 520px);
+/* Orbes glass: sobre las líneas, bajo el fade y el texto */
+.landing-hero__aurora {
+    position: absolute;
+    inset: 0;
     overflow: hidden;
-    position: relative;
+    pointer-events: none;
+    z-index: 2;
 }
 
-.landing-hero__words-track {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(14px, 2.2vh, 28px);
+.landing-hero__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.22;
     will-change: transform;
 }
 
-.landing-hero__words-item {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.32;
-    transform: scale(0.9);
-    transition: opacity 0.45s ease, transform 0.45s ease;
+/* Naranja — top-left */
+.landing-hero__orb--1 {
+    width: clamp(320px, 55vw, 700px);
+    height: clamp(320px, 55vw, 700px);
+    background: radial-gradient(circle, #ff6500 0%, transparent 68%);
+    top: -15%;
+    left: -8%;
+    animation: hero-orb-1 16s ease-in-out infinite alternate;
 }
 
-.landing-hero__words-item.is-active {
-    opacity: 1;
-    transform: scale(1);
+/* Rojo — top-right */
+.landing-hero__orb--2 {
+    width: clamp(280px, 48vw, 620px);
+    height: clamp(280px, 48vw, 620px);
+    background: radial-gradient(circle, #ff0000 0%, transparent 68%);
+    top: 5%;
+    right: -6%;
+    animation: hero-orb-2 20s ease-in-out infinite alternate;
 }
 
-.landing-hero__words-item img {
-    display: block;
-    width: 100%;
-    max-width: min(300px, 32vw);
-    height: auto;
+/* Cian — bottom-right */
+.landing-hero__orb--3 {
+    width: clamp(300px, 52vw, 660px);
+    height: clamp(300px, 52vw, 660px);
+    background: radial-gradient(circle, #00e7ff 0%, transparent 68%);
+    bottom: -10%;
+    right: 8%;
+    animation: hero-orb-3 18s ease-in-out infinite alternate;
+}
+
+/* Índigo — centro */
+.landing-hero__orb--4 {
+    width: clamp(260px, 42vw, 560px);
+    height: clamp(260px, 42vw, 560px);
+    background: radial-gradient(circle, #0018ee 0%, transparent 68%);
+    top: 35%;
+    left: 30%;
+    animation: hero-orb-4 22s ease-in-out infinite alternate;
+}
+
+/* Violeta — bottom-left */
+.landing-hero__orb--5 {
+    width: clamp(280px, 45vw, 580px);
+    height: clamp(280px, 45vw, 580px);
+    background: radial-gradient(circle, #5b00ea 0%, transparent 68%);
+    bottom: 0%;
+    left: -4%;
+    animation: hero-orb-5 24s ease-in-out infinite alternate;
+}
+
+@keyframes hero-orb-1 {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    100% { transform: translate(6vw,  10vh) scale(1.12); }
+}
+@keyframes hero-orb-2 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(-7vw, 7vh) scale(0.92); }
+}
+@keyframes hero-orb-3 {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    100% { transform: translate(-5vw,-8vh)  scale(1.08); }
+}
+@keyframes hero-orb-4 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(8vw,-5vh)  scale(1.15); }
+}
+@keyframes hero-orb-5 {
+    0%   { transform: translate(0,   0)    scale(1);    }
+    100% { transform: translate(5vw,-7vh)  scale(0.95); }
+}
+
+/* Fade inferior para fundir con la sección siguiente */
+.landing-hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40vh;
+    background: linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.6) 50%, rgba(10,10,10,0) 100%);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Texto e interacciones */
+.landing-hero__content {
+    position: relative;
+    z-index: 4;
+    padding: 0 52px 72px;
+    pointer-events: none;
 }
 
 .landing-hero__eyebrow {
@@ -4046,134 +4088,11 @@ body.entrance-done .landing-header {
     border-color: rgba(255, 255, 255, 0.26);
 }
 
-/* Degradado suave hacia abajo para fundir con la sección siguiente */
-.landing-hero::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 36vh;
-    background: linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.55) 52%, rgba(10, 10, 10, 0) 100%);
-    pointer-events: none;
-    z-index: 2;
-}
-
-/* ── Orbes de luz ambiental: glass / aurora ─────────────────────────────── */
-.landing-hero__aurora {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1; /* sobre el canvas, bajo el degradado y el texto */
-}
-
-.landing-hero__orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.32;
-    will-change: transform;
-}
-
-/* Naranja — top-left */
-.landing-hero__orb--1 {
-    width: clamp(320px, 55vw, 700px);
-    height: clamp(320px, 55vw, 700px);
-    background: radial-gradient(circle, #ff6500 0%, transparent 68%);
-    top: -15%;
-    left: -8%;
-    animation: hero-orb-1 16s ease-in-out infinite alternate;
-}
-
-/* Rojo — top-right */
-.landing-hero__orb--2 {
-    width: clamp(280px, 48vw, 620px);
-    height: clamp(280px, 48vw, 620px);
-    background: radial-gradient(circle, #ff0000 0%, transparent 68%);
-    top: 5%;
-    right: -6%;
-    animation: hero-orb-2 20s ease-in-out infinite alternate;
-}
-
-/* Cian — bottom-right */
-.landing-hero__orb--3 {
-    width: clamp(300px, 52vw, 660px);
-    height: clamp(300px, 52vw, 660px);
-    background: radial-gradient(circle, #00e7ff 0%, transparent 68%);
-    bottom: -10%;
-    right: 8%;
-    animation: hero-orb-3 18s ease-in-out infinite alternate;
-}
-
-/* Azul índigo — centro */
-.landing-hero__orb--4 {
-    width: clamp(260px, 42vw, 560px);
-    height: clamp(260px, 42vw, 560px);
-    background: radial-gradient(circle, #0018ee 0%, transparent 68%);
-    top: 35%;
-    left: 30%;
-    animation: hero-orb-4 22s ease-in-out infinite alternate;
-}
-
-/* Violeta — bottom-left */
-.landing-hero__orb--5 {
-    width: clamp(280px, 45vw, 580px);
-    height: clamp(280px, 45vw, 580px);
-    background: radial-gradient(circle, #5b00ea 0%, transparent 68%);
-    bottom: 0%;
-    left: -4%;
-    animation: hero-orb-5 24s ease-in-out infinite alternate;
-}
-
-@keyframes hero-orb-1 {
-    0%   { transform: translate(0,    0)    scale(1);    }
-    100% { transform: translate(6vw,  10vh) scale(1.12); }
-}
-@keyframes hero-orb-2 {
-    0%   { transform: translate(0,   0)    scale(1);    }
-    100% { transform: translate(-7vw, 7vh) scale(0.92); }
-}
-@keyframes hero-orb-3 {
-    0%   { transform: translate(0,    0)    scale(1);    }
-    100% { transform: translate(-5vw,-8vh)  scale(1.08); }
-}
-@keyframes hero-orb-4 {
-    0%   { transform: translate(0,   0)    scale(1);    }
-    100% { transform: translate(8vw,-5vh)  scale(1.15); }
-}
-@keyframes hero-orb-5 {
-    0%   { transform: translate(0,   0)    scale(1);    }
-    100% { transform: translate(5vw,-7vh)  scale(0.95); }
-}
-
 @media (max-width: 768px) {
-    .landing-hero__content {
-        padding: clamp(72px, 18vw, 100px) 24px clamp(40px, 10vw, 64px);
-    }
-
-    .landing-hero__lockup {
-        grid-template-columns: 1fr;
-        gap: clamp(20px, 6vw, 40px);
-    }
-
-    .landing-hero__smart-img {
-        max-width: min(320px, 78vw);
-    }
-
-    .landing-hero__words-viewport {
-        max-width: min(280px, 72vw);
-        height: clamp(240px, 42vh, 400px);
-    }
-
-    .landing-hero__words-item img {
-        max-width: min(260px, 70vw);
-    }
-
-    .landing-hero__title { font-size: clamp(2.8rem, 13vw, 4rem); }
-    .landing-hero__orb { filter: blur(60px); opacity: 0.28; }
+    .landing-hero__content { padding: 0 24px 56px; }
+    .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
+    .landing-hero__orb     { filter: blur(60px); opacity: 0.18; }
 }
-
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
 .landing-pillars {
     position: relative;

@@ -369,15 +369,15 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = LandingView;
 }
 
-// ── Hero canvas: partículas magnéticas con --brand-gradient horizontal ────────
+// ── Hero canvas: líneas verticales con efecto prisma + --brand-gradient ──────
 class HeroParticleCanvas {
   constructor(canvas) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.particles = [];
-    this.mouse = { x: -9999, y: -9999 };
-    this.raf = null;
-    this._dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.ctx    = canvas.getContext('2d');
+    this.lines  = [];
+    this.mouse  = { x: -9999, y: -9999 };
+    this.raf    = null;
+    this._dpr   = Math.min(window.devicePixelRatio || 1, 2);
     this._w = 0;
     this._h = 0;
 
@@ -386,49 +386,33 @@ class HeroParticleCanvas {
     this._onTouch  = this._onTouch.bind(this);
     this._onResize = this._onResize.bind(this);
 
-    // Construye el sampler de color leyendo --brand-gradient del CSS
     this._buildGradientSampler();
     this._init();
   }
 
-  // ── Sampler de degradado ────────────────────────────────────────────────────
-  // Lee --brand-gradient del CSS, lo renderiza en un canvas 1×512 y
-  // extrae los píxeles para muestrear colores exactos por posición X.
+  // ── Sampler: lee --brand-gradient, renderiza en canvas 512×1, guarda pixels ──
   _buildGradientSampler() {
     const css = getComputedStyle(document.documentElement);
     let raw = css.getPropertyValue('--brand-gradient').trim();
+    if (!raw) raw = 'linear-gradient(90deg,#ff0000 0%,#ff6500 12.5%,#ffe500 25%,#9acc00 37.5%,#00d614 50%,#00e7ff 62.5%,#0018ee 75%,#5b00ea 87.5%,#900090 100%)';
 
-    // Fallback con los 9 stops de la paleta si el var no está disponible
-    if (!raw) {
-      raw = 'linear-gradient(90deg,#ff0000 0%,#ff6500 12.5%,#ffe500 25%,#9acc00 37.5%,#00d614 50%,#00e7ff 62.5%,#0018ee 75%,#5b00ea 87.5%,#900090 100%)';
-    }
-
-    // Extrae los stops con regex: captura color hexadecimal y su posición %
     const stopRe = /(#[0-9a-fA-F]{3,8})\s+([\d.]+)%/g;
-    const stops = [];
+    const stops  = [];
     let m;
-    while ((m = stopRe.exec(raw)) !== null) {
-      stops.push({ color: m[1], t: parseFloat(m[2]) / 100 });
-    }
+    while ((m = stopRe.exec(raw)) !== null) stops.push({ color: m[1], t: parseFloat(m[2]) / 100 });
 
-    // Renderiza el degradado en un canvas de 1px de alto para muestrear
     const W = 512;
-    const oc  = document.createElement('canvas');
-    oc.width  = W;
-    oc.height = 1;
+    const oc = document.createElement('canvas');
+    oc.width = W; oc.height = 1;
     const octx = oc.getContext('2d');
     const grad = octx.createLinearGradient(0, 0, W, 0);
-    stops.forEach(({ color, t }) => {
-      try { grad.addColorStop(t, color); } catch (_) { /* ignora stops inválidos */ }
-    });
+    stops.forEach(({ color, t }) => { try { grad.addColorStop(t, color); } catch (_) {} });
     octx.fillStyle = grad;
     octx.fillRect(0, 0, W, 1);
-
-    this._gradPx = octx.getImageData(0, 0, W, 1).data; // Uint8ClampedArray RGBA
+    this._gradPx = octx.getImageData(0, 0, W, 1).data;
     this._gradW  = W;
   }
 
-  // Devuelve { r, g, b } para un valor normalizado t ∈ [0, 1]
   _sample(t) {
     const i = Math.min(Math.floor(t * (this._gradW - 1)), this._gradW - 1) * 4;
     return { r: this._gradPx[i], g: this._gradPx[i + 1], b: this._gradPx[i + 2] };
@@ -454,24 +438,20 @@ class HeroParticleCanvas {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
     this._h = h;
-    this._buildGrid();
+    this._buildLines();
   }
 
-  _buildGrid() {
-    const GAP  = 30;
-    const cols = Math.ceil(this._w / GAP) + 1;
-    const rows = Math.ceil(this._h / GAP) + 1;
-    const offX = (this._w % GAP) / 2;
-    const offY = (this._h % GAP) / 2;
-    this.particles = [];
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const ox = offX + c * GAP;
-        const oy = offY + r * GAP;
-        // Color según posición horizontal: izquierda = rojo, derecha = violeta
-        const { r: pr, g: pg, b: pb } = this._sample(ox / (this._w || 1));
-        this.particles.push({ ox, oy, x: ox, y: oy, vx: 0, vy: 0, pr, pg, pb });
-      }
+  // Crea una línea vertical por cada GAP píxeles horizontales.
+  // Cada línea almacena su posición origen, velocidad y color del degradado.
+  _buildLines() {
+    const GAP   = 14;
+    const count = Math.ceil(this._w / GAP) + 2;
+    const offX  = (this._w % GAP) / 2;
+    this.lines  = [];
+    for (let i = 0; i < count; i++) {
+      const ox            = offX + i * GAP;
+      const { r, g, b }   = this._sample(ox / (this._w || 1));
+      this.lines.push({ ox, x: ox, vx: 0, r, g, b });
     }
   }
 
@@ -493,54 +473,48 @@ class HeroParticleCanvas {
 
   _onResize() { this._resize(); }
 
-  // ── Física ─────────────────────────────────────────────────────────────────
+  // ── Física en eje X (las líneas solo se desplazan horizontalmente) ─────────
   _update() {
-    const RADIUS  = 150;
-    const SPRING  = 0.07;
-    const DAMPING = 0.78;
-    const FORCE   = 7;
+    const RADIUS  = 180;
+    const SPRING  = 0.055;
+    const DAMPING = 0.80;
+    const FORCE   = 14;
     const mx = this.mouse.x;
-    const my = this.mouse.y;
 
-    for (const p of this.particles) {
-      const dx = p.x - mx;
-      const dy = p.y - my;
-      const distSq = dx * dx + dy * dy;
+    for (const l of this.lines) {
+      const dx   = l.x - mx;
+      const dist = Math.abs(dx);
 
-      if (distSq < RADIUS * RADIUS) {
-        const dist = Math.sqrt(distSq) || 1;
+      if (dist < RADIUS) {
         const ratio = (RADIUS - dist) / RADIUS;
-        p.vx += (dx / dist) * ratio * FORCE;
-        p.vy += (dy / dist) * ratio * FORCE;
+        // Empuja la línea en la dirección que se aleja del cursor
+        l.vx += (dist === 0 ? 1 : Math.sign(dx)) * ratio * FORCE;
       }
 
-      p.vx += (p.ox - p.x) * SPRING;
-      p.vy += (p.oy - p.y) * SPRING;
-      p.vx *= DAMPING;
-      p.vy *= DAMPING;
-      p.x  += p.vx;
-      p.y  += p.vy;
+      l.vx += (l.ox - l.x) * SPRING; // muelle hacia origen
+      l.vx *= DAMPING;                // amortiguación
+      l.x  += l.vx;
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render: líneas verticales con grosor y opacidad según desplazamiento ───
   _draw() {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this._w, this._h);
 
-    for (const p of this.particles) {
-      const dx   = p.x - p.ox;
-      const dy   = p.y - p.oy;
-      const disp = Math.sqrt(dx * dx + dy * dy);
-      const t    = Math.min(disp / 55, 1); // 0 = reposo, 1 = máx. desplazamiento
+    for (const l of this.lines) {
+      const disp  = Math.abs(l.x - l.ox);
+      const t     = Math.min(disp / 65, 1); // 0 = reposo, 1 = máx desplazamiento
 
-      const radius = 1.4 + t * 2.2;        // crece al desplazarse
-      const alpha  = 0.08 + t * 0.74;      // casi invisible en reposo, vívido al moverse
+      const lw    = 0.7 + t * 2.0;          // 0.7 px en reposo → 2.7 px en movimiento
+      const alpha = 0.08 + t * 0.76;        // casi invisible en reposo, vívido al moverse
 
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.pr},${p.pg},${p.pb},${alpha.toFixed(2)})`;
-      ctx.fill();
+      ctx.moveTo(l.x, 0);
+      ctx.lineTo(l.x, this._h);
+      ctx.lineWidth   = lw;
+      ctx.strokeStyle = `rgba(${l.r},${l.g},${l.b},${alpha.toFixed(2)})`;
+      ctx.stroke();
     }
   }
 
