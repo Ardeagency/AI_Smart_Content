@@ -5063,32 +5063,35 @@ body.entrance-done .landing-header {
 /* ═══════════════════════════════════════════════════════════════
    LANDING FL
 /* ══════════════════════════════════════════════════════════
-   #landing-after-pillars — GSAP pin:true + pinType:transform
-   (scroller: #app-container, no window)
+   #landing-after-pillars — CSS sticky + scroll handler nativo
+   Sin GSAP pin: evita incompatibilidades con #app-container
    ══════════════════════════════════════════════════════════ */
 
 /*
- * GSAP agrega el espaciado de pin automáticamente.
- * La sección solo necesita height: 100vh en CSS.
+ * La sección es 650 vh de alto (100 visible + 550 de scroll).
+ * .lfw__inner usa position:sticky para permanecer en pantalla
+ * mientras el usuario scrollea por toda la sección.
  */
 .lfw {
     position: relative;
     width: 100%;
-    height: 100vh;
+    height: 650vh;   /* 100vh visible + 11 items × 50vh */
     background: #0a0a0d;
-    overflow: hidden;
 }
 
-/* Contenedor flex full-height (GSAP lo envuelve en un spacer al hacer pin) */
 .lfw__inner {
+    position: sticky;
+    top: 0;
+    height: 100vh;
     width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
-/* Wrapper de las dos columnas */
+/* Dos columnas */
 .lfw__content-wrap {
     width: 100%;
     max-width: 1200px;
@@ -5107,9 +5110,7 @@ body.entrance-done .landing-header {
     padding-left: 20px;
 }
 
-.lfw__header {
-    margin-bottom: 36px;
-}
+.lfw__header { margin-bottom: 36px; }
 
 .lfw__title {
     font-size: clamp(1.4rem, 2.4vw, 2rem);
@@ -5120,38 +5121,32 @@ body.entrance-done .landing-header {
 }
 
 .lfw__subtitle {
-    font-size: 0.875rem;
-    color: rgba(212, 209, 216, 0.55);
+    font-size: .875rem;
+    color: rgba(212,209,216,.55);
     line-height: 1.65;
     margin: 0;
 }
 
 .lfw__subtitle strong {
-    color: rgba(212, 209, 216, 0.85);
+    color: rgba(212,209,216,.85);
     font-weight: 600;
 }
 
-/* Barra de progreso lateral — GSAP anima scaleY */
+/* Barra de progreso */
 .lfw__fill {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 3px;
     height: 100%;
     background: linear-gradient(to bottom,
-        #ff0000 0%,
-        #ff6500 20%,
-        #ffe500 35%,
-        #00d614 55%,
-        #00e7ff 72%,
-        #5b00ea 88%,
-        #900090 100%
-    );
+        #ff0000 0%, #ff6500 20%, #ffe500 35%,
+        #00d614 55%, #00e7ff 72%, #5b00ea 88%, #900090 100%);
     border-radius: 2px;
     transform-origin: top left;
+    will-change: transform;
 }
 
-/* Lista de flujos */
+/* Lista */
 .lfw__list {
     list-style: none;
     margin: 0 0 28px;
@@ -5164,31 +5159,29 @@ body.entrance-done .landing-header {
 .lfw__list li {
     font-size: clamp(1.1rem, 1.8vw, 1.45rem);
     font-weight: 600;
-    color: rgba(212, 209, 216, 0.28);
+    color: rgba(212,209,216,.28);
     cursor: default;
     line-height: 1.35;
-    letter-spacing: -0.01em;
+    letter-spacing: -.01em;
     padding: 3px 0;
+    transition: color .2s ease;
 }
 
 .lfw__cta {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8125rem;
+    font-size: .8125rem;
     font-weight: 600;
-    color: rgba(212, 209, 216, 0.5);
+    color: rgba(212,209,216,.5);
     text-decoration: none;
-    letter-spacing: 0.04em;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    transition: color 0.2s;
+    transition: color .2s;
 }
+.lfw__cta:hover { color: var(--warm-1,#ff6500); }
 
-.lfw__cta:hover {
-    color: var(--warm-1, #ff6500);
-}
-
-/* ── Columna derecha: slides ── */
+/* ── Columna derecha ── */
 .lfw__slides {
     flex: 1;
     position: relative;
@@ -5201,83 +5194,70 @@ body.entrance-done .landing-header {
     position: absolute;
     inset: 0;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,.06);
     opacity: 0;
     visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
 }
 
-/* Colores radiales por flujo */
-.lfw__slide--1 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,0,0,0.18) 0%, rgba(255,0,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(255,0,0,0.22);
+/* Colores por flujo */
+.lfw__slide--1{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,0,0,.18) 0%,rgba(255,0,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(255,0,0,.22);
 }
-.lfw__slide--2 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,101,0,0.18) 0%, rgba(255,101,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(255,101,0,0.22);
+.lfw__slide--2{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,101,0,.18) 0%,rgba(255,101,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(255,101,0,.22);
 }
-.lfw__slide--3 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,229,0,0.18) 0%, rgba(255,229,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(255,229,0,0.22);
+.lfw__slide--3{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,229,0,.18) 0%,rgba(255,229,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(255,229,0,.22);
 }
-.lfw__slide--4 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(154,204,0,0.18) 0%, rgba(154,204,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(154,204,0,0.22);
+.lfw__slide--4{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(154,204,0,.18) 0%,rgba(154,204,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(154,204,0,.22);
 }
-.lfw__slide--5 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(0,214,20,0.18) 0%, rgba(0,214,20,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(0,214,20,0.22);
+.lfw__slide--5{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,214,20,.18) 0%,rgba(0,214,20,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(0,214,20,.22);
 }
-.lfw__slide--6 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(0,231,255,0.18) 0%, rgba(0,231,255,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(0,231,255,0.22);
+.lfw__slide--6{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,231,255,.18) 0%,rgba(0,231,255,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(0,231,255,.22);
 }
-.lfw__slide--7 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(0,24,238,0.18) 0%, rgba(0,24,238,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(0,24,238,0.22);
+.lfw__slide--7{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,24,238,.18) 0%,rgba(0,24,238,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(0,24,238,.22);
 }
-.lfw__slide--8 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(91,0,234,0.18) 0%, rgba(91,0,234,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(91,0,234,0.22);
+.lfw__slide--8{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(91,0,234,.18) 0%,rgba(91,0,234,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(91,0,234,.22);
 }
-.lfw__slide--9 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(144,0,144,0.18) 0%, rgba(144,0,144,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(144,0,144,0.22);
+.lfw__slide--9{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(144,0,144,.18) 0%,rgba(144,0,144,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(144,0,144,.22);
 }
-.lfw__slide--10 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,0,0,0.18) 0%, rgba(255,0,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(255,0,0,0.22);
+.lfw__slide--10{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,0,0,.18) 0%,rgba(255,0,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(255,0,0,.22);
 }
-.lfw__slide--11 {
-    background: radial-gradient(ellipse 80% 70% at 35% 45%, rgba(255,101,0,0.18) 0%, rgba(255,101,0,0.06) 50%, transparent 80%), #0a0a0d;
-    border-color: rgba(255,101,0,0.22);
+.lfw__slide--11{
+    background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,101,0,.18) 0%,rgba(255,101,0,.06) 50%,transparent 80%),#0a0a0d;
+    border-color:rgba(255,101,0,.22);
 }
 
-/* ── Responsive: en móvil desactivamos el pin ── */
+/* ── Responsive ── */
 @media (max-width: 900px) {
-    .lfw__content-wrap {
-        flex-direction: column;
-        padding: 40px 24px;
-        gap: 40px;
-    }
-    .lfw__left {
-        width: 100%;
-    }
-    .lfw__slides {
-        width: 100%;
-        height: 280px;
-    }
-    .lfw__list li {
-        font-size: 1rem;
-    }
+    .lfw { height: auto; min-height: 100vh; }
+    .lfw__inner { position: relative; height: auto; min-height: 100vh; padding: 60px 0; }
+    .lfw__content-wrap { flex-direction: column; padding: 40px 24px; gap: 40px; }
+    .lfw__left { width: 100%; }
+    .lfw__slides { width: 100%; height: 280px; }
+    .lfw__list li { font-size: 1rem; }
 }
-
 @media (max-width: 600px) {
-    .lfw__fill {
-        display: none;
-    }
-    .lfw__slides {
-        height: 220px;
-    }
+    .lfw__fill { display: none; }
+    .lfw__slides { height: 220px; }
 }
 
 .landing-bento {

@@ -64,12 +64,11 @@ class LandingView extends BaseView {
   }
 
   /**
-   * GSAP ScrollTrigger pin-list: idéntico al CodePen pomvabo de GreenSock,
-   * adaptado para que el scroller sea #app-container en vez de window.
+   * Efecto scroll-list (pin lateral) con CSS sticky + listener nativo.
+   * No usa GSAP pin para evitar incompatibilidades con #app-container.
    *
-   * Clave: pinType:'transform' — en lugar de position:fixed (que solo
-   * funciona con window), GSAP usa translateY() para mantener la sección
-   * visible mientras dura el scroll de la animación.
+   * CSS:  .lfw { height: 650vh }  .lfw__inner { position: sticky; top:0 }
+   * JS:   calcula progreso 0→1 por scrollTop y actualiza colores/slides/fill.
    */
   initLfwScrollAnimation() {
     if (typeof this.lfwScrollCleanup === 'function') {
@@ -77,71 +76,77 @@ class LandingView extends BaseView {
       this.lfwScrollCleanup = null;
     }
 
-    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
-
-    gsap.registerPlugin(ScrollTrigger);
-
     const scrollEl = document.getElementById('app-container');
     if (!scrollEl) return;
 
     const section   = document.querySelector('#landing-after-pillars');
     if (!section) return;
 
-    const list      = section.querySelector('.lfw__list');
+    const listEl    = section.querySelector('.lfw__list');
     const fill      = section.querySelector('.lfw__fill');
-    const listItems = list ? gsap.utils.toArray('li', list) : [];
-    const slides    = gsap.utils.toArray('.lfw__slide', section);
+    const listItems = listEl ? Array.from(listEl.querySelectorAll('li')) : [];
+    const slides    = Array.from(section.querySelectorAll('.lfw__slide'));
 
     if (!listItems.length || !slides.length) return;
 
+    const N              = listItems.length;
     const ACTIVE_COLOR   = '#ff6500';
     const INACTIVE_COLOR = 'rgba(212,209,216,0.28)';
 
-    // Primer ítem y primer slide siempre visibles al entrar
-    gsap.set(fill,     { scaleY: 1 / listItems.length, transformOrigin: 'top left' });
-    gsap.set(listItems[0], { color: ACTIVE_COLOR });
-    gsap.set(slides[0],    { autoAlpha: 1 });
-
-    // Con scroller personalizado, % se calcula sobre la altura total scrollable
-    // (no sobre el viewport). Usamos px explícito: 50vh × N items.
-    const viewportH = scrollEl.clientHeight || window.innerHeight;
-    const pinDist   = Math.round(listItems.length * 0.5 * viewportH);
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger:  section,
-        scroller: scrollEl,
-        start:    'top top',
-        end:      '+=' + pinDist + 'px',
-        pin:      true,
-        pinType:  'transform',
-        scrub:    true,
-      },
-    });
-
+    // Estado inicial: primer ítem y primer slide activos
     listItems.forEach((item, i) => {
-      const prevItem = listItems[i - 1];
-      if (prevItem) {
-        tl.set(item,       { color: ACTIVE_COLOR },   0.5 * i)
-          .to(slides[i],   { autoAlpha: 1, duration: 0.2 }, '<')
-          .set(prevItem,   { color: INACTIVE_COLOR }, '<')
-          .to(slides[i - 1], { autoAlpha: 0, duration: 0.2 }, '<');
-      }
+      item.style.color = i === 0 ? ACTIVE_COLOR : INACTIVE_COLOR;
     });
+    slides.forEach((slide, i) => {
+      slide.style.opacity    = i === 0 ? '1' : '0';
+      slide.style.visibility = i === 0 ? 'visible' : 'hidden';
+    });
+    if (fill) fill.style.transform = `scaleY(${1 / N})`;
 
-    tl.to(fill, {
-      scaleY: 1,
-      transformOrigin: 'top left',
-      ease: 'none',
-      duration: tl.duration(),
-    }, 0).to({}, {});   // pequeña pausa al final antes de despinar
+    let lastActive = 0;
 
-    ScrollTrigger.refresh();
+    const onScroll = () => {
+      const sectionTop = section.offsetTop;
+      const sectionH   = section.offsetHeight;       // ≈ 650vh
+      const viewportH  = scrollEl.clientHeight;
+      const scrollTop  = scrollEl.scrollTop;
+
+      // progress 0 → 1 mientras la sección está "pinned"
+      const progress = Math.max(0, Math.min(1,
+        (scrollTop - sectionTop) / (sectionH - viewportH)
+      ));
+
+      // Barra de progreso: crece de 1/N → 1
+      if (fill) {
+        fill.style.transform = `scaleY(${1 / N + progress * (1 - 1 / N)})`;
+      }
+
+      // Ítem activo basado en progreso
+      const activeIndex = Math.min(N - 1, Math.floor(progress * N));
+      if (activeIndex !== lastActive) {
+        listItems[lastActive].style.color  = INACTIVE_COLOR;
+        slides[lastActive].style.opacity   = '0';
+        slides[lastActive].style.visibility = 'hidden';
+
+        listItems[activeIndex].style.color  = ACTIVE_COLOR;
+        slides[activeIndex].style.opacity   = '1';
+        slides[activeIndex].style.visibility = 'visible';
+
+        lastActive = activeIndex;
+      }
+    };
+
+    scrollEl.addEventListener('scroll', onScroll, { passive: true });
+    onScroll(); // estado inicial correcto
 
     this.lfwScrollCleanup = () => {
-      ScrollTrigger.getAll().forEach((st) => {
-        if (st.vars && st.vars.trigger === section) st.kill();
+      scrollEl.removeEventListener('scroll', onScroll);
+      listItems.forEach(item => { item.style.color = ''; });
+      slides.forEach(slide => {
+        slide.style.opacity = '';
+        slide.style.visibility = '';
       });
+      if (fill) fill.style.transform = '';
     };
   }
 
