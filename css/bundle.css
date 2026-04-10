@@ -3841,29 +3841,25 @@ body.entrance-done .landing-header {
     background: rgba(255, 255, 255, 0.12);
 }
 
-/* Login: relleno #000, trazo 1.5px negro arriba → blanco abajo, blur, radio 20px */
+/* Login: relleno sólido, borde uniforme (sin degradado en el trazo) */
 .landing-header-login-btn {
-    --landing-login-fill: #000000;
     box-sizing: border-box;
     flex: 0 0 auto;
     width: 100px;
     min-width: 100px;
     height: 35px;
     padding: 0 10px;
-    border: 1.5px solid transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
     border-radius: 20px;
-    background:
-        linear-gradient(var(--landing-login-fill), var(--landing-login-fill)) padding-box,
-        linear-gradient(to bottom, #000000 0%, #ffffff 100%) border-box;
-    background-origin: padding-box, border-box;
-    background-clip: padding-box, border-box;
+    background: #000000;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     opacity: 1;
 }
 
 .landing-header-login-btn:hover {
-    --landing-login-fill: #0a0a0a;
+    background: #0a0a0a;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .landing-header-login-btn:focus-visible {
@@ -4785,7 +4781,7 @@ body.entrance-done .landing-header {
 }
 
 .lpf__content > .lpf__text:last-of-type {
-    margin-bottom: 32px;
+    margin-bottom: 0;
 }
 
 .lpf__cta {
