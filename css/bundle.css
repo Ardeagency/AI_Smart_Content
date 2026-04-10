@@ -5670,6 +5670,68 @@ body.entrance-done .landing-header {
     .vbento__card--improve   { min-height: 280px; }
 }
 
+/* ─────────────────────────────────────────
+   LANDING STATEMENT — "No responde a prompts"
+───────────────────────────────────────── */
+.landing-statement {
+    background: #000000;
+    color: #ffffff;
+    padding: clamp(96px, 15vw, 180px) 0;
+    text-align: center;
+}
+
+.landing-statement__inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 52px);
+}
+
+.landing-statement__heading {
+    margin: 0 0 clamp(20px, 2.8vw, 36px);
+    font-size: clamp(2rem, 5.5vw, 4.8rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.42) 0%,
+        rgba(255, 255, 255, 0.68) 35%,
+        rgba(255, 255, 255, 0.95) 70%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.landing-statement__sub {
+    margin: 0 0 clamp(32px, 4.5vw, 52px);
+    font-size: clamp(0.88rem, 1.3vw, 1.05rem);
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.landing-statement__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 13px 26px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(0.85rem, 1.1vw, 0.95rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.landing-statement__btn:hover {
+    border-color: rgba(255, 255, 255, 0.42);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
 /* ─── Landing: De la señal a la acción (3 tarjetas + CTA) ─── */
 .landing-signal {
     position: relative;
