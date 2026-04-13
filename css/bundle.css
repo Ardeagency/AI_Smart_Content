@@ -4047,11 +4047,8 @@ body.entrance-done .landing-header {
     align-items: center;
 }
 
-/* Lockup: smart + columna — caja uniforme para palabras (max-h + max-w); pad-y entre filas */
+/* Lockup: palabras a tamaño intrínseco (viewBox vía width/height en HTML); solo pad-y; viewport alto por JS */
 .landing-hero__lockup {
-    --hero-word-slot: clamp(44px, 6vw, 84px);
-    /* Ancho máx. ≈ el SVG más ancho (videos ~3.79× alto) para que ninguno se escale distinto */
-    --hero-word-max-w: calc(var(--hero-word-slot) * 3.85);
     --hero-word-pad-y: 15px;
     position: relative;
     z-index: 2;
@@ -4075,11 +4072,12 @@ body.entrance-done .landing-header {
     min-width: 0;
 }
 
-/* smart.svg: más bajo que cada palabra (altura de palabra = --hero-word-slot) */
+/* smart.svg: más compacto que el bloque de palabras (sin atar a slot fijo) */
 .landing-hero__smart-img {
     display: block;
-    height: calc(var(--hero-word-slot) * 0.88);
     width: auto;
+    height: auto;
+    max-height: clamp(32px, 5vw, 56px);
     max-width: min(64vw, 620px);
     object-fit: contain;
     object-position: center right;
@@ -4094,12 +4092,14 @@ body.entrance-done .landing-header {
     min-width: 0;
 }
 
-/* Viewport slot-machine: 5 filas; ancho acorde a la caja de palabras */
+/* Viewport: altura = ventana de 5 filas (JS); ancho tope para que max-width:100% en SVG escale proporcional */
 .landing-hero__words-viewport {
     position: relative;
     overflow: hidden;
-    height: calc((var(--hero-word-slot) + (2 * var(--hero-word-pad-y))) * 5);
-    width: min(var(--hero-word-max-w), 92vw);
+    min-height: 12rem;
+    height: auto;
+    width: 100%;
+    max-width: min(92vw, 640px);
     -webkit-mask-image: linear-gradient(
         to bottom,
         transparent 0%,
@@ -4124,16 +4124,19 @@ body.entrance-done .landing-header {
 .landing-hero__words-track {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
     will-change: transform;
     transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Cada fila: altura fija (offsetHeight estable para el carrusel); palabra centrada en la caja de contenido */
+/* Cada fila: altura natural del SVG + padding (el carrusel suma offsetHeight por fila en JS) */
 .landing-hero__words-item {
     flex-shrink: 0;
     box-sizing: border-box;
     padding: var(--hero-word-pad-y) 0;
-    height: calc(var(--hero-word-slot) + (2 * var(--hero-word-pad-y)));
+    height: auto;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -4146,8 +4149,7 @@ body.entrance-done .landing-header {
     display: block;
     width: auto;
     height: auto;
-    max-height: var(--hero-word-slot);
-    max-width: var(--hero-word-max-w);
+    max-width: 100%;
     flex-shrink: 0;
     object-fit: contain;
     object-position: left center;
@@ -4200,7 +4202,6 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__lockup {
-        --hero-word-slot: clamp(40px, 10vw, 62px);
         flex-direction: column;
         align-items: center;
         gap: clamp(12px, 3.5vw, 22px);
@@ -4212,26 +4213,21 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__smart-img {
-        height: calc(var(--hero-word-slot) * 0.88);
+        max-height: clamp(28px, 9vw, 48px);
         max-width: min(92vw, 440px);
         object-position: center center;
     }
 
     .landing-hero__words-viewport {
-        height: calc((var(--hero-word-slot) + (2 * var(--hero-word-pad-y))) * 5);
-        width: min(var(--hero-word-max-w), 92vw);
+        max-width: 92vw;
     }
 
     .landing-hero__words-item {
         padding: var(--hero-word-pad-y) 0;
-        height: calc(var(--hero-word-slot) + (2 * var(--hero-word-pad-y)));
     }
 
     .landing-hero__words-item img {
-        width: auto;
-        height: auto;
-        max-height: var(--hero-word-slot);
-        max-width: var(--hero-word-max-w);
+        max-width: 100%;
         object-fit: contain;
         object-position: left center;
     }

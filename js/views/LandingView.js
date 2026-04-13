@@ -428,18 +428,11 @@ class LandingView extends BaseView {
   /**
    * Hero words rotator — slot machine vertical infinita.
    *
-   * Layout: la columna de palabras es una pila vertical (flex-direction:column).
-   * El track se desplaza con translateY para simular un slot que avanza cada 2 s.
-   * Se prependen 2 clones (últimas 2 palabras) y se añaden 3 clones al final
-   * para que el bucle sea completamente seamless.
+   * Cada fila tiene altura natural (SVG intrínseco + padding). prefix[i] = suma de
+   * alturas de las filas 0..i-1; translateY = -prefix[realIdx]. El viewport recibe
+   * la altura máxima de cualquier ventana de 5 filas consecutivas para que no recorte.
    *
-   * Estructura del track:
-   *   [clone(N-2), clone(N-1), real(0..N-1), clone(0), clone(1), clone(2)]
-   *
-   * translateY = -realIdx * wordHeight
-   * → realIdx=0: muestra clone(N-2), clone(N-1), real(0), real(1), real(2)  ✓
-   * → realIdx=N: muestra real(N-2), real(N-1), clone(0), clone(1), clone(2)
-   *   → snap instantáneo a realIdx=0 (mismo contenido visual) ✓
+   * Track: [clone(N-2), clone(N-1), real(0..N-1), clone(0), clone(1), clone(2)]
    */
   initHeroWordsRotator() {
     if (typeof this.heroWordsRotatorCleanup === 'function') {
@@ -448,66 +441,121 @@ class LandingView extends BaseView {
     }
 
     const track = document.querySelector('.landing-hero__words-track');
-    if (!track) return;
+    const viewport = document.querySelector('.landing-hero__words-viewport');
+    if (!track || !viewport) return;
 
     const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
     if (realItems.length < 2) return;
 
     const N = realItems.length;
 
-    // Prepend en orden inverso para que el DOM quede: [clone(N-2), clone(N-1), real(0)...]
-    // insertBefore al firstChild invierte el orden de iteración, así que iteramos [N-1, N-2]
     [realItems[N - 1], realItems[N - 2]].forEach(item => {
       track.insertBefore(item.cloneNode(true), track.firstChild);
     });
 
-    // Append: clone(0), clone(1), clone(2) al final
     for (let i = 0; i < 3; i++) {
       track.appendChild(realItems[i].cloneNode(true));
     }
 
     let realIdx = 0;
     let busy = false;
+    let prefix = [0];
 
-    const getWordH = () => realItems[0].offsetHeight || 48;
+    const remeasure = () => {
+      const kids = Array.from(track.children);
+      const next = [0];
+      for (let i = 0; i < kids.length; i++) {
+        next.push(next[i] + kids[i].offsetHeight);
+      }
+      prefix = next;
+
+      let maxFive = 0;
+      if (kids.length >= 5) {
+        for (let i = 0; i <= kids.length - 5; i++) {
+          const win = next[i + 5] - next[i];
+          if (win > maxFive) maxFive = win;
+        }
+      } else if (kids.length > 0) {
+        maxFive = next[kids.length];
+      }
+      if (maxFive > 0) {
+        viewport.style.height = `${Math.ceil(maxFive)}px`;
+      }
+    };
 
     const setPos = (idx, animate) => {
-      const h = getWordH();
       track.style.transition = animate
         ? 'transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)'
         : 'none';
-      track.style.transform = `translateY(${-idx * h}px)`;
-      if (!animate) void track.offsetHeight; // fuerza reflow
+      const y = prefix[idx] !== undefined ? prefix[idx] : 0;
+      track.style.transform = `translateY(${-y}px)`;
+      if (!animate) void track.offsetHeight;
     };
 
-    // Posición inicial: real(0) en el centro del slot (2 ítems arriba = clones)
-    setPos(0, false);
+    const settleLayout = () => {
+      remeasure();
+      setPos(realIdx, false);
+    };
+
+    let rafResize = 0;
+    const onResize = () => {
+      cancelAnimationFrame(rafResize);
+      rafResize = requestAnimationFrame(settleLayout);
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(settleLayout);
+    });
+
+    const imgs = track.querySelectorAll('img');
+    const onImgLoad = () => settleLayout();
+    imgs.forEach(img => {
+      if (!img.complete) img.addEventListener('load', onImgLoad);
+    });
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(onResize);
+      ro.observe(track);
+    }
+    window.addEventListener('resize', onResize, { passive: true });
+
+    let timer = null;
+
+    const detachStatic = () => {
+      cancelAnimationFrame(rafResize);
+      window.removeEventListener('resize', onResize);
+      if (ro) ro.disconnect();
+      imgs.forEach(img => img.removeEventListener('load', onImgLoad));
+    };
 
     if (
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
-      this.heroWordsRotatorCleanup = () => {};
+      this.heroWordsRotatorCleanup = detachStatic;
       return;
     }
 
-    const timer = window.setInterval(() => {
+    timer = window.setInterval(() => {
       if (busy) return;
       realIdx++;
       setPos(realIdx, true);
 
-      // Al llegar al clon(0) (índice N), hacer snap invisible de vuelta a real(0)
       if (realIdx >= N) {
         busy = true;
-        setTimeout(() => {
+        window.setTimeout(() => {
           realIdx = 0;
-          setPos(0, false);
+          settleLayout();
           busy = false;
-        }, 750); // duración de la transición CSS
+        }, 750);
       }
     }, 2000);
 
-    this.heroWordsRotatorCleanup = () => window.clearInterval(timer);
+    this.heroWordsRotatorCleanup = () => {
+      detachStatic();
+      if (timer != null) window.clearInterval(timer);
+    };
   }
 
   onLeave() {
