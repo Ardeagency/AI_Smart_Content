@@ -4048,16 +4048,17 @@ body.entrance-done .landing-header {
 }
 
 /* Lockup: smart + palabra rotativa pegadas (sin columna “1fr” que abre hueco) */
+/* Lockup: smart + palabra rotativa — fila única centrada como bloque */
 .landing-hero__lockup {
     position: relative;
     z-index: 2;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
     gap: 0;
     width: fit-content;
-    max-width: 100%;
+    max-width: 96vw;
     margin: 0 auto;
     isolation: isolate;
 }
@@ -4069,12 +4070,12 @@ body.entrance-done .landing-header {
     justify-content: flex-end;
 }
 
-/* smart.svg: altura fija alineada con palabras del carrusel */
+/* smart.svg: grande para que "smart" sea el elemento dominante */
 .landing-hero__smart-img {
     display: block;
-    height: clamp(48px, 8vw, 96px);
+    height: clamp(72px, 13vw, 180px);
     width: auto;
-    max-width: min(500px, 50vw);
+    max-width: min(700px, 60vw);
 }
 
 .landing-hero__words {
@@ -4084,12 +4085,12 @@ body.entrance-done .landing-header {
     justify-content: flex-start;
 }
 
-/* Ventana: muestra UNA sola palabra */
+/* Viewport de palabras — ancho proporcional al contenido real de los SVG */
 .landing-hero__words-viewport {
     position: relative;
     overflow: hidden;
-    height: clamp(48px, 8vw, 96px);
-    min-width: min(400px, 52vw);
+    height: clamp(72px, 13vw, 180px);
+    width: clamp(140px, 20vw, 300px);
 }
 
 /* Contenedor para anclar palabras con position:absolute */
@@ -4119,9 +4120,9 @@ body.entrance-done .landing-header {
 
 .landing-hero__words-item img {
     display: block;
-    height: clamp(48px, 8vw, 96px);
+    height: 100%;
     width: auto;
-    max-width: min(460px, 54vw);
+    max-width: 100%;
 }
 
 .landing-hero__eyebrow {
@@ -4182,18 +4183,19 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__smart-img {
-        height: clamp(36px, 10vw, 64px);
-        max-width: min(320px, 82vw);
+        height: clamp(48px, 12vw, 80px);
+        max-width: min(360px, 88vw);
     }
 
     .landing-hero__words-viewport {
-        height: clamp(36px, 10vw, 64px);
-        min-width: min(320px, 82vw);
+        height: clamp(48px, 12vw, 80px);
+        width: clamp(160px, 60vw, 280px);
     }
 
     .landing-hero__words-item img {
-        height: clamp(36px, 10vw, 64px);
-        max-width: min(340px, 82vw);
+        height: 100%;
+        width: auto;
+        max-width: 100%;
     }
 
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
