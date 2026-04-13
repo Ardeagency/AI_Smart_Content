@@ -54,13 +54,18 @@
 </section>
 
 <!-- ══════════════════════════════════════════
-     VERA INTRO — "Conoce Vera"
-     Inspirado en el estilo de sección intro (Lazy AI)
-     Banner strip + heading + panel mockup de Vera
+     VERA INTRO — estilo hero Lazy AI
+     Banner strip · Heading · Launcher widget
 ══════════════════════════════════════════ -->
 <section class="lintro" id="landing-vera-intro" aria-labelledby="lintro-heading">
 
-    <!-- Banner strip: líneas + eyebrow + separador + subtext -->
+    <!-- Fondo ambiental (orbes difusos) -->
+    <div class="lintro__bg" aria-hidden="true">
+        <div class="lintro__bg-orb lintro__bg-orb--1"></div>
+        <div class="lintro__bg-orb lintro__bg-orb--2"></div>
+    </div>
+
+    <!-- Banner strip: línea | "Conoce Vera" · sep · subtext | línea -->
     <div class="lintro__banner sr-reveal">
         <div class="lintro__line"></div>
         <div class="lintro__tag">
@@ -71,56 +76,84 @@
         <div class="lintro__line"></div>
     </div>
 
-    <!-- Heading central -->
+    <!-- Heading: dos tramos (negrita + gradiente) -->
     <div class="lintro__text sr-reveal sr-reveal--d1">
         <h2 id="lintro-heading" class="lintro__h2">
-            <span class="lintro__h2-a">Captura señales.</span>
-            <span class="lintro__h2-b">Ejecuta sin fricción.</span>
+            <span class="lintro__h2-a">Señal,</span>
+            <span class="lintro__h2-b">ejecutada en segundos.</span>
         </h2>
         <p class="lintro__desc">
-            Vera observa el mercado, interpreta el contexto de tu marca
-            y convierte cada oportunidad en contenido listo para publicar.
+            Un contexto. Una instrucción. Vera procesa, decide y ejecuta.
         </p>
     </div>
 
-    <!-- Panel / mockup visual de Vera en acción -->
-    <div class="lintro__panel-wrap sr-reveal sr-reveal--d2">
-        <div class="lintro__panel">
-            <div class="lintro__panel-top">
-                <div class="lintro__panel-brand">
-                    <img src="/recursos/Recursos%20de%20Marca/Recursos/Vera-2.svg" alt="Vera" class="lintro__vera-logo" width="90" height="34">
-                    <span class="lintro__panel-status">
-                        <span class="lintro__pulse"></span>
-                        Activo
-                    </span>
-                </div>
-                <span class="lintro__panel-hint">Procesando en tiempo real</span>
+    <!-- Launcher de Vera (widget tipo Lazy AI) -->
+    <div class="lintro__launcher-wrap sr-reveal sr-reveal--d2">
+
+        <!-- Modal superior de acceso (superpuesto) -->
+        <div class="lintro__access">
+            <div class="lintro__access-top">
+                <p class="lintro__access-label">Accede a Vera y empieza a escalar.</p>
+                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="lintro__access-icon" aria-hidden="true" width="20" height="20">
+                    <path d="M9.374 3.959 7.291 5.834l2.083 1.875M10.625 16.041l2.083-1.875-2.083-1.875" stroke="#6C6E76" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.125 5.834h2.917a5 5 0 0 1 5 5v.208M11.876 14.167H8.959a5 5 0 0 1-5-5V8.96" stroke="#6C6E76" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
-            <div class="lintro__panel-body">
-                <div class="lintro__row lintro__row--signal">
-                    <span class="lintro__row-label">Señal</span>
-                    <span class="lintro__row-val">+23 % interés en automatización de marketing en tu sector</span>
-                </div>
-                <div class="lintro__row lintro__row--decision">
-                    <span class="lintro__row-label">Decisión</span>
-                    <span class="lintro__row-val">Crear contenido educativo sobre IA para tu audiencia objetivo</span>
-                </div>
-                <div class="lintro__row lintro__row--output">
-                    <span class="lintro__row-label">Ejecución</span>
-                    <span class="lintro__row-val">3 piezas listas · 1 hilo · 2 copies para ads</span>
-                </div>
-            </div>
-            <div class="lintro__panel-footer">
-                <span class="lintro__panel-time">Hace 4 segundos</span>
-                <a href="/contacto" class="lintro__panel-cta">Ver demo →</a>
+            <div class="lintro__access-bottom">
+                <a href="/contacto" class="lintro__access-btn">
+                    <span>Solicitar acceso</span>
+                </a>
             </div>
         </div>
-    </div>
+
+        <!-- Launcher principal -->
+        <div class="lintro__launcher">
+
+            <!-- Badge "prueba en vivo" -->
+            <div class="lintro__try-badge" aria-hidden="true">
+                <span>Haz clic o escribe</span>
+                <kbd class="lintro__kbd">/</kbd>
+                <span>para acciones de Vera</span>
+            </div>
+
+            <!-- Área de entrada / editor -->
+            <div class="lintro__editor-zone">
+                <div class="lintro__cursor" aria-hidden="true"></div>
+                <p class="lintro__placeholder">
+                    Escribe algo o usa <kbd>/</kbd> para comandos de Vera
+                </p>
+            </div>
+
+            <!-- Branding link -->
+            <div class="lintro__launcher-link">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="14" height="14">
+                    <path d="M12.166 8.833 12.999 8a2.828 2.828 0 1 0-4-4l-.833.833M5.834 7.167 5 8a2.828 2.828 0 1 0 4 4l.834-.834M10.5 6.5l-3 3" stroke="#808085" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <img src="/recursos/Recursos%20de%20Marca/Recursos/Vera-2.svg" alt="Vera" class="lintro__vera-inline" width="48" height="18">
+                <span>· El sistema que piensa contigo</span>
+            </div>
+
+            <!-- Barra inferior: señales + procesar -->
+            <div class="lintro__launcher-bottom">
+                <hr class="lintro__divider">
+                <div class="lintro__launcher-footer">
+                    <div class="lintro__launcher-inbox">
+                        <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="14" height="14">
+                            <path d="m12.049 7.157-.913-3.196a1.152 1.152 0 0 0-1.108-.835H5.72c-.515 0-.967.341-1.108.836L3.7 7.156M6.846 7.513c-.149-.193-.357-.356-.601-.356H3.699v3.167c0 .636.516 1.152 1.152 1.152h6.046c.636 0 1.152-.516 1.152-1.152V7.157H9.503c-.244 0-.452.163-.6.356a1.294 1.294 0 0 1-2.057 0Z" stroke="#B8B8B8" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Señales</span>
+                    </div>
+                    <button class="lintro__launcher-btn" type="button">Procesar</button>
+                </div>
+            </div>
+
+        </div>
+    </div><!-- /.lintro__launcher-wrap -->
 
     <!-- Párrafo inferior -->
-    <p class="lintro__try sr-reveal sr-reveal--d3">
-        <a href="/contacto" class="lintro__try-link">Solicita acceso</a>
-        · Descubre cómo Vera transforma señal en contenido antes de que tu competencia lo vea.
+    <p class="lintro__footer-text sr-reveal sr-reveal--d3">
+        <a href="/contacto" class="lintro__footer-link">Prueba la demo</a>
+        · Descubre cómo Vera convierte señales en contenido antes de que tu competencia lo vea.
     </p>
 
 </section>

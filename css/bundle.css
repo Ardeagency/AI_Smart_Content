@@ -4220,33 +4220,71 @@ body.entrance-done .landing-header {
     .landing-hero__orb     { filter: blur(60px); opacity: 0.18; }
 }
 /* ─────────────────────────────────────────
-   VERA INTRO — sección "Conoce Vera"
-   (entre hero y value-pillars, estilo Lazy AI intro)
+   VERA INTRO — hero estilo Lazy AI
+   Banner strip · Heading · Launcher widget
 ───────────────────────────────────────── */
+
+/* Sección base */
 .lintro {
-    background: #000000;
+    position: relative;
+    background: #0d0d10;
     color: #ffffff;
-    padding: clamp(80px, 12vh, 160px) clamp(24px, 6vw, 96px);
+    padding: clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 10vh, 120px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(40px, 6vw, 72px);
+    gap: clamp(36px, 5vw, 60px);
     text-align: center;
+    overflow: hidden;
 }
 
-/* Banner strip */
+/* Orbes ambientales de fondo */
+.lintro__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.lintro__bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.18;
+}
+
+.lintro__bg-orb--1 {
+    width: 600px;
+    height: 500px;
+    background: radial-gradient(ellipse, #3b1fa8, transparent 70%);
+    top: -100px;
+    left: -150px;
+}
+
+.lintro__bg-orb--2 {
+    width: 500px;
+    height: 400px;
+    background: radial-gradient(ellipse, #1a3a6b, transparent 70%);
+    bottom: -80px;
+    right: -100px;
+}
+
+/* Todo el contenido por encima del fondo */
+.lintro > * { position: relative; z-index: 1; }
+
+/* ── Banner strip ── */
 .lintro__banner {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
     width: 100%;
-    max-width: 900px;
+    max-width: 860px;
 }
 
 .lintro__line {
     flex: 1;
     height: 1px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .lintro__tag {
@@ -4257,11 +4295,11 @@ body.entrance-done .landing-header {
 }
 
 .lintro__eyebrow {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.82);
 }
 
 .lintro__sep {
@@ -4269,27 +4307,25 @@ body.entrance-done .landing-header {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.25);
     flex-shrink: 0;
 }
 
 .lintro__subtext {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.38);
+    color: rgba(255, 255, 255, 0.35);
 }
 
-/* Heading */
-.lintro__text {
-    max-width: 860px;
-}
+/* ── Heading ── */
+.lintro__text { max-width: 820px; }
 
 .lintro__h2 {
-    font-size: clamp(2.8rem, 6.5vw, 5.6rem);
+    font-size: clamp(2.8rem, 6.5vw, 5.8rem);
     font-weight: 700;
-    letter-spacing: -0.035em;
-    line-height: 1.05;
-    margin: 0 0 clamp(18px, 2.5vw, 30px);
+    letter-spacing: -0.036em;
+    line-height: 1.04;
+    margin: 0 0 clamp(16px, 2vw, 24px);
 }
 
 .lintro__h2-a {
@@ -4299,180 +4335,257 @@ body.entrance-done .landing-header {
 
 .lintro__h2-b {
     display: block;
-    background: linear-gradient(to right, rgba(255,255,255,0.52), rgba(255,255,255,0.78));
+    background: linear-gradient(to right, rgba(255,255,255,0.48), rgba(255,255,255,0.72));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
 
 .lintro__desc {
-    font-size: clamp(0.95rem, 1.5vw, 1.12rem);
-    color: rgba(255, 255, 255, 0.5);
+    font-size: clamp(0.9rem, 1.4vw, 1.08rem);
+    color: rgba(255, 255, 255, 0.44);
     line-height: 1.7;
     margin: 0;
 }
 
-/* Panel mockup de Vera */
-.lintro__panel-wrap {
+/* ── Launcher wrap: agrupa modal de acceso + launcher ── */
+.lintro__launcher-wrap {
+    position: relative;
     width: 100%;
-    max-width: 660px;
+    max-width: 520px;
 }
 
-.lintro__panel {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+/* Modal de acceso — solapado encima del launcher (igual que Lazy AI) */
+.lintro__access {
+    background: #1c1c21;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
     overflow: hidden;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow:
-        0 0 0 1px rgba(255,255,255,0.04) inset,
-        0 24px 80px rgba(0,0,0,0.6);
-    text-align: left;
 }
 
-.lintro__panel-top {
+.lintro__access-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px;
+    padding: 16px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 
-.lintro__panel-brand {
+.lintro__access-label {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.58);
+    margin: 0;
+}
+
+.lintro__access-icon {
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.lintro__access-bottom {
+    padding: 14px 20px;
+}
+
+.lintro__access-btn {
     display: flex;
     align-items: center;
-    gap: 14px;
+    justify-content: center;
+    width: 100%;
+    padding: 11px 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.82);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+    position: relative;
+    overflow: hidden;
 }
 
-.lintro__vera-logo {
-    display: block;
-    height: 20px;
-    width: auto;
-    filter: brightness(0) invert(1);
-    opacity: 0.88;
+.lintro__access-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 60% at var(--x,50%) var(--y,50%),
+        rgba(255,255,255,0.12), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
-.lintro__panel-status {
+.lintro__access-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.28);
+    color: #ffffff;
+}
+
+.lintro__access-btn:hover::before { opacity: 1; }
+
+/* ── Launcher principal ── */
+.lintro__launcher {
+    background: #18181c;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0 0 18px 18px;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 32px 80px rgba(0,0,0,0.7),
+        0 0 120px rgba(80,60,160,0.12);
+    text-align: left;
+}
+
+/* Badge "prueba en vivo" */
+.lintro__try-badge {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    color: rgba(255, 255, 255, 0.48);
+    padding: 12px 20px 8px;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.32);
 }
 
-.lintro__pulse {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #00d614;
-    box-shadow: 0 0 8px #00d614;
-    animation: lintro-pulse 2s ease-in-out infinite;
+.lintro__kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.06);
+    font-family: inherit;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
 }
 
-@keyframes lintro-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.55; transform: scale(0.8); }
-}
-
-.lintro__panel-hint {
-    font-size: 0.66rem;
-    color: rgba(255,255,255,0.26);
-    letter-spacing: 0.04em;
-}
-
-.lintro__panel-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.lintro__row {
+/* Área de entrada / editor */
+.lintro__editor-zone {
+    min-height: 80px;
+    padding: 14px 20px 20px;
     display: flex;
     align-items: flex-start;
-    gap: 16px;
-    padding: 16px 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    transition: background 0.2s;
+    gap: 10px;
+    cursor: text;
 }
 
-.lintro__row:last-child { border-bottom: none; }
-.lintro__row:hover { background: rgba(255,255,255,0.025); }
-
-.lintro__row-label {
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+.lintro__cursor {
+    width: 1px;
+    height: 20px;
+    background: #ffffff;
+    box-shadow: 0 0 8px #fff;
+    margin-top: 1px;
     flex-shrink: 0;
-    width: 76px;
-    padding-top: 2px;
+    animation: lintro-blink 1s linear infinite;
 }
 
-.lintro__row--signal   .lintro__row-label { color: #ff6500; }
-.lintro__row--decision .lintro__row-label { color: #ffe500; }
-.lintro__row--output   .lintro__row-label { color: #00d614; }
+@keyframes lintro-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
 
-.lintro__row-val {
+.lintro__placeholder {
     font-size: 0.88rem;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.55;
+    color: rgba(255,255,255,0.28);
+    margin: 0;
+    line-height: 1.5;
 }
 
-.lintro__panel-footer {
+.lintro__placeholder kbd {
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.48);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 4px;
+    padding: 0 5px;
+}
+
+/* Branding link */
+.lintro__launcher-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 20px 12px;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.28);
+}
+
+.lintro__vera-inline {
+    display: block;
+    height: 14px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.35;
+}
+
+/* Divider + footer bar */
+.lintro__divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    margin: 0;
+}
+
+.lintro__launcher-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
-    border-top: 1px solid rgba(255,255,255,0.07);
-    background: rgba(255,255,255,0.02);
+    padding: 12px 20px;
 }
 
-.lintro__panel-time {
-    font-size: 0.66rem;
-    color: rgba(255,255,255,0.24);
+.lintro__launcher-inbox {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
 }
 
-.lintro__panel-cta {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.62);
-    text-decoration: none;
-    letter-spacing: 0.02em;
-    transition: color 0.2s;
+.lintro__launcher-btn {
+    padding: 7px 18px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.72);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.lintro__panel-cta:hover { color: #ffffff; }
+.lintro__launcher-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.26);
+    color: #ffffff;
+}
 
-/* Párrafo inferior */
-.lintro__try {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.34);
+/* ── Párrafo inferior ── */
+.lintro__footer-text {
+    font-size: 0.83rem;
+    color: rgba(255,255,255,0.3);
     line-height: 1.65;
     margin: 0;
-    max-width: 560px;
+    max-width: 520px;
 }
 
-.lintro__try-link {
-    color: rgba(255,255,255,0.68);
+.lintro__footer-link {
+    color: rgba(255,255,255,0.62);
     font-weight: 500;
     text-decoration: none;
-    border-bottom: 1px solid rgba(255,255,255,0.18);
+    border-bottom: 1px solid rgba(255,255,255,0.16);
     transition: color 0.2s, border-color 0.2s;
 }
 
-.lintro__try-link:hover {
+.lintro__footer-link:hover {
     color: #ffffff;
-    border-color: rgba(255,255,255,0.48);
+    border-color: rgba(255,255,255,0.45);
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* ── Responsive ── */
+@media (max-width: 600px) {
     .lintro__tag { flex-direction: column; gap: 4px; }
     .lintro__sep { display: none; }
-    .lintro__row { flex-direction: column; gap: 4px; }
-    .lintro__row-label { width: auto; }
+    .lintro__launcher-wrap { max-width: 100%; }
 }
 
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
