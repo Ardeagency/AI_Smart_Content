@@ -114,7 +114,6 @@ Manejo de errores KIE en el proxy:
 
 - `docs/KIE-VIDEO-API.md`: Documentación de la API KIE (createTask, recordInfo, códigos de error, prevención 524).
 - `docs/FLUJO-VIDEO-OPENAI-KIE.md`: Flujo OpenAI (prompt) → KIE (producción).
-- `docs/KLING-API-ANALISIS-TEXT-IMAGE-VIDEO.md`: Comparativa con la API oficial de Kling (referencia; la app no la usa).
 
 ---
 
