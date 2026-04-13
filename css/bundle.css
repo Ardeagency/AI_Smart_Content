@@ -4224,7 +4224,7 @@ body.entrance-done .landing-header {
 ───────────────────────────────────────── */
 
 .vprompt {
-    background: #0c0c0e;
+    background: #000000;
     color: #ffffff;
     padding: clamp(72px, 11vh, 130px) clamp(20px, 5vw, 60px) clamp(60px, 10vh, 110px);
     display: flex;
