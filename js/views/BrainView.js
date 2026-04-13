@@ -645,7 +645,7 @@ function renderMarkdown(text, opts = {}) {
   }).filter(Boolean).join('');
 }
 
-const VERA_AVATAR_SRC = '/recursos/Recursos%20de%20Marca/Recursos/Vera.svg';
+const VERA_AVATAR_SRC = '/recursos/vera/Vera.svg';
 
 /** URL del chat: ai-engine externo o Netlify Function en el mismo origen */
 function getAiChatUrl() {

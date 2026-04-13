@@ -7,7 +7,7 @@ const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'insight', label: 'Insight', icon: 'fa-chart-line', iconSrc: '/recursos/icons/insight.svg', route: 'insight' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/Recursos%20de%20Marca/Recursos/Vera.svg', route: 'brain' },
+    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'brain' },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -428,7 +428,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <div class="header-logo">
-              <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="AI Smart Content" class="header-logo-img">
+              <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="header-logo-img">
             </div>
           </div>
           <div class="header-right">

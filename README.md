@@ -81,8 +81,15 @@ AI Smart Content/
 |   |-- functions/          # RPCs activas (products, inputs, living)
 |   `-- seeds/              # Seeds de datos (templates UI)
 |-- memory-banks/           # Bancos de memoria de Vera (identidad, estrategia, datos)
-|-- recursos/               # Assets de marca (logos, fondos, iconos)
-|-- favicons/               # Favicons SVG (claro/oscuro)
+|-- recursos/               # Todos los recursos visuales
+|   |-- logos/              # Variantes del logo AI Smart Content
+|   |-- vera/               # Identidad visual de Vera
+|   |-- assets/             # Assets graficos de marca
+|   |-- banners/            # Banners SVG para landing
+|   |-- icons/              # Iconos de interfaz (SVG)
+|   |-- favicons/           # Favicons SVG (claro/oscuro)
+|   |-- fondos/             # Fondos e imagenes de fondo
+|   `-- source/             # Archivos fuente Illustrator (.ai)
 `-- docs/                   # Documentacion tecnica y specs de producto
 ```
 

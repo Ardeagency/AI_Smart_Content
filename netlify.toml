@@ -180,11 +180,11 @@
   to = "/recursos/:splat"
   status = 200
 
-# Favicons - servir directamente (evitar que el SPA fallback devuelva index.html)
+# Favicons - redirige ruta legacy a nueva ubicación dentro de recursos/
 [[redirects]]
   from = "/favicons/*"
-  to = "/favicons/:splat"
-  status = 200
+  to = "/recursos/favicons/:splat"
+  status = 301
 
 # SQL files - bloqueado: no exponer esquema de base de datos públicamente
 [[redirects]]
@@ -237,7 +237,7 @@
 
 # Headers para favicons (cache largo, son estáticos)
 [[headers]]
-  for = "/favicons/*"
+  for = "/recursos/favicons/*"
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
