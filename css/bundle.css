@@ -4072,10 +4072,10 @@ body.entrance-done .landing-header {
     min-width: 0;
 }
 
-/* smart.svg a tamaño natural escalado por --hero-row; viewBox 525×116 → ratio ≈ 4.52 */
+/* smart.svg: misma altura de imagen que las palabras (row menos 12px arriba y 12px abajo) */
 .landing-hero__smart-img {
     display: block;
-    height: var(--hero-row);
+    height: calc(var(--hero-row) - 24px);
     width: auto;
     max-width: min(64vw, 580px);
 }
@@ -4138,7 +4138,7 @@ body.entrance-done .landing-header {
 
 .landing-hero__words-item img {
     display: block;
-    height: 100%;
+    height: calc(var(--hero-row) - 24px);
     width: auto;
     max-width: none;
     flex-shrink: 0;
