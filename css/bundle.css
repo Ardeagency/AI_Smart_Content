@@ -4221,70 +4221,85 @@ body.entrance-done .landing-header {
 }
 /* ─────────────────────────────────────────
    VERA INTRO — hero estilo Lazy AI
-   Banner strip · Heading · Launcher widget
+   Círculo · Banner · Heading · Launcher
 ───────────────────────────────────────── */
 
-/* Sección base */
+/* ── Sección base ── */
 .lintro {
     position: relative;
-    background: #0d0d10;
+    background: #141416;        /* gris oscuro FUERA del círculo */
     color: #ffffff;
-    padding: clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 10vh, 120px);
+    padding: clamp(80px, 12vh, 140px) clamp(20px, 5vw, 60px) clamp(60px, 10vh, 120px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(36px, 5vw, 60px);
+    gap: clamp(28px, 4vw, 48px);
     text-align: center;
     overflow: hidden;
+    min-height: 100vh;
 }
 
-/* Orbes ambientales de fondo */
-.lintro__bg {
+/* ── Gran círculo oscuro centrado (el "lente" de Lazy AI) ── */
+.lintro__sphere {
     position: absolute;
-    inset: 0;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(940px, 94vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #0b0b0d;        /* más oscuro DENTRO */
+    border: 1px solid rgba(255,255,255,0.05);
     pointer-events: none;
     z-index: 0;
 }
 
-.lintro__bg-orb {
+/* ── Rayos de luz horizontales en los costados del círculo ── */
+.lintro__ray {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.18;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 1px;
+    width: clamp(80px, 14vw, 160px);
+    pointer-events: none;
+    z-index: 1;
 }
 
-.lintro__bg-orb--1 {
-    width: 600px;
-    height: 500px;
-    background: radial-gradient(ellipse, #3b1fa8, transparent 70%);
-    top: -100px;
-    left: -150px;
+.lintro__ray--left {
+    right: calc(50% + min(470px, 47vw) - 30px);
+    background: linear-gradient(to left, rgba(255,255,255,0.0), rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.0));
+    box-shadow:
+        0 0 18px 5px rgba(255,255,255,0.35),
+        0 0 60px 20px rgba(255,255,255,0.08);
 }
 
-.lintro__bg-orb--2 {
-    width: 500px;
-    height: 400px;
-    background: radial-gradient(ellipse, #1a3a6b, transparent 70%);
-    bottom: -80px;
-    right: -100px;
+.lintro__ray--right {
+    left: calc(50% + min(470px, 47vw) - 30px);
+    background: linear-gradient(to right, rgba(255,255,255,0.0), rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.0));
+    box-shadow:
+        0 0 18px 5px rgba(255,255,255,0.35),
+        0 0 60px 20px rgba(255,255,255,0.08);
 }
 
 /* Todo el contenido por encima del fondo */
-.lintro > * { position: relative; z-index: 1; }
+.lintro > *:not(.lintro__sphere):not(.lintro__ray) {
+    position: relative;
+    z-index: 2;
+}
 
-/* ── Banner strip ── */
+/* ── Banner strip: línea | eyebrow | pipe | subtext | línea ── */
 .lintro__banner {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     width: 100%;
-    max-width: 860px;
+    max-width: 760px;
 }
 
 .lintro__line {
     flex: 1;
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,0.18);
 }
 
 .lintro__tag {
@@ -4295,177 +4310,80 @@ body.entrance-done .landing-header {
 }
 
 .lintro__eyebrow {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.76);
 }
 
-.lintro__sep {
-    display: inline-block;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.25);
-    flex-shrink: 0;
+.lintro__pipe {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.28);
+    line-height: 1;
 }
 
 .lintro__subtext {
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: rgba(255,255,255,0.38);
 }
 
-/* ── Heading ── */
-.lintro__text { max-width: 820px; }
+/* ── Heading inline (como Lazy AI: bold + italic-light mismo tamaño) ── */
+.lintro__text { max-width: 840px; }
 
 .lintro__h2 {
-    font-size: clamp(2.8rem, 6.5vw, 5.8rem);
+    font-size: clamp(2.4rem, 6vw, 5.6rem);
     font-weight: 700;
-    letter-spacing: -0.036em;
-    line-height: 1.04;
-    margin: 0 0 clamp(16px, 2vw, 24px);
+    letter-spacing: -0.03em;
+    line-height: 1.06;
+    margin: 0 0 clamp(14px, 2vw, 22px);
 }
 
+/* "Señal" — bold blanco */
 .lintro__h2-a {
-    display: block;
     color: #ffffff;
 }
 
+/* "al ritmo del pensamiento" — lighter/italic, muted */
 .lintro__h2-b {
-    display: block;
-    background: linear-gradient(to right, rgba(255,255,255,0.48), rgba(255,255,255,0.72));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(255,255,255,0.6);
 }
 
 .lintro__desc {
-    font-size: clamp(0.9rem, 1.4vw, 1.08rem);
-    color: rgba(255, 255, 255, 0.44);
+    font-size: clamp(0.88rem, 1.4vw, 1.05rem);
+    color: rgba(255,255,255,0.42);
     line-height: 1.7;
     margin: 0;
 }
 
-/* ── Launcher wrap: agrupa modal de acceso + launcher ── */
+/* ── Launcher: tarjeta simple sin modal encima ── */
 .lintro__launcher-wrap {
-    position: relative;
     width: 100%;
-    max-width: 520px;
+    max-width: 500px;
 }
 
-/* Modal de acceso — solapado encima del launcher (igual que Lazy AI) */
-.lintro__access {
-    background: #1c1c21;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px 16px 0 0;
-    border-bottom: none;
-    overflow: hidden;
-}
-
-.lintro__access-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-}
-
-.lintro__access-label {
-    font-size: 0.82rem;
-    color: rgba(255,255,255,0.58);
-    margin: 0;
-}
-
-.lintro__access-icon {
-    flex-shrink: 0;
-    opacity: 0.6;
-}
-
-.lintro__access-bottom {
-    padding: 14px 20px;
-}
-
-.lintro__access-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 11px 20px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.82);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.25s, border-color 0.25s, color 0.25s;
-    position: relative;
-    overflow: hidden;
-}
-
-.lintro__access-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 60% 60% at var(--x,50%) var(--y,50%),
-        rgba(255,255,255,0.12), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.lintro__access-btn:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.28);
-    color: #ffffff;
-}
-
-.lintro__access-btn:hover::before { opacity: 1; }
-
-/* ── Launcher principal ── */
 .lintro__launcher {
-    background: #18181c;
+    background: rgba(24,24,28,0.92);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 0 0 18px 18px;
+    border-radius: 16px;
     overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     box-shadow:
-        0 0 0 1px rgba(255,255,255,0.03) inset,
-        0 32px 80px rgba(0,0,0,0.7),
-        0 0 120px rgba(80,60,160,0.12);
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 24px 60px rgba(0,0,0,0.8);
     text-align: left;
 }
 
-/* Badge "prueba en vivo" */
-.lintro__try-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 20px 8px;
-    font-size: 0.72rem;
-    color: rgba(255,255,255,0.32);
-}
-
-.lintro__kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1px 6px;
-    border-radius: 5px;
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.06);
-    font-family: inherit;
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.5);
-}
-
-/* Área de entrada / editor */
+/* Editor */
 .lintro__editor-zone {
-    min-height: 80px;
-    padding: 14px 20px 20px;
+    min-height: 72px;
+    padding: 18px 20px 14px;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
     cursor: text;
 }
 
@@ -4473,64 +4391,67 @@ body.entrance-done .landing-header {
     width: 1px;
     height: 20px;
     background: #ffffff;
-    box-shadow: 0 0 8px #fff;
+    box-shadow: 0 0 8px rgba(255,255,255,0.8);
     margin-top: 1px;
     flex-shrink: 0;
     animation: lintro-blink 1s linear infinite;
 }
 
 @keyframes lintro-blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
 }
 
 .lintro__placeholder {
     font-size: 0.88rem;
-    color: rgba(255,255,255,0.28);
+    color: rgba(255,255,255,0.26);
     margin: 0;
     line-height: 1.5;
 }
 
-.lintro__placeholder kbd {
-    font-family: inherit;
-    font-size: 0.82rem;
-    color: rgba(255,255,255,0.48);
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 4px;
+.lintro__kbd {
+    display: inline-flex;
+    align-items: center;
     padding: 0 5px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.07);
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.46);
 }
 
 /* Branding link */
 .lintro__launcher-link {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 8px 20px 12px;
+    gap: 6px;
+    padding: 6px 20px 14px;
     font-size: 0.72rem;
-    color: rgba(255,255,255,0.28);
+    color: rgba(255,255,255,0.26);
 }
 
 .lintro__vera-inline {
     display: block;
-    height: 14px;
+    height: 13px;
     width: auto;
     filter: brightness(0) invert(1);
-    opacity: 0.35;
+    opacity: 0.32;
 }
 
-/* Divider + footer bar */
+/* Divider */
 .lintro__divider {
     border: none;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    border-top: 1px solid rgba(255,255,255,0.08);
     margin: 0;
 }
 
+/* Footer bar */
 .lintro__launcher-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
+    padding: 11px 20px;
 }
 
 .lintro__launcher-inbox {
@@ -4538,15 +4459,15 @@ body.entrance-done .landing-header {
     align-items: center;
     gap: 7px;
     font-size: 0.78rem;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.38);
 }
 
 .lintro__launcher-btn {
-    padding: 7px 18px;
+    padding: 6px 16px;
     border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.72);
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.7);
     font-size: 0.78rem;
     font-weight: 500;
     cursor: pointer;
@@ -4554,38 +4475,35 @@ body.entrance-done .landing-header {
 }
 
 .lintro__launcher-btn:hover {
-    background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.26);
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.28);
     color: #ffffff;
 }
 
 /* ── Párrafo inferior ── */
 .lintro__footer-text {
-    font-size: 0.83rem;
-    color: rgba(255,255,255,0.3);
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.28);
     line-height: 1.65;
     margin: 0;
-    max-width: 520px;
+    max-width: 500px;
 }
 
 .lintro__footer-link {
-    color: rgba(255,255,255,0.62);
-    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
     text-decoration: none;
-    border-bottom: 1px solid rgba(255,255,255,0.16);
-    transition: color 0.2s, border-color 0.2s;
+    transition: color 0.2s;
 }
 
-.lintro__footer-link:hover {
-    color: #ffffff;
-    border-color: rgba(255,255,255,0.45);
-}
+.lintro__footer-link:hover { color: #ffffff; }
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-    .lintro__tag { flex-direction: column; gap: 4px; }
-    .lintro__sep { display: none; }
+    .lintro__tag { flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .lintro__pipe { display: none; }
     .lintro__launcher-wrap { max-width: 100%; }
+    .lintro__sphere { width: 100vw; }
 }
 
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
