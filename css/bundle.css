@@ -4219,6 +4219,262 @@ body.entrance-done .landing-header {
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
     .landing-hero__orb     { filter: blur(60px); opacity: 0.18; }
 }
+/* ─────────────────────────────────────────
+   VERA INTRO — sección "Conoce Vera"
+   (entre hero y value-pillars, estilo Lazy AI intro)
+───────────────────────────────────────── */
+.lintro {
+    background: #000000;
+    color: #ffffff;
+    padding: clamp(80px, 12vh, 160px) clamp(24px, 6vw, 96px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(40px, 6vw, 72px);
+    text-align: center;
+}
+
+/* Banner strip */
+.lintro__banner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.lintro__line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.lintro__tag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.lintro__eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.lintro__sep {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.28);
+    flex-shrink: 0;
+}
+
+.lintro__subtext {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+/* Heading */
+.lintro__text {
+    max-width: 860px;
+}
+
+.lintro__h2 {
+    font-size: clamp(2.8rem, 6.5vw, 5.6rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin: 0 0 clamp(18px, 2.5vw, 30px);
+}
+
+.lintro__h2-a {
+    display: block;
+    color: #ffffff;
+}
+
+.lintro__h2-b {
+    display: block;
+    background: linear-gradient(to right, rgba(255,255,255,0.52), rgba(255,255,255,0.78));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.lintro__desc {
+    font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* Panel mockup de Vera */
+.lintro__panel-wrap {
+    width: 100%;
+    max-width: 660px;
+}
+
+.lintro__panel {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 24px 80px rgba(0,0,0,0.6);
+    text-align: left;
+}
+
+.lintro__panel-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.lintro__panel-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.lintro__vera-logo {
+    display: block;
+    height: 20px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.88;
+}
+
+.lintro__panel-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.lintro__pulse {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00d614;
+    box-shadow: 0 0 8px #00d614;
+    animation: lintro-pulse 2s ease-in-out infinite;
+}
+
+@keyframes lintro-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.55; transform: scale(0.8); }
+}
+
+.lintro__panel-hint {
+    font-size: 0.66rem;
+    color: rgba(255,255,255,0.26);
+    letter-spacing: 0.04em;
+}
+
+.lintro__panel-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.lintro__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s;
+}
+
+.lintro__row:last-child { border-bottom: none; }
+.lintro__row:hover { background: rgba(255,255,255,0.025); }
+
+.lintro__row-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    width: 76px;
+    padding-top: 2px;
+}
+
+.lintro__row--signal   .lintro__row-label { color: #ff6500; }
+.lintro__row--decision .lintro__row-label { color: #ffe500; }
+.lintro__row--output   .lintro__row-label { color: #00d614; }
+
+.lintro__row-val {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.55;
+}
+
+.lintro__panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.02);
+}
+
+.lintro__panel-time {
+    font-size: 0.66rem;
+    color: rgba(255,255,255,0.24);
+}
+
+.lintro__panel-cta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.62);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+}
+
+.lintro__panel-cta:hover { color: #ffffff; }
+
+/* Párrafo inferior */
+.lintro__try {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.34);
+    line-height: 1.65;
+    margin: 0;
+    max-width: 560px;
+}
+
+.lintro__try-link {
+    color: rgba(255,255,255,0.68);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.18);
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.lintro__try-link:hover {
+    color: #ffffff;
+    border-color: rgba(255,255,255,0.48);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .lintro__tag { flex-direction: column; gap: 4px; }
+    .lintro__sep { display: none; }
+    .lintro__row { flex-direction: column; gap: 4px; }
+    .lintro__row-label { width: auto; }
+}
+
 /* Landing — value pillars: scroll-track alarga el documento; sticky = títulos + carrusel vertical (sin fondo negro en card). */
 .landing-pillars {
     position: relative;

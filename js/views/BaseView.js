@@ -54,7 +54,7 @@ class BaseView {
       if (skipCache) {
         if (this.templatePath === 'signin.html') url += '?v=logo02';
         else if (this.templatePath === 'tasks.html') url += '?v=edit';
-        else if (this.templatePath === 'landing.html') url += '?v=20260412-slot-machine';
+        else if (this.templatePath === 'landing.html') url += '?v=20260412-vera-intro';
       }
       const response = await fetch(url);
       
