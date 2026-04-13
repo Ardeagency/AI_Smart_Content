@@ -4070,7 +4070,7 @@ body.entrance-done .landing-header {
     justify-content: flex-end;
 }
 
-/* smart.svg: grande para que "smart" sea el elemento dominante */
+/* smart.png: grande para que "smart" sea el elemento dominante */
 .landing-hero__smart-img {
     display: block;
     height: clamp(72px, 13vw, 180px);
