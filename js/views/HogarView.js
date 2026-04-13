@@ -445,7 +445,7 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card de organización: card-home.svg + vidrio; overlay con nombre e indicador circular de créditos (imagen 2).
+   * Card de organización: vidrio; overlay con nombre e indicador circular de créditos.
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
@@ -453,7 +453,6 @@ class HogarView extends BaseView {
     const safeId = `credits-${String(org.id).replace(/[^a-z0-9-]/gi, '')}`;
     return `
       <div class="org-card-home" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <img src="/recursos/card-home.svg" alt="" class="org-card-home-svg" width="150" height="200">
         <div class="org-card-home-content">
           <h3 class="org-card-home-name">${name}</h3>
           <div class="org-card-home-credits-wrap" aria-hidden="true">
@@ -476,12 +475,11 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card "Nueva Organización": mismo recurso card-home.svg; overlay con título y descripción.
+   * Card "Nueva Organización": overlay con título y descripción.
    */
   renderNewOrgCard() {
     return `
       <div class="org-card-home org-card-home--new" data-new-org role="button" tabindex="0" title="Crear nueva organización">
-        <img src="/recursos/card-home.svg" alt="" class="org-card-home-svg" width="150" height="200">
         <div class="org-card-home-content">
           <h3 class="org-card-home-name">Nueva Organización</h3>
           <p class="org-card-home-desc">Crea una organización para gestionar tus marcas y contenido</p>
