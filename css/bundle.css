@@ -4049,7 +4049,7 @@ body.entrance-done .landing-header {
 
 /* Lockup: smart + columna — altura del lockup gobernada por --hero-word-slot (5 filas visibles) */
 .landing-hero__lockup {
-    --hero-word-slot: clamp(38px, 5.2vw, 72px);
+    --hero-word-slot: clamp(44px, 6vw, 84px);
     position: relative;
     z-index: 2;
     display: flex;
@@ -4076,7 +4076,7 @@ body.entrance-done .landing-header {
     display: block;
     height: calc(var(--hero-word-slot) * 4.35);
     width: auto;
-    max-width: min(58vw, 560px);
+    max-width: min(64vw, 620px);
     object-fit: contain;
     object-position: center right;
 }
@@ -4094,7 +4094,7 @@ body.entrance-done .landing-header {
     position: relative;
     overflow: hidden;
     height: calc(var(--hero-word-slot) * 5);
-    width: clamp(168px, 22vw, 304px);
+    width: clamp(184px, 24vw, 328px);
     -webkit-mask-image: linear-gradient(
         to bottom,
         transparent 0%,
@@ -4192,7 +4192,7 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__lockup {
-        --hero-word-slot: clamp(34px, 9vw, 54px);
+        --hero-word-slot: clamp(40px, 10vw, 62px);
         flex-direction: column;
         align-items: center;
         gap: clamp(12px, 3.5vw, 22px);
@@ -4205,13 +4205,13 @@ body.entrance-done .landing-header {
 
     .landing-hero__smart-img {
         height: calc(var(--hero-word-slot) * 4.1);
-        max-width: min(92vw, 400px);
+        max-width: min(92vw, 440px);
         object-position: center center;
     }
 
     .landing-hero__words-viewport {
         height: calc(var(--hero-word-slot) * 5);
-        width: clamp(148px, 62vw, 280px);
+        width: clamp(160px, 64vw, 300px);
     }
 
     .landing-hero__words-item {
@@ -4275,11 +4275,12 @@ body.entrance-done .landing-header {
     line-height: 1.5;
 }
 
-/* ── Caja textarea ── */
+/* ── Caja textarea (separación extra respecto al bloque título + subtítulo) ── */
 .vprompt__box {
     position: relative;
     width: 100%;
     max-width: 560px;
+    margin-top: clamp(20px, 3.5vh, 52px);
 }
 
 .vprompt__textarea {
