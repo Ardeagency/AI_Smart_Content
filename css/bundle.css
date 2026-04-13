@@ -4049,18 +4049,13 @@ body.entrance-done .landing-header {
 
 /* ─── Hero lockup: smart + carrusel vertical de palabras ─── */
 .landing-hero__lockup {
-    /* --hero-row: alto de cada fila de la columna de palabras */
     --hero-row: clamp(56px, 8vw, 108px);
     position: relative;
     z-index: 2;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: center;
     gap: clamp(8px, 1.5vw, 24px);
-    width: fit-content;
-    max-width: min(96vw, 1200px);
-    margin: 0 auto;
     isolation: isolate;
 }
 
