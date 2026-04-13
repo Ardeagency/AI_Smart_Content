@@ -426,13 +426,20 @@ class LandingView extends BaseView {
 
 
   /**
-   * Hero: columna derecha — carrusel vertical (SVG banner) que avanza cada 2 s.
-   */
-  /**
-   * Hero words rotator — versión simple y robusta.
-   * Cada palabra tiene position:absolute dentro del viewport.
-   * Solo se alterna la clase .is-active; CSS maneja el fade/slide.
-   * Sin clones, sin cálculos de translateY, sin dependencia del tamaño.
+   * Hero words rotator — slot machine vertical infinita.
+   *
+   * Layout: la columna de palabras es una pila vertical (flex-direction:column).
+   * El track se desplaza con translateY para simular un slot que avanza cada 2 s.
+   * Se prependen 2 clones (últimas 2 palabras) y se añaden 3 clones al final
+   * para que el bucle sea completamente seamless.
+   *
+   * Estructura del track:
+   *   [clone(N-2), clone(N-1), real(0..N-1), clone(0), clone(1), clone(2)]
+   *
+   * translateY = -realIdx * wordHeight
+   * → realIdx=0: muestra clone(N-2), clone(N-1), real(0), real(1), real(2)  ✓
+   * → realIdx=N: muestra real(N-2), real(N-1), clone(0), clone(1), clone(2)
+   *   → snap instantáneo a realIdx=0 (mismo contenido visual) ✓
    */
   initHeroWordsRotator() {
     if (typeof this.heroWordsRotatorCleanup === 'function') {
@@ -440,39 +447,67 @@ class LandingView extends BaseView {
       this.heroWordsRotatorCleanup = null;
     }
 
-    const items = Array.from(
-      document.querySelectorAll('.landing-hero__words-item')
-    );
-    if (!items.length) return;
+    const track = document.querySelector('.landing-hero__words-track');
+    if (!track) return;
 
-    let current = 0;
+    const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
+    if (realItems.length < 2) return;
 
-    const activate = (idx) => {
-      items.forEach((item, i) => {
-        item.classList.toggle('is-active', i === idx);
-      });
+    const N = realItems.length;
+
+    // Prepend en orden inverso para que el DOM quede: [clone(N-2), clone(N-1), real(0)...]
+    // insertBefore al firstChild invierte el orden de iteración, así que iteramos [N-1, N-2]
+    [realItems[N - 1], realItems[N - 2]].forEach(item => {
+      track.insertBefore(item.cloneNode(true), track.firstChild);
+    });
+
+    // Append: clone(0), clone(1), clone(2) al final
+    for (let i = 0; i < 3; i++) {
+      track.appendChild(realItems[i].cloneNode(true));
+    }
+
+    let realIdx = 0;
+    let busy = false;
+
+    const getWordH = () => realItems[0].offsetHeight || 48;
+
+    const setPos = (idx, animate) => {
+      const h = getWordH();
+      track.style.transition = animate
+        ? 'transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)'
+        : 'none';
+      track.style.transform = `translateY(${-idx * h}px)`;
+      if (!animate) void track.offsetHeight; // fuerza reflow
     };
 
-    // Mostrar la primera palabra de inmediato
-    activate(0);
+    // Posición inicial: real(0) en el centro del slot (2 ítems arriba = clones)
+    setPos(0, false);
 
-    const reduceMotion =
+    if (
       typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (reduceMotion) {
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       this.heroWordsRotatorCleanup = () => {};
       return;
     }
 
     const timer = window.setInterval(() => {
-      current = (current + 1) % items.length;
-      activate(current);
+      if (busy) return;
+      realIdx++;
+      setPos(realIdx, true);
+
+      // Al llegar al clon(0) (índice N), hacer snap invisible de vuelta a real(0)
+      if (realIdx >= N) {
+        busy = true;
+        setTimeout(() => {
+          realIdx = 0;
+          setPos(0, false);
+          busy = false;
+        }, 750); // duración de la transición CSS
+      }
     }, 2000);
 
-    this.heroWordsRotatorCleanup = () => {
-      window.clearInterval(timer);
-    };
+    this.heroWordsRotatorCleanup = () => window.clearInterval(timer);
   }
 
   onLeave() {

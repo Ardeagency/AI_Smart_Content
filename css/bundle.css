@@ -4085,44 +4085,58 @@ body.entrance-done .landing-header {
     justify-content: flex-start;
 }
 
-/* Viewport de palabras — ancho proporcional al contenido real de los SVG */
+/* Viewport slot-machine: muestra 5 palabras apiladas con fade en extremos */
 .landing-hero__words-viewport {
     position: relative;
     overflow: hidden;
-    height: clamp(72px, 13vw, 180px);
+    height: calc(clamp(48px, 7.5vw, 100px) * 5);
     width: clamp(140px, 20vw, 300px);
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0,0,0,0.35) 14%,
+        black 30%,
+        black 70%,
+        rgba(0,0,0,0.35) 86%,
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0,0,0,0.35) 14%,
+        black 30%,
+        black 70%,
+        rgba(0,0,0,0.35) 86%,
+        transparent 100%
+    );
 }
 
-/* Contenedor para anclar palabras con position:absolute */
+/* Columna de palabras: flujo vertical; JS mueve con translateY */
 .landing-hero__words-track {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Cada palabra oculta por defecto */
+/* Cada slot ocupa exactamente 1 fila */
 .landing-hero__words-item {
-    position: absolute;
-    inset: 0;
+    flex-shrink: 0;
+    height: clamp(48px, 7.5vw, 100px);
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 0.55s ease, transform 0.55s ease;
 }
 
-/* Activa: visible */
-.landing-hero__words-item.is-active {
-    opacity: 1;
-    transform: translateY(0);
-}
+/* .is-active ya no controla visibilidad — la mask del viewport lo gestiona */
+.landing-hero__words-item.is-active {}
 
 .landing-hero__words-item img {
     display: block;
     height: 100%;
     width: auto;
-    max-width: 100%;
+    max-width: none;
+    flex-shrink: 0;
 }
 
 .landing-hero__eyebrow {
@@ -4188,14 +4202,18 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__words-viewport {
-        height: clamp(48px, 12vw, 80px);
-        width: clamp(160px, 60vw, 280px);
+        height: calc(clamp(36px, 9vw, 56px) * 5);
+        width: clamp(120px, 56vw, 260px);
+    }
+
+    .landing-hero__words-item {
+        height: clamp(36px, 9vw, 56px);
     }
 
     .landing-hero__words-item img {
         height: 100%;
         width: auto;
-        max-width: 100%;
+        max-width: none;
     }
 
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
