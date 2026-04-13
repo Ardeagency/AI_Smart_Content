@@ -54,76 +54,59 @@
 </section>
 
 <!-- ══════════════════════════════════════════
-     VERA INTRO — estilo hero Lazy AI
-     Círculo oscuro · Banner · Heading · Launcher
+     VERA PROMPT — heading + textarea + chips
 ══════════════════════════════════════════ -->
-<section class="lintro" id="landing-vera-intro" aria-labelledby="lintro-heading">
+<section class="vprompt" id="landing-vera-prompt" aria-labelledby="vprompt-heading">
 
-    <!-- Gran círculo oscuro de fondo + rayos de luz laterales -->
-    <div class="lintro__sphere" aria-hidden="true"></div>
-    <div class="lintro__ray lintro__ray--left"  aria-hidden="true"></div>
-    <div class="lintro__ray lintro__ray--right" aria-hidden="true"></div>
+    <!-- Heading -->
+    <h2 id="vprompt-heading" class="vprompt__h2 sr-reveal">
+        El cerebro que opera tu marca.
+    </h2>
+    <p class="vprompt__sub sr-reveal sr-reveal--d1">Analiza, decide y crea en tiempo real.</p>
 
-    <!-- Banner strip: línea | eyebrow | separador vertical | subtext | línea -->
-    <div class="lintro__banner sr-reveal">
-        <div class="lintro__line"></div>
-        <div class="lintro__tag">
-            <span class="lintro__eyebrow">Conoce Vera</span>
-            <span class="lintro__pipe" aria-hidden="true">|</span>
-            <span class="lintro__subtext">el sistema que piensa mientras trabajas</span>
-        </div>
-        <div class="lintro__line"></div>
+    <!-- Textarea + botón -->
+    <div class="vprompt__box sr-reveal sr-reveal--d2">
+        <textarea
+            class="vprompt__textarea"
+            placeholder="Analiza, decide y lo convierte en acción..."
+            rows="4"
+            aria-label="Describe qué quieres que haga Vera"
+        ></textarea>
+        <button class="vprompt__send" type="button" aria-label="Enviar">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true">
+                <path d="M10 15V5M10 5L6 9M10 5l4 4" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
     </div>
 
-    <!-- Heading inline: bold + italic/light -->
-    <div class="lintro__text sr-reveal sr-reveal--d1">
-        <h2 id="lintro-heading" class="lintro__h2">
-            <span class="lintro__h2-a">Señal</span><span class="lintro__h2-b"> al ritmo del pensamiento</span>
-        </h2>
-        <p class="lintro__desc">Un contexto. Una instrucción. Vera procesa, decide y ejecuta.</p>
+    <!-- Chips de sugerencia -->
+    <div class="vprompt__chips sr-reveal sr-reveal--d3" role="list">
+        <button class="vprompt__chip" type="button" role="listitem">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true">
+                <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#888" stroke-width="1.2"/>
+                <path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="#888" stroke-width="1.2"/>
+                <path d="M5.5 8.5h5M5.5 11h3" stroke="#888" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            <span>Variaciones de banner on-brand</span>
+        </button>
+        <button class="vprompt__chip" type="button" role="listitem">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true">
+                <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#888" stroke-width="1.2"/>
+                <circle cx="8" cy="8" r="2.2" stroke="#888" stroke-width="1.2"/>
+                <circle cx="12" cy="5.5" r="0.7" fill="#888"/>
+            </svg>
+            <span>Editorial de moda en Tokio</span>
+        </button>
+        <button class="vprompt__chip" type="button" role="listitem">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true">
+                <rect x="1.5" y="2.5" width="5.5" height="5.5" rx="1" stroke="#888" stroke-width="1.2"/>
+                <rect x="9" y="2.5" width="5.5" height="5.5" rx="1" stroke="#888" stroke-width="1.2"/>
+                <rect x="1.5" y="10" width="5.5" height="5.5" rx="1" stroke="#888" stroke-width="1.2"/>
+                <rect x="9" y="10" width="5.5" height="5.5" rx="1" stroke="#888" stroke-width="1.2"/>
+            </svg>
+            <span>Moodboard para campaña</span>
+        </button>
     </div>
-
-    <!-- Launcher simple (igual al de la captura: sin modal encima) -->
-    <div class="lintro__launcher-wrap sr-reveal sr-reveal--d2">
-        <div class="lintro__launcher">
-
-            <!-- Área de editor con cursor parpadeante -->
-            <div class="lintro__editor-zone">
-                <div class="lintro__cursor" aria-hidden="true"></div>
-                <p class="lintro__placeholder">
-                    Escribe algo o usa <kbd class="lintro__kbd">/</kbd> para comandos de Vera
-                </p>
-            </div>
-
-            <!-- Branding link -->
-            <div class="lintro__launcher-link">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="13" height="13">
-                    <path d="M12.166 8.833 12.999 8a2.828 2.828 0 1 0-4-4l-.833.833M5.834 7.167 5 8a2.828 2.828 0 1 0 4 4l.834-.834M10.5 6.5l-3 3" stroke="#808085" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <img src="/recursos/Recursos%20de%20Marca/Recursos/Vera-2.svg" alt="Vera" class="lintro__vera-inline" width="44" height="16">
-                <span>· El sistema que piensa contigo</span>
-            </div>
-
-            <!-- Barra inferior: señales + procesar -->
-            <hr class="lintro__divider">
-            <div class="lintro__launcher-footer">
-                <div class="lintro__launcher-inbox">
-                    <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="14" height="14">
-                        <path d="m12.049 7.157-.913-3.196a1.152 1.152 0 0 0-1.108-.835H5.72c-.515 0-.967.341-1.108.836L3.7 7.156M6.846 7.513c-.149-.193-.357-.356-.601-.356H3.699v3.167c0 .636.516 1.152 1.152 1.152h6.046c.636 0 1.152-.516 1.152-1.152V7.157H9.503c-.244 0-.452.163-.6.356a1.294 1.294 0 0 1-2.057 0Z" stroke="#B8B8B8" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span>Señales</span>
-                </div>
-                <button class="lintro__launcher-btn" type="button">Procesar</button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Párrafo inferior -->
-    <p class="lintro__footer-text sr-reveal sr-reveal--d3">
-        <a href="/contacto" class="lintro__footer-link">Prueba la demo</a>
-        · Descubre cómo Vera convierte señales en contenido antes de que tu competencia lo vea.
-    </p>
 
 </section>
 
