@@ -428,11 +428,11 @@ class LandingView extends BaseView {
   /**
    * Hero words rotator — slot machine vertical infinita.
    *
-   * Cada fila tiene altura natural (SVG intrínseco + padding). prefix[i] = suma de
-   * alturas de las filas 0..i-1; translateY = -prefix[realIdx]. El viewport recibe
-   * la altura máxima de cualquier ventana de 5 filas consecutivas para que no recorte.
+   * Todas las filas tienen la misma altura (--hero-row vía CSS); el JS solo lee
+   * offsetHeight de la primera fila y avanza de una en una con translateY.
    *
    * Track: [clone(N-2), clone(N-1), real(0..N-1), clone(0), clone(1), clone(2)]
+   * translateY = -realIdx * rowH
    */
   initHeroWordsRotator() {
     if (typeof this.heroWordsRotatorCleanup === 'function') {
@@ -441,8 +441,7 @@ class LandingView extends BaseView {
     }
 
     const track = document.querySelector('.landing-hero__words-track');
-    const viewport = document.querySelector('.landing-hero__words-viewport');
-    if (!track || !viewport) return;
+    if (!track) return;
 
     const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
     if (realItems.length < 2) return;
@@ -459,85 +458,29 @@ class LandingView extends BaseView {
 
     let realIdx = 0;
     let busy = false;
-    let prefix = [0];
 
-    const remeasure = () => {
-      const kids = Array.from(track.children);
-      const next = [0];
-      for (let i = 0; i < kids.length; i++) {
-        next.push(next[i] + kids[i].offsetHeight);
-      }
-      prefix = next;
-
-      let maxFive = 0;
-      if (kids.length >= 5) {
-        for (let i = 0; i <= kids.length - 5; i++) {
-          const win = next[i + 5] - next[i];
-          if (win > maxFive) maxFive = win;
-        }
-      } else if (kids.length > 0) {
-        maxFive = next[kids.length];
-      }
-      if (maxFive > 0) {
-        viewport.style.height = `${Math.ceil(maxFive)}px`;
-      }
-    };
+    const getRowH = () => realItems[0].offsetHeight || 80;
 
     const setPos = (idx, animate) => {
+      const h = getRowH();
       track.style.transition = animate
         ? 'transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)'
         : 'none';
-      const y = prefix[idx] !== undefined ? prefix[idx] : 0;
-      track.style.transform = `translateY(${-y}px)`;
+      track.style.transform = `translateY(${-(idx * h)}px)`;
       if (!animate) void track.offsetHeight;
     };
 
-    const settleLayout = () => {
-      remeasure();
-      setPos(realIdx, false);
-    };
-
-    let rafResize = 0;
-    const onResize = () => {
-      cancelAnimationFrame(rafResize);
-      rafResize = requestAnimationFrame(settleLayout);
-    };
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(settleLayout);
-    });
-
-    const imgs = track.querySelectorAll('img');
-    const onImgLoad = () => settleLayout();
-    imgs.forEach(img => {
-      if (!img.complete) img.addEventListener('load', onImgLoad);
-    });
-
-    let ro = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(onResize);
-      ro.observe(track);
-    }
-    window.addEventListener('resize', onResize, { passive: true });
-
-    let timer = null;
-
-    const detachStatic = () => {
-      cancelAnimationFrame(rafResize);
-      window.removeEventListener('resize', onResize);
-      if (ro) ro.disconnect();
-      imgs.forEach(img => img.removeEventListener('load', onImgLoad));
-    };
+    setPos(0, false);
 
     if (
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
-      this.heroWordsRotatorCleanup = detachStatic;
+      this.heroWordsRotatorCleanup = () => {};
       return;
     }
 
-    timer = window.setInterval(() => {
+    const timer = window.setInterval(() => {
       if (busy) return;
       realIdx++;
       setPos(realIdx, true);
@@ -546,16 +489,13 @@ class LandingView extends BaseView {
         busy = true;
         window.setTimeout(() => {
           realIdx = 0;
-          settleLayout();
+          setPos(0, false);
           busy = false;
         }, 750);
       }
     }, 2000);
 
-    this.heroWordsRotatorCleanup = () => {
-      detachStatic();
-      if (timer != null) window.clearInterval(timer);
-    };
+    this.heroWordsRotatorCleanup = () => window.clearInterval(timer);
   }
 
   onLeave() {

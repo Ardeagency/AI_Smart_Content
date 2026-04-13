@@ -4047,16 +4047,17 @@ body.entrance-done .landing-header {
     align-items: center;
 }
 
-/* Lockup: palabras a tamaño intrínseco (viewBox vía width/height en HTML); solo pad-y; viewport alto por JS */
+/* ─── Hero lockup: smart + carrusel vertical de palabras ─── */
 .landing-hero__lockup {
-    --hero-word-pad-y: 15px;
+    /* --hero-row: alto de cada fila de la columna de palabras */
+    --hero-row: clamp(56px, 8vw, 108px);
     position: relative;
     z-index: 2;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    gap: clamp(6px, 1.1vw, 20px);
+    gap: clamp(8px, 1.5vw, 24px);
     width: fit-content;
     max-width: min(96vw, 1200px);
     margin: 0 auto;
@@ -4068,19 +4069,15 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    align-self: center;
     min-width: 0;
 }
 
-/* smart.svg: más compacto que el bloque de palabras (sin atar a slot fijo) */
+/* smart.svg a tamaño natural escalado por --hero-row; viewBox 525×116 → ratio ≈ 4.52 */
 .landing-hero__smart-img {
     display: block;
+    height: var(--hero-row);
     width: auto;
-    height: auto;
-    max-height: clamp(32px, 5vw, 56px);
-    max-width: min(64vw, 620px);
-    object-fit: contain;
-    object-position: center right;
+    max-width: min(64vw, 580px);
 }
 
 .landing-hero__words {
@@ -4088,58 +4085,52 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    align-self: center;
     min-width: 0;
 }
 
-/* Viewport: altura = ventana de 5 filas (JS); ancho tope para que max-width:100% en SVG escale proporcional */
+/* Viewport: muestra 5 filas; overflow-x visible para no recortar palabras anchas */
 .landing-hero__words-viewport {
     position: relative;
     overflow: hidden;
-    min-height: 12rem;
-    height: auto;
-    width: 100%;
-    max-width: min(92vw, 640px);
+    height: calc(var(--hero-row) * 5);
+    width: clamp(200px, 38vw, 580px);
     -webkit-mask-image: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(0, 0, 0, 0.45) 11%,
-        black 26%,
-        black 74%,
-        rgba(0, 0, 0, 0.45) 89%,
+        rgba(0, 0, 0, 0.5) 12%,
+        black 27%,
+        black 73%,
+        rgba(0, 0, 0, 0.5) 88%,
         transparent 100%
     );
     mask-image: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(0, 0, 0, 0.45) 11%,
-        black 26%,
-        black 74%,
-        rgba(0, 0, 0, 0.45) 89%,
+        rgba(0, 0, 0, 0.5) 12%,
+        black 27%,
+        black 73%,
+        rgba(0, 0, 0, 0.5) 88%,
         transparent 100%
     );
 }
 
-/* Columna de palabras: flujo vertical; JS mueve con translateY */
+/* Columna de palabras: JS mueve con translateY */
 .landing-hero__words-track {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
     will-change: transform;
     transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Cada fila: altura natural del SVG + padding (el carrusel suma offsetHeight por fila en JS) */
+/* Cada fila: --hero-row de alto; imagen en height:100%/width:auto = proporciones intrínsecas del SVG */
 .landing-hero__words-item {
     flex-shrink: 0;
-    box-sizing: border-box;
-    padding: var(--hero-word-pad-y) 0;
-    height: auto;
-    width: 100%;
+    height: var(--hero-row);
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    padding: 12px 0;
+    box-sizing: border-box;
 }
 
 /* .is-active ya no controla visibilidad — la mask del viewport lo gestiona */
@@ -4147,12 +4138,10 @@ body.entrance-done .landing-header {
 
 .landing-hero__words-item img {
     display: block;
+    height: 100%;
     width: auto;
-    height: auto;
-    max-width: 100%;
+    max-width: none;
     flex-shrink: 0;
-    object-fit: contain;
-    object-position: left center;
 }
 
 .landing-hero__eyebrow {
@@ -4202,9 +4191,10 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__lockup {
+        --hero-row: clamp(44px, 12vw, 72px);
         flex-direction: column;
         align-items: center;
-        gap: clamp(12px, 3.5vw, 22px);
+        gap: clamp(10px, 3vw, 20px);
     }
 
     .landing-hero__smart,
@@ -4213,23 +4203,11 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__smart-img {
-        max-height: clamp(28px, 9vw, 48px);
-        max-width: min(92vw, 440px);
-        object-position: center center;
+        max-width: min(92vw, 420px);
     }
 
     .landing-hero__words-viewport {
-        max-width: 92vw;
-    }
-
-    .landing-hero__words-item {
-        padding: var(--hero-word-pad-y) 0;
-    }
-
-    .landing-hero__words-item img {
-        max-width: 100%;
-        object-fit: contain;
-        object-position: left center;
+        width: min(96vw, 580px);
     }
 
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
