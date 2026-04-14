@@ -34,7 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Application CSS — bundle único (rutas desde raíz para evitar 404 en recargas) -->
-    <link rel="stylesheet" href="css/bundle.css?v=20260414-public-pages">
+    <link rel="stylesheet" href="css/bundle.css?v=20260414-public-shell">
     
     <style>
         #modals-portal {
@@ -78,6 +78,13 @@
     <!-- App Container (Dinámico) -->
     <!-- Las vistas se cargarán aquí dinámicamente -->
     <div id="app-container"></div>
+
+    <!-- Public Shell (persistente entre rutas públicas: header + main + footer fuera de app-container para evitar parpadeo) -->
+    <div id="public-shell" aria-hidden="true">
+      <div id="public-header-root"></div>
+      <main id="public-view-content"></main>
+      <div id="public-footer-root"></div>
+    </div>
 
     <!-- Portal de modales: fuera del scroll, centrados en pantalla -->
     <div id="modals-portal" aria-hidden="true"></div>

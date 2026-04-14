@@ -31675,18 +31675,39 @@ body.production-filters-in-header .living-container > .living-history-section {
     }
 }
 
-/* Ruta pública: anula padding-top del app-container y asegura fondo sólido */
-body.route-public #app-container {
-    padding-top: 0;
+/* ─── Shell persistente de páginas públicas ────────────────────────────────
+   El shell vive fuera de #app-container. Al entrar a una ruta pública se
+   activa con body.route-public: ocultamos app-container y mostramos shell.
+   Como el header y footer están en el shell (persistentes), navegar entre
+   rutas públicas solo re-renderiza #public-view-content → SIN parpadeo.
+*/
+#public-shell {
+    display: none;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-height: 100vh;
     background: #0b0b0c;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
-body.route-public.entrance-active #app-container {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+body.route-public #public-shell {
+    display: block;
+}
+body.route-public #app-container {
+    display: none !important;
+}
+body.route-public #navigation-container {
+    display: none !important;
+}
+/* Shell debe ser visible aunque todavía no se haya completado el entrance */
+body.route-public.entrance-active #public-shell {
+    display: block;
 }
 
-/* Main container de una página pública */
+/* Contenedor interno del contenido de la vista pública */
+#public-view-content,
 .public-page {
     position: relative;
     z-index: 1;

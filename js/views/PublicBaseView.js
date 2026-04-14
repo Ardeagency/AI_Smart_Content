@@ -1,56 +1,76 @@
 /**
  * PublicBaseView - Base para páginas públicas (marketing).
- * Envuelve el contenido de cada vista con header + footer públicos.
- * Las subclases implementan renderContent() — HTML inline, sin templates.
+ *
+ * A diferencia de BaseView, esta clase NO renderiza en #app-container.
+ * Todo el contenido va dentro del shell persistente (#public-shell),
+ * así el header y el footer NO se re-renderizan al navegar entre rutas
+ * públicas y no hay parpadeo.
+ *
+ * Las subclases implementan renderContent() — HTML inline (sin templates).
  */
 class PublicBaseView extends BaseView {
   constructor() {
     super();
     this.templatePath = null;
     this.activePath = '/';
-    this.hideFooter = false;
     this.pageClass = '';
+    // Apuntará al nodo interno del shell, no a #app-container
+    this.container = null;
   }
 
   async onEnter() {
-    // Página pública — sin redirección
+    // Público — sin redirección
   }
 
   async updateHeader() {
-    // Las páginas públicas tienen su propio header (sin avatar de usuario)
+    // El header de usuario (avatar/dropdown) no aplica en páginas públicas
   }
 
-  /**
-   * HTML del contenido principal (sin header/footer). Override obligatorio.
-   */
   renderContent() {
     return '';
   }
 
-  renderHTML() {
-    const content = this.renderContent();
-    if (!window.PublicLayout) return content;
-    return window.PublicLayout.wrap({
-      active: this.activePath,
-      content,
-      hideFooter: this.hideFooter,
-      extraClass: this.pageClass
-    });
-  }
+  /**
+   * Override de BaseView.render(): no usa el flujo normal con #app-container.
+   * Le delega a PublicLayout que mantiene el shell persistente.
+   */
+  async render() {
+    if (!window.PublicLayout) {
+      // Fallback defensivo si algo falla en el orden de carga
+      const appContainer = document.getElementById('app-container');
+      if (appContainer) appContainer.innerHTML = this.renderContent();
+      return;
+    }
 
-  async init() {
-    if (window.PublicLayout) {
-      window.PublicLayout.initBehaviors(this.container);
+    try {
+      await this.onEnter();
+      const html = this.renderContent();
+      const contentRoot = window.PublicLayout.renderView({
+        activePath: this.activePath,
+        content: html,
+        pageClass: this.pageClass
+      });
+      this.container = contentRoot || document.getElementById('public-view-content');
+      await this.init();
+      this.initialized = true;
+    } catch (err) {
+      console.error('[PublicBaseView] Error renderizando vista pública:', err);
     }
   }
 
+  async init() {
+    // Override en subclases. Por defecto no hace nada extra:
+    // el scroll-reveal, mobile toggle y scroll del header los maneja PublicLayout.
+  }
+
   async onLeave() {
-    if (window.PublicLayout) window.PublicLayout.cleanup();
+    // NO desmontamos el shell aquí — si la siguiente ruta también es pública
+    // el shell debe permanecer para evitar parpadeo. PublicLayout escucha
+    // 'routechange' y se desmonta solo si la nueva ruta NO es pública.
   }
 
   destroy() {
     super.destroy();
-    if (window.PublicLayout) window.PublicLayout.cleanup();
   }
 }
 
