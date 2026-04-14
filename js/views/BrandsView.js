@@ -150,12 +150,12 @@ class BrandsView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
 
-    // Si el template no es el de marcas (p. ej. fetch devolvió error o index.html), no intentar renderAll
+    // Si el contenedor no existe (render parcial o DOM inesperado), no intentar renderAll
     const brandsRoot = container.querySelector('#brandsListContainer');
     if (!brandsRoot) {
       if (!this._containerWarned.template) {
         this._containerWarned.template = true;
-        console.warn('⚠️ Vista Marcas: no se cargó el template (comprueba que /templates/brands.html esté disponible).');
+        console.warn('⚠️ Vista Marcas: #brandsListContainer no está en el DOM; renderHTML() no se aplicó correctamente.');
       }
       return;
     }

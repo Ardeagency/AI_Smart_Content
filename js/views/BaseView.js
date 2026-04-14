@@ -1,20 +1,18 @@
 /**
- * BaseView - Clase base para todas las vistas de la SPA
- * 
- * Proporciona funcionalidad común: carga de templates y renderizado.
- * Todas las vistas deben extender esta clase.
- * 
+ * BaseView - Clase base para todas las vistas de la SPA.
+ *
+ * Patrón: cada subclase implementa renderHTML() retornando un template literal
+ * con el HTML de la vista. No se usan templates externos.
+ *
  * @class BaseView
  * @abstract
  * @example
  * class MiVista extends BaseView {
- *   constructor() {
- *     super();
- *     this.templatePath = 'mi-vista.html';
+ *   renderHTML() {
+ *     return `<div class="mi-vista">...</div>`;
  *   }
- * 
  *   async init() {
- *     // Setup de la vista
+ *     // setup de listeners, data fetching, etc.
  *   }
  * }
  */
