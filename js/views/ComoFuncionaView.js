@@ -15,7 +15,7 @@ class ComoFuncionaView extends PublicBaseView {
         <div class="pp-hero__inner">
           <span class="pp-eyebrow sr-reveal">Cómo funciona</span>
           <h1 class="pp-hero__title sr-reveal">Un equipo técnico configura todo. Tu marca solo necesita estar lista para producir.</h1>
-          <p class="pp-hero__sub sr-reveal sr-reveal--d1">[COPY: subtítulo — aclaración del modelo de servicio managed]</p>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">Arde diseña la configuración, activa integraciones y mantiene la plataforma; tu equipo se queda con la decisión creativa y el criterio de negocio.</p>
         </div>
       </section>
 
@@ -48,7 +48,7 @@ class ComoFuncionaView extends PublicBaseView {
               <span class="pp-step__num">03</span>
               <div>
                 <h3 class="pp-step__title">Configuración de la organización</h3>
-                <p>Arde crea la organización, configura los módulos, activa los flujos relevantes e integra plataformas existentes. Tiempo estimado: [COPY: días o semanas].</p>
+                <p>Arde crea la organización, configura los módulos, activa los flujos relevantes e integra plataformas existentes. Tiempo estimado: en la mayoría de despliegues, entre dos y seis semanas según complejidad de marca e integraciones.</p>
               </div>
             </li>
             <li class="pp-step sr-reveal sr-reveal--d3">
@@ -76,7 +76,7 @@ class ComoFuncionaView extends PublicBaseView {
             <li>Brief inicial de marca</li>
             <li>Acceso a cuentas de redes sociales para integraciones</li>
             <li>Un punto de contacto interno para validaciones</li>
-            <li>[COPY: otros requisitos concretos]</li>
+            <li>Políticas internas de aprobación (quién valida piezas y en qué etapas)</li>
           </ul>
         </div>
       </section>

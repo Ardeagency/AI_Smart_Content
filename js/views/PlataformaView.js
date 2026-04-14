@@ -14,8 +14,8 @@ class PlataformaView extends PublicBaseView {
       <section class="pp-hero">
         <div class="pp-hero__inner">
           <span class="pp-eyebrow sr-reveal">Plataforma</span>
-          <h1 class="pp-hero__title sr-reveal">[COPY: Posicionamiento técnico de la plataforma en una línea contundente]</h1>
-          <p class="pp-hero__sub sr-reveal sr-reveal--d1">[COPY: Descripción general — qué hace AI S-MART CONTENT al nivel de sistema, por qué es relevante para CMO + IT]</p>
+          <h1 class="pp-hero__title sr-reveal">Sistema operativo de contenido para marcas que ya no pueden depender del copy-paste entre herramientas sueltas.</h1>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">AI S-MART CONTENT unifica marca, inteligencia de mercado, producción y agentes en una sola capa: el marketing define el qué; la plataforma gobierna el cómo y el cuándo con trazabilidad y control de acceso por organización.</p>
         </div>
       </section>
 
@@ -24,7 +24,7 @@ class PlataformaView extends PublicBaseView {
           <div class="pp-module__copy sr-reveal">
             <span class="pp-module__label">Módulo 01</span>
             <h2 id="pp-mod-production" class="pp-section__title">Producción de contenido</h2>
-            <p class="pp-section__text">[COPY: Flujos automatizados de contenido a escala — content_flows como columna vertebral.]</p>
+            <p class="pp-section__text">Flujos de contenido gobernados por reglas de marca: desde brief hasta pieza lista para publicar, con revisión humana donde la política de la organización lo exige.</p>
             <ul class="pp-list">
               <li>Outputs: imagen, video, copy, hashtags</li>
               <li>Ejecución manual, autopilot y programada</li>
@@ -32,7 +32,7 @@ class PlataformaView extends PublicBaseView {
             </ul>
           </div>
           <div class="pp-module__media sr-reveal sr-reveal--d1" aria-hidden="true">
-            <div class="pp-placeholder">[IMAGEN/DEMO: captura del módulo de flujos]</div>
+            <div class="pp-placeholder">Captura de producto del módulo de flujos — próximamente</div>
           </div>
         </div>
       </section>
@@ -40,12 +40,12 @@ class PlataformaView extends PublicBaseView {
       <section class="pp-section pp-module pp-module--reverse" aria-labelledby="pp-mod-brand">
         <div class="pp-section__inner pp-module__grid">
           <div class="pp-module__media sr-reveal" aria-hidden="true">
-            <div class="pp-placeholder">[IMAGEN/DEMO: captura del módulo de marca]</div>
+            <div class="pp-placeholder">Captura de producto del sistema de marca — próximamente</div>
           </div>
           <div class="pp-module__copy sr-reveal sr-reveal--d1">
             <span class="pp-module__label">Módulo 02</span>
             <h2 id="pp-mod-brand" class="pp-section__title">Sistema de marca</h2>
-            <p class="pp-section__text">[COPY: ADN verbal y visual codificado en el sistema para garantizar consistencia.]</p>
+            <p class="pp-section__text">Tono, pilares narrativos y lineamientos visuales viven en el mismo modelo de datos que alimenta la producción: cada salida hereda el ADN aprobado por la marca.</p>
             <ul class="pp-list">
               <li>Audiencias, entidades (productos, servicios, lugares), campañas</li>
               <li>Tono, lineamientos visuales y pilares narrativos por marca</li>
@@ -60,7 +60,7 @@ class PlataformaView extends PublicBaseView {
           <div class="pp-module__copy sr-reveal">
             <span class="pp-module__label">Módulo 03</span>
             <h2 id="pp-mod-intel" class="pp-section__title">Inteligencia competitiva</h2>
-            <p class="pp-section__text">[COPY: Monitoreo de competidores, señales de mercado y análisis de contenido propio.]</p>
+            <p class="pp-section__text">Señales de competencia, tendencias y desempeño de tu propio contenido en un solo tablero, para que el equipo tome decisiones con contexto, no con capturas sueltas.</p>
             <ul class="pp-list">
               <li>Redes sociales, marketplaces y web</li>
               <li>Captura de anuncios competidores y tendencias</li>
@@ -68,7 +68,7 @@ class PlataformaView extends PublicBaseView {
             </ul>
           </div>
           <div class="pp-module__media sr-reveal sr-reveal--d1" aria-hidden="true">
-            <div class="pp-placeholder">[IMAGEN/DEMO: dashboard de inteligencia]</div>
+            <div class="pp-placeholder">Captura de producto del tablero de inteligencia — próximamente</div>
           </div>
         </div>
       </section>
@@ -76,12 +76,12 @@ class PlataformaView extends PublicBaseView {
       <section class="pp-section pp-module pp-module--reverse" aria-labelledby="pp-mod-vera">
         <div class="pp-section__inner pp-module__grid">
           <div class="pp-module__media sr-reveal" aria-hidden="true">
-            <div class="pp-placeholder">[IMAGEN/DEMO: sistema de agentes VERA]</div>
+            <div class="pp-placeholder">Captura de producto de agentes VERA — próximamente</div>
           </div>
           <div class="pp-module__copy sr-reveal sr-reveal--d1">
             <span class="pp-module__label">Módulo 04</span>
             <h2 id="pp-mod-vera" class="pp-section__title">Agentes VERA</h2>
-            <p class="pp-section__text">[COPY: Sistema de agentes autónomos operando en background 24/7.]</p>
+            <p class="pp-section__text">Agentes VERA ejecutan misiones de análisis, producción y monitoreo en segundo plano, con visibilidad de estado para quien opera la marca.</p>
             <ul class="pp-list">
               <li>Misiones: producción, análisis, monitoreo, reporte</li>
               <li>Orquestación continua sin intervención manual</li>
@@ -94,23 +94,23 @@ class PlataformaView extends PublicBaseView {
       <section class="pp-section pp-integrations" aria-labelledby="pp-integrations">
         <div class="pp-section__inner">
           <h2 id="pp-integrations" class="pp-section__title sr-reveal">Integraciones</h2>
-          <p class="pp-section__text sr-reveal sr-reveal--d1">[COPY: plataformas conectables — brand_integrations].</p>
+          <p class="pp-section__text sr-reveal sr-reveal--d1">Conectamos canales y fuentes de datos según el contrato de cada organización (Meta, Google, marketplaces y más), siempre con credenciales cifradas y alcance acotado por marca.</p>
           <div class="pp-integrations__grid sr-reveal sr-reveal--d2" aria-hidden="true">
-            <div class="pp-integration-chip">[LOGO: Meta]</div>
-            <div class="pp-integration-chip">[LOGO: Google]</div>
-            <div class="pp-integration-chip">[LOGO: TikTok]</div>
-            <div class="pp-integration-chip">[LOGO: LinkedIn]</div>
-            <div class="pp-integration-chip">[LOGO: Amazon]</div>
-            <div class="pp-integration-chip">[LOGO: Shopify]</div>
-            <div class="pp-integration-chip">[LOGO: Mercado Libre]</div>
-            <div class="pp-integration-chip">[LOGO: YouTube]</div>
+            <div class="pp-integration-chip">Meta</div>
+            <div class="pp-integration-chip">Google</div>
+            <div class="pp-integration-chip">TikTok</div>
+            <div class="pp-integration-chip">LinkedIn</div>
+            <div class="pp-integration-chip">Amazon</div>
+            <div class="pp-integration-chip">Shopify</div>
+            <div class="pp-integration-chip">Mercado Libre</div>
+            <div class="pp-integration-chip">YouTube</div>
           </div>
         </div>
       </section>
 
       <section class="pp-cta">
         <div class="pp-cta__inner sr-reveal">
-          <h2 class="pp-cta__title">[COPY: CTA final — invitación a evaluar fit]</h2>
+          <h2 class="pp-cta__title">¿Tiene sentido para tu stack y tu gobierno de marca? Hablemos de alcance y piloto.</h2>
           <a href="/contacto" class="pp-btn pp-btn--primary">Solicitar acceso</a>
         </div>
       </section>

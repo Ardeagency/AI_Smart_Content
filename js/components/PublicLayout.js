@@ -102,13 +102,13 @@
             <a href="/" class="landing-footer-brand-link" aria-label="AI Smart Content Home" data-href="/">
               <img src="/recursos/assets/assets-16.svg" alt="AI Smart Content" class="landing-footer-bar-logo" loading="lazy">
             </a>
-            <p class="landing-footer-tagline">[COPY: tagline corto — autoridad y precisión para marcas enterprise]</p>
+            <p class="landing-footer-tagline">Inteligencia operativa de marca: menos latencia entre el mercado y tu contenido.</p>
           </div>
           ${cols}
         </div>
         <div class="landing-footer-bottom">
           <div class="landing-footer-bottom-inner">
-            <span class="landing-footer-copy">© 2025 AI S-MART CONTENT by Arde Agency S.A.S. Todos los derechos reservados.</span>
+            <span class="landing-footer-copy">© 2026 AI S-MART CONTENT by Arde Agency S.A.S. Todos los derechos reservados.</span>
             <p class="landing-footer-credit">
               <a href="/privacidad" class="landing-footer-credit-link" data-href="/privacidad">Privacidad</a>
               &nbsp;·&nbsp;

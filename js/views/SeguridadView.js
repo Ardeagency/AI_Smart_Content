@@ -14,8 +14,8 @@ class SeguridadView extends PublicBaseView {
       <section class="pp-hero">
         <div class="pp-hero__inner">
           <span class="pp-eyebrow sr-reveal">Seguridad</span>
-          <h1 class="pp-hero__title sr-reveal">[COPY: Declaración de compromiso con la seguridad de los datos]</h1>
-          <p class="pp-hero__sub sr-reveal sr-reveal--d1">[COPY: Resumen — aislamiento por organización, encriptación, control manual de accesos]</p>
+          <h1 class="pp-hero__title sr-reveal">Tus datos de marca se tratan como activo crítico, no como fila en una base anónima.</h1>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">Aislamiento por organización en base de datos, cifrado en tránsito y en reposo, tokens de integración protegidos y altas de usuario solo por invitación revisada por Arde.</p>
         </div>
       </section>
 
@@ -47,7 +47,7 @@ class SeguridadView extends PublicBaseView {
             <li><strong>Encriptación en tránsito:</strong> TLS end-to-end.</li>
             <li><strong>Encriptación en reposo:</strong> aplicada sobre volúmenes y bases de datos.</li>
             <li><strong>Tokens de integración:</strong> encriptados vía <code>brand_integrations.encryption_iv</code>.</li>
-            <li><strong>Backups:</strong> [COPY: frecuencia, retención, región].</li>
+            <li><strong>Backups:</strong> copias automáticas gestionadas por el proveedor de base de datos con retención acorde al plan contratado; detalle de ventanas y región disponible para clientes en documentación contractual.</li>
           </ul>
         </div>
       </section>
@@ -79,13 +79,16 @@ class SeguridadView extends PublicBaseView {
               <span>Anthropic</span><span>Modelos de IA (Claude)</span><span>US</span>
             </div>
             <div class="pp-table__row">
-              <span>Supabase</span><span>Base de datos y autenticación</span><span>[COPY: región]</span>
+              <span>Supabase</span><span>Base de datos y autenticación</span><span>Según proyecto (UE / US)</span>
             </div>
             <div class="pp-table__row">
               <span>Hetzner</span><span>Infraestructura de servidores de agentes</span><span>EU</span>
             </div>
             <div class="pp-table__row">
-              <span>[AGREGAR]</span><span>[COPY: otros subprocesadores relevantes]</span><span>—</span>
+              <span>OpenAI</span><span>Modelos de IA (texto e imagen según flujo)</span><span>US</span>
+            </div>
+            <div class="pp-table__row">
+              <span>Otros</span><span>Proveedores adicionales según integraciones activas de tu organización (redes, analítica, email)</span><span>Variable</span>
             </div>
           </div>
         </div>
@@ -94,8 +97,7 @@ class SeguridadView extends PublicBaseView {
       <section class="pp-section" aria-labelledby="pp-incidents">
         <div class="pp-section__inner">
           <h2 id="pp-incidents" class="pp-section__title sr-reveal">Política de incidentes</h2>
-          <p class="pp-section__text sr-reveal sr-reveal--d1">[COPY: proceso de notificación — ventanas de tiempo, canales de comunicación, post-mortem público].</p>
-          <p class="pp-section__text sr-reveal sr-reveal--d2">Estado del sistema en tiempo real en <a href="/status" class="pp-link">/status</a>.</p>
+          <p class="pp-section__text sr-reveal sr-reveal--d1">Ante incidentes que impacten confidencialidad, integridad o disponibilidad del servicio, notificamos a los contactos designados de la organización por los canales acordados en el contrato, con cronograma de contención y, cuando aplique, resumen técnico para post-mortem interno. El estado en vivo del sistema se publica en <a href="/status" class="pp-link">/status</a>.</p>
         </div>
       </section>
 

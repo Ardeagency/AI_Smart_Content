@@ -69,8 +69,8 @@ class StatusView extends PublicBaseView {
         <div class="pp-section__inner">
           <h2 id="pp-status-uptime" class="pp-section__title sr-reveal">Uptime (últimos 30 días)</h2>
           <div class="pp-uptime sr-reveal sr-reveal--d1">
-            <span class="pp-uptime__value" id="statusUptime">[DATO: %]</span>
-            <p class="pp-uptime__desc">Disponibilidad calculada desde <code>system_metrics</code>. [NOTA: semi-estático en etapa inicial].</p>
+            <span class="pp-uptime__value" id="statusUptime">—</span>
+            <p class="pp-uptime__desc">El porcentaje de disponibilidad de los últimos 30 días se mostrará aquí cuando el feed público de <code>system_metrics</code> esté conectado a esta vista.</p>
           </div>
         </div>
       </section>

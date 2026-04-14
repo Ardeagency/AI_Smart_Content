@@ -24,20 +24,20 @@ class ChangelogView extends PublicBaseView {
 
           <article class="pp-changelog__entry sr-reveal">
             <header class="pp-changelog__head">
-              <span class="pp-changelog__date">[MES AÑO]</span>
-              <span class="pp-changelog__version">[EJEMPLO: v1.2 — "Agentes de segunda generación"]</span>
+              <span class="pp-changelog__date">Abril 2026</span>
+              <span class="pp-changelog__version">Agentes y orquestación</span>
               <span class="pp-tag pp-tag--new">Nuevo</span>
             </header>
-            <p class="pp-changelog__desc">[COPY: Descripción del cambio — qué mejora para el cliente y por qué importa].</p>
+            <p class="pp-changelog__desc">Ajustes en el ciclo de vida de misiones de agentes, mejor visibilidad de estado en la interfaz y refinamiento de prompts por defecto para tareas de análisis recurrentes.</p>
           </article>
 
           <article class="pp-changelog__entry sr-reveal sr-reveal--d1">
             <header class="pp-changelog__head">
-              <span class="pp-changelog__date">[MES AÑO]</span>
-              <span class="pp-changelog__version">[EJEMPLO: v1.1 — "Monitoreo ampliado"]</span>
+              <span class="pp-changelog__date">Marzo 2026</span>
+              <span class="pp-changelog__version">Inteligencia y monitoreo</span>
               <span class="pp-tag pp-tag--improve">Mejora</span>
             </header>
-            <p class="pp-changelog__desc">[COPY: Descripción del cambio].</p>
+            <p class="pp-changelog__desc">Mejoras en captura de señales de competencia y en la presentación de resultados de monitoreo para reducir ruido en el tablero operativo.</p>
           </article>
 
         </div>
@@ -50,7 +50,7 @@ class ChangelogView extends PublicBaseView {
             <input type="email" class="pp-field__input" name="email" placeholder="tu@empresa.com" required aria-label="Email para suscribirse">
             <button type="submit" class="pp-btn pp-btn--primary">Suscribir</button>
           </form>
-          <p class="pp-form__note">[NOTA: conectar a servicio de email en segunda fase].</p>
+          <p class="pp-form__note">La suscripción por correo está en activación; si necesitas novedades críticas, escríbenos a <a href="mailto:contact@aismartcontent.io" class="pp-link">contact@aismartcontent.io</a>.</p>
         </div>
       </section>
     `;

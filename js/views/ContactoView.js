@@ -101,8 +101,8 @@ class ContactoView extends PublicBaseView {
                 <a href="https://api.whatsapp.com/message/RLPG652D2LS4D1?autoload=1&app_absent=0" class="pp-contact__value" target="_blank" rel="noopener noreferrer">+57 321 830 0088</a>
               </li>
               <li>
-                <span class="pp-contact__label">LinkedIn</span>
-                <a href="#" class="pp-contact__value">[OPCIONAL: LinkedIn de Arde Agency]</a>
+                <span class="pp-contact__label">Arde Agency</span>
+                <a href="https://www.ardeagency.com" class="pp-contact__value" target="_blank" rel="noopener noreferrer">ardeagency.com</a>
               </li>
             </ul>
             <div class="pp-contact__note">

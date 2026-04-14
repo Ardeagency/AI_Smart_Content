@@ -15,7 +15,7 @@ class SolucionesView extends PublicBaseView {
         <div class="pp-hero__inner">
           <span class="pp-eyebrow sr-reveal">Soluciones</span>
           <h1 class="pp-hero__title sr-reveal">Diseñado para marcas que producen contenido a escala</h1>
-          <p class="pp-hero__sub sr-reveal sr-reveal--d1">[COPY: Subtítulo — a quién le sirve y cómo filtra prospectos no ideales].</p>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">Si buscas un chat suelto o un SaaS sin acompañamiento, no encajamos. Si necesitas gobierno de marca, volumen y trazabilidad con un equipo que opera contigo, sí.</p>
         </div>
       </section>
 
@@ -86,7 +86,7 @@ class SolucionesView extends PublicBaseView {
 
       <section class="pp-cta">
         <div class="pp-cta__inner sr-reveal">
-          <h2 class="pp-cta__title">[COPY: CTA final enfocado a prospectos calificados]</h2>
+          <h2 class="pp-cta__title">Cuéntanos tu contexto: marcas, mercados y presión de contenido. Evaluamos fit sin perder tu tiempo.</h2>
           <a href="/contacto" class="pp-btn pp-btn--primary">Solicitar acceso</a>
         </div>
       </section>
