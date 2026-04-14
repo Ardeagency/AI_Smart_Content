@@ -4035,7 +4035,11 @@ body.entrance-done .landing-header {
     z-index: 0;
 }
 
-.landing-hero__bg-layer--a { opacity: 1; }
+/* Imagen 0 en CSS: se descarga con el stylesheet, antes de que corra JS */
+.landing-hero__bg-layer--a {
+    opacity: 1;
+    background-image: url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg');
+}
 .landing-hero__bg-layer--b { opacity: 0; }
 
 /* Capa oscura fija: siempre encima de las imágenes, nunca anima */

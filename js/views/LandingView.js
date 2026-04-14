@@ -461,9 +461,6 @@ class LandingView extends BaseView {
       'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg'
     ];
 
-    // Preload all images so transitions are instant when they happen
-    heroBackgrounds.forEach(url => { (new Image()).src = url; });
-
     const getBgUrl = (index) =>
       heroBackgrounds[((index % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
 
@@ -471,13 +468,21 @@ class LandingView extends BaseView {
     let activeLayer = layerA;
     let inactiveLayer = layerB;
 
+    // Pre-stage: set next image on the hidden layer so it downloads in background.
+    // Called after each transition — gives ~4s to load before it's needed.
+    const preStageNext = (nextIndex) => {
+      inactiveLayer.style.backgroundImage = `url("${getBgUrl(nextIndex)}")`;
+    };
+
     const crossfadeTo = (index) => {
       const url = getBgUrl(index);
       inactiveLayer.style.backgroundImage = `url("${url}")`;
-      void inactiveLayer.offsetHeight; // force paint before transitioning
+      void inactiveLayer.offsetHeight;
       inactiveLayer.style.opacity = '1';
       activeLayer.style.opacity = '0';
       [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
+      // After transition settles, silently load the one after next
+      window.setTimeout(() => preStageNext(index + 1), 750);
     };
 
     const ROTATE_INTERVAL_MS = 5000;
@@ -506,11 +511,15 @@ class LandingView extends BaseView {
       if (!animate) void track.offsetHeight;
     };
 
-    // Initialize first frame — no animation, no crossfade flash
-    layerA.style.backgroundImage = `url("${getBgUrl(0)}")`;
+    // layerA already has image[0] from CSS — only set inline if CSS didn't apply it
+    if (!layerA.style.backgroundImage) {
+      layerA.style.backgroundImage = `url("${getBgUrl(0)}")`;
+    }
     layerA.style.opacity = '1';
     layerB.style.opacity = '0';
     setPos(0, false);
+    // Pre-stage image[1] on the hidden layerB so it's cached before first rotation
+    window.setTimeout(() => preStageNext(1), 200);
 
     if (
       typeof window.matchMedia === 'function' &&
