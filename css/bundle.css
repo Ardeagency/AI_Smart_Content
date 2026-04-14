@@ -31675,17 +31675,26 @@ body.production-filters-in-header .living-container > .living-history-section {
     }
 }
 
-/* Main container: asegurar buen background y padding superior bajo el header */
+/* Ruta pública: anula padding-top del app-container y asegura fondo sólido */
+body.route-public #app-container {
+    padding-top: 0;
+    background: #0b0b0c;
+}
+body.route-public.entrance-active #app-container {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Main container de una página pública */
 .public-page {
     position: relative;
     z-index: 1;
     display: block;
     min-height: calc(100vh - 120px);
-    padding-top: 96px;
     color: var(--text-primary);
     background: #0b0b0c;
 }
-body.entrance-active .public-page { opacity: 1; }
 
 .public-page code {
     font-family: var(--font-mono);
@@ -31697,11 +31706,11 @@ body.entrance-active .public-page { opacity: 1; }
 
 /* Hero de página pública */
 .pp-hero {
-    padding: clamp(60px, 10vw, 120px) 20px clamp(40px, 6vw, 72px);
+    padding: clamp(110px, 14vw, 170px) 20px clamp(40px, 6vw, 72px);
     background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.06), transparent 60%), #0b0b0c;
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.pp-hero--compact { padding: clamp(50px, 8vw, 90px) 20px clamp(24px, 4vw, 48px); }
+.pp-hero--compact { padding: clamp(100px, 12vw, 140px) 20px clamp(24px, 4vw, 48px); }
 .pp-hero__inner {
     width: min(1100px, 100%);
     margin: 0 auto;

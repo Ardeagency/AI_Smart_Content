@@ -126,6 +126,9 @@
   function initBehaviors(container) {
     const scope = container || document;
 
+    // Marcar ruta pública (habilita estilos específicos en bundle.css: sin padding-top, etc.)
+    document.body.classList.add('route-public');
+
     // Header floating-on-scroll
     const header = scope.querySelector('.public-header');
     if (header) {
@@ -142,7 +145,8 @@
       target.addEventListener('scroll', update, { passive: true });
       PublicLayout._scrollCleanup = () => target.removeEventListener('scroll', update);
 
-      // Asegurar que el header se muestre (entrance-done controla fade-in en landing; replicamos)
+      // Asegurar que el header se muestre aunque no venga del entrance de la landing
+      document.body.classList.remove('entrance-active');
       document.body.classList.add('entrance-done');
     }
 
@@ -191,6 +195,7 @@
       PublicLayout._ioCleanup();
       PublicLayout._ioCleanup = null;
     }
+    document.body.classList.remove('route-public');
   }
 
   const PublicLayout = {

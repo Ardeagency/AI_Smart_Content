@@ -1,11 +1,12 @@
 /**
- * PublicBaseView - Base para todas las páginas públicas nuevas.
- * Carga el template específico y lo envuelve con header + footer públicos.
- * Inicializa comportamientos comunes (header sticky, mobile menu, scroll reveal).
+ * PublicBaseView - Base para páginas públicas (marketing).
+ * Envuelve el contenido de cada vista con header + footer públicos.
+ * Las subclases implementan renderContent() — HTML inline, sin templates.
  */
 class PublicBaseView extends BaseView {
   constructor() {
     super();
+    this.templatePath = null;
     this.activePath = '/';
     this.hideFooter = false;
     this.pageClass = '';
@@ -19,15 +20,19 @@ class PublicBaseView extends BaseView {
     // Las páginas públicas tienen su propio header (sin avatar de usuario)
   }
 
-  async renderHTML() {
-    if (!this.templatePath) {
-      throw new Error('PublicBaseView requiere templatePath');
-    }
-    const inner = await this.loadTemplate();
-    if (!window.PublicLayout) return inner;
+  /**
+   * HTML del contenido principal (sin header/footer). Override obligatorio.
+   */
+  renderContent() {
+    return '';
+  }
+
+  renderHTML() {
+    const content = this.renderContent();
+    if (!window.PublicLayout) return content;
     return window.PublicLayout.wrap({
       active: this.activePath,
-      content: inner,
+      content,
       hideFooter: this.hideFooter,
       extraClass: this.pageClass
     });

@@ -1,9 +1,119 @@
+/**
+ * ContactoView - Formulario de contacto (único punto de entrada).
+ * Página pública — HTML inline siguiendo el patrón SPA.
+ */
 class ContactoView extends PublicBaseView {
   constructor() {
     super();
-    this.templatePath = 'contacto.html';
     this.activePath = '/contacto';
     this.pageClass = 'public-page--contacto';
+  }
+
+  renderContent() {
+    return `
+      <section class="pp-hero pp-hero--compact">
+        <div class="pp-hero__inner">
+          <span class="pp-eyebrow sr-reveal">Contacto</span>
+          <h1 class="pp-hero__title sr-reveal">Cuéntanos sobre tu marca. Nosotros nos encargamos del resto.</h1>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">Revisamos cada solicitud manualmente y te contactamos en 48 horas hábiles.</p>
+        </div>
+      </section>
+
+      <section class="pp-section pp-contact">
+        <div class="pp-section__inner pp-contact__grid">
+
+          <form class="pp-form sr-reveal" id="contactForm" novalidate>
+            <div class="pp-form__row">
+              <label class="pp-field">
+                <span class="pp-field__label">Nombre completo</span>
+                <input class="pp-field__input" type="text" name="full_name" required autocomplete="name">
+              </label>
+              <label class="pp-field">
+                <span class="pp-field__label">Correo corporativo</span>
+                <input class="pp-field__input" type="email" name="email" required autocomplete="email">
+              </label>
+            </div>
+
+            <div class="pp-form__row">
+              <label class="pp-field">
+                <span class="pp-field__label">Empresa / marca</span>
+                <input class="pp-field__input" type="text" name="company" required autocomplete="organization">
+              </label>
+              <label class="pp-field">
+                <span class="pp-field__label">Cargo / rol</span>
+                <input class="pp-field__input" type="text" name="role" required autocomplete="organization-title">
+              </label>
+            </div>
+
+            <div class="pp-form__row">
+              <label class="pp-field">
+                <span class="pp-field__label">País / mercado principal</span>
+                <input class="pp-field__input" type="text" name="market" required>
+              </label>
+              <label class="pp-field">
+                <span class="pp-field__label">Marcas o líneas de producto</span>
+                <input class="pp-field__input" type="text" name="brands_count" placeholder="Número aproximado">
+              </label>
+            </div>
+
+            <label class="pp-field pp-field--full">
+              <span class="pp-field__label">¿Cuál es tu principal reto en producción de contenido?</span>
+              <textarea class="pp-field__textarea" name="challenge" rows="5" required></textarea>
+            </label>
+
+            <div class="pp-form__row">
+              <label class="pp-field">
+                <span class="pp-field__label">¿Cómo nos encontraste?</span>
+                <select class="pp-field__input" name="source" required>
+                  <option value="">Selecciona una opción</option>
+                  <option value="referral">Referido</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="search">Búsqueda</option>
+                  <option value="event">Evento</option>
+                  <option value="other">Otro</option>
+                </select>
+              </label>
+              <label class="pp-field">
+                <span class="pp-field__label">Sitio web (opcional)</span>
+                <input class="pp-field__input" type="url" name="website" autocomplete="url">
+              </label>
+            </div>
+
+            <label class="pp-field pp-field--full">
+              <span class="pp-field__label">Teléfono de contacto (opcional)</span>
+              <input class="pp-field__input" type="tel" name="phone" autocomplete="tel">
+            </label>
+
+            <button type="submit" class="pp-btn pp-btn--primary pp-form__submit">Enviar solicitud</button>
+            <p class="pp-form__note">Revisamos cada solicitud manualmente. Si hay fit, agendamos una sesión de diagnóstico sin costo.</p>
+            <p class="pp-form__status" id="contactStatus" role="status" aria-live="polite"></p>
+          </form>
+
+          <aside class="pp-contact__aside sr-reveal sr-reveal--d1">
+            <h2 class="pp-contact__aside-title">Contacto directo</h2>
+            <ul class="pp-contact__list">
+              <li>
+                <span class="pp-contact__label">Email</span>
+                <a href="mailto:contact@aismartcontent.io" class="pp-contact__value">contact@aismartcontent.io</a>
+              </li>
+              <li>
+                <span class="pp-contact__label">WhatsApp</span>
+                <a href="https://api.whatsapp.com/message/RLPG652D2LS4D1?autoload=1&app_absent=0" class="pp-contact__value" target="_blank" rel="noopener noreferrer">+57 321 830 0088</a>
+              </li>
+              <li>
+                <span class="pp-contact__label">LinkedIn</span>
+                <a href="#" class="pp-contact__value">[OPCIONAL: LinkedIn de Arde Agency]</a>
+              </li>
+            </ul>
+            <div class="pp-contact__note">
+              <p><strong>¿Ya eres usuario?</strong> Accede en <a href="/login" class="pp-link">/login</a>.</p>
+              <p>AI S-MART CONTENT es por invitación. No existe registro público.</p>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+    `;
   }
 
   async init() {
@@ -14,7 +124,6 @@ class ContactoView extends PublicBaseView {
 
     this.addEventListener(form, 'submit', (e) => {
       e.preventDefault();
-      // Validación mínima nativa
       if (!form.checkValidity()) {
         status.textContent = 'Por favor completa los campos requeridos.';
         status.classList.remove('is-success');
@@ -22,7 +131,6 @@ class ContactoView extends PublicBaseView {
         form.reportValidity();
         return;
       }
-      // Envío en etapa inicial: placeholder — se conectará a endpoint/servicio de formularios
       status.textContent = 'Solicitud recibida. Te contactaremos en 48 horas hábiles.';
       status.classList.remove('is-error');
       status.classList.add('is-success');
@@ -30,4 +138,9 @@ class ContactoView extends PublicBaseView {
     });
   }
 }
+
 window.ContactoView = ContactoView;
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ContactoView;
+}

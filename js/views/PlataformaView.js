@@ -1,9 +1,125 @@
+/**
+ * PlataformaView - Descripción técnica de la plataforma AI S-MART CONTENT.
+ * Página pública — HTML inline siguiendo el patrón SPA del proyecto.
+ */
 class PlataformaView extends PublicBaseView {
   constructor() {
     super();
-    this.templatePath = 'plataforma.html';
     this.activePath = '/plataforma';
     this.pageClass = 'public-page--plataforma';
   }
+
+  renderContent() {
+    return `
+      <section class="pp-hero">
+        <div class="pp-hero__inner">
+          <span class="pp-eyebrow sr-reveal">Plataforma</span>
+          <h1 class="pp-hero__title sr-reveal">[COPY: Posicionamiento técnico de la plataforma en una línea contundente]</h1>
+          <p class="pp-hero__sub sr-reveal sr-reveal--d1">[COPY: Descripción general — qué hace AI S-MART CONTENT al nivel de sistema, por qué es relevante para CMO + IT]</p>
+        </div>
+      </section>
+
+      <section class="pp-section pp-module" aria-labelledby="pp-mod-production">
+        <div class="pp-section__inner pp-module__grid">
+          <div class="pp-module__copy sr-reveal">
+            <span class="pp-module__label">Módulo 01</span>
+            <h2 id="pp-mod-production" class="pp-section__title">Producción de contenido</h2>
+            <p class="pp-section__text">[COPY: Flujos automatizados de contenido a escala — content_flows como columna vertebral.]</p>
+            <ul class="pp-list">
+              <li>Outputs: imagen, video, copy, hashtags</li>
+              <li>Ejecución manual, autopilot y programada</li>
+              <li>Revisión y aprobación integradas al flujo</li>
+            </ul>
+          </div>
+          <div class="pp-module__media sr-reveal sr-reveal--d1" aria-hidden="true">
+            <div class="pp-placeholder">[IMAGEN/DEMO: captura del módulo de flujos]</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-section pp-module pp-module--reverse" aria-labelledby="pp-mod-brand">
+        <div class="pp-section__inner pp-module__grid">
+          <div class="pp-module__media sr-reveal" aria-hidden="true">
+            <div class="pp-placeholder">[IMAGEN/DEMO: captura del módulo de marca]</div>
+          </div>
+          <div class="pp-module__copy sr-reveal sr-reveal--d1">
+            <span class="pp-module__label">Módulo 02</span>
+            <h2 id="pp-mod-brand" class="pp-section__title">Sistema de marca</h2>
+            <p class="pp-section__text">[COPY: ADN verbal y visual codificado en el sistema para garantizar consistencia.]</p>
+            <ul class="pp-list">
+              <li>Audiencias, entidades (productos, servicios, lugares), campañas</li>
+              <li>Tono, lineamientos visuales y pilares narrativos por marca</li>
+              <li>Consistencia garantizada en cada pieza generada</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-section pp-module" aria-labelledby="pp-mod-intel">
+        <div class="pp-section__inner pp-module__grid">
+          <div class="pp-module__copy sr-reveal">
+            <span class="pp-module__label">Módulo 03</span>
+            <h2 id="pp-mod-intel" class="pp-section__title">Inteligencia competitiva</h2>
+            <p class="pp-section__text">[COPY: Monitoreo de competidores, señales de mercado y análisis de contenido propio.]</p>
+            <ul class="pp-list">
+              <li>Redes sociales, marketplaces y web</li>
+              <li>Captura de anuncios competidores y tendencias</li>
+              <li>Análisis de tono, coherencia y pilares narrativos propios</li>
+            </ul>
+          </div>
+          <div class="pp-module__media sr-reveal sr-reveal--d1" aria-hidden="true">
+            <div class="pp-placeholder">[IMAGEN/DEMO: dashboard de inteligencia]</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-section pp-module pp-module--reverse" aria-labelledby="pp-mod-vera">
+        <div class="pp-section__inner pp-module__grid">
+          <div class="pp-module__media sr-reveal" aria-hidden="true">
+            <div class="pp-placeholder">[IMAGEN/DEMO: sistema de agentes VERA]</div>
+          </div>
+          <div class="pp-module__copy sr-reveal sr-reveal--d1">
+            <span class="pp-module__label">Módulo 04</span>
+            <h2 id="pp-mod-vera" class="pp-section__title">Agentes VERA</h2>
+            <p class="pp-section__text">[COPY: Sistema de agentes autónomos operando en background 24/7.]</p>
+            <ul class="pp-list">
+              <li>Misiones: producción, análisis, monitoreo, reporte</li>
+              <li>Orquestación continua sin intervención manual</li>
+              <li>Estado en tiempo real de agentes activos</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-section pp-integrations" aria-labelledby="pp-integrations">
+        <div class="pp-section__inner">
+          <h2 id="pp-integrations" class="pp-section__title sr-reveal">Integraciones</h2>
+          <p class="pp-section__text sr-reveal sr-reveal--d1">[COPY: plataformas conectables — brand_integrations].</p>
+          <div class="pp-integrations__grid sr-reveal sr-reveal--d2" aria-hidden="true">
+            <div class="pp-integration-chip">[LOGO: Meta]</div>
+            <div class="pp-integration-chip">[LOGO: Google]</div>
+            <div class="pp-integration-chip">[LOGO: TikTok]</div>
+            <div class="pp-integration-chip">[LOGO: LinkedIn]</div>
+            <div class="pp-integration-chip">[LOGO: Amazon]</div>
+            <div class="pp-integration-chip">[LOGO: Shopify]</div>
+            <div class="pp-integration-chip">[LOGO: Mercado Libre]</div>
+            <div class="pp-integration-chip">[LOGO: YouTube]</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-cta">
+        <div class="pp-cta__inner sr-reveal">
+          <h2 class="pp-cta__title">[COPY: CTA final — invitación a evaluar fit]</h2>
+          <a href="/contacto" class="pp-btn pp-btn--primary">Solicitar acceso</a>
+        </div>
+      </section>
+    `;
+  }
 }
+
 window.PlataformaView = PlataformaView;
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = PlataformaView;
+}

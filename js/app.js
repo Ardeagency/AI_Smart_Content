@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260409-11';
+const APP_LAZY_SCRIPT_VER = '20260414-public';
 
 class App {
   constructor() {
