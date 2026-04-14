@@ -217,13 +217,13 @@ class App {
     r.register('/brands', brandsLoader, auth);
     r.register('/brands/:brandId', brandsLoader, auth);
 
-    // ── Org: Brain (identidad a nivel organizations, UI heredada de Brands) ──
-    const brainOrganizationLoader = this._lazy('BrainorganizationView', [
+    // ── Org: Marca a nivel organizations (sin brand_container) ──
+    const brandOrganizationLoader = this._lazy('BrandOrganizationView', [
       '/js/views/BrandsView.js',
-      '/js/views/BrainorganizationView.js'
+      '/js/views/BrandOrganizationView.js'
     ]);
-    r.register('/org/:orgIdShort/:orgNameSlug/brain-organization', brainOrganizationLoader, auth);
-    r.register('/brain-organization', brainOrganizationLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandOrganizationLoader, auth);
+    r.register('/brand-organization', brandOrganizationLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(
@@ -270,8 +270,8 @@ class App {
     const veraLoader = this._lazy('VeraView', ['/js/views/VeraView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/vera', veraLoader, auth);
     r.register('/vera', veraLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/brain', brainOrganizationLoader, auth);
-    r.register('/brain', brainOrganizationLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brain', legacyRouteRedirectView, auth);
+    r.register('/brain', legacyRouteRedirectView, auth);
 
     // ── Org: Audiences ──
     const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);

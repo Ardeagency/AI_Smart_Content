@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Brand + Brain organización).
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca contenedor + Marca organización).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -28,7 +28,7 @@ const SIDEBAR_USER_CONFIG = {
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
         { label: 'Brand', route: 'brand' },
-        { label: 'Brain', route: 'brain-organization' }
+        { label: 'Marca organización', route: 'brand-organization' }
       ]
     }
   ],
@@ -289,7 +289,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/brain', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits', '/brand-organization'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1598,9 +1598,8 @@ class Navigation {
       '/vera': 'VERA',
       '/tasks': 'TASKS',
       '/brand': 'IDENTITY',
+      '/brand-organization': 'IDENTITY',
       '/brands': 'IDENTITY',
-      '/brain-organization': 'BRAIN',
-      '/brain': 'BRAIN',
       '/products': 'IDENTITY',
       '/product-detail': 'IDENTITY',
       '/studio/flows': 'FLOWS',
