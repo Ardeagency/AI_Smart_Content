@@ -10,6 +10,7 @@ if (typeof window.ProductsManager === 'undefined') {
         this.supabase = null;
         this.userId = null;
         this.brandContainerId = null;
+        this.organizationId = null;
         this.products = [];
         this.currentProduct = null;
         this.activeFilter = 'todos'; // Filtro activo por categoría
@@ -311,44 +312,61 @@ if (typeof window.ProductsManager === 'undefined') {
         // Validar cliente y userId antes de hacer consulta
         if (!this.supabase || typeof this.supabase.from !== 'function' || !this.userId) {
             this.brandContainerId = null;
+            this.organizationId = null;
             return;
         }
 
         try {
-            // Validar que userId sea un UUID válido
-            if (!this.isValidUUID(this.userId)) {
-                console.warn('⚠️ userId no es un UUID válido:', this.userId);
-                this.brandContainerId = null;
-                return;
-            }
+            // Resolver organization_id desde appState o localStorage
+            this.organizationId = (window.appState?.get('selectedOrganizationId')) ||
+                localStorage.getItem('selectedOrganizationId') ||
+                window.currentOrgId ||
+                null;
 
-            // Cargar brand_container asociado al usuario (según schema.sql línea 72-89)
-            const { data: brandContainer, error } = await this.supabase
-                .from('brand_containers')
-                .select('id')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            // Si no hay registros o hay error, continuar sin brandContainerId
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    // No hay brand_container, continuar sin él (es normal si el usuario no ha creado uno)
+            if (!this.organizationId) {
+                // Fallback: cargar brand_container por user_id para obtener su organization_id
+                if (!this.isValidUUID(this.userId)) {
+                    console.warn('⚠️ userId no es un UUID válido:', this.userId);
                     this.brandContainerId = null;
                     return;
                 }
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_container:', error.message);
-                }
-                this.brandContainerId = null;
-                return;
-            }
+                const { data: brandContainer, error } = await this.supabase
+                    .from('brand_containers')
+                    .select('id, organization_id')
+                    .eq('user_id', this.userId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
 
-            if (brandContainer && brandContainer.id) {
-                this.brandContainerId = brandContainer.id;
+                if (error) {
+                    if (error.code !== 'PGRST116') {
+                        console.warn('⚠️ Error cargando brand_container:', error.message);
+                    }
+                    this.brandContainerId = null;
+                    return;
+                }
+
+                if (brandContainer) {
+                    this.brandContainerId = brandContainer.id;
+                    this.organizationId = brandContainer.organization_id || null;
+                } else {
+                    this.brandContainerId = null;
+                }
             } else {
-                this.brandContainerId = null;
+                // Cargar brand_container por organization_id
+                const { data: brandContainer, error } = await this.supabase
+                    .from('brand_containers')
+                    .select('id, organization_id')
+                    .eq('organization_id', this.organizationId)
+                    .order('created_at', { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (!error && brandContainer) {
+                    this.brandContainerId = brandContainer.id;
+                } else {
+                    this.brandContainerId = null;
+                }
             }
         } catch (error) {
             console.warn('⚠️ Error cargando brand_container:', error);
@@ -466,15 +484,11 @@ if (typeof window.ProductsManager === 'undefined') {
             window.appLoader.showSpinner();
         }
 
-        // Validar brandContainerId
-        if (!this.brandContainerId) {
-            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
-            emptyState.style.display = 'block';
-            this.products = [];
-            return;
-        }
-
-        if (!this.isValidUUID(this.brandContainerId)) {
+        // Validar que tengamos organization_id o brandContainerId
+        const checkOrgId = this.organizationId ||
+            window.appState?.get('selectedOrganizationId') ||
+            localStorage.getItem('selectedOrganizationId');
+        if (!checkOrgId && !this.brandContainerId) {
             if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
             emptyState.style.display = 'block';
             this.products = [];
@@ -483,13 +497,21 @@ if (typeof window.ProductsManager === 'undefined') {
 
         try {
             // ============================================
-            // PASO 1: OBTENER PRODUCTS según schema.sql (línea 307-328)
+            // PASO 1: OBTENER PRODUCTS según schema.sql
+            // products.organization_id -> organizations.id
             // ============================================
-            // products.brand_container_id -> brand_containers.id
+            const orgId = this.organizationId ||
+                window.appState?.get('selectedOrganizationId') ||
+                localStorage.getItem('selectedOrganizationId');
+            if (!orgId) {
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
             const { data: products, error: productsError } = await this.supabase
                 .from('products')
                 .select('*')
-                .eq('brand_container_id', this.brandContainerId)
+                .eq('organization_id', orgId)
                 .order('created_at', { ascending: false });
 
             if (productsError) {
@@ -828,8 +850,11 @@ if (typeof window.ProductsManager === 'undefined') {
             const el = document.getElementById(elId);
             return el ? el.value.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
         };
+        const newOrgId = this.organizationId ||
+            window.appState?.get('selectedOrganizationId') ||
+            localStorage.getItem('selectedOrganizationId');
         const formData = {
-            brand_container_id: this.brandContainerId,
+            organization_id: newOrgId,
             tipo_producto: document.getElementById('new_tipo_producto').value,
             nombre_producto: document.getElementById('new_nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('new_descripcion_producto').value.trim(),
@@ -847,9 +872,8 @@ if (typeof window.ProductsManager === 'undefined') {
         saveBtn.textContent = 'Creando...';
 
         try {
-            // Validar brandContainerId antes de insertar
-            if (!this.isValidUUID(this.brandContainerId)) {
-                throw new Error('brand_container_id no válido');
+            if (!newOrgId || !this.isValidUUID(newOrgId)) {
+                throw new Error('organization_id no válido');
             }
 
             // Validar campos requeridos según schema.sql (línea 307-328)
@@ -1391,8 +1415,11 @@ if (typeof window.ProductsManager === 'undefined') {
             const el = document.getElementById(elId);
             return el ? el.value.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
         };
+        const editOrgId = this.organizationId ||
+            window.appState?.get('selectedOrganizationId') ||
+            localStorage.getItem('selectedOrganizationId');
         const formData = {
-            brand_container_id: this.brandContainerId,
+            organization_id: editOrgId,
             tipo_producto: document.getElementById('tipo_producto').value,
             nombre_producto: document.getElementById('nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('descripcion_producto').value.trim(),
@@ -1410,9 +1437,8 @@ if (typeof window.ProductsManager === 'undefined') {
         saveBtn.textContent = 'Guardando...';
 
         try {
-            // Validar brandContainerId antes de operar
-            if (!this.isValidUUID(this.brandContainerId)) {
-                throw new Error('brand_container_id no válido');
+            if (!editOrgId || !this.isValidUUID(editOrgId)) {
+                throw new Error('organization_id no válido');
             }
 
             // Validar campos requeridos según schema.sql (línea 307-328)

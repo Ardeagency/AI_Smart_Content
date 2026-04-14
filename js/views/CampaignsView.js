@@ -325,20 +325,14 @@ class CampaignsView extends BaseView {
     }
   }
 
-  /** Audiencias de la marca (vía brands.project_id = brand_container_id). */
+  /** Audiencias del brand_container. */
   async loadAudiences() {
     if (!this.supabase || !this.brandContainerId) return [];
     try {
-      const { data: brand } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', this.brandContainerId)
-        .maybeSingle();
-      if (!brand || !brand.id) return [];
       const { data, error } = await this.supabase
         .from('audiences')
         .select('id, name')
-        .eq('brand_id', brand.id)
+        .eq('brand_container_id', this.brandContainerId)
         .order('name');
       if (error) return [];
       this.audiences = data || [];
@@ -349,14 +343,18 @@ class CampaignsView extends BaseView {
     }
   }
 
-  /** Entidades de marca (productos/servicios) del brand_container. */
+  /** Entidades de marca (productos/servicios) de la organización. */
   async loadBrandEntities(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
+    if (!this.supabase) return [];
     try {
+      const orgId = this.organizationId ||
+        window.appState?.get('selectedOrganizationId') ||
+        localStorage.getItem('selectedOrganizationId');
+      if (!orgId) return [];
       const { data, error } = await this.supabase
         .from('brand_entities')
         .select('id, name, entity_type')
-        .eq('brand_container_id', brandContainerId)
+        .eq('organization_id', orgId)
         .order('name');
       return error ? [] : (data || []);
     } catch (e) {

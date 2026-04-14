@@ -101,7 +101,20 @@ class BrandsView extends BaseView {
                     <!-- Se renderizarán dinámicamente -->
                 </div>
             </div>
-    </div>
+        </div>
+
+        <!-- Entidades de marca -->
+        <div class="brand-card card-entities">
+            <div class="card-header">
+                <h2 class="card-title">Entidades de marca</h2>
+                <button type="button" class="card-add-btn" id="addEntityBtn" title="Agregar entidad"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="card-content">
+                <div class="entities-list" id="brandEntitiesList">
+                    <!-- Se renderizarán dinámicamente -->
+                </div>
+            </div>
+        </div>
 
     </div>
 
@@ -229,9 +242,10 @@ class BrandsView extends BaseView {
 
   /**
    * Carga datos según schema.sql:
-   * brand_containers, brands(project_id→container), brand_assets(brand_container_id),
-   * brand_entities(brand_container_id), brand_places(entity_id), audiences(brand_id),
-   * brand_colors(brand_id), brand_fonts(brand_id),
+   * brand_containers (contiene todos los campos de marca: nicho_core, sub_nichos, arquetipo, etc.),
+   * brand_assets(brand_container_id), brand_entities(brand_container_id),
+   * brand_places(entity_id), audiences(brand_container_id),
+   * brand_colors(organization_id), brand_fonts(organization_id),
    * products(brand_container_id), organization_members, organization_credits, credit_usage.
    *
    * Resolución de contenedor (alineada con StudioView.getBrandContainerId):
@@ -295,45 +309,10 @@ class BrandsView extends BaseView {
           this.brandIntegrations = integRows || [];
         }
         
-        // Brand — auto-crea la fila si no existe (p.ej. tras DROP TABLE brands en migración)
-        const { data: brand, error: brandError } = await this.supabase
-        .from('brands')
-        .select('*')
-          .eq('project_id', container.id)
-          .maybeSingle();
-        
-        if (brandError) {
-          console.warn('⚠️ Error cargando brand:', brandError);
-          this.brandData = null;
-        } else if (brand) {
-          this.brandData = brand;
-        } else {
-          // No existe fila en brands → auto-crear con valores vacíos
-          try {
-            const { data: newBrand, error: createErr } = await this.supabase
-              .from('brands')
-              .insert({ project_id: container.id, nicho_core: '' })
-              .select()
-              .single();
-            if (createErr) {
-              console.warn('⚠️ No se pudo auto-crear brands row:', createErr);
-              this.brandData = null;
-            } else {
-              this.brandData = newBrand;
-              console.info('✅ brands row auto-creado para container', container.id);
-            }
-          } catch (e) {
-            console.warn('⚠️ Error auto-creando brands:', e);
-            this.brandData = null;
-          }
-        }
-
-        if (!this.brandData?.id) {
-          this.brandColors = [];
-          this.brandFonts = [];
-          this.brandRules = [];
-          this.brandAudiences = [];
-        }
+        // brand_containers ahora contiene directamente los campos de marca
+        // (nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision,
+        //  verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos)
+        this.brandData = container;
 
         // Productos
         const { data: products, error: productsError } = await this.supabase
@@ -397,28 +376,24 @@ class BrandsView extends BaseView {
           }
         }
 
-        // Audiences asociadas a la marca
-        if (this.brandData?.id) {
-          const { data: audiences, error: audiencesError } = await this.supabase
-            .from('audiences')
-            .select('*')
-            .eq('brand_id', this.brandData.id)
-            .order('created_at', { ascending: true });
-          
-          if (audiencesError) {
-            console.warn('⚠️ Error cargando audiences:', audiencesError);
-            this.brandAudiences = [];
-          } else {
-            this.brandAudiences = audiences || [];
-          }
+        // Audiences asociadas al brand_container
+        const { data: audiences, error: audiencesError } = await this.supabase
+          .from('audiences')
+          .select('*')
+          .eq('brand_container_id', container.id)
+          .order('created_at', { ascending: true });
+
+        if (audiencesError) {
+          console.warn('⚠️ Error cargando audiences:', audiencesError);
+          this.brandAudiences = [];
+        } else {
+          this.brandAudiences = audiences || [];
         }
 
-        // Colores y fuentes (brands.id; fallback legacy si brand_id guardó brand_container.id)
-        if (this.brandData?.id) {
-          this.brandColors = await this._queryBrandColorsRows();
-          this.brandFonts = await this._queryBrandFontsRows();
-            this.brandRules = [];
-        }
+        // Colores y fuentes por organization_id
+        this.brandColors = await this._queryBrandColorsRows();
+        this.brandFonts = await this._queryBrandFontsRows();
+        this.brandRules = [];
 
         // Organización
         if (container.organization_id) {
@@ -519,55 +494,40 @@ class BrandsView extends BaseView {
   }
 
   /**
-   * Filas de brand_colors: primero por brands.id; si no hay filas, intenta brand_id = brand_container.id
-   * (datos antiguos mal enlazados).
+   * Filas de brand_colors por organization_id.
    */
   async _queryBrandColorsRows() {
-    if (!this.supabase || !this.brandData?.id) return [];
+    const orgId = this.brandContainerData?.organization_id;
+    if (!this.supabase || !orgId) return [];
     const { data, error } = await this.supabase
       .from('brand_colors')
       .select('*')
-      .eq('brand_id', this.brandData.id);
+      .eq('organization_id', orgId);
     if (error) {
-      console.warn('⚠️ Error cargando colores (brand_id → brands.id):', error);
+      console.warn('⚠️ Error cargando colores:', error);
       return [];
     }
-    let rows = data || [];
-    if (rows.length === 0 && this.brandContainerData?.id) {
-      const { data: legacy, error: errLeg } = await this.supabase
-        .from('brand_colors')
-        .select('*')
-        .eq('brand_id', this.brandContainerData.id);
-      if (!errLeg && legacy && legacy.length) rows = legacy;
-    }
-    return rows;
+    return data || [];
   }
 
-  /** Igual que colores: brands.id primero, fallback por container.id. */
+  /** Filas de brand_fonts por organization_id. */
   async _queryBrandFontsRows() {
-    if (!this.supabase || !this.brandData?.id) return [];
+    const orgId = this.brandContainerData?.organization_id;
+    if (!this.supabase || !orgId) return [];
     const { data, error } = await this.supabase
       .from('brand_fonts')
       .select('*')
-      .eq('brand_id', this.brandData.id);
+      .eq('organization_id', orgId);
     if (error) {
-      console.warn('⚠️ Error cargando fuentes (brand_id → brands.id):', error);
+      console.warn('⚠️ Error cargando fuentes:', error);
       return [];
     }
-    let rows = data || [];
-    if (rows.length === 0 && this.brandContainerData?.id) {
-      const { data: legacy, error: errLeg } = await this.supabase
-        .from('brand_fonts')
-        .select('*')
-        .eq('brand_id', this.brandContainerData.id);
-      if (!errLeg && legacy && legacy.length) rows = legacy;
-    }
-    return rows;
+    return data || [];
   }
 
   /** Recarga solo brand_colors desde Supabase (evita recargar todo loadData en operaciones de color). */
   async _reloadColors() {
-    if (!this.supabase || !this.brandData?.id) return;
+    if (!this.supabase || !this.brandContainerData?.organization_id) return;
     this.brandColors = await this._queryBrandColorsRows();
   }
 
@@ -923,18 +883,167 @@ class BrandsView extends BaseView {
 
   renderCards() {
     this.applyBrandBackgroundGradient();
-    // Visual de marca - Brand Colors
     this.renderBrandColors();
-    
-    // Visual de marca - Typography
     this.renderTypography();
-
-    // Archivos de identidad
     this.renderIdentityFiles();
     this.setupFileUpload();
-    
-    // Setup event listeners para INFO
+    this.renderBrandEntities();
     this.setupEventListeners();
+  }
+
+  renderBrandEntities() {
+    const container = (this.container && this.container.querySelector('#brandEntitiesList')) ||
+                      document.getElementById('brandEntitiesList');
+    if (!container) return;
+
+    const entities = this.brandEntities || [];
+    if (!entities.length) {
+      container.innerHTML = '<p class="entities-empty">Sin entidades. Agrega productos o servicios como entidades de marca.</p>';
+    } else {
+      container.innerHTML = entities.map(e => {
+        const places = (this.brandPlaces || []).filter(p => p.entity_id === e.id);
+        const placesHtml = places.length
+          ? places.map(p => `<span class="entity-place-tag" title="${this.escapeHtml(p.address || '')}"><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(p.name)}</span>`).join('')
+          : '';
+        return `
+          <div class="entity-row" data-entity-id="${e.id}">
+            <span class="entity-type-badge entity-type-${this.escapeHtml(e.entity_type || 'other')}">${this.escapeHtml(e.entity_type || 'otro')}</span>
+            <div class="entity-main">
+              <span class="entity-name">${this.escapeHtml(e.name)}</span>
+              ${places.length ? `<div class="entity-places">${placesHtml}</div>` : ''}
+            </div>
+            ${e.price != null ? `<span class="entity-price">${e.price} ${e.currency || 'USD'}</span>` : ''}
+            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="Agregar lugar"><i class="fas fa-map-pin"></i></button>
+            <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="Eliminar" aria-label="Eliminar entidad">×</button>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.entity-delete-btn').forEach(btn => {
+        btn.addEventListener('click', ev => {
+          ev.stopPropagation();
+          this.deleteEntity(btn.getAttribute('data-entity-id'));
+        });
+      });
+
+      container.querySelectorAll('.entity-add-place-btn').forEach(btn => {
+        btn.addEventListener('click', ev => {
+          ev.stopPropagation();
+          this.openAddPlaceModal(btn.getAttribute('data-entity-id'));
+        });
+      });
+    }
+
+    const addBtn = (this.container || document).querySelector('#addEntityBtn');
+    if (addBtn && !addBtn._entityBound) {
+      addBtn._entityBound = true;
+      addBtn.addEventListener('click', () => this.openAddEntityModal());
+    }
+  }
+
+  openAddPlaceModal(entityId) {
+    document.getElementById('brandPlaceModal')?.remove();
+    const entity = (this.brandEntities || []).find(e => e.id === entityId);
+    const entityName = entity ? entity.name : entityId;
+
+    const modalHtml = `
+      <div class="modal-overlay" id="brandPlaceModal">
+        <div class="modal">
+          <div class="modal-header"><h3>Agregar lugar a <em>${this.escapeHtml(entityName)}</em></h3><button type="button" class="modal-close" id="placeModalClose"><i class="fas fa-times"></i></button></div>
+          <div class="modal-body">
+            <div class="form-group"><label for="place_name">Nombre del lugar <span class="form-required">*</span></label><input type="text" id="place_name" class="form-input" placeholder="Ej: Tienda Ciudad de México" required></div>
+            <div class="form-group"><label for="place_address">Dirección</label><input type="text" id="place_address" class="form-input" placeholder="Ej: Av. Insurgentes Sur 1234"></div>
+            <div class="form-row">
+              <div class="form-group"><label for="place_city">Ciudad</label><input type="text" id="place_city" class="form-input" placeholder="Ciudad"></div>
+              <div class="form-group"><label for="place_country">País</label><input type="text" id="place_country" class="form-input" placeholder="País"></div>
+            </div>
+            <div class="form-group"><label for="place_type">Tipo</label><select id="place_type" class="form-input"><option value="store">Tienda</option><option value="office">Oficina</option><option value="warehouse">Bodega</option><option value="other">Otro</option></select></div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="placeModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="placeModalSubmit">Agregar</button></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('placeModalClose')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
+    document.getElementById('placeModalCancel')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
+    document.getElementById('placeModalSubmit')?.addEventListener('click', async () => {
+      if (!this.supabase) return;
+      const name = document.getElementById('place_name')?.value?.trim();
+      if (!name) { alert('El nombre del lugar es obligatorio.'); return; }
+      const payload = {
+        entity_id: entityId,
+        name,
+        address: document.getElementById('place_address')?.value?.trim() || null,
+        city: document.getElementById('place_city')?.value?.trim() || null,
+        country: document.getElementById('place_country')?.value?.trim() || null,
+        place_type: document.getElementById('place_type')?.value || 'other',
+      };
+      const { data, error } = await this.supabase.from('brand_places').insert(payload).select().single();
+      if (error) { console.error('BrandsView addPlace:', error); alert('Error al agregar el lugar.'); return; }
+      this.brandPlaces = [...(this.brandPlaces || []), data];
+      document.getElementById('brandPlaceModal')?.remove();
+      this.renderBrandEntities();
+    });
+  }
+
+  openAddEntityModal() {
+    document.getElementById('brandEntityModal')?.remove();
+    const ENTITY_TYPES = ['product', 'service', 'place', 'brand', 'influencer', 'competitor', 'other'];
+    const typeOpts = ENTITY_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
+
+    const modalHtml = `
+      <div class="modal-overlay" id="brandEntityModal">
+        <div class="modal">
+          <div class="modal-header"><h3>Nueva Entidad de Marca</h3><button type="button" class="modal-close" id="entityModalClose"><i class="fas fa-times"></i></button></div>
+          <div class="modal-body">
+            <div class="form-group"><label for="ent_name">Nombre <span class="form-required">*</span></label><input type="text" id="ent_name" class="form-input" placeholder="Ej: Producto X" required></div>
+            <div class="form-group"><label for="ent_type">Tipo <span class="form-required">*</span></label><select id="ent_type" class="form-input">${typeOpts}</select></div>
+            <div class="form-group"><label for="ent_description">Descripción</label><textarea id="ent_description" class="form-input" rows="2"></textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label for="ent_price">Precio</label><input type="number" id="ent_price" class="form-input" step="any" placeholder="0"></div>
+              <div class="form-group"><label for="ent_currency">Moneda</label><select id="ent_currency" class="form-input"><option>USD</option><option>EUR</option><option>MXN</option><option>COP</option><option>ARS</option></select></div>
+            </div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="entityModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="entityModalSubmit">Crear</button></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('entityModalClose')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
+    document.getElementById('entityModalCancel')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
+    document.getElementById('entityModalSubmit')?.addEventListener('click', () => this.submitCreateEntity());
+  }
+
+  async submitCreateEntity() {
+    if (!this.supabase || !this.brandContainerData?.organization_id) return;
+    const name = document.getElementById('ent_name')?.value?.trim();
+    if (!name) { alert('El nombre es obligatorio.'); return; }
+
+    const priceRaw = document.getElementById('ent_price')?.value;
+    const payload = {
+      organization_id: this.brandContainerData.organization_id,
+      name,
+      entity_type: document.getElementById('ent_type')?.value || 'other',
+      description: document.getElementById('ent_description')?.value?.trim() || null,
+      price: priceRaw ? parseFloat(priceRaw) : null,
+      currency: document.getElementById('ent_currency')?.value || 'USD',
+    };
+
+    const { data, error } = await this.supabase.from('brand_entities').insert(payload).select().single();
+    if (error) { console.error('BrandsView createEntity:', error); alert('Error al crear la entidad.'); return; }
+    this.brandEntities = [...(this.brandEntities || []), data];
+    document.getElementById('brandEntityModal')?.remove();
+    this.renderBrandEntities();
+  }
+
+  async deleteEntity(entityId) {
+    if (!confirm('¿Eliminar esta entidad? Se eliminarán también sus vínculos con productos y servicios.')) return;
+    if (!this.supabase || !entityId) return;
+
+    const { error } = await this.supabase.from('brand_entities').delete().eq('id', entityId);
+    if (error) { console.error('BrandsView deleteEntity:', error); alert('Error al eliminar.'); return; }
+    this.brandEntities = (this.brandEntities || []).filter(e => e.id !== entityId);
+    this.renderBrandEntities();
   }
 
 
@@ -1241,10 +1350,12 @@ class BrandsView extends BaseView {
       return;
     }
     // Refrescar colores desde BD por si hubo cambios (otra pestaña, etc.)
+    const orgId = this.brandContainerData?.organization_id;
+    if (!orgId) return;
     const { data: freshColors } = await this.supabase
       .from('brand_colors')
       .select('id, color_role, hex_value')
-      .eq('brand_id', this.brandData.id);
+      .eq('organization_id', orgId);
     const currentInDb = freshColors || [];
     if (currentInDb.length >= 4) {
       alert('Máximo 4 colores por marca.');
@@ -1255,7 +1366,7 @@ class BrandsView extends BaseView {
       const { error } = await this.supabase
         .from('brand_colors')
         .insert({
-          brand_id: this.brandData.id,
+          organization_id: orgId,
           color_role: colorRole,
           hex_value: hexNorm
         });
@@ -1351,7 +1462,7 @@ class BrandsView extends BaseView {
       this.loadFontForPreview(fontValue);
       const previousFonts = [...(this.brandFonts || [])];
       const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
-      this.brandFonts = [...others, { brand_id: this.brandData?.id, font_usage: 'images', font_family: fontValue, font_weight: '400', fallback_font: 'sans-serif' }];
+      this.brandFonts = [...others, { organization_id: this.brandContainerData?.organization_id, font_usage: 'images', font_family: fontValue, font_weight: '400', fallback_font: 'sans-serif' }];
       this.renderTypography();
       try {
         if (this._typographySavePromise) await this._typographySavePromise;
@@ -1394,12 +1505,13 @@ class BrandsView extends BaseView {
   }
 
   async saveTypographyForImages(fontFamily) {
-    if (!this.supabase || !this.brandData?.id) return;
+    const orgId = this.brandContainerData?.organization_id;
+    if (!this.supabase || !orgId) return;
     try {
       const { data: existing } = await this.supabase
         .from('brand_fonts')
         .select('id')
-        .eq('brand_id', this.brandData.id)
+        .eq('organization_id', orgId)
         .eq('font_usage', 'images')
         .limit(1)
         .maybeSingle();
@@ -1416,7 +1528,7 @@ class BrandsView extends BaseView {
         await this.supabase
           .from('brand_fonts')
           .insert({
-            brand_id: this.brandData.id,
+            organization_id: orgId,
             font_family: fontFamily,
             font_usage: 'images',
             font_weight: '400',
@@ -2203,36 +2315,8 @@ class BrandsView extends BaseView {
   }
 
   async saveBrandField(fieldName, value) {
-    if (!this.supabase || !this.brandData) {
-      if (!this.brandContainerData) return;
-      
-      let v = value;
-      if (BrandsView.BRAND_ARRAY_FIELDS.includes(fieldName) && typeof v === 'string') {
-        v = v.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
-      }
-
-      const row = {
-            project_id: this.brandContainerData.id,
-        nicho_core: fieldName === 'nicho_core' ? this._normalizeBrandFieldForDb('nicho_core', v) : ''
-      };
-      if (fieldName !== 'nicho_core') {
-        row[fieldName] = this._normalizeBrandFieldForDb(fieldName, v);
-      }
-
-      try {
-        const { data: newBrand, error } = await this.supabase.from('brands').insert(row).select().single();
-
-        if (error) throw error;
-        this.brandData = newBrand;
-        console.log(`✅ Brand creado y ${fieldName} guardado`);
-        this._refreshInfoPanelIfOpen();
-        return;
-      } catch (error) {
-        console.error(`❌ Error al crear brand:`, error);
-        alert(`Error al crear brand. Por favor, intenta de nuevo.`);
-        return;
-      }
-    }
+    // Los campos de marca (nicho_core, arquetipo, etc.) ahora viven en brand_containers
+    if (!this.supabase || !this.brandContainerData) return;
 
     const saveKey = `brand_${fieldName}`;
     if (this.savingFields.has(saveKey)) {
@@ -2254,13 +2338,14 @@ class BrandsView extends BaseView {
 
     try {
       const { error } = await this.supabase
-        .from('brands')
+        .from('brand_containers')
         .update({ [fieldName]: payloadValue, updated_at: new Date().toISOString() })
-        .eq('id', this.brandData.id);
+        .eq('id', this.brandContainerData.id);
 
       if (error) throw error;
 
-      this.brandData[fieldName] = payloadValue;
+      this.brandContainerData[fieldName] = payloadValue;
+      this.brandData = this.brandContainerData;
       console.log(`✅ ${fieldName} actualizado correctamente`);
     } catch (error) {
       console.error(`❌ Error al guardar ${fieldName}:`, error);

@@ -116,9 +116,9 @@ class InsightView extends BaseView {
     this._destroyCharts();
     const map = {
       'my-brands':  () => { body.innerHTML = this._myBrandsLoadingSkeleton(); this._renderMyBrands(); },
-      competence:   () => { body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'Analiza a tu competencia: publicaciones, métricas y posicionamiento en redes sociales.'); },
-      tendencies:   () => { body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'Tendencias de contenido, hashtags y temas relevantes para tu industria en tiempo real.'); },
-      strategy:     () => { body.innerHTML = this._pageComingSoon('Strategy', 'fa-route', 'Recomendaciones estratégicas basadas en el rendimiento de tus campañas y el mercado.'); },
+      competence:   () => { body.innerHTML = this._competenceLoadingSkeleton(); this._renderCompetence(); },
+      tendencies:   () => { body.innerHTML = this._tendenciesLoadingSkeleton(); this._renderTendencies(); },
+      strategy:     () => { body.innerHTML = this._monitoringLoadingSkeleton(); this._renderMonitoring(); },
     };
     (map[tabId] || (() => {}))();
   }
@@ -1947,6 +1947,432 @@ class InsightView extends BaseView {
         <p class="insight-cs-desc">${this._esc(description)}</p>
         <span class="insight-cs-badge">Próximamente</span>
       </div>`;
+  }
+
+  // ── Competence tab ─────────────────────────────────────────────────────────
+
+  _competenceLoadingSkeleton() {
+    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando datos de competencia…</div>`;
+  }
+
+  async _renderCompetence() {
+    const body = document.getElementById('insightTabBody');
+    if (!body) return;
+
+    try {
+      if (!this._supabase && window.supabaseService) {
+        this._supabase = await window.supabaseService.getClient();
+      } else if (!this._supabase && window.supabase) {
+        this._supabase = window.supabase;
+      }
+    } catch (e) { console.error('[InsightView] Supabase init competence:', e); }
+
+    if (!this._supabase) {
+      body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'No se pudo conectar con la base de datos.');
+      return;
+    }
+
+    const orgId = window.appState?.get('selectedOrganizationId') ||
+      localStorage.getItem('selectedOrganizationId') ||
+      window.currentOrgId;
+
+    try {
+      const [entitiesRes, competitorAdsRes, vulnerabilitiesRes] = await Promise.allSettled([
+        orgId ? this._supabase
+          .from('intelligence_entities')
+          .select('id, name, entity_type, source, social_handle, followers_count, engagement_rate, last_analyzed_at')
+          .eq('organization_id', orgId)
+          .eq('entity_type', 'competitor')
+          .order('followers_count', { ascending: false })
+          .limit(20) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('competitor_ads')
+          .select('id, competitor_name, platform, ad_copy, call_to_action, landing_url, seen_at, performance_score')
+          .eq('organization_id', orgId)
+          .order('seen_at', { ascending: false })
+          .limit(30) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('brand_vulnerabilities')
+          .select('id, title, description, severity, status, detected_at')
+          .eq('organization_id', orgId)
+          .order('detected_at', { ascending: false })
+          .limit(10) : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      const competitors = (entitiesRes.status === 'fulfilled' && !entitiesRes.value.error) ? (entitiesRes.value.data || []) : [];
+      const ads = (competitorAdsRes.status === 'fulfilled' && !competitorAdsRes.value.error) ? (competitorAdsRes.value.data || []) : [];
+      const vulnerabilities = (vulnerabilitiesRes.status === 'fulfilled' && !vulnerabilitiesRes.value.error) ? (vulnerabilitiesRes.value.data || []) : [];
+
+      body.innerHTML = this._renderCompetenceHtml(competitors, ads, vulnerabilities);
+      this._bindCompetenceEvents(competitors);
+    } catch (e) {
+      console.error('[InsightView] renderCompetence:', e);
+      body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'Error cargando datos de competencia.');
+    }
+  }
+
+  _renderCompetenceHtml(competitors, ads, vulnerabilities) {
+    const competitorRows = competitors.length
+      ? competitors.map(c => `
+        <tr>
+          <td>${this._esc(c.name)}</td>
+          <td>${this._esc(c.source || '—')}</td>
+          <td>${c.followers_count != null ? Number(c.followers_count).toLocaleString() : '—'}</td>
+          <td>${c.engagement_rate != null ? (c.engagement_rate * 100).toFixed(2) + '%' : '—'}</td>
+          <td>${c.last_analyzed_at ? new Date(c.last_analyzed_at).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" class="insight-table-empty">Sin competidores registrados. Usa intelligence_entities para agregarlos.</td></tr>`;
+
+    const adRows = ads.length
+      ? ads.map(a => `
+        <tr>
+          <td>${this._esc(a.competitor_name || '—')}</td>
+          <td><span class="insight-platform-badge">${this._esc(a.platform || '—')}</span></td>
+          <td class="insight-ad-copy">${this._esc((a.ad_copy || '').slice(0, 120))}${(a.ad_copy || '').length > 120 ? '…' : ''}</td>
+          <td>${this._esc(a.call_to_action || '—')}</td>
+          <td>${a.seen_at ? new Date(a.seen_at).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" class="insight-table-empty">Sin anuncios de competencia registrados.</td></tr>`;
+
+    const SEVERITY_COLORS = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e' };
+    const vulnRows = vulnerabilities.length
+      ? vulnerabilities.map(v => {
+          const color = SEVERITY_COLORS[v.severity] || '#6b7280';
+          return `
+            <tr>
+              <td>${this._esc(v.title || '—')}</td>
+              <td><span class="insight-severity-badge" style="background:${color}">${this._esc(v.severity || '—')}</span></td>
+              <td>${this._esc(v.status || '—')}</td>
+              <td>${v.detected_at ? new Date(v.detected_at).toLocaleDateString('es-ES') : '—'}</td>
+            </tr>`;
+        }).join('')
+      : `<tr><td colspan="4" class="insight-table-empty">Sin vulnerabilidades detectadas.</td></tr>`;
+
+    return `
+      <div class="insight-competence">
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-users"></i> Competidores monitoreados</h2>
+          <div class="insight-table-wrap">
+            <table class="insight-table">
+              <thead><tr><th>Nombre</th><th>Fuente</th><th>Seguidores</th><th>Engagement</th><th>Último análisis</th></tr></thead>
+              <tbody>${competitorRows}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-ad"></i> Anuncios de competencia</h2>
+          <div class="insight-table-wrap">
+            <table class="insight-table">
+              <thead><tr><th>Competidor</th><th>Plataforma</th><th>Copy</th><th>CTA</th><th>Visto</th></tr></thead>
+              <tbody>${adRows}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-shield-alt"></i> Vulnerabilidades de marca</h2>
+          <div class="insight-table-wrap">
+            <table class="insight-table">
+              <thead><tr><th>Título</th><th>Severidad</th><th>Estado</th><th>Detectada</th></tr></thead>
+              <tbody>${vulnRows}</tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  _bindCompetenceEvents() {}
+
+  // ── Monitoring (Strategy tab) ──────────────────────────────────────────────
+
+  _monitoringLoadingSkeleton() {
+    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando monitores…</div>`;
+  }
+
+  async _renderMonitoring() {
+    const body = document.getElementById('insightTabBody');
+    if (!body) return;
+
+    try {
+      if (!this._supabase && window.supabaseService) {
+        this._supabase = await window.supabaseService.getClient();
+      } else if (!this._supabase && window.supabase) {
+        this._supabase = window.supabase;
+      }
+    } catch (e) { console.error('[InsightView] Supabase init monitoring:', e); }
+
+    if (!this._supabase) {
+      body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'No se pudo conectar con la base de datos.');
+      return;
+    }
+
+    const orgId = window.appState?.get('selectedOrganizationId') ||
+      localStorage.getItem('selectedOrganizationId') ||
+      window.currentOrgId;
+
+    try {
+      const [triggersRes] = await Promise.allSettled([
+        orgId ? this._supabase
+          .from('monitoring_triggers')
+          .select('id, name, trigger_type, status, keywords, platforms, last_triggered_at, created_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      const triggers = (triggersRes.status === 'fulfilled' && !triggersRes.value.error) ? (triggersRes.value.data || []) : [];
+      body.innerHTML = this._renderMonitoringHtml(triggers, orgId);
+      this._bindMonitoringEvents(triggers, orgId);
+    } catch (e) {
+      console.error('[InsightView] renderMonitoring:', e);
+      body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'Error cargando monitores.');
+    }
+  }
+
+  _renderMonitoringHtml(triggers, orgId) {
+    const STATUS_COLORS = { active: '#22c55e', paused: '#eab308', inactive: '#6b7280', error: '#ef4444' };
+
+    const triggerRows = triggers.length
+      ? triggers.map(t => {
+          const color = STATUS_COLORS[t.status] || '#6b7280';
+          const keywords = (t.keywords || []).slice(0, 4);
+          return `
+            <tr>
+              <td>${this._esc(t.name || '—')}</td>
+              <td><span class="insight-signal-type">${this._esc(t.trigger_type || '—')}</span></td>
+              <td>${keywords.length ? keywords.map(k => `<span class="insight-keyword">${this._esc(k)}</span>`).join('') : '—'}</td>
+              <td><span class="insight-severity-badge" style="background:${color}">${this._esc(t.status || '—')}</span></td>
+              <td>${t.last_triggered_at ? new Date(t.last_triggered_at).toLocaleDateString('es-ES') : '—'}</td>
+              <td class="insight-trigger-actions">
+                <button type="button" class="btn btn-ghost btn-sm insight-trigger-toggle" data-trigger-id="${t.id}" data-status="${t.status}" title="${t.status === 'active' ? 'Pausar' : 'Activar'}">
+                  <i class="fas ${t.status === 'active' ? 'fa-pause' : 'fa-play'}"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm insight-trigger-delete" data-trigger-id="${t.id}" title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>`;
+        }).join('')
+      : `<tr><td colspan="6" class="insight-table-empty">Sin monitores activos. Crea uno para vigilar palabras clave y señales.</td></tr>`;
+
+    return `
+      <div class="insight-monitoring">
+        <div class="insight-monitoring-header">
+          <h2 class="insight-section-title"><i class="fas fa-radar"></i> Monitoring Triggers</h2>
+          ${orgId ? `<button type="button" class="btn btn-primary btn-sm" id="addTriggerBtn"><i class="fas fa-plus"></i> Nuevo Monitor</button>` : ''}
+        </div>
+        <div class="insight-table-wrap">
+          <table class="insight-table">
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Keywords</th><th>Estado</th><th>Último trigger</th><th>Acciones</th></tr></thead>
+            <tbody id="triggersTableBody">${triggerRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  _bindMonitoringEvents(triggers, orgId) {
+    document.getElementById('addTriggerBtn')?.addEventListener('click', () => this._openAddTriggerModal(orgId));
+
+    document.querySelectorAll('.insight-trigger-toggle').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-trigger-id');
+        const currentStatus = btn.getAttribute('data-status');
+        const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+        if (!this._supabase || !id) return;
+        await this._supabase.from('monitoring_triggers').update({ status: newStatus }).eq('id', id);
+        this._renderMonitoring();
+      });
+    });
+
+    document.querySelectorAll('.insight-trigger-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-trigger-id');
+        if (!confirm('¿Eliminar este monitor?') || !this._supabase || !id) return;
+        await this._supabase.from('monitoring_triggers').delete().eq('id', id);
+        this._renderMonitoring();
+      });
+    });
+  }
+
+  _openAddTriggerModal(orgId) {
+    document.getElementById('insightTriggerModal')?.remove();
+    const TRIGGER_TYPES = ['keyword', 'mention', 'hashtag', 'competitor', 'sentiment', 'trend'];
+    const PLATFORMS = ['instagram', 'tiktok', 'twitter', 'facebook', 'youtube', 'web'];
+    const typeOpts = TRIGGER_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
+
+    const modalHtml = `
+      <div class="modal-overlay" id="insightTriggerModal">
+        <div class="modal">
+          <div class="modal-header"><h3>Nuevo Monitor</h3><button type="button" class="modal-close" id="triggerModalClose"><i class="fas fa-times"></i></button></div>
+          <div class="modal-body">
+            <div class="form-group"><label for="trg_name">Nombre <span class="form-required">*</span></label><input type="text" id="trg_name" class="form-input" placeholder="Ej: Menciones de marca" required></div>
+            <div class="form-group"><label for="trg_type">Tipo</label><select id="trg_type" class="form-input">${typeOpts}</select></div>
+            <div class="form-group"><label for="trg_keywords">Keywords (uno por línea)</label><textarea id="trg_keywords" class="form-input" rows="3" placeholder="Palabra clave 1\nPalabra clave 2"></textarea></div>
+            <div class="form-group"><label>Plataformas</label><div class="insight-platforms-checkboxes">${PLATFORMS.map(p => `<label class="insight-platform-check"><input type="checkbox" name="trg_platform" value="${p}"> ${p}</label>`).join('')}</div></div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="triggerModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="triggerModalSubmit">Crear</button></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('triggerModalClose')?.addEventListener('click', () => document.getElementById('insightTriggerModal')?.remove());
+    document.getElementById('triggerModalCancel')?.addEventListener('click', () => document.getElementById('insightTriggerModal')?.remove());
+    document.getElementById('triggerModalSubmit')?.addEventListener('click', async () => {
+      const name = document.getElementById('trg_name')?.value?.trim();
+      if (!name) { alert('El nombre es obligatorio.'); return; }
+      const keywords = (document.getElementById('trg_keywords')?.value || '')
+        .split(/\n/).map(s => s.trim()).filter(Boolean);
+      const platforms = [...document.querySelectorAll('input[name="trg_platform"]:checked')].map(el => el.value);
+      const payload = {
+        organization_id: orgId,
+        name,
+        trigger_type: document.getElementById('trg_type')?.value || 'keyword',
+        keywords,
+        platforms,
+        status: 'active',
+      };
+      const { error } = await this._supabase.from('monitoring_triggers').insert(payload);
+      if (error) { alert('Error al crear monitor.'); return; }
+      document.getElementById('insightTriggerModal')?.remove();
+      this._renderMonitoring();
+    });
+  }
+
+  // ── Tendencies tab ─────────────────────────────────────────────────────────
+
+  _tendenciesLoadingSkeleton() {
+    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando tendencias…</div>`;
+  }
+
+  async _renderTendencies() {
+    const body = document.getElementById('insightTabBody');
+    if (!body) return;
+
+    try {
+      if (!this._supabase && window.supabaseService) {
+        this._supabase = await window.supabaseService.getClient();
+      } else if (!this._supabase && window.supabase) {
+        this._supabase = window.supabase;
+      }
+    } catch (e) { console.error('[InsightView] Supabase init tendencies:', e); }
+
+    if (!this._supabase) {
+      body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'No se pudo conectar con la base de datos.');
+      return;
+    }
+
+    const orgId = window.appState?.get('selectedOrganizationId') ||
+      localStorage.getItem('selectedOrganizationId') ||
+      window.currentOrgId;
+
+    try {
+      const [trendRes, signalsRes, retailRes] = await Promise.allSettled([
+        orgId ? this._supabase
+          .from('trend_topics')
+          .select('id, topic, platform, volume_score, sentiment_score, related_keywords, detected_at, expires_at')
+          .eq('organization_id', orgId)
+          .order('volume_score', { ascending: false })
+          .limit(30) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('intelligence_signals')
+          .select('id, signal_type, title, description, relevance_score, detected_at, source_url')
+          .eq('organization_id', orgId)
+          .order('detected_at', { ascending: false })
+          .limit(20) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('retail_prices')
+          .select('id, product_name, competitor_name, price, currency, platform, recorded_at')
+          .eq('organization_id', orgId)
+          .order('recorded_at', { ascending: false })
+          .limit(20) : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      const trends = (trendRes.status === 'fulfilled' && !trendRes.value.error) ? (trendRes.value.data || []) : [];
+      const signals = (signalsRes.status === 'fulfilled' && !signalsRes.value.error) ? (signalsRes.value.data || []) : [];
+      const prices = (retailRes.status === 'fulfilled' && !retailRes.value.error) ? (retailRes.value.data || []) : [];
+
+      body.innerHTML = this._renderTendenciesHtml(trends, signals, prices);
+    } catch (e) {
+      console.error('[InsightView] renderTendencies:', e);
+      body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'Error cargando tendencias.');
+    }
+  }
+
+  _renderTendenciesHtml(trends, signals, prices) {
+    const trendCards = trends.length
+      ? trends.map(t => {
+          const sentiment = t.sentiment_score != null
+            ? (t.sentiment_score > 0.5 ? '🟢' : t.sentiment_score > 0 ? '🟡' : '🔴')
+            : '';
+          const keywords = (t.related_keywords || []).slice(0, 4);
+          return `
+            <div class="insight-trend-card">
+              <div class="insight-trend-header">
+                <span class="insight-trend-topic">${this._esc(t.topic)}</span>
+                <span class="insight-trend-platform">${this._esc(t.platform || '—')}</span>
+              </div>
+              <div class="insight-trend-meta">
+                <span>Volumen: <strong>${t.volume_score != null ? t.volume_score.toLocaleString() : '—'}</strong></span>
+                ${sentiment ? `<span>Sentimiento: ${sentiment}</span>` : ''}
+                ${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}
+              </div>
+              ${keywords.length ? `<div class="insight-trend-keywords">${keywords.map(k => `<span class="insight-keyword">${this._esc(k)}</span>`).join('')}</div>` : ''}
+            </div>`;
+        }).join('')
+      : '<p class="insight-table-empty">Sin tendencias registradas para esta organización.</p>';
+
+    const signalRows = signals.length
+      ? signals.map(s => `
+        <tr>
+          <td><span class="insight-signal-type">${this._esc(s.signal_type || '—')}</span></td>
+          <td>${this._esc(s.title || '—')}</td>
+          <td>${s.relevance_score != null ? (s.relevance_score * 100).toFixed(0) + '%' : '—'}</td>
+          <td>${s.detected_at ? new Date(s.detected_at).toLocaleDateString('es-ES') : '—'}</td>
+          <td>${s.source_url ? `<a href="${this._esc(s.source_url)}" target="_blank" rel="noopener" class="insight-source-link"><i class="fas fa-external-link-alt"></i></a>` : '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" class="insight-table-empty">Sin señales de inteligencia registradas.</td></tr>`;
+
+    const priceRows = prices.length
+      ? prices.map(p => `
+        <tr>
+          <td>${this._esc(p.product_name || '—')}</td>
+          <td>${this._esc(p.competitor_name || '—')}</td>
+          <td><strong>${p.price != null ? `${p.price} ${p.currency || 'USD'}` : '—'}</strong></td>
+          <td><span class="insight-platform-badge">${this._esc(p.platform || '—')}</span></td>
+          <td>${p.recorded_at ? new Date(p.recorded_at).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" class="insight-table-empty">Sin precios de competencia registrados.</td></tr>`;
+
+    return `
+      <div class="insight-tendencies">
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-fire"></i> Tendencias activas</h2>
+          <div class="insight-trends-grid">${trendCards}</div>
+        </section>
+
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-signal"></i> Señales de inteligencia</h2>
+          <div class="insight-table-wrap">
+            <table class="insight-table">
+              <thead><tr><th>Tipo</th><th>Señal</th><th>Relevancia</th><th>Detectada</th><th>Fuente</th></tr></thead>
+              <tbody>${signalRows}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="insight-section">
+          <h2 class="insight-section-title"><i class="fas fa-tag"></i> Precios de mercado</h2>
+          <div class="insight-table-wrap">
+            <table class="insight-table">
+              <thead><tr><th>Producto</th><th>Competidor</th><th>Precio</th><th>Plataforma</th><th>Registrado</th></tr></thead>
+              <tbody>${priceRows}</tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    `;
   }
 }
 

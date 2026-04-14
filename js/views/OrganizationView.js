@@ -36,6 +36,7 @@ class OrganizationView extends BaseView {
         <button type="button" class="tab-btn" data-tab="users" role="tab" aria-selected="false">Usuarios y roles</button>
         <button type="button" class="tab-btn" data-tab="permissions" role="tab" aria-selected="false">Permisos</button>
         <button type="button" class="tab-btn" data-tab="integrations" role="tab" aria-selected="false">Integraciones</button>
+        <button type="button" class="tab-btn" data-tab="business-units" role="tab" aria-selected="false">Unidades de negocio</button>
         <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">Facturación</button>
     </div>
 
@@ -50,6 +51,22 @@ class OrganizationView extends BaseView {
                         <div class="form-group">
                             <label for="orgName">Nombre de la organización</label>
                             <input type="text" id="orgName" name="name" class="form-input" required placeholder="Ej. Mi Empresa">
+                        </div>
+                        <div class="form-group">
+                            <label for="orgBrandNameOficial">Nombre oficial de marca</label>
+                            <input type="text" id="orgBrandNameOficial" name="brand_name_oficial" class="form-input" placeholder="Nombre comercial oficial">
+                        </div>
+                        <div class="form-group">
+                            <label for="orgBrandSlogan">Slogan</label>
+                            <input type="text" id="orgBrandSlogan" name="brand_slogan" class="form-input" placeholder="Slogan de la organización">
+                        </div>
+                        <div class="form-group">
+                            <label for="orgLevelAutonomy">Nivel de autonomía del agente</label>
+                            <select id="orgLevelAutonomy" name="level_of_autonomy" class="form-input">
+                                <option value="manual">Manual — Todas las acciones requieren aprobación</option>
+                                <option value="parcial">Parcial — Sugerencias automáticas, acciones manuales</option>
+                                <option value="total">Total — El agente actúa de forma autónoma</option>
+                            </select>
                         </div>
                         <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
                             <i class="fas fa-save"></i> Guardar cambios
@@ -131,6 +148,20 @@ class OrganizationView extends BaseView {
                         <p class="org-members-empty">Cargando integraciones...</p>
                     </div>
                 </section>
+            </div>
+        </div>
+
+        <!-- Tab: Unidades de negocio -->
+        <div class="tab-content" id="business-unitsTab" role="tabpanel">
+            <div class="organization-business-units">
+                <div class="org-section-header">
+                    <h2>Unidades de negocio</h2>
+                    <button type="button" class="btn btn-primary btn-sm" id="createBusinessUnitBtn"><i class="fas fa-plus"></i> Nueva unidad</button>
+                </div>
+                <p class="org-section-desc">Organiza tu estructura interna en unidades de negocio y asigna miembros a cada una.</p>
+                <div id="businessUnitsList" class="business-units-list">
+                    <p class="org-placeholder">Cargando unidades de negocio…</p>
+                </div>
             </div>
         </div>
 
@@ -233,7 +264,7 @@ class OrganizationView extends BaseView {
     try {
       const { data: orgData, error: orgError } = await this.supabase
         .from('organizations')
-        .select('id, name, owner_user_id, created_at, deleted_at')
+        .select('id, name, owner_user_id, created_at, deleted_at, level_of_autonomy, logo_url, brand_name_oficial, brand_slogan')
         .eq('id', this.orgId)
         .maybeSingle();
 
@@ -328,6 +359,17 @@ class OrganizationView extends BaseView {
 
     const nameInput = this.querySelector('#orgName');
     if (nameInput) nameInput.value = this.org.name;
+
+    const brandNameInput = this.querySelector('#orgBrandNameOficial');
+    if (brandNameInput) brandNameInput.value = this.org.brand_name_oficial || '';
+
+    const sloganInput = this.querySelector('#orgBrandSlogan');
+    if (sloganInput) sloganInput.value = this.org.brand_slogan || '';
+
+    const autonomySelect = this.querySelector('#orgLevelAutonomy');
+    if (autonomySelect && this.org.level_of_autonomy) {
+      autonomySelect.value = this.org.level_of_autonomy;
+    }
 
     const formatDate = (d) => {
       if (!d) return '—';
@@ -495,8 +537,14 @@ class OrganizationView extends BaseView {
         const panelId = tab + 'Tab';
         const panel = this.querySelector('#' + panelId);
         if (panel) panel.classList.add('active');
+        if (tab === 'business-units') this.loadAndRenderBusinessUnits();
       });
     });
+
+    const createBuBtn = this.querySelector('#createBusinessUnitBtn');
+    if (createBuBtn) {
+      createBuBtn.addEventListener('click', () => this.openCreateBusinessUnitModal());
+    }
 
     const generalForm = this.querySelector('#orgGeneralForm');
     if (generalForm) {
@@ -543,24 +591,33 @@ class OrganizationView extends BaseView {
       return;
     }
 
+    const brandNameOficial = this.querySelector('#orgBrandNameOficial')?.value?.trim() || null;
+    const brandSlogan = this.querySelector('#orgBrandSlogan')?.value?.trim() || null;
+    const levelOfAutonomy = this.querySelector('#orgLevelAutonomy')?.value || null;
+
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
     }
 
     try {
+      const updatePayload = { name };
+      if (brandNameOficial !== undefined) updatePayload.brand_name_oficial = brandNameOficial;
+      if (brandSlogan !== undefined) updatePayload.brand_slogan = brandSlogan;
+      if (levelOfAutonomy) updatePayload.level_of_autonomy = levelOfAutonomy;
+
       const { error } = await this.supabase
         .from('organizations')
-        .update({ name })
+        .update(updatePayload)
         .eq('id', this.orgId)
         .eq('owner_user_id', this.userId);
 
       if (error) throw error;
-      this.org = { ...this.org, name };
+      this.org = { ...this.org, ...updatePayload };
       this.updateHeaderContext('Configuración de la organización', null, name);
     } catch (error) {
-      console.error('Error guardando nombre:', error);
-      alert(error.message || 'No se pudo guardar el nombre.');
+      console.error('Error guardando organización:', error);
+      alert(error.message || 'No se pudo guardar.');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -596,39 +653,59 @@ class OrganizationView extends BaseView {
     const role = (roleSelect?.value || 'member').toLowerCase();
     if (!email) return;
 
+    const submitBtn = document.querySelector('#orgInviteForm button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando...'; }
+
     try {
-      const { data: profile, error: profileError } = await this.supabase
+      // Verificar que no haya invitación pendiente ya
+      const { data: existingInvite } = await this.supabase
+        .from('organization_invitations')
+        .select('id, status')
+        .eq('organization_id', this.orgId)
+        .eq('email', email)
+        .in('status', ['pending'])
+        .maybeSingle();
+
+      if (existingInvite) {
+        alert('Ya existe una invitación pendiente para ese email.');
+        return;
+      }
+
+      // Verificar que no sea ya miembro
+      const { data: profile } = await this.supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
-      if (profileError) throw profileError;
-      if (!profile) {
-        alert('No existe ningún usuario con ese email. El usuario debe estar registrado en la plataforma.');
-        return;
+      if (profile) {
+        const existing = this.members.find(m => m.user_id === profile.id);
+        if (existing) {
+          alert('Ese usuario ya es miembro de la organización.');
+          return;
+        }
       }
 
-      const existing = this.members.find(m => m.user_id === profile.id);
-      if (existing) {
-        alert('Ese usuario ya es miembro de la organización.');
-        return;
-      }
-
-      const { error: insertError } = await this.supabase
-        .from('organization_members')
+      // Crear invitación en organization_invitations
+      const { error: inviteError } = await this.supabase
+        .from('organization_invitations')
         .insert({
           organization_id: this.orgId,
-          user_id: profile.id,
-          role: role === 'admin' ? 'admin' : 'member'
+          email,
+          role: role === 'admin' ? 'admin' : 'member',
+          invited_by: this.userId,
         });
 
-      if (insertError) throw insertError;
+      if (inviteError) throw inviteError;
+
       this.closeInviteModal();
+      alert(`Invitación enviada a ${email}. El usuario podrá aceptarla desde su perfil.`);
       await this.loadOrganizationData();
     } catch (error) {
-      console.error('Error añadiendo miembro:', error);
-      alert(error.message || 'No se pudo añadir el miembro.');
+      console.error('Error enviando invitación:', error);
+      alert(error.message || 'No se pudo enviar la invitación.');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Añadir'; }
     }
   }
 
@@ -659,6 +736,151 @@ class OrganizationView extends BaseView {
       container.querySelector('.organization-content')?.insertAdjacentHTML('beforebegin',
         `<div class="org-error-banner" role="alert">${this.escapeHtml(message)}</div>`);
     }
+  }
+
+  async loadAndRenderBusinessUnits() {
+    const listEl = this.querySelector('#businessUnitsList');
+    if (!listEl) return;
+    if (!this.supabase || !this.orgId) {
+      listEl.innerHTML = '<p class="org-placeholder">No se pudo cargar las unidades de negocio.</p>';
+      return;
+    }
+
+    listEl.innerHTML = '<p class="org-placeholder">Cargando…</p>';
+    try {
+      const { data: units, error } = await this.supabase
+        .from('business_units')
+        .select('id, name, description, created_at')
+        .eq('organization_id', this.orgId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      if (!units || !units.length) {
+        listEl.innerHTML = '<p class="org-placeholder">Sin unidades de negocio. Crea una para estructurar tu organización.</p>';
+        return;
+      }
+
+      // Load user assignments for each unit
+      const unitIds = units.map(u => u.id);
+      const { data: assignments } = await this.supabase
+        .from('user_business_units')
+        .select('business_unit_id, user_id, profiles(full_name, email)')
+        .in('business_unit_id', unitIds);
+
+      const assignmentsByUnit = {};
+      (assignments || []).forEach(a => {
+        if (!assignmentsByUnit[a.business_unit_id]) assignmentsByUnit[a.business_unit_id] = [];
+        assignmentsByUnit[a.business_unit_id].push(a);
+      });
+
+      listEl.innerHTML = units.map(u => {
+        const members = assignmentsByUnit[u.id] || [];
+        const memberHtml = members.length
+          ? members.map(m => {
+              const profile = m.profiles;
+              const name = (Array.isArray(profile) ? profile[0] : profile)?.full_name || (Array.isArray(profile) ? profile[0] : profile)?.email || m.user_id;
+              return `<span class="bu-member-tag">${this.escapeHtml(name)}</span>`;
+            }).join('')
+          : '<span class="bu-member-tag bu-member-empty">Sin miembros asignados</span>';
+
+        return `
+          <div class="business-unit-card" data-bu-id="${u.id}">
+            <div class="bu-card-header">
+              <h3 class="bu-name">${this.escapeHtml(u.name)}</h3>
+              <div class="bu-card-actions">
+                <button type="button" class="btn btn-ghost btn-sm bu-assign-btn" data-bu-id="${u.id}" title="Asignar miembro"><i class="fas fa-user-plus"></i></button>
+                <button type="button" class="btn btn-ghost btn-sm bu-delete-btn" data-bu-id="${u.id}" title="Eliminar"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+            ${u.description ? `<p class="bu-desc">${this.escapeHtml(u.description)}</p>` : ''}
+            <div class="bu-members">${memberHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('.bu-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => this.deleteBusinessUnit(btn.getAttribute('data-bu-id')));
+      });
+      listEl.querySelectorAll('.bu-assign-btn').forEach(btn => {
+        btn.addEventListener('click', () => this.openAssignMemberToBuModal(btn.getAttribute('data-bu-id')));
+      });
+    } catch (e) {
+      console.error('OrganizationView loadBusinessUnits:', e);
+      listEl.innerHTML = '<p class="org-placeholder">Error cargando unidades de negocio.</p>';
+    }
+  }
+
+  openCreateBusinessUnitModal() {
+    document.getElementById('orgBuModal')?.remove();
+    const modalHtml = `
+      <div class="modal-overlay" id="orgBuModal">
+        <div class="modal">
+          <div class="modal-header"><h3>Nueva Unidad de Negocio</h3><button type="button" class="modal-close" id="buModalClose"><i class="fas fa-times"></i></button></div>
+          <div class="modal-body">
+            <div class="form-group"><label for="bu_name">Nombre <span class="form-required">*</span></label><input type="text" id="bu_name" class="form-input" placeholder="Ej: E-commerce" required></div>
+            <div class="form-group"><label for="bu_desc">Descripción</label><textarea id="bu_desc" class="form-input" rows="2"></textarea></div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="buModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="buModalSubmit">Crear</button></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('buModalClose')?.addEventListener('click', () => document.getElementById('orgBuModal')?.remove());
+    document.getElementById('buModalCancel')?.addEventListener('click', () => document.getElementById('orgBuModal')?.remove());
+    document.getElementById('buModalSubmit')?.addEventListener('click', async () => {
+      const name = document.getElementById('bu_name')?.value?.trim();
+      if (!name) { alert('El nombre es obligatorio.'); return; }
+      const { error } = await this.supabase.from('business_units').insert({
+        organization_id: this.orgId,
+        name,
+        description: document.getElementById('bu_desc')?.value?.trim() || null,
+      });
+      if (error) { alert('Error al crear la unidad.'); return; }
+      document.getElementById('orgBuModal')?.remove();
+      await this.loadAndRenderBusinessUnits();
+    });
+  }
+
+  async deleteBusinessUnit(buId) {
+    if (!confirm('¿Eliminar esta unidad de negocio?')) return;
+    const { error } = await this.supabase.from('business_units').delete().eq('id', buId);
+    if (error) { alert('Error al eliminar.'); return; }
+    await this.loadAndRenderBusinessUnits();
+  }
+
+  openAssignMemberToBuModal(buId) {
+    document.getElementById('orgBuAssignModal')?.remove();
+    const memberOpts = this.members.map(m => {
+      const profile = m.profiles;
+      const label = (Array.isArray(profile) ? profile[0] : profile)?.full_name ||
+        (Array.isArray(profile) ? profile[0] : profile)?.email || m.user_id;
+      return `<option value="${m.user_id}">${this.escapeHtml(label)}</option>`;
+    }).join('');
+
+    if (!memberOpts) { alert('No hay miembros disponibles para asignar.'); return; }
+
+    const modalHtml = `
+      <div class="modal-overlay" id="orgBuAssignModal">
+        <div class="modal">
+          <div class="modal-header"><h3>Asignar miembro</h3><button type="button" class="modal-close" id="buAssignClose"><i class="fas fa-times"></i></button></div>
+          <div class="modal-body">
+            <div class="form-group"><label for="bu_assign_user">Miembro</label><select id="bu_assign_user" class="form-input"><option value="">Seleccionar…</option>${memberOpts}</select></div>
+          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="buAssignCancel">Cancelar</button><button type="button" class="btn btn-primary" id="buAssignSubmit">Asignar</button></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('buAssignClose')?.addEventListener('click', () => document.getElementById('orgBuAssignModal')?.remove());
+    document.getElementById('buAssignCancel')?.addEventListener('click', () => document.getElementById('orgBuAssignModal')?.remove());
+    document.getElementById('buAssignSubmit')?.addEventListener('click', async () => {
+      const userId = document.getElementById('bu_assign_user')?.value;
+      if (!userId) { alert('Selecciona un miembro.'); return; }
+      const { error } = await this.supabase.from('user_business_units').insert({ business_unit_id: buId, user_id: userId });
+      if (error) { alert('Error al asignar.'); return; }
+      document.getElementById('orgBuAssignModal')?.remove();
+      await this.loadAndRenderBusinessUnits();
+    });
   }
 }
 
