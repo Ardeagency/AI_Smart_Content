@@ -25691,7 +25691,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     border-radius: var(--glass-radius);
 }
-/* Production Context: mismo shell visual que Brain #brainInputWrap (.gpt-composer), sin max-width del chat */
+/* Production Context: mismo shell visual que Vera #veraInputWrap (.gpt-composer), sin max-width del chat */
 .video-view-container .video-sidebar-console .video-prompt-footer-card.video-sidebar-card {
     padding: 0;
     background: transparent;

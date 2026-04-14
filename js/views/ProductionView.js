@@ -3,9 +3,8 @@
  * Maneja el dashboard con información de perfil, productos y campañas
  * 
  * Rutas soportadas:
- * - /org/:orgId/production - Con contexto de organización
- * - /production - Sin org (usa organización guardada)
- * - /org/:orgId/historial, /historial, /living - Legacy (misma vista)
+ * - /org/:orgId/production — con contexto de organización
+ * - /production — sin org (usa organización guardada)
  */
 class ProductionView extends BaseView {
   constructor() {

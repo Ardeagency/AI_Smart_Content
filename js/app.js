@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260414-no-templates';
+const APP_LAZY_SCRIPT_VER = '20260414-legacy-routes-redirect';
 
 class App {
   constructor() {
@@ -160,24 +160,48 @@ class App {
         if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
       }
     };
+
+    /** /insight, /brain, /living, /historial → /dashboard, /vera, /production (misma org si aplica). */
+    const legacyRouteRedirectView = class extends (window.BaseView || class {}) {
+      async render() {
+        const q = window.location.search || '';
+        let path = window.location.pathname || '/';
+        if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+        let target = null;
+        if (path === '/insight' || path.endsWith('/insight')) {
+          target = path === '/insight' ? '/dashboard' : path.replace(/\/insight$/, '/dashboard');
+        } else if (path === '/brain' || path.endsWith('/brain')) {
+          target = path === '/brain' ? '/vera' : path.replace(/\/brain$/, '/vera');
+        } else if (path === '/living' || path === '/historial') {
+          target = '/production';
+        } else if (path.endsWith('/living') || path.endsWith('/historial')) {
+          target = path.replace(/\/(living|historial)$/, '/production');
+        }
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        if (target && window.router) window.router.navigate(target + q, true);
+        else if (window.router) window.router.navigate('/dashboard' + q, true);
+      }
+    };
+
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
-    // ── Org: Dashboard (métricas Meta + Google Analytics). Rutas legacy /insight siguen activas. ──
+    // ── Org: Dashboard ──
     const dashboardLoader = this._lazy('DashboardView', ['/js/views/DashboardView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/insight', dashboardLoader, auth);
-    r.register('/insight', dashboardLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/insight', legacyRouteRedirectView, auth);
+    r.register('/insight', legacyRouteRedirectView, auth);
 
-    // ── Org: Production (LivingView → ProductionView; legacy /living, /historial) ──
+    // ── Org: Production ──
     const productionLoader = this._lazy('ProductionView', ['/js/views/ProductionView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/production', productionLoader, auth);
     r.register('/production', productionLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/historial', productionLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/living', productionLoader, auth);
-    r.register('/historial', productionLoader, auth);
-    r.register('/living', productionLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/historial', legacyRouteRedirectView, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/living', legacyRouteRedirectView, auth);
+    r.register('/historial', legacyRouteRedirectView, auth);
+    r.register('/living', legacyRouteRedirectView, auth);
 
     // ── Org: Tasks (registrar pronto para que /org/.../tasks coincida con prioridad) ──
     const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
@@ -234,12 +258,12 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/studio/:flowSlug', studioLoader, auth);
     r.register('/studio/:flowSlug', studioLoader, auth);
 
-    // ── Org: Vera (chat). Rutas legacy /brain siguen activas. ──
+    // ── Org: Vera (chat) ──
     const veraLoader = this._lazy('VeraView', ['/js/views/VeraView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/vera', veraLoader, auth);
     r.register('/vera', veraLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/brain', veraLoader, auth);
-    r.register('/brain', veraLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brain', legacyRouteRedirectView, auth);
+    r.register('/brain', legacyRouteRedirectView, auth);
 
     // ── Org: Audiences ──
     const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);

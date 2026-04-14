@@ -788,7 +788,7 @@ class ProductsView extends BaseView {
 
   setupRouterLinks() {
     const basePath = this.getOrgBasePath();
-    const productionLinks = this.querySelectorAll('a[href*="production"], a[href*="historial"], a[href*="living"]');
+    const productionLinks = this.querySelectorAll('a[href*="production"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
 
     productionLinks.forEach(link => {

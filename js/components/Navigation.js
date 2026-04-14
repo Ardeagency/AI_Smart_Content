@@ -293,7 +293,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/insight', '/production', '/historial', '/living', '/vera', '/brain', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1598,12 +1598,8 @@ class Navigation {
 
     const titles = {
       '/dashboard': 'DASHBOARD',
-      '/insight': 'DASHBOARD',
       '/production': 'PRODUCTION',
-      '/historial': 'PRODUCTION',
-      '/living': 'PRODUCTION',
       '/vera': 'VERA',
-      '/brain': 'VERA',
       '/tasks': 'TASKS',
       '/brand': 'IDENTITY',
       '/brands': 'IDENTITY',

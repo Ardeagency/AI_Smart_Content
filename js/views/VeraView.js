@@ -1,5 +1,5 @@
 /**
- * VeraView — Vera (AI Brain Interface)
+ * VeraView — Vera (chat conversacional)
  *
  * Layout: área de mensajes + composer (sin sidebar ni topbar).
  * Principio: 1 org → 1 cerebro (OpenClaw). Frontend → Backend API → OpenClaw.
@@ -758,24 +758,24 @@ class VeraView extends (window.BaseView || class {}) {
     return `
       <div id="chatcontainer" class="gpt-layout">
         <div class="gpt-main" id="gptMain">
-          <div class="gpt-messages-scroll" id="brainMessagesWrap">
-            <div class="gpt-messages-inner" id="brainMessageList"></div>
+          <div class="gpt-messages-scroll" id="veraMessagesWrap">
+            <div class="gpt-messages-inner" id="veraMessageList"></div>
           </div>
           <div class="gpt-composer-wrap" id="chatInputOverlay">
-            <div class="gpt-composer" id="brainInputWrap">
+            <div class="gpt-composer" id="veraInputWrap">
               <textarea
                 class="gpt-composer-textarea"
-                id="brainInput"
+                id="veraInput"
                 placeholder="Pregunta lo que quieras"
                 rows="1"
               ></textarea>
               <div class="gpt-composer-row">
                 <div class="gpt-composer-btns">
-                  <button class="gpt-composer-icon" id="brainPlus" title="Adjuntar">
+                  <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar">
                     <i class="fas fa-paperclip"></i>
                   </button>
                 </div>
-                <button class="gpt-send-btn" id="brainSend" title="Enviar" disabled>
+                <button class="gpt-send-btn" id="veraSend" title="Enviar" disabled>
                   <i class="fas fa-arrow-up"></i>
                 </button>
               </div>
@@ -804,7 +804,7 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   _bindMediaHover() {
-    const root = document.getElementById('brainMessageList');
+    const root = document.getElementById('veraMessageList');
     if (!root || root.__veraMediaHoverBound) return;
     root.__veraMediaHoverBound = true;
 
@@ -871,7 +871,7 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   renderWelcome() {
-    const list = document.getElementById('brainMessageList');
+    const list = document.getElementById('veraMessageList');
     if (!list) return;
     list.innerHTML = `
       <div class="gpt-welcome">
@@ -884,7 +884,7 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   _bindTaskEvents() {
-    const root = document.getElementById('brainMessageList');
+    const root = document.getElementById('veraMessageList');
     if (!root || root.__veraTaskBound) return;
     root.__veraTaskBound = true;
 
@@ -925,7 +925,7 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   _bindQuickReplyButtons() {
-    const root = document.getElementById('brainMessageList');
+    const root = document.getElementById('veraMessageList');
     if (!root || root.__veraQuickRepliesBound) return;
     root.__veraQuickRepliesBound = true;
 
@@ -948,8 +948,8 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   renderMessages() {
-    const list = document.getElementById('brainMessageList');
-    const scroll = document.getElementById('brainMessagesWrap');
+    const list = document.getElementById('veraMessageList');
+    const scroll = document.getElementById('veraMessagesWrap');
     if (!list) return;
 
     if (!this.aiState.messages.length) {
@@ -986,8 +986,8 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   appendMessage(msg) {
-    const list = document.getElementById('brainMessageList');
-    const scroll = document.getElementById('brainMessagesWrap');
+    const list = document.getElementById('veraMessageList');
+    const scroll = document.getElementById('veraMessagesWrap');
     if (!list) return;
     const welcome = list.querySelector('.gpt-welcome');
     if (welcome) welcome.remove();
@@ -1000,8 +1000,8 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Typing / Activity indicator ────────────────────── */
   showTypingIndicator(statusText) {
-    const list = document.getElementById('brainMessageList');
-    const scroll = document.getElementById('brainMessagesWrap');
+    const list = document.getElementById('veraMessageList');
+    const scroll = document.getElementById('veraMessagesWrap');
     if (!list) return;
     const welcome = list.querySelector('.gpt-welcome');
     if (welcome) welcome.remove();
@@ -1024,7 +1024,7 @@ class VeraView extends (window.BaseView || class {}) {
     const el = document.getElementById('veraStatusText');
     if (el) el.textContent = text || '';
     // Auto-scroll suave
-    const scroll = document.getElementById('brainMessagesWrap');
+    const scroll = document.getElementById('veraMessagesWrap');
     if (scroll) scroll.scrollTop = scroll.scrollHeight;
   }
 
@@ -1099,8 +1099,8 @@ class VeraView extends (window.BaseView || class {}) {
 
   /* ── Input binding ───────────────────────────────────── */
   bindInput() {
-    const input = document.getElementById('brainInput');
-    const sendBtn = document.getElementById('brainSend');
+    const input = document.getElementById('veraInput');
+    const sendBtn = document.getElementById('veraSend');
     if (!input) return;
 
     const autoResize = () => {
@@ -1133,7 +1133,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (sendBtn) this.addEventListener(sendBtn, 'click', send);
 
     // Plus / mic — placeholder
-    const plusBtn = document.getElementById('brainPlus');
+    const plusBtn = document.getElementById('veraPlus');
     if (plusBtn) this.addEventListener(plusBtn, 'click', () => {});
   }
 
@@ -1142,8 +1142,8 @@ class VeraView extends (window.BaseView || class {}) {
     if (!this.aiState.organization_id || this.aiState.isLoading) return;
     this.aiState.isLoading = true;
 
-    const sendBtn = document.getElementById('brainSend');
-    const input = document.getElementById('brainInput');
+    const sendBtn = document.getElementById('veraSend');
+    const input = document.getElementById('veraInput');
     if (sendBtn) sendBtn.disabled = true;
 
     // Mostrar mensaje del usuario inmediatamente (optimistic UI)

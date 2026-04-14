@@ -136,7 +136,7 @@ class BaseView {
    * Sistema centralizado de carga de scripts dinámicos
    * Evita duplicaciones y maneja correctamente scripts ya cargados
    * 
-   * @param {string} scriptSrc - Ruta del script (ej: 'js/living.js')
+   * @param {string} scriptSrc - Ruta del script (ej: 'js/living.js' para el módulo de Production)
    * @param {string} globalVar - Variable global que debe estar disponible después de cargar (ej: 'LivingManager')
    * @param {number} timeout - Timeout en ms para esperar la variable global (default: 5000)
    * @returns {Promise<void>}
@@ -149,8 +149,8 @@ class BaseView {
       return Promise.resolve();
     }
 
-    // Usar ruta absoluta para que funcione en rutas profundas (ej: /org/:id/living)
-    // Si no, js/living.js se resuelve a /org/:id/js/living.js y el servidor devuelve HTML → SyntaxError
+    // Usar ruta absoluta para que funcione en rutas profundas (ej: /org/:id/production)
+    // Si no, js/living.js se resuelve bajo el segmento de org y el servidor devuelve HTML → SyntaxError
     const resolvedSrc = scriptSrc.startsWith('http') ? scriptSrc : (scriptSrc.startsWith('/') ? scriptSrc : '/' + scriptSrc);
 
     // Verificar si el script ya está cargado en el DOM
