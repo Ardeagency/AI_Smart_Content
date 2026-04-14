@@ -471,6 +471,23 @@ class LandingView extends BaseView {
       hero.style.setProperty('--landing-hero-bg-image', `url("${bgUrl}")`);
     };
 
+    let backgroundFadeTimer = null;
+    const BG_FADE_HALF_MS = 210;
+    const ROTATE_INTERVAL_MS = 4000;
+
+    const transitionHeroBackground = (index) => {
+      if (backgroundFadeTimer) {
+        window.clearTimeout(backgroundFadeTimer);
+        backgroundFadeTimer = null;
+      }
+      hero.classList.add('is-bg-fading');
+      backgroundFadeTimer = window.setTimeout(() => {
+        setHeroBackground(index);
+        hero.classList.remove('is-bg-fading');
+        backgroundFadeTimer = null;
+      }, BG_FADE_HALF_MS);
+    };
+
     [realItems[N - 1], realItems[N - 2]].forEach(item => {
       track.insertBefore(item.cloneNode(true), track.firstChild);
     });
@@ -508,21 +525,23 @@ class LandingView extends BaseView {
       if (busy) return;
       realIdx++;
       setPos(realIdx, true);
-      setHeroBackground(realIdx);
+      transitionHeroBackground(realIdx);
 
       if (realIdx >= N) {
         busy = true;
         window.setTimeout(() => {
           realIdx = 0;
           setPos(0, false);
-          setHeroBackground(0);
+          transitionHeroBackground(0);
           busy = false;
         }, 750);
       }
-    }, 2000);
+    }, ROTATE_INTERVAL_MS);
 
     this.heroWordsRotatorCleanup = () => {
       window.clearInterval(timer);
+      if (backgroundFadeTimer) window.clearTimeout(backgroundFadeTimer);
+      hero.classList.remove('is-bg-fading');
       hero.style.removeProperty('--landing-hero-bg-image');
     };
   }
