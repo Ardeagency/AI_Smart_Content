@@ -19,8 +19,6 @@ class BrandOrganizationView extends BaseView {
     this.brandPlaces = [];
     this.brandAudiences = [];
     this.brandSocialLinks = [];
-    /** @type {Array<object>} filas de brand_integrations para el panel INFO */
-    this.brandIntegrations = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -277,7 +275,6 @@ class BrandOrganizationView extends BaseView {
         this.organizationRow = null;
         this.brandContainerData = null;
         this.brandData = null;
-        this.brandIntegrations = [];
         this.products = [];
         this.brandAssets = [];
         this.brandEntities = [];
@@ -307,7 +304,6 @@ class BrandOrganizationView extends BaseView {
         this.organizationRow = null;
         this.brandContainerData = null;
         this.brandData = null;
-        this.brandIntegrations = [];
         this.products = [];
         this.brandAssets = [];
         this.brandEntities = [];
@@ -325,7 +321,6 @@ class BrandOrganizationView extends BaseView {
 
       this.organizationRow = org;
       this._mergeOrgIntoShim();
-      this.brandIntegrations = [];
 
       const { data: products, error: productsError } = await this.supabase
         .from('products')
@@ -1764,130 +1759,47 @@ class BrandOrganizationView extends BaseView {
     }
   }
 
-  /** Ruta Dashboard (conexiones / métricas) respetando prefijo de org si existe. */
-  getOrgDashboardHref() {
-    const orgId = window.currentOrgId || this.brandContainerData?.organization_id;
-    const name = (window.currentOrgName || '').trim();
-    if (orgId && typeof window.getOrgPathPrefix === 'function') {
-      const prefix = window.getOrgPathPrefix(orgId, name);
-      if (prefix) return `${prefix}/dashboard`;
-    }
-    return '/dashboard';
-  }
-
-  _pickBrandIntegration(platform) {
-    const rows = this.brandIntegrations || [];
-    const active = rows.filter((r) => r && String(r.platform).toLowerCase() === platform && r.is_active);
-    if (active.length) return active[0];
-    const any = rows.find((r) => r && String(r.platform).toLowerCase() === platform);
-    return any || null;
-  }
-
-  _integrationTokenExpired(row) {
-    if (!row?.token_expires_at) return false;
-    return new Date(row.token_expires_at) < new Date();
-  }
-
-  /** Integración utilizable: activa y token no vencido. */
-  _integrationUsable(row) {
-    return !!(row && row.is_active && !this._integrationTokenExpired(row));
-  }
-
   /**
-   * Filas fijas YouTube / Facebook / Instagram / Analytics a partir de brand_integrations.
-   * Meta (facebook) cubre Facebook + Instagram; Google cubre YouTube + GA4.
+   * Lista de `brand_assets` del workspace en el panel INFO (sustituye integraciones sociales).
    */
-  buildInfoIntegrationRows() {
-    const dashboardHref = this.getOrgDashboardHref();
-    const google = this._pickBrandIntegration('google');
-    const facebook = this._pickBrandIntegration('facebook');
-    const gOk = this._integrationUsable(google);
-    const fOk = this._integrationUsable(facebook);
-    let meta = google?.metadata;
-    if (meta && typeof meta === 'string') {
-      try {
-        meta = JSON.parse(meta);
-      } catch (_) {
-        meta = {};
-      }
+  renderInfoAssetsSectionHtml() {
+    const assets = this.brandAssets || [];
+    if (!assets.length) {
+      return `
+      <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
+        <h3 class="info-section-title" id="infoAssetsHeading">Assets</h3>
+        <p class="info-assets-empty">Aún no hay archivos. Súbelos desde la card «Archivos de identidad».</p>
+      </section>`;
     }
-    if (!meta || typeof meta !== 'object') meta = {};
-    const ga4Id = meta.ga4_property_id || meta.ga4PropertyId || '';
-
-    return [
-      {
-        key: 'youtube',
-        label: 'YouTube',
-        iconClass: 'fab fa-youtube',
-        connected: gOk,
-        actionHref: gOk ? 'https://www.youtube.com/' : dashboardHref,
-        actionExternal: gOk,
-        hint: ''
-      },
-      {
-        key: 'facebook',
-        label: 'Facebook',
-        iconClass: 'fab fa-facebook-f',
-        connected: fOk,
-        actionHref: fOk ? 'https://www.facebook.com/' : dashboardHref,
-        actionExternal: fOk,
-        hint: ''
-      },
-      {
-        key: 'instagram',
-        label: 'Instagram',
-        iconClass: 'fab fa-instagram',
-        connected: fOk,
-        actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
-        actionExternal: fOk,
-        hint: ''
-      },
-      {
-        key: 'analytics',
-        label: 'Analytics',
-        iconClass: 'fas fa-chart-line',
-        connected: gOk && !!String(ga4Id).trim(),
-        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : dashboardHref,
-        actionExternal: gOk && !!String(ga4Id).trim(),
-        hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
-      }
-    ];
-  }
-
-  renderInfoIntegrationsCompactHtml() {
-    const rows = this.buildInfoIntegrationRows();
-    const items = rows
-      .map((row) => {
-        const linkAttrs = row.actionExternal
-          ? `href="${row.actionHref}" target="_blank" rel="noopener noreferrer"`
-          : `href="${row.actionHref}"`;
-        const linkedIcon = row.connected
-          ? '<span class="info-connect-linked" title="Conectado" aria-hidden="true"><i class="fas fa-link"></i></span>'
+    const items = assets.slice(0, 16).map((a) => {
+      const name = this.escapeHtml(a.file_name || 'Archivo');
+      const url = this.escapeHtml(String(a.file_url || '').trim() || '#');
+      const type = String(a.file_type || '').toLowerCase();
+      const fname = String(a.file_name || '');
+      const isImg =
+        type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fname);
+      const thumb = isImg
+        ? `<img src="${url}" alt="" class="info-asset-thumb" loading="lazy" width="40" height="40">`
+        : `<span class="info-asset-icon" aria-hidden="true"><i class="fas fa-file"></i></span>`;
+      const sizeKb =
+        a.file_size != null && Number.isFinite(Number(a.file_size))
+          ? `<span class="info-asset-meta">${Math.max(1, Math.round(Number(a.file_size) / 1024))} KB</span>`
           : '';
-        const hint = row.hint
-          ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
-          : '';
-        return `
-          <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
-            <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(row.iconClass)}"></i></span>
-            <div class="info-connect-main">
-              <span class="info-connect-label">${this.escapeHtml(row.label)}</span>
-              ${hint}
-            </div>
-            ${linkedIcon}
-            <a class="info-connect-external" ${linkAttrs} aria-label="${row.actionExternal ? `Abrir ${row.label}` : `Ir a Insight para conectar ${row.label}`}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
-          </li>`;
-      })
-      .join('');
-
+      return `
+        <li class="info-asset-row">
+          <div class="info-asset-preview">${thumb}</div>
+          <div class="info-asset-main">
+            <span class="info-asset-name">${name}</span>
+            ${sizeKb}
+          </div>
+          <a class="info-connect-external" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Abrir archivo"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+        </li>`;
+    }).join('');
     return `
-      <section class="info-section info-section-connect" aria-labelledby="infoConnectHeading">
-        <h3 class="info-section-title" id="infoConnectHeading">En la web</h3>
-        <ul class="info-connect-list" role="list">
-          ${items}
-        </ul>
-      </section>
-    `;
+      <section class="info-section info-section-assets" aria-labelledby="infoAssetsHeading">
+        <h3 class="info-section-title" id="infoAssetsHeading">Assets</h3>
+        <ul class="info-asset-list" role="list">${items}</ul>
+      </section>`;
   }
 
   renderBrandSchemaAsideHtml() {
@@ -1936,7 +1848,7 @@ class BrandOrganizationView extends BaseView {
               ${this.renderIdentitySection(brandContainer)}
               </div>
           </section>
-          ${this.renderInfoIntegrationsCompactHtml()}
+          ${this.renderInfoAssetsSectionHtml()}
         </div>
         <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandSchemaHeading">
           ${this.renderBrandSchemaAsideHtml()}

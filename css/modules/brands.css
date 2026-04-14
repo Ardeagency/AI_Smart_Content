@@ -1740,6 +1740,96 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: rgba(0, 0, 0, 0.06);
 }
 
+/* Panel INFO: lista de assets (reemplaza «En la web» / integraciones) */
+#infoPanelContent .info-assets-empty {
+    margin: 0.35rem 0 0;
+    font-size: var(--font-size-sm);
+    opacity: 0.78;
+    line-height: 1.45;
+}
+
+#infoPanelContent .info-asset-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--glass-radius);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-asset-list {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#infoPanelContent .info-asset-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem 0.65rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: inherit;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-asset-row {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+#infoPanelContent .info-asset-row:last-child {
+    border-bottom: none;
+}
+
+#infoPanelContent .info-asset-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#infoPanelContent .info-asset-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#infoPanelContent .info-asset-icon {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.1rem;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-asset-icon {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+#infoPanelContent .info-asset-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+#infoPanelContent .info-asset-name {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#infoPanelContent .info-asset-meta {
+    font-size: var(--font-size-xs);
+    opacity: 0.7;
+}
+
 @media (max-width: 768px) {
     #brandsListContainer > div.brand-card.card-info.expanded #infoPanelContent {
         overflow-y: auto;
@@ -2016,7 +2106,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-color: var(--glass-border);
 }
 
-/* Integraciones (INFO > Identidad): grid de cards (Google / Meta) — ver BrandOrganizationView.renderIntegrationsInto */
+/* Assets en panel INFO — ver BrandOrganizationView.renderInfoAssetsSectionHtml */
 .brand-integrations-cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(220px, 1fr));
