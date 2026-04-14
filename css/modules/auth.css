@@ -1,0 +1,482 @@
+/* ========== signin.css – Login (misma animación que landing, botones alineados) ========== */
+
+/* Contenedor: misma animación de entrada que la landing */
+.signin-container {
+    min-height: 100vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg) center/cover no-repeat;
+    color: var(--text-primary);
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    opacity: 0;
+}
+
+body.entrance-done .signin-container {
+    animation: landing-fade-in 0.6s ease-out 0.1s forwards;
+}
+
+/* Wrapper centrado (login) */
+.signin-container .signin-inner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Card del login: estilo glass unificado (misma plataforma) */
+.signin-container .signin-card {
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+    margin: 0 auto;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    padding: 2rem;
+    position: relative;
+}
+
+.signin-container .signin-card::before {
+    display: none;
+}
+
+/* Cambiar contraseña: reutiliza form-main-content y form-org-card */
+.signin-container .form-org-bg-grid { display: none; }
+.signin-container .form-main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+.signin-container .form-org-card.signin-card {
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+    margin: 0 auto;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    padding: 2rem;
+    position: relative;
+}
+
+.signin-container .form-org-card.signin-card::before {
+    display: none;
+}
+
+.signin-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    min-height: 3rem;
+    width: 100%;
+}
+
+.signin-brand-logo {
+    max-height: 3.5rem;
+    height: auto;
+    width: auto;
+    max-width: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.signin-brand-logo svg,
+svg.signin-brand-logo {
+    max-height: 3.5rem;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    display: block;
+}
+
+/* Banner de contraseña actualizada */
+.signin-success-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 214, 20, 0.12);
+    border: 1px solid rgba(0, 214, 20, 0.35);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.signin-success-banner[hidden] {
+    display: none;
+}
+
+.signin-success-banner-icon {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+/* Formulario: ancho completo */
+.signin-container #form_signin {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Estados (signin / signup): solo uno visible */
+.signin-container .auth-state {
+    display: none;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.signin-container .auth-state.active { display: flex; }
+
+/* Inputs login: estilo glass unificado */
+.signin-container .form-input,
+.signin-container input[type="text"],
+.signin-container input[type="email"],
+.signin-container input[type="password"] {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    font-family: inherit;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.signin-container .form-input::placeholder,
+.signin-container input::placeholder {
+    color: var(--text-muted);
+}
+
+.signin-container .form-input:focus,
+.signin-container input:focus {
+    outline: none;
+    border-color: var(--accent-brand);
+    box-shadow: 0 0 0 2px var(--accent-brand-soft);
+}
+
+/* Botones: estilo glass unificado (misma plataforma) */
+.signin-container .btn {
+    width: 100%;
+    max-width: 100%;
+    padding: var(--glass-padding);
+    border-radius: var(--glass-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+}
+
+.signin-container .btn-primary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
+    color: var(--text-primary);
+}
+
+.signin-container .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Enlace "¿Olvidaste tu contraseña?" – acento paleta (cyan) */
+.signin-forgot {
+    font-size: var(--font-size-base);
+    color: rgba(0, 231, 255, 0.95);
+    text-decoration: none;
+    text-align: center;
+    margin-top: -0.25rem;
+    transition: var(--transition);
+}
+
+.signin-forgot-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+}
+
+.signin-forgot:hover,
+.signin-forgot-btn:hover {
+    color: #00e7ff;
+    text-decoration: underline;
+}
+
+/* Divisor "o" */
+.signin-divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: var(--spacing-md);
+    margin: 0.25rem 0;
+}
+
+.signin-divider::before,
+.signin-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.signin-divider span {
+    font-size: var(--font-size-base);
+    color: var(--text-muted);
+    padding: 0 0.25rem;
+}
+
+/* Botón Google: estilo glass unificado */
+.signin-google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
+}
+
+.signin-google-btn + .signin-google-btn {
+    margin-top: 0.5rem;
+}
+
+.signin-google-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
+}
+
+.signin-google-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Bloque Recuperar contraseña */
+.signin-recover {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+}
+
+.signin-recover[hidden] {
+    display: none !important;
+}
+
+.signin-recover-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.signin-recover-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.45;
+}
+
+.signin-recover-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+}
+
+.signin-recover-success {
+    padding: 0.75rem;
+    background: var(--color-success-bg);
+    border: 1px solid rgba(0, 214, 20, 0.3);
+    border-radius: var(--border-radius);
+}
+
+.signin-recover-success[hidden] {
+    display: none;
+}
+
+.signin-recover-success-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.signin-recover-back {
+    font-size: 0.9rem;
+    color: rgba(0, 231, 255, 0.95);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: var(--transition);
+}
+
+.signin-recover-back-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.signin-recover-back:hover,
+.signin-recover-back-btn:hover {
+    color: #00e7ff;
+    text-decoration: underline;
+}
+
+/* Vista Cambiar contraseña (reutiliza estilos signin) */
+.cambiar-contrasena-loading {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.cambiar-contrasena-invalid .btn,
+.cambiar-contrasena-form-wrap .form-input {
+    margin-top: 0.25rem;
+}
+
+.cambiar-contrasena-form-wrap form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+}
+
+/* Páginas legales (privacidad, términos de servicio) */
+.legal-page-container .legal-page-card {
+    width: 100%;
+    max-width: 560px;
+}
+.legal-page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin: 0 0 0.25rem 0;
+    text-align: center;
+}
+.legal-page-updated {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #a0a0a0);
+    margin: 0 0 1.25rem 0;
+    text-align: center;
+}
+.legal-page-body {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+.legal-page-body section {
+    margin-bottom: 1rem;
+}
+.legal-page-body h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin: 0 0 0.5rem 0;
+}
+.legal-page-body p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #a0a0a0);
+    margin: 0;
+}
+.legal-page-back {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+}
+
+/* Toggle entre Iniciar sesión / Registrarse */
+.signin-toggle {
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+.signin-toggle-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.signin-toggle-link {
+    background: none;
+    border: none;
+    color: rgba(0, 231, 255, 0.95);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.signin-toggle-link:hover {
+    color: #00e7ff;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .signin-container .form-main-content,
+    .signin-container .signin-inner {
+        padding: var(--spacing-lg);
+        align-items: flex-start;
+        padding-top: 3rem;
+    }
+}
+
+

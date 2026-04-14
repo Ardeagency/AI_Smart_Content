@@ -1,0 +1,646 @@
+/* ========== flow-catalog.css (467 lineas) ========== */
+
+/**
+ * Flow Catalog - Feed inteligente (Netflix/Spotify style)
+ * Hero carousel + categorías + filas horizontales + flow cards
+ */
+.flow-catalog {
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 3rem;
+  background: var(--bg-primary);
+}
+
+.flow-catalog-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+.flow-catalog-loading .fa-spin { font-size: var(--font-size-3xl); color: var(--accent-warm); }
+
+/* ---------- HERO CAROUSEL ---------- */
+/* Estado vacío: mensaje PROXIMAMENTE cuando no hay flujos */
+.flow-catalog-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.flow-catalog-empty-text {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.flow-catalog-empty--in-section {
+  min-height: 24vh;
+  padding: 2rem 1.5rem;
+}
+
+/* Hero carrusel: full-bleed por categoría, minimalista, sin flechas */
+.flow-catalog-hero-section {
+  position: relative;
+  width: 100%;
+  height: 75vh;
+  min-height: 420px;
+  max-height: 720px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.flow-catalog-hero-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 0;
+  padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.flow-catalog-hero-track::-webkit-scrollbar {
+  display: none;
+}
+
+.flow-hero-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  position: relative;
+  cursor: pointer;
+}
+.flow-hero-slide-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--black-40);
+}
+.flow-hero-slide-bg-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.flow-hero-slide-video {
+  pointer-events: none;
+}
+.flow-hero-slide-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 4rem;
+  background: var(--black-40);
+}
+.flow-hero-slide-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.45) 40%, transparent 75%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0;
+}
+.flow-hero-slide-content {
+  padding: 2.5rem 2rem 2.5rem;
+  color: var(--color-white);
+}
+.flow-hero-slide-title {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-white);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+.flow-hero-slide-desc {
+  max-width: 520px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  line-height: 1.45;
+}
+.flow-hero-slide-cta {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+.flow-hero-slide-cta:hover {
+  color: var(--color-white);
+  opacity: 1;
+}
+.flow-hero-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--text-muted);
+}
+
+/* ---------- ROW SECTIONS ---------- */
+.flow-catalog-row-section {
+  padding: 0 2rem 2rem;
+}
+.flow-catalog-row-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+}
+.flow-catalog-row-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.flow-catalog-row-scroll::-webkit-scrollbar { height: 6px; }
+.flow-catalog-row-scroll::-webkit-scrollbar-thumb { background: var(--icon-button); border-radius: 3px; }
+
+/* ---------- CATEGORIES STRIP ---------- */
+.flow-catalog-categories-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.flow-catalog-category-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  text-decoration: none;
+    transition: var(--transition);
+  white-space: nowrap;
+}
+.flow-catalog-category-chip:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border-light);
+}
+.flow-catalog-category-chip.active {
+  color: #000000;
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+.flow-catalog-sub-chip {
+  cursor: pointer;
+  font-family: inherit;
+}
+.flow-catalog-subcategories-strip .flow-catalog-category-chip.active {
+  background: #f3f4f6;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
+}
+
+/* ---------- FLOW CARD (minimalista: imagen + nombre + badge; hover: opacar/difuminar + métricas) ---------- */
+.flow-card {
+  flex: 0 0 200px;
+  width: 200px;
+  scroll-snap-align: start;
+  background: var(--bg-hover);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+    transition: var(--transition);
+  display: block;
+  text-align: left;
+}
+.flow-card:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--white-20);
+}
+.flow-card:focus {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+.flow-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-4xl);
+  background: linear-gradient(145deg, var(--bg-hover) 0%, var(--black-40) 100%);
+}
+.flow-card:hover .flow-card-placeholder,
+.flow-card:focus-visible .flow-card-placeholder {
+  filter: blur(4px) brightness(0.6);
+}
+.flow-card-badges {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.flow-card:hover .flow-card-badges,
+.flow-card:focus-visible .flow-card-badges {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.flow-card-badge {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius-sm);
+  background: var(--black-50);
+  color: var(--text-primary);
+}
+.flow-card-badge--new {
+  background: rgba(0, 214, 20, 0.9);
+  color: var(--color-white);
+}
+.flow-card-badge--trending {
+  background: #ffffff;
+  color: #000000;
+}
+.flow-card-badge--auto {
+  background: var(--icon-button);
+}
+
+/* Iconos esquina superior derecha: like, run, save (vertical) */
+.flow-card-icons {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 3;
+  pointer-events: none;
+}
+.flow-card-icons .flow-card-icon-btn {
+  pointer-events: auto;
+}
+.flow-card-icon-btn,
+.flow-card-icon-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  background: var(--black-50);
+  border-radius: var(--radius-sm);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.flow-card-icon-stat {
+  cursor: default;
+  pointer-events: none;
+}
+.flow-card-icon-btn:hover {
+  background: var(--white-20);
+  color: var(--color-white);
+}
+.flow-card-icon-btn.is-active {
+  color: var(--color-error);
+}
+.flow-card-icon-btn.flow-card-icon-save.is-active {
+  color: var(--color-info);
+}
+.flow-card-icon-count {
+  font-weight: 600;
+  min-width: 1ch;
+}
+
+/* Overlay por defecto: nombre + etiquetas (tipo flujo, nuevo, etc.) */
+.flow-card-overlay--default {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem 0.75rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
+  color: var(--color-white);
+  z-index: 1;
+  transition: opacity 0.25s ease;
+}
+.flow-card:hover .flow-card-overlay--default,
+.flow-card:focus-visible .flow-card-overlay--default {
+  opacity: 0;
+  pointer-events: none;
+}
+.flow-card--catalog .flow-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-card-tags--default {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.flow-card-tags--default .flow-card-tag {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.6rem;
+}
+
+/* Overlay hover: créditos + categoría, subcategoría, tipo output, modo ejecución, versión — organizado abajo a la izquierda */
+.flow-card-overlay--hover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 1rem 0.75rem;
+  background: var(--black-50);
+  color: var(--color-white);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 2;
+}
+.flow-card:hover .flow-card-overlay--hover,
+.flow-card:focus-visible .flow-card-overlay--hover {
+  opacity: 1;
+  visibility: visible;
+}
+.flow-card-hover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  text-align: left;
+  width: 100%;
+  max-width: 100%;
+}
+.flow-card-credits {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-white);
+}
+.flow-card-meta-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--white-95);
+}
+.flow-card-meta-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Footer de card (Mis Flujos dev: editar, run, log, eliminar) integrado en la misma card */
+.flow-card--with-footer {
+  display: flex;
+  flex-direction: column;
+}
+.flow-card--with-footer .flow-card-media {
+  flex: 0 0 auto;
+}
+.flow-card-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-hover);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.flow-card-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.flow-card-footer-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+}
+.flow-card-footer-btn.delete:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+.flow-card-footer-btn i {
+  font-size: var(--font-size-sm);
+}
+
+.flow-card-overlay--hover .flow-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.35rem;
+}
+.flow-card-tag {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--color-white);
+  background: var(--white-20);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.flow-card-overlay--hover .flow-card-metrics {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--white-95);
+}
+.flow-card-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.flow-card-metric i {
+  opacity: 0.9;
+  font-size: 0.7rem;
+}
+.flow-card-output-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--white-95);
+}
+.flow-card-output-type i {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+/* Compatibilidad con cards que aún usen body (hero u otros) */
+.flow-card-body {
+  padding: 1rem;
+}
+.flow-card:not(.flow-card--catalog) .flow-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-card-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flow-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.flow-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flow-card-cost {
+  margin-left: auto;
+  color: var(--accent-warm);
+  font-weight: 500;
+}
+
+/* ---------- GALLERY BY SUBCATEGORY (category view) ---------- */
+.flow-catalog-gallery-by-sub {
+  padding: 0 2rem 2rem;
+}
+.flow-catalog-sub-row .flow-catalog-row-scroll {
+  margin-bottom: 1.5rem;
+}
+
+/* Todos los flujos: por categoría y subcategoría (mismo catálogo) */
+.flow-catalog-gallery-by-category-sub {
+  padding: 0 0 2rem;
+}
+.flow-catalog-category-block {
+  margin-bottom: 2.5rem;
+}
+.flow-catalog-category-block-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Categorías visuales: grid de cards (content_categories / subcategory_id) */
+.flow-catalog-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+.flow-catalog-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 1rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+.flow-catalog-category-card:hover {
+  border-color: var(--border-light);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+.flow-catalog-category-card.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-warm);
+  color: var(--text-primary);
+}
+.flow-catalog-category-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}
+.flow-catalog-category-card-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
+

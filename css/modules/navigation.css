@@ -1,0 +1,2974 @@
+/* ========== navigation.css (2595 lineas) ========== */
+
+/* =========================================
+   SISTEMA DE NAVEGACIÓN AI SMART CONTENT
+   ========================================= */
+
+/* Variables --nav-* y --sidebar-* definidas en base.css :root (fuente única) */
+
+/* =========================================
+   HEADER PRINCIPAL
+   ========================================= */
+
+.main-header {
+    position: fixed;
+    top: 0;
+    left: var(--nav-width, 260px);
+    right: 0;
+    max-width: calc(100vw - var(--nav-width, 260px));
+    background: transparent;
+    border-bottom: none;
+    padding: 8px 16px;
+    z-index: 1000;
+    box-shadow: none;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Cuando el sidebar está colapsado */
+.side-navigation.collapsed ~ * .main-header,
+body.sidebar-collapsed .main-header,
+#app-container .main-header {
+    left: var(--nav-width-collapsed, 72px);
+}
+
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    gap: 1rem;
+    /* Formato: [item, ruta] [tokens, user] */
+}
+
+/* =========================================
+   ICONO TOGGLE SIDEBAR EN HEADER
+   ========================================= */
+
+.header-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.header-sidebar-toggle:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.header-sidebar-toggle i {
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
+    -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   ZONA IZQUIERDA: ITEM Y RUTA
+   Formato: [item toggle, ruta]
+   ========================================= */
+
+.header-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 12px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+}
+
+.title-section h1,
+#headerRoute {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: var(--font-family);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.header-context {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.header-context-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
+}
+
+.header-section {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    font-family: var(--font-family);
+    white-space: nowrap;
+}
+
+.header-separator {
+    color: var(--text-muted);
+    font-size: 0.938rem;
+    font-weight: 400;
+}
+
+.header-active-object {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-context-secondary {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-family: var(--font-family);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* =========================================
+   ZONA DERECHA: TOKENS Y USUARIO
+   Formato: [tokens, user]
+   ========================================= */
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+    margin-left: auto;
+    position: relative;
+}
+
+/* Tokens/Créditos */
+.header-credits {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-family: var(--font-family);
+}
+
+.header-credits-value {
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Avatar del usuario */
+.header-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.avatar-circle:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+}
+
+.avatar-initials {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--nav-transition);
+    position: relative;
+}
+
+.header-user:hover {
+    background: var(--bg-hover);
+}
+
+/* Avatar del header quitado: no combina con la plataforma; solo se muestra el botón menú */
+.header-user-avatar,
+.user-avatar {
+    display: none;
+}
+
+.header-user-initials {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-user-chevron {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+
+.header-user-chevron:hover {
+    color: var(--text-primary);
+}
+
+.header-user-chevron i {
+    font-size: 10px;
+}
+
+/* Dropdown de usuario (legacy + actual) unificado en el bloque glass-black de navegación */
+
+/* Botón hamburguesa - solo móvil */
+.hamburger-menu {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .hamburger-menu {
+        display: flex;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    transition: var(--nav-transition);
+}
+
+.hamburger-menu:hover {
+        background: var(--bg-hover);
+}
+
+.hamburger-line {
+    width: 24px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: var(--nav-transition);
+    transform-origin: center;
+}
+    
+    
+    .main-header {
+        padding: 8px 12px;
+        height: 44px;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+}
+
+/* =========================================
+   NAVEGACIÓN LATERAL
+   ========================================= */
+
+/* Sidebar colapsado: ancho reducido (el efecto glass-black va en #navFlyout, no aquí) */
+.side-navigation.collapsed {
+    width: var(--nav-width-collapsed);
+}
+
+/* Centrar todos los iconos en collapsed (consumidor y desarrollador) */
+.side-navigation.collapsed .nav-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* Quitar del flujo en colapsado para que el icono centre: nav-text tiene flex:1 y ocupaba espacio */
+.side-navigation.collapsed .nav-text,
+.side-navigation.collapsed .nav-section-title,
+.side-navigation.collapsed .nav-profile-info,
+.side-navigation.collapsed .nav-profile-chevron {
+    display: none;
+}
+
+/* Carets no existen en collapsed: containers abren flyout */
+.side-navigation.collapsed .nav-chevron {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-link,
+.side-navigation.collapsed .nav-submenu-toggle {
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: var(--radius-md);
+}
+
+/* Ítems que intencionalmente no muestran label (ej. Vera: el texto viene en el ícono) */
+.nav-link.nav-link--no-label {
+    gap: 0;
+}
+
+.side-navigation.collapsed .nav-icon {
+    margin: 0;
+}
+
+/* Vertical spacing entre ítems (reducido) */
+.side-navigation.collapsed .nav-menu .nav-item,
+.side-navigation.collapsed .nav-menu .nav-group {
+    margin-bottom: 6px;
+}
+
+.side-navigation.collapsed .nav-menu .nav-item:last-child,
+.side-navigation.collapsed .nav-menu .nav-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Active en collapsed: barra izquierda + highlight sutil (no tarjeta gigante) */
+.side-navigation.collapsed .nav-link.active,
+.side-navigation.collapsed .nav-submenu-toggle.active {
+    background: var(--white-5);
+}
+
+.side-navigation.collapsed .nav-link.active::before,
+.side-navigation.collapsed .nav-submenu-toggle.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.12));
+    border-radius: 0 2px 2px 0;
+    opacity: 0.9;
+}
+
+/* Submenú inline no visible en collapsed (se usa flyout) */
+.side-navigation.collapsed .nav-submenu {
+    display: none;
+}
+
+/* =========================================
+   CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
+   ========================================= */
+
+/* Header del sidebar (solo nombre de la organización, sin card) */
+.nav-mode-user .nav-workspace-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 100%;
+    /* No recortar descendentes (g, y, etc.); el ancho lo limitan el flex + el título */
+    overflow: visible;
+    min-height: min-content;
+    /* Alineado con .nav-menu (padding horizontal) + aire inferior para descendentes */
+    padding: 12px 10px 14px;
+    box-sizing: border-box;
+}
+
+/* Botón abrir/cerrar sidebar (icono colapsado) */
+.nav-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--sidebar-icon-color, var(--text-secondary));
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+.nav-sidebar-toggle:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+.nav-sidebar-toggle-icon {
+    width: 21px;
+    height: 18px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* Developer: cabecera con botón toggle y nombre del desarrollador */
+.nav-dev-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 16px 8px;
+}
+.nav-dev-header-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--sidebar-text-primary, var(--text-primary));
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+.side-navigation.collapsed .nav-dev-toggle-header {
+    justify-content: center;
+    padding: 12px;
+}
+.side-navigation.collapsed .nav-dev-header-name {
+    display: none;
+}
+
+.nav-identity-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-divider);
+}
+
+.nav-identity-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.nav-logo-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-brand-soft, rgba(255, 255, 255, 0.08));
+    border-radius: var(--radius-sm);
+    color: var(--accent-brand);
+    font-size: 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nav-logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+}
+
+.nav-logo-icon:has(img) {
+    background: transparent;
+    padding: 2px;
+}
+
+.nav-identity-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-org-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Título único del header del sidebar (solo nombre de la organización) */
+.nav-org-title {
+    font-family: Inter, system-ui, sans-serif;
+    font-size: var(--nav-org-title-size, clamp(22px, 2.2vw, 32px));
+    font-weight: 700;
+    /* Interlineado suficiente para descendentes; 1.05 recortaba g/y con overflow+ellipsis */
+    line-height: 1.22;
+    letter-spacing: normal;
+    color: #FFFFFF;
+    text-align: left;
+    margin: 0;
+    padding: 0.06em 0 0.12em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.nav-org-title.nav-org-title--two-lines {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.2;
+    padding: 0.04em 0 0.1em;
+}
+
+.nav-org-type {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+.nav-org-chevron {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+
+.nav-org-chevron:hover {
+    color: var(--text-primary);
+}
+
+.nav-org-chevron i {
+    font-size: 12px;
+}
+
+/* Dropdown de organización — design glass (una sola definición) */
+.nav-org-dropdown {
+    box-sizing: border-box;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 16px;
+    right: 16px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition);
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.nav-org-dropdown.open {
+    display: block;
+}
+
+.nav-org-dropdown.active {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(8px);
+}
+
+.nav-org-dropdown-header {
+    padding: 12px 16px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-org-dropdown-list {
+    padding: 8px 0;
+}
+
+.nav-org-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.nav-org-option:hover {
+    background: var(--sidebar-hover);
+}
+
+.nav-org-option.active {
+    background: var(--sidebar-active);
+}
+
+.nav-org-option-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-org-option-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.nav-org-option-type {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.nav-org-check {
+    color: var(--accent-brand);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.nav-org-divider {
+    height: 1px;
+    background: var(--nav-separator);
+    margin: 8px 0;
+}
+
+.nav-org-option.create-org {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.nav-org-option.create-org i {
+    width: 16px;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* Ocultar identidad cuando está colapsado */
+.side-navigation.collapsed .nav-identity-section {
+    padding: 12px;
+}
+
+.side-navigation.collapsed .nav-workspace-header,
+.side-navigation.collapsed .nav-identity-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.side-navigation.collapsed .nav-identity-card {
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.side-navigation.collapsed .nav-identity-content {
+    justify-content: center;
+}
+
+.side-navigation.collapsed .nav-identity-info,
+.side-navigation.collapsed .nav-org-chevron,
+.side-navigation.collapsed .nav-org-title {
+    display: none;
+}
+
+.nav-collapsed-only-icon {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-collapsed-only-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.side-navigation.collapsed .nav-workspace-header .nav-logo-icon,
+.side-navigation.collapsed .nav-identity-section .nav-logo-icon,
+.side-navigation.collapsed .nav-identity-section .nav-dev-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+/* Footer collapsed: icon stack + divider, iconos centrados */
+.side-navigation.collapsed .nav-footer {
+    border: none;
+    padding: 12px 6px 16px;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.side-navigation.collapsed .nav-footer-link,
+.side-navigation.collapsed .nav-footer-action {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-md);
+}
+
+.side-navigation.collapsed .nav-footer .nav-icon {
+    margin: 0;
+}
+
+/* Footer desarrollador colapsado: mismo rail que el menú (iconos 40×40, sin texto) */
+.side-navigation.collapsed.nav-mode-developer .nav-footer {
+    padding: 12px 6px 16px;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: transparent;
+    width: 100%;
+    max-width: 40px;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stat {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-md);
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stat span {
+    display: none;
+}
+
+/* Toggle button removido del sidebar - ahora está en el header */
+
+/* Tooltips unificados — design glass-black */
+.nav-tooltip {
+    box-sizing: border-box;
+    position: fixed;
+    left: 67px; /* 51px sidebar + 16px gap */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--glass-padding);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    font-size: 13px;
+    color: var(--glass-black-text);
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+    z-index: var(--z-popover);
+}
+
+.nav-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Flyout (#navFlyout): glass-black — textos blancos (opacidad vía --glass-black-bg) */
+.nav-flyout {
+    box-sizing: border-box;
+    position: fixed;
+    left: 63px; /* 51px sidebar + 12px safe zone */
+    width: 240px;
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: var(--glass-padding);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    z-index: var(--z-modal);
+    overflow: visible;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-6px);
+    transition: opacity 0.12s ease, visibility 0.12s ease, transform 0.12s ease;
+}
+
+.nav-flyout.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* Safe zone: puente invisible entre icono y flyout para no cerrar al mover el cursor */
+.nav-flyout-bridge {
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+}
+
+.nav-flyout-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: var(--glass-radius);
+    background: transparent;
+    width: 100%;
+}
+
+/* Header: icono 16px + nombre módulo 14px medium, divider */
+.nav-flyout-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--glass-black-border);
+}
+
+.nav-flyout-header-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--glass-black-text);
+    flex-shrink: 0;
+}
+
+.nav-flyout-header-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--glass-black-text);
+}
+
+/* Body: lista vertical con tree indicator (línea izquierda) */
+.nav-flyout-body {
+    padding: 4px 0;
+    position: relative;
+}
+
+.nav-flyout-body::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--glass-black-text);
+    opacity: 0.35;
+    border-radius: 1px;
+}
+
+.nav-flyout-list {
+    padding: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.nav-flyout-link {
+    display: block;
+    padding: 6px 12px 6px 20px; /* indent: 10px line + 2px + 8px */
+    font-size: 13px;
+    color: var(--glass-black-text);
+    text-decoration: none;
+    border-radius: var(--glass-radius);
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.nav-flyout-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--glass-black-text);
+}
+
+.nav-flyout-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--glass-black-text);
+    font-weight: 500;
+}
+
+/* Footer: CTA secundario "Abrir [módulo] →" */
+.nav-flyout-footer {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--glass-black-border);
+}
+
+.nav-flyout-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--glass-black-text);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.nav-flyout-cta:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--glass-black-text);
+}
+
+.nav-flyout-cta i {
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.nav-flyout-cta-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Flyout Notificaciones (user_notifications) */
+.nav-flyout-notifications-body {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.nav-flyout-notifications-loading,
+.nav-flyout-notifications-empty,
+.nav-flyout-notifications-error {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--glass-black-text);
+    opacity: 0.9;
+}
+
+.nav-flyout-notifications-error {
+    color: var(--color-error, #f87171);
+}
+
+.nav-flyout-notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-flyout-notification-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    text-align: left;
+    color: var(--glass-black-text);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.1s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-flyout-notification-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-flyout-notification-item.unread {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-flyout-notification-item .nav-flyout-notification-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.nav-flyout-notification-item .nav-flyout-notification-title {
+    font-weight: 600;
+}
+
+.nav-flyout-notification-item .nav-flyout-notification-message {
+    opacity: 0.9;
+    line-height: 1.3;
+}
+
+.nav-flyout-notification-item .nav-flyout-notification-date {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.nav-flyout-notification-item.info { border-left-color: var(--color-info, #0ea5e9); }
+.nav-flyout-notification-item.success { border-left-color: var(--color-success, #22c55e); }
+.nav-flyout-notification-item.warning { border-left-color: var(--color-warning, #eab308); }
+.nav-flyout-notification-item.error { border-left-color: var(--color-error, #ef4444); }
+
+/* =========================================
+   MENÚ PRINCIPAL
+   ========================================= */
+
+/* =========================================
+   CAPA 2 — ESTRUCTURA (Dominios conceptuales)
+   No lista páginas, lista dominios conceptuales
+   ========================================= */
+
+.nav-menu {
+    padding: 0 10px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+.nav-section {
+    margin-bottom: 0;
+}
+
+.nav-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    padding: 0 12px 8px 12px;
+    margin-bottom: 4px;
+    font-family: var(--font-family);
+    line-height: 1.2;
+}
+
+.side-navigation.collapsed .nav-section-title {
+    display: none;
+}
+
+/* =========================================
+   DOMINIOS CONCEPTUALES — SEPARACIÓN VISUAL
+   ========================================= */
+
+.nav-item {
+    position: relative;
+    margin-bottom: 0;
+}
+
+/* Ritmo vertical del menú (orden actual: Vera primario, [Workspace] Dashboard, Production, [Create] Task, Video, Flows, Identity) */
+.nav-item:first-child {
+    margin-top: 0;
+}
+
+/* =========================================
+   ITEMS PRIMARIOS — PESO TIPOGRÁFICO NIVEL 1
+   ========================================= */
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    height: var(--nav-item-height);
+    min-height: var(--nav-item-height);
+    color: var(--text-primary); /* Texto normal, no grita */
+    text-decoration: none;
+    transition: var(--transition-fast);
+    position: relative;
+    font-weight: 400; /* Texto normal, no medium */
+    font-size: 14px;
+    font-family: var(--font-family);
+    line-height: 1.4;
+    margin-bottom: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+}
+
+/* Hover sutil */
+.nav-link:hover {
+    color: var(--white-95);
+    background: var(--bg-hover);
+}
+
+/* Estado activo que susurra, no grita */
+.nav-link.active {
+    color: var(--text-primary); /* Texto 100%, pero no más grande */
+    background: var(--bg-hover); /* Fondo apenas distinto */
+    font-weight: 500; /* Ligeramente más peso, pero sutil */
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.12));
+    border-radius: 0 2px 2px 0;
+}
+
+.nav-link.active .nav-icon {
+    color: var(--icon-button-active);
+}
+
+
+.nav-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+.nav-link:hover .nav-icon {
+    color: var(--icon-button-hover);
+}
+
+.nav-text {
+    flex: 1;
+    font-size: 12px;
+    font-family: var(--font-family);
+    transition: var(--transition-fast);
+    opacity: 1;
+    overflow: visible;
+    line-height: 1.4;
+    padding-top: 0;
+    text-transform: none;
+}
+
+.nav-badge {
+    background: var(--brand-gradient-dynamic, rgba(255, 255, 255, 0.12));
+    color: var(--bg-primary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-md);
+    min-width: 18px;
+    text-align: center;
+}
+
+.nav-badge.secondary {
+    background: var(--text-muted);
+}
+
+.nav-badge.success {
+    background: var(--color-success);
+}
+
+/* =========================================
+   SUBMENÚS
+   ========================================= */
+
+/* Chevron: base (rotación abierta en .nav-item.has-submenu.submenu-open .nav-chevron) */
+.nav-chevron {
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease, color 0.15s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* =========================================
+   NIVEL 3 — HIJOS SUBORDINADOS
+   Se sienten subordinados, más pequeños, más silenciosos
+   ========================================= */
+
+.nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-left: 0;
+    margin-top: 2px;
+    margin-bottom: 0;
+}
+
+.nav-submenu-item {
+    position: relative;
+    margin-left: 24px; /* Indentado real para subordinación clara */
+    margin-bottom: 1px;
+}
+
+.nav-link-sub {
+    padding-left: 12px;
+    height: 32px; /* Más pequeño que padre */
+    min-height: 32px;
+    font-size: 13px; /* Tamaño menor - nivel 3 */
+    font-weight: 400; /* Peso menor que el padre */
+    position: relative;
+    color: var(--text-muted); /* Color 60% - más silencioso */
+}
+
+/* Punto conector en la línea vertical (opcional, para mejor visualización) */
+.nav-link-sub::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--icon-button);
+    border: 1px solid var(--white-10);
+    z-index: 2;
+}
+
+.nav-link-sub:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+.nav-link-sub.active {
+    color: var(--text-primary); /* No 100%, más sutil */
+    background: var(--bg-hover);
+    font-weight: 400; /* Sin cambio de peso */
+}
+
+.nav-link-sub.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.12));
+    border-radius: 0 2px 2px 0;
+}
+
+/* Legacy (BaseView antiguo):
+   estas reglas se eliminaron aquí para no duplicar ni competir con
+   el sidebar actual basado en .nav-mode-user/.nav-mode-developer. */
+
+/* El aire comunica estructura - espacios reales entre dominios */
+
+/* =========================================
+   FOOTER DEL PANEL: PERFIL
+   ========================================= */
+
+.nav-footer {
+    flex-shrink: 0;
+    padding: 16px;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.nav-footer-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--nav-transition);
+    position: relative;
+}
+
+.nav-footer-profile:hover {
+    background: var(--bg-hover);
+}
+
+.nav-profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nav-profile-avatar span {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.nav-profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-profile-name {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-profile-email {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.2;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-profile-chevron {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+
+.nav-profile-chevron:hover {
+    color: var(--text-primary);
+}
+
+.nav-profile-chevron i {
+    font-size: 12px;
+}
+
+/* Dropdown de perfil — design glass unificado */
+.nav-profile-dropdown {
+    box-sizing: border-box;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 16px;
+    right: 16px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.nav-profile-dropdown.open {
+    display: block;
+}
+
+.nav-profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: var(--nav-transition);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    font-weight: 400;
+}
+
+.nav-profile-dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.nav-profile-dropdown-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.nav-profile-dropdown-item.nav-logout:hover {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+}
+
+.nav-profile-dropdown-item.nav-logout:hover i {
+    color: var(--color-error);
+}
+
+/* Estado colapsado del footer */
+.side-navigation.collapsed .nav-footer-profile {
+    justify-content: center;
+    padding: 8px;
+}
+
+.side-navigation.collapsed .nav-profile-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+/* =========================================
+   CONTENIDO PRINCIPAL
+   ========================================= */
+
+/* El offset del sidebar lo aplica solo body.has-sidebar #app-container; .main-content no añade margin. */
+.main-content {
+    margin-top: 0;
+    margin-left: 0;
+    min-height: 100vh;
+    height: auto;
+    background: var(--bg-primary);
+    padding-top: 48px; /* Altura del header delgado */
+    position: relative;
+    z-index: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* =========================================
+   BREADCRUMBS
+   ========================================= */
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2rem;
+    padding: 0 2rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--nav-transition);
+}
+
+.breadcrumb-item:hover {
+    color: var(--accent-brand);
+}
+
+.breadcrumb-item.active {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.breadcrumb-separator {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+@media (max-width: 768px) {
+    .main-header {
+        padding: 12px 16px;
+        left: 0;
+        max-width: 100vw;
+    }
+    
+    #app-container .main-header {
+        left: 0;
+        max-width: 100vw;
+    }
+    
+    .header-content {
+        max-width: 100%;
+    }
+    
+    .side-navigation {
+        width: var(--nav-width);
+        transform: translateX(-100%);
+        transition: var(--nav-transition);
+    }
+    
+    .side-navigation.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding-top: 48px; /* Altura del header en móvil */
+    }
+    
+    .nav-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--nav-overlay);
+        z-index: var(--z-nav-mobile-overlay);
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--nav-transition);
+    }
+    
+    .nav-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .content-container {
+        padding: 1rem;
+    }
+    
+    .breadcrumbs {
+        padding: 0 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+    
+    .nav-footer {
+        padding: 1rem;
+    }
+    
+    .nav-user-details h4 {
+        font-size: 0.9rem;
+    }
+    
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 10px 1.25rem;
+    }
+    
+    .nav-icon {
+        font-size: 0.9rem;
+    }
+    
+    .nav-logout {
+        font-size: 0.9rem;
+        padding: 10px 14px;
+    }
+    
+    .content-container {
+        padding: 0.5rem;
+    }
+}
+
+/* =========================================
+   ESTADOS ESPECIALES
+   ========================================= */
+
+.nav-item.coming-soon .nav-text::after {
+    content: 'Próximamente';
+    font-size: 0.7rem;
+    color: var(--color-warning);
+    background: var(--color-warning-light);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 8px;
+}
+
+.nav-item.beta .nav-text::after {
+    content: 'Beta';
+    font-size: 0.7rem;
+    color: var(--color-success);
+    background: var(--color-success-light);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 8px;
+}
+
+/* =========================================
+   SISTEMA DE LAYOUT INTELIGENTE
+   Controla el layout según la ruta actual
+   ========================================= */
+
+/* === LAYOUT: SIN NAVEGACIÓN (Páginas públicas) === */
+body.no-nav #navigation-container {
+    display: none;
+}
+
+body.no-nav #app-container {
+    margin-left: 0;
+    padding-top: 0;
+}
+
+/* === LAYOUT: SOLO HEADER (Settings, etc.) === */
+body.has-header-only #app-container {
+    margin-left: 0;
+    padding-top: 0;
+}
+
+/* === LAYOUT: CON SIDEBAR (Org y Dev) === */
+body.has-sidebar #app-container {
+    margin-left: var(--nav-width, 260px);
+    max-width: calc(100vw - var(--nav-width, 260px));
+    padding: 0;
+    padding-top: 45px; /* Solo padding superior para quedar debajo del header principal */
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+}
+
+/* Brands: sin padding en app-container (el contenedor de brands ocupa todo) */
+body.has-sidebar #app-container:has(> .brand-dashboard-container) {
+    padding: 0;
+}
+
+body.has-sidebar.sidebar-collapsed #app-container {
+    margin-left: var(--nav-width-collapsed, 72px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
+}
+
+/* Sin padding superior en Products y Studio; lo aplican sus contenedores internos */
+body.has-sidebar #app-container:has(> div.product-view),
+body.has-sidebar #app-container:has(> div.main-content > div.products-container),
+body.has-sidebar #app-container:has(> div.studio-layout) {
+    padding-top: 0;
+}
+
+/* Production: padding superior para header de dos filas (ruta+icono + filtros + paddings) */
+body.has-sidebar #app-container:has(> main.living-main-content) {
+    padding-top: 97px;
+}
+
+/* =========================================
+   APP HEADER (Nuevo sistema)
+   ========================================= */
+
+.app-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: var(--app-header-height, 45.8px);
+    background: var(--glass-black-bg);
+    border: none;
+    border-bottom: 1px solid var(--glass-black-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--glass-black-text);
+    --text-primary: var(--glass-black-text);
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+}
+.app-header .header-title,
+.app-header .header-left,
+.app-header .header-right,
+.app-header .header-logo .logo-text,
+.app-header #headerRoute {
+    color: var(--glass-black-text);
+}
+.app-header .user-menu-btn {
+    color: var(--glass-black-text);
+}
+.app-header .user-menu-btn:hover {
+    color: var(--glass-black-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+.app-header .nav-sidebar-toggle {
+    color: var(--glass-black-text);
+}
+.app-header .nav-sidebar-toggle:hover {
+    color: var(--glass-black-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Header solo (sin sidebar) - Home/Hogar: transparente, sin borde, logo centrado, 50px padding superior */
+.app-header.header-only {
+    left: 0;
+    background: transparent;
+    border-bottom: none;
+    padding-top: 50px;
+    height: auto;
+    min-height: calc(50px + var(--app-header-height, 45.8px));
+}
+
+.app-header.header-only .header-content {
+    position: relative;
+}
+
+.app-header.header-only .header-left {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Header con sidebar: efecto glass-black. Con filtros (Production) pasa a dos filas. */
+.app-header.with-sidebar {
+    left: var(--nav-width, 260px);
+    max-width: calc(100vw - var(--nav-width, 260px));
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    border-radius: 0 0 var(--glass-radius) 0;
+}
+body.production-filters-in-header .app-header.with-sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: var(--app-header-height, 45.8px);
+    padding-top: 12px;
+}
+body.production-filters-in-header .app-header .header-content {
+    padding-bottom: 14px;
+}
+
+body.sidebar-collapsed .app-header.with-sidebar {
+    left: var(--nav-width-collapsed, 72px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
+}
+
+/* #appHeader > .header-content: adaptar al ancho del header (no desbordar) */
+#appHeader > .header-content,
+.app-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0 20px;
+    gap: 16px;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.app-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.app-header .header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.app-header .header-logo .logo-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+}
+
+.app-header .header-logo .header-logo-img {
+    height: 32px;
+    width: auto;
+    display: block;
+}
+
+/* Oculto por defecto (solo header sin sidebar, ej. Hogar) */
+.app-header .header-hamburger {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+/* Visible cuando hay sidebar (desktop y móvil) para colapsar/abrir */
+.app-header.with-sidebar .header-hamburger {
+    display: flex;
+}
+
+.app-header .header-hamburger:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.app-header .header-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Slot de filtros de Production: segunda fila del header, oculto por defecto */
+.app-header .header-production-slot {
+    display: none;
+    min-width: 0;
+}
+body.production-filters-in-header .app-header .header-production-slot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 0 20px 16px;
+    box-sizing: border-box;
+}
+body.production-filters-in-header .app-header .header-production-slot .living-history-filters {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-header .header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* Slot para pestañas del Builder: oculto cuando está vacío (resto de páginas dev) */
+.app-header .header-builder-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+.app-header .header-builder-slot:empty {
+  display: none;
+}
+
+/* Builder: pestañas (Configuración, Módulos, Inputs, Ficha) integradas en el header principal */
+.app-header.app-header--builder .header-builder-slot .builder-tabs-header {
+  background: transparent;
+  border-bottom: none;
+  flex: 0 0 auto;
+  padding: 0;
+  margin: 0;
+  height: auto;
+}
+.app-header.app-header--builder .header-builder-slot .builder-tabs-header .builder-tabs {
+  padding: 0;
+  gap: 6px;
+}
+.app-header.app-header--builder .header-left .header-title {
+  margin-right: 8px;
+}
+
+.app-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+/* Usuario en header: solo botón menú (avatar quitado por diseño) */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.user-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.user-menu-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Contenedor del botón + dropdown: no recortar y dar contexto de posicionamiento a #userDropdown */
+#appHeader .header-right,
+#appHeader .header-user-menu-wrap {
+    position: relative;
+    overflow: visible !important;
+}
+.header-user-menu-wrap {
+    display: flex;
+    align-items: center;
+}
+
+/* User Dropdown — glass-black, anclado al botón. Solo display para mostrar/ocultar (evitar conflictos con visibility/opacity). */
+#userDropdown,
+#userDropdown.user-dropdown,
+.app-header .user-dropdown,
+#headerUserDropdown,
+.app-header .header-user-dropdown {
+    box-sizing: border-box;
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    width: 240px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 0;
+    color: var(--glass-black-text);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    z-index: 9999;
+    display: none;
+}
+/* Visible solo con .active; especificidad alta para que nada lo pise */
+#userDropdown.active,
+#userDropdown.user-dropdown.active,
+.app-header .header-user-menu-wrap .user-dropdown.active,
+#headerUserDropdown.open,
+.app-header .header-user-dropdown.open {
+    display: flex !important;
+}
+
+/* Capa glass dedicada del dropdown principal:
+   evita que el backdrop se "aplane" por el contexto visual del header. */
+#userDropdown.glass-black,
+#userDropdown.user-dropdown.glass-black,
+.app-header .header-user-menu-wrap .user-dropdown.glass-black {
+    background: rgba(0, 0, 0, 0.34) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+.user-dropdown-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-black-border);
+}
+
+.user-dropdown-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--glass-black-text);
+}
+
+.user-dropdown-email {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 2px;
+}
+
+.user-dropdown-divider {
+    height: 1px;
+    background: var(--glass-black-border);
+    margin: 0;
+}
+
+.user-dropdown-item,
+.header-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-dropdown-item:hover,
+.header-user-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--glass-black-text);
+}
+
+.user-dropdown-item i,
+.header-user-dropdown-item i {
+    width: 18px;
+    font-size: 14px;
+}
+
+.user-dropdown-item-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.header-user-dropdown-item.header-user-logout:hover {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+}
+
+.header-user-dropdown-item.header-user-logout:hover i {
+    color: var(--color-error);
+}
+
+/* Switcher Consumidor / Desarrollador (solo para usuarios con is_developer) */
+.user-dropdown-mode-switcher {
+    padding: 12px 16px;
+}
+
+.user-dropdown-mode-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.user-dropdown-mode-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    transition: var(--transition);
+}
+
+.user-dropdown-mode-option:hover {
+    color: var(--glass-black-text);
+}
+
+.user-dropdown-mode-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-brand);
+    cursor: pointer;
+}
+
+.user-dropdown-mode-option input[type="radio"]:checked + span {
+    color: var(--glass-black-text);
+    font-weight: 500;
+}
+
+/* Settings Modal (header dropdown) */
+#modals-portal .modal.user-settings-modal .modal-overlay {
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+#modals-portal .modal.user-settings-modal .modal-content {
+    width: 860px;
+    max-width: min(860px, calc(100vw - 48px));
+    min-height: 560px;
+    max-height: min(78vh, 720px);
+    border: 1px solid var(--glass-white-border);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+#modals-portal .modal.user-settings-modal .modal-header {
+    border-bottom: 1px solid var(--glass-white-border);
+}
+
+#modals-portal .modal.user-settings-modal .modal-close {
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.user-settings-modal-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1rem;
+    max-height: none;
+}
+
+.user-settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.user-settings-panels .is-hidden {
+    display: none;
+}
+
+/* =========================================
+   SIDEBAR - IDENTIDAD Y ORGANIZACIÓN
+   ========================================= */
+
+.nav-identity-section {
+    padding: 16px;
+    background: transparent;
+    border: none;
+    position: relative;
+}
+
+.nav-identity-card {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-hover);
+    border: 1px solid var(--nav-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-identity-card:hover {
+    background: var(--white-5);
+    border-color: var(--border-color);
+}
+
+.nav-org-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.nav-org-chevron:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Developer Identity Card - Idéntico al consumidor (Living/Brands): misma card, mismo icono naranja */
+.nav-identity-card.dev-identity {
+    background: var(--bg-hover);
+    border: 1px solid var(--border-divider);
+}
+
+.nav-identity-card.dev-identity:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-divider);
+}
+
+.nav-dev-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.nav-dev-icon .nav-dev-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nav-org-option-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nav-org-option-avatar span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.nav-org-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-org-option-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.nav-org-option-role {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+    margin-top: 1px;
+}
+
+.nav-org-option i.fa-check {
+    color: var(--color-success);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.nav-org-home,
+.nav-org-create {
+    color: var(--text-secondary);
+}
+
+.nav-org-home i,
+.nav-org-create i {
+    width: 16px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon-color);
+}
+
+/* Tokens Display */
+.nav-tokens {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+}
+
+.nav-tokens i {
+    color: var(--color-warning);
+    font-size: 16px;
+}
+
+.nav-tokens #navTokensValue {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nav-tokens .nav-tokens-label {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Developer Stats */
+.nav-dev-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+}
+
+.nav-dev-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.nav-dev-stat i {
+    font-size: 14px;
+    color: var(--accent-brand);
+}
+
+.nav-dev-stat span {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+/* Mode Switch Button - Mismo estilo que nav-tokens (card sutil, acento naranja al hover) */
+.nav-mode-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-hover);
+    border: 1px solid var(--nav-border);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-mode-switch:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+    color: var(--accent-brand);
+}
+.nav-mode-switch:hover i {
+    color: var(--accent-brand);
+}
+
+.nav-mode-switch i {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* =========================================
+   SIDEBAR MÓVIL
+   ========================================= */
+
+@media (max-width: 768px) {
+    /* Header hamburger visible */
+    .app-header .header-hamburger {
+        display: flex;
+    }
+
+    /* Header ocupa todo el ancho */
+    .app-header.with-sidebar {
+        left: 0;
+        max-width: 100vw;
+    }
+
+    /* Sidebar oculto por defecto en móvil */
+    .side-navigation {
+        transform: translateX(-100%);
+    }
+
+    .side-navigation.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* App container sin margen en móvil; ancho completo; solo padding superior */
+    body.has-sidebar #app-container {
+        margin-left: 0;
+        max-width: 100vw;
+        padding: 0;
+        padding-top: 45px;
+    }
+
+    body.has-sidebar #app-container:has(> .brand-dashboard-container) {
+        padding: 0;
+    }
+
+    /* Misma excepción en móvil: sin padding superior en Products, Living y Studio */
+    body.has-sidebar #app-container:has(> div.product-view),
+    body.has-sidebar #app-container:has(> div.main-content > div.products-container),
+    body.has-sidebar #app-container:has(> main.living-main-content),
+    body.has-sidebar #app-container:has(> div.studio-layout) {
+        padding-top: 0;
+    }
+
+    /* Overlay visible cuando nav está abierta */
+    .nav-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* =========================================
+   OVERLAY DE NAVEGACIÓN
+   ========================================= */
+
+.nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--black-70);
+    z-index: var(--z-nav-overlay);
+    opacity: 0;
+    visibility: hidden;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* =========================================
+   SIDEBAR NAVEGACIÓN PRINCIPAL
+   ========================================= */
+
+.side-navigation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--nav-width, 260px);
+    height: 100vh;
+    background-color: var(--sidebar-background, var(--bg-primary));
+    border-right: 1px solid var(--glass-black-border);
+    display: flex;
+    flex-direction: column;
+    z-index: var(--z-nav-sidebar);
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    /* Colores para legibilidad sobre glass-black */
+    --sidebar-text-primary: var(--glass-black-text);
+    --sidebar-text-secondary: rgba(255, 255, 255, 0.85);
+    --sidebar-icon-color: rgba(255, 255, 255, 0.9);
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active: rgba(255, 255, 255, 0.15);
+    --nav-border: var(--glass-black-border);
+    --text-primary: var(--glass-black-text);
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-muted: rgba(255, 255, 255, 0.7);
+}
+.side-navigation::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--sidebar-background, var(--bg-primary));
+    border-radius: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.side-navigation > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================
+   MENÚ DE NAVEGACIÓN
+   ========================================= */
+
+/* Spacer entre menú y footer: no crece para que .nav-menu use todo el espacio disponible */
+.nav-spacer {
+    flex: 0 0 0;
+    min-height: 0;
+}
+
+/* Reglas visuales sidebar usuario: menos altura y padding, texto 12px, iconos 16px */
+.nav-mode-user .nav-link,
+.nav-mode-user .nav-main-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    transition: background 0.12s ease, color 0.12s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-mode-user .nav-link:hover,
+.nav-mode-user .nav-main-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-link.active,
+.nav-mode-user .nav-main-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon-color);
+}
+
+.nav-mode-user .nav-icon-img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Iconos SVG del sidebar: forzar 16×16 */
+#sideNavigation .nav-menu .nav-icon-img,
+#sideNavigation .nav-menu .nav-link .nav-icon-img,
+#sideNavigation .nav-menu .nav-submenu-toggle .nav-icon-img,
+#sideNavigation .nav-footer .nav-icon-img {
+    width: 16px;
+    height: 16px;
+}
+
+.nav-mode-user .nav-text {
+    flex: 1;
+}
+
+.nav-mode-user .nav-chevron {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+/* Submenú: indent 18px, solo texto, peso 400 */
+.nav-item.has-submenu .nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.nav-item.has-submenu.submenu-open .nav-submenu {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.nav-item.has-submenu.submenu-open .nav-chevron {
+    transform: rotate(90deg);
+}
+
+.nav-mode-user .nav-submenu-link {
+    display: flex;
+    align-items: center;
+    padding: 0 12px 0 28px; /* 12 + 16px indent */
+    min-height: 30px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: none;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nav-mode-user .nav-submenu-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-secondary);
+}
+
+.nav-mode-user .nav-submenu-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
+/* Compatibilidad: sidebar dev y otros mantienen estilos anteriores */
+.side-navigation:not(.nav-mode-user) .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--nav-item-height);
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: none;
+    transition: background 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.side-navigation:not(.nav-mode-user) .nav-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.side-navigation:not(.nav-mode-user) .nav-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+    font-weight: 500;
+}
+
+.side-navigation:not(.nav-mode-user) .nav-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon-color);
+}
+
+.side-navigation:not(.nav-mode-user) .nav-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 10px 48px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+    text-transform: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.side-navigation:not(.nav-mode-user) .nav-submenu-link:hover,
+.side-navigation:not(.nav-mode-user) .nav-submenu-link.active {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+/* Lead: gobernanza, diferenciación visual (spacing superior, acento sutil) */
+.nav-mode-developer .nav-dev-lead-section {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--nav-border);
+}
+
+.nav-mode-developer .nav-dev-lead-section .nav-link.nav-submenu-toggle .nav-icon {
+    color: var(--text-primary);
+}
+
+/* =========================================
+   VERA — ÍTEM PRIMARIO (acción principal)
+   ========================================= */
+
+.nav-item--primary {
+    margin-bottom: 10px;
+}
+
+.nav-item--primary .nav-link,
+.nav-item--primary .nav-main-link {
+    min-height: 40px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--sidebar-text-primary) !important;
+    letter-spacing: 0.01em;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.nav-item--primary .nav-link:hover,
+.nav-item--primary .nav-main-link:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.nav-item--primary .nav-link.active,
+.nav-item--primary .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.11) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
+}
+
+.nav-item--primary .nav-link.active::before,
+.nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+.nav-item--primary .nav-icon-img {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.nav-item--primary .nav-icon {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 18px !important;
+    color: var(--sidebar-text-primary) !important;
+}
+
+/* En collapsed: Vera ítem primario mantiene ícono más grande */
+.side-navigation.collapsed .nav-item--primary .nav-link,
+.side-navigation.collapsed .nav-item--primary .nav-main-link {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    width: 40px;
+    height: 40px;
+}
+
+.side-navigation.collapsed .nav-item--primary .nav-link.active,
+.side-navigation.collapsed .nav-item--primary .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.13) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.side-navigation.collapsed .nav-item--primary .nav-link.active::before,
+.side-navigation.collapsed .nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+/* =========================================
+   NAV SECTION LABELS — Separadores de grupo
+   ========================================= */
+
+.nav-section-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.28);
+    padding: 14px 12px 4px;
+    margin: 0;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.side-navigation.collapsed .nav-section-label {
+    display: none;
+}
+
+/* =========================================
+   ACTIVE STATE — Acento visual mejorado
+   ========================================= */
+
+.nav-mode-user .nav-link.active::before,
+.nav-mode-user .nav-main-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 3px;
+    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.5));
+    border-radius: 0 3px 3px 0;
+    opacity: 1;
+}
+
+.nav-mode-user .nav-link.active,
+.nav-mode-user .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.09);
+    color: var(--sidebar-text-primary);
+    font-weight: 600 !important;
+}
+
+/* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
+.nav-mode-user .nav-footer {
+    flex-shrink: 0;
+    padding: 12px 16px 16px;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-mode-user .nav-footer-link,
+.nav-mode-user .nav-footer-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: none;
+    transition: background 0.12s ease, color 0.12s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-mode-user .nav-footer-link:hover,
+.nav-mode-user .nav-footer-action:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-footer-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
+/* Créditos de la organización (debajo del enlace Créditos) */
+.nav-org-credits {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--nav-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-org-credits-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.nav-org-credits-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.nav-org-credits-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.nav-org-credits-bar-fill {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 3px;
+    background: var(--brand-gradient-dynamic, rgba(255, 255, 255, 0.12));
+}
+
+.side-navigation.collapsed .nav-org-credits {
+    display: none;
+}
+
+/* =========================================
+   PÁGINA DE ERROR
+   ========================================= */
+
+.error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-content h1 {
+    font-size: 6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.error-content p {
+    font-size: var(--font-size-xl);
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+/* .error-actions usa .btn-primary y .btn-secondary globales (design system v2) */
+
