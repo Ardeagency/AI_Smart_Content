@@ -1978,23 +1978,9 @@ body.sidebar-collapsed .main-header,
     margin-bottom: 0;
 }
 
-/* Ritmo vertical del menú (orden actual: Insight, Production, Vera, Task, Video, Flows, Identity) */
+/* Ritmo vertical del menú (orden actual: Vera primario, [Workspace] Dashboard, Production, [Create] Task, Video, Flows, Identity) */
 .nav-item:first-child {
     margin-top: 0;
-    margin-bottom: 5px;
-}
-
-.nav-item:nth-child(2) {
-    margin-bottom: 5px;
-}
-
-.nav-item:nth-child(5),
-.nav-item:nth-child(6) {
-    margin-bottom: 5px;
-}
-
-.nav-item:nth-child(6) {
-    margin-bottom: 5px;
 }
 
 /* =========================================
@@ -3562,6 +3548,123 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--text-primary);
 }
 
+/* =========================================
+   VERA — ÍTEM PRIMARIO (acción principal)
+   ========================================= */
+
+.nav-item--primary {
+    margin-bottom: 10px;
+}
+
+.nav-item--primary .nav-link,
+.nav-item--primary .nav-main-link {
+    min-height: 40px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--sidebar-text-primary) !important;
+    letter-spacing: 0.01em;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.nav-item--primary .nav-link:hover,
+.nav-item--primary .nav-main-link:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.nav-item--primary .nav-link.active,
+.nav-item--primary .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.11) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
+}
+
+.nav-item--primary .nav-link.active::before,
+.nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+.nav-item--primary .nav-icon-img {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.nav-item--primary .nav-icon {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 18px !important;
+    color: var(--sidebar-text-primary) !important;
+}
+
+/* En collapsed: Vera ítem primario mantiene ícono más grande */
+.side-navigation.collapsed .nav-item--primary .nav-link,
+.side-navigation.collapsed .nav-item--primary .nav-main-link {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    width: 40px;
+    height: 40px;
+}
+
+.side-navigation.collapsed .nav-item--primary .nav-link.active,
+.side-navigation.collapsed .nav-item--primary .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.13) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.side-navigation.collapsed .nav-item--primary .nav-link.active::before,
+.side-navigation.collapsed .nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+/* =========================================
+   NAV SECTION LABELS — Separadores de grupo
+   ========================================= */
+
+.nav-section-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.28);
+    padding: 14px 12px 4px;
+    margin: 0;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.side-navigation.collapsed .nav-section-label {
+    display: none;
+}
+
+/* =========================================
+   ACTIVE STATE — Acento visual mejorado
+   ========================================= */
+
+.nav-mode-user .nav-link.active::before,
+.nav-mode-user .nav-main-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 3px;
+    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.5));
+    border-radius: 0 3px 3px 0;
+    opacity: 1;
+}
+
+.nav-mode-user .nav-link.active,
+.nav-mode-user .nav-main-link.active {
+    background: rgba(255, 255, 255, 0.09);
+    color: var(--sidebar-text-primary);
+    font-weight: 600 !important;
+}
+
 /* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
 .nav-mode-user .nav-footer {
     flex-shrink: 0;
@@ -3908,28 +4011,34 @@ body.entrance-done .landing-header {
     }
 }
 
-/* ─── Landing Hero: líneas verticales + aurora glass + imagen de fondo ─── */
+/* ─── Landing Hero: fondo negro base + dos capas crossfade ─── */
 .landing-hero {
     position: relative;
     isolation: isolate;
     min-height: 100vh;
-    background: var(--landing-hero-bg-image, url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg')) center center / cover no-repeat;
+    background: #000;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.landing-hero__bg-fade {
+/* Capas de crossfade: A visible, B oculta; JS las alterna */
+.landing-hero__bg-layer {
     position: absolute;
     inset: 0;
-    background: #000;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 2;
-    transition: opacity 160ms ease-in-out;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    will-change: opacity;
+    transition: opacity 700ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
 }
 
+.landing-hero__bg-layer--a { opacity: 1; }
+.landing-hero__bg-layer--b { opacity: 0; }
+
+/* Capa oscura fija: siempre encima de las imágenes, nunca anima */
 .landing-hero__bg-dim {
     position: absolute;
     inset: 0;
@@ -3939,11 +4048,7 @@ body.entrance-done .landing-header {
     z-index: 1;
 }
 
-.landing-hero__bg-fade.is-active {
-    opacity: 0.28;
-}
-
-/* Capa oscura: solo negro, sin tintes; abajo más opaco, arriba transparente */
+/* Gradiente principal: sobre imágenes y dim, da profundidad */
 .landing-hero::before {
     content: "";
     position: absolute;
@@ -3956,7 +4061,7 @@ body.entrance-done .landing-header {
         transparent 100%
     );
     pointer-events: none;
-    z-index: 0;
+    z-index: 2;
 }
 
 /* Orbes de color desactivados (sin brillo ni degradados cromáticos sobre el hero) */
@@ -4137,7 +4242,7 @@ body.entrance-done .landing-header {
     display: flex;
     flex-direction: column;
     will-change: transform;
-    transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Cada fila: --hero-row de alto; imagen en height:100%/width:auto = proporciones intrínsecas del SVG */

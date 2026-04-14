@@ -1,13 +1,16 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Créditos).
+ * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Task, Video, Flows, Identity.
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'insight', label: 'Insight', icon: 'fa-chart-line', iconSrc: '/recursos/icons/insight.svg', route: 'insight' },
+    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'brain', primary: true },
+    { type: 'section', label: 'Workspace' },
+    { type: 'page', id: 'insight', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/insight.svg', route: 'insight' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'brain' },
+    { type: 'section', label: 'Create' },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -497,12 +500,16 @@ class Navigation {
       : `<i class="fas ${item.icon} nav-icon"></i>`;
 
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
+      if (item.type === 'section') {
+        return `<div class="nav-section-label" aria-hidden="true">${_escapeHtml(item.label)}</div>`;
+      }
       if (item.type === 'page') {
         const href = full(item.route);
+        const isPrimary = !!item.primary;
         const hideLabel = !!item.hideLabel;
         return `
-          <div class="nav-item">
-            <a href="${href}" class="nav-link nav-main-link ${hideLabel ? 'nav-link--no-label' : ''}" data-route="${href}" data-tooltip="${item.label}">
+          <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}">
+            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}" data-route="${href}" data-tooltip="${item.label}">
               ${iconHTML(item)}
               ${hideLabel ? '' : `<span class="nav-text">${item.label}</span>`}
             </a>
@@ -1590,7 +1597,7 @@ class Navigation {
     }
 
     const titles = {
-      '/insight': 'INSIGHT',
+      '/insight': 'DASHBOARD',
       '/production': 'PRODUCTION',
       '/historial': 'PRODUCTION',
       '/living': 'PRODUCTION',
