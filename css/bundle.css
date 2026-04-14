@@ -32444,3 +32444,29 @@ body.route-public.entrance-active #public-shell {
     border-color: rgba(255,255,255,0.45);
     background: rgba(255,255,255,0.05);
 }
+
+/* ───── Páginas legales (privacidad, términos, eliminación de datos) ───── */
+.pp-legal__body {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+.pp-legal__sec h2 {
+    margin: 0 0 10px;
+    font-size: 1.18rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: -0.005em;
+}
+.pp-legal__sec p {
+    margin: 0;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.65;
+    font-size: 0.98rem;
+}
+.pp-legal__sec + .pp-legal__sec {
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}

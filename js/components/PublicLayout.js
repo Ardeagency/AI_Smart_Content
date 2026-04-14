@@ -49,8 +49,11 @@
   ];
 
   const PUBLIC_ROUTES = new Set([
+    '/',
     '/plataforma', '/soluciones', '/casos', '/seguridad',
-    '/como-funciona', '/nosotros', '/status', '/contacto', '/changelog'
+    '/como-funciona', '/nosotros', '/status', '/contacto', '/changelog',
+    '/privacidad', '/terminos',
+    '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'
   ]);
 
   // Estado interno
@@ -232,8 +235,7 @@
    * Renderiza el contenido de una página pública dentro del shell persistente.
    * Llamado por PublicBaseView.render().
    */
-  function renderView({ activePath, content, pageClass, scrollToTop = true }) {
-    // Asegurar estado visual del shell
+  function renderView({ activePath, content, pageClass, scrollToTop = true, hideFooter = false, hideHeader = false }) {
     document.body.classList.add('route-public');
     document.body.classList.remove('entrance-active');
     document.body.classList.add('entrance-done');
@@ -243,6 +245,11 @@
 
     mountShellOnce();
     setActiveLink(activePath);
+
+    const headerRoot = document.getElementById('public-header-root');
+    const footerRoot = document.getElementById('public-footer-root');
+    if (headerRoot) headerRoot.style.display = hideHeader ? 'none' : '';
+    if (footerRoot) footerRoot.style.display = hideFooter ? 'none' : '';
 
     const contentRoot = document.getElementById('public-view-content');
     if (!contentRoot) return null;
@@ -261,7 +268,6 @@
 
     attachScrollReveal(contentRoot);
 
-    // Actualizar estado flotante del header según scroll actual
     const header = document.querySelector('#public-header-root .public-header');
     if (header) {
       const y = (shell && shell.scrollHeight > shell.clientHeight + 2)

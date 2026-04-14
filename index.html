@@ -34,7 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Application CSS — bundle único (rutas desde raíz para evitar 404 en recargas) -->
-    <link rel="stylesheet" href="css/bundle.css?v=20260414-public-shell">
+    <link rel="stylesheet" href="css/bundle.css?v=20260414-inline">
     
     <style>
         #modals-portal {
@@ -109,9 +109,13 @@
     <script src="js/services/AppState.js"></script>
     <script src="js/session-utils.js"></script>
     
+    <!-- Shell público (header + footer persistentes) — se usa en landing y demás públicas -->
+    <script src="js/components/PublicLayout.js?v=20260414-public-shell"></script>
+    <script src="js/views/PublicBaseView.js?v=20260414-public-shell"></script>
+
     <!-- Vistas críticas (landing + login) — el resto se carga lazy por ruta -->
-    <script src="js/views/LandingView.js?v=20260413-hero-stable"></script>
-    <script src="js/views/SignInView.js"></script>
+    <script src="js/views/LandingView.js?v=20260414-inline"></script>
+    <script src="js/views/SignInView.js?v=20260414-inline"></script>
     
     <!-- Navigation + App init -->
     <script src="js/components/Navigation.js?v=20260327-1845"></script>

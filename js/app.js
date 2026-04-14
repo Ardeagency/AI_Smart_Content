@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260414-public-shell';
+const APP_LAZY_SCRIPT_VER = '20260414-inline';
 
 class App {
   constructor() {
@@ -120,17 +120,18 @@ class App {
     r.register('/terminos', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
     r.register('/eliminacion-de-datos', this._lazy('DataDeletionView', ['/js/views/DataDeletionView.js']), pub);
 
-    // ── Páginas públicas marketing (lazy) ──
-    const publicDeps = ['/js/components/PublicLayout.js', '/js/views/PublicBaseView.js'];
-    r.register('/plataforma', this._lazy('PlataformaView', [...publicDeps, '/js/views/PlataformaView.js']), pub);
-    r.register('/soluciones', this._lazy('SolucionesView', [...publicDeps, '/js/views/SolucionesView.js']), pub);
-    r.register('/casos', this._lazy('CasosView', [...publicDeps, '/js/views/CasosView.js']), pub);
-    r.register('/seguridad', this._lazy('SeguridadView', [...publicDeps, '/js/views/SeguridadView.js']), pub);
-    r.register('/como-funciona', this._lazy('ComoFuncionaView', [...publicDeps, '/js/views/ComoFuncionaView.js']), pub);
-    r.register('/nosotros', this._lazy('NosotrosView', [...publicDeps, '/js/views/NosotrosView.js']), pub);
-    r.register('/status', this._lazy('StatusView', [...publicDeps, '/js/views/StatusView.js']), pub);
-    r.register('/contacto', this._lazy('ContactoView', [...publicDeps, '/js/views/ContactoView.js']), pub);
-    r.register('/changelog', this._lazy('ChangelogView', [...publicDeps, '/js/views/ChangelogView.js']), pub);
+    // ── Páginas públicas marketing (lazy).
+    // PublicLayout y PublicBaseView ya vienen cargados sync en index.html,
+    // por lo que solo se carga la vista específica.
+    r.register('/plataforma', this._lazy('PlataformaView', ['/js/views/PlataformaView.js']), pub);
+    r.register('/soluciones', this._lazy('SolucionesView', ['/js/views/SolucionesView.js']), pub);
+    r.register('/casos', this._lazy('CasosView', ['/js/views/CasosView.js']), pub);
+    r.register('/seguridad', this._lazy('SeguridadView', ['/js/views/SeguridadView.js']), pub);
+    r.register('/como-funciona', this._lazy('ComoFuncionaView', ['/js/views/ComoFuncionaView.js']), pub);
+    r.register('/nosotros', this._lazy('NosotrosView', ['/js/views/NosotrosView.js']), pub);
+    r.register('/status', this._lazy('StatusView', ['/js/views/StatusView.js']), pub);
+    r.register('/contacto', this._lazy('ContactoView', ['/js/views/ContactoView.js']), pub);
+    r.register('/changelog', this._lazy('ChangelogView', ['/js/views/ChangelogView.js']), pub);
 
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {

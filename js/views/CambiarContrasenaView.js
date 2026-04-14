@@ -5,7 +5,47 @@
 class CambiarContrasenaView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'cambiar-contrasena.html';
+    this.templatePath = null;
+  }
+
+  async updateHeader() {
+    // Página pública sin header de usuario
+  }
+
+  renderHTML() {
+    return `
+      <div class="signin-container cambiar-contrasena-container">
+        <div class="form-org-bg-grid" aria-hidden="true"></div>
+        <div class="form-main-content">
+          <div class="form-org-card signin-card cambiar-contrasena-card">
+            <div class="signin-brand">
+              <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="signin-brand-logo">
+            </div>
+
+            <div class="cambiar-contrasena-invalid" id="changePasswordInvalid" hidden>
+              <h2 class="signin-recover-title">Enlace inválido o expirado</h2>
+              <p class="signin-recover-desc">Este enlace ya no es válido. Solicita uno nuevo desde la página de inicio de sesión.</p>
+              <a href="/login" class="btn btn-primary" id="linkInvalidToLogin">Ir a iniciar sesión</a>
+            </div>
+
+            <div class="cambiar-contrasena-form-wrap" id="changePasswordFormWrap" hidden>
+              <h2 class="signin-recover-title">Cambiar contraseña</h2>
+              <p class="signin-recover-desc">Introduce tu nueva contraseña. Debe tener al menos 8 caracteres.</p>
+              <form id="form_change_password" novalidate>
+                <input type="password" class="form-input" id="newPassword" name="newPassword" placeholder="Nueva contraseña" autocomplete="new-password" required minlength="8">
+                <input type="password" class="form-input" id="newPasswordConfirm" name="newPasswordConfirm" placeholder="Confirmar contraseña" autocomplete="new-password" required minlength="8">
+                <button type="submit" class="btn btn-primary" id="btnChangePassword">Cambiar contraseña</button>
+              </form>
+              <a href="/login" class="signin-recover-back" id="linkChangeBackToLogin">Volver al inicio de sesión</a>
+            </div>
+
+            <div class="cambiar-contrasena-loading" id="changePasswordLoading">
+              <p class="signin-recover-desc">Verificando enlace...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   async onEnter() {}

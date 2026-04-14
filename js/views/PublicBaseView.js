@@ -14,6 +14,8 @@ class PublicBaseView extends BaseView {
     this.templatePath = null;
     this.activePath = '/';
     this.pageClass = '';
+    this.hideFooter = false;
+    this.hideHeader = false;
     // Apuntará al nodo interno del shell, no a #app-container
     this.container = null;
   }
@@ -48,7 +50,9 @@ class PublicBaseView extends BaseView {
       const contentRoot = window.PublicLayout.renderView({
         activePath: this.activePath,
         content: html,
-        pageClass: this.pageClass
+        pageClass: this.pageClass,
+        hideFooter: this.hideFooter,
+        hideHeader: this.hideHeader
       });
       this.container = contentRoot || document.getElementById('public-view-content');
       await this.init();
