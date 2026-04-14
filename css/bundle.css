@@ -3913,7 +3913,7 @@ body.entrance-done .landing-header {
     position: relative;
     isolation: isolate;
     min-height: 100vh;
-    background: url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg') center center / cover no-repeat;
+    background: var(--landing-hero-bg-image, url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1772113552/Fondos-01_fyfce2.jpg')) center center / cover no-repeat;
     overflow: hidden;
     display: flex;
     align-items: center;

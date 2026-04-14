@@ -441,12 +441,35 @@ class LandingView extends BaseView {
     }
 
     const track = document.querySelector('.landing-hero__words-track');
-    if (!track) return;
+    const hero = document.querySelector('.landing-hero');
+    if (!track || !hero) return;
 
     const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
     if (realItems.length < 2) return;
 
     const N = realItems.length;
+    const heroBackgrounds = [
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/Recurso_28Imagen-cloud-wonder_2-2x_copia_zgwsbb.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/Recurso_36Imagen-cloud-wonder_2-2x_copia_bqshyg.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102750/Recurso_38Imagen-cloud-wonder_2-2x_copia_ixttbb.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg',
+      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg'
+    ];
+
+    const getBackgroundByIndex = (index) => {
+      if (!heroBackgrounds.length) return null;
+      return heroBackgrounds[((index % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
+    };
+
+    const setHeroBackground = (index) => {
+      const bgUrl = getBackgroundByIndex(index);
+      if (!bgUrl) return;
+      hero.style.setProperty('--landing-hero-bg-image', `url("${bgUrl}")`);
+    };
 
     [realItems[N - 1], realItems[N - 2]].forEach(item => {
       track.insertBefore(item.cloneNode(true), track.firstChild);
@@ -471,6 +494,7 @@ class LandingView extends BaseView {
     };
 
     setPos(0, false);
+    setHeroBackground(0);
 
     if (
       typeof window.matchMedia === 'function' &&
@@ -484,18 +508,23 @@ class LandingView extends BaseView {
       if (busy) return;
       realIdx++;
       setPos(realIdx, true);
+      setHeroBackground(realIdx);
 
       if (realIdx >= N) {
         busy = true;
         window.setTimeout(() => {
           realIdx = 0;
           setPos(0, false);
+          setHeroBackground(0);
           busy = false;
         }, 750);
       }
     }, 2000);
 
-    this.heroWordsRotatorCleanup = () => window.clearInterval(timer);
+    this.heroWordsRotatorCleanup = () => {
+      window.clearInterval(timer);
+      hero.style.removeProperty('--landing-hero-bg-image');
+    };
   }
 
   onLeave() {
