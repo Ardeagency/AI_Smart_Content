@@ -293,9 +293,9 @@ class AuthService {
   }
 
   /**
-   * Obtener ruta por defecto para usuario consumidor: primera org (Insight) o /create si no tiene org.
+   * Obtener ruta por defecto para usuario consumidor: primera org (Dashboard) o /create si no tiene org.
    * @param {string} userId - ID del usuario
-   * @returns {Promise<string>} /org/:id/insight o /create
+   * @returns {Promise<string>} /org/:id/dashboard o /create
    */
   async getDefaultUserRoute(userId) {
     if (!this.supabase || !userId) return '/create';
@@ -318,9 +318,9 @@ class AuthService {
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/insight` : '/create';
+        return prefix ? `${prefix}/dashboard` : '/create';
       }
-      return `/org/${org.id}/insight`;
+      return `/org/${org.id}/dashboard`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
       return '/create';

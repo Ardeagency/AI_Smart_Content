@@ -1,7 +1,7 @@
 /**
  * Configuración en tiempo de ejecución (sin build).
  *
- * Para que Vera (BrainView) hable con tu servidor ai-engine en lugar de
+ * Para que Vera (VeraView) hable con tu servidor ai-engine en lugar de
  * /api/ai/chat (Netlify), define la URL base del motor, sin barra final:
  *
  *   window.AI_ENGINE_BASE_URL = 'https://tu-dominio-o-ip:3000';

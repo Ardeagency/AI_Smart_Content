@@ -533,7 +533,7 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Navegar a una organización (ir a living con esa organización seleccionada)
+   * Navegar a una organización (ir a Production con esa organización seleccionada)
    */
   navigateToOrganization(orgId, orgName) {
     if (window.appState) {

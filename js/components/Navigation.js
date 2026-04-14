@@ -6,9 +6,9 @@
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'brain', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'brain', primary: true },
+    { type: 'page', id: 'vera', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'vera', primary: true },
     { type: 'section', label: 'Workspace' },
-    { type: 'page', id: 'insight', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/insight.svg', route: 'insight' },
+    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
@@ -293,7 +293,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/insight', '/production', '/historial', '/living', '/brain', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/insight', '/production', '/historial', '/living', '/vera', '/brain', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1597,10 +1597,12 @@ class Navigation {
     }
 
     const titles = {
+      '/dashboard': 'DASHBOARD',
       '/insight': 'DASHBOARD',
       '/production': 'PRODUCTION',
       '/historial': 'PRODUCTION',
       '/living': 'PRODUCTION',
+      '/vera': 'VERA',
       '/brain': 'VERA',
       '/tasks': 'TASKS',
       '/brand': 'IDENTITY',

@@ -11750,7 +11750,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-height: 400px;
 }
 
-/* Header de filtros (fecha, tipo, flujo): en Production se mueven al app-header (ver LivingView.moveFiltersToHeader) */
+/* Header de filtros (fecha, tipo, flujo): en Production se mueven al app-header (ver ProductionView.moveFiltersToHeader) */
 .living-history-filters {
     display: flex;
     flex-wrap: wrap;

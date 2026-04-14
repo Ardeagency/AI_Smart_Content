@@ -1,5 +1,5 @@
 /**
- * LivingView - Vista del dashboard principal (Living)
+ * ProductionView - Vista del dashboard de producción (contenido generado)
  * Maneja el dashboard con información de perfil, productos y campañas
  * 
  * Rutas soportadas:
@@ -7,7 +7,7 @@
  * - /production - Sin org (usa organización guardada)
  * - /org/:orgId/historial, /historial, /living - Legacy (misma vista)
  */
-class LivingView extends BaseView {
+class ProductionView extends BaseView {
   constructor() {
     super();
     this.templatePath = null;
@@ -307,10 +307,10 @@ class LivingView extends BaseView {
 }
 
 // Hacer disponible globalmente
-window.LivingView = LivingView;
+window.ProductionView = ProductionView;
 
 // Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = LivingView;
+  module.exports = ProductionView;
 }
 

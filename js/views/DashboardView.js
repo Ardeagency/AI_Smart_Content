@@ -1,5 +1,5 @@
 /**
- * InsightView – Panel de inteligencia de marca.
+ * DashboardView – Panel de inteligencia de marca.
  * Sub-páginas: My Brands · Competence · Tendencies · Strategy
  *
  * My Brands — arquitectura event-driven (sin polling/cron):
@@ -19,7 +19,7 @@
  *  - MIN_REFETCH_INTERVAL  → mínimo 30s entre re-fetches
  *  - debounce 1.5s en Realtime → absorbe ráfagas de cambios
  */
-class InsightView extends BaseView {
+class DashboardView extends BaseView {
 
   static MIN_SYNC_INTERVAL   = 2 * 60 * 1000;  // 2 min entre syncs Meta
   static MIN_REFETCH_INTERVAL = 30 * 1000;       // 30s entre re-fetches DB
@@ -64,7 +64,7 @@ class InsightView extends BaseView {
 
   async render() {
     await super.render();
-    this.updateHeaderContext('Insight', null, window.currentOrgName || '');
+    this.updateHeaderContext('Dashboard', null, window.currentOrgName || '');
     const container = document.getElementById('app-container');
     if (!container) return;
     container.innerHTML = this._buildShell();
@@ -137,7 +137,7 @@ class InsightView extends BaseView {
       } else if (window.supabase) {
         this._supabase = window.supabase;
       }
-    } catch (e) { console.error('[InsightView] Supabase init:', e); }
+    } catch (e) { console.error('[DashboardView] Supabase init:', e); }
 
     if (!this._supabase) {
       document.getElementById('insightTabBody').innerHTML = this._myBrandsError('No se pudo conectar con la base de datos.');
@@ -289,7 +289,7 @@ class InsightView extends BaseView {
           this._updateLiveIndicator(status);
         });
     } catch (e) {
-      console.warn('[InsightView] Realtime unavailable, using polling only:', e.message);
+      console.warn('[DashboardView] Realtime unavailable, using polling only:', e.message);
       this._updateLiveIndicator('POLLING');
       this._scheduleRealtimeReconnect('exception');
     }
@@ -305,13 +305,13 @@ class InsightView extends BaseView {
       const sinceSyncc = Date.now() - (this._lastSyncTime  || 0);
 
       // Solo re-fetch si han pasado más de MIN_REFETCH_INTERVAL
-      if (sinceFetch < InsightView.MIN_REFETCH_INTERVAL) return;
+      if (sinceFetch < DashboardView.MIN_REFETCH_INTERVAL) return;
 
       // Re-fetch de DB (evento: usuario vuelve al tab)
       await this._dbRefresh();
 
       // Adicionalmente, si el último sync fue hace más de MIN_SYNC_INTERVAL → sync Meta
-      if (sinceSyncc >= InsightView.MIN_SYNC_INTERVAL) {
+      if (sinceSyncc >= DashboardView.MIN_SYNC_INTERVAL) {
         const { data: { session } } = await this._supabase.auth.getSession();
         if (session?.access_token) {
           this._triggerBackgroundSync(session.access_token, this._brandContainerId);
@@ -370,7 +370,7 @@ class InsightView extends BaseView {
       this._refreshTimer = null;
       if (this._activeTab !== 'my-brands' || !this._brandContainerId) return;
       // Guard: no re-fetch si ya se hizo hace menos de MIN_REFETCH_INTERVAL
-      if (Date.now() - (this._lastFetchTime || 0) < InsightView.MIN_REFETCH_INTERVAL) return;
+      if (Date.now() - (this._lastFetchTime || 0) < DashboardView.MIN_REFETCH_INTERVAL) return;
       await this._dbRefresh();
     }, 1500);
   }
@@ -389,7 +389,7 @@ class InsightView extends BaseView {
   async _triggerBackgroundSync(token, bcId) {
     if (this._syncing) return;
     const sinceLast = Date.now() - (this._lastSyncTime || 0);
-    if (sinceLast < InsightView.MIN_SYNC_INTERVAL) return; // rate-limit
+    if (sinceLast < DashboardView.MIN_SYNC_INTERVAL) return; // rate-limit
 
     this._syncing = true;
     this._setSyncToast(true);
@@ -407,10 +407,10 @@ class InsightView extends BaseView {
         // Si Realtime no está disponible, _scheduleRefresh actúa como fallback.
         this._scheduleRefresh('sync-complete');
       } else if (!res.ok) {
-        console.warn('[InsightView] sync-meta:', res.status, data?.error || '', data?.meta || '');
+        console.warn('[DashboardView] sync-meta:', res.status, data?.error || '', data?.meta || '');
       }
     } catch (e) {
-      console.warn('[InsightView] Background sync failed:', e.message);
+      console.warn('[DashboardView] Background sync failed:', e.message);
     } finally {
       this._syncing = false;
       this._setSyncToast(false);
@@ -1146,7 +1146,7 @@ class InsightView extends BaseView {
     const orgPath = window.currentOrgPath || '';
     const pathMap = {
       production: orgPath ? `${orgPath}/production` : '/production',
-      insight:    orgPath ? `${orgPath}/insight`    : '/insight',
+      dashboard:  orgPath ? `${orgPath}/dashboard`  : '/dashboard',
       brand:      orgPath ? `${orgPath}/brand`      : '/brands',
     };
 
@@ -1965,7 +1965,7 @@ class InsightView extends BaseView {
       } else if (!this._supabase && window.supabase) {
         this._supabase = window.supabase;
       }
-    } catch (e) { console.error('[InsightView] Supabase init competence:', e); }
+    } catch (e) { console.error('[DashboardView] Supabase init competence:', e); }
 
     if (!this._supabase) {
       body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'No se pudo conectar con la base de datos.');
@@ -2006,7 +2006,7 @@ class InsightView extends BaseView {
       body.innerHTML = this._renderCompetenceHtml(competitors, ads, vulnerabilities);
       this._bindCompetenceEvents(competitors);
     } catch (e) {
-      console.error('[InsightView] renderCompetence:', e);
+      console.error('[DashboardView] renderCompetence:', e);
       body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'Error cargando datos de competencia.');
     }
   }
@@ -2101,7 +2101,7 @@ class InsightView extends BaseView {
       } else if (!this._supabase && window.supabase) {
         this._supabase = window.supabase;
       }
-    } catch (e) { console.error('[InsightView] Supabase init monitoring:', e); }
+    } catch (e) { console.error('[DashboardView] Supabase init monitoring:', e); }
 
     if (!this._supabase) {
       body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'No se pudo conectar con la base de datos.');
@@ -2125,7 +2125,7 @@ class InsightView extends BaseView {
       body.innerHTML = this._renderMonitoringHtml(triggers, orgId);
       this._bindMonitoringEvents(triggers, orgId);
     } catch (e) {
-      console.error('[InsightView] renderMonitoring:', e);
+      console.error('[DashboardView] renderMonitoring:', e);
       body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'Error cargando monitores.');
     }
   }
@@ -2256,7 +2256,7 @@ class InsightView extends BaseView {
       } else if (!this._supabase && window.supabase) {
         this._supabase = window.supabase;
       }
-    } catch (e) { console.error('[InsightView] Supabase init tendencies:', e); }
+    } catch (e) { console.error('[DashboardView] Supabase init tendencies:', e); }
 
     if (!this._supabase) {
       body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'No se pudo conectar con la base de datos.');
@@ -2295,7 +2295,7 @@ class InsightView extends BaseView {
 
       body.innerHTML = this._renderTendenciesHtml(trends, signals, prices);
     } catch (e) {
-      console.error('[InsightView] renderTendencies:', e);
+      console.error('[DashboardView] renderTendencies:', e);
       body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'Error cargando tendencias.');
     }
   }
@@ -2376,4 +2376,4 @@ class InsightView extends BaseView {
   }
 }
 
-window.InsightView = InsightView;
+window.DashboardView = DashboardView;

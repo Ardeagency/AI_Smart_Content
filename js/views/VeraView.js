@@ -1,5 +1,5 @@
 /**
- * BrainView — Vera (AI Brain Interface)
+ * VeraView — Vera (AI Brain Interface)
  *
  * Layout: área de mensajes + composer (sin sidebar ni topbar).
  * Principio: 1 org → 1 cerebro (OpenClaw). Frontend → Backend API → OpenClaw.
@@ -681,7 +681,7 @@ function getAiTaskEventUrl() {
 }
 
 /* ─── View ─────────────────────────────────────────────── */
-class BrainView extends (window.BaseView || class {}) {
+class VeraView extends (window.BaseView || class {}) {
   constructor() {
     super();
     this.templatePath = null;
@@ -736,7 +736,7 @@ class BrainView extends (window.BaseView || class {}) {
         this.userId = user?.id;
       }
     } catch (e) {
-      console.warn('BrainView supabase:', e);
+      console.warn('VeraView supabase:', e);
     }
 
     this.organizationName = (window.currentOrgName || '').trim();
@@ -1210,7 +1210,7 @@ class BrainView extends (window.BaseView || class {}) {
       }
 
     } catch (err) {
-      console.error('BrainView sendMessage:', err);
+      console.error('VeraView sendMessage:', err);
       this.hideTypingIndicator();
       const errMsg = {
         id: `local-error-${Date.now()}`,
@@ -1389,11 +1389,11 @@ class BrainView extends (window.BaseView || class {}) {
           })
           .subscribe((status) => {
             if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-              console.warn('BrainView Realtime: canal con error, estado:', status);
+              console.warn('VeraView Realtime: canal con error, estado:', status);
             }
           });
       } catch (e) {
-        console.warn('BrainView: Realtime no disponible:', e.message);
+        console.warn('VeraView: Realtime no disponible:', e.message);
         finish({
           role: 'error',
           content: 'No se pudo conectar al tiempo real. Recarga la página para ver la respuesta de Vera.'
@@ -1403,4 +1403,4 @@ class BrainView extends (window.BaseView || class {}) {
   }
 }
 
-window.BrainView = BrainView;
+window.VeraView = VeraView;

@@ -37,7 +37,7 @@ class Router {
 
   /**
    * Registrar una ruta
-   * @param {string} path - Ruta (ej: '/', '/login', '/living')
+   * @param {string} path - Ruta (ej: '/', '/login', '/production')
    * @param {Function|Promise} viewLoader - Clase de vista o función que retorna la clase
    * @param {Object} options - Opciones de la ruta
    * @param {boolean} options.requiresAuth - Si requiere autenticación
@@ -371,9 +371,9 @@ class Router {
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/insight` : '/create';
+        return prefix ? `${prefix}/dashboard` : '/create';
       }
-      return `/org/${org.id}/insight`;
+      return `/org/${org.id}/dashboard`;
     } catch (e) {
       return '/create';
     }

@@ -1857,15 +1857,15 @@ class BrandsView extends BaseView {
     }
   }
 
-  /** Ruta Insight (conexiones / métricas) respetando prefijo de org si existe. */
-  getOrgInsightHref() {
+  /** Ruta Dashboard (conexiones / métricas) respetando prefijo de org si existe. */
+  getOrgDashboardHref() {
     const orgId = window.currentOrgId || this.brandContainerData?.organization_id;
     const name = (window.currentOrgName || '').trim();
     if (orgId && typeof window.getOrgPathPrefix === 'function') {
       const prefix = window.getOrgPathPrefix(orgId, name);
-      if (prefix) return `${prefix}/insight`;
+      if (prefix) return `${prefix}/dashboard`;
     }
-    return '/insight';
+    return '/dashboard';
   }
 
   _pickBrandIntegration(platform) {
@@ -1891,7 +1891,7 @@ class BrandsView extends BaseView {
    * Meta (facebook) cubre Facebook + Instagram; Google cubre YouTube + GA4.
    */
   buildInfoIntegrationRows() {
-    const insight = this.getOrgInsightHref();
+    const dashboardHref = this.getOrgDashboardHref();
     const google = this._pickBrandIntegration('google');
     const facebook = this._pickBrandIntegration('facebook');
     const gOk = this._integrationUsable(google);
@@ -1913,7 +1913,7 @@ class BrandsView extends BaseView {
         label: 'YouTube',
         iconClass: 'fab fa-youtube',
         connected: gOk,
-        actionHref: gOk ? 'https://www.youtube.com/' : insight,
+        actionHref: gOk ? 'https://www.youtube.com/' : dashboardHref,
         actionExternal: gOk,
         hint: ''
       },
@@ -1922,7 +1922,7 @@ class BrandsView extends BaseView {
         label: 'Facebook',
         iconClass: 'fab fa-facebook-f',
         connected: fOk,
-        actionHref: fOk ? 'https://www.facebook.com/' : insight,
+        actionHref: fOk ? 'https://www.facebook.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
       },
@@ -1931,7 +1931,7 @@ class BrandsView extends BaseView {
         label: 'Instagram',
         iconClass: 'fab fa-instagram',
         connected: fOk,
-        actionHref: fOk ? 'https://www.instagram.com/' : insight,
+        actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
       },
@@ -1940,7 +1940,7 @@ class BrandsView extends BaseView {
         label: 'Analytics',
         iconClass: 'fas fa-chart-line',
         connected: gOk && !!String(ga4Id).trim(),
-        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : insight,
+        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : dashboardHref,
         actionExternal: gOk && !!String(ga4Id).trim(),
         hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
       }
