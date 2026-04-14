@@ -210,20 +210,14 @@ class App {
     r.register('/tasks', tasksLoader, auth);
     r.register('/tasks/:taskId', tasksLoader, auth);
 
-    // ── Org: Brand ──
-    const brandsLoader = this._lazy('BrandsView', ['/js/views/BrandsView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/brand', brandsLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandsLoader, auth);
-    r.register('/brands', brandsLoader, auth);
-    r.register('/brands/:brandId', brandsLoader, auth);
-
-    // ── Org: Marca a nivel organizations (sin brand_container) ──
-    const brandOrganizationLoader = this._lazy('BrandOrganizationView', [
-      '/js/views/BrandsView.js',
-      '/js/views/BrandOrganizationView.js'
-    ]);
-    r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandOrganizationLoader, auth);
-    r.register('/brand-organization', brandOrganizationLoader, auth);
+    // ── Org: Marca (organizations + assets org; antigua BrandsView unificada aquí) ──
+    const brandViewLoader = this._lazy('BrandOrganizationView', ['/js/views/BrandOrganizationView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
+    r.register('/brands', brandViewLoader, auth);
+    r.register('/brands/:brandId', brandViewLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandViewLoader, auth);
+    r.register('/brand-organization', brandViewLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(

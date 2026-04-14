@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca contenedor + Marca organización).
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -26,10 +26,7 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
-      children: [
-        { label: 'Brand', route: 'brand' },
-        { label: 'Marca organización', route: 'brand-organization' }
-      ]
+      children: [{ label: 'Marca', route: 'brand' }]
     }
   ],
   footer: [
@@ -1597,8 +1594,8 @@ class Navigation {
       '/production': 'PRODUCTION',
       '/vera': 'VERA',
       '/tasks': 'TASKS',
-      '/brand': 'IDENTITY',
-      '/brand-organization': 'IDENTITY',
+      '/brand': 'MARCA',
+      '/brand-organization': 'MARCA',
       '/brands': 'IDENTITY',
       '/products': 'IDENTITY',
       '/product-detail': 'IDENTITY',

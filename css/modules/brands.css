@@ -78,7 +78,7 @@
 
 /* ============================================
    FONDO CON GRADIENTE
-   Cuando hay colores de marca (brand_colors), BrandsView aplica el mismo
+   Cuando hay colores de marca (brand_colors), BrandOrganizationView aplica el mismo
    degradado inteligente vía inline style y además setea en :root:
    --brand-gradient-dynamic (135deg) y --brand-gradient-dynamic-vertical (180deg)
    para que resaltados, barras activas, créditos y selecciones en toda la app los usen.
@@ -93,7 +93,7 @@
 .background-gradient {
     position: absolute;
     inset: 0;
-    /* Fallback neutro hasta que JS pinte (alineado con BrandsView.neutralBg; --warm-* no es paleta de fondo) */
+    /* Fallback neutro hasta que JS pinte (alineado con BrandOrganizationView.neutralBg; --warm-* no es paleta de fondo) */
     background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%);
 }
 
@@ -2016,7 +2016,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-color: var(--glass-border);
 }
 
-/* Integraciones (INFO > Identidad): grid de cards (Google / Meta) — ver BrandsView.renderIntegrationsInto */
+/* Integraciones (INFO > Identidad): grid de cards (Google / Meta) — ver BrandOrganizationView.renderIntegrationsInto */
 .brand-integrations-cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(220px, 1fr));
