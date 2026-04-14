@@ -3930,6 +3930,15 @@ body.entrance-done .landing-header {
     transition: opacity 420ms ease-in-out;
 }
 
+.landing-hero__bg-dim {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: 1;
+}
+
 .landing-hero.is-bg-fading .landing-hero__bg-fade {
     opacity: 0.42;
 }
