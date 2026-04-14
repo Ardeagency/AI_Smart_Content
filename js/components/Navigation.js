@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Task, Video, Flows, Identity.
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Brand en sidebar; otras rutas Identity siguen por URL directa).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -11,7 +11,6 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'section', label: 'Create' },
-    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
@@ -27,13 +26,7 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
-      children: [
-        { label: 'Brand', route: 'brand' },
-        { label: 'Products', route: 'products' },
-        { label: 'Services', route: 'servicios' },
-        { label: 'Audiences', route: 'audiences' },
-        { label: 'Campaigns', route: 'campaigns' }
-      ]
+      children: [{ label: 'Brand', route: 'brand' }]
     }
   ],
   footer: [
