@@ -19,7 +19,6 @@
  * }
  */
 class BaseView {
-  static _templateCache = new Map();
   static _userProfileCache = null;
   static _userProfileCacheTime = 0;
   static _USER_CACHE_TTL = 60000;
@@ -32,65 +31,12 @@ class BaseView {
   }
 
   /**
-   * Cargar template HTML desde la carpeta templates/ (DEPRECATED - usar renderHTML)
-   * @returns {Promise<string>} HTML del template
-   * @deprecated Usar renderHTML() en su lugar para SPA real
-   */
-  async loadTemplate() {
-    if (!this.templatePath) {
-      throw new Error('templatePath no definido. Debes definir templatePath o implementar renderHTML() en la subclase.');
-    }
-
-    try {
-      let url = `/templates/${this.templatePath}`;
-      /* landing.html: no cachear en memoria (evita HTML antiguo sin hero lockup tras deploy). */
-      const skipCache =
-        this.templatePath === 'signin.html' ||
-        this.templatePath === 'tasks.html' ||
-        this.templatePath === 'landing.html';
-      if (!skipCache && BaseView._templateCache.has(this.templatePath)) {
-        return BaseView._templateCache.get(this.templatePath);
-      }
-      if (skipCache) {
-        if (this.templatePath === 'signin.html') url += '?v=logo02';
-        else if (this.templatePath === 'tasks.html') url += '?v=edit';
-        else if (this.templatePath === 'landing.html') url += '?v=20260413-smart-fix';
-      }
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Error cargando template: ${response.status} ${response.statusText}`);
-      }
-      
-      const html = await response.text();
-      if (!skipCache) {
-        BaseView._templateCache.set(this.templatePath, html);
-      }
-      return html;
-    } catch (error) {
-      console.error('Error cargando template:', error);
-      return `
-        <div class="error-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 2rem; text-align: center;">
-          <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error cargando contenido</h2>
-          <p style="color: var(--text-secondary, #a0a0a0);">No se pudo cargar el template: ${this.templatePath}</p>
-        </div>
-      `;
-    }
-  }
-
-  /**
-   * Generar HTML de la vista (método a sobrescribir en subclases)
-   * @returns {string} HTML generado
+   * Generar HTML de la vista. Método abstracto — cada subclase lo sobrescribe
+   * retornando un template literal con el HTML de la vista (patrón SPA, sin templates externos).
+   * @returns {string} HTML de la vista
    */
   renderHTML() {
-    // Si tiene templatePath, usar loadTemplate (compatibilidad hacia atrás)
-    if (this.templatePath) {
-      return this.loadTemplate();
-    }
-    throw new Error('renderHTML() no implementado. Debes implementar este método o definir templatePath.');
+    throw new Error('renderHTML() no implementado. Cada subclase de BaseView debe implementarlo retornando el HTML de la vista.');
   }
 
   /**
@@ -107,18 +53,8 @@ class BaseView {
 
     try {
       await this.onEnter();
-      let html;
-      if (typeof this.renderHTML === 'function' && this.renderHTML !== BaseView.prototype.renderHTML) {
-        html = await this.renderHTML();
-      } else if (this.templatePath) {
-        html = await this.loadTemplate();
-      } else {
-        throw new Error('No se puede renderizar: falta renderHTML() o templatePath');
-      }
-      
-      if (html instanceof Promise) {
-        html = await html;
-      }
+      let html = this.renderHTML();
+      if (html instanceof Promise) html = await html;
       
       this.container.innerHTML = html;
       this.moveModalsToPortal();

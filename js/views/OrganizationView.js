@@ -7,7 +7,7 @@
 class OrganizationView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'organization.html';
+    this.templatePath = null;
     this.supabase = null;
     this.userId = null;
     this.orgId = null;
@@ -20,6 +20,157 @@ class OrganizationView extends BaseView {
     this.storage = { used_mb: 0, max_mb: 0, updated_at: null };
     this.isOwner = false;
     this.canManageMembers = false;
+  }
+
+  renderHTML() {
+    return `
+<div class="organization-container">
+    <div class="organization-header">
+        <h1 class="organization-title">Configuración de la organización</h1>
+        <p class="organization-subtitle">Administra los datos y la información técnica de tu espacio de trabajo.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="organization-tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">Información general</button>
+        <button type="button" class="tab-btn" data-tab="users" role="tab" aria-selected="false">Usuarios y roles</button>
+        <button type="button" class="tab-btn" data-tab="permissions" role="tab" aria-selected="false">Permisos</button>
+        <button type="button" class="tab-btn" data-tab="integrations" role="tab" aria-selected="false">Integraciones</button>
+        <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">Facturación</button>
+    </div>
+
+    <div class="organization-content">
+        <!-- Tab: Información general -->
+        <div class="tab-content active" id="overviewTab" role="tabpanel">
+            <div class="organization-overview">
+                <section class="org-section org-section-form">
+                    <h2>Datos de la organización</h2>
+                    <p class="org-section-desc">Nombre y datos editables del espacio de trabajo.</p>
+                    <form id="orgGeneralForm" class="org-form">
+                        <div class="form-group">
+                            <label for="orgName">Nombre de la organización</label>
+                            <input type="text" id="orgName" name="name" class="form-input" required placeholder="Ej. Mi Empresa">
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
+                            <i class="fas fa-save"></i> Guardar cambios
+                        </button>
+                    </form>
+                </section>
+                <section class="org-section org-section-meta">
+                    <h2>Metadata (solo lectura)</h2>
+                    <p class="org-section-desc">Información técnica según el schema: organizaciones, créditos, almacenamiento.</p>
+                    <div class="org-metadata" id="orgMetadata">
+                        <div class="metadata-row"><span class="metadata-label">ID</span><code class="metadata-value" id="metaId">—</code></div>
+                        <div class="metadata-row"><span class="metadata-label">Estado</span><span class="metadata-value" id="metaStatus">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Creada</span><span class="metadata-value" id="metaCreated">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Propietario (user_id)</span><code class="metadata-value" id="metaOwner">—</code></div>
+                        <div class="metadata-row"><span class="metadata-label">Créditos disponibles</span><span class="metadata-value" id="metaCreditsAvailable">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Créditos totales</span><span class="metadata-value" id="metaCreditsTotal">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Créditos (actualizado)</span><span class="metadata-value" id="metaCreditsUpdated">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Almacenamiento usado (MB)</span><span class="metadata-value" id="metaStorageUsed">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Almacenamiento máximo (MB)</span><span class="metadata-value" id="metaStorageMax">—</span></div>
+                        <div class="metadata-row"><span class="metadata-label">Almacenamiento (actualizado)</span><span class="metadata-value" id="metaStorageUpdated">—</span></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Tab: Usuarios y roles -->
+        <div class="tab-content" id="usersTab" role="tabpanel">
+            <div class="organization-users">
+                <h2>Usuarios y roles</h2>
+                <p class="org-section-desc">Miembros del espacio de trabajo y sus roles. Solo el propietario o un admin pueden invitar o eliminar miembros.</p>
+                <div class="org-members-list" id="orgMembersList">
+                    <!-- Rellenado por JS -->
+                </div>
+                <div class="org-members-actions" id="orgMembersActions">
+                    <button type="button" class="btn btn-secondary" id="orgInviteMemberBtn" title="Añadir miembro (por email)">
+                        <i class="fas fa-user-plus"></i> Añadir miembro
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Permisos (placeholder) -->
+        <div class="tab-content" id="permissionsTab" role="tabpanel">
+            <div class="organization-permissions">
+                <h2>Permisos</h2>
+                <p class="org-placeholder">Configuración de permisos por rol. Próximamente.</p>
+            </div>
+        </div>
+
+        <!-- Tab: Integraciones -->
+        <div class="tab-content" id="integrationsTab" role="tabpanel">
+            <div class="organization-integrations">
+                <h2>Integraciones</h2>
+                <p class="org-section-desc">Estado de todas las integraciones conectadas a esta organización.</p>
+                <section class="org-section">
+                    <h3 class="org-integrations-subtitle">Resumen de organización</h3>
+                    <div class="org-integration-summary" id="orgIntegrationSummary">
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Estado de la organización</span>
+                            <span class="org-summary-value" id="orgSummaryStatus">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Marcas vinculadas</span>
+                            <span class="org-summary-value" id="orgSummaryBrands">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Integraciones activas</span>
+                            <span class="org-summary-value" id="orgSummaryIntegrationsActive">—</span>
+                        </div>
+                        <div class="org-summary-item">
+                            <span class="org-summary-label">Total integraciones</span>
+                            <span class="org-summary-value" id="orgSummaryIntegrationsTotal">—</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="org-section">
+                    <h3 class="org-integrations-subtitle">Plataformas</h3>
+                    <div class="org-integrations-list" id="orgIntegrationsList">
+                        <p class="org-members-empty">Cargando integraciones...</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Tab: Facturación (placeholder) -->
+        <div class="tab-content" id="billingTab" role="tabpanel">
+            <div class="organization-billing">
+                <h2>Facturación / Plan</h2>
+                <p class="org-placeholder">Información de facturación y plan. Próximamente.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Invitar miembro -->
+<div class="modal org-modal" id="orgInviteModal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Añadir miembro</h3>
+            <button type="button" class="modal-close" id="orgInviteModalClose" aria-label="Cerrar">&times;</button>
+        </div>
+        <form id="orgInviteForm">
+            <div class="form-group">
+                <label for="inviteEmail">Email del usuario</label>
+                <input type="email" id="inviteEmail" class="form-input" required placeholder="usuario@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label for="inviteRole">Rol</label>
+                <select id="inviteRole" class="form-select">
+                    <option value="member">Miembro</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="orgInviteCancel">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Añadir</button>
+            </div>
+        </form>
+    </div>
+</div>
+`;
   }
 
   async onEnter() {

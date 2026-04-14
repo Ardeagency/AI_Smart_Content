@@ -5,9 +5,70 @@
 class PlanesView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'planes.html';
+    this.templatePath = null;
     this.selectedPlan = null;
     this.billingPeriod = 'monthly';
+  }
+
+  renderHTML() {
+    return `
+      <div class="planes-main">
+      <div class="planes-layout planes-layout-single">
+          <div class="planes-hero">
+              <div class="planes-hero-background"><div class="planes-background-gradient"></div></div>
+              <div class="planes-hero-content">
+                  <h1 class="planes-hero-title" id="planesBillingTitle">Planes mensuales</h1>
+                  <div class="planes-billing-toggle" role="group" aria-label="Tipo de facturación">
+                      <button type="button" class="planes-toggle-btn active" data-billing="monthly" id="toggleMonthly">Mensual</button>
+                      <button type="button" class="planes-toggle-btn" data-billing="annual" id="toggleAnnual">Anual</button>
+                  </div>
+                  <p class="planes-hero-subtitle">Elige tu plan.</p>
+                  <div class="planes-plans" id="planesList">
+                      <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29" data-price-annual="290">
+                          <h3 class="plan-card-name">Básico</h3>
+                          <div class="plan-card-price">
+                              <span class="price-monthly">$29<span>/mes</span></span>
+                              <span class="price-annual">$290<span>/año</span></span>
+                          </div>
+                          <div class="plan-card-credits">50 créditos</div>
+                          <ul class="plan-card-details">
+                              <li>Uso personal y proyectos pequeños</li>
+                              <li>Soporte por email</li>
+                          </ul>
+                      </div>
+                      <div class="plan-card-small" data-plan="pro" data-credits="150" data-price="79" data-price-annual="790">
+                          <h3 class="plan-card-name">Pro</h3>
+                          <div class="plan-card-price">
+                              <span class="price-monthly">$79<span>/mes</span></span>
+                              <span class="price-annual">$790<span>/año</span></span>
+                          </div>
+                          <div class="plan-card-credits">150 créditos</div>
+                          <ul class="plan-card-details">
+                              <li>Freelancers y equipos pequeños</li>
+                              <li>Uso moderado de contenido</li>
+                          </ul>
+                      </div>
+                      <div class="plan-card-small" data-plan="enterprise" data-credits="500" data-price="199" data-price-annual="1990">
+                          <h3 class="plan-card-name">Enterprise</h3>
+                          <div class="plan-card-price">
+                              <span class="price-monthly">$199<span>/mes</span></span>
+                              <span class="price-annual">$1990<span>/año</span></span>
+                          </div>
+                          <div class="plan-card-credits">500 créditos</div>
+                          <ul class="plan-card-details">
+                              <li>Soporte prioritario</li>
+                              <li>Personalización</li>
+                          </ul>
+                      </div>
+                  </div>
+                  <p class="planes-cta-login">
+                      <a href="/login" class="planes-link-login">Iniciar sesión o registrarse</a>
+                  </p>
+              </div>
+          </div>
+      </div>
+      </div>
+    `;
   }
 
   async onEnter() {}

@@ -6,10 +6,54 @@
 class HogarView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'hogar.html';
+    this.templatePath = null;
     this.supabase = null;
     this.userId = null;
     this.organizations = [];
+  }
+
+  renderHTML() {
+    return `
+      <!--
+        Hogar View - Selector de modo y organizaciones
+        El header es generado por Navigation.js (header-only mode)
+      -->
+      <div class="hogar-container">
+          <div class="hogar-header">
+              <h1 class="hogar-title">Mis Organizaciones</h1>
+              <p class="hogar-subtitle">Selecciona una organización o crea una nueva</p>
+          </div>
+          <div class="organizations-grid" id="organizationsGrid" style="display: none;"></div>
+      </div>
+
+      <!-- Modal para crear/editar organización -->
+      <div class="modal-overlay" id="orgModal" style="display: none;">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h2 id="orgModalTitle">Nueva Organización</h2>
+                  <button class="modal-close" id="orgModalClose">
+                      <i class="fas fa-times"></i>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <form id="orgForm">
+                      <div class="form-group">
+                          <label for="orgName">Nombre de la Organización *</label>
+                          <input type="text" id="orgName" name="name" required
+                                 placeholder="Ej: Mi Empresa S.A.">
+                      </div>
+                      <div class="form-actions">
+                          <button type="button" class="btn btn-secondary" id="orgModalCancel">Cancelar</button>
+                          <button type="submit" class="btn btn-primary" id="orgModalSubmit">
+                              <i class="fas fa-save"></i>
+                              Guardar
+                          </button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+    `;
   }
 
   /**

@@ -6,7 +6,7 @@
 class CampaignsView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'campaigns.html';
+    this.templatePath = null;
     this.supabase = null;
     this.userId = null;
     this.organizationId = null;
@@ -15,6 +15,148 @@ class CampaignsView extends BaseView {
     this.campaigns = [];
     this.audiences = [];
     this.TONO_OPCIONES = ['Premium', 'Emocional', 'Técnico', 'Aspiracional', 'Disruptivo'];
+  }
+
+  renderHTML() {
+    return `
+<!-- Vista principal: Strategic Cards (no tabla) -->
+<div class="campaigns-page" id="campaignsPage">
+  <div class="campaigns-container campaigns-list-view" id="campaignsListContainer">
+    <div class="campaigns-header">
+      <h1 class="campaigns-title">Campañas</h1>
+      <button type="button" class="btn btn-primary" id="createCampaignBtn">
+        <i class="fas fa-plus"></i>
+        Nueva Campaña
+      </button>
+    </div>
+    <div class="campaigns-cards-grid" id="campaignsGrid"></div>
+    <div class="campaigns-empty" id="campaignsEmpty" style="display: none;">
+      <p>Aún no hay campañas. Crea una para definir contexto temporal, objetivos y ángulos de venta.</p>
+      <button type="button" class="btn btn-primary" id="createCampaignEmptyBtn">Nueva Campaña</button>
+    </div>
+  </div>
+
+  <!-- Drawer lateral (panel al hacer click en card) -->
+  <div class="campaign-drawer-overlay" id="campaignDrawerOverlay" aria-hidden="true"></div>
+  <aside class="campaign-drawer" id="campaignDrawer" aria-hidden="true">
+    <div class="campaign-drawer-header">
+      <h2 class="campaign-drawer-title" id="campaignDrawerTitle">Campaña</h2>
+      <button type="button" class="campaign-drawer-close" id="campaignDrawerClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="campaign-drawer-body" id="campaignDrawerBody"></div>
+    <div class="campaign-drawer-footer">
+      <a class="btn btn-primary" id="campaignDrawerVerDetalle">Ver detalle completo</a>
+    </div>
+  </aside>
+
+  <!-- Vista detalle completa (cuando entras a una campaña) -->
+  <div class="campaign-detail-wrapper" id="campaignDetailContainer" style="display: none;">
+    <div class="campaign-detail">
+      <!-- Header estratégico -->
+      <header class="campaign-detail-header-strategic">
+        <div class="campaign-detail-header-top">
+          <a class="btn btn-ghost campaign-detail-back" id="backToCampaignsBtn">
+            <i class="fas fa-arrow-left"></i>
+            Volver a campañas
+          </a>
+          <div class="campaign-detail-actions">
+            <button type="button" class="btn btn-secondary" id="campaignDetailEditBtn"><i class="fas fa-pen"></i> Editar</button>
+            <button type="button" class="btn btn-secondary" id="campaignDetailDuplicateBtn"><i class="fas fa-copy"></i> Duplicar</button>
+            <button type="button" class="btn btn-primary" id="campaignDetailGenerateBtn"><i class="fas fa-magic"></i> Generar contenido</button>
+            <button type="button" class="btn btn-ghost" id="campaignDetailArchiveBtn"><i class="fas fa-archive"></i> Archivar</button>
+          </div>
+        </div>
+        <div class="campaign-detail-hero">
+          <h1 class="campaign-detail-title" id="campaignDetailTitle">Campaña Estratégica</h1>
+          <p class="campaign-detail-audience" id="campaignDetailAudience">Audiencia: —</p>
+          <span class="campaign-detail-status campaign-detail-status-active" id="campaignDetailStatus">Activa</span>
+        </div>
+      </header>
+
+      <div class="campaign-detail-sections">
+        <!-- Sección 1: Contexto Temporal -->
+        <section class="campaign-section campaign-section-temporal" id="sectionContextoTemporal">
+          <h2 class="campaign-section-title">Contexto temporal</h2>
+          <div class="campaign-section-content">
+            <div class="campaign-chips" id="contextoTemporalChips"></div>
+            <div class="campaign-chips-add" id="contextoTemporalAdd" style="display: none;">
+              <input type="text" class="campaign-chip-input" id="contextoTemporalInput" placeholder="Ej: Q1 2026, Lanzamiento..." maxlength="80" />
+              <button type="button" class="btn btn-ghost btn-sm" id="contextoTemporalAddBtn">Añadir</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="contextoTemporalToggleAdd"><i class="fas fa-plus"></i> Añadir</button>
+          </div>
+        </section>
+
+        <!-- Sección 2: Objetivos Estratégicos -->
+        <section class="campaign-section campaign-section-objetivos" id="sectionObjetivos">
+          <h2 class="campaign-section-title">Objetivos estratégicos</h2>
+          <div class="campaign-section-content">
+            <div class="campaign-blocks campaign-blocks-objetivos" id="objetivosEstrategicosBlocks"></div>
+            <div class="campaign-blocks-add" id="objetivosAdd" style="display: none;">
+              <input type="text" class="campaign-block-input" id="objetivosInput" placeholder="Ej: Awareness, Conversión..." maxlength="120" />
+              <button type="button" class="btn btn-ghost btn-sm" id="objetivosAddBtn">Añadir</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="objetivosToggleAdd"><i class="fas fa-plus"></i> Añadir objetivo</button>
+          </div>
+        </section>
+
+        <!-- Sección 3: Ángulos de Venta -->
+        <section class="campaign-section campaign-section-angulos" id="sectionAngulos">
+          <h2 class="campaign-section-title">Ángulos de venta</h2>
+          <p class="campaign-section-desc">Importante para el motor AI.</p>
+          <div class="campaign-section-content">
+            <div class="campaign-mini-cards" id="angulosVentaCards"></div>
+            <div class="campaign-blocks-add" id="angulosAdd" style="display: none;">
+              <input type="text" class="campaign-block-input" id="angulosInput" placeholder="Ej: Innovación, Diseño..." maxlength="80" />
+              <button type="button" class="btn btn-ghost btn-sm" id="angulosAddBtn">Añadir</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="angulosToggleAdd"><i class="fas fa-plus"></i> Añadir ángulo</button>
+          </div>
+        </section>
+
+        <!-- Sección 4: Oferta Principal -->
+        <section class="campaign-section campaign-section-oferta" id="sectionOferta">
+          <h2 class="campaign-section-title">Oferta principal</h2>
+          <div class="campaign-section-content">
+            <div class="campaign-blocks campaign-blocks-oferta" id="ofertaPrincipalBlocks"></div>
+            <div class="campaign-blocks-add" id="ofertaAdd" style="display: none;">
+              <input type="text" class="campaign-block-input" id="ofertaInput" placeholder="Ej: 30% OFF, Edición limitada..." maxlength="120" />
+              <button type="button" class="btn btn-ghost btn-sm" id="ofertaAddBtn">Añadir</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="ofertaToggleAdd"><i class="fas fa-plus"></i> Añadir oferta</button>
+          </div>
+        </section>
+
+        <!-- Sección 5: Productos / Entidades de la campaña (campaign_entities) -->
+        <section class="campaign-section campaign-section-entities" id="sectionEntities">
+          <h2 class="campaign-section-title">Productos / Entidades de la campaña</h2>
+          <p class="campaign-section-desc">Asocia productos o entidades de marca a esta campaña. Marca uno como hero si es el protagonista.</p>
+          <div class="campaign-section-content">
+            <div class="campaign-entities-list" id="campaignEntitiesList"></div>
+            <div class="campaign-entities-add" id="campaignEntitiesAddRow" style="display: none;">
+              <select id="campaignEntitySelect" class="campaign-entity-select">
+                <option value="">Seleccionar entidad...</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="campaignEntityAddBtn">Añadir</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="campaignEntityAddCancel">Cancelar</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="campaignEntitiesToggleAdd"><i class="fas fa-plus"></i> Añadir producto o entidad</button>
+          </div>
+        </section>
+
+        <!-- Sección 6: Tono Modificador -->
+        <section class="campaign-section campaign-section-tono" id="sectionTono">
+          <h2 class="campaign-section-title">Tono modificador</h2>
+          <p class="campaign-section-desc">Puedes elegir varios.</p>
+          <div class="campaign-section-content">
+            <div class="campaign-tono-selector" id="tonoModificadorSelector"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+`;
   }
 
   async onEnter() {

@@ -168,12 +168,6 @@
   to = "/css/:splat"
   status = 200
 
-# Templates HTML - servir directamente
-[[redirects]]
-  from = "/templates/*"
-  to = "/templates/:splat"
-  status = 200
-
 # Recursos/imágenes - servir directamente
 [[redirects]]
   from = "/recursos/*"
@@ -228,12 +222,6 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Hub-Signature-256"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-
-# Headers para templates (cache)
-[[headers]]
-  for = "/templates/*"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
 
 # Headers para favicons (cache largo, son estáticos)
 [[headers]]

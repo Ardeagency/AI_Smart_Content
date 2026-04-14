@@ -6,7 +6,7 @@ const MAX_PRODUCT_IMAGES = 6;
 class ProductsView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'products.html';
+    this.templatePath = null;
     this.productsManager = null;
     this.supabase = null;
     this.userId = null;
@@ -16,6 +16,53 @@ class ProductsView extends BaseView {
     this.productData = null;
     this.productImages = [];
     this.brandName = '';
+  }
+
+  renderHTML() {
+    return `
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <div class="products-container">
+                <!-- Main Content -->
+                <div class="products-main">
+                    <!-- Page Header: estilo imagen (título + All + filtros dropdown + Nuevo Producto) -->
+                    <header class="products-page-header">
+                        <h1 class="products-page-title">Productos</h1>
+                        <div class="products-header-actions">
+                            <div class="products-filters-row" role="group" aria-label="Filtrar por tipo">
+                                <button type="button" class="products-filter-all active" id="productsFilterAll" data-category="todos">All</button>
+                                <div id="categoryTabs" class="products-filter-dropdowns">
+                                    <!-- Filtros por tipo_producto (dropdown style) insertados por JS -->
+                                </div>
+                            </div>
+                            <button class="products-btn-new btn-add-product" id="addProductBtn">
+                                <i class="fas fa-plus"></i>
+                                <span>Nuevo Producto</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Products Gallery -->
+                <div class="products-gallery" id="productsGallery">
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <i class="fas fa-box-open"></i>
+                        <h3>No hay productos</h3>
+                        <p>Aún no has creado ningún producto</p>
+                        <button class="btn-primary" onclick="document.getElementById('addProductBtn').click()">
+                            <i class="fas fa-plus"></i>
+                            Crear Primer Producto
+                        </button>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid" id="productsGrid" style="display: none;">
+                        <!-- Products will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
   }
 
   /**
