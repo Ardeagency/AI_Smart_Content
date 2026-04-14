@@ -471,22 +471,11 @@ class LandingView extends BaseView {
       hero.style.setProperty('--landing-hero-bg-image', `url("${bgUrl}")`);
     };
 
-    let backgroundFadeTimer = null;
-    const BG_FADE_HALF_MS = 210;
-    const ROTATE_INTERVAL_MS = 4000;
-
-    const transitionHeroBackground = (index) => {
-      if (backgroundFadeTimer) {
-        window.clearTimeout(backgroundFadeTimer);
-        backgroundFadeTimer = null;
-      }
-      hero.classList.add('is-bg-fading');
-      backgroundFadeTimer = window.setTimeout(() => {
-        setHeroBackground(index);
-        hero.classList.remove('is-bg-fading');
-        backgroundFadeTimer = null;
-      }, BG_FADE_HALF_MS);
-    };
+    const ROTATE_INTERVAL_MS = 5000;
+    const WORD_TRANSITION_MS = 700;
+    const BG_SWITCH_DELAY_MS = 420;
+    let switchTimer = null;
+    let wrapResetTimer = null;
 
     [realItems[N - 1], realItems[N - 2]].forEach(item => {
       track.insertBefore(item.cloneNode(true), track.firstChild);
@@ -523,24 +512,37 @@ class LandingView extends BaseView {
 
     const timer = window.setInterval(() => {
       if (busy) return;
-      realIdx++;
-      setPos(realIdx, true);
-      transitionHeroBackground(realIdx);
+      busy = true;
+      hero.classList.add('is-bg-fading');
 
-      if (realIdx >= N) {
-        busy = true;
-        window.setTimeout(() => {
-          realIdx = 0;
-          setPos(0, false);
-          transitionHeroBackground(0);
-          busy = false;
-        }, 750);
-      }
+      if (switchTimer) window.clearTimeout(switchTimer);
+      switchTimer = window.setTimeout(() => {
+        realIdx++;
+        setPos(realIdx, true);
+        setHeroBackground(realIdx);
+        hero.classList.remove('is-bg-fading');
+
+        if (realIdx >= N) {
+          if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
+          wrapResetTimer = window.setTimeout(() => {
+            realIdx = 0;
+            setPos(0, false);
+            setHeroBackground(0);
+            busy = false;
+            wrapResetTimer = null;
+          }, WORD_TRANSITION_MS + 50);
+          return;
+        }
+
+        busy = false;
+        switchTimer = null;
+      }, BG_SWITCH_DELAY_MS);
     }, ROTATE_INTERVAL_MS);
 
     this.heroWordsRotatorCleanup = () => {
       window.clearInterval(timer);
-      if (backgroundFadeTimer) window.clearTimeout(backgroundFadeTimer);
+      if (switchTimer) window.clearTimeout(switchTimer);
+      if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
       hero.classList.remove('is-bg-fading');
       hero.style.removeProperty('--landing-hero-bg-image');
     };
