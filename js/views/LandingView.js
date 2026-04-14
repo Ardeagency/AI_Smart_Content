@@ -442,7 +442,8 @@ class LandingView extends BaseView {
 
     const track = document.querySelector('.landing-hero__words-track');
     const hero = document.querySelector('.landing-hero');
-    if (!track || !hero) return;
+    const bgFade = document.querySelector('.landing-hero__bg-fade');
+    if (!track || !hero || !bgFade) return;
 
     const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
     if (realItems.length < 2) return;
@@ -473,7 +474,7 @@ class LandingView extends BaseView {
 
     const ROTATE_INTERVAL_MS = 5000;
     const WORD_TRANSITION_MS = 700;
-    const BG_SWITCH_DELAY_MS = 420;
+    const BG_SWITCH_DELAY_MS = 95;
     let switchTimer = null;
     let wrapResetTimer = null;
 
@@ -513,14 +514,14 @@ class LandingView extends BaseView {
     const timer = window.setInterval(() => {
       if (busy) return;
       busy = true;
-      hero.classList.add('is-bg-fading');
+      bgFade.classList.add('is-active');
 
       if (switchTimer) window.clearTimeout(switchTimer);
       switchTimer = window.setTimeout(() => {
         realIdx++;
         setPos(realIdx, true);
         setHeroBackground(realIdx);
-        hero.classList.remove('is-bg-fading');
+        bgFade.classList.remove('is-active');
 
         if (realIdx >= N) {
           if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
@@ -543,7 +544,7 @@ class LandingView extends BaseView {
       window.clearInterval(timer);
       if (switchTimer) window.clearTimeout(switchTimer);
       if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
-      hero.classList.remove('is-bg-fading');
+      bgFade.classList.remove('is-active');
       hero.style.removeProperty('--landing-hero-bg-image');
     };
   }

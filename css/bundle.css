@@ -3927,7 +3927,7 @@ body.entrance-done .landing-header {
     opacity: 0;
     pointer-events: none;
     z-index: 2;
-    transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 160ms ease-in-out;
 }
 
 .landing-hero__bg-dim {
@@ -3939,8 +3939,8 @@ body.entrance-done .landing-header {
     z-index: 1;
 }
 
-.landing-hero.is-bg-fading .landing-hero__bg-fade {
-    opacity: 0.5;
+.landing-hero__bg-fade.is-active {
+    opacity: 0.28;
 }
 
 /* Capa oscura: solo negro, sin tintes; abajo más opaco, arriba transparente */
