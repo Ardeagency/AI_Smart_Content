@@ -4023,16 +4023,27 @@ body.entrance-done .landing-header {
     justify-content: center;
 }
 
-/* Capas de crossfade: A visible, B oculta; JS las alterna */
+/* Capas de crossfade: fade-in-only — la nueva capa entra encima, la vieja hace snap a 0 */
 .landing-hero__bg-layer {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    will-change: opacity;
-    transition: opacity 700ms cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+    /* solo opacity transiciona; transform lo maneja la animación kenburns */
+    transition: opacity 900ms ease-in-out;
     z-index: 0;
+}
+
+/* Ken Burns: zoom muy sutil que hace la imagen sentirse viva */
+@keyframes hero-bg-kenburns {
+    from { transform: scale(1.0);   }
+    to   { transform: scale(1.06);  }
+}
+
+.landing-hero__bg-layer.is-active-bg {
+    animation: hero-bg-kenburns 5500ms ease-out forwards;
 }
 
 /* Imagen 0 en CSS: se descarga con el stylesheet, antes de que corra JS */

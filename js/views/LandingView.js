@@ -464,25 +464,40 @@ class LandingView extends BaseView {
     const getBgUrl = (index) =>
       heroBackgrounds[((index % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
 
-    // Crossfade state: activeLayer is fully visible, inactiveLayer is hidden
+    // Crossfade state
     let activeLayer = layerA;
     let inactiveLayer = layerB;
+    const FADE_MS = 900;
 
-    // Pre-stage: set next image on the hidden layer so it downloads in background.
-    // Called after each transition — gives ~4s to load before it's needed.
+    // Pre-stage: carga silenciosa de la siguiente imagen en la capa oculta
     const preStageNext = (nextIndex) => {
       inactiveLayer.style.backgroundImage = `url("${getBgUrl(nextIndex)}")`;
     };
 
     const crossfadeTo = (index) => {
       const url = getBgUrl(index);
+
+      // 1. Preparar capa nueva (oculta): imagen + z-index encima + quitar kenburns
       inactiveLayer.style.backgroundImage = `url("${url}")`;
-      void inactiveLayer.offsetHeight;
-      inactiveLayer.style.opacity = '1';
-      activeLayer.style.opacity = '0';
-      [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
-      // After transition settles, silently load the one after next
-      window.setTimeout(() => preStageNext(index + 1), 750);
+      inactiveLayer.style.zIndex = '1';    // nueva ENCIMA siempre
+      activeLayer.style.zIndex = '0';     // vieja DETRÁS
+      inactiveLayer.classList.remove('is-active-bg');
+
+      // 2. Doble rAF: garantiza que el browser pintó el background antes de transicionar
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        // 3. Fade-in de la nueva capa; la vieja se queda opaca debajo (sin ver-a-través)
+        inactiveLayer.style.opacity = '1';
+        inactiveLayer.classList.add('is-active-bg');  // arranca Ken Burns
+
+        // 4. Cuando el fade termina, la vieja ya está cubierta → snap a 0 sin flash
+        window.setTimeout(() => {
+          activeLayer.style.opacity = '0';
+          activeLayer.classList.remove('is-active-bg');
+          [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
+          // Pre-cargar la siguiente imagen mientras la actual está visible
+          window.setTimeout(() => preStageNext(index + 1), 100);
+        }, FADE_MS);
+      }));
     };
 
     const ROTATE_INTERVAL_MS = 5000;
@@ -511,15 +526,18 @@ class LandingView extends BaseView {
       if (!animate) void track.offsetHeight;
     };
 
-    // layerA already has image[0] from CSS — only set inline if CSS didn't apply it
+    // Init: layerA visible encima, layerB oculta detrás
     if (!layerA.style.backgroundImage) {
       layerA.style.backgroundImage = `url("${getBgUrl(0)}")`;
     }
     layerA.style.opacity = '1';
+    layerA.style.zIndex = '1';
+    layerA.classList.add('is-active-bg');
     layerB.style.opacity = '0';
+    layerB.style.zIndex = '0';
     setPos(0, false);
-    // Pre-stage image[1] on the hidden layerB so it's cached before first rotation
-    window.setTimeout(() => preStageNext(1), 200);
+    // Pre-stage imagen[1] mientras se muestra la primera
+    window.setTimeout(() => preStageNext(1), 300);
 
     if (
       typeof window.matchMedia === 'function' &&
@@ -554,6 +572,10 @@ class LandingView extends BaseView {
     this.heroWordsRotatorCleanup = () => {
       window.clearInterval(timer);
       if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
+      [layerA, layerB].forEach(l => {
+        l.classList.remove('is-active-bg');
+        l.style.zIndex = '';
+      });
     };
   }
 
