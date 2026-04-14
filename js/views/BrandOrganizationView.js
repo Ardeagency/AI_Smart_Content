@@ -1,13 +1,88 @@
 /**
  * BrandOrganizationView — misma experiencia visual que BrandsView, pero anclada a la fila
- * `organizations` del workspace activo (no a `brand_containers`). Colores, fuentes,
- * entidades y activos con alcance org siguen por `organization_id`.
+ * `organizations` del workspace activo (no a `brand_containers`). Sin card de entidades de marca.
  */
 class BrandOrganizationView extends BrandsView {
   constructor() {
     super();
     /** @type {object|null} Fila `organizations` */
     this.organizationRow = null;
+  }
+
+  /** Misma plantilla que BrandsView salvo la card «Entidades de marca». */
+  renderHTML() {
+    return `
+<!-- Brands Dashboard (organización) — sin entidades de marca -->
+<div class="brand-dashboard-container" id="brandsListContainer">
+
+    <div class="brand-dashboard-background">
+        <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
+        <div class="background-gradient" id="backgroundGradient"></div>
+    </div>
+
+    <div class="brand-corner-bottom-left">
+        <div class="brand-main-info">
+            <div class="brand-name-row">
+                <h1 class="brand-name-large" id="brandNameLarge"></h1>
+                <div class="brand-status-indicator"><span class="status-dot"></span></div>
+            </div>
+        </div>
+        <div class="brand-market-row">
+            <span class="market-label" id="brandMarketLabel"></span>
+        </div>
+    </div>
+
+    <div class="brand-cards-zone">
+
+        <div class="brand-card card-info">
+            <div class="card-header">
+                <h2 class="card-title">INFO</h2>
+                <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <div class="brand-card card-concept">
+                <div class="card-header">
+                <h2 class="card-title">Visual de marca</h2>
+                </div>
+                <div class="card-content">
+                <div class="visual-section">
+                    <div class="visual-section-label">Brand Colors</div>
+                    <div class="color-swatches" id="brandColorSwatches">
+            </div>
+        </div>
+
+                <div class="visual-section">
+                    <div class="visual-section-label">Typography System</div>
+                    <div class="typography-preview" id="typographyPreview">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="brand-card card-identity">
+            <div class="card-header">
+                <h2 class="card-title">Archivos de identidad</h2>
+            </div>
+            <div class="card-content">
+                <div class="identity-files" id="identityFilesContainer">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+    `;
+  }
+
+  renderCards() {
+    this.applyBrandBackgroundGradient();
+    this.renderBrandColors();
+    this.renderTypography();
+    this.renderIdentityFiles();
+    this.setupFileUpload();
+    this.setupEventListeners();
   }
 
   _mergeOrgIntoShim() {
@@ -137,34 +212,8 @@ class BrandOrganizationView extends BrandsView {
         this.brandAssets = assets || [];
       }
 
-      const { data: entities, error: entitiesError } = await this.supabase
-        .from('brand_entities')
-        .select('*')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: true });
-      if (entitiesError) {
-        console.warn('BrandOrganizationView: brand_entities', entitiesError);
-        this.brandEntities = [];
-        this.brandPlaces = [];
-      } else {
-        this.brandEntities = entities || [];
-        if (this.brandEntities.length > 0) {
-          const entityIds = this.brandEntities.map((e) => e.id);
-          const { data: places, error: placesError } = await this.supabase
-            .from('brand_places')
-            .select('*')
-            .in('entity_id', entityIds)
-            .order('created_at', { ascending: true });
-          if (placesError) {
-            console.warn('BrandOrganizationView: brand_places', placesError);
-            this.brandPlaces = [];
-          } else {
-            this.brandPlaces = places || [];
-          }
-        } else {
-          this.brandPlaces = [];
-        }
-      }
+      this.brandEntities = [];
+      this.brandPlaces = [];
 
       this.brandAudiences = [];
       this.brandColors = await this._queryBrandColorsRows();
