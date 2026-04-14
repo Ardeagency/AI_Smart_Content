@@ -441,9 +441,9 @@ class LandingView extends BaseView {
     }
 
     const track = document.querySelector('.landing-hero__words-track');
-    const hero = document.querySelector('.landing-hero');
-    const bgFade = document.querySelector('.landing-hero__bg-fade');
-    if (!track || !hero || !bgFade) return;
+    const layerA = document.querySelector('.landing-hero__bg-layer--a');
+    const layerB = document.querySelector('.landing-hero__bg-layer--b');
+    if (!track || !layerA || !layerB) return;
 
     const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
     if (realItems.length < 2) return;
@@ -461,21 +461,27 @@ class LandingView extends BaseView {
       'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg'
     ];
 
-    const getBackgroundByIndex = (index) => {
-      if (!heroBackgrounds.length) return null;
-      return heroBackgrounds[((index % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
-    };
+    // Preload all images so transitions are instant when they happen
+    heroBackgrounds.forEach(url => { (new Image()).src = url; });
 
-    const setHeroBackground = (index) => {
-      const bgUrl = getBackgroundByIndex(index);
-      if (!bgUrl) return;
-      hero.style.setProperty('--landing-hero-bg-image', `url("${bgUrl}")`);
+    const getBgUrl = (index) =>
+      heroBackgrounds[((index % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
+
+    // Crossfade state: activeLayer is fully visible, inactiveLayer is hidden
+    let activeLayer = layerA;
+    let inactiveLayer = layerB;
+
+    const crossfadeTo = (index) => {
+      const url = getBgUrl(index);
+      inactiveLayer.style.backgroundImage = `url("${url}")`;
+      void inactiveLayer.offsetHeight; // force paint before transitioning
+      inactiveLayer.style.opacity = '1';
+      activeLayer.style.opacity = '0';
+      [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
     };
 
     const ROTATE_INTERVAL_MS = 5000;
-    const WORD_TRANSITION_MS = 700;
-    const BG_SWITCH_DELAY_MS = 95;
-    let switchTimer = null;
+    const WORD_TRANSITION_MS = 650;
     let wrapResetTimer = null;
 
     [realItems[N - 1], realItems[N - 2]].forEach(item => {
@@ -494,14 +500,17 @@ class LandingView extends BaseView {
     const setPos = (idx, animate) => {
       const h = getRowH();
       track.style.transition = animate
-        ? 'transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1)'
+        ? `transform ${WORD_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
         : 'none';
       track.style.transform = `translateY(${-(idx * h)}px)`;
       if (!animate) void track.offsetHeight;
     };
 
+    // Initialize first frame — no animation, no crossfade flash
+    layerA.style.backgroundImage = `url("${getBgUrl(0)}")`;
+    layerA.style.opacity = '1';
+    layerB.style.opacity = '0';
     setPos(0, false);
-    setHeroBackground(0);
 
     if (
       typeof window.matchMedia === 'function' &&
@@ -514,38 +523,28 @@ class LandingView extends BaseView {
     const timer = window.setInterval(() => {
       if (busy) return;
       busy = true;
-      bgFade.classList.add('is-active');
 
-      if (switchTimer) window.clearTimeout(switchTimer);
-      switchTimer = window.setTimeout(() => {
-        realIdx++;
-        setPos(realIdx, true);
-        setHeroBackground(realIdx);
-        bgFade.classList.remove('is-active');
+      realIdx++;
+      setPos(realIdx, true);   // words animate
+      crossfadeTo(realIdx);    // background crossfades simultaneously
 
-        if (realIdx >= N) {
-          if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
-          wrapResetTimer = window.setTimeout(() => {
-            realIdx = 0;
-            setPos(0, false);
-            setHeroBackground(0);
-            busy = false;
-            wrapResetTimer = null;
-          }, WORD_TRANSITION_MS + 50);
-          return;
-        }
+      if (realIdx >= N) {
+        if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
+        wrapResetTimer = window.setTimeout(() => {
+          realIdx = 0;
+          setPos(0, false);
+          busy = false;
+          wrapResetTimer = null;
+        }, WORD_TRANSITION_MS + 50);
+        return;
+      }
 
-        busy = false;
-        switchTimer = null;
-      }, BG_SWITCH_DELAY_MS);
+      busy = false;
     }, ROTATE_INTERVAL_MS);
 
     this.heroWordsRotatorCleanup = () => {
       window.clearInterval(timer);
-      if (switchTimer) window.clearTimeout(switchTimer);
       if (wrapResetTimer) window.clearTimeout(wrapResetTimer);
-      bgFade.classList.remove('is-active');
-      hero.style.removeProperty('--landing-hero-bg-image');
     };
   }
 
