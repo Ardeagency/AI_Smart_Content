@@ -816,6 +816,16 @@ class BrandstorageView extends BaseView {
     this.setupEventListeners();
   }
 
+  getBrandContainerHref(id) {
+    const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
+    const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
+    if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, orgName);
+      if (prefix) return `${prefix}/brand/${id}`;
+    }
+    return `/brand/${id}`;
+  }
+
   renderBrandStorageLibrary() {
     const grid = (this.container && this.container.querySelector('#brandStorageGrid')) ||
       document.getElementById('brandStorageGrid');
@@ -831,16 +841,6 @@ class BrandstorageView extends BaseView {
       return;
     }
 
-    const makeHref = (id) => {
-      const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
-      const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
-      if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
-        const prefix = window.getOrgPathPrefix(orgId, orgName);
-        if (prefix) return `${prefix}/brand/${id}`;
-      }
-      return `/brand/${id}`;
-    };
-
     grid.innerHTML = rows.map((item) => {
       const name = this.escapeHtml(item.nombre_marca || 'Sin nombre');
       const slogan = this.escapeHtml(String(item.brand_slogan || item.propuesta_valor || '').trim());
@@ -851,14 +851,14 @@ class BrandstorageView extends BaseView {
       const updated = item.updated_at
         ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
-      const href = this.escapeHtml(makeHref(item.id));
+      const href = this.escapeHtml(this.getBrandContainerHref(item.id));
 
       const created = item.created_at
         ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
 
       return `
-        <a class="brand-storage-item" href="${href}" data-route="${href}">
+        <a class="brand-storage-item" href="${href}" data-route="${href}" data-brand-container-id="${this.escapeHtml(item.id)}">
           <div class="brand-storage-item-cover" aria-hidden="true"></div>
           <div class="brand-storage-item-head">
             <div class="brand-storage-item-logo">
@@ -1666,20 +1666,149 @@ class BrandstorageView extends BaseView {
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
-    
-    const infoBtn = container.querySelector('.card-info');
-    if (infoBtn && infoBtn.dataset.brandsInfoClickBound !== '1') {
-      infoBtn.dataset.brandsInfoClickBound = '1';
-      infoBtn.style.cursor = 'pointer';
-      infoBtn.addEventListener('click', () => {
-        this.openInfoPanel();
+
+    container.querySelectorAll('.brand-storage-item').forEach((itemEl) => {
+      if (itemEl.dataset.infoClickBound === '1') return;
+      itemEl.dataset.infoClickBound = '1';
+      itemEl.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const id = String(itemEl.getAttribute('data-brand-container-id') || '').trim();
+        if (!id) return;
+        this.openBrandContainerInfoPanel(id);
       });
+    });
+  }
+
+  renderBrandContainerInfoContent(item) {
+    const name = this.escapeHtml(item?.nombre_marca || 'Sub-marca');
+    const slogan = this.escapeHtml(String(item?.brand_slogan || item?.propuesta_valor || '').trim());
+    const href = this.escapeHtml(this.getBrandContainerHref(item?.id));
+    const updated = item?.updated_at
+      ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+      : null;
+    const created = item?.created_at
+      ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+      : null;
+
+    const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna
+      ? item.visual_dna
+      : {};
+    const logoUrl = String(item?.logo_url || visualDna.logo_url || visualDna.logo || '').trim();
+
+    const logoHtml = logoUrl
+      ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-asset-thumb" loading="lazy" width="56" height="56">`
+      : '<span class="info-asset-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>';
+
+    return `
+      <div class="info-panel-grid">
+        <div class="info-panel-grid__primary">
+          <section class="info-section" aria-labelledby="infoBrandSummaryHeading">
+            <h3 class="info-section-title" id="infoBrandSummaryHeading">Resumen</h3>
+            <ul class="info-asset-list" role="list">
+              <li class="info-asset-row">
+                <div class="info-asset-preview">${logoHtml}</div>
+                <div class="info-asset-main">
+                  <span class="info-asset-name">${name}</span>
+                  ${slogan ? `<span class="info-asset-meta">${slogan}</span>` : '<span class="info-asset-meta">Sin slogan</span>'}
+                </div>
+                <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Abrir sub-marca"><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandMetaHeading">
+          <div class="info-brand-aside-inner">
+            <h3 class="info-section-title" id="infoBrandMetaHeading">Información</h3>
+            <div class="info-brand-fields">
+              ${updated ? `
+              <div class="info-brand-field">
+                <div class="info-brand-field-label">Última actualización</div>
+                <div class="info-brand-aside-lead">${this.escapeHtml(updated)}</div>
+              </div>` : ''}
+              ${created ? `
+              <div class="info-brand-field">
+                <div class="info-brand-field-label">Fecha de creación</div>
+                <div class="info-brand-aside-lead">${this.escapeHtml(created)}</div>
+              </div>` : ''}
+              <div class="info-brand-field">
+                <div class="info-brand-field-label">Acción</div>
+                <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Ir a sub-marca">
+                  <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    `;
+  }
+
+  openBrandContainerInfoPanel(itemId) {
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+    const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
+    const cardsZone = container.querySelector('.brand-cards-zone');
+    if (!dashboardContainer || !cardsZone) return;
+
+    const existing = dashboardContainer.querySelector('.brand-card.card-info.expanded.brand-storage-item-info-panel');
+    if (existing) existing.remove();
+
+    const item = (this.brandContainers || []).find((row) => String(row.id) === String(itemId));
+    if (!item) return;
+
+    const infoCard = document.createElement('div');
+    infoCard.className = 'brand-card card-info expanded brand-storage-item-info-panel';
+    infoCard.innerHTML = `
+      <div class="card-header">
+        <h2 class="card-title">INFO · ${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</h2>
+      </div>
+      <div class="card-content-expanded" id="infoPanelContent">${this.renderBrandContainerInfoContent(item)}</div>
+    `;
+
+    const header = infoCard.querySelector('.card-header');
+    if (header) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'info-close-btn';
+      closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeBrandContainerInfoPanel();
+      });
+      header.appendChild(closeBtn);
     }
 
-    if (localStorage.getItem('brands_open_info') === '1') {
-      localStorage.removeItem('brands_open_info');
-      setTimeout(() => this.openInfoPanel(), 300);
+    this.brandContainerInfoState = { dashboardContainer };
+    dashboardContainer.classList.add('info-mode-secondary');
+    dashboardContainer.appendChild(infoCard);
+    infoCard.style.opacity = '0';
+    infoCard.style.transform = 'scale(0.97) translateY(10px)';
+    requestAnimationFrame(() => {
+      infoCard.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      infoCard.style.opacity = '1';
+      infoCard.style.transform = 'scale(1) translateY(0)';
+    });
+
+    if (typeof this.updateLinksForRouter === 'function') {
+      this.updateLinksForRouter();
     }
+  }
+
+  closeBrandContainerInfoPanel() {
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+    const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
+    const panel = dashboardContainer.querySelector('.brand-card.card-info.expanded.brand-storage-item-info-panel');
+    if (!panel) return;
+
+    panel.style.opacity = '0';
+    panel.style.transform = 'scale(0.97) translateY(-10px)';
+    setTimeout(() => {
+      panel.remove();
+      dashboardContainer.classList.remove('info-mode-secondary');
+      this.brandContainerInfoState = null;
+    }, 220);
   }
 
   // ============================================
