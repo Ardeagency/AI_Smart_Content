@@ -941,8 +941,13 @@ class BrandOrganizationView extends BaseView {
     const root = container?.querySelector('#brandsListContainer');
     if (root) root.classList.toggle('brand-storage-gallery-view', isStorage);
 
+    // card-info solo visible cuando hay exactamente 1 sub-marca
+    const singleSubBrand = !isStorage && (this.brandContainers || []).length === 1;
+    const infoCard = container?.querySelector('.card-info');
+    if (infoCard) infoCard.style.display = singleSubBrand ? '' : 'none';
+
     // Mostrar/ocultar cards exclusivas del modo organización
-    ['card-info', 'card-concept', 'card-identity', 'card-assets'].forEach((cls) => {
+    ['card-concept', 'card-identity', 'card-assets'].forEach((cls) => {
       const card = container?.querySelector(`.${cls}`);
       if (card) card.style.display = isStorage ? 'none' : '';
     });
