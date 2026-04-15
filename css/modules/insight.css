@@ -448,9 +448,10 @@
   background: var(--white-8, rgba(255,255,255,0.06));
 }
 .insight-subnav-btn.active {
-  background: var(--brand-primary-brillo-strong, var(--brillo-active));
-  color: var(--text-primary);
-  border: 1px solid var(--brand-primary, var(--accent-brand));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
   font-weight: 600;
 }
 .insight-subnav-btn i { font-size: 0.9rem; }
