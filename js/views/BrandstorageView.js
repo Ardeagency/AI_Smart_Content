@@ -2002,6 +2002,7 @@ class BrandstorageView extends BaseView {
         label: 'YouTube',
         iconClass: 'fab fa-youtube',
         connected: gOk,
+        oauthProvider: 'google',
         actionHref: gOk ? 'https://www.youtube.com/' : dashboardHref,
         actionExternal: gOk,
         hint: ''
@@ -2011,6 +2012,7 @@ class BrandstorageView extends BaseView {
         label: 'Facebook',
         iconClass: 'fab fa-facebook-f',
         connected: fOk,
+        oauthProvider: 'facebook',
         actionHref: fOk ? 'https://www.facebook.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
@@ -2020,6 +2022,7 @@ class BrandstorageView extends BaseView {
         label: 'Instagram',
         iconClass: 'fab fa-instagram',
         connected: fOk,
+        oauthProvider: 'facebook',
         actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
@@ -2029,6 +2032,7 @@ class BrandstorageView extends BaseView {
         label: 'Analytics',
         iconClass: 'fas fa-chart-line',
         connected: gOk && !!String(ga4Id).trim(),
+        oauthProvider: 'google',
         actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : dashboardHref,
         actionExternal: gOk && !!String(ga4Id).trim(),
         hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
@@ -2049,6 +2053,9 @@ class BrandstorageView extends BaseView {
         const hint = row.hint
           ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
           : '';
+        const actionHtml = row.connected
+          ? `<a class="info-connect-action is-open" ${linkAttrs} aria-label="Abrir ${this.escapeHtml(row.label)}">Abrir</a>`
+          : `<button type="button" class="info-connect-action is-connect" data-connect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-connect-label="${this.escapeHtml(row.label)}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Conectar ${this.escapeHtml(row.label)}">Conectar</button>`;
         return `
           <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
             <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(row.iconClass)}"></i></span>
@@ -2057,7 +2064,7 @@ class BrandstorageView extends BaseView {
               ${hint}
             </div>
             ${linkedIcon}
-            <a class="info-connect-external" ${linkAttrs} aria-label="${row.actionExternal ? `Abrir ${row.label}` : `Ir a Insight para conectar ${row.label}`}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+            ${actionHtml}
           </li>`;
       })
       .join('');
@@ -2340,8 +2347,74 @@ class BrandstorageView extends BaseView {
     return true;
   }
 
+  async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
+    const normalizedProvider = String(provider || '').toLowerCase();
+    const brandId = String(brandContainerId || '').trim();
+    if (!brandId || (normalizedProvider !== 'google' && normalizedProvider !== 'facebook')) return;
+    if (!this.supabase) {
+      alert('Supabase no disponible para conectar integración.');
+      return;
+    }
+
+    const endpoint = normalizedProvider === 'facebook'
+      ? '/api/integrations/facebook/start'
+      : '/api/integrations/google/start';
+
+    try {
+      if (actionButton) {
+        actionButton.disabled = true;
+        actionButton.dataset.originalText = actionButton.textContent || 'Conectar';
+        actionButton.textContent = 'Conectando...';
+      }
+
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('Sesión no válida. Inicia sesión y vuelve a intentar.');
+        return;
+      }
+
+      const returnTo = '/brandstorage';
+      const qs = new URLSearchParams({
+        brand_container_id: brandId,
+        return_to: returnTo
+      });
+      const res = await fetch(`${location.origin}${endpoint}?${qs.toString()}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.authorize_url) {
+        throw new Error(json?.error || `No se pudo iniciar OAuth (${res.status})`);
+      }
+      window.location.href = json.authorize_url;
+    } catch (error) {
+      console.error('BrandstorageView startBrandIntegrationOAuth:', error);
+      alert(error?.message || 'No se pudo conectar la integración.');
+    } finally {
+      if (actionButton) {
+        actionButton.disabled = false;
+        actionButton.textContent = actionButton.dataset.originalText || 'Conectar';
+      }
+    }
+  }
+
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
+
+    panelRoot.querySelectorAll('.info-connect-action.is-connect[data-connect-provider][data-brand-container-id]').forEach((btn) => {
+      if (btn.dataset.boundConnectAction === '1') return;
+      btn.dataset.boundConnectAction = '1';
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const provider = btn.getAttribute('data-connect-provider');
+        const targetBrandId = btn.getAttribute('data-brand-container-id') || brandContainerId;
+        await this.startBrandIntegrationOAuth(provider, targetBrandId, btn);
+      });
+    });
 
     panelRoot.querySelectorAll('.info-brand-single-select[data-brand-field][data-brand-input-type="single-select"]').forEach((wrap) => {
       if (wrap.dataset.boundEditable === '1') return;

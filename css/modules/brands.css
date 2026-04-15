@@ -2454,8 +2454,61 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.85rem;
 }
 
+#infoPanelContent .info-connect-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 86px;
+    height: 2rem;
+    padding: 0 0.7rem;
+    color: inherit;
+    opacity: 0.9;
+    text-decoration: none;
+    border-radius: var(--radius-xs);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+#infoPanelContent .info-connect-action:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.32);
+    transform: translateY(-1px);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-connect-action {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.16);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-connect-action:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.22);
+}
+
+#infoPanelContent .info-connect-action:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}
+
+#infoPanelContent .info-connect-action.is-connect {
+    color: #fff;
+}
+
+#infoPanelContent .info-connect-action.is-open {
+    color: inherit;
+}
+
+/* Compatibilidad para iconos usados en otras secciones del panel INFO */
 #infoPanelContent .info-connect-external {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2rem;
@@ -2464,16 +2517,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.65;
     text-decoration: none;
     border-radius: var(--radius-xs);
-    transition: opacity 0.15s ease, background-color 0.15s ease;
-}
-
-#infoPanelContent .info-connect-external:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-connect-external:hover {
-    background: rgba(0, 0, 0, 0.06);
 }
 
 /* Panel INFO: lista de assets (reemplaza «En la web» / integraciones) */
