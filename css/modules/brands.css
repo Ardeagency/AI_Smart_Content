@@ -1241,7 +1241,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-assets {
-    min-height: 220px;
+    min-height: 0;
+    height: auto;
 }
 
 .identity-files {
@@ -1367,10 +1368,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
+    align-items: stretch;
 }
 
 .assets-file-empty {
-    padding: 0.5rem 0;
+    padding: 0;
+    margin: 0;
+    min-height: 0;
 }
 
 .assets-file-item {

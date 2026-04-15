@@ -828,7 +828,8 @@ class BrandOrganizationView extends BaseView {
     this.renderTypography();
     this.renderIdentityFiles();
     this.renderAssetsFiles();
-    this.setupFileUpload();
+    this.setupIdentityUpload();
+    this.setupAssetsUpload();
     this.setupEventListeners();
   }
 
@@ -1493,23 +1494,45 @@ class BrandOrganizationView extends BaseView {
       return;
     }
 
-    const logoUrl = (this.brandContainerData?.logo_url || '').trim();
-
-    if (!logoUrl) {
-      container.innerHTML = `
-        <div class="identity-file-empty"></div>
-      `;
+    const identityAssets = this.getIdentityAssets();
+    if (!identityAssets.length) {
+      container.innerHTML = '<div class="identity-file-empty"></div>';
       return;
     }
 
-    container.innerHTML = `
-      <div class="identity-file-item identity-file-item--logo">
-        <img src="${this.escapeHtml(logoUrl)}" alt="Logo organización" class="identity-logo-preview" loading="lazy">
-        <div class="identity-file-info">
-          <div class="identity-file-name">Logo de organización</div>
+    container.innerHTML = identityAssets.map((asset) => {
+      const fileName = asset.file_name || 'Archivo identidad';
+      const fileType = String(asset.file_type || '').toLowerCase();
+      const fileUrl = String(asset.file_url || '').trim();
+      const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
+      const preview = isImage && fileUrl
+        ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="identity-logo-preview" loading="lazy">`
+        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+      return `
+        <div class="identity-file-item identity-file-item--logo" data-identity-asset-id="${asset.id}">
+          <div class="assets-file-preview">${preview}</div>
+          <div class="identity-file-info">
+            <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
+          </div>
+          <div class="assets-file-actions">
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir archivo identidad"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar archivo identidad">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }).join('');
+
+    container.querySelectorAll('[data-remove-asset-id]').forEach((btn) => {
+      if (btn.dataset.assetBound === '1') return;
+      btn.dataset.assetBound = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.removeAsset(btn.getAttribute('data-remove-asset-id'));
+      });
+    });
   }
 
   renderAssetsFiles() {
@@ -1517,7 +1540,8 @@ class BrandOrganizationView extends BaseView {
                       document.getElementById('assetsFilesContainer');
     if (!container) return;
 
-    const assets = this.brandAssets || [];
+    const identityIds = new Set(this.getIdentityAssets().map((a) => a.id));
+    const assets = (this.brandAssets || []).filter((a) => !identityIds.has(a.id));
     if (!assets.length) {
       container.innerHTML = `
         <div class="assets-file-empty"></div>
@@ -1565,6 +1589,16 @@ class BrandOrganizationView extends BaseView {
         e.stopPropagation();
         this.removeAsset(btn.getAttribute('data-remove-asset-id'));
       });
+    });
+  }
+
+  getIdentityAssets() {
+    return (this.brandAssets || []).filter((asset) => {
+      if (!asset || !asset.id) return false;
+      const assetType = String(asset.asset_type || '').toLowerCase();
+      if (assetType === 'identity') return true;
+      const path = String(asset.storage_path || '').toLowerCase();
+      return path.includes('/identity/');
     });
   }
 
@@ -2305,6 +2339,73 @@ class BrandOrganizationView extends BaseView {
     }
   }
 
+  async uploadIdentityFile(file) {
+    if (!this.supabase || !this.organizationRow) return;
+    const orgId = this.organizationRow.id;
+    try {
+      const fileExt = (file.name.split('.').pop() || 'bin').toLowerCase();
+      const fileName = `identity_${orgId}_${Date.now()}.${fileExt}`;
+      const filePath = `organizations/${orgId}/identity/${fileName}`;
+      const bucket = 'brand-core';
+
+      const { error: uploadError } = await this.supabase.storage.from(bucket).upload(filePath, file, {
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl }
+      } = this.supabase.storage.from(bucket).getPublicUrl(filePath);
+
+      const { data: insertedAsset, error: insertError } = await this.supabase
+        .from('brand_assets')
+        .insert({
+          organization_id: orgId,
+          asset_scope: 'organization',
+          asset_type: 'identity',
+          brand_container_id: null,
+          bucket,
+          storage_path: filePath,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: file.type,
+          file_size: file.size
+        })
+        .select('id')
+        .single();
+      if (insertError) throw insertError;
+
+      // Registro base en ai_brand_vectors para que el pipeline de IA tenga fuente del archivo.
+      // Si falla, no bloquea el upload del asset.
+      const { error: vectorError } = await this.supabase.from('ai_brand_vectors').insert({
+        organization_id: orgId,
+        brand_container_id: null,
+        source_bucket: bucket,
+        source_path: filePath,
+        source_type: file.type || 'file',
+        chunk_index: 0,
+        content: `Archivo de identidad: ${file.name}`,
+        metadata: {
+          asset_id: insertedAsset?.id || null,
+          file_name: file.name,
+          origin: 'brand-identity-upload',
+          vector_status: 'pending'
+        }
+      });
+      if (vectorError) {
+        console.warn('BrandOrganizationView ai_brand_vectors:', vectorError);
+      }
+
+      await this._reloadAssets();
+      this.renderIdentityFiles();
+      this.renderAssetsFiles();
+    } catch (error) {
+      console.error('BrandOrganizationView uploadIdentityFile:', error);
+      alert('Error al subir archivo de identidad.');
+    }
+  }
+
   async removeAsset(assetId) {
     if (!this.supabase || !assetId) return;
     const asset = (this.brandAssets || []).find((a) => a.id === assetId);
@@ -2461,7 +2562,34 @@ class BrandOrganizationView extends BaseView {
     }
   }
 
-  setupFileUpload() {
+  setupIdentityUpload() {
+    const container = document.getElementById('identityFilesContainer');
+    if (!container) return;
+
+    let uploadBtn = container.querySelector('.identity-upload-btn');
+    if (!uploadBtn) {
+      uploadBtn = document.createElement('button');
+      uploadBtn.className = 'file-upload-btn identity-upload-btn';
+      uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
+      uploadBtn.style.marginTop = '1rem';
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.style.display = 'none';
+      fileInput.multiple = true;
+      fileInput.accept = 'image/*,application/pdf,.svg,.ai,.eps,.psd';
+      fileInput.addEventListener('change', (e) => {
+        Array.from(e.target.files).forEach((file) => this.uploadIdentityFile(file));
+        fileInput.value = '';
+      });
+
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      container.appendChild(fileInput);
+      container.appendChild(uploadBtn);
+    }
+  }
+
+  setupAssetsUpload() {
     const container = document.getElementById('assetsFilesContainer');
     if (!container) return;
 
