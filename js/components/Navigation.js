@@ -304,7 +304,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1662,9 +1662,6 @@ class Navigation {
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
-      '/audiences': 'IDENTITY',
-      '/marketing': 'IDENTITY',
-      '/campaigns': 'IDENTITY',
       '/content': 'IDENTITY',
       '/video': 'VIDEO',
       '/organization': 'SETTINGS',

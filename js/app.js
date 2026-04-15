@@ -161,7 +161,7 @@ class App {
       }
     };
 
-    /** /insight, /brain, /living, /historial → /dashboard, /vera, /production (misma org si aplica). */
+    /** /insight, /brain, /living, /historial, /audiences, /marketing, /campaigns → destinos legacy (misma org si aplica). */
     const legacyRouteRedirectView = class extends (window.BaseView || class {}) {
       async render() {
         const q = window.location.search || '';
@@ -176,6 +176,12 @@ class App {
           target = '/production';
         } else if (path.endsWith('/living') || path.endsWith('/historial')) {
           target = path.replace(/\/(living|historial)$/, '/production');
+        } else if (/\/audiences(\/|$)/.test(path)) {
+          target = path.replace(/\/audiences(\/.*)?$/, '/dashboard');
+        } else if (/\/marketing(\/|$)/.test(path)) {
+          target = path.replace(/\/marketing(\/.*)?$/, '/dashboard');
+        } else if (/\/campaigns(\/|$)/.test(path)) {
+          target = path.replace(/\/campaigns(\/.*)?$/, '/dashboard');
         }
         const c = document.getElementById('app-container');
         if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
@@ -278,19 +284,17 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/brain', legacyRouteRedirectView, auth);
     r.register('/brain', legacyRouteRedirectView, auth);
 
-    // ── Org: Audiences ──
-    const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/audiences', audiencesLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/audiences/:audienceId', audiencesLoader, auth);
-    r.register('/audiences', audiencesLoader, auth);
-
-    // ── Org: Campaigns ──
-    const campaignsLoader = this._lazy('CampaignsView', ['/js/views/CampaignsView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/marketing', campaignsLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/campaigns', campaignsLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/campaigns/:campaignId', campaignsLoader, auth);
-    r.register('/campaigns', campaignsLoader, auth);
-    r.register('/marketing', campaignsLoader, auth);
+    // ── Audiences / Campaigns / Marketing: vistas retiradas → redirección legacy ──
+    r.register('/org/:orgIdShort/:orgNameSlug/audiences', legacyRouteRedirectView, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/audiences/:audienceId', legacyRouteRedirectView, auth);
+    r.register('/audiences', legacyRouteRedirectView, auth);
+    r.register('/audiences/:audienceId', legacyRouteRedirectView, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/marketing', legacyRouteRedirectView, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/campaigns', legacyRouteRedirectView, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/campaigns/:campaignId', legacyRouteRedirectView, auth);
+    r.register('/campaigns', legacyRouteRedirectView, auth);
+    r.register('/campaigns/:campaignId', legacyRouteRedirectView, auth);
+    r.register('/marketing', legacyRouteRedirectView, auth);
 
     // ── Org: Content ──
     const contentLoader = this._lazy('ContentView', ['/js/views/ContentView.js']);
