@@ -162,17 +162,6 @@ class BrandOrganizationView extends BaseView {
             </div>
         </div>
 
-        <!-- Sub-marcas: se activa cuando hay 1+ brand_containers -->
-        <div class="brand-card card-sub-brands" id="brandSubBrandsCard" style="display:none">
-            <div class="card-header">
-                <h2 class="card-title">Sub-marcas</h2>
-                <span class="card-title-counter" id="brandSubBrandsCount"></span>
-            </div>
-            <div class="card-content" id="brandSubBrandsContent">
-                <!-- Renderizado dinámico: galería o botón INFO -->
-            </div>
-        </div>
-
     </div>
 
 </div>
@@ -961,7 +950,6 @@ class BrandOrganizationView extends BaseView {
       this.setupAssetsUpload();
     }
 
-    this.renderSubBrandsCard();
     this.setupEventListeners();
   }
 
@@ -1004,109 +992,6 @@ class BrandOrganizationView extends BaseView {
     delegate.brandColors = this.brandColors || [];
     delegate.brandFonts = this.brandFonts || [];
     delegate._dataLoaded = true;
-  }
-
-  /**
-   * Renderiza la card de sub-marcas:
-   * - isStorageMode o múltiples sub-marcas → galería delegada a BrandstorageView
-   * - 1 sub-marca → botón INFO inline
-   * - 0 sub-marcas (modo org) → card oculta
-   */
-  renderSubBrandsCard() {
-    const card = document.getElementById('brandSubBrandsCard');
-    const content = document.getElementById('brandSubBrandsContent');
-    const countEl = document.getElementById('brandSubBrandsCount');
-    if (!card || !content) return;
-
-    const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
-    const isStorageMode = this._isStorageMode();
-
-    if (!containers.length && !isStorageMode) {
-      card.style.display = 'none';
-      return;
-    }
-
-    card.style.display = '';
-    if (countEl) countEl.textContent = String(containers.length);
-
-    if (isStorageMode || containers.length > 1) {
-      // Modo galería: delegar renderizado al BrandstorageView delegate
-      content.innerHTML = '<div class="brand-storage-grid" id="brandStorageGrid"></div>';
-
-      const delegate = this._getOrCreateBsDelegate();
-      if (delegate) {
-        this._syncDelegate(delegate);
-        delegate.renderBrandStorageLibrary();
-
-        // Rebindear clicks para usar nuestro openSubBrandInfoPanel
-        const grid = document.getElementById('brandStorageGrid');
-        if (grid) {
-          grid.querySelectorAll('.brand-storage-item[data-brand-container-id]').forEach((itemEl) => {
-            const clone = itemEl.cloneNode(true);
-            itemEl.replaceWith(clone);
-            clone.addEventListener('click', () => {
-              const id = String(clone.getAttribute('data-brand-container-id') || '').trim();
-              if (id) this.openSubBrandInfoPanel(id);
-            });
-          });
-        }
-      } else {
-        content.innerHTML = containers.length
-          ? containers.map((item) => `
-            <button type="button" class="brand-storage-item" data-brand-container-id="${this.escapeHtml(String(item.id))}">
-              <span>${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</span>
-            </button>`).join('')
-          : '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
-      }
-    } else if (containers.length === 1) {
-      // Modo único: mostrar nombre + botón INFO
-      const item = containers[0];
-      let logoUrl = '';
-      try {
-        const vdna = item.visual_dna;
-        const meta = typeof vdna === 'string' ? JSON.parse(vdna) : (vdna || {});
-        logoUrl = (meta.logo_url || meta.logo || '').trim();
-      } catch (_) {}
-
-      content.innerHTML = `
-        <div class="sub-brand-single-row">
-          <div class="sub-brand-single-identity">
-            ${logoUrl
-              ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="sub-brand-single-logo" loading="lazy">`
-              : `<div class="sub-brand-single-logo sub-brand-single-logo--empty"><i class="fas fa-tag" aria-hidden="true"></i></div>`
-            }
-            <span class="sub-brand-single-name">${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</span>
-          </div>
-          <button type="button" class="sub-brand-info-btn" data-sub-brand-id="${this.escapeHtml(String(item.id || ''))}">
-            <i class="fas fa-info-circle" aria-hidden="true"></i>
-            INFO
-          </button>
-        </div>
-      `;
-
-      const infoBtn = content.querySelector('.sub-brand-info-btn');
-      if (infoBtn) {
-        infoBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = infoBtn.getAttribute('data-sub-brand-id');
-          if (id) this.openSubBrandInfoPanel(id);
-        });
-      }
-    } else {
-      // Storage mode activo pero sin sub-marcas
-      content.innerHTML = '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
-    }
-  }
-
-  /**
-   * Abre el panel INFO de una sub-marca usando el delegate BrandstorageView.
-   * @param {string|number} itemId - ID del brand_container
-   */
-  openSubBrandInfoPanel(itemId) {
-    const delegate = this._getOrCreateBsDelegate();
-    if (!delegate) return;
-    this._syncDelegate(delegate);
-    delegate.openBrandContainerInfoPanel(itemId);
   }
 
   renderBrandEntities() {
