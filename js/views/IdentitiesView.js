@@ -1,7 +1,7 @@
 /**
- * IdentitiesView — Gestión exclusiva de brand_entities.
- * No incluye páginas/listados de productos o servicios.
- * Solo se mantiene Product Detail como vista independiente.
+ * IdentitiesView — Secciones de servicios y productos.
+ * - Servicios: carrusel horizontal
+ * - Productos: galeria masonry (estilo Production)
  */
 class IdentitiesView extends BaseView {
   constructor() {
@@ -10,31 +10,44 @@ class IdentitiesView extends BaseView {
     this.supabase = null;
     this.userId = null;
     this.organizationId = null;
-    this.entities = [];
+    this.services = [];
+    this.products = [];
+    this.productImageById = {};
+    this._onResizeBound = null;
   }
 
   renderHTML() {
     return `
 <div class="identities-page" id="identitiesPage">
-
-  <!-- Vista lista -->
-  <div class="identities-list-view" id="identitiesListView">
-    <div class="identities-header">
-      <h1 class="identities-title">Identities</h1>
-      <button type="button" class="btn btn-primary" id="addIdentityBtn">
-        <i class="fas fa-plus"></i> Nueva Identidad
-      </button>
-    </div>
-    <div class="identities-grid" id="identitiesGrid"></div>
-    <div class="identities-empty" id="identitiesEmpty" style="display:none;">
-      <i class="fas fa-layer-group"></i>
-      <p>No hay identidades registradas en esta organización.</p>
-      <button type="button" class="btn btn-primary" id="addIdentityEmptyBtn">
-        <i class="fas fa-plus"></i> Crear primera identidad
-      </button>
-    </div>
+  <div class="identities-header">
+    <h1 class="identities-title">Identities</h1>
   </div>
 
+  <section class="identities-section">
+    <div class="identities-section-head">
+      <h2 class="identities-section-title">Servicios</h2>
+      <span class="identities-section-count" id="servicesCount">0</span>
+    </div>
+    <div class="identities-services-carousel-wrap">
+      <div class="identities-services-carousel" id="identitiesServicesCarousel"></div>
+    </div>
+    <div class="identities-empty" id="servicesEmpty" style="display:none;">
+      <i class="fas fa-concierge-bell"></i>
+      <p>No hay servicios para esta organizacion.</p>
+    </div>
+  </section>
+
+  <section class="identities-section">
+    <div class="identities-section-head">
+      <h2 class="identities-section-title">Productos</h2>
+      <span class="identities-section-count" id="productsCount">0</span>
+    </div>
+    <div class="identities-products-masonry" id="identitiesProductsMasonry"></div>
+    <div class="identities-empty" id="productsEmpty" style="display:none;">
+      <i class="fas fa-box-open"></i>
+      <p>No hay productos para esta organizacion.</p>
+    </div>
+  </section>
 </div>`;
   }
 
@@ -58,14 +71,11 @@ class IdentitiesView extends BaseView {
   async render() {
     await super.render();
     await this._initSupabase();
-
-    await this._renderList();
+    await this._loadData();
+    this._renderServices();
+    this._renderProductsMasonry();
     this._setupEventListeners();
   }
-
-  // ─────────────────────────────────────────────
-  // Supabase
-  // ─────────────────────────────────────────────
 
   async _initSupabase() {
     try {
@@ -81,239 +91,180 @@ class IdentitiesView extends BaseView {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // Lista de entidades
-  // ─────────────────────────────────────────────
+  async _loadData() {
+    if (!this.supabase || !this.organizationId) {
+      this.services = [];
+      this.products = [];
+      this.productImageById = {};
+      return;
+    }
 
-  async _loadEntities() {
-    if (!this.supabase || !this.organizationId) return [];
     try {
-      const { data, error } = await this.supabase
-        .from('brand_entities')
-        .select('id, name, entity_type, description, price, currency, metadata, created_at')
-        .eq('organization_id', this.organizationId)
-        .order('name');
-      if (error) throw error;
-      this.entities = data || [];
-      return this.entities;
+      const [servicesRes, productsRes] = await Promise.all([
+        this.supabase
+          .from('services')
+          .select('id, entity_id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: false }),
+        this.supabase
+          .from('products')
+          .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (servicesRes.error) throw servicesRes.error;
+      if (productsRes.error) throw productsRes.error;
+
+      this.services = servicesRes.data || [];
+      this.products = productsRes.data || [];
+
+      const productIds = this.products.map((p) => p.id);
+      this.productImageById = {};
+      if (productIds.length) {
+        const { data: imagesData, error: imagesError } = await this.supabase
+          .from('product_images')
+          .select('product_id, image_url, image_order')
+          .in('product_id', productIds)
+          .order('image_order', { ascending: true });
+        if (imagesError) throw imagesError;
+        (imagesData || []).forEach((img) => {
+          if (!this.productImageById[img.product_id]) {
+            this.productImageById[img.product_id] = img.image_url;
+          }
+        });
+      }
     } catch (e) {
-      console.error('IdentitiesView _loadEntities:', e);
-      return [];
+      console.error('IdentitiesView _loadData:', e);
+      this.services = [];
+      this.products = [];
+      this.productImageById = {};
     }
   }
 
-  async _renderList() {
-    await this._loadEntities();
+  _renderServices() {
+    const carousel = document.getElementById('identitiesServicesCarousel');
+    const empty = document.getElementById('servicesEmpty');
+    const count = document.getElementById('servicesCount');
+    if (!carousel) return;
 
-    const grid = document.getElementById('identitiesGrid');
-    const empty = document.getElementById('identitiesEmpty');
-    if (!grid) return;
+    if (count) count.textContent = String(this.services.length || 0);
 
-    if (!this.entities.length) {
-      grid.innerHTML = '';
+    if (!this.services.length) {
+      carousel.innerHTML = '';
       if (empty) empty.style.display = 'flex';
       return;
     }
     if (empty) empty.style.display = 'none';
 
-    grid.innerHTML = this.entities.map(entity => {
-      const typeLabel = this._entityTypeLabel(entity.entity_type);
-      const priceLabel = entity.price != null
-        ? `<span class="identity-card-price">${entity.price} ${entity.currency || 'USD'}</span>`
-        : '';
+    carousel.innerHTML = this.services.map((s) => {
+      const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';
+      const tags = (s.beneficios_principales || []).slice(0, 3);
       return `
-        <article class="identity-card" data-entity-id="${entity.id}" role="button" tabindex="0" aria-label="${this.escapeHtml(entity.name)}">
-          <div class="identity-card-inner">
-            <div class="identity-card-top">
-              <span class="identity-type-badge identity-type-${this.escapeHtml(entity.entity_type || 'other')}">${this.escapeHtml(typeLabel)}</span>
-              ${priceLabel}
-            </div>
-            <h3 class="identity-card-name">${this.escapeHtml(entity.name)}</h3>
-            ${entity.description ? `<p class="identity-card-desc">${this.escapeHtml(entity.description)}</p>` : ''}
-            <div class="identity-card-stats">
-              <span class="identity-card-stat"><i class="fas fa-fingerprint"></i> ${this.escapeHtml(typeLabel)}</span>
-            </div>
+        <article class="identities-service-card">
+          <h3 class="identities-service-title">${this.escapeHtml(s.nombre_servicio || 'Servicio')}</h3>
+          ${s.descripcion_servicio ? `<p class="identities-service-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : ''}
+          <div class="identities-service-meta">
+            ${price ? `<span class="identities-service-price">${this.escapeHtml(price)}</span>` : ''}
+            ${s.duracion_estimada ? `<span class="identities-service-duration"><i class="fas fa-clock"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
           </div>
-          <div class="identity-card-actions">
-            <button type="button" class="btn btn-ghost btn-sm js-edit-identity" data-id="${entity.id}">
-              <i class="fas fa-pen"></i>
-            </button>
-            <button type="button" class="btn btn-ghost btn-danger btn-sm js-delete-identity" data-id="${entity.id}">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </article>`;
+          ${tags.length ? `<div class="identities-service-tags">${tags.map((t) => `<span class="service-tag">${this.escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        </article>
+      `;
     }).join('');
+  }
 
-    grid.querySelectorAll('.js-edit-identity').forEach(btn => {
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        const entity = this.entities.find(e => e.id === id);
-        if (entity) this._editEntity(entity);
-      });
+  _getMasonryColumns() {
+    const w = window.innerWidth || 1200;
+    if (w >= 1280) return 5;
+    if (w >= 1024) return 4;
+    if (w >= 768) return 3;
+    return 2;
+  }
+
+  _renderProductsMasonry() {
+    const container = document.getElementById('identitiesProductsMasonry');
+    const empty = document.getElementById('productsEmpty');
+    const count = document.getElementById('productsCount');
+    if (!container) return;
+
+    if (count) count.textContent = String(this.products.length || 0);
+
+    if (!this.products.length) {
+      container.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    const colsCount = this._getMasonryColumns();
+    const cols = Array.from({ length: colsCount }, () => []);
+    this.products.forEach((p, i) => {
+      cols[i % colsCount].push(this._renderProductCard(p, i));
     });
-    grid.querySelectorAll('.js-delete-identity').forEach(btn => {
-      btn.addEventListener('click', async (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const id = btn.getAttribute('data-id');
-        if (id) await this._deleteEntity(id);
+
+    container.innerHTML = `
+      <div class="identities-masonry-grid">
+        ${cols.map((col) => `<div class="identities-masonry-column">${col.join('')}</div>`).join('')}
+      </div>
+    `;
+
+    container.querySelectorAll('.identity-product-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const productId = card.getAttribute('data-product-id');
+        const entityId = card.getAttribute('data-entity-id');
+        if (!productId || !entityId || !window.router) return;
+        const orgId = this.routeParams?.orgId;
+        const orgSlug = this.routeParams?.orgNameSlug;
+        let url;
+        if (orgId && orgSlug && typeof window.getOrgPathPrefix === 'function') {
+          url = `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${entityId}/${productId}`;
+        } else if (orgId && orgSlug) {
+          url = `/org/${orgId}/${orgSlug}/product-detail/${entityId}/${productId}`;
+        } else {
+          url = `/product-detail/${entityId}/${productId}`;
+        }
+        window.router.navigate(url, true);
       });
     });
   }
 
-  // ─────────────────────────────────────────────
-  // CRUD de entidades
-  // ─────────────────────────────────────────────
-
-  _buildEntityModalHtml(title, data = {}) {
-    const monedas = ['USD', 'EUR', 'MXN', 'COP', 'ARS', 'CLP'];
-    const monedaOpts = monedas.map(m => `<option value="${m}" ${(data.currency || 'USD') === m ? 'selected' : ''}>${m}</option>`).join('');
-    const entityTypes = [
-      { value: 'persona', label: 'Persona' },
-      { value: 'empresa', label: 'Empresa' },
-      { value: 'marca', label: 'Marca' },
-      { value: 'product', label: 'Producto' },
-      { value: 'persona_juridica', label: 'Persona Jurídica' },
-      { value: 'other', label: 'Otro' },
-    ];
-    const typeOpts = entityTypes.map(t =>
-      `<option value="${t.value}" ${(data.entity_type || 'other') === t.value ? 'selected' : ''}>${t.label}</option>`
-    ).join('');
-
+  _renderProductCard(p, i) {
+    const imageUrl = this.productImageById[p.id] || '';
+    const price = p.precio_producto != null ? `${p.precio_producto} ${p.moneda || 'USD'}` : '';
+    const variant = i % 5;
     return `
-      <div class="modal-overlay" id="identityEntityModal">
-        <div class="modal">
-          <div class="modal-header">
-            <h3>${this.escapeHtml(title)}</h3>
-            <button type="button" class="modal-close" id="iemClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label for="iem_nombre">Nombre <span class="form-required">*</span></label>
-              <input type="text" id="iem_nombre" class="form-input" required placeholder="Ej: Marca Principal" value="${this.escapeHtml(data.name || '')}">
-            </div>
-            <div class="form-group">
-              <label for="iem_type">Tipo de entidad</label>
-              <select id="iem_type" class="form-input">${typeOpts}</select>
-            </div>
-            <div class="form-group">
-              <label for="iem_desc">Descripción</label>
-              <textarea id="iem_desc" class="form-input" rows="3" placeholder="Describe esta identidad">${this.escapeHtml(data.description || '')}</textarea>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="iem_precio">Precio (opcional)</label>
-                <input type="number" id="iem_precio" class="form-input" step="any" placeholder="0" value="${data.price != null ? data.price : ''}">
-              </div>
-              <div class="form-group">
-                <label for="iem_moneda">Moneda</label>
-                <select id="iem_moneda" class="form-input">${monedaOpts}</select>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-ghost" id="iemCancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="iemSubmit">Guardar</button>
+      <article class="identity-product-card identity-product-card--masonry-${variant}" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
+        <div class="identity-product-card-image-wrap">
+          ${imageUrl
+            ? `<img class="identity-product-card-image" src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(p.nombre_producto || 'Producto')}" loading="lazy">`
+            : `<div class="identity-product-card-image identity-product-card-image--empty"><i class="fas fa-image"></i></div>`
+          }
+        </div>
+        <div class="identity-product-card-body">
+          <h3 class="identity-product-card-title">${this.escapeHtml(p.nombre_producto || 'Producto')}</h3>
+          ${p.descripcion_producto ? `<p class="identity-product-card-desc">${this.escapeHtml(p.descripcion_producto)}</p>` : ''}
+          <div class="identity-product-card-meta">
+            ${price ? `<span class="identity-product-card-price">${this.escapeHtml(price)}</span>` : ''}
+            ${p.tipo_producto ? `<span class="identity-product-card-type">${this.escapeHtml(p.tipo_producto)}</span>` : ''}
           </div>
         </div>
-      </div>`;
+      </article>
+    `;
   }
-
-  _collectEntityModalData() {
-    const precioRaw = document.getElementById('iem_precio')?.value;
-    return {
-      name: document.getElementById('iem_nombre')?.value?.trim() || '',
-      entity_type: document.getElementById('iem_type')?.value || 'other',
-      description: document.getElementById('iem_desc')?.value?.trim() || null,
-      price: precioRaw ? parseFloat(precioRaw) : null,
-      currency: document.getElementById('iem_moneda')?.value || 'USD',
-    };
-  }
-
-  _openEntityModal(title, data, onSubmit) {
-    document.getElementById('identityEntityModal')?.remove();
-    document.body.insertAdjacentHTML('beforeend', this._buildEntityModalHtml(title, data));
-    const closeModal = () => document.getElementById('identityEntityModal')?.remove();
-    document.getElementById('iemClose')?.addEventListener('click', closeModal);
-    document.getElementById('iemCancel')?.addEventListener('click', closeModal);
-    document.getElementById('iemSubmit')?.addEventListener('click', async () => {
-      const payload = this._collectEntityModalData();
-      if (!payload.name) { this._notify('El nombre es obligatorio.', 'error'); return; }
-      await onSubmit(payload);
-      closeModal();
-    });
-  }
-
-  async _createEntity() {
-    if (!this.supabase || !this.organizationId) return;
-    this._openEntityModal('Nueva Identidad', {}, async (payload) => {
-      const { error } = await this.supabase.from('brand_entities').insert({
-        ...payload,
-        organization_id: this.organizationId,
-      });
-      if (error) { this._notify('Error al crear la identidad.', 'error'); return; }
-      this._notify('Identidad creada', 'success');
-      await this._renderList();
-    });
-  }
-
-  async _editEntity(entity) {
-    if (!this.supabase) return;
-    this._openEntityModal('Editar Identidad', entity, async (payload) => {
-      const { error } = await this.supabase
-        .from('brand_entities')
-        .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq('id', entity.id);
-      if (error) { this._notify('Error al guardar.', 'error'); return; }
-      this._notify('Cambios guardados', 'success');
-      await this._renderList();
-    });
-  }
-
-  async _deleteEntity(entityId) {
-    if (!confirm('¿Eliminar esta identidad? Esta acción no se puede deshacer.')) return;
-    if (!this.supabase) return;
-    const { error } = await this.supabase.from('brand_entities').delete().eq('id', entityId);
-    if (error) { this._notify('Error al eliminar.', 'error'); return; }
-    this._notify('Identidad eliminada', 'success');
-    await this._renderList();
-  }
-
-  // ─────────────────────────────────────────────
-  // Event listeners
-  // ─────────────────────────────────────────────
 
   _setupEventListeners() {
-    document.getElementById('addIdentityBtn')?.addEventListener('click', () => this._createEntity());
-    document.getElementById('addIdentityEmptyBtn')?.addEventListener('click', () => this._createEntity());
+    if (!this._onResizeBound) {
+      this._onResizeBound = () => this._renderProductsMasonry();
+      window.addEventListener('resize', this._onResizeBound);
+    }
   }
 
-  // ─────────────────────────────────────────────
-  // Utilidades
-  // ─────────────────────────────────────────────
-
-  _entityTypeLabel(type) {
-    const map = {
-      persona: 'Persona',
-      empresa: 'Empresa',
-      marca: 'Marca',
-      product: 'Producto',
-      other: 'Otro',
-      persona_juridica: 'Persona Jurídica',
-    };
-    return map[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Entidad');
-  }
-
-  _notify(message, type = 'info') {
-    const el = document.createElement('div');
-    el.className = `notification notification-${type}`;
-    el.style.cssText = `position:fixed;top:80px;right:2rem;padding:1rem 1.5rem;background:${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};color:#fff;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);z-index:10000;animation:slideIn .3s ease;`;
-    el.textContent = message;
-    document.body.appendChild(el);
-    setTimeout(() => { el.style.animation = 'slideOut .3s ease'; setTimeout(() => el.remove(), 300); }, 3000);
+  async onLeave() {
+    if (this._onResizeBound) {
+      window.removeEventListener('resize', this._onResizeBound);
+      this._onResizeBound = null;
+    }
   }
 
   escapeHtml(s) {
