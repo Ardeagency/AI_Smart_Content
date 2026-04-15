@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca).
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca + Brand Storage).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -26,7 +26,10 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
-      children: [{ label: 'Marca', route: 'brand' }]
+      children: [
+        { label: 'Marca', route: 'brand' },
+        { label: 'Brand Storage', route: 'brand-storage' }
+      ]
     }
   ],
   footer: [
@@ -286,7 +289,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits', '/brand-organization'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1596,6 +1599,8 @@ class Navigation {
       '/tasks': 'TASKS',
       '/brand': 'MARCA',
       '/brand-organization': 'MARCA',
+      '/brand-storage': 'BRAND STORAGE',
+      '/brandstorage': 'BRAND STORAGE',
       '/brands': 'IDENTITY',
       '/products': 'IDENTITY',
       '/product-detail': 'IDENTITY',

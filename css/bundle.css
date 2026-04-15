@@ -37,11 +37,11 @@
     --bg-secondary: #141517;
     --bg-card: #000000;
     --bg-tertiary: #000000;
-    /* Hover y seleccionado: brillo con color principal de la marca (BrandstorageView inyecta --brand-primary-brillo) */
+    /* Hover y seleccionado: brillo con color principal de la marca (BrandOrganizationView inyecta --brand-primary-brillo) */
     --brillo-hover: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --brillo-active: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
     --bg-hover: var(--brillo-hover);
-    /* Acento: sin naranja por defecto; BrandstorageView/OrgBrandTheme inyectan --brand-primary desde brand_colors */
+    /* Acento: sin naranja por defecto; BrandOrganizationView/OrgBrandTheme inyectan --brand-primary desde brand_colors */
     --accent-brand: var(--brand-primary, rgba(255, 255, 255, 0.35));
     --accent-brand-soft: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --icon-button-active: var(--brand-primary, var(--icon-button));

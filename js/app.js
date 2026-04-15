@@ -210,14 +210,20 @@ class App {
     r.register('/tasks', tasksLoader, auth);
     r.register('/tasks/:taskId', tasksLoader, auth);
 
-    // ── Org: Marca (organizations + assets org; antigua BrandsView unificada aquí) ──
-    const brandViewLoader = this._lazy('BrandstorageView', ['/js/views/BrandstorageView.js']);
+    // ── Org: Marca (organizations + assets org) ──
+    const brandViewLoader = this._lazy('BrandOrganizationView', ['/js/views/BrandOrganizationView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
     r.register('/brands', brandViewLoader, auth);
     r.register('/brands/:brandId', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandViewLoader, auth);
     r.register('/brand-organization', brandViewLoader, auth);
+
+    // ── Org: Brand Storage (vista separada, similar a BrandOrganizationView) ──
+    const brandStorageLoader = this._lazy('BrandstorageView', ['/js/views/BrandstorageView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageLoader, auth);
+    r.register('/brand-storage', brandStorageLoader, auth);
+    r.register('/brandstorage', brandStorageLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(
