@@ -1352,7 +1352,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
+    width: 100%;
     text-decoration: none;
+    text-align: left;
+    font: inherit;
     color: inherit;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
@@ -1361,6 +1364,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .brand-storage-item-cover {

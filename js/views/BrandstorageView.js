@@ -858,7 +858,7 @@ class BrandstorageView extends BaseView {
         : '';
 
       return `
-        <a class="brand-storage-item" href="${href}" data-route="${href}" data-brand-container-id="${this.escapeHtml(item.id)}">
+        <button type="button" class="brand-storage-item" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
           <div class="brand-storage-item-cover" aria-hidden="true"></div>
           <div class="brand-storage-item-head">
             <div class="brand-storage-item-logo">
@@ -875,7 +875,7 @@ class BrandstorageView extends BaseView {
             <span>${updated ? `Actualizado: ${updated}` : (created ? `Creada: ${created}` : 'Sin fecha')}</span>
             <i class="fas fa-chevron-right" aria-hidden="true"></i>
           </div>
-        </a>
+        </button>
       `;
     }).join('');
 
