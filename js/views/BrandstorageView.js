@@ -552,13 +552,16 @@ class BrandstorageView extends BaseView {
   };
 
   static BRAND_MERCADO_OPTIONS = [
-    'Latinoamérica',
-    'Norteamérica',
-    'Europa',
-    'Global',
-    'B2B',
-    'B2C',
-    'Local / Regional'
+    'Colombia',
+    'México',
+    'Estados Unidos',
+    'Argentina',
+    'Chile',
+    'Perú',
+    'Ecuador',
+    'Venezuela',
+    'España',
+    'Brasil'
   ];
 
   static BRAND_SUB_NICHOS_OPTIONS = [
