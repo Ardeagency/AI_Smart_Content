@@ -301,26 +301,17 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Cargar colores de marca de la organización (desde brand_colors vía brands → brand_containers)
+   * Cargar colores de marca de la organización (schema actual: brand_colors.organization_id).
    * Devuelve array de hex hasta 3 colores para el Brand Gradient Identity Header.
    */
   async getOrganizationBrandColors(organizationId) {
     if (!this.supabase) return [];
-    const brandContainerIds = await this.getBrandContainerIds(organizationId);
-    if (brandContainerIds.length === 0) return [];
 
     try {
-      const { data: brands } = await this.supabase
-        .from('brands')
-        .select('id')
-        .in('project_id', brandContainerIds);
-      const brandIds = brands ? brands.map(b => b.id) : [];
-      if (brandIds.length === 0) return [];
-
       const { data: colors } = await this.supabase
         .from('brand_colors')
         .select('hex_value')
-        .in('brand_id', brandIds);
+        .eq('organization_id', organizationId);
 
       if (!colors || colors.length === 0) return [];
       const seen = new Set();

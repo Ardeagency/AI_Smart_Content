@@ -2241,7 +2241,7 @@ class BrandOrganizationView extends BaseView {
       const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
       const fileName = `org_logo_${orgId}_${Date.now()}.${fileExt}`;
       const filePath = `${orgId}/${fileName}`;
-      const bucket = 'brand-logos';
+      const bucket = 'org-assets';
 
       const { error: uploadError } = await this.supabase.storage
         .from(bucket)

@@ -7,8 +7,8 @@
  * Cadena de resolución robusta (múltiples fallbacks):
  *   1. brand_containers WHERE organization_id = orgId
  *   2. Si vacío → brand_containers via organization_members (user_id IN members)
- *   3. brand_colors WHERE brand_id IN (brands.id para esos containers)
- *   4. Si vacío → brand_colors WHERE brand_id IN (container_ids) [legacy]
+ *   3. brand_colors WHERE organization_id = orgId
+ *   4. Si vacío → sin colores
  */
 (function () {
   'use strict';
@@ -90,47 +90,30 @@
 
   /**
    * Hexes de brand_colors de la org (hasta 4, sin duplicados).
-   * Fallbacks:
-   *  - containers por organization_id → fallback por members
-   *  - brand_colors por brands.id → fallback por brand_container.id (legacy)
+   * Lee por `organization_id` (schema vigente).
    */
   async function getOrganizationBrandColors(organizationId) {
     const supabase = getSupabase();
     if (!supabase) return [];
 
-    const brandContainerIds = await getBrandContainerIds(organizationId);
-    if (brandContainerIds.length === 0) {
-      console.warn('OrgBrandTheme: no brand_containers para org', organizationId);
-      return [];
-    }
-
     try {
-      // Intento A: brand_colors por brands.id (patrón nuevo)
-      const { data: brandsRows } = await supabase
-        .from('brands')
-        .select('id')
-        .in('project_id', brandContainerIds);
-
-      const brandIds = brandsRows ? brandsRows.map(b => b.id).filter(Boolean) : [];
-
-      if (brandIds.length > 0) {
-        const { data: colors } = await supabase
-          .from('brand_colors')
-          .select('hex_value')
-          .in('brand_id', brandIds);
-        const hexes = normalizeHexRows(colors);
-        if (hexes.length > 0) return hexes;
-      }
-
-      // Intento B: brand_colors por brand_container.id (patrón legacy)
-      const { data: legacyColors } = await supabase
+      const { data: colors } = await supabase
         .from('brand_colors')
         .select('hex_value')
-        .in('brand_id', brandContainerIds);
-      const legacyHexes = normalizeHexRows(legacyColors);
-      if (legacyHexes.length > 0) return legacyHexes;
+        .eq('organization_id', organizationId);
+      const hexes = normalizeHexRows(colors);
+      if (hexes.length > 0) return hexes;
 
-      console.warn('OrgBrandTheme: sin colores para containers', brandContainerIds);
+      // Fallback suave por containers para no romper orgs en transición de datos.
+      const brandContainerIds = await getBrandContainerIds(organizationId);
+      if (brandContainerIds.length > 0) {
+        const { data: legacyColors } = await supabase
+          .from('brand_colors')
+          .select('hex_value')
+          .in('brand_id', brandContainerIds);
+        const legacyHexes = normalizeHexRows(legacyColors);
+        if (legacyHexes.length > 0) return legacyHexes;
+      }
       return [];
     } catch (e) {
       console.error('OrgBrandTheme: error getOrganizationBrandColors', e);
