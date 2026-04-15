@@ -68,7 +68,7 @@ class BrandstorageView extends BaseView {
   renderHTML() {
     return `
 <!-- Brand Storage Library -->
-<div class="brand-dashboard-container" id="brandsListContainer">
+<div class="brand-dashboard-container brand-storage-gallery-view" id="brandsListContainer">
 
     <!-- Fondo: skeleton visible hasta que carguen datos; luego crossfade al gradiente de marca -->
     <div class="brand-dashboard-background">
@@ -80,7 +80,7 @@ class BrandstorageView extends BaseView {
     <div class="brand-cards-zone">
         <div class="brand-card card-storage-library">
             <div class="card-header">
-                <h2 class="card-title">Brand Storage</h2>
+                <h2 class="card-title">Sub-marcas</h2>
                 <span class="card-title-counter" id="brandStorageCount">0</span>
             </div>
             <div class="card-content">
@@ -278,7 +278,7 @@ class BrandstorageView extends BaseView {
 
       const { data: containerRows, error: containersError } = await this.supabase
         .from('brand_containers')
-        .select('id, nombre_marca, brand_slogan, logo_url, updated_at, created_at')
+        .select('id, nombre_marca, propuesta_valor, visual_dna, updated_at, created_at')
         .eq('organization_id', orgId)
         .order('created_at', { ascending: false });
       if (containersError) {
@@ -844,14 +844,22 @@ class BrandstorageView extends BaseView {
     grid.innerHTML = rows.map((item) => {
       const name = this.escapeHtml(item.nombre_marca || 'Sin nombre');
       const slogan = this.escapeHtml(String(item.brand_slogan || item.propuesta_valor || '').trim());
-      const logoUrl = String(item.logo_url || '').trim();
+      const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna
+        ? item.visual_dna
+        : {};
+      const logoUrl = String(item.logo_url || visualDna.logo_url || visualDna.logo || '').trim();
       const updated = item.updated_at
         ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
       const href = this.escapeHtml(makeHref(item.id));
 
+      const created = item.created_at
+        ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '';
+
       return `
         <a class="brand-storage-item" href="${href}" data-route="${href}">
+          <div class="brand-storage-item-cover" aria-hidden="true"></div>
           <div class="brand-storage-item-head">
             <div class="brand-storage-item-logo">
               ${logoUrl
@@ -864,7 +872,7 @@ class BrandstorageView extends BaseView {
             </div>
           </div>
           <div class="brand-storage-item-foot">
-            <span>${updated ? `Actualizado: ${updated}` : 'Sin fecha'}</span>
+            <span>${updated ? `Actualizado: ${updated}` : (created ? `Creada: ${created}` : 'Sin fecha')}</span>
             <i class="fas fa-chevron-right" aria-hidden="true"></i>
           </div>
         </a>

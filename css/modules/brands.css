@@ -1301,6 +1301,26 @@ h1.brand-name-large[contenteditable="true"]:hover,
     gap: 0.6rem;
 }
 
+/* Brand Storage como galería de sub-marcas (mantiene fondo + card glass) */
+.brand-dashboard-container.brand-storage-gallery-view .brand-cards-zone {
+    left: 1.5rem;
+    width: auto;
+    max-width: none;
+}
+
+.brand-dashboard-container.brand-storage-gallery-view .card-storage-library {
+    min-height: 100%;
+}
+
+.brand-dashboard-container.brand-storage-gallery-view .card-storage-library .card-content {
+    flex: 1;
+}
+
+.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.85rem;
+}
+
 .brand-storage-empty {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
@@ -1319,6 +1339,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: rgba(0, 0, 0, 0.12);
     padding: 0.7rem 0.75rem;
     transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-storage-item-cover {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01) 55%, rgba(0, 0, 0, 0.06));
+    pointer-events: none;
+    opacity: 0.9;
 }
 
 .brand-storage-item:hover {
@@ -1331,6 +1361,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     grid-template-columns: auto 1fr;
     align-items: center;
     gap: 0.65rem;
+    position: relative;
+    z-index: 1;
 }
 
 .brand-storage-item-logo {
@@ -1383,6 +1415,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.75rem;
     color: var(--text-muted);
     opacity: 0.9;
+    position: relative;
+    z-index: 1;
 }
 
 .identity-files {
