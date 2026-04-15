@@ -1304,16 +1304,36 @@ h1.brand-name-large[contenteditable="true"]:hover,
 /* Brand Storage como galería de sub-marcas (mantiene fondo + card glass) */
 .brand-dashboard-container.brand-storage-gallery-view .brand-cards-zone {
     left: 1.5rem;
+    bottom: auto;
     width: auto;
     max-width: none;
+    overflow-y: visible;
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .card-storage-library {
-    min-height: 100%;
+    min-height: 0;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .card-storage-library .card-content {
-    flex: 1;
+    flex: 0 0 auto;
+    display: block;
+    padding-top: 0.45rem;
+}
+
+/* En galería, el contenedor NO debe heredar glass dinámico de .brand-card */
+#brandsListContainer.brand-storage-gallery-view.brand-cards-glass-black .card-storage-library,
+#brandsListContainer.brand-storage-gallery-view.brand-cards-glass-white .card-storage-library {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid {
