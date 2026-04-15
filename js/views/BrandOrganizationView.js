@@ -29,6 +29,14 @@ class BrandOrganizationView extends BaseView {
     this._dataLoaded = false;
     /** @type {object|null} Fila `organizations` del workspace activo */
     this.organizationRow = null;
+    /** @type {Array} Filas brand_containers de la organización (sub-marcas) */
+    this.brandContainers = [];
+    /** @type {Array} Integraciones de sub-marcas (brand_integrations) */
+    this.brandIntegrations = [];
+    /** @type {Array} Campañas de sub-marcas (campaigns) */
+    this.brandCampaigns = [];
+    /** @type {BrandstorageView|null} Delegate para galería e INFO panels de sub-marcas */
+    this._bsDelegate = null;
   }
 
   _mergeOrgIntoShim() {
@@ -143,6 +151,17 @@ class BrandOrganizationView extends BaseView {
             </div>
             <div class="card-content">
                 <div class="assets-files" id="assetsFilesContainer"></div>
+            </div>
+        </div>
+
+        <!-- Sub-marcas: se activa cuando hay 1+ brand_containers -->
+        <div class="brand-card card-sub-brands" id="brandSubBrandsCard" style="display:none">
+            <div class="card-header">
+                <h2 class="card-title">Sub-marcas</h2>
+                <span class="card-title-counter" id="brandSubBrandsCount"></span>
+            </div>
+            <div class="card-content" id="brandSubBrandsContent">
+                <!-- Renderizado dinámico: galería o botón INFO -->
             </div>
         </div>
 
@@ -361,6 +380,52 @@ class BrandOrganizationView extends BaseView {
       this.brandEntities = [];
       this.brandPlaces = [];
       this.brandAudiences = [];
+
+      // Cargar sub-marcas (brand_containers) para el estado dual
+      try {
+        const { data: containerRows } = await this.supabase
+          .from('brand_containers')
+          .select('id, nombre_marca, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, updated_at, created_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false });
+        this.brandContainers = containerRows || [];
+
+        const containerIds = this.brandContainers.map((r) => r.id).filter(Boolean);
+        if (containerIds.length) {
+          const [audiencesRes, campaignsRes, integrationsRes] = await Promise.allSettled([
+            this.supabase
+              .from('audiences')
+              .select('id, brand_container_id, name, description, awareness_level, entity_id, datos_demograficos, datos_psicograficos, dolores, deseos, objeciones, gatillos_compra, estilo_lenguaje, created_at, updated_at')
+              .in('brand_container_id', containerIds)
+              .order('updated_at', { ascending: false }),
+            this.supabase
+              .from('campaigns')
+              .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at, updated_at')
+              .in('brand_container_id', containerIds)
+              .order('updated_at', { ascending: false }),
+            this.supabase
+              .from('brand_integrations')
+              .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
+              .in('brand_container_id', containerIds)
+              .order('platform', { ascending: true })
+          ]);
+          this.brandAudiences = audiencesRes.status === 'fulfilled' && !audiencesRes.value.error
+            ? (audiencesRes.value.data || []) : [];
+          this.brandCampaigns = campaignsRes.status === 'fulfilled' && !campaignsRes.value.error
+            ? (campaignsRes.value.data || []) : [];
+          this.brandIntegrations = integrationsRes.status === 'fulfilled' && !integrationsRes.value.error
+            ? (integrationsRes.value.data || []) : [];
+        } else {
+          this.brandCampaigns = [];
+          this.brandIntegrations = [];
+        }
+      } catch (e) {
+        console.warn('BrandOrganizationView: brand_containers', e);
+        this.brandContainers = [];
+        this.brandCampaigns = [];
+        this.brandIntegrations = [];
+      }
+
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
       this.brandRules = [];
@@ -861,13 +926,174 @@ class BrandOrganizationView extends BaseView {
 
   renderCards() {
     this.applyBrandBackgroundGradient();
-    this.renderBrandColors();
-    this.renderTypography();
-    this.renderIdentityFiles();
-    this.renderAssetsFiles();
-    this.setupIdentityUpload();
-    this.setupAssetsUpload();
+    const isStorage = this._isStorageMode();
+    const container = this.container || document.getElementById('app-container');
+
+    // Activar/desactivar clase de modo galería en el root
+    const root = container?.querySelector('#brandsListContainer');
+    if (root) root.classList.toggle('brand-storage-gallery-view', isStorage);
+
+    // Mostrar/ocultar cards exclusivas del modo organización
+    ['card-concept', 'card-identity', 'card-assets'].forEach((cls) => {
+      const card = container?.querySelector(`.${cls}`);
+      if (card) card.style.display = isStorage ? 'none' : '';
+    });
+
+    if (!isStorage) {
+      this.renderBrandColors();
+      this.renderTypography();
+      this.renderIdentityFiles();
+      this.renderAssetsFiles();
+      this.setupIdentityUpload();
+      this.setupAssetsUpload();
+    }
+
+    this.renderSubBrandsCard();
     this.setupEventListeners();
+  }
+
+  // ============================================
+  // ESTADO DUAL: SUB-MARCAS
+  // ============================================
+
+  /** Devuelve true cuando la URL activa el modo galería de sub-marcas. */
+  _isStorageMode() {
+    const path = window.location.pathname || '';
+    return path === '/brandstorage' || path === '/brand-storage' || path.endsWith('/brand-storage');
+  }
+
+  /**
+   * Obtiene (o crea) el delegate BrandstorageView usado para galería e INFO panels.
+   * BrandstorageView.js debe estar cargado como dependencia del loader.
+   * @returns {BrandstorageView|null}
+   */
+  _getOrCreateBsDelegate() {
+    if (!window.BrandstorageView) return null;
+    if (!this._bsDelegate) {
+      this._bsDelegate = new window.BrandstorageView();
+    }
+    return this._bsDelegate;
+  }
+
+  /** Sincroniza los datos actuales al delegate antes de delegar operaciones. */
+  _syncDelegate(delegate) {
+    delegate.isActive = true;
+    delegate.supabase = this.supabase;
+    delegate.userId = this.userId;
+    delegate.container = this.container || document.getElementById('app-container');
+    delegate.organizationRow = this.organizationRow;
+    delegate.brandContainerData = this.brandContainerData;
+    delegate.brandContainers = this.brandContainers || [];
+    delegate.brandIntegrations = this.brandIntegrations || [];
+    delegate.brandAudiences = this.brandAudiences || [];
+    delegate.brandCampaigns = this.brandCampaigns || [];
+    delegate.brandAssets = this.brandAssets || [];
+    delegate.brandColors = this.brandColors || [];
+    delegate.brandFonts = this.brandFonts || [];
+    delegate._dataLoaded = true;
+  }
+
+  /**
+   * Renderiza la card de sub-marcas:
+   * - isStorageMode o múltiples sub-marcas → galería delegada a BrandstorageView
+   * - 1 sub-marca → botón INFO inline
+   * - 0 sub-marcas (modo org) → card oculta
+   */
+  renderSubBrandsCard() {
+    const card = document.getElementById('brandSubBrandsCard');
+    const content = document.getElementById('brandSubBrandsContent');
+    const countEl = document.getElementById('brandSubBrandsCount');
+    if (!card || !content) return;
+
+    const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+    const isStorageMode = this._isStorageMode();
+
+    if (!containers.length && !isStorageMode) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+    if (countEl) countEl.textContent = String(containers.length);
+
+    if (isStorageMode || containers.length > 1) {
+      // Modo galería: delegar renderizado al BrandstorageView delegate
+      content.innerHTML = '<div class="brand-storage-grid" id="brandStorageGrid"></div>';
+
+      const delegate = this._getOrCreateBsDelegate();
+      if (delegate) {
+        this._syncDelegate(delegate);
+        delegate.renderBrandStorageLibrary();
+
+        // Rebindear clicks para usar nuestro openSubBrandInfoPanel
+        const grid = document.getElementById('brandStorageGrid');
+        if (grid) {
+          grid.querySelectorAll('.brand-storage-item[data-brand-container-id]').forEach((itemEl) => {
+            const clone = itemEl.cloneNode(true);
+            itemEl.replaceWith(clone);
+            clone.addEventListener('click', () => {
+              const id = String(clone.getAttribute('data-brand-container-id') || '').trim();
+              if (id) this.openSubBrandInfoPanel(id);
+            });
+          });
+        }
+      } else {
+        content.innerHTML = containers.length
+          ? containers.map((item) => `
+            <button type="button" class="brand-storage-item" data-brand-container-id="${this.escapeHtml(String(item.id))}">
+              <span>${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</span>
+            </button>`).join('')
+          : '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
+      }
+    } else if (containers.length === 1) {
+      // Modo único: mostrar nombre + botón INFO
+      const item = containers[0];
+      let logoUrl = '';
+      try {
+        const vdna = item.visual_dna;
+        const meta = typeof vdna === 'string' ? JSON.parse(vdna) : (vdna || {});
+        logoUrl = (meta.logo_url || meta.logo || '').trim();
+      } catch (_) {}
+
+      content.innerHTML = `
+        <div class="sub-brand-single-row">
+          <div class="sub-brand-single-identity">
+            ${logoUrl
+              ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="sub-brand-single-logo" loading="lazy">`
+              : `<div class="sub-brand-single-logo sub-brand-single-logo--empty"><i class="fas fa-tag" aria-hidden="true"></i></div>`
+            }
+            <span class="sub-brand-single-name">${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</span>
+          </div>
+          <button type="button" class="sub-brand-info-btn" data-sub-brand-id="${this.escapeHtml(String(item.id || ''))}">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            INFO
+          </button>
+        </div>
+      `;
+
+      const infoBtn = content.querySelector('.sub-brand-info-btn');
+      if (infoBtn) {
+        infoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = infoBtn.getAttribute('data-sub-brand-id');
+          if (id) this.openSubBrandInfoPanel(id);
+        });
+      }
+    } else {
+      // Storage mode activo pero sin sub-marcas
+      content.innerHTML = '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
+    }
+  }
+
+  /**
+   * Abre el panel INFO de una sub-marca usando el delegate BrandstorageView.
+   * @param {string|number} itemId - ID del brand_container
+   */
+  openSubBrandInfoPanel(itemId) {
+    const delegate = this._getOrCreateBsDelegate();
+    if (!delegate) return;
+    this._syncDelegate(delegate);
+    delegate.openBrandContainerInfoPanel(itemId);
   }
 
   renderBrandEntities() {

@@ -211,7 +211,12 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Marca (organizations + assets org) ──
-    const brandViewLoader = this._lazy('BrandOrganizationView', ['/js/views/BrandOrganizationView.js']);
+    // BrandstorageView.js se carga como dependencia para que BrandOrganizationView pueda
+    // delegarle el renderizado de la galería de sub-marcas y los paneles INFO.
+    const brandViewLoader = this._lazy('BrandOrganizationView', [
+      '/js/views/BrandstorageView.js',
+      '/js/views/BrandOrganizationView.js'
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
     r.register('/brands', brandViewLoader, auth);
@@ -219,11 +224,12 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandViewLoader, auth);
     r.register('/brand-organization', brandViewLoader, auth);
 
-    // ── Org: Brand Storage (vista separada, similar a BrandOrganizationView) ──
-    const brandStorageLoader = this._lazy('BrandstorageView', ['/js/views/BrandstorageView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageLoader, auth);
-    r.register('/brand-storage', brandStorageLoader, auth);
-    r.register('/brandstorage', brandStorageLoader, auth);
+    // ── Org: Brand Storage — ahora es un estado de BrandOrganizationView ──
+    // La URL /brandstorage activa el modo galería dentro de BrandOrganizationView.
+    // BrandstorageView.js sigue existiendo como módulo (usado como delegate), no como ruta.
+    r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandViewLoader, auth);
+    r.register('/brand-storage', brandViewLoader, auth);
+    r.register('/brandstorage', brandViewLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(

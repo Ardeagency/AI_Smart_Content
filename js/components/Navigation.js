@@ -27,8 +27,7 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
-        { label: 'Marca', route: 'brand' },
-        { label: 'Brand Storage', route: 'brand-storage' }
+        { label: 'Marca', route: 'brand' }
       ]
     }
   ],
