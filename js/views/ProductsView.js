@@ -159,8 +159,8 @@ class ProductsView extends BaseView {
           <div class="product-view-error">
             <h2>Producto no encontrado</h2>
             <p>El producto solicitado no existe o no tienes acceso.</p>
-            <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products' + (brandId ? `/${brandId}` : '')) : (orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products')}" class="product-view-back" data-router-link>
-              <i class="fas fa-arrow-left"></i> Volver a productos
+            <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/identities') : (orgId ? `/org/${orgId}/identities` : '/identities')}" class="product-view-back" data-router-link>
+              <i class="fas fa-arrow-left"></i> Volver a Identities
             </a>
           </div>
         `;
@@ -176,8 +176,8 @@ class ProductsView extends BaseView {
       this.brandName = brandName || 'Marca';
 
       const backUrl = orgId && typeof window.getOrgPathPrefix === 'function'
-        ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products' + (brandId ? `/${brandId}` : ''))
-        : (orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products');
+        ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/identities')
+        : (orgId ? `/org/${orgId}/identities` : '/identities');
       const html = this.getProductDetailHTML(product, images, brandName || 'Marca', backUrl);
       this.container.innerHTML = html;
       this.updateLinksForRouter();
@@ -306,10 +306,10 @@ class ProductsView extends BaseView {
     return `
       <div class="product-view">
         <a href="${backUrl}" class="product-view-back back-to-products-btn" data-back-url="${backUrl}" data-router-link>
-          <i class="fas fa-arrow-left"></i> Volver a productos
+          <i class="fas fa-arrow-left"></i> Volver a Identities
         </a>
         <nav class="product-view-breadcrumbs" aria-label="Navegación">
-          <a href="${backUrl}" data-router-link>Productos</a>
+          <a href="${backUrl}" data-router-link>Identities</a>
           <span>/</span>
           <span>${this.escapeHtml(product.nombre_producto || 'Ficha técnica')}</span>
         </nav>
