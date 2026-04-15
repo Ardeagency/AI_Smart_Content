@@ -2096,6 +2096,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.35rem;
 }
 
+#infoPanelContent .info-brand-multiselect__panel[hidden] {
+    display: none !important;
+}
+
 #infoPanelContent .info-brand-multiselect__option {
     display: flex;
     align-items: center;
