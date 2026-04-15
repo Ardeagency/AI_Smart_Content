@@ -211,7 +211,7 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Marca (organizations + assets org; antigua BrandsView unificada aquí) ──
-    const brandViewLoader = this._lazy('BrandOrganizationView', ['/js/views/BrandOrganizationView.js']);
+    const brandViewLoader = this._lazy('BrandstorageView', ['/js/views/BrandstorageView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
     r.register('/brands', brandViewLoader, auth);

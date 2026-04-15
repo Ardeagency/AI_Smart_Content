@@ -1,8 +1,8 @@
 /**
- * BrandOrganizationView — Identidad de marca a nivel workspace (`organizations`).
+ * BrandstorageView — Identidad de marca a nivel workspace (`organizations`).
  * Sin `brand_containers`; sin card de entidades. Hereda la UX premium del antiguo BrandsView.
  */
-class BrandOrganizationView extends BaseView {
+class BrandstorageView extends BaseView {
   constructor() {
     super();
     this.templatePath = null;
@@ -308,7 +308,7 @@ class BrandOrganizationView extends BaseView {
         .maybeSingle();
 
       if (orgErr && orgErr.code !== 'PGRST116') {
-        console.warn('BrandOrganizationView: error cargando organizations', orgErr);
+        console.warn('BrandstorageView: error cargando organizations', orgErr);
       }
 
       if (!org) {
@@ -339,7 +339,7 @@ class BrandOrganizationView extends BaseView {
         .eq('organization_id', orgId)
         .limit(5);
       if (productsError) {
-        console.warn('BrandOrganizationView: productos', productsError);
+        console.warn('BrandstorageView: productos', productsError);
         this.products = [];
       } else {
         this.products = products || [];
@@ -352,7 +352,7 @@ class BrandOrganizationView extends BaseView {
         .order('created_at', { ascending: false })
         .limit(12);
       if (assetsError) {
-        console.warn('BrandOrganizationView: brand_assets', assetsError);
+        console.warn('BrandstorageView: brand_assets', assetsError);
         this.brandAssets = [];
       } else {
         this.brandAssets = assets || [];
@@ -399,13 +399,13 @@ class BrandOrganizationView extends BaseView {
           this.creditUsage = [];
         }
       } catch (e) {
-        console.warn('BrandOrganizationView: datos org secundarios', e);
+        console.warn('BrandstorageView: datos org secundarios', e);
         this.organizationMembers = [];
         this.organizationCredits = { credits_available: 100 };
         this.creditUsage = [];
       }
     } catch (error) {
-      console.error('BrandOrganizationView loadData:', error);
+      console.error('BrandstorageView loadData:', error);
     } finally {
       this._dataLoaded = true;
       if (this.isActive) this._refreshInfoPanelIfOpen();
@@ -493,7 +493,7 @@ class BrandOrganizationView extends BaseView {
 
   static getNichoCoreLabel(storedValue) {
     const v = storedValue == null ? '' : String(storedValue);
-    const row = BrandOrganizationView.NICHO_CORE_OPTIONS.find((o) => o.value === v);
+    const row = BrandstorageView.NICHO_CORE_OPTIONS.find((o) => o.value === v);
     if (row) return row.label;
     return v.trim() ? v : 'Seleccionar nicho';
   }
@@ -513,19 +513,19 @@ class BrandOrganizationView extends BaseView {
   ];
 
   static get BRAND_ARRAY_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
+    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
   }
 
   static get BRAND_JSON_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'json').map((b) => b.field);
+    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'json').map((b) => b.field);
   }
 
   static get BRAND_TEXT_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'text').map((b) => b.field);
+    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'text').map((b) => b.field);
   }
 
   static get BRAND_TEXTAREA_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'textarea').map((b) => b.field);
+    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'textarea').map((b) => b.field);
   }
 
   /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
@@ -958,7 +958,7 @@ class BrandOrganizationView extends BaseView {
         place_type: document.getElementById('place_type')?.value || 'other',
       };
       const { data, error } = await this.supabase.from('brand_places').insert(payload).select().single();
-      if (error) { console.error('BrandOrganizationView addPlace:', error); alert('Error al agregar el lugar.'); return; }
+      if (error) { console.error('BrandstorageView addPlace:', error); alert('Error al agregar el lugar.'); return; }
       this.brandPlaces = [...(this.brandPlaces || []), data];
       document.getElementById('brandPlaceModal')?.remove();
       this.renderBrandEntities();
@@ -1009,7 +1009,7 @@ class BrandOrganizationView extends BaseView {
     };
 
     const { data, error } = await this.supabase.from('brand_entities').insert(payload).select().single();
-    if (error) { console.error('BrandOrganizationView createEntity:', error); alert('Error al crear la entidad.'); return; }
+    if (error) { console.error('BrandstorageView createEntity:', error); alert('Error al crear la entidad.'); return; }
     this.brandEntities = [...(this.brandEntities || []), data];
     document.getElementById('brandEntityModal')?.remove();
     this.renderBrandEntities();
@@ -1020,7 +1020,7 @@ class BrandOrganizationView extends BaseView {
     if (!this.supabase || !entityId) return;
 
     const { error } = await this.supabase.from('brand_entities').delete().eq('id', entityId);
-    if (error) { console.error('BrandOrganizationView deleteEntity:', error); alert('Error al eliminar.'); return; }
+    if (error) { console.error('BrandstorageView deleteEntity:', error); alert('Error al eliminar.'); return; }
     this.brandEntities = (this.brandEntities || []).filter(e => e.id !== entityId);
     this.renderBrandEntities();
   }
@@ -1385,7 +1385,7 @@ class BrandOrganizationView extends BaseView {
 
   /** Carga todas las fuentes del dropdown para que "AaBbCc" se vea bien en cada opción. */
   loadAllTypographyFonts() {
-    BrandOrganizationView.TYPOGRAPHY_FONTS.forEach(f => this.loadFontForPreview(f.value));
+    BrandstorageView.TYPOGRAPHY_FONTS.forEach(f => this.loadFontForPreview(f.value));
   }
 
   renderTypography() {
@@ -1400,7 +1400,7 @@ class BrandOrganizationView extends BaseView {
     }
     const currentFont = this.getTypographyFontFamily();
     this.loadFontForPreview(currentFont);
-    const fonts = BrandOrganizationView.TYPOGRAPHY_FONTS;
+    const fonts = BrandstorageView.TYPOGRAPHY_FONTS;
     const dropdownId = 'typographyFontDropdown';
     const panelId = 'typographyFontPanel';
     container.innerHTML = `
@@ -2020,8 +2020,8 @@ class BrandOrganizationView extends BaseView {
    * @returns {string|string[]|object}
    */
   _normalizeBrandFieldForDb(fieldName, value) {
-    const jsonFields = BrandOrganizationView.BRAND_JSON_FIELDS;
-    const arrFields = BrandOrganizationView.BRAND_ARRAY_FIELDS;
+    const jsonFields = BrandstorageView.BRAND_JSON_FIELDS;
+    const arrFields = BrandstorageView.BRAND_ARRAY_FIELDS;
 
     if (jsonFields.includes(fieldName)) {
       if (value == null || value === '') return {};
@@ -2045,7 +2045,7 @@ class BrandOrganizationView extends BaseView {
       return String(value ?? '').trim();
     }
 
-    if (BrandOrganizationView.BRAND_TEXTAREA_FIELDS.includes(fieldName) || BrandOrganizationView.BRAND_TEXT_FIELDS.includes(fieldName)) {
+    if (BrandstorageView.BRAND_TEXTAREA_FIELDS.includes(fieldName) || BrandstorageView.BRAND_TEXT_FIELDS.includes(fieldName)) {
       const s = value == null ? '' : String(value).trim();
       return s === '' ? null : s;
     }
@@ -2166,7 +2166,7 @@ class BrandOrganizationView extends BaseView {
 
     const refreshLabel = () => {
       const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
-      valueEl.textContent = BrandOrganizationView.getNichoCoreLabel(cur);
+      valueEl.textContent = BrandstorageView.getNichoCoreLabel(cur);
     };
 
     refreshLabel();
@@ -2240,13 +2240,13 @@ class BrandOrganizationView extends BaseView {
       } else {
         const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan', 'level_of_autonomy']);
         if (!allowed.has(fieldName)) {
-          console.warn('BrandOrganizationView: campo organizations no soportado:', fieldName);
+          console.warn('BrandstorageView: campo organizations no soportado:', fieldName);
         } else {
           await this._patchOrganization({ [fieldName]: value || null });
         }
       }
     } catch (error) {
-      console.error(`BrandOrganizationView saveContainerField ${fieldName}:`, error);
+      console.error(`BrandstorageView saveContainerField ${fieldName}:`, error);
       alert(`Error al guardar ${fieldName}.`);
     } finally {
       this.savingFields.delete(saveKey);
@@ -2268,7 +2268,7 @@ class BrandOrganizationView extends BaseView {
       await this._patchOrganization({ [fieldName]: v });
       if (this.brandData) this.brandData[fieldName] = v;
     } catch (error) {
-      console.error('BrandOrganizationView saveBrandField:', error);
+      console.error('BrandstorageView saveBrandField:', error);
       alert(`Error al guardar ${fieldName}.`);
     } finally {
       this.savingFields.delete(saveKey);
@@ -2333,7 +2333,7 @@ class BrandOrganizationView extends BaseView {
       this.renderAll();
       this.renderCornerLogoUploader();
     } catch (error) {
-      console.error('BrandOrganizationView uploadLogo:', error);
+      console.error('BrandstorageView uploadLogo:', error);
       alert('Error al subir logo.');
     } finally {
       if (logoWrap) {
@@ -2375,7 +2375,7 @@ class BrandOrganizationView extends BaseView {
       await this._reloadAssets();
       this.renderAssetsFiles();
     } catch (error) {
-      console.error('BrandOrganizationView uploadAsset:', error);
+      console.error('BrandstorageView uploadAsset:', error);
       alert('Error al subir archivo.');
     }
   }
@@ -2435,14 +2435,14 @@ class BrandOrganizationView extends BaseView {
         }
       });
       if (vectorError) {
-        console.warn('BrandOrganizationView ai_brand_vectors:', vectorError);
+        console.warn('BrandstorageView ai_brand_vectors:', vectorError);
       }
 
       await this._reloadAssets();
       this.renderIdentityFiles();
       this.renderAssetsFiles();
     } catch (error) {
-      console.error('BrandOrganizationView uploadIdentityFile:', error);
+      console.error('BrandstorageView uploadIdentityFile:', error);
       alert('Error al subir archivo de identidad.');
     }
   }
@@ -2466,7 +2466,7 @@ class BrandOrganizationView extends BaseView {
       this.brandAssets = (this.brandAssets || []).filter((a) => a.id !== assetId);
       this.renderAssetsFiles();
     } catch (error) {
-      console.error('BrandOrganizationView removeAsset:', error);
+      console.error('BrandstorageView removeAsset:', error);
       alert('No se pudo eliminar el asset.');
     }
   }
@@ -2658,4 +2658,4 @@ class BrandOrganizationView extends BaseView {
   }
 }
 
-window.BrandOrganizationView = BrandOrganizationView;
+window.BrandstorageView = BrandstorageView;
