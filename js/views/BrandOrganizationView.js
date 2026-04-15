@@ -1083,8 +1083,7 @@ class BrandOrganizationView extends BaseView {
       if (infoBtn) {
         infoBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const id = infoBtn.getAttribute('data-sub-brand-id');
-          if (id) this.openSubBrandInfoPanel(id);
+          this.openInfoPanel();
         });
       }
     } else {
