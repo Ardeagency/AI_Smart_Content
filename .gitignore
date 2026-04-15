@@ -132,8 +132,11 @@ dist/
 # Local development
 .local/
 
-# Fondos: solo local, no subir al repo
+# Fondos: solo local, no subir al repo (no se usan en la web — ahorran 159MB de deploy)
 recursos/Recursos de Marca/Fondos/
+recursos/fondos/
+# Archivos fuente de diseño (.ai / .psd) — solo locales, no deployar
+recursos/source/
 
 # Esquemas de base de datos y migraciones SQL: no exponer estructura interna
 SQL/

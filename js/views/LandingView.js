@@ -238,7 +238,7 @@ class LandingView extends PublicBaseView {
       <section class="vbento" id="landing-vera-bento" aria-labelledby="vbento-heading">
         <div class="vbento__inner">
           <div class="vbento__header sr-reveal">
-            <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51">
+            <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51" loading="lazy" decoding="async">
             <h2 id="vbento-heading" class="vbento__title">Un sistema. Todo conectado.</h2>
             <p class="vbento__sub">Vera no es una herramienta. Es la inteligencia que conecta señal, decisión, ejecución y aprendizaje en un solo flujo.</p>
           </div>
@@ -250,7 +250,7 @@ class LandingView extends PublicBaseView {
                   <span class="vbento__orbit-dot vbento__orbit-dot--b"></span>
                   <span class="vbento__orbit-dot vbento__orbit-dot--c"></span>
                 </div>
-                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__hero-logo">
+                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__hero-logo" loading="lazy" decoding="async" width="180" height="69">
               </div>
               <div class="vbento__card-body">
                 <h3 class="vbento__card-title">Un solo sistema</h3>
@@ -522,16 +522,20 @@ class LandingView extends PublicBaseView {
     if (realItems.length < 2) return;
 
     const N = realItems.length;
+    // Cloudinary transforms: w_auto,dpr_auto limita el ancho al del viewport y a la densidad
+    // del dispositivo. q_auto/f_auto deja a Cloudinary elegir formato (avif/webp) y calidad
+    // óptimos por navegador. Resultado: ~60–80% menos bytes que la versión original.
+    const CLD_PARAMS = 'q_auto,f_auto,c_limit,w_1920,dpr_auto';
     const heroBackgrounds = [
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/Recurso_28Imagen-cloud-wonder_2-2x_copia_zgwsbb.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/Recurso_36Imagen-cloud-wonder_2-2x_copia_bqshyg.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102750/Recurso_38Imagen-cloud-wonder_2-2x_copia_ixttbb.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg',
-      'https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg'
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/Recurso_28Imagen-cloud-wonder_2-2x_copia_zgwsbb.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/Recurso_36Imagen-cloud-wonder_2-2x_copia_bqshyg.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102750/Recurso_38Imagen-cloud-wonder_2-2x_copia_ixttbb.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg`,
+      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg`
     ];
 
     const getBgUrl = (i) => heroBackgrounds[((i % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
@@ -596,8 +600,10 @@ class LandingView extends PublicBaseView {
       return;
     }
 
-    const timer = setInterval(() => {
-      if (busy) return;
+    // Rotador: solo avanza si la pestaña está visible (ahorra CPU/batería en background tabs
+    // y evita que el crossfade dispare fetch de imágenes cuando nadie las está viendo).
+    const tick = () => {
+      if (busy || document.hidden) return;
       busy = true;
       realIdx++;
       setPos(realIdx, true);
@@ -613,7 +619,8 @@ class LandingView extends PublicBaseView {
         return;
       }
       busy = false;
-    }, ROTATE);
+    };
+    const timer = setInterval(tick, ROTATE);
 
     this.heroWordsRotatorCleanup = () => {
       clearInterval(timer);

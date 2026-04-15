@@ -71,7 +71,7 @@
     return `
       <header class="landing-header public-header" data-public-header>
         <a href="/" class="landing-header-brand" aria-label="AI Smart Content Home" data-href="/">
-          <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo">
+          <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo" width="180" height="36" decoding="async">
         </a>
         <button class="public-header-toggle" id="publicHeaderToggle" aria-label="Abrir menú" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -100,7 +100,7 @@
         <div class="landing-footer-main public-footer-main">
           <div class="landing-footer-brand">
             <a href="/" class="landing-footer-brand-link" aria-label="AI Smart Content Home" data-href="/">
-              <img src="/recursos/assets/assets-16.svg" alt="AI Smart Content" class="landing-footer-bar-logo" loading="lazy">
+              <img src="/recursos/assets/assets-16.svg" alt="AI Smart Content" class="landing-footer-bar-logo" loading="lazy" decoding="async" width="200" height="48">
             </a>
             <p class="landing-footer-tagline">Inteligencia operativa de marca: menos latencia entre el mercado y tu contenido.</p>
           </div>

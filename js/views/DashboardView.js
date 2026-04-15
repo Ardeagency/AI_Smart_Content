@@ -209,6 +209,7 @@ class DashboardView extends BaseView {
     this._destroyCharts();
     body.innerHTML = this._myBrandsDashboardHTML(insightRes, postsRes);
     this._setupDashboardEvents(insightRes, postsRes);
+    await this._ensureChartJs();
     this._renderCharts(insightRes, postsRes);
     this._lastFetchTime = Date.now();  // timestamp del último re-fetch de DB
     this._updateLastSyncLabel();
@@ -1531,6 +1532,20 @@ class DashboardView extends BaseView {
   }
 
   // ── My Brands: charts ──────────────────────────────────────────────────────
+
+  _ensureChartJs() {
+    if (window.Chart) return Promise.resolve();
+    if (window.__chartJsLoadPromise) return window.__chartJsLoadPromise;
+    window.__chartJsLoadPromise = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      s.async = true;
+      s.onload = () => resolve();
+      s.onerror = () => resolve();
+      document.head.appendChild(s);
+    });
+    return window.__chartJsLoadPromise;
+  }
 
   _renderCharts(insight, posts) {
     if (!window.Chart) return;

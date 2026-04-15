@@ -233,21 +233,21 @@ class IdentitiesView extends BaseView {
     const imageUrl = this.productImageById[p.id] || '';
     const price = p.precio_producto != null ? `${p.precio_producto} ${p.moneda || 'USD'}` : '';
     return `
-      <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
-        <div class="identity-product-card-image-wrap">
+      <div class="living-masonry-item">
+        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
           ${imageUrl
             ? `<img class="identity-product-card-image" src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(p.nombre_producto || 'Producto')}" loading="lazy">`
             : `<div class="identity-product-card-image identity-product-card-image--empty"><i class="fas fa-image"></i></div>`
           }
-        </div>
-        <div class="identity-product-card-body identity-product-card-body--overlay">
-          <h3 class="identity-product-card-title">${this.escapeHtml(p.nombre_producto || 'Producto')}</h3>
-          <div class="identity-product-card-meta">
-            ${price ? `<span class="identity-product-card-price">${this.escapeHtml(price)}</span>` : ''}
-            ${p.tipo_producto ? `<span class="identity-product-card-type">${this.escapeHtml(p.tipo_producto)}</span>` : ''}
+          <div class="history-card-flow-name identity-product-flow-name">
+            <div class="identity-product-card-title">${this.escapeHtml(p.nombre_producto || 'Producto')}</div>
+            <div class="identity-product-card-meta">
+              ${price ? `<span class="identity-product-card-price">${this.escapeHtml(price)}</span>` : ''}
+              ${p.tipo_producto ? `<span class="identity-product-card-type">${this.escapeHtml(p.tipo_producto)}</span>` : ''}
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </div>
     `;
   }
 

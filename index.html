@@ -15,26 +15,34 @@
     <meta property="og:description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
     <meta property="og:type" content="website">
     
-    <!-- Preconnect para optimización -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://connect.facebook.net" crossorigin>
+    <!-- Preconnect — solo orígenes críticos para primera pintura -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://connect.facebook.net">
-    <link rel="dns-prefetch" href="https://res.cloudinary.com">
-    <!-- Preload: primera imagen del hero para evitar pantalla negra -->
-    <link rel="preload" as="image" href="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg">
-    <link rel="preload" as="image" href="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776102754/Recurso_28Imagen-cloud-wonder_2-2x_copia_zgwsbb.jpg">
-    
-    <!-- External CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Application CSS — bundle único (rutas desde raíz para evitar 404 en recargas) -->
+    <!-- Preload: solo primera imagen del hero (las siguientes se cargan bajo demanda al rotar).
+         Mismos parámetros de Cloudinary que LandingView para aprovechar el mismo cache-key. -->
+    <link rel="preload" as="image" fetchpriority="high" href="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto,f_auto,c_limit,w_1920,dpr_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg">
+
+    <!-- Application CSS — crítico, bloqueante.
+         bundle.css usa @import para cargar módulos → los navegadores los descargan en
+         cascada. Preload paralelo de los módulos usados en la landing para evitar
+         esa cadena serial y acelerar la primera pintura. -->
+    <link rel="preload" as="style" href="css/modules/public.css">
+    <link rel="preload" as="style" href="css/modules/landing.css">
+    <link rel="preload" as="style" href="css/modules/navigation.css">
+    <link rel="preload" as="style" href="css/modules/auth.css">
     <link rel="stylesheet" href="css/bundle.css?v=20260414-no-templates">
+
+    <!-- Fuente Inter — pesos reducidos (solo los usados en la UI) + display=swap -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+
+    <!-- Icon fonts — carga NO bloqueante (pattern preload+onload swap). Solo se usan en vistas autenticadas -->
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"></noscript>
     
     <style>
         #modals-portal {
@@ -55,7 +63,7 @@
             <div class="entrance-text-block entrance-text-2">
                 <div class="entrance-reveal-frame">
                     <span class="entrance-reveal-box" aria-hidden="true"></span>
-                    <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="entrance-logo">
+                    <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="entrance-logo" width="320" height="64" fetchpriority="high" decoding="async">
                 </div>
             </div>
         </div>
@@ -89,37 +97,38 @@
     <!-- Portal de modales: fuera del scroll, centrados en pantalla -->
     <div id="modals-portal" aria-hidden="true"></div>
 
-    <!-- External Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+    <!-- External Scripts.
+         Chart.js ya no se carga aquí: se lazy-loadea desde DashboardView cuando se necesita.
+         Supabase JS SDK usa `defer` para no bloquear la primera pintura del hero. -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
     <!-- URL base del ai-engine (opcional). Ver js/runtime-config.js -->
-    <script src="js/runtime-config.js"></script>
-    
+    <script src="js/runtime-config.js" defer></script>
+
     <!-- Core: loader + entrada animada (rutas relativas a <base href="/">) -->
-    <script src="js/app-loader.js"></script>
-    <script src="js/views/BaseView.js"></script>
-    <script src="js/router.js"></script>
-    
+    <script src="js/app-loader.js" defer></script>
+    <script src="js/views/BaseView.js" defer></script>
+    <script src="js/router.js" defer></script>
+
     <!-- Services (AuthService imprescindible: si falla 404/redirect, el router redirige a onboarding) -->
-    <script src="js/services/SupabaseService.js"></script>
-    <script src="js/services/AuthService.js"></script>
-    <script src="js/services/OrgBrandTheme.js?v=20260409-11"></script>
-    <script src="js/org-url.js"></script>
-    <script src="js/services/AppState.js"></script>
-    <script src="js/session-utils.js"></script>
-    
+    <script src="js/services/SupabaseService.js" defer></script>
+    <script src="js/services/AuthService.js" defer></script>
+    <script src="js/services/OrgBrandTheme.js?v=20260409-11" defer></script>
+    <script src="js/org-url.js" defer></script>
+    <script src="js/services/AppState.js" defer></script>
+    <script src="js/session-utils.js" defer></script>
+
     <!-- Shell público (header + footer persistentes) — se usa en landing y demás públicas -->
-    <script src="js/components/PublicLayout.js?v=20260414-public-shell"></script>
-    <script src="js/views/PublicBaseView.js?v=20260414-public-shell"></script>
+    <script src="js/components/PublicLayout.js?v=20260414-public-shell" defer></script>
+    <script src="js/views/PublicBaseView.js?v=20260414-public-shell" defer></script>
 
     <!-- Vistas críticas (landing + login) — el resto se carga lazy por ruta -->
-    <script src="js/views/LandingView.js?v=20260414-inline"></script>
-    <script src="js/views/SignInView.js?v=20260414-inline"></script>
-    
+    <script src="js/views/LandingView.js?v=20260414-inline" defer></script>
+    <script src="js/views/SignInView.js?v=20260414-inline" defer></script>
+
     <!-- Navigation + App init -->
-    <script src="js/components/Navigation.js?v=20260327-1845"></script>
-    <script src="js/app.js?v=20260409-11"></script>
+    <script src="js/components/Navigation.js?v=20260327-1845" defer></script>
+    <script src="js/app.js?v=20260409-11" defer></script>
 
 </body>
 </html>

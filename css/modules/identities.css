@@ -173,28 +173,16 @@
 }
 
 .identity-product-card {
-  background: var(--media-container-bg, var(--bg-card));
-  border-radius: var(--media-container-radius, 12px);
-  overflow: hidden;
   cursor: pointer;
-  position: relative;
-  border: none;
-  box-shadow: var(--media-container-shadow, var(--shadow-floating));
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .identity-product-card:hover {
   transform: translateY(-1px);
-  box-shadow: var(--media-container-shadow-hover, var(--shadow-hover, 0 6px 20px rgba(0, 0, 0, 0.25)));
-}
-
-.identity-product-card-image-wrap {
-  width: 100%;
 }
 
 .identity-product-card-image {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   object-fit: cover;
   background: var(--bg-secondary);
@@ -209,29 +197,16 @@
   font-size: 1.2rem;
 }
 
-.identity-product-card-body {
-  padding: 0.8rem;
-}
-
-.identity-product-card-body--overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.22) 70%, rgba(0, 0, 0, 0));
-  backdrop-filter: blur(1px);
-}
-
 .identity-product-card-title {
-  margin: 0;
-  font-size: 0.9rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #fff;
-  line-height: 1.3;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .identity-product-card-meta {
-  margin-top: 0.55rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -239,16 +214,23 @@
 }
 
 .identity-product-card-price {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
+  text-transform: uppercase;
 }
 
 .identity-product-card-type {
-  font-size: 0.67rem;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.86);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+}
+
+.identity-product-flow-name {
+  opacity: 1;
+  padding: 14px 14px 12px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
 }
 
 /* -------------------- Empty -------------------- */

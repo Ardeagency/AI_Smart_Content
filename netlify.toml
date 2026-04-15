@@ -223,11 +223,18 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Hub-Signature-256"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 
-# Headers para favicons (cache largo, son estáticos)
+# Favicons — cache largo
 [[headers]]
   for = "/recursos/favicons/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Imágenes, logos, banners, vera — cache largo + stale-while-revalidate
+# Netlify invalida automáticamente al deployar un archivo con el mismo nombre
+[[headers]]
+  for = "/recursos/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, stale-while-revalidate=604800"
 
 # HTML de app shell y rutas SPA: siempre revalidar
 [[headers]]
@@ -240,16 +247,18 @@
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
-# Assets críticos sin hash de nombre: evitar servir versiones viejas
+# Assets versionados vía ?v=… en el HTML (bundle.css, app.js, vistas).
+# Usamos cache largo + SWR: el navegador solo revalida en segundo plano si el
+# query string cambia, y Netlify purga CDN al deploy si el archivo cambió.
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "no-cache, must-revalidate"
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
   for = "/js/*"
   [headers.values]
-    Cache-Control = "no-cache, must-revalidate"
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL
