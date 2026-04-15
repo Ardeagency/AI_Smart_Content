@@ -1821,10 +1821,10 @@ class BrandstorageView extends BaseView {
     }).join('');
     return `
       <div class="info-brand-multiselect" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="array-multiselect" data-selected='${this.escapeHtml(JSON.stringify(selected))}'>
-        <button type="button" class="info-brand-multiselect__trigger" aria-expanded="false">
+        <div class="info-brand-multiselect__trigger" role="button" tabindex="0" aria-expanded="false">
           <span class="info-brand-multiselect__value">${selectedLabel}</span>
           <span class="info-brand-multiselect__caret" aria-hidden="true"></span>
-        </button>
+        </div>
         <div class="info-brand-multiselect__panel" hidden>
           ${optionsHtml}
         </div>
@@ -2318,6 +2318,12 @@ class BrandstorageView extends BaseView {
       };
 
       trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(panel.hidden);
+      });
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
         e.stopPropagation();
         setOpen(panel.hidden);
