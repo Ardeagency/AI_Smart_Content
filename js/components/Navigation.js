@@ -304,7 +304,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1656,6 +1656,7 @@ class Navigation {
       '/brand-organization': 'MARCA',
       '/brand-storage': 'BRAND STORAGE',
       '/brandstorage': 'BRAND STORAGE',
+      '/command-center': 'COMMAND CENTER',
       '/brands': 'IDENTITY',
       '/product-detail': 'IDENTITY',
       '/identities': 'IDENTITY',
@@ -1935,7 +1936,7 @@ class Navigation {
   }
 
   /**
-   * HTML de los ítems del submenú Brand Storage (sub-marcas). Por ahora no navegan.
+   * HTML de los ítems del submenú Brand Storage (sub-marcas) → Command Center por slug de nombre.
    */
   _buildBrandStorageSubmenuChildrenHtml() {
     const rows = Array.isArray(this._brandStorageSubbrands) ? this._brandStorageSubbrands : [];
@@ -1944,11 +1945,31 @@ class Navigation {
     }
     return rows
       .map((r) => {
-        const name = _escapeHtml(String((r.nombre_marca || 'Sub-marca').trim() || 'Sub-marca'));
-        const id = _escapeHtml(String(r.id || ''));
-        return `<span class="nav-submenu-link nav-submenu-link--placeholder" data-brand-container-id="${id}" tabindex="-1" title="${name}"><span>${name}</span></span>`;
+        const rawName = String((r.nombre_marca || 'Sub-marca').trim() || 'Sub-marca');
+        const name = _escapeHtml(rawName);
+        const slug =
+          typeof window.getOrgSlug === 'function' ? window.getOrgSlug(rawName) : 'sub-marca';
+        const href = _escapeHtml(this.getUserSidebarRoute(`command-center/${slug}`));
+        return `<a href="${href}" class="nav-submenu-link nav-submenu-link--command-center" data-route="${href}" data-tooltip="${name}"><span>${name}</span></a>`;
       })
       .join('');
+  }
+
+  _bindBrandStorageSubmenuRouteLinks(submenuRoot) {
+    if (!submenuRoot) return;
+    submenuRoot.querySelectorAll('a.nav-submenu-link[data-route]:not([data-nav-bound])').forEach((link) => {
+      link.setAttribute('data-nav-bound', '1');
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const route = link.dataset.route || (link.getAttribute && link.getAttribute('href'));
+        if (route && window.router) {
+          const path = route.indexOf('/') === 0 ? route : new URL(route, window.location.origin).pathname;
+          window.router.navigate(path);
+        }
+        const ud = document.getElementById('userDropdown');
+        if (ud) ud.classList.remove('active');
+      });
+    });
   }
 
   /** Actualiza solo el DOM del submenú (tras fetch o re-render parcial). */
@@ -1956,6 +1977,9 @@ class Navigation {
     const el = document.getElementById('nav-sub-brand-storage');
     if (!el) return;
     el.innerHTML = this._buildBrandStorageSubmenuChildrenHtml();
+    this._bindBrandStorageSubmenuRouteLinks(el);
+    this._lastActivePath = null;
+    this.updateActiveLink();
   }
 
   /**

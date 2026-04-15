@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260415-product-detail-caracteristicas-visuales';
+const APP_LAZY_SCRIPT_VER = '20260415-command-center';
 
 class App {
   constructor() {
@@ -236,6 +236,10 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandViewLoader, auth);
     r.register('/brand-storage', brandViewLoader, auth);
     r.register('/brandstorage', brandViewLoader, auth);
+
+    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandSlug', commandCenterLoader, auth);
+    r.register('/command-center/:subBrandSlug', commandCenterLoader, auth);
 
     // OAuth callback para integraciones OAuth propias (Google/Facebook)
     r.register(
