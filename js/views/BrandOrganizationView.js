@@ -87,6 +87,9 @@ class BrandOrganizationView extends BaseView {
                 <h1 class="brand-name-large" id="brandNameLarge"></h1>
                 <div class="brand-status-indicator"><span class="status-dot"></span></div>
             </div>
+            <div class="brand-slogan-row">
+                <span class="brand-slogan-label" id="brandSloganLabel"></span>
+            </div>
         </div>
         <div class="brand-market-row">
             <span class="market-label" id="brandMarketLabel"></span>
@@ -769,6 +772,7 @@ class BrandOrganizationView extends BaseView {
     this.applyBrandBackgroundGradient();
     this.renderCornerLogoUploader();
     this.renderBrandName();
+    this.renderBrandSlogan();
     this.renderMarket();
     this.renderCards();
   }
@@ -811,6 +815,14 @@ class BrandOrganizationView extends BaseView {
         this.renderBrandName();
       });
     }
+  }
+
+  renderBrandSlogan() {
+    const el = document.getElementById('brandSloganLabel');
+    if (!el) return;
+    const slogan = String(this.brandData?.brand_slogan || '').trim();
+    el.textContent = slogan;
+    el.style.display = slogan ? 'block' : 'none';
   }
 
   renderMarket() {
