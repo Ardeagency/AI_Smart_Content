@@ -1784,7 +1784,16 @@ class BrandstorageView extends BaseView {
       ? rawValues.map((v) => String(v).trim()).filter(Boolean)
       : [];
     const selectedSet = new Set(selected);
-    const selectedLabel = selected.length ? selected.join(', ') : 'Seleccionar';
+    const selectedLabel = selected.length
+      ? selected
+          .map((value) => `
+            <span class="info-brand-multiselect__chip">
+              <span class="info-brand-multiselect__chip-label">${this.escapeHtml(value)}</span>
+              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(value)}">×</button>
+            </span>
+          `)
+          .join('')
+      : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
     const optionsHtml = options.map((option) => {
       const isSelected = selectedSet.has(option);
       return `
@@ -1797,7 +1806,7 @@ class BrandstorageView extends BaseView {
     return `
       <div class="info-brand-multiselect" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="array-multiselect" data-selected='${this.escapeHtml(JSON.stringify(selected))}'>
         <button type="button" class="info-brand-multiselect__trigger" aria-expanded="false">
-          <span class="info-brand-multiselect__value">${this.escapeHtml(selectedLabel)}</span>
+          <span class="info-brand-multiselect__value">${selectedLabel}</span>
           <span class="info-brand-multiselect__caret" aria-hidden="true"></span>
         </button>
         <div class="info-brand-multiselect__panel" hidden>
@@ -2250,7 +2259,16 @@ class BrandstorageView extends BaseView {
           const check = btn.querySelector('.info-brand-multiselect__check');
           if (check) check.textContent = isSelected ? '✓' : '';
         });
-        valueEl.textContent = selected.length ? selected.join(', ') : 'Seleccionar';
+        valueEl.innerHTML = selected.length
+          ? selected
+              .map((value) => `
+                <span class="info-brand-multiselect__chip">
+                  <span class="info-brand-multiselect__chip-label">${this.escapeHtml(value)}</span>
+                  <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(value)}">×</button>
+                </span>
+              `)
+              .join('')
+          : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
         wrap.setAttribute('data-selected', JSON.stringify(selected));
       };
 
@@ -2286,8 +2304,21 @@ class BrandstorageView extends BaseView {
           else selected = [...selected, val];
           syncUi();
           await this.saveBrandContainerFieldById(brandContainerId, field, selected);
-          setOpen(false);
         });
+      });
+
+      if (wrap.dataset.boundChipRemove === '1') return;
+      wrap.dataset.boundChipRemove = '1';
+      valueEl.addEventListener('click', async (e) => {
+        const removeBtn = e.target.closest('.info-brand-multiselect__chip-remove');
+        if (!removeBtn || !valueEl.contains(removeBtn)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const value = String(removeBtn.getAttribute('data-value') || '').trim();
+        if (!value) return;
+        selected = selected.filter((v) => v !== value);
+        syncUi();
+        await this.saveBrandContainerFieldById(brandContainerId, field, selected);
       });
 
       const closeOnOutside = (ev) => {
