@@ -269,6 +269,11 @@
     overflow-wrap: break-word;
 }
 
+.brand-slogan-label.is-placeholder {
+    opacity: 0.62;
+    font-style: italic;
+}
+
 .brand-name-large {
     font-size: 6rem;
     font-weight: 700;
@@ -1271,6 +1276,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     margin-bottom: 1rem;
 }
 
+.identity-files.identity-files--empty {
+    margin-bottom: 0.35rem;
+    gap: 0;
+}
+
 .identity-file-item {
     display: flex;
     align-items: center;
@@ -1372,6 +1382,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
     justify-content: center;
     gap: 0.5rem;
     transition: var(--transition);
+}
+
+.identity-upload-btn {
+    margin-top: 0.2rem;
 }
 
 .file-upload-btn:hover {

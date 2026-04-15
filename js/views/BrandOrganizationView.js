@@ -821,8 +821,10 @@ class BrandOrganizationView extends BaseView {
     const el = document.getElementById('brandSloganLabel');
     if (!el) return;
     const slogan = String(this.brandData?.brand_slogan || '').trim();
-    el.textContent = slogan;
-    el.style.display = slogan ? 'block' : 'none';
+    const hasSlogan = !!slogan;
+    el.textContent = hasSlogan ? slogan : 'Slogan';
+    el.classList.toggle('is-placeholder', !hasSlogan);
+    el.style.display = 'block';
   }
 
   renderMarket() {
@@ -1508,9 +1510,12 @@ class BrandOrganizationView extends BaseView {
 
     const identityAssets = this.getIdentityAssets();
     if (!identityAssets.length) {
-      container.innerHTML = '<div class="identity-file-empty"></div>';
+      container.innerHTML = '';
+      container.classList.add('identity-files--empty');
       return;
     }
+
+    container.classList.remove('identity-files--empty');
 
     container.innerHTML = identityAssets.map((asset) => {
       const fileName = asset.file_name || 'Archivo identidad';
@@ -2583,7 +2588,6 @@ class BrandOrganizationView extends BaseView {
       uploadBtn = document.createElement('button');
       uploadBtn.className = 'file-upload-btn identity-upload-btn';
       uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
-      uploadBtn.style.marginTop = '1rem';
 
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
@@ -2611,7 +2615,6 @@ class BrandOrganizationView extends BaseView {
       uploadBtn = document.createElement('button');
       uploadBtn.className = 'file-upload-btn';
       uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
-      uploadBtn.style.marginTop = '1rem';
 
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
