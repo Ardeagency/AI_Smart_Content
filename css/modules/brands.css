@@ -2054,6 +2054,18 @@ h1.brand-name-large[contenteditable="true"]:hover,
     text-align: left;
 }
 
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-multiselect__trigger {
+    background: var(--glass-black-bg);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-multiselect__trigger {
+    background: var(--glass-white-bg);
+    border-color: var(--glass-white-border);
+    color: var(--text-primary);
+}
+
 #infoPanelContent .info-brand-multiselect__value {
     flex: 1;
     min-width: 0;
@@ -2090,14 +2102,28 @@ h1.brand-name-large[contenteditable="true"]:hover,
     overflow-y: auto;
     border-radius: 12px;
     border: 1px solid var(--glass-border);
-    background: var(--glass-bg);
+    background: rgba(20, 20, 20, 0.92);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     padding: 0.35rem;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.4);
 }
 
 #infoPanelContent .info-brand-multiselect__panel[hidden] {
     display: none !important;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-multiselect__panel {
+    background: rgba(16, 18, 24, 0.94);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-multiselect__panel {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: var(--glass-white-border);
+    color: var(--text-primary);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
 }
 
 #infoPanelContent .info-brand-multiselect__option {
@@ -2118,6 +2144,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
 #infoPanelContent .info-brand-multiselect__option:hover,
 #infoPanelContent .info-brand-multiselect__option.is-selected {
     background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-multiselect__option:hover,
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-multiselect__option.is-selected {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-multiselect__option:hover,
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-multiselect__option.is-selected {
+    background: rgba(15, 23, 42, 0.08);
 }
 
 #infoPanelContent .info-brand-multiselect__check {
