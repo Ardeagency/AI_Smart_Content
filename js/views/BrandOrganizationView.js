@@ -1497,10 +1497,7 @@ class BrandOrganizationView extends BaseView {
 
     if (!logoUrl) {
       container.innerHTML = `
-        <div class="identity-file-empty">
-          <div class="identity-file-empty-text">Sin logo organizacional</div>
-          <div class="identity-file-empty-hint">Súbelo desde la sección INFO del perfil de organización.</div>
-        </div>
+        <div class="identity-file-empty"></div>
       `;
       return;
     }
@@ -1523,10 +1520,7 @@ class BrandOrganizationView extends BaseView {
     const assets = this.brandAssets || [];
     if (!assets.length) {
       container.innerHTML = `
-        <div class="assets-file-empty">
-          <div class="identity-file-empty-text">Sin assets todavía</div>
-          <div class="identity-file-empty-hint">Sube imágenes, logos, PDFs y archivos de referencia.</div>
-        </div>
+        <div class="assets-file-empty"></div>
       `;
       return;
     }
