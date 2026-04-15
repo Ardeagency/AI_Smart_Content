@@ -18,6 +18,8 @@ class BrandstorageView extends BaseView {
     this.brandEntities = [];
     this.brandPlaces = [];
     this.brandAudiences = [];
+    this.brandCampaigns = [];
+    this.brandIntegrations = [];
     this.brandSocialLinks = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
@@ -233,6 +235,8 @@ class BrandstorageView extends BaseView {
         this.brandEntities = [];
         this.brandPlaces = [];
         this.brandAudiences = [];
+        this.brandCampaigns = [];
+        this.brandIntegrations = [];
         this.organizationMembers = [];
         this.organizationCredits = { credits_available: 100 };
         this.creditUsage = [];
@@ -263,6 +267,8 @@ class BrandstorageView extends BaseView {
         this.brandEntities = [];
         this.brandPlaces = [];
         this.brandAudiences = [];
+        this.brandCampaigns = [];
+        this.brandIntegrations = [];
         this.organizationMembers = [];
         this.organizationCredits = { credits_available: 100 };
         this.creditUsage = [];
@@ -313,9 +319,50 @@ class BrandstorageView extends BaseView {
         this.brandAssets = assets || [];
       }
 
-      this.brandEntities = [];
+      const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
+
+      const [entitiesResult, audiencesResult, campaignsResult, integrationsResult] = await Promise.allSettled([
+        this.supabase
+          .from('brand_entities')
+          .select('id, brand_container_id, name, entity_type, description, created_at, updated_at')
+          .eq('organization_id', orgId)
+          .order('updated_at', { ascending: false }),
+        containerIds.length
+          ? this.supabase
+            .from('audiences')
+            .select('id, brand_container_id, name, description, awareness_level, entity_id, datos_demograficos, datos_psicograficos, dolores, deseos, objeciones, gatillos_compra, estilo_lenguaje, created_at, updated_at')
+            .in('brand_container_id', containerIds)
+            .order('updated_at', { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+        containerIds.length
+          ? this.supabase
+            .from('campaigns')
+            .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at, updated_at')
+            .in('brand_container_id', containerIds)
+            .order('updated_at', { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+        containerIds.length
+          ? this.supabase
+            .from('brand_integrations')
+            .select('id, brand_container_id, platform, external_account_name, is_active, last_sync_at, updated_at')
+            .in('brand_container_id', containerIds)
+            .order('platform', { ascending: true })
+          : Promise.resolve({ data: [], error: null })
+      ]);
+
+      this.brandEntities = entitiesResult.status === 'fulfilled' && !entitiesResult.value.error
+        ? (entitiesResult.value.data || [])
+        : [];
       this.brandPlaces = [];
-      this.brandAudiences = [];
+      this.brandAudiences = audiencesResult.status === 'fulfilled' && !audiencesResult.value.error
+        ? (audiencesResult.value.data || [])
+        : [];
+      this.brandCampaigns = campaignsResult.status === 'fulfilled' && !campaignsResult.value.error
+        ? (campaignsResult.value.data || [])
+        : [];
+      this.brandIntegrations = integrationsResult.status === 'fulfilled' && !integrationsResult.value.error
+        ? (integrationsResult.value.data || [])
+        : [];
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
       this.brandRules = [];
@@ -1680,64 +1727,247 @@ class BrandstorageView extends BaseView {
     });
   }
 
+  formatInfoDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  renderInfoTags(values, fallback = 'Sin datos') {
+    const list = Array.isArray(values) ? values.filter(Boolean).map((v) => String(v).trim()).filter(Boolean) : [];
+    if (!list.length) {
+      return `<span class="brand-storage-info-empty">${this.escapeHtml(fallback)}</span>`;
+    }
+    return list.map((value) => `<span class="brand-storage-info-tag">${this.escapeHtml(value)}</span>`).join('');
+  }
+
+  renderInfoJson(value) {
+    if (!value || typeof value !== 'object') {
+      return '<span class="brand-storage-info-empty">Sin datos</span>';
+    }
+    const entries = Object.entries(value).filter(([, v]) => v != null && String(v).trim() !== '');
+    if (!entries.length) return '<span class="brand-storage-info-empty">Sin datos</span>';
+    return `<pre class="brand-storage-info-json">${this.escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+  }
+
+  getIntegrationsForContainer(brandContainerId) {
+    const id = String(brandContainerId || '');
+    return (this.brandIntegrations || []).filter((row) => String(row.brand_container_id || '') === id);
+  }
+
+  getCampaignsForContainer(brandContainerId) {
+    const id = String(brandContainerId || '');
+    return (this.brandCampaigns || []).filter((row) => String(row.brand_container_id || '') === id);
+  }
+
+  getAudiencesForContainer(brandContainerId) {
+    const id = String(brandContainerId || '');
+    return (this.brandAudiences || []).filter((row) => String(row.brand_container_id || '') === id);
+  }
+
+  getEntitiesForContainer(brandContainerId) {
+    const id = String(brandContainerId || '');
+    return (this.brandEntities || []).filter((row) => String(row.brand_container_id || '') === id);
+  }
+
+  getIntegrationPlatformMeta(platformRaw) {
+    const platform = String(platformRaw || '').toLowerCase();
+    if (platform === 'youtube') return { label: 'YouTube', iconClass: 'fab fa-youtube' };
+    if (platform === 'instagram') return { label: 'Instagram', iconClass: 'fab fa-instagram' };
+    if (platform === 'facebook') return { label: 'Facebook', iconClass: 'fab fa-facebook-f' };
+    if (platform === 'google') return { label: 'Google', iconClass: 'fab fa-google' };
+    if (platform === 'tiktok') return { label: 'TikTok', iconClass: 'fab fa-tiktok' };
+    return { label: platformRaw || 'Integración', iconClass: 'fas fa-plug' };
+  }
+
+  renderIntegrationsSection(brandContainerId) {
+    const rows = this.getIntegrationsForContainer(brandContainerId);
+    if (!rows.length) {
+      return `
+      <section class="info-section" aria-labelledby="infoBrandIntegrationsHeading">
+        <h3 class="info-section-title" id="infoBrandIntegrationsHeading">Integraciones</h3>
+        <p class="info-assets-empty">Sin integraciones conectadas para esta sub-marca.</p>
+      </section>`;
+    }
+
+    const items = rows.map((row) => {
+      const meta = this.getIntegrationPlatformMeta(row.platform);
+      const status = row.is_active ? 'Conectada' : 'Desconectada';
+      const account = row.external_account_name ? this.escapeHtml(row.external_account_name) : 'Sin cuenta asociada';
+      const syncText = row.last_sync_at ? ` · Sync: ${this.escapeHtml(this.formatInfoDate(row.last_sync_at))}` : '';
+      return `
+        <li class="info-connect-row" data-connect-key="${this.escapeHtml(String(row.platform || ''))}">
+          <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(meta.iconClass)}"></i></span>
+          <div class="info-connect-main">
+            <span class="info-connect-label">${this.escapeHtml(meta.label)}</span>
+            <span class="info-connect-hint">${account}${syncText}</span>
+          </div>
+          <span class="info-connect-linked" title="${this.escapeHtml(status)}" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-link' : 'fa-unlink'}"></i></span>
+          <span class="info-connect-external" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-check-circle' : 'fa-circle'}"></i></span>
+        </li>`;
+    }).join('');
+
+    return `
+      <section class="info-section" aria-labelledby="infoBrandIntegrationsHeading">
+        <h3 class="info-section-title" id="infoBrandIntegrationsHeading">Integraciones</h3>
+        <ul class="info-connect-list" role="list">${items}</ul>
+      </section>`;
+  }
+
+  renderBrandReadonlySchema(item) {
+    const fieldHtml = BrandstorageView.BRAND_SCHEMA_BLOCKS.map((block) => {
+      const raw = item?.[block.field];
+      let valueHtml = '';
+      if (block.type === 'select') {
+        valueHtml = `<div class="brand-storage-info-value">${this.escapeHtml(BrandstorageView.getNichoCoreLabel(raw))}</div>`;
+      } else if (block.type === 'array') {
+        valueHtml = `<div class="brand-storage-info-tags">${this.renderInfoTags(raw)}</div>`;
+      } else if (block.type === 'json') {
+        valueHtml = this.renderInfoJson(raw);
+      } else {
+        const text = raw == null || String(raw).trim() === '' ? 'Sin datos' : String(raw);
+        valueHtml = `<div class="brand-storage-info-value">${this.escapeHtml(text)}</div>`;
+      }
+      return `
+        <div class="info-brand-field">
+          <div class="info-brand-field-label">${this.escapeHtml(block.label)}</div>
+          ${valueHtml}
+        </div>`;
+    }).join('');
+    return `<div class="info-brand-fields">${fieldHtml}</div>`;
+  }
+
+  renderCampaignsSection(brandContainerId) {
+    const rows = this.getCampaignsForContainer(brandContainerId);
+    if (!rows.length) {
+      return `
+      <section class="info-section" aria-labelledby="infoBrandCampaignsHeading">
+        <h3 class="info-section-title" id="infoBrandCampaignsHeading">Campañas</h3>
+        <p class="info-assets-empty">No hay campañas vinculadas a esta sub-marca.</p>
+      </section>`;
+    }
+
+    const items = rows.slice(0, 8).map((row) => {
+      const objetivo = Array.isArray(row.objetivos_estrategicos) ? row.objetivos_estrategicos[0] : '';
+      const tono = Array.isArray(row.tono_modificador) ? row.tono_modificador.join(', ') : String(row.tono_modificador || '');
+      return `
+        <li class="info-asset-row">
+          <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-bullhorn"></i></span></div>
+          <div class="info-asset-main">
+            <span class="info-asset-name">${this.escapeHtml(row.nombre_campana || 'Campaña')}</span>
+            <span class="info-asset-meta">${this.escapeHtml(row.descripcion_interna || row.contexto_temporal || objetivo || 'Sin descripción')}</span>
+            ${tono ? `<span class="info-asset-meta">Tono: ${this.escapeHtml(tono)}</span>` : ''}
+          </div>
+          <span class="info-connect-external" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+        </li>`;
+    }).join('');
+
+    return `
+      <section class="info-section" aria-labelledby="infoBrandCampaignsHeading">
+        <h3 class="info-section-title" id="infoBrandCampaignsHeading">Campañas</h3>
+        <ul class="info-asset-list" role="list">${items}</ul>
+      </section>`;
+  }
+
+  renderAudiencesSection(brandContainerId) {
+    const rows = this.getAudiencesForContainer(brandContainerId);
+    if (!rows.length) {
+      return `
+      <section class="info-section" aria-labelledby="infoBrandAudiencesHeading">
+        <h3 class="info-section-title" id="infoBrandAudiencesHeading">Audiencias</h3>
+        <p class="info-assets-empty">No hay audiencias registradas para esta sub-marca.</p>
+      </section>`;
+    }
+
+    const items = rows.slice(0, 8).map((row) => {
+      const dolor = Array.isArray(row.dolores) && row.dolores.length ? `Dolor: ${row.dolores[0]}` : '';
+      const lenguaje = Array.isArray(row.estilo_lenguaje) && row.estilo_lenguaje.length ? `Lenguaje: ${row.estilo_lenguaje[0]}` : '';
+      const resumen = [row.description, dolor, lenguaje].filter(Boolean).join(' · ');
+      return `
+        <li class="info-asset-row">
+          <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-users"></i></span></div>
+          <div class="info-asset-main">
+            <span class="info-asset-name">${this.escapeHtml(row.name || 'Audiencia')}</span>
+            <span class="info-asset-meta">${this.escapeHtml(resumen || 'Sin descripción')}</span>
+          </div>
+          <span class="info-connect-external" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+        </li>`;
+    }).join('');
+
+    return `
+      <section class="info-section" aria-labelledby="infoBrandAudiencesHeading">
+        <h3 class="info-section-title" id="infoBrandAudiencesHeading">Audiencias</h3>
+        <ul class="info-asset-list" role="list">${items}</ul>
+      </section>`;
+  }
+
+  renderEntitiesSection(brandContainerId) {
+    const rows = this.getEntitiesForContainer(brandContainerId);
+    if (!rows.length) {
+      return `
+      <section class="info-section" aria-labelledby="infoBrandEntitiesHeading">
+        <h3 class="info-section-title" id="infoBrandEntitiesHeading">Entidades y descripciones</h3>
+        <p class="info-assets-empty">Sin entidades vinculadas.</p>
+      </section>`;
+    }
+
+    const items = rows.slice(0, 8).map((row) => `
+      <li class="info-asset-row">
+        <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-cube"></i></span></div>
+        <div class="info-asset-main">
+          <span class="info-asset-name">${this.escapeHtml(row.name || 'Entidad')}</span>
+          <span class="info-asset-meta">${this.escapeHtml(row.description || row.entity_type || 'Sin descripción')}</span>
+        </div>
+        <span class="info-connect-external" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+      </li>
+    `).join('');
+
+    return `
+      <section class="info-section" aria-labelledby="infoBrandEntitiesHeading">
+        <h3 class="info-section-title" id="infoBrandEntitiesHeading">Entidades y descripciones</h3>
+        <ul class="info-asset-list" role="list">${items}</ul>
+      </section>`;
+  }
+
   renderBrandContainerInfoContent(item) {
     const name = this.escapeHtml(item?.nombre_marca || 'Sub-marca');
     const slogan = this.escapeHtml(String(item?.brand_slogan || item?.propuesta_valor || '').trim());
     const href = this.escapeHtml(this.getBrandContainerHref(item?.id));
-    const updated = item?.updated_at
-      ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
-      : null;
-    const created = item?.created_at
-      ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
-      : null;
+    const updated = item?.updated_at ? this.formatInfoDate(item.updated_at) : '';
+    const created = item?.created_at ? this.formatInfoDate(item.created_at) : '';
 
-    const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna
-      ? item.visual_dna
-      : {};
+    const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna ? item.visual_dna : {};
     const logoUrl = String(item?.logo_url || visualDna.logo_url || visualDna.logo || '').trim();
-
-    const logoHtml = logoUrl
-      ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-asset-thumb" loading="lazy" width="56" height="56">`
-      : '<span class="info-asset-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>';
 
     return `
       <div class="info-panel-grid">
         <div class="info-panel-grid__primary">
-          <section class="info-section" aria-labelledby="infoBrandSummaryHeading">
-            <h3 class="info-section-title" id="infoBrandSummaryHeading">Resumen</h3>
-            <ul class="info-asset-list" role="list">
-              <li class="info-asset-row">
-                <div class="info-asset-preview">${logoHtml}</div>
-                <div class="info-asset-main">
-                  <span class="info-asset-name">${name}</span>
-                  ${slogan ? `<span class="info-asset-meta">${slogan}</span>` : '<span class="info-asset-meta">Sin slogan</span>'}
-                </div>
-                <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Abrir sub-marca"><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-              </li>
-            </ul>
+          <section class="info-section info-section-identity" aria-labelledby="infoBrandIdentityHeading">
+            <h3 class="info-section-title" id="infoBrandIdentityHeading">Identidad</h3>
+            <div class="info-identity-row info-identity-row--logo-only">
+              <div class="info-logo-container">
+                ${logoUrl
+                  ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview">`
+                  : '<div class="info-logo-placeholder visible"><i class="fas fa-image"></i></div>'}
+              </div>
+            </div>
+            <div class="brand-storage-info-summary">
+              <div class="brand-storage-info-title">${name}</div>
+              <div class="brand-storage-info-subtitle">${slogan || 'Sin propuesta de valor definida'}</div>
+              <div class="brand-storage-info-dates">${updated ? `Actualizado ${this.escapeHtml(updated)}` : ''}${created ? ` · Creado ${this.escapeHtml(created)}` : ''}</div>
+              <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Abrir sub-marca"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+            </div>
           </section>
+          ${this.renderIntegrationsSection(item?.id)}
         </div>
         <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandMetaHeading">
           <div class="info-brand-aside-inner">
-            <h3 class="info-section-title" id="infoBrandMetaHeading">Información</h3>
-            <div class="info-brand-fields">
-              ${updated ? `
-              <div class="info-brand-field">
-                <div class="info-brand-field-label">Última actualización</div>
-                <div class="info-brand-aside-lead">${this.escapeHtml(updated)}</div>
-              </div>` : ''}
-              ${created ? `
-              <div class="info-brand-field">
-                <div class="info-brand-field-label">Fecha de creación</div>
-                <div class="info-brand-aside-lead">${this.escapeHtml(created)}</div>
-              </div>` : ''}
-              <div class="info-brand-field">
-                <div class="info-brand-field-label">Acción</div>
-                <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Ir a sub-marca">
-                  <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                </a>
-              </div>
-            </div>
+            <h3 class="info-section-title" id="infoBrandMetaHeading">Ficha completa de la sub-marca</h3>
+            ${this.renderBrandReadonlySchema(item)}
+            ${this.renderEntitiesSection(item?.id)}
+            ${this.renderCampaignsSection(item?.id)}
+            ${this.renderAudiencesSection(item?.id)}
           </div>
         </aside>
       </div>
@@ -1759,6 +1989,7 @@ class BrandstorageView extends BaseView {
 
     const infoCard = document.createElement('div');
     infoCard.className = 'brand-card card-info expanded brand-storage-item-info-panel';
+    infoCard.setAttribute('data-brand-container-id', String(item.id));
     infoCard.innerHTML = `
       <div class="card-header">
         <h2 class="card-title">INFO · ${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</h2>
@@ -2034,11 +2265,17 @@ class BrandstorageView extends BaseView {
 
   _refreshInfoPanelIfOpen() {
     const root = this.container || document.getElementById('app-container');
-    const infoCard = root?.querySelector('.card-info.expanded');
+    const infoCard = root?.querySelector('.brand-card.card-info.expanded.brand-storage-item-info-panel');
     if (!infoCard) return;
+    const itemId = String(infoCard.getAttribute('data-brand-container-id') || '').trim();
+    const item = (this.brandContainers || []).find((row) => String(row.id) === itemId);
+    if (!item) return;
     const content = infoCard.querySelector('#infoPanelContent');
     if (content) {
-      this.renderInfoPanelContent(content);
+      content.innerHTML = this.renderBrandContainerInfoContent(item);
+      if (typeof this.updateLinksForRouter === 'function') {
+        this.updateLinksForRouter();
+      }
     }
   }
 
