@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production, Brand Organization, Identities → [Create] Video, Flows.
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production, Brand Organization, Brand Storage (2+ sub-marcas), Identities → [Create] Video, Flows.
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -17,6 +17,14 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       route: 'brand'
+    },
+    {
+      type: 'container',
+      id: 'brand-storage',
+      label: 'Brand Storage',
+      icon: 'fa-layer-group',
+      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      children: []
     },
     {
       type: 'page',
@@ -35,18 +43,6 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
-    },
-    // Brand Storage se muestra dinámicamente solo cuando hay 2+ sub-marcas.
-    // updateBrandStorageLink() controla su visibilidad via #navBrandStorageLink.
-    {
-      type: 'page',
-      id: 'brand-storage',
-      label: 'Brand Storage',
-      icon: 'fa-layer-group',
-      iconSrc: '/recursos/icons/Identity-Brands.svg',
-      route: 'brand-storage',
-      navId: 'navBrandStorageLink',
-      hidden: true
     }
   ],
   footer: [
@@ -171,6 +167,8 @@ class Navigation {
     this._devCache = null;
     this._devCacheTime = 0;
     this._catalogCategories = [];
+    /** @type {Array<{id:string,nombre_marca?:string}>} Sub-marcas para el submenú de Brand Storage */
+    this._brandStorageSubbrands = [];
     this._CACHE_TTL = 60000;
     this._creditsUpdatedAttached = false;
     this._creditsRefreshInterval = null;
@@ -531,6 +529,25 @@ class Navigation {
           </div>`;
       }
       const isOpen = expandedId === item.id;
+      if (item.id === 'brand-storage') {
+        const storageHref = full('brand-storage');
+        const subHtml = this._buildBrandStorageSubmenuChildrenHtml();
+        return `
+        <div class="nav-item has-submenu nav-brand-storage-wrap ${isOpen ? 'submenu-open' : ''}" id="navBrandStorageContainer" style="display:none" data-container-id="brand-storage">
+          <div class="nav-brand-storage-head">
+            <a href="${storageHref}" class="nav-link nav-main-link nav-brand-storage-page" data-route="${storageHref}" data-tooltip="${_escapeHtml(item.label)}">
+              ${iconHTML(item)}
+              <span class="nav-text">${_escapeHtml(item.label)}</span>
+            </a>
+            <button type="button" class="nav-submenu-toggle nav-brand-storage-expand-btn" data-tooltip="Sub-marcas" aria-expanded="${isOpen}" aria-controls="nav-sub-brand-storage">
+              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="nav-submenu" id="nav-sub-brand-storage" role="group" aria-label="${_escapeHtml(item.label)}">
+            ${subHtml}
+          </div>
+        </div>`;
+      }
       let childItems = item.children || [];
       if (item.id === 'catalog') {
         const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
@@ -1272,8 +1289,14 @@ class Navigation {
     if (!flyout) return;
     const submenu = containerEl.querySelector('.nav-submenu');
     const toggle = containerEl.querySelector('.nav-submenu-toggle');
-    const label = toggle?.dataset?.tooltip || 'Módulo';
-    const iconEl = toggle?.querySelector('.nav-icon');
+    const label =
+      containerEl.querySelector('.nav-brand-storage-page')?.dataset?.tooltip ||
+      toggle?.dataset?.tooltip ||
+      'Módulo';
+    const iconEl =
+      containerEl.querySelector('.nav-brand-storage-head .nav-icon-img') ||
+      containerEl.querySelector('.nav-brand-storage-head .nav-icon') ||
+      toggle?.querySelector('.nav-icon');
     const iconClass = iconEl ? (iconEl.className.baseVal || iconEl.className).replace(/\s*nav-icon\s*/, '').trim() : 'fas fa-folder';
     const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
     const currentPath = window.location.pathname;
@@ -1287,6 +1310,10 @@ class Navigation {
     links.forEach((a) => {
       const route = a.dataset.route || '';
       const itemLabel = (a.querySelector('span') || a).textContent.trim();
+      if (!route || a.classList.contains('nav-submenu-link--placeholder')) {
+        bodyHtml += `<span class="nav-flyout-static">${_escapeHtml(itemLabel)}</span>`;
+        return;
+      }
       const active = currentPath === route || (route && currentPath.startsWith(route + '/'));
       bodyHtml += `<a href="${route}" class="nav-flyout-link${active ? ' active' : ''}" data-route="${route}" ${active ? ' aria-current="page"' : ''}>${itemLabel}</a>`;
     });
@@ -1873,13 +1900,15 @@ class Navigation {
   }
 
   /**
-   * Consulta el conteo de brand_containers de la org actual y actualiza la visibilidad
-   * del link "Brand Storage" en el sidebar (solo visible con 2+ sub-marcas).
+   * Carga sub-marcas (brand_containers) de la org actual, rellena el submenú de Brand Storage
+   * y muestra u oculta el bloque completo (solo visible con 2+ sub-marcas).
    */
   async loadBrandContainersCount() {
     const orgId = this.currentOrgId;
     if (!orgId) {
+      this._brandStorageSubbrands = [];
       this.updateBrandStorageLink(0);
+      this.renderBrandStorageSubmenu();
       return;
     }
     try {
@@ -1887,23 +1916,53 @@ class Navigation {
         ? await window.supabaseService.getClient()
         : window.supabase;
       if (!supabase) return;
-      const { count } = await supabase
+      const { data, error } = await supabase
         .from('brand_containers')
-        .select('id', { count: 'exact', head: true })
-        .eq('organization_id', orgId);
-      this.updateBrandStorageLink(count || 0);
+        .select('id, nombre_marca')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false });
+      this._brandStorageSubbrands = !error && Array.isArray(data) ? data : [];
+      this.updateBrandStorageLink(this._brandStorageSubbrands.length);
+      this.renderBrandStorageSubmenu();
     } catch (e) {
       console.warn('Navigation: loadBrandContainersCount', e);
+      this._brandStorageSubbrands = [];
+      this.updateBrandStorageLink(0);
+      this.renderBrandStorageSubmenu();
     }
   }
 
   /**
-   * Muestra u oculta el link "Brand Storage" del sidebar según el número de sub-marcas.
+   * HTML de los ítems del submenú Brand Storage (sub-marcas). Por ahora no navegan.
+   */
+  _buildBrandStorageSubmenuChildrenHtml() {
+    const rows = Array.isArray(this._brandStorageSubbrands) ? this._brandStorageSubbrands : [];
+    if (!rows.length) {
+      return `<span class="nav-submenu-link nav-submenu-link--placeholder nav-submenu-link--empty" tabindex="-1"><span class="nav-submenu-muted">…</span></span>`;
+    }
+    return rows
+      .map((r) => {
+        const name = _escapeHtml(String((r.nombre_marca || 'Sub-marca').trim() || 'Sub-marca'));
+        const id = _escapeHtml(String(r.id || ''));
+        return `<span class="nav-submenu-link nav-submenu-link--placeholder" data-brand-container-id="${id}" tabindex="-1" title="${name}"><span>${name}</span></span>`;
+      })
+      .join('');
+  }
+
+  /** Actualiza solo el DOM del submenú (tras fetch o re-render parcial). */
+  renderBrandStorageSubmenu() {
+    const el = document.getElementById('nav-sub-brand-storage');
+    if (!el) return;
+    el.innerHTML = this._buildBrandStorageSubmenuChildrenHtml();
+  }
+
+  /**
+   * Muestra u oculta el bloque Brand Storage (enlace + desplegable) según el número de sub-marcas.
    * @param {number} count - Número de brand_containers de la organización
    */
   updateBrandStorageLink(count) {
-    const link = document.getElementById('navBrandStorageLink');
-    if (link) link.style.display = count >= 2 ? '' : 'none';
+    const wrap = document.getElementById('navBrandStorageContainer');
+    if (wrap) wrap.style.display = count >= 2 ? '' : 'none';
   }
 
   _startCreditsRefreshInterval() {

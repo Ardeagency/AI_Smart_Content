@@ -2672,6 +2672,59 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--sidebar-text-primary);
 }
 
+/* Brand Storage: fila enlace a página + chevron para desplegar sub-marcas */
+.nav-brand-storage-head {
+    display: flex;
+    align-items: stretch;
+    min-height: 30px;
+}
+
+.nav-brand-storage-head .nav-brand-storage-page {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+}
+
+.nav-brand-storage-expand-btn {
+    flex-shrink: 0;
+    width: auto;
+    min-width: 32px;
+    padding: 0 8px 0 4px;
+    justify-content: center;
+}
+
+.nav-brand-storage-expand-btn .nav-text {
+    display: none;
+}
+
+.nav-item.has-submenu.nav-brand-storage-wrap.submenu-open .nav-submenu {
+    max-height: 480px;
+}
+
+.nav-mode-user .nav-submenu-link--placeholder {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.92;
+}
+
+.nav-mode-user .nav-submenu-link--placeholder.nav-submenu-link--empty {
+    opacity: 0.55;
+    font-style: italic;
+}
+
+.nav-submenu-muted {
+    color: var(--text-muted);
+}
+
+/* Flyout (sidebar colapsado): ítem de sub-marca sin navegación */
+.nav-flyout-static {
+    display: block;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
 /* Compatibilidad: sidebar dev y otros mantienen estilos anteriores */
 .side-navigation:not(.nav-mode-user) .nav-link {
     display: flex;
