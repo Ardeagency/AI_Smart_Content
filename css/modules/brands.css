@@ -2205,6 +2205,137 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.85;
 }
 
+/* Single select dropdown (Nicho core) */
+#infoPanelContent .info-brand-single-select {
+    position: relative;
+    width: 100%;
+}
+
+#infoPanelContent .info-brand-single-select__trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-single-select__trigger {
+    background: var(--glass-black-bg);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-single-select__trigger {
+    background: var(--glass-white-bg);
+    border-color: var(--glass-white-border);
+    color: var(--text-primary);
+}
+
+#infoPanelContent .info-brand-single-select__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-size-sm);
+}
+
+#infoPanelContent .info-brand-single-select__caret {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid currentColor;
+    opacity: 0.7;
+    transition: transform 0.15s ease;
+}
+
+#infoPanelContent .info-brand-single-select.is-open .info-brand-single-select__caret {
+    transform: rotate(180deg);
+}
+
+#infoPanelContent .info-brand-single-select__panel {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    max-height: 220px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(20, 20, 20, 0.92);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 0.35rem;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.4);
+}
+
+#infoPanelContent .info-brand-single-select__panel[hidden] {
+    display: none !important;
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-single-select__panel {
+    background: rgba(16, 18, 24, 0.94);
+    border-color: var(--glass-black-border);
+    color: var(--glass-black-text);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-single-select__panel {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: var(--glass-white-border);
+    color: var(--text-primary);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+}
+
+#infoPanelContent .info-brand-single-select__option {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+}
+
+#infoPanelContent .info-brand-single-select__option:hover,
+#infoPanelContent .info-brand-single-select__option.is-selected {
+    background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+}
+
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-single-select__option:hover,
+#brandsListContainer.brand-cards-glass-black #infoPanelContent .info-brand-single-select__option.is-selected {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-single-select__option:hover,
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-single-select__option.is-selected {
+    background: rgba(15, 23, 42, 0.08);
+}
+
+#infoPanelContent .info-brand-single-select__check {
+    width: 1rem;
+    display: inline-flex;
+    justify-content: center;
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
 #infoPanelContent .info-brand-text-editor.editable-field {
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;

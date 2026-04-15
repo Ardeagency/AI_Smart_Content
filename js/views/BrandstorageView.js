@@ -1832,6 +1832,35 @@ class BrandstorageView extends BaseView {
     `;
   }
 
+  renderBrandSingleSelect(fieldName, rawValue, options) {
+    const normalized = rawValue == null ? '' : String(rawValue);
+    const currentLabel = fieldName === 'nicho_core'
+      ? BrandstorageView.getNichoCoreLabel(normalized)
+      : (normalized || 'Seleccionar');
+    const optionsHtml = (options || []).map((opt) => {
+      const value = String(opt?.value ?? '');
+      const label = String(opt?.label ?? value);
+      const isSelected = value === normalized;
+      return `
+        <button type="button" class="info-brand-single-select__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(value)}">
+          <span class="info-brand-single-select__check" aria-hidden="true">${isSelected ? '✓' : ''}</span>
+          <span>${this.escapeHtml(label)}</span>
+        </button>
+      `;
+    }).join('');
+    return `
+      <div class="info-brand-single-select" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="single-select" data-selected="${this.escapeHtml(normalized)}">
+        <button type="button" class="info-brand-single-select__trigger" aria-expanded="false">
+          <span class="info-brand-single-select__value">${this.escapeHtml(currentLabel)}</span>
+          <span class="info-brand-single-select__caret" aria-hidden="true"></span>
+        </button>
+        <div class="info-brand-single-select__panel" hidden>
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+  }
+
   getIntegrationsForContainer(brandContainerId) {
     const id = String(brandContainerId || '');
     return (this.brandIntegrations || []).filter((row) => String(row.brand_container_id || '') === id);
@@ -1975,11 +2004,7 @@ class BrandstorageView extends BaseView {
       const raw = item?.[block.field];
       let valueHtml = '';
       if (block.type === 'select') {
-        const options = BrandstorageView.NICHO_CORE_OPTIONS.map((opt) => {
-          const selected = String(opt.value) === String(raw || '') ? 'selected' : '';
-          return `<option value="${this.escapeHtml(opt.value)}" ${selected}>${this.escapeHtml(opt.label)}</option>`;
-        }).join('');
-        valueHtml = `<select class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="select">${options}</select>`;
+        valueHtml = this.renderBrandSingleSelect(block.field, raw, BrandstorageView.NICHO_CORE_OPTIONS);
       } else if (block.type === 'array') {
         if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo' || block.field === 'sub_nichos') {
           valueHtml = this.renderBrandArrayMultiSelect(block.field, raw);
@@ -2248,6 +2273,77 @@ class BrandstorageView extends BaseView {
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
 
+    panelRoot.querySelectorAll('.info-brand-single-select[data-brand-field][data-brand-input-type="single-select"]').forEach((wrap) => {
+      if (wrap.dataset.boundEditable === '1') return;
+      wrap.dataset.boundEditable = '1';
+      const field = wrap.getAttribute('data-brand-field');
+      const trigger = wrap.querySelector('.info-brand-single-select__trigger');
+      const valueEl = wrap.querySelector('.info-brand-single-select__value');
+      const panel = wrap.querySelector('.info-brand-single-select__panel');
+      const optionButtons = Array.from(wrap.querySelectorAll('.info-brand-single-select__option'));
+      if (!field || !trigger || !valueEl || !panel || !optionButtons.length) return;
+
+      let selected = String(wrap.getAttribute('data-selected') || '');
+
+      const syncUi = () => {
+        optionButtons.forEach((btn) => {
+          const val = String(btn.getAttribute('data-value') || '');
+          const isSelected = val === selected;
+          btn.classList.toggle('is-selected', isSelected);
+          const check = btn.querySelector('.info-brand-single-select__check');
+          if (check) check.textContent = isSelected ? '✓' : '';
+        });
+        valueEl.textContent = field === 'nicho_core'
+          ? BrandstorageView.getNichoCoreLabel(selected)
+          : (selected || 'Seleccionar');
+        wrap.setAttribute('data-selected', selected);
+      };
+
+      const closeOtherDropdowns = () => {
+        panelRoot.querySelectorAll('.info-brand-multiselect.is-open, .info-brand-single-select.is-open').forEach((otherWrap) => {
+          if (otherWrap === wrap) return;
+          otherWrap.classList.remove('is-open');
+          const otherTrigger = otherWrap.querySelector('.info-brand-multiselect__trigger, .info-brand-single-select__trigger');
+          const otherPanel = otherWrap.querySelector('.info-brand-multiselect__panel, .info-brand-single-select__panel');
+          if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+          if (otherPanel) otherPanel.hidden = true;
+        });
+      };
+
+      const setOpen = (open) => {
+        if (open) closeOtherDropdowns();
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        panel.hidden = !open;
+        wrap.classList.toggle('is-open', open);
+      };
+
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(panel.hidden);
+      });
+
+      optionButtons.forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const val = String(btn.getAttribute('data-value') || '').trim();
+          selected = val;
+          syncUi();
+          await this.saveBrandContainerFieldById(brandContainerId, field, selected);
+          setOpen(false);
+        });
+      });
+
+      const closeOnOutside = (ev) => {
+        if (!wrap.contains(ev.target)) setOpen(false);
+      };
+      document.addEventListener('click', closeOnOutside, true);
+      if (!this._brandInfoPanelDisposers) this._brandInfoPanelDisposers = [];
+      this._brandInfoPanelDisposers.push(() => document.removeEventListener('click', closeOnOutside, true));
+      syncUi();
+    });
+
     panelRoot.querySelectorAll('.info-brand-multiselect[data-brand-field][data-brand-input-type="array-multiselect"]').forEach((wrap) => {
       if (wrap.dataset.boundEditable === '1') return;
       wrap.dataset.boundEditable = '1';
@@ -2291,11 +2387,11 @@ class BrandstorageView extends BaseView {
       const setOpen = (open) => {
         // Permitir solo un multiselect abierto a la vez dentro del panel INFO
         if (open) {
-          panelRoot.querySelectorAll('.info-brand-multiselect.is-open').forEach((otherWrap) => {
+          panelRoot.querySelectorAll('.info-brand-multiselect.is-open, .info-brand-single-select.is-open').forEach((otherWrap) => {
             if (otherWrap === wrap) return;
             otherWrap.classList.remove('is-open');
-            const otherTrigger = otherWrap.querySelector('.info-brand-multiselect__trigger');
-            const otherPanel = otherWrap.querySelector('.info-brand-multiselect__panel');
+            const otherTrigger = otherWrap.querySelector('.info-brand-multiselect__trigger, .info-brand-single-select__trigger');
+            const otherPanel = otherWrap.querySelector('.info-brand-multiselect__panel, .info-brand-single-select__panel');
             if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
             if (otherPanel) otherPanel.hidden = true;
           });
