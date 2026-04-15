@@ -1301,10 +1301,15 @@ class Navigation {
     const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
     const currentPath = window.location.pathname;
 
+    const isImgIcon = iconEl && String(iconEl.tagName).toUpperCase() === 'IMG';
+    const iconHeaderInner = isImgIcon
+      ? `<img src="${_escapeHtml(iconEl.getAttribute('src') || '')}" class="nav-flyout-header-img" alt="" width="16" height="16">`
+      : `<i class="${iconClass}"></i>`;
+
     const headerHtml = `
       <div class="nav-flyout-header">
-        <span class="nav-flyout-header-icon"><i class="${iconClass}"></i></span>
-        <span class="nav-flyout-header-label">${label}</span>
+        <span class="nav-flyout-header-icon">${iconHeaderInner}</span>
+        <span class="nav-flyout-header-label">${_escapeHtml(String(label))}</span>
       </div>`;
     let bodyHtml = '<div class="nav-flyout-body"><div class="nav-flyout-list">';
     links.forEach((a) => {

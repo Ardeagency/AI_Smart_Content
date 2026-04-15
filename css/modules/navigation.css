@@ -956,6 +956,13 @@ body.sidebar-collapsed .main-header,
     flex-shrink: 0;
 }
 
+.nav-flyout-header-img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: block;
+}
+
 .nav-flyout-header-label {
     font-size: 14px;
     font-weight: 500;
