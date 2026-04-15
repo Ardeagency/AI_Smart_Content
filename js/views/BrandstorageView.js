@@ -516,6 +516,25 @@ class BrandstorageView extends BaseView {
     { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos', type: 'array' }
   ];
 
+  static BRAND_IDIOMAS_OPTIONS = [
+    'Español',
+    'Inglés',
+    'Portugués',
+    'Francés',
+    'Alemán',
+    'Italiano'
+  ];
+
+  static BRAND_MERCADO_OPTIONS = [
+    'Latinoamérica',
+    'Norteamérica',
+    'Europa',
+    'Global',
+    'B2B',
+    'B2C',
+    'Local / Regional'
+  ];
+
   static get BRAND_ARRAY_FIELDS() {
     return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
   }
@@ -1753,6 +1772,41 @@ class BrandstorageView extends BaseView {
     return `<pre class="brand-storage-info-json">${this.escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
   }
 
+  getBrandArrayFieldOptions(fieldName) {
+    if (fieldName === 'idiomas_contenido') return BrandstorageView.BRAND_IDIOMAS_OPTIONS;
+    if (fieldName === 'mercado_objetivo') return BrandstorageView.BRAND_MERCADO_OPTIONS;
+    return [];
+  }
+
+  renderBrandArrayMultiSelect(fieldName, rawValues) {
+    const options = this.getBrandArrayFieldOptions(fieldName);
+    const selected = Array.isArray(rawValues)
+      ? rawValues.map((v) => String(v).trim()).filter(Boolean)
+      : [];
+    const selectedSet = new Set(selected);
+    const selectedLabel = selected.length ? selected.join(', ') : 'Seleccionar';
+    const optionsHtml = options.map((option) => {
+      const isSelected = selectedSet.has(option);
+      return `
+        <button type="button" class="info-brand-multiselect__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(option)}">
+          <span class="info-brand-multiselect__check" aria-hidden="true">${isSelected ? '✓' : ''}</span>
+          <span>${this.escapeHtml(option)}</span>
+        </button>
+      `;
+    }).join('');
+    return `
+      <div class="info-brand-multiselect" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="array-multiselect" data-selected='${this.escapeHtml(JSON.stringify(selected))}'>
+        <button type="button" class="info-brand-multiselect__trigger" aria-expanded="false">
+          <span class="info-brand-multiselect__value">${this.escapeHtml(selectedLabel)}</span>
+          <span class="info-brand-multiselect__caret" aria-hidden="true"></span>
+        </button>
+        <div class="info-brand-multiselect__panel" hidden>
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+  }
+
   getIntegrationsForContainer(brandContainerId) {
     const id = String(brandContainerId || '');
     return (this.brandIntegrations || []).filter((row) => String(row.brand_container_id || '') === id);
@@ -1902,8 +1956,12 @@ class BrandstorageView extends BaseView {
         }).join('');
         valueHtml = `<select class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="select">${options}</select>`;
       } else if (block.type === 'array') {
-        const textValue = Array.isArray(raw) ? raw.join(', ') : '';
-        valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="array" rows="2" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
+        if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo') {
+          valueHtml = this.renderBrandArrayMultiSelect(block.field, raw);
+        } else {
+          const textValue = Array.isArray(raw) ? raw.join(', ') : '';
+          valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="array" rows="2" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
+        }
       } else if (block.type === 'json') {
         const jsonValue = raw && typeof raw === 'object' ? JSON.stringify(raw, null, 2) : '{}';
         valueHtml = `<textarea class="info-brand-json-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="json" rows="5" spellcheck="false">${this.escapeHtml(jsonValue)}</textarea>`;
@@ -2165,11 +2223,76 @@ class BrandstorageView extends BaseView {
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
 
+    panelRoot.querySelectorAll('.info-brand-multiselect[data-brand-field][data-brand-input-type="array-multiselect"]').forEach((wrap) => {
+      if (wrap.dataset.boundEditable === '1') return;
+      wrap.dataset.boundEditable = '1';
+      const field = wrap.getAttribute('data-brand-field');
+      const trigger = wrap.querySelector('.info-brand-multiselect__trigger');
+      const valueEl = wrap.querySelector('.info-brand-multiselect__value');
+      const panel = wrap.querySelector('.info-brand-multiselect__panel');
+      const optionButtons = Array.from(wrap.querySelectorAll('.info-brand-multiselect__option'));
+      if (!field || !trigger || !valueEl || !panel || !optionButtons.length) return;
+
+      let selected = [];
+      try {
+        selected = JSON.parse(wrap.getAttribute('data-selected') || '[]');
+      } catch (_) {
+        selected = [];
+      }
+      selected = Array.isArray(selected) ? selected.map((v) => String(v).trim()).filter(Boolean) : [];
+
+      const syncUi = () => {
+        const set = new Set(selected);
+        optionButtons.forEach((btn) => {
+          const val = String(btn.getAttribute('data-value') || '');
+          const isSelected = set.has(val);
+          btn.classList.toggle('is-selected', isSelected);
+          const check = btn.querySelector('.info-brand-multiselect__check');
+          if (check) check.textContent = isSelected ? '✓' : '';
+        });
+        valueEl.textContent = selected.length ? selected.join(', ') : 'Seleccionar';
+        wrap.setAttribute('data-selected', JSON.stringify(selected));
+      };
+
+      const setOpen = (open) => {
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        panel.hidden = !open;
+        wrap.classList.toggle('is-open', open);
+      };
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setOpen(panel.hidden);
+      });
+
+      optionButtons.forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const val = String(btn.getAttribute('data-value') || '').trim();
+          if (!val) return;
+          if (selected.includes(val)) selected = selected.filter((v) => v !== val);
+          else selected = [...selected, val];
+          syncUi();
+          await this.saveBrandContainerFieldById(brandContainerId, field, selected);
+        });
+      });
+
+      const closeOnOutside = (ev) => {
+        if (!wrap.contains(ev.target)) setOpen(false);
+      };
+      document.addEventListener('click', closeOnOutside, true);
+      if (!this._brandInfoPanelDisposers) this._brandInfoPanelDisposers = [];
+      this._brandInfoPanelDisposers.push(() => document.removeEventListener('click', closeOnOutside, true));
+      syncUi();
+    });
+
     panelRoot.querySelectorAll('[data-brand-field]').forEach((el) => {
       if (el.dataset.boundEditable === '1') return;
       el.dataset.boundEditable = '1';
       const field = el.getAttribute('data-brand-field');
       const type = el.getAttribute('data-brand-input-type') || 'text';
+      if (type === 'array-multiselect') return;
       const onSave = async () => {
         let nextValue = '';
         if (type === 'json') {
@@ -2234,6 +2357,12 @@ class BrandstorageView extends BaseView {
     setTimeout(() => {
       panel.remove();
       dashboardContainer.classList.remove('info-mode-secondary');
+      if (Array.isArray(this._brandInfoPanelDisposers)) {
+        this._brandInfoPanelDisposers.forEach((fn) => {
+          try { fn(); } catch (_) {}
+        });
+      }
+      this._brandInfoPanelDisposers = [];
       this.brandContainerInfoState = null;
     }, 220);
   }
