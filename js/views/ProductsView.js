@@ -344,6 +344,7 @@ class ProductsView extends BaseView {
             ${sectionTextarea('Variantes (uno por línea)', 'variantes', vArr('variantes'))}
             ${sectionTextarea('Casos de uso', 'casos_de_uso', vArr('casos_de_uso'))}
             ${sectionTextarea('Materiales / composición', 'materiales_composicion', vArr('materiales_composicion'))}
+            ${sectionTextarea('Características visuales (una por línea)', 'caracteristicas_visuales', vArr('caracteristicas_visuales'))}
           </div>
         </div>
       </div>
