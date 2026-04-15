@@ -2531,8 +2531,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     --sidebar-text-primary: var(--glass-black-text);
     --sidebar-text-secondary: rgba(255, 255, 255, 0.85);
     --sidebar-icon-color: rgba(255, 255, 255, 0.9);
-    --sidebar-hover: rgba(255, 255, 255, 0.1);
-    --sidebar-active: rgba(255, 255, 255, 0.15);
+    /* Mantener dinámicos los estados hover/active según tema de marca */
+    --sidebar-hover: var(--brillo-hover);
+    --sidebar-active: var(--brillo-active);
     --nav-border: var(--glass-black-border);
     --text-primary: var(--glass-black-text);
     --text-secondary: rgba(255, 255, 255, 0.85);

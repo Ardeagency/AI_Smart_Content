@@ -448,8 +448,9 @@
   background: var(--white-8, rgba(255,255,255,0.06));
 }
 .insight-subnav-btn.active {
-  background: var(--accent-brand, #a78bfa);
-  color: var(--bg-dark, #131418);
+  background: var(--brand-primary-brillo-strong, var(--brillo-active));
+  color: var(--text-primary);
+  border: 1px solid var(--brand-primary, var(--accent-brand));
   font-weight: 600;
 }
 .insight-subnav-btn i { font-size: 0.9rem; }
