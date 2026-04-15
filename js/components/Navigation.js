@@ -27,7 +27,10 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
-        { label: 'Marca', route: 'brand' }
+        { label: 'Marca', route: 'brand' },
+        // Brand Storage se muestra dinámicamente solo cuando hay 2+ sub-marcas.
+        // updateBrandStorageLink() controla su visibilidad via #navBrandStorageLink.
+        { label: 'Brand Storage', route: 'brand-storage', navId: 'navBrandStorageLink', hidden: true }
       ]
     }
   ],
@@ -521,10 +524,14 @@ class Navigation {
       }
       const children = childItems
         .map(
-          (c) => `
-            <a href="${full(c.route)}" class="nav-submenu-link" data-route="${full(c.route)}" data-tooltip="${c.label}">
+          (c) => {
+            const idAttr = c.navId ? ` id="${_escapeHtml(c.navId)}"` : '';
+            const hiddenStyle = c.hidden ? ' style="display:none"' : '';
+            return `
+            <a href="${full(c.route)}" class="nav-submenu-link"${idAttr}${hiddenStyle} data-route="${full(c.route)}" data-tooltip="${c.label}">
               <span>${c.label}</span>
-            </a>`
+            </a>`;
+          }
         )
         .join('');
       return `
@@ -1842,9 +1849,45 @@ class Navigation {
       await this.loadCreditsFromDb();
       this._startCreditsRefreshInterval();
       await this.loadOrganizationsList();
+      // Cargar conteo de sub-marcas para mostrar/ocultar link Brand Storage
+      this.loadBrandContainersCount();
     } catch (err) {
       console.error('Error loading organization info:', err);
     }
+  }
+
+  /**
+   * Consulta el conteo de brand_containers de la org actual y actualiza la visibilidad
+   * del link "Brand Storage" en el sidebar (solo visible con 2+ sub-marcas).
+   */
+  async loadBrandContainersCount() {
+    const orgId = this.currentOrgId;
+    if (!orgId) {
+      this.updateBrandStorageLink(0);
+      return;
+    }
+    try {
+      const supabase = window.supabaseService
+        ? await window.supabaseService.getClient()
+        : window.supabase;
+      if (!supabase) return;
+      const { count } = await supabase
+        .from('brand_containers')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgId);
+      this.updateBrandStorageLink(count || 0);
+    } catch (e) {
+      console.warn('Navigation: loadBrandContainersCount', e);
+    }
+  }
+
+  /**
+   * Muestra u oculta el link "Brand Storage" del sidebar según el número de sub-marcas.
+   * @param {number} count - Número de brand_containers de la organización
+   */
+  updateBrandStorageLink(count) {
+    const link = document.getElementById('navBrandStorageLink');
+    if (link) link.style.display = count >= 2 ? '' : 'none';
   }
 
   _startCreditsRefreshInterval() {

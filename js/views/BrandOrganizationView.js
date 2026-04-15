@@ -941,6 +941,11 @@ class BrandOrganizationView extends BaseView {
       if (card) card.style.display = isStorage ? 'none' : '';
     });
 
+    // En modo org: eliminar la card de galería si existiera de una visita anterior
+    if (!isStorage) {
+      container?.querySelector('.brand-cards-zone .card-storage-library')?.remove();
+    }
+
     if (!isStorage) {
       this.renderBrandColors();
       this.renderTypography();
@@ -948,6 +953,8 @@ class BrandOrganizationView extends BaseView {
       this.renderAssetsFiles();
       this.setupIdentityUpload();
       this.setupAssetsUpload();
+    } else {
+      this._renderStorageGallery();
     }
 
     this.setupEventListeners();
@@ -992,6 +999,62 @@ class BrandOrganizationView extends BaseView {
     delegate.brandColors = this.brandColors || [];
     delegate.brandFonts = this.brandFonts || [];
     delegate._dataLoaded = true;
+  }
+
+  /**
+   * Renderiza la galería de sub-marcas dentro de brand-cards-zone cuando la URL
+   * es /brandstorage.  Inyecta o reutiliza una card con #brandStorageGrid y delega
+   * el renderizado a BrandstorageView.
+   */
+  _renderStorageGallery() {
+    const appContainer = this.container || document.getElementById('app-container');
+    const cardsZone = appContainer?.querySelector('.brand-cards-zone');
+    if (!cardsZone) return;
+
+    // Crear o reutilizar la card de galería
+    let galleryCard = cardsZone.querySelector('.card-storage-library');
+    if (!galleryCard) {
+      galleryCard = document.createElement('div');
+      galleryCard.className = 'brand-card card-storage-library';
+      galleryCard.innerHTML = `
+        <div class="card-header">
+          <h2 class="card-title">Sub-marcas</h2>
+          <span class="card-title-counter" id="brandStorageCount">0</span>
+        </div>
+        <div class="card-content">
+          <div class="brand-storage-grid" id="brandStorageGrid"></div>
+        </div>`;
+      cardsZone.appendChild(galleryCard);
+    }
+
+    const delegate = this._getOrCreateBsDelegate();
+    if (!delegate) return;
+    this._syncDelegate(delegate);
+    delegate.renderBrandStorageLibrary();
+
+    // Redirigir clicks a nuestro openSubBrandInfoPanel para usar el delegate
+    const grid = galleryCard.querySelector('#brandStorageGrid') || document.getElementById('brandStorageGrid');
+    if (grid) {
+      grid.querySelectorAll('.brand-storage-item[data-brand-container-id]').forEach((itemEl) => {
+        if (itemEl.dataset.galleryClickBound === '1') return;
+        itemEl.dataset.galleryClickBound = '1';
+        itemEl.addEventListener('click', () => {
+          const id = String(itemEl.getAttribute('data-brand-container-id') || '').trim();
+          if (id) this.openSubBrandInfoPanel(id);
+        });
+      });
+    }
+  }
+
+  /**
+   * Abre el panel INFO de una sub-marca específica usando el delegate BrandstorageView.
+   * @param {string|number} itemId - ID del brand_container
+   */
+  openSubBrandInfoPanel(itemId) {
+    const delegate = this._getOrCreateBsDelegate();
+    if (!delegate) return;
+    this._syncDelegate(delegate);
+    delegate.openBrandContainerInfoPanel(itemId);
   }
 
   renderBrandEntities() {
