@@ -45,6 +45,8 @@
 }
 
 .identities-add-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
