@@ -2048,7 +2048,6 @@ class BrandstorageView extends BaseView {
           <div class="info-brand-aside-inner">
             <h3 class="info-section-title" id="infoBrandMetaHeading">Ficha completa de la sub-marca</h3>
             ${this.renderBrandReadonlySchema(item)}
-            ${this.renderEntitiesSection(item?.id)}
             ${this.renderCampaignsSection(item?.id)}
             ${this.renderAudiencesSection(item?.id)}
           </div>
