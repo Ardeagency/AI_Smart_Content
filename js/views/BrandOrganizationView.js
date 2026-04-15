@@ -1560,11 +1560,12 @@ class BrandOrganizationView extends BaseView {
     const identityIds = new Set(this.getIdentityAssets().map((a) => a.id));
     const assets = (this.brandAssets || []).filter((a) => !identityIds.has(a.id));
     if (!assets.length) {
-      container.innerHTML = `
-        <div class="assets-file-empty"></div>
-      `;
+      container.innerHTML = '';
+      container.classList.add('assets-files--empty');
       return;
     }
+
+    container.classList.remove('assets-files--empty');
 
     container.innerHTML = assets.map((asset) => {
       const fileName = asset.file_name || 'Archivo';
@@ -2613,7 +2614,7 @@ class BrandOrganizationView extends BaseView {
     let uploadBtn = container.querySelector('.file-upload-btn');
     if (!uploadBtn) {
       uploadBtn = document.createElement('button');
-      uploadBtn.className = 'file-upload-btn';
+      uploadBtn.className = 'file-upload-btn assets-upload-btn';
       uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
 
       const fileInput = document.createElement('input');
