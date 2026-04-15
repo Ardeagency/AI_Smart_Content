@@ -1794,17 +1794,23 @@ class BrandstorageView extends BaseView {
     const items = rows.map((row) => {
       const meta = this.getIntegrationPlatformMeta(row.platform);
       const status = row.is_active ? 'Conectada' : 'Desconectada';
-      const account = row.external_account_name ? this.escapeHtml(row.external_account_name) : 'Sin cuenta asociada';
+      const account = row.external_account_name ? String(row.external_account_name) : '';
       const syncText = row.last_sync_at ? ` · Sync: ${this.escapeHtml(this.formatInfoDate(row.last_sync_at))}` : '';
       return `
         <li class="info-connect-row" data-connect-key="${this.escapeHtml(String(row.platform || ''))}">
           <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(meta.iconClass)}"></i></span>
           <div class="info-connect-main">
             <span class="info-connect-label">${this.escapeHtml(meta.label)}</span>
-            <span class="info-connect-hint">${account}${syncText}</span>
+            <input type="text" class="info-brand-textarea" data-integration-id="${this.escapeHtml(String(row.id || ''))}" data-integration-field="external_account_name" value="${this.escapeHtml(account)}" placeholder="Cuenta conectada">
+            <span class="info-connect-hint">${syncText ? `Última sincronización${syncText}` : 'Sin sincronización registrada'}</span>
           </div>
           <span class="info-connect-linked" title="${this.escapeHtml(status)}" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-link' : 'fa-unlink'}"></i></span>
-          <span class="info-connect-external" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-check-circle' : 'fa-circle'}"></i></span>
+          <label class="info-connect-external" aria-label="Estado integración">
+            <select class="info-brand-textarea" data-integration-id="${this.escapeHtml(String(row.id || ''))}" data-integration-field="is_active">
+              <option value="1" ${row.is_active ? 'selected' : ''}>Activa</option>
+              <option value="0" ${row.is_active ? '' : 'selected'}>Inactiva</option>
+            </select>
+          </label>
         </li>`;
     }).join('');
 
@@ -1816,18 +1822,27 @@ class BrandstorageView extends BaseView {
   }
 
   renderBrandReadonlySchema(item) {
-    const fieldHtml = BrandstorageView.BRAND_SCHEMA_BLOCKS.map((block) => {
+    const fieldHtml = [{ field: 'nombre_marca', label: 'Nombre de sub-marca', type: 'text' }, ...BrandstorageView.BRAND_SCHEMA_BLOCKS].map((block) => {
       const raw = item?.[block.field];
       let valueHtml = '';
       if (block.type === 'select') {
-        valueHtml = `<div class="brand-storage-info-value">${this.escapeHtml(BrandstorageView.getNichoCoreLabel(raw))}</div>`;
+        const options = BrandstorageView.NICHO_CORE_OPTIONS.map((opt) => {
+          const selected = String(opt.value) === String(raw || '') ? 'selected' : '';
+          return `<option value="${this.escapeHtml(opt.value)}" ${selected}>${this.escapeHtml(opt.label)}</option>`;
+        }).join('');
+        valueHtml = `<select class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="select">${options}</select>`;
       } else if (block.type === 'array') {
-        valueHtml = `<div class="brand-storage-info-tags">${this.renderInfoTags(raw)}</div>`;
+        const textValue = Array.isArray(raw) ? raw.join(', ') : '';
+        valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="array" rows="2" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
       } else if (block.type === 'json') {
-        valueHtml = this.renderInfoJson(raw);
+        const jsonValue = raw && typeof raw === 'object' ? JSON.stringify(raw, null, 2) : '{}';
+        valueHtml = `<textarea class="info-brand-json-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="json" rows="5" spellcheck="false">${this.escapeHtml(jsonValue)}</textarea>`;
+      } else if (block.type === 'textarea') {
+        const textValue = raw == null ? '' : String(raw);
+        valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="textarea" rows="3" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
       } else {
-        const text = raw == null || String(raw).trim() === '' ? 'Sin datos' : String(raw);
-        valueHtml = `<div class="brand-storage-info-value">${this.escapeHtml(text)}</div>`;
+        const textValue = raw == null ? '' : String(raw);
+        valueHtml = `<div class="info-brand-text-editor editable-field" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="text" contenteditable="true">${this.escapeHtml(textValue)}</div>`;
       }
       return `
         <div class="info-brand-field">
@@ -1916,8 +1931,9 @@ class BrandstorageView extends BaseView {
       <li class="info-asset-row">
         <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-cube"></i></span></div>
         <div class="info-asset-main">
-          <span class="info-asset-name">${this.escapeHtml(row.name || 'Entidad')}</span>
-          <span class="info-asset-meta">${this.escapeHtml(row.description || row.entity_type || 'Sin descripción')}</span>
+          <input type="text" class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="name" value="${this.escapeHtml(String(row.name || ''))}" placeholder="Nombre entidad">
+          <textarea class="info-brand-textarea" data-entity-id="${this.escapeHtml(String(row.id || ''))}" data-entity-field="description" rows="2" spellcheck="true" placeholder="Descripción de entidad">${this.escapeHtml(String(row.description || ''))}</textarea>
+          <span class="info-asset-meta">${this.escapeHtml(row.entity_type || 'Sin tipo')}</span>
         </div>
         <span class="info-connect-external" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
       </li>
@@ -1937,8 +1953,8 @@ class BrandstorageView extends BaseView {
     const updated = item?.updated_at ? this.formatInfoDate(item.updated_at) : '';
     const created = item?.created_at ? this.formatInfoDate(item.created_at) : '';
 
-    const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna ? item.visual_dna : {};
-    const logoUrl = String(item?.logo_url || visualDna.logo_url || visualDna.logo || '').trim();
+    const orgLogoUrl = String(this.organizationRow?.logo_url || '').trim();
+    const logoUrl = orgLogoUrl;
 
     return `
       <div class="info-panel-grid">
@@ -2020,10 +2036,122 @@ class BrandstorageView extends BaseView {
       infoCard.style.opacity = '1';
       infoCard.style.transform = 'scale(1) translateY(0)';
     });
+    this.setupBrandContainerInfoPanelEditables(infoCard, item.id);
 
     if (typeof this.updateLinksForRouter === 'function') {
       this.updateLinksForRouter();
     }
+  }
+
+  async saveBrandContainerFieldById(brandContainerId, fieldName, value) {
+    if (!this.supabase || !brandContainerId || !fieldName) return false;
+    const normalizedValue = this._normalizeBrandFieldForDb(fieldName, value);
+    const { error } = await this.supabase
+      .from('brand_containers')
+      .update({ [fieldName]: normalizedValue })
+      .eq('id', brandContainerId);
+    if (error) {
+      console.error('BrandstorageView saveBrandContainerFieldById:', error);
+      alert(`No se pudo guardar ${fieldName}.`);
+      return false;
+    }
+    const row = (this.brandContainers || []).find((item) => String(item.id) === String(brandContainerId));
+    if (row) row[fieldName] = normalizedValue;
+    return true;
+  }
+
+  async saveBrandIntegrationField(integrationId, fieldName, value) {
+    if (!this.supabase || !integrationId || !fieldName) return false;
+    const normalized = fieldName === 'is_active' ? Boolean(Number(value)) : (String(value || '').trim() || null);
+    const { error } = await this.supabase
+      .from('brand_integrations')
+      .update({ [fieldName]: normalized })
+      .eq('id', integrationId);
+    if (error) {
+      console.error('BrandstorageView saveBrandIntegrationField:', error);
+      alert(`No se pudo guardar integración (${fieldName}).`);
+      return false;
+    }
+    const row = (this.brandIntegrations || []).find((item) => String(item.id) === String(integrationId));
+    if (row) row[fieldName] = normalized;
+    return true;
+  }
+
+  async saveBrandEntityField(entityId, fieldName, value) {
+    if (!this.supabase || !entityId || !fieldName) return false;
+    const normalized = String(value || '').trim() || null;
+    const { error } = await this.supabase
+      .from('brand_entities')
+      .update({ [fieldName]: normalized })
+      .eq('id', entityId);
+    if (error) {
+      console.error('BrandstorageView saveBrandEntityField:', error);
+      alert(`No se pudo guardar entidad (${fieldName}).`);
+      return false;
+    }
+    const row = (this.brandEntities || []).find((item) => String(item.id) === String(entityId));
+    if (row) row[fieldName] = normalized;
+    return true;
+  }
+
+  setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
+    if (!panelRoot || !brandContainerId) return;
+
+    panelRoot.querySelectorAll('[data-brand-field]').forEach((el) => {
+      if (el.dataset.boundEditable === '1') return;
+      el.dataset.boundEditable = '1';
+      const field = el.getAttribute('data-brand-field');
+      const type = el.getAttribute('data-brand-input-type') || 'text';
+      const onSave = async () => {
+        let nextValue = '';
+        if (type === 'json') {
+          const raw = String(el.value || '').trim();
+          try {
+            nextValue = raw ? JSON.parse(raw) : {};
+          } catch (_) {
+            alert(`JSON no válido en ${field}.`);
+            return;
+          }
+        } else if (type === 'array') {
+          nextValue = String(el.value || '')
+            .split(/,|\n/)
+            .map((v) => v.trim())
+            .filter(Boolean);
+        } else if (type === 'text') {
+          nextValue = String(el.textContent || '').trim();
+        } else {
+          nextValue = String(el.value || '').trim();
+        }
+        await this.saveBrandContainerFieldById(brandContainerId, field, nextValue);
+      };
+
+      if (type === 'select') el.addEventListener('change', onSave);
+      else el.addEventListener('blur', onSave);
+    });
+
+    panelRoot.querySelectorAll('[data-integration-id][data-integration-field]').forEach((el) => {
+      if (el.dataset.boundEditable === '1') return;
+      el.dataset.boundEditable = '1';
+      const integrationId = el.getAttribute('data-integration-id');
+      const field = el.getAttribute('data-integration-field');
+      const handler = async () => {
+        const value = field === 'is_active' ? String(el.value || '0') : String(el.value || '');
+        await this.saveBrandIntegrationField(integrationId, field, value);
+      };
+      if (field === 'is_active') el.addEventListener('change', handler);
+      else el.addEventListener('blur', handler);
+    });
+
+    panelRoot.querySelectorAll('[data-entity-id][data-entity-field]').forEach((el) => {
+      if (el.dataset.boundEditable === '1') return;
+      el.dataset.boundEditable = '1';
+      const entityId = el.getAttribute('data-entity-id');
+      const field = el.getAttribute('data-entity-field');
+      el.addEventListener('blur', async () => {
+        const value = String(el.value || '').trim();
+        await this.saveBrandEntityField(entityId, field, value);
+      });
+    });
   }
 
   closeBrandContainerInfoPanel() {
@@ -2273,6 +2401,7 @@ class BrandstorageView extends BaseView {
     const content = infoCard.querySelector('#infoPanelContent');
     if (content) {
       content.innerHTML = this.renderBrandContainerInfoContent(item);
+      this.setupBrandContainerInfoPanelEditables(infoCard, item.id);
       if (typeof this.updateLinksForRouter === 'function') {
         this.updateLinksForRouter();
       }
