@@ -173,18 +173,19 @@
 }
 
 .identity-product-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md, 12px);
+  background: var(--media-container-bg, var(--bg-card));
+  border-radius: var(--media-container-radius, 12px);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  border: none;
+  box-shadow: var(--media-container-shadow, var(--shadow-floating));
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .identity-product-card:hover {
   transform: translateY(-1px);
-  border-color: var(--accent-brand);
-  box-shadow: var(--shadow-hover, 0 6px 20px rgba(0, 0, 0, 0.25));
+  box-shadow: var(--media-container-shadow-hover, var(--shadow-hover, 0 6px 20px rgba(0, 0, 0, 0.25)));
 }
 
 .identity-product-card-image-wrap {
@@ -195,6 +196,7 @@
   width: 100%;
   height: auto;
   display: block;
+  object-fit: cover;
   background: var(--bg-secondary);
 }
 
@@ -211,22 +213,21 @@
   padding: 0.8rem;
 }
 
+.identity-product-card-body--overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.22) 70%, rgba(0, 0, 0, 0));
+  backdrop-filter: blur(1px);
+}
+
 .identity-product-card-title {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff;
   line-height: 1.3;
-}
-
-.identity-product-card-desc {
-  margin: 0.45rem 0 0;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .identity-product-card-meta {
@@ -240,12 +241,12 @@
 .identity-product-card-price {
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .identity-product-card-type {
   font-size: 0.67rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.86);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
