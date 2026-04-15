@@ -124,6 +124,13 @@
   color: var(--text-primary);
 }
 
+.identity-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem;
+}
+
 /* ── Type badges ── */
 .identity-type-badge {
   font-size: 0.6875rem;
