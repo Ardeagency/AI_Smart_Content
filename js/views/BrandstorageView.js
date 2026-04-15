@@ -344,7 +344,7 @@ class BrandstorageView extends BaseView {
         containerIds.length
           ? this.supabase
             .from('brand_integrations')
-            .select('id, brand_container_id, platform, external_account_name, is_active, last_sync_at, updated_at')
+            .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
             .in('brand_container_id', containerIds)
             .order('platform', { ascending: true })
           : Promise.resolve({ data: [], error: null })
@@ -1771,46 +1771,120 @@ class BrandstorageView extends BaseView {
     return (this.brandEntities || []).filter((row) => String(row.brand_container_id || '') === id);
   }
 
-  getIntegrationPlatformMeta(platformRaw) {
-    const platform = String(platformRaw || '').toLowerCase();
-    if (platform === 'youtube') return { label: 'YouTube', iconClass: 'fab fa-youtube' };
-    if (platform === 'instagram') return { label: 'Instagram', iconClass: 'fab fa-instagram' };
-    if (platform === 'facebook') return { label: 'Facebook', iconClass: 'fab fa-facebook-f' };
-    if (platform === 'google') return { label: 'Google', iconClass: 'fab fa-google' };
-    if (platform === 'tiktok') return { label: 'TikTok', iconClass: 'fab fa-tiktok' };
-    return { label: platformRaw || 'Integración', iconClass: 'fas fa-plug' };
+  getOrgDashboardHref() {
+    const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
+    const name = (window.currentOrgName || this.organizationRow?.name || '').trim();
+    if (orgId && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, name);
+      if (prefix) return `${prefix}/dashboard`;
+    }
+    return '/dashboard';
+  }
+
+  _pickBrandIntegrationForContainer(brandContainerId, platform) {
+    const rows = this.getIntegrationsForContainer(brandContainerId);
+    const normPlatform = String(platform || '').toLowerCase();
+    const active = rows.filter((r) => r && String(r.platform || '').toLowerCase() === normPlatform && r.is_active);
+    if (active.length) return active[0];
+    const any = rows.find((r) => r && String(r.platform || '').toLowerCase() === normPlatform);
+    return any || null;
+  }
+
+  _integrationTokenExpired(row) {
+    if (!row?.token_expires_at) return false;
+    return new Date(row.token_expires_at) < new Date();
+  }
+
+  _integrationUsable(row) {
+    return !!(row && row.is_active && !this._integrationTokenExpired(row));
+  }
+
+  buildInfoIntegrationRows(brandContainerId) {
+    const dashboardHref = this.getOrgDashboardHref();
+    const google = this._pickBrandIntegrationForContainer(brandContainerId, 'google');
+    const facebook = this._pickBrandIntegrationForContainer(brandContainerId, 'facebook');
+    const gOk = this._integrationUsable(google);
+    const fOk = this._integrationUsable(facebook);
+    let meta = google?.metadata;
+    if (meta && typeof meta === 'string') {
+      try {
+        meta = JSON.parse(meta);
+      } catch (_) {
+        meta = {};
+      }
+    }
+    if (!meta || typeof meta !== 'object') meta = {};
+    const ga4Id = meta.ga4_property_id || meta.ga4PropertyId || '';
+
+    return [
+      {
+        key: 'youtube',
+        label: 'YouTube',
+        iconClass: 'fab fa-youtube',
+        connected: gOk,
+        actionHref: gOk ? 'https://www.youtube.com/' : dashboardHref,
+        actionExternal: gOk,
+        hint: ''
+      },
+      {
+        key: 'facebook',
+        label: 'Facebook',
+        iconClass: 'fab fa-facebook-f',
+        connected: fOk,
+        actionHref: fOk ? 'https://www.facebook.com/' : dashboardHref,
+        actionExternal: fOk,
+        hint: ''
+      },
+      {
+        key: 'instagram',
+        label: 'Instagram',
+        iconClass: 'fab fa-instagram',
+        connected: fOk,
+        actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
+        actionExternal: fOk,
+        hint: ''
+      },
+      {
+        key: 'analytics',
+        label: 'Analytics',
+        iconClass: 'fas fa-chart-line',
+        connected: gOk && !!String(ga4Id).trim(),
+        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : dashboardHref,
+        actionExternal: gOk && !!String(ga4Id).trim(),
+        hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
+      }
+    ];
   }
 
   renderIntegrationsSection(brandContainerId) {
-    const rows = this.getIntegrationsForContainer(brandContainerId);
-    if (!rows.length) {
-      return `
-      <section class="info-section" aria-labelledby="infoBrandIntegrationsHeading">
-        <h3 class="info-section-title" id="infoBrandIntegrationsHeading">Integraciones</h3>
-        <p class="info-assets-empty">Sin integraciones conectadas para esta sub-marca.</p>
-      </section>`;
-    }
-
-    const items = rows.map((row) => {
-      const meta = this.getIntegrationPlatformMeta(row.platform);
-      const status = row.is_active ? 'Conectada' : 'Desconectada';
-      const account = row.external_account_name ? this.escapeHtml(row.external_account_name) : 'Sin cuenta asociada';
-      const syncText = row.last_sync_at ? ` · Sync: ${this.escapeHtml(this.formatInfoDate(row.last_sync_at))}` : '';
-      return `
-        <li class="info-connect-row" data-connect-key="${this.escapeHtml(String(row.platform || ''))}">
-          <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(meta.iconClass)}"></i></span>
-          <div class="info-connect-main">
-            <span class="info-connect-label">${this.escapeHtml(meta.label)}</span>
-            <span class="info-connect-hint">${account}${syncText}</span>
-          </div>
-          <span class="info-connect-linked" title="${this.escapeHtml(status)}" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-link' : 'fa-unlink'}"></i></span>
-          <span class="info-connect-external" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-check-circle' : 'fa-circle'}"></i></span>
-        </li>`;
-    }).join('');
+    const rows = this.buildInfoIntegrationRows(brandContainerId);
+    const items = rows
+      .map((row) => {
+        const linkAttrs = row.actionExternal
+          ? `href="${row.actionHref}" target="_blank" rel="noopener noreferrer"`
+          : `href="${row.actionHref}" data-route="${row.actionHref}"`;
+        const linkedIcon = row.connected
+          ? '<span class="info-connect-linked" title="Conectado" aria-hidden="true"><i class="fas fa-link"></i></span>'
+          : '';
+        const hint = row.hint
+          ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
+          : '';
+        return `
+          <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
+            <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(row.iconClass)}"></i></span>
+            <div class="info-connect-main">
+              <span class="info-connect-label">${this.escapeHtml(row.label)}</span>
+              ${hint}
+            </div>
+            ${linkedIcon}
+            <a class="info-connect-external" ${linkAttrs} aria-label="${row.actionExternal ? `Abrir ${row.label}` : `Ir a Insight para conectar ${row.label}`}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </li>`;
+      })
+      .join('');
 
     return `
-      <section class="info-section" aria-labelledby="infoBrandIntegrationsHeading">
-        <h3 class="info-section-title" id="infoBrandIntegrationsHeading">Integraciones</h3>
+      <section class="info-section info-section-connect" aria-labelledby="infoConnectHeading">
+        <h3 class="info-section-title" id="infoConnectHeading">En la web</h3>
         <ul class="info-connect-list" role="list">${items}</ul>
       </section>`;
   }
