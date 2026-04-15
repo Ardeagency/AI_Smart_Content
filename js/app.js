@@ -238,18 +238,17 @@ class App {
       pub
     );
 
-    // ── Org: Products ──
+    // ── Org: Product detail (mantiene ruta de ficha de producto) ──
     const productsLoader = this._lazy('ProductsView', ['/js/products.js', '/js/views/ProductsView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:brandId/:productId', productsLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/products', productsLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/products/:brandId', productsLoader, auth);
-    r.register('/products', productsLoader, auth);
-    r.register('/products/:productId', productsLoader, auth);
+    r.register('/product-detail/:brandId/:productId', productsLoader, auth);
 
-    // ── Org: Servicios ──
-    const servicesLoader = this._lazy('ServicesView', ['/js/views/ServicesView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/servicios', servicesLoader, auth);
-    r.register('/servicios', servicesLoader, auth);
+    // ── Org: Identities (unifica brand_entities, productos y servicios) ──
+    const identitiesLoader = this._lazy('IdentitiesView', ['/js/views/IdentitiesView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/identities', identitiesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/identities/:entityId', identitiesLoader, auth);
+    r.register('/identities', identitiesLoader, auth);
+    r.register('/identities/:entityId', identitiesLoader, auth);
 
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);

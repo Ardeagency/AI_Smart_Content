@@ -10,6 +10,14 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'section', label: 'Workspace' },
     { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    {
+      type: 'page',
+      id: 'brand-organization',
+      label: 'Brand Organization',
+      icon: 'fa-layer-group',
+      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      route: 'brand'
+    },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -19,14 +27,6 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
-    },
-    {
-      type: 'page',
-      id: 'brand-organization',
-      label: 'Brand Organization',
-      icon: 'fa-layer-group',
-      iconSrc: '/recursos/icons/Identity-Brands.svg',
-      route: 'brand'
     },
     // Brand Storage se muestra dinámicamente solo cuando hay 2+ sub-marcas.
     // updateBrandStorageLink() controla su visibilidad via #navBrandStorageLink.
@@ -39,6 +39,14 @@ const SIDEBAR_USER_CONFIG = {
       route: 'brand-storage',
       navId: 'navBrandStorageLink',
       hidden: true
+    },
+    {
+      type: 'page',
+      id: 'identities',
+      label: 'Identities',
+      icon: 'fa-id-card',
+      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      route: 'identities'
     }
   ],
   footer: [
@@ -298,7 +306,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1617,8 +1625,8 @@ class Navigation {
       '/brand-storage': 'BRAND STORAGE',
       '/brandstorage': 'BRAND STORAGE',
       '/brands': 'IDENTITY',
-      '/products': 'IDENTITY',
       '/product-detail': 'IDENTITY',
+      '/identities': 'IDENTITY',
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
@@ -1627,7 +1635,6 @@ class Navigation {
       '/campaigns': 'IDENTITY',
       '/content': 'IDENTITY',
       '/video': 'VIDEO',
-      '/servicios': 'IDENTITY',
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',
       '/dev/dashboard': 'DASHBOARD',

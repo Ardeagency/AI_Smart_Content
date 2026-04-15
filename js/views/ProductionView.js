@@ -239,7 +239,7 @@ class ProductionView extends BaseView {
     productsLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
-        window.router?.navigate(`${basePath}/products`);
+        window.router?.navigate(`${basePath}/identities`);
       });
     });
 

@@ -1,0 +1,416 @@
+/* ============================================================
+   Identities — Lista de brand_entities con tabs Productos/Servicios
+   ============================================================ */
+
+/* ── Página ── */
+.identities-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.identities-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.identities-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Grid de tarjetas ── */
+.identities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Tarjeta de identidad ── */
+.identity-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.identity-card:hover,
+.identity-card:focus-visible {
+  border-color: var(--accent-brand);
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.identity-card-inner {
+  flex: 1;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.identity-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.identity-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.identity-card-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.identity-card-stats {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.identity-card-stat {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.identity-card-stat i {
+  color: var(--accent-brand);
+  font-size: 0.7rem;
+}
+
+.identity-card-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.identity-card:hover .identity-card-arrow {
+  color: var(--text-primary);
+}
+
+/* ── Type badges ── */
+.identity-type-badge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.identity-type-persona    { color: #60a5fa; border-color: rgba(96,165,250,.3); background: rgba(96,165,250,.08); }
+.identity-type-empresa    { color: #a78bfa; border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.08); }
+.identity-type-marca      { color: #34d399; border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.08); }
+.identity-type-product    { color: #fb923c; border-color: rgba(251,146,60,.3); background: rgba(251,146,60,.08); }
+.identity-type-persona_juridica { color: #f472b6; border-color: rgba(244,114,182,.3); background: rgba(244,114,182,.08); }
+.identity-type-other      { color: var(--text-muted); }
+
+/* ── Empty state ── */
+.identities-empty,
+.identity-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 220px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.identities-empty i,
+.identity-panel-empty i {
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+.identities-empty p,
+.identity-panel-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ── Vista detalle de entidad ── */
+.identity-detail-view {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.identity-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.identity-detail-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.identity-detail-title {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Tabs ── */
+.identity-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.identity-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  border-radius: var(--radius-xs, 4px) var(--radius-xs, 4px) 0 0;
+}
+
+.identity-tab:hover { color: var(--text-primary); }
+
+.identity-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-brand);
+}
+
+.identity-tab-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.identity-tab.active .identity-tab-count { color: var(--text-secondary); }
+
+/* ── Panel actions ── */
+.identity-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Products grid (dentro de identity) ── */
+.identity-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.identity-product-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.identity-product-card:hover,
+.identity-product-card:focus-visible {
+  border-color: var(--accent-brand);
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.identity-product-card .product-card-inner {
+  flex: 1;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.identity-product-card .product-card-icon {
+  font-size: 1.25rem;
+  color: var(--accent-brand);
+  margin-bottom: 0.25rem;
+}
+
+.identity-product-card .product-card-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.identity-product-card .product-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.identity-product-card .product-card-price {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.identity-product-card .product-card-type {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.identity-product-card .product-card-link {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.identity-product-card:hover .product-card-link { color: var(--text-primary); }
+
+/* ── Services grid (dentro de identity) ── */
+.identity-services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.identity-service-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  padding: 1.25rem;
+}
+
+.identity-service-card:hover,
+.identity-service-card:focus-visible {
+  border-color: var(--accent-brand);
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.identity-service-card .service-card-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.identity-service-card .service-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.identity-service-card .service-card-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.identity-service-card .service-card-price {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.identity-service-card .service-card-duration {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.identity-service-card .service-card-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.service-tag {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .identities-page,
+  .identity-detail-view {
+    padding: 1rem;
+  }
+
+  .identities-grid,
+  .identity-products-grid,
+  .identity-services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .identity-detail-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}

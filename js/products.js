@@ -754,7 +754,7 @@ if (typeof window.ProductsManager === 'undefined') {
                 const prefix = `/org/${orgMatch[1]}/${orgMatch[2]}`;
                 window.router.navigate(`${prefix}/product-detail/${brandId}/${product.id}`);
             } else if (window.router) {
-                window.router.navigate(`/products/${product.id}`);
+                window.router.navigate(`/product-detail/${product.brand_container_id || ''}/${product.id}`);
             }
         });
 
