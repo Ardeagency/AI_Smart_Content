@@ -517,13 +517,39 @@ class BrandstorageView extends BaseView {
   ];
 
   static BRAND_IDIOMAS_OPTIONS = [
-    'Español',
-    'Inglés',
-    'Portugués',
-    'Francés',
-    'Alemán',
-    'Italiano'
+    { value: 'es', label: 'es - Spanish' },
+    { value: 'en', label: 'en - English' },
+    { value: 'pt', label: 'pt - Portuguese' },
+    { value: 'fr', label: 'fr - French' },
+    { value: 'de', label: 'de - German' },
+    { value: 'it', label: 'it - Italian' }
   ];
+
+  static BRAND_IDIOMAS_ALIASES = {
+    es: 'es',
+    espanol: 'es',
+    español: 'es',
+    spanish: 'es',
+    en: 'en',
+    ingles: 'en',
+    inglés: 'en',
+    english: 'en',
+    pt: 'pt',
+    portugues: 'pt',
+    portugués: 'pt',
+    portuguese: 'pt',
+    fr: 'fr',
+    frances: 'fr',
+    francés: 'fr',
+    french: 'fr',
+    de: 'de',
+    aleman: 'de',
+    alemán: 'de',
+    german: 'de',
+    it: 'it',
+    italiano: 'it',
+    italian: 'it'
+  };
 
   static BRAND_MERCADO_OPTIONS = [
     'Latinoamérica',
@@ -1794,28 +1820,69 @@ class BrandstorageView extends BaseView {
     return [];
   }
 
+  normalizeBrandArrayValues(fieldName, rawValues) {
+    const values = Array.isArray(rawValues) ? rawValues : [];
+    const normalized = values
+      .map((v) => String(v).trim())
+      .filter(Boolean)
+      .map((value) => {
+        if (fieldName !== 'idiomas_contenido') return value;
+        const key = value.toLowerCase();
+        return BrandstorageView.BRAND_IDIOMAS_ALIASES[key] || key;
+      });
+    return Array.from(new Set(normalized));
+  }
+
+  getBrandArrayOptionEntries(fieldName, rawValues) {
+    const baseOptions = this.getBrandArrayFieldOptions(fieldName) || [];
+    const entries = baseOptions.map((option) => {
+      if (typeof option === 'string') return { value: option, label: option };
+      return {
+        value: String(option?.value ?? '').trim(),
+        label: String(option?.label ?? option?.value ?? '').trim()
+      };
+    }).filter((entry) => entry.value);
+
+    const selectedValues = this.normalizeBrandArrayValues(fieldName, rawValues);
+    const map = new Map(entries.map((entry) => [entry.value, entry]));
+    selectedValues.forEach((value) => {
+      if (!map.has(value)) map.set(value, { value, label: this.getBrandArrayValueLabel(fieldName, value) });
+    });
+    return Array.from(map.values());
+  }
+
+  getBrandArrayValueLabel(fieldName, value) {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) return '';
+    if (fieldName === 'idiomas_contenido') {
+      const match = BrandstorageView.BRAND_IDIOMAS_OPTIONS.find((opt) => String(opt.value) === normalized);
+      if (match) return match.label;
+    }
+    return normalized;
+  }
+
   renderBrandArrayMultiSelect(fieldName, rawValues) {
-    const selected = Array.isArray(rawValues)
-      ? rawValues.map((v) => String(v).trim()).filter(Boolean)
-      : [];
-    const options = Array.from(new Set([...this.getBrandArrayFieldOptions(fieldName), ...selected]));
+    const selected = this.normalizeBrandArrayValues(fieldName, rawValues);
+    const options = this.getBrandArrayOptionEntries(fieldName, selected);
     const selectedSet = new Set(selected);
     const selectedLabel = selected.length
       ? selected
           .map((value) => `
             <span class="info-brand-multiselect__chip">
-              <span class="info-brand-multiselect__chip-label">${this.escapeHtml(value)}</span>
-              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(value)}">×</button>
+              <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}</span>
+              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}">×</button>
             </span>
           `)
           .join('')
       : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
     const optionsHtml = options.map((option) => {
-      const isSelected = selectedSet.has(option);
+      const optionValue = String(option.value || '');
+      const optionLabel = String(option.label || optionValue);
+      const isSelected = selectedSet.has(optionValue);
       return `
-        <button type="button" class="info-brand-multiselect__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(option)}">
+        <button type="button" class="info-brand-multiselect__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(optionValue)}">
           <span class="info-brand-multiselect__check" aria-hidden="true">${isSelected ? '✓' : ''}</span>
-          <span>${this.escapeHtml(option)}</span>
+          <span>${this.escapeHtml(optionLabel)}</span>
         </button>
       `;
     }).join('');
@@ -2367,6 +2434,7 @@ class BrandstorageView extends BaseView {
         selected = [];
       }
       selected = Array.isArray(selected) ? selected.map((v) => String(v).trim()).filter(Boolean) : [];
+      selected = this.normalizeBrandArrayValues(field, selected);
 
       const syncUi = () => {
         const set = new Set(selected);
@@ -2381,8 +2449,8 @@ class BrandstorageView extends BaseView {
           ? selected
               .map((value) => `
                 <span class="info-brand-multiselect__chip">
-                  <span class="info-brand-multiselect__chip-label">${this.escapeHtml(value)}</span>
-                  <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(value)}">×</button>
+                  <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(field, value))}</span>
+                  <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(field, value))}">×</button>
                 </span>
               `)
               .join('')
