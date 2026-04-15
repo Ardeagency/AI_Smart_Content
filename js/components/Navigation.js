@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Identity (Marca + Brand Storage).
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production → [Create] Video, Flows, Brand Organization.
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -21,17 +21,24 @@ const SIDEBAR_USER_CONFIG = {
       children: [] // Se rellenan con content_categories (schema 218-224) en render
     },
     {
-      type: 'container',
-      id: 'identity',
-      label: 'Identity',
+      type: 'page',
+      id: 'brand-organization',
+      label: 'Brand Organization',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
-      children: [
-        { label: 'Marca', route: 'brand' },
-        // Brand Storage se muestra dinámicamente solo cuando hay 2+ sub-marcas.
-        // updateBrandStorageLink() controla su visibilidad via #navBrandStorageLink.
-        { label: 'Brand Storage', route: 'brand-storage', navId: 'navBrandStorageLink', hidden: true }
-      ]
+      route: 'brand'
+    },
+    // Brand Storage se muestra dinámicamente solo cuando hay 2+ sub-marcas.
+    // updateBrandStorageLink() controla su visibilidad via #navBrandStorageLink.
+    {
+      type: 'page',
+      id: 'brand-storage',
+      label: 'Brand Storage',
+      icon: 'fa-layer-group',
+      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      route: 'brand-storage',
+      navId: 'navBrandStorageLink',
+      hidden: true
     }
   ],
   footer: [
@@ -505,9 +512,11 @@ class Navigation {
         const href = full(item.route);
         const isPrimary = !!item.primary;
         const hideLabel = !!item.hideLabel;
+        const idAttr = item.navId ? ` id="${_escapeHtml(item.navId)}"` : '';
+        const hiddenStyle = item.hidden ? ' style="display:none"' : '';
         return `
           <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}">
-            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}" data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle} data-route="${href}" data-tooltip="${item.label}">
               ${iconHTML(item)}
               ${hideLabel ? '' : `<span class="nav-text">${item.label}</span>`}
             </a>
