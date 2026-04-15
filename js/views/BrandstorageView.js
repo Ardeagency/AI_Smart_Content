@@ -535,6 +535,21 @@ class BrandstorageView extends BaseView {
     'Local / Regional'
   ];
 
+  static BRAND_SUB_NICHOS_OPTIONS = [
+    'E-commerce',
+    'Retail',
+    'Salud',
+    'Bienestar',
+    'Fitness',
+    'Educación',
+    'SaaS',
+    'Servicios profesionales',
+    'Finanzas',
+    'Inmobiliaria',
+    'Turismo',
+    'B2B Industrial'
+  ];
+
   static get BRAND_ARRAY_FIELDS() {
     return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
   }
@@ -1775,14 +1790,15 @@ class BrandstorageView extends BaseView {
   getBrandArrayFieldOptions(fieldName) {
     if (fieldName === 'idiomas_contenido') return BrandstorageView.BRAND_IDIOMAS_OPTIONS;
     if (fieldName === 'mercado_objetivo') return BrandstorageView.BRAND_MERCADO_OPTIONS;
+    if (fieldName === 'sub_nichos') return BrandstorageView.BRAND_SUB_NICHOS_OPTIONS;
     return [];
   }
 
   renderBrandArrayMultiSelect(fieldName, rawValues) {
-    const options = this.getBrandArrayFieldOptions(fieldName);
     const selected = Array.isArray(rawValues)
       ? rawValues.map((v) => String(v).trim()).filter(Boolean)
       : [];
+    const options = Array.from(new Set([...this.getBrandArrayFieldOptions(fieldName), ...selected]));
     const selectedSet = new Set(selected);
     const selectedLabel = selected.length
       ? selected
@@ -1965,7 +1981,7 @@ class BrandstorageView extends BaseView {
         }).join('');
         valueHtml = `<select class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="select">${options}</select>`;
       } else if (block.type === 'array') {
-        if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo') {
+        if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo' || block.field === 'sub_nichos') {
           valueHtml = this.renderBrandArrayMultiSelect(block.field, raw);
         } else {
           const textValue = Array.isArray(raw) ? raw.join(', ') : '';
