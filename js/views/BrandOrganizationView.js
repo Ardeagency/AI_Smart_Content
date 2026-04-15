@@ -77,6 +77,12 @@ class BrandOrganizationView extends BaseView {
     <!-- Footer: MARCA + Mercado -->
     <div class="brand-corner-bottom-left">
         <div class="brand-main-info">
+            <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="Subir logo de organización">
+                <span class="brand-corner-logo-inner" id="brandCornerLogoInner">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </span>
+                <input type="file" id="brandCornerLogoInput" class="brand-corner-logo-input" accept="image/*">
+            </button>
             <div class="brand-name-row">
                 <h1 class="brand-name-large" id="brandNameLarge"></h1>
                 <div class="brand-status-indicator"><span class="status-dot"></span></div>
@@ -761,9 +767,39 @@ class BrandOrganizationView extends BaseView {
   renderAll() {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
+    this.renderCornerLogoUploader();
     this.renderBrandName();
     this.renderMarket();
     this.renderCards();
+  }
+
+  renderCornerLogoUploader() {
+    const btn = document.getElementById('brandCornerLogoBtn');
+    const inner = document.getElementById('brandCornerLogoInner');
+    const input = document.getElementById('brandCornerLogoInput');
+    if (!btn || !inner || !input) return;
+
+    const logoUrl = String(this.brandContainerData?.logo_url || '').trim();
+    if (logoUrl) {
+      inner.innerHTML = `<img src="${this.escapeHtml(logoUrl)}" alt="Logo organización" class="brand-corner-logo-img" loading="lazy">`;
+      btn.classList.add('has-logo');
+    } else {
+      inner.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i>';
+      btn.classList.remove('has-logo');
+    }
+
+    if (btn.dataset.logoBound !== '1') {
+      btn.dataset.logoBound = '1';
+      btn.addEventListener('click', () => input.click());
+    }
+    if (input.dataset.logoBound !== '1') {
+      input.dataset.logoBound = '1';
+      input.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) this.uploadLogo(file);
+        input.value = '';
+      });
+    }
   }
 
   renderBrandName() {
@@ -2202,7 +2238,7 @@ class BrandOrganizationView extends BaseView {
     }
     const orgId = this.organizationRow.id;
     const container = this.container || document.getElementById('app-container');
-    const logoWrap = container?.querySelector('.info-logo-container');
+    const logoWrap = container?.querySelector('.brand-corner-logo-btn') || container?.querySelector('.info-logo-container');
     if (logoWrap) {
       logoWrap.style.pointerEvents = 'none';
       logoWrap.style.opacity = '0.7';
@@ -2226,15 +2262,7 @@ class BrandOrganizationView extends BaseView {
       await this._patchOrganization({ logo_url: publicUrl });
       if (this.brandContainerData) this.brandContainerData.logo_url = publicUrl;
       this.renderAll();
-      const infoCard = container?.querySelector('.card-info.expanded');
-      if (infoCard) {
-        const content = infoCard.querySelector('.card-content-expanded');
-        if (content) this.renderInfoPanelContent(content);
-      }
-      const logoInput = (this.container || document.getElementById('app-container'))?.querySelector(
-        '.info-logo-container input[type="file"]'
-      );
-      if (logoInput) logoInput.value = '';
+      this.renderCornerLogoUploader();
     } catch (error) {
       console.error('BrandOrganizationView uploadLogo:', error);
       alert('Error al subir logo.');
