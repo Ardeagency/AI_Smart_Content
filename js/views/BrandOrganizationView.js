@@ -90,14 +90,6 @@ class BrandOrganizationView extends BaseView {
     <!-- Cards a la derecha -->
     <div class="brand-cards-zone">
 
-        <!-- INFO - Solo botón expandir -->
-        <div class="brand-card card-info">
-            <div class="card-header">
-                <h2 class="card-title">INFO</h2>
-                <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
-            </div>
-        </div>
-
         <!-- Visual de marca -->
         <div class="brand-card card-concept">
                 <div class="card-header">
