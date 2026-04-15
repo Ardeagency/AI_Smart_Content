@@ -25,8 +25,14 @@ class IdentitiesView extends BaseView {
 
   <section class="identities-section">
     <div class="identities-section-head">
-      <h2 class="identities-section-title">Servicios</h2>
-      <span class="identities-section-count" id="servicesCount">0</span>
+      <div class="identities-section-head-main">
+        <h2 class="identities-section-title">Servicios</h2>
+        <span class="identities-section-count" id="servicesCount">0</span>
+      </div>
+      <button type="button" class="identities-add-btn" id="identitiesAddServiceBtn" aria-label="Agregar servicio">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>Agregar servicio</span>
+      </button>
     </div>
     <div class="identities-services-carousel-wrap">
       <div class="identities-services-carousel" id="identitiesServicesCarousel"></div>
@@ -39,8 +45,14 @@ class IdentitiesView extends BaseView {
 
   <section class="identities-section">
     <div class="identities-section-head">
-      <h2 class="identities-section-title">Productos</h2>
-      <span class="identities-section-count" id="productsCount">0</span>
+      <div class="identities-section-head-main">
+        <h2 class="identities-section-title">Productos</h2>
+        <span class="identities-section-count" id="productsCount">0</span>
+      </div>
+      <button type="button" class="identities-add-btn" id="identitiesAddProductBtn" aria-label="Agregar producto">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>Agregar producto</span>
+      </button>
     </div>
     <div class="identities-products-masonry" id="identitiesProductsMasonry"></div>
     <div class="identities-empty" id="productsEmpty" style="display:none;">
@@ -142,6 +154,115 @@ class IdentitiesView extends BaseView {
     }
   }
 
+  /**
+   * Primera brand_entity de la organizacion, o una por defecto si no existe (FK servicios/productos).
+   */
+  async _ensureEntityId() {
+    if (!this.supabase || !this.organizationId) return null;
+    const { data: rows, error } = await this.supabase
+      .from('brand_entities')
+      .select('id')
+      .eq('organization_id', this.organizationId)
+      .order('created_at', { ascending: true })
+      .limit(1);
+    if (error) {
+      console.error('IdentitiesView _ensureEntityId:', error);
+      return null;
+    }
+    if (rows?.length) return rows[0].id;
+
+    const { data: created, error: insErr } = await this.supabase
+      .from('brand_entities')
+      .insert({
+        organization_id: this.organizationId,
+        name: 'Identity principal',
+        entity_type: 'other',
+        description: null,
+      })
+      .select('id')
+      .single();
+    if (insErr) {
+      console.error('IdentitiesView _ensureEntityId insert:', insErr);
+      return null;
+    }
+    return created?.id || null;
+  }
+
+  _navigateToProductDetail(entityId, productId) {
+    if (!entityId || !productId || !window.router) return;
+    const orgId = this.routeParams?.orgId;
+    const orgSlug = this.routeParams?.orgNameSlug;
+    let url;
+    if (orgId && orgSlug && typeof window.getOrgPathPrefix === 'function') {
+      url = `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${entityId}/${productId}`;
+    } else if (orgId && orgSlug) {
+      url = `/org/${orgId}/${orgSlug}/product-detail/${entityId}/${productId}`;
+    } else {
+      url = `/product-detail/${entityId}/${productId}`;
+    }
+    window.router.navigate(url, true);
+  }
+
+  async _onAddService() {
+    if (!this.supabase || !this.organizationId) return;
+    const btn = document.getElementById('identitiesAddServiceBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const entityId = await this._ensureEntityId();
+      if (!entityId) {
+        alert('No se pudo obtener una identidad para vincular el servicio.');
+        return;
+      }
+      const { error } = await this.supabase.from('services').insert({
+        organization_id: this.organizationId,
+        entity_id: entityId,
+        nombre_servicio: 'Nuevo servicio',
+        descripcion_servicio: null,
+      });
+      if (error) throw error;
+      await this._loadData();
+      this._renderServices();
+    } catch (e) {
+      console.error('IdentitiesView _onAddService:', e);
+      alert(e?.message || 'Error al crear el servicio');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async _onAddProduct() {
+    if (!this.supabase || !this.organizationId) return;
+    const btn = document.getElementById('identitiesAddProductBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const entityId = await this._ensureEntityId();
+      if (!entityId) {
+        alert('No se pudo obtener una identidad para vincular el producto.');
+        return;
+      }
+      const { data, error } = await this.supabase
+        .from('products')
+        .insert({
+          organization_id: this.organizationId,
+          entity_id: entityId,
+          tipo_producto: 'otro',
+          nombre_producto: 'nuevo producto',
+          descripcion_producto: 'Pendiente de descripción.',
+          moneda: 'USD',
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      if (!data?.id) return;
+      this._navigateToProductDetail(entityId, data.id);
+    } catch (e) {
+      console.error('IdentitiesView _onAddProduct:', e);
+      alert(e?.message || 'Error al crear el producto');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   _renderServices() {
     const carousel = document.getElementById('identitiesServicesCarousel');
     const empty = document.getElementById('servicesEmpty');
@@ -213,18 +334,8 @@ class IdentitiesView extends BaseView {
       card.addEventListener('click', () => {
         const productId = card.getAttribute('data-product-id');
         const entityId = card.getAttribute('data-entity-id');
-        if (!productId || !entityId || !window.router) return;
-        const orgId = this.routeParams?.orgId;
-        const orgSlug = this.routeParams?.orgNameSlug;
-        let url;
-        if (orgId && orgSlug && typeof window.getOrgPathPrefix === 'function') {
-          url = `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${entityId}/${productId}`;
-        } else if (orgId && orgSlug) {
-          url = `/org/${orgId}/${orgSlug}/product-detail/${entityId}/${productId}`;
-        } else {
-          url = `/product-detail/${entityId}/${productId}`;
-        }
-        window.router.navigate(url, true);
+        if (!productId || !entityId) return;
+        this._navigateToProductDetail(entityId, productId);
       });
     });
   }
@@ -256,6 +367,10 @@ class IdentitiesView extends BaseView {
       this._onResizeBound = () => this._renderProductsMasonry();
       window.addEventListener('resize', this._onResizeBound);
     }
+    const addServiceBtn = document.getElementById('identitiesAddServiceBtn');
+    const addProductBtn = document.getElementById('identitiesAddProductBtn');
+    if (addServiceBtn) addServiceBtn.onclick = () => this._onAddService();
+    if (addProductBtn) addProductBtn.onclick = () => this._onAddProduct();
   }
 
   async onLeave() {
