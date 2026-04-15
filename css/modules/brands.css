@@ -1280,6 +1280,111 @@ h1.brand-name-large[contenteditable="true"]:hover,
     height: auto;
 }
 
+.card-storage-library {
+    min-height: 0;
+    height: auto;
+}
+
+.card-title-counter {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.card-storage-library .card-content {
+    padding-top: 0.35rem;
+}
+
+.brand-storage-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+}
+
+.brand-storage-empty {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    opacity: 0.9;
+    padding: 0.4rem 0;
+}
+
+.brand-storage-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.12);
+    padding: 0.7rem 0.75rem;
+    transition: var(--transition);
+}
+
+.brand-storage-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.brand-storage-item-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.brand-storage-item-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    flex-shrink: 0;
+}
+
+.brand-storage-item-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.brand-storage-item-meta {
+    min-width: 0;
+}
+
+.brand-storage-item-name {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.brand-storage-item-slogan {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.brand-storage-item-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.9;
+}
+
 .identity-files {
     display: flex;
     flex-direction: column;

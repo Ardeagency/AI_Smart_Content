@@ -29,6 +29,8 @@ class BrandstorageView extends BaseView {
     this._dataLoaded = false;
     /** @type {object|null} Fila `organizations` del workspace activo */
     this.organizationRow = null;
+    /** @type {Array<object>} Biblioteca de brand_containers de la organización */
+    this.brandContainers = [];
   }
 
   _mergeOrgIntoShim() {
@@ -65,7 +67,7 @@ class BrandstorageView extends BaseView {
 
   renderHTML() {
     return `
-<!-- Brands Dashboard - Diseño Premium. Inicio fluido con animaciones suaves. -->
+<!-- Brand Storage Library -->
 <div class="brand-dashboard-container" id="brandsListContainer">
 
     <!-- Fondo: skeleton visible hasta que carguen datos; luego crossfade al gradiente de marca -->
@@ -74,53 +76,15 @@ class BrandstorageView extends BaseView {
         <div class="background-gradient" id="backgroundGradient"></div>
     </div>
 
-    <!-- Cards a la derecha -->
+    <!-- Biblioteca de marcas -->
     <div class="brand-cards-zone">
-
-        <!-- Visual de marca -->
-        <div class="brand-card card-concept">
-                <div class="card-header">
-                <h2 class="card-title">Visual de marca</h2>
-                </div>
-                <div class="card-content">
-                <!-- Brand Colors -->
-                <div class="visual-section">
-                    <div class="visual-section-label">Brand Colors</div>
-                    <div class="color-swatches" id="brandColorSwatches">
-                        <!-- Se renderizarán dinámicamente -->
-            </div>
-        </div>
-
-                <!-- Typography System -->
-                <div class="visual-section">
-                    <div class="visual-section-label">Typography System</div>
-                    <div class="typography-preview" id="typographyPreview">
-                        <!-- Se renderizará dinámicamente -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Archivos de identidad -->
-        <div class="brand-card card-identity">
+        <div class="brand-card card-storage-library">
             <div class="card-header">
-                <h2 class="card-title">Archivos de identidad</h2>
+                <h2 class="card-title">Brand Storage</h2>
+                <span class="card-title-counter" id="brandStorageCount">0</span>
             </div>
             <div class="card-content">
-                <!-- Archivos -->
-                <div class="identity-files" id="identityFilesContainer">
-                    <!-- Se renderizarán dinámicamente -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Assets -->
-        <div class="brand-card card-assets">
-            <div class="card-header">
-                <h2 class="card-title">Assets</h2>
-            </div>
-            <div class="card-content">
-                <div class="assets-files" id="assetsFilesContainer"></div>
+                <div class="brand-storage-grid" id="brandStorageGrid"></div>
             </div>
         </div>
 
@@ -181,11 +145,10 @@ class BrandstorageView extends BaseView {
       return;
     }
 
-    const checkContainers = () => {
+      const checkContainers = () => {
       if (!this.isActive) return false;
-      const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
-      const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
-      if (brandColorsEl && typographyEl) {
+      const storageGridEl = container.querySelector('#brandStorageGrid') || document.getElementById('brandStorageGrid');
+      if (storageGridEl) {
         // Primer render inmediato con lo que haya (puede ser vacío)
         this.renderAll();
         const root = container.querySelector('#brandsListContainer');
@@ -230,7 +193,7 @@ class BrandstorageView extends BaseView {
     await super.updateHeader();
     const name =
       (this.organizationRow?.brand_name_oficial || this.organizationRow?.name || 'Marca').trim();
-    this.updateHeaderContext('Marca', name);
+    this.updateHeaderContext('Brand Storage', name);
   }
 
   async initSupabase() {
@@ -263,6 +226,7 @@ class BrandstorageView extends BaseView {
       if (!orgId) {
         this.organizationRow = null;
         this.brandContainerData = null;
+        this.brandContainers = [];
         this.brandData = null;
         this.products = [];
         this.brandAssets = [];
@@ -292,6 +256,7 @@ class BrandstorageView extends BaseView {
       if (!org) {
         this.organizationRow = null;
         this.brandContainerData = null;
+        this.brandContainers = [];
         this.brandData = null;
         this.products = [];
         this.brandAssets = [];
@@ -310,6 +275,18 @@ class BrandstorageView extends BaseView {
 
       this.organizationRow = org;
       this._mergeOrgIntoShim();
+
+      const { data: containerRows, error: containersError } = await this.supabase
+        .from('brand_containers')
+        .select('id, nombre_marca, brand_slogan, logo_url, updated_at, created_at')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false });
+      if (containersError) {
+        console.warn('BrandstorageView: brand_containers', containersError);
+        this.brandContainers = [];
+      } else {
+        this.brandContainers = containerRows || [];
+      }
 
       const { data: products, error: productsError } = await this.supabase
         .from('products')
@@ -835,13 +812,68 @@ class BrandstorageView extends BaseView {
 
   renderCards() {
     this.applyBrandBackgroundGradient();
-    this.renderBrandColors();
-    this.renderTypography();
-    this.renderIdentityFiles();
-    this.renderAssetsFiles();
-    this.setupIdentityUpload();
-    this.setupAssetsUpload();
+    this.renderBrandStorageLibrary();
     this.setupEventListeners();
+  }
+
+  renderBrandStorageLibrary() {
+    const grid = (this.container && this.container.querySelector('#brandStorageGrid')) ||
+      document.getElementById('brandStorageGrid');
+    const countEl = (this.container && this.container.querySelector('#brandStorageCount')) ||
+      document.getElementById('brandStorageCount');
+    if (!grid) return;
+
+    const rows = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+    if (countEl) countEl.textContent = String(rows.length);
+
+    if (!rows.length) {
+      grid.innerHTML = '<div class="brand-storage-empty">No tienes marcas todavía.</div>';
+      return;
+    }
+
+    const makeHref = (id) => {
+      const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
+      const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
+      if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
+        const prefix = window.getOrgPathPrefix(orgId, orgName);
+        if (prefix) return `${prefix}/brand/${id}`;
+      }
+      return `/brand/${id}`;
+    };
+
+    grid.innerHTML = rows.map((item) => {
+      const name = this.escapeHtml(item.nombre_marca || 'Sin nombre');
+      const slogan = this.escapeHtml(String(item.brand_slogan || item.propuesta_valor || '').trim());
+      const logoUrl = String(item.logo_url || '').trim();
+      const updated = item.updated_at
+        ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '';
+      const href = this.escapeHtml(makeHref(item.id));
+
+      return `
+        <a class="brand-storage-item" href="${href}" data-route="${href}">
+          <div class="brand-storage-item-head">
+            <div class="brand-storage-item-logo">
+              ${logoUrl
+                ? `<img src="${this.escapeHtml(logoUrl)}" alt="" loading="lazy">`
+                : '<i class="fas fa-layer-group" aria-hidden="true"></i>'}
+            </div>
+            <div class="brand-storage-item-meta">
+              <div class="brand-storage-item-name">${name}</div>
+              ${slogan ? `<div class="brand-storage-item-slogan">${slogan}</div>` : ''}
+            </div>
+          </div>
+          <div class="brand-storage-item-foot">
+            <span>${updated ? `Actualizado: ${updated}` : 'Sin fecha'}</span>
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          </div>
+        </a>
+      `;
+    }).join('');
+
+    if (typeof this.updateLinksForRouter === 'function') {
+      this.updateLinksForRouter();
+    }
   }
 
   renderBrandEntities() {
