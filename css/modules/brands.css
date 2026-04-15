@@ -2506,6 +2506,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: inherit;
 }
 
+#infoPanelContent .info-connect-action.is-disconnect {
+    color: inherit;
+}
+
+#infoPanelContent .info-connect-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 /* Compatibilidad para iconos usados en otras secciones del panel INFO */
 #infoPanelContent .info-connect-external {
     display: inline-flex;

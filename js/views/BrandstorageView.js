@@ -1985,16 +1985,6 @@ class BrandstorageView extends BaseView {
     const facebook = this._pickBrandIntegrationForContainer(brandContainerId, 'facebook');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
-    let meta = google?.metadata;
-    if (meta && typeof meta === 'string') {
-      try {
-        meta = JSON.parse(meta);
-      } catch (_) {
-        meta = {};
-      }
-    }
-    if (!meta || typeof meta !== 'object') meta = {};
-    const ga4Id = meta.ga4_property_id || meta.ga4PropertyId || '';
 
     return [
       {
@@ -2026,16 +2016,6 @@ class BrandstorageView extends BaseView {
         actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
-      },
-      {
-        key: 'analytics',
-        label: 'Analytics',
-        iconClass: 'fas fa-chart-line',
-        connected: gOk && !!String(ga4Id).trim(),
-        oauthProvider: 'google',
-        actionHref: gOk && String(ga4Id).trim() ? 'https://analytics.google.com/analytics/web/' : dashboardHref,
-        actionExternal: gOk && !!String(ga4Id).trim(),
-        hint: gOk && !String(ga4Id).trim() ? 'Elige una propiedad GA4 en Insight' : ''
       }
     ];
   }
@@ -2054,7 +2034,12 @@ class BrandstorageView extends BaseView {
           ? `<span class="info-connect-hint">${this.escapeHtml(row.hint)}</span>`
           : '';
         const actionHtml = row.connected
-          ? `<a class="info-connect-action is-open" ${linkAttrs} aria-label="Abrir ${this.escapeHtml(row.label)}">Abrir</a>`
+          ? `
+            <div class="info-connect-actions">
+              <a class="info-connect-action is-open" ${linkAttrs} aria-label="Abrir ${this.escapeHtml(row.label)}">Abrir</a>
+              <button type="button" class="info-connect-action is-disconnect" data-disconnect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Desconectar ${this.escapeHtml(row.label)}">Desconectar</button>
+            </div>
+          `
           : `<button type="button" class="info-connect-action is-connect" data-connect-provider="${this.escapeHtml(row.oauthProvider || '')}" data-connect-label="${this.escapeHtml(row.label)}" data-brand-container-id="${this.escapeHtml(String(brandContainerId || ''))}" aria-label="Conectar ${this.escapeHtml(row.label)}">Conectar</button>`;
         return `
           <li class="info-connect-row" data-connect-key="${this.escapeHtml(row.key)}">
@@ -2401,6 +2386,58 @@ class BrandstorageView extends BaseView {
     }
   }
 
+  async disconnectBrandIntegration(provider, brandContainerId, actionButton = null) {
+    const normalizedProvider = String(provider || '').toLowerCase();
+    const brandId = String(brandContainerId || '').trim();
+    if (!brandId || (normalizedProvider !== 'google' && normalizedProvider !== 'facebook')) return;
+    if (!this.supabase) {
+      alert('Supabase no disponible para desconectar integración.');
+      return;
+    }
+
+    try {
+      if (actionButton) {
+        actionButton.disabled = true;
+        actionButton.dataset.originalText = actionButton.textContent || 'Desconectar';
+        actionButton.textContent = 'Desconectando...';
+      }
+
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('Sesión no válida. Inicia sesión y vuelve a intentar.');
+        return;
+      }
+
+      const res = await fetch(`${location.origin}/api/integrations/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          brand_container_id: brandId,
+          platform: normalizedProvider
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.error || `No se pudo desconectar (${res.status})`);
+      }
+
+      await this.loadData();
+      this._refreshInfoPanelIfOpen();
+    } catch (error) {
+      console.error('BrandstorageView disconnectBrandIntegration:', error);
+      alert(error?.message || 'No se pudo desconectar la integración.');
+    } finally {
+      if (actionButton) {
+        actionButton.disabled = false;
+        actionButton.textContent = actionButton.dataset.originalText || 'Desconectar';
+      }
+    }
+  }
+
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
 
@@ -2413,6 +2450,18 @@ class BrandstorageView extends BaseView {
         const provider = btn.getAttribute('data-connect-provider');
         const targetBrandId = btn.getAttribute('data-brand-container-id') || brandContainerId;
         await this.startBrandIntegrationOAuth(provider, targetBrandId, btn);
+      });
+    });
+
+    panelRoot.querySelectorAll('.info-connect-action.is-disconnect[data-disconnect-provider][data-brand-container-id]').forEach((btn) => {
+      if (btn.dataset.boundDisconnectAction === '1') return;
+      btn.dataset.boundDisconnectAction = '1';
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const provider = btn.getAttribute('data-disconnect-provider');
+        const targetBrandId = btn.getAttribute('data-brand-container-id') || brandContainerId;
+        await this.disconnectBrandIntegration(provider, targetBrandId, btn);
       });
     });
 
