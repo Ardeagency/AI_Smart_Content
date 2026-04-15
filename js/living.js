@@ -209,13 +209,16 @@ class LivingManager {
      * Para funcionalidad completa (con imágenes), usar ProductsManager.
      */
     async loadProducts() {
-        if (!this.supabase || !this.brandContainerId) { this.products = []; return; }
+        if (!this.supabase) { this.products = []; return; }
+        const orgId = this.organizationId || this.projectData?.organization_id || null;
+        if (!orgId && !this.brandContainerId) { this.products = []; return; }
         try {
-            const { data, error } = await this.supabase
+            let q = this.supabase
                 .from('products')
-                .select('id, nombre_producto, tipo_producto, precio_producto, moneda, created_at')
-                .eq('brand_container_id', this.brandContainerId)
-                .order('created_at', { ascending: false });
+                .select('id, nombre_producto, tipo_producto, precio_producto, moneda, created_at');
+            if (orgId) q = q.eq('organization_id', orgId);
+            else q = q.eq('brand_container_id', this.brandContainerId);
+            const { data, error } = await q.order('created_at', { ascending: false });
             if (error) throw error;
             this.products = data || [];
         } catch (error) {
@@ -325,7 +328,9 @@ class LivingManager {
             // Reutilizar brandContainerId de loadProjectData() si ya se cargó
             if (!this.brandContainerId && this.projectData?.id) {
                 this.brandContainerId = this.projectData.id;
-                this.organizationId = this.projectData.organization_id;
+                if (!this.organizationId && this.projectData.organization_id) {
+                    this.organizationId = this.projectData.organization_id;
+                }
             }
 
             if (!this.brandContainerId) {

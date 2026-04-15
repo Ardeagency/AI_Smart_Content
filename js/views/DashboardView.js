@@ -152,12 +152,16 @@ class DashboardView extends BaseView {
 
     const { data: containers } = await this._supabase
       .from('brand_containers')
-      .select('id,nombre_marca,logo_url')
+      .select('id,nombre_marca,organizations(logo_url)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(15);
 
-    this._brandContainers = containers || [];
+    this._brandContainers = (containers || []).map((row) => ({
+      id: row.id,
+      nombre_marca: row.nombre_marca,
+      logo_url: row.organizations?.logo_url ?? null,
+    }));
 
     if (!this._brandContainers.length) {
       document.getElementById('insightTabBody').innerHTML = this._myBrandsNoBrands();
@@ -1995,22 +1999,21 @@ class DashboardView extends BaseView {
       const [entitiesRes, competitorAdsRes, vulnerabilitiesRes] = await Promise.allSettled([
         orgId ? this._supabase
           .from('intelligence_entities')
-          .select('id, name, entity_type, source, social_handle, followers_count, engagement_rate, last_analyzed_at')
+          .select('id, name, domain, target_identifier, is_active, metadata, created_at')
           .eq('organization_id', orgId)
-          .eq('entity_type', 'competitor')
-          .order('followers_count', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(20) : Promise.resolve({ data: [], error: null }),
         orgId ? this._supabase
           .from('competitor_ads')
-          .select('id, competitor_name, platform, ad_copy, call_to_action, landing_url, seen_at, performance_score')
+          .select('id, platform, copy_text, creative_url, last_seen_at, first_seen_at, captured_at, entity_id, intelligence_entities(name)')
           .eq('organization_id', orgId)
-          .order('seen_at', { ascending: false })
+          .order('captured_at', { ascending: false })
           .limit(30) : Promise.resolve({ data: [], error: null }),
         orgId ? this._supabase
           .from('brand_vulnerabilities')
-          .select('id, title, description, severity, status, detected_at')
+          .select('id, title, description, severity, status, created_at')
           .eq('organization_id', orgId)
-          .order('detected_at', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(10) : Promise.resolve({ data: [], error: null }),
       ]);
 
@@ -2028,25 +2031,38 @@ class DashboardView extends BaseView {
 
   _renderCompetenceHtml(competitors, ads, vulnerabilities) {
     const competitorRows = competitors.length
-      ? competitors.map(c => `
+      ? competitors.map((c) => {
+          const meta = c.metadata && typeof c.metadata === 'object' ? c.metadata : {};
+          const followers = meta.followers_count != null ? Number(meta.followers_count).toLocaleString() : '—';
+          const engagement = meta.engagement_rate != null ? (Number(meta.engagement_rate) * 100).toFixed(2) + '%' : '—';
+          const source = c.domain || meta.source || '—';
+          const lastAt = meta.last_analyzed_at || c.created_at;
+          return `
         <tr>
           <td>${this._esc(c.name)}</td>
-          <td>${this._esc(c.source || '—')}</td>
-          <td>${c.followers_count != null ? Number(c.followers_count).toLocaleString() : '—'}</td>
-          <td>${c.engagement_rate != null ? (c.engagement_rate * 100).toFixed(2) + '%' : '—'}</td>
-          <td>${c.last_analyzed_at ? new Date(c.last_analyzed_at).toLocaleDateString('es-ES') : '—'}</td>
-        </tr>`).join('')
+          <td>${this._esc(source)}</td>
+          <td>${followers}</td>
+          <td>${engagement}</td>
+          <td>${lastAt ? new Date(lastAt).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`;
+        }).join('')
       : `<tr><td colspan="5" class="insight-table-empty">Sin competidores registrados. Usa intelligence_entities para agregarlos.</td></tr>`;
 
     const adRows = ads.length
-      ? ads.map(a => `
+      ? ads.map((a) => {
+          const ent = a.intelligence_entities;
+          const entName = ent && typeof ent === 'object' && !Array.isArray(ent) ? ent.name : (Array.isArray(ent) ? ent[0]?.name : null);
+          const copy = a.copy_text || '';
+          const when = a.last_seen_at || a.captured_at;
+          return `
         <tr>
-          <td>${this._esc(a.competitor_name || '—')}</td>
+          <td>${this._esc(entName || '—')}</td>
           <td><span class="insight-platform-badge">${this._esc(a.platform || '—')}</span></td>
-          <td class="insight-ad-copy">${this._esc((a.ad_copy || '').slice(0, 120))}${(a.ad_copy || '').length > 120 ? '…' : ''}</td>
-          <td>${this._esc(a.call_to_action || '—')}</td>
-          <td>${a.seen_at ? new Date(a.seen_at).toLocaleDateString('es-ES') : '—'}</td>
-        </tr>`).join('')
+          <td class="insight-ad-copy">${this._esc(copy.slice(0, 120))}${copy.length > 120 ? '…' : ''}</td>
+          <td>${a.creative_url ? `<a href="${this._esc(a.creative_url)}" target="_blank" rel="noopener" class="insight-source-link">Creative</a>` : '—'}</td>
+          <td>${when ? new Date(when).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`;
+        }).join('')
       : `<tr><td colspan="5" class="insight-table-empty">Sin anuncios de competencia registrados.</td></tr>`;
 
     const SEVERITY_COLORS = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e' };
@@ -2058,7 +2074,7 @@ class DashboardView extends BaseView {
               <td>${this._esc(v.title || '—')}</td>
               <td><span class="insight-severity-badge" style="background:${color}">${this._esc(v.severity || '—')}</span></td>
               <td>${this._esc(v.status || '—')}</td>
-              <td>${v.detected_at ? new Date(v.detected_at).toLocaleDateString('es-ES') : '—'}</td>
+              <td>${v.created_at ? new Date(v.created_at).toLocaleDateString('es-ES') : '—'}</td>
             </tr>`;
         }).join('')
       : `<tr><td colspan="4" class="insight-table-empty">Sin vulnerabilidades detectadas.</td></tr>`;
@@ -2079,7 +2095,7 @@ class DashboardView extends BaseView {
           <h2 class="insight-section-title"><i class="fas fa-ad"></i> Anuncios de competencia</h2>
           <div class="insight-table-wrap">
             <table class="insight-table">
-              <thead><tr><th>Competidor</th><th>Plataforma</th><th>Copy</th><th>CTA</th><th>Visto</th></tr></thead>
+              <thead><tr><th>Entidad</th><th>Plataforma</th><th>Copy</th><th>Creative</th><th>Visto</th></tr></thead>
               <tbody>${adRows}</tbody>
             </table>
           </div>
@@ -2131,7 +2147,7 @@ class DashboardView extends BaseView {
       const [triggersRes] = await Promise.allSettled([
         orgId ? this._supabase
           .from('monitoring_triggers')
-          .select('id, name, trigger_type, status, keywords, platforms, last_triggered_at, created_at')
+          .select('id, sensor_type, status, config, cadence, next_run_at, last_run_at, created_at, brand_container_id')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
       ]);
@@ -2151,14 +2167,17 @@ class DashboardView extends BaseView {
     const triggerRows = triggers.length
       ? triggers.map(t => {
           const color = STATUS_COLORS[t.status] || '#6b7280';
-          const keywords = (t.keywords || []).slice(0, 4);
+          const cfg = t.config && typeof t.config === 'object' ? t.config : {};
+          const label = cfg.label || cfg.name || t.sensor_type || '—';
+          const kw = Array.isArray(cfg.keywords) ? cfg.keywords : (typeof cfg.keywords === 'string' ? cfg.keywords.split(/\s+/) : []);
+          const keywords = kw.filter(Boolean).slice(0, 4);
           return `
             <tr>
-              <td>${this._esc(t.name || '—')}</td>
-              <td><span class="insight-signal-type">${this._esc(t.trigger_type || '—')}</span></td>
-              <td>${keywords.length ? keywords.map(k => `<span class="insight-keyword">${this._esc(k)}</span>`).join('') : '—'}</td>
+              <td>${this._esc(label)}</td>
+              <td><span class="insight-signal-type">${this._esc(t.sensor_type || '—')}</span></td>
+              <td>${keywords.length ? keywords.map(k => `<span class="insight-keyword">${this._esc(String(k))}</span>`).join('') : '—'}</td>
               <td><span class="insight-severity-badge" style="background:${color}">${this._esc(t.status || '—')}</span></td>
-              <td>${t.last_triggered_at ? new Date(t.last_triggered_at).toLocaleDateString('es-ES') : '—'}</td>
+              <td>${t.last_run_at ? new Date(t.last_run_at).toLocaleDateString('es-ES') : '—'}</td>
               <td class="insight-trigger-actions">
                 <button type="button" class="btn btn-ghost btn-sm insight-trigger-toggle" data-trigger-id="${t.id}" data-status="${t.status}" title="${t.status === 'active' ? 'Pausar' : 'Activar'}">
                   <i class="fas ${t.status === 'active' ? 'fa-pause' : 'fa-play'}"></i>
@@ -2240,13 +2259,23 @@ class DashboardView extends BaseView {
       const keywords = (document.getElementById('trg_keywords')?.value || '')
         .split(/\n/).map(s => s.trim()).filter(Boolean);
       const platforms = [...document.querySelectorAll('input[name="trg_platform"]:checked')].map(el => el.value);
+      const sensorType = document.getElementById('trg_type')?.value || 'keyword';
+      const { data: bcRow, error: bcErr } = await this._supabase
+        .from('brand_containers')
+        .select('id')
+        .eq('organization_id', orgId)
+        .limit(1)
+        .maybeSingle();
+      if (bcErr || !bcRow?.id) {
+        alert('No hay una marca (brand_container) en esta organización; no se puede crear el monitor.');
+        return;
+      }
       const payload = {
         organization_id: orgId,
-        name,
-        trigger_type: document.getElementById('trg_type')?.value || 'keyword',
-        keywords,
-        platforms,
+        brand_container_id: bcRow.id,
+        sensor_type: sensorType,
         status: 'active',
+        config: { label: name, keywords, platforms },
       };
       const { error } = await this._supabase.from('monitoring_triggers').insert(payload);
       if (error) { alert('Error al crear monitor.'); return; }
@@ -2283,30 +2312,42 @@ class DashboardView extends BaseView {
       window.currentOrgId;
 
     try {
-      const [trendRes, signalsRes, retailRes] = await Promise.allSettled([
-        orgId ? this._supabase
-          .from('trend_topics')
-          .select('id, topic, platform, volume_score, sentiment_score, related_keywords, detected_at, expires_at')
-          .eq('organization_id', orgId)
-          .order('volume_score', { ascending: false })
-          .limit(30) : Promise.resolve({ data: [], error: null }),
-        orgId ? this._supabase
-          .from('intelligence_signals')
-          .select('id, signal_type, title, description, relevance_score, detected_at, source_url')
-          .eq('organization_id', orgId)
-          .order('detected_at', { ascending: false })
-          .limit(20) : Promise.resolve({ data: [], error: null }),
-        orgId ? this._supabase
-          .from('retail_prices')
-          .select('id, product_name, competitor_name, price, currency, platform, recorded_at')
-          .eq('organization_id', orgId)
-          .order('recorded_at', { ascending: false })
-          .limit(20) : Promise.resolve({ data: [], error: null }),
-      ]);
-
-      const trends = (trendRes.status === 'fulfilled' && !trendRes.value.error) ? (trendRes.value.data || []) : [];
-      const signals = (signalsRes.status === 'fulfilled' && !signalsRes.value.error) ? (signalsRes.value.data || []) : [];
-      const prices = (retailRes.status === 'fulfilled' && !retailRes.value.error) ? (retailRes.value.data || []) : [];
+      let trends = [];
+      let signals = [];
+      let prices = [];
+      if (orgId) {
+        const [trendRes, retailRes, entRes] = await Promise.all([
+          this._supabase
+            .from('trend_topics')
+            .select('id, keyword, source, category, velocity_score, relevance_score, sentiment, detected_at, metadata')
+            .eq('organization_id', orgId)
+            .order('relevance_score', { ascending: false })
+            .limit(30),
+          this._supabase
+            .from('retail_prices')
+            .select('id, product_name, price, currency, retailer, captured_at, stock_status')
+            .eq('organization_id', orgId)
+            .order('captured_at', { ascending: false })
+            .limit(20),
+          this._supabase
+            .from('intelligence_entities')
+            .select('id')
+            .eq('organization_id', orgId)
+            .limit(500),
+        ]);
+        trends = trendRes.error ? [] : (trendRes.data || []);
+        prices = retailRes.error ? [] : (retailRes.data || []);
+        const entityIds = (entRes.data || []).map((r) => r.id).filter(Boolean);
+        if (entityIds.length) {
+          const sigRes = await this._supabase
+            .from('intelligence_signals')
+            .select('id, signal_type, content_text, content_numeric, captured_at, entity_id')
+            .in('entity_id', entityIds)
+            .order('captured_at', { ascending: false })
+            .limit(20);
+          signals = sigRes.error ? [] : (sigRes.data || []);
+        }
+      }
 
       body.innerHTML = this._renderTendenciesHtml(trends, signals, prices);
     } catch (e) {
@@ -2317,46 +2358,53 @@ class DashboardView extends BaseView {
 
   _renderTendenciesHtml(trends, signals, prices) {
     const trendCards = trends.length
-      ? trends.map(t => {
-          const sentiment = t.sentiment_score != null
-            ? (t.sentiment_score > 0.5 ? '🟢' : t.sentiment_score > 0 ? '🟡' : '🔴')
+      ? trends.map((t) => {
+          const sent = t.sentiment && typeof t.sentiment === 'object' ? t.sentiment : {};
+          const score = sent.score != null ? Number(sent.score) : null;
+          const sentiment = score != null
+            ? (score > 0.5 ? '🟢' : score > 0 ? '🟡' : '🔴')
             : '';
-          const keywords = (t.related_keywords || []).slice(0, 4);
+          const meta = t.metadata && typeof t.metadata === 'object' ? t.metadata : {};
+          const keywords = Array.isArray(meta.related_keywords) ? meta.related_keywords.slice(0, 4) : [];
+          const vol = t.velocity_score != null ? t.velocity_score : t.relevance_score;
           return `
             <div class="insight-trend-card">
               <div class="insight-trend-header">
-                <span class="insight-trend-topic">${this._esc(t.topic)}</span>
-                <span class="insight-trend-platform">${this._esc(t.platform || '—')}</span>
+                <span class="insight-trend-topic">${this._esc(t.keyword || '—')}</span>
+                <span class="insight-trend-platform">${this._esc(t.source || '—')}</span>
               </div>
               <div class="insight-trend-meta">
-                <span>Volumen: <strong>${t.volume_score != null ? t.volume_score.toLocaleString() : '—'}</strong></span>
+                <span>Relevancia / velocidad: <strong>${vol != null ? String(vol) : '—'}</strong></span>
                 ${sentiment ? `<span>Sentimiento: ${sentiment}</span>` : ''}
                 ${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}
               </div>
-              ${keywords.length ? `<div class="insight-trend-keywords">${keywords.map(k => `<span class="insight-keyword">${this._esc(k)}</span>`).join('')}</div>` : ''}
+              ${keywords.length ? `<div class="insight-trend-keywords">${keywords.map(k => `<span class="insight-keyword">${this._esc(String(k))}</span>`).join('')}</div>` : ''}
             </div>`;
         }).join('')
       : '<p class="insight-table-empty">Sin tendencias registradas para esta organización.</p>';
 
     const signalRows = signals.length
-      ? signals.map(s => `
+      ? signals.map((s) => {
+          const text = (s.content_text || '').slice(0, 120);
+          return `
         <tr>
           <td><span class="insight-signal-type">${this._esc(s.signal_type || '—')}</span></td>
-          <td>${this._esc(s.title || '—')}</td>
-          <td>${s.relevance_score != null ? (s.relevance_score * 100).toFixed(0) + '%' : '—'}</td>
-          <td>${s.detected_at ? new Date(s.detected_at).toLocaleDateString('es-ES') : '—'}</td>
-          <td>${s.source_url ? `<a href="${this._esc(s.source_url)}" target="_blank" rel="noopener" class="insight-source-link"><i class="fas fa-external-link-alt"></i></a>` : '—'}</td>
-        </tr>`).join('')
+          <td>${this._esc(text || '—')}${(s.content_text || '').length > 120 ? '…' : ''}</td>
+          <td>${s.content_numeric != null ? String(s.content_numeric) : '—'}</td>
+          <td>${s.captured_at ? new Date(s.captured_at).toLocaleDateString('es-ES') : '—'}</td>
+          <td>—</td>
+        </tr>`;
+        }).join('')
       : `<tr><td colspan="5" class="insight-table-empty">Sin señales de inteligencia registradas.</td></tr>`;
 
     const priceRows = prices.length
       ? prices.map(p => `
         <tr>
           <td>${this._esc(p.product_name || '—')}</td>
-          <td>${this._esc(p.competitor_name || '—')}</td>
+          <td>${this._esc(p.retailer || '—')}</td>
           <td><strong>${p.price != null ? `${p.price} ${p.currency || 'USD'}` : '—'}</strong></td>
-          <td><span class="insight-platform-badge">${this._esc(p.platform || '—')}</span></td>
-          <td>${p.recorded_at ? new Date(p.recorded_at).toLocaleDateString('es-ES') : '—'}</td>
+          <td><span class="insight-platform-badge">${this._esc(p.stock_status || '—')}</span></td>
+          <td>${p.captured_at ? new Date(p.captured_at).toLocaleDateString('es-ES') : '—'}</td>
         </tr>`).join('')
       : `<tr><td colspan="5" class="insight-table-empty">Sin precios de competencia registrados.</td></tr>`;
 
@@ -2381,7 +2429,7 @@ class DashboardView extends BaseView {
           <h2 class="insight-section-title"><i class="fas fa-tag"></i> Precios de mercado</h2>
           <div class="insight-table-wrap">
             <table class="insight-table">
-              <thead><tr><th>Producto</th><th>Competidor</th><th>Precio</th><th>Plataforma</th><th>Registrado</th></tr></thead>
+              <thead><tr><th>Producto</th><th>Retailer</th><th>Precio</th><th>Stock</th><th>Capturado</th></tr></thead>
               <tbody>${priceRows}</tbody>
             </table>
           </div>

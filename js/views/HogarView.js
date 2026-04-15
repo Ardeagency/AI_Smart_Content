@@ -185,7 +185,7 @@ class HogarView extends BaseView {
           .select('organization_id, credits_available, credits_total')
           .in('organization_id', orgIds),
         this.supabase.from('brand_containers')
-          .select('organization_id, nombre_marca, logo_url')
+          .select('organization_id, nombre_marca, organizations(logo_url)')
           .in('organization_id', orgIds),
         this.supabase.from('organization_members')
           .select('organization_id, user_id')
@@ -205,7 +205,12 @@ class HogarView extends BaseView {
       (containersRows || []).forEach(r => {
         if (!marcasByOrg[r.organization_id]) marcasByOrg[r.organization_id] = [];
         if (r.nombre_marca) marcasByOrg[r.organization_id].push(r.nombre_marca);
-        if (!firstBrandByOrg[r.organization_id]) firstBrandByOrg[r.organization_id] = { nombre_marca: r.nombre_marca, logo_url: r.logo_url || '' };
+        if (!firstBrandByOrg[r.organization_id]) {
+          firstBrandByOrg[r.organization_id] = {
+            nombre_marca: r.nombre_marca,
+            logo_url: (r.organizations && r.organizations.logo_url) || '',
+          };
+        }
       });
 
       const membersByOrg = {};

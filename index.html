@@ -20,28 +20,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    <!-- Preload: solo primera imagen del hero (las siguientes se cargan bajo demanda al rotar).
-         Mismos parámetros de Cloudinary que LandingView para aprovechar el mismo cache-key. -->
-    <link rel="preload" as="image" fetchpriority="high" href="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto,f_auto,c_limit,w_1920,dpr_auto/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg">
+    <!-- Hero: sin link preload (evita avisos de consola si la ruta no pinta el hero al instante).
+         La landing usa la misma URL en CSS/JS; preconnect a Cloudinary ya está arriba. -->
 
-    <!-- Application CSS — crítico, bloqueante.
-         bundle.css usa @import para cargar módulos → los navegadores los descargan en
-         cascada. Preload paralelo de los módulos usados en la landing para evitar
-         esa cadena serial y acelerar la primera pintura. -->
-    <link rel="preload" as="style" href="css/modules/public.css">
-    <link rel="preload" as="style" href="css/modules/landing.css">
-    <link rel="preload" as="style" href="css/modules/navigation.css">
-    <link rel="preload" as="style" href="css/modules/auth.css">
+    <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
     <link rel="stylesheet" href="css/bundle.css?v=20260415-identities-add-buttons">
 
     <!-- Fuente Inter — pesos reducidos (solo los usados en la UI) + display=swap -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 
-    <!-- Icon fonts — carga NO bloqueante (pattern preload+onload swap). Solo se usan en vistas autenticadas -->
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- Icon fonts — carga no bloqueante sin rel=preload (evita warning "preloaded but not used"). -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"></noscript>
     
     <style>

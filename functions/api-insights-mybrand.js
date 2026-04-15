@@ -72,9 +72,15 @@ exports.handler = async (event) => {
   const containers = await supabaseRest({
     url: env.url, serviceKey: env.serviceKey,
     path: 'brand_containers', method: 'GET',
-    searchParams: { select: 'id,user_id,organization_id,nombre_marca,logo_url', id: `eq.${brand_container_id}`, limit: '1' }
+    searchParams: { select: 'id,user_id,organization_id,nombre_marca,organizations(logo_url)', id: `eq.${brand_container_id}`, limit: '1' }
   });
-  const bc = Array.isArray(containers) ? containers[0] : null;
+  const bcRow = Array.isArray(containers) ? containers[0] : null;
+  const bc = bcRow
+    ? {
+        ...bcRow,
+        logo_url: bcRow.organizations?.logo_url ?? null,
+      }
+    : null;
   if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
 
   if (bc.user_id !== user.id) {
