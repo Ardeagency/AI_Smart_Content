@@ -127,6 +127,16 @@ class BrandOrganizationView extends BaseView {
             </div>
         </div>
 
+        <!-- Assets -->
+        <div class="brand-card card-assets">
+            <div class="card-header">
+                <h2 class="card-title">Assets</h2>
+            </div>
+            <div class="card-content">
+                <div class="assets-files" id="assetsFilesContainer"></div>
+            </div>
+        </div>
+
     </div>
 
 </div>
@@ -781,6 +791,7 @@ class BrandOrganizationView extends BaseView {
     this.renderBrandColors();
     this.renderTypography();
     this.renderIdentityFiles();
+    this.renderAssetsFiles();
     this.setupFileUpload();
     this.setupEventListeners();
   }
@@ -1446,53 +1457,85 @@ class BrandOrganizationView extends BaseView {
       return;
     }
 
-    const assets = (this.brandAssets || []).slice(0, 3); // Máx 3 archivos
-    
-    if (assets.length === 0) {
+    const logoUrl = (this.brandContainerData?.logo_url || '').trim();
+
+    if (!logoUrl) {
       container.innerHTML = `
-        <div class="identity-file-empty"></div>
+        <div class="identity-file-empty">
+          <div class="identity-file-empty-text">Sin logo organizacional</div>
+          <div class="identity-file-empty-hint">Súbelo desde la sección INFO del perfil de organización.</div>
+        </div>
       `;
       return;
     }
 
-    container.innerHTML = assets.map(asset => {
-      const fileName = asset.file_name || 'File';
-      const fileType = asset.file_type || asset.asset_type || 'file';
-      const fileUrl = asset.file_url || '';
-      const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
-      
-      // Validar URL antes de usarla
-      const isValidUrl = fileUrl && 
-        (fileUrl.startsWith('http://') || 
-         fileUrl.startsWith('https://') || 
-         fileUrl.startsWith('/'));
-      
-      // Icono según tipo de archivo
-      let icon = 'fa-file';
-      if (fileType.includes('image') || fileType.includes('logo')) {
-        icon = 'fa-image';
-      } else if (fileType.includes('pdf')) {
-        icon = 'fa-file-pdf';
-      } else if (fileType.includes('vector')) {
-        icon = 'fa-file-image';
-      }
+    container.innerHTML = `
+      <div class="identity-file-item identity-file-item--logo">
+        <img src="${this.escapeHtml(logoUrl)}" alt="Logo organización" class="identity-logo-preview" loading="lazy">
+        <div class="identity-file-info">
+          <div class="identity-file-name">Logo de organización</div>
+        </div>
+      </div>
+    `;
+  }
 
-      const dateText = uploadDate 
-        ? `Uploaded · ${uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+  renderAssetsFiles() {
+    const container = (this.container && this.container.querySelector('#assetsFilesContainer')) ||
+                      document.getElementById('assetsFilesContainer');
+    if (!container) return;
+
+    const assets = this.brandAssets || [];
+    if (!assets.length) {
+      container.innerHTML = `
+        <div class="assets-file-empty">
+          <div class="identity-file-empty-text">Sin assets todavía</div>
+          <div class="identity-file-empty-hint">Sube imágenes, logos, PDFs y archivos de referencia.</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = assets.map((asset) => {
+      const fileName = asset.file_name || 'Archivo';
+      const fileType = String(asset.file_type || asset.asset_type || 'file').toLowerCase();
+      const fileUrl = String(asset.file_url || '').trim();
+      const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
+      const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
+
+      const dateText = uploadDate
+        ? `Subido · ${uploadDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
         : '';
 
+      const preview = isImage && fileUrl
+        ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="asset-file-thumb" loading="lazy">`
+        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+
       return `
-        <div class="identity-file-item">
-          <div class="identity-file-icon">
-            <i class="fas ${icon}"></i>
-          </div>
+        <div class="assets-file-item" data-asset-id="${asset.id}">
+          <div class="assets-file-preview">${preview}</div>
           <div class="identity-file-info">
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
             ${dateText ? `<div class="identity-file-date">${dateText}</div>` : ''}
           </div>
+          <div class="assets-file-actions">
+            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir asset"><i class="fas fa-external-link-alt"></i></a>` : ''}
+            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar asset">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
+
+    container.querySelectorAll('[data-remove-asset-id]').forEach((btn) => {
+      if (btn.dataset.assetBound === '1') return;
+      btn.dataset.assetBound = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.removeAsset(btn.getAttribute('data-remove-asset-id'));
+      });
+    });
   }
 
   escapeHtml(text) {
@@ -2222,6 +2265,8 @@ class BrandOrganizationView extends BaseView {
         organization_id: orgId,
         asset_scope: 'organization',
         brand_container_id: null,
+        bucket: 'brand-core',
+        storage_path: filePath,
         file_name: file.name,
         file_url: publicUrl,
         file_type: file.type,
@@ -2231,11 +2276,44 @@ class BrandOrganizationView extends BaseView {
       if (insertError) throw insertError;
 
       await this._reloadAssets();
-      this.renderIdentityFiles();
+      this.renderAssetsFiles();
     } catch (error) {
       console.error('BrandOrganizationView uploadAsset:', error);
       alert('Error al subir archivo.');
     }
+  }
+
+  async removeAsset(assetId) {
+    if (!this.supabase || !assetId) return;
+    const asset = (this.brandAssets || []).find((a) => a.id === assetId);
+    if (!asset) return;
+    if (!window.confirm('¿Eliminar este asset?')) return;
+
+    try {
+      const bucket = asset.bucket || 'brand-core';
+      const storagePath = asset.storage_path || this._extractStoragePathFromUrl(asset.file_url, bucket);
+      if (storagePath) {
+        await this.supabase.storage.from(bucket).remove([storagePath]);
+      }
+
+      const { error } = await this.supabase.from('brand_assets').delete().eq('id', assetId);
+      if (error) throw error;
+
+      this.brandAssets = (this.brandAssets || []).filter((a) => a.id !== assetId);
+      this.renderAssetsFiles();
+    } catch (error) {
+      console.error('BrandOrganizationView removeAsset:', error);
+      alert('No se pudo eliminar el asset.');
+    }
+  }
+
+  _extractStoragePathFromUrl(url, bucket) {
+    const raw = String(url || '').trim();
+    if (!raw) return '';
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const idx = raw.indexOf(marker);
+    if (idx >= 0) return raw.slice(idx + marker.length);
+    return '';
   }
 
   // ============================================
@@ -2362,7 +2440,7 @@ class BrandOrganizationView extends BaseView {
   }
 
   setupFileUpload() {
-    const container = document.getElementById('identityFilesContainer');
+    const container = document.getElementById('assetsFilesContainer');
     if (!container) return;
 
     // Agregar botón de upload si no existe
