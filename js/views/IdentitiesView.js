@@ -232,9 +232,8 @@ class IdentitiesView extends BaseView {
   _renderProductCard(p, i) {
     const imageUrl = this.productImageById[p.id] || '';
     const price = p.precio_producto != null ? `${p.precio_producto} ${p.moneda || 'USD'}` : '';
-    const variant = i % 5;
     return `
-      <article class="identity-product-card identity-product-card--masonry-${variant}" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
+      <article class="identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
         <div class="identity-product-card-image-wrap">
           ${imageUrl
             ? `<img class="identity-product-card-image" src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(p.nombre_producto || 'Producto')}" loading="lazy">`

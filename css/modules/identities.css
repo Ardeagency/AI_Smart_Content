@@ -193,8 +193,8 @@
 
 .identity-product-card-image {
   width: 100%;
+  height: auto;
   display: block;
-  object-fit: cover;
   background: var(--bg-secondary);
 }
 
@@ -206,12 +206,6 @@
   color: var(--text-muted);
   font-size: 1.2rem;
 }
-
-.identity-product-card--masonry-0 .identity-product-card-image { aspect-ratio: 1 / 1; }
-.identity-product-card--masonry-1 .identity-product-card-image { aspect-ratio: 4 / 3; }
-.identity-product-card--masonry-2 .identity-product-card-image { aspect-ratio: 3 / 4; }
-.identity-product-card--masonry-3 .identity-product-card-image { aspect-ratio: 3 / 2; }
-.identity-product-card--masonry-4 .identity-product-card-image { aspect-ratio: 2 / 3; }
 
 .identity-product-card-body {
   padding: 0.8rem;
