@@ -1829,7 +1829,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     max-width: calc(100vw - var(--nav-width, 260px));
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
-    border-radius: 0 0 var(--glass-radius) 0;
+    border-radius: 0;
 }
 body.production-filters-in-header .app-header.with-sidebar {
     flex-direction: column;

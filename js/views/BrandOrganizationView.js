@@ -1013,6 +1013,11 @@ class BrandOrganizationView extends BaseView {
     const countEl = document.getElementById('brandSubBrandsCount');
     if (!card || !content) return;
 
+    // Resetear el binding de card-info para que setupEventListeners lo rehaga con el estado correcto
+    const container = this.container || document.getElementById('app-container');
+    const infoCard = container?.querySelector('.card-info');
+    if (infoCard) delete infoCard.dataset.brandsInfoClickBound;
+
     const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
     const isStorageMode = this._isStorageMode();
 
@@ -1054,7 +1059,7 @@ class BrandOrganizationView extends BaseView {
           : '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
       }
     } else if (containers.length === 1) {
-      // Modo único: mostrar nombre + botón INFO
+      // Modo único: mostrar solo el nombre — card-info es el panel legítimo de esta sub-marca
       const item = containers[0];
       let logoUrl = '';
       try {
@@ -1072,20 +1077,8 @@ class BrandOrganizationView extends BaseView {
             }
             <span class="sub-brand-single-name">${this.escapeHtml(item.nombre_marca || 'Sub-marca')}</span>
           </div>
-          <button type="button" class="sub-brand-info-btn" data-sub-brand-id="${this.escapeHtml(String(item.id || ''))}">
-            <i class="fas fa-info-circle" aria-hidden="true"></i>
-            INFO
-          </button>
         </div>
       `;
-
-      const infoBtn = content.querySelector('.sub-brand-info-btn');
-      if (infoBtn) {
-        infoBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.openInfoPanel();
-        });
-      }
     } else {
       // Storage mode activo pero sin sub-marcas
       content.innerHTML = '<div class="brand-storage-empty">No hay sub-marcas todavía.</div>';
@@ -1885,19 +1878,31 @@ class BrandOrganizationView extends BaseView {
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
-    
+
     const infoBtn = container.querySelector('.card-info');
     if (infoBtn && infoBtn.dataset.brandsInfoClickBound !== '1') {
       infoBtn.dataset.brandsInfoClickBound = '1';
       infoBtn.style.cursor = 'pointer';
       infoBtn.addEventListener('click', () => {
-        this.openInfoPanel();
+        const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+        if (containers.length === 1) {
+          // Panel INFO de la única sub-marca (delegado a BrandstorageView)
+          this.openSubBrandInfoPanel(containers[0].id);
+        } else {
+          // Panel INFO de organización (sin sub-marcas o múltiples)
+          this.openInfoPanel();
+        }
       });
     }
 
     if (localStorage.getItem('brands_open_info') === '1') {
       localStorage.removeItem('brands_open_info');
-      setTimeout(() => this.openInfoPanel(), 300);
+      const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+      if (containers.length === 1) {
+        setTimeout(() => this.openSubBrandInfoPanel(containers[0].id), 300);
+      } else {
+        setTimeout(() => this.openInfoPanel(), 300);
+      }
     }
   }
 
