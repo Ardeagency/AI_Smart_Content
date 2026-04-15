@@ -2255,6 +2255,17 @@ class BrandstorageView extends BaseView {
       };
 
       const setOpen = (open) => {
+        // Permitir solo un multiselect abierto a la vez dentro del panel INFO
+        if (open) {
+          panelRoot.querySelectorAll('.info-brand-multiselect.is-open').forEach((otherWrap) => {
+            if (otherWrap === wrap) return;
+            otherWrap.classList.remove('is-open');
+            const otherTrigger = otherWrap.querySelector('.info-brand-multiselect__trigger');
+            const otherPanel = otherWrap.querySelector('.info-brand-multiselect__panel');
+            if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+            if (otherPanel) otherPanel.hidden = true;
+          });
+        }
         trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
         panel.hidden = !open;
         wrap.classList.toggle('is-open', open);
@@ -2275,6 +2286,7 @@ class BrandstorageView extends BaseView {
           else selected = [...selected, val];
           syncUi();
           await this.saveBrandContainerFieldById(brandContainerId, field, selected);
+          setOpen(false);
         });
       });
 
