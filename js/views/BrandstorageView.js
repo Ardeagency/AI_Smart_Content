@@ -1794,23 +1794,17 @@ class BrandstorageView extends BaseView {
     const items = rows.map((row) => {
       const meta = this.getIntegrationPlatformMeta(row.platform);
       const status = row.is_active ? 'Conectada' : 'Desconectada';
-      const account = row.external_account_name ? String(row.external_account_name) : '';
+      const account = row.external_account_name ? this.escapeHtml(row.external_account_name) : 'Sin cuenta asociada';
       const syncText = row.last_sync_at ? ` · Sync: ${this.escapeHtml(this.formatInfoDate(row.last_sync_at))}` : '';
       return `
         <li class="info-connect-row" data-connect-key="${this.escapeHtml(String(row.platform || ''))}">
           <span class="info-connect-icon" aria-hidden="true"><i class="${this.escapeHtml(meta.iconClass)}"></i></span>
           <div class="info-connect-main">
             <span class="info-connect-label">${this.escapeHtml(meta.label)}</span>
-            <input type="text" class="info-brand-textarea" data-integration-id="${this.escapeHtml(String(row.id || ''))}" data-integration-field="external_account_name" value="${this.escapeHtml(account)}" placeholder="Cuenta conectada">
-            <span class="info-connect-hint">${syncText ? `Última sincronización${syncText}` : 'Sin sincronización registrada'}</span>
+            <span class="info-connect-hint">${account}${syncText}</span>
           </div>
           <span class="info-connect-linked" title="${this.escapeHtml(status)}" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-link' : 'fa-unlink'}"></i></span>
-          <label class="info-connect-external" aria-label="Estado integración">
-            <select class="info-brand-textarea" data-integration-id="${this.escapeHtml(String(row.id || ''))}" data-integration-field="is_active">
-              <option value="1" ${row.is_active ? 'selected' : ''}>Activa</option>
-              <option value="0" ${row.is_active ? '' : 'selected'}>Inactiva</option>
-            </select>
-          </label>
+          <span class="info-connect-external" aria-hidden="true"><i class="fas ${row.is_active ? 'fa-check-circle' : 'fa-circle'}"></i></span>
         </li>`;
     }).join('');
 
@@ -1972,7 +1966,6 @@ class BrandstorageView extends BaseView {
               <div class="brand-storage-info-title">${name}</div>
               <div class="brand-storage-info-subtitle">${slogan || 'Sin propuesta de valor definida'}</div>
               <div class="brand-storage-info-dates">${updated ? `Actualizado ${this.escapeHtml(updated)}` : ''}${created ? ` · Creado ${this.escapeHtml(created)}` : ''}</div>
-              <a class="info-connect-external" href="${href}" data-route="${href}" aria-label="Abrir sub-marca"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
             </div>
           </section>
           ${this.renderIntegrationsSection(item?.id)}
