@@ -238,10 +238,10 @@ class App {
       pub
     );
 
-    // ── Org: Product detail (mantiene ruta de ficha de producto) ──
+    // ── Org: Product detail — :entityId reemplaza al antiguo :brandId ──
     const productsLoader = this._lazy('ProductsView', ['/js/products.js', '/js/views/ProductsView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:brandId/:productId', productsLoader, auth);
-    r.register('/product-detail/:brandId/:productId', productsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:entityId/:productId', productsLoader, auth);
+    r.register('/product-detail/:entityId/:productId', productsLoader, auth);
 
     // ── Org: Identities (unifica brand_entities, productos y servicios) ──
     const identitiesLoader = this._lazy('IdentitiesView', ['/js/views/IdentitiesView.js']);

@@ -104,6 +104,13 @@
   font-size: 0.7rem;
 }
 
+.identity-card-price {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-left: auto;
+}
+
 .identity-card-arrow {
   display: flex;
   align-items: center;
@@ -189,6 +196,24 @@
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
+}
+
+.identity-detail-price {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--accent-brand);
+}
+
+.identity-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
 }
 
 /* ── Tabs ── */

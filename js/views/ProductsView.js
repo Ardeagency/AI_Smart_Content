@@ -106,13 +106,13 @@ class ProductsView extends BaseView {
 
     const params = this.routeParams || {};
     const productId = params.productId;
-    const brandId = params.brandId;
+    const entityId = params.entityId || params.brandId; // brandId como alias legacy
     const orgId = params.orgId;
 
-    if (productId && (orgId ? brandId : true)) {
+    if (productId) {
       // Modo detalle
       this.productId = productId;
-      this.brandId = brandId || null;
+      this.brandId = entityId || null; // mantiene compatibilidad interna
       this.container.innerHTML = `
         <div class="product-view">
           <div class="product-view-loading">
@@ -142,13 +142,12 @@ class ProductsView extends BaseView {
       try {
         product = await this.loadProductForDetail(productId);
         if (product) {
-          const containerId = product.brand_container_id || brandId;
-          const [imgs, bn] = await Promise.all([
+          const [imgs, entityName] = await Promise.all([
             this.loadProductImagesForDetail(productId),
-            containerId ? this.loadBrandName(containerId) : Promise.resolve('')
+            product.entity_id ? this.loadEntityName(product.entity_id) : Promise.resolve('')
           ]);
           images = imgs;
-          brandName = bn;
+          brandName = entityName;
         }
       } catch (e) {
         console.error('Error cargando detalle:', e);
@@ -219,17 +218,17 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Cargar nombre de marca (brand_container)
+   * Cargar nombre de entidad (brand_entity) para mostrar en el detalle
    */
-  async loadBrandName(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return '';
-      const { data, error } = await this.supabase
-        .from('brand_containers')
-      .select('nombre_marca, logo_url')
-      .eq('id', brandContainerId)
+  async loadEntityName(entityId) {
+    if (!this.supabase || !entityId) return '';
+    const { data, error } = await this.supabase
+      .from('brand_entities')
+      .select('name')
+      .eq('id', entityId)
       .single();
     if (error || !data) return '';
-    return data.nombre_marca || '';
+    return data.name || '';
   }
 
   /**

@@ -2,6 +2,12 @@
  * IdentitiesView — Vista unificada de identidades de la organización.
  * Lista todas las brand_entities; al seleccionar una muestra sus
  * productos (tab) y servicios (tab) con CRUD completo.
+ *
+ * Schema actual:
+ *   brand_entities: id, entity_type, name, description, price, currency,
+ *                   metadata, organization_id, created_at, updated_at
+ *   products:       entity_id → brand_entities.id  (ya no usa brand_container_id)
+ *   services:       entity_id NOT NULL → brand_entities.id
  */
 class IdentitiesView extends BaseView {
   constructor() {
@@ -13,10 +19,7 @@ class IdentitiesView extends BaseView {
     this.entities = [];
     this.currentEntity = null;
     this.activeTab = 'products';
-    // productos
     this.products = [];
-    this.brandContainerMap = {}; // entityId → brandContainerId
-    // servicios
     this.services = [];
     this.currentService = null;
   }
@@ -29,11 +32,17 @@ class IdentitiesView extends BaseView {
   <div class="identities-list-view" id="identitiesListView">
     <div class="identities-header">
       <h1 class="identities-title">Identities</h1>
+      <button type="button" class="btn btn-primary" id="addIdentityBtn">
+        <i class="fas fa-plus"></i> Nueva Identidad
+      </button>
     </div>
     <div class="identities-grid" id="identitiesGrid"></div>
     <div class="identities-empty" id="identitiesEmpty" style="display:none;">
       <i class="fas fa-layer-group"></i>
       <p>No hay identidades registradas en esta organización.</p>
+      <button type="button" class="btn btn-primary" id="addIdentityEmptyBtn">
+        <i class="fas fa-plus"></i> Crear primera identidad
+      </button>
     </div>
   </div>
 
@@ -46,6 +55,15 @@ class IdentitiesView extends BaseView {
       <div class="identity-detail-title-wrap">
         <span class="identity-type-badge" id="identityTypeBadge"></span>
         <h1 class="identity-detail-title" id="identityDetailTitle"></h1>
+        <span class="identity-detail-price" id="identityDetailPrice"></span>
+      </div>
+      <div class="identity-detail-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="editIdentityBtn">
+          <i class="fas fa-pen"></i> Editar
+        </button>
+        <button type="button" class="btn btn-ghost btn-danger btn-sm" id="deleteIdentityBtn">
+          <i class="fas fa-trash"></i>
+        </button>
       </div>
     </div>
 
@@ -68,7 +86,7 @@ class IdentitiesView extends BaseView {
           <i class="fas fa-plus"></i> Nuevo Producto
         </button>
       </div>
-      <div class="products-grid identity-products-grid" id="identityProductsGrid"></div>
+      <div class="identity-products-grid" id="identityProductsGrid"></div>
       <div class="identity-panel-empty" id="identityProductsEmpty" style="display:none;">
         <i class="fas fa-box-open"></i>
         <p>Sin productos aún. Crea el primero.</p>
@@ -82,7 +100,7 @@ class IdentitiesView extends BaseView {
           <i class="fas fa-plus"></i> Nuevo Servicio
         </button>
       </div>
-      <div class="services-grid identity-services-grid" id="identityServicesGrid"></div>
+      <div class="identity-services-grid" id="identityServicesGrid"></div>
       <div class="identity-panel-empty" id="identityServicesEmpty" style="display:none;">
         <i class="fas fa-concierge-bell"></i>
         <p>Sin servicios aún. Crea el primero.</p>
@@ -157,7 +175,7 @@ class IdentitiesView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('brand_entities')
-        .select('id, name, entity_type, description, brand_container_id, created_at')
+        .select('id, name, entity_type, description, price, currency, metadata, created_at')
         .eq('organization_id', this.organizationId)
         .order('name');
       if (error) throw error;
@@ -189,17 +207,20 @@ class IdentitiesView extends BaseView {
     }
     if (empty) empty.style.display = 'none';
 
-    // Cargar conteos de productos y servicios para todas las entidades
     const counts = await this._loadEntityCounts();
 
     grid.innerHTML = this.entities.map(entity => {
       const c = counts[entity.id] || { products: 0, services: 0 };
       const typeLabel = this._entityTypeLabel(entity.entity_type);
+      const priceLabel = entity.price != null
+        ? `<span class="identity-card-price">${entity.price} ${entity.currency || 'USD'}</span>`
+        : '';
       return `
         <article class="identity-card" data-entity-id="${entity.id}" role="button" tabindex="0" aria-label="${this.escapeHtml(entity.name)}">
           <div class="identity-card-inner">
             <div class="identity-card-top">
               <span class="identity-type-badge identity-type-${this.escapeHtml(entity.entity_type || 'other')}">${this.escapeHtml(typeLabel)}</span>
+              ${priceLabel}
             </div>
             <h3 class="identity-card-name">${this.escapeHtml(entity.name)}</h3>
             ${entity.description ? `<p class="identity-card-desc">${this.escapeHtml(entity.description)}</p>` : ''}
@@ -229,37 +250,27 @@ class IdentitiesView extends BaseView {
     this.entities.forEach(e => { counts[e.id] = { products: 0, services: 0 }; });
 
     try {
-      // Servicios: entity_id
       const entityIds = this.entities.map(e => e.id);
+
+      // Productos: ahora entity_id FK directo a brand_entities
+      const { data: pData } = await this.supabase
+        .from('products')
+        .select('entity_id')
+        .in('entity_id', entityIds)
+        .eq('organization_id', this.organizationId);
+      (pData || []).forEach(p => {
+        if (p.entity_id && counts[p.entity_id]) counts[p.entity_id].products++;
+      });
+
+      // Servicios: entity_id FK directo a brand_entities
       const { data: svcData } = await this.supabase
         .from('services')
         .select('entity_id')
-        .in('entity_id', entityIds);
+        .in('entity_id', entityIds)
+        .eq('organization_id', this.organizationId);
       (svcData || []).forEach(s => {
-        if (counts[s.entity_id]) counts[s.entity_id].services++;
+        if (s.entity_id && counts[s.entity_id]) counts[s.entity_id].services++;
       });
-
-      // Productos: brand_container_id de cada entidad
-      const containerIds = [...new Set(this.entities.map(e => e.brand_container_id).filter(Boolean))];
-      if (containerIds.length) {
-        const { data: pData } = await this.supabase
-          .from('products')
-          .select('brand_container_id')
-          .in('brand_container_id', containerIds)
-          .eq('organization_id', this.organizationId);
-        // mapear brand_container_id → entities
-        const containerToEntity = {};
-        this.entities.forEach(e => {
-          if (e.brand_container_id) {
-            if (!containerToEntity[e.brand_container_id]) containerToEntity[e.brand_container_id] = [];
-            containerToEntity[e.brand_container_id].push(e.id);
-          }
-        });
-        (pData || []).forEach(p => {
-          const eIds = containerToEntity[p.brand_container_id] || [];
-          eIds.forEach(eid => { if (counts[eid]) counts[eid].products++; });
-        });
-      }
     } catch (e) {
       console.error('IdentitiesView _loadEntityCounts:', e);
     }
@@ -281,15 +292,17 @@ class IdentitiesView extends BaseView {
 
     const titleEl = document.getElementById('identityDetailTitle');
     const badgeEl = document.getElementById('identityTypeBadge');
+    const priceEl = document.getElementById('identityDetailPrice');
     if (titleEl) titleEl.textContent = entity.name;
     if (badgeEl) {
       badgeEl.textContent = this._entityTypeLabel(entity.entity_type);
       badgeEl.className = `identity-type-badge identity-type-${this.escapeHtml(entity.entity_type || 'other')}`;
     }
+    if (priceEl) {
+      priceEl.textContent = entity.price != null ? `${entity.price} ${entity.currency || 'USD'}` : '';
+    }
 
-    // Navegar a URL de detalle (sin reload)
     this._updateDetailUrl(entity.id);
-
     await this._switchTab('products');
   }
 
@@ -310,29 +323,153 @@ class IdentitiesView extends BaseView {
   }
 
   // ─────────────────────────────────────────────
+  // CRUD de entidades
+  // ─────────────────────────────────────────────
+
+  _buildEntityModalHtml(title, data = {}) {
+    const monedas = ['USD', 'EUR', 'MXN', 'COP', 'ARS', 'CLP'];
+    const monedaOpts = monedas.map(m => `<option value="${m}" ${(data.currency || 'USD') === m ? 'selected' : ''}>${m}</option>`).join('');
+    const entityTypes = [
+      { value: 'persona', label: 'Persona' },
+      { value: 'empresa', label: 'Empresa' },
+      { value: 'marca', label: 'Marca' },
+      { value: 'product', label: 'Producto' },
+      { value: 'persona_juridica', label: 'Persona Jurídica' },
+      { value: 'other', label: 'Otro' },
+    ];
+    const typeOpts = entityTypes.map(t =>
+      `<option value="${t.value}" ${(data.entity_type || 'other') === t.value ? 'selected' : ''}>${t.label}</option>`
+    ).join('');
+
+    return `
+      <div class="modal-overlay" id="identityEntityModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>${this.escapeHtml(title)}</h3>
+            <button type="button" class="modal-close" id="iemClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="iem_nombre">Nombre <span class="form-required">*</span></label>
+              <input type="text" id="iem_nombre" class="form-input" required placeholder="Ej: Marca Principal" value="${this.escapeHtml(data.name || '')}">
+            </div>
+            <div class="form-group">
+              <label for="iem_type">Tipo de entidad</label>
+              <select id="iem_type" class="form-input">${typeOpts}</select>
+            </div>
+            <div class="form-group">
+              <label for="iem_desc">Descripción</label>
+              <textarea id="iem_desc" class="form-input" rows="3" placeholder="Describe esta identidad">${this.escapeHtml(data.description || '')}</textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="iem_precio">Precio (opcional)</label>
+                <input type="number" id="iem_precio" class="form-input" step="any" placeholder="0" value="${data.price != null ? data.price : ''}">
+              </div>
+              <div class="form-group">
+                <label for="iem_moneda">Moneda</label>
+                <select id="iem_moneda" class="form-input">${monedaOpts}</select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="iemCancel">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="iemSubmit">Guardar</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  _collectEntityModalData() {
+    const precioRaw = document.getElementById('iem_precio')?.value;
+    return {
+      name: document.getElementById('iem_nombre')?.value?.trim() || '',
+      entity_type: document.getElementById('iem_type')?.value || 'other',
+      description: document.getElementById('iem_desc')?.value?.trim() || null,
+      price: precioRaw ? parseFloat(precioRaw) : null,
+      currency: document.getElementById('iem_moneda')?.value || 'USD',
+    };
+  }
+
+  _openEntityModal(title, data, onSubmit) {
+    document.getElementById('identityEntityModal')?.remove();
+    document.body.insertAdjacentHTML('beforeend', this._buildEntityModalHtml(title, data));
+    const closeModal = () => document.getElementById('identityEntityModal')?.remove();
+    document.getElementById('iemClose')?.addEventListener('click', closeModal);
+    document.getElementById('iemCancel')?.addEventListener('click', closeModal);
+    document.getElementById('iemSubmit')?.addEventListener('click', async () => {
+      const payload = this._collectEntityModalData();
+      if (!payload.name) { this._notify('El nombre es obligatorio.', 'error'); return; }
+      await onSubmit(payload);
+      closeModal();
+    });
+  }
+
+  async _createEntity() {
+    if (!this.supabase || !this.organizationId) return;
+    this._openEntityModal('Nueva Identidad', {}, async (payload) => {
+      const { error } = await this.supabase.from('brand_entities').insert({
+        ...payload,
+        organization_id: this.organizationId,
+      });
+      if (error) { this._notify('Error al crear la identidad.', 'error'); return; }
+      this._notify('Identidad creada', 'success');
+      await this._renderList();
+    });
+  }
+
+  async _editEntity(entity) {
+    if (!this.supabase) return;
+    this._openEntityModal('Editar Identidad', entity, async (payload) => {
+      const { error } = await this.supabase
+        .from('brand_entities')
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', entity.id);
+      if (error) { this._notify('Error al guardar.', 'error'); return; }
+      this._notify('Cambios guardados', 'success');
+      Object.assign(this.currentEntity, payload);
+      // Actualizar header del detalle
+      const titleEl = document.getElementById('identityDetailTitle');
+      const badgeEl = document.getElementById('identityTypeBadge');
+      const priceEl = document.getElementById('identityDetailPrice');
+      if (titleEl) titleEl.textContent = payload.name;
+      if (badgeEl) {
+        badgeEl.textContent = this._entityTypeLabel(payload.entity_type);
+        badgeEl.className = `identity-type-badge identity-type-${this.escapeHtml(payload.entity_type || 'other')}`;
+      }
+      if (priceEl) priceEl.textContent = payload.price != null ? `${payload.price} ${payload.currency || 'USD'}` : '';
+    });
+  }
+
+  async _deleteEntity(entityId) {
+    if (!confirm('¿Eliminar esta identidad? Se eliminarán también sus productos y servicios. Esta acción no se puede deshacer.')) return;
+    if (!this.supabase) return;
+    const { error } = await this.supabase.from('brand_entities').delete().eq('id', entityId);
+    if (error) { this._notify('Error al eliminar.', 'error'); return; }
+    this._notify('Identidad eliminada', 'success');
+    this._backToList();
+  }
+
+  // ─────────────────────────────────────────────
   // Tabs
   // ─────────────────────────────────────────────
 
   async _switchTab(tab) {
     this.activeTab = tab;
-
-    const tabBtns = document.querySelectorAll('.identity-tab');
-    tabBtns.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tab));
-
+    document.querySelectorAll('.identity-tab').forEach(btn =>
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab)
+    );
     const panelProducts = document.getElementById('panelProducts');
     const panelServices = document.getElementById('panelServices');
     if (panelProducts) panelProducts.style.display = tab === 'products' ? 'block' : 'none';
     if (panelServices) panelServices.style.display = tab === 'services' ? 'block' : 'none';
 
-    if (tab === 'products') {
-      await this._loadProducts();
-    } else {
-      await this._loadServices();
-    }
+    if (tab === 'products') await this._loadProducts();
+    else await this._loadServices();
   }
 
   // ─────────────────────────────────────────────
-  // Productos
+  // Productos — entity_id es ahora FK directo
   // ─────────────────────────────────────────────
 
   async _loadProducts() {
@@ -342,18 +479,12 @@ class IdentitiesView extends BaseView {
     if (!grid) return;
 
     try {
-      const brandContainerId = this.currentEntity.brand_container_id;
-      let query = this.supabase
+      const { data, error } = await this.supabase
         .from('products')
-        .select('id, nombre_producto, tipo_producto, precio_producto, moneda, descripcion_producto, brand_container_id')
+        .select('id, nombre_producto, tipo_producto, precio_producto, moneda, descripcion_producto, entity_id')
         .eq('organization_id', this.organizationId)
+        .eq('entity_id', this.currentEntity.id)
         .order('created_at', { ascending: false });
-
-      if (brandContainerId) {
-        query = query.eq('brand_container_id', brandContainerId);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       this.products = data || [];
     } catch (e) {
@@ -378,7 +509,7 @@ class IdentitiesView extends BaseView {
       const price = p.precio_producto != null ? `${p.precio_producto} ${p.moneda || 'USD'}` : null;
       const detailUrl = this._productDetailUrl(p, orgId, orgSlug);
       return `
-        <article class="product-card identity-product-card" data-product-id="${p.id}" role="button" tabindex="0">
+        <article class="identity-product-card" data-product-id="${p.id}" role="button" tabindex="0">
           <div class="product-card-inner">
             <div class="product-card-icon"><i class="fas fa-cube"></i></div>
             <h3 class="product-card-name">${this.escapeHtml(p.nombre_producto || 'Sin nombre')}</h3>
@@ -402,32 +533,41 @@ class IdentitiesView extends BaseView {
         if (window.router) window.router.navigate(url);
       });
       card.addEventListener('keydown', ev => {
-        if (ev.key === 'Enter' || ev.key === ' ') {
-          ev.preventDefault();
-          card.click();
-        }
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); card.click(); }
       });
     });
 
     this.updateLinksForRouter();
   }
 
+  /**
+   * URL de detalle de producto.
+   * Usa entity_id como parámetro de ruta (antes era brand_container_id).
+   */
   _productDetailUrl(product, orgId, orgSlug) {
-    const brandId = product.brand_container_id || '';
+    const entityId = product.entity_id || this.currentEntity?.id || '';
     if (orgId && orgSlug && typeof window.getOrgPathPrefix === 'function') {
-      return `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${brandId}/${product.id}`;
+      return `${window.getOrgPathPrefix(orgId, orgSlug)}/product-detail/${entityId}/${product.id}`;
     }
     if (orgId && orgSlug) {
-      return `/org/${orgId}/${orgSlug}/product-detail/${brandId}/${product.id}`;
+      return `/org/${orgId}/${orgSlug}/product-detail/${entityId}/${product.id}`;
     }
-    return `/product-detail/${brandId}/${product.id}`;
+    return `/product-detail/${entityId}/${product.id}`;
   }
 
   async _showNewProductModal() {
-    if (!this.supabase || !this.organizationId) return;
-    const brandContainerId = this.currentEntity?.brand_container_id;
+    if (!this.supabase || !this.organizationId || !this.currentEntity) return;
     const monedas = ['USD', 'EUR', 'MXN', 'COP', 'ARS', 'CLP'];
     const monedaOpts = monedas.map(m => `<option value="${m}">${m}</option>`).join('');
+    const tiposProducto = [
+      ['bebida','Bebidas'], ['bebida_alcoholica','Bebidas Alcohólicas'], ['agua','Agua'],
+      ['energetica','Bebidas Energéticas'], ['alimento','Alimentos'], ['snack','Snacks'],
+      ['suplemento_alimenticio','Suplementos'], ['cosmetico','Cosméticos'], ['skincare','Skincare'],
+      ['maquillaje','Maquillaje'], ['perfume','Perfumes'], ['cuidado_cabello','Cuidado del Cabello'],
+      ['app','Apps/Software'], ['electronico','Electrónicos'], ['smartphone','Smartphones'],
+      ['ropa','Ropa'], ['calzado','Calzado'], ['accesorio_moda','Accesorios de Moda'], ['otro','Otros'],
+    ];
+    const tipoOpts = tiposProducto.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
 
     document.getElementById('identityProductModal')?.remove();
     const html = `
@@ -443,7 +583,11 @@ class IdentitiesView extends BaseView {
               <input type="text" id="ipm_nombre" class="form-input" required placeholder="Ej: Producto A">
             </div>
             <div class="form-group">
-              <label for="ipm_desc">Descripción</label>
+              <label for="ipm_tipo">Tipo de producto <span class="form-required">*</span></label>
+              <select id="ipm_tipo" class="form-input">${tipoOpts}</select>
+            </div>
+            <div class="form-group">
+              <label for="ipm_desc">Descripción <span class="form-required">*</span></label>
               <textarea id="ipm_desc" class="form-input" rows="3" placeholder="Describe el producto"></textarea>
             </div>
             <div class="form-row">
@@ -470,21 +614,29 @@ class IdentitiesView extends BaseView {
     document.getElementById('ipmCancel')?.addEventListener('click', closeModal);
     document.getElementById('ipmSubmit')?.addEventListener('click', async () => {
       const nombre = document.getElementById('ipm_nombre')?.value?.trim();
+      const desc = document.getElementById('ipm_desc')?.value?.trim();
+      const tipo = document.getElementById('ipm_tipo')?.value;
       if (!nombre) { this._notify('El nombre es obligatorio.', 'error'); return; }
+      if (!desc) { this._notify('La descripción es obligatoria.', 'error'); return; }
       const payload = {
         nombre_producto: nombre,
-        descripcion_producto: document.getElementById('ipm_desc')?.value?.trim() || null,
+        tipo_producto: tipo || 'otro',
+        descripcion_producto: desc,
         precio_producto: parseFloat(document.getElementById('ipm_precio')?.value) || null,
         moneda: document.getElementById('ipm_moneda')?.value || 'USD',
         organization_id: this.organizationId,
-        brand_container_id: brandContainerId || null,
+        entity_id: this.currentEntity.id,
       };
       const { data, error } = await this.supabase.from('products').insert(payload).select('id').single();
-      if (error) { this._notify('Error al crear el producto.', 'error'); return; }
+      if (error) { this._notify('Error al crear el producto.', 'error'); console.error(error); return; }
       closeModal();
       this._notify('Producto creado', 'success');
       if (data?.id) {
-        const url = this._productDetailUrl({ id: data.id, brand_container_id: brandContainerId }, this.routeParams?.orgId, this.routeParams?.orgNameSlug);
+        const url = this._productDetailUrl(
+          { id: data.id, entity_id: this.currentEntity.id },
+          this.routeParams?.orgId,
+          this.routeParams?.orgNameSlug
+        );
         if (window.router) window.router.navigate(url);
       } else {
         await this._loadProducts();
@@ -493,7 +645,7 @@ class IdentitiesView extends BaseView {
   }
 
   // ─────────────────────────────────────────────
-  // Servicios (portado de ServicesView)
+  // Servicios
   // ─────────────────────────────────────────────
 
   async _loadServices() {
@@ -505,7 +657,7 @@ class IdentitiesView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('services')
-        .select('id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales, diferenciadores, casos_de_uso, entregables, metodologia_pasos, url_servicio, entity_id')
+        .select('id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales, diferenciadores, casos_de_uso, entregables, metodologia_pasos, url_servicio')
         .eq('organization_id', this.organizationId)
         .eq('entity_id', this.currentEntity.id)
         .order('created_at', { ascending: false });
@@ -529,19 +681,17 @@ class IdentitiesView extends BaseView {
     grid.innerHTML = this.services.map(s => {
       const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : null;
       return `
-        <article class="service-card identity-service-card" data-service-id="${s.id}" role="button" tabindex="0">
-          <div class="service-card-inner">
-            <h3 class="service-card-name">${this.escapeHtml(s.nombre_servicio)}</h3>
-            ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : ''}
-            <div class="service-card-meta">
-              ${price ? `<span class="service-card-price">${this.escapeHtml(price)}</span>` : ''}
-              ${s.duracion_estimada ? `<span class="service-card-duration"><i class="fas fa-clock"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
-            </div>
-            ${(s.beneficios_principales || []).length ? `
-              <div class="service-card-benefits">
-                ${(s.beneficios_principales || []).slice(0, 3).map(b => `<span class="service-tag">${this.escapeHtml(b)}</span>`).join('')}
-              </div>` : ''}
+        <article class="identity-service-card" data-service-id="${s.id}" role="button" tabindex="0">
+          <h3 class="service-card-name">${this.escapeHtml(s.nombre_servicio)}</h3>
+          ${s.descripcion_servicio ? `<p class="service-card-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : ''}
+          <div class="service-card-meta">
+            ${price ? `<span class="service-card-price">${this.escapeHtml(price)}</span>` : ''}
+            ${s.duracion_estimada ? `<span class="service-card-duration"><i class="fas fa-clock"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
           </div>
+          ${(s.beneficios_principales || []).length ? `
+            <div class="service-card-benefits">
+              ${s.beneficios_principales.slice(0, 3).map(b => `<span class="service-tag">${this.escapeHtml(b)}</span>`).join('')}
+            </div>` : ''}
         </article>`;
     }).join('');
 
@@ -570,10 +720,10 @@ class IdentitiesView extends BaseView {
     const monedas = ['USD', 'EUR', 'MXN', 'COP', 'ARS', 'CLP'];
     const monedaOpts = monedas.map(m => `<option value="${m}" ${(data.moneda || 'USD') === m ? 'selected' : ''}>${m}</option>`).join('');
     const arrToText = key => (Array.isArray(data[key]) ? data[key].join('\n') : (data[key] || ''));
-    const textareaField = (id, label, key, placeholder = '') => `
+    const taField = (id, label, key, ph = '') => `
       <div class="form-group">
         <label for="${id}">${label} <span class="form-hint">(uno por línea)</span></label>
-        <textarea id="${id}" class="form-input" rows="3" placeholder="${placeholder}">${this.escapeHtml(arrToText(key))}</textarea>
+        <textarea id="${id}" class="form-input" rows="3" placeholder="${ph}">${this.escapeHtml(arrToText(key))}</textarea>
       </div>`;
 
     return `
@@ -610,11 +760,11 @@ class IdentitiesView extends BaseView {
               <label for="ism_url">URL del servicio</label>
               <input type="url" id="ism_url" class="form-input" placeholder="https://" value="${this.escapeHtml(data.url_servicio || '')}">
             </div>
-            ${textareaField('ism_beneficios', 'Beneficios principales', 'beneficios_principales', 'Principales beneficios del servicio...')}
-            ${textareaField('ism_diferenciadores', 'Diferenciadores', 'diferenciadores', 'Qué lo hace único...')}
-            ${textareaField('ism_casos', 'Casos de uso', 'casos_de_uso', 'Cuándo usar este servicio...')}
-            ${textareaField('ism_entregables', 'Entregables', 'entregables', 'Qué se entrega al cliente...')}
-            ${textareaField('ism_metodologia', 'Metodología / Pasos', 'metodologia_pasos', 'Paso 1: ...\nPaso 2: ...')}
+            ${taField('ism_beneficios', 'Beneficios principales', 'beneficios_principales', 'Principales beneficios...')}
+            ${taField('ism_diferenciadores', 'Diferenciadores', 'diferenciadores', 'Qué lo hace único...')}
+            ${taField('ism_casos', 'Casos de uso', 'casos_de_uso', 'Cuándo usar este servicio...')}
+            ${taField('ism_entregables', 'Entregables', 'entregables', 'Qué se entrega al cliente...')}
+            ${taField('ism_metodologia', 'Metodología / Pasos', 'metodologia_pasos', 'Paso 1: ...\nPaso 2: ...')}
           </div>
           <div class="modal-footer">
             ${data.id ? `<button type="button" class="btn btn-ghost btn-danger" id="ismDelete">Eliminar</button>` : ''}
@@ -674,7 +824,7 @@ class IdentitiesView extends BaseView {
         organization_id: this.organizationId,
         entity_id: this.currentEntity.id,
       });
-      if (error) { this._notify('Error al crear el servicio.', 'error'); return; }
+      if (error) { this._notify('Error al crear el servicio.', 'error'); console.error(error); return; }
       this._notify('Servicio creado', 'success');
       await this._loadServices();
     });
@@ -705,19 +855,22 @@ class IdentitiesView extends BaseView {
   // ─────────────────────────────────────────────
 
   _setupEventListeners() {
-    document.getElementById('backToIdentitiesBtn')?.addEventListener('click', () => {
-      this._backToList();
-    });
-
+    document.getElementById('backToIdentitiesBtn')?.addEventListener('click', () => this._backToList());
     document.getElementById('tabProducts')?.addEventListener('click', () => this._switchTab('products'));
     document.getElementById('tabServices')?.addEventListener('click', () => this._switchTab('services'));
-
     document.getElementById('addProductBtn')?.addEventListener('click', () => this._showNewProductModal());
     document.getElementById('addServiceBtn')?.addEventListener('click', () => this._createService());
+    document.getElementById('addIdentityBtn')?.addEventListener('click', () => this._createEntity());
+    document.getElementById('addIdentityEmptyBtn')?.addEventListener('click', () => this._createEntity());
+    document.getElementById('editIdentityBtn')?.addEventListener('click', () => {
+      if (this.currentEntity) this._editEntity(this.currentEntity);
+    });
+    document.getElementById('deleteIdentityBtn')?.addEventListener('click', () => {
+      if (this.currentEntity) this._deleteEntity(this.currentEntity.id);
+    });
   }
 
   _backToList() {
-    // Restablecer URL a listado
     const orgId = this.routeParams?.orgId;
     const orgSlug = this.routeParams?.orgNameSlug;
     let url;
