@@ -88,7 +88,7 @@ class BrandOrganizationView extends BaseView {
                 <div class="brand-status-indicator"><span class="status-dot"></span></div>
             </div>
             <div class="brand-slogan-row">
-                <span class="brand-slogan-label" id="brandSloganLabel"></span>
+                <input type="text" class="brand-slogan-input" id="brandSloganInput" placeholder="Slogan" aria-label="Slogan">
             </div>
         </div>
         <div class="brand-market-row">
@@ -818,13 +818,36 @@ class BrandOrganizationView extends BaseView {
   }
 
   renderBrandSlogan() {
-    const el = document.getElementById('brandSloganLabel');
+    const el = document.getElementById('brandSloganInput');
     if (!el) return;
     const slogan = String(this.brandData?.brand_slogan || '').trim();
-    const hasSlogan = !!slogan;
-    el.textContent = hasSlogan ? slogan : 'Slogan';
-    el.classList.toggle('is-placeholder', !hasSlogan);
-    el.style.display = 'block';
+    el.value = slogan;
+    el.classList.toggle('is-placeholder', !slogan);
+
+    if (el.dataset.sloganBound === '1') return;
+    el.dataset.sloganBound = '1';
+
+    el.addEventListener('focus', () => {
+      el.classList.remove('is-placeholder');
+    });
+
+    el.addEventListener('blur', async () => {
+      const next = String(el.value || '').trim();
+      const prev = String(this.brandData?.brand_slogan || '').trim();
+      if (next === prev) {
+        el.classList.toggle('is-placeholder', !next);
+        return;
+      }
+      await this.saveBrandField('brand_slogan', next || null);
+      el.classList.toggle('is-placeholder', !next);
+    });
+
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        el.blur();
+      }
+    });
   }
 
   renderMarket() {

@@ -258,7 +258,7 @@
     min-width: 0;
 }
 
-.brand-slogan-label {
+.brand-slogan-input {
     font-size: clamp(0.95rem, 1.4vw, 1.25rem);
     font-weight: 500;
     color: rgba(255, 255, 255, 0.86);
@@ -267,9 +267,20 @@
     display: block;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    outline: none;
 }
 
-.brand-slogan-label.is-placeholder {
+.brand-slogan-input::placeholder {
+    color: rgba(255, 255, 255, 0.62);
+    font-style: italic;
+}
+
+.brand-slogan-input.is-placeholder {
     opacity: 0.62;
     font-style: italic;
 }
