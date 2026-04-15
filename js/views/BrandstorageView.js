@@ -284,7 +284,7 @@ class BrandstorageView extends BaseView {
 
       const { data: containerRows, error: containersError } = await this.supabase
         .from('brand_containers')
-        .select('id, nombre_marca, propuesta_valor, visual_dna, updated_at, created_at')
+        .select('id, nombre_marca, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, updated_at, created_at')
         .eq('organization_id', orgId)
         .order('created_at', { ascending: false });
       if (containersError) {
@@ -502,6 +502,8 @@ class BrandstorageView extends BaseView {
 
   /** Esquema `public.brands` (panel INFO derecho): orden y tipo de editor. */
   static BRAND_SCHEMA_BLOCKS = [
+    { field: 'idiomas_contenido', label: 'Idiomas de contenido', type: 'array' },
+    { field: 'mercado_objetivo', label: 'Mercado objetivo', type: 'array' },
     { field: 'nicho_core', label: 'Nicho core', type: 'select' },
     { field: 'sub_nichos', label: 'Sub-nichos', type: 'array' },
     { field: 'arquetipo', label: 'Arquetipo', type: 'text' },
