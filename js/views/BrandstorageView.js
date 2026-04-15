@@ -74,28 +74,6 @@ class BrandstorageView extends BaseView {
         <div class="background-gradient" id="backgroundGradient"></div>
     </div>
 
-    <!-- Footer: MARCA + Mercado -->
-    <div class="brand-corner-bottom-left">
-        <div class="brand-main-info">
-            <button type="button" class="brand-corner-logo-btn" id="brandCornerLogoBtn" aria-label="Subir logo de organización">
-                <span class="brand-corner-logo-inner" id="brandCornerLogoInner">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </span>
-                <input type="file" id="brandCornerLogoInput" class="brand-corner-logo-input" accept="image/*">
-            </button>
-            <div class="brand-name-row">
-                <h1 class="brand-name-large" id="brandNameLarge"></h1>
-                <div class="brand-status-indicator"><span class="status-dot"></span></div>
-            </div>
-            <div class="brand-slogan-row">
-                <input type="text" class="brand-slogan-input" id="brandSloganInput" placeholder="Slogan" aria-label="Slogan">
-            </div>
-        </div>
-        <div class="brand-market-row">
-            <span class="market-label" id="brandMarketLabel"></span>
-        </div>
-    </div>
-
     <!-- Cards a la derecha -->
     <div class="brand-cards-zone">
 
@@ -770,10 +748,6 @@ class BrandstorageView extends BaseView {
   renderAll() {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
-    this.renderCornerLogoUploader();
-    this.renderBrandName();
-    this.renderBrandSlogan();
-    this.renderMarket();
     this.renderCards();
   }
 
