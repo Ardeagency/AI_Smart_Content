@@ -241,11 +241,18 @@ class App {
     r.register('/brand-organization', brandViewLoader, auth);
 
     // ── Org: Brand Storage — vista propia (galería + INFO sub-marcas) ──
-    // brand-schema: getters estáticos y mercado_objetivo; brand-colors: utilidades de color.
+    // Dependencias en orden: utilidades / config → vista base → mixins.
+    //   · brand-colors, brand-schema: fuentes únicas de utilidades y catálogos.
+    //   · BrandstorageView: clase principal.
+    //   · *.mixin.js: parches sobre BrandstorageView.prototype (ver cada archivo).
     const brandStorageViewLoader = this._lazy('BrandstorageView', [
       '/js/config/brand-schema.js',
       '/js/utils/brand-colors.js',
-      '/js/views/BrandstorageView.js'
+      '/js/views/BrandstorageView.js',
+      '/js/views/brandstorage/Typography.mixin.js',
+      '/js/views/brandstorage/Uploads.mixin.js',
+      '/js/views/brandstorage/ColorEditor.mixin.js',
+      '/js/views/brandstorage/InfoPanel.mixin.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageViewLoader, auth);
     r.register('/brand-storage', brandStorageViewLoader, auth);
