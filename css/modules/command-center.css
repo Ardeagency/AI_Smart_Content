@@ -1,4 +1,10 @@
-/* CommandCenter reset — estilo base inspirado en IdentitiesView */
+/* Command Center — superficies sólidas (sin glass / sin capas translúcidas) */
+
+#commandCenterPage,
+#commandCenterPage * {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 .cc-page {
   min-height: 100%;
@@ -6,10 +12,21 @@
   max-width: 1280px;
   margin: 0 auto;
   padding-top: 15px;
+  /* Misma familia cromática que el shell, sin “cristal” encima */
+  background: var(--bg-primary, #191919);
 }
 
 .cc-section {
   margin-top: 0.75rem;
+}
+
+/* Bloque superior Audiencias: mismo lenguaje de panel sólido */
+#commandCenterPage > .cc-section:first-of-type {
+  margin-top: 0;
+  border: 1px solid var(--border-divider, #212126);
+  border-radius: 12px;
+  padding: 0.85rem 1rem 1rem;
+  background: var(--bg-secondary, #141517);
 }
 
 .cc-section-head {
@@ -68,30 +85,30 @@
 .cc-carousel::-webkit-scrollbar { height: 6px; }
 .cc-carousel::-webkit-scrollbar-track { background: transparent; }
 .cc-carousel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border-divider, #212126);
   border-radius: 999px;
 }
 
 .cc-aud-card {
   min-width: 250px;
   max-width: 270px;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 0.95rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--bg-secondary, #141517);
+  border: 1px solid var(--border-divider, #212126);
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
   scroll-snap-align: start;
 }
 
 .cc-aud-card:hover,
 .cc-aud-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: #1a1a1f;
   outline: none;
 }
 
@@ -110,8 +127,8 @@
   border-radius: 999px;
   font-size: 0.72rem;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111114;
+  border: 1px solid var(--border-divider, #212126);
 }
 
 .cc-loading {
@@ -126,7 +143,7 @@
   display: block;
   height: 12px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-divider, #212126);
   animation: cc-pulse 1.3s ease-in-out infinite;
 }
 
@@ -147,13 +164,14 @@
   gap: 0.55rem;
   min-height: 120px;
   text-align: center;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border: 1px dashed var(--border-divider, #212126);
   border-radius: 12px;
+  background: var(--bg-secondary, #141517);
 }
 
 .cc-empty i {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .cc-empty p {
@@ -178,9 +196,10 @@
   width: min(680px, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: #111216;
+  border-radius: 12px;
+  border: 1px solid var(--border-divider, #212126);
+  background: #141518;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
 }
 
 .cc-modal-head {
@@ -189,7 +208,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1rem 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 1px solid var(--border-divider, #212126);
 }
 
 .cc-modal-title {
@@ -202,8 +221,8 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-divider, #212126);
+  background: #111114;
   color: var(--text-secondary);
   cursor: pointer;
 }
@@ -231,8 +250,8 @@
 .cc-field textarea {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-divider, #212126);
+  background: #0f0f12;
   color: var(--text-primary);
   padding: 0.6rem 0.72rem;
   font: inherit;
@@ -270,16 +289,24 @@
 }
 
 .cc-col--left {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
+  border: 1px solid var(--border-divider, #212126);
+  border-radius: 12px;
   padding: 0.85rem 1rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary, #141517);
 }
 
 .cc-col--right {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+}
+
+/* Cada bloque API como panel sólido (no “flotando” sobre el fondo) */
+.cc-col--right > .cc-section {
+  border: 1px solid var(--border-divider, #212126);
+  border-radius: 12px;
+  padding: 0.85rem 1rem 1rem;
+  background: var(--bg-secondary, #141517);
 }
 
 .cc-section--tight {
@@ -333,8 +360,8 @@
 
 .cc-api-card {
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-divider, #212126);
+  background: var(--bg-secondary, #141517);
   padding: 0.75rem 0.85rem;
 }
 
@@ -362,7 +389,7 @@
 .cc-api-target-block + .cc-api-target-block {
   margin-top: 0.55rem;
   padding-top: 0.55rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-divider, #212126);
 }
 
 .cc-api-target-label {
@@ -403,8 +430,8 @@
 
 .cc-api-camp-row {
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border-divider, #212126);
+  background: #111114;
   padding: 0.55rem 0.65rem;
   margin-bottom: 0.45rem;
 }
@@ -447,8 +474,8 @@
 
 .cc-api-status--off {
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111114;
+  border: 1px solid var(--border-divider, #212126);
 }
 
 .cc-api-camp-stats {
@@ -457,4 +484,33 @@
   gap: 0.35rem 0.65rem;
   font-size: 0.68rem;
   color: var(--text-muted);
+}
+
+/* Botones del modal Command Center: sin blur glass del sistema de botones */
+#ccAudienceModalBackdrop .btn,
+#ccAudienceModalBackdrop .btn-primary,
+#ccAudienceModalBackdrop .btn-secondary {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#ccAudienceModalBackdrop .btn-secondary {
+  background: #111114;
+  border-color: var(--border-divider, #212126);
+}
+
+#ccAudienceModalBackdrop .btn-secondary:hover:not(:disabled) {
+  background: #1a1a1f;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+#ccAudienceModalBackdrop .btn-primary {
+  background: var(--accent-brand, #3a3a42);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text-primary, #fff);
+}
+
+#ccAudienceModalBackdrop .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  border-color: rgba(255, 255, 255, 0.28);
 }
