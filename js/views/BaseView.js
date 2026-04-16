@@ -346,13 +346,25 @@ class BaseView {
   }
 
   /**
-   * Escapar HTML para prevenir XSS
+   * Escapar HTML para prevenir XSS. Fuente única de verdad — todas las demás
+   * implementaciones (Navigation._escapeHtml, BIC._esc, input-registry.escapeHtml)
+   * delegan aquí. Usa regex (no DOM) para que sirva también en helpers module-level
+   * que corren antes del primer render y para evitar un reflow por cada escape.
    */
+  static escapeHtml(text) {
+    if (text == null) return '';
+    return String(text).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[ch]));
+  }
+
+  /** Alias de instancia para mantener compat con `this.escapeHtml(...)` en subclases. */
   escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return BaseView.escapeHtml(text);
   }
 
   /**

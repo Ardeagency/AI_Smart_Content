@@ -748,7 +748,10 @@ class VeraView extends (window.BaseView || class {}) {
           .eq('id', this.aiState.organization_id)
           .maybeSingle();
         this.organizationName = data?.name ? String(data.name) : '';
-      } catch (_) {}
+      } catch (err) {
+        // Antes era silencio total y el nombre mostraba "Organización" sin pista de por qué.
+        console.warn('[VeraView] no se pudo resolver organization.name:', err?.message || err);
+      }
     }
     if (!this.organizationName) this.organizationName = 'Organización';
   }
@@ -1329,7 +1332,11 @@ class VeraView extends (window.BaseView || class {}) {
             .limit(1);
 
           if (data?.length) handleMsg(data[0]);
-        } catch (_) {}
+        } catch (err) {
+          // Fallback poll del chat: si esto falla repetidamente, el usuario verá
+          // "escribiendo…" sin respuesta. Logueamos para poder diagnosticar.
+          console.warn('[VeraView] polling fallback falló:', err?.message || err);
+        }
       };
 
       // ── Ticker de UI ──────────────────────────────────────────────────────

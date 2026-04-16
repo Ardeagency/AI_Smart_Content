@@ -91,11 +91,16 @@
     group: 'STRUCTURAL_CONTAINER'
   };
 
+  // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
+  // input-registry se llegara a cargar antes que BaseView en alguna ruta futura.
   function escapeHtml(str) {
+    if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+      return BaseView.escapeHtml(str);
+    }
     if (str == null) return '';
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return String(str).replace(/[&<>"']/g, function (ch) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[ch];
+    });
   }
 
   function getInputType(field) {

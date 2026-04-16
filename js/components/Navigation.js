@@ -52,11 +52,15 @@ const SIDEBAR_USER_CONFIG = {
 
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
+// Delegamos en BaseView.escapeHtml (carga antes que Navigation en index.html).
+// Fallback defensivo por si el orden de scripts cambiara en algún deploy futuro.
 function _escapeHtml(s) {
+  if (typeof BaseView !== 'undefined' && typeof BaseView.escapeHtml === 'function') {
+    return BaseView.escapeHtml(s);
+  }
   if (s == null) return '';
-  const div = document.createElement('div');
-  div.textContent = String(s);
-  return div.innerHTML;
+  return String(s).replace(/[&<>"']/g, (ch) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
 }
 
 function _formatOrgNameTwoLines(name) {

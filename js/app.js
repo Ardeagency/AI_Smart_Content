@@ -161,32 +161,38 @@ class App {
       }
     };
 
-    /** /insight, /brain, /living, /historial, /audiences, /marketing, /campaigns → destinos legacy (misma org si aplica). */
+    /**
+     * Redirecciones legacy: mapea rutas viejas (pre-refactor) a su equivalente actual.
+     * Data-driven para que añadir/retirar rutas sea una línea. Cuando analytics confirme
+     * que una entrada tiene cero tráfico, borrar la línea y su `r.register(...)` abajo.
+     *
+     * TODO(2026-Q3): revisar con analytics y eliminar las que nadie use.
+     */
+    const LEGACY_ROUTE_REDIRECTS = [
+      { match: /(^|\/)insight$/,            replace: (p) => p.replace(/\/?insight$/, '/dashboard').replace(/^\/?dashboard/, '/dashboard') },
+      { match: /(^|\/)brain$/,              replace: (p) => p === '/brain' ? '/vera'       : p.replace(/\/brain$/, '/vera') },
+      { match: /(^|\/)(living|historial)$/, replace: (p) => (p === '/living' || p === '/historial') ? '/production' : p.replace(/\/(living|historial)$/, '/production') },
+      { match: /\/audiences(\/|$)/,         replace: (p) => p.replace(/\/audiences(\/.*)?$/, '/dashboard') },
+      { match: /\/marketing(\/|$)/,         replace: (p) => p.replace(/\/marketing(\/.*)?$/, '/dashboard') },
+      { match: /\/campaigns(\/|$)/,         replace: (p) => p.replace(/\/campaigns(\/.*)?$/, '/dashboard') }
+    ];
+
     const legacyRouteRedirectView = class extends (window.BaseView || class {}) {
       async render() {
         const q = window.location.search || '';
         let path = window.location.pathname || '/';
         if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-        let target = null;
-        if (path === '/insight' || path.endsWith('/insight')) {
-          target = path === '/insight' ? '/dashboard' : path.replace(/\/insight$/, '/dashboard');
-        } else if (path === '/brain' || path.endsWith('/brain')) {
-          target = path === '/brain' ? '/vera' : path.replace(/\/brain$/, '/vera');
-        } else if (path === '/living' || path === '/historial') {
-          target = '/production';
-        } else if (path.endsWith('/living') || path.endsWith('/historial')) {
-          target = path.replace(/\/(living|historial)$/, '/production');
-        } else if (/\/audiences(\/|$)/.test(path)) {
-          target = path.replace(/\/audiences(\/.*)?$/, '/dashboard');
-        } else if (/\/marketing(\/|$)/.test(path)) {
-          target = path.replace(/\/marketing(\/.*)?$/, '/dashboard');
-        } else if (/\/campaigns(\/|$)/.test(path)) {
-          target = path.replace(/\/campaigns(\/.*)?$/, '/dashboard');
-        }
+
+        const hit = LEGACY_ROUTE_REDIRECTS.find((r) => r.match.test(path));
+        const target = hit ? hit.replace(path) : '/dashboard';
+
+        // Log (silenciado en prod por app-loader) para poder medir tráfico legacy
+        // antes de borrar estas rutas. Si `console.warn` deja de verse, es hora de limpiar.
+        console.warn('[legacy-route]', path, '→', target);
+
         const c = document.getElementById('app-container');
         if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
-        if (target && window.router) window.router.navigate(target + q, true);
-        else if (window.router) window.router.navigate('/dashboard' + q, true);
+        if (window.router) window.router.navigate(target + q, true);
       }
     };
 

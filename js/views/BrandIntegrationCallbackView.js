@@ -271,13 +271,8 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
     wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect('/brands'));
   }
 
-  _esc(text) {
-    return String(text ?? '').replace(/[&<>"']/g, (m) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
-  }
-
-  // Alias para compatibilidad con BaseView si lo llama
-  escapeHtml(t) { return this._esc(t); }
+  // Alias local: `_esc` existía antes; delegamos en `this.escapeHtml` (BaseView).
+  _esc(text) { return this.escapeHtml(text); }
 }
 
 window.BrandIntegrationCallbackView = BrandIntegrationCallbackView;
