@@ -1,6 +1,6 @@
 /**
- * BrandstorageView — Identidad de marca a nivel workspace (`organizations`).
- * Sin `brand_containers`; sin card de entidades. Hereda la UX premium del antiguo BrandsView.
+ * BrandstorageView — Página dedicada: biblioteca de sub-marcas (`brand_containers`) + paneles INFO.
+ * Independiente de BrandOrganizationView (misma lógica de datos/UI en este módulo).
  */
 class BrandstorageView extends BaseView {
   constructor() {
@@ -33,6 +33,8 @@ class BrandstorageView extends BaseView {
     this.organizationRow = null;
     /** @type {Array<object>} Biblioteca de brand_containers de la organización */
     this.brandContainers = [];
+    /** Org UUID con la que se cargó la vista (navegación suave mismo ViewClass) */
+    this._mountedOrgId = null;
   }
 
   _mergeOrgIntoShim() {
@@ -69,14 +71,8 @@ class BrandstorageView extends BaseView {
 
   renderHTML() {
     return `
-<!-- Brand Storage Library -->
-<div class="brand-dashboard-container brand-storage-gallery-view" id="brandsListContainer">
-
-    <!-- Fondo: skeleton visible hasta que carguen datos; luego crossfade al gradiente de marca -->
-    <div class="brand-dashboard-background">
-        <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
-        <div class="background-gradient" id="backgroundGradient"></div>
-    </div>
+<!-- Brand Storage Library — página propia, sin capa de degradado dinámico de marca -->
+<div class="brand-dashboard-container brand-storage-standalone brand-storage-gallery-view" id="brandsListContainer">
 
     <!-- Biblioteca de marcas -->
     <div class="brand-cards-zone">
@@ -130,6 +126,46 @@ class BrandstorageView extends BaseView {
     this.cleanup();
   }
 
+  /** URL de retorno OAuth acorde al prefijo org (si aplica). */
+  getBrandStorageReturnPath() {
+    const orgId = window.currentOrgId || this.organizationRow?.id;
+    const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
+    if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, orgName);
+      if (prefix) return `${prefix}/brand-storage`;
+    }
+    return '/brand-storage';
+  }
+
+  /**
+   * Navegación entre rutas de Brand Storage sin remontar el DOM (misma clase de vista).
+   * @param {string} _path
+   * @param {Record<string, string>} routeParams
+   * @returns {Promise<boolean>}
+   */
+  async handleSameViewClassNavigation(_path, routeParams) {
+    if (window.authService) {
+      const isAuth = await window.authService.checkAccess(true);
+      if (!isAuth && window.router) {
+        window.router.navigate('/login', true);
+        return false;
+      }
+    }
+    const nextOrg = typeof window !== 'undefined' ? (window.currentOrgId ?? null) : null;
+    if ((this._mountedOrgId ?? null) !== (nextOrg ?? null)) {
+      return false;
+    }
+    this.routeParams = routeParams || {};
+    this.isActive = true;
+    await this.ensureDataLoaded();
+    if ((this._mountedOrgId ?? null) !== (typeof window !== 'undefined' ? (window.currentOrgId ?? null) : null)) {
+      return false;
+    }
+    this.renderAll();
+    await this.updateHeader();
+    return true;
+  }
+
   async render() {
     await super.render();
     if (!this.isActive) return;
@@ -158,10 +194,7 @@ class BrandstorageView extends BaseView {
         (async () => {
           await this.ensureDataLoaded();
           if (!this.isActive) return;
-          // Re-renderizar con datos reales una vez que cargaron
           this.renderAll();
-          this.applyBrandBackgroundGradient();
-          if (root) root.classList.add('brands-background-ready');
         })();
         return true;
       }
@@ -220,6 +253,7 @@ class BrandstorageView extends BaseView {
   async loadData() {
     if (!this.supabase || !this.userId) {
       this._dataLoaded = true;
+      this._mountedOrgId = null;
       return;
     }
 
@@ -410,6 +444,7 @@ class BrandstorageView extends BaseView {
       console.error('BrandstorageView loadData:', error);
     } finally {
       this._dataLoaded = true;
+      this._mountedOrgId = this.organizationRow?.id ?? null;
       if (this.isActive) this._refreshInfoPanelIfOpen();
     }
   }
@@ -471,147 +506,21 @@ class BrandstorageView extends BaseView {
   }
 
   /** Opciones del desplegable `nicho_core` (valor guardado = `value`). */
-  static NICHO_CORE_OPTIONS = [
-    { value: '', label: 'Seleccionar nicho' },
-    { value: 'tecnologia_saas', label: 'Tecnología / SaaS' },
-    { value: 'ecommerce_retail', label: 'E-commerce / Retail' },
-    { value: 'salud_bienestar', label: 'Salud y bienestar' },
-    { value: 'fitness_deporte', label: 'Fitness y deporte' },
-    { value: 'alimentacion', label: 'Alimentación y gastronomía' },
-    { value: 'educacion', label: 'Educación y formación' },
-    { value: 'inmobiliaria', label: 'Inmobiliaria' },
-    { value: 'servicios_profesionales', label: 'Servicios profesionales' },
-    { value: 'marketing_agencia', label: 'Marketing y agencias' },
-    { value: 'entretenimiento', label: 'Entretenimiento y medios' },
-    { value: 'moda_belleza', label: 'Moda y belleza' },
-    { value: 'turismo', label: 'Turismo y hospitalidad' },
-    { value: 'finanzas', label: 'Finanzas y seguros' },
-    { value: 'industrial_b2b', label: 'Industrial / B2B' },
-    { value: 'sostenibilidad', label: 'Sostenibilidad e impacto' },
-    { value: 'arte_cultura', label: 'Arte y cultura' },
-    { value: 'hogar_lifestyle', label: 'Hogar y lifestyle' },
-    { value: 'otro', label: 'Otro' }
-  ];
-
-  static getNichoCoreLabel(storedValue) {
-    const v = storedValue == null ? '' : String(storedValue);
-    const row = BrandstorageView.NICHO_CORE_OPTIONS.find((o) => o.value === v);
-    if (row) return row.label;
-    return v.trim() ? v : 'Seleccionar nicho';
-  }
-
-  /** Esquema `public.brands` (panel INFO derecho): orden y tipo de editor. */
-  static BRAND_SCHEMA_BLOCKS = [
-    { field: 'idiomas_contenido', label: 'Idiomas de contenido', type: 'array' },
-    { field: 'mercado_objetivo', label: 'Mercado objetivo', type: 'array' },
-    { field: 'nicho_core', label: 'Nicho core', type: 'select' },
-    { field: 'sub_nichos', label: 'Sub-nichos', type: 'array' },
-    { field: 'arquetipo', label: 'Arquetipo', type: 'text' },
-    { field: 'propuesta_valor', label: 'Propuesta de valor', type: 'textarea' },
-    { field: 'mision_vision', label: 'Misión y visión', type: 'textarea' },
-    { field: 'verbal_dna', label: 'ADN verbal (JSON)', type: 'json' },
-    { field: 'visual_dna', label: 'ADN visual (JSON)', type: 'json' },
-    { field: 'palabras_clave', label: 'Palabras clave', type: 'array' },
-    { field: 'palabras_prohibidas', label: 'Palabras prohibidas', type: 'array' },
-    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos', type: 'array' }
-  ];
-
-  static BRAND_IDIOMAS_OPTIONS = [
-    { value: 'es', label: 'es - Spanish' },
-    { value: 'en', label: 'en - English' },
-    { value: 'pt', label: 'pt - Portuguese' },
-    { value: 'fr', label: 'fr - French' },
-    { value: 'de', label: 'de - German' },
-    { value: 'it', label: 'it - Italian' }
-  ];
-
-  static BRAND_IDIOMAS_ALIASES = {
-    es: 'es',
-    espanol: 'es',
-    español: 'es',
-    spanish: 'es',
-    en: 'en',
-    ingles: 'en',
-    inglés: 'en',
-    english: 'en',
-    pt: 'pt',
-    portugues: 'pt',
-    portugués: 'pt',
-    portuguese: 'pt',
-    fr: 'fr',
-    frances: 'fr',
-    francés: 'fr',
-    french: 'fr',
-    de: 'de',
-    aleman: 'de',
-    alemán: 'de',
-    german: 'de',
-    it: 'it',
-    italiano: 'it',
-    italian: 'it'
-  };
-
-  static BRAND_MERCADO_OPTIONS = [
-    'Colombia',
-    'México',
-    'Estados Unidos',
-    'Argentina',
-    'Chile',
-    'Perú',
-    'Ecuador',
-    'Venezuela',
-    'España',
-    'Brasil'
-  ];
-
-  static BRAND_SUB_NICHOS_OPTIONS = [
-    'E-commerce',
-    'Retail',
-    'Salud',
-    'Bienestar',
-    'Fitness',
-    'Educación',
-    'SaaS',
-    'Servicios profesionales',
-    'Finanzas',
-    'Inmobiliaria',
-    'Turismo',
-    'B2B Industrial'
-  ];
-
-  static get BRAND_ARRAY_FIELDS() {
-    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
-  }
-
-  static get BRAND_JSON_FIELDS() {
-    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'json').map((b) => b.field);
-  }
-
-  static get BRAND_TEXT_FIELDS() {
-    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'text').map((b) => b.field);
-  }
-
-  static get BRAND_TEXTAREA_FIELDS() {
-    return BrandstorageView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'textarea').map((b) => b.field);
-  }
-
-  /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
-  static TYPOGRAPHY_FONTS = [
-    { value: 'Inter', label: 'Inter' },
-    { value: 'Roboto', label: 'Roboto' },
-    { value: 'Open Sans', label: 'Open Sans' },
-    { value: 'Lato', label: 'Lato' },
-    { value: 'Montserrat', label: 'Montserrat' },
-    { value: 'Poppins', label: 'Poppins' },
-    { value: 'Playfair Display', label: 'Playfair Display' },
-    { value: 'Oswald', label: 'Oswald' },
-    { value: 'Raleway', label: 'Raleway' },
-    { value: 'Bebas Neue', label: 'Bebas Neue' },
-    { value: 'Source Sans 3', label: 'Source Sans 3' },
-    { value: 'Nunito', label: 'Nunito' },
-    { value: 'Work Sans', label: 'Work Sans' },
-    { value: 'DM Sans', label: 'DM Sans' },
-  ];
+  // Catálogos de marca ahora viven en /js/config/brand-schema.js (fuente única,
+  // compartida con BrandOrganizationView). Estos getters estáticos mantienen la
+  // API `BrandstorageView.NICHO_CORE_OPTIONS` para no tocar el resto del archivo.
+  static get NICHO_CORE_OPTIONS()      { return window.BrandSchema.NICHO_CORE_OPTIONS; }
+  static getNichoCoreLabel(v)          { return window.BrandSchema.getNichoCoreLabel(v); }
+  static get BRAND_SCHEMA_BLOCKS()     { return window.BrandSchema.BRAND_SCHEMA_BLOCKS_CONTAINER; }
+  static get BRAND_IDIOMAS_OPTIONS()   { return window.BrandSchema.BRAND_IDIOMAS_OPTIONS; }
+  static get BRAND_IDIOMAS_ALIASES()   { return window.BrandSchema.BRAND_IDIOMAS_ALIASES; }
+  static get BRAND_MERCADO_OPTIONS()   { return window.BrandSchema.BRAND_MERCADO_OPTIONS; }
+  static get BRAND_SUB_NICHOS_OPTIONS(){ return window.BrandSchema.BRAND_SUB_NICHOS_OPTIONS; }
+  static get BRAND_ARRAY_FIELDS()      { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_CONTAINER, 'array'); }
+  static get BRAND_JSON_FIELDS()       { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_CONTAINER, 'json'); }
+  static get BRAND_TEXT_FIELDS()       { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_CONTAINER, 'text'); }
+  static get BRAND_TEXTAREA_FIELDS()   { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_CONTAINER, 'textarea'); }
+  static get TYPOGRAPHY_FONTS()        { return window.BrandSchema.TYPOGRAPHY_FONTS; }
 
   // ============================================
   // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)
@@ -637,104 +546,23 @@ class BrandstorageView extends BaseView {
     return hexes;
   }
 
-  /** Convierte #rrggbb a rgba(r,g,b,alpha). */
-  hexToRgba(hex, alpha = 1) {
-    const clean = (hex || '').replace(/^#/, '');
-    if (clean.length !== 6) return hex;
-    const r = parseInt(clean.slice(0, 2), 16);
-    const g = parseInt(clean.slice(2, 4), 16);
-    const b = parseInt(clean.slice(4, 6), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
+  // Color utils ahora viven en /js/utils/brand-colors.js (fuente única para los 5
+  // archivos que antes duplicaban hexToHSL/hslToHex/hexToRgba). Aliases de instancia
+  // para no romper llamadas `this.hexToX()` dispersas por la vista.
+  hexToRgba(hex, alpha = 1)          { return window.BrandColors.hexToRgba(hex, alpha); }
+  hexToHSL(hex)                      { return window.BrandColors.hexToHSL(hex); }
+  hslToHex(h, s, l)                  { return window.BrandColors.hslToHex(h, s, l); }
+  filterAndScoreBrandColors(hexes)   { return window.BrandColors.filterAndScoreBrandColors(hexes); }
+  getBrandUIPalette(brandColors)     { return window.BrandColors.getBrandUIPalette(brandColors); }
+  buildBrandGradientCss(hexes, angle = 135) { return window.BrandColors.buildBrandGradientCss(hexes, angle); }
 
-  hexToHSL(hex) {
-    const clean = hex.replace(/^#/, '');
-    const r = parseInt(clean.slice(0, 2), 16) / 255;
-    const g = parseInt(clean.slice(2, 4), 16) / 255;
-    const b = parseInt(clean.slice(4, 6), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        default: h = ((r - g) / d + 4) / 6;
-      }
-    }
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-
-  hslToHex(h, s, l) {
-    s /= 100; l /= 100;
-    const a = s * Math.min(l, 1 - l);
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    };
-    const r = Math.round(f(0) * 255);
-    const g = Math.round(f(8) * 255);
-    const b = Math.round(f(4) * 255);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  }
-
-  filterAndScoreBrandColors(hexes) {
-    const MIN_L = 18, MAX_L = 85, MIN_S = 15, MAX_S = 90;
-    const idealL = 45, idealS = 50;
-    const out = [];
-    for (const hex of hexes.slice(0, 5)) {
-      const { h, s, l } = this.hexToHSL(hex);
-      if (l > MAX_L || l < MIN_L || s < MIN_S || s > MAX_S) continue;
-      const scoreL = 30 - Math.abs(l - idealL) / 2;
-      const scoreS = 40 - Math.abs(s - idealS) / 2;
-      const score = Math.max(0, scoreL + scoreS);
-      out.push({ hex, h, s, l, score });
-    }
-    return out.sort((a, b) => b.score - a.score).slice(0, 3);
-  }
-
-  getBrandUIPalette(brandColors) {
-    if (!brandColors || brandColors.length === 0) return null;
-    const filtered = this.filterAndScoreBrandColors(brandColors);
-    if (filtered.length === 0) {
-      const raw = brandColors[0];
-      const { h, s, l } = this.hexToHSL(raw);
-      const primary = this.hslToHex(h, Math.min(90, Math.max(20, s)), Math.min(75, Math.max(25, l)));
-      const secondary = this.hslToHex(h, Math.min(85, s + 5), Math.max(15, l - 18));
-      return { primary, secondary };
-    }
-    const primary = filtered[0].hex;
-    let secondary = null;
-    for (let i = 1; i < filtered.length; i++) {
-      const diff = Math.abs(filtered[i].h - filtered[0].h);
-      const hueDiff = Math.min(diff, 360 - diff);
-      if (hueDiff > 20) {
-        secondary = filtered[i].hex;
-        break;
-      }
-    }
-    if (!secondary) {
-      const { h, s, l } = this.hexToHSL(primary);
-      secondary = this.hslToHex(h, Math.min(90, s + 10), Math.max(18, l - 12));
-    }
-    return { primary, secondary };
-  }
-
-  /**
-   * Construye un degradado que usa TODOS los colores de la marca (hasta 4),
-   * con transparencia suave para que se mezclen bien y no se vean bloques opacos.
-   * @param {string[]} hexes - Array de hex (#rrggbb)
-   * @param {number} [angle=135] - Ángulo del gradiente en grados (135 = fondo, 180 = vertical para barras nav)
-   */
-  buildBrandGradientCss(hexes, angle = 135) {
-    if (!hexes || hexes.length === 0) return '';
-    const alpha = angle === 180 ? 1 : 0.88; // barras nav opacas; fondo algo transparente
-    const stops = hexes.map((hex, i) => {
-      const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
-      return `${this.hexToRgba(hex, alpha)} ${Math.round(pct)}%`;
-    });
-    return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
+  /** Tras cambiar colores: actualiza glass de cards y acentos (esta vista no pinta degradado de fondo). */
+  _refreshBrandStorageVisualChrome() {
+    this._cachedGradientKey = null;
+    this.applyBrandCardsGlassVariant();
+    const hexes = this.getBrandColorsHexArray();
+    if (hexes.length) this.applyBrandPrimaryBrillo();
+    else this.resetBrandPrimaryBrillo();
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -836,7 +664,11 @@ class BrandstorageView extends BaseView {
 
   renderAll() {
     if (!this.isActive) return;
-    this.applyBrandBackgroundGradient();
+    // Sin degradado dinámico de marca en esta página: solo variante glass + acentos de UI.
+    this.applyBrandCardsGlassVariant();
+    const hexes = this.getBrandColorsHexArray();
+    if (hexes.length) this.applyBrandPrimaryBrillo();
+    else this.resetBrandPrimaryBrillo();
     this.renderCards();
   }
 
@@ -923,7 +755,6 @@ class BrandstorageView extends BaseView {
   }
 
   renderCards() {
-    this.applyBrandBackgroundGradient();
     this.renderBrandStorageLibrary();
     this.setupEventListeners();
   }
@@ -1422,7 +1253,7 @@ class BrandstorageView extends BaseView {
       if (error) throw error;
       await this._reloadColors();
       this.renderCards();
-      this.applyBrandBackgroundGradient(true);
+      this._refreshBrandStorageVisualChrome();
     } catch (error) {
       console.error('❌ Error al actualizar color:', error);
       alert('Error al actualizar el color. Por favor, intenta de nuevo.');
@@ -1478,7 +1309,7 @@ class BrandstorageView extends BaseView {
       if (error) throw error;
       await this._reloadColors();
       this.renderCards();
-      this.applyBrandBackgroundGradient(true);
+      this._refreshBrandStorageVisualChrome();
     } catch (error) {
       const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
       console.error('❌ Error al crear color:', error);
@@ -2359,7 +2190,7 @@ class BrandstorageView extends BaseView {
         return;
       }
 
-      const returnTo = '/brandstorage';
+      const returnTo = this.getBrandStorageReturnPath();
       const qs = new URLSearchParams({
         brand_container_id: brandId,
         return_to: returnTo
@@ -3348,7 +3179,7 @@ class BrandstorageView extends BaseView {
 
       await this._reloadColors();
       this.renderCards();
-      this.applyBrandBackgroundGradient(true);
+      this._refreshBrandStorageVisualChrome();
       console.log(`✅ Color eliminado`);
     } catch (error) {
       console.error(`❌ Error al eliminar color:`, error);

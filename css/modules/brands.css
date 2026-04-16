@@ -127,6 +127,13 @@
     opacity: 1;
 }
 
+/* Brand Storage — página dedicada (sin capa skeleton/gradiente de Organization) */
+.brand-dashboard-container.brand-storage-standalone {
+    position: relative;
+    min-height: 72vh;
+    background: var(--bg-primary, #191919);
+}
+
 /* Entrada suave del contenido al pintar */
 .brand-dashboard-container .brand-corner-bottom-left,
 .brand-dashboard-container .brand-cards-zone {
@@ -1760,6 +1767,24 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 #infoPanelContent .info-section-content {
     color: inherit;
+}
+
+/* Panel INFO org: puente a Brand Storage si hay una sola sub-marca */
+.info-single-subbrand-bridge {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.15rem;
+    border-radius: var(--glass-radius, 12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+}
+.info-single-subbrand-bridge__title {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+.info-single-subbrand-bridge__lead {
+    margin: 0 0 0.75rem;
+    opacity: 0.88;
+    font-size: 0.9rem;
 }
 
 /* Panel INFO: dos columnas (primaria = logo + integraciones; secundaria = ficha brands con scroll) */

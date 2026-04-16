@@ -35,8 +35,6 @@ class BrandOrganizationView extends BaseView {
     this.brandIntegrations = [];
     /** @type {Array} Campañas de sub-marcas (campaigns) */
     this.brandCampaigns = [];
-    /** @type {BrandstorageView|null} Delegate para galería e INFO panels de sub-marcas */
-    this._bsDelegate = null;
     /** Org UUID con la que se cargó la vista (navegación suave mismo ViewClass) */
     this._mountedOrgId = null;
   }
@@ -205,8 +203,8 @@ class BrandOrganizationView extends BaseView {
   }
 
   /**
-   * Evita destruir y volver a pintar el shell cuando solo cambia la URL entre rutas de marca
-   * (organización ↔ brand storage, /brands, etc.) y el workspace es el mismo.
+   * Evita destruir y volver a pintar el shell cuando solo cambia la URL entre rutas de la misma vista
+   * (p. ej. /brands ↔ /brand-organization) y el workspace es el mismo. Brand Storage es otra vista.
    * @param {string} path
    * @param {Record<string, string>} routeParams
    * @returns {Promise<boolean>}
@@ -870,142 +868,43 @@ class BrandOrganizationView extends BaseView {
 
   renderCards() {
     this.applyBrandBackgroundGradient();
-    const isStorage = this._isStorageMode();
     const container = this.container || document.getElementById('app-container');
-
-    // Activar/desactivar clase de modo galería en el root
     const root = container?.querySelector('#brandsListContainer');
-    if (root) root.classList.toggle('brand-storage-gallery-view', isStorage);
+    if (root) root.classList.remove('brand-storage-gallery-view');
 
-    // En modo Brand Storage (galería), ocultar el banner inferior izquierdo (nombre/slogan/market)
-    const corner = container?.querySelector('.brand-corner-bottom-left');
-    if (corner) corner.style.display = isStorage ? 'none' : '';
-
-    // card-info: solo visible con exactamente 1 sub-marca y fuera del modo galería
-    const showInfoCard = !isStorage && Array.isArray(this.brandContainers) && this.brandContainers.length === 1;
+    const showInfoCard = Array.isArray(this.brandContainers) && this.brandContainers.length === 1;
     const infoCardEl = container?.querySelector('.card-info:not(.expanded)');
     if (infoCardEl) infoCardEl.style.display = showInfoCard ? '' : 'none';
 
-    // Mostrar/ocultar cards exclusivas del modo organización
     ['card-concept', 'card-identity', 'card-assets'].forEach((cls) => {
       const card = container?.querySelector(`.${cls}`);
-      if (card) card.style.display = isStorage ? 'none' : '';
+      if (card) card.style.display = '';
     });
 
-    // En modo org: eliminar la card de galería si existiera de una visita anterior
-    if (!isStorage) {
-      container?.querySelector('.brand-cards-zone .card-storage-library')?.remove();
-    }
+    container?.querySelector('.brand-cards-zone .card-storage-library')?.remove();
 
-    if (!isStorage) {
-      this.renderBrandColors();
-      this.renderTypography();
-      this.renderIdentityFiles();
-      this.renderAssetsFiles();
-      this.setupIdentityUpload();
-      this.setupAssetsUpload();
-    } else {
-      this._renderStorageGallery();
-    }
+    const corner = container?.querySelector('.brand-corner-bottom-left');
+    if (corner) corner.style.display = '';
+
+    this.renderBrandColors();
+    this.renderTypography();
+    this.renderIdentityFiles();
+    this.renderAssetsFiles();
+    this.setupIdentityUpload();
+    this.setupAssetsUpload();
 
     this.setupEventListeners();
   }
 
-  // ============================================
-  // ESTADO DUAL: SUB-MARCAS
-  // ============================================
-
-  /** Devuelve true cuando la URL activa el modo galería de sub-marcas. */
-  _isStorageMode() {
-    const path = window.location.pathname || '';
-    return path === '/brandstorage' || path === '/brand-storage' || path.endsWith('/brand-storage');
-  }
-
-  /**
-   * Obtiene (o crea) el delegate BrandstorageView usado para galería e INFO panels.
-   * BrandstorageView.js debe estar cargado como dependencia del loader.
-   * @returns {BrandstorageView|null}
-   */
-  _getOrCreateBsDelegate() {
-    if (!window.BrandstorageView) return null;
-    if (!this._bsDelegate) {
-      this._bsDelegate = new window.BrandstorageView();
+  /** Ruta a la página dedicada Brand Storage (sub-marcas). */
+  getBrandStoragePageHref() {
+    const orgId = window.currentOrgId || this.organizationRow?.id;
+    const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
+    if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, orgName);
+      if (prefix) return `${prefix}/brand-storage`;
     }
-    return this._bsDelegate;
-  }
-
-  /** Sincroniza los datos actuales al delegate antes de delegar operaciones. */
-  _syncDelegate(delegate) {
-    delegate.isActive = true;
-    delegate.supabase = this.supabase;
-    delegate.userId = this.userId;
-    delegate.container = this.container || document.getElementById('app-container');
-    delegate.organizationRow = this.organizationRow;
-    delegate.brandContainerData = this.brandContainerData;
-    delegate.brandContainers = this.brandContainers || [];
-    delegate.brandIntegrations = this.brandIntegrations || [];
-    delegate.brandAudiences = this.brandAudiences || [];
-    delegate.brandCampaigns = this.brandCampaigns || [];
-    delegate.brandAssets = this.brandAssets || [];
-    delegate.brandColors = this.brandColors || [];
-    delegate.brandFonts = this.brandFonts || [];
-    delegate._dataLoaded = true;
-  }
-
-  /**
-   * Renderiza la galería de sub-marcas dentro de brand-cards-zone cuando la URL
-   * es /brandstorage.  Inyecta o reutiliza una card con #brandStorageGrid y delega
-   * el renderizado a BrandstorageView.
-   */
-  _renderStorageGallery() {
-    const appContainer = this.container || document.getElementById('app-container');
-    const cardsZone = appContainer?.querySelector('.brand-cards-zone');
-    if (!cardsZone) return;
-
-    // Crear o reutilizar la card de galería
-    let galleryCard = cardsZone.querySelector('.card-storage-library');
-    if (!galleryCard) {
-      galleryCard = document.createElement('div');
-      galleryCard.className = 'brand-card card-storage-library';
-      galleryCard.innerHTML = `
-        <div class="card-header">
-          <h2 class="card-title">Sub-marcas</h2>
-          <span class="card-title-counter" id="brandStorageCount">0</span>
-        </div>
-        <div class="card-content">
-          <div class="brand-storage-grid" id="brandStorageGrid"></div>
-        </div>`;
-      cardsZone.appendChild(galleryCard);
-    }
-
-    const delegate = this._getOrCreateBsDelegate();
-    if (!delegate) return;
-    this._syncDelegate(delegate);
-    delegate.renderBrandStorageLibrary();
-
-    // Redirigir clicks a nuestro openSubBrandInfoPanel para usar el delegate
-    const grid = galleryCard.querySelector('#brandStorageGrid') || document.getElementById('brandStorageGrid');
-    if (grid) {
-      grid.querySelectorAll('.brand-storage-item[data-brand-container-id]').forEach((itemEl) => {
-        if (itemEl.dataset.galleryClickBound === '1') return;
-        itemEl.dataset.galleryClickBound = '1';
-        itemEl.addEventListener('click', () => {
-          const id = String(itemEl.getAttribute('data-brand-container-id') || '').trim();
-          if (id) this.openSubBrandInfoPanel(id);
-        });
-      });
-    }
-  }
-
-  /**
-   * Abre el panel INFO de una sub-marca específica usando el delegate BrandstorageView.
-   * @param {string|number} itemId - ID del brand_container
-   */
-  openSubBrandInfoPanel(itemId) {
-    const delegate = this._getOrCreateBsDelegate();
-    if (!delegate) return;
-    this._syncDelegate(delegate);
-    delegate.openBrandContainerInfoPanel(itemId);
+    return '/brand-storage';
   }
 
   renderBrandEntities() {
@@ -2118,24 +2017,20 @@ class BrandOrganizationView extends BaseView {
   renderInfoPanelContent(container) {
     if (!container) return;
 
-    // Con exactamente 1 sub-marca: mostrar datos de esa sub-marca (no de la org)
     const singleSubBrand = Array.isArray(this.brandContainers) && this.brandContainers.length === 1
       ? this.brandContainers[0] : null;
+    const storageHref = this.escapeHtml(this.getBrandStoragePageHref());
+    const subBrandBridge = singleSubBrand
+      ? `<div class="info-single-subbrand-bridge">
+          <div class="info-single-subbrand-bridge__title">${this.escapeHtml(singleSubBrand.nombre_marca || 'Sub-marca')}</div>
+          <p class="info-single-subbrand-bridge__lead">Ficha completa, integraciones y campañas viven en <strong>Brand Storage</strong>.</p>
+          <a href="${storageHref}" class="btn btn-primary btn-sm" data-route="${storageHref}">Abrir Brand Storage</a>
+        </div>`
+      : '';
 
-    if (singleSubBrand) {
-      const delegate = this._getOrCreateBsDelegate();
-      if (delegate) {
-        this._syncDelegate(delegate);
-        container.innerHTML = delegate.renderBrandContainerInfoContent(singleSubBrand);
-        delegate.setupBrandContainerInfoPanelEditables(container, singleSubBrand.id);
-        if (typeof this.updateLinksForRouter === 'function') this.updateLinksForRouter();
-        return;
-      }
-    }
-
-    // Fallback: datos de la organización (0 sub-marcas o delegate no disponible)
     const brandContainer = this.brandContainerData;
     container.innerHTML = `
+      ${subBrandBridge}
       <div class="info-panel-grid">
         <div class="info-panel-grid__primary">
           <section class="info-section info-section-identity">
