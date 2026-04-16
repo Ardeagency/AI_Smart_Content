@@ -930,6 +930,10 @@ class BrandOrganizationView extends BaseView {
     const root = container?.querySelector('#brandsListContainer');
     if (root) root.classList.toggle('brand-storage-gallery-view', isStorage);
 
+    // En modo Brand Storage (galería), ocultar el banner inferior izquierdo (nombre/slogan/market)
+    const corner = container?.querySelector('.brand-corner-bottom-left');
+    if (corner) corner.style.display = isStorage ? 'none' : '';
+
     // card-info: solo visible con exactamente 1 sub-marca y fuera del modo galería
     const showInfoCard = !isStorage && Array.isArray(this.brandContainers) && this.brandContainers.length === 1;
     const infoCardEl = container?.querySelector('.card-info:not(.expanded)');
