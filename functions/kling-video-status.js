@@ -8,13 +8,13 @@ const shared = require('./lib/kie-video-shared');
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: shared.corsHeaders(), body: '' };
+    return { statusCode: 204, headers: shared.corsHeaders(event), body: '' };
   }
 
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'Método no permitido. Usa GET con ?taskId=...' })
     };
   }
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
   if (!user) {
     return {
       statusCode: 401,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
@@ -32,7 +32,7 @@ exports.handler = async (event) => {
   if (!headers) {
     return {
       statusCode: 500,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'Configura KIE_API_KEY en Netlify (Dashboard → Site settings → Environment variables)' })
     };
   }
@@ -41,18 +41,18 @@ exports.handler = async (event) => {
   if (!taskId) {
     return {
       statusCode: 400,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'Falta el parámetro taskId' })
     };
   }
 
   try {
-    return await shared.handleStatus(taskId, headers);
+    return await shared.handleStatus(taskId, headers, event);
   } catch (err) {
     console.error('kling-video-status error:', err);
     return {
       statusCode: 500,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: err.message || 'Error interno' })
     };
   }

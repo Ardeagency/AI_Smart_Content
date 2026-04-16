@@ -280,7 +280,7 @@ async function handleDataDeletion(env, signedRequest) {
 
 // ── Handler principal ─────────────────────────────────────────────────────────
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
 
   // ── GET: handshake de suscripción ──────────────────────────────────────────
   if (event.httpMethod === 'GET') {
@@ -292,7 +292,7 @@ exports.handler = async (event) => {
 
     if (!verifyToken) {
       console.error('[webhook] META_WEBHOOK_VERIFY_TOKEN no configurado');
-      return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Webhook verify token not configured' }) };
+      return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: 'Webhook verify token not configured' }) };
     }
 
     if (mode === 'subscribe' && challenge) {
@@ -306,17 +306,17 @@ exports.handler = async (event) => {
     }
 
     console.warn('[webhook] handshake failed — token mismatch or missing fields');
-    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Webhook verification failed' }) };
+    return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Webhook verification failed' }) };
   }
 
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   // ── POST: verificar firma antes de procesar ────────────────────────────────
   if (!verifySignature(event)) {
     console.warn('[webhook] firma inválida — posible request no legítima');
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid signature' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid signature' }) };
   }
 
   // ── Parsear payload ────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ exports.handler = async (event) => {
   try {
     payload = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {});
   } catch (_) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid JSON' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
   const object  = String(payload?.object || '');
@@ -347,7 +347,7 @@ exports.handler = async (event) => {
         const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
         return {
           statusCode: 200,
-          headers: corsHeaders(),
+          headers: corsHeaders(event),
           body: JSON.stringify({
             url: `${siteUrl}/data-deletion-status`,
             confirmation_code: crypto.createHash('sha256').update(deletedId).digest('hex').slice(0, 16)
@@ -382,7 +382,7 @@ exports.handler = async (event) => {
   // ACK a Meta — siempre 200
   return {
     statusCode: 200,
-    headers: corsHeaders(),
+    headers: corsHeaders(event),
     body: JSON.stringify({ received: true, object, entries: entries.length })
   };
 };

@@ -117,12 +117,12 @@ async function upsertBrandIntegration({ env, payload }) {
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   let body = {};
@@ -130,15 +130,15 @@ exports.handler = async (event) => {
 
   const { code, state } = body || {};
   if (!code || !state) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing code/state' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing code/state' }) };
   }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
 
   let stateObj;
   try { stateObj = verifyAndDecodeState(state); } catch (e) {
-    return { statusCode: e.statusCode || 400, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: e.statusCode || 400, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const platform         = String(stateObj.platform || '').toLowerCase().trim();
@@ -146,10 +146,10 @@ exports.handler = async (event) => {
   const returnTo         = sanitizeReturnTo(String(stateObj.return_to || '/home'));
 
   if (!['google', 'facebook'].includes(platform)) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unsupported platform' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
   if (!brandContainerId) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id in state' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id in state' }) };
   }
 
   let sessionUser;
@@ -157,11 +157,11 @@ exports.handler = async (event) => {
     const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
     sessionUser = auth.user;
   } catch (e) {
-    return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   if (stateObj.uid && stateObj.uid !== sessionUser.id) {
-    return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Session mismatch' }) };
+    return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Session mismatch' }) };
   }
 
   const redirectUri = getRedirectUri();
@@ -322,7 +322,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ok: true,
         return_to: returnTo,
@@ -336,6 +336,6 @@ exports.handler = async (event) => {
 
   } catch (e) {
     console.error('[exchange] error:', e?.message);
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: e?.message || 'Token exchange failed' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: e?.message || 'Token exchange failed' }) };
   }
 };

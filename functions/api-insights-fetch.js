@@ -105,28 +105,28 @@ async function fetchGoogleAnalytics({ token, propertyId, startDate, endDate }) {
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
-  if (!user?.id) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+  if (!user?.id) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
 
   const { platform, integration_id, date_range, ga4_property_id } = body;
   if (!platform || !integration_id) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing platform or integration_id' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing platform or integration_id' }) };
   }
 
   // ── Load integration row ──────────────────────────────────────────────────
@@ -136,7 +136,7 @@ exports.handler = async (event) => {
     searchParams: { select: '*', id: `eq.${integration_id}`, limit: '1' }
   });
   const integration = Array.isArray(rows) ? rows[0] : null;
-  if (!integration) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Integration not found' }) };
+  if (!integration) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Integration not found' }) };
 
   // ── Verify user owns or is a member of the brand container ───────────────
   const containers = await supabaseRest({
@@ -145,7 +145,7 @@ exports.handler = async (event) => {
     searchParams: { select: 'id,user_id,organization_id', id: `eq.${integration.brand_container_id}`, limit: '1' }
   });
   const bc = Array.isArray(containers) ? containers[0] : null;
-  if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
+  if (!bc) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Brand container not found' }) };
 
   if (bc.user_id !== user.id) {
     const members = await supabaseRest({
@@ -154,7 +154,7 @@ exports.handler = async (event) => {
       searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
     });
     if (!Array.isArray(members) || members.length === 0) {
-      return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+      return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
     }
   }
 
@@ -230,7 +230,7 @@ exports.handler = async (event) => {
       data = await fetchMetaInsights({ token, datePreset, appSecret });
     } else if (platform === 'google') {
       if (!ga4_property_id) {
-        return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'ga4_property_id is required for Google Analytics' }) };
+        return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'ga4_property_id is required for Google Analytics' }) };
       }
       // Persist ga4_property_id in metadata if new
       if (integration.metadata?.ga4_property_id !== ga4_property_id) {
@@ -247,14 +247,14 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: true, data })
     };
   } catch (e) {
     console.error('[insights] fetch error:', e?.message);
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: e?.message || 'Failed to fetch insights' })
     };
   }

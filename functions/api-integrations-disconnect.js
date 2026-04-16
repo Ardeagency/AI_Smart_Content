@@ -71,16 +71,16 @@ async function revokeMetaToken(userId, token, appSecret) {
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
@@ -89,17 +89,17 @@ exports.handler = async (event) => {
   const platform = String(body.platform || '').toLowerCase().trim();
 
   if (!brandContainerId || !platform) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id or platform' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id or platform' }) };
   }
   if (!['google', 'facebook'].includes(platform)) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Unsupported platform' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
 
   // Verify user access to this brand
   try {
     await assertBrandContainerAccess({ env, accessToken, brandContainerId });
   } catch (e) {
-    return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   // Load integration row (need tokens to revoke)
@@ -137,7 +137,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    headers: corsHeaders(),
+    headers: corsHeaders(event),
     body: JSON.stringify({ ok: true, platform })
   };
 };

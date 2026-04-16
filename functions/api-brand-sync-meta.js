@@ -518,28 +518,28 @@ async function upsertHeatmap(env, brandContainerId, heatmap, audienceDemographic
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
   if (event.httpMethod !== 'POST')
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
   if (!accessToken)
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
   if (!user?.id)
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
   const { brand_container_id } = body;
   if (!brand_container_id)
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
   // Verificar acceso + integración Meta (errores de Supabase → JSON claro, no 500 genérico sin contexto)
   let bc;
@@ -551,7 +551,7 @@ exports.handler = async (event) => {
       searchParams: { select: 'id,user_id,organization_id', id: `eq.${brand_container_id}`, limit: '1' }
     });
     bc = Array.isArray(containers) ? containers[0] : null;
-    if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
+    if (!bc) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Brand container not found' }) };
 
     if (bc.user_id !== user.id) {
       const members = await supabaseRest({
@@ -560,7 +560,7 @@ exports.handler = async (event) => {
         searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
       });
       if (!Array.isArray(members) || members.length === 0)
-        return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+        return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
     }
 
     const integRows = await supabaseRest({
@@ -580,16 +580,16 @@ exports.handler = async (event) => {
     const code = e.statusCode >= 400 && e.statusCode < 600 ? e.statusCode : 500;
     return {
       statusCode: code,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: e?.message || 'Database error' })
     };
   }
 
   if (!integ)
-    return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'No active Meta integration found' }) };
+    return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'No active Meta integration found' }) };
 
   if (integ.token_expires_at && new Date(integ.token_expires_at) < new Date())
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Meta token expired. Please reconnect.' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Meta token expired. Please reconnect.' }) };
 
   const userToken = integ.access_token;
   const now    = new Date();
@@ -606,7 +606,7 @@ exports.handler = async (event) => {
     const pages = pagesData.data || [];
 
     if (pages.length === 0) {
-      return { statusCode: 200, headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      return { statusCode: 200, headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
         body: JSON.stringify({ ok: true, summary: { ...summary, message: 'No Facebook Pages found' } }) };
     }
 
@@ -763,7 +763,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: true, summary })
     };
 
@@ -783,7 +783,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify(payload)
     };
   }

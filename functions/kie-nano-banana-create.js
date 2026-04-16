@@ -14,12 +14,27 @@ const ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', 
 const RESOLUTIONS = new Set(['1K', '2K', '4K']);
 const OUTPUT_FORMATS = new Set(['png', 'jpg']);
 
-function corsHeaders() {
+// Allow-list estricta: solo el dominio propio (+ localhost en dev). Reemplaza el `*`
+// que permitía que cualquier web usara este endpoint con el token del usuario.
+const ALLOWED_ORIGINS = new Set([
+  'https://aismartcontent.io', 'https://www.aismartcontent.io',
+  'http://localhost:8888', 'http://localhost:8080', 'http://localhost:5173',
+  'http://127.0.0.1:8888'
+]);
+if (process.env.SITE_URL) ALLOWED_ORIGINS.add(process.env.SITE_URL.replace(/\/$/, ''));
+
+function corsHeaders(event) {
+  const origin = event?.headers?.origin || event?.headers?.Origin || '';
+  const allow = origin && ALLOWED_ORIGINS.has(origin)
+    ? origin
+    : (process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'https://aismartcontent.io');
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin'
   };
 }
 
@@ -72,7 +87,7 @@ function pickEnum(value, allowedSet, fallback) {
 }
 
 exports.handler = async (event) => {
-  const c = corsHeaders();
+  const c = corsHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers: c, body: JSON.stringify({ error: 'Método no permitido' }) };

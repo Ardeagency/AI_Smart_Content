@@ -16,27 +16,27 @@ const {
 } = require('./lib/ai-shared');
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Método no permitido' }) };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Método no permitido' }) };
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); }
-  catch (_) { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Body JSON inválido' }) }; }
+  catch (_) { return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Body JSON inválido' }) }; }
 
   const { organization_id, conversation_id, action } = body;
   if (!organization_id || !conversation_id || !action?.type) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Faltan campos requeridos' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Faltan campos requeridos' }) };
   }
 
   let env;
   try { env = getSupabaseEnv(); }
-  catch (e) { return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) }; }
+  catch (e) { return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) }; }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
-  if (!user?.id) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+  if (!user?.id) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
 
   try {
     await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: organization_id, userId: user.id });
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
     // Stub: devuelve ack. Aquí irá switch(action.type) → runFlow(payload) → flow_run.
     return {
       statusCode: 200,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({
         ok: true,
         status: 'queued',
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
       })
     };
   } catch (e) {
-    return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 };
 

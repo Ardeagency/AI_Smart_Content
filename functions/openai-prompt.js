@@ -9,12 +9,25 @@
 
 const { requireAuth } = require('./lib/ai-shared');
 
-function corsHeaders() {
+const ALLOWED_ORIGINS = new Set([
+  'https://aismartcontent.io', 'https://www.aismartcontent.io',
+  'http://localhost:8888', 'http://localhost:8080', 'http://localhost:5173',
+  'http://127.0.0.1:8888'
+]);
+if (process.env.SITE_URL) ALLOWED_ORIGINS.add(process.env.SITE_URL.replace(/\/$/, ''));
+
+function corsHeaders(event) {
+  const origin = event?.headers?.origin || event?.headers?.Origin || '';
+  const allow = origin && ALLOWED_ORIGINS.has(origin)
+    ? origin
+    : (process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'https://aismartcontent.io');
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin'
   };
 }
 
@@ -38,13 +51,13 @@ function buildContextText(context) {
 
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: corsHeaders(), body: '' };
+    return { statusCode: 204, headers: corsHeaders(event), body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: 'Método no permitido' })
     };
   }
@@ -53,7 +66,7 @@ exports.handler = async (event, context) => {
   if (!user) {
     return {
       statusCode: 401,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
@@ -62,7 +75,7 @@ exports.handler = async (event, context) => {
   if (!apiKey) {
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: 'OPENAI_API_KEY no configurada en el servidor' })
     };
   }
@@ -73,7 +86,7 @@ exports.handler = async (event, context) => {
   } catch (_) {
     return {
       statusCode: 400,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: 'Body JSON inválido' })
     };
   }
@@ -114,7 +127,7 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones ni prefijos.`;
     if (data.error) {
       return {
         statusCode: res.status >= 400 ? res.status : 500,
-        headers: corsHeaders(),
+        headers: corsHeaders(event),
         body: JSON.stringify({ error: data.error.message || 'Error de OpenAI' })
       };
     }
@@ -125,21 +138,21 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones ni prefijos.`;
     if (!prompt) {
       return {
         statusCode: 500,
-        headers: corsHeaders(),
+        headers: corsHeaders(event),
         body: JSON.stringify({ error: 'OpenAI no devolvió texto' })
       };
     }
 
     return {
       statusCode: 200,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ prompt })
     };
   } catch (err) {
     console.error('openai-prompt error:', err);
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: err.message || 'Error interno' })
     };
   }

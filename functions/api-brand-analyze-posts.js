@@ -137,28 +137,28 @@ async function recalculateNarrativePillars(env, brandContainerId) {
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
-  if (!user?.id) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+  if (!user?.id) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
 
   let body = {};
   try { body = typeof event.body === 'string' ? JSON.parse(event.body) : (event.body || {}); } catch (_) {}
 
   const { brand_container_id, limit: rawLimit } = body;
   if (!brand_container_id) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
   }
   const batchLimit = Math.min(Number(rawLimit) || 10, 20);
 
@@ -169,7 +169,7 @@ exports.handler = async (event) => {
     searchParams: { select: 'id,user_id,organization_id', id: `eq.${brand_container_id}`, limit: '1' }
   });
   const bc = Array.isArray(containers) ? containers[0] : null;
-  if (!bc) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
+  if (!bc) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Brand container not found' }) };
 
   if (bc.user_id !== user.id) {
     const members = await supabaseRest({
@@ -178,7 +178,7 @@ exports.handler = async (event) => {
       searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
     });
     if (!Array.isArray(members) || members.length === 0) {
-      return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+      return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
     }
   }
 
@@ -215,7 +215,7 @@ exports.handler = async (event) => {
     await recalculateNarrativePillars(env, brand_container_id).catch(() => {});
     return {
       statusCode: 200,
-      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: true, analyzed: 0, message: 'No new posts to analyze' })
     };
   }
@@ -243,7 +243,7 @@ exports.handler = async (event) => {
     analyses = await analyzeBatch(postsToAnalyze, brandRules);
   } catch (e) {
     console.error('[analyze-posts] OpenAI error:', e?.message);
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   // Guardar resultados en brand_content_analysis
@@ -281,7 +281,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
     body: JSON.stringify({ ok: true, analyzed: toInsert.length })
   };
 };

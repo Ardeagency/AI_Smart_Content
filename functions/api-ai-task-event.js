@@ -23,18 +23,18 @@ function nowIso() {
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: corsHeaders(), body: '' };
+    return { statusCode: 204, headers: corsHeaders(event), body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Método no permitido' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Método no permitido' }) };
   }
 
   let body = {};
   try {
     body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body || {};
   } catch (_) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Body JSON inválido' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Body JSON inválido' }) };
   }
 
   const {
@@ -47,7 +47,7 @@ exports.handler = async (event) => {
   } = body;
 
   if (!organization_id || !conversation_id) {
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Faltan organization_id o conversation_id' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Faltan organization_id o conversation_id' }) };
   }
 
   // Auth: require bearer
@@ -55,17 +55,17 @@ exports.handler = async (event) => {
   try {
     env = getSupabaseEnv();
   } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
   if (!accessToken) {
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
   }
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
   if (!user?.id) {
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
   }
 
   try {
@@ -85,7 +85,7 @@ exports.handler = async (event) => {
       }
     });
     if (!Array.isArray(conv) || conv.length === 0) {
-      return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Conversation not found for organization' }) };
+      return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Conversation not found for organization' }) };
     }
 
     const payload = {
@@ -113,12 +113,12 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ ok: true })
     };
   } catch (e) {
     const status = e.statusCode || 500;
-    return { statusCode: status, headers: corsHeaders(), body: JSON.stringify({ error: e.message, at: nowIso() }) };
+    return { statusCode: status, headers: corsHeaders(event), body: JSON.stringify({ error: e.message, at: nowIso() }) };
   }
 };
 

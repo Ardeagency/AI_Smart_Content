@@ -8,14 +8,8 @@ const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(
 const CREATE_PATH = '/api/v1/jobs/createTask';
 const RECORD_INFO_PATH = '/api/v1/jobs/recordInfo';
 
-function corsHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-  };
-}
+// Reutilizamos la allow-list centralizada en ai-shared (antes esto era `*`).
+const { corsHeaders } = require('./ai-shared');
 
 function getKieAuthHeaders() {
   const apiKey = process.env.KIE_API_KEY;
@@ -43,8 +37,8 @@ function distributeDuration(totalSec, n) {
  * Crea una tarea en KIE. body puede incluir action: 'createTask' (compat) o no.
  * @returns { Promise<{ statusCode: number, headers: Object, body: string }> }
  */
-async function handleCreate(body, headers) {
-  const c = corsHeaders();
+async function handleCreate(body, headers, event) {
+  const c = corsHeaders(event);
   const mode = body.mode === 'pro' ? 'pro' : 'std';
   const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
   const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
@@ -193,8 +187,8 @@ async function handleCreate(body, headers) {
  * Consulta estado de una tarea en KIE.
  * @returns { Promise<{ statusCode: number, headers: Object, body: string }> }
  */
-async function handleStatus(taskId, headers) {
-  const c = corsHeaders();
+async function handleStatus(taskId, headers, event) {
+  const c = corsHeaders(event);
   const statusUrl = `${KIE_BASE}${RECORD_INFO_PATH}?taskId=${encodeURIComponent(taskId)}`;
   const statusRes = await fetch(statusUrl, { method: 'GET', headers: { 'Authorization': headers.Authorization } });
   const statusData = await statusRes.json().catch(() => ({}));

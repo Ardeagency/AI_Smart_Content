@@ -50,31 +50,31 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
-  if (event.httpMethod !== 'GET') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
+  if (event.httpMethod !== 'GET') return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
-  if (!accessToken) return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
+  if (!accessToken) return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing Authorization Bearer token' }) };
 
   const brandContainerId = event.queryStringParameters?.brand_container_id;
   const returnTo = event.queryStringParameters?.return_to || '/home';
-  if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
+  if (!brandContainerId) return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
   let user;
   try {
     const auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
     user = auth.user;
   } catch (e) {
-    return { statusCode: e.statusCode || 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
-  if (!clientId) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing GOOGLE_CLIENT_ID env var' }) };
+  if (!clientId) return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing GOOGLE_CLIENT_ID env var' }) };
 
   // Permisos completos de Google: Analytics, YouTube, Ads y Business Profile
   const scopes = process.env.GOOGLE_OAUTH_SCOPES ||
@@ -100,7 +100,7 @@ exports.handler = async (event) => {
       iat: Date.now()
     });
   } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const authorizeUrl =
@@ -116,7 +116,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
     body: JSON.stringify({ authorize_url: authorizeUrl })
   };
 };

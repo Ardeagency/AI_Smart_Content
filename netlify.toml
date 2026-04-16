@@ -215,11 +215,13 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self' https: data:; media-src 'self' blob: https:; frame-ancestors 'none'; object-src 'none';"
 
-# Headers para las funciones
+# Headers para las funciones.
+# NOTA: `Access-Control-Allow-Origin` ahora lo fija cada función en su respuesta
+# (ver functions/lib/ai-shared.js `corsHeaders(event)`), con allow-list estricta
+# para endpoints con auth. No se declara aquí para no forzar `*` en todo.
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Hub-Signature-256"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
 

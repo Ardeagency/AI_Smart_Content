@@ -18,14 +18,14 @@ const shared = require('./lib/kie-video-shared');
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: shared.corsHeaders(), body: '' };
+    return { statusCode: 204, headers: shared.corsHeaders(event), body: '' };
   }
 
   const user = await shared.requireAuth(event);
   if (!user) {
     return {
       statusCode: 401,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'No autorizado. Se requiere sesión activa.' })
     };
   }
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
   if (!headers) {
     return {
       statusCode: 500,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: 'Configura KIE_API_KEY en Netlify (Dashboard → Site settings → Environment variables)' })
     };
   }
@@ -45,28 +45,28 @@ exports.handler = async (event) => {
       try {
         body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body || {};
       } catch (_) {
-        return { statusCode: 400, headers: shared.corsHeaders(), body: JSON.stringify({ error: 'Body JSON inválido' }) };
+        return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'Body JSON inválido' }) };
       }
       if (body.action !== 'createTask') {
-        return { statusCode: 400, headers: shared.corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
+        return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
-      return await shared.handleCreate(body, headers);
+      return await shared.handleCreate(body, headers, event);
     }
 
     if (event.httpMethod === 'GET') {
       const taskId = event.queryStringParameters?.taskId;
       if (!taskId) {
-        return { statusCode: 400, headers: shared.corsHeaders(), body: JSON.stringify({ error: 'Falta el parámetro taskId' }) };
+        return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'Falta el parámetro taskId' }) };
       }
-      return await shared.handleStatus(taskId, headers);
+      return await shared.handleStatus(taskId, headers, event);
     }
 
-    return { statusCode: 405, headers: shared.corsHeaders(), body: JSON.stringify({ error: 'Método no permitido' }) };
+    return { statusCode: 405, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'Método no permitido' }) };
   } catch (err) {
     console.error('kling-video (router) error:', err);
     return {
       statusCode: 500,
-      headers: shared.corsHeaders(),
+      headers: shared.corsHeaders(event),
       body: JSON.stringify({ error: err.message || 'Error interno' })
     };
   }

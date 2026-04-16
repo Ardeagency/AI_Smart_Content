@@ -1,9 +1,41 @@
-function corsHeaders() {
+/**
+ * Whitelist de orígenes permitidos para llamar a las funciones con auth.
+ * En producción solo el dominio propio; en local, los puertos típicos de Netlify/Vite.
+ * SITE_URL se añade en runtime para que deploys custom también queden cubiertos.
+ */
+const ALLOWED_ORIGINS = new Set([
+  'https://aismartcontent.io',
+  'https://www.aismartcontent.io',
+  'http://localhost:8888',
+  'http://localhost:8080',
+  'http://localhost:5173',
+  'http://127.0.0.1:8888'
+]);
+if (process.env.SITE_URL) ALLOWED_ORIGINS.add(process.env.SITE_URL.replace(/\/$/, ''));
+
+function resolveAllowedOrigin(event) {
+  const origin = event?.headers?.origin || event?.headers?.Origin || '';
+  if (origin && ALLOWED_ORIGINS.has(origin)) return origin;
+  // Fallback conservador: el dominio canónico. Así nunca devolvemos `*` sobre
+  // endpoints con auth — evita que un sitio tercero use el token del usuario.
+  return process.env.SITE_URL
+    ? process.env.SITE_URL.replace(/\/$/, '')
+    : 'https://aismartcontent.io';
+}
+
+/**
+ * Headers CORS para funciones con auth (reflejan el origin si está en la allow-list,
+ * si no, el dominio canónico). Llamar siempre con el `event` completo.
+ * Sin argumento devuelve el default estricto (solo dominio canónico).
+ */
+function corsHeaders(event) {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': resolveAllowedOrigin(event),
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Vary': 'Origin'
   };
 }
 

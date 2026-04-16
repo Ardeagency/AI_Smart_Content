@@ -72,10 +72,10 @@ function mapIgMedia(m) {
   };
 }
 
-function noPageResponse({ limit, detail, message, account }) {
+function noPageResponse({ event, limit, detail, message, account }) {
   return {
     statusCode: 200,
-    headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ok: true,
       page: null, pages: [],
@@ -94,29 +94,29 @@ function noPageResponse({ limit, detail, message, account }) {
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
   if (event.httpMethod !== 'GET')
-    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
 
   const accessToken = getBearerToken(event);
   if (!accessToken)
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
 
   const user = await fetchSupabaseUser({ url: env.url, anonKey: env.anonKey, accessToken });
   if (!user?.id)
-    return { statusCode: 401, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid session' }) };
+    return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Invalid session' }) };
 
   const qs                = event.queryStringParameters || {};
   const { brand_container_id } = qs;
   const limit             = Math.min(Math.max(Number(qs.limit) || 50, 1), 100);
 
   if (!brand_container_id)
-    return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id' }) };
 
   // ── Verificar acceso al brand container ──────────────────────────────────
   const containers = await supabaseRest({
@@ -126,7 +126,7 @@ exports.handler = async (event) => {
   });
   const bc = Array.isArray(containers) ? containers[0] : null;
   if (!bc)
-    return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Brand container not found' }) };
+    return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Brand container not found' }) };
 
   if (bc.user_id !== user.id) {
     const members = await supabaseRest({
@@ -135,7 +135,7 @@ exports.handler = async (event) => {
       searchParams: { select: 'id', organization_id: `eq.${bc.organization_id}`, user_id: `eq.${user.id}`, limit: '1' }
     });
     if (!Array.isArray(members) || members.length === 0)
-      return { statusCode: 403, headers: corsHeaders(), body: JSON.stringify({ error: 'Unauthorized' }) };
+      return { statusCode: 403, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
   // ── Obtener integración Meta ──────────────────────────────────────────────
@@ -152,7 +152,7 @@ exports.handler = async (event) => {
   });
   const integ = Array.isArray(integRows) ? integRows[0] : null;
   if (!integ)
-    return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'No active Meta integration' }) };
+    return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'No active Meta integration' }) };
 
   const userToken  = integ.access_token;
   const appSecret  = process.env.META_APP_SECRET || '';
@@ -188,10 +188,10 @@ exports.handler = async (event) => {
     if (!activePage) {
       const meInfo = await metaGraphGet('/me', userToken, appSecret, { fields: 'id,name' }).catch(() => null);
       if (!meInfo) {
-        return noPageResponse({ limit, detail: 'invalid_token',
+        return noPageResponse({ event, limit, detail: 'invalid_token',
           message: 'El token de Meta ha expirado o es inválido. Reconecta Meta en Marcas.' });
       }
-      return noPageResponse({ limit, detail: 'no_pages_selected',
+      return noPageResponse({ event, limit, detail: 'no_pages_selected',
         account: { id: meInfo.id, name: meInfo.name },
         message: `La cuenta "${meInfo.name}" no tiene páginas disponibles. Reconecta Meta en Marcas y selecciona la página que quieres usar.`
       });
@@ -204,7 +204,7 @@ exports.handler = async (event) => {
       pageToken = d.access_token || null;
     }
     if (!pageToken) {
-      return noPageResponse({ limit, detail: 'no_page_token',
+      return noPageResponse({ event, limit, detail: 'no_page_token',
         message: 'No se pudo obtener el token de página. Reconecta Meta en Marcas.' });
     }
 
@@ -264,7 +264,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ok: true,
         page: {
@@ -297,7 +297,7 @@ exports.handler = async (event) => {
     console.error('[brand-posts-meta] error:', e?.message);
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: e?.message || 'Error fetching posts' })
     };
   }

@@ -17,13 +17,13 @@ function normalizeBase(url) {
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: corsHeaders(), body: "" };
+    return { statusCode: 204, headers: corsHeaders(event), body: "" };
   }
 
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: "Método no permitido" }),
     };
   }
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
   } catch (_) {
     return {
       statusCode: 400,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: "Body JSON inválido" }),
     };
   }
@@ -43,7 +43,7 @@ exports.handler = async (event) => {
   if (!organization_id || typeof message !== "string" || !message.trim()) {
     return {
       statusCode: 400,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: "organization_id y message son requeridos" }),
     };
   }
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
   if (!accessToken) {
     return {
       statusCode: 401,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({ error: "Missing Authorization Bearer token" }),
     };
   }
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
   if (!aiEngineBaseUrl) {
     return {
       statusCode: 500,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({
         error: "AI_ENGINE_URL no configurada. Define la variable de entorno en Netlify Dashboard.",
       }),
@@ -92,7 +92,7 @@ exports.handler = async (event) => {
     const isTimeout = e?.name === "AbortError";
     return {
       statusCode: isTimeout ? 504 : 502,
-      headers: corsHeaders(),
+      headers: corsHeaders(event),
       body: JSON.stringify({
         error: isTimeout
           ? "El motor de IA tardó demasiado en responder. Intenta de nuevo."
@@ -106,7 +106,7 @@ exports.handler = async (event) => {
   const text = await upstream.text();
   return {
     statusCode: upstream.status,
-    headers: corsHeaders(),
+    headers: corsHeaders(event),
     body: text,
   };
 };
