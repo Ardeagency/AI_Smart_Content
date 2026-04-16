@@ -37,6 +37,8 @@ class BrandOrganizationView extends BaseView {
     this.brandCampaigns = [];
     /** @type {BrandstorageView|null} Delegate para galería e INFO panels de sub-marcas */
     this._bsDelegate = null;
+    /** Org UUID con la que se cargó la vista (navegación suave mismo ViewClass) */
+    this._mountedOrgId = null;
   }
 
   _mergeOrgIntoShim() {
@@ -202,6 +204,36 @@ class BrandOrganizationView extends BaseView {
     this.cleanup();
   }
 
+  /**
+   * Evita destruir y volver a pintar el shell cuando solo cambia la URL entre rutas de marca
+   * (organización ↔ brand storage, /brands, etc.) y el workspace es el mismo.
+   * @param {string} path
+   * @param {Record<string, string>} routeParams
+   * @returns {Promise<boolean>}
+   */
+  async handleSameViewClassNavigation(_path, routeParams) {
+    if (window.authService) {
+      const isAuth = await window.authService.checkAccess(true);
+      if (!isAuth && window.router) {
+        window.router.navigate('/login', true);
+        return false;
+      }
+    }
+    const nextOrg = typeof window !== 'undefined' ? (window.currentOrgId ?? null) : null;
+    if ((this._mountedOrgId ?? null) !== (nextOrg ?? null)) {
+      return false;
+    }
+    this.routeParams = routeParams || {};
+    this.isActive = true;
+    await this.ensureDataLoaded();
+    if ((this._mountedOrgId ?? null) !== (typeof window !== 'undefined' ? (window.currentOrgId ?? null) : null)) {
+      return false;
+    }
+    this.renderAll();
+    await this.updateHeader();
+    return true;
+  }
+
   async render() {
     await super.render();
     if (!this.isActive) return;
@@ -293,6 +325,7 @@ class BrandOrganizationView extends BaseView {
   async loadData() {
     if (!this.supabase || !this.userId) {
       this._dataLoaded = true;
+      this._mountedOrgId = null;
       return;
     }
 
@@ -474,6 +507,7 @@ class BrandOrganizationView extends BaseView {
       console.error('BrandOrganizationView loadData:', error);
     } finally {
       this._dataLoaded = true;
+      this._mountedOrgId = this.organizationRow?.id ?? null;
       if (this.isActive) this._refreshInfoPanelIfOpen();
     }
   }
@@ -636,105 +670,14 @@ class BrandOrganizationView extends BaseView {
     return hexes;
   }
 
-  /** Convierte #rrggbb a rgba(r,g,b,alpha). */
-  hexToRgba(hex, alpha = 1) {
-    const clean = (hex || '').replace(/^#/, '');
-    if (clean.length !== 6) return hex;
-    const r = parseInt(clean.slice(0, 2), 16);
-    const g = parseInt(clean.slice(2, 4), 16);
-    const b = parseInt(clean.slice(4, 6), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  hexToHSL(hex) {
-    const clean = hex.replace(/^#/, '');
-    const r = parseInt(clean.slice(0, 2), 16) / 255;
-    const g = parseInt(clean.slice(2, 4), 16) / 255;
-    const b = parseInt(clean.slice(4, 6), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        default: h = ((r - g) / d + 4) / 6;
-      }
-    }
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-
-  hslToHex(h, s, l) {
-    s /= 100; l /= 100;
-    const a = s * Math.min(l, 1 - l);
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    };
-    const r = Math.round(f(0) * 255);
-    const g = Math.round(f(8) * 255);
-    const b = Math.round(f(4) * 255);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  }
-
-  filterAndScoreBrandColors(hexes) {
-    const MIN_L = 18, MAX_L = 85, MIN_S = 15, MAX_S = 90;
-    const idealL = 45, idealS = 50;
-    const out = [];
-    for (const hex of hexes.slice(0, 5)) {
-      const { h, s, l } = this.hexToHSL(hex);
-      if (l > MAX_L || l < MIN_L || s < MIN_S || s > MAX_S) continue;
-      const scoreL = 30 - Math.abs(l - idealL) / 2;
-      const scoreS = 40 - Math.abs(s - idealS) / 2;
-      const score = Math.max(0, scoreL + scoreS);
-      out.push({ hex, h, s, l, score });
-    }
-    return out.sort((a, b) => b.score - a.score).slice(0, 3);
-  }
-
-  getBrandUIPalette(brandColors) {
-    if (!brandColors || brandColors.length === 0) return null;
-    const filtered = this.filterAndScoreBrandColors(brandColors);
-    if (filtered.length === 0) {
-      const raw = brandColors[0];
-      const { h, s, l } = this.hexToHSL(raw);
-      const primary = this.hslToHex(h, Math.min(90, Math.max(20, s)), Math.min(75, Math.max(25, l)));
-      const secondary = this.hslToHex(h, Math.min(85, s + 5), Math.max(15, l - 18));
-      return { primary, secondary };
-    }
-    const primary = filtered[0].hex;
-    let secondary = null;
-    for (let i = 1; i < filtered.length; i++) {
-      const diff = Math.abs(filtered[i].h - filtered[0].h);
-      const hueDiff = Math.min(diff, 360 - diff);
-      if (hueDiff > 20) {
-        secondary = filtered[i].hex;
-        break;
-      }
-    }
-    if (!secondary) {
-      const { h, s, l } = this.hexToHSL(primary);
-      secondary = this.hslToHex(h, Math.min(90, s + 10), Math.max(18, l - 12));
-    }
-    return { primary, secondary };
-  }
-
-  /**
-   * Construye un degradado que usa TODOS los colores de la marca (hasta 4),
-   * con transparencia suave para que se mezclen bien y no se vean bloques opacos.
-   * @param {string[]} hexes - Array de hex (#rrggbb)
-   * @param {number} [angle=135] - Ángulo del gradiente en grados (135 = fondo, 180 = vertical para barras nav)
-   */
-  buildBrandGradientCss(hexes, angle = 135) {
-    if (!hexes || hexes.length === 0) return '';
-    const alpha = angle === 180 ? 1 : 0.88; // barras nav opacas; fondo algo transparente
-    const stops = hexes.map((hex, i) => {
-      const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
-      return `${this.hexToRgba(hex, alpha)} ${Math.round(pct)}%`;
-    });
-    return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
-  }
+  // Color utils ahora viven en /js/utils/brand-colors.js (ver BrandstorageView).
+  // Aliases de instancia para mantener `this.hexToX()` funcionando sin tocar callers.
+  hexToRgba(hex, alpha = 1)          { return window.BrandColors.hexToRgba(hex, alpha); }
+  hexToHSL(hex)                      { return window.BrandColors.hexToHSL(hex); }
+  hslToHex(h, s, l)                  { return window.BrandColors.hslToHex(h, s, l); }
+  filterAndScoreBrandColors(hexes)   { return window.BrandColors.filterAndScoreBrandColors(hexes); }
+  getBrandUIPalette(brandColors)     { return window.BrandColors.getBrandUIPalette(brandColors); }
+  buildBrandGradientCss(hexes, angle = 135) { return window.BrandColors.buildBrandGradientCss(hexes, angle); }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
   applyBrandBackgroundGradient(forceUpdate = false) {

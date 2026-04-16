@@ -2,7 +2,9 @@
  * Router - Sistema de navegación para SPA
  * 
  * Maneja rutas sin recargar la página usando History API.
- * Siempre crea nuevas instancias de vistas (sin caché) para evitar errores de carga.
+ * Por defecto crea una instancia nueva por ruta; las vistas pueden implementar
+ * `handleSameViewClassNavigation(path, routeParams)` para reutilizar la instancia
+ * y el DOM cuando la URL cambia pero el shell es el mismo (menos parpadeo).
  * 
  * @class Router
  * @example
@@ -51,6 +53,23 @@ class Router {
       requiresAuth: options.requiresAuth || false,
       redirectIfAuth: options.redirectIfAuth || false
     };
+  }
+
+  /**
+   * Resuelve la clase de vista desde la config de ruta (clase directa o lazy loader).
+   * @param {{ viewLoader: Function }} route
+   * @returns {Promise<Function|null>}
+   */
+  async _resolveViewClassFromRoute(route) {
+    if (!route || !route.viewLoader) return null;
+    const loader = route.viewLoader;
+    if (typeof loader === 'function') {
+      const isClass = loader.prototype && loader.prototype.constructor === loader;
+      if (isClass) return loader;
+      const result = await loader();
+      return result.default || result;
+    }
+    return null;
   }
 
   /**
@@ -231,9 +250,51 @@ class Router {
       const container = document.getElementById('app-container');
       if (!container) return;
 
-      // Cleanup anterior (fire-and-forget, no bloquea navegación)
-      if (this.currentView) {
-        const prevView = this.currentView;
+      const ViewClass = await this._resolveViewClassFromRoute(route);
+      if (!ViewClass || typeof ViewClass !== 'function') return;
+
+      const prevView = this.currentView;
+      const canSoftNavigate =
+        prevView &&
+        prevView.constructor === ViewClass &&
+        typeof prevView.handleSameViewClassNavigation === 'function';
+
+      if (canSoftNavigate) {
+        try {
+          const handled = await prevView.handleSameViewClassNavigation(path, routeParams);
+          if (handled) {
+            this.currentView = prevView;
+            this.currentRoute = path;
+            prevView.routeParams = routeParams;
+
+            if (path === '/') {
+              document.body.classList.add('route-landing');
+            } else {
+              document.body.classList.remove('route-landing');
+            }
+
+            if (window.appNavigation && typeof window.appNavigation.render === 'function') {
+              await window.appNavigation.render();
+            }
+
+            const publicNoEntrance = ['/', '/login', '/signin', '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'];
+            if (!publicNoEntrance.includes(path)) {
+              container.classList.remove('view-enter');
+              void container.offsetHeight;
+              container.classList.add('view-enter');
+            }
+
+            window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
+            return;
+          }
+        } catch (e) {
+          console.warn('Router: soft navigation falló, se hace montaje completo.', e);
+        }
+      }
+
+      // Montaje completo: destruir vista anterior (no vaciar innerHTML aquí: el flash en blanco
+      // y un paint extra; la nueva vista reemplaza el DOM en BaseView.render()).
+      if (prevView) {
         this.currentView = null;
         if (typeof prevView.onLeave === 'function') {
           try { prevView.onLeave(); } catch (_) {}
@@ -243,24 +304,7 @@ class Router {
         }
       }
 
-      // Batch DOM operations
-      container.innerHTML = '';
       container.classList.remove('view-leave', 'view-enter');
-
-      let ViewClass;
-      if (typeof route.viewLoader === 'function') {
-        const isClass = route.viewLoader.prototype && route.viewLoader.prototype.constructor === route.viewLoader;
-        if (isClass) {
-          ViewClass = route.viewLoader;
-        } else {
-          const result = await route.viewLoader();
-          ViewClass = result.default || result;
-        }
-      } else {
-        ViewClass = route.viewLoader;
-      }
-
-      if (!ViewClass || typeof ViewClass !== 'function') return;
 
       // Mostrar/ocultar fondo de la landing (imagen en index.html #landing-background-wrap)
       if (path === '/') {
