@@ -836,7 +836,14 @@ class BrandstorageView extends BaseView {
       document.getElementById('brandStorageCount');
     if (!grid) return;
 
-    const rows = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+    const rows = Array.isArray(this.brandContainers)
+      ? [...this.brandContainers].sort((a, b) => {
+          const ta = new Date(a.created_at || 0).getTime();
+          const tb = new Date(b.created_at || 0).getTime();
+          if (tb !== ta) return tb - ta;
+          return String(a.nombre_marca || '').localeCompare(String(b.nombre_marca || ''), 'es', { sensitivity: 'base' });
+        })
+      : [];
     if (countEl) countEl.textContent = String(rows.length);
 
     if (!rows.length) {

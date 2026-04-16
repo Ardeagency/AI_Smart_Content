@@ -127,10 +127,15 @@
     opacity: 1;
 }
 
-/* Brand Storage — página dedicada; el color base lo pintan skeleton + .background-gradient */
+/* Brand Storage — mismo relleno que Organization (#app-container); sin 72vh que cortaba el fondo */
 .brand-dashboard-container.brand-storage-standalone {
-    position: relative;
-    min-height: 72vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 0;
+    overflow: hidden;
     background: transparent;
 }
 
@@ -1308,22 +1313,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
     gap: 0.6rem;
 }
 
-/* Masonry: columnas CSS; tarjetas cuadradas estilo .brand-card (glass del contenedor) */
+/* Galería en grid por filas (orden estable); columnas CSS reordenaban visualmente */
 .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry {
-    display: block;
-    columns: 260px;
-    column-gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    align-items: start;
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: stretch;
     width: 100%;
-    margin: 0 0 1rem;
-    break-inside: avoid;
-    vertical-align: top;
+    margin: 0;
     aspect-ratio: 1;
     min-height: 0;
     min-width: 0;
@@ -1358,6 +1362,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .brand-storage-tile__foot {
     flex: 0 0 auto;
+    margin-top: auto;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -1425,13 +1430,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.78;
 }
 
-/* Brand Storage como galería de sub-marcas (mantiene fondo + card glass) */
+/* Brand Storage: zona de cards a altura completa (evita “corte” visual); scroll interno */
 .brand-dashboard-container.brand-storage-gallery-view .brand-cards-zone {
     left: 1.5rem;
-    bottom: auto;
+    right: 1.5rem;
+    top: calc(48px + 1.5rem);
+    bottom: 1.5rem;
     width: auto;
     max-width: none;
-    overflow-y: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .card-storage-library {
