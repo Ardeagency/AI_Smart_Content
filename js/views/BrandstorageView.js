@@ -73,8 +73,13 @@ class BrandstorageView extends BaseView {
 
   renderHTML() {
     return `
-<!-- Brand Storage Library — página propia, sin capa de degradado dinámico de marca -->
+<!-- Brand Storage Library — misma capa skeleton + degradado que Brand Organization -->
 <div class="brand-dashboard-container brand-storage-standalone brand-storage-gallery-view" id="brandsListContainer">
+
+    <div class="brand-dashboard-background">
+        <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
+        <div class="background-gradient" id="backgroundGradient"></div>
+    </div>
 
     <!-- Biblioteca de marcas -->
     <div class="brand-cards-zone">
@@ -197,6 +202,8 @@ class BrandstorageView extends BaseView {
           await this.ensureDataLoaded();
           if (!this.isActive) return;
           this.renderAll();
+          this.applyBrandBackgroundGradient();
+          if (root) root.classList.add('brands-background-ready');
         })();
         return true;
       }
@@ -360,11 +367,13 @@ class BrandstorageView extends BaseView {
       const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
 
       const [entitiesResult, audiencesResult, campaignsResult, integrationsResult] = await Promise.allSettled([
-        this.supabase
-          .from('brand_entities')
-          .select('id, brand_container_id, name, entity_type, description, created_at, updated_at')
-          .eq('organization_id', orgId)
-          .order('updated_at', { ascending: false }),
+        containerIds.length
+          ? this.supabase
+            .from('brand_entities')
+            .select('id, brand_container_id, name, entity_type, description, created_at, updated_at')
+            .in('brand_container_id', containerIds)
+            .order('updated_at', { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
         containerIds.length
           ? this.supabase
             .from('audiences')
@@ -579,13 +588,10 @@ class BrandstorageView extends BaseView {
   getBrandUIPalette(brandColors)     { return window.BrandColors.getBrandUIPalette(brandColors); }
   buildBrandGradientCss(hexes, angle = 135) { return window.BrandColors.buildBrandGradientCss(hexes, angle); }
 
-  /** Tras cambiar colores: actualiza glass de cards y acentos (esta vista no pinta degradado de fondo). */
+  /** Tras cambiar colores: actualiza degradado de fondo, glass de cards y acentos. */
   _refreshBrandStorageVisualChrome() {
     this._cachedGradientKey = null;
-    this.applyBrandCardsGlassVariant();
-    const hexes = this.getBrandColorsHexArray();
-    if (hexes.length) this.applyBrandPrimaryBrillo();
-    else this.resetBrandPrimaryBrillo();
+    this.applyBrandBackgroundGradient(true);
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -856,12 +862,16 @@ class BrandstorageView extends BaseView {
       return `
         <button type="button" class="brand-card brand-storage-tile" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
           <div class="brand-storage-tile__mercado">${mercado}</div>
-          <div class="brand-storage-tile__name">${name}</div>
-          <div class="brand-storage-tile__prods" aria-label="Producciones">
-            <span class="brand-storage-tile__prods-num">${prodsStr}</span>
-            <span class="brand-storage-tile__prods-label">Producciones</span>
+          <div class="brand-storage-tile__foot">
+            <div class="brand-storage-tile__row-nameprods">
+              <div class="brand-storage-tile__name">${name}</div>
+              <div class="brand-storage-tile__prods" aria-label="Producciones">
+                <span class="brand-storage-tile__prods-num">${prodsStr}</span>
+                <span class="brand-storage-tile__prods-label">Producciones</span>
+              </div>
+            </div>
+            <div class="brand-storage-tile__updated">${updatedLine}</div>
           </div>
-          <div class="brand-storage-tile__updated">${updatedLine}</div>
         </button>
       `;
     }).join('');

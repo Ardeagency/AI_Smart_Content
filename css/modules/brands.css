@@ -127,11 +127,11 @@
     opacity: 1;
 }
 
-/* Brand Storage — página dedicada (sin capa skeleton/gradiente de Organization) */
+/* Brand Storage — página dedicada; el color base lo pintan skeleton + .background-gradient */
 .brand-dashboard-container.brand-storage-standalone {
     position: relative;
     min-height: 72vh;
-    background: var(--bg-primary, #191919);
+    background: transparent;
 }
 
 /* Entrada suave del contenido al pintar */
@@ -1316,22 +1316,23 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile {
-    display: inline-grid;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
     width: 100%;
     margin: 0 0 1rem;
     break-inside: avoid;
     vertical-align: top;
     aspect-ratio: 1;
     min-height: 0;
+    min-width: 0;
     box-sizing: border-box;
     cursor: pointer;
     text-align: left;
     font: inherit;
     color: inherit;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 1fr auto auto;
-    align-items: end;
-    gap: 0.45rem 0.75rem;
+    gap: 0.5rem;
     padding: clamp(0.9rem, 2.8vw, 1.2rem);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -1342,9 +1343,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .brand-storage-tile__mercado {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    align-self: start;
+    flex: 0 1 auto;
+    min-height: 0;
     font-size: 0.72rem;
     line-height: 1.4;
     font-weight: 500;
@@ -1356,9 +1356,27 @@ h1.brand-name-large[contenteditable="true"]:hover,
     -webkit-line-clamp: 5;
 }
 
+.brand-storage-tile__foot {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.brand-storage-tile__row-nameprods {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+}
+
 .brand-storage-tile__name {
-    grid-column: 1;
-    grid-row: 2;
+    flex: 1 1 auto;
     font-weight: 700;
     font-size: clamp(0.95rem, 2.6vw, 1.2rem);
     letter-spacing: 0.02em;
@@ -1370,8 +1388,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .brand-storage-tile__prods {
-    grid-column: 2;
-    grid-row: 2;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -1396,8 +1413,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .brand-storage-tile__updated {
-    grid-column: 1;
-    grid-row: 3;
     font-size: 0.68rem;
     opacity: 0.62;
     line-height: 1.25;
