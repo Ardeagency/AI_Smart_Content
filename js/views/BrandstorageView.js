@@ -434,6 +434,7 @@ class BrandstorageView extends BaseView {
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
       this.brandRules = [];
+      this._syncRootGradientFromBrandColors();
 
       try {
         const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
@@ -590,6 +591,31 @@ class BrandstorageView extends BaseView {
     return hexes;
   }
 
+  /** Publica en :root el degradado a partir de this.brandColors (para CSS var en la galería). */
+  _syncRootGradientFromBrandColors() {
+    const hexes = this.getBrandColorsHexArray();
+    const root = document.documentElement;
+    if (!hexes.length || !window.BrandColors || typeof this.buildBrandGradientCss !== 'function') return;
+    try {
+      const brandGradient = this.buildBrandGradientCss(hexes);
+      root.style.setProperty('--brand-gradient-dynamic', brandGradient);
+      root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
+    } catch (_) {
+      /* sin BrandColors en edge cases */
+    }
+  }
+
+  /** Hexes para degradado: filas locales o último tema de org (OrgBrandTheme). */
+  _getGradientHexesForBackground() {
+    let hexes = this.getBrandColorsHexArray();
+    if (hexes.length) return hexes;
+    if (window.OrgBrandTheme && typeof window.OrgBrandTheme.getLastBrandHexes === 'function') {
+      const fromTheme = window.OrgBrandTheme.getLastBrandHexes();
+      if (Array.isArray(fromTheme) && fromTheme.length) return fromTheme.slice(0, 4);
+    }
+    return [];
+  }
+
   // Color utils ahora viven en /js/utils/brand-colors.js (fuente única para los 5
   // archivos que antes duplicaban hexToHSL/hslToHex/hexToRgba). Aliases de instancia
   // para no romper llamadas `this.hexToX()` dispersas por la vista.
@@ -611,8 +637,7 @@ class BrandstorageView extends BaseView {
     const appEl = this.container || document.getElementById('app-container');
     const brandsRoot = (appEl && appEl.querySelector('#brandsListContainer')) || document.getElementById('brandsListContainer');
     const gradientEl = brandsRoot && brandsRoot.querySelector('.background-gradient');
-    if (!gradientEl) return;
-    const hexes = this.getBrandColorsHexArray();
+    const hexes = this._getGradientHexesForBackground();
     const root = document.documentElement;
     const rootGradRaw = (getComputedStyle(root).getPropertyValue('--brand-gradient-dynamic') || '').trim();
     const colorsKey = hexes.length
@@ -624,17 +649,23 @@ class BrandstorageView extends BaseView {
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
     if (hexes.length) {
       const brandGradient = this.buildBrandGradientCss(hexes);
-      gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
-      gradientEl.setAttribute('data-brand-gradient', 'true');
+      if (gradientEl) {
+        gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
+        gradientEl.setAttribute('data-brand-gradient', 'true');
+      }
       root.style.setProperty('--brand-gradient-dynamic', brandGradient);
       root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
       this.applyBrandPrimaryBrillo();
     } else if (rootGradRaw && rootGradRaw !== 'none') {
-      gradientEl.style.background = `${rootGradRaw}, ${neutralBg}`;
-      gradientEl.setAttribute('data-brand-gradient', 'true');
+      if (gradientEl) {
+        gradientEl.style.background = `${rootGradRaw}, ${neutralBg}`;
+        gradientEl.setAttribute('data-brand-gradient', 'true');
+      }
     } else {
-      gradientEl.style.background = neutralBg;
-      gradientEl.removeAttribute('data-brand-gradient');
+      if (gradientEl) {
+        gradientEl.style.background = neutralBg;
+        gradientEl.removeAttribute('data-brand-gradient');
+      }
       this.resetBrandPrimaryBrillo();
     }
     this.applyBrandCardsGlassVariant();
@@ -642,7 +673,7 @@ class BrandstorageView extends BaseView {
 
   /** Degradado + glass + clase para mostrar la capa .background-gradient (opacity en CSS). */
   _syncBrandStorageBackgroundChrome() {
-    this.applyBrandBackgroundGradient();
+    this.applyBrandBackgroundGradient(true);
     const appEl = this.container || document.getElementById('app-container');
     const root = (appEl && appEl.querySelector('#brandsListContainer')) || document.getElementById('brandsListContainer');
     if (root) root.classList.add('brands-background-ready');
@@ -654,7 +685,7 @@ class BrandstorageView extends BaseView {
    * - Muy claro/saturado o mixto/neutro: usar glass-black.
    */
   getBrandCardsGlassMode() {
-    const hexes = this.getBrandColorsHexArray();
+    const hexes = this._getGradientHexesForBackground();
     if (!hexes.length) return 'black';
     const hslColors = hexes.map((hex) => this.hexToHSL(hex));
     const count = hslColors.length;
@@ -679,7 +710,7 @@ class BrandstorageView extends BaseView {
 
   /** Pone en :root el color principal de la marca para hover/selected (brillo). */
   applyBrandPrimaryBrillo() {
-    const hexes = this.getBrandColorsHexArray();
+    const hexes = this._getGradientHexesForBackground();
     if (!hexes.length) {
       this.resetBrandPrimaryBrillo();
       return;
@@ -889,14 +920,12 @@ class BrandstorageView extends BaseView {
 
       return `
         <button type="button" class="brand-card brand-storage-tile" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
-          <div class="brand-storage-tile__mercado">${mercado}</div>
-          <div class="brand-storage-tile__foot">
-            <div class="brand-storage-tile__row-nameprods">
-              <div class="brand-storage-tile__name">${name}</div>
-              <div class="brand-storage-tile__prods" aria-label="Producciones">
-                <span class="brand-storage-tile__prods-num">${prodsStr}</span>
-                <span class="brand-storage-tile__prods-label">Producciones</span>
-              </div>
+          <div class="brand-storage-tile__stack">
+            <div class="brand-storage-tile__name">${name}</div>
+            <div class="brand-storage-tile__mercado">${mercado}</div>
+            <div class="brand-storage-tile__prods" aria-label="Producciones">
+              <span class="brand-storage-tile__prods-num">${prodsStr}</span>
+              <span class="brand-storage-tile__prods-label">Producciones</span>
             </div>
             <div class="brand-storage-tile__updated">${updatedLine}</div>
           </div>

@@ -139,6 +139,22 @@
     background: transparent;
 }
 
+/* Galería: degradado en el propio contenedor (hereda --brand-gradient-dynamic de :root / JS).
+   La capa interna a veces queda detrás del stacking del glass; así el color siempre se ve. */
+.brand-dashboard-container.brand-storage-standalone.brand-storage-gallery-view {
+    background: var(--brand-gradient-dynamic, linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* No duplicar opacidad: el fondo ya pinta el contenedor */
+.brand-dashboard-container.brand-storage-gallery-view .brand-dashboard-background .background-skeleton,
+.brand-dashboard-container.brand-storage-gallery-view .brand-dashboard-background .background-gradient {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
 /* Entrada suave del contenido al pintar */
 .brand-dashboard-container .brand-corner-bottom-left,
 .brand-dashboard-container .brand-cards-zone {
@@ -1336,7 +1352,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     text-align: left;
     font: inherit;
     color: inherit;
-    gap: 0.5rem;
+    gap: 0;
     padding: clamp(0.9rem, 2.8vw, 1.2rem);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -1346,65 +1362,58 @@ h1.brand-name-large[contenteditable="true"]:hover,
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
+/* Orden vertical: nombre → mercado → producciones → última actualización (todo alineado a la izquierda) */
+.brand-storage-tile__stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+}
+
+.brand-storage-tile__name {
+    font-weight: 700;
+    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .brand-storage-tile__mercado {
     flex: 0 1 auto;
     min-height: 0;
+    width: 100%;
     font-size: 0.72rem;
     line-height: 1.4;
     font-weight: 500;
     opacity: 0.88;
-    max-height: 42%;
+    max-height: 38%;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 5;
 }
 
-.brand-storage-tile__foot {
-    flex: 0 0 auto;
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    width: 100%;
-    min-width: 0;
-}
-
-.brand-storage-tile__row-nameprods {
+.brand-storage-tile__prods {
     display: flex;
     flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 0.35rem 0.5rem;
+    text-align: left;
     width: 100%;
-    min-width: 0;
-}
-
-.brand-storage-tile__name {
-    flex: 1 1 auto;
-    font-weight: 700;
-    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
-    letter-spacing: 0.02em;
-    line-height: 1.15;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.brand-storage-tile__prods {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-end;
-    gap: 0.12rem;
-    text-align: right;
 }
 
 .brand-storage-tile__prods-num {
     font-weight: 700;
-    font-size: clamp(1.1rem, 3vw, 1.45rem);
+    font-size: clamp(1.05rem, 2.8vw, 1.35rem);
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }
@@ -1422,6 +1431,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     opacity: 0.62;
     line-height: 1.25;
     min-width: 0;
+    width: 100%;
 }
 
 #brandsListContainer.brand-cards-glass-white .brand-storage-tile__mercado,
