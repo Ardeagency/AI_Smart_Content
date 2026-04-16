@@ -921,13 +921,17 @@ class BrandstorageView extends BaseView {
       return `
         <button type="button" class="brand-card brand-storage-tile" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
           <div class="brand-storage-tile__stack">
-            <div class="brand-storage-tile__name">${name}</div>
-            <div class="brand-storage-tile__mercado">${mercado}</div>
-            <div class="brand-storage-tile__prods" aria-label="Producciones">
-              <span class="brand-storage-tile__prods-num">${prodsStr}</span>
-              <span class="brand-storage-tile__prods-label">Producciones</span>
+            <div class="brand-storage-tile__head">
+              <div class="brand-storage-tile__name">${name}</div>
+              <div class="brand-storage-tile__mercado">${mercado}</div>
             </div>
-            <div class="brand-storage-tile__updated">${updatedLine}</div>
+            <div class="brand-storage-tile__bottom">
+              <div class="brand-storage-tile__prods" aria-label="Producciones">
+                <span class="brand-storage-tile__prods-num">${prodsStr}</span>
+                <span class="brand-storage-tile__prods-label">Producciones</span>
+              </div>
+              <div class="brand-storage-tile__updated">${updatedLine}</div>
+            </div>
           </div>
         </button>
       `;
