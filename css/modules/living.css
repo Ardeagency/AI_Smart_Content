@@ -521,11 +521,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: var(--media-container-shadow);
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     background: var(--media-container-bg);
-    aspect-ratio: 0.75 / 1;
-}
-
-.history-image-card.history-image-card--wide {
-    aspect-ratio: 1.33333 / 1;
+    /* Altura según la imagen (cuadrado / vertical / horizontal); sin recorte forzado */
 }
 
 .history-image-card:hover {
@@ -534,9 +530,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .history-image-card img {
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: none;
     display: block;
-    object-fit: cover;
 }
 
 /* Acciones: Descargar + Copiar prompt (esquina superior derecha) */

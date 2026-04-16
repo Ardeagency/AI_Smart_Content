@@ -1,7 +1,7 @@
 /**
  * IdentitiesView — Secciones de servicios y productos.
  * - Servicios: carrusel horizontal
- * - Productos: galeria masonry (estilo Production)
+ * - Productos: masonry como Production (imagen a proporción natural, nombre solo en hover)
  */
 class IdentitiesView extends BaseView {
   constructor() {
@@ -331,32 +331,33 @@ class IdentitiesView extends BaseView {
     `;
 
     container.querySelectorAll('.identity-product-card').forEach((card) => {
-      card.addEventListener('click', () => {
+      const open = () => {
         const productId = card.getAttribute('data-product-id');
         const entityId = card.getAttribute('data-entity-id');
         if (!productId || !entityId) return;
         this._navigateToProductDetail(entityId, productId);
+      };
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
       });
     });
   }
 
-  _renderProductCard(p, i) {
+  _renderProductCard(p, _i) {
     const imageUrl = this.productImageById[p.id] || '';
-    const price = p.precio_producto != null ? `${p.precio_producto} ${p.moneda || 'USD'}` : '';
+    const name = p.nombre_producto || 'Producto';
     return `
       <div class="living-masonry-item">
-        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0">
+        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0"${imageUrl ? '' : ` aria-label="${this.escapeHtml(name)}"`}>
           ${imageUrl
-            ? `<img class="identity-product-card-image" src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(p.nombre_producto || 'Producto')}" loading="lazy">`
-            : `<div class="identity-product-card-image identity-product-card-image--empty"><i class="fas fa-image"></i></div>`
+            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(name)}" loading="lazy">`
+            : `<div class="identity-product-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
           }
-          <div class="history-card-flow-name identity-product-flow-name">
-            <div class="identity-product-card-title">${this.escapeHtml(p.nombre_producto || 'Producto')}</div>
-            <div class="identity-product-card-meta">
-              ${price ? `<span class="identity-product-card-price">${this.escapeHtml(price)}</span>` : ''}
-              ${p.tipo_producto ? `<span class="identity-product-card-type">${this.escapeHtml(p.tipo_producto)}</span>` : ''}
-            </div>
-          </div>
+          <div class="history-card-flow-name">${this.escapeHtml(name)}</div>
         </article>
       </div>
     `;

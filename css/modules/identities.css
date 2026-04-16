@@ -213,65 +213,28 @@
   gap: 0.75rem;
 }
 
+/* Misma interacción que Production (living): hover = sombra; nombre en banda inferior solo al hover */
 .identity-product-card {
   cursor: pointer;
 }
 
-.identity-product-card:hover {
-  transform: translateY(-1px);
+/* Sin precio/tipo en la tarjeta: el detalle del producto los muestra */
+.identities-page .history-card-flow-name {
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.identity-product-card-image {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  background: var(--bg-secondary);
-}
-
-.identity-product-card-image--empty {
-  min-height: 180px;
+.identity-product-card-placeholder {
+  min-height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 2rem;
+  text-align: center;
   color: var(--text-muted);
-  font-size: 1.2rem;
-}
-
-.identity-product-card-title {
-  margin: 0 0 0.4rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #fff;
-  line-height: 1.25;
-  text-transform: uppercase;
-}
-
-.identity-product-card-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.identity-product-card-price {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #fff;
-  text-transform: uppercase;
-}
-
-.identity-product-card-type {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.86);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.identity-product-flow-name {
-  opacity: 1;
-  padding: 14px 14px 12px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  font-size: 1.75rem;
+  background: var(--bg-secondary);
 }
 
 /* -------------------- Empty -------------------- */
