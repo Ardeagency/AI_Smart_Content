@@ -112,6 +112,10 @@ class BrandstorageView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
+    const orgId = typeof window !== 'undefined' ? window.currentOrgId : null;
+    if (orgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
+      await window.OrgBrandTheme.applyOrgBrandTheme(orgId);
+    }
   }
 
   onLeave() {
@@ -202,8 +206,6 @@ class BrandstorageView extends BaseView {
           await this.ensureDataLoaded();
           if (!this.isActive) return;
           this.renderAll();
-          this.applyBrandBackgroundGradient();
-          if (root) root.classList.add('brands-background-ready');
         })();
         return true;
       }
@@ -486,11 +488,21 @@ class BrandstorageView extends BaseView {
     await this.loadData();
   }
 
+  /** UUID de organización del workspace (colores/fuentes viven por org, no solo con contenedor activo). */
+  _getWorkspaceOrganizationId() {
+    return (
+      this.organizationRow?.id ||
+      this.brandContainerData?.organization_id ||
+      (typeof window !== 'undefined' ? window.currentOrgId : null) ||
+      null
+    );
+  }
+
   /**
    * Filas de brand_colors por organization_id.
    */
   async _queryBrandColorsRows() {
-    const orgId = this.brandContainerData?.organization_id;
+    const orgId = this._getWorkspaceOrganizationId();
     if (!this.supabase || !orgId) return [];
     const { data, error } = await this.supabase
       .from('brand_colors')
@@ -505,7 +517,7 @@ class BrandstorageView extends BaseView {
 
   /** Filas de brand_fonts por organization_id. */
   async _queryBrandFontsRows() {
-    const orgId = this.brandContainerData?.organization_id;
+    const orgId = this._getWorkspaceOrganizationId();
     if (!this.supabase || !orgId) return [];
     const { data, error } = await this.supabase
       .from('brand_fonts')
@@ -596,16 +608,20 @@ class BrandstorageView extends BaseView {
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
   applyBrandBackgroundGradient(forceUpdate = false) {
-    const container = this.container || document.getElementById('app-container');
-    const gradientEl = (container && container.querySelector('.background-gradient')) || document.querySelector('.background-gradient');
+    const appEl = this.container || document.getElementById('app-container');
+    const brandsRoot = (appEl && appEl.querySelector('#brandsListContainer')) || document.getElementById('brandsListContainer');
+    const gradientEl = brandsRoot && brandsRoot.querySelector('.background-gradient');
     if (!gradientEl) return;
     const hexes = this.getBrandColorsHexArray();
-    const colorsKey = hexes.join(',');
+    const root = document.documentElement;
+    const rootGradRaw = (getComputedStyle(root).getPropertyValue('--brand-gradient-dynamic') || '').trim();
+    const colorsKey = hexes.length
+      ? hexes.join(',')
+      : (rootGradRaw ? `root:${rootGradRaw.slice(0, 120)}` : '');
     if (!forceUpdate && this._cachedGradientKey === colorsKey) return;
     this._cachedGradientKey = colorsKey;
 
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
-    const root = document.documentElement;
     if (hexes.length) {
       const brandGradient = this.buildBrandGradientCss(hexes);
       gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
@@ -613,14 +629,23 @@ class BrandstorageView extends BaseView {
       root.style.setProperty('--brand-gradient-dynamic', brandGradient);
       root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
       this.applyBrandPrimaryBrillo();
+    } else if (rootGradRaw && rootGradRaw !== 'none') {
+      gradientEl.style.background = `${rootGradRaw}, ${neutralBg}`;
+      gradientEl.setAttribute('data-brand-gradient', 'true');
     } else {
       gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
-      // NO borrar --brand-gradient-dynamic* aquí: esas vars las gestiona OrgBrandTheme
-      // para toda la plataforma. Solo reseteamos el elemento visual y los vars de brillo.
       this.resetBrandPrimaryBrillo();
     }
     this.applyBrandCardsGlassVariant();
+  }
+
+  /** Degradado + glass + clase para mostrar la capa .background-gradient (opacity en CSS). */
+  _syncBrandStorageBackgroundChrome() {
+    this.applyBrandBackgroundGradient();
+    const appEl = this.container || document.getElementById('app-container');
+    const root = (appEl && appEl.querySelector('#brandsListContainer')) || document.getElementById('brandsListContainer');
+    if (root) root.classList.add('brands-background-ready');
   }
 
   /**
@@ -693,11 +718,7 @@ class BrandstorageView extends BaseView {
 
   renderAll() {
     if (!this.isActive) return;
-    // Sin degradado dinámico de marca en esta página: solo variante glass + acentos de UI.
-    this.applyBrandCardsGlassVariant();
-    const hexes = this.getBrandColorsHexArray();
-    if (hexes.length) this.applyBrandPrimaryBrillo();
-    else this.resetBrandPrimaryBrillo();
+    this._syncBrandStorageBackgroundChrome();
     this.renderCards();
   }
 
