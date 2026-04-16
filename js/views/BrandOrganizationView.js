@@ -317,9 +317,10 @@ class BrandOrganizationView extends BaseView {
         return;
       }
 
+      // Solo columnas leídas por la vista (ver _mergeOrgIntoShim y referencias a organizationRow).
       const { data: org, error: orgErr } = await this.supabase
         .from('organizations')
-        .select('*')
+        .select('id, name, brand_name_oficial, brand_slogan, logo_url, level_of_autonomy')
         .eq('id', orgId)
         .maybeSingle();
 
@@ -349,9 +350,10 @@ class BrandOrganizationView extends BaseView {
       this.organizationRow = org;
       this._mergeOrgIntoShim();
 
+      // `this.products` no se consume aquí; query mínima por compatibilidad con el shape esperado.
       const { data: products, error: productsError } = await this.supabase
         .from('products')
-        .select('*')
+        .select('id')
         .eq('organization_id', orgId)
         .limit(5);
       if (productsError) {
@@ -361,9 +363,11 @@ class BrandOrganizationView extends BaseView {
         this.products = products || [];
       }
 
+      // Campos efectivamente leídos: id, asset_type, storage_path, bucket, file_name,
+      // file_type, file_url, created_at. Añadimos file_size por paridad con otras vistas.
       const { data: assets, error: assetsError } = await this.supabase
         .from('brand_assets')
-        .select('*')
+        .select('id, asset_type, storage_path, bucket, file_name, file_type, file_url, file_size, created_at')
         .eq('organization_id', orgId)
         .order('created_at', { ascending: false })
         .limit(12);
@@ -523,7 +527,7 @@ class BrandOrganizationView extends BaseView {
     if (!this.supabase || !orgId) return;
     const { data } = await this.supabase
       .from('brand_assets')
-      .select('*')
+      .select('id, asset_type, storage_path, bucket, file_name, file_type, file_url, file_size, created_at')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
       .limit(12);

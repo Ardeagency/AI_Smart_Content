@@ -1728,6 +1728,10 @@ class VideoView extends BaseView {
       clearInterval(this._pollInterval);
       this._pollInterval = null;
     }
+    if (this._pollVisibilityHandler) {
+      document.removeEventListener('visibilitychange', this._pollVisibilityHandler);
+      this._pollVisibilityHandler = null;
+    }
   }
 
   async pollTask(taskId) {
@@ -1745,6 +1749,10 @@ class VideoView extends BaseView {
         }
         return;
       }
+      // Pausamos el fetch a KIE cuando la pestaña está oculta. El timeout se sigue
+      // midiendo contra wall-clock (pollStartedAt), así que no se alarga la espera total.
+      // Ahorra ~20 llamadas/min a KIE por cada tab en background generando video.
+      if (document.hidden) return;
       try {
         const res = await fetch(statusUrl);
         let data = {};
@@ -1873,6 +1881,9 @@ class VideoView extends BaseView {
 
     await poll();
     this._pollInterval = setInterval(poll, VideoView.POLL_INTERVAL_MS);
+    // Al volver a la pestaña, un poll inmediato evita esperar 3s al próximo tick.
+    this._pollVisibilityHandler = () => { if (!document.hidden) poll(); };
+    document.addEventListener('visibilitychange', this._pollVisibilityHandler);
   }
 
   onLeave() {

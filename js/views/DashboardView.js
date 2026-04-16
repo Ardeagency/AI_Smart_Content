@@ -335,7 +335,12 @@ class DashboardView extends BaseView {
 
   _setupLabelInterval() {
     this._clearLabelInterval();
-    this._labelTimer = setInterval(() => this._updateLastSyncLabel(), 30 * 1000);
+    // Skippeamos el update cuando la pestaña está oculta: el label se refresca al volver
+    // vía visibilitychange en _setupVisibilityListener. Evita wakeups innecesarios cada 30s.
+    this._labelTimer = setInterval(() => {
+      if (document.hidden) return;
+      this._updateLastSyncLabel();
+    }, 30 * 1000);
   }
 
   _clearLabelInterval() {

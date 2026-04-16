@@ -463,7 +463,7 @@ class BrandstorageView extends BaseView {
     if (!this.supabase || !orgId) return;
     const { data } = await this.supabase
       .from('brand_assets')
-      .select('*')
+      .select('id, asset_type, storage_path, bucket, file_name, file_type, file_url, file_size, created_at')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: false })
       .limit(12);
