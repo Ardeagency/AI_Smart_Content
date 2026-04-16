@@ -35,6 +35,8 @@ class BrandstorageView extends BaseView {
     this.brandContainers = [];
     /** Org UUID con la que se cargó la vista (navegación suave mismo ViewClass) */
     this._mountedOrgId = null;
+    /** Conteos de filas `system_ai_outputs` por `brand_container_id` (producciones) */
+    this._productionCountsByContainerId = {};
   }
 
   _mergeOrgIntoShim() {
@@ -82,7 +84,7 @@ class BrandstorageView extends BaseView {
                 <span class="card-title-counter" id="brandStorageCount">0</span>
             </div>
             <div class="card-content">
-                <div class="brand-storage-grid" id="brandStorageGrid"></div>
+                <div class="brand-storage-grid brand-storage-grid--masonry" id="brandStorageGrid"></div>
             </div>
         </div>
 
@@ -254,10 +256,12 @@ class BrandstorageView extends BaseView {
     if (!this.supabase || !this.userId) {
       this._dataLoaded = true;
       this._mountedOrgId = null;
+      this._productionCountsByContainerId = {};
       return;
     }
 
     try {
+      this._productionCountsByContainerId = {};
       const orgId = typeof window !== 'undefined' ? window.currentOrgId : null;
       if (!orgId) {
         this.organizationRow = null;
@@ -397,6 +401,25 @@ class BrandstorageView extends BaseView {
       this.brandIntegrations = integrationsResult.status === 'fulfilled' && !integrationsResult.value.error
         ? (integrationsResult.value.data || [])
         : [];
+
+      if (this.supabase && containerIds.length) {
+        try {
+          const { data: outRows, error: outErr } = await this.supabase
+            .from('system_ai_outputs')
+            .select('brand_container_id')
+            .in('brand_container_id', containerIds);
+          if (!outErr && Array.isArray(outRows)) {
+            outRows.forEach((row) => {
+              const k = String(row.brand_container_id || '');
+              if (!k) return;
+              this._productionCountsByContainerId[k] = (this._productionCountsByContainerId[k] || 0) + 1;
+            });
+          }
+        } catch (e) {
+          console.warn('BrandstorageView: conteo producciones (system_ai_outputs)', e);
+        }
+      }
+
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
       this.brandRules = [];
@@ -769,6 +792,28 @@ class BrandstorageView extends BaseView {
     return `/brand/${id}`;
   }
 
+  /** Texto compacto de mercado objetivo para la tarjeta de galería. */
+  formatMercadoObjetivoTile(item) {
+    const raw = item?.mercado_objetivo;
+    const arr = Array.isArray(raw) ? raw.filter((v) => v != null && String(v).trim() !== '') : [];
+    const opts = BrandstorageView.BRAND_MERCADO_OPTIONS || [];
+    if (!arr.length) return 'Sin mercado definido';
+    return arr
+      .map((v) => {
+        const s = String(v).trim();
+        const opt = opts.find((o) => String(o.value) === s);
+        return opt ? String(opt.label || '').trim() : s;
+      })
+      .filter(Boolean)
+      .join(' · ');
+  }
+
+  getProductionCountForContainer(containerId) {
+    const k = String(containerId || '');
+    if (!k) return 0;
+    return Number(this._productionCountsByContainerId[k] || 0);
+  }
+
   renderBrandStorageLibrary() {
     const grid = (this.container && this.container.querySelector('#brandStorageGrid')) ||
       document.getElementById('brandStorageGrid');
@@ -786,38 +831,28 @@ class BrandstorageView extends BaseView {
 
     grid.innerHTML = rows.map((item) => {
       const name = this.escapeHtml(item.nombre_marca || 'Sin nombre');
-      const slogan = this.escapeHtml(String(item.brand_slogan || item.propuesta_valor || '').trim());
-      const visualDna = item && typeof item.visual_dna === 'object' && item.visual_dna
-        ? item.visual_dna
-        : {};
-      const logoUrl = String(item.logo_url || visualDna.logo_url || visualDna.logo || '').trim();
-      const updated = item.updated_at
+      const mercado = this.escapeHtml(this.formatMercadoObjetivoTile(item));
+      const updatedRaw = item.updated_at
         ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
-      const href = this.escapeHtml(this.getBrandContainerHref(item.id));
-
-      const created = item.created_at
+      const createdFallback = item.created_at
         ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
+      const updatedLine = updatedRaw
+        ? `Última actualización: ${this.escapeHtml(updatedRaw)}`
+        : (createdFallback ? `Creada: ${this.escapeHtml(createdFallback)}` : 'Sin fecha');
+      const prods = this.getProductionCountForContainer(item.id);
+      const prodsStr = this.escapeHtml(String(prods));
 
       return `
-        <button type="button" class="brand-storage-item" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
-          <div class="brand-storage-item-cover" aria-hidden="true"></div>
-          <div class="brand-storage-item-head">
-            <div class="brand-storage-item-logo">
-              ${logoUrl
-                ? `<img src="${this.escapeHtml(logoUrl)}" alt="" loading="lazy">`
-                : '<i class="fas fa-layer-group" aria-hidden="true"></i>'}
-            </div>
-            <div class="brand-storage-item-meta">
-              <div class="brand-storage-item-name">${name}</div>
-              ${slogan ? `<div class="brand-storage-item-slogan">${slogan}</div>` : ''}
-            </div>
+        <button type="button" class="brand-card brand-storage-tile" data-brand-container-id="${this.escapeHtml(item.id)}" aria-label="Ver información de ${name}">
+          <div class="brand-storage-tile__mercado">${mercado}</div>
+          <div class="brand-storage-tile__name">${name}</div>
+          <div class="brand-storage-tile__prods" aria-label="Producciones">
+            <span class="brand-storage-tile__prods-num">${prodsStr}</span>
+            <span class="brand-storage-tile__prods-label">Producciones</span>
           </div>
-          <div class="brand-storage-item-foot">
-            <span>${updated ? `Actualizado: ${updated}` : (created ? `Creada: ${created}` : 'Sin fecha')}</span>
-            <i class="fas fa-chevron-right" aria-hidden="true"></i>
-          </div>
+          <div class="brand-storage-tile__updated">${updatedLine}</div>
         </button>
       `;
     }).join('');
@@ -1610,7 +1645,7 @@ class BrandstorageView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
     
-    container.querySelectorAll('.brand-storage-item').forEach((itemEl) => {
+    container.querySelectorAll('.brand-storage-tile').forEach((itemEl) => {
       if (itemEl.dataset.infoClickBound === '1') return;
       itemEl.dataset.infoClickBound = '1';
       itemEl.addEventListener('click', (ev) => {
