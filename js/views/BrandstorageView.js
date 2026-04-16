@@ -1778,7 +1778,7 @@ class BrandstorageView extends BaseView {
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
-
+    
     container.querySelectorAll('.brand-storage-item').forEach((itemEl) => {
       if (itemEl.dataset.infoClickBound === '1') return;
       itemEl.dataset.infoClickBound = '1';

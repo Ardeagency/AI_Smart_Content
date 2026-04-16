@@ -904,6 +904,84 @@ class DashboardView extends BaseView {
           </div>
         </div>
 
+        <!-- ── NARRATIVE INTELLIGENCE ── -->
+        <div class="mb-intel-block" id="section-narrative-intel">
+          <div class="mb-intel-header">
+            <span class="mb-intel-module">NARRATIVE INTELLIGENCE</span>
+            <span class="mb-intel-meta">${narrative.pillars_active?.length || 0} pilares activos · ${narrative.pillars_orphan?.length || 0} temas huérfanos</span>
+          </div>
+          <div class="mb-intel-body">
+            <div class="mb-widget mb-widget--wide">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon imb-col--indigo"><i class="fas fa-compass"></i></span>
+                <div>
+                  <div class="mb-widget-title">Pilares Narrativos</div>
+                  <div class="mb-widget-desc">${narrative.pillars_active?.length ? 'Distribución de contenido por pilar estratégico' : 'Se construirá al analizar más contenido'}</div>
+                </div>
+              </div>
+              ${narrative.pillars_active?.length ? `<div class="sd-chart-wrap" id="mbPillarsRadarChart"></div>` : '<div class="mb-empty-sm"><i class="fas fa-compass"></i><p>Publica más contenido para ver tus pilares narrativos</p></div>'}
+            </div>
+            <div class="mb-widget">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon imb-col--purple"><i class="fas fa-shield-alt"></i></span>
+                <div>
+                  <div class="mb-widget-title">Brand Soul Guard</div>
+                  <div class="mb-widget-desc">Coherencia de tono de marca</div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:0.75rem 0">
+                <div style="font-size:2.25rem;font-weight:800;color:${(diagnostic.coherence_avg || 0) >= 70 ? '#4ade80' : (diagnostic.coherence_avg || 0) >= 40 ? '#fbbf24' : '#f87171'};line-height:1">${diagnostic.coherence_avg != null ? diagnostic.coherence_avg : '—'}</div>
+                <div style="font-size:0.72rem;color:rgba(212,209,216,0.45);margin-top:0.35rem">Coherencia de tono / 100</div>
+              </div>
+              ${narrative.pillars_orphan?.length ? `
+                <hr class="mb-widget-divider">
+                <div class="mb-widget-sublabel mb-widget-sublabel--warn">Temas Huérfanos</div>
+                <div class="mb-pillars-list">${narrative.pillars_orphan.map(p => `<span class="mb-pillar-tag mb-pillar-tag--orphan"><i class="fas fa-exclamation-circle"></i> ${this._esc(typeof p === 'string' ? p : p.pillar_name || p.name || '?')}</span>`).join('')}</div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── COMMERCIAL INTELLIGENCE ── -->
+        ${insight?.dimensions?.F_retail || false ? `
+        <div class="mb-intel-block" id="section-commercial">
+          <div class="mb-intel-header">
+            <span class="mb-intel-module">COMMERCIAL INTELLIGENCE</span>
+            <span class="mb-intel-meta">Precios y disponibilidad en retailers</span>
+          </div>
+          <div class="mb-intel-body mb-intel-body--stack">
+            <div class="mb-widget mb-widget--full">
+              <div class="mb-widget-header">
+                <span class="mb-widget-icon imb-col--orange"><i class="fas fa-store"></i></span>
+                <div>
+                  <div class="mb-widget-title">MAP Monitor</div>
+                  <div class="mb-widget-desc">Rastreo de precios propios en retailers</div>
+                </div>
+              </div>
+              <div class="sd-chart-wrap" id="mbRetailPriceChart"></div>
+            </div>
+          </div>
+        </div>` : ''}
+
+        <!-- ── DIAGNOSTIC SWOT ── -->
+        ${diagnostic.vulnerabilities?.length || diagnostic.strengths?.length ? `
+        <div class="mb-intel-block" id="section-swot">
+          <div class="mb-intel-header">
+            <span class="mb-intel-module">SWOT DINÁMICO</span>
+            <span class="mb-intel-meta">${diagnostic.vulnerabilities?.length || 0} vulnerabilidades · ${diagnostic.strengths?.length || 0} fortalezas</span>
+          </div>
+          <div class="mb-intel-row">
+            ${diagnostic.strengths?.length ? `<div class="mb-widget">
+              <div class="mb-widget-header"><span class="mb-widget-icon imb-col--green"><i class="fas fa-check-circle"></i></span><div><div class="mb-widget-title">Fortalezas</div></div></div>
+              ${diagnostic.strengths.slice(0, 5).map(s => `<div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem"><i class="fas fa-check" style="color:#4ade80;margin-top:2px;flex-shrink:0"></i><span style="color:var(--text-primary)">${this._esc(typeof s === 'string' ? s : s.title || '—')}</span></div>`).join('')}
+            </div>` : ''}
+            ${diagnostic.vulnerabilities?.length ? `<div class="mb-widget">
+              <div class="mb-widget-header"><span class="mb-widget-icon imb-col--red"><i class="fas fa-exclamation-triangle"></i></span><div><div class="mb-widget-title">Vulnerabilidades</div></div></div>
+              ${diagnostic.vulnerabilities.slice(0, 5).map(v => `<div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem"><i class="fas fa-exclamation-circle" style="color:#f87171;margin-top:2px;flex-shrink:0"></i><span style="color:var(--text-primary)">${this._esc(typeof v === 'string' ? v : v.title || '—')}</span></div>`).join('')}
+            </div>` : ''}
+          </div>
+        </div>` : ''}
+
         <!-- ── STRATEGIC ACTIONS ── -->
         <div class="mb-intel-block mb-intel-block--last" id="section-strategy">
           <div class="mb-intel-header">
@@ -1584,6 +1662,34 @@ class DashboardView extends BaseView {
     if (apiTS?.dates?.length > 1)          this._renderGrowthChart(apiTS);
     if (audience?.gender_groups)           this._renderAudienceGenderChart(audience.gender_groups);
     if (audience?.top_countries?.length)   this._renderAudienceCountriesChart(audience.top_countries);
+
+    // Narrative pillars radar
+    if (narrative?.pillars_active?.length) this._renderPillarsRadar(narrative.pillars_active);
+  }
+
+  _renderPillarsRadar(pillars) {
+    const el = document.getElementById('mbPillarsRadarChart');
+    if (!el || !pillars?.length) return;
+    const canvas = document.createElement('canvas');
+    el.appendChild(canvas);
+    const labels = pillars.map(p => (typeof p === 'string' ? p : p.pillar_name || p.name || '?').slice(0, 15));
+    const data = pillars.map(p => typeof p === 'object' ? (p.post_count || p.count || 1) : 1);
+    const engData = pillars.map(p => typeof p === 'object' ? (p.avg_engagement || p.engagement || 0) : 0);
+    this._chartInstances.pillarsRadar = new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Posts', data, backgroundColor: 'rgba(99,102,241,0.2)', borderColor: '#6366f1', borderWidth: 2, pointBackgroundColor: '#6366f1', pointRadius: 4 },
+          ...(engData.some(v => v > 0) ? [{ label: 'Engagement', data: engData, backgroundColor: 'rgba(107,207,127,0.15)', borderColor: '#6bcf7f', borderWidth: 2, pointBackgroundColor: '#6bcf7f', pointRadius: 3 }] : [])
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: { r: { angleLines: { color: 'rgba(255,255,255,0.06)' }, grid: { color: 'rgba(255,255,255,0.06)' }, pointLabels: { color: 'rgba(212,209,216,0.65)', font: { size: 10 } }, ticks: { display: false } } },
+        plugins: { legend: { labels: { color: 'rgba(212,209,216,0.6)', font: { size: 10 } } } }
+      }
+    });
   }
 
   _renderEmotionChart(emotions) {
@@ -1976,7 +2082,7 @@ class DashboardView extends BaseView {
   // ── Competence tab ─────────────────────────────────────────────────────────
 
   _competenceLoadingSkeleton() {
-    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando datos de competencia…</div>`;
+    return `<div class="sd-loading"><i class="fas fa-spinner fa-spin"></i> Cargando inteligencia competitiva…</div>`;
   }
 
   async _renderCompetence() {
@@ -2001,130 +2107,439 @@ class DashboardView extends BaseView {
       window.currentOrgId;
 
     try {
-      const [entitiesRes, competitorAdsRes, vulnerabilitiesRes] = await Promise.allSettled([
+      const [entitiesRes, competitorAdsRes, vulnerabilitiesRes, pricesRes, compPostsRes, signalsRes] = await Promise.allSettled([
         orgId ? this._supabase
           .from('intelligence_entities')
           .select('id, name, domain, target_identifier, is_active, metadata, created_at')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false })
-          .limit(20) : Promise.resolve({ data: [], error: null }),
+          .limit(30) : Promise.resolve({ data: [], error: null }),
         orgId ? this._supabase
           .from('competitor_ads')
-          .select('id, platform, copy_text, creative_url, last_seen_at, first_seen_at, captured_at, entity_id, intelligence_entities(name)')
+          .select('id, platform, copy_text, creative_url, last_seen_at, first_seen_at, captured_at, estimated_spend_range, entity_id, intelligence_entities(name)')
           .eq('organization_id', orgId)
+          .order('captured_at', { ascending: false })
+          .limit(50) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('brand_vulnerabilities')
+          .select('id, title, description, severity, status, created_at, metadata')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(20) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('retail_prices')
+          .select('id, product_name, price, currency, retailer, stock_status, promo_label, captured_at, scope, entity_id')
+          .eq('organization_id', orgId)
+          .order('captured_at', { ascending: false })
+          .limit(50) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('brand_posts')
+          .select('id, content, metrics, sentiment, network, captured_at, entity_id, is_competitor, post_source')
+          .eq('is_competitor', true)
           .order('captured_at', { ascending: false })
           .limit(30) : Promise.resolve({ data: [], error: null }),
         orgId ? this._supabase
-          .from('brand_vulnerabilities')
-          .select('id, title, description, severity, status, created_at')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: false })
-          .limit(10) : Promise.resolve({ data: [], error: null }),
+          .from('intelligence_signals')
+          .select('id, signal_type, content_text, content_numeric, ai_analysis, captured_at, entity_id')
+          .order('captured_at', { ascending: false })
+          .limit(30) : Promise.resolve({ data: [], error: null }),
       ]);
 
-      const competitors = (entitiesRes.status === 'fulfilled' && !entitiesRes.value.error) ? (entitiesRes.value.data || []) : [];
-      const ads = (competitorAdsRes.status === 'fulfilled' && !competitorAdsRes.value.error) ? (competitorAdsRes.value.data || []) : [];
+      const competitors     = (entitiesRes.status === 'fulfilled' && !entitiesRes.value.error) ? (entitiesRes.value.data || []) : [];
+      const ads             = (competitorAdsRes.status === 'fulfilled' && !competitorAdsRes.value.error) ? (competitorAdsRes.value.data || []) : [];
       const vulnerabilities = (vulnerabilitiesRes.status === 'fulfilled' && !vulnerabilitiesRes.value.error) ? (vulnerabilitiesRes.value.data || []) : [];
+      const prices          = (pricesRes.status === 'fulfilled' && !pricesRes.value.error) ? (pricesRes.value.data || []) : [];
+      const compPosts       = (compPostsRes.status === 'fulfilled' && !compPostsRes.value.error) ? (compPostsRes.value.data || []) : [];
+      const signals         = (signalsRes.status === 'fulfilled' && !signalsRes.value.error) ? (signalsRes.value.data || []) : [];
 
-      body.innerHTML = this._renderCompetenceHtml(competitors, ads, vulnerabilities);
-      this._bindCompetenceEvents(competitors);
+      body.innerHTML = this._renderCompetenceHtml(competitors, ads, vulnerabilities, prices, compPosts, signals);
+      await this._ensureChartJs();
+      this._renderCompetenceCharts(ads, prices, compPosts);
     } catch (e) {
       console.error('[DashboardView] renderCompetence:', e);
       body.innerHTML = this._pageComingSoon('Competence', 'fa-chess', 'Error cargando datos de competencia.');
     }
   }
 
-  _renderCompetenceHtml(competitors, ads, vulnerabilities) {
+  _renderCompetenceHtml(competitors, ads, vulnerabilities, prices, compPosts, signals) {
+    const totalComps = competitors.length;
+    const totalAds = ads.length;
+    const criticalVulns = vulnerabilities.filter(v => v.severity === 'critical' || v.severity === 'high').length;
+    const ownPrices = prices.filter(p => p.scope === 'brand');
+    const compPrices = prices.filter(p => p.scope !== 'brand');
+    const outOfStock = compPrices.filter(p => p.stock_status === 'out_of_stock' || p.stock_status === 'unavailable');
+
+    // Share of Voice
+    const sovHtml = `
+      <div class="sd-sov-header">
+        <div class="sd-sov-icon"><i class="fas fa-chess-queen"></i></div>
+        <div class="sd-sov-body">
+          <div class="sd-sov-title">Infiltración Táctica</div>
+          <div class="sd-sov-value">${totalComps} Competidor${totalComps !== 1 ? 'es' : ''} Monitoreados</div>
+          <div class="sd-sov-sub">Inteligencia competitiva en tiempo real</div>
+        </div>
+        <div class="sd-sov-kpis">
+          <div class="sd-sov-kpi">
+            <div class="sd-sov-kpi-value">${totalAds}</div>
+            <div class="sd-sov-kpi-label">Ads activos</div>
+          </div>
+          <div class="sd-sov-kpi">
+            <div class="sd-sov-kpi-value" style="color:${criticalVulns > 0 ? '#f87171' : '#4ade80'}">${criticalVulns}</div>
+            <div class="sd-sov-kpi-label">Vulns críticas</div>
+          </div>
+          <div class="sd-sov-kpi">
+            <div class="sd-sov-kpi-value" style="color:${outOfStock.length > 0 ? '#fbbf24' : '#4ade80'}">${outOfStock.length}</div>
+            <div class="sd-sov-kpi-label">Sin stock rival</div>
+          </div>
+        </div>
+      </div>`;
+
+    // A. The Price War
+    const priceRows = prices.length
+      ? prices.slice(0, 15).map(p => {
+          const isOwn = p.scope === 'brand';
+          const stockClass = (p.stock_status === 'in_stock' || p.stock_status === 'available') ? 'sd-status--active' : (p.stock_status === 'out_of_stock' || p.stock_status === 'unavailable') ? 'sd-severity--critical' : 'sd-status--pending';
+          return `<tr>
+            <td>${this._esc(p.product_name || '—')}</td>
+            <td>${this._esc(p.retailer || '—')}</td>
+            <td><strong>${p.price != null ? `${Number(p.price).toLocaleString()} ${p.currency || 'USD'}` : '—'}</strong></td>
+            <td><span class="${stockClass}">${this._esc(p.stock_status || '—')}</span></td>
+            <td>${p.promo_label ? `<span class="sd-widget-badge sd-widget-badge--orange">${this._esc(p.promo_label)}</span>` : '—'}</td>
+            <td><span class="sd-widget-badge ${isOwn ? 'sd-widget-badge--blue' : 'sd-widget-badge--purple'}">${isOwn ? 'Propia' : 'Rival'}</span></td>
+            <td>${p.captured_at ? new Date(p.captured_at).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="7" class="sd-table-empty">Sin datos de precios. Configura sensores de retail para rastrear precios.</td></tr>`;
+
+    const priceWarHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--orange"><i class="fas fa-dollar-sign"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">The Price War</div>
+            <div class="sd-dim-subtitle">Inteligencia de precios cross-platform · SKU vs SKU</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          ${prices.length ? `<div class="sd-widget sd-widget--full"><div class="sd-widget-header"><span class="sd-widget-title">Comparativa de Precios por Retailer</span></div><div class="sd-chart-wrap" id="compPriceChart"></div></div>` : ''}
+          <div class="sd-widget sd-widget--full">
+            <div class="sd-widget-header">
+              <span class="sd-widget-title">Monitor de Precios</span>
+              <span class="sd-widget-badge sd-widget-badge--blue">${prices.length} registros</span>
+            </div>
+            <div class="sd-table-wrap">
+              <table class="sd-table">
+                <thead><tr><th>Producto</th><th>Retailer</th><th>Precio</th><th>Stock</th><th>Promo</th><th>Origen</th><th>Capturado</th></tr></thead>
+                <tbody>${priceRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // B. The Content Battle
+    const compPostCards = compPosts.length
+      ? compPosts.slice(0, 6).map(p => {
+          const m = p.metrics && typeof p.metrics === 'object' ? p.metrics : {};
+          const likes = m.likes || m.like_count || 0;
+          const comments = m.comments || m.comment_count || 0;
+          const shares = m.shares || m.share_count || 0;
+          const eng = likes + comments + shares;
+          const text = (p.content || '').slice(0, 100);
+          return `<div class="sd-trend-card">
+            <div class="sd-trend-header">
+              <span class="sd-trend-keyword">${this._esc(p.network || '—')}</span>
+              <span class="sd-trend-source">${eng.toLocaleString()} eng</span>
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin:0 0 0.4rem;line-height:1.45">${this._esc(text)}${text.length >= 100 ? '…' : ''}</p>
+            <div class="sd-trend-meta">
+              <span><i class="fas fa-heart" style="color:#f472b6"></i> ${likes.toLocaleString()}</span>
+              <span><i class="fas fa-comment" style="color:#60a5fa"></i> ${comments.toLocaleString()}</span>
+              <span><i class="fas fa-share" style="color:#4ade80"></i> ${shares.toLocaleString()}</span>
+              ${p.captured_at ? `<span>${new Date(p.captured_at).toLocaleDateString('es-ES')}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="sd-empty"><i class="fas fa-eye-slash"></i><p class="sd-empty-title">Sin posts de competencia</p><p class="sd-empty-desc">Configura entidades de inteligencia para monitorear el contenido de tus rivales.</p></div>`;
+
+    const contentBattleHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--blue"><i class="fas fa-swords"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">The Content Battle</div>
+            <div class="sd-dim-subtitle">Análisis de narrativa y desempeño del rival</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          ${compPosts.length ? `<div class="sd-widget sd-widget--full"><div class="sd-widget-header"><span class="sd-widget-title">Engagement del rival por red</span></div><div class="sd-chart-wrap" id="compEngChart"></div></div>` : ''}
+          <div class="sd-trends-grid">${compPostCards}</div>
+        </div>
+      </div>`;
+
+    // C. The Attack Surface
+    const vulnRows = vulnerabilities.length
+      ? vulnerabilities.map(v => {
+          const sevClass = `sd-severity--${v.severity || 'medium'}`;
+          const statusClass = `sd-status--${v.status || 'open'}`;
+          return `<tr>
+            <td style="font-weight:600">${this._esc(v.title || '—')}</td>
+            <td><span class="${sevClass}">${this._esc(v.severity || '—')}</span></td>
+            <td><span class="${statusClass}">${this._esc(v.status || '—')}</span></td>
+            <td style="font-size:0.78rem;color:var(--text-secondary);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this._esc((v.description || '').slice(0, 100))}</td>
+            <td>${v.created_at ? new Date(v.created_at).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="5" class="sd-table-empty">Sin vulnerabilidades detectadas. El agente las creará al encontrar debilidades del rival.</td></tr>`;
+
+    const negSignals = signals.filter(s => s.signal_type === 'review_negative' || s.signal_type === 'complaint' || s.signal_type === 'crisis');
+    const negSignalRows = negSignals.length
+      ? negSignals.slice(0, 8).map(s => `<tr>
+          <td><span class="sd-severity--high">${this._esc(s.signal_type)}</span></td>
+          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this._esc((s.content_text || '').slice(0, 120))}</td>
+          <td>${s.captured_at ? new Date(s.captured_at).toLocaleDateString('es-ES') : '—'}</td>
+        </tr>`).join('')
+      : '';
+
+    const attackSurfaceHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--red"><i class="fas fa-crosshairs"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">The Attack Surface</div>
+            <div class="sd-dim-subtitle">Vulnerabilidades del rival y oportunidades de ataque</div>
+          </div>
+        </div>
+        ${criticalVulns > 0 ? `<div class="sd-alerts"><div class="sd-alert sd-alert--danger"><i class="fas fa-exclamation-triangle"></i> ${criticalVulns} vulnerabilidad${criticalVulns > 1 ? 'es' : ''} de alto impacto detectada${criticalVulns > 1 ? 's' : ''}. Momento de contraatacar.</div></div>` : ''}
+        <div class="sd-dim-body sd-dim-body--stack">
+          <div class="sd-widget sd-widget--full">
+            <div class="sd-widget-header">
+              <span class="sd-widget-title">Vulnerabilidades Detectadas</span>
+              <span class="sd-widget-badge ${criticalVulns > 0 ? 'sd-widget-badge--red' : 'sd-widget-badge--green'}">${vulnerabilities.length}</span>
+            </div>
+            <div class="sd-table-wrap">
+              <table class="sd-table">
+                <thead><tr><th>Título</th><th>Severidad</th><th>Estado</th><th>Descripción</th><th>Detectada</th></tr></thead>
+                <tbody>${vulnRows}</tbody>
+              </table>
+            </div>
+          </div>
+          ${negSignalRows ? `<div class="sd-widget sd-widget--full">
+            <div class="sd-widget-header">
+              <span class="sd-widget-title">Señales Negativas del Rival</span>
+              <span class="sd-widget-badge sd-widget-badge--orange">${negSignals.length}</span>
+            </div>
+            <div class="sd-table-wrap">
+              <table class="sd-table">
+                <thead><tr><th>Tipo</th><th>Señal</th><th>Detectada</th></tr></thead>
+                <tbody>${negSignalRows}</tbody>
+              </table>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`;
+
+    // D. Ad Intelligence
+    const adRows = ads.length
+      ? ads.slice(0, 15).map(a => {
+          const ent = a.intelligence_entities;
+          const entName = ent && typeof ent === 'object' && !Array.isArray(ent) ? ent.name : (Array.isArray(ent) ? ent[0]?.name : null);
+          const copy = a.copy_text || '';
+          const spend = a.estimated_spend_range && typeof a.estimated_spend_range === 'object' ? a.estimated_spend_range : null;
+          const spendStr = spend ? `${spend.min || '?'}–${spend.max || '?'} ${spend.currency || 'USD'}` : '—';
+          const when = a.last_seen_at || a.captured_at;
+          const daysSeen = a.first_seen_at && a.last_seen_at
+            ? Math.max(1, Math.ceil((new Date(a.last_seen_at) - new Date(a.first_seen_at)) / 86400000))
+            : null;
+          return `<tr>
+            <td style="font-weight:600">${this._esc(entName || '—')}</td>
+            <td><span class="sd-widget-badge sd-widget-badge--purple">${this._esc(a.platform || '—')}</span></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this._esc(copy.slice(0, 100))}</td>
+            <td>${spendStr}</td>
+            <td>${daysSeen ? `${daysSeen}d` : '—'}</td>
+            <td>${a.creative_url ? `<a href="${this._esc(a.creative_url)}" target="_blank" rel="noopener" style="color:#60a5fa;text-decoration:none"><i class="fas fa-external-link-alt"></i></a>` : '—'}</td>
+            <td>${when ? new Date(when).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="7" class="sd-table-empty">Sin anuncios detectados. El agente los capturará al encontrar campañas activas del rival.</td></tr>`;
+
+    const adIntelHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--purple"><i class="fas fa-bullhorn"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Ad Intelligence</div>
+            <div class="sd-dim-subtitle">Inversión publicitaria y estrategia de pauta del rival</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          ${ads.length ? `<div class="sd-dim-row">
+            <div class="sd-widget"><div class="sd-widget-header"><span class="sd-widget-title">Distribución por Plataforma</span></div><div class="sd-chart-wrap sd-chart-wrap--sm" id="compAdsPlatformChart"></div></div>
+            <div class="sd-widget"><div class="sd-widget-header"><span class="sd-widget-title">Actividad Temporal</span></div><div class="sd-chart-wrap sd-chart-wrap--sm" id="compAdsTimelineChart"></div></div>
+          </div>` : ''}
+          <div class="sd-widget sd-widget--full">
+            <div class="sd-widget-header">
+              <span class="sd-widget-title">Radar de Pauta Digital</span>
+              <span class="sd-widget-badge sd-widget-badge--purple">${ads.length} ads</span>
+            </div>
+            <div class="sd-table-wrap">
+              <table class="sd-table">
+                <thead><tr><th>Entidad</th><th>Plataforma</th><th>Copy</th><th>Inversión Est.</th><th>Duración</th><th>Creative</th><th>Visto</th></tr></thead>
+                <tbody>${adRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // Competitors table
     const competitorRows = competitors.length
-      ? competitors.map((c) => {
+      ? competitors.map(c => {
           const meta = c.metadata && typeof c.metadata === 'object' ? c.metadata : {};
           const followers = meta.followers_count != null ? Number(meta.followers_count).toLocaleString() : '—';
           const engagement = meta.engagement_rate != null ? (Number(meta.engagement_rate) * 100).toFixed(2) + '%' : '—';
           const source = c.domain || meta.source || '—';
           const lastAt = meta.last_analyzed_at || c.created_at;
-          return `
-        <tr>
-          <td>${this._esc(c.name)}</td>
-          <td>${this._esc(source)}</td>
-          <td>${followers}</td>
-          <td>${engagement}</td>
-          <td>${lastAt ? new Date(lastAt).toLocaleDateString('es-ES') : '—'}</td>
-        </tr>`;
+          const activeClass = c.is_active ? 'sd-status--active' : 'sd-status--paused';
+          return `<tr>
+            <td style="font-weight:600">${this._esc(c.name)}</td>
+            <td><span class="sd-widget-badge sd-widget-badge--blue">${this._esc(source)}</span></td>
+            <td>${this._esc(c.target_identifier || '—')}</td>
+            <td>${followers}</td>
+            <td>${engagement}</td>
+            <td><span class="${activeClass}">${c.is_active ? 'activo' : 'pausado'}</span></td>
+            <td>${lastAt ? new Date(lastAt).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
         }).join('')
-      : `<tr><td colspan="5" class="insight-table-empty">Sin competidores registrados. Usa intelligence_entities para agregarlos.</td></tr>`;
+      : `<tr><td colspan="7" class="sd-table-empty">Sin competidores registrados. Agrega entidades de inteligencia para monitorearlos.</td></tr>`;
 
-    const adRows = ads.length
-      ? ads.map((a) => {
-          const ent = a.intelligence_entities;
-          const entName = ent && typeof ent === 'object' && !Array.isArray(ent) ? ent.name : (Array.isArray(ent) ? ent[0]?.name : null);
-          const copy = a.copy_text || '';
-          const when = a.last_seen_at || a.captured_at;
-          return `
-        <tr>
-          <td>${this._esc(entName || '—')}</td>
-          <td><span class="insight-platform-badge">${this._esc(a.platform || '—')}</span></td>
-          <td class="insight-ad-copy">${this._esc(copy.slice(0, 120))}${copy.length > 120 ? '…' : ''}</td>
-          <td>${a.creative_url ? `<a href="${this._esc(a.creative_url)}" target="_blank" rel="noopener" class="insight-source-link">Creative</a>` : '—'}</td>
-          <td>${when ? new Date(when).toLocaleDateString('es-ES') : '—'}</td>
-        </tr>`;
-        }).join('')
-      : `<tr><td colspan="5" class="insight-table-empty">Sin anuncios de competencia registrados.</td></tr>`;
-
-    const SEVERITY_COLORS = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e' };
-    const vulnRows = vulnerabilities.length
-      ? vulnerabilities.map(v => {
-          const color = SEVERITY_COLORS[v.severity] || '#6b7280';
-          return `
-            <tr>
-              <td>${this._esc(v.title || '—')}</td>
-              <td><span class="insight-severity-badge" style="background:${color}">${this._esc(v.severity || '—')}</span></td>
-              <td>${this._esc(v.status || '—')}</td>
-              <td>${v.created_at ? new Date(v.created_at).toLocaleDateString('es-ES') : '—'}</td>
-            </tr>`;
-        }).join('')
-      : `<tr><td colspan="4" class="insight-table-empty">Sin vulnerabilidades detectadas.</td></tr>`;
-
-    return `
-      <div class="insight-competence">
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-users"></i> Competidores monitoreados</h2>
-          <div class="insight-table-wrap">
-            <table class="insight-table">
-              <thead><tr><th>Nombre</th><th>Fuente</th><th>Seguidores</th><th>Engagement</th><th>Último análisis</th></tr></thead>
+    const competitorsSection = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--indigo"><i class="fas fa-binoculars"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Entidades Monitoreadas</div>
+            <div class="sd-dim-subtitle">Perfiles, tiendas y fuentes bajo vigilancia</div>
+          </div>
+        </div>
+        <div class="sd-widget sd-widget--full">
+          <div class="sd-table-wrap">
+            <table class="sd-table">
+              <thead><tr><th>Nombre</th><th>Dominio</th><th>Identificador</th><th>Seguidores</th><th>Engagement</th><th>Estado</th><th>Último análisis</th></tr></thead>
               <tbody>${competitorRows}</tbody>
             </table>
           </div>
-        </section>
+        </div>
+      </div>`;
 
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-ad"></i> Anuncios de competencia</h2>
-          <div class="insight-table-wrap">
-            <table class="insight-table">
-              <thead><tr><th>Entidad</th><th>Plataforma</th><th>Copy</th><th>Creative</th><th>Visto</th></tr></thead>
-              <tbody>${adRows}</tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-shield-alt"></i> Vulnerabilidades de marca</h2>
-          <div class="insight-table-wrap">
-            <table class="insight-table">
-              <thead><tr><th>Título</th><th>Severidad</th><th>Estado</th><th>Detectada</th></tr></thead>
-              <tbody>${vulnRows}</tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    `;
+    return `<div class="sd-dashboard">${sovHtml}${priceWarHtml}${contentBattleHtml}${attackSurfaceHtml}${adIntelHtml}${competitorsSection}</div>`;
   }
 
-  _bindCompetenceEvents() {}
+  _renderCompetenceCharts(ads, prices, compPosts) {
+    if (typeof Chart === 'undefined') return;
 
-  // ── Monitoring (Strategy tab) ──────────────────────────────────────────────
+    const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'rgba(212,209,216,0.6)', font: { size: 11 } } } }, scales: { x: { ticks: { color: 'rgba(212,209,216,0.4)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: 'rgba(212,209,216,0.4)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } } } };
+
+    // Price comparison chart
+    if (prices.length) {
+      const el = document.getElementById('compPriceChart');
+      if (el) {
+        const byRetailer = {};
+        prices.forEach(p => {
+          if (!p.retailer || p.price == null) return;
+          if (!byRetailer[p.retailer]) byRetailer[p.retailer] = { own: [], comp: [] };
+          (p.scope === 'brand' ? byRetailer[p.retailer].own : byRetailer[p.retailer].comp).push(Number(p.price));
+        });
+        const labels = Object.keys(byRetailer).slice(0, 8);
+        const ownAvg = labels.map(r => { const arr = byRetailer[r].own; return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; });
+        const compAvg = labels.map(r => { const arr = byRetailer[r].comp; return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; });
+        if (labels.length) {
+          const canvas = document.createElement('canvas');
+          el.appendChild(canvas);
+          this._chartInstances.compPrice = new Chart(canvas, {
+            type: 'bar',
+            data: { labels, datasets: [
+              { label: 'Tu marca', data: ownAvg, backgroundColor: 'rgba(96,165,250,0.7)', borderRadius: 4 },
+              { label: 'Competencia', data: compAvg, backgroundColor: 'rgba(248,113,113,0.7)', borderRadius: 4 }
+            ] },
+            options: { ...chartOpts, plugins: { ...chartOpts.plugins, title: { display: false } } }
+          });
+        }
+      }
+    }
+
+    // Competitor posts engagement by network
+    if (compPosts.length) {
+      const el = document.getElementById('compEngChart');
+      if (el) {
+        const byNet = {};
+        compPosts.forEach(p => {
+          const net = p.network || 'other';
+          const m = p.metrics && typeof p.metrics === 'object' ? p.metrics : {};
+          const eng = (m.likes || m.like_count || 0) + (m.comments || m.comment_count || 0) + (m.shares || m.share_count || 0);
+          if (!byNet[net]) byNet[net] = { total: 0, count: 0 };
+          byNet[net].total += eng;
+          byNet[net].count += 1;
+        });
+        const labels = Object.keys(byNet);
+        const avgs = labels.map(n => Math.round(byNet[n].total / byNet[n].count));
+        const colors = labels.map(n => n === 'instagram' ? 'rgba(225,48,108,0.7)' : n === 'facebook' ? 'rgba(24,119,242,0.7)' : n === 'tiktok' ? 'rgba(255,255,255,0.7)' : n === 'youtube' ? 'rgba(255,0,0,0.7)' : 'rgba(167,139,250,0.7)');
+        const canvas = document.createElement('canvas');
+        el.appendChild(canvas);
+        this._chartInstances.compEng = new Chart(canvas, {
+          type: 'bar',
+          data: { labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)), datasets: [{ label: 'Engagement promedio', data: avgs, backgroundColor: colors, borderRadius: 4 }] },
+          options: { ...chartOpts, indexAxis: 'y', plugins: { ...chartOpts.plugins, legend: { display: false } } }
+        });
+      }
+    }
+
+    // Ads platform distribution (doughnut)
+    if (ads.length) {
+      const el = document.getElementById('compAdsPlatformChart');
+      if (el) {
+        const byPlatform = {};
+        ads.forEach(a => { const p = a.platform || 'other'; byPlatform[p] = (byPlatform[p] || 0) + 1; });
+        const labels = Object.keys(byPlatform);
+        const data = labels.map(l => byPlatform[l]);
+        const bgColors = ['rgba(96,165,250,0.8)', 'rgba(192,132,252,0.8)', 'rgba(251,146,60,0.8)', 'rgba(244,114,182,0.8)', 'rgba(45,212,191,0.8)', 'rgba(163,163,163,0.8)'];
+        const canvas = document.createElement('canvas');
+        el.appendChild(canvas);
+        this._chartInstances.compAdsPlatform = new Chart(canvas, {
+          type: 'doughnut',
+          data: { labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)), datasets: [{ data, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { color: 'rgba(212,209,216,0.6)', font: { size: 11 }, padding: 12 } } } }
+        });
+      }
+    }
+
+    // Ads timeline (line chart by month)
+    if (ads.length) {
+      const el = document.getElementById('compAdsTimelineChart');
+      if (el) {
+        const byMonth = {};
+        ads.forEach(a => {
+          const d = a.captured_at || a.first_seen_at;
+          if (!d) return;
+          const key = d.slice(0, 7);
+          byMonth[key] = (byMonth[key] || 0) + 1;
+        });
+        const sorted = Object.entries(byMonth).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+        const canvas = document.createElement('canvas');
+        el.appendChild(canvas);
+        this._chartInstances.compAdsTimeline = new Chart(canvas, {
+          type: 'line',
+          data: { labels: sorted.map(([k]) => k), datasets: [{ label: 'Ads detectados', data: sorted.map(([, v]) => v), borderColor: '#c084fc', backgroundColor: 'rgba(192,132,252,0.1)', fill: true, tension: 0.3, pointRadius: 3 }] },
+          options: { ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } } }
+        });
+      }
+    }
+  }
+
+  // ── Strategy (Centro de Comando) ──────────────────────────────────────────
 
   _monitoringLoadingSkeleton() {
-    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando monitores…</div>`;
+    return `<div class="sd-loading"><i class="fas fa-spinner fa-spin"></i> Cargando centro de comando…</div>`;
   }
 
   async _renderMonitoring() {
@@ -2137,10 +2552,10 @@ class DashboardView extends BaseView {
       } else if (!this._supabase && window.supabase) {
         this._supabase = window.supabase;
       }
-    } catch (e) { console.error('[DashboardView] Supabase init monitoring:', e); }
+    } catch (e) { console.error('[DashboardView] Supabase init strategy:', e); }
 
     if (!this._supabase) {
-      body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'No se pudo conectar con la base de datos.');
+      body.innerHTML = this._pageComingSoon('Strategy', 'fa-route', 'No se pudo conectar con la base de datos.');
       return;
     }
 
@@ -2149,69 +2564,242 @@ class DashboardView extends BaseView {
       window.currentOrgId;
 
     try {
-      const [triggersRes] = await Promise.allSettled([
+      const [triggersRes, missionsRes, missionRunsRes, sensorRunsRes, vulnsRes] = await Promise.allSettled([
         orgId ? this._supabase
           .from('monitoring_triggers')
-          .select('id, sensor_type, status, config, cadence, next_run_at, last_run_at, created_at, brand_container_id')
+          .select('id, sensor_type, status, config, cadence, cadence_value, priority, next_run_at, last_run_at, last_run_status, created_at, brand_container_id')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('body_missions')
+          .select('id, mission_type, status, action_payload, result_reference, created_at, updated_at, brand_container_id')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(20) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('mission_runs')
+          .select('id, mission_id, status, trigger_type, started_at, completed_at, duration_ms, result, error_message, tokens_used, created_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(30) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('sensor_runs')
+          .select('id, trigger_id, sensor_type, status, started_at, finished_at, duration_ms, error_message, stats, created_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(30) : Promise.resolve({ data: [], error: null }),
+        orgId ? this._supabase
+          .from('brand_vulnerabilities')
+          .select('id, title, severity, status')
+          .eq('organization_id', orgId)
+          .eq('status', 'open')
+          .limit(10) : Promise.resolve({ data: [], error: null }),
       ]);
 
       const triggers = (triggersRes.status === 'fulfilled' && !triggersRes.value.error) ? (triggersRes.value.data || []) : [];
-      body.innerHTML = this._renderMonitoringHtml(triggers, orgId);
-      this._bindMonitoringEvents(triggers, orgId);
+      const missions = (missionsRes.status === 'fulfilled' && !missionsRes.value.error) ? (missionsRes.value.data || []) : [];
+      const missionRuns = (missionRunsRes.status === 'fulfilled' && !missionRunsRes.value.error) ? (missionRunsRes.value.data || []) : [];
+      const sensorRuns = (sensorRunsRes.status === 'fulfilled' && !sensorRunsRes.value.error) ? (sensorRunsRes.value.data || []) : [];
+      const openVulns = (vulnsRes.status === 'fulfilled' && !vulnsRes.value.error) ? (vulnsRes.value.data || []) : [];
+
+      body.innerHTML = this._renderStrategyHtml(triggers, missions, missionRuns, sensorRuns, openVulns, orgId);
+      this._bindStrategyEvents(triggers, orgId);
     } catch (e) {
-      console.error('[DashboardView] renderMonitoring:', e);
-      body.innerHTML = this._pageComingSoon('Monitoring', 'fa-route', 'Error cargando monitores.');
+      console.error('[DashboardView] renderStrategy:', e);
+      body.innerHTML = this._pageComingSoon('Strategy', 'fa-route', 'Error cargando centro de comando.');
     }
   }
 
-  _renderMonitoringHtml(triggers, orgId) {
-    const STATUS_COLORS = { active: '#22c55e', paused: '#eab308', inactive: '#6b7280', error: '#ef4444' };
+  _renderStrategyHtml(triggers, missions, missionRuns, sensorRuns, openVulns, orgId) {
+    const activeTriggers = triggers.filter(t => t.status === 'active').length;
+    const activeMissions = missions.filter(m => m.status === 'running' || m.status === 'pending').length;
+    const completedMissions = missions.filter(m => m.status === 'completed').length;
+    const failedRuns = missionRuns.filter(r => r.status === 'failed').length;
+    const totalTokens = missionRuns.reduce((sum, r) => sum + (r.tokens_used || 0), 0);
+    const successSensorRuns = sensorRuns.filter(r => r.status === 'success').length;
+    const failedSensorRuns = sensorRuns.filter(r => r.status === 'failed').length;
 
+    // Health scores (simplified calculation)
+    const brandHealth = Math.max(0, Math.min(100, 100 - (openVulns.filter(v => v.severity === 'critical').length * 25) - (openVulns.filter(v => v.severity === 'high').length * 10)));
+    const opsHealth = sensorRuns.length ? Math.round((successSensorRuns / sensorRuns.length) * 100) : 100;
+    const missionHealth = missionRuns.length ? Math.round(((missionRuns.length - failedRuns) / missionRuns.length) * 100) : 100;
+    const healthColor = (v) => v >= 75 ? '#4ade80' : v >= 50 ? '#fbbf24' : '#f87171';
+
+    // SOV header
+    const sovHtml = `
+      <div class="sd-sov-header">
+        <div class="sd-sov-icon"><i class="fas fa-chess-king"></i></div>
+        <div class="sd-sov-body">
+          <div class="sd-sov-title">Centro de Comando Estratégico</div>
+          <div class="sd-sov-value">${activeMissions} Misión${activeMissions !== 1 ? 'es' : ''} Activa${activeMissions !== 1 ? 's' : ''}</div>
+          <div class="sd-sov-sub">${activeTriggers} sensores activos · ${totalTokens.toLocaleString()} tokens consumidos</div>
+        </div>
+        <div class="sd-sov-kpis">
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:#4ade80">${completedMissions}</div><div class="sd-sov-kpi-label">Completadas</div></div>
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:${failedRuns ? '#f87171' : '#4ade80'}">${failedRuns}</div><div class="sd-sov-kpi-label">Fallidas</div></div>
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value">${openVulns.length}</div><div class="sd-sov-kpi-label">Alertas abiertas</div></div>
+        </div>
+      </div>`;
+
+    // D. Health Score
+    const healthHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--green"><i class="fas fa-heartbeat"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Salud Organizacional</div>
+            <div class="sd-dim-subtitle">Score agregado de marca, operaciones y misiones</div>
+          </div>
+        </div>
+        <div class="sd-health-grid">
+          <div class="sd-health-card">
+            <div class="sd-health-score" style="color:${healthColor(brandHealth)}">${brandHealth}</div>
+            <div class="sd-health-label">Marca</div>
+            <div class="sd-health-bar"><div class="sd-health-fill" style="width:${brandHealth}%;background:${healthColor(brandHealth)}"></div></div>
+          </div>
+          <div class="sd-health-card">
+            <div class="sd-health-score" style="color:${healthColor(opsHealth)}">${opsHealth}</div>
+            <div class="sd-health-label">Operaciones</div>
+            <div class="sd-health-bar"><div class="sd-health-fill" style="width:${opsHealth}%;background:${healthColor(opsHealth)}"></div></div>
+          </div>
+          <div class="sd-health-card">
+            <div class="sd-health-score" style="color:${healthColor(missionHealth)}">${missionHealth}</div>
+            <div class="sd-health-label">Misiones</div>
+            <div class="sd-health-bar"><div class="sd-health-fill" style="width:${missionHealth}%;background:${healthColor(missionHealth)}"></div></div>
+          </div>
+        </div>
+      </div>`;
+
+    // A. Active Missions
+    const missionCards = missions.length
+      ? missions.slice(0, 8).map(m => {
+          const statusCls = `sd-mission-card--${m.status || 'pending'}`;
+          const statusBadge = `sd-status--${m.status || 'pending'}`;
+          const payload = m.action_payload && typeof m.action_payload === 'object' ? m.action_payload : {};
+          const result = m.result_reference && typeof m.result_reference === 'object' ? m.result_reference : {};
+          const runs = missionRuns.filter(r => r.mission_id === m.id);
+          const lastRun = runs[0];
+          return `<div class="sd-mission-card ${statusCls}">
+            <div class="sd-mission-top">
+              <span class="sd-mission-type">${this._esc(m.mission_type || '—')}</span>
+              <span class="${statusBadge}">${this._esc(m.status || '—')}</span>
+            </div>
+            <div class="sd-mission-body">
+              <div class="sd-mission-title">${this._esc(payload.title || payload.description || m.mission_type || 'Misión')}</div>
+              ${result.summary ? `<div class="sd-mission-desc">${this._esc(result.summary.slice(0, 120))}</div>` : ''}
+            </div>
+            <div class="sd-mission-footer">
+              ${lastRun?.duration_ms ? `<span><i class="fas fa-clock"></i> ${(lastRun.duration_ms / 1000).toFixed(1)}s</span>` : ''}
+              ${lastRun?.tokens_used ? `<span><i class="fas fa-coins"></i> ${lastRun.tokens_used} tokens</span>` : ''}
+              <span>${m.created_at ? new Date(m.created_at).toLocaleDateString('es-ES') : ''}</span>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="sd-empty"><i class="fas fa-rocket"></i><p class="sd-empty-title">Sin misiones registradas</p><p class="sd-empty-desc">El agente creará misiones al detectar señales que requieren acción.</p></div>`;
+
+    const missionsHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--purple"><i class="fas fa-rocket"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Misiones Activas</div>
+            <div class="sd-dim-subtitle">Acciones autónomas ejecutadas por el agente</div>
+          </div>
+        </div>
+        <div class="sd-missions-grid">${missionCards}</div>
+      </div>`;
+
+    // B. Sensors & Triggers (enhanced)
     const triggerRows = triggers.length
       ? triggers.map(t => {
-          const color = STATUS_COLORS[t.status] || '#6b7280';
+          const statusCls = `sd-status--${t.status || 'paused'}`;
           const cfg = t.config && typeof t.config === 'object' ? t.config : {};
           const label = cfg.label || cfg.name || t.sensor_type || '—';
           const kw = Array.isArray(cfg.keywords) ? cfg.keywords : (typeof cfg.keywords === 'string' ? cfg.keywords.split(/\s+/) : []);
           const keywords = kw.filter(Boolean).slice(0, 4);
-          return `
-            <tr>
-              <td>${this._esc(label)}</td>
-              <td><span class="insight-signal-type">${this._esc(t.sensor_type || '—')}</span></td>
-              <td>${keywords.length ? keywords.map(k => `<span class="insight-keyword">${this._esc(String(k))}</span>`).join('') : '—'}</td>
-              <td><span class="insight-severity-badge" style="background:${color}">${this._esc(t.status || '—')}</span></td>
-              <td>${t.last_run_at ? new Date(t.last_run_at).toLocaleDateString('es-ES') : '—'}</td>
-              <td class="insight-trigger-actions">
+          const triggerSensorRuns = sensorRuns.filter(r => r.trigger_id === t.id);
+          const successCount = triggerSensorRuns.filter(r => r.status === 'success').length;
+          const failCount = triggerSensorRuns.filter(r => r.status === 'failed').length;
+          const lastRunStatus = t.last_run_status || (triggerSensorRuns[0]?.status) || '—';
+          return `<tr>
+            <td style="font-weight:600">${this._esc(label)}</td>
+            <td><span class="sd-widget-badge sd-widget-badge--blue">${this._esc(t.sensor_type || '—')}</span></td>
+            <td>${keywords.length ? keywords.map(k => `<span class="sd-trend-kw">${this._esc(String(k))}</span>`).join(' ') : '—'}</td>
+            <td><span class="${statusCls}">${this._esc(t.status || '—')}</span></td>
+            <td style="font-size:0.78rem"><span style="color:#4ade80">${successCount}</span> / <span style="color:#f87171">${failCount}</span></td>
+            <td>${t.last_run_at ? new Date(t.last_run_at).toLocaleDateString('es-ES') : '—'}</td>
+            <td>
+              <div style="display:flex;gap:0.35rem">
                 <button type="button" class="btn btn-ghost btn-sm insight-trigger-toggle" data-trigger-id="${t.id}" data-status="${t.status}" title="${t.status === 'active' ? 'Pausar' : 'Activar'}">
                   <i class="fas ${t.status === 'active' ? 'fa-pause' : 'fa-play'}"></i>
                 </button>
                 <button type="button" class="btn btn-ghost btn-sm insight-trigger-delete" data-trigger-id="${t.id}" title="Eliminar">
                   <i class="fas fa-trash"></i>
                 </button>
-              </td>
-            </tr>`;
+              </div>
+            </td>
+          </tr>`;
         }).join('')
-      : `<tr><td colspan="6" class="insight-table-empty">Sin monitores activos. Crea uno para vigilar palabras clave y señales.</td></tr>`;
+      : `<tr><td colspan="7" class="sd-table-empty">Sin monitores activos. Crea uno para vigilar señales.</td></tr>`;
 
-    return `
-      <div class="insight-monitoring">
-        <div class="insight-monitoring-header">
-          <h2 class="insight-section-title"><i class="fas fa-radar"></i> Monitoring Triggers</h2>
-          ${orgId ? `<button type="button" class="btn btn-primary btn-sm" id="addTriggerBtn"><i class="fas fa-plus"></i> Nuevo Monitor</button>` : ''}
+    const sensorsHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--cyan"><i class="fas fa-satellite"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Sensores y Triggers</div>
+            <div class="sd-dim-subtitle">Monitores activos con estadísticas de ejecución</div>
+          </div>
+          ${orgId ? `<button type="button" class="btn btn-primary btn-sm" id="addTriggerBtn" style="margin-left:auto"><i class="fas fa-plus"></i> Nuevo Monitor</button>` : ''}
         </div>
-        <div class="insight-table-wrap">
-          <table class="insight-table">
-            <thead><tr><th>Nombre</th><th>Tipo</th><th>Keywords</th><th>Estado</th><th>Último trigger</th><th>Acciones</th></tr></thead>
-            <tbody id="triggersTableBody">${triggerRows}</tbody>
-          </table>
+        <div class="sd-widget sd-widget--full">
+          <div class="sd-table-wrap">
+            <table class="sd-table">
+              <thead><tr><th>Nombre</th><th>Tipo</th><th>Keywords</th><th>Estado</th><th>Éxitos/Fallos</th><th>Último run</th><th>Acciones</th></tr></thead>
+              <tbody id="triggersTableBody">${triggerRows}</tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    `;
+      </div>`;
+
+    // C. Recent Mission Runs timeline
+    const runRows = missionRuns.length
+      ? missionRuns.slice(0, 10).map(r => {
+          const statusCls = `sd-status--${r.status || 'pending'}`;
+          return `<tr>
+            <td><span class="${statusCls}">${this._esc(r.status || '—')}</span></td>
+            <td>${this._esc(r.trigger_type || '—')}</td>
+            <td>${r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)}s` : '—'}</td>
+            <td>${r.tokens_used || '—'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.78rem;color:${r.error_message ? '#f87171' : 'var(--text-secondary)'}">${this._esc(r.error_message || (r.result?.summary || '').slice(0, 80) || '—')}</td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="6" class="sd-table-empty">Sin ejecuciones de misiones registradas.</td></tr>`;
+
+    const runsHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--orange"><i class="fas fa-history"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Timeline de Ejecuciones</div>
+            <div class="sd-dim-subtitle">Historial reciente de misiones y resultados</div>
+          </div>
+        </div>
+        <div class="sd-widget sd-widget--full">
+          <div class="sd-table-wrap">
+            <table class="sd-table">
+              <thead><tr><th>Estado</th><th>Trigger</th><th>Duración</th><th>Tokens</th><th>Resultado / Error</th><th>Fecha</th></tr></thead>
+              <tbody>${runRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+
+    return `<div class="sd-dashboard">${sovHtml}${healthHtml}${missionsHtml}${sensorsHtml}${runsHtml}</div>`;
   }
 
-  _bindMonitoringEvents(triggers, orgId) {
+  _bindStrategyEvents(triggers, orgId) {
     document.getElementById('addTriggerBtn')?.addEventListener('click', () => this._openAddTriggerModal(orgId));
 
     document.querySelectorAll('.insight-trigger-toggle').forEach(btn => {
@@ -2237,8 +2825,8 @@ class DashboardView extends BaseView {
 
   _openAddTriggerModal(orgId) {
     document.getElementById('insightTriggerModal')?.remove();
-    const TRIGGER_TYPES = ['keyword', 'mention', 'hashtag', 'competitor', 'sentiment', 'trend'];
-    const PLATFORMS = ['instagram', 'tiktok', 'twitter', 'facebook', 'youtube', 'web'];
+    const TRIGGER_TYPES = ['keyword', 'mention', 'hashtag', 'competitor', 'sentiment', 'trend', 'price', 'stock'];
+    const PLATFORMS = ['instagram', 'tiktok', 'twitter', 'facebook', 'youtube', 'web', 'amazon', 'mercadolibre'];
     const typeOpts = TRIGGER_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
 
     const modalHtml = `
@@ -2292,7 +2880,7 @@ class DashboardView extends BaseView {
   // ── Tendencies tab ─────────────────────────────────────────────────────────
 
   _tendenciesLoadingSkeleton() {
-    return `<div class="insight-section-loading"><i class="fas fa-spinner fa-spin"></i> Cargando tendencias…</div>`;
+    return `<div class="sd-loading"><i class="fas fa-spinner fa-spin"></i> Cargando el pulso del mundo…</div>`;
   }
 
   async _renderTendencies() {
@@ -2317,17 +2905,15 @@ class DashboardView extends BaseView {
       window.currentOrgId;
 
     try {
-      let trends = [];
-      let signals = [];
-      let prices = [];
+      let trends = [], signals = [], prices = [], ownPosts = [];
       if (orgId) {
-        const [trendRes, retailRes, entRes] = await Promise.all([
+        const [trendRes, retailRes, entRes, postsRes] = await Promise.all([
           this._supabase
             .from('trend_topics')
-            .select('id, keyword, source, category, velocity_score, relevance_score, sentiment, detected_at, metadata')
+            .select('id, keyword, source, category, velocity_score, relevance_score, sentiment, detected_at, metadata, scope')
             .eq('organization_id', orgId)
-            .order('relevance_score', { ascending: false })
-            .limit(30),
+            .order('velocity_score', { ascending: false, nullsFirst: false })
+            .limit(50),
           this._supabase
             .from('retail_prices')
             .select('id, product_name, price, currency, retailer, captured_at, stock_status')
@@ -2339,108 +2925,333 @@ class DashboardView extends BaseView {
             .select('id')
             .eq('organization_id', orgId)
             .limit(500),
+          this._supabase
+            .from('brand_posts')
+            .select('content, network')
+            .eq('is_competitor', false)
+            .limit(200),
         ]);
         trends = trendRes.error ? [] : (trendRes.data || []);
         prices = retailRes.error ? [] : (retailRes.data || []);
-        const entityIds = (entRes.data || []).map((r) => r.id).filter(Boolean);
+        ownPosts = postsRes.error ? [] : (postsRes.data || []);
+        const entityIds = (entRes.data || []).map(r => r.id).filter(Boolean);
         if (entityIds.length) {
           const sigRes = await this._supabase
             .from('intelligence_signals')
-            .select('id, signal_type, content_text, content_numeric, captured_at, entity_id')
+            .select('id, signal_type, content_text, content_numeric, ai_analysis, captured_at, entity_id')
             .in('entity_id', entityIds)
             .order('captured_at', { ascending: false })
-            .limit(20);
+            .limit(30);
           signals = sigRes.error ? [] : (sigRes.data || []);
         }
       }
 
-      body.innerHTML = this._renderTendenciesHtml(trends, signals, prices);
+      body.innerHTML = this._renderTendenciesHtml(trends, signals, prices, ownPosts);
+      await this._ensureChartJs();
+      this._renderTendenciesCharts(trends, signals);
     } catch (e) {
       console.error('[DashboardView] renderTendencies:', e);
       body.innerHTML = this._pageComingSoon('Tendencies', 'fa-fire', 'Error cargando tendencias.');
     }
   }
 
-  _renderTendenciesHtml(trends, signals, prices) {
+  _renderTendenciesHtml(trends, signals, prices, ownPosts) {
+    const ownContentLower = ownPosts.map(p => (p.content || '').toLowerCase()).join(' ');
+    const totalTrends = trends.length;
+    const emerging = trends.filter(t => (t.velocity_score || 0) < 30);
+    const growing = trends.filter(t => (t.velocity_score || 0) >= 30 && (t.velocity_score || 0) < 70);
+    const massive = trends.filter(t => (t.velocity_score || 0) >= 70);
+
+    // Sentiment global
+    let sentSum = 0, sentCount = 0;
+    trends.forEach(t => {
+      const s = t.sentiment && typeof t.sentiment === 'object' ? t.sentiment : {};
+      if (s.score != null) { sentSum += Number(s.score); sentCount++; }
+    });
+    const globalSentiment = sentCount ? (sentSum / sentCount) : null;
+    const sentLabel = globalSentiment != null ? (globalSentiment > 0.5 ? 'Positivo' : globalSentiment > 0 ? 'Neutro' : 'Negativo') : '—';
+    const sentColor = globalSentiment != null ? (globalSentiment > 0.5 ? '#4ade80' : globalSentiment > 0 ? '#fbbf24' : '#f87171') : 'rgba(212,209,216,0.5)';
+
+    // SOV header
+    const sovHtml = `
+      <div class="sd-sov-header">
+        <div class="sd-sov-icon"><i class="fas fa-satellite-dish"></i></div>
+        <div class="sd-sov-body">
+          <div class="sd-sov-title">El Pulso del Mundo</div>
+          <div class="sd-sov-value">${totalTrends} Tendencia${totalTrends !== 1 ? 's' : ''} Activa${totalTrends !== 1 ? 's' : ''}</div>
+          <div class="sd-sov-sub">Arbitraje de atención · Señales antes de que sean masivas</div>
+        </div>
+        <div class="sd-sov-kpis">
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:#60a5fa">${emerging.length}</div><div class="sd-sov-kpi-label">Emergiendo</div></div>
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:#fb923c">${growing.length}</div><div class="sd-sov-kpi-label">Creciendo</div></div>
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:#f87171">${massive.length}</div><div class="sd-sov-kpi-label">Masivas</div></div>
+          <div class="sd-sov-kpi"><div class="sd-sov-kpi-value" style="color:${sentColor}">${sentLabel}</div><div class="sd-sov-kpi-label">Mood global</div></div>
+        </div>
+      </div>`;
+
+    // A. Early Detection
+    const getPhase = (v) => {
+      if (v >= 70) return { label: 'masivo', cls: 'sd-phase--massive', velCls: 'sd-velocity--hot' };
+      if (v >= 30) return { label: 'creciendo', cls: 'sd-phase--growing', velCls: 'sd-velocity--warm' };
+      return { label: 'emergiendo', cls: 'sd-phase--emerging', velCls: 'sd-velocity--cool' };
+    };
+
     const trendCards = trends.length
-      ? trends.map((t) => {
+      ? trends.slice(0, 12).map(t => {
+          const vel = t.velocity_score || t.relevance_score || 0;
+          const phase = getPhase(vel);
           const sent = t.sentiment && typeof t.sentiment === 'object' ? t.sentiment : {};
           const score = sent.score != null ? Number(sent.score) : null;
-          const sentiment = score != null
-            ? (score > 0.5 ? '🟢' : score > 0 ? '🟡' : '🔴')
-            : '';
+          const sentEmoji = score != null ? (score > 0.5 ? '🟢' : score > 0 ? '🟡' : '🔴') : '';
           const meta = t.metadata && typeof t.metadata === 'object' ? t.metadata : {};
           const keywords = Array.isArray(meta.related_keywords) ? meta.related_keywords.slice(0, 4) : [];
-          const vol = t.velocity_score != null ? t.velocity_score : t.relevance_score;
-          return `
-            <div class="insight-trend-card">
-              <div class="insight-trend-header">
-                <span class="insight-trend-topic">${this._esc(t.keyword || '—')}</span>
-                <span class="insight-trend-platform">${this._esc(t.source || '—')}</span>
+          const isContentGap = !ownContentLower.includes((t.keyword || '').toLowerCase());
+          return `<div class="sd-trend-card">
+            <div class="sd-trend-header">
+              <span class="sd-trend-keyword">${this._esc(t.keyword || '—')}</span>
+              <span class="sd-trend-source">${this._esc(t.source || '—')}</span>
+            </div>
+            <div class="sd-trend-meta">
+              <div class="sd-trend-velocity">
+                <div class="sd-velocity-bar"><div class="sd-velocity-fill ${phase.velCls}" style="width:${Math.min(100, vel)}%"></div></div>
+                <span>${vel}</span>
               </div>
-              <div class="insight-trend-meta">
-                <span>Relevancia / velocidad: <strong>${vol != null ? String(vol) : '—'}</strong></span>
-                ${sentiment ? `<span>Sentimiento: ${sentiment}</span>` : ''}
-                ${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}
-              </div>
-              ${keywords.length ? `<div class="insight-trend-keywords">${keywords.map(k => `<span class="insight-keyword">${this._esc(String(k))}</span>`).join('')}</div>` : ''}
-            </div>`;
+              <span class="sd-trend-phase ${phase.cls}">${phase.label}</span>
+              ${sentEmoji ? `<span>${sentEmoji}</span>` : ''}
+              ${isContentGap ? `<span class="sd-trend-gap-badge"><i class="fas fa-gem"></i> Océano Azul</span>` : ''}
+              ${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}
+            </div>
+            ${keywords.length ? `<div class="sd-trend-keywords">${keywords.map(k => `<span class="sd-trend-kw">${this._esc(String(k))}</span>`).join('')}</div>` : ''}
+          </div>`;
         }).join('')
-      : '<p class="insight-table-empty">Sin tendencias registradas para esta organización.</p>';
+      : `<div class="sd-empty"><i class="fas fa-satellite-dish"></i><p class="sd-empty-title">Sin tendencias detectadas</p><p class="sd-empty-desc">El agente las generará al escanear fuentes de nicho.</p></div>`;
 
+    const earlyDetectHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--cyan"><i class="fas fa-radar"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Early Detection</div>
+            <div class="sd-dim-subtitle">Señales débiles de nicho antes de que sean masivas</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          ${trends.length ? `<div class="sd-widget sd-widget--full"><div class="sd-widget-header"><span class="sd-widget-title">Velocidad de Tendencias</span></div><div class="sd-chart-wrap" id="trendVelocityChart"></div></div>` : ''}
+          <div class="sd-trends-grid">${trendCards}</div>
+        </div>
+      </div>`;
+
+    // B. Real World Sync
+    const culturalTrends = trends.filter(t => t.category === 'cultural' || t.category === 'event' || t.category === 'news');
+    const culturalCards = culturalTrends.length
+      ? culturalTrends.slice(0, 6).map(t => {
+          const vel = t.velocity_score || 0;
+          const phase = getPhase(vel);
+          return `<div class="sd-trend-card">
+            <div class="sd-trend-header">
+              <span class="sd-trend-keyword">${this._esc(t.keyword || '—')}</span>
+              <span class="sd-trend-source">${this._esc(t.category || t.source || '—')}</span>
+            </div>
+            <div class="sd-trend-meta">
+              <span class="sd-trend-phase ${phase.cls}">${phase.label}</span>
+              ${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="sd-empty"><i class="fas fa-globe-americas"></i><p class="sd-empty-title">Sin contexto cultural detectado</p><p class="sd-empty-desc">Se llenará con noticias, eventos y cambios climáticos relevantes a tu nicho.</p></div>`;
+
+    const realWorldHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--green"><i class="fas fa-globe-americas"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Real World Sync</div>
+            <div class="sd-dim-subtitle">Contexto cultural, climático y social que afecta tu producto</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          <div class="sd-dim-row">
+            <div class="sd-widget">
+              <div class="sd-widget-header"><span class="sd-widget-title">Sentiment Shift Global</span></div>
+              <div style="text-align:center;padding:1rem 0">
+                <div style="font-size:2.5rem;font-weight:800;color:${sentColor};line-height:1">${globalSentiment != null ? (globalSentiment * 100).toFixed(0) : '—'}</div>
+                <div style="font-size:0.78rem;color:rgba(212,209,216,0.5);margin-top:0.35rem">${sentLabel} · Basado en ${sentCount} tendencias</div>
+              </div>
+            </div>
+            <div class="sd-widget">
+              <div class="sd-widget-header"><span class="sd-widget-title">Distribución de Fuentes</span></div>
+              <div class="sd-chart-wrap sd-chart-wrap--sm" id="trendSourcesChart"></div>
+            </div>
+          </div>
+          <div class="sd-trends-grid">${culturalCards}</div>
+        </div>
+      </div>`;
+
+    // C. Platform Pulse
+    const platformTrends = {};
+    trends.forEach(t => {
+      const src = (t.source || 'other').toLowerCase();
+      if (!platformTrends[src]) platformTrends[src] = { count: 0, topVel: 0 };
+      platformTrends[src].count++;
+      if ((t.velocity_score || 0) > platformTrends[src].topVel) platformTrends[src].topVel = t.velocity_score || 0;
+    });
+    const PLATFORM_ICONS = { instagram: 'fab fa-instagram', tiktok: 'fab fa-tiktok', youtube: 'fab fa-youtube', facebook: 'fab fa-facebook', twitter: 'fab fa-twitter', google: 'fab fa-google', web: 'fas fa-globe' };
+    const PLATFORM_CSS = { instagram: 'sd-platform-icon--ig', tiktok: 'sd-platform-icon--tt', youtube: 'sd-platform-icon--yt', facebook: 'sd-platform-icon--fb', twitter: 'sd-platform-icon--tw' };
+
+    const platformCards = Object.entries(platformTrends).map(([p, d]) => `
+      <div class="sd-platform-card">
+        <div class="sd-platform-icon ${PLATFORM_CSS[p] || 'sd-platform-icon--web'}"><i class="${PLATFORM_ICONS[p] || 'fas fa-globe'}"></i></div>
+        <div class="sd-platform-body">
+          <div class="sd-platform-name">${p.charAt(0).toUpperCase() + p.slice(1)}</div>
+          <div class="sd-platform-stat">${d.count} tendencias · Top vel: ${d.topVel}</div>
+        </div>
+      </div>`).join('');
+
+    const platformPulseHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--pink"><i class="fas fa-broadcast-tower"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Platform Pulse</div>
+            <div class="sd-dim-subtitle">Inteligencia algorítmica por plataforma · Formato ganador</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          <div class="sd-platform-grid">${platformCards || '<div class="sd-empty"><p class="sd-empty-desc">Sin datos de plataformas aún.</p></div>'}</div>
+          ${trends.length ? `<div class="sd-widget sd-widget--full"><div class="sd-widget-header"><span class="sd-widget-title">Hashtag & Keyword Velocity</span></div><div class="sd-chart-wrap" id="trendKeywordVelChart"></div></div>` : ''}
+        </div>
+      </div>`;
+
+    // D. Visual Trend
+    const hookSignals = signals.filter(s => s.signal_type === 'hook' || s.signal_type === 'narrative_hook' || s.signal_type === 'visual_trend');
+    const visualTrends = trends.filter(t => {
+      const m = t.metadata && typeof t.metadata === 'object' ? t.metadata : {};
+      return m.visual_style || t.category === 'visual' || t.category === 'aesthetic';
+    });
+
+    const visualCards = [...hookSignals.slice(0, 4).map(s => `
+      <div class="sd-trend-card">
+        <div class="sd-trend-header">
+          <span class="sd-trend-keyword"><i class="fas fa-bolt" style="color:#fbbf24"></i> ${this._esc((s.content_text || '').slice(0, 60))}</span>
+          <span class="sd-trend-source">${this._esc(s.signal_type)}</span>
+        </div>
+        <div class="sd-trend-meta">${s.captured_at ? `<span>${new Date(s.captured_at).toLocaleDateString('es-ES')}</span>` : ''}</div>
+      </div>`),
+    ...visualTrends.slice(0, 4).map(t => {
+      const meta = t.metadata && typeof t.metadata === 'object' ? t.metadata : {};
+      return `<div class="sd-trend-card">
+        <div class="sd-trend-header">
+          <span class="sd-trend-keyword"><i class="fas fa-palette" style="color:#c084fc"></i> ${this._esc(t.keyword || '—')}</span>
+          <span class="sd-trend-source">${this._esc(meta.visual_style || t.source || '—')}</span>
+        </div>
+        <div class="sd-trend-meta">${t.detected_at ? `<span>${new Date(t.detected_at).toLocaleDateString('es-ES')}</span>` : ''}</div>
+      </div>`;
+    })].join('');
+
+    const visualTrendHtml = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--purple"><i class="fas fa-palette"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Visual Trend</div>
+            <div class="sd-dim-subtitle">Estética del momento, hooks y ganchos de atención</div>
+          </div>
+        </div>
+        <div class="sd-dim-body sd-dim-body--stack">
+          ${visualCards ? `<div class="sd-trends-grid">${visualCards}</div>` : `<div class="sd-empty"><i class="fas fa-palette"></i><p class="sd-empty-title">Sin tendencias visuales</p><p class="sd-empty-desc">El agente detectará estilos de edición, hooks y paletas emergentes.</p></div>`}
+        </div>
+      </div>`;
+
+    // Intelligence Signals table
     const signalRows = signals.length
-      ? signals.map((s) => {
-          const text = (s.content_text || '').slice(0, 120);
-          return `
-        <tr>
-          <td><span class="insight-signal-type">${this._esc(s.signal_type || '—')}</span></td>
-          <td>${this._esc(text || '—')}${(s.content_text || '').length > 120 ? '…' : ''}</td>
-          <td>${s.content_numeric != null ? String(s.content_numeric) : '—'}</td>
-          <td>${s.captured_at ? new Date(s.captured_at).toLocaleDateString('es-ES') : '—'}</td>
-          <td>—</td>
-        </tr>`;
+      ? signals.slice(0, 15).map(s => {
+          const text = (s.content_text || '').slice(0, 140);
+          const ai = s.ai_analysis && typeof s.ai_analysis === 'object' ? s.ai_analysis : {};
+          return `<tr>
+            <td><span class="sd-widget-badge sd-widget-badge--blue">${this._esc(s.signal_type || '—')}</span></td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this._esc(text)}</td>
+            <td>${s.content_numeric != null ? Number(s.content_numeric).toLocaleString() : '—'}</td>
+            <td style="font-size:0.75rem;color:var(--text-secondary);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ai.summary ? this._esc(ai.summary.slice(0, 80)) : '—'}</td>
+            <td>${s.captured_at ? new Date(s.captured_at).toLocaleDateString('es-ES') : '—'}</td>
+          </tr>`;
         }).join('')
-      : `<tr><td colspan="5" class="insight-table-empty">Sin señales de inteligencia registradas.</td></tr>`;
+      : `<tr><td colspan="5" class="sd-table-empty">Sin señales de inteligencia registradas.</td></tr>`;
 
-    const priceRows = prices.length
-      ? prices.map(p => `
-        <tr>
-          <td>${this._esc(p.product_name || '—')}</td>
-          <td>${this._esc(p.retailer || '—')}</td>
-          <td><strong>${p.price != null ? `${p.price} ${p.currency || 'USD'}` : '—'}</strong></td>
-          <td><span class="insight-platform-badge">${this._esc(p.stock_status || '—')}</span></td>
-          <td>${p.captured_at ? new Date(p.captured_at).toLocaleDateString('es-ES') : '—'}</td>
-        </tr>`).join('')
-      : `<tr><td colspan="5" class="insight-table-empty">Sin precios de competencia registrados.</td></tr>`;
-
-    return `
-      <div class="insight-tendencies">
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-fire"></i> Tendencias activas</h2>
-          <div class="insight-trends-grid">${trendCards}</div>
-        </section>
-
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-signal"></i> Señales de inteligencia</h2>
-          <div class="insight-table-wrap">
-            <table class="insight-table">
-              <thead><tr><th>Tipo</th><th>Señal</th><th>Relevancia</th><th>Detectada</th><th>Fuente</th></tr></thead>
+    const signalsSection = `
+      <div class="sd-dimension">
+        <div class="sd-dim-header">
+          <div class="sd-dim-icon sd-dim-icon--yellow"><i class="fas fa-signal"></i></div>
+          <div class="sd-dim-title-wrap">
+            <div class="sd-dim-title">Señales de Inteligencia</div>
+            <div class="sd-dim-subtitle">Capturas del agente en fuentes monitoreadas</div>
+          </div>
+        </div>
+        <div class="sd-widget sd-widget--full">
+          <div class="sd-table-wrap">
+            <table class="sd-table">
+              <thead><tr><th>Tipo</th><th>Señal</th><th>Relevancia</th><th>Análisis IA</th><th>Detectada</th></tr></thead>
               <tbody>${signalRows}</tbody>
             </table>
           </div>
-        </section>
+        </div>
+      </div>`;
 
-        <section class="insight-section">
-          <h2 class="insight-section-title"><i class="fas fa-tag"></i> Precios de mercado</h2>
-          <div class="insight-table-wrap">
-            <table class="insight-table">
-              <thead><tr><th>Producto</th><th>Retailer</th><th>Precio</th><th>Stock</th><th>Capturado</th></tr></thead>
-              <tbody>${priceRows}</tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    `;
+    return `<div class="sd-dashboard">${sovHtml}${earlyDetectHtml}${realWorldHtml}${platformPulseHtml}${visualTrendHtml}${signalsSection}</div>`;
+  }
+
+  _renderTendenciesCharts(trends, signals) {
+    if (typeof Chart === 'undefined' || !trends.length) return;
+
+    const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'rgba(212,209,216,0.6)', font: { size: 11 } } } }, scales: { x: { ticks: { color: 'rgba(212,209,216,0.4)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: 'rgba(212,209,216,0.4)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } } } };
+
+    // Velocity chart (horizontal bars — top keywords by velocity)
+    const velEl = document.getElementById('trendVelocityChart');
+    if (velEl) {
+      const top = trends.filter(t => t.velocity_score != null).sort((a, b) => b.velocity_score - a.velocity_score).slice(0, 10);
+      const labels = top.map(t => (t.keyword || '').slice(0, 25));
+      const data = top.map(t => t.velocity_score);
+      const colors = data.map(v => v >= 70 ? 'rgba(248,113,113,0.8)' : v >= 30 ? 'rgba(251,146,60,0.8)' : 'rgba(96,165,250,0.8)');
+      const canvas = document.createElement('canvas');
+      velEl.appendChild(canvas);
+      this._chartInstances.trendVelocity = new Chart(canvas, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Velocity Score', data, backgroundColor: colors, borderRadius: 4 }] },
+        options: { ...chartOpts, indexAxis: 'y', plugins: { ...chartOpts.plugins, legend: { display: false } } }
+      });
+    }
+
+    // Sources distribution (doughnut)
+    const srcEl = document.getElementById('trendSourcesChart');
+    if (srcEl) {
+      const bySource = {};
+      trends.forEach(t => { const s = (t.source || 'other').toLowerCase(); bySource[s] = (bySource[s] || 0) + 1; });
+      const labels = Object.keys(bySource);
+      const data = labels.map(l => bySource[l]);
+      const bgColors = ['rgba(225,48,108,0.8)', 'rgba(96,165,250,0.8)', 'rgba(255,0,0,0.8)', 'rgba(24,119,242,0.8)', 'rgba(45,212,191,0.8)', 'rgba(167,139,250,0.8)', 'rgba(163,163,163,0.6)'];
+      const canvas = document.createElement('canvas');
+      srcEl.appendChild(canvas);
+      this._chartInstances.trendSources = new Chart(canvas, {
+        type: 'doughnut',
+        data: { labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)), datasets: [{ data, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { color: 'rgba(212,209,216,0.6)', font: { size: 11 }, padding: 10 } } } }
+      });
+    }
+
+    // Keyword velocity bar chart
+    const kwEl = document.getElementById('trendKeywordVelChart');
+    if (kwEl) {
+      const top = trends.filter(t => t.velocity_score != null).sort((a, b) => b.velocity_score - a.velocity_score).slice(0, 15);
+      const labels = top.map(t => (t.keyword || '').slice(0, 20));
+      const data = top.map(t => t.velocity_score);
+      const colors = data.map(v => v >= 70 ? 'rgba(248,113,113,0.7)' : v >= 30 ? 'rgba(251,146,60,0.7)' : 'rgba(96,165,250,0.7)');
+      const canvas = document.createElement('canvas');
+      kwEl.appendChild(canvas);
+      this._chartInstances.trendKwVel = new Chart(canvas, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Velocity', data, backgroundColor: colors, borderRadius: 3 }] },
+        options: { ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } } }
+      });
+    }
   }
 }
 
