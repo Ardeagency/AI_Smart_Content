@@ -1337,11 +1337,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
     align-items: start;
 }
 
-.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
+/* Grid: fila 1fr empuja el pie a la esquina inferior (flex de .brand-card no respetaba altura con aspect-ratio). */
+.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile.brand-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-content: stretch;
+    justify-items: stretch;
     width: 100%;
     margin: 0;
     aspect-ratio: 1;
@@ -1352,29 +1354,20 @@ h1.brand-name-large[contenteditable="true"]:hover,
     text-align: left;
     font: inherit;
     color: inherit;
-    gap: 0;
     padding: clamp(0.9rem, 2.8vw, 1.2rem);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile:hover {
+.brand-dashboard-container.brand-storage-gallery-view .brand-storage-grid--masonry > .brand-storage-tile.brand-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
-/* Columna: arriba nombre + mercado; abajo (esquina inferior izq.) producciones + fecha */
-.brand-storage-tile__stack {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    align-items: stretch;
-    min-height: 0;
-    width: 100%;
-    text-align: left;
-}
-
 .brand-storage-tile__head {
-    flex: 0 0 auto;
+    grid-row: 1;
+    grid-column: 1;
+    align-self: start;
+    justify-self: stretch;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1384,8 +1377,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .brand-storage-tile__bottom {
-    margin-top: auto;
-    flex: 0 0 auto;
+    grid-row: 2;
+    grid-column: 1;
+    align-self: end;
+    justify-self: stretch;
     display: flex;
     flex-direction: column;
     align-items: flex-start;

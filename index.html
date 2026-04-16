@@ -24,7 +24,7 @@
          La landing usa la misma URL en CSS/JS; preconnect a Cloudinary ya está arriba. -->
 
     <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
-    <link rel="stylesheet" href="css/bundle.css?v=20260416-brand-storage-tile-bottom">
+    <link rel="stylesheet" href="css/bundle.css?v=20260416-brand-storage-tile-grid">
 
     <!-- Fuente Inter — pesos reducidos (solo los usados en la UI) + display=swap -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -112,10 +112,14 @@
     <script src="js/views/BaseView.js" defer></script>
     <script src="js/router.js" defer></script>
 
+    <!-- Utilidades de color — fuente única para hexToHSL/hslToHex/hexToRgba/etc.
+         Debe cargar ANTES que OrgBrandTheme (que las consume en el theme inicial). -->
+    <script src="js/utils/brand-colors.js?v=20260417-split" defer></script>
+
     <!-- Services (AuthService imprescindible: si falla 404/redirect, el router redirige a onboarding) -->
     <script src="js/services/SupabaseService.js" defer></script>
     <script src="js/services/AuthService.js" defer></script>
-    <script src="js/services/OrgBrandTheme.js?v=20260409-11" defer></script>
+    <script src="js/services/OrgBrandTheme.js?v=20260417-split" defer></script>
     <script src="js/org-url.js" defer></script>
     <script src="js/services/AppState.js" defer></script>
     <script src="js/session-utils.js" defer></script>
