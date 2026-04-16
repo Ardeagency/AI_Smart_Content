@@ -1626,6 +1626,11 @@ class DashboardView extends BaseView {
     window.__chartJsLoadPromise = new Promise((resolve) => {
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      // SRI: si jsdelivr entrega bytes distintos a los firmados, el navegador rechaza
+      // el script y Chart queda undefined — mejor sin gráficas que con código inyectado.
+      s.integrity = 'sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g';
+      s.crossOrigin = 'anonymous';
+      s.referrerPolicy = 'no-referrer';
       s.async = true;
       s.onload = () => resolve();
       s.onerror = () => resolve();

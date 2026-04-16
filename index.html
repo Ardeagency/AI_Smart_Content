@@ -24,17 +24,22 @@
          La landing usa la misma URL en CSS/JS; preconnect a Cloudinary ya está arriba. -->
 
     <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
-    <link rel="stylesheet" href="css/bundle.css?v=20260416-cc-fix-layout">
+    <link rel="stylesheet" href="css/bundle.css?v=20260416-cc-redesign">
 
     <!-- Fuente Inter — pesos reducidos (solo los usados en la UI) + display=swap -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
 
-    <!-- Icon fonts — carga no bloqueante sin rel=preload (evita warning "preloaded but not used"). -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"></noscript>
+    <!-- Icon fonts — carga no bloqueante + SRI (si jsdelivr entregara bytes distintos a los
+         firmados aquí, el navegador rechaza el CSS: defensa contra compromiso del CDN). -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'"
+          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'"
+          integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
+          integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
     
     <style>
         #modals-portal {
@@ -91,8 +96,13 @@
 
     <!-- External Scripts.
          Chart.js ya no se carga aquí: se lazy-loadea desde DashboardView cuando se necesita.
-         Supabase JS SDK usa `defer` para no bloquear la primera pintura del hero. -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+         Supabase JS SDK usa `defer` para no bloquear la primera pintura del hero.
+         Versión pinneada + SRI: sin pin, jsdelivr resuelve `@2` a la última minor y el
+         SRI rompería en cada release. Con hash fijo, si el CDN sirve bytes distintos el
+         navegador rechaza el script (mitiga un compromiso de la supply-chain). -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.2" defer
+            integrity="sha384-clqYxV1hjoC1RwoBT11M16mn2I42U4CCZc2QcnjigG/l1lFSxC/zBRAoMxhlrK1Z"
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- URL base del ai-engine (opcional). Ver js/runtime-config.js -->
     <script src="js/runtime-config.js" defer></script>
@@ -119,8 +129,8 @@
     <script src="js/views/SignInView.js?v=20260414-inline" defer></script>
 
     <!-- Navigation + App init -->
-    <script src="js/components/Navigation.js?v=20260416-cc-fix-layout" defer></script>
-    <script src="js/app.js?v=20260416-cc-fix-layout" defer></script>
+    <script src="js/components/Navigation.js?v=20260416-cc-redesign" defer></script>
+    <script src="js/app.js?v=20260416-cc-redesign" defer></script>
 
 </body>
 </html>

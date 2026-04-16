@@ -259,7 +259,7 @@ class CommandCenterView extends BaseView {
     body.innerHTML = `<div class="cc-audience-grid">
       ${rows.map((a) => {
         const demo = (a.datos_demograficos && typeof a.datos_demograficos === 'object') ? a.datos_demograficos : {};
-        const psycho = (a.datos_psicograficos && typeof a.datos_psicograficos === 'object') ? a.datos_psicograficos : {};
+        const initials = (a.name || 'A').replace(/\s+/g, ' ').trim().split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
         const tags = [
           demo.edad && this._tag(String(demo.edad), 'blue'),
           demo.genero && this._tag(String(demo.genero), 'teal'),
@@ -275,10 +275,11 @@ class CommandCenterView extends BaseView {
         return `
         <div class="cc-aud-card">
           <div class="cc-aud-card-head">
+            <div class="cc-aud-avatar">${initials}</div>
             <span class="cc-aud-name">${this.escapeHtml(a.name || 'Sin nombre')}</span>
-            ${tags ? `<div class="cc-aud-tags">${tags}</div>` : ''}
           </div>
-          ${a.description ? `<p class="cc-aud-desc">${this.escapeHtml(String(a.description).slice(0, 120))}${a.description.length > 120 ? '…' : ''}</p>` : ''}
+          ${tags ? `<div class="cc-aud-tags">${tags}</div>` : ''}
+          ${a.description ? `<p class="cc-aud-desc">${this.escapeHtml(String(a.description).slice(0, 110))}${a.description.length > 110 ? '…' : ''}</p>` : ''}
           ${painItems || deseos ? `
           <div class="cc-aud-insights">
             ${painItems ? `<div class="cc-aud-insight-col"><div class="cc-aud-insight-label">Dolores</div><ul>${painItems}</ul></div>` : ''}
@@ -309,13 +310,16 @@ class CommandCenterView extends BaseView {
       const obj = Array.isArray(c.objetivos_estrategicos) ? c.objetivos_estrategicos : [];
       return `
       <div class="cc-camp-item">
-        <div class="cc-camp-item-head">
-          <span class="cc-camp-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
-          ${c.contexto_temporal ? this._tag(String(c.contexto_temporal), 'blue') : ''}
+        <div class="cc-camp-icon"><i class="fas fa-bullhorn"></i></div>
+        <div class="cc-camp-content">
+          <div class="cc-camp-item-head">
+            <span class="cc-camp-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
+            ${c.contexto_temporal ? this._tag(String(c.contexto_temporal), 'blue') : ''}
+          </div>
+          ${c.descripcion_interna ? `<p class="cc-camp-desc">${this.escapeHtml(String(c.descripcion_interna).slice(0, 80))}${c.descripcion_interna.length > 80 ? '…' : ''}</p>` : ''}
+          ${obj.length ? `<div class="cc-camp-obj">${obj.slice(0, 2).map((o) => `<span>${this.escapeHtml(String(o))}</span>`).join('')}</div>` : ''}
+          <div class="cc-camp-date">${this._fmtDate(c.updated_at || c.created_at)}</div>
         </div>
-        ${c.descripcion_interna ? `<p class="cc-camp-desc">${this.escapeHtml(String(c.descripcion_interna).slice(0, 100))}${c.descripcion_interna.length > 100 ? '…' : ''}</p>` : ''}
-        ${obj.length ? `<div class="cc-camp-obj">${obj.slice(0, 2).map((o) => `<span>${this.escapeHtml(String(o))}</span>`).join('')}</div>` : ''}
-        <div class="cc-camp-date">${this._fmtDate(c.updated_at || c.created_at)}</div>
       </div>`;
     }).join('');
   }
@@ -354,14 +358,19 @@ class CommandCenterView extends BaseView {
     body.innerHTML = campaigns.map((c) => {
       const status = c.status || c.effective_status || '';
       const statusColor = status === 'ACTIVE' ? 'green' : status === 'PAUSED' ? 'orange' : 'gray';
+      const platform = String(c._platform || '').toLowerCase();
+      const dotClass = platform.includes('meta') || platform.includes('facebook') ? 'cc-api-platform-dot--meta' : '';
       return `
       <div class="cc-api-item">
-        <div class="cc-api-item-head">
-          <span class="cc-api-name">${this.escapeHtml(c.name || c.id || 'Campaña')}</span>
-          ${status ? this._tag(status, statusColor) : ''}
+        <div class="cc-api-platform-dot ${dotClass}"></div>
+        <div class="cc-api-content">
+          <div class="cc-api-item-head">
+            <span class="cc-api-name">${this.escapeHtml(c.name || c.id || 'Campaña')}</span>
+            ${status ? this._tag(status, statusColor) : ''}
+          </div>
+          ${c.objective ? `<div class="cc-api-meta">${this.escapeHtml(c.objective)}</div>` : ''}
+          ${c._account ? `<div class="cc-api-account">${this.escapeHtml(c._account)}</div>` : ''}
         </div>
-        ${c.objective ? `<div class="cc-api-meta">${this.escapeHtml(c.objective)}</div>` : ''}
-        ${c._account ? `<div class="cc-api-account">${this.escapeHtml(c._account)}</div>` : ''}
       </div>`;
     }).join('');
   }
@@ -398,14 +407,20 @@ class CommandCenterView extends BaseView {
 
     body.innerHTML = apiAudiences.map((a) => {
       const sz = a.approximate_count || a.size;
+      const platform = String(a._platform || '').toLowerCase();
+      const dotClass = platform.includes('meta') || platform.includes('facebook') ? 'cc-api-platform-dot--meta'
+        : platform.includes('google') ? 'cc-api-platform-dot--google' : '';
       return `
       <div class="cc-api-item">
-        <div class="cc-api-item-head">
-          <span class="cc-api-name">${this.escapeHtml(a.name || a.id || 'Audiencia')}</span>
-          ${a.subtype ? this._tag(String(a.subtype), 'purple') : ''}
+        <div class="cc-api-platform-dot ${dotClass}"></div>
+        <div class="cc-api-content">
+          <div class="cc-api-item-head">
+            <span class="cc-api-name">${this.escapeHtml(a.name || a.id || 'Audiencia')}</span>
+            ${a.subtype ? this._tag(String(a.subtype), 'purple') : ''}
+          </div>
+          ${sz != null ? `<div class="cc-api-meta">${Number(sz).toLocaleString('es-ES')} personas aprox.</div>` : ''}
+          ${a._account ? `<div class="cc-api-account">${this.escapeHtml(a._account)}</div>` : ''}
         </div>
-        ${sz != null ? `<div class="cc-api-meta">${Number(sz).toLocaleString('es-ES')} personas aprox.</div>` : ''}
-        ${a._account ? `<div class="cc-api-account">${this.escapeHtml(a._account)}</div>` : ''}
       </div>`;
     }).join('');
   }

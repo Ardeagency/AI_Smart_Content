@@ -1994,17 +1994,32 @@ class Navigation {
   _startCreditsRefreshInterval() {
     this._stopCreditsRefreshInterval();
     if (this.currentMode !== 'user' || !this.currentOrgId) return;
+    // Pausa el polling cuando la pestaña está oculta: evita hits cada 25s a la DB
+    // (RLS + egress). Al volver, un visibilitychange dispara una refresh inmediata
+    // para que el saldo de créditos se vea actualizado sin esperar al próximo tick.
     this._creditsRefreshInterval = setInterval(() => {
+      if (document.hidden) return;
       if (this.currentMode === 'user' && this.currentOrgId) {
         this.loadCreditsFromDb();
       }
     }, 25000);
+    this._creditsVisibilityHandler = () => {
+      if (document.hidden) return;
+      if (this.currentMode === 'user' && this.currentOrgId) {
+        this.loadCreditsFromDb();
+      }
+    };
+    document.addEventListener('visibilitychange', this._creditsVisibilityHandler);
   }
 
   _stopCreditsRefreshInterval() {
     if (this._creditsRefreshInterval) {
       clearInterval(this._creditsRefreshInterval);
       this._creditsRefreshInterval = null;
+    }
+    if (this._creditsVisibilityHandler) {
+      document.removeEventListener('visibilitychange', this._creditsVisibilityHandler);
+      this._creditsVisibilityHandler = null;
     }
   }
 
