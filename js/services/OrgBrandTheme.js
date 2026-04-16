@@ -121,98 +121,15 @@
     }
   }
 
-  function hexToRgba(hex, alpha) {
-    const clean = (hex || '').replace(/^#/, '');
-    if (clean.length !== 6) return hex;
-    const r = parseInt(clean.slice(0, 2), 16);
-    const g = parseInt(clean.slice(2, 4), 16);
-    const b = parseInt(clean.slice(4, 6), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-  }
-
-  function hexToHSL(hex) {
-    const clean = (hex || '').replace(/^#/, '');
-    const r = parseInt(clean.slice(0, 2), 16) / 255;
-    const g = parseInt(clean.slice(2, 4), 16) / 255;
-    const b = parseInt(clean.slice(4, 6), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        default: h = ((r - g) / d + 4) / 6;
-      }
-    }
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-
-  function hslToHex(h, s, l) {
-    s /= 100; l /= 100;
-    const a = s * Math.min(l, 1 - l);
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    };
-    const r = Math.round(f(0) * 255);
-    const g = Math.round(f(8) * 255);
-    const b = Math.round(f(4) * 255);
-    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-  }
-
-  function filterAndScoreBrandColors(hexes) {
-    const MIN_L = 18, MAX_L = 85, MIN_S = 15, MAX_S = 90;
-    const idealL = 45, idealS = 50;
-    const out = [];
-    for (const hex of hexes.slice(0, 5)) {
-      const { h, s, l } = hexToHSL(hex);
-      if (l > MAX_L || l < MIN_L || s < MIN_S || s > MAX_S) continue;
-      const scoreL = 30 - Math.abs(l - idealL) / 2;
-      const scoreS = 40 - Math.abs(s - idealS) / 2;
-      out.push({ hex, h, s, l, score: Math.max(0, scoreL + scoreS) });
-    }
-    return out.sort((a, b) => b.score - a.score).slice(0, 3);
-  }
-
-  function getBrandUIPalette(hexes) {
-    if (!hexes || hexes.length === 0) return null;
-    const filtered = filterAndScoreBrandColors(hexes);
-    if (filtered.length === 0) {
-      const raw = hexes[0];
-      const { h, s, l } = hexToHSL(raw);
-      const primary = hslToHex(h, Math.min(90, Math.max(20, s)), Math.min(75, Math.max(25, l)));
-      const secondary = hslToHex(h, Math.min(85, s + 5), Math.max(15, l - 18));
-      return { primary, secondary };
-    }
-    const primary = filtered[0].hex;
-    let secondary = null;
-    for (let i = 1; i < filtered.length; i++) {
-      const diff = Math.abs(filtered[i].h - filtered[0].h);
-      const hueDiff = Math.min(diff, 360 - diff);
-      if (hueDiff > 20) {
-        secondary = filtered[i].hex;
-        break;
-      }
-    }
-    if (!secondary) {
-      const { h, s, l } = hexToHSL(primary);
-      secondary = hslToHex(h, Math.min(90, s + 10), Math.max(18, l - 12));
-    }
-    return { primary, secondary };
-  }
-
-  function buildBrandGradientCss(hexes, angle) {
-    angle = angle === undefined ? 135 : angle;
-    if (!hexes || hexes.length === 0) return '';
-    const alpha = angle === 180 ? 1 : 0.88;
-    const stops = hexes.map((hex, i) => {
-      const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
-      return hexToRgba(hex, alpha) + ' ' + Math.round(pct) + '%';
-    });
-    return 'linear-gradient(' + angle + 'deg, ' + stops.join(', ') + ')';
-  }
+  // Color utils compartidos desde /js/utils/brand-colors.js (cargado antes que este
+  // service en index.html). Aliases locales para no tocar el resto del archivo.
+  const _BC = () => window.BrandColors || {};
+  function hexToRgba(hex, alpha)           { return _BC().hexToRgba(hex, alpha); }
+  function hexToHSL(hex)                   { return _BC().hexToHSL(hex); }
+  function hslToHex(h, s, l)               { return _BC().hslToHex(h, s, l); }
+  function filterAndScoreBrandColors(hexes){ return _BC().filterAndScoreBrandColors(hexes); }
+  function getBrandUIPalette(hexes)        { return _BC().getBrandUIPalette(hexes); }
+  function buildBrandGradientCss(hexes, angle) { return _BC().buildBrandGradientCss(hexes, angle); }
 
   function getLastBrandHexes() {
     return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];

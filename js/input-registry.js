@@ -1189,37 +1189,10 @@
     initAspectRatioPicker(container);
   }
 
-  function hexToHSL(hex) {
-    var clean = (hex || '').toString().replace(/^#/, '');
-    if (clean.length < 6) clean = '000000';
-    var r = parseInt(clean.slice(0, 2), 16) / 255;
-    var g = parseInt(clean.slice(2, 4), 16) / 255;
-    var b = parseInt(clean.slice(4, 6), 16) / 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-      var d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        default: h = ((r - g) / d + 4) / 6;
-      }
-    }
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-  function hslToHex(h, s, l) {
-    s /= 100; l /= 100;
-    var a = s * Math.min(l, 1 - l);
-    var f = function (n) {
-      var k = (n + h / 30) % 12;
-      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    };
-    var r = Math.round(f(0) * 255);
-    var g = Math.round(f(8) * 255);
-    var b = Math.round(f(4) * 255);
-    return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
-  }
+  // Color utils compartidos: ver /js/utils/brand-colors.js (cargado como dependencia
+  // de las vistas que usan input-registry vía app.js _lazy).
+  function hexToHSL(hex) { return (window.BrandColors || {}).hexToHSL(hex); }
+  function hslToHex(h, s, l) { return (window.BrandColors || {}).hslToHex(h, s, l); }
   /**
    * Abre el modal de selección de color (rueda + hex + Aplicar/Cerrar). Llama a onApply(hex) al pulsar Aplicar.
    * @param {string} initialHex - Hex inicial (ej. #6E3DE9)

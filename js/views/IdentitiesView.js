@@ -295,12 +295,12 @@ class IdentitiesView extends BaseView {
     }).join('');
   }
 
+  /** Debe coincidir con columnas en identities.css (máx. 3 para tarjetas más grandes). */
   _getMasonryColumns() {
     const w = window.innerWidth || 1200;
-    if (w >= 1280) return 5;
-    if (w >= 1024) return 4;
-    if (w >= 768) return 3;
-    return 2;
+    if (w >= 992) return 3;
+    if (w >= 640) return 2;
+    return 1;
   }
 
   _renderProductsMasonry() {
