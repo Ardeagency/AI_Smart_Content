@@ -227,11 +227,18 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Marca organizacional (sin galería Brand Storage) ──
-    // brand-colors: degradados/glass. brand-schema: catálogos (NICHO_CORE_OPTIONS, TYPOGRAPHY_FONTS, BRAND_SCHEMA_BLOCKS_ORG).
+    // Dependencias en orden: utilidades → config → vista base → mixins.
+    //   · brand-colors, brand-schema: fuentes únicas.
+    //   · BrandOrganizationView: clase principal.
+    //   · *.mixin.js: parches sobre BrandOrganizationView.prototype.
     const brandViewLoader = this._lazy('BrandOrganizationView', [
       '/js/utils/brand-colors.js',
       '/js/config/brand-schema.js',
-      '/js/views/BrandOrganizationView.js'
+      '/js/views/BrandOrganizationView.js',
+      '/js/views/brand-organization/Typography.mixin.js',
+      '/js/views/brand-organization/Uploads.mixin.js',
+      '/js/views/brand-organization/ColorEditor.mixin.js',
+      '/js/views/brand-organization/InfoPanel.mixin.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
