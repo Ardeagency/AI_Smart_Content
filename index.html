@@ -95,7 +95,7 @@
     <div id="modals-portal" aria-hidden="true"></div>
 
     <!-- External Scripts.
-         Chart.js ya no se carga aquí: se lazy-loadea desde DashboardView cuando se necesita.
+         Chart.js no se carga aquí; otras vistas lo cargan bajo demanda si lo necesitan.
          Supabase JS SDK usa `defer` para no bloquear la primera pintura del hero.
          Versión pinneada + SRI: sin pin, jsdelivr resuelve `@2` a la última minor y el
          SRI rompería en cada release. Con hash fijo, si el CDN sirve bytes distintos el
