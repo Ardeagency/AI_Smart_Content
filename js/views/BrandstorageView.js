@@ -796,13 +796,22 @@ class BrandstorageView extends BaseView {
   formatMercadoObjetivoTile(item) {
     const raw = item?.mercado_objetivo;
     const arr = Array.isArray(raw) ? raw.filter((v) => v != null && String(v).trim() !== '') : [];
-    const opts = BrandstorageView.BRAND_MERCADO_OPTIONS || [];
+    let opts = [];
+    try {
+      opts = (window.BrandSchema && Array.isArray(window.BrandSchema.BRAND_MERCADO_OPTIONS))
+        ? window.BrandSchema.BRAND_MERCADO_OPTIONS
+        : [];
+    } catch (_) {
+      opts = [];
+    }
     if (!arr.length) return 'Sin mercado definido';
     return arr
       .map((v) => {
         const s = String(v).trim();
-        const opt = opts.find((o) => String(o.value) === s);
-        return opt ? String(opt.label || '').trim() : s;
+        const opt = opts.find((o) => (typeof o === 'string' ? o === s : String(o?.value ?? '') === s));
+        if (typeof opt === 'string') return opt;
+        if (opt && typeof opt === 'object') return String(opt.label || opt.value || '').trim();
+        return s;
       })
       .filter(Boolean)
       .join(' · ');

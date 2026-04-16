@@ -223,7 +223,11 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Marca organizacional (sin galería Brand Storage) ──
-    const brandViewLoader = this._lazy('BrandOrganizationView', ['/js/views/BrandOrganizationView.js']);
+    // brand-colors: BrandOrganizationView usa window.BrandColors (degradados / glass).
+    const brandViewLoader = this._lazy('BrandOrganizationView', [
+      '/js/utils/brand-colors.js',
+      '/js/views/BrandOrganizationView.js'
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);
     r.register('/brands', brandViewLoader, auth);
@@ -231,8 +235,13 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/brand-organization', brandViewLoader, auth);
     r.register('/brand-organization', brandViewLoader, auth);
 
-    // ── Org: Brand Storage — vista propia (galería + INFO sub-marcas), sin delegar en BrandOrganizationView ──
-    const brandStorageViewLoader = this._lazy('BrandstorageView', ['/js/views/BrandstorageView.js']);
+    // ── Org: Brand Storage — vista propia (galería + INFO sub-marcas) ──
+    // brand-schema: getters estáticos y mercado_objetivo; brand-colors: utilidades de color.
+    const brandStorageViewLoader = this._lazy('BrandstorageView', [
+      '/js/config/brand-schema.js',
+      '/js/utils/brand-colors.js',
+      '/js/views/BrandstorageView.js'
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageViewLoader, auth);
     r.register('/brand-storage', brandStorageViewLoader, auth);
     r.register('/brandstorage', brandStorageViewLoader, auth);
