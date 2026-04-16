@@ -44,7 +44,14 @@ function verifyAndDecodeState(state) {
 }
 
 function sanitizeReturnTo(returnTo) {
-  return /^\/[a-zA-Z0-9\-_/?=&%#]*$/.test(returnTo) ? returnTo : '/home';
+  // Solo rutas internas "planas": / + alfanuméricos + _ - / . sin query/fragment.
+  // Rechazamos `?`, `#`, `%`, `&`, `=`, `\\` y `//` aunque sean comunes: no son
+  // necesarios en un return_to legítimo y sí son vectores para XSS en atributos
+  // HTML o open-redirect (`//evil.com/...` es protocol-relative).
+  if (typeof returnTo !== 'string' || returnTo.length > 200) return '/home';
+  if (!/^\/[A-Za-z0-9_\-/.]*$/.test(returnTo)) return '/home';
+  if (returnTo.includes('//') || returnTo.startsWith('/\\')) return '/home';
+  return returnTo;
 }
 
 function getRedirectUri() {

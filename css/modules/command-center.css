@@ -3,7 +3,12 @@
 .cc-page {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1rem;
+  padding: calc(48px + 1.25rem) 1.5rem 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  min-height: 100%;
 }
 
 /* ── Panels ──────────────────────────────────────────────────────── */
@@ -12,6 +17,13 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  /* glass-black inline — sin depender de .card */
+  background: var(--glass-black-bg);
+  border: 1px solid var(--glass-black-border);
+  color: var(--glass-black-text);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
 }
 
 .cc-panel-head {

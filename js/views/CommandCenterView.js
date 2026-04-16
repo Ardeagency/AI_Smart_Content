@@ -74,10 +74,10 @@ class CommandCenterView extends BaseView {
   /* ── HTML ─────────────────────────────────────────────────────────── */
   renderHTML() {
     return `
-<div class="cc-page page-content" id="commandCenterPage">
+<div class="cc-page" id="commandCenterPage">
 
   <!-- Bloque de audiencias Supabase — ancho completo arriba -->
-  <section class="cc-panel card glass-black" id="ccPanelAudiences">
+  <section class="cc-panel" id="ccPanelAudiences">
     <div class="cc-panel-head">
       <div class="cc-panel-title">
         <i class="fas fa-users"></i>
@@ -95,7 +95,7 @@ class CommandCenterView extends BaseView {
   <div class="cc-bottom-row">
 
     <!-- Izquierda: Campañas Supabase -->
-    <section class="cc-panel card glass-black" id="ccPanelCampaigns">
+    <section class="cc-panel" id="ccPanelCampaigns">
       <div class="cc-panel-head">
         <div class="cc-panel-title">
           <i class="fas fa-bullhorn"></i>
@@ -110,7 +110,7 @@ class CommandCenterView extends BaseView {
     </section>
 
     <!-- Centro: Campañas de API -->
-    <section class="cc-panel card glass-black" id="ccPanelApiCampaigns">
+    <section class="cc-panel" id="ccPanelApiCampaigns">
       <div class="cc-panel-head">
         <div class="cc-panel-title">
           <i class="fas fa-satellite-dish"></i>
@@ -125,7 +125,7 @@ class CommandCenterView extends BaseView {
     </section>
 
     <!-- Derecha: Audiencias de API -->
-    <section class="cc-panel card glass-black" id="ccPanelApiAudiences">
+    <section class="cc-panel" id="ccPanelApiAudiences">
       <div class="cc-panel-head">
         <div class="cc-panel-title">
           <i class="fas fa-plug"></i>

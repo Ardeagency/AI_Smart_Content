@@ -209,6 +209,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
   _showNoPages(returnTo) {
     const wrap = document.getElementById('bic-container');
     if (!wrap) return;
+    const safeReturn = this._safeInternalPath(returnTo);
     wrap.innerHTML = `
       <div class="bic-error">
         <i class="fas fa-flag"></i>
@@ -223,17 +224,36 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
               asegúrate de seleccionar al menos una página antes de continuar.</li>
           <li>Si no eres Administrador de ninguna Página, primero crea una o pide acceso de administrador.</li>
         </ul>
-        <button onclick="window.router?.navigate('${returnTo}')" class="bic-confirm-btn">
+        <button type="button" class="bic-confirm-btn" data-bic-back="1">
           <i class="fas fa-arrow-left"></i> Volver
         </button>
       </div>`;
+    wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect(safeReturn));
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  /**
+   * Valida que `path` sea una ruta interna segura (misma app, sin esquema, sin `//`
+   * para que el router no lo interprete como protocol-relative). Si no lo es,
+   * devuelve `/brands` (fallback seguro).
+   *
+   * Rechazamos deliberadamente `?`, `#`, `%`, `&`, `=`, espacios y comillas —
+   * nunca necesarios en una ruta interna y sí utilizables para XSS/open-redirect
+   * si el valor llegara a un atributo HTML o a `window.location.href`.
+   */
+  _safeInternalPath(path) {
+    const s = typeof path === 'string' ? path.trim() : '';
+    if (!s || s.length > 200) return '/brands';
+    if (!/^\/[A-Za-z0-9_\-/.]*$/.test(s)) return '/brands';
+    if (s.includes('//') || s.startsWith('/\\')) return '/brands';
+    return s;
+  }
+
   _redirect(to) {
-    if (window.router) window.router.navigate(to, true);
-    else window.location.href = to;
+    const safe = this._safeInternalPath(to);
+    if (window.router) window.router.navigate(safe, true);
+    else window.location.href = safe;
   }
 
   _showError(msg) {
@@ -244,10 +264,11 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
         <i class="fas fa-exclamation-triangle"></i>
         <h2>Error al conectar</h2>
         <p>${this._esc(msg)}</p>
-        <button onclick="window.router?.navigate('/brands')" class="bic-confirm-btn">
+        <button type="button" class="bic-confirm-btn" data-bic-back="1">
           <i class="fas fa-arrow-left"></i> Volver a Marcas
         </button>
       </div>`;
+    wrap.querySelector('[data-bic-back="1"]')?.addEventListener('click', () => this._redirect('/brands'));
   }
 
   _esc(text) {
