@@ -168,12 +168,13 @@
     opacity: 1;
     transform: translateY(0);
 }
-.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card {
+/* Solo hijos directos: no animar las tiles internas de Brand Storage (otro .brand-card dentro del grid). */
+.brand-dashboard-container.brands-ready .brand-cards-zone > .brand-card {
     animation: brands-card-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(1) { animation-delay: 0.05s; }
-.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(2) { animation-delay: 0.12s; }
-.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(3) { animation-delay: 0.19s; }
+.brand-dashboard-container.brands-ready .brand-cards-zone > .brand-card:nth-child(1) { animation-delay: 0.05s; }
+.brand-dashboard-container.brands-ready .brand-cards-zone > .brand-card:nth-child(2) { animation-delay: 0.12s; }
+.brand-dashboard-container.brands-ready .brand-cards-zone > .brand-card:nth-child(3) { animation-delay: 0.19s; }
 @keyframes brands-card-fade-in {
     from {
         opacity: 0;
@@ -1355,6 +1356,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font: inherit;
     color: inherit;
     padding: clamp(0.9rem, 2.8vw, 1.2rem);
+    overflow: visible;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -1407,14 +1409,15 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-height: 0;
     width: 100%;
     font-size: 0.72rem;
-    line-height: 1.4;
+    line-height: 1.45;
     font-weight: 500;
     opacity: 0.88;
-    max-height: 38%;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 5;
+    -webkit-line-clamp: 4;
+    /* Sin % de altura: el padre .__head es auto y 38% recortaba mal el -webkit-box */
+    max-height: 5.2em;
 }
 
 .brand-storage-tile__prods {
