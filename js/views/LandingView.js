@@ -51,10 +51,30 @@ class LandingView extends PublicBaseView {
       </section>
 
       <section class="vprompt" id="landing-vera-prompt" aria-labelledby="vprompt-heading">
-        <h2 id="vprompt-heading" class="vprompt__h2 sr-reveal">El cerebro que opera tu marca.</h2>
-        <p class="vprompt__sub sr-reveal sr-reveal--d1">Analiza, decide y crea en tiempo real.</p>
+        <!-- 1) Heading + subtítulo visibles desde el inicio de la sección -->
+        <h2 id="vprompt-heading" class="vprompt__h2">
+          <span class="vprompt__h2-top">El cerebro que</span>
+          <span class="vprompt__h2-main">opera tu marca</span>
+        </h2>
+        <p class="vprompt__sub">El sistema que entiende tu marca, conoce a tu audiencia y produce el contenido que tu operación necesita.</p>
 
-        <div class="vprompt__box sr-reveal sr-reveal--d2">
+        <!-- Logo Vera FIJO al viewport — se muestra solo cuando la sección está en pantalla -->
+        <img src="/recursos/vera/Vera-2.svg" class="vprompt__fixed-logo" alt="">
+
+        <!-- 2) Scroll runway: gradiente orgánico que se transforma en orb circular -->
+        <div class="vprompt__intro-runway" aria-hidden="true">
+          <div class="vprompt__intro">
+            <div class="vprompt__intro-aurora"></div>
+            <div class="vprompt__intro-orb"></div>
+          </div>
+        </div>
+
+        <!-- 3) Estado compacto: orb + caja + chips aparecen al final del scroll -->
+        <div class="vprompt__orb" aria-hidden="true">
+          <img src="/recursos/vera/Vera-2.svg" alt="" class="vprompt__orb-logo">
+        </div>
+
+        <div class="vprompt__box">
           <textarea class="vprompt__textarea" placeholder="Analiza, decide y lo convierte en acción..." rows="4" aria-label="Describe qué quieres que haga Vera"></textarea>
           <button class="vprompt__send" type="button" aria-label="Enviar">
             <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true">
@@ -63,7 +83,7 @@ class LandingView extends PublicBaseView {
           </button>
         </div>
 
-        <div class="vprompt__chips sr-reveal sr-reveal--d3" role="list">
+        <div class="vprompt__chips" role="list">
           <button class="vprompt__chip" type="button" role="listitem">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true">
               <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#888" stroke-width="1.2"/>
@@ -128,6 +148,11 @@ class LandingView extends PublicBaseView {
       </section>
 
       <section class="lfw" id="landing-after-pillars" aria-label="Flujos generativos">
+        <video class="lfw__bg-video" aria-hidden="true"
+          poster="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/winter%20scene-poster.png?updatedAt=1759895292054"
+          preload="metadata" autoplay loop muted playsinline
+          src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4"></video>
+        <div class="lfw__bg-overlay" aria-hidden="true"></div>
         <div class="lfw__inner">
           <div class="lfw__content-wrap">
             <div class="lfw__left">
@@ -238,7 +263,7 @@ class LandingView extends PublicBaseView {
       <section class="vbento" id="landing-vera-bento" aria-labelledby="vbento-heading">
         <div class="vbento__inner">
           <div class="vbento__header sr-reveal">
-            <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51" loading="lazy" decoding="async">
+            <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51">
             <h2 id="vbento-heading" class="vbento__title">Un sistema. Todo conectado.</h2>
             <p class="vbento__sub">Vera no es una herramienta. Es la inteligencia que conecta señal, decisión, ejecución y aprendizaje en un solo flujo.</p>
           </div>
@@ -250,7 +275,7 @@ class LandingView extends PublicBaseView {
                   <span class="vbento__orbit-dot vbento__orbit-dot--b"></span>
                   <span class="vbento__orbit-dot vbento__orbit-dot--c"></span>
                 </div>
-                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__hero-logo" loading="lazy" decoding="async" width="180" height="69">
+                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__hero-logo">
               </div>
               <div class="vbento__card-body">
                 <h3 class="vbento__card-title">Un solo sistema</h3>
@@ -484,6 +509,9 @@ class LandingView extends PublicBaseView {
     this.initHeroWordsRotator();
     this.initLfwScrollAnimation();
     this.initWhyCarousel();
+    this.initVpromptIntroScroll();
+    this.initVpromptGradientMouse();
+    this.initVpromptFixedLogo();
   }
 
   async onLeave() {
@@ -491,6 +519,18 @@ class LandingView extends PublicBaseView {
     if (typeof this.heroWordsRotatorCleanup === 'function') {
       this.heroWordsRotatorCleanup();
       this.heroWordsRotatorCleanup = null;
+    }
+    if (typeof this.vpromptIntroScrollCleanup === 'function') {
+      this.vpromptIntroScrollCleanup();
+      this.vpromptIntroScrollCleanup = null;
+    }
+    if (typeof this.vpromptGradientMouseCleanup === 'function') {
+      this.vpromptGradientMouseCleanup();
+      this.vpromptGradientMouseCleanup = null;
+    }
+    if (typeof this.vpromptFixedLogoCleanup === 'function') {
+      this.vpromptFixedLogoCleanup();
+      this.vpromptFixedLogoCleanup = null;
     }
     if (typeof this.lfwScrollCleanup === 'function') {
       this.lfwScrollCleanup();
@@ -873,6 +913,174 @@ class LandingView extends PublicBaseView {
       viewport.removeEventListener('scroll', updateBtns);
       viewport.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', updateBtns);
+    };
+  }
+
+  // Scroll-driven: la intro (Vera grande + gradiente) se pina en el viewport
+  // dentro del runway. Conforme se scrollea el runway (150vh), la intro se
+  // encoge y desvanece; al final aparecen orb+caja+chips (estado compacto).
+  // --vprompt-p (0 → 1) mide progreso dentro del runway específicamente.
+  initVpromptIntroScroll() {
+    if (typeof this.vpromptIntroScrollCleanup === 'function') {
+      this.vpromptIntroScrollCleanup();
+      this.vpromptIntroScrollCleanup = null;
+    }
+    const section = document.getElementById('landing-vera-prompt');
+    if (!section) return;
+    const runway = section.querySelector('.vprompt__intro-runway');
+    if (!runway) return;
+
+    let raf = null;
+    const update = () => {
+      raf = null;
+      const rect = runway.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      // Rango de scroll = alto del runway - alto del viewport
+      // (la intro está sticky top:0 así que ocupa los primeros vh del runway)
+      const range = runway.offsetHeight - vh;
+      if (range <= 0) {
+        section.style.setProperty('--vprompt-p', '0');
+        return;
+      }
+      // scrolled = cuánto ha scrolleado el runway pasado el viewport
+      const scrolled = -rect.top;
+      let p = scrolled / range;
+      if (p < 0) p = 0;
+      if (p > 1) p = 1;
+      section.style.setProperty('--vprompt-p', p.toFixed(3));
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+
+    this.vpromptIntroScrollCleanup = () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }
+
+  // Parallax siguiendo el cursor. Actualiza --mx y --my en las capas aurora+orb
+  // (rango -1 a +1) con lerp suave para un sentido orgánico.
+  initVpromptGradientMouse() {
+    if (typeof this.vpromptGradientMouseCleanup === 'function') {
+      this.vpromptGradientMouseCleanup();
+      this.vpromptGradientMouseCleanup = null;
+    }
+    const aurora = document.querySelector('#landing-vera-prompt .vprompt__intro-aurora');
+    const orb = document.querySelector('#landing-vera-prompt .vprompt__intro-orb');
+    const targets = [aurora, orb].filter(Boolean);
+    if (!targets.length) return;
+
+    // Respeta reduced-motion: no aplicar movimiento
+    if (typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    let targetX = 0, targetY = 0; // rango -1 a +1 respecto al centro
+    let currentX = 0, currentY = 0;
+    let raf = null;
+    let running = false;
+
+    const onMove = (e) => {
+      const w = window.innerWidth || document.documentElement.clientWidth;
+      const h = window.innerHeight || document.documentElement.clientHeight;
+      // Normaliza la posición del cursor a -1..+1 relativo al viewport
+      targetX = ((e.clientX / w) - 0.5) * 2;
+      targetY = ((e.clientY / h) - 0.5) * 2;
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const tick = () => {
+      // Lerp 8% por frame → movimiento suave
+      const ease = 0.08;
+      currentX += (targetX - currentX) * ease;
+      currentY += (targetY - currentY) * ease;
+
+      const mx = currentX.toFixed(3);
+      const my = currentY.toFixed(3);
+      targets.forEach(el => {
+        el.style.setProperty('--mx', mx);
+        el.style.setProperty('--my', my);
+      });
+
+      const dx = Math.abs(targetX - currentX);
+      const dy = Math.abs(targetY - currentY);
+      if (dx > 0.001 || dy > 0.001) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        running = false;
+        raf = null;
+      }
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+
+    this.vpromptGradientMouseCleanup = () => {
+      window.removeEventListener('mousemove', onMove);
+      if (raf) cancelAnimationFrame(raf);
+      running = false;
+    };
+  }
+
+  // El logo Vera es un elemento con position: fixed adherido al viewport.
+  // Lo movemos a document.body para evitar "containing block" roto por transforms.
+  // Se muestra SOLO cuando:
+  //  (a) el subtítulo "El sistema..." ya ha scrolleado FUERA del viewport (por arriba)
+  //  (b) el runway todavía está visible en el viewport
+  initVpromptFixedLogo() {
+    if (typeof this.vpromptFixedLogoCleanup === 'function') {
+      this.vpromptFixedLogoCleanup();
+      this.vpromptFixedLogoCleanup = null;
+    }
+    const section = document.getElementById('landing-vera-prompt');
+    const runway = section ? section.querySelector('.vprompt__intro-runway') : null;
+    const sub = section ? section.querySelector('.vprompt__sub') : null;
+    const logo = document.querySelector('.vprompt__fixed-logo');
+    if (!section || !runway || !sub || !logo) return;
+
+    if (logo.parentElement !== document.body) {
+      document.body.appendChild(logo);
+    }
+
+    let raf = null;
+    const update = () => {
+      raf = null;
+      const subRect = sub.getBoundingClientRect();
+      const runwayRect = runway.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      // Logo aparece apenas el subtítulo empieza a moverse hacia arriba
+      // (trigger rápido: top del subtítulo a 25% desde el tope del viewport).
+      const shouldShow = subRect.top < vh * 0.25 && runwayRect.bottom > 0;
+      logo.classList.toggle('is-visible', shouldShow);
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+
+    this.vpromptFixedLogoCleanup = () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+      if (logo.parentElement === document.body) {
+        logo.remove();
+      }
     };
   }
 }

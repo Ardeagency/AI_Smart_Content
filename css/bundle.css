@@ -659,6 +659,10 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
   padding: 0 !important;
 }
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
+/* Mientras la entrada está activa o antes de que la landing pinte: bg negro
+   para que el fade del overlay no revele el gris #191919 del body */
+body.entrance-active,
+body.route-landing { background: #000; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }
@@ -693,7 +697,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     justify-content: center;
     background: var(--bg-black);
     pointer-events: auto;
-    transition: opacity 0.9s ease-out;
+    transition: opacity 0.35s ease-out;
 }
 .loader-overlay.loader-overlay--hidden { opacity: 0; pointer-events: none; }
 .loader-overlay.loader-overlay--gone { visibility: hidden; }
@@ -714,7 +718,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     inset: 0;
     background: var(--bg-black);
     pointer-events: auto;
-    transition: opacity 0.7s ease-out;
+    transition: opacity 0.25s ease-out;
 }
 .entrance-overlay.entrance-overlay--hidden { opacity: 0; pointer-events: none; visibility: hidden; }
 
@@ -764,11 +768,11 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
         linear-gradient(82deg, rgba(255,229,0,0.35) 20%, rgba(0,231,255,0.3) 50%, rgba(91,0,234,0.35) 80%);
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.2s ease-out, width 0.7s ease-out, left 0s, right 0s;
+    transition: opacity 0.12s ease-out, width 0.3s ease-out, left 0s, right 0s;
 }
 .entrance-reveal-box.entrance-reveal-show { opacity: 1; }
 .entrance-reveal-box.entrance-reveal-expand { width: 100%; }
-.entrance-reveal-box.entrance-reveal-away { left: auto; right: 0; width: 0; transition: width 0.5s ease-out; }
+.entrance-reveal-box.entrance-reveal-away { left: auto; right: 0; width: 0; transition: width 0.25s ease-out; }
 .entrance-logo {
     position: relative;
     z-index: 3;
@@ -778,7 +782,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     display: block;
     opacity: 0;
     transform: translateY(12px);
-    transition: opacity 0.55s ease-out, transform 0.5s ease-out;
+    transition: opacity 0.22s ease-out, transform 0.22s ease-out;
 }
 .entrance-logo.entrance-visible { opacity: 1; transform: translateY(0); }
 .entrance-logo.entrance-out { opacity: 0; transform: translateY(-20px); }

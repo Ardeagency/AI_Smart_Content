@@ -97,20 +97,14 @@ body.entrance-done.route-landing #landing-background-wrap {
     }
 }
 
+/* Al hacer scroll: se mantiene la posición y tamaño originales,
+   solo se agrega el fondo efecto cristal (glass). */
 .landing-header.landing-header--floating {
-    top: 20px;
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 6px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 14px;
     background: rgba(10, 10, 10, 0.42);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 body.entrance-done .landing-header {
@@ -201,12 +195,13 @@ body.entrance-done .landing-header {
         flex-wrap: wrap;
     }
 
+    /* Mobile floating: sin cambio de posición ni tamaño, solo glass */
     .landing-header.landing-header--floating {
-        top: 8px;
-        left: 6px;
-        right: 6px;
-        width: auto;
-        padding: 6px;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        padding: 10px 16px;
     }
 
     .landing-header-logo {
@@ -412,7 +407,8 @@ body.entrance-done .landing-header {
 
 /* ─── Hero lockup: smart + carrusel vertical de palabras ─── */
 .landing-hero__lockup {
-    --hero-row: clamp(56px, 8vw, 108px);
+    /* Reducido un 30% respecto al original (56/8vw/108 → 40/5.6vw/76) */
+    --hero-row: clamp(40px, 5.6vw, 76px);
     position: relative;
     z-index: 2;
     display: flex;
@@ -420,26 +416,27 @@ body.entrance-done .landing-header {
     align-items: center;
     gap: clamp(8px, 1.5vw, 24px);
     isolation: isolate;
+    width: 100%;
 }
 
 .landing-hero__smart {
-    flex: 0 1 auto;
+    flex: 1 1 50%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     min-width: 0;
 }
 
-/* smart.svg: misma altura de imagen que las palabras (row menos 12px arriba y 12px abajo) */
+/* smart.svg: misma altura de imagen que las palabras (row menos 6px arriba y 6px abajo) */
 .landing-hero__smart-img {
     display: block;
-    height: calc(var(--hero-row) - 24px);
+    height: calc(var(--hero-row) - 12px);
     width: auto;
-    max-width: min(64vw, 580px);
+    max-width: min(45vw, 406px);
 }
 
 .landing-hero__words {
-    flex: 0 0 auto;
+    flex: 1 1 50%;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -451,23 +448,27 @@ body.entrance-done .landing-header {
     position: relative;
     overflow: hidden;
     height: calc(var(--hero-row) * 5);
-    width: clamp(200px, 38vw, 580px);
+    width: clamp(140px, 26.6vw, 406px);
+    /* Pico agudo en el centro (palabra activa al 100%) con falloff hacia los bordes:
+       fila 3 (centro) full, filas 2/4 ~50%, filas 1/5 ~15% */
     -webkit-mask-image: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(0, 0, 0, 0.5) 12%,
-        black 27%,
-        black 73%,
-        rgba(0, 0, 0, 0.5) 88%,
+        rgba(0, 0, 0, 0.15) 10%,
+        rgba(0, 0, 0, 0.5) 30%,
+        black 50%,
+        rgba(0, 0, 0, 0.5) 70%,
+        rgba(0, 0, 0, 0.15) 90%,
         transparent 100%
     );
     mask-image: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(0, 0, 0, 0.5) 12%,
-        black 27%,
-        black 73%,
-        rgba(0, 0, 0, 0.5) 88%,
+        rgba(0, 0, 0, 0.15) 10%,
+        rgba(0, 0, 0, 0.5) 30%,
+        black 50%,
+        rgba(0, 0, 0, 0.5) 70%,
+        rgba(0, 0, 0, 0.15) 90%,
         transparent 100%
     );
 }
@@ -487,7 +488,7 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 12px 0;
+    padding: 6px 0;
     box-sizing: border-box;
 }
 
@@ -496,7 +497,7 @@ body.entrance-done .landing-header {
 
 .landing-hero__words-item img {
     display: block;
-    height: calc(var(--hero-row) - 24px);
+    height: calc(var(--hero-row) - 12px);
     width: auto;
     max-width: none;
     flex-shrink: 0;
@@ -549,7 +550,8 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__lockup {
-        --hero-row: clamp(44px, 12vw, 72px);
+        /* Mobile reducido 30% (44/12vw/72 → 31/8.4vw/50) */
+        --hero-row: clamp(31px, 8.4vw, 50px);
         flex-direction: column;
         align-items: center;
         gap: clamp(10px, 3vw, 20px);
@@ -561,11 +563,11 @@ body.entrance-done .landing-header {
     }
 
     .landing-hero__smart-img {
-        max-width: min(92vw, 420px);
+        max-width: min(64vw, 294px);
     }
 
     .landing-hero__words-viewport {
-        width: min(96vw, 580px);
+        width: min(67vw, 406px);
     }
 
     .landing-hero__title   { font-size: clamp(2.8rem, 13vw, 4rem); }
@@ -576,6 +578,8 @@ body.entrance-done .landing-header {
 ───────────────────────────────────────── */
 
 .vprompt {
+    /* --vprompt-p: 0 → 1 conforme avanza el scroll DENTRO del runway de la intro. JS lo actualiza. */
+    --vprompt-p: 0;
     background: #000000;
     color: #ffffff;
     padding: clamp(72px, 11vh, 130px) clamp(20px, 5vw, 60px) clamp(60px, 10vh, 110px);
@@ -586,6 +590,114 @@ body.entrance-done .landing-header {
     text-align: center;
     position: relative;
     overflow: hidden;
+}
+
+/* Runway de 200vh — 1 pantalla de scroll sticky (200vh - 100vh intro = 100vh scroll). */
+.vprompt__intro-runway {
+    position: relative;
+    width: 100%;
+    height: 200vh;
+    margin-top: clamp(40px, 6vh, 80px);
+    margin-bottom: clamp(20px, 3vh, 40px);
+}
+
+/* Intro sticky: se pina en el viewport. Grid overlay con aurora + orb centrados.
+   El logo Vera es ahora un elemento FIJO separado (.vprompt__fixed-logo). */
+.vprompt__intro {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.vprompt__intro > * {
+    grid-area: 1 / 1; /* todos los hijos en la misma celda → se apilan centrados */
+}
+
+/* Logo Vera FIJO al viewport. Aparece de forma sutil al hacer scroll:
+   fade largo + suave escalado/translate para un entry delicado. */
+.vprompt__fixed-logo {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* Estado inicial: escala ligeramente reducida + pequeño desplazamiento hacia abajo */
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.94);
+    width: clamp(143px, 18.48vw, 218px);
+    height: auto;
+    filter: brightness(0) invert(1);
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.9s;
+}
+
+.vprompt__fixed-logo.is-visible {
+    opacity: 1;
+    visibility: visible;
+    /* Estado final: centrado y escala natural */
+    transform: translate(-50%, -50%) scale(1);
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0s;
+}
+
+/* Aurora orgánica — gradiente difuso fijo (sin transformación por scroll).
+   Se extiende más allá del viewport (-40%) para que el blur y las zonas transparent
+   tengan espacio de fade a negro sin dejar bordes rectangulares visibles. */
+.vprompt__intro-aurora {
+    --mx: 0;
+    --my: 0;
+    position: absolute;
+    inset: -40%;
+    width: auto;
+    height: auto;
+    background:
+        radial-gradient(
+            ellipse 40% 45%
+            at calc(30% + var(--mx) * 10%) calc(35% + var(--my) * 12%),
+            #ff4e2e 0%, transparent 55%
+        ),
+        radial-gradient(
+            ellipse 38% 42%
+            at calc(65% + var(--mx) * 12%) calc(42% + var(--my) * 10%),
+            #ec4899 0%, transparent 55%
+        ),
+        radial-gradient(
+            ellipse 42% 48%
+            at calc(35% + var(--mx) * -10%) calc(68% + var(--my) * -8%),
+            #b84eff 0%, transparent 55%
+        ),
+        radial-gradient(
+            ellipse 40% 45%
+            at calc(68% + var(--mx) * -12%) calc(70% + var(--my) * -10%),
+            #6d28d9 0%, transparent 55%
+        );
+    filter: blur(110px);
+    opacity: 1;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Orb desactivado — ya no hay transformación de degradado a círculo */
+.vprompt__intro-orb {
+    display: none;
+}
+
+/* Heading + subtítulo visibles desde el inicio (sin atado al scroll) */
+/* Contenido compacto (orb + caja + chips): aparece al final del runway */
+.vprompt .vprompt__orb,
+.vprompt .vprompt__box,
+.vprompt .vprompt__chips {
+    opacity: calc(max(0, var(--vprompt-p) * 1.8 - 0.6));
+    transform: translateY(calc((1 - var(--vprompt-p)) * 30px));
+    transition: none;
 }
 
 /* Vignette radial sutil en las esquinas */
@@ -599,22 +711,103 @@ body.entrance-done .landing-header {
 
 .vprompt > * { position: relative; z-index: 1; }
 
-/* ── Heading ── */
+/* ── Orb Vera (círculo con degradado orgánico + texto blanco) ── */
+.vprompt__orb {
+    position: relative;
+    width: clamp(72px, 8vw, 96px);
+    height: clamp(72px, 8vw, 96px);
+    border-radius: 50%;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Gradiente orgánico: varios radiales superpuestos crean la mezcla suave
+       rosa / púrpura / azul / naranja que se ve en la referencia. */
+    background:
+        radial-gradient(circle at 25% 20%, #d946ef 0%, transparent 55%),
+        radial-gradient(circle at 80% 25%, #ff7a3d 0%, transparent 50%),
+        radial-gradient(circle at 70% 75%, #6d28d9 0%, transparent 55%),
+        radial-gradient(circle at 25% 80%, #ec4899 0%, transparent 55%),
+        radial-gradient(circle at 50% 50%, #4338ca 0%, transparent 65%),
+        #1a0a3a;
+    box-shadow:
+        0 0 24px rgba(217, 70, 239, 0.35),
+        0 0 48px rgba(109, 40, 217, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Sutil highlight de cristal arriba */
+.vprompt__orb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.25) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.vprompt__orb-logo {
+    position: relative;
+    z-index: 1;
+    width: 58%;
+    height: auto;
+    display: block;
+    /* Fuerza todo el logo (incluida la "V" con gradiente) a blanco puro */
+    filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+/* ── Heading (dos líneas: pequeña blanca arriba, grande con degradado abajo) ── */
 .vprompt__h2 {
-    font-size: clamp(2rem, 5.5vw, 3.6rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 0;
     font-weight: 600;
     letter-spacing: -0.025em;
-    line-height: 1.1;
+}
+
+.vprompt__h2-top {
+    font-size: clamp(1.3rem, 2.86vw, 1.95rem);
+    font-weight: 500;
     color: #ffffff;
-    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1;
+}
+
+.vprompt__h2-main {
+    font-size: clamp(2.4rem, 6.5vw, 4.4rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    background: linear-gradient(90deg,
+        #1a66ff 0%,
+        #7a2bff 22%,
+        #b32bff 40%,
+        #e02bb8 58%,
+        #ff3f5e 76%,
+        #ff7a1a 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
 /* ── Subtítulo ── */
 .vprompt__sub {
     font-size: clamp(0.88rem, 1.5vw, 1.05rem);
     color: rgba(255,255,255,0.46);
-    margin: 0;
-    line-height: 1.5;
+    /* Margen negativo: compensa el descender de "opera tu marca" (la "p") para
+       acercar visualmente el subtítulo al heading. */
+    margin: -18px auto 0;
+    line-height: 1.4;
+    /* Ancho máximo alineado con el heading "opera tu marca" */
+    max-width: min(92%, 520px);
+    text-align: center;
+    text-wrap: balance;
 }
 
 /* ── Caja textarea (separación extra respecto al bloque título + subtítulo) ── */
@@ -1571,8 +1764,36 @@ body.entrance-done .landing-header {
     overflow: hidden;
 }
 
+/* Video de fondo (VFX) — cubre toda la sección, debajo del contenido */
+.lfw__bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+}
+
+/* Overlay oscuro para que el contenido sea legible sobre el video */
+.lfw__bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.35) 50%,
+        rgba(0, 0, 0, 0.65) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
 /* Inner: full-size, sin restricción de ancho */
 .lfw__inner {
+    position: relative;
+    z-index: 2;
     width: 100%;
     height: 100%;
     display: flex;
@@ -2208,10 +2429,10 @@ body.entrance-done .landing-header {
 
 .landing-statement__heading {
     margin: 0 0 clamp(20px, 2.8vw, 36px);
-    font-size: clamp(1.5rem, 3.4vw, 3rem);
+    font-size: clamp(2rem, 5.5vw, 4.8rem);
     font-weight: 700;
     letter-spacing: -0.03em;
-    line-height: 1.15;
+    line-height: 1.08;
     background: linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0.42) 0%,
@@ -3177,6 +3398,305 @@ body.entrance-done .landing-header {
         opacity: 1;
         transform: none;
         transition: none;
+    }
+}
+
+/* ─────────────────────────────────────────
+   Public header: dropdown "Nosotros" + botones CTA
+   ───────────────────────────────────────── */
+
+/* Dropdown wrapper */
+.public-nav-dropdown {
+    position: relative;
+    display: inline-flex;
+}
+
+button.public-nav-dropdown-trigger,
+.landing-header-link.public-nav-dropdown-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    cursor: pointer;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    height: 38px;
+    padding: 0 18px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 22px;
+    color: var(--color-white);
+    opacity: 1;
+    transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+button.public-nav-dropdown-trigger:hover,
+.landing-header-link.public-nav-dropdown-trigger:hover {
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.public-nav-dropdown-caret {
+    transition: transform 0.22s ease;
+    opacity: 0.85;
+}
+
+.public-nav-dropdown.is-open .public-nav-dropdown-caret {
+    transform: rotate(180deg);
+}
+
+/* Menu desplegable — efecto cristal (frosted glass) con borde blanco delgado */
+.public-nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 220px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 18px;
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+    z-index: 1000;
+}
+
+.public-nav-dropdown.is-open .public-nav-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.public-dropdown-item {
+    display: block;
+    padding: 10px 14px;
+    color: var(--color-white);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border-radius: 9px;
+    opacity: 0.88;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.public-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    opacity: 1;
+}
+
+.public-dropdown-item.is-active {
+    background: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+}
+
+/* "Solicitar Acceso" — píldora outlined transparente */
+.public-nav-request {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 18px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 22px;
+    background: transparent;
+    color: var(--color-white);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.public-nav-request:hover {
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ───── Borde arcoíris animado (hover compartido) ─────
+   Técnica: conic-gradient girando sobre su eje, con @property animando un ángulo.
+   La banda de colores recorre todo el contorno del botón de forma fluida y continua.
+   El mask-composite recorta todo menos el anillo de 1.5px de grosor — el texto
+   del botón queda en el centro transparente, siempre visible. */
+@property --border-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes nav-border-rotate {
+    to { --border-angle: 360deg; }
+}
+
+button.public-nav-dropdown-trigger::before,
+a.public-nav-request::before {
+    content: '';
+    position: absolute;
+    /* -1.5px para compensar el border nativo 1.5px y que el arcoíris toque el borde externo */
+    inset: -1.5px;
+    border-radius: 23.5px;
+    padding: 1.5px;
+    background: conic-gradient(
+        from var(--border-angle),
+        #ff0000, #ff6500, #ffe500, #9acc00, #00d614,
+        #00e7ff, #0018ee, #5b00ea, #900090, #ff0000
+    );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+button.public-nav-dropdown-trigger:hover::before,
+a.public-nav-request:hover::before {
+    opacity: 1;
+    animation: nav-border-rotate 8s linear infinite;
+}
+
+/* "Acceder" — píldora NEGRA con arcoíris siguiendo la curva del borde inferior.
+   NO usar `isolation: isolate`: los pseudos con z-index:-1 deben escapar al stacking
+   context del header para quedar realmente DETRÁS del fondo negro del botón.
+   Alta especificidad para ganarle a `.public-nav-access` de public.css. */
+a.public-nav-access--glow,
+a.public-nav-access.public-nav-access--glow {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 22px;
+    margin-left: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    background: #000;
+    color: var(--color-white);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+/* HALO difuso debajo (glow amplio y suave) */
+a.public-nav-access--glow::before {
+    content: '';
+    position: absolute;
+    left: -5%;
+    right: -5%;
+    bottom: -9px;
+    height: 18px;
+    background: var(--brand-gradient);
+    border-radius: 40px;
+    filter: blur(12px);
+    opacity: 0.85;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* BORDE ARCOÍRIS INFERIOR — píldora 2px más grande detrás del botón,
+   con máscara vertical que solo muestra una franja en el borde inferior.
+   Como el botón tiene bg negro y NO hay isolation, el pseudo queda por detrás
+   y sólo asoma por fuera del botón: se ve como una línea arcoíris que sigue
+   las esquinas curvas inferiores (↘ ↙). */
+a.public-nav-access--glow::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 24px;
+    background: var(--brand-gradient);
+    z-index: -1;
+    pointer-events: none;
+    /* Mask agresivo: mantener solo el último ~8% (línea fina) */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 82%, #000 92%);
+    mask-image: linear-gradient(to bottom, transparent 0%, transparent 82%, #000 92%);
+}
+
+a.public-nav-access--glow:hover {
+    background: #000;
+    border-color: transparent;
+    transform: translateY(-1px);
+}
+
+a.public-nav-access--glow:hover::before {
+    opacity: 1;
+    filter: blur(14px);
+}
+
+/* En hover: el ::after pasa de "línea inferior" a anillo completo animado
+   con conic-gradient rotando (mismo efecto fluido que los otros botones).
+   inset: -1px para compensar el border 1px nativo y que el arcoíris toque
+   el borde externo del botón sin dejar "anillo oscuro" visible. */
+a.public-nav-access--glow:hover::after {
+    inset: -1px;
+    padding: 1.5px;
+    border-radius: 23px;
+    background: conic-gradient(
+        from var(--border-angle),
+        #ff0000, #ff6500, #ffe500, #9acc00, #00d614,
+        #00e7ff, #0018ee, #5b00ea, #900090, #ff0000
+    );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 1;
+    animation: nav-border-rotate 8s linear infinite;
+}
+
+/* Ajustes mobile: dropdown + CTAs a ancho completo */
+@media (max-width: 768px) {
+    .public-header-nav .public-nav-dropdown {
+        width: 100%;
+    }
+    .public-header-nav .public-nav-dropdown-trigger {
+        width: 100%;
+        justify-content: space-between;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 10px;
+    }
+    .public-header-nav .public-nav-dropdown-menu {
+        position: static;
+        min-width: 0;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        display: none;
+        margin-top: 4px;
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.04);
+    }
+    .public-header-nav .public-nav-dropdown.is-open .public-nav-dropdown-menu {
+        display: flex;
+    }
+    .public-header-nav .public-nav-request,
+    .public-header-nav .public-nav-access--glow {
+        width: 100%;
+        height: 40px;
+        padding: 0 14px;
+        margin-left: 0;
+        margin-top: 4px;
     }
 }
 

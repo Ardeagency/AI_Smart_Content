@@ -11,6 +11,7 @@
  * y devolver el control a #app-container.
  */
 (function () {
+  // Items dentro del dropdown de "Nosotros".
   const NAV_LINKS = [
     { href: '/plataforma', label: 'Plataforma' },
     { href: '/soluciones', label: 'Soluciones' },
@@ -61,11 +62,12 @@
   let scrollCleanup = null;
   let ioCleanup = null;
   let mobileCleanup = null;
+  let dropdownCleanup = null;
   let routeListenerBound = false;
 
   function buildHeaderHTML() {
-    const links = NAV_LINKS.map(item =>
-      `<a href="${item.href}" class="landing-header-link public-nav-link" data-href="${item.href}">${item.label}</a>`
+    const dropdownItems = NAV_LINKS.map(item =>
+      `<a href="${item.href}" class="public-dropdown-item public-nav-link" data-href="${item.href}" role="menuitem">${item.label}</a>`
     ).join('');
 
     return `
@@ -77,9 +79,19 @@
           <span></span><span></span><span></span>
         </button>
         <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
-          ${links}
-          <a href="/login" class="public-nav-access" data-href="/login">Acceder</a>
-          <a href="/contacto" class="landing-header-login-btn public-nav-cta" data-href="/contacto">Solicitar acceso</a>
+          <div class="public-nav-dropdown" id="publicNavDropdown">
+            <button type="button" class="landing-header-link public-nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
+              Nosotros
+              <svg class="public-nav-dropdown-caret" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                <path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="public-nav-dropdown-menu" role="menu">
+              ${dropdownItems}
+            </div>
+          </div>
+          <a href="/contacto" class="public-nav-cta public-nav-request" data-href="/contacto">Solicitar Acceso</a>
+          <a href="/login" class="public-nav-access public-nav-access--glow" data-href="/login">Acceder</a>
         </nav>
       </header>
     `;
@@ -183,6 +195,49 @@
     };
   }
 
+  function attachDropdownBehavior() {
+    if (dropdownCleanup) { dropdownCleanup(); dropdownCleanup = null; }
+    const dropdown = document.getElementById('publicNavDropdown');
+    if (!dropdown) return;
+    const trigger = dropdown.querySelector('.public-nav-dropdown-trigger');
+    const menu = dropdown.querySelector('.public-nav-dropdown-menu');
+    if (!trigger || !menu) return;
+
+    const close = () => {
+      dropdown.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+    const open = () => {
+      dropdown.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+    };
+    const toggle = (e) => {
+      e.stopPropagation();
+      dropdown.classList.contains('is-open') ? close() : open();
+    };
+    const onDocClick = (e) => {
+      if (!dropdown.contains(e.target)) close();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    const onMenuClick = (e) => {
+      if (e.target.closest('a')) close();
+    };
+
+    trigger.addEventListener('click', toggle);
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKey);
+    menu.addEventListener('click', onMenuClick);
+
+    dropdownCleanup = () => {
+      trigger.removeEventListener('click', toggle);
+      document.removeEventListener('click', onDocClick);
+      document.removeEventListener('keydown', onKey);
+      menu.removeEventListener('click', onMenuClick);
+    };
+  }
+
   function mountShellOnce() {
     if (shellMounted) return;
     const headerRoot = document.getElementById('public-header-root');
@@ -197,6 +252,7 @@
 
     attachHeaderScrollBehavior();
     attachMobileToggleBehavior();
+    attachDropdownBehavior();
 
     shellMounted = true;
   }
@@ -287,6 +343,7 @@
     if (scrollCleanup) { scrollCleanup(); scrollCleanup = null; }
     if (ioCleanup) { ioCleanup(); ioCleanup = null; }
     if (mobileCleanup) { mobileCleanup(); mobileCleanup = null; }
+    if (dropdownCleanup) { dropdownCleanup(); dropdownCleanup = null; }
 
     const headerRoot = document.getElementById('public-header-root');
     const footerRoot = document.getElementById('public-footer-root');

@@ -264,38 +264,64 @@
             else setTimeout(fn, ms);
         }
 
-        // 1) Rectángulo con degradado: mostrar → expandir → barrer a la derecha
-        at(0, function () {
-            if (revealBox) revealBox.classList.add('entrance-reveal-show');
-        });
-        at(280, function () {
-            if (revealBox) revealBox.classList.add('entrance-reveal-expand');
-        });
-        at(1100, function () {
-            if (revealBox) revealBox.classList.add('entrance-reveal-away');
-        });
-
-        // 2) Logo visible
-        at(1400, function () {
-            if (entranceLogo) entranceLogo.classList.add('entrance-visible');
-        });
-
-        // 3) Salida logo, fade del overlay y revelar landing (#app-container)
-        at(2400, function () {
+        // Helper: cierra la entrada (fade del overlay + switch de clases)
+        function finishEntrance() {
             if (entranceLogo) entranceLogo.classList.add('entrance-out');
             overlay.classList.add('entrance-overlay--hidden');
             document.body.classList.remove('entrance-active');
             document.body.classList.add('entrance-done');
+        }
+
+        // 1) Rectángulo con degradado: mostrar → expandir → barrer a la derecha
+        at(0, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-show');
+        });
+        at(80, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-expand');
+        });
+        at(380, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-away');
         });
 
-        // 4) Al terminar: mostrar spinner solo si la landing aún no ha renderizado
-        at(3200, function () {
-            var container = document.getElementById('app-container');
-            var hasContent = container && container.innerHTML.trim().length > 0;
-            if (!hasContent && window.appLoader && typeof window.appLoader.showSpinner === 'function') {
-                window.appLoader.showSpinner();
-            }
+        // 2) Logo visible
+        at(500, function () {
+            if (entranceLogo) entranceLogo.classList.add('entrance-visible');
         });
+
+        // 3) Salida sincronizada con el render de la landing:
+        //    esperamos (a) el tiempo mínimo de marca (850ms) Y (b) que app-container tenga contenido.
+        //    Fallback duro de 1800ms por si algo falla en el render.
+        var minTimeReached = false;
+        var contentReady = false;
+        var ended = false;
+        function maybeEnd() {
+            if (ended) return;
+            if (minTimeReached && contentReady) { ended = true; finishEntrance(); }
+        }
+        at(850, function () { minTimeReached = true; maybeEnd(); });
+
+        var container = document.getElementById('app-container');
+        function hasContent() { return container && container.innerHTML.trim().length > 0; }
+        if (hasContent()) {
+            contentReady = true;
+        } else if (container && typeof MutationObserver !== 'undefined') {
+            var obs = new MutationObserver(function () {
+                if (hasContent()) {
+                    contentReady = true;
+                    obs.disconnect();
+                    maybeEnd();
+                }
+            });
+            obs.observe(container, { childList: true, subtree: true });
+            // Fallback duro: pase lo que pase, salimos a 1800ms
+            at(1800, function () {
+                try { obs.disconnect(); } catch (_) {}
+                contentReady = true;
+                maybeEnd();
+            });
+        } else {
+            at(1800, function () { contentReady = true; maybeEnd(); });
+        }
     }
 
     function startEntranceAndInit() {
