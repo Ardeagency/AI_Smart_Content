@@ -275,7 +275,72 @@ class CommandCenterView extends BaseView {
     this._renderSupabaseCampaigns();
     this._renderApiAudienceTargeting();
     this._renderApiCampaignsPanel();
+    await this._maybeSyncMetaFromApisThenRefresh(bid);
     this.updateLinksForRouter();
+  }
+
+  /**
+   * Orquestación desde el cliente: pide al backend que llame a Meta y guarde en
+   * `brand_integrations.metadata` (el navegador no usa el token de Meta directo).
+   * Throttle ~25 min por integración para no saturar Graph API.
+   */
+  async _maybeSyncMetaFromApisThenRefresh(bid) {
+    if (!this._supabase || !bid) return;
+    const rows = (this._integrations || []).filter((i) => {
+      const p = String(i.platform || '').toLowerCase();
+      return p === 'facebook' || p.includes('meta') || p.includes('facebook');
+    });
+    if (!rows.length) return;
+
+    const STALE_MS = 25 * 60 * 1000;
+    const now = Date.now();
+    const { data: { session } } = await this._supabase.auth.getSession();
+    const accessToken = session?.access_token;
+    if (!accessToken) return;
+
+    let anyOk = false;
+    for (const row of rows) {
+      const syncedAt = row.metadata?.meta_insights?.synced_at;
+      if (syncedAt) {
+        const t = new Date(syncedAt).getTime();
+        if (Number.isFinite(t) && (now - t) < STALE_MS) continue;
+      }
+      try {
+        const res = await fetch('/api/insights/fetch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            platform: 'facebook',
+            integration_id: row.id,
+            date_range: '30d',
+          }),
+        });
+        if (res.ok) anyOk = true;
+        else console.warn('CommandCenterView: meta sync HTTP', res.status, await res.text().catch(() => ''));
+      } catch (e) {
+        console.warn('CommandCenterView: meta sync', e);
+      }
+    }
+
+    if (!anyOk) return;
+
+    try {
+      const { data, error } = await this._supabase
+        .from('brand_integrations')
+        .select('id, platform, external_account_name, is_active, metadata, last_sync_at, updated_at')
+        .eq('brand_container_id', bid)
+        .order('platform', { ascending: true });
+      if (!error && Array.isArray(data)) {
+        this._integrations = data;
+        this._renderApiAudienceTargeting();
+        this._renderApiCampaignsPanel();
+      }
+    } catch (e) {
+      console.warn('CommandCenterView: refresh integrations', e);
+    }
   }
 
   _renderAudiencesCarousel() {

@@ -228,6 +228,28 @@ exports.handler = async (event) => {
     if (platform === 'facebook') {
       const appSecret = process.env.META_APP_SECRET || '';
       data = await fetchMetaInsights({ token, datePreset, appSecret });
+      // Persistir en Supabase para que el SPA (p. ej. Command Center) lea `metadata` sin llamar a Graph desde el navegador.
+      const prev = integration.metadata && typeof integration.metadata === 'object' ? integration.metadata : {};
+      const nowIso = new Date().toISOString();
+      const campaignsArr = Array.isArray(data.campaigns) ? data.campaigns : [];
+      const newMeta = {
+        ...prev,
+        campaigns: campaignsArr,
+        meta_insights: {
+          synced_at: nowIso,
+          date_preset: datePreset,
+          date_range: date_range || null,
+          ad_account_id: data.adAccountId || null,
+          accounts: data.accounts || [],
+          account_insights: data.insights || null
+        }
+      };
+      await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'PATCH',
+        searchParams: { id: `eq.${integration_id}` },
+        body: [{ metadata: newMeta, last_sync_at: nowIso, updated_at: nowIso }]
+      });
     } else if (platform === 'google') {
       if (!ga4_property_id) {
         return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'ga4_property_id is required for Google Analytics' }) };
