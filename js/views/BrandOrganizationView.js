@@ -566,83 +566,17 @@ class BrandOrganizationView extends BaseView {
     this.brandAssets = data || [];
   }
 
-  /** Opciones del desplegable `nicho_core` (valor guardado = `value`). */
-  static NICHO_CORE_OPTIONS = [
-    { value: '', label: 'Seleccionar nicho' },
-    { value: 'tecnologia_saas', label: 'Tecnología / SaaS' },
-    { value: 'ecommerce_retail', label: 'E-commerce / Retail' },
-    { value: 'salud_bienestar', label: 'Salud y bienestar' },
-    { value: 'fitness_deporte', label: 'Fitness y deporte' },
-    { value: 'alimentacion', label: 'Alimentación y gastronomía' },
-    { value: 'educacion', label: 'Educación y formación' },
-    { value: 'inmobiliaria', label: 'Inmobiliaria' },
-    { value: 'servicios_profesionales', label: 'Servicios profesionales' },
-    { value: 'marketing_agencia', label: 'Marketing y agencias' },
-    { value: 'entretenimiento', label: 'Entretenimiento y medios' },
-    { value: 'moda_belleza', label: 'Moda y belleza' },
-    { value: 'turismo', label: 'Turismo y hospitalidad' },
-    { value: 'finanzas', label: 'Finanzas y seguros' },
-    { value: 'industrial_b2b', label: 'Industrial / B2B' },
-    { value: 'sostenibilidad', label: 'Sostenibilidad e impacto' },
-    { value: 'arte_cultura', label: 'Arte y cultura' },
-    { value: 'hogar_lifestyle', label: 'Hogar y lifestyle' },
-    { value: 'otro', label: 'Otro' }
-  ];
-
-  static getNichoCoreLabel(storedValue) {
-    const v = storedValue == null ? '' : String(storedValue);
-    const row = BrandOrganizationView.NICHO_CORE_OPTIONS.find((o) => o.value === v);
-    if (row) return row.label;
-    return v.trim() ? v : 'Seleccionar nicho';
-  }
-
-  /** Esquema `public.brands` (panel INFO derecho): orden y tipo de editor. */
-  static BRAND_SCHEMA_BLOCKS = [
-    { field: 'nicho_core', label: 'Nicho core', type: 'select' },
-    { field: 'sub_nichos', label: 'Sub-nichos', type: 'array' },
-    { field: 'arquetipo', label: 'Arquetipo', type: 'text' },
-    { field: 'propuesta_valor', label: 'Propuesta de valor', type: 'textarea' },
-    { field: 'mision_vision', label: 'Misión y visión', type: 'textarea' },
-    { field: 'verbal_dna', label: 'ADN verbal (JSON)', type: 'json' },
-    { field: 'visual_dna', label: 'ADN visual (JSON)', type: 'json' },
-    { field: 'palabras_clave', label: 'Palabras clave', type: 'array' },
-    { field: 'palabras_prohibidas', label: 'Palabras prohibidas', type: 'array' },
-    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos', type: 'array' }
-  ];
-
-  static get BRAND_ARRAY_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'array').map((b) => b.field);
-  }
-
-  static get BRAND_JSON_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'json').map((b) => b.field);
-  }
-
-  static get BRAND_TEXT_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'text').map((b) => b.field);
-  }
-
-  static get BRAND_TEXTAREA_FIELDS() {
-    return BrandOrganizationView.BRAND_SCHEMA_BLOCKS.filter((b) => b.type === 'textarea').map((b) => b.field);
-  }
-
-  /** Fuentes disponibles para tipografía en imágenes (dropdown en Visual de marca). */
-  static TYPOGRAPHY_FONTS = [
-    { value: 'Inter', label: 'Inter' },
-    { value: 'Roboto', label: 'Roboto' },
-    { value: 'Open Sans', label: 'Open Sans' },
-    { value: 'Lato', label: 'Lato' },
-    { value: 'Montserrat', label: 'Montserrat' },
-    { value: 'Poppins', label: 'Poppins' },
-    { value: 'Playfair Display', label: 'Playfair Display' },
-    { value: 'Oswald', label: 'Oswald' },
-    { value: 'Raleway', label: 'Raleway' },
-    { value: 'Bebas Neue', label: 'Bebas Neue' },
-    { value: 'Source Sans 3', label: 'Source Sans 3' },
-    { value: 'Nunito', label: 'Nunito' },
-    { value: 'Work Sans', label: 'Work Sans' },
-    { value: 'DM Sans', label: 'DM Sans' },
-  ];
+  // Catálogos ahora viven en /js/config/brand-schema.js (fuente única compartida
+  // con BrandstorageView). Variante ORG = schema sin `idiomas_contenido` ni
+  // `mercado_objetivo` (aplican solo a sub-marca, no a organización).
+  static get NICHO_CORE_OPTIONS()    { return window.BrandSchema.NICHO_CORE_OPTIONS; }
+  static getNichoCoreLabel(v)        { return window.BrandSchema.getNichoCoreLabel(v); }
+  static get BRAND_SCHEMA_BLOCKS()   { return window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG; }
+  static get BRAND_ARRAY_FIELDS()    { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'array'); }
+  static get BRAND_JSON_FIELDS()     { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'json'); }
+  static get BRAND_TEXT_FIELDS()     { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'text'); }
+  static get BRAND_TEXTAREA_FIELDS() { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'textarea'); }
+  static get TYPOGRAPHY_FONTS()      { return window.BrandSchema.TYPOGRAPHY_FONTS; }
 
   // ============================================
   // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)

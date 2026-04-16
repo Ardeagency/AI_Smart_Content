@@ -106,7 +106,8 @@ class App {
     const pub = { requiresAuth: false, redirectIfAuth: false };
     const auth = { requiresAuth: true, redirectIfAuth: false };
 
-    const inputDeps = ['/js/flags-data.js', '/js/input-registry.js'];
+    // input-registry usa window.BrandColors (color picker modal) — cargar primero.
+    const inputDeps = ['/js/utils/brand-colors.js', '/js/flags-data.js', '/js/input-registry.js'];
     const devBase = ['/js/views/DevBaseView.js'];
     const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/input-registry.js'];
 
@@ -226,9 +227,10 @@ class App {
     r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Org: Marca organizacional (sin galería Brand Storage) ──
-    // brand-colors: BrandOrganizationView usa window.BrandColors (degradados / glass).
+    // brand-colors: degradados/glass. brand-schema: catálogos (NICHO_CORE_OPTIONS, TYPOGRAPHY_FONTS, BRAND_SCHEMA_BLOCKS_ORG).
     const brandViewLoader = this._lazy('BrandOrganizationView', [
       '/js/utils/brand-colors.js',
+      '/js/config/brand-schema.js',
       '/js/views/BrandOrganizationView.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
