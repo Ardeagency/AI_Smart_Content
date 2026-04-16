@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260416-meta-sync-persist';
+const APP_LAZY_SCRIPT_VER = '20260417-brand-assets';
 
 class App {
   constructor() {
@@ -21,7 +21,10 @@ class App {
     let url = src;
     if (typeof src === 'string' && src.startsWith('/') && !/^https?:\/\//i.test(src)) {
       const base = src.split(/[?#]/)[0];
-      url = `${base}?v=${APP_LAZY_SCRIPT_VER}`;
+      // Módulos bajo /js/config/ y /js/utils/: URL limpia (sin ?v=). Evita 404 cacheados en CDN
+      // cuando el archivo se añadió después y la clave de caché incluía query antigua.
+      const isSharedModule = /\/js\/(config|utils)\//.test(base);
+      url = isSharedModule ? base : `${base}?v=${APP_LAZY_SCRIPT_VER}`;
     }
     if (this._loadedScripts.has(url)) return Promise.resolve();
     return new Promise((resolve, reject) => {
