@@ -2264,9 +2264,11 @@ body.entrance-done .landing-header {
 }
 
 .landing-bento__icon {
-    width: min(140px, 70%);
-    height: auto;
+    height: clamp(78px, 9vw, 110px);
+    width: auto;
+    max-width: 80%;
     display: block;
+    object-fit: contain;
 }
 
 .landing-bento__card-label {
