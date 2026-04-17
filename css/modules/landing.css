@@ -2260,22 +2260,8 @@ body.entrance-done .landing-header {
     width: 100%;
 }
 
-.landing-bento__card-main--stat {
-    font-size: clamp(2.5rem, 6vw, 3.75rem);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: #ffffff;
-}
-
-.landing-bento__chart {
-    width: min(200px, 85%);
-    height: auto;
-    display: block;
-}
-
-.landing-bento__orbit {
-    width: min(120px, 70%);
+.landing-bento__icon {
+    width: min(140px, 70%);
     height: auto;
     display: block;
 }

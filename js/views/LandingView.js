@@ -250,34 +250,27 @@ class LandingView extends PublicBaseView {
           </header>
           <div class="landing-bento__grid">
             <article class="landing-bento__card landing-bento__card--yellow sr-reveal sr-reveal--d1">
-              <div class="landing-bento__card-main landing-bento__card-main--stat" aria-hidden="true">2x</div>
+              <div class="landing-bento__card-main" aria-hidden="true">
+                <img class="landing-bento__icon" src="recursos/icons/icono%201.svg" alt="" loading="lazy">
+              </div>
               <p class="landing-bento__card-label">Ejecución más rápida</p>
             </article>
             <article class="landing-bento__card landing-bento__card--cyan sr-reveal sr-reveal--d2">
               <div class="landing-bento__card-main" aria-hidden="true">
-                <svg class="landing-bento__chart" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <rect x="8" y="48" width="18" height="24" rx="2" fill="rgba(255,255,255,0.85)"/>
-                  <rect x="34" y="36" width="18" height="36" rx="2" fill="rgba(255,255,255,0.92)"/>
-                  <rect x="60" y="24" width="18" height="48" rx="2" fill="#ffffff"/>
-                  <rect x="86" y="12" width="18" height="60" rx="2" fill="#ffffff"/>
-                </svg>
+                <img class="landing-bento__icon" src="recursos/icons/Icono%202.svg" alt="" loading="lazy">
               </div>
               <p class="landing-bento__card-label">Datos, contexto y decisiones en un solo sistema</p>
             </article>
             <article class="landing-bento__card landing-bento__card--purple sr-reveal sr-reveal--d3">
               <div class="landing-bento__card-main" aria-hidden="true">
-                <svg class="landing-bento__orbit" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="50" cy="50" r="38" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="4 5"/>
-                  <circle cx="50" cy="50" r="14" fill="#ffffff"/>
-                  <circle cx="50" cy="14" r="7" fill="#ffffff"/>
-                  <circle cx="86" cy="50" r="6" fill="#ffffff"/>
-                  <circle cx="22" cy="72" r="6" fill="#ffffff"/>
-                </svg>
+                <img class="landing-bento__icon" src="recursos/icons/icono%203.svg" alt="" loading="lazy">
               </div>
               <p class="landing-bento__card-label">Todo integrado en una herramienta</p>
             </article>
             <article class="landing-bento__card landing-bento__card--green sr-reveal sr-reveal--d4">
-              <div class="landing-bento__card-main landing-bento__card-main--stat" aria-hidden="true">130%</div>
+              <div class="landing-bento__card-main" aria-hidden="true">
+                <img class="landing-bento__icon" src="recursos/icons/icono%204.svg" alt="" loading="lazy">
+              </div>
               <p class="landing-bento__card-label">Mayor impacto por acción</p>
             </article>
           </div>
