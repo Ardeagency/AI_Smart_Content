@@ -580,7 +580,12 @@ body.entrance-done .landing-header {
 .vprompt {
     /* --vprompt-p: 0 → 1 conforme avanza el scroll DENTRO del runway de la intro. JS lo actualiza. */
     --vprompt-p: 0;
-    background: #000000;
+    background:
+        radial-gradient(ellipse 55% 30% at 22% 40%, rgba(255, 78, 46, 0.38) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 30% at 78% 44%, rgba(184, 78, 255, 0.32) 0%, transparent 58%),
+        radial-gradient(ellipse 55% 35% at 45% 62%, rgba(109, 40, 217, 0.28) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 30% at 68% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 55%),
+        #000000;
     color: #ffffff;
     padding: clamp(72px, 11vh, 130px) clamp(20px, 5vw, 60px) clamp(60px, 10vh, 110px);
     display: flex;
@@ -610,6 +615,7 @@ body.entrance-done .landing-header {
     display: grid;
     place-items: center;
     pointer-events: none;
+    perspective: 650px;
 }
 
 .vprompt__intro > * {
@@ -648,41 +654,10 @@ body.entrance-done .landing-header {
         visibility 0s linear 0s;
 }
 
-/* Aurora orgánica — gradiente difuso fijo (sin transformación por scroll).
-   Se extiende más allá del viewport (-40%) para que el blur y las zonas transparent
-   tengan espacio de fade a negro sin dejar bordes rectangulares visibles. */
+/* Aurora desactivada: el gradiente único vive en el background de .vprompt
+   para evitar duplicación visual a lo largo de la sección. */
 .vprompt__intro-aurora {
-    --mx: 0;
-    --my: 0;
-    position: absolute;
-    inset: -40%;
-    width: auto;
-    height: auto;
-    background:
-        radial-gradient(
-            ellipse 40% 45%
-            at calc(30% + var(--mx) * 10%) calc(35% + var(--my) * 12%),
-            #ff4e2e 0%, transparent 55%
-        ),
-        radial-gradient(
-            ellipse 38% 42%
-            at calc(65% + var(--mx) * 12%) calc(42% + var(--my) * 10%),
-            #ec4899 0%, transparent 55%
-        ),
-        radial-gradient(
-            ellipse 42% 48%
-            at calc(35% + var(--mx) * -10%) calc(68% + var(--my) * -8%),
-            #b84eff 0%, transparent 55%
-        ),
-        radial-gradient(
-            ellipse 40% 45%
-            at calc(68% + var(--mx) * -12%) calc(70% + var(--my) * -10%),
-            #6d28d9 0%, transparent 55%
-        );
-    filter: blur(110px);
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
+    display: none;
 }
 
 /* Orb desactivado — ya no hay transformación de degradado a círculo */
@@ -696,7 +671,7 @@ body.entrance-done .landing-header {
     position: absolute;
     top: 8%;
     left: 6%;
-    width: clamp(260px, 26vw, 380px);
+    width: clamp(182px, 18.2vw, 266px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.06);
@@ -707,11 +682,18 @@ body.entrance-done .landing-header {
         0 12px 36px rgba(0, 0, 0, 0.35);
     overflow: hidden;
     z-index: 4;
-    /* Aparece cuando se ha recorrido el 30% del runway */
-    opacity: calc(max(0, min(1, (var(--vprompt-p, 0) - 0.3) * 5)));
-    transform: translateY(calc((1 - max(0, min(1, (var(--vprompt-p, 0) - 0.3) * 5))) * 24px));
-    transition: none;
+    opacity: 0;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    contain: layout paint;
+    will-change: transform;
+    transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
+}
+
+.vprompt__intro-card.is-visible {
+    opacity: 1;
 }
 
 .vprompt__intro-card-img {
@@ -722,10 +704,15 @@ body.entrance-done .landing-header {
 }
 
 .vprompt__intro-card-img img {
-    width: 100%;
-    height: 100%;
+    /* Ligeramente sobredimensionada (+12%) y centrada, para que la traslación
+       parallax del efecto 3D no descubra los bordes del contenedor. */
+    width: 112%;
+    height: 112%;
+    margin-left: -6%;
+    margin-top: -6%;
     object-fit: cover;
     display: block;
+    will-change: transform;
 }
 
 .vprompt__intro-card-body {
@@ -751,7 +738,7 @@ body.entrance-done .landing-header {
     .vprompt__intro-card {
         top: 5%;
         left: 4%;
-        width: min(75vw, 300px);
+        width: min(52vw, 210px);
     }
 }
 
@@ -765,16 +752,28 @@ body.entrance-done .landing-header {
     transition: none;
 }
 
-/* Vignette radial sutil en las esquinas */
+/* Fade de entrada: funde el negro del hero con el degradado de la sección
+   sin crear una frontera visible. Cubre un tramo amplio y decae gradual. */
 .vprompt::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%);
+    top: 0;
+    left: 0;
+    right: 0;
+    height: clamp(320px, 42vh, 540px);
+    background: linear-gradient(
+        to bottom,
+        #000000 0%,
+        rgba(0, 0, 0, 0.9) 25%,
+        rgba(0, 0, 0, 0.55) 55%,
+        rgba(0, 0, 0, 0.2) 82%,
+        transparent 100%
+    );
     pointer-events: none;
+    z-index: 1;
 }
 
-.vprompt > * { position: relative; z-index: 1; }
+.vprompt > * { position: relative; z-index: 2; }
 
 /* ── Orb Vera (círculo con degradado orgánico + texto blanco) ── */
 .vprompt__orb {

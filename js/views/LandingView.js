@@ -521,8 +521,11 @@ class LandingView extends PublicBaseView {
     this.initLfwScrollAnimation();
     this.initWhyCarousel();
     this.initVpromptIntroScroll();
-    this.initVpromptGradientMouse();
+    // initVpromptGradientMouse() deshabilitado: el aurora está display:none,
+    // el listener global de pointermove estaba gastando frames actualizando
+    // variables CSS de un elemento invisible.
     this.initVpromptFixedLogo();
+    this.initVpromptCard3D();
   }
 
   async onLeave() {
@@ -542,6 +545,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.vpromptFixedLogoCleanup === 'function') {
       this.vpromptFixedLogoCleanup();
       this.vpromptFixedLogoCleanup = null;
+    }
+    if (typeof this.vpromptCard3DCleanup === 'function') {
+      this.vpromptCard3DCleanup();
+      this.vpromptCard3DCleanup = null;
     }
     if (typeof this.lfwScrollCleanup === 'function') {
       this.lfwScrollCleanup();
@@ -984,9 +991,8 @@ class LandingView extends PublicBaseView {
       this.vpromptGradientMouseCleanup();
       this.vpromptGradientMouseCleanup = null;
     }
-    const aurora = document.querySelector('#landing-vera-prompt .vprompt__intro-aurora');
-    const orb = document.querySelector('#landing-vera-prompt .vprompt__intro-orb');
-    const targets = [aurora, orb].filter(Boolean);
+    const introAurora = document.querySelector('#landing-vera-prompt .vprompt__intro-aurora');
+    const targets = [introAurora].filter(Boolean);
     if (!targets.length) return;
 
     // Respeta reduced-motion: no aplicar movimiento
@@ -1064,16 +1070,17 @@ class LandingView extends PublicBaseView {
       document.body.appendChild(logo);
     }
 
+    const card = document.querySelector('#landing-vera-prompt .vprompt__intro-card');
+
     let raf = null;
     const update = () => {
       raf = null;
       const subRect = sub.getBoundingClientRect();
       const runwayRect = runway.getBoundingClientRect();
       const vh = window.innerHeight || document.documentElement.clientHeight;
-      // Logo aparece apenas el subtítulo empieza a moverse hacia arriba
-      // (trigger rápido: top del subtítulo a 25% desde el tope del viewport).
       const shouldShow = subRect.top < vh * 0.25 && runwayRect.bottom > 0;
       logo.classList.toggle('is-visible', shouldShow);
+      if (card) card.classList.toggle('is-visible', shouldShow);
     };
 
     const onScroll = () => {
@@ -1092,6 +1099,111 @@ class LandingView extends PublicBaseView {
       if (logo.parentElement === document.body) {
         logo.remove();
       }
+    };
+  }
+
+  // Parallax 3D de la card "Un agente autónomo" siguiendo el cursor.
+  // Rota la card (outer) y desplaza sus capas internas (inner) con lerp suave.
+  // Perspective vive en .vprompt__intro (ver landing.css).
+  initVpromptCard3D() {
+    if (typeof this.vpromptCard3DCleanup === 'function') {
+      this.vpromptCard3DCleanup();
+      this.vpromptCard3DCleanup = null;
+    }
+    const section = document.getElementById('landing-vera-prompt');
+    const card = section ? section.querySelector('.vprompt__intro-card') : null;
+    if (!section || !card) return;
+
+    if (typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    // Trasladamos el <img> interno (clippeado por .vprompt__intro-card-img) y
+    // el body; así el border-radius del contenedor no se mueve.
+    const imgLayer = card.querySelector('.vprompt__intro-card-img img');
+    const bodyLayer = card.querySelector('.vprompt__intro-card-body');
+
+    let targetRX = 0, targetRY = 0, targetTX = 0, targetTY = 0;
+    let currentRX = 0, currentRY = 0, currentTX = 0, currentTY = 0;
+    let raf = null;
+    let running = false;
+
+    const tick = () => {
+      const ease = 0.12;
+      currentRX += (targetRX - currentRX) * ease;
+      currentRY += (targetRY - currentRY) * ease;
+      currentTX += (targetTX - currentTX) * ease;
+      currentTY += (targetTY - currentTY) * ease;
+
+      card.style.transform =
+        `rotateX(${currentRX.toFixed(3)}deg) rotateY(${currentRY.toFixed(3)}deg)`;
+      if (imgLayer) {
+        imgLayer.style.transform =
+          `translate(${currentTX.toFixed(3)}px, ${currentTY.toFixed(3)}px)`;
+      }
+      if (bodyLayer) {
+        bodyLayer.style.transform =
+          `translate(${(currentTX * 0.5).toFixed(3)}px, ${(currentTY * 0.5).toFixed(3)}px)`;
+      }
+
+      const stillMoving =
+        Math.abs(targetRX - currentRX) > 0.01 ||
+        Math.abs(targetRY - currentRY) > 0.01 ||
+        Math.abs(targetTX - currentTX) > 0.01 ||
+        Math.abs(targetTY - currentTY) > 0.01;
+
+      if (stillMoving) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        running = false;
+        raf = null;
+      }
+    };
+
+    const schedule = () => {
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const onMove = (e) => {
+      // Si la card no está visible, no gastamos frames calculando su 3D.
+      if (!card.classList.contains('is-visible')) return;
+      const w = window.innerWidth || 1;
+      const h = window.innerHeight || 1;
+      const nx = e.clientX / w;
+      const ny = e.clientY / h;
+      // Rango ±8° para rotación, ±16px para parallax interno.
+      // Con la card al 70% del tamaño y perspective 650px, valores suaves
+      // dan sensación 3D sin deformar.
+      targetRX = (0.5 - ny) * 16;
+      targetRY = (nx - 0.5) * 16;
+      targetTX = (nx - 0.5) * 32;
+      targetTY = (ny - 0.5) * 32;
+      schedule();
+    };
+
+    const onLeave = () => {
+      targetRX = 0;
+      targetRY = 0;
+      targetTX = 0;
+      targetTY = 0;
+      schedule();
+    };
+
+    section.addEventListener('pointermove', onMove, { passive: true });
+    section.addEventListener('pointerleave', onLeave, { passive: true });
+
+    this.vpromptCard3DCleanup = () => {
+      section.removeEventListener('pointermove', onMove);
+      section.removeEventListener('pointerleave', onLeave);
+      if (raf) cancelAnimationFrame(raf);
+      running = false;
+      card.style.transform = '';
+      if (imgLayer) imgLayer.style.transform = '';
+      if (bodyLayer) bodyLayer.style.transform = '';
     };
   }
 }

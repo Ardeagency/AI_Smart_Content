@@ -81,7 +81,7 @@
         <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
           <div class="public-nav-dropdown" id="publicNavDropdown">
             <button type="button" class="landing-header-link public-nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
-              Nosotros
+              Saber más
               <svg class="public-nav-dropdown-caret" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
                 <path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
