@@ -65,10 +65,14 @@ function verifySignature(event) {
     .createHmac('sha256', appSecret)
     .update(rawBody, 'utf8')
     .digest('hex');
-  // Comparación en tiempo constante para evitar timing attacks
+  // Comparación en tiempo constante. Si el largo de la firma recibida no
+  // coincide con el esperado (64 hex para SHA-256), rechazamos de inmediato.
+  // Antes se sustituía `expected` por `computed` para igualar longitud,
+  // lo que hacía que timingSafeEqual retornara true siempre → bypass total.
   const expected = sigHeader.slice('sha256='.length);
+  if (expected.length !== computed.length) return false;
   const a = Buffer.from(computed, 'hex');
-  const b = Buffer.from(expected.length === computed.length ? expected : computed, 'hex');
+  const b = Buffer.from(expected, 'hex');
   return crypto.timingSafeEqual(a, b);
 }
 
