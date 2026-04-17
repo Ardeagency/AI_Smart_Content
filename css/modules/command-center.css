@@ -20,27 +20,61 @@
   margin-top: 0.75rem;
 }
 
-/* Bloque superior Audiencias: panel blanco, título color canvas, cards color fondo */
+/* Bloque superior Audiencias: panel blanco, título color canvas, cards color fondo, brillo inferior marca */
 #commandCenterPage > .cc-section:first-of-type {
   margin-top: 0;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 0.85rem 1rem 1rem;
   background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+#commandCenterPage > .cc-section:first-of-type > * {
+  position: relative;
+  z-index: 1;
+}
+
+#commandCenterPage > .cc-section:first-of-type::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  max-height: 120px;
+  pointer-events: none;
+  border-radius: 0 0 11px 11px;
+  background: var(--brand-gradient);
+  opacity: 0.2;
+  z-index: 0;
 }
 
 #commandCenterPage > .cc-section:first-of-type .cc-section-title {
   color: var(--bg-primary, #0b0b0b);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-section-count {
-  color: var(--bg-primary, #0b0b0b);
-  background: rgba(11, 11, 11, 0.07);
-  border-color: rgba(11, 11, 11, 0.12);
+#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-section-subtitle {
-  color: rgba(11, 11, 11, 0.5);
+#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--bg-primary, #0b0b0b);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-suffix {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(11, 11, 11, 0.45);
+  text-transform: lowercase;
 }
 
 #commandCenterPage > .cc-section:first-of-type .cc-aud-card {

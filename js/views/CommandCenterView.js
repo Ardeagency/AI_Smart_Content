@@ -74,9 +74,11 @@ class CommandCenterView extends BaseView {
     <div class="cc-section-head">
       <div class="cc-section-head-main">
         <h2 class="cc-section-title">Audiencias</h2>
-        <span class="cc-section-count" id="ccAudCount">0</span>
       </div>
-      <span class="cc-section-subtitle">Supabase</span>
+      <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
+        <span class="cc-aud-head-count-num" id="ccAudCount">0</span>
+        <span class="cc-aud-head-count-suffix" aria-hidden="true">audiencias</span>
+      </div>
     </div>
     <div class="cc-carousel-wrap">
       <div class="cc-carousel" id="ccAudCarousel">
