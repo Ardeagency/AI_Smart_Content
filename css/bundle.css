@@ -35,7 +35,7 @@
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {
-    --bg-primary: #191919;
+    --bg-primary: #0b0b0b;
     --bg-secondary: #141517;
     --bg-card: #000000;
     --bg-tertiary: #000000;
@@ -659,10 +659,10 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
   padding: 0 !important;
 }
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
-/* Mientras la entrada está activa o antes de que la landing pinte: bg negro
-   para que el fade del overlay no revele el gris #191919 del body */
+/* Mientras la entrada está activa o antes de que la landing pinte: mismo tono que el canvas
+   para que el fade del overlay no revele un color distinto del body */
 body.entrance-active,
-body.route-landing { background: #000; }
+body.route-landing { background: #0b0b0b; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }

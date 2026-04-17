@@ -2242,7 +2242,7 @@
   display: flex;
   width: 100%;
   height: calc(100dvh - var(--app-header-height, 45.8px));
-  background: var(--bg-primary, #191919);
+  background: var(--bg-primary, #0b0b0b);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
