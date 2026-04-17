@@ -406,14 +406,14 @@ body.sidebar-collapsed .main-header,
     margin-bottom: 0;
 }
 
-/* Active en collapsed: barra izquierda + highlight sutil (no tarjeta gigante) */
-.side-navigation.collapsed .nav-link.active,
-.side-navigation.collapsed .nav-submenu-toggle.active {
+/* Active en collapsed: highlight sutil (sidebar usuario: sin barra, ver bloque .nav-mode-user) */
+.side-navigation.collapsed:not(.nav-mode-user) .nav-link.active,
+.side-navigation.collapsed:not(.nav-mode-user) .nav-submenu-toggle.active {
     background: var(--white-5);
 }
 
-.side-navigation.collapsed .nav-link.active::before,
-.side-navigation.collapsed .nav-submenu-toggle.active::before {
+.side-navigation.collapsed:not(.nav-mode-user) .nav-link.active::before,
+.side-navigation.collapsed:not(.nav-mode-user) .nav-submenu-toggle.active::before {
     content: '';
     position: absolute;
     left: 0;
@@ -424,6 +424,17 @@ body.sidebar-collapsed .main-header,
     background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.12));
     border-radius: 0 2px 2px 0;
     opacity: 0.9;
+}
+
+.side-navigation.nav-mode-user.collapsed .nav-link.active,
+.side-navigation.nav-mode-user.collapsed .nav-submenu-toggle.active {
+    background: var(--sidebar-active);
+}
+
+.side-navigation.nav-mode-user.collapsed .nav-link.active::before,
+.side-navigation.nav-mode-user.collapsed .nav-submenu-toggle.active::before {
+    display: none !important;
+    content: none !important;
 }
 
 /* Submenú inline no visible en collapsed (se usa flyout) */
@@ -2584,12 +2595,18 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     font-size: 12px;
     font-weight: 500;
     text-transform: none;
-    transition: background 0.12s ease, color 0.12s ease;
+    transition: background 0.12s ease, color 0.12s ease, opacity 0.15s ease;
     cursor: pointer;
     border: none;
     background: none;
     width: 100%;
     text-align: left;
+    opacity: 0.58;
+}
+
+.nav-mode-user .nav-link:hover:not(.active),
+.nav-mode-user .nav-main-link:hover:not(.active) {
+    opacity: 0.82;
 }
 
 .nav-mode-user .nav-link:hover,
@@ -2602,6 +2619,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-user .nav-main-link.active {
     background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
+    opacity: 1;
 }
 
 .nav-mode-user .nav-icon {
@@ -2666,7 +2684,12 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     font-weight: 400;
     text-transform: none;
     border-radius: var(--radius-sm);
-    transition: background 0.12s ease, color 0.12s ease;
+    transition: background 0.12s ease, color 0.12s ease, opacity 0.15s ease;
+    opacity: 0.58;
+}
+
+.nav-mode-user .nav-submenu-link:hover:not(.active) {
+    opacity: 0.82;
 }
 
 .nav-mode-user .nav-submenu-link:hover {
@@ -2677,6 +2700,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-user .nav-submenu-link.active {
     background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
+    opacity: 1;
 }
 
 /* Brand Storage: fila enlace a página + chevron para desplegar sub-marcas.
@@ -2982,27 +3006,22 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 /* =========================================
-   ACTIVE STATE — Acento visual mejorado
+   ACTIVE STATE — Sidebar usuario: sin barra lateral; contraste por opacidad
    ========================================= */
 
 .nav-mode-user .nav-link.active::before,
-.nav-mode-user .nav-main-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 15%;
-    bottom: 15%;
-    width: 3px;
-    background: var(--brand-gradient-dynamic-vertical, rgba(255, 255, 255, 0.5));
-    border-radius: 0 3px 3px 0;
-    opacity: 1;
+.nav-mode-user .nav-main-link.active::before,
+.nav-mode-user .nav-submenu-toggle.active::before {
+    display: none !important;
+    content: none !important;
 }
 
 .nav-mode-user .nav-link.active,
 .nav-mode-user .nav-main-link.active {
-    background: rgba(255, 255, 255, 0.09);
+    background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
     font-weight: 600 !important;
+    opacity: 1;
 }
 
 /* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
