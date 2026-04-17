@@ -67,14 +67,33 @@ class LandingView extends PublicBaseView {
             <div class="vprompt__intro-aurora"></div>
             <div class="vprompt__intro-orb"></div>
 
-            <!-- Card glass: aparece al scrollear, esquina superior izquierda -->
-            <div class="vprompt__intro-card">
+            <!-- Cards glass: flotan alrededor del logo Vera y se pueden arrastrar.
+                 Cada una apunta al logo vía una línea SVG (ver initVpromptCardLink). -->
+            <div class="vprompt__intro-card vprompt__intro-card--1">
               <div class="vprompt__intro-card-img">
                 <img src="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776393696/CARD1_fnojqv.jpg" alt="Agente autónomo – flujo de trabajo" loading="lazy">
               </div>
               <div class="vprompt__intro-card-body">
                 <h3 class="vprompt__intro-card-title">Un agente autónomo</h3>
                 <p class="vprompt__intro-card-sub">Tu agente operativo, 24/7.</p>
+              </div>
+            </div>
+            <div class="vprompt__intro-card vprompt__intro-card--2">
+              <div class="vprompt__intro-card-img">
+                <img src="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776393696/CARD1_fnojqv.jpg" alt="Inteligencia de marca" loading="lazy">
+              </div>
+              <div class="vprompt__intro-card-body">
+                <h3 class="vprompt__intro-card-title">Inteligencia de marca</h3>
+                <p class="vprompt__intro-card-sub">Tu identidad, tono y posicionamiento operando como sistema.</p>
+              </div>
+            </div>
+            <div class="vprompt__intro-card vprompt__intro-card--3">
+              <div class="vprompt__intro-card-img">
+                <img src="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776393696/CARD1_fnojqv.jpg" alt="Producción autónoma" loading="lazy">
+              </div>
+              <div class="vprompt__intro-card-body">
+                <h3 class="vprompt__intro-card-title">Producción autónoma</h3>
+                <p class="vprompt__intro-card-sub">Imagen, video y copy producidos al ritmo de tu operación.</p>
               </div>
             </div>
           </div>
@@ -169,31 +188,54 @@ class LandingView extends PublicBaseView {
             <div class="lfw__left">
               <div class="lfw__fill" aria-hidden="true"></div>
               <ul class="lfw__list">
-                <li>Estrategia</li>
-                <li>Análisis</li>
                 <li>Monitoreo</li>
-                <li>Scraping</li>
-                <li>Marketing</li>
-                <li>Competencia</li>
-                <li>Fotografía</li>
-                <li>Post</li>
-                <li>Reels</li>
-                <li>Historias</li>
-                <li>Copys</li>
+                <li>Inteligencia</li>
+                <li>ADN</li>
+                <li>Estrategia</li>
+                <li>Producción</li>
               </ul>
             </div>
             <div class="lfw__slides">
-              <div class="lfw__slide lfw__slide--1" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--2" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--3" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--4" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--5" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--6" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--7" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--8" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--9" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--10" aria-hidden="true"></div>
-              <div class="lfw__slide lfw__slide--11" aria-hidden="true"></div>
+              <div class="lfw__slide lfw__slide--1" aria-hidden="true">
+                <div class="lfw__slide-frame">
+                  <div class="lfw__slide-caption">
+                    <h3 class="lfw__slide-title">Escucha activa del mercado</h3>
+                    <p class="lfw__slide-desc">Scraping en tiempo real de redes, reviews y competencia.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lfw__slide lfw__slide--2" aria-hidden="true">
+                <div class="lfw__slide-frame">
+                  <div class="lfw__slide-caption">
+                    <h3 class="lfw__slide-title">Datos que se vuelven decisiones</h3>
+                    <p class="lfw__slide-desc">Insights de audiencia, competencia y tendencias accionables.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lfw__slide lfw__slide--3" aria-hidden="true">
+                <div class="lfw__slide-frame">
+                  <div class="lfw__slide-caption">
+                    <h3 class="lfw__slide-title">Tu marca, como sistema operativo</h3>
+                    <p class="lfw__slide-desc">Identidad, tono y posicionamiento estructurados para operar.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lfw__slide lfw__slide--4" aria-hidden="true">
+                <div class="lfw__slide-frame">
+                  <div class="lfw__slide-caption">
+                    <h3 class="lfw__slide-title">Campañas pensadas, no improvisadas</h3>
+                    <p class="lfw__slide-desc">Planes, calendarios y narrativas alineadas a tu objetivo.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lfw__slide lfw__slide--5" aria-hidden="true">
+                <div class="lfw__slide-frame">
+                  <div class="lfw__slide-caption">
+                    <h3 class="lfw__slide-title">Contenido a escala enterprise</h3>
+                    <p class="lfw__slide-desc">Imagen, video y copy producidos sin perder consistencia.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -521,11 +563,10 @@ class LandingView extends PublicBaseView {
     this.initLfwScrollAnimation();
     this.initWhyCarousel();
     this.initVpromptIntroScroll();
-    // initVpromptGradientMouse() deshabilitado: el aurora está display:none,
-    // el listener global de pointermove estaba gastando frames actualizando
-    // variables CSS de un elemento invisible.
+    this.initVpromptGradientMouse();
     this.initVpromptFixedLogo();
     this.initVpromptCard3D();
+    this.initVpromptCardLink();
   }
 
   async onLeave() {
@@ -549,6 +590,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.vpromptCard3DCleanup === 'function') {
       this.vpromptCard3DCleanup();
       this.vpromptCard3DCleanup = null;
+    }
+    if (typeof this.vpromptCardLinkCleanup === 'function') {
+      this.vpromptCardLinkCleanup();
+      this.vpromptCardLinkCleanup = null;
     }
     if (typeof this.lfwScrollCleanup === 'function') {
       this.lfwScrollCleanup();
@@ -706,9 +751,13 @@ class LandingView extends PublicBaseView {
     if (!listItems.length || !slides.length) return;
 
     const count = listItems.length;
+    // Colores de cada categoría activa (en sync con .lfw__slide--N del CSS).
     const ITEM_COLORS = [
-      '#ff0000','#ff6500','#ffe500','#9acc00','#00d614',
-      '#00e7ff','#0018ee','#5b00ea','#900090','#ff0000','#ff6500',
+      '#ff0000', // Monitoreo
+      '#ff6500', // Inteligencia
+      '#ffe500', // ADN
+      '#00d614', // Estrategia
+      '#5b00ea', // Producción
     ];
     const INACTIVE_COLOR = 'rgba(212,209,216,0.15)';
 
@@ -736,21 +785,11 @@ class LandingView extends PublicBaseView {
     const WHEEL_THRESHOLD = 120, ENTER_ZONE = 60, COOLDOWN = 420, CAP = 60;
     const leftCol = section.querySelector('.lfw__left');
 
-    const positionCarousel = (active, animate) => {
-      const h = leftCol ? leftCol.clientHeight : window.innerHeight;
-      const centerY = h * 0.40;
-      const step = h * 0.13;
+    // Todos los items quedan visibles en una lista stacked (layout CSS).
+    // JS solo marca cuál es el activo → se ilumina en blanco via .is-active.
+    const positionCarousel = (active /*, animate */) => {
       listItems.forEach((item, j) => {
-        const offset = j - active;
-        const y = centerY + offset * step;
-        const scale = Math.max(0.28, 1 - Math.abs(offset) * 0.20);
-        const opacity = Math.max(0.04, 1 - Math.abs(offset) * 0.26);
-        const color = offset === 0 ? ITEM_COLORS[active % ITEM_COLORS.length] : INACTIVE_COLOR;
-        if (!animate) item.style.transition = 'none';
-        else item.style.transition = '';
-        item.style.transform = `translateY(${y}px) scale(${scale})`;
-        item.style.opacity = opacity;
-        item.style.color = color;
+        item.classList.toggle('is-active', j === active);
       });
     };
 
@@ -984,52 +1023,35 @@ class LandingView extends PublicBaseView {
     };
   }
 
-  // Parallax siguiendo el cursor. Actualiza --mx y --my en las capas aurora+orb
-  // (rango -1 a +1) con lerp suave para un sentido orgánico.
+  // Parallax del degradado siguiendo el cursor. Actualiza --mx/--my en la
+  // sección .vprompt (rango -1 a +1) con lerp suave; el CSS ::after lee esas
+  // variables y desplaza las elipses. Listener acotado a la sección para
+  // no correr fuera de su viewport.
   initVpromptGradientMouse() {
     if (typeof this.vpromptGradientMouseCleanup === 'function') {
       this.vpromptGradientMouseCleanup();
       this.vpromptGradientMouseCleanup = null;
     }
-    const introAurora = document.querySelector('#landing-vera-prompt .vprompt__intro-aurora');
-    const targets = [introAurora].filter(Boolean);
-    if (!targets.length) return;
+    const section = document.getElementById('landing-vera-prompt');
+    if (!section) return;
 
-    // Respeta reduced-motion: no aplicar movimiento
     if (typeof window.matchMedia === 'function' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
     }
 
-    let targetX = 0, targetY = 0; // rango -1 a +1 respecto al centro
+    let targetX = 0, targetY = 0;
     let currentX = 0, currentY = 0;
     let raf = null;
     let running = false;
 
-    const onMove = (e) => {
-      const w = window.innerWidth || document.documentElement.clientWidth;
-      const h = window.innerHeight || document.documentElement.clientHeight;
-      // Normaliza la posición del cursor a -1..+1 relativo al viewport
-      targetX = ((e.clientX / w) - 0.5) * 2;
-      targetY = ((e.clientY / h) - 0.5) * 2;
-      if (!running) {
-        running = true;
-        raf = requestAnimationFrame(tick);
-      }
-    };
-
     const tick = () => {
-      // Lerp 8% por frame → movimiento suave
       const ease = 0.08;
       currentX += (targetX - currentX) * ease;
       currentY += (targetY - currentY) * ease;
 
-      const mx = currentX.toFixed(3);
-      const my = currentY.toFixed(3);
-      targets.forEach(el => {
-        el.style.setProperty('--mx', mx);
-        el.style.setProperty('--my', my);
-      });
+      section.style.setProperty('--mx', currentX.toFixed(3));
+      section.style.setProperty('--my', currentY.toFixed(3));
 
       const dx = Math.abs(targetX - currentX);
       const dy = Math.abs(targetY - currentY);
@@ -1041,10 +1063,34 @@ class LandingView extends PublicBaseView {
       }
     };
 
-    window.addEventListener('mousemove', onMove, { passive: true });
+    const schedule = () => {
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const onMove = (e) => {
+      const rect = section.getBoundingClientRect();
+      const w = rect.width || 1;
+      const h = rect.height || 1;
+      targetX = (((e.clientX - rect.left) / w) - 0.5) * 2;
+      targetY = (((e.clientY - rect.top) / h) - 0.5) * 2;
+      schedule();
+    };
+
+    const onLeave = () => {
+      targetX = 0;
+      targetY = 0;
+      schedule();
+    };
+
+    section.addEventListener('pointermove', onMove, { passive: true });
+    section.addEventListener('pointerleave', onLeave, { passive: true });
 
     this.vpromptGradientMouseCleanup = () => {
-      window.removeEventListener('mousemove', onMove);
+      section.removeEventListener('pointermove', onMove);
+      section.removeEventListener('pointerleave', onLeave);
       if (raf) cancelAnimationFrame(raf);
       running = false;
     };
@@ -1070,7 +1116,21 @@ class LandingView extends PublicBaseView {
       document.body.appendChild(logo);
     }
 
-    const card = document.querySelector('#landing-vera-prompt .vprompt__intro-card');
+    // Las cards también se mueven al body y quedan fixed al viewport, como el logo.
+    // Así no se pierden al scrollear y sus efectos 3D + drag siguen funcionando.
+    const cards = Array.from(
+      section.querySelectorAll('.vprompt__intro-card')
+    ).concat(
+      // Si alguna ya estaba en body (re-init), incluirla también
+      Array.from(document.body.querySelectorAll(':scope > .vprompt__intro-card'))
+    );
+    // Dedupe
+    const uniqueCards = [...new Set(cards)];
+    uniqueCards.forEach(card => {
+      if (card.parentElement !== document.body) {
+        document.body.appendChild(card);
+      }
+    });
 
     let raf = null;
     const update = () => {
@@ -1080,7 +1140,7 @@ class LandingView extends PublicBaseView {
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const shouldShow = subRect.top < vh * 0.25 && runwayRect.bottom > 0;
       logo.classList.toggle('is-visible', shouldShow);
-      if (card) card.classList.toggle('is-visible', shouldShow);
+      uniqueCards.forEach(c => c.classList.toggle('is-visible', shouldShow));
     };
 
     const onScroll = () => {
@@ -1099,44 +1159,68 @@ class LandingView extends PublicBaseView {
       if (logo.parentElement === document.body) {
         logo.remove();
       }
+      uniqueCards.forEach(c => {
+        if (c.parentElement === document.body) c.remove();
+      });
     };
   }
 
-  // Parallax 3D de la card "Un agente autónomo" siguiendo el cursor.
-  // Rota la card (outer) y desplaza sus capas internas (inner) con lerp suave.
-  // Perspective vive en .vprompt__intro (ver landing.css).
+  // Interacción de las cards flotantes:
+  //  - hover: parallax 3D siguiendo el cursor (rotateX/Y + traslación interna)
+  //  - drag: cada card se puede arrastrar independientemente; durante el drag
+  //    la rotación se aplana (queda plana mientras la mueves, tipo Framer).
+  // Cada card tiene su propio estado/RAF (no comparten estado).
   initVpromptCard3D() {
     if (typeof this.vpromptCard3DCleanup === 'function') {
       this.vpromptCard3DCleanup();
       this.vpromptCard3DCleanup = null;
     }
-    const section = document.getElementById('landing-vera-prompt');
-    const card = section ? section.querySelector('.vprompt__intro-card') : null;
-    if (!section || !card) return;
+    const cards = Array.from(document.querySelectorAll('.vprompt__intro-card'));
+    if (!cards.length) return;
 
-    if (typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
+    const cleanups = cards.map(card => this._initSingleCard3D(card));
+    this.vpromptCard3DCleanup = () => {
+      cleanups.forEach(fn => { if (typeof fn === 'function') fn(); });
+    };
+  }
 
-    // Trasladamos el <img> interno (clippeado por .vprompt__intro-card-img) y
-    // el body; así el border-radius del contenedor no se mueve.
+  // Conecta hover + drag a una sola card. Devuelve una función cleanup.
+  _initSingleCard3D(card) {
+    if (!card) return null;
+
+    const reducedMotion = typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const imgLayer = card.querySelector('.vprompt__intro-card-img img');
     const bodyLayer = card.querySelector('.vprompt__intro-card-body');
 
+    // Offset acumulado por drag. Persiste entre sesiones de arrastre.
+    let dx = 0, dy = 0;
+
+    // Targets/current para el lerp de rotación + parallax interno
     let targetRX = 0, targetRY = 0, targetTX = 0, targetTY = 0;
     let currentRX = 0, currentRY = 0, currentTX = 0, currentTY = 0;
+
+    // Estado de drag
+    let dragging = false;
+    let pointerId = null;
+    let dragStartCX = 0, dragStartCY = 0;
+    let dragStartDX = 0, dragStartDY = 0;
+
     let raf = null;
     let running = false;
 
     const tick = () => {
-      const ease = 0.12;
+      const ease = 0.14;
       currentRX += (targetRX - currentRX) * ease;
       currentRY += (targetRY - currentRY) * ease;
       currentTX += (targetTX - currentTX) * ease;
       currentTY += (targetTY - currentTY) * ease;
 
+      // perspective() en el propio transform (la card ya no vive dentro de
+      // .vprompt__intro que antes aportaba la perspectiva al padre).
       card.style.transform =
+        `perspective(650px) translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) ` +
         `rotateX(${currentRX.toFixed(3)}deg) rotateY(${currentRY.toFixed(3)}deg)`;
       if (imgLayer) {
         imgLayer.style.transform =
@@ -1153,7 +1237,7 @@ class LandingView extends PublicBaseView {
         Math.abs(targetTX - currentTX) > 0.01 ||
         Math.abs(targetTY - currentTY) > 0.01;
 
-      if (stillMoving) {
+      if (stillMoving || dragging) {
         raf = requestAnimationFrame(tick);
       } else {
         running = false;
@@ -1168,42 +1252,226 @@ class LandingView extends PublicBaseView {
       }
     };
 
-    const onMove = (e) => {
-      // Si la card no está visible, no gastamos frames calculando su 3D.
+    const applyHoverFromEvent = (e) => {
+      const rect = card.getBoundingClientRect();
+      const w = rect.width || 1;
+      const h = rect.height || 1;
+      const nx = (e.clientX - rect.left) / w - 0.5;
+      const ny = (e.clientY - rect.top) / h - 0.5;
+      targetRX = -ny * 20;
+      targetRY = nx * 20;
+      targetTX = nx * 40;
+      targetTY = ny * 40;
+    };
+
+    const onPointerDown = (e) => {
       if (!card.classList.contains('is-visible')) return;
-      const w = window.innerWidth || 1;
-      const h = window.innerHeight || 1;
-      const nx = e.clientX / w;
-      const ny = e.clientY / h;
-      // Rango ±8° para rotación, ±16px para parallax interno.
-      // Con la card al 70% del tamaño y perspective 650px, valores suaves
-      // dan sensación 3D sin deformar.
-      targetRX = (0.5 - ny) * 16;
-      targetRY = (nx - 0.5) * 16;
-      targetTX = (nx - 0.5) * 32;
-      targetTY = (ny - 0.5) * 32;
+      // Solo botón principal del ratón (o touch/pen): permite drag
+      if (e.button !== undefined && e.button !== 0) return;
+      dragging = true;
+      pointerId = e.pointerId;
+      dragStartCX = e.clientX;
+      dragStartCY = e.clientY;
+      dragStartDX = dx;
+      dragStartDY = dy;
+      // Mientras arrastras la card queda plana (rotación → 0)
+      targetRX = 0; targetRY = 0; targetTX = 0; targetTY = 0;
+      try { card.setPointerCapture(pointerId); } catch (_) {}
+      card.classList.add('is-dragging');
+      schedule();
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e) => {
+      if (!card.classList.contains('is-visible')) return;
+      if (dragging) {
+        dx = dragStartDX + (e.clientX - dragStartCX);
+        dy = dragStartDY + (e.clientY - dragStartCY);
+        schedule();
+      } else if (!reducedMotion) {
+        applyHoverFromEvent(e);
+        schedule();
+      }
+    };
+
+    const endDrag = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      if (pointerId != null && card.hasPointerCapture && card.hasPointerCapture(pointerId)) {
+        try { card.releasePointerCapture(pointerId); } catch (_) {}
+      }
+      pointerId = null;
+      card.classList.remove('is-dragging');
       schedule();
     };
 
-    const onLeave = () => {
-      targetRX = 0;
-      targetRY = 0;
-      targetTX = 0;
-      targetTY = 0;
+    const onPointerLeave = () => {
+      if (dragging) return;
+      targetRX = 0; targetRY = 0; targetTX = 0; targetTY = 0;
       schedule();
     };
 
-    section.addEventListener('pointermove', onMove, { passive: true });
-    section.addEventListener('pointerleave', onLeave, { passive: true });
+    card.addEventListener('pointerdown', onPointerDown);
+    card.addEventListener('pointermove', onPointerMove, { passive: true });
+    card.addEventListener('pointerup', endDrag);
+    card.addEventListener('pointercancel', endDrag);
+    card.addEventListener('pointerleave', onPointerLeave, { passive: true });
 
-    this.vpromptCard3DCleanup = () => {
-      section.removeEventListener('pointermove', onMove);
-      section.removeEventListener('pointerleave', onLeave);
+    return () => {
+      card.removeEventListener('pointerdown', onPointerDown);
+      card.removeEventListener('pointermove', onPointerMove);
+      card.removeEventListener('pointerup', endDrag);
+      card.removeEventListener('pointercancel', endDrag);
+      card.removeEventListener('pointerleave', onPointerLeave);
       if (raf) cancelAnimationFrame(raf);
       running = false;
+      dragging = false;
+      card.classList.remove('is-dragging');
       card.style.transform = '';
       if (imgLayer) imgLayer.style.transform = '';
       if (bodyLayer) bodyLayer.style.transform = '';
+    };
+  }
+
+  // Línea SVG que conecta cada card flotante con el logo Vera.
+  // Un <path> + <linearGradient> por card; se recalculan cuando la card se mueve.
+  // La línea sale del borde de la card más cercano al logo (auto-detectado por
+  // los centros): así una card a la izquierda conecta por su lado derecho,
+  // y una card a la derecha por su lado izquierdo, etc.
+  initVpromptCardLink() {
+    if (typeof this.vpromptCardLinkCleanup === 'function') {
+      this.vpromptCardLinkCleanup();
+      this.vpromptCardLinkCleanup = null;
+    }
+    const cards = Array.from(document.querySelectorAll('.vprompt__intro-card'));
+    const logo = document.querySelector('.vprompt__fixed-logo');
+    if (!cards.length || !logo) return;
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'vprompt__link');
+    svg.setAttribute('aria-hidden', 'true');
+
+    const defs = document.createElementNS(ns, 'defs');
+    svg.appendChild(defs);
+
+    const mkStop = (offset, opacity) => {
+      const s = document.createElementNS(ns, 'stop');
+      s.setAttribute('offset', offset);
+      s.setAttribute('stop-color', '#ffffff');
+      s.setAttribute('stop-opacity', String(opacity));
+      return s;
+    };
+
+    // Crea un path + linearGradient por card
+    const paths = cards.map((card, i) => {
+      const gradId = `vprompt-link-gradient-${i}`;
+      const grad = document.createElementNS(ns, 'linearGradient');
+      grad.setAttribute('id', gradId);
+      grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+      grad.appendChild(mkStop('0%',   0.55));
+      grad.appendChild(mkStop('55%',  0.28));
+      grad.appendChild(mkStop('100%', 0));
+      defs.appendChild(grad);
+
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', `url(#${gradId})`);
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('vector-effect', 'non-scaling-stroke');
+      svg.appendChild(path);
+
+      return { card, path, grad };
+    });
+
+    document.body.appendChild(svg);
+
+    let raf = null;
+
+    const update = () => {
+      raf = null;
+      const logoVisible = logo.classList.contains('is-visible');
+      if (!logoVisible) {
+        svg.classList.remove('is-visible');
+        return;
+      }
+
+      const logoRect = logo.getBoundingClientRect();
+      const logoCX = logoRect.left + logoRect.width / 2;
+      const logoCY = logoRect.top + logoRect.height / 2;
+
+      let anyVisible = false;
+
+      paths.forEach(({ card, path, grad }) => {
+        const cardVisible = card.classList.contains('is-visible');
+        if (!cardVisible) {
+          path.setAttribute('d', '');
+          return;
+        }
+        anyVisible = true;
+
+        const cardRect = card.getBoundingClientRect();
+        const cardCX = cardRect.left + cardRect.width / 2;
+
+        // Salida desde el lado de la card más cercano al logo
+        const fromRight = cardCX < logoCX;
+        const x1 = fromRight ? cardRect.right : cardRect.left;
+        const y1 = cardRect.top + cardRect.height / 2;
+        // Llega al borde del logo más cercano a la card
+        const x2 = fromRight ? logoRect.left : logoRect.right;
+        const y2 = logoCY;
+
+        const dx = x2 - x1;
+        const c1x = x1 + dx * 0.5;
+        const c1y = y1;
+        const c2x = x1 + dx * 0.5;
+        const c2y = y2;
+
+        path.setAttribute('d', `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`);
+        grad.setAttribute('x1', x1);
+        grad.setAttribute('y1', y1);
+        grad.setAttribute('x2', x2);
+        grad.setAttribute('y2', y2);
+      });
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      svg.setAttribute('width', vw);
+      svg.setAttribute('height', vh);
+      svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+
+      svg.classList.toggle('is-visible', anyVisible);
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    // Observa cambios de style (transform) y class (visibility) en cada card
+    const observers = cards.map(card => {
+      const o = new MutationObserver(schedule);
+      o.observe(card, { attributes: true, attributeFilter: ['style', 'class'] });
+      return o;
+    });
+    const logoObserver = new MutationObserver(schedule);
+    logoObserver.observe(logo, { attributes: true, attributeFilter: ['class', 'style'] });
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+
+    schedule();
+
+    this.vpromptCardLinkCleanup = () => {
+      observers.forEach(o => o.disconnect());
+      logoObserver.disconnect();
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (raf) cancelAnimationFrame(raf);
+      if (svg && svg.parentElement === document.body) {
+        svg.remove();
+      }
     };
   }
 }

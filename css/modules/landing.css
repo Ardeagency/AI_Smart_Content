@@ -580,12 +580,8 @@ body.entrance-done .landing-header {
 .vprompt {
     /* --vprompt-p: 0 → 1 conforme avanza el scroll DENTRO del runway de la intro. JS lo actualiza. */
     --vprompt-p: 0;
-    background:
-        radial-gradient(ellipse 55% 30% at 22% 40%, rgba(255, 78, 46, 0.38) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 30% at 78% 44%, rgba(184, 78, 255, 0.32) 0%, transparent 58%),
-        radial-gradient(ellipse 55% 35% at 45% 62%, rgba(109, 40, 217, 0.28) 0%, transparent 55%),
-        radial-gradient(ellipse 45% 30% at 68% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 55%),
-        #000000;
+    /* Base negra; el degradado orgánico vive en .vprompt::after con blur. */
+    background: #000000;
     color: #ffffff;
     padding: clamp(72px, 11vh, 130px) clamp(20px, 5vw, 60px) clamp(60px, 10vh, 110px);
     display: flex;
@@ -597,11 +593,11 @@ body.entrance-done .landing-header {
     overflow: hidden;
 }
 
-/* Runway de 200vh — card + logo + aurora adheridas por 1 pantalla de scroll. */
+/* Runway de 150vh — 50vh de scroll efectivo con el sticky de 100vh adentro. */
 .vprompt__intro-runway {
     position: relative;
     width: 100%;
-    height: 200vh;
+    height: 150vh;
     margin-top: clamp(40px, 6vh, 80px);
     margin-bottom: clamp(20px, 3vh, 40px);
 }
@@ -654,6 +650,22 @@ body.entrance-done .landing-header {
         visibility 0s linear 0s;
 }
 
+/* Línea SVG que conecta la card con el logo Vera. JS la crea dinámicamente
+   y actualiza el path + gradiente al viewport entero. */
+.vprompt__link {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 45; /* debajo del logo (z:50), encima del degradado y la card */
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vprompt__link.is-visible {
+    opacity: 1;
+}
+
 /* Aurora desactivada: el gradiente único vive en el background de .vprompt
    para evitar duplicación visual a lo largo de la sección. */
 .vprompt__intro-aurora {
@@ -665,13 +677,13 @@ body.entrance-done .landing-header {
     display: none;
 }
 
-/* Card glass "Un agente autónomo" — esquina superior izquierda del intro.
-   Aparece con --vprompt-p (después de que el heading+logo sean visibles). */
+/* Card glass "Un agente autónomo" — fijada al viewport (como el logo Vera).
+   JS la mueve a document.body al iniciar; aparece/desaparece con .is-visible
+   según el scroll. La perspective va en el transform (JS) porque su ancestro
+   directo ya no es .vprompt__intro. */
 .vprompt__intro-card {
-    position: absolute;
-    top: 8%;
-    left: 6%;
-    width: clamp(182px, 18.2vw, 266px);
+    position: fixed;
+    width: clamp(127px, 12.7vw, 186px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.06);
@@ -681,19 +693,76 @@ body.entrance-done .landing-header {
         inset 0 1px 0 rgba(255, 255, 255, 0.08),
         0 12px 36px rgba(0, 0, 0, 0.35);
     overflow: hidden;
-    z-index: 4;
+    z-index: 48; /* debajo del logo (50), encima de la línea (45) */
     opacity: 0;
+    visibility: hidden;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     contain: layout paint;
     will-change: transform;
-    transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.9s;
     pointer-events: none;
 }
 
 .vprompt__intro-card.is-visible {
     opacity: 1;
+    visibility: visible;
+    /* Solo recibe eventos de puntero cuando está visible, para que el
+       efecto 3D y el drag solo corran al pasar el cursor sobre la card. */
+    pointer-events: auto;
+    cursor: grab;
+    /* Evita el pan/zoom del navegador en touch mientras se arrastra */
+    touch-action: none;
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0s;
+}
+
+.vprompt__intro-card.is-dragging {
+    cursor: grabbing;
+}
+
+/* Borde arcoíris animado en hover — mismo patrón que los botones del header:
+   conic-gradient usando @property --border-angle + mask-composite para recortar
+   solo el anillo (el centro queda transparente, el contenido sigue visible).
+   Usamos ::after (no ::before) porque la card tiene transform-style: preserve-3d
+   y en ese modo el z-index se ignora: el orden de pintura lo fija el DOM, así que
+   ::after queda encima de la imagen y el body. */
+.vprompt__intro-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+        from var(--border-angle),
+        #ff0000, #ff6500, #ffe500, #9acc00, #00d614,
+        #00e7ff, #0018ee, #5b00ea, #900090, #ff0000
+    );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    /* translateZ asegura que quede al frente en 3D por si alguna capa con
+       translateZ > 0 intentara taparlo. */
+    transform: translateZ(1px);
+}
+
+.vprompt__intro-card.is-visible:hover {
+    /* Oculta el borde blanco estático para que el arcoíris no se duplique. */
+    border-color: transparent;
+}
+
+.vprompt__intro-card.is-visible:hover::after {
+    opacity: 1;
+    animation: nav-border-rotate 8s linear infinite;
 }
 
 .vprompt__intro-card-img {
@@ -723,23 +792,32 @@ body.entrance-done .landing-header {
     font-size: clamp(1.1rem, 1.8vw, 1.4rem);
     font-weight: 600;
     color: #ffffff;
-    margin: 0 0 4px;
+    margin: 0;
+    line-height: 1.1;
     letter-spacing: -0.02em;
 }
 
 .vprompt__intro-card-sub {
     font-size: clamp(0.78rem, 1.1vw, 0.92rem);
     color: rgba(255, 255, 255, 0.55);
-    margin: 0;
-    line-height: 1.4;
+    margin: 2px 0 0;
+    line-height: 1.3;
 }
+
+/* Posicionamiento de las 3 cards flotantes alrededor del logo Vera.
+   Card 1 — arriba-centro (sobre Vera). Card 2 — derecha-medio (alineada al logo).
+   Card 3 — abajo-izquierda. */
+.vprompt__intro-card--1 { top: 12%;  left: 25%; }
+.vprompt__intro-card--2 { top: 44%;  right: 5%; }
+.vprompt__intro-card--3 { bottom: 5%; left: 8%; }
 
 @media (max-width: 768px) {
     .vprompt__intro-card {
-        top: 5%;
-        left: 4%;
-        width: min(52vw, 210px);
+        width: min(36vw, 147px);
     }
+    .vprompt__intro-card--1 { top: 6%;   left: 50%; transform: translateX(-50%); }
+    .vprompt__intro-card--2 { top: 42%;  right: 4%; }
+    .vprompt__intro-card--3 { bottom: 4%; left: 4%; }
 }
 
 /* Heading + subtítulo visibles desde el inicio (sin atado al scroll) */
@@ -760,17 +838,42 @@ body.entrance-done .landing-header {
     top: 0;
     left: 0;
     right: 0;
-    height: clamp(320px, 42vh, 540px);
+    /* Cubre heading + subtítulo y se funde antes del degradado.
+       Altura calibrada a la zona de textos superiores. */
+    height: clamp(280px, 36vh, 420px);
     background: linear-gradient(
         to bottom,
         #000000 0%,
-        rgba(0, 0, 0, 0.9) 25%,
-        rgba(0, 0, 0, 0.55) 55%,
-        rgba(0, 0, 0, 0.2) 82%,
+        rgba(0, 0, 0, 0.92) 35%,
+        rgba(0, 0, 0, 0.55) 70%,
         transparent 100%
     );
     pointer-events: none;
     z-index: 1;
+}
+
+/* Capa de degradado orgánico: elipses solapadas a Y=50% + blur fuerte
+   para fundir colores sin bordes duros. Queda detrás del fade superior.
+   --mx/--my (rango -1..1) los actualiza JS con el movimiento del cursor
+   para dar una sensación orgánica de respuesta al puntero. */
+.vprompt {
+    --mx: 0;
+    --my: 0;
+}
+
+.vprompt::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 42% 48% at calc(12% + var(--mx) * 4%) calc(50% + var(--my) * 4%), rgba(255, 120, 0,  0.85) 0%, transparent 80%),
+        radial-gradient(ellipse 42% 48% at calc(32% - var(--mx) * 3%) calc(50% - var(--my) * 3%), rgba(255, 40, 70,  0.80) 0%, transparent 80%),
+        radial-gradient(ellipse 42% 48% at calc(52% + var(--mx) * 5%) calc(50% + var(--my) * 4%), rgba(236, 72, 153, 0.80) 0%, transparent 80%),
+        radial-gradient(ellipse 42% 48% at calc(72% - var(--mx) * 3%) calc(50% - var(--my) * 3%), rgba(140, 60, 230, 0.80) 0%, transparent 80%),
+        radial-gradient(ellipse 42% 48% at calc(92% + var(--mx) * 4%) calc(50% + var(--my) * 4%), rgba(40, 180, 255, 0.75) 0%, transparent 80%);
+    filter: blur(70px);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .vprompt > * { position: relative; z-index: 2; }
@@ -1824,34 +1927,14 @@ body.entrance-done .landing-header {
     position: relative;
     width: 100%;
     height: 100vh;
-    background: #0a0a0d;
+    background: #000000;
     overflow: hidden;
 }
 
-/* Video de fondo (VFX) — cubre toda la sección, debajo del contenido */
-.lfw__bg-video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-    pointer-events: none;
-    display: block;
-}
-
-/* Overlay oscuro para que el contenido sea legible sobre el video */
+/* Video de fondo y overlay desactivados: la sección usa negro plano. */
+.lfw__bg-video,
 .lfw__bg-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.55) 0%,
-        rgba(0, 0, 0, 0.35) 50%,
-        rgba(0, 0, 0, 0.65) 100%
-    );
-    z-index: 1;
-    pointer-events: none;
+    display: none;
 }
 
 /* Inner: full-size, sin restricción de ancho */
@@ -1902,31 +1985,32 @@ body.entrance-done .landing-header {
     inset: 0;
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding-left: clamp(28px, 4vw, 72px);
+    /* Stack vertical centrado en el viewport */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(12px, 2.2vh, 28px);
     overflow: hidden;
 }
 
-/* Cada palabra: position:absolute — JS asigna translateY + scale */
+/* Cada palabra queda en su línea, alineada a la izquierda (texto justificado
+   al margen izquierdo). Por defecto gris atenuado; solo el item activo
+   se ilumina en blanco cuando el scroll está en esa categoría. */
 .lfw__list li {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding-left: clamp(28px, 4vw, 72px);
-    font-size: clamp(2.8rem, 5.8vw, 9rem);
-    font-weight: 800;
-    line-height: 1.0;
-    letter-spacing: -0.03em;
-    color: rgba(212, 209, 216, 0.15);
+    font-size: clamp(2rem, 4.2vw, 5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: rgba(212, 209, 216, 0.22);
     cursor: default;
-    transform-origin: left center;
     white-space: nowrap;
-    /* Transición suave al avanzar ítems */
-    transition:
-        transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        opacity   0.45s ease,
-        color     0.35s ease;
-    will-change: transform, opacity, color;
+    transition: color 0.35s ease;
+    will-change: color;
+}
+
+.lfw__list li.is-active {
+    color: #ffffff;
 }
 
 /* ── Columna derecha: slides ── */
@@ -1940,25 +2024,67 @@ body.entrance-done .landing-header {
 .lfw__slide {
     position: absolute;
     inset: 48px 64px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.06);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.6vh, 22px);
     opacity: 0;
     visibility: hidden;
     transition: opacity .3s ease, visibility .3s ease;
 }
 
-/* Colores por flujo */
-.lfw__slide--1{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,0,0,.18) 0%,rgba(255,0,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(255,0,0,.22);}
-.lfw__slide--2{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,101,0,.18) 0%,rgba(255,101,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(255,101,0,.22);}
-.lfw__slide--3{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,229,0,.18) 0%,rgba(255,229,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(255,229,0,.22);}
-.lfw__slide--4{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(154,204,0,.18) 0%,rgba(154,204,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(154,204,0,.22);}
-.lfw__slide--5{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,214,20,.18) 0%,rgba(0,214,20,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(0,214,20,.22);}
-.lfw__slide--6{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,231,255,.18) 0%,rgba(0,231,255,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(0,231,255,.22);}
-.lfw__slide--7{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(0,24,238,.18) 0%,rgba(0,24,238,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(0,24,238,.22);}
-.lfw__slide--8{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(91,0,234,.18) 0%,rgba(91,0,234,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(91,0,234,.22);}
-.lfw__slide--9{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(144,0,144,.18) 0%,rgba(144,0,144,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(144,0,144,.22);}
-.lfw__slide--10{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,0,0,.18) 0%,rgba(255,0,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(255,0,0,.22);}
-.lfw__slide--11{background:radial-gradient(ellipse 80% 70% at 35% 45%,rgba(255,101,0,.18) 0%,rgba(255,101,0,.06) 50%,transparent 80%),#0a0a0d;border-color:rgba(255,101,0,.22);}
+/* Frame del slide: rectángulo con imagen de fondo. El caption vive DENTRO
+   (position: absolute) con un gradiente negro abajo para que el texto resalte.
+   aspect-ratio 4:3 → ~35% menos alto que antes. */
+.lfw__slide-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #000000;
+    background-image: url('https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776449500/IMAGEN_2Recurso_1_z235zf.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+/* Caption: título + descripción DENTRO del frame, anclados abajo.
+   Tiene un gradiente negro 90% → 0% (bottom → top) para que el texto
+   destaque sobre la imagen de fondo. */
+.lfw__slide-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: clamp(48px, 6vh, 88px) clamp(20px, 2.2vw, 32px) clamp(20px, 2.4vh, 28px);
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.90) 0%,
+        rgba(0, 0, 0, 0.70) 35%,
+        rgba(0, 0, 0, 0.35) 70%,
+        transparent 100%
+    );
+    pointer-events: none;
+}
+
+.lfw__slide-title {
+    font-size: clamp(1rem, 1.25vw, 1.35rem);
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.lfw__slide-desc {
+    font-size: clamp(0.85rem, 1vw, 1rem);
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Todos los slides comparten el mismo frame negro plano (sin tintes de color). */
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -1968,7 +2094,7 @@ body.entrance-done .landing-header {
     .lfw__slide { inset: 16px 24px; }
 }
 @media (max-width: 600px) {
-    .lfw__list li { font-size: clamp(2rem, 8vw, 3.5rem); }
+    .lfw__list li { font-size: clamp(1.6rem, 7vw, 3rem); }
     .lfw__fill { display: none; }
 }
 
