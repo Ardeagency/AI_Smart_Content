@@ -110,25 +110,17 @@ class CommandCenterView extends BaseView {
       </div>
     </aside>
 
-    <div class="cc-col cc-col--right">
-      <section class="cc-section cc-section--tight">
-        <div class="cc-section-head">
-          <div class="cc-section-head-main">
-            <h2 class="cc-section-title">Audiencias API</h2>
-          </div>
-          <span class="cc-section-subtitle">Meta / integraciones</span>
-        </div>
-        <div class="cc-api-stack" id="ccApiAudStack"></div>
-      </section>
-      <section class="cc-section cc-section--tight">
-        <div class="cc-section-head">
-          <div class="cc-section-head-main">
-            <h2 class="cc-section-title">Campañas API</h2>
-          </div>
-          <span class="cc-section-subtitle">Activas / inactivas</span>
-        </div>
-        <div id="ccApiCampWrap"></div>
-      </section>
+    <div class="cc-col cc-col--right cc-col--published">
+      <h2 class="cc-published-title">Published data</h2>
+      <div class="cc-published-stack">
+        <section class="cc-published-slice" aria-label="Audiencias desde integraciones">
+          <div class="cc-api-stack" id="ccApiAudStack"></div>
+        </section>
+        <hr class="cc-published-divider" aria-hidden="true" />
+        <section class="cc-published-slice" aria-label="Campañas desde integraciones">
+          <div id="ccApiCampWrap"></div>
+        </section>
+      </div>
     </div>
   </div>
 </div>
