@@ -1016,7 +1016,7 @@ class VideoView extends BaseView {
     if (!select) return;
     const campaigns = this.dbData.campaigns || [];
     const current = this.selectedCampaignId;
-    select.innerHTML = '<option value="">— Ninguna</option>' + campaigns.map((c) => `<option value="${c.id}">${(c.nombre_campana || '').slice(0, 50)}</option>`).join('');
+    select.innerHTML = '<option value="">— Ninguna</option>' + campaigns.map((c) => `<option value="${c.id}">${this.escapeHtml((c.nombre_campana || '').slice(0, 50))}</option>`).join('');
     if (current && campaigns.some((c) => String(c.id) === current)) select.value = current;
   }
 
@@ -1025,7 +1025,7 @@ class VideoView extends BaseView {
     if (!select) return;
     const audiences = this.dbData.audiences || [];
     const current = this.selectedAudienceId;
-    select.innerHTML = '<option value="">— Ninguna</option>' + audiences.map((a) => `<option value="${a.id}">${(a.name || '').slice(0, 50)}</option>`).join('');
+    select.innerHTML = '<option value="">— Ninguna</option>' + audiences.map((a) => `<option value="${a.id}">${this.escapeHtml((a.name || '').slice(0, 50))}</option>`).join('');
     if (current && audiences.some((a) => String(a.id) === current)) select.value = current;
   }
 

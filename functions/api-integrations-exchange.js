@@ -132,7 +132,8 @@ exports.handler = async (event) => {
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
-    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
+    console.error('[exchange] env error:', e.message);
+    return { statusCode: 500, headers: corsHeaders(event), body: JSON.stringify({ error: 'Server configuration error' }) };
   }
 
   let body = {};
@@ -345,7 +346,7 @@ exports.handler = async (event) => {
     };
 
   } catch (e) {
-    console.error('[exchange] error:', e?.message);
-    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: e?.message || 'Token exchange failed' }) };
+    console.error('[exchange] error:', e?.message, e?.details || '');
+    return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Token exchange failed' }) };
   }
 };

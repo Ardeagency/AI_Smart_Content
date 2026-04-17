@@ -14,9 +14,34 @@
     return;
   }
 
+  // Límites de tamaño de archivo (bytes). Supabase tiene sus propios límites de
+  // bucket, pero validar en el cliente evita el upload innecesario + da feedback inmediato.
+  const MAX_LOGO_SIZE     = 10 * 1024 * 1024;   // 10 MB
+  const MAX_ASSET_SIZE    = 50 * 1024 * 1024;   // 50 MB
+  const MAX_IDENTITY_SIZE = 50 * 1024 * 1024;   // 50 MB
+
+  // Extensiones seguras permitidas por tipo de archivo.
+  const ALLOWED_LOGO_EXT     = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
+  const ALLOWED_ASSET_EXT    = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'mp4', 'mov', 'ai', 'eps', 'psd']);
+  const ALLOWED_IDENTITY_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'ai', 'eps', 'psd']);
+
+  function _validateFile(file, maxSize, allowedExtensions, label) {
+    if (!file) return 'Archivo no proporcionado.';
+    if (file.size > maxSize) {
+      return `El archivo "${file.name}" supera el tamaño máximo (${Math.round(maxSize / 1024 / 1024)} MB).`;
+    }
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!allowedExtensions.has(ext)) {
+      return `La extensión ".${ext}" no está permitida para ${label}. Formatos válidos: ${[...allowedExtensions].join(', ')}.`;
+    }
+    return null;
+  }
+
   const UploadsMixin = {
     async uploadLogo(file) {
       if (!file || !this.organizationRow) return;
+      const err = _validateFile(file, MAX_LOGO_SIZE, ALLOWED_LOGO_EXT, 'logo');
+      if (err) { alert(err); return; }
       if (!this.supabase && window.supabaseService) {
         this.supabase = await window.supabaseService.getClient();
       }
@@ -64,6 +89,8 @@
 
     async uploadAsset(file) {
       if (!this.supabase || !this.organizationRow) return;
+      const err = _validateFile(file, MAX_ASSET_SIZE, ALLOWED_ASSET_EXT, 'asset');
+      if (err) { alert(err); return; }
       const orgId = this.organizationRow.id;
       try {
         const fileExt = file.name.split('.').pop();
@@ -101,6 +128,8 @@
 
     async uploadIdentityFile(file) {
       if (!this.supabase || !this.organizationRow) return;
+      const err = _validateFile(file, MAX_IDENTITY_SIZE, ALLOWED_IDENTITY_EXT, 'archivo de identidad');
+      if (err) { alert(err); return; }
       const orgId = this.organizationRow.id;
       try {
         const fileExt = (file.name.split('.').pop() || 'bin').toLowerCase();

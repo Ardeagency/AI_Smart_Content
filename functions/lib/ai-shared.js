@@ -146,6 +146,26 @@ async function requireAuth(event) {
   }
 }
 
+/**
+ * Rechaza requests con body mayor a `maxBytes`. Devuelve null si está OK,
+ * o un objeto de respuesta HTTP 413 si excede. Usar al inicio del handler:
+ *   const tooBig = checkBodySize(event, 1024 * 1024);
+ *   if (tooBig) return tooBig;
+ */
+function checkBodySize(event, maxBytes = 5 * 1024 * 1024) {
+  const cl = parseInt(event.headers?.['content-length'] || '0', 10);
+  const bodyLen = typeof event.body === 'string' ? Buffer.byteLength(event.body) : 0;
+  const size = Math.max(cl, bodyLen);
+  if (size > maxBytes) {
+    return {
+      statusCode: 413,
+      headers: corsHeaders(event),
+      body: JSON.stringify({ error: `Payload too large (max ${Math.round(maxBytes / 1024 / 1024)} MB)` })
+    };
+  }
+  return null;
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
@@ -153,6 +173,7 @@ module.exports = {
   fetchSupabaseUser,
   requireAuth,
   supabaseRest,
-  assertOrgMember
+  assertOrgMember,
+  checkBodySize
 };
 

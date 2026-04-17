@@ -966,7 +966,7 @@ class BrandstorageView extends BaseView {
               <span class="entity-name">${this.escapeHtml(e.name)}</span>
               ${places.length ? `<div class="entity-places">${placesHtml}</div>` : ''}
             </div>
-            ${e.price != null ? `<span class="entity-price">${e.price} ${e.currency || 'USD'}</span>` : ''}
+            ${e.price != null ? `<span class="entity-price">${e.price} ${this.escapeHtml(e.currency || 'USD')}</span>` : ''}
             <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="Agregar lugar"><i class="fas fa-map-pin"></i></button>
             <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="Eliminar" aria-label="Eliminar entidad">×</button>
           </div>
