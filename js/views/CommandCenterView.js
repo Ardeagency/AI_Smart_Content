@@ -70,24 +70,27 @@ class CommandCenterView extends BaseView {
   renderHTML() {
     return `
 <div class="cc-page" id="commandCenterPage">
-  <section class="cc-section">
-    <div class="cc-section-head">
-      <div class="cc-section-head-main">
-        <h2 class="cc-section-title">Audiencias</h2>
+  <section class="cc-section cc-section--audiences">
+    <div class="cc-aud-glow" aria-hidden="true"></div>
+    <div class="cc-section--audiences-body">
+      <div class="cc-section-head">
+        <div class="cc-section-head-main">
+          <h2 class="cc-section-title">Audiencias</h2>
+        </div>
+        <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
+          <span class="cc-aud-head-count-num" id="ccAudCount">0</span>
+          <span class="cc-aud-head-count-suffix" aria-hidden="true">audiencias</span>
+        </div>
       </div>
-      <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
-        <span class="cc-aud-head-count-num" id="ccAudCount">0</span>
-        <span class="cc-aud-head-count-suffix" aria-hidden="true">audiencias</span>
+      <div class="cc-carousel-wrap">
+        <div class="cc-carousel" id="ccAudCarousel">
+          <div class="cc-loading"><span></span><span></span><span></span></div>
+        </div>
       </div>
-    </div>
-    <div class="cc-carousel-wrap">
-      <div class="cc-carousel" id="ccAudCarousel">
-        <div class="cc-loading"><span></span><span></span><span></span></div>
+      <div class="cc-empty" id="ccAudEmpty" style="display:none;">
+        <i class="fas fa-users-slash"></i>
+        <p>No hay audiencias para esta sub-marca.</p>
       </div>
-    </div>
-    <div class="cc-empty" id="ccAudEmpty" style="display:none;">
-      <i class="fas fa-users-slash"></i>
-      <p>No hay audiencias para esta sub-marca.</p>
     </div>
   </section>
 

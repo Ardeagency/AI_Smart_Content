@@ -20,49 +20,58 @@
   margin-top: 0.75rem;
 }
 
-/* Bloque superior Audiencias: panel blanco, título color canvas, cards color fondo, brillo inferior marca */
-#commandCenterPage > .cc-section:first-of-type {
+/* Bloque Audiencias (.cc-section--audiences): panel blanco, contador a la derecha, brillo difuminado abajo */
+#commandCenterPage .cc-section--audiences {
   margin-top: 0;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
-  padding: 0.85rem 1rem 1rem;
+  padding: 0;
   background: #ffffff;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
-#commandCenterPage > .cc-section:first-of-type > * {
+/* Brillo tipo referencia: gradiente de marca muy difuminado, solo un halo bajo el panel */
+#commandCenterPage .cc-section--audiences .cc-aud-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -42%;
+  transform: translateX(-50%);
+  width: min(104%, 520px);
+  height: 56px;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  filter: blur(44px);
+  opacity: 0.2;
+}
+
+#commandCenterPage .cc-section--audiences-body {
   position: relative;
   z-index: 1;
+  padding: 0.85rem 1rem 1rem;
 }
 
-#commandCenterPage > .cc-section:first-of-type::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 38%;
-  max-height: 120px;
-  pointer-events: none;
-  border-radius: 0 0 11px 11px;
-  background: var(--brand-gradient);
-  opacity: 0.2;
-  z-index: 0;
-}
-
-#commandCenterPage > .cc-section:first-of-type .cc-section-title {
+#commandCenterPage .cc-section--audiences .cc-section-title {
   color: var(--bg-primary, #0b0b0b);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-wrap {
+/* Por si quedara markup antiguo cacheado en el cliente */
+#commandCenterPage .cc-section--audiences .cc-section-head-main .cc-section-count,
+#commandCenterPage .cc-section--audiences .cc-section-subtitle {
+  display: none !important;
+}
+
+#commandCenterPage .cc-section--audiences .cc-aud-head-count-wrap {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35rem;
   flex-shrink: 0;
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-num {
+#commandCenterPage .cc-section--audiences .cc-aud-head-count-num {
   font-size: 1rem;
   font-weight: 700;
   color: var(--bg-primary, #0b0b0b);
@@ -70,49 +79,49 @@
   line-height: 1.2;
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-head-count-suffix {
+#commandCenterPage .cc-section--audiences .cc-aud-head-count-suffix {
   font-size: 0.75rem;
   font-weight: 500;
   color: rgba(11, 11, 11, 0.45);
   text-transform: lowercase;
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-card {
+#commandCenterPage .cc-section--audiences .cc-aud-card {
   background: var(--bg-primary, #0b0b0b);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-card:hover,
-#commandCenterPage > .cc-section:first-of-type .cc-aud-card:focus-visible {
+#commandCenterPage .cc-section--audiences .cc-aud-card:hover,
+#commandCenterPage .cc-section--audiences .cc-aud-card:focus-visible {
   background: #121212;
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-name {
+#commandCenterPage .cc-section--audiences .cc-aud-name {
   color: var(--text-primary);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-aud-level {
+#commandCenterPage .cc-section--audiences .cc-aud-level {
   color: rgba(255, 255, 255, 0.88);
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-loading span {
+#commandCenterPage .cc-section--audiences .cc-loading span {
   background: rgba(11, 11, 11, 0.1);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-empty {
+#commandCenterPage .cc-section--audiences .cc-empty {
   background: rgba(11, 11, 11, 0.03);
   border-color: rgba(11, 11, 11, 0.12);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-empty i,
-#commandCenterPage > .cc-section:first-of-type .cc-empty p {
+#commandCenterPage .cc-section--audiences .cc-empty i,
+#commandCenterPage .cc-section--audiences .cc-empty p {
   color: rgba(11, 11, 11, 0.45);
 }
 
-#commandCenterPage > .cc-section:first-of-type .cc-carousel::-webkit-scrollbar-thumb {
+#commandCenterPage .cc-section--audiences .cc-carousel::-webkit-scrollbar-thumb {
   background: rgba(11, 11, 11, 0.22);
 }
 
