@@ -95,12 +95,13 @@ class CommandCenterView extends BaseView {
 
   <div class="cc-two-col" id="ccTwoCol">
     <aside class="cc-col cc-col--left">
-      <div class="cc-section-head">
+      <div class="cc-section-head cc-section-head--campaigns">
         <div class="cc-section-head-main">
-          <h2 class="cc-section-title">Campañas</h2>
-          <span class="cc-section-count" id="ccCampCount">0</span>
+          <h2 class="cc-section-title cc-section-title--campaigns">Campañas</h2>
         </div>
-        <span class="cc-section-subtitle">Plataforma</span>
+        <div class="cc-camp-head-count-wrap" aria-live="polite" aria-atomic="true">
+          <span class="cc-camp-head-count-num" id="ccCampCount" aria-label="Total de campañas">0</span>
+        </div>
       </div>
       <div class="cc-list" id="ccCampList"></div>
       <div class="cc-empty cc-empty--inline" id="ccCampEmpty" style="display:none;">
