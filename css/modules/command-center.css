@@ -377,11 +377,12 @@
   min-width: 0;
 }
 
+/* Columna Campañas: sin panel tipo glass (fondo página) */
 .cc-col--left {
-  border: 1px solid var(--border-divider, #212126);
-  border-radius: 12px;
-  padding: 0.85rem 1rem 1rem;
-  background: var(--bg-secondary, #141517);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .cc-col--right {
@@ -390,12 +391,12 @@
   gap: 0.85rem;
 }
 
-/* Cada bloque API como panel sólido (no “flotando” sobre el fondo) */
+/* Bloques API (derecha): sin contenedor con borde/relleno; el fondo es el de la página */
 .cc-col--right > .cc-section {
-  border: 1px solid var(--border-divider, #212126);
-  border-radius: 12px;
-  padding: 0.85rem 1rem 1rem;
-  background: var(--bg-secondary, #141517);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .cc-section--tight {
