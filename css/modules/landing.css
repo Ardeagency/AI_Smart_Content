@@ -807,9 +807,13 @@ body.entrance-done .landing-header {
 /* Posicionamiento de las 3 cards flotantes alrededor del logo Vera.
    Card 1 — arriba-centro (sobre Vera). Card 2 — derecha-medio (alineada al logo).
    Card 3 — abajo-izquierda. */
-.vprompt__intro-card--1 { top: 12%;  left: 25%; }
-.vprompt__intro-card--2 { top: 44%;  right: 5%; }
-.vprompt__intro-card--3 { bottom: 5%; left: 8%; }
+/* Posición de las 3 cards flotantes alrededor del logo Vera.
+   Card 1 (Un agente autónomo) → arriba-izquierda.
+   Card 2 (Inteligencia de marca) → derecha, debajo del logo.
+   Card 3 (Producción autónoma) → abajo-izquierda. */
+.vprompt__intro-card--1 { top: 10%;   left: 26%; }
+.vprompt__intro-card--2 { top: 48%;   right: 6%; }
+.vprompt__intro-card--3 { bottom: 3%; left: 17%; }
 
 @media (max-width: 768px) {
     .vprompt__intro-card {
