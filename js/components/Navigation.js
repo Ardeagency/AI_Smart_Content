@@ -602,8 +602,10 @@ class Navigation {
         <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
           ${footerHTML}
           <div class="nav-org-credits" id="navOrgCreditsBlock">
-            <span class="nav-org-credits-label">Credits</span>
-            <span class="nav-org-credits-value" id="navTokensValue">—</span>
+            <div class="nav-org-credits-row">
+              <span class="nav-org-credits-label">credits</span>
+              <span class="nav-org-credits-value" id="navTokensValue">—</span>
+            </div>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
         </div>

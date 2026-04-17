@@ -61,7 +61,11 @@
       }
       const available = data != null ? (data.credits_available ?? 0) : 0;
       const total = data != null ? (data.credits_total ?? 0) : 0;
-      const nextLabel = this._formatCreditsDisplay(available);
+      const used = total > 0 ? Math.max(0, total - available) : 0;
+      const nextLabel =
+        total > 0
+          ? `${this._formatCreditsDisplay(total)}/${this._formatCreditsDisplay(used)}`
+          : '—';
       const pct = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
       const nextWidth = `${pct}%`;
       if (tokensEl && tokensEl.textContent !== nextLabel) {
@@ -118,13 +122,17 @@
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
     this._renderAdaptiveOrgName(this._orgCache.name || '');
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
-    const credits = this._orgCache.credits != null ? this._orgCache.credits : 0;
+    const available = this._orgCache.credits != null ? this._orgCache.credits : 0;
+    const totalRaw = this._orgCache.credits_total != null ? this._orgCache.credits_total : 0;
+    const total = totalRaw > 0 ? totalRaw : 0;
+    const used = total > 0 ? Math.max(0, total - available) : 0;
     if (tokensEl) {
-      tokensEl.textContent = this._formatCreditsDisplay(credits);
+      tokensEl.textContent =
+        total > 0 ? `${this._formatCreditsDisplay(total)}/${this._formatCreditsDisplay(used)}` : '—';
     }
     if (barFill) {
-      const total = this._orgCache.credits_total != null && this._orgCache.credits_total > 0 ? this._orgCache.credits_total : 1;
-      const pct = Math.min(100, Math.round((credits / total) * 100));
+      const denom = total > 0 ? total : 1;
+      const pct = Math.min(100, Math.round((available / denom) * 100));
       barFill.style.width = `${pct}%`;
     }
   },

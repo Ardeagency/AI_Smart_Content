@@ -3067,27 +3067,43 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--sidebar-text-primary);
 }
 
-/* Créditos de la organización (debajo del enlace Créditos) */
+/* Créditos de la organización: fila credits | total/usado + barra */
 .nav-org-credits {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--nav-border);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+}
+
+.nav-org-credits-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
 }
 
 .nav-org-credits-label {
     font-size: 11px;
     font-weight: 500;
     color: var(--text-muted);
+    text-transform: lowercase;
+    flex-shrink: 0;
 }
 
 .nav-org-credits-value {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 0.8125rem;
+    font-weight: 600;
     color: var(--text-primary);
     line-height: 1.2;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .nav-org-credits-bar {
