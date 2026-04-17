@@ -293,8 +293,14 @@
    */
   function renderView({ activePath, content, pageClass, scrollToTop = true, hideFooter = false, hideHeader = false }) {
     document.body.classList.add('route-public');
-    document.body.classList.remove('entrance-active');
-    document.body.classList.add('entrance-done');
+    // Solo tocar entrance si el overlay ya terminó (evita flash gris durante la carga inicial).
+    // app-loader.js maneja finishEntrance() y es el único que debe remover entrance-active.
+    var entranceOverlay = document.getElementById('entranceOverlay');
+    var entranceDone = !entranceOverlay || entranceOverlay.classList.contains('entrance-overlay--hidden');
+    if (entranceDone) {
+      document.body.classList.remove('entrance-active');
+      document.body.classList.add('entrance-done');
+    }
 
     const shell = document.getElementById('public-shell');
     if (shell) shell.setAttribute('aria-hidden', 'false');

@@ -787,6 +787,32 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .entrance-logo.entrance-visible { opacity: 1; transform: translateY(0); }
 .entrance-logo.entrance-out { opacity: 0; transform: translateY(-20px); }
 
+/* Barra de progreso de carga */
+.entrance-progress {
+    position: absolute;
+    top: 54%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(320px, 60vw);
+    height: 2.5px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+.entrance-progress.is-active { opacity: 1; }
+.entrance-progress.is-done { opacity: 0; transition: opacity 0.3s ease 0.2s; }
+.entrance-progress__bar {
+    height: 100%;
+    width: 0%;
+    background: var(--brand-gradient);
+    background-size: 200% 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease-out;
+}
+
 .app-notification {
     position: fixed;
     top: 20px;

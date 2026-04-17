@@ -61,11 +61,22 @@ class LandingView extends PublicBaseView {
         <!-- Logo Vera FIJO al viewport — se muestra solo cuando la sección está en pantalla -->
         <img src="/recursos/vera/Vera-2.svg" class="vprompt__fixed-logo" alt="">
 
-        <!-- 2) Scroll runway: gradiente orgánico que se transforma en orb circular -->
+        <!-- 2) Scroll runway: gradiente orgánico + card "agente autónomo" -->
         <div class="vprompt__intro-runway" aria-hidden="true">
           <div class="vprompt__intro">
             <div class="vprompt__intro-aurora"></div>
             <div class="vprompt__intro-orb"></div>
+
+            <!-- Card glass: aparece al scrollear, esquina superior izquierda -->
+            <div class="vprompt__intro-card">
+              <div class="vprompt__intro-card-img">
+                <img src="https://res.cloudinary.com/dmruwjuxn/image/upload/q_auto/f_auto/v1776393696/CARD1_fnojqv.jpg" alt="Agente autónomo – flujo de trabajo" loading="lazy">
+              </div>
+              <div class="vprompt__intro-card-body">
+                <h3 class="vprompt__intro-card-title">Un agente autónomo</h3>
+                <p class="vprompt__intro-card-sub">Tu agente operativo, 24/7.</p>
+              </div>
+            </div>
           </div>
         </div>
 

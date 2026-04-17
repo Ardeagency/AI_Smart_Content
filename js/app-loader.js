@@ -264,12 +264,40 @@
             else setTimeout(fn, ms);
         }
 
+        // Elementos de la barra de progreso
+        var progressEl = document.getElementById('entranceProgress');
+        var progressBar = document.getElementById('entranceProgressBar');
+        var progressInterval = null;
+        var currentProgress = 0;
+
         // Helper: cierra la entrada (fade del overlay + switch de clases)
         function finishEntrance() {
-            if (entranceLogo) entranceLogo.classList.add('entrance-out');
-            overlay.classList.add('entrance-overlay--hidden');
-            document.body.classList.remove('entrance-active');
-            document.body.classList.add('entrance-done');
+            // Barra a 100%, luego fade del overlay
+            if (progressBar) progressBar.style.width = '100%';
+            if (progressEl) progressEl.classList.add('is-done');
+            if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+
+            setTimeout(function () {
+                if (entranceLogo) entranceLogo.classList.add('entrance-out');
+                overlay.classList.add('entrance-overlay--hidden');
+                document.body.classList.remove('entrance-active');
+                document.body.classList.add('entrance-done');
+            }, 350);
+        }
+
+        // Inicia el progreso falso: rápido al inicio, lento al final
+        function startProgress() {
+            if (progressEl) progressEl.classList.add('is-active');
+            progressInterval = setInterval(function () {
+                if (currentProgress < 50) {
+                    currentProgress += 4;
+                } else if (currentProgress < 75) {
+                    currentProgress += 1.5;
+                } else if (currentProgress < 90) {
+                    currentProgress += 0.5;
+                }
+                if (progressBar) progressBar.style.width = currentProgress + '%';
+            }, 80);
         }
 
         // 1) Rectángulo con degradado: mostrar → expandir → barrer a la derecha
@@ -288,39 +316,57 @@
             if (entranceLogo) entranceLogo.classList.add('entrance-visible');
         });
 
-        // 3) Salida sincronizada con el render de la landing:
-        //    esperamos (a) el tiempo mínimo de marca (850ms) Y (b) que app-container tenga contenido.
-        //    Fallback duro de 1800ms por si algo falla en el render.
-        var minTimeReached = false;
-        var contentReady = false;
-        var ended = false;
-        function maybeEnd() {
-            if (ended) return;
-            if (minTimeReached && contentReady) { ended = true; finishEntrance(); }
-        }
-        at(850, function () { minTimeReached = true; maybeEnd(); });
+        // 3) Logo sale, barra de progreso aparece y comienza a llenarse
+        at(1100, function () {
+            if (entranceLogo) entranceLogo.classList.add('entrance-out');
+            startProgress();
+        });
 
-        var container = document.getElementById('app-container');
-        function hasContent() { return container && container.innerHTML.trim().length > 0; }
-        if (hasContent()) {
-            contentReady = true;
-        } else if (container && typeof MutationObserver !== 'undefined') {
-            var obs = new MutationObserver(function () {
-                if (hasContent()) {
-                    contentReady = true;
-                    obs.disconnect();
-                    maybeEnd();
+        // 4) Cuando el contenido esté listo, barra salta a 100% y el overlay se cierra.
+        //    Vigila DOS contenedores: #app-container (rutas auth) y #public-view-content
+        //    (landing y públicas — PublicBaseView renderiza ahí, NO en app-container).
+        var appContainer = document.getElementById('app-container');
+        var publicContainer = document.getElementById('public-view-content');
+        var ended = false;
+
+        function hasContent() {
+            return (appContainer && appContainer.innerHTML.trim().length > 0) ||
+                   (publicContainer && publicContainer.innerHTML.trim().length > 0);
+        }
+
+        function tryFinish() {
+            if (ended) return;
+            if (hasContent()) {
+                ended = true;
+                if (currentProgress === 0) {
+                    at(1200, finishEntrance);
+                } else {
+                    finishEntrance();
                 }
+            }
+        }
+
+        if (hasContent()) {
+            at(1200, function () { if (!ended) { ended = true; finishEntrance(); } });
+        } else if (typeof MutationObserver !== 'undefined') {
+            var targets = [appContainer, publicContainer].filter(Boolean);
+            var observers = targets.map(function (el) {
+                var obs = new MutationObserver(function () {
+                    if (hasContent()) {
+                        observers.forEach(function (o) { try { o.disconnect(); } catch (_) {} });
+                        tryFinish();
+                    }
+                });
+                obs.observe(el, { childList: true, subtree: true });
+                return obs;
             });
-            obs.observe(container, { childList: true, subtree: true });
-            // Fallback duro: pase lo que pase, salimos a 1800ms
-            at(1800, function () {
-                try { obs.disconnect(); } catch (_) {}
-                contentReady = true;
-                maybeEnd();
+            // Fallback duro: 4s (antes 8s — ahora que observamos el contenedor correcto, no debería llegar aquí)
+            at(4000, function () {
+                observers.forEach(function (o) { try { o.disconnect(); } catch (_) {} });
+                if (!ended) { ended = true; finishEntrance(); }
             });
         } else {
-            at(1800, function () { contentReady = true; maybeEnd(); });
+            at(2000, function () { if (!ended) { ended = true; finishEntrance(); } });
         }
     }
 
