@@ -2182,16 +2182,17 @@ body.entrance-done .landing-header {
 
 .landing-bento__title {
     margin: 0 0 1rem;
-    font-size: clamp(1.35rem, 3.2vw, 2.15rem);
+    font-size: clamp(2.4rem, 5vw, 4.4rem);
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.1;
     letter-spacing: -0.02em;
 }
 
+/* Subtítulo = 50% del tamaño del título en cada breakpoint. */
 .landing-bento__subtitle {
     margin: 0;
-    font-size: clamp(0.9rem, 1.35vw, 1.05rem);
-    line-height: 1.55;
+    font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+    line-height: 1.4;
     font-weight: 400;
     color: rgba(255, 255, 255, 0.88);
 }
