@@ -38,14 +38,14 @@
   left: 50%;
   bottom: -42%;
   transform: translateX(-50%);
-  width: min(104%, 520px);
-  height: 56px;
+  width: min(108%, 560px);
+  height: 68px;
   pointer-events: none;
   z-index: 0;
   border-radius: 50%;
   background: var(--brand-gradient);
-  filter: blur(44px);
-  opacity: 0.2;
+  filter: blur(40px);
+  opacity: 0.52;
 }
 
 #commandCenterPage .cc-section--audiences-body {
