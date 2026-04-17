@@ -190,8 +190,15 @@ class App {
         const hit = LEGACY_ROUTE_REDIRECTS.find((r) => r.match.test(path));
         const target = hit ? hit.replace(path) : '/dashboard';
 
-        // Log (silenciado en prod por app-loader) para poder medir tráfico legacy
-        // antes de borrar estas rutas. Si `console.warn` deja de verse, es hora de limpiar.
+        // Tracking en localStorage (visible incluso en prod donde console.warn está
+        // silenciado). Revisar: localStorage.getItem('_legacy_route_hits')
+        try {
+          const hits = JSON.parse(localStorage.getItem('_legacy_route_hits') || '{}');
+          hits[path] = (hits[path] || 0) + 1;
+          hits._total = (hits._total || 0) + 1;
+          hits._last = new Date().toISOString();
+          localStorage.setItem('_legacy_route_hits', JSON.stringify(hits));
+        } catch (_) {}
         console.warn('[legacy-route]', path, '→', target);
 
         const c = document.getElementById('app-container');

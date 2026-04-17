@@ -8,6 +8,7 @@ const {
   assertOrgMember
 } = require('./lib/ai-shared');
 const { getMetaGraphVersion } = require('./lib/meta-graph');
+const { checkRateLimit } = require('./lib/rate-limiter');
 
 function getRedirectUri() {
   const base = process.env.SITE_URL ? process.env.SITE_URL.replace(/\/$/, '') : 'http://localhost:8888';
@@ -48,6 +49,15 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(event), body: '' };
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers: corsHeaders(event), body: JSON.stringify({ error: 'Method not allowed' }) };
+
+  const rl = checkRateLimit(event, { maxRequests: 10, windowMs: 60000, keyPrefix: 'oauth-fb' });
+  if (rl.blocked) {
+    return {
+      statusCode: 429,
+      headers: { ...corsHeaders(event), 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) },
+      body: JSON.stringify({ error: 'Too many requests. Try again in a moment.' })
+    };
+  }
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) {
