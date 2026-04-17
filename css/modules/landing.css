@@ -1966,21 +1966,9 @@ body.entrance-done .landing-header {
     overflow: hidden;
 }
 
-/* Barra de progreso — al borde izquierdo */
+/* Barra de progreso — al borde izquierdo (oculta) */
 .lfw__fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(to bottom,
-        #ff0000 0%, #ff6500 18%, #ffe500 32%,
-        #9acc00 46%, #00d614 54%, #00e7ff 68%,
-        #0018ee 76%, #5b00ea 86%, #900090 100%);
-    border-radius: 0 2px 2px 0;
-    transform-origin: top left;
-    will-change: transform;
-    z-index: 2;
+    display: none;
 }
 
 /* Lista: contenedor absoluto full-size */
