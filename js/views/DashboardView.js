@@ -82,11 +82,12 @@ class DashboardView extends BaseView {
     if (!body) return;
     if (tabId === 'my-brands') {
       this._renderMyBrands(body);
+    } else if (tabId === 'competence') {
+      this._renderCompetence(body);
     } else {
       const copy = {
-        competence: { title: 'Competencia', icon: 'fa-chess', desc: 'Inteligencia táctica sobre precios, contenido del rival, superficie de ataque y pauta.' },
-        tendencies:  { title: 'Tendencias',  icon: 'fa-fire',  desc: 'El pulso del mundo: señales emergentes, contexto cultural, plataformas y estética.' },
-        strategy:    { title: 'Estrategia',  icon: 'fa-route', desc: 'Centro de comando: misiones, sensores, acciones estratégicas y salud organizacional.' },
+        tendencies: { title: 'Tendencias', icon: 'fa-fire',  desc: 'El pulso del mundo: señales emergentes, contexto cultural, plataformas y estética.' },
+        strategy:   { title: 'Estrategia', icon: 'fa-route', desc: 'Centro de comando: misiones, sensores, acciones estratégicas y salud organizacional.' },
       };
       const tab = copy[tabId];
       body.innerHTML = this._pageComingSoon(tab.title, tab.icon, tab.desc);
@@ -827,6 +828,616 @@ class DashboardView extends BaseView {
         card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
         card.style.opacity = '1';
         card.style.transform = 'none';
+      }, i * 60);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     COMPETENCIA — Infiltración Táctica
+  ═══════════════════════════════════════════════════════════ */
+  async _renderCompetence(body) {
+    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando inteligencia táctica…</div>`;
+    try { await this._ensureChartJs(); } catch (_) {}
+    body.innerHTML = this._buildCompetenceHTML();
+    this._initCompetenceCharts();
+    this._animateCC();
+  }
+
+  _buildCompetenceHTML() {
+    return `
+    <div class="cc-dashboard">
+
+      <!-- ── Header ── -->
+      <div class="cc-header">
+        <div class="cc-header-left">
+          <div class="cc-spy-icon"><i class="fas fa-user-secret"></i></div>
+          <div>
+            <h2 class="cc-title">Infiltración Táctica</h2>
+            <p class="cc-subtitle">OpenClaw · Patrullaje cada 10 min · Demostración</p>
+          </div>
+        </div>
+        <div class="cc-rival-selector">
+          <span class="cc-rival-label">Rival monitoreado:</span>
+          <span class="cc-rival-chip"><i class="fas fa-building"></i> Competidor A</span>
+          <span class="cc-rival-chip cc-chip--dim"><i class="fas fa-building"></i> Competidor B</span>
+          <span class="cc-rival-chip cc-chip--dim"><i class="fas fa-building"></i> Competidor C</span>
+        </div>
+      </div>
+
+      <!-- ── KPI Strip ── -->
+      <div class="cc-kpi-strip">
+        ${this._ccKpi('fa-bullhorn',          'Share of Voice',          '34%',  'Nosotros vs mercado',    'blue')}
+        ${this._ccKpi('fa-pen-nib',           'Posts rival / sem',       '31',   '−3 vs semana ant.',      'orange')}
+        ${this._ccKpi('fa-face-frown',        'Reviews neg. detectadas', '247',  '↑ 18 esta semana',       'red')}
+        ${this._ccKpi('fa-rectangle-ad',      'Anuncios activos',        '14',   'Meta · Google · TikTok', 'purple')}
+        ${this._ccKpi('fa-triangle-exclamation','Vulnerabilidades',      '6',    'Explotables hoy',        'yellow')}
+        ${this._ccKpi('fa-box-open',          'SKUs sin stock rival',    '3',    'Oportunidad inmediata',  'green')}
+      </div>
+
+      <!-- ── OpenClaw Mission Control ── -->
+      <div class="cc-mission-control">
+        <div class="cc-mc-header">
+          <span><i class="fas fa-satellite-dish"></i> OpenClaw Mission Control</span>
+          <span class="cc-pulse-dot"></span>
+        </div>
+        <div class="cc-mc-missions" id="ccMissions"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM A · THE PRICE WAR
+      ══════════════════════════════════════════════ -->
+      ${this._ccDim('A', 'fa-sack-dollar', 'The Price War', 'Precios cross-platform, stock crítico y bundles del rival')}
+
+      <div class="cc-dim-row">
+        <div class="cc-widget cc-widget--wide">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-chart-bar"></i> Monitor de Precios SKU vs SKU</span>
+            <span class="cc-badge cc-badge--blue">Cross-Platform</span>
+          </div>
+          <div class="cc-widget-body">
+            <canvas id="ccChartPrecios" height="200"></canvas>
+          </div>
+        </div>
+        <div class="cc-widget">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-boxes-stacking"></i> Stock Crítico del Rival</span>
+            <span class="cc-badge cc-badge--red">Oportunidad</span>
+          </div>
+          <div class="cc-widget-body">
+            ${this._ccStockRival()}
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-widget cc-widget--full">
+        <div class="cc-widget-header">
+          <span class="cc-widget-title"><i class="fas fa-tags"></i> Análisis de Ofertas y Bundles del Rival</span>
+          <span class="cc-badge cc-badge--orange">Canibalización</span>
+        </div>
+        <div class="cc-widget-body">
+          ${this._ccBundlesTable()}
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM B · THE CONTENT BATTLE
+      ══════════════════════════════════════════════ -->
+      ${this._ccDim('B', 'fa-swords', 'The Content Battle', 'Temas ganadores, engagement real y lanzamientos en la sombra')}
+
+      <div class="cc-dim-row">
+        <div class="cc-widget">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-fire"></i> Temas Ganadores del Rival</span>
+            <span class="cc-badge cc-badge--orange">Fórmula viral</span>
+          </div>
+          <div class="cc-widget-body">
+            <canvas id="ccChartTemas" height="220"></canvas>
+          </div>
+        </div>
+        <div class="cc-widget cc-widget--wide">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-chart-line"></i> Benchmarking de Engagement Real</span>
+            <span class="cc-badge cc-badge--blue">Nosotros vs Rival</span>
+          </div>
+          <div class="cc-widget-body">
+            <canvas id="ccChartEngagement" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-widget cc-widget--full">
+        <div class="cc-widget-header">
+          <span class="cc-widget-title"><i class="fas fa-eye-slash"></i> Detección de Lanzamientos en la Sombra</span>
+          <span class="cc-badge cc-badge--purple">Anticipación</span>
+        </div>
+        <div class="cc-widget-body">
+          ${this._ccShadowLaunches()}
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM C · ATTACK SURFACE
+      ══════════════════════════════════════════════ -->
+      ${this._ccDim('C', 'fa-crosshairs', 'Attack Surface', 'Reviews negativas explotables y crisis de reputación del rival')}
+
+      <div class="cc-dim-row">
+        <div class="cc-widget cc-widget--wide">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-star-half-stroke"></i> Reviews Negativas del Rival — Puntos de Dolor</span>
+            <span class="cc-badge cc-badge--red">Explotable</span>
+          </div>
+          <div class="cc-widget-body">
+            <canvas id="ccChartPain" height="180"></canvas>
+          </div>
+        </div>
+        <div class="cc-widget">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-bomb"></i> Crisis de Reputación del Rival</span>
+            <span class="cc-badge cc-badge--red">Alerta activa</span>
+          </div>
+          <div class="cc-widget-body">
+            ${this._ccCrisisRival()}
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM D · AD INTELLIGENCE
+      ══════════════════════════════════════════════ -->
+      ${this._ccDim('D', 'fa-satellite', 'Ad Intelligence', 'Radar de pauta digital e influencer mapping del rival')}
+
+      <div class="cc-dim-row">
+        <div class="cc-widget">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-radar"></i> Radar de Pauta Digital</span>
+            <span class="cc-badge cc-badge--purple">Inversión estimada</span>
+          </div>
+          <div class="cc-widget-body mb-widget-body--center">
+            <canvas id="ccChartAds" height="230"></canvas>
+          </div>
+        </div>
+        <div class="cc-widget cc-widget--wide">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-user-tie"></i> Influencer Mapping del Rival</span>
+            <span class="cc-badge cc-badge--blue">Oportunidad de captura</span>
+          </div>
+          <div class="cc-widget-body">
+            ${this._ccInfluencerMap()}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Share of Voice ── -->
+      ${this._ccDim('+', 'fa-chart-pie', 'Share of Voice', 'Cuota de atención del nicho — quién domina la conversación')}
+      <div class="cc-dim-row">
+        <div class="cc-widget mb-widget-body--center">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-chart-pie"></i> Share of Voice — Nicho</span>
+            <span class="cc-badge cc-badge--blue">Tiempo real</span>
+          </div>
+          <div class="cc-widget-body mb-widget-body--center">
+            <canvas id="ccChartSOV" height="240"></canvas>
+          </div>
+        </div>
+        <div class="cc-widget cc-widget--wide">
+          <div class="cc-widget-header">
+            <span class="cc-widget-title"><i class="fas fa-chart-area"></i> Share of Voice — Evolución 30 días</span>
+            <span class="cc-badge cc-badge--green">Tendencia</span>
+          </div>
+          <div class="cc-widget-body">
+            <canvas id="ccChartSOVLine" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer demo -->
+      <div class="mb-demo-note">
+        <i class="fas fa-flask"></i>
+        <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará inteligencia real con scraping y APIs de terceros.</span>
+      </div>
+
+    </div>`;
+  }
+
+  /* ── Helpers competencia ─────────────────────────────── */
+  _ccDim(letter, icon, title, subtitle) {
+    return `
+      <div class="mb-dim-header cc-dim-header">
+        <div class="mb-dim-letter cc-dim-letter">${this._esc(letter)}</div>
+        <div>
+          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
+          <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
+        </div>
+      </div>`;
+  }
+
+  _ccKpi(icon, label, value, sub, color) {
+    return `
+      <div class="mb-kpi-card mb-kpi--${color} cc-kpi-card">
+        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
+        <div class="mb-kpi-body">
+          <div class="mb-kpi-value">${value}</div>
+          <div class="mb-kpi-label">${label}</div>
+          <div class="mb-kpi-sub">${sub}</div>
+        </div>
+      </div>`;
+  }
+
+  _ccStockRival() {
+    const rows = [
+      { product: 'Rival Pro 3000',   amazon: 'out', ml: 'out',  walmart: 'ok',  note: '🟢 Lanzar campaña Amazon' },
+      { product: 'Rival Compact X',  amazon: 'ok',  ml: 'low',  walmart: 'low', note: '🟡 Vigilar MLibre' },
+      { product: 'Rival Classic',    amazon: 'low', ml: 'ok',   walmart: 'out', note: '🟢 Lanzar en Walmart' },
+      { product: 'Rival Mini',       amazon: 'ok',  ml: 'ok',   walmart: 'ok',  note: '⚪ Sin oportunidad' },
+    ];
+    const icon = { ok: '✓', low: '!', out: '✗' };
+    const cls  = { ok: 'mb-stock--ok', low: 'mb-stock--low', out: 'mb-stock--out' };
+    return `
+      <div class="mb-stock-grid cc-stock">
+        <div class="mb-stock-header-row cc-stock-hdr">
+          <span>Producto rival</span><span>AMZ</span><span>ML</span><span>WMT</span><span>Acción</span>
+        </div>
+        ${rows.map(r => `
+          <div class="mb-stock-row cc-stock-row5">
+            <span class="mb-stock-name">${r.product}</span>
+            <span class="mb-stock-cell ${cls[r.amazon]}">${icon[r.amazon]}</span>
+            <span class="mb-stock-cell ${cls[r.ml]}">${icon[r.ml]}</span>
+            <span class="mb-stock-cell ${cls[r.walmart]}">${icon[r.walmart]}</span>
+            <span class="cc-stock-action">${r.note}</span>
+          </div>`).join('')}
+        <div class="mb-stock-legend">
+          <span class="mb-stock--ok">✓ Con stock</span>
+          <span class="mb-stock--low">! Bajo</span>
+          <span class="mb-stock--out">✗ Agotado</span>
+        </div>
+      </div>`;
+  }
+
+  _ccBundlesTable() {
+    const bundles = [
+      { rival: 'Rival A', bundle: 'Kit Cocina Pro (3 pzas)', plataforma: 'Amazon MX',     precio: '$2,499', tipo: '2x1',       impacto: 'Alto',  accion: 'Lanzar bundle superior' },
+      { rival: 'Rival A', bundle: 'Combo Hogar Esencial',    plataforma: 'Mercado Libre',  precio: '$1,199', tipo: '20% dto',   impacto: 'Medio', accion: 'Igualar precio' },
+      { rival: 'Rival B', bundle: 'Pack Mini + Accesorios',  plataforma: 'Walmart MX',     precio: '$899',   tipo: 'Bundle',    impacto: 'Alto',  accion: 'Crear contra-bundle' },
+      { rival: 'Rival B', bundle: 'Flash Sale 48h',          plataforma: 'Tienda propia',  precio: '$749',   tipo: 'Flash',     impacto: 'Bajo',  accion: 'Monitorear' },
+    ];
+    const impactoCls = { Alto: 'cc-impact--high', Medio: 'cc-impact--med', Bajo: 'cc-impact--low' };
+    return `
+      <div class="cc-table-wrap">
+        <table class="mb-map-table cc-table">
+          <thead><tr>
+            <th>Rival</th><th>Bundle / Oferta</th><th>Plataforma</th>
+            <th>Precio</th><th>Tipo</th><th>Impacto</th><th>Acción sugerida</th>
+          </tr></thead>
+          <tbody>
+            ${bundles.map(b => `<tr>
+              <td>${b.rival}</td>
+              <td style="color:var(--text-primary);font-weight:500">${b.bundle}</td>
+              <td>${b.plataforma}</td>
+              <td class="mb-map-price">${b.precio}</td>
+              <td><span class="cc-type-badge">${b.tipo}</span></td>
+              <td><span class="cc-impact ${impactoCls[b.impacto]}">${b.impacto}</span></td>
+              <td class="cc-action-cell">${b.accion}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  _ccShadowLaunches() {
+    const signals = [
+      { date: 'Hace 3 d',  confidence: 87, signal: 'Registro de dominio "rivalpromax.mx" detectado — posible línea premium.', type: 'dominio', action: 'Preparar contenido anticipatorio' },
+      { date: 'Hace 5 d',  confidence: 74, signal: 'Nueva categoría "Profesional" apareció en menú de su web (etiqueta "coming-soon" oculta en HTML).', type: 'web', action: 'Auditar sus webs cada 6h' },
+      { date: 'Hace 8 d',  confidence: 62, signal: 'Pico de contrataciones en LinkedIn: 4 diseñadores de packaging en los últimos 15 días.', type: 'linkedin', action: 'Monitorear lanzamientos Q2' },
+      { date: 'Hace 12 d', confidence: 41, signal: 'Cambio en pie de página: eliminaronSKU de producto — posible discontinuación.', type: 'web', action: 'Oportunidad en ese segmento' },
+    ];
+    const typeIcon = { dominio: 'fa-globe', web: 'fa-code', linkedin: 'fa-linkedin' };
+    const confColor = (c) => c>=80 ? '#f87171' : c>=60 ? '#fbbf24' : '#60a5fa';
+    return `
+      <div class="cc-shadow-list">
+        ${signals.map(s => `
+          <div class="cc-shadow-row">
+            <div class="cc-shadow-icon"><i class="fab ${typeIcon[s.type] || 'fas fa-eye'}"></i></div>
+            <div class="cc-shadow-body">
+              <p class="cc-shadow-msg">${s.signal}</p>
+              <div class="cc-shadow-meta">
+                <span class="cc-shadow-date">${s.date}</span>
+                <span class="cc-shadow-action"><i class="fas fa-bolt"></i> ${s.action}</span>
+              </div>
+            </div>
+            <div class="cc-shadow-conf">
+              <div class="cc-conf-ring" style="--conf-color:${confColor(s.confidence)}">
+                <span>${s.confidence}%</span>
+              </div>
+              <span class="cc-conf-label">confianza</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _ccCrisisRival() {
+    const crises = [
+      { level: 'high', product: 'Rival Pro 3000', issue: 'Defecto de motor — 312 quejas en Amazon en 48 h. Hashtag #RivalFalla trending.',      window: '72 h para capturar' },
+      { level: 'med',  product: 'Rival Compact X', issue: 'Soporte al cliente no responde — foro ForoCocinaMX con 89 posts negativos.',          window: '5 días activo' },
+      { level: 'low',  product: 'Rival Classic',   issue: 'Retraso de envíos en Walmart — 34 comentarios. Riesgo bajo de escalar.',              window: 'Monitoreo pasivo' },
+    ];
+    const levelCls  = { high: 'cc-crisis--high', med: 'cc-crisis--med', low: 'cc-crisis--low' };
+    const levelIcon = { high: 'fa-circle-xmark', med: 'fa-triangle-exclamation', low: 'fa-circle-dot' };
+    const levelLbl  = { high: 'Crisis activa', med: 'En desarrollo', low: 'Latente' };
+    return `
+      <div class="cc-crisis-list">
+        ${crises.map(c => `
+          <div class="cc-crisis-item ${levelCls[c.level]}">
+            <div class="cc-crisis-top">
+              <i class="fas ${levelIcon[c.level]}"></i>
+              <span class="cc-crisis-product">${c.product}</span>
+              <span class="cc-crisis-badge">${levelLbl[c.level]}</span>
+            </div>
+            <p class="cc-crisis-desc">${c.issue}</p>
+            <div class="cc-crisis-window"><i class="fas fa-clock"></i> ${c.window}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _ccInfluencerMap() {
+    const list = [
+      { handle: '@chefcarlos_mx',   plat: 'ig', followers: '128K', reach: 94, trabajaCon: 'Rival A', capturable: true,  note: 'Audiencia alineada al 100%'  },
+      { handle: '@recetasfaciles',  plat: 'yt', followers: '240K', reach: 88, trabajaCon: 'Rival B', capturable: true,  note: 'Contrato vence en 60 días'   },
+      { handle: '@hogarmoderno',    plat: 'tt', followers: '87K',  reach: 76, trabajaCon: 'Rival A', capturable: false, note: 'Contrato exclusivo 1 año'    },
+      { handle: '@cocinafusion',    plat: 'ig', followers: '55K',  reach: 71, trabajaCon: 'Rival B', capturable: true,  note: 'Microinfluencer de alto CTR'  },
+      { handle: 'ForoCocinaMX',     plat: 'web',followers: '31K', reach: 65, trabajaCon: 'Rival A', capturable: true,  note: 'Comunidad orgánica valiosa'  },
+    ];
+    const pIcon = { ig:'fa-instagram', yt:'fa-youtube', tt:'fa-tiktok', web:'fa-globe' };
+    return `
+      <div class="cc-inf-table-wrap">
+        <table class="mb-map-table cc-table cc-inf-table">
+          <thead><tr>
+            <th>Perfil</th><th>Red</th><th>Seguidores</th>
+            <th>Afinidad</th><th>Trabaja con</th><th>Capturable</th><th>Nota OpenClaw</th>
+          </tr></thead>
+          <tbody>
+            ${list.map(r => `<tr>
+              <td style="color:var(--text-primary);font-weight:600">${r.handle}</td>
+              <td><i class="fab ${pIcon[r.plat] || 'fa-globe'}" style="font-size:1rem;color:var(--text-secondary)"></i></td>
+              <td>${r.followers}</td>
+              <td>
+                <div class="cc-reach-bar-wrap">
+                  <div class="cc-reach-bar" style="width:${r.reach}%"></div>
+                  <span>${r.reach}</span>
+                </div>
+              </td>
+              <td>${r.trabajaCon}</td>
+              <td>${r.capturable ? '<span class="cc-cap--yes"><i class="fas fa-check"></i> Sí</span>' : '<span class="cc-cap--no"><i class="fas fa-lock"></i> No</span>'}</td>
+              <td style="font-size:0.75rem;color:var(--text-muted)">${r.note}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  /* ── Mission Control (OpenClaw autonomous actions) ── */
+  _buildMissions() {
+    return [
+      { status: 'done',    icon: 'fa-check-circle', msg: 'Misión: Neutralizar oferta rival en Amazon MX — Generados 4 activos comparativos. Estado: Al aire.', time: 'Hace 22 min' },
+      { status: 'running', icon: 'fa-spinner fa-spin', msg: 'Misión: Capturar clientes de crisis "Rival Pro 3000" — Redactando 3 variantes de contenido.', time: 'En curso' },
+      { status: 'alert',   icon: 'fa-triangle-exclamation', msg: 'Alerta: Rival B bajó precio en Mercado Libre −$130 — Requiere aprobación para igualar.', time: 'Hace 5 min' },
+      { status: 'done',    icon: 'fa-check-circle', msg: 'Misión: Counter al bundle "Kit Cocina Pro" — Publicado bundle Oster con ahorro adicional de $200.', time: 'Hace 2 h' },
+    ];
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     CHART.JS — Gráficos de Competencia
+  ───────────────────────────────────────────────────────── */
+  _initCompetenceCharts() {
+    if (!window.Chart) return;
+    this._ccChartPrecios();
+    this._ccChartTemas();
+    this._ccChartEngagement();
+    this._ccChartPain();
+    this._ccChartAds();
+    this._ccChartSOV();
+    this._ccChartSOVLine();
+    this._buildMissionControl();
+  }
+
+  _ccChartPrecios() {
+    const ctx = document.getElementById('ccChartPrecios');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Oster Pro 1200\nvs Rival Pro 3000', 'Oster Classic 800\nvs Rival Classic', 'Oster Mini Chef\nvs Rival Mini', 'Oster Compact\nvs Rival Compact X'],
+        datasets: [
+          { label: 'Nosotros — Amazon',  data: [1299,899,549,699], backgroundColor: 'rgba(96,165,250,0.75)',  borderRadius: 4 },
+          { label: 'Rival — Amazon',     data: [1249,920,579,679], backgroundColor: 'rgba(239,68,68,0.65)',   borderRadius: 4 },
+          { label: 'Nosotros — M.Libre', data: [1180,870,539,685], backgroundColor: 'rgba(96,165,250,0.4)',   borderRadius: 4, borderColor: 'rgba(96,165,250,0.7)', borderWidth: 1 },
+          { label: 'Rival — M.Libre',    data: [1199,855,559,690], backgroundColor: 'rgba(239,68,68,0.35)',   borderRadius: 4, borderColor: 'rgba(239,68,68,0.6)',  borderWidth: 1 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `$${v.toLocaleString()}` } },
+          x: { grid: { display: false }, ticks: { maxRotation: 0, font: { size: 10 } } },
+        },
+      },
+    }));
+  }
+
+  _ccChartTemas() {
+    const ctx = document.getElementById('ccChartTemas');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Recetas fáciles', 'Unboxing', 'Comparativas', 'Lifestyle', 'Tutoriales', 'Humor/tendencia'],
+        datasets: [
+          { label: 'Rival (engagement promedio)',  data: [8.4, 6.1, 5.9, 7.2, 4.8, 9.3], backgroundColor: 'rgba(239,68,68,0.7)',  borderRadius: 4 },
+          { label: 'Nosotros (engagement promedio)', data: [6.2, 4.4, 7.1, 5.5, 5.9, 3.1], backgroundColor: 'rgba(96,165,250,0.7)', borderRadius: 4 },
+        ],
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10 } }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          x: { max: 12, grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Engagement (%)' } },
+          y: { grid: { display: false } },
+        },
+      },
+    }));
+  }
+
+  _ccChartEngagement() {
+    const ctx = document.getElementById('ccChartEngagement');
+    if (!ctx) return;
+    const labels = Array.from({length: 12}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 33 + i * 3); return `${d.getDate()}/${d.getMonth()+1}`; });
+    this._reg(new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Nosotros', data: [4.1,4.3,3.8,4.6,4.9,4.4,5.1,4.8,4.7,5.3,4.6,4.8], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.1)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
+          { label: 'Rival A',  data: [5.2,5.8,5.1,6.2,5.7,4.9,5.4,5.8,6.1,5.5,6.3,5.9], borderColor: 'rgba(239,68,68,0.9)',  backgroundColor: 'rgba(239,68,68,0.07)',  borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
+          { label: 'Rival B',  data: [3.4,3.6,3.9,3.2,3.8,4.1,3.7,3.5,3.9,4.0,3.6,3.8], borderColor: 'rgba(251,191,36,0.9)', backgroundColor: 'rgba(251,191,36,0.06)',  borderWidth: 2, tension: 0.4, fill: false, borderDash: [5,3], pointRadius: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `${v}%` }, title: { display: true, text: 'Engagement rate (%)' } },
+          x: { grid: { display: false } },
+        },
+      },
+    }));
+  }
+
+  _ccChartPain() {
+    const ctx = document.getElementById('ccChartPain');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['"Se rompe fácil"', '"Soporte lento"', '"Cable muy corto"', '"Ruido excesivo"', '"Difícil limpiar"', '"Garantía no cumple"', '"Precio no justificado"'],
+        datasets: [{
+          label: 'Menciones negativas detectadas',
+          data: [312, 247, 189, 156, 134, 98, 87],
+          backgroundColor: [
+            'rgba(239,68,68,0.85)', 'rgba(239,68,68,0.75)', 'rgba(249,115,22,0.75)',
+            'rgba(249,115,22,0.7)', 'rgba(251,191,36,0.7)', 'rgba(251,191,36,0.65)', 'rgba(156,163,175,0.6)',
+          ],
+          borderRadius: 5,
+        }],
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { afterLabel: () => '→ Crear contenido que ataque este punto' } },
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Menciones negativas' } },
+          y: { grid: { display: false } },
+        },
+      },
+    }));
+  }
+
+  _ccChartAds() {
+    const ctx = document.getElementById('ccChartAds');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Meta (video)', 'Meta (carrusel)', 'Google Search', 'Google Display', 'TikTok', 'YouTube Pre-roll'],
+        datasets: [
+          { label: 'Rival A — inversión estimada',   data: [85, 62, 78, 45, 90, 55], borderColor: 'rgba(239,68,68,0.9)',  backgroundColor: 'rgba(239,68,68,0.1)',  pointRadius: 4, borderWidth: 2 },
+          { label: 'Rival B — inversión estimada',   data: [55, 80, 40, 70, 35, 60], borderColor: 'rgba(251,191,36,0.9)', backgroundColor: 'rgba(251,191,36,0.08)', pointRadius: 4, borderWidth: 2 },
+          { label: 'Nosotros — posicionamiento',     data: [70, 55, 85, 60, 50, 45], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.1)',  pointRadius: 4, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } },
+        scales: {
+          r: {
+            min: 0, max: 100,
+            ticks: { stepSize: 25, color: 'rgba(212,209,216,0.4)', backdropColor: 'transparent' },
+            grid: { color: 'rgba(255,255,255,0.08)' },
+            pointLabels: { color: 'rgba(212,209,216,0.8)', font: { size: 10 } },
+          },
+        },
+      },
+    }));
+  }
+
+  _ccChartSOV() {
+    const ctx = document.getElementById('ccChartSOV');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Nosotros', 'Rival A', 'Rival B', 'Rival C', 'Otros'],
+        datasets: [{
+          data: [34, 28, 19, 11, 8],
+          backgroundColor: ['rgba(96,165,250,0.85)', 'rgba(239,68,68,0.8)', 'rgba(251,191,36,0.8)', 'rgba(167,139,250,0.8)', 'rgba(156,163,175,0.6)'],
+          borderColor: 'rgba(0,0,0,0)', hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '58%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } },
+          tooltip: { callbacks: { label: d => `${d.label}: ${d.raw}%` } },
+        },
+      },
+    }));
+  }
+
+  _ccChartSOVLine() {
+    const ctx = document.getElementById('ccChartSOVLine');
+    if (!ctx) return;
+    const labels = Array.from({length: 10}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 27 + i * 3); return `${d.getDate()}/${d.getMonth()+1}`; });
+    this._reg(new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Nosotros', data: [29,30,31,30,32,33,31,34,33,34], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.12)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
+          { label: 'Rival A',  data: [31,30,30,31,29,28,30,28,29,28], borderColor: 'rgba(239,68,68,0.8)',  backgroundColor: 'rgba(239,68,68,0.07)',  borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 },
+          { label: 'Rival B',  data: [20,21,20,19,21,20,19,20,20,19], borderColor: 'rgba(251,191,36,0.8)', borderWidth: 2, borderDash: [4,3], tension: 0.4, fill: false, pointRadius: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          y: { max: 45, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `${v}%` } },
+          x: { grid: { display: false } },
+        },
+      },
+    }));
+  }
+
+  _buildMissionControl() {
+    const el = document.getElementById('ccMissions');
+    if (!el) return;
+    const missions = this._buildMissions();
+    const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
+    el.innerHTML = missions.map(m => `
+      <div class="cc-mission ${statusCls[m.status]}">
+        <i class="fas ${m.icon} cc-mission-icon"></i>
+        <span class="cc-mission-msg">${m.msg}</span>
+        <span class="cc-mission-time">${m.time}</span>
+      </div>`).join('');
+  }
+
+  _animateCC() {
+    document.querySelectorAll('.cc-kpi-card').forEach((card, i) => {
+      card.style.opacity = '0'; card.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        card.style.opacity = '1'; card.style.transform = 'none';
       }, i * 60);
     });
   }
