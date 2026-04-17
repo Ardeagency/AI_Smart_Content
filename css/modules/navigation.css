@@ -2891,6 +2891,37 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
+/* Vera: logo blanco (Logoverablanco.svg) centrado, chip #0b0b0b, sin label visible */
+.nav-item--primary .nav-link.nav-link--no-label,
+.nav-item--primary .nav-main-link.nav-link--no-label {
+    justify-content: center;
+    gap: 0;
+    background: #0b0b0b !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: none !important;
+}
+
+.nav-item--primary .nav-link.nav-link--no-label:hover,
+.nav-item--primary .nav-main-link.nav-link--no-label:hover {
+    background: #121212 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.nav-item--primary .nav-link.nav-link--no-label.active,
+.nav-item--primary .nav-main-link.nav-link--no-label.active {
+    background: #101010 !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28) !important;
+}
+
+.nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
+    width: auto !important;
+    height: 22px !important;
+    max-width: min(140px, calc(100% - 8px));
+    object-fit: contain;
+}
+
 .nav-item--primary .nav-icon-img {
     width: 20px !important;
     height: 20px !important;
@@ -2903,10 +2934,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--sidebar-text-primary) !important;
 }
 
-/* En collapsed: Vera ítem primario mantiene ícono más grande */
+/* En collapsed: Vera (único primario) — mismo chip #0b0b0b, logo más compacto */
 .side-navigation.collapsed .nav-item--primary .nav-link,
 .side-navigation.collapsed .nav-item--primary .nav-main-link {
-    background: rgba(255, 255, 255, 0.07) !important;
+    background: #0b0b0b !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     width: 40px;
     height: 40px;
@@ -2914,8 +2945,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .side-navigation.collapsed .nav-item--primary .nav-link.active,
 .side-navigation.collapsed .nav-item--primary .nav-main-link.active {
-    background: rgba(255, 255, 255, 0.13) !important;
+    background: #101010 !important;
     border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.side-navigation.collapsed .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
+    max-width: 34px;
+    height: auto !important;
+    max-height: 13px;
 }
 
 .side-navigation.collapsed .nav-item--primary .nav-link.active::before,

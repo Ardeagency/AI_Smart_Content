@@ -6,7 +6,17 @@
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'vera', label: 'Vera', icon: 'fa-brain', iconSrc: '/recursos/vera/Vera.svg', route: 'vera', primary: true },
+    {
+      type: 'page',
+      id: 'vera',
+      label: 'Vera',
+      icon: 'fa-brain',
+      iconSrc: '/recursos/vera/Logoverablanco.svg',
+      route: 'vera',
+      primary: true,
+      hideLabel: true,
+      navIconClass: 'nav-icon-img--vera-logo'
+    },
     { type: 'section', label: 'Workspace' },
     { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
@@ -443,9 +453,15 @@ class Navigation {
     const full = (suffix) => this.getUserSidebarRoute(suffix);
     const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
-    const iconHTML = (item) => item.iconSrc
-      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">`
-      : `<i class="fas ${item.icon} nav-icon"></i>`;
+    const iconHTML = (item) => {
+      if (item.iconSrc) {
+        const extra = item.navIconClass ? ` ${item.navIconClass}` : '';
+        const w = item.iconImgWidth != null ? item.iconImgWidth : 16;
+        const h = item.iconImgHeight != null ? item.iconImgHeight : 16;
+        return `<img src="${item.iconSrc}" class="nav-icon nav-icon-img${extra}" alt="" width="${w}" height="${h}">`;
+      }
+      return `<i class="fas ${item.icon} nav-icon"></i>`;
+    };
 
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
       if (item.type === 'section') {
@@ -455,11 +471,12 @@ class Navigation {
         const href = full(item.route);
         const isPrimary = !!item.primary;
         const hideLabel = !!item.hideLabel;
+        const ariaLabel = hideLabel ? ` aria-label="${_escapeHtml(item.label)}"` : '';
         const idAttr = item.navId ? ` id="${_escapeHtml(item.navId)}"` : '';
         const hiddenStyle = item.hidden ? ' style="display:none"' : '';
         return `
           <div class="nav-item${isPrimary ? ' nav-item--primary' : ''}">
-            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle} data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link nav-main-link${isPrimary ? ' nav-link--primary' : ''}${hideLabel ? ' nav-link--no-label' : ''}"${idAttr}${hiddenStyle}${ariaLabel} data-route="${href}" data-tooltip="${item.label}">
               ${iconHTML(item)}
               ${hideLabel ? '' : `<span class="nav-text">${item.label}</span>`}
             </a>
