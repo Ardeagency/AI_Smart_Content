@@ -2141,6 +2141,22 @@ body.entrance-done .landing-header {
     background-attachment: fixed;
 }
 
+/* Vignette: negro sólido en el top/bottom → transparente en la banda central,
+   para integrar la imagen con las secciones adyacentes. */
+.landing-bento__bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        #000000 0%,
+        rgba(0, 0, 0, 0) 22%,
+        rgba(0, 0, 0, 0) 78%,
+        #000000 100%
+    );
+}
+
 @media (prefers-reduced-motion: reduce) {
     .landing-bento__bg { background-attachment: scroll; }
 }
