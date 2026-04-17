@@ -611,6 +611,11 @@ class BrandOrganizationView extends BaseView {
   getBrandUIPalette(brandColors)     { return window.BrandColors.getBrandUIPalette(brandColors); }
   buildBrandGradientCss(hexes, angle = 135) { return window.BrandColors.buildBrandGradientCss(hexes, angle); }
 
+  /** Hook llamado por ColorEditor.mixin.js tras cada cambio de color. */
+  _refreshVisualChrome() {
+    this.applyBrandBackgroundGradient(true);
+  }
+
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
   applyBrandBackgroundGradient(forceUpdate = false) {
     const container = this.container || document.getElementById('app-container');

@@ -226,18 +226,25 @@ class App {
     r.register('/tasks', tasksLoader, auth);
     r.register('/tasks/:taskId', tasksLoader, auth);
 
-    // ── Org: Marca organizacional (sin galería Brand Storage) ──
-    // Dependencias en orden: utilidades → config → vista base → mixins.
-    //   · brand-colors, brand-schema: fuentes únicas.
-    //   · BrandOrganizationView: clase principal.
-    //   · *.mixin.js: parches sobre BrandOrganizationView.prototype.
-    const brandViewLoader = this._lazy('BrandOrganizationView', [
+    // ── Deps compartidas de marca: mixins que aplican sobre BrandstorageView
+    // y/o BrandOrganizationView según cuál esté definido al cargar.
+    // Typography, Uploads y ColorEditor son idénticos entre ambas vistas.
+    // InfoPanel difiere (sub-marca vs organización) → cada vista tiene el suyo.
+    const brandSharedDeps = [
       '/js/utils/brand-colors.js',
-      '/js/config/brand-schema.js',
+      '/js/config/brand-schema.js'
+    ];
+    const brandSharedMixins = [
+      '/js/views/brand-mixins/Typography.mixin.js',
+      '/js/views/brand-mixins/Uploads.mixin.js',
+      '/js/views/brand-mixins/ColorEditor.mixin.js'
+    ];
+
+    // ── Org: Marca organizacional (sin galería Brand Storage) ──
+    const brandViewLoader = this._lazy('BrandOrganizationView', [
+      ...brandSharedDeps,
       '/js/views/BrandOrganizationView.js',
-      '/js/views/brand-organization/Typography.mixin.js',
-      '/js/views/brand-organization/Uploads.mixin.js',
-      '/js/views/brand-organization/ColorEditor.mixin.js',
+      ...brandSharedMixins,
       '/js/views/brand-organization/InfoPanel.mixin.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
@@ -248,17 +255,10 @@ class App {
     r.register('/brand-organization', brandViewLoader, auth);
 
     // ── Org: Brand Storage — vista propia (galería + INFO sub-marcas) ──
-    // Dependencias en orden: utilidades / config → vista base → mixins.
-    //   · brand-colors, brand-schema: fuentes únicas de utilidades y catálogos.
-    //   · BrandstorageView: clase principal.
-    //   · *.mixin.js: parches sobre BrandstorageView.prototype (ver cada archivo).
     const brandStorageViewLoader = this._lazy('BrandstorageView', [
-      '/js/config/brand-schema.js',
-      '/js/utils/brand-colors.js',
+      ...brandSharedDeps,
       '/js/views/BrandstorageView.js',
-      '/js/views/brandstorage/Typography.mixin.js',
-      '/js/views/brandstorage/Uploads.mixin.js',
-      '/js/views/brandstorage/ColorEditor.mixin.js',
+      ...brandSharedMixins,
       '/js/views/brandstorage/InfoPanel.mixin.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand-storage', brandStorageViewLoader, auth);

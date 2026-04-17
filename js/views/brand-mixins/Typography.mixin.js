@@ -1,19 +1,12 @@
 /**
- * BrandstorageView — Typography mixin.
+ * Shared Typography mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
- * Gestión de la fuente tipográfica para imágenes de marca: dropdown con preview,
- * carga bajo demanda desde Google Fonts y persistencia en `brand_fonts`.
- *
- * Patrón mixin vanilla: al cargarse, copia estos métodos sobre el prototype de
- * BrandstorageView. Debe cargarse DESPUÉS de BrandstorageView.js (ver app.js
- * brandStorageViewLoader).
+ * Dropdown de tipografía para imágenes: preview con Google Fonts lazy-loaded,
+ * persistencia en `brand_fonts` (font_usage = 'images'). Aplica Object.assign
+ * sobre el prototype de cada clase definida al cargarse.
  */
 (function () {
   'use strict';
-  if (typeof BrandstorageView === 'undefined') {
-    console.warn('[Typography.mixin] BrandstorageView no disponible; se aborta el mixin.');
-    return;
-  }
 
   const TypographyMixin = {
     getTypographyFontFamily() {
@@ -22,9 +15,8 @@
       return 'Inter';
     },
 
-    /** Carga la fuente en el documento para la vista previa (Google Fonts). */
     loadFontForPreview(fontFamily) {
-      if (!fontFamily || fontFamily === 'Inter') return; // Inter ya está en index.html
+      if (!fontFamily || fontFamily === 'Inter') return;
       const id = `font-preview-${fontFamily.replace(/\s+/g, '-')}`;
       if (document.getElementById(id)) return;
       const link = document.createElement('link');
@@ -34,9 +26,9 @@
       document.head.appendChild(link);
     },
 
-    /** Carga todas las fuentes del dropdown para que "AaBbCc" se vea bien en cada opción. */
     loadAllTypographyFonts() {
-      BrandstorageView.TYPOGRAPHY_FONTS.forEach(f => this.loadFontForPreview(f.value));
+      const fonts = window.BrandSchema ? window.BrandSchema.TYPOGRAPHY_FONTS : [];
+      fonts.forEach(f => this.loadFontForPreview(f.value));
     },
 
     renderTypography() {
@@ -51,7 +43,7 @@
       }
       const currentFont = this.getTypographyFontFamily();
       this.loadFontForPreview(currentFont);
-      const fonts = BrandstorageView.TYPOGRAPHY_FONTS;
+      const fonts = window.BrandSchema ? window.BrandSchema.TYPOGRAPHY_FONTS : [];
       const dropdownId = 'typographyFontDropdown';
       const panelId = 'typographyFontPanel';
       container.innerHTML = `
@@ -148,22 +140,12 @@
         if (existing) {
           await this.supabase
             .from('brand_fonts')
-            .update({
-              font_family: fontFamily,
-              font_weight: '400',
-              fallback_font: 'sans-serif'
-            })
+            .update({ font_family: fontFamily, font_weight: '400', fallback_font: 'sans-serif' })
             .eq('id', existing.id);
         } else {
           await this.supabase
             .from('brand_fonts')
-            .insert({
-              organization_id: orgId,
-              font_family: fontFamily,
-              font_usage: 'images',
-              font_weight: '400',
-              fallback_font: 'sans-serif'
-            });
+            .insert({ organization_id: orgId, font_family: fontFamily, font_usage: 'images', font_weight: '400', fallback_font: 'sans-serif' });
         }
       } catch (e) {
         console.error('Error al guardar tipografía:', e);
@@ -172,5 +154,6 @@
     }
   };
 
-  Object.assign(BrandstorageView.prototype, TypographyMixin);
+  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, TypographyMixin);
+  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, TypographyMixin);
 })();

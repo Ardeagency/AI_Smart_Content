@@ -1,17 +1,19 @@
 /**
- * BrandstorageView — ColorEditor mixin.
+ * Shared ColorEditor mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
  * Modal de edición de color (rueda de tono + plano S/L + input hex) y su
  * persistencia en `brand_colors` (create/update/delete). Usa las utilidades
  * puras de /js/utils/brand-colors.js para hex↔HSL.
  *
- * Mixin vanilla: aplica sobre BrandstorageView.prototype al cargarse.
- * Cargar DESPUÉS de BrandstorageView.js.
+ * Tras cada cambio de color llama `this._refreshVisualChrome()` — cada vista
+ * define ese hook para actualizar su propio chrome (gradiente, glass, brillo).
+ *
+ * Aplica sobre el prototype de ambas vistas de marca al cargarse.
  */
 (function () {
   'use strict';
-  if (typeof BrandstorageView === 'undefined') {
-    console.warn('[ColorEditor.mixin] BrandstorageView no disponible; se aborta el mixin.');
+  if (typeof BrandstorageView === 'undefined' && typeof BrandOrganizationView === 'undefined') {
+    console.warn('[ColorEditor.mixin] ninguna vista de marca disponible; se aborta el mixin.');
     return;
   }
 
@@ -230,7 +232,7 @@
         if (error) throw error;
         await this._reloadColors();
         this.renderCards();
-        this._refreshBrandStorageVisualChrome();
+        if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
         console.error('❌ Error al actualizar color:', error);
         alert('Error al actualizar el color. Por favor, intenta de nuevo.');
@@ -286,7 +288,7 @@
         if (error) throw error;
         await this._reloadColors();
         this.renderCards();
-        this._refreshBrandStorageVisualChrome();
+        if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
       } catch (error) {
         const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
         console.error('❌ Error al crear color:', error);
@@ -311,7 +313,7 @@
 
         await this._reloadColors();
         this.renderCards();
-        this._refreshBrandStorageVisualChrome();
+        if (typeof this._refreshVisualChrome === 'function') this._refreshVisualChrome();
         console.log('✅ Color eliminado');
       } catch (error) {
         console.error('❌ Error al eliminar color:', error);
@@ -320,5 +322,6 @@
     }
   };
 
-  Object.assign(BrandstorageView.prototype, ColorEditorMixin);
+  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, ColorEditorMixin);
+  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, ColorEditorMixin);
 })();

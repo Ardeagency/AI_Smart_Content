@@ -632,6 +632,11 @@ class BrandstorageView extends BaseView {
     this.applyBrandBackgroundGradient(true);
   }
 
+  /** Hook llamado por ColorEditor.mixin.js tras cada cambio de color. */
+  _refreshVisualChrome() {
+    this._refreshBrandStorageVisualChrome();
+  }
+
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
   applyBrandBackgroundGradient(forceUpdate = false) {
     const appEl = this.container || document.getElementById('app-container');

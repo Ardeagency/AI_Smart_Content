@@ -1,18 +1,16 @@
 /**
- * BrandstorageView — Uploads mixin.
+ * Shared Uploads mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
  * Subida, inserción en `brand_assets` y borrado de archivos de marca:
  * logo de organización, identidad (indexada en `ai_brand_vectors`) y assets
- * generales. También expone los wirings de los botones "Subir archivo" de las
- * secciones de identidad y assets.
+ * generales. También expone los wirings de los botones "Subir archivo".
  *
- * Mixin vanilla: aplica sobre BrandstorageView.prototype al cargarse.
- * Cargar DESPUÉS de BrandstorageView.js.
+ * Aplica sobre el prototype de ambas vistas de marca al cargarse.
  */
 (function () {
   'use strict';
-  if (typeof BrandstorageView === 'undefined') {
-    console.warn('[Uploads.mixin] BrandstorageView no disponible; se aborta el mixin.');
+  if (typeof BrandstorageView === 'undefined' && typeof BrandOrganizationView === 'undefined') {
+    console.warn('[Uploads.mixin] ninguna vista de marca disponible; se aborta el mixin.');
     return;
   }
 
@@ -255,5 +253,6 @@
     }
   };
 
-  Object.assign(BrandstorageView.prototype, UploadsMixin);
+  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, UploadsMixin);
+  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, UploadsMixin);
 })();
