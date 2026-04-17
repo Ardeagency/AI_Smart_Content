@@ -2005,12 +2005,23 @@ body.entrance-done .landing-header {
     color: rgba(212, 209, 216, 0.22);
     cursor: default;
     white-space: nowrap;
+    align-self: flex-start;
     transition: color 0.35s ease;
     will-change: color;
 }
 
 .lfw__list li.is-active {
     color: #ffffff;
+}
+
+.lfw__list li.is-active::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin-top: clamp(6px, 0.8vh, 10px);
+    border-radius: 999px;
+    background: linear-gradient(90deg, #6d28d9 0%, #ea580c 52%, #fbbf24 100%);
 }
 
 /* ── Columna derecha: slides ── */
