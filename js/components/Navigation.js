@@ -11,7 +11,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'vera',
       label: 'Vera',
       icon: 'fa-brain',
-      iconSrc: '/recursos/vera/Logoverablanco.svg',
+      iconSrc: '/recursos/vera/Vera-2.svg',
       route: 'vera',
       primary: true,
       hideLabel: true,

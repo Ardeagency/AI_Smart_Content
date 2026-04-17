@@ -2891,7 +2891,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
-/* Vera: logo blanco (Logoverablanco.svg) centrado, chip #0b0b0b, sin label visible */
+/* Vera: wordmark (Vera-2.svg) centrado, chip #0b0b0b, sin label visible */
 .nav-item--primary .nav-link.nav-link--no-label,
 .nav-item--primary .nav-main-link.nav-link--no-label {
     justify-content: center;
@@ -2917,8 +2917,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
     width: auto !important;
-    height: 22px !important;
-    max-width: min(140px, calc(100% - 8px));
+    height: 24px !important;
+    max-width: min(148px, calc(100% - 8px));
     object-fit: contain;
 }
 
@@ -2950,9 +2950,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .side-navigation.collapsed .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
-    max-width: 34px;
+    max-width: 36px;
     height: auto !important;
-    max-height: 13px;
+    max-height: 14px;
 }
 
 .side-navigation.collapsed .nav-item--primary .nav-link.active::before,
