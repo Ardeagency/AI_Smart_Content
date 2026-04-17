@@ -2177,7 +2177,7 @@ body.entrance-done .landing-header {
 .landing-bento__header {
     text-align: center;
     max-width: 52rem;
-    margin: 0 auto clamp(2rem, 5vw, 3rem);
+    margin: 0 auto clamp(3.5rem, 7vw, 5.5rem);
 }
 
 .landing-bento__title {
@@ -2188,13 +2188,12 @@ body.entrance-done .landing-header {
     letter-spacing: -0.02em;
 }
 
-/* Subtítulo = 50% del tamaño del título en cada breakpoint. */
 .landing-bento__subtitle {
-    margin: 0;
-    font-size: clamp(1.2rem, 2.5vw, 2.2rem);
-    line-height: 1.4;
+    margin: clamp(0.6rem, 1.2vw, 1rem) 0 0;
+    font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+    line-height: 1.5;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.78);
 }
 
 .landing-bento__grid {
