@@ -2238,9 +2238,10 @@ body.entrance-done .landing-header {
     justify-self: center;
     border-radius: 20px;
     border: 2px solid var(--bento-border, #00e7ff);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    background: var(--bento-tint, rgba(0, 231, 255, 0.4));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     flex: 1 1 auto;
     margin: 0 auto;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
@@ -2248,7 +2249,9 @@ body.entrance-done .landing-header {
 
 .landing-bento__card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 .landing-bento__card-main {
@@ -2276,10 +2279,10 @@ body.entrance-done .landing-header {
     color: rgba(255, 255, 255, 0.95);
 }
 
-.landing-bento__card--yellow  { --bento-border: #ffe500; }
-.landing-bento__card--cyan    { --bento-border: #00e7ff; }
-.landing-bento__card--purple  { --bento-border: #b388ff; }
-.landing-bento__card--green   { --bento-border: #00e676; }
+.landing-bento__card--yellow  { --bento-border: #ffe500; --bento-tint: rgba(255, 229, 0, 0.4); }
+.landing-bento__card--cyan    { --bento-border: #00e7ff; --bento-tint: rgba(0, 231, 255, 0.4); }
+.landing-bento__card--purple  { --bento-border: #b388ff; --bento-tint: rgba(179, 136, 255, 0.4); }
+.landing-bento__card--green   { --bento-border: #00e676; --bento-tint: rgba(0, 230, 118, 0.4); }
 
 @media (max-width: 700px) {
     .landing-bento__grid {
