@@ -455,10 +455,11 @@
   overflow-y: auto;
 }
 
+/* Mismo tratamiento que .cc-api-card (Audiencias API / bloques API) */
 .cc-camp-row {
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #202020;
+  border: 1px solid var(--border-divider, #212126);
+  background: var(--bg-secondary, #141517);
   padding: 0.75rem 0.85rem;
 }
 
@@ -490,7 +491,7 @@
 .cc-api-card {
   border-radius: 12px;
   border: 1px solid var(--border-divider, #212126);
-  background: #202020;
+  background: var(--bg-secondary, #141517);
   padding: 0.75rem 0.85rem;
 }
 
@@ -560,7 +561,7 @@
 .cc-api-camp-row {
   border-radius: 10px;
   border: 1px solid var(--border-divider, #212126);
-  background: #202020;
+  background: #111114;
   padding: 0.55rem 0.65rem;
   margin-bottom: 0.45rem;
 }
