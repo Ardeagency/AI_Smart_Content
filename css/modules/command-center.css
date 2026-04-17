@@ -36,16 +36,16 @@
 #commandCenterPage .cc-section--audiences .cc-aud-glow {
   position: absolute;
   left: 50%;
-  bottom: -42%;
+  bottom: -34%;
   transform: translateX(-50%);
-  width: min(108%, 560px);
-  height: 68px;
+  width: min(112%, 600px);
+  height: 76px;
   pointer-events: none;
   z-index: 0;
   border-radius: 50%;
   background: var(--brand-gradient);
-  filter: blur(40px);
-  opacity: 0.52;
+  filter: blur(36px);
+  opacity: 0.72;
 }
 
 #commandCenterPage .cc-section--audiences-body {
@@ -77,13 +77,6 @@
   color: var(--bg-primary, #0b0b0b);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
-}
-
-#commandCenterPage .cc-section--audiences .cc-aud-head-count-suffix {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(11, 11, 11, 0.45);
-  text-transform: lowercase;
 }
 
 #commandCenterPage .cc-section--audiences .cc-aud-card {

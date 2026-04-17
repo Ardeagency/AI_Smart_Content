@@ -78,8 +78,7 @@ class CommandCenterView extends BaseView {
           <h2 class="cc-section-title">Audiencias</h2>
         </div>
         <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
-          <span class="cc-aud-head-count-num" id="ccAudCount">0</span>
-          <span class="cc-aud-head-count-suffix" aria-hidden="true">audiencias</span>
+          <span class="cc-aud-head-count-num" id="ccAudCount" aria-label="Total de audiencias">0</span>
         </div>
       </div>
       <div class="cc-carousel-wrap">
