@@ -35,17 +35,17 @@
 /* Brillo tipo referencia: gradiente de marca muy difuminado, solo un halo bajo el panel */
 #commandCenterPage .cc-section--audiences .cc-aud-glow {
   position: absolute;
-  left: 50%;
-  bottom: -34%;
-  transform: translateX(-50%);
-  width: min(112%, 600px);
-  height: 76px;
+  left: -6%;
+  right: -6%;
+  width: auto;
+  bottom: -30%;
+  height: 72px;
   pointer-events: none;
   z-index: 0;
   border-radius: 50%;
   background: var(--brand-gradient);
   filter: blur(36px);
-  opacity: 0.72;
+  opacity: 0.64;
 }
 
 #commandCenterPage .cc-section--audiences-body {
