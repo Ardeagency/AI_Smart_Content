@@ -90,7 +90,7 @@ class DashboardView extends BaseView {
       const copy = {
         strategy: { title: 'Estrategia', icon: 'fa-route', desc: 'Centro de comando: misiones, sensores, acciones estratégicas y salud organizacional.' },
       };
-      const tab = copy[tabId];
+      const tab = copy[tabId] || copy.strategy;
       body.innerHTML = this._pageComingSoon(tab.title, tab.icon, tab.desc);
     }
   }
@@ -834,6 +834,538 @@ class DashboardView extends BaseView {
   }
 
   /* ═══════════════════════════════════════════════════════════
+     TENDENCIAS — El Pulso del Mundo
+  ═══════════════════════════════════════════════════════════ */
+  async _renderTendencies(body) {
+    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Escaneando señales del mundo…</div>`;
+    try { await this._ensureChartJs(); } catch (_) {}
+    body.innerHTML = this._buildTendenciesHTML();
+    this._initTendenciesCharts();
+    this._animateTD();
+  }
+
+  _buildTendenciesHTML() {
+    return `
+    <div class="td-dashboard">
+
+      <!-- ── Header ── -->
+      <div class="td-header">
+        <div class="td-header-left">
+          <div class="td-pulse-icon"><i class="fas fa-earth-americas"></i></div>
+          <div>
+            <h2 class="td-title">El Pulso del Mundo</h2>
+            <p class="td-subtitle">OpenClaw · Escaneo 360° cada 15 min · Demostración</p>
+          </div>
+        </div>
+        <div class="td-scan-status">
+          <div class="td-scan-ring" id="tdScanRing">
+            <span class="td-scan-line"></span>
+          </div>
+          <div class="td-scan-meta">
+            <span class="td-scan-label">Último escaneo</span>
+            <span class="td-scan-time">Hace 3 min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── KPI Strip ── -->
+      <div class="td-kpi-strip">
+        ${this._tdKpi('fa-bolt',          'Señales activas',         '47',   'Esta hora',               'yellow')}
+        ${this._tdKpi('fa-water',         'Content Gaps / día',      '12',   'Océanos azules',          'blue')}
+        ${this._tdKpi('fa-arrow-trend-up','Alcance potencial',       '+38%', 'vs publicación normal',   'green')}
+        ${this._tdKpi('fa-gear',          'Cambios algorítmicos',    '3',    'Hoy en plataformas',      'orange')}
+        ${this._tdKpi('fa-face-grin-wide','Sentimiento global',      '😊',   'Optimista / Nostálgico',  'pink')}
+        ${this._tdKpi('fa-eye',           'Oportunidades capturadas','9',    'Últimas 24 h',            'purple')}
+      </div>
+
+      <!-- ── OpenClaw Opportunity Feed ── -->
+      <div class="td-opportunity-feed">
+        <div class="td-of-header">
+          <span><i class="fas fa-satellite-dish"></i> OpenClaw Opportunity Feed</span>
+          <span class="cc-pulse-dot"></span>
+        </div>
+        <div class="td-of-list" id="tdOpFeed"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM A · THE EARLY DETECTION
+      ══════════════════════════════════════════════ -->
+      ${this._tdDim('A', 'fa-radar', 'The Early Detection', 'Señales débiles de nicho, audios virales y content gaps')}
+
+      <div class="td-dim-row">
+        <div class="td-widget td-widget--wide">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-signal"></i> Señales Débiles del Nicho</span>
+            <span class="td-badge td-badge--yellow">Ascenso</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdNicheSignals()}
+          </div>
+        </div>
+        <div class="td-widget">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-music"></i> Audios y Memes en Ascenso</span>
+            <span class="td-badge td-badge--pink">TikTok · Reels</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdAudios()}
+          </div>
+        </div>
+      </div>
+
+      <div class="td-widget td-widget--full">
+        <div class="td-widget-header">
+          <span class="td-widget-title"><i class="fas fa-water"></i> Content Gaps — Océanos Azules del Día</span>
+          <span class="td-badge td-badge--blue">Ningún rival está aquí</span>
+        </div>
+        <div class="td-widget-body">
+          ${this._tdContentGaps()}
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM B · THE REAL WORLD SYNC
+      ══════════════════════════════════════════════ -->
+      ${this._tdDim('B', 'fa-globe', 'The Real World Sync', 'Contexto climático, eventos culturales y sentiment shift global')}
+
+      <div class="td-dim-row">
+        <div class="td-widget td-widget--wide">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-cloud-sun"></i> Sincronización con el Mundo Físico</span>
+            <span class="td-badge td-badge--green">Oportunidades activas</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdWorldSync()}
+          </div>
+        </div>
+        <div class="td-widget">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-face-smile"></i> Sentiment Shift Global</span>
+            <span class="td-badge td-badge--yellow">Hoy</span>
+          </div>
+          <div class="td-widget-body td-widget-body--center">
+            <canvas id="tdChartSentiment" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM C · THE PLATFORM PULSE
+      ══════════════════════════════════════════════ -->
+      ${this._tdDim('C', 'fa-microchip', 'The Platform Pulse', 'Cambios algorítmicos, velocidad de hashtags y keywords')}
+
+      <div class="td-dim-row">
+        <div class="td-widget">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-sliders"></i> Algorithmic Watchdog</span>
+            <span class="td-badge td-badge--orange">Cambios detectados</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdAlgoWatchdog()}
+          </div>
+        </div>
+        <div class="td-widget td-widget--wide">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-hashtag"></i> Hashtag & Keyword Velocity</span>
+            <span class="td-badge td-badge--blue">Aceleración</span>
+          </div>
+          <div class="td-widget-body">
+            <canvas id="tdChartVelocity" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           DIM D · THE VISUAL TREND
+      ══════════════════════════════════════════════ -->
+      ${this._tdDim('D', 'fa-palette', 'The Visual Trend', 'Estética del minuto, paletas dominantes y ganchos de atención')}
+
+      <div class="td-dim-row">
+        <div class="td-widget td-widget--wide">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-palette"></i> Evolución Estética del Minuto</span>
+            <span class="td-badge td-badge--pink">Engagement visual</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdAestheticTrends()}
+          </div>
+        </div>
+        <div class="td-widget">
+          <div class="td-widget-header">
+            <span class="td-widget-title"><i class="fas fa-bolt-lightning"></i> Narrative Hooks — Top 3 segundos</span>
+            <span class="td-badge td-badge--yellow">Anti-scroll</span>
+          </div>
+          <div class="td-widget-body">
+            ${this._tdNarrativeHooks()}
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyword velocity trend extra chart -->
+      <div class="td-widget td-widget--full">
+        <div class="td-widget-header">
+          <span class="td-widget-title"><i class="fas fa-chart-area"></i> Curva de Emergencia de Tendencias — Últimas 48 horas</span>
+          <span class="td-badge td-badge--green">Tiempo real</span>
+        </div>
+        <div class="td-widget-body">
+          <canvas id="tdChartEmergence" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- Footer demo -->
+      <div class="mb-demo-note">
+        <i class="fas fa-flask"></i>
+        <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará Google Trends, APIs meteorológicas, scraping de plataformas y detección de audio en tiempo real.</span>
+      </div>
+
+    </div>`;
+  }
+
+  /* ── Helpers tendencias ─────────────────────────────── */
+  _tdDim(letter, icon, title, subtitle) {
+    return `
+      <div class="mb-dim-header td-dim-header">
+        <div class="mb-dim-letter td-dim-letter">${this._esc(letter)}</div>
+        <div>
+          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
+          <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
+        </div>
+      </div>`;
+  }
+
+  _tdKpi(icon, label, value, sub, color) {
+    return `
+      <div class="mb-kpi-card mb-kpi--${color} td-kpi-card">
+        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
+        <div class="mb-kpi-body">
+          <div class="mb-kpi-value">${value}</div>
+          <div class="mb-kpi-label">${label}</div>
+          <div class="mb-kpi-sub">${sub}</div>
+        </div>
+      </div>`;
+  }
+
+  _tdNicheSignals() {
+    const signals = [
+      { topic: 'Journaling para salud mental',   category: 'Lifestyle',     vel: 94, delta: '+152%', opportunity: 'Alto', age: '2 h' },
+      { topic: 'Recetas sin gluten express',      category: 'Alimentación',  vel: 87, delta: '+89%',  opportunity: 'Alto', age: '4 h' },
+      { topic: 'Cocina retro años 90',            category: 'Nostalgia',     vel: 81, delta: '+67%',  opportunity: 'Alto', age: '6 h' },
+      { topic: 'Meal prep para oficina',          category: 'Productividad', vel: 73, delta: '+44%',  opportunity: 'Medio', age: '11 h' },
+      { topic: 'ASMR de cocina',                  category: 'Audio',         vel: 68, delta: '+38%',  opportunity: 'Medio', age: '14 h' },
+      { topic: 'Colores terracotas en interiores',category: 'Estética',      vel: 61, delta: '+31%',  opportunity: 'Medio', age: '18 h' },
+    ];
+    const oppCls = { Alto: 'td-opp--high', Medio: 'td-opp--med' };
+    return `
+      <div class="td-signals-table">
+        <div class="td-sigt-header">
+          <span>Señal / Tema</span><span>Categoría</span><span>Velocidad</span><span>Δ 24h</span><span>Oportunidad</span><span>Edad</span>
+        </div>
+        ${signals.map(s => `
+          <div class="td-sigt-row">
+            <span class="td-sigt-topic">${s.topic}</span>
+            <span class="td-sigt-cat">${s.category}</span>
+            <span class="td-sigt-vel">
+              <div class="td-vel-bar-wrap"><div class="td-vel-bar" style="width:${s.vel}%"></div></div>
+              <span>${s.vel}</span>
+            </span>
+            <span class="td-sigt-delta td-delta--up">${s.delta}</span>
+            <span class="${oppCls[s.opportunity] || 'td-opp--med'} td-opp-badge">${s.opportunity}</span>
+            <span class="td-sigt-age">${s.age}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _tdAudios() {
+    const audios = [
+      { name: '"Lo-fi Cocina Mix"',     platform: 'tt',  phase: 'Exponencial', uses: '84K', fit: 98 },
+      { name: '"Retro 90s Beat"',       platform: 'ig',  phase: 'Crecimiento', uses: '47K', fit: 91 },
+      { name: '"ASMR Kitchen Sounds"',  platform: 'tt',  phase: 'Crecimiento', uses: '31K', fit: 86 },
+      { name: '"Motivational Morning"', platform: 'yt',  phase: 'Emergencia',  uses: '12K', fit: 74 },
+      { name: '"Viral Cooking Reel"',   platform: 'ig',  phase: 'Emergencia',  uses: '8K',  fit: 68 },
+    ];
+    const pIcon = { tt: 'fa-tiktok', ig: 'fa-instagram', yt: 'fa-youtube' };
+    const phaseCls = { Exponencial: 'td-phase--exp', Crecimiento: 'td-phase--grow', Emergencia: 'td-phase--early' };
+    return `
+      <div class="td-audios-list">
+        ${audios.map((a, i) => `
+          <div class="td-audio-row">
+            <span class="td-audio-rank">#${i+1}</span>
+            <div class="td-audio-info">
+              <span class="td-audio-name">${a.name}</span>
+              <span class="td-audio-uses"><i class="fab ${pIcon[a.platform]}"></i> ${a.uses} usos</span>
+            </div>
+            <span class="td-phase-badge ${phaseCls[a.phase]}">${a.phase}</span>
+            <div class="td-fit-wrap">
+              <div class="td-fit-bar" style="width:${a.fit}%"></div>
+              <span class="td-fit-val">${a.fit}%</span>
+            </div>
+          </div>`).join('')}
+        <div class="td-audios-legend">
+          <span class="td-phase--exp td-phase-badge">Exponencial</span> = úsalo ahora ·
+          <span class="td-phase--grow td-phase-badge">Crecimiento</span> = próximos 48h ·
+          <span class="td-phase--early td-phase-badge">Emergencia</span> = preparar
+        </div>
+      </div>`;
+  }
+
+  _tdContentGaps() {
+    const gaps = [
+      { topic: 'Guía de compra de licuadoras para smoothies proteicos',   volume: 42000, brands: 0,  score: 99, action: 'Blog + Reel' },
+      { topic: 'Cómo personalizar gadgets de cocina estética años 90s',   volume: 28000, brands: 0,  score: 96, action: 'Carrusel + Story' },
+      { topic: 'Licuadoras y salud mental: el ritual de la mañana',       volume: 19000, brands: 1,  score: 91, action: 'Video corto' },
+      { topic: 'Cocina sostenible: aparatos que duran toda la vida',      volume: 31000, brands: 2,  score: 87, action: 'Blog + Email' },
+      { topic: 'Meal prep en 20 minutos con blender de alto poder',       volume: 15000, brands: 0,  score: 94, action: 'Tutorial Reel' },
+    ];
+    return `
+      <div class="td-gaps-grid">
+        ${gaps.map(g => `
+          <div class="td-gap-card">
+            <div class="td-gap-top">
+              <span class="td-gap-score" style="--gap-score:${g.score}">${g.score}</span>
+              <div class="td-gap-meta">
+                <span class="td-gap-vol"><i class="fas fa-magnifying-glass"></i> ${g.volume.toLocaleString()} búsquedas/mes</span>
+                <span class="td-gap-brands ${g.brands === 0 ? 'td-brands--zero' : 'td-brands--few'}">
+                  <i class="fas fa-building"></i> ${g.brands === 0 ? 'Ninguna marca activa' : g.brands + ' marca(s) activas'}
+                </span>
+              </div>
+            </div>
+            <p class="td-gap-topic">${g.topic}</p>
+            <div class="td-gap-action"><i class="fas fa-bolt"></i> Acción: <strong>${g.action}</strong></div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _tdWorldSync() {
+    const events = [
+      { type: 'weather', icon: 'fa-temperature-high', title: 'Ola de calor — CDMX / MTY',    impact: 'Licuadoras granizados +68% búsquedas', urgency: 'high', action: 'Publicar HOY' },
+      { type: 'event',   icon: 'fa-futbol',           title: 'Partido Final Liga MX — sábado', impact: 'Contenido de snacks y botanas en vivo', urgency: 'med',  action: 'Preparar para sábado' },
+      { type: 'calendar',icon: 'fa-calendar-day',     title: 'Día del Niño — 30 de abril',    impact: 'Aparatos fáciles de usar para toda la familia', urgency: 'med', action: 'Campaña 28–30 abr' },
+      { type: 'news',    icon: 'fa-newspaper',        title: 'Boom de dietas sin gluten',     impact: 'Contenido de recetas saludables +31%',  urgency: 'low',  action: 'Blog esta semana' },
+      { type: 'weather', icon: 'fa-cloud-rain',       title: 'Lluvias en GDL esta tarde',     impact: 'Recetas de interior / Sopas calientes',  urgency: 'low',  action: 'Post vespertino' },
+    ];
+    const urg = { high: 'td-urg--high', med: 'td-urg--med', low: 'td-urg--low' };
+    const typeClr = { weather: 'rgba(96,165,250,0.15)', event: 'rgba(34,197,94,0.1)', calendar: 'rgba(251,191,36,0.1)', news: 'rgba(167,139,250,0.1)' };
+    return `
+      <div class="td-world-list">
+        ${events.map(e => `
+          <div class="td-world-row" style="--row-bg:${typeClr[e.type]}">
+            <div class="td-world-icon"><i class="fas ${e.icon}"></i></div>
+            <div class="td-world-body">
+              <span class="td-world-title">${e.title}</span>
+              <span class="td-world-impact">${e.impact}</span>
+            </div>
+            <div class="td-world-right">
+              <span class="td-urg-badge ${urg[e.urgency]}">${e.action}</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _tdAlgoWatchdog() {
+    const platforms = [
+      { name: 'Instagram',  icon: 'fa-instagram',  favFormat: 'Carrusel',         change: true,  note: '↑ Prioridad vs Reels esta semana' },
+      { name: 'TikTok',     icon: 'fa-tiktok',     favFormat: 'Video < 30 seg',   change: false, note: 'Sin cambios — sigue igual' },
+      { name: 'YouTube',    icon: 'fa-youtube',    favFormat: 'Shorts 60 seg',    change: true,  note: '↑ Shorts sobre videos largos' },
+      { name: 'Facebook',   icon: 'fa-facebook-f', favFormat: 'Reels nativos',    change: false, note: 'Sin cambios' },
+      { name: 'LinkedIn',   icon: 'fa-linkedin-in',favFormat: 'Carrusel + Texto', change: true,  note: '↑ Documentos PDF convertidos' },
+      { name: 'Pinterest',  icon: 'fa-pinterest-p',favFormat: 'Idea Pin vertical',change: false, note: 'Sin cambios' },
+    ];
+    return `
+      <div class="td-algo-list">
+        ${platforms.map(p => `
+          <div class="td-algo-row ${p.change ? 'td-algo--changed' : ''}">
+            <div class="td-algo-icon"><i class="fab ${p.icon}"></i></div>
+            <div class="td-algo-body">
+              <span class="td-algo-name">${p.name}</span>
+              <span class="td-algo-format"><i class="fas fa-star"></i> ${p.favFormat}</span>
+            </div>
+            <div class="td-algo-status">
+              ${p.change
+                ? '<span class="td-algo-badge td-algo--alert"><i class="fas fa-triangle-exclamation"></i> Cambio</span>'
+                : '<span class="td-algo-badge td-algo--ok"><i class="fas fa-check"></i> Estable</span>'}
+              <span class="td-algo-note">${p.note}</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _tdAestheticTrends() {
+    const trends = [
+      { name: 'Retro 90s Neon',   palette: ['#ff6ec7','#00f5d4','#ffd500','#ff0080'], engagement: 9.4, badge: '🔥 Dominante', fit: 'Perfecto para lanzamientos' },
+      { name: 'Terracotas y Sage', palette: ['#c45e2a','#8b7355','#7a9e7e','#f5e6d0'], engagement: 8.1, badge: '↑ En ascenso', fit: 'Lifestyle / hogar' },
+      { name: 'Minimalismo Crudo', palette: ['#f0ede8','#d6cfc4','#9b9189','#3a3530'], engagement: 7.6, badge: 'Estable', fit: 'Productos premium' },
+      { name: 'Digital Glitch',    palette: ['#00e5ff','#ff00aa','#1a1a2e','#ffffff'], engagement: 7.2, badge: '↑ Emergiendo', fit: 'Público joven / Gen Z' },
+    ];
+    return `
+      <div class="td-aesthetic-list">
+        ${trends.map(t => `
+          <div class="td-aesthetic-row">
+            <div class="td-aes-palette">
+              ${t.palette.map(c => `<span class="td-aes-swatch" style="background:${c}" title="${c}"></span>`).join('')}
+            </div>
+            <div class="td-aes-info">
+              <span class="td-aes-name">${t.name}</span>
+              <span class="td-aes-fit">${t.fit}</span>
+            </div>
+            <div class="td-aes-right">
+              <span class="td-aes-badge">${t.badge}</span>
+              <div class="td-aes-eng"><i class="fas fa-heart"></i> ${t.engagement}%</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _tdNarrativeHooks() {
+    const hooks = [
+      { hook: '"¿Sabías que el 80% de los smoothies pierden nutrientes si usas una licuadora básica?"', retention: 94, type: 'Dato impactante' },
+      { hook: '"Esto es lo que nadie te dice sobre preparar comida en 15 minutos…"',                   retention: 91, type: 'Curiosidad / Misterio' },
+      { hook: '"POV: Ya terminaste de cocinar y son las 7am 🧃"',                                     retention: 88, type: 'Identificación / POV' },
+      { hook: '"El truco que usan los chefs para no lavar mil cosas."',                               retention: 85, type: 'Solución rápida' },
+      { hook: '"Probé 5 licuadoras. Solo 1 sobrevivió a esto."',                                      retention: 82, type: 'Prueba / Reto' },
+    ];
+    const typeCls = { 'Dato impactante':'td-hook--stat', 'Curiosidad / Misterio':'td-hook--mystery', 'Identificación / POV':'td-hook--pov', 'Solución rápida':'td-hook--solution', 'Prueba / Reto':'td-hook--challenge' };
+    return `
+      <div class="td-hooks-list">
+        ${hooks.map((h, i) => `
+          <div class="td-hook-row">
+            <span class="td-hook-num">${i+1}</span>
+            <div class="td-hook-body">
+              <p class="td-hook-text">${h.hook}</p>
+              <div class="td-hook-meta">
+                <span class="td-hook-type ${typeCls[h.type] || ''}">${h.type}</span>
+                <div class="td-hook-ret-wrap">
+                  <div class="td-hook-ret-bar" style="width:${h.retention}%"></div>
+                  <span class="td-hook-ret-val">${h.retention}% retención</span>
+                </div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  /* ── Chart.js — Tendencias ─────────────────────────── */
+  _initTendenciesCharts() {
+    if (!window.Chart) return;
+    this._tdChartSentiment();
+    this._tdChartVelocity();
+    this._tdChartEmergence();
+    this._buildOpportunityFeed();
+  }
+
+  _tdChartSentiment() {
+    const ctx = document.getElementById('tdChartSentiment');
+    if (!ctx) return;
+    this._reg(new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Optimista', 'Nostálgico', 'Humorístico', 'Informativo', 'Ansioso', 'Cínico'],
+        datasets: [{
+          data: [32, 24, 18, 14, 7, 5],
+          backgroundColor: [
+            'rgba(34,197,94,0.85)', 'rgba(251,191,36,0.85)', 'rgba(96,165,250,0.85)',
+            'rgba(167,139,250,0.75)', 'rgba(249,115,22,0.75)', 'rgba(156,163,175,0.6)',
+          ],
+          borderColor: 'rgba(0,0,0,0)', hoverOffset: 7,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '58%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 9, padding: 9 } },
+          tooltip: { callbacks: { label: d => `${d.label}: ${d.raw}%` } },
+        },
+      },
+    }));
+  }
+
+  _tdChartVelocity() {
+    const ctx = document.getElementById('tdChartVelocity');
+    if (!ctx) return;
+    const keywords = ['#smoothies', '#journaling', '#mealprepideas', '#cocinaretro', '#asmrcocina', '#sinfgluten', '#vidarapida', '#morningritual'];
+    const velocity = [94, 87, 78, 81, 68, 74, 62, 71];
+    const growth   = [152,89, 56, 67, 38, 44, 31, 43];
+    this._reg(new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: keywords,
+        datasets: [
+          { label: 'Velocidad (score)',   data: velocity, backgroundColor: 'rgba(96,165,250,0.75)', borderRadius: 5, yAxisID: 'y' },
+          { label: 'Crecimiento 24h (%)', data: growth,   backgroundColor: 'rgba(251,191,36,0.6)',  borderRadius: 5, yAxisID: 'y2' },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10 } }, tooltip: { mode: 'index', intersect: false } },
+        scales: {
+          y:  { position: 'left',  max: 110, grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Velocidad' } },
+          y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => `+${v}%` }, title: { display: true, text: 'Crecimiento' } },
+          x:  { grid: { display: false }, ticks: { font: { size: 10 } } },
+        },
+      },
+    }));
+  }
+
+  _tdChartEmergence() {
+    const ctx = document.getElementById('tdChartEmergence');
+    if (!ctx) return;
+    const hours = Array.from({length: 25}, (_, i) => {
+      const h = new Date(); h.setHours(h.getHours() - 24 + i, 0, 0, 0);
+      return `${String(h.getHours()).padStart(2,'0')}h`;
+    });
+    const genZ   = [12,14,11,9,8,11,18,28,35,42,38,45,52,48,55,62,58,70,74,68,77,81,76,79,84];
+    const retro  = [5,4,6,5,4,5,8,14,19,24,22,27,33,38,42,39,48,55,52,58,61,65,60,62,68];
+    const health = [8,9,7,6,5,7,12,20,26,30,28,34,38,35,41,44,40,48,51,47,53,57,52,55,61];
+    this._reg(new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: hours,
+        datasets: [
+          { label: 'Señal "Cocina Retro 90s"',        data: retro,  borderColor: 'rgba(251,191,36,0.9)',  backgroundColor: 'rgba(251,191,36,0.08)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 },
+          { label: 'Señal "Recetas Salud Mental"',    data: health, borderColor: 'rgba(34,197,94,0.9)',   backgroundColor: 'rgba(34,197,94,0.08)',  borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 },
+          { label: 'Señal "Estética Gen Z"',          data: genZ,   borderColor: 'rgba(167,139,250,0.9)', backgroundColor: 'rgba(167,139,250,0.08)',borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, title: { display: true, text: 'Índice de emergencia' } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } },
+        },
+      },
+    }));
+  }
+
+  _buildOpportunityFeed() {
+    const el = document.getElementById('tdOpFeed');
+    if (!el) return;
+    const ops = [
+      { status: 'done',    icon: 'fa-check-circle', msg: 'Detectada tendencia "Cocina Retro 90s" — Generado set de 4 visuales con estética neon. Alcance estimado: +40%.', time: 'Hace 8 min' },
+      { status: 'running', icon: 'fa-spinner fa-spin', msg: 'Analizando Content Gap "licuadoras para smoothies proteicos" — Redactando guía SEO + script de Reel.', time: 'En curso' },
+      { status: 'alert',   icon: 'fa-triangle-exclamation', msg: 'Ola de calor detectada en Monterrey — Oportunidad de publicación en 2 h. Requiere aprobación.', time: 'Hace 12 min' },
+      { status: 'done',    icon: 'fa-check-circle', msg: 'Audio "Lo-fi Cocina Mix" en fase exponencial en TikTok — Video generado y programado para las 8pm.', time: 'Hace 31 min' },
+    ];
+    const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
+    el.innerHTML = ops.map(o => `
+      <div class="cc-mission ${statusCls[o.status]}">
+        <i class="fas ${o.icon} cc-mission-icon"></i>
+        <span class="cc-mission-msg">${o.msg}</span>
+        <span class="cc-mission-time">${o.time}</span>
+      </div>`).join('');
+  }
+
+  _animateTD() {
+    document.querySelectorAll('.td-kpi-card').forEach((card, i) => {
+      card.style.opacity = '0'; card.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        card.style.opacity = '1'; card.style.transform = 'none';
+      }, i * 60);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════
      COMPETENCIA — Infiltración Táctica
   ═══════════════════════════════════════════════════════════ */
   async _renderCompetence(body) {
@@ -1440,404 +1972,6 @@ class DashboardView extends BaseView {
         card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
         card.style.opacity = '1'; card.style.transform = 'none';
       }, i * 60);
-    });
-  }
-
-  /* ═══════════════════════════════════════════════════════════
-     TENDENCIAS — El Pulso del Mundo
-  ═══════════════════════════════════════════════════════════ */
-  async _renderTendencies(body) {
-    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando el pulso del mundo…</div>`;
-    try { await this._ensureChartJs(); } catch (_) {}
-    body.innerHTML = this._buildTendenciesHTML();
-    this._initTendenciesCharts();
-    this._animateTR();
-  }
-
-  _buildTendenciesHTML() {
-    return `
-    <div class="tr-dashboard">
-
-      <div class="tr-header">
-        <div class="tr-header-left">
-          <div class="tr-pulse-icon"><i class="fas fa-globe-americas"></i></div>
-          <div>
-            <h2 class="tr-title">El Pulso del Mundo</h2>
-            <p class="tr-subtitle">Arbitraje de atención · OpenClaw escanea cada 15 min · Demostración</p>
-          </div>
-        </div>
-        <div class="tr-scan-badge"><span class="tr-scan-dot"></span> Escaneo 360° activo</div>
-      </div>
-
-      <div class="tr-mission-banner">
-        <i class="fas fa-bolt"></i>
-        <div class="tr-mission-text">
-          <strong>Misión de relevancia:</strong> Detectada tendencia estética <em>Retro-90s</em> en tu nicho.
-          Generado set de visuales + blog. <span class="tr-mission-metric">Prob. alcance orgánico: +40% vs promedio</span>
-        </div>
-      </div>
-
-      <div class="tr-kpi-strip">
-        ${this._trKpi('fa-signal',           'Señales calientes',     '12',  '↑ 4 en 3 h',           'orange')}
-        ${this._trKpi('fa-cloud-sun',      'Sync mundo físico',     '94%', 'Monterrey + eventos',  'blue')}
-        ${this._trKpi('fa-gears',          'Shift algorítmico',     '2',   'Plataformas hoy',    'purple')}
-        ${this._trKpi('fa-water',          'Océanos azules',        '7',   'Gaps sin marca',      'teal')}
-        ${this._trKpi('fa-gauge-high',     'Velocidad keywords',    '+18%', 'Aceleración máx.',   'green')}
-        ${this._trKpi('fa-palette',        'Estética en auge',      '5',   'Paletas trending',   'pink')}
-      </div>
-
-      ${this._trDim('A', 'fa-bolt', 'The Early Detection', 'Señales de nicho, audios en ascenso y océanos azules')}
-      <div class="tr-dim-row">
-        <div class="tr-widget tr-widget--wide">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-wave-square"></i> Señales Débiles (Niche Signals)</span>
-            <span class="tr-badge tr-badge--orange">Últimas 72 h</span>
-          </div>
-          <div class="tr-widget-body">
-            <canvas id="trChartSignals" height="190"></canvas>
-          </div>
-        </div>
-        <div class="tr-widget">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-music"></i> Audios y Memes en Ascenso</span>
-            <span class="tr-badge tr-badge--pink">TikTok / Reels</span>
-          </div>
-          <div class="tr-widget-body">
-            ${this._trAudioMemeList()}
-          </div>
-        </div>
-      </div>
-
-      <div class="tr-widget tr-widget--full">
-        <div class="tr-widget-header">
-          <span class="tr-widget-title"><i class="fas fa-fish"></i> Content Gaps — Océanos Azules</span>
-          <span class="tr-badge tr-badge--teal">Sin contenido de marca aún</span>
-        </div>
-        <div class="tr-widget-body">
-          ${this._trContentGaps()}
-        </div>
-      </div>
-
-      ${this._trDim('B', 'fa-globe', 'The Real World Sync', 'Clima, eventos y sentimiento global del día')}
-      <div class="tr-dim-row">
-        <div class="tr-widget tr-widget--wide">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-location-dot"></i> Sincronización con el Mundo Físico</span>
-            <span class="tr-badge tr-badge--blue">Noticias · Clima · Eventos</span>
-          </div>
-          <div class="tr-widget-body">
-            ${this._trWorldSync()}
-          </div>
-        </div>
-        <div class="tr-widget">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-masks-theater"></i> Sentiment Shift Global</span>
-            <span class="tr-badge tr-badge--purple">Tono del día</span>
-          </div>
-          <div class="tr-widget-body mb-widget-body--center">
-            <canvas id="trChartSentiment" height="220"></canvas>
-          </div>
-        </div>
-      </div>
-
-      ${this._trDim('C', 'fa-microchip', 'The Platform Pulse', 'Reglas algorítmicas y velocidad de keywords')}
-      <div class="tr-dim-row">
-        <div class="tr-widget">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-shield-dog"></i> Algorithmic Watchdog</span>
-            <span class="tr-badge tr-badge--red">Hoy</span>
-          </div>
-          <div class="tr-widget-body">
-            ${this._trAlgoWatch()}
-          </div>
-        </div>
-        <div class="tr-widget tr-widget--wide">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-chart-line"></i> Hashtag &amp; Keyword Velocity</span>
-            <span class="tr-badge tr-badge--green">Volumen + aceleración</span>
-          </div>
-          <div class="tr-widget-body">
-            <canvas id="trChartVelocity" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      ${this._trDim('D', 'fa-wand-magic-sparkles', 'The Visual Trend', 'Estética del minuto y narrative hooks')}
-      <div class="tr-dim-row">
-        <div class="tr-widget tr-widget--wide">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-palette"></i> Evolución Estética del Minuto</span>
-            <span class="tr-badge tr-badge--pink">Nicho creativo</span>
-          </div>
-          <div class="tr-widget-body">
-            ${this._trAesthetic()}
-          </div>
-        </div>
-        <div class="tr-widget">
-          <div class="tr-widget-header">
-            <span class="tr-widget-title"><i class="fas fa-anchor"></i> Narrative Hooks (0–3 s)</span>
-            <span class="tr-badge tr-badge--orange">Alto retención</span>
-          </div>
-          <div class="tr-widget-body">
-            ${this._trHooks()}
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-demo-note tr-demo-note">
-        <i class="fas fa-flask"></i>
-        <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará Trends, clima, noticias y señales de plataforma en tiempo real.</span>
-      </div>
-    </div>`;
-  }
-
-  _trDim(letter, icon, title, subtitle) {
-    return `
-      <div class="mb-dim-header tr-dim-header">
-        <div class="mb-dim-letter tr-dim-letter">${this._esc(letter)}</div>
-        <div>
-          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
-          <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
-        </div>
-      </div>`;
-  }
-
-  _trKpi(icon, label, value, sub, color) {
-    return `
-      <div class="mb-kpi-card mb-kpi--${color} tr-kpi-card">
-        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
-        <div class="mb-kpi-body">
-          <div class="mb-kpi-value">${value}</div>
-          <div class="mb-kpi-label">${label}</div>
-          <div class="mb-kpi-sub">${sub}</div>
-        </div>
-      </div>`;
-  }
-
-  _trAudioMemeList() {
-    const items = [
-      { name: 'Audio: "granizado verano 2026"', growth: 94, plat: 'TT', phase: 'Exponencial' },
-      { name: 'CapCut template "zoom dramático"', growth: 78, plat: 'IG', phase: 'Crecimiento' },
-      { name: 'Sound: kitchen ASMR loop', growth: 62, plat: 'TT', phase: 'Early' },
-      { name: 'Meme: "yo vs mi licuadora"', growth: 55, plat: 'Reels', phase: 'Early' },
-      { name: 'Audio: "nostalgia 90s beat"', growth: 41, plat: 'TT', phase: 'Vibración' },
-    ];
-    return `
-      <div class="tr-audio-list">
-        ${items.map(i => `
-          <div class="tr-audio-row">
-            <span class="tr-audio-name">${i.name}</span>
-            <span class="tr-audio-plat">${i.plat}</span>
-            <div class="tr-audio-bar-wrap"><div class="tr-audio-bar" style="width:${i.growth}%"></div></div>
-            <span class="tr-audio-pct">${i.growth}%</span>
-            <span class="tr-audio-phase tr-phase--${i.phase === 'Exponencial' ? 'exp' : i.phase === 'Crecimiento' ? 'gro' : 'early'}">${i.phase}</span>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _trContentGaps() {
-    const gaps = [
-      { topic: 'Licuados altos en proteína post-gym', vol: 'Alto', brands: 0, action: 'Generar carrusel educativo + Reel' },
-      { topic: 'Electrodomésticos "quiet luxury" en cocina', vol: 'Medio', brands: 0, action: 'Blog + estética minimal' },
-      { topic: 'Batch cooking domingo sin estrés', vol: 'Alto', brands: 1, action: 'Serie de 3 Reels' },
-      { topic: 'Granizados caseros vs comprados (sostenibilidad)', vol: 'Medio', brands: 0, action: 'Comparativa con CTA' },
-    ];
-    return `
-      <div class="tr-gap-grid">
-        ${gaps.map(g => `
-          <div class="tr-gap-card">
-            <div class="tr-gap-topic">${g.topic}</div>
-            <div class="tr-gap-meta">
-              <span class="tr-gap-vol">Volumen conversación: <strong>${g.vol}</strong></span>
-              <span class="tr-gap-brands">Marcas en nicho con contenido pro: <strong>${g.brands}</strong></span>
-            </div>
-            <div class="tr-gap-action"><i class="fas fa-rocket"></i> ${g.action}</div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _trWorldSync() {
-    return `
-      <div class="tr-world-grid">
-        <div class="tr-world-card tr-world--heat">
-          <div class="tr-world-icon"><i class="fas fa-sun"></i></div>
-          <div>
-            <div class="tr-world-title">Ola de calor · Monterrey</div>
-            <p class="tr-world-desc">+38°C pronosticados 3 días. OpenClaw sugiere contenido: licuadoras de alta potencia para granizados y bebidas frías.</p>
-          </div>
-        </div>
-        <div class="tr-world-card tr-world--event">
-          <div class="tr-world-icon"><i class="fas fa-futbol"></i></div>
-          <div>
-            <div class="tr-world-title">Evento deportivo nacional</div>
-            <p class="tr-world-desc">Pico de conversación en snacks y reuniones en casa. Ventana para contenido "party mode" y uso social del producto.</p>
-          </div>
-        </div>
-        <div class="tr-world-card tr-world--news">
-          <div class="tr-world-icon"><i class="fas fa-newspaper"></i></div>
-          <div>
-            <div class="tr-world-title">Noticia: moda y estética retro 90s</div>
-            <p class="tr-world-desc">Cruce de relevancia: colores neón y personalización. Alineación con línea de productos coloridos (ej. Sharpie / marca creativa).</p>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  _trAlgoWatch() {
-    const rows = [
-      { plat: 'Instagram', change: 'Carruseles de fotos ↑ prioridad vs Reels (últimas 48 h)', impact: 'Alto', fmt: 'Carrusel 7 slides' },
-      { plat: 'TikTok',    change: 'Videos 21–34 s con loop perfecto favorecidos en FYP', impact: 'Alto', fmt: 'Loop + hook 1 s' },
-      { plat: 'YouTube',   change: 'Shorts con capítulo en título ganan +12% impresiones', impact: 'Medio', fmt: 'Short + capítulo' },
-    ];
-    return `
-      <div class="tr-algo-list">
-        ${rows.map(r => `
-          <div class="tr-algo-row">
-            <span class="tr-algo-plat">${r.plat}</span>
-            <p class="tr-algo-change">${r.change}</p>
-            <span class="tr-algo-impact tr-impact--${r.impact === 'Alto' ? 'high' : 'med'}">${r.impact}</span>
-            <span class="tr-algo-fmt">${r.fmt}</span>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _trAesthetic() {
-    const palettes = [
-      { name: 'Neón retro 90s', colors: ['#ff00ff', '#00ffff', '#ffff00', '#ff6600'], score: 92 },
-      { name: 'Quiet kitchen', colors: ['#e8e4dc', '#b8a99a', '#6b7280', '#1f2937'], score: 78 },
-      { name: 'Fresh citrus', colors: ['#fef08a', '#84cc16', '#f97316', '#ffffff'], score: 71 },
-    ];
-    const tags = ['Grain ligero', 'Subtítulos bold', 'Jump cuts cada 1.2s', 'Texto sobre producto', 'LUT cálido'];
-    return `
-      <div class="tr-aesthetic-wrap">
-        <div class="tr-palette-row">
-          ${palettes.map(p => `
-            <div class="tr-palette-card">
-              <div class="tr-palette-swatches">
-                ${p.colors.map(c => `<span class="tr-swatch" style="background:${c}"></span>`).join('')}
-              </div>
-              <div class="tr-palette-name">${p.name}</div>
-              <div class="tr-palette-score">Engagement nicho: <strong>${p.score}</strong></div>
-            </div>`).join('')}
-        </div>
-        <div class="tr-aesthetic-tags">
-          <span class="tr-aesthetic-label">Estilos de edición con más engagement hoy:</span>
-          ${tags.map(t => `<span class="tr-tag">${t}</span>`).join('')}
-        </div>
-      </div>`;
-  }
-
-  _trHooks() {
-    const hooks = [
-      { text: 'Nadie te dice esto sobre tu licuadora…', score: 96, type: 'Curiosidad' },
-      { text: 'POV: acabas de descubrir el truco del batch cooking', score: 91, type: 'POV' },
-      { text: '3 cosas que odio de [categoría] — y la #3 cambió todo', score: 88, type: 'Lista' },
-      { text: 'Esto pasó cuando probé [producto] por primera vez', score: 85, type: 'Historia' },
-      { text: 'Deja de hacer esto si quieres [resultado] en 2026', score: 82, type: 'Directo' },
-    ];
-    return `
-      <div class="tr-hooks-list">
-        ${hooks.map((h, i) => `
-          <div class="tr-hook-row">
-            <span class="tr-hook-rank">#${i + 1}</span>
-            <p class="tr-hook-text">"${h.text}"</p>
-            <span class="tr-hook-type">${h.type}</span>
-            <span class="tr-hook-score">${h.score}</span>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _initTendenciesCharts() {
-    if (!window.Chart) return;
-    this._trChartSignals();
-    this._trChartSentiment();
-    this._trChartVelocity();
-  }
-
-  _trChartSignals() {
-    const ctx = document.getElementById('trChartSignals');
-    if (!ctx) return;
-    const labels = Array.from({ length: 24 }, (_, i) => `${i}h`);
-    this._reg(new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: '"Journaling salud mental" (nicho)', data: this._trNoiseSeries(24, 12, 3.2), borderColor: 'rgba(249,115,22,0.95)', backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 2.5, tension: 0.45, fill: true, pointRadius: 0 },
-          { label: '"Batch cooking domingo"', data: this._trNoiseSeries(24, 8, 2.1), borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.08)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 },
-          { label: '"Electro quiet luxury"', data: this._trNoiseSeries(24, 5, 1.4), borderColor: 'rgba(167,139,250,0.9)', borderWidth: 2, tension: 0.4, fill: false, borderDash: [4, 3], pointRadius: 0 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 10 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          y: { grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Índice de vibración nicho' } },
-          x: { grid: { display: false }, title: { display: true, text: 'Horas atrás' } },
-        },
-      },
-    }));
-  }
-
-  _trNoiseSeries(n, base, amp) {
-    return Array.from({ length: n }, (_, i) => Math.max(0, base + Math.sin(i / 3) * amp + (Math.random() - 0.5) * 2));
-  }
-
-  _trChartSentiment() {
-    const ctx = document.getElementById('trChartSentiment');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Informativo', 'Alegre / esperanzador', 'Nostálgico', 'Cínico / irónico'],
-        datasets: [{
-          data: [38, 28, 22, 12],
-          backgroundColor: ['rgba(96,165,250,0.85)', 'rgba(34,197,94,0.8)', 'rgba(167,139,250,0.8)', 'rgba(156,163,175,0.75)'],
-          borderColor: 'rgba(0,0,0,0)', hoverOffset: 6,
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '55%',
-        plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } },
-          tooltip: { callbacks: { label: d => `${d.label}: ${d.raw}%` } },
-        },
-      },
-    }));
-  }
-
-  _trChartVelocity() {
-    const ctx = document.getElementById('trChartVelocity');
-    if (!ctx) return;
-    const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    this._reg(new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { type: 'bar', label: 'Volumen búsqueda (índice)', data: [42, 48, 55, 61, 58, 72, 68], backgroundColor: 'rgba(96,165,250,0.45)', borderColor: 'rgba(96,165,250,0.8)', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
-          { type: 'line', label: 'Aceleración (Δ semanal)', data: [2, 5, 8, 12, 9, 15, 18], borderColor: 'rgba(249,115,22,0.95)', backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 2.5, tension: 0.35, fill: true, yAxisID: 'y1', pointRadius: 3 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          y: { position: 'left', grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Volumen' } },
-          y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Aceleración %' } },
-          x: { grid: { display: false } },
-        },
-      },
-    }));
-  }
-
-  _animateTR() {
-    document.querySelectorAll('.tr-kpi-card').forEach((card, i) => {
-      card.style.opacity = '0'; card.style.transform = 'translateY(10px)';
-      setTimeout(() => {
-        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
-        card.style.opacity = '1'; card.style.transform = 'none';
-      }, i * 55);
     });
   }
 

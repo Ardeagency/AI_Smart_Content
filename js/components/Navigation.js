@@ -430,6 +430,63 @@ class Navigation {
   }
 
   /**
+   * Header: apertura inmediata (UX como #userDropdown) y carga async.
+   */
+  async openHeaderNotificationsDropdown(triggerBtn) {
+    this.ensureNotificationsDropdown();
+    const panel = document.getElementById('notificationsDropdown');
+    if (!panel || !triggerBtn) return;
+
+    if (panel.classList.contains('active')) {
+      this.closeNotificationsDropdown();
+      return;
+    }
+
+    if (typeof this.closeFlyout === 'function') this.closeFlyout();
+    const ud = document.getElementById('userDropdown');
+    if (ud) ud.classList.remove('active');
+
+    if (typeof this._renderNotificationsDropdownContent === 'function') {
+      this._renderNotificationsDropdownContent(panel, null, 'Cargando…', false);
+    } else {
+      panel.innerHTML = '<div class="nav-flyout-notifications-loading">Cargando…</div>';
+    }
+    this._showNotificationsDropdownPanel(panel);
+    this.positionUserDropdown(triggerBtn, panel);
+
+    const user = window.authService?.getCurrentUser?.();
+    let supabase = window.authService?.supabase;
+    if (!supabase?.from && window.supabaseService?.getClient) {
+      try {
+        supabase = await window.supabaseService.getClient();
+      } catch (_) {
+        supabase = null;
+      }
+    }
+
+    if (!user?.id || !supabase?.from) {
+      if (typeof this._renderNotificationsDropdownContent === 'function') {
+        this._renderNotificationsDropdownContent(panel, [], null, true);
+      }
+      this.positionUserDropdown(triggerBtn, panel);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('user_notifications')
+      .select('id, title, message, type, is_read, created_at, link_to')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (typeof this._renderNotificationsDropdownContent === 'function') {
+      this._renderNotificationsDropdownContent(panel, error ? [] : (data || []), null, true, error?.message);
+    }
+    this.positionUserDropdown(triggerBtn, panel);
+    this.refreshNotificationsBadge();
+  }
+
+  /**
    * Actualiza el punto rojo si hay filas con is_read = false en user_notifications.
    */
   async refreshNotificationsBadge() {
@@ -1086,7 +1143,7 @@ class Navigation {
       document.addEventListener('credits-updated', () => this.refreshCredits());
     }
 
-    /* Delegación en document: si solo se usa listener en el botón, un re-render u orden de bind puede dejar la campana sin handler (clic no abre nada). */
+    /* Delegación en document: header se maneja aquí, sidebar sigue en flyout lateral. */
     if (!this._notificationsClickDelegation) {
       this._notificationsClickDelegation = true;
       document.addEventListener(
@@ -1096,21 +1153,17 @@ class Navigation {
           if (!btn) return;
           e.preventDefault();
           e.stopPropagation();
-          this.ensureNotificationsDropdown();
-          const panel = document.getElementById('notificationsDropdown');
           const fromHeader = !!document.getElementById('appHeader')?.contains(btn);
-          if (fromHeader && panel?.classList.contains('active')) {
-            this.closeNotificationsDropdown();
+          if (fromHeader) {
+            this.openHeaderNotificationsDropdown(btn);
             return;
           }
-          if (!fromHeader) {
-            const flyout = document.getElementById('navFlyout');
-            const notifFlyoutOpen =
-              flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
-            if (notifFlyoutOpen) {
-              this.closeFlyout();
-              return;
-            }
+          const flyout = document.getElementById('navFlyout');
+          const notifFlyoutOpen =
+            flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
+          if (notifFlyoutOpen) {
+            this.closeFlyout();
+            return;
           }
           if (typeof this.openNotificationsFlyout === 'function') {
             this.openNotificationsFlyout(btn);
