@@ -286,6 +286,9 @@ class Navigation {
       if (config.mode === 'user' && config.orgId) {
         this.loadCreditsFromDb();
       }
+      if (config.showHeader) {
+        this.refreshNotificationsBadge();
+      }
       return;
     }
 
@@ -326,6 +329,10 @@ class Navigation {
       await this.loadOrganizationInfo();
     }
 
+    if (config.showHeader) {
+      this.refreshNotificationsBadge();
+    }
+
     this.initialized = true;
   }
 
@@ -348,6 +355,108 @@ class Navigation {
    * Dropdown de usuario (único fragmento reutilizable)
    * @param {string} settingsHref - URL destino del botón "Mi cuenta"
    */
+  /**
+   * Campana + punto rojo de no leídas (mismo patrón visual que badges estándar).
+   */
+  getHeaderNotificationsButtonGroupHTML() {
+    return `
+            <span class="header-notifications-wrap">
+              <button
+                type="button"
+                class="user-menu-btn nav-footer-btn"
+                data-flyout="notifications"
+                data-tooltip="Notificaciones"
+                aria-label="Notificaciones"
+                id="headerNotificationsBtn"
+              >
+                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
+              </button>
+              <span class="header-notifications-badge" id="headerNotificationsBadge" hidden aria-hidden="true"></span>
+            </span>`;
+  }
+
+  /**
+   * Panel de notificaciones en body (mismo enfoque que #userDropdown: evita que el glass del header anule el panel).
+   */
+  ensureNotificationsDropdown() {
+    const all = document.querySelectorAll('#notificationsDropdown');
+    all.forEach((el, i) => {
+      if (i > 0) el.remove();
+    });
+    let panel = document.getElementById('notificationsDropdown');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'notificationsDropdown';
+      panel.className = 'user-dropdown glass-black notifications-dropdown';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-label', 'Notificaciones');
+      panel.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(panel);
+    } else if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+  }
+
+  closeNotificationsDropdown() {
+    const panel = document.getElementById('notificationsDropdown');
+    if (panel) {
+      panel.classList.remove('active');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  /**
+   * Actualiza el punto rojo si hay filas con is_read = false en user_notifications.
+   */
+  async refreshNotificationsBadge() {
+    const badge = document.getElementById('headerNotificationsBadge');
+    if (!badge) return;
+    try {
+      const user = window.authService?.getCurrentUser?.();
+      let supabase = window.authService?.supabase;
+      if (!supabase?.from && window.supabaseService?.getClient) {
+        try {
+          supabase = await window.supabaseService.getClient();
+        } catch (_) {
+          supabase = null;
+        }
+      }
+      if (!user?.id || !supabase?.from) {
+        badge.hidden = true;
+        badge.setAttribute('aria-hidden', 'true');
+        return;
+      }
+      const { count, error } = await supabase
+        .from('user_notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      if (error) {
+        badge.hidden = true;
+        badge.setAttribute('aria-hidden', 'true');
+        return;
+      }
+      if ((count ?? 0) > 0) {
+        badge.hidden = false;
+        badge.removeAttribute('aria-hidden');
+      } else {
+        badge.hidden = true;
+        badge.setAttribute('aria-hidden', 'true');
+      }
+    } catch (_) {
+      badge.hidden = true;
+      badge.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  /** Reposiciona el dropdown de notificaciones si está abierto (resize/scroll). */
+  repositionOpenNotificationsDropdown() {
+    const panel = document.getElementById('notificationsDropdown');
+    const btn = document.getElementById('headerNotificationsBtn');
+    if (!panel?.classList.contains('active') || !btn) return;
+    this.positionUserDropdown(btn, panel);
+  }
+
   getUserDropdownHTML(settingsHref = '/home') {
     // Si hay org activa, navegar a su configuración; si no, ir al onboarding de organización.
     const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/form_org';
@@ -394,16 +503,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
-              <button
-                type="button"
-                class="user-menu-btn nav-footer-btn"
-                data-flyout="notifications"
-                data-tooltip="Notificaciones"
-                aria-label="Notificaciones"
-                id="headerNotificationsBtn"
-              >
-                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-              </button>
+              ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
@@ -565,16 +665,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
-              <button
-                type="button"
-                class="user-menu-btn nav-footer-btn"
-                data-flyout="notifications"
-                data-tooltip="Notificaciones"
-                aria-label="Notificaciones"
-                id="headerNotificationsBtn"
-              >
-                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-              </button>
+              ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
@@ -666,16 +757,7 @@ class Navigation {
           <div class="header-center header-builder-slot" id="headerBuilderSlot" aria-hidden="true"></div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
-              <button
-                type="button"
-                class="user-menu-btn nav-footer-btn"
-                data-flyout="notifications"
-                data-tooltip="Notificaciones"
-                aria-label="Notificaciones"
-                id="headerNotificationsBtn"
-              >
-                <img src="/recursos/icons/notification.svg" class="nav-icon nav-icon-img" alt="" width="16" height="16">
-              </button>
+              ${this.getHeaderNotificationsButtonGroupHTML()}
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
@@ -881,6 +963,8 @@ class Navigation {
    * Configurar event listeners
    */
   setupEventListeners() {
+    this.ensureNotificationsDropdown();
+
     // Botón del sidebar (icono colapsado): en móvil abre/cierra overlay; en desktop colapsa/expande sidebar
     const sidebarToggle = document.getElementById('sidebarToggleBtn');
     if (sidebarToggle) {
@@ -915,6 +999,7 @@ class Navigation {
         e.preventDefault();
         e.stopPropagation();
         if (typeof this.closeFlyout === 'function') this.closeFlyout();
+        this.closeNotificationsDropdown();
         const willOpen = !userDropdown.classList.contains('active');
         userDropdown.classList.toggle('active');
         if (willOpen) {
@@ -955,8 +1040,20 @@ class Navigation {
         const userBtn = document.getElementById('userMenuBtn');
         const clickedInsideUserDropdown = ud && (ud.contains(e.target) || (userBtn && userBtn.contains(e.target)));
         const clickedInsideOrgDropdown = od && od.contains(e.target);
+        const nd = document.getElementById('notificationsDropdown');
+        const notifBtn = document.getElementById('headerNotificationsBtn');
+        const notifWrap = document.querySelector('.header-notifications-wrap');
+        const clickedInsideNotifications =
+          nd &&
+          (nd.contains(e.target) ||
+            (notifBtn && notifBtn.contains(e.target)) ||
+            (notifWrap && notifWrap.contains(e.target)));
         if (ud && !clickedInsideUserDropdown) ud.classList.remove('active');
         if (od && !clickedInsideOrgDropdown) od.classList.remove('active');
+        if (nd && !clickedInsideNotifications) {
+          nd.classList.remove('active');
+          nd.setAttribute('aria-hidden', 'true');
+        }
       });
     }
 
@@ -971,12 +1068,20 @@ class Navigation {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const flyout = document.getElementById('navFlyout');
-        const notifOpen =
-          flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
-        if (notifOpen) {
-          this.closeFlyout();
+        const panel = document.getElementById('notificationsDropdown');
+        const fromHeader = !!document.getElementById('appHeader')?.contains(btn);
+        if (fromHeader && panel?.classList.contains('active')) {
+          this.closeNotificationsDropdown();
           return;
+        }
+        if (!fromHeader) {
+          const flyout = document.getElementById('navFlyout');
+          const notifFlyoutOpen =
+            flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
+          if (notifFlyoutOpen) {
+            this.closeFlyout();
+            return;
+          }
         }
         this.openNotificationsFlyout(btn);
         const ud = document.getElementById('userDropdown');
@@ -1018,9 +1123,7 @@ class Navigation {
       };
       const repositionHeaderPopovers = () => {
         reposition();
-        if (typeof this.repositionOpenHeaderNotificationsFlyout === 'function') {
-          this.repositionOpenHeaderNotificationsFlyout();
-        }
+        this.repositionOpenNotificationsDropdown();
       };
       window.addEventListener('resize', repositionHeaderPopovers);
       window.addEventListener('scroll', repositionHeaderPopovers, true);
@@ -1037,6 +1140,11 @@ class Navigation {
     this.setupCollapsedTooltips();
     this.setupFlyoutCloseListeners();
     this.ensureSettingsModal();
+
+    if (!this._notificationsUpdatedAttached) {
+      this._notificationsUpdatedAttached = true;
+      document.addEventListener('notifications-updated', () => this.refreshNotificationsBadge());
+    }
   }
 
   /**
@@ -1052,6 +1160,9 @@ class Navigation {
     dropdownEl.style.top = `${top}px`;
     dropdownEl.style.right = `${right}px`;
     dropdownEl.style.left = 'auto';
+    if (dropdownEl.id === 'notificationsDropdown') {
+      dropdownEl.style.maxHeight = `${Math.max(200, window.innerHeight - top - MARGIN)}px`;
+    }
   }
 
 

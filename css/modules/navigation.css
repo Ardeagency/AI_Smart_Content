@@ -2099,6 +2099,93 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
 }
 
+/* Mismo patrón que #userDropdown: panel en document.body, visible solo con .active */
+#notificationsDropdown,
+#notificationsDropdown.user-dropdown,
+#notificationsDropdown.notifications-dropdown {
+    box-sizing: border-box;
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    width: min(320px, calc(100vw - 24px));
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 0;
+    color: var(--glass-black-text);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    z-index: 10050;
+    display: none;
+}
+
+#notificationsDropdown.active,
+#notificationsDropdown.user-dropdown.active,
+#notificationsDropdown.notifications-dropdown.active {
+    display: flex !important;
+}
+
+#notificationsDropdown.glass-black,
+#notificationsDropdown.user-dropdown.glass-black,
+#notificationsDropdown.notifications-dropdown.glass-black {
+    background: rgba(0, 0, 0, 0.34) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+.notifications-dropdown-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.notifications-dropdown-head {
+    flex-shrink: 0;
+}
+
+.notifications-dropdown-head-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--glass-black-text);
+}
+
+.notifications-dropdown-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Campana: contenedor para el punto de no leídas */
+.header-notifications-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-notifications-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-error, #ef4444);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.header-notifications-badge[hidden] {
+    display: none !important;
+}
+
 .user-dropdown-header {
     padding: 16px;
     border-bottom: 1px solid var(--glass-black-border);
