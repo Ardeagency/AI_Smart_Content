@@ -2329,10 +2329,162 @@ body.entrance-done .landing-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   VERA — Bloque tipográfico Space Grotesk (#landing-4, referencia guía)
+   ═══════════════════════════════════════════════════════════════ */
+.landing-vera-type {
+    --vera-type-fg: #ffffff;
+    --vera-type-muted: rgba(255, 255, 255, 0.55);
+    background: #000000;
+    color: var(--vera-type-fg);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    overflow: hidden;
+    padding: clamp(48px, 8vw, 88px) 0 clamp(28px, 5vw, 48px);
+}
+
+.landing-vera-type__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 4vw, 52px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 3.75rem);
+}
+
+.landing-vera-type__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 0.85fr);
+    gap: clamp(1rem, 3vw, 2rem);
+    align-items: start;
+}
+
+.landing-vera-type__charset {
+    margin: 0;
+    font-size: clamp(0.62rem, 1vw, 0.75rem);
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--vera-type-muted);
+    word-break: break-word;
+}
+
+.landing-vera-type__lede {
+    margin: 0;
+    font-size: clamp(0.95rem, 1.55vw, 1.15rem);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+}
+
+.landing-vera-type__weights {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: clamp(0.68rem, 1.05vw, 0.8rem);
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--vera-type-muted);
+    text-align: right;
+}
+
+.landing-vera-type__sample {
+    text-align: left;
+    max-width: 42rem;
+}
+
+.landing-vera-type__kicker {
+    margin: 0 0 0.65rem;
+    font-size: clamp(0.65rem, 1vw, 0.72rem);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vera-type-muted);
+}
+
+.landing-vera-type__title {
+    margin: 0 0 1rem;
+    font-size: clamp(1.5rem, 3.2vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+}
+
+.landing-vera-type__copy {
+    margin: 0;
+    font-size: clamp(0.85rem, 1.25vw, 0.98rem);
+    font-weight: 400;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.landing-vera-type__display {
+    position: relative;
+    margin-top: clamp(0.5rem, 2vw, 1.25rem);
+    min-height: clamp(160px, 22vw, 260px);
+}
+
+.landing-vera-type__mega-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: clamp(0.15rem, 1.2vw, 0.75rem);
+    line-height: 0.78;
+    user-select: none;
+}
+
+.landing-vera-type__mega {
+    font-weight: 700;
+    font-size: clamp(4.5rem, 22vw, 13.5rem);
+    letter-spacing: -0.04em;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    transform: translateY(clamp(0.15rem, 1.5vw, 0.6rem));
+}
+
+.landing-vera-type__mega--1 {
+    background-image: linear-gradient(165deg, #ffffff 0%, #ff4d2e 35%, #c91818 100%);
+}
+
+.landing-vera-type__mega--2 {
+    background-image: linear-gradient(175deg, #fff5e6 0%, #ffb347 45%, #ff6b35 100%);
+}
+
+.landing-vera-type__mega--3 {
+    background-image: linear-gradient(180deg, #e8ffc7 0%, #38ef7d 42%, #11998e 100%);
+}
+
+.landing-vera-type__mega--4 {
+    background-image: linear-gradient(195deg, #c084fc 0%, #6366f1 48%, #312e81 100%);
+}
+
+@media (max-width: 900px) {
+    .landing-vera-type__top {
+        grid-template-columns: 1fr;
+    }
+
+    .landing-vera-type__weights {
+        text-align: left;
+    }
+
+    .landing-vera-type__charset {
+        max-width: 36rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .landing-vera-type__mega-row {
+        flex-wrap: wrap;
+        row-gap: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    VERA MODULES — 4 tarjetas tipo "proveedor" (Framer-style)
    ═══════════════════════════════════════════════════════════════ */
 /* ─────────────────────────────────────────
-   VERA BENTO — grid 6 tarjetas tipo bento
+   VERA BENTO — grid 6 tarjetas tipo bento (#landing-5)
 ───────────────────────────────────────── */
 .vbento {
     background: #000000;

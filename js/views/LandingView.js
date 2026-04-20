@@ -148,7 +148,34 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="vbento" id="landing-4" aria-labelledby="vbento-heading">
+      <section class="landing-vera-type" id="landing-4" aria-labelledby="vera-type-heading">
+        <div class="landing-vera-type__inner">
+          <div class="landing-vera-type__top sr-reveal">
+            <p class="landing-vera-type__charset" aria-hidden="true">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz · 0123456789</p>
+            <p class="landing-vera-type__lede">Genera y ejecuta contenido con el ADN de tu marca, en el momento en que el mercado lo pide.</p>
+            <ul class="landing-vera-type__weights" aria-hidden="true">
+              <li>Space Grotesk Regular</li>
+              <li>Space Grotesk SemiBold</li>
+              <li>Space Grotesk Bold</li>
+            </ul>
+          </div>
+          <div class="landing-vera-type__sample sr-reveal">
+            <p class="landing-vera-type__kicker">Texto de muestra</p>
+            <h2 id="vera-type-heading" class="landing-vera-type__title">La inteligencia opera mientras tú priorizas.</h2>
+            <p class="landing-vera-type__copy">AISmartContent conecta señal, decisión y ejecución. Vera lee el contexto, reduce el ruido y traduce la operación en piezas listas para salir.</p>
+          </div>
+          <div class="landing-vera-type__display sr-reveal" aria-hidden="true">
+            <div class="landing-vera-type__mega-row">
+              <span class="landing-vera-type__mega landing-vera-type__mega--1">V</span>
+              <span class="landing-vera-type__mega landing-vera-type__mega--2">e</span>
+              <span class="landing-vera-type__mega landing-vera-type__mega--3">r</span>
+              <span class="landing-vera-type__mega landing-vera-type__mega--4">a</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="vbento" id="landing-5" aria-labelledby="vbento-heading">
         <div class="vbento__inner">
           <div class="vbento__header sr-reveal">
             <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51">
@@ -204,7 +231,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-statement" id="landing-5">
+      <section class="landing-statement" id="landing-6">
         <div class="landing-statement__inner">
           <h2 class="landing-statement__heading sr-reveal">
             No responde a prompts.<br>
@@ -221,7 +248,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-why" id="landing-6" aria-labelledby="landing-why-heading">
+      <section class="landing-why" id="landing-7" aria-labelledby="landing-why-heading">
         <div class="landing-why__inner">
           <h2 id="landing-why-heading" class="landing-why__title sr-reveal">Por qué AISmartContent cambia cómo opera tu marca.</h2>
         </div>
@@ -277,7 +304,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-different" id="landing-7" aria-labelledby="landing-different-heading">
+      <section class="landing-different" id="landing-8" aria-labelledby="landing-different-heading">
         <div class="landing-different__inner">
           <h2 id="landing-different-heading" class="landing-different__title sr-reveal">Lo que pasa cuando tu marca opera diferente</h2>
           <ul class="landing-different__list">
