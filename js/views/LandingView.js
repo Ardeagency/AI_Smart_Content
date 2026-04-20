@@ -182,7 +182,6 @@ class LandingView extends PublicBaseView {
       <section class="vbento" id="landing-5" aria-labelledby="vbento-heading">
         <div class="vbento__inner">
           <div class="vbento__header sr-reveal">
-            <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51">
             <h2 id="vbento-heading" class="vbento__title">Un sistema. Todo conectado.</h2>
             <p class="vbento__sub">Vera no es una herramienta. Es la inteligencia que conecta señal, decisión, ejecución y aprendizaje en un solo flujo.</p>
           </div>
