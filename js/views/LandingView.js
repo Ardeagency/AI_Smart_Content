@@ -2,311 +2,469 @@
  * LandingView - Landing pública (/).
  * Extiende PublicBaseView: reutiliza el shell persistente (header + footer)
  * y solo aporta su propio contenido inline. Sin templates.
+ *
+ * Secciones (Blueprint v2 — 4 zonas psicológicas):
+ *   Zona 1 — Captura:          S01 Hero, S02 Credibilidad
+ *   Zona 2 — Problema:         S03 Dolor estructural, S04 Agitación
+ *   Zona 3 — Solución:         S05 Capacidades, S06 VERA, S07 Dashboard
+ *   Zona 4 — Confianza+Acción: S08 Lo que pasa, S09 Social, S10 FAQ, S11 CTA
  */
 class LandingView extends PublicBaseView {
   constructor() {
     super();
     this.activePath = '/';
     this.pageClass = 'public-page--landing';
-    this.heroWordsRotatorCleanup = null;
-    this.lfwScrollCleanup = null;
-    this.whyCarouselCleanup = null;
+    this.heroRevealCleanup = null;
+    this.metricsCleanup = null;
+    this.faqCleanup = null;
+    this.ctaFormCleanup = null;
   }
 
   renderContent() {
     return `
-      <section class="landing-hero" id="landing-1" aria-label="Main Hero">
-        <div class="landing-hero__aurora" aria-hidden="true">
-          <span class="landing-hero__orb landing-hero__orb--1"></span>
-          <span class="landing-hero__orb landing-hero__orb--2"></span>
-          <span class="landing-hero__orb landing-hero__orb--3"></span>
-          <span class="landing-hero__orb landing-hero__orb--4"></span>
-          <span class="landing-hero__orb landing-hero__orb--5"></span>
+      <!-- ════════ S01: HERO ════════ -->
+      <section class="lp-hero" id="landing-1" aria-label="Hero principal">
+        <div class="lp-hero__bg" aria-hidden="true">
+          <span class="lp-hero__glow lp-hero__glow--1" aria-hidden="true"></span>
+          <span class="lp-hero__glow lp-hero__glow--2" aria-hidden="true"></span>
         </div>
-        <div class="landing-hero__bg-layer landing-hero__bg-layer--a" aria-hidden="true"></div>
-        <div class="landing-hero__bg-layer landing-hero__bg-layer--b" aria-hidden="true"></div>
-        <div class="landing-hero__bg-dim" aria-hidden="true"></div>
-
-        <div class="landing-hero__content">
-          <div class="landing-hero__lockup">
-            <div class="landing-hero__smart">
-              <img class="landing-hero__smart-img" src="/recursos/banners/smart.svg" alt="AI Smart Content" width="525" height="145" loading="eager" fetchpriority="high">
-            </div>
-            <div class="landing-hero__words" aria-hidden="true">
-              <div class="landing-hero__words-viewport">
-                <div class="landing-hero__words-track">
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/ads.svg" alt="" width="271" height="166" loading="eager" fetchpriority="high" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/brand.svg" alt="" width="443" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/day.svg" alt="" width="280" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/focus.svg" alt="" width="418" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/images.svg" alt="" width="552" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/sales.svg" alt="" width="382" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/speed.svg" alt="" width="467" height="166" loading="eager" decoding="async"></div>
-                  <div class="landing-hero__words-item"><img src="/recursos/banners/videos.svg" alt="" width="510" height="166" loading="eager" decoding="async"></div>
-                </div>
-              </div>
-            </div>
+        <div class="lp-hero__noise" aria-hidden="true"></div>
+        <div class="lp-hero__inner">
+          <div class="lp-hero__kicker" data-reveal>
+            <span class="lp-hero__kicker-dot" aria-hidden="true"></span>
+            <span>Inteligencia de contenido para marcas en América Latina</span>
           </div>
-        </div>
-      </section>
-
-      <section class="lfw" id="landing-2" aria-label="Flujos generativos">
-        <video class="lfw__bg-video" aria-hidden="true"
-          poster="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/winter%20scene-poster.png?updatedAt=1759895292054"
-          preload="metadata" autoplay loop muted playsinline
-          src="https://ik.imagekit.io/ff5bkg98p/framer-website-assets/Videos/vfx-bg.webm/ik-video.mp4"></video>
-        <div class="lfw__bg-overlay" aria-hidden="true"></div>
-        <div class="lfw__inner">
-          <div class="lfw__content-wrap">
-            <div class="lfw__left">
-              <div class="lfw__fill" aria-hidden="true"></div>
-              <ul class="lfw__list">
-                <li>Monitoreo</li>
-                <li>Inteligencia</li>
-                <li>ADN</li>
-                <li>Estrategia</li>
-                <li>Producción</li>
-              </ul>
-            </div>
-            <div class="lfw__slides">
-              <div class="lfw__slide lfw__slide--1" aria-hidden="true">
-                <div class="lfw__slide-frame">
-                  <div class="lfw__slide-caption">
-                    <h3 class="lfw__slide-title">Escucha activa del mercado</h3>
-                    <p class="lfw__slide-desc">Scraping en tiempo real de redes, reviews y competencia.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="lfw__slide lfw__slide--2" aria-hidden="true">
-                <div class="lfw__slide-frame">
-                  <div class="lfw__slide-caption">
-                    <h3 class="lfw__slide-title">Datos que se vuelven decisiones</h3>
-                    <p class="lfw__slide-desc">Insights de audiencia, competencia y tendencias accionables.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="lfw__slide lfw__slide--3" aria-hidden="true">
-                <div class="lfw__slide-frame">
-                  <div class="lfw__slide-caption">
-                    <h3 class="lfw__slide-title">Tu marca, como sistema operativo</h3>
-                    <p class="lfw__slide-desc">Identidad, tono y posicionamiento estructurados para operar.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="lfw__slide lfw__slide--4" aria-hidden="true">
-                <div class="lfw__slide-frame">
-                  <div class="lfw__slide-caption">
-                    <h3 class="lfw__slide-title">Campañas pensadas, no improvisadas</h3>
-                    <p class="lfw__slide-desc">Planes, calendarios y narrativas alineadas a tu objetivo.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="lfw__slide lfw__slide--5" aria-hidden="true">
-                <div class="lfw__slide-frame">
-                  <div class="lfw__slide-caption">
-                    <h3 class="lfw__slide-title">Contenido a escala enterprise</h3>
-                    <p class="lfw__slide-desc">Imagen, video y copy producidos sin perder consistencia.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-bento" id="landing-3" aria-labelledby="landing-bento-heading">
-        <div class="landing-bento__bg" aria-hidden="true"></div>
-        <div class="landing-bento__mesh" aria-hidden="true"></div>
-        <div class="landing-bento__shell">
-          <div class="landing-bento__main">
-            <header class="landing-bento__header sr-reveal">
-              <h2 id="landing-bento-heading" class="landing-bento__title">Todo lo que necesitas.<br>En un solo lugar.</h2>
-              <p class="landing-bento__subtitle">AISmartContent optimiza cada decisión, elimina fricción y ejecuta en el momento correcto.</p>
-            </header>
-          </div>
-          <div class="landing-bento__footer" role="group" aria-label="Capacidades del sistema">
-            <div class="landing-bento__footer-line" aria-hidden="true"></div>
-            <ul class="landing-bento__stat-row">
-              <li class="landing-bento__stat sr-reveal sr-reveal--d1">
-                <span class="landing-bento__stat-k">Señal</span>
-                <span class="landing-bento__stat-v">Mercado, competencia y contexto en lectura continua.</span>
-              </li>
-              <li class="landing-bento__stat sr-reveal sr-reveal--d2">
-                <span class="landing-bento__stat-k">Criterio</span>
-                <span class="landing-bento__stat-v">Datos, ADN de marca y timing en una sola capa de decisión.</span>
-              </li>
-              <li class="landing-bento__stat sr-reveal sr-reveal--d3">
-                <span class="landing-bento__stat-k">Ejecución</span>
-                <span class="landing-bento__stat-v">Contenido listo para canales, alineado a estrategia.</span>
-              </li>
-              <li class="landing-bento__stat sr-reveal sr-reveal--d4">
-                <span class="landing-bento__stat-k">Aprendizaje</span>
-                <span class="landing-bento__stat-v">Cada resultado informa la siguiente acción.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-vera-type" id="landing-4" aria-labelledby="vera-type-heading">
-        <div class="landing-vera-type__inner">
-          <div class="landing-vera-type__grid">
-            <div class="landing-vera-type__left sr-reveal">
-              <h2 id="vera-type-heading" class="landing-vera-type__title">Muévete antes</h2>
-              <div class="landing-vera-type__rule" aria-hidden="true"></div>
-              <p class="landing-vera-type__subtitle">Muévete antes</p>
-              <p class="landing-vera-type__desc">VERA como el centro de inteligencia de tu marca, operando 24/7. Analiza comportamiento real, movimientos de la competencia y señales del mercado en tiempo real. No reacciona a lo que ya pasó, se anticipa a lo que viene, permitiendo que tu marca actúe en el momento exacto.</p>
-              <a href="/contacto" class="landing-vera-type__cta">Muévete antes</a>
-            </div>
-            <div class="landing-vera-type__right sr-reveal">
-              <div class="landing-vera-type__toprow">
-                <div class="landing-vera-type__cell">
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                </div>
-                <div class="landing-vera-type__cell">
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                  <p class="landing-vera-type__cell-line">Muévete antes</p>
-                </div>
-              </div>
-              <div class="landing-vera-type__brand">
-                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="landing-vera-type__brand-img" width="360" height="138" decoding="async" loading="lazy">
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="vbento" id="landing-5" aria-labelledby="vbento-heading">
-        <div class="vbento__inner">
-          <div class="vbento__header sr-reveal">
-            <h2 id="vbento-heading" class="vbento__title">Un sistema. Todo conectado.</h2>
-            <p class="vbento__sub">Vera no es una herramienta. Es la inteligencia que conecta señal, decisión, ejecución y aprendizaje en un solo flujo.</p>
-          </div>
-          <div class="vbento__grid">
-            <article class="vbento__card vbento__card--hero sr-reveal sr-reveal--d1">
-              <div class="vbento__card-visual" aria-hidden="true">
-                <div class="vbento__orbit">
-                  <span class="vbento__orbit-dot vbento__orbit-dot--a"></span>
-                  <span class="vbento__orbit-dot vbento__orbit-dot--b"></span>
-                  <span class="vbento__orbit-dot vbento__orbit-dot--c"></span>
-                </div>
-                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__hero-logo">
-              </div>
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Un solo sistema</h3>
-                <p class="vbento__card-desc">Desde inteligencia hasta ejecución. Vera conecta cada parte del proceso sin fricción.</p>
-              </div>
-            </article>
-            <article class="vbento__card vbento__card--reading sr-reveal sr-reveal--d2">
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Lectura en tiempo real</h3>
-                <p class="vbento__card-desc">Monitorea tendencias, competencia y comportamiento del consumidor.</p>
-              </div>
-            </article>
-            <article class="vbento__card vbento__card--decision sr-reveal sr-reveal--d3">
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Decisiones con criterio</h3>
-                <p class="vbento__card-desc">Evalúa qué hacer, cuándo hacerlo y por qué. Prioriza impacto real sobre ruido.</p>
-              </div>
-            </article>
-            <article class="vbento__card vbento__card--content sr-reveal sr-reveal--d4">
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Contenido que construye marca</h3>
-                <p class="vbento__card-desc">Imágenes, copys, campañas y piezas alineadas al ADN.</p>
-              </div>
-            </article>
-            <article class="vbento__card vbento__card--connected sr-reveal sr-reveal--d5">
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Todo conectado</h3>
-                <p class="vbento__card-desc">Investigación, estrategia y ejecución trabajando como un solo sistema.</p>
-              </div>
-            </article>
-            <article class="vbento__card vbento__card--improve sr-reveal sr-reveal--d6">
-              <div class="vbento__card-body">
-                <h3 class="vbento__card-title">Mejora con cada resultado</h3>
-                <p class="vbento__card-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-statement" id="landing-6">
-        <div class="landing-statement__inner">
-          <h2 class="landing-statement__heading sr-reveal">
-            No responde a prompts.<br>
-            Opera con inteligencia, criterio y<br>
-            contexto en tiempo real.
-          </h2>
-          <p class="landing-statement__sub sr-reveal sr-reveal--d1">
-            Cada señal del mercado se transforma en una decisión, cada<br>
-            decisión en acción y cada acción en aprendizaje.
+          <h1 class="lp-hero__headline">
+            <span class="lp-hero__line" data-reveal>Tu marca,</span>
+            <span class="lp-hero__line lp-hero__line--accent" data-reveal>operando en</span>
+            <span class="lp-hero__line" data-reveal>tiempo real.</span>
+          </h1>
+          <p class="lp-hero__sub" data-reveal>
+            AISmartContent convierte señales del mercado en contenido estratégico.<br>
+            Inteligencia, criterio y ejecución en un solo sistema.
           </p>
-          <div class="landing-statement__cta sr-reveal sr-reveal--d2">
-            <a href="/contacto" class="landing-statement__btn">Contactar ventas ↗</a>
+          <div class="lp-hero__actions" data-reveal>
+            <a href="/contacto" class="lp-hero__cta lp-hero__cta--primary">Solicitar acceso anticipado</a>
+            <a href="#landing-6" class="lp-hero__cta lp-hero__cta--ghost">Ver cómo funciona</a>
+          </div>
+          <div class="lp-hero__proof" data-reveal aria-label="Prueba social rápida">
+            <span class="lp-hero__proof-item"><strong>+50</strong> organizaciones</span>
+            <span class="lp-hero__proof-div" aria-hidden="true">|</span>
+            <span class="lp-hero__proof-item"><strong>3×</strong> más rápido</span>
+            <span class="lp-hero__proof-div" aria-hidden="true">|</span>
+            <span class="lp-hero__proof-item"><strong>24/7</strong> operando</span>
+          </div>
+        </div>
+        <div class="lp-hero__scroll-hint" aria-hidden="true">
+          <span class="lp-hero__scroll-line"></span>
+        </div>
+      </section>
+
+      <!-- ════════ S02: CREDIBILIDAD INMEDIATA ════════ -->
+      <section class="lp-cred" id="landing-2" aria-label="Tecnologías integradas y credenciales">
+        <div class="lp-cred__inner">
+          <p class="lp-cred__label">Tecnologías que potencian el sistema</p>
+          <div class="lp-cred__track-wrap" aria-hidden="true">
+            <div class="lp-cred__track">
+              <span class="lp-cred__logo">OpenAI</span>
+              <span class="lp-cred__logo">Anthropic</span>
+              <span class="lp-cred__logo">Google Gemini</span>
+              <span class="lp-cred__logo">Meta AI</span>
+              <span class="lp-cred__logo">Stability AI</span>
+              <span class="lp-cred__logo">ElevenLabs</span>
+              <span class="lp-cred__logo">Runway</span>
+              <span class="lp-cred__logo">Supabase</span>
+              <span class="lp-cred__logo">Replicate</span>
+              <span class="lp-cred__logo">Perplexity</span>
+              <!-- duplicado para loop continuo -->
+              <span class="lp-cred__logo" aria-hidden="true">OpenAI</span>
+              <span class="lp-cred__logo" aria-hidden="true">Anthropic</span>
+              <span class="lp-cred__logo" aria-hidden="true">Google Gemini</span>
+              <span class="lp-cred__logo" aria-hidden="true">Meta AI</span>
+              <span class="lp-cred__logo" aria-hidden="true">Stability AI</span>
+              <span class="lp-cred__logo" aria-hidden="true">ElevenLabs</span>
+              <span class="lp-cred__logo" aria-hidden="true">Runway</span>
+              <span class="lp-cred__logo" aria-hidden="true">Supabase</span>
+              <span class="lp-cred__logo" aria-hidden="true">Replicate</span>
+              <span class="lp-cred__logo" aria-hidden="true">Perplexity</span>
+            </div>
+          </div>
+          <div class="lp-cred__badges" aria-label="Acreditaciones">
+            <div class="lp-cred__badge sr-reveal">
+              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
+              <span>Partner certificado LatamDigital</span>
+            </div>
+            <div class="lp-cred__badge sr-reveal sr-reveal--d1">
+              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
+              <span>Construido en ARDE Agency</span>
+            </div>
+            <div class="lp-cred__badge sr-reveal sr-reveal--d2">
+              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
+              <span>+50 organizaciones en LATAM</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="landing-why" id="landing-7" aria-labelledby="landing-why-heading">
-        <div class="landing-why__inner">
-          <h2 id="landing-why-heading" class="landing-why__title sr-reveal">Por qué AISmartContent cambia cómo opera tu marca.</h2>
+      <!-- ════════ S03: DOLOR ESTRUCTURAL — 5 PAIN CARDS ════════ -->
+      <section class="lp-pain" id="landing-3" aria-labelledby="lp-pain-heading">
+        <div class="lp-pain__header">
+          <p class="lp-pain__eyebrow sr-reveal">El problema real</p>
+          <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">¿Te suena familiar?</h2>
+          <p class="lp-pain__sub sr-reveal sr-reveal--d1">Las marcas no fallan por falta de creatividad.<br>Fallan por falta de sistema.</p>
         </div>
-        <div class="landing-why__viewport" id="landing-why-viewport" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Beneficios de AISmartContent">
-          <div class="landing-why__track">
-            <article class="landing-why__card-wrap">
-              <div class="landing-why__card">
-                <div class="landing-why__card-body">
-                  <h3 class="landing-why__card-title">Lectura en tiempo real</h3>
-                  <p class="landing-why__card-desc">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
-                </div>
-                <span class="landing-why__fab landing-why__fab--plus" aria-hidden="true"><span class="landing-why__fab-icon">+</span></span>
-              </div>
-            </article>
-            <article class="landing-why__card-wrap">
-              <div class="landing-why__card">
-                <div class="landing-why__card-body">
-                  <h3 class="landing-why__card-title">Decisiones con contexto</h3>
-                  <p class="landing-why__card-desc">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
-                </div>
-                <span class="landing-why__fab landing-why__fab--plus" aria-hidden="true"><span class="landing-why__fab-icon">+</span></span>
-              </div>
-            </article>
-            <article class="landing-why__card-wrap">
-              <div class="landing-why__card">
-                <div class="landing-why__card-body">
-                  <h3 class="landing-why__card-title">Ejecución alineada</h3>
-                  <p class="landing-why__card-desc">Convierte decisiones en contenido listo para salir, sin fricción.</p>
-                </div>
-                <span class="landing-why__fab landing-why__fab--arrow" aria-hidden="true"><span class="landing-why__fab-icon">&gt;</span></span>
-              </div>
-            </article>
-            <article class="landing-why__card-wrap">
-              <div class="landing-why__card">
-                <div class="landing-why__card-body">
-                  <h3 class="landing-why__card-title">Optimización continua</h3>
-                  <p class="landing-why__card-desc">Aprende de cada acción para mejorar la siguiente.</p>
-                </div>
-                <span class="landing-why__fab landing-why__fab--plus" aria-hidden="true"><span class="landing-why__fab-icon">+</span></span>
-              </div>
-            </article>
-          </div>
+        <div class="lp-pain__columns" role="list">
+          <article class="lp-pain__col" role="listitem" tabindex="0">
+            <div class="lp-pain__col-num" aria-hidden="true">01</div>
+            <div class="lp-pain__col-content">
+              <h3 class="lp-pain__col-title">Publican sin señal</h3>
+              <p class="lp-pain__col-body">Crean contenido basado en intuición, no en lo que el mercado está pidiendo en este momento.</p>
+            </div>
+            <div class="lp-pain__col-reveal" aria-hidden="true">
+              <p>Sin escucha activa, cada publicación es una apuesta. El 73% del contenido empresarial no genera engagement real.</p>
+            </div>
+          </article>
+          <article class="lp-pain__col" role="listitem" tabindex="0">
+            <div class="lp-pain__col-num" aria-hidden="true">02</div>
+            <div class="lp-pain__col-content">
+              <h3 class="lp-pain__col-title">Siempre reaccionando</h3>
+              <p class="lp-pain__col-body">Tu competencia mueve. Tu marca responde. Para cuando actúas, la ventana ya cerró.</p>
+            </div>
+            <div class="lp-pain__col-reveal" aria-hidden="true">
+              <p>Las marcas reactivas pierden el 40% de las oportunidades de timing. La velocidad es ventaja competitiva.</p>
+            </div>
+          </article>
+          <article class="lp-pain__col" role="listitem" tabindex="0">
+            <div class="lp-pain__col-num" aria-hidden="true">03</div>
+            <div class="lp-pain__col-content">
+              <h3 class="lp-pain__col-title">Equipos saturados</h3>
+              <p class="lp-pain__col-body">Más horas, mismo output. La producción manual tiene techo. El sistema nunca descansa.</p>
+            </div>
+            <div class="lp-pain__col-reveal" aria-hidden="true">
+              <p>Los equipos dedican el 60% de su tiempo a tareas repetitivas que un sistema inteligente hace en segundos.</p>
+            </div>
+          </article>
+          <article class="lp-pain__col" role="listitem" tabindex="0">
+            <div class="lp-pain__col-num" aria-hidden="true">04</div>
+            <div class="lp-pain__col-content">
+              <h3 class="lp-pain__col-title">IA sin contexto</h3>
+              <p class="lp-pain__col-body">Usas herramientas de IA que no conocen tu ADN. Responden prompts, no construyen marca.</p>
+            </div>
+            <div class="lp-pain__col-reveal" aria-hidden="true">
+              <p>La IA genérica produce contenido genérico. Sin identidad estructurada, cada pieza erosiona tu posicionamiento.</p>
+            </div>
+          </article>
+          <article class="lp-pain__col" role="listitem" tabindex="0">
+            <div class="lp-pain__col-num" aria-hidden="true">05</div>
+            <div class="lp-pain__col-content">
+              <h3 class="lp-pain__col-title">Cero aprendizaje</h3>
+              <p class="lp-pain__col-body">Cada campaña empieza de cero. No hay ventaja acumulada. No hay sistema que aprenda.</p>
+            </div>
+            <div class="lp-pain__col-reveal" aria-hidden="true">
+              <p>Sin memoria operativa, repites los mismos errores. La ventaja competitiva viene de un sistema que mejora.</p>
+            </div>
+          </article>
         </div>
-        <div class="landing-why__inner landing-why__inner--nav">
-          <div class="landing-why__nav" role="group" aria-label="Desplazar carrusel">
-            <button type="button" class="landing-why__nav-btn landing-why__nav-btn--prev" id="landing-why-prev" aria-controls="landing-why-viewport" aria-label="Anterior">
-              <span aria-hidden="true">&lt;</span>
-            </button>
-            <button type="button" class="landing-why__nav-btn landing-why__nav-btn--next" id="landing-why-next" aria-controls="landing-why-viewport" aria-label="Siguiente">
-              <span aria-hidden="true">&gt;</span>
-            </button>
+      </section>
+
+      <!-- ════════ S04: AGITACIÓN ════════ -->
+      <section class="lp-agit" id="landing-4" aria-label="El costo de no actuar">
+        <div class="lp-agit__inner">
+          <p class="lp-agit__eyebrow sr-reveal">El costo de no actuar</p>
+          <h2 class="lp-agit__headline sr-reveal">
+            Cada día sin sistema es un día que<br>
+            <em class="lp-agit__accent">tu competencia te saca ventaja.</em>
+          </h2>
+          <div class="lp-agit__ticker-wrap" aria-label="Consecuencias de operar sin sistema">
+            <div class="lp-agit__ticker" aria-hidden="true">
+              <span class="lp-agit__ticker-item">Oportunidades perdidas</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item">Decisiones tardías</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item">Equipos agotados</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item">Contenido irrelevante</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item">Marca difusa</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item">Presupuesto desperdiciado</span>
+              <span class="lp-agit__ticker-sep">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Oportunidades perdidas</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Decisiones tardías</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Equipos agotados</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Contenido irrelevante</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Marca difusa</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+              <span class="lp-agit__ticker-item" aria-hidden="true">Presupuesto desperdiciado</span>
+              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->
+      <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
+        <div class="lp-caps__inner">
+          <header class="lp-caps__header">
+            <p class="lp-caps__eyebrow sr-reveal">La solución</p>
+            <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">Las tres capacidades que cambian cómo opera tu marca</h2>
+            <p class="lp-caps__sub sr-reveal sr-reveal--d1">No son herramientas aisladas. Son un sistema integrado que aprende, decide y ejecuta.</p>
+          </header>
+          <div class="lp-caps__grid">
+            <div class="lp-caps__card sr-reveal sr-reveal--d1">
+              <div class="lp-caps__card-head">
+                <span class="lp-caps__card-num" aria-hidden="true">01</span>
+                <div class="lp-caps__card-icon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                    <circle cx="11" cy="11" r="3" fill="currentColor"/>
+                    <circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-dasharray="4 2.5"/>
+                  </svg>
+                </div>
+              </div>
+              <h3 class="lp-caps__card-title">Señal e inteligencia</h3>
+              <p class="lp-caps__card-desc">Monitoreo continuo de mercado, competencia y tendencias. Datos que se convierten en insights accionables antes de que sean evidentes.</p>
+              <div class="lp-caps__ba">
+                <div class="lp-caps__ba-item lp-caps__ba-item--before">
+                  <span class="lp-caps__ba-tag">Antes</span>
+                  <span class="lp-caps__ba-text">Intuición y suposiciones</span>
+                </div>
+                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
+                <div class="lp-caps__ba-item lp-caps__ba-item--after">
+                  <span class="lp-caps__ba-tag">Con VERA</span>
+                  <span class="lp-caps__ba-text">Señal en tiempo real</span>
+                </div>
+              </div>
+            </div>
+            <div class="lp-caps__card sr-reveal sr-reveal--d2">
+              <div class="lp-caps__card-head">
+                <span class="lp-caps__card-num" aria-hidden="true">02</span>
+                <div class="lp-caps__card-icon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                    <path d="M11 2L13.6 7.4L19.7 8.3L15.4 12.5L16.4 18.6L11 15.8L5.6 18.6L6.6 12.5L2.3 8.3L8.4 7.4L11 2Z" stroke="currentColor" stroke-width="1.4" fill="none"/>
+                  </svg>
+                </div>
+              </div>
+              <h3 class="lp-caps__card-title">Criterio y estrategia</h3>
+              <p class="lp-caps__card-desc">Cruza datos, ADN de marca y contexto para decidir qué hacer, cuándo y cómo. Sin reuniones interminables ni hojas de cálculo.</p>
+              <div class="lp-caps__ba">
+                <div class="lp-caps__ba-item lp-caps__ba-item--before">
+                  <span class="lp-caps__ba-tag">Antes</span>
+                  <span class="lp-caps__ba-text">Decisiones lentas e imprecisas</span>
+                </div>
+                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
+                <div class="lp-caps__ba-item lp-caps__ba-item--after">
+                  <span class="lp-caps__ba-tag">Con VERA</span>
+                  <span class="lp-caps__ba-text">Criterio estructurado</span>
+                </div>
+              </div>
+            </div>
+            <div class="lp-caps__card sr-reveal sr-reveal--d3">
+              <div class="lp-caps__card-head">
+                <span class="lp-caps__card-num" aria-hidden="true">03</span>
+                <div class="lp-caps__card-icon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                    <rect x="2" y="7" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+                    <path d="M15 7V5.5a4 4 0 00-8 0V7" stroke="currentColor" stroke-width="1.4"/>
+                  </svg>
+                </div>
+              </div>
+              <h3 class="lp-caps__card-title">Ejecución y producción</h3>
+              <p class="lp-caps__card-desc">Contenido listo para canales, alineado a estrategia y ADN. Imagen, video y copy a escala enterprise sin perder consistencia.</p>
+              <div class="lp-caps__ba">
+                <div class="lp-caps__ba-item lp-caps__ba-item--before">
+                  <span class="lp-caps__ba-tag">Antes</span>
+                  <span class="lp-caps__ba-text">Producción manual y lenta</span>
+                </div>
+                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
+                <div class="lp-caps__ba-item lp-caps__ba-item--after">
+                  <span class="lp-caps__ba-tag">Con VERA</span>
+                  <span class="lp-caps__ba-text">Escala sin fricción</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S06: VERA — EL MECANISMO ════════ -->
+      <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
+        <div class="lp-vera__inner">
+          <div class="lp-vera__top">
+            <div class="lp-vera__text-col">
+              <p class="lp-vera__eyebrow sr-reveal">El motor</p>
+              <h2 id="lp-vera-heading" class="lp-vera__title sr-reveal">VERA — La inteligencia que nunca para</h2>
+              <p class="lp-vera__sub sr-reveal sr-reveal--d1">No responde a prompts. Opera con inteligencia, criterio y contexto de marca en tiempo real.</p>
+              <p class="lp-vera__statement sr-reveal sr-reveal--d2">Cada señal del mercado se transforma en una decisión, cada decisión en acción y cada acción en aprendizaje.</p>
+              <a href="/contacto" class="lp-vera__cta sr-reveal sr-reveal--d3">Ver VERA en acción ↗</a>
+            </div>
+            <div class="lp-vera__diagram-col" aria-hidden="true">
+              <div class="lp-vera__diagram">
+                <div class="lp-vera__core">
+                  <img src="/recursos/vera/Vera-2.svg" alt="" class="lp-vera__core-logo" width="60" height="23" decoding="async" loading="lazy">
+                </div>
+                <div class="lp-vera__ring lp-vera__ring--1"></div>
+                <div class="lp-vera__ring lp-vera__ring--2"></div>
+                <div class="lp-vera__chip lp-vera__chip--1">Monitoreo</div>
+                <div class="lp-vera__chip lp-vera__chip--2">Inteligencia</div>
+                <div class="lp-vera__chip lp-vera__chip--3">ADN</div>
+                <div class="lp-vera__chip lp-vera__chip--4">Estrategia</div>
+                <div class="lp-vera__chip lp-vera__chip--5">Producción</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-vera__layers" role="list" aria-label="Las 6 capas de VERA">
+            <div class="lp-vera__layer sr-reveal sr-reveal--d1" role="listitem">
+              <span class="lp-vera__layer-num" aria-hidden="true">01</span>
+              <div>
+                <h3 class="lp-vera__layer-title">Monitoreo continuo</h3>
+                <p class="lp-vera__layer-desc">Scraping en tiempo real de redes, reviews y competencia.</p>
+              </div>
+            </div>
+            <div class="lp-vera__layer sr-reveal sr-reveal--d2" role="listitem">
+              <span class="lp-vera__layer-num" aria-hidden="true">02</span>
+              <div>
+                <h3 class="lp-vera__layer-title">Inteligencia de mercado</h3>
+                <p class="lp-vera__layer-desc">Insights de audiencia y tendencias convertidos en decisiones.</p>
+              </div>
+            </div>
+            <div class="lp-vera__layer sr-reveal sr-reveal--d3" role="listitem">
+              <span class="lp-vera__layer-num" aria-hidden="true">03</span>
+              <div>
+                <h3 class="lp-vera__layer-title">ADN de marca</h3>
+                <p class="lp-vera__layer-desc">Identidad, tono y posicionamiento estructurados para operar.</p>
+              </div>
+            </div>
+            <div class="lp-vera__layer sr-reveal sr-reveal--d4" role="listitem">
+              <span class="lp-vera__layer-num" aria-hidden="true">04</span>
+              <div>
+                <h3 class="lp-vera__layer-title">Estrategia táctica</h3>
+                <p class="lp-vera__layer-desc">Planes, calendarios y narrativas alineadas al objetivo.</p>
+              </div>
+            </div>
+            <div class="lp-vera__layer sr-reveal sr-reveal--d5" role="listitem">
+              <span class="lp-vera__layer-num" aria-hidden="true">05</span>
+              <div>
+                <h3 class="lp-vera__layer-title">Producción a escala</h3>
+                <p class="lp-vera__layer-desc">Imagen, video y copy producidos sin perder consistencia.</p>
+              </div>
+            </div>
+            <div class="lp-vera__layer sr-reveal" role="listitem" style="transition-delay:0.55s">
+              <span class="lp-vera__layer-num" aria-hidden="true">06</span>
+              <div>
+                <h3 class="lp-vera__layer-title">Aprendizaje continuo</h3>
+                <p class="lp-vera__layer-desc">Cada acción informa la siguiente. Ventaja acumulada.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S07: LIVING DASHBOARD ════════ -->
+      <section class="lp-dash" id="landing-7" aria-labelledby="lp-dash-heading">
+        <div class="lp-dash__inner">
+          <header class="lp-dash__header">
+            <p class="lp-dash__eyebrow sr-reveal">El sistema en acción</p>
+            <h2 id="lp-dash-heading" class="lp-dash__title sr-reveal">Un dashboard que piensa mientras tu equipo ejecuta</h2>
+            <p class="lp-dash__sub sr-reveal sr-reveal--d1">Señales, decisiones y contenido en tiempo real. Todo en un solo lugar.</p>
+          </header>
+          <div class="lp-dash__screen-wrap" aria-label="Vista previa del dashboard de AISmartContent">
+            <div class="lp-dash__screen">
+              <div class="lp-dash__chrome" aria-hidden="true">
+                <span class="lp-dash__dot"></span>
+                <span class="lp-dash__dot"></span>
+                <span class="lp-dash__dot"></span>
+                <span class="lp-dash__url">app.aismartcontent.com / dashboard</span>
+              </div>
+              <div class="lp-dash__body">
+                <aside class="lp-dash__sidebar">
+                  <div class="lp-dash__nav-item lp-dash__nav-item--active"></div>
+                  <div class="lp-dash__nav-item"></div>
+                  <div class="lp-dash__nav-item"></div>
+                  <div class="lp-dash__nav-item"></div>
+                  <div class="lp-dash__nav-item"></div>
+                </aside>
+                <main class="lp-dash__main">
+                  <div class="lp-dash__topbar">
+                    <div class="lp-dash__topbar-left">
+                      <div class="lp-dash__mock-line lp-dash__mock-line--h"></div>
+                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                    </div>
+                    <div class="lp-dash__live-badge">● Live</div>
+                  </div>
+                  <div class="lp-dash__metrics-row">
+                    <div class="lp-dash__metric-tile">
+                      <div class="lp-dash__metric-val">3×</div>
+                      <div class="lp-dash__metric-lbl">Velocidad producción</div>
+                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:72%"></div></div>
+                    </div>
+                    <div class="lp-dash__metric-tile">
+                      <div class="lp-dash__metric-val">68%</div>
+                      <div class="lp-dash__metric-lbl">Reducción decisión</div>
+                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:68%"></div></div>
+                    </div>
+                    <div class="lp-dash__metric-tile">
+                      <div class="lp-dash__metric-val">+50</div>
+                      <div class="lp-dash__metric-lbl">Organizaciones</div>
+                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:85%"></div></div>
+                    </div>
+                  </div>
+                  <div class="lp-dash__cards-row">
+                    <div class="lp-dash__mini-card">
+                      <div class="lp-dash__mini-icon"></div>
+                      <div class="lp-dash__mock-line"></div>
+                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                    </div>
+                    <div class="lp-dash__mini-card">
+                      <div class="lp-dash__mini-icon"></div>
+                      <div class="lp-dash__mock-line"></div>
+                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                    </div>
+                    <div class="lp-dash__mini-card">
+                      <div class="lp-dash__mini-icon"></div>
+                      <div class="lp-dash__mock-line"></div>
+                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                    </div>
+                    <div class="lp-dash__mini-card">
+                      <div class="lp-dash__mini-icon"></div>
+                      <div class="lp-dash__mock-line"></div>
+                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                    </div>
+                  </div>
+                </main>
+              </div>
+            </div>
+          </div>
+          <div class="lp-dash__feats">
+            <div class="lp-dash__feat sr-reveal sr-reveal--d1">
+              <span class="lp-dash__feat-dot" aria-hidden="true"></span>
+              <div>
+                <strong class="lp-dash__feat-title">Señales en tiempo real</strong>
+                <p class="lp-dash__feat-desc">Mercado, competencia y audiencia actualizados continuamente.</p>
+              </div>
+            </div>
+            <div class="lp-dash__feat sr-reveal sr-reveal--d2">
+              <span class="lp-dash__feat-dot" aria-hidden="true"></span>
+              <div>
+                <strong class="lp-dash__feat-title">Pipeline de contenido</strong>
+                <p class="lp-dash__feat-desc">Desde la idea hasta la publicación, todo en un solo flujo.</p>
+              </div>
+            </div>
+            <div class="lp-dash__feat sr-reveal sr-reveal--d3">
+              <span class="lp-dash__feat-dot" aria-hidden="true"></span>
+              <div>
+                <strong class="lp-dash__feat-title">Performance analytics</strong>
+                <p class="lp-dash__feat-desc">Resultados que alimentan la estrategia siguiente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S08: LO QUE PASA CUANDO… (conservado) ════════ -->
       <section class="landing-different" id="landing-8" aria-labelledby="landing-different-heading">
         <div class="landing-different__inner">
           <h2 id="landing-different-heading" class="landing-different__title sr-reveal">Lo que pasa cuando tu marca opera diferente</h2>
@@ -349,29 +507,188 @@ class LandingView extends PublicBaseView {
           </ul>
         </div>
       </section>
+
+      <!-- ════════ S09: PRUEBA SOCIAL + MÉTRICAS ════════ -->
+      <section class="lp-social" id="landing-9" aria-labelledby="lp-social-heading">
+        <div class="lp-social__inner">
+          <p class="lp-social__eyebrow sr-reveal">Resultados reales</p>
+          <h2 id="lp-social-heading" class="lp-social__title sr-reveal">Marcas que ya operan con inteligencia</h2>
+          <div class="lp-social__metrics">
+            <div class="lp-social__metric sr-reveal sr-reveal--d1" data-count="3" data-suffix="×">
+              <div class="lp-social__metric-val"><span class="lp-social__count">3</span><span>×</span></div>
+              <p class="lp-social__metric-lbl">Más rápido en producción de contenido</p>
+            </div>
+            <div class="lp-social__metric sr-reveal sr-reveal--d2" data-count="68" data-suffix="%">
+              <div class="lp-social__metric-val"><span class="lp-social__count">68</span><span>%</span></div>
+              <p class="lp-social__metric-lbl">Reducción en tiempo de decisión estratégica</p>
+            </div>
+            <div class="lp-social__metric sr-reveal sr-reveal--d3" data-count="50" data-suffix="+">
+              <div class="lp-social__metric-val"><span>+</span><span class="lp-social__count">50</span></div>
+              <p class="lp-social__metric-lbl">Organizaciones en América Latina</p>
+            </div>
+            <div class="lp-social__metric sr-reveal sr-reveal--d4">
+              <div class="lp-social__metric-val">24<span class="lp-social__sep">/</span>7</div>
+              <p class="lp-social__metric-lbl">El sistema opera sin parar</p>
+            </div>
+          </div>
+          <div class="lp-social__quotes">
+            <blockquote class="lp-social__quote sr-reveal sr-reveal--d1">
+              <p>"Pasamos de publicar por intuición a operar con sistema. La diferencia es brutal."</p>
+              <footer>
+                <cite class="lp-social__cite">
+                  <span class="lp-social__cite-name">Directora de Marketing</span>
+                  <span class="lp-social__cite-co">Empresa retail, LATAM</span>
+                </cite>
+              </footer>
+            </blockquote>
+            <blockquote class="lp-social__quote sr-reveal sr-reveal--d2">
+              <p>"VERA detectó una tendencia tres días antes de que la viera nuestra competencia. Actuamos primero."</p>
+              <footer>
+                <cite class="lp-social__cite">
+                  <span class="lp-social__cite-name">CEO</span>
+                  <span class="lp-social__cite-co">Startup B2B SaaS</span>
+                </cite>
+              </footer>
+            </blockquote>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S10: FAQ ════════ -->
+      <section class="lp-faq" id="landing-10" aria-labelledby="lp-faq-heading">
+        <div class="lp-faq__inner">
+          <header class="lp-faq__header">
+            <p class="lp-faq__eyebrow sr-reveal">Preguntas frecuentes</p>
+            <h2 id="lp-faq-heading" class="lp-faq__title sr-reveal">Lo que necesitas saber antes de empezar</h2>
+          </header>
+          <div class="lp-faq__list">
+            <div class="lp-faq__item">
+              <button class="lp-faq__q" aria-expanded="false" type="button">
+                <span>¿AISmartContent reemplaza a mi equipo de contenido?</span>
+                <span class="lp-faq__icon" aria-hidden="true">+</span>
+              </button>
+              <div class="lp-faq__a" hidden>
+                <p>No. AISmartContent potencia a tu equipo. Elimina tareas repetitivas y de bajo valor para que tu equipo pueda enfocarse en decisiones estratégicas y creatividad de alto impacto. Es un multiplicador, no un sustituto.</p>
+              </div>
+            </div>
+            <div class="lp-faq__item">
+              <button class="lp-faq__q" aria-expanded="false" type="button">
+                <span>¿Cuánto tiempo tarda la implementación?</span>
+                <span class="lp-faq__icon" aria-hidden="true">+</span>
+              </button>
+              <div class="lp-faq__a" hidden>
+                <p>El onboarding básico toma 72 horas. Estructuramos el ADN de tu marca, conectamos las fuentes de datos y configuramos los flujos de trabajo. En la primera semana ya ves el sistema operando.</p>
+              </div>
+            </div>
+            <div class="lp-faq__item">
+              <button class="lp-faq__q" aria-expanded="false" type="button">
+                <span>¿El contenido que produce respeta la identidad de mi marca?</span>
+                <span class="lp-faq__icon" aria-hidden="true">+</span>
+              </button>
+              <div class="lp-faq__a" hidden>
+                <p>Sí. VERA trabaja a partir del ADN de tu marca: tono, valores, estilo visual, posicionamiento y audiencia objetivo. Todo el contenido producido pasa por esa capa antes de salir. No es IA genérica; es IA entrenada para tu marca específica.</p>
+              </div>
+            </div>
+            <div class="lp-faq__item">
+              <button class="lp-faq__q" aria-expanded="false" type="button">
+                <span>¿Funciona para cualquier industria?</span>
+                <span class="lp-faq__icon" aria-hidden="true">+</span>
+              </button>
+              <div class="lp-faq__a" hidden>
+                <p>Principalmente para marcas B2C y B2B con necesidad de contenido estratégico constante. Hemos trabajado con retail, salud, tecnología, finanzas y educación. Si tu marca tiene presencia digital activa, el sistema agrega valor inmediato.</p>
+              </div>
+            </div>
+            <div class="lp-faq__item">
+              <button class="lp-faq__q" aria-expanded="false" type="button">
+                <span>¿Cuál es el costo?</span>
+                <span class="lp-faq__icon" aria-hidden="true">+</span>
+              </button>
+              <div class="lp-faq__a" hidden>
+                <p>Los planes se definen según el tamaño del equipo, el volumen de contenido y las integraciones requeridas. Actualmente tenemos acceso anticipado con condiciones especiales para las primeras organizaciones. Solicita una conversación y te presentamos la propuesta.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S11: CTA FINAL ════════ -->
+      <section class="lp-cta" id="landing-11" aria-labelledby="lp-cta-heading">
+        <div class="lp-cta__bg" aria-hidden="true">
+          <span class="lp-cta__glow" aria-hidden="true"></span>
+        </div>
+        <div class="lp-cta__ticker-wrap" aria-hidden="true">
+          <div class="lp-cta__ticker">
+            <span>Empieza a operar diferente</span>
+            <span class="lp-cta__ticker-sep">·</span>
+            <span>Empieza a operar diferente</span>
+            <span class="lp-cta__ticker-sep">·</span>
+            <span>Empieza a operar diferente</span>
+            <span class="lp-cta__ticker-sep">·</span>
+            <span aria-hidden="true">Empieza a operar diferente</span>
+            <span class="lp-cta__ticker-sep" aria-hidden="true">·</span>
+            <span aria-hidden="true">Empieza a operar diferente</span>
+            <span class="lp-cta__ticker-sep" aria-hidden="true">·</span>
+          </div>
+        </div>
+        <div class="lp-cta__inner">
+          <p class="lp-cta__eyebrow sr-reveal">Acceso anticipado</p>
+          <h2 id="lp-cta-heading" class="lp-cta__title sr-reveal">Tu marca, operando con inteligencia real.</h2>
+          <p class="lp-cta__sub sr-reveal sr-reveal--d1">Únete a las organizaciones que ya operan con VERA.<br>Plazas limitadas para el acceso anticipado.</p>
+          <form class="lp-cta__form sr-reveal sr-reveal--d2" novalidate aria-label="Formulario de acceso anticipado">
+            <div class="lp-cta__fields">
+              <div class="lp-cta__field">
+                <label class="lp-cta__label" for="cta-name">Nombre</label>
+                <input class="lp-cta__input" type="text" id="cta-name" name="name" placeholder="Tu nombre" autocomplete="given-name" required>
+              </div>
+              <div class="lp-cta__field">
+                <label class="lp-cta__label" for="cta-company">Empresa</label>
+                <input class="lp-cta__input" type="text" id="cta-company" name="company" placeholder="Nombre de tu empresa" autocomplete="organization" required>
+              </div>
+              <div class="lp-cta__field">
+                <label class="lp-cta__label" for="cta-role">Rol</label>
+                <input class="lp-cta__input" type="text" id="cta-role" name="role" placeholder="Tu rol en la empresa" autocomplete="organization-title">
+              </div>
+              <div class="lp-cta__field">
+                <label class="lp-cta__label" for="cta-email">Email</label>
+                <input class="lp-cta__input" type="email" id="cta-email" name="email" placeholder="tu@empresa.com" autocomplete="email" required>
+              </div>
+            </div>
+            <button class="lp-cta__submit" type="submit">
+              <span class="lp-cta__submit-text">Quiero acceso anticipado</span>
+              <span class="lp-cta__submit-arrow" aria-hidden="true">↗</span>
+            </button>
+            <p class="lp-cta__success" hidden aria-live="polite">Listo. Te contactamos pronto.</p>
+          </form>
+        </div>
+      </section>
     `;
   }
 
   async init() {
     await super.init();
-    this.initHeroWordsRotator();
-    this.initLfwScrollAnimation();
-    this.initWhyCarousel();
+    this.initHeroReveal();
+    this.initMetricsCounter();
+    this.initFaqAccordion();
+    this.initCtaForm();
   }
 
   async onLeave() {
     await super.onLeave();
-    if (typeof this.heroWordsRotatorCleanup === 'function') {
-      this.heroWordsRotatorCleanup();
-      this.heroWordsRotatorCleanup = null;
+    if (typeof this.heroRevealCleanup === 'function') {
+      this.heroRevealCleanup();
+      this.heroRevealCleanup = null;
     }
-    if (typeof this.lfwScrollCleanup === 'function') {
-      this.lfwScrollCleanup();
-      this.lfwScrollCleanup = null;
+    if (typeof this.metricsCleanup === 'function') {
+      this.metricsCleanup();
+      this.metricsCleanup = null;
     }
-    if (typeof this.whyCarouselCleanup === 'function') {
-      this.whyCarouselCleanup();
-      this.whyCarouselCleanup = null;
+    if (typeof this.faqCleanup === 'function') {
+      this.faqCleanup();
+      this.faqCleanup = null;
+    }
+    if (typeof this.ctaFormCleanup === 'function') {
+      this.ctaFormCleanup();
+      this.ctaFormCleanup = null;
     }
   }
 
@@ -380,367 +697,152 @@ class LandingView extends PublicBaseView {
     super.destroy();
   }
 
-  initHeroWordsRotator() {
-    if (typeof this.heroWordsRotatorCleanup === 'function') {
-      this.heroWordsRotatorCleanup();
-      this.heroWordsRotatorCleanup = null;
+  initHeroReveal() {
+    if (typeof this.heroRevealCleanup === 'function') {
+      this.heroRevealCleanup();
+      this.heroRevealCleanup = null;
     }
 
-    const track = this.container.querySelector('.landing-hero__words-track');
-    const layerA = this.container.querySelector('.landing-hero__bg-layer--a');
-    const layerB = this.container.querySelector('.landing-hero__bg-layer--b');
-    if (!track || !layerA || !layerB) return;
+    const hero = this.container.querySelector('.lp-hero');
+    if (!hero) return;
 
-    const realItems = Array.from(track.querySelectorAll('.landing-hero__words-item'));
-    if (realItems.length < 2) return;
+    const reveals = Array.from(hero.querySelectorAll('[data-reveal]'));
+    if (!reveals.length) return;
 
-    const N = realItems.length;
-    // Cloudinary transforms: w_auto,dpr_auto limita el ancho al del viewport y a la densidad
-    // del dispositivo. q_auto/f_auto deja a Cloudinary elegir formato (avif/webp) y calidad
-    // óptimos por navegador. Resultado: ~60–80% menos bytes que la versión original.
-    const CLD_PARAMS = 'q_auto,f_auto,c_limit,w_1920,dpr_auto';
-    const heroBackgrounds = [
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/Recurso_28Imagen-cloud-wonder_2-2x_copia_zgwsbb.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102754/Recurso_36Imagen-cloud-wonder_2-2x_copia_bqshyg.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102750/Recurso_38Imagen-cloud-wonder_2-2x_copia_ixttbb.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg`,
-      `https://res.cloudinary.com/dmruwjuxn/image/upload/${CLD_PARAMS}/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg`
-    ];
-
-    const getBgUrl = (i) => heroBackgrounds[((i % heroBackgrounds.length) + heroBackgrounds.length) % heroBackgrounds.length];
-
-    let activeLayer = layerA;
-    let inactiveLayer = layerB;
-    const FADE_MS = 900;
-
-    const preStageNext = (next) => {
-      inactiveLayer.style.backgroundImage = `url("${getBgUrl(next)}")`;
-    };
-
-    const crossfadeTo = (i) => {
-      const url = getBgUrl(i);
-      inactiveLayer.style.backgroundImage = `url("${url}")`;
-      inactiveLayer.style.zIndex = '1';
-      activeLayer.style.zIndex = '0';
-      inactiveLayer.classList.remove('is-active-bg');
-
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        inactiveLayer.style.opacity = '1';
-        inactiveLayer.classList.add('is-active-bg');
-        setTimeout(() => {
-          activeLayer.style.opacity = '0';
-          activeLayer.classList.remove('is-active-bg');
-          [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
-          setTimeout(() => preStageNext(i + 1), 100);
-        }, FADE_MS);
-      }));
-    };
-
-    [realItems[N - 1], realItems[N - 2]].forEach(item => {
-      track.insertBefore(item.cloneNode(true), track.firstChild);
+    reveals.forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.11}s`;
     });
-    for (let i = 0; i < 3; i++) track.appendChild(realItems[i].cloneNode(true));
 
-    let realIdx = 0;
-    let busy = false;
-    let wrapResetTimer = null;
-    const ROTATE = 5000;
-    const WORD_TR = 650;
-
-    const getRowH = () => realItems[0].offsetHeight || 80;
-    const setPos = (idx, animate) => {
-      const h = getRowH();
-      track.style.transition = animate ? `transform ${WORD_TR}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none';
-      track.style.transform = `translateY(${-(idx * h)}px)`;
-      if (!animate) void track.offsetHeight;
-    };
-
-    if (!layerA.style.backgroundImage) layerA.style.backgroundImage = `url("${getBgUrl(0)}")`;
-    layerA.style.opacity = '1';
-    layerA.style.zIndex = '1';
-    layerA.classList.add('is-active-bg');
-    layerB.style.opacity = '0';
-    layerB.style.zIndex = '0';
-    setPos(0, false);
-    setTimeout(() => preStageNext(1), 300);
-
-    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.heroWordsRotatorCleanup = () => {};
-      return;
-    }
-
-    // Rotador: solo avanza si la pestaña está visible (ahorra CPU/batería en background tabs
-    // y evita que el crossfade dispare fetch de imágenes cuando nadie las está viendo).
-    const tick = () => {
-      if (busy || document.hidden) return;
-      busy = true;
-      realIdx++;
-      setPos(realIdx, true);
-      crossfadeTo(realIdx);
-      if (realIdx >= N) {
-        if (wrapResetTimer) clearTimeout(wrapResetTimer);
-        wrapResetTimer = setTimeout(() => {
-          realIdx = 0;
-          setPos(0, false);
-          busy = false;
-          wrapResetTimer = null;
-        }, WORD_TR + 50);
-        return;
-      }
-      busy = false;
-    };
-    const timer = setInterval(tick, ROTATE);
-
-    this.heroWordsRotatorCleanup = () => {
-      clearInterval(timer);
-      if (wrapResetTimer) clearTimeout(wrapResetTimer);
-      [layerA, layerB].forEach(l => {
-        l.classList.remove('is-active-bg');
-        l.style.zIndex = '';
-      });
-    };
-  }
-
-  initLfwScrollAnimation() {
-    if (typeof this.lfwScrollCleanup === 'function') {
-      this.lfwScrollCleanup();
-      this.lfwScrollCleanup = null;
-    }
-
-    const section = this.container.querySelector('#landing-2');
-    if (!section) return;
-
-    const listEl = section.querySelector('.lfw__list');
-    const fill = section.querySelector('.lfw__fill');
-    const listItems = listEl ? Array.from(listEl.querySelectorAll('li')) : [];
-    const slides = Array.from(section.querySelectorAll('.lfw__slide'));
-    if (!listItems.length || !slides.length) return;
-
-    const count = listItems.length;
-    // Colores de cada categoría activa (en sync con .lfw__slide--N del CSS).
-    const ITEM_COLORS = [
-      '#ff0000', // Monitoreo
-      '#ff6500', // Inteligencia
-      '#ffe500', // ADN
-      '#00d614', // Estrategia
-      '#5b00ea', // Producción
-    ];
-    const INACTIVE_COLOR = 'rgba(212,209,216,0.15)';
-
-    const shell = document.getElementById('public-shell');
-    const scrollEl = () => (shell && shell.scrollHeight > shell.clientHeight + 2) ? shell : window;
-    const getY = () => {
-      const el = scrollEl();
-      return el === window ? (window.scrollY || document.documentElement.scrollTop || 0) : el.scrollTop;
-    };
-    const setY = (y) => {
-      const el = scrollEl();
-      if (el === window) window.scrollTo({ top: y, left: 0, behavior: 'auto' });
-      else el.scrollTop = y;
-    };
-    const smoothBy = (dy) => {
-      const el = scrollEl();
-      (el === window ? window : el).scrollBy({ top: dy, behavior: 'smooth' });
-    };
-
-    const lockYFromSection = () => getY() + section.getBoundingClientRect().top;
-
-    let locked = false, lockY = 0, idx = 0, wheelAccum = 0;
-    let touchStartY = null, suppressLock = false, suppressTimer = null, lastAdvance = 0;
-
-    const WHEEL_THRESHOLD = 120, ENTER_ZONE = 60, COOLDOWN = 420, CAP = 60;
-    const leftCol = section.querySelector('.lfw__left');
-
-    // Todos los items quedan visibles en una lista stacked (layout CSS).
-    // JS solo marca cuál es el activo → se ilumina en blanco via .is-active.
-    const positionCarousel = (active /*, animate */) => {
-      listItems.forEach((item, j) => {
-        item.classList.toggle('is-active', j === active);
-      });
-    };
-
-    const activate = (i) => {
-      const safe = Math.max(0, Math.min(count - 1, i));
-      positionCarousel(safe, true);
-      slides.forEach((s, j) => {
-        const on = j === safe;
-        s.style.opacity = on ? '1' : '0';
-        s.style.visibility = on ? 'visible' : 'hidden';
-      });
-      if (fill) fill.style.transform = `scaleY(${(safe + 1) / count})`;
-    };
-
-    positionCarousel(0, false);
+    // Trigger after layout paint so transition takes effect
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      listItems.forEach(item => { item.style.transition = ''; });
+      hero.classList.add('is-ready');
     }));
 
-    const scheduleClear = () => {
-      if (suppressTimer) clearTimeout(suppressTimer);
-      suppressTimer = setTimeout(() => { suppressLock = false; suppressTimer = null; }, 1100);
-    };
-
-    const enterLock = (fromBottom) => {
-      lockY = lockYFromSection();
-      setY(lockY);
-      locked = true;
-      wheelAccum = 0;
-      idx = fromBottom ? count - 1 : 0;
-      activate(idx);
-    };
-
-    const exitDown = () => {
-      locked = false;
-      suppressLock = true;
-      wheelAccum = 0;
-      smoothBy(Math.round(window.innerHeight * 0.65));
-      scheduleClear();
-    };
-    const exitUp = () => {
-      locked = false;
-      suppressLock = true;
-      wheelAccum = 0;
-      smoothBy(-Math.round(window.innerHeight * 0.65));
-      scheduleClear();
-    };
-
-    const advance = (fwd) => {
-      wheelAccum = 0;
-      const now = Date.now();
-      if (now - lastAdvance < COOLDOWN) return;
-      lastAdvance = now;
-      if (fwd) {
-        if (idx < count - 1) { idx++; activate(idx); }
-        else exitDown();
-      } else {
-        if (idx > 0) { idx--; activate(idx); }
-        else exitUp();
-      }
-    };
-
-    const tryEnter = (dy, prevent) => {
-      if (suppressLock) return false;
-      const dist = section.getBoundingClientRect().top;
-      if (dy > 0 && dist <= ENTER_ZONE && dist > -ENTER_ZONE * 1.5) { prevent(); enterLock(false); return true; }
-      if (dy < 0 && Math.abs(dist) <= ENTER_ZONE) { prevent(); enterLock(true); return true; }
-      return false;
-    };
-
-    const normWheel = (e) => {
-      let dy = e.deltaY;
-      if (e.deltaMode === 1) dy *= 16;
-      if (e.deltaMode === 2) dy *= window.innerHeight;
-      const sign = dy >= 0 ? 1 : -1;
-      return sign * Math.min(Math.abs(dy), CAP);
-    };
-
-    const onWheel = (e) => {
-      if (locked) {
-        e.preventDefault();
-        wheelAccum += normWheel(e);
-        if (wheelAccum >= WHEEL_THRESHOLD) advance(true);
-        else if (wheelAccum <= -WHEEL_THRESHOLD) advance(false);
-        return;
-      }
-      tryEnter(normWheel(e), () => e.preventDefault());
-    };
-    const onTs = (e) => {
-      if (!e.touches?.[0]) return;
-      touchStartY = e.touches[0].clientY;
-      if (locked) wheelAccum = 0;
-    };
-    const onTm = (e) => {
-      if (touchStartY == null || !e.touches?.[0]) return;
-      const dy = touchStartY - e.touches[0].clientY;
-      if (Math.abs(dy) < 5) return;
-      touchStartY = e.touches[0].clientY;
-      if (locked) {
-        e.preventDefault();
-        wheelAccum += dy * 1.4;
-        if (wheelAccum >= WHEEL_THRESHOLD) advance(true);
-        else if (wheelAccum <= -WHEEL_THRESHOLD) advance(false);
-        return;
-      }
-      tryEnter(dy, () => e.preventDefault());
-    };
-    const onTe = () => { touchStartY = null; if (!locked) wheelAccum = 0; };
-    const onResize = () => {
-      if (locked) { lockY = lockYFromSection(); setY(lockY); }
-      positionCarousel(idx, false);
-    };
-
-    activate(0);
-
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('touchstart', onTs, { passive: true });
-    window.addEventListener('touchmove', onTm, { passive: false });
-    window.addEventListener('touchend', onTe, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
-
-    this.lfwScrollCleanup = () => {
-      window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTs);
-      window.removeEventListener('touchmove', onTm);
-      window.removeEventListener('touchend', onTe);
-      window.removeEventListener('resize', onResize);
-      if (suppressTimer) clearTimeout(suppressTimer);
-      listItems.forEach(item => { item.style.color = ''; });
-      slides.forEach(s => { s.style.opacity = ''; s.style.visibility = ''; });
-      if (fill) fill.style.transform = '';
+    this.heroRevealCleanup = () => {
+      hero.classList.remove('is-ready');
+      reveals.forEach(el => { el.style.transitionDelay = ''; });
     };
   }
 
-  initWhyCarousel() {
-    if (typeof this.whyCarouselCleanup === 'function') {
-      this.whyCarouselCleanup();
-      this.whyCarouselCleanup = null;
+  initMetricsCounter() {
+    if (typeof this.metricsCleanup === 'function') {
+      this.metricsCleanup();
+      this.metricsCleanup = null;
     }
 
-    const viewport = this.container.querySelector('#landing-why-viewport');
-    const prevBtn = this.container.querySelector('#landing-why-prev');
-    const nextBtn = this.container.querySelector('#landing-why-next');
-    const track = viewport?.querySelector('.landing-why__track');
-    const wraps = viewport ? viewport.querySelectorAll('.landing-why__card-wrap') : [];
-    if (!viewport || !prevBtn || !nextBtn || !track || wraps.length === 0) return;
+    const metrics = this.container.querySelectorAll('.lp-social__metric[data-count]');
+    if (!metrics.length) return;
 
-    const getStep = () => {
-      const first = wraps[0];
-      const gap = Number.parseFloat(getComputedStyle(track).gap || getComputedStyle(track).columnGap || '0') || 0;
-      return first.offsetWidth + gap;
-    };
-    const EDGE = 3;
-    const updateBtns = () => {
-      const max = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-      const x = viewport.scrollLeft;
-      prevBtn.disabled = x <= EDGE;
-      nextBtn.disabled = x >= max - EDGE;
-    };
-    const go = (dir) => viewport.scrollBy({ left: dir * getStep(), behavior: 'smooth' });
-    const onPrev = () => go(-1);
-    const onNext = () => go(1);
-    const onKey = (e) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); onPrev(); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); onNext(); }
+    const animate = (el) => {
+      const target = parseInt(el.dataset.count, 10);
+      if (isNaN(target)) return;
+      const countEl = el.querySelector('.lp-social__count');
+      if (!countEl) return;
+
+      const duration = 1400;
+      const start = performance.now();
+      const tick = (now) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        countEl.textContent = Math.round(eased * target);
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     };
 
-    prevBtn.addEventListener('click', onPrev);
-    nextBtn.addEventListener('click', onNext);
-    viewport.addEventListener('scroll', updateBtns, { passive: true });
-    viewport.addEventListener('keydown', onKey);
-    window.addEventListener('resize', updateBtns, { passive: true });
-    updateBtns();
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animate(entry.target);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
 
-    this.whyCarouselCleanup = () => {
-      prevBtn.removeEventListener('click', onPrev);
-      nextBtn.removeEventListener('click', onNext);
-      viewport.removeEventListener('scroll', updateBtns);
-      viewport.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', updateBtns);
+    metrics.forEach(m => obs.observe(m));
+
+    this.metricsCleanup = () => obs.disconnect();
+  }
+
+  initFaqAccordion() {
+    if (typeof this.faqCleanup === 'function') {
+      this.faqCleanup();
+      this.faqCleanup = null;
+    }
+
+    const buttons = this.container.querySelectorAll('.lp-faq__q');
+    if (!buttons.length) return;
+
+    const handlers = [];
+
+    const toggle = (btn) => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      const answer = btn.nextElementSibling;
+      const item = btn.closest('.lp-faq__item');
+
+      // Close all
+      buttons.forEach(b => {
+        b.setAttribute('aria-expanded', 'false');
+        b.closest('.lp-faq__item')?.classList.remove('is-open');
+        const a = b.nextElementSibling;
+        if (a) a.hidden = true;
+      });
+
+      // Open if was closed
+      if (!isOpen && answer) {
+        btn.setAttribute('aria-expanded', 'true');
+        answer.hidden = false;
+        item?.classList.add('is-open');
+      }
     };
+
+    buttons.forEach(btn => {
+      const handler = () => toggle(btn);
+      btn.addEventListener('click', handler);
+      handlers.push({ btn, handler });
+    });
+
+    this.faqCleanup = () => {
+      handlers.forEach(({ btn, handler }) => btn.removeEventListener('click', handler));
+    };
+  }
+
+  initCtaForm() {
+    if (typeof this.ctaFormCleanup === 'function') {
+      this.ctaFormCleanup();
+      this.ctaFormCleanup = null;
+    }
+
+    const form = this.container.querySelector('.lp-cta__form');
+    if (!form) return;
+
+    const onSubmit = async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('.lp-cta__submit');
+      const successMsg = form.querySelector('.lp-cta__success');
+      if (!btn) return;
+
+      btn.disabled = true;
+      const textEl = btn.querySelector('.lp-cta__submit-text');
+      if (textEl) textEl.textContent = 'Enviando…';
+
+      try {
+        // Placeholder: here goes Supabase/API call
+        await new Promise(r => setTimeout(r, 800));
+
+        const fields = form.querySelector('.lp-cta__fields');
+        if (fields) fields.style.display = 'none';
+        btn.style.display = 'none';
+        if (successMsg) successMsg.hidden = false;
+      } catch {
+        btn.disabled = false;
+        if (textEl) textEl.textContent = 'Quiero acceso anticipado';
+      }
+    };
+
+    form.addEventListener('submit', onSubmit);
+    this.ctaFormCleanup = () => form.removeEventListener('submit', onSubmit);
   }
 }
 

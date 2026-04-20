@@ -1,14 +1,19 @@
 /**
  * DashboardView – Panel de inteligencia de marca (organización).
- * Tab "Mi Marca": 15 visualizaciones en modo demostración (datos simulados).
+ * Tab "Mi Marca": datos reales desde Supabase + APIs externas.
+ * Spec: dashboard_mi_marca_spec.docx — ARDE Agency S.A.S.
  */
 class DashboardView extends BaseView {
 
   constructor() {
     super();
-    this._activeTab = 'my-brands';
-    this._charts = [];
+    this._activeTab  = 'my-brands';
+    this._charts     = [];
     this._chartJsReady = false;
+    this._supabase   = null;
+    this._orgId      = null;
+    this._mbData     = null;   // Cache de datos de la sesión
+    this._mbService  = null;   // Instancia de MiBrandaDataService
   }
 
   async onEnter() {
@@ -19,6 +24,21 @@ class DashboardView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
+    // Resolver Supabase + orgId una sola vez
+    await this._initDataLayer();
+  }
+
+  async _initDataLayer() {
+    try {
+      if (window.supabaseService) this._supabase = await window.supabaseService.getClient();
+      else if (window.supabase)  this._supabase = window.supabase;
+    } catch (_) {}
+
+    this._orgId =
+      this.routeParams?.orgIdShort ||
+      window.appState?.get('selectedOrganizationId') ||
+      localStorage.getItem('selectedOrganizationId') ||
+      null;
   }
 
   onLeave() {
@@ -95,19 +115,60 @@ class DashboardView extends BaseView {
     }
   }
 
-  /* ─────────────────────────────────────────────────────────
-     MI MARCA — layout principal
-  ───────────────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════
+     MI MARCA — datos reales desde Supabase
+  ═══════════════════════════════════════════════════════════ */
   async _renderMyBrands(body) {
-    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando visualizaciones…</div>`;
+    // 1. Skeleton inmediato
+    body.innerHTML = this._buildMyBrandsSkeleton();
 
-    try {
-      await this._ensureChartJs();
-    } catch (_) {}
+    // 2. Cargar dependencias en paralelo
+    const [,] = await Promise.allSettled([
+      this._ensureChartJs(),
+      this._ensureMBService(),
+    ]);
 
-    body.innerHTML = this._buildMyBrandsHTML();
-    this._initAllCharts();
+    // 3. Cargar datos (usa cache de sesión si ya se cargaron)
+    if (!this._mbData) {
+      this._mbData = this._mbService
+        ? await this._mbService.loadAll()
+        : null;
+    }
+    const d = this._mbData;
+
+    // 4. Render completo con datos reales
+    body.innerHTML = this._buildMyBrandsHTML(d);
+    this._initAllCharts(d);
     this._animateKPIs();
+  }
+
+  async _ensureMBService() {
+    if (this._mbService) return;
+    if (!window.MiBrandaDataService) {
+      try {
+        await this.loadScript('/js/services/MiBrandaDataService.js', 'MiBrandaDataService', 6000);
+      } catch (_) { return; }
+    }
+    if (!this._supabase || !this._orgId) return;
+    try {
+      this._mbService = await new window.MiBrandaDataService().init(this._supabase, this._orgId);
+    } catch (e) {
+      console.warn('[DashboardView] MiBrandaDataService init error:', e);
+    }
+  }
+
+  _buildMyBrandsSkeleton() {
+    const skel = n => Array(n).fill('<div class="mb-skel-block"></div>').join('');
+    return `
+    <div class="mb-dashboard mb-dashboard--loading">
+      <div class="mb-brand-header mb-skel-panel">${skel(4)}</div>
+      <div class="mb-kpi-strip">${Array(6).fill(`<div class="mb-kpi-card"><div class="mb-skel-block" style="height:64px;width:100%"></div></div>`).join('')}</div>
+      <div class="mb-skel-panel">${skel(3)}</div>
+      <div class="mb-dim-row">
+        <div class="mb-widget mb-widget--wide" style="min-height:200px">${skel(3)}</div>
+        <div class="mb-widget" style="min-height:200px">${skel(2)}</div>
+      </div>
+    </div>`;
   }
 
   async _ensureChartJs() {
@@ -119,7 +180,23 @@ class DashboardView extends BaseView {
     this._chartJsReady = true;
   }
 
-  _buildMyBrandsHTML() {
+  _buildMyBrandsHTML(d) {
+    const noData = !d;
+    const containers  = d?.containers || [];
+    const kpis        = d?.kpis?.data || {};
+    const hasAnyData  = containers.length > 0;
+
+    // KPI values — real o placeholder
+    const posts7d     = kpis.posts7d      != null ? kpis.posts7d      : '—';
+    const sentScore   = kpis.sentimentScore != null ? kpis.sentimentScore : '—';
+    const mapComp     = kpis.mapCompliance != null ? `${kpis.mapCompliance}%` : '—';
+    const crisisIdx   = kpis.crisisOpen   != null ? kpis.crisisOpen   : '—';
+    const mentions24h = kpis.mentions24h  != null ? kpis.mentions24h  : '—';
+    const brandCount  = kpis.brandCount   != null ? kpis.brandCount   : containers.length;
+
+    // Brand score: computed from real data if available
+    const brandScore  = sentScore !== '—' ? Math.min(100, Math.round(sentScore * 0.6 + (crisisIdx === 0 ? 40 : 20))) : 0;
+
     return `
     <div class="mb-dashboard">
 
@@ -151,12 +228,12 @@ class DashboardView extends BaseView {
 
       <!-- ── KPI Strip ── -->
       <div class="mb-kpi-strip">
-        ${this._kpiCard('fa-pen-nib',     'Publicaciones/sem', '24',   '+12% vs anterior',  'blue')}
-        ${this._kpiCard('fa-heart',       'Engagement Rate',   '4.8%', '+0.6 pts',          'pink')}
-        ${this._kpiCard('fa-face-smile',  'Sentiment Score',   '78',   '↑ Positivo',        'green')}
-        ${this._kpiCard('fa-tag',         'Cumplimiento MAP',  '91%',  '3 alertas activas', 'orange')}
-        ${this._kpiCard('fa-triangle-exclamation', 'Índice Crisis', '0.4', 'Bajo riesgo',   'teal')}
-        ${this._kpiCard('fa-users',       'Menciones totales', '1.2K', 'Últimas 24 h',      'purple')}
+        ${this._kpiCard('fa-pen-nib',     'Posts propios / 7d', String(posts7d),   hasAnyData ? 'Últimos 7 días' : 'Sin datos aún',  'blue')}
+        ${this._kpiCard('fa-heart',       'Engagement Rate',    '—',               'API Meta necesaria',                             'pink')}
+        ${this._kpiCard('fa-face-smile',  'Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA', 'green')}
+        ${this._kpiCard('fa-tag',         'Cumplimiento MAP',   mapComp,           mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados', 'orange')}
+        ${this._kpiCard('fa-triangle-exclamation', 'Crisis abiertas', String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención', 'teal')}
+        ${this._kpiCard('fa-users',       'Menciones 24 h',     String(mentions24h), hasAnyData ? 'Shadow + etiquetadas' : 'Sin señales aún', 'purple')}
       </div>
 
       <!-- ══════════════════════════════════════════════════════
@@ -530,204 +607,284 @@ class DashboardView extends BaseView {
   }
 
   /* ─────────────────────────────────────────────────────────
-     CHART.JS — inicialización de todos los gráficos
+     CHART.JS — inicialización con datos reales + fallback demo
   ───────────────────────────────────────────────────────── */
-  _initAllCharts() {
+  _initAllCharts(d) {
     if (!window.Chart) { return; }
     Chart.defaults.color = 'rgba(212,209,216,0.7)';
     Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
     Chart.defaults.font.size = 11;
 
-    this._chartPublicacion();
-    this._chartFormatos();
-    this._chartPilares();
-    this._chartOfertas();
-    this._chartSentimiento();
-    this._chartShadow();
-    this._chartRadar();
-    this._chartFuga();
-    this._buildHeatmap();
-    this._buildSemanticCloud();
-    this._animateScoreRing(78);
+    const kpis = d?.kpis?.data || {};
+    const brandScore = kpis.sentimentScore != null
+      ? Math.min(100, Math.round(kpis.sentimentScore * 0.6 + (kpis.crisisOpen === 0 ? 40 : 20)))
+      : 0;
+
+    this._chartPublicacion(d?.ritmo);
+    this._chartFormatos(d?.formatos);
+    this._chartPilares(d?.pilares);
+    this._chartOfertas(d?.ofertas);
+    this._chartSentimiento(d?.sentimiento);
+    this._chartShadow(d?.shadowMentions);
+    this._chartRadar(d?.blindSpots);
+    this._chartFuga(d?.fuga);
+    this._buildHeatmap(d?.heatmap);
+    this._buildSemanticCloud(d?.semantica);
+    this._buildMBMissions(d?.missions, d?.crisis);
+    this._renderMAPWidget(d?.mapMonitor);
+    this._renderStockWidget(d?.stock);
+    this._renderInfluenceWidget(d?.influencia);
+    this._renderCrisisWidget(d?.crisis);
+    this._renderSWOTWidget(d?.swot);
+    this._animateScoreRing(brandScore);
   }
 
   _reg(chart) { this._charts.push(chart); return chart; }
 
-  _chartPublicacion() {
+  _chartPublicacion(ritmoRes) {
     const ctx = document.getElementById('chartPublicacion');
     if (!ctx) return;
-    const labels = Array.from({length:30},(_,i)=>{const d=new Date(); d.setDate(d.getDate()-29+i); return `${d.getDate()}/${d.getMonth()+1}`;});
-    const posts  = [2,3,1,4,2,0,3,5,2,3,1,4,3,2,5,4,3,2,4,3,1,5,4,3,2,4,5,3,4,2];
-    const lat    = [2.4,1.8,3.1,1.2,2.9,0,1.5,0.8,2.2,1.9,3.4,1.1,1.7,2.6,0.9,1.3,1.8,2.1,1.0,1.6,2.8,0.7,1.2,1.9,2.3,1.1,0.8,1.5,1.0,1.7];
+    const hasReal = ritmoRes && !ritmoRes.isEmpty && Array.isArray(ritmoRes.data) && ritmoRes.data.length > 0;
+    let labels, posts;
+    if (hasReal) {
+      labels = ritmoRes.data.map(r => r.label);
+      posts  = ritmoRes.data.map(r => r.count);
+    } else {
+      labels = Array.from({length:30},(_,i)=>{const d=new Date(); d.setDate(d.getDate()-29+i); return `${d.getDate()}/${d.getMonth()+1}`;});
+      posts  = Array(30).fill(0); // No hay datos — barras en cero
+    }
     this._reg(new Chart(ctx, {
       data: {
         labels,
         datasets: [
-          { type:'bar',  label:'Posts',             data:posts, backgroundColor:'rgba(96,165,250,0.3)', borderColor:'rgba(96,165,250,0.8)', borderWidth:1, yAxisID:'y' },
-          { type:'line', label:'Latencia (horas)',  data:lat,   borderColor:'#f59e0b', borderWidth:2, pointRadius:2, tension:0.4, yAxisID:'y2', fill:false },
+          { type:'bar', label:'Posts propios', data:posts, backgroundColor:'rgba(96,165,250,0.45)', borderColor:'rgba(96,165,250,0.8)', borderWidth:1, yAxisID:'y',
+            ...(hasReal ? {} : { backgroundColor: 'rgba(255,255,255,0.07)' }) },
         ],
       },
       options: {
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'top', labels:{boxWidth:12, padding:16} }, tooltip:{mode:'index',intersect:false} },
+        plugins:{
+          legend:{ position:'top', labels:{boxWidth:12, padding:16} },
+          tooltip:{mode:'index',intersect:false},
+          ...(hasReal ? {} : { annotation: {} }),
+        },
         scales:{
-          y:  { position:'left',  grid:{color:'rgba(255,255,255,0.06)'}, ticks:{stepSize:1} },
-          y2: { position:'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Latencia (h)'} },
-          x:  { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{maxTicksLimit:10} },
+          y:{ position:'left', grid:{color:'rgba(255,255,255,0.06)'}, ticks:{stepSize:1}, beginAtZero:true },
+          x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{maxTicksLimit:10} },
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Conecta redes sociales para ver el ritmo de publicación');
   }
 
-  _chartFormatos() {
+  _chartFormatos(formatosRes) {
     const ctx = document.getElementById('chartFormatos');
     if (!ctx) return;
+    const hasReal = formatosRes && !formatosRes.isEmpty && Array.isArray(formatosRes.data) && formatosRes.data.length > 0;
+    const COLORS = ['rgba(239,68,68,0.8)','rgba(96,165,250,0.8)','rgba(34,197,94,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(20,184,166,0.8)'];
+    const labels = hasReal ? formatosRes.data.map(r => r.label) : ['Sin datos'];
+    const values = hasReal ? formatosRes.data.map(r => r.pct)   : [100];
+    const colors = hasReal ? COLORS.slice(0, labels.length) : ['rgba(255,255,255,0.07)'];
     this._reg(new Chart(ctx, {
       type:'doughnut',
-      data:{
-        labels:['Reel / Video corto','Carrusel','Imagen estática','Story','Post de texto'],
-        datasets:[{
-          data:[38,28,18,11,5],
-          backgroundColor:['rgba(239,68,68,0.8)','rgba(96,165,250,0.8)','rgba(34,197,94,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)'],
-          borderColor:'rgba(0,0,0,0)',
-          borderWidth:0, hoverOffset:6,
-        }],
-      },
+      data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'rgba(0,0,0,0)', borderWidth:0, hoverOffset:6 }] },
       options:{
         responsive:true, maintainAspectRatio:false, cutout:'62%',
         plugins:{
           legend:{position:'bottom', labels:{boxWidth:10, padding:10}},
-          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}%`}},
+          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}${hasReal ? '%' : ''}`}},
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Sin posts cargados aún');
   }
 
-  _chartPilares() {
+  _chartPilares(pilaresRes) {
     const ctx = document.getElementById('chartPilares');
     if (!ctx) return;
+    const hasReal = pilaresRes && !pilaresRes.isEmpty && Array.isArray(pilaresRes.data) && pilaresRes.data.length > 0;
+    const rows    = hasReal ? pilaresRes.data.slice(0, 8) : [];
+    const labels  = hasReal ? rows.map(r => r.pillar_name) : ['Sin pilares configurados'];
+    const counts  = hasReal ? rows.map(r => r.post_count || 0) : [0];
+    const eng     = hasReal ? rows.map(r => Math.round((r.avg_engagement || 0) * 10) / 10) : [0];
     this._reg(new Chart(ctx, {
       type:'bar',
       data:{
-        labels:['Innovación de producto','Lifestyle / Inspiración','Soporte y garantía','Sustentabilidad','Comunidad','Promociones'],
+        labels,
         datasets:[
-          { label:'Publicado (%)', data:[32,25,16,12,8,7], backgroundColor:'rgba(96,165,250,0.7)', borderRadius:4 },
-          { label:'Ideal (%)',     data:[30,30,12,15,8,5],  backgroundColor:'rgba(167,139,250,0.4)', borderRadius:4 },
+          { label:'Posts', data:counts, backgroundColor:'rgba(96,165,250,0.7)', borderRadius:4, yAxisID:'y' },
+          { label:'Eng. promedio', data:eng, backgroundColor:'rgba(167,139,250,0.5)', borderRadius:4, yAxisID:'y2' },
         ],
       },
       options:{
         indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'top', labels:{boxWidth:10, padding:14} }, tooltip:{mode:'index',intersect:false} },
         scales:{
-          x:{ max:40, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{callback:v=>`${v}%`} },
-          y:{ grid:{display:false} },
+          y:  { grid:{display:false} },
+          ...(hasReal ? {
+            y:  { grid:{display:false} },
+            yAxisID: {},
+          } : {}),
+          x:  { grid:{color:'rgba(255,255,255,0.06)'} },
+          y2: { position:'right', grid:{drawOnChartArea:false}, display: hasReal },
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Configura pilares narrativos en tu brand container');
   }
 
-  _chartOfertas() {
+  _chartOfertas(ofertasRes) {
     const ctx = document.getElementById('chartOfertas');
     if (!ctx) return;
+    const hasReal = ofertasRes && !ofertasRes.isEmpty && Array.isArray(ofertasRes.data) && ofertasRes.data.length > 0;
+    let labels, datasets;
+    if (hasReal) {
+      // Agrupar por retailer / promo_label
+      const byPromo = {};
+      const retailers = [...new Set(ofertasRes.data.map(r => r.retailer))].slice(0, 6);
+      ofertasRes.data.forEach(r => {
+        const lbl = r.promo_label || 'Promo';
+        if (!byPromo[lbl]) byPromo[lbl] = {};
+        byPromo[lbl][r.retailer] = (byPromo[lbl][r.retailer] || 0) + 1;
+      });
+      labels = retailers;
+      const COLORS = ['rgba(34,197,94,0.7)','rgba(96,165,250,0.7)','rgba(251,191,36,0.7)','rgba(239,68,68,0.6)'];
+      datasets = Object.entries(byPromo).slice(0, 4).map(([promo, byR], i) => ({
+        label: promo, data: retailers.map(r => byR[r] || 0),
+        backgroundColor: COLORS[i % COLORS.length], borderRadius: 4,
+      }));
+    } else {
+      labels = ['Sin datos de retailer'];
+      datasets = [{ label: 'Sin datos', data: [0], backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 4 }];
+    }
     this._reg(new Chart(ctx, {
       type:'bar',
-      data:{
-        labels:['Amazon MX','Mercado Libre','Walmart MX','Coppel','Liverpool'],
-        datasets:[
-          { label:'2x1',         data:[4.2,3.8,3.1,5.0,2.9], backgroundColor:'rgba(34,197,94,0.7)',  borderRadius:4 },
-          { label:'20% dcto',    data:[5.1,4.9,4.5,4.1,4.8], backgroundColor:'rgba(96,165,250,0.7)', borderRadius:4 },
-          { label:'Envío gratis',data:[3.5,4.2,5.2,3.8,4.6], backgroundColor:'rgba(251,191,36,0.7)', borderRadius:4 },
-        ],
-      },
+      data:{ labels, datasets },
       options:{
         responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'top', labels:{boxWidth:10} }, tooltip:{mode:'index', intersect:false} },
         scales:{
-          y:{ title:{display:true, text:'Conversión (%)'}, grid:{color:'rgba(255,255,255,0.06)'}, max:7 },
+          y:{ title:{display:true, text: hasReal ? 'Usos de promo' : ''}, grid:{color:'rgba(255,255,255,0.06)'} },
           x:{ grid:{display:false} },
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Carga precios y promociones en retail_prices para activar este widget');
   }
 
-  _chartSentimiento() {
+  _chartSentimiento(sentRes) {
     const ctx = document.getElementById('chartSentimiento');
     if (!ctx) return;
+    const hasReal = sentRes && !sentRes.isEmpty && sentRes.data?.emotions && Object.keys(sentRes.data.emotions).length > 0;
+    const EMOTION_COLORS = {
+      alegria:'rgba(34,197,94,0.85)', alegría:'rgba(34,197,94,0.85)', joy:'rgba(34,197,94,0.85)',
+      confianza:'rgba(96,165,250,0.85)', trust:'rgba(96,165,250,0.85)',
+      sorpresa:'rgba(251,191,36,0.85)', surprise:'rgba(251,191,36,0.85)',
+      confusion:'rgba(167,139,250,0.85)', confusión:'rgba(167,139,250,0.85)',
+      decepcion:'rgba(156,163,175,0.85)', sadness:'rgba(156,163,175,0.85)',
+      ironia:'rgba(249,115,22,0.85)', ironía:'rgba(249,115,22,0.85)',
+      enojo:'rgba(239,68,68,0.85)', anger:'rgba(239,68,68,0.85)',
+    };
+    let labels, values, colors;
+    if (hasReal) {
+      const entries = Object.entries(sentRes.data.emotions).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const total = entries.reduce((s,[,v])=>s+v, 0);
+      labels = entries.map(([e]) => e.charAt(0).toUpperCase() + e.slice(1));
+      values = entries.map(([,v]) => total > 0 ? Math.round(v/total*100) : 0);
+      colors = entries.map(([e]) => EMOTION_COLORS[e.toLowerCase()] || 'rgba(156,163,175,0.7)');
+    } else {
+      labels = ['Sin análisis de sentimiento']; values = [100]; colors = ['rgba(255,255,255,0.07)'];
+    }
     this._reg(new Chart(ctx, {
       type:'doughnut',
-      data:{
-        labels:['Alegría','Confianza','Sorpresa','Confusión','Decepción','Ironía','Enojo'],
-        datasets:[{
-          data:[38,22,14,10,7,5,4],
-          backgroundColor:[
-            'rgba(34,197,94,0.85)','rgba(96,165,250,0.85)','rgba(251,191,36,0.85)',
-            'rgba(167,139,250,0.85)','rgba(156,163,175,0.85)','rgba(249,115,22,0.85)','rgba(239,68,68,0.85)',
-          ],
-          borderColor:'rgba(0,0,0,0)', hoverOffset:6,
-        }],
-      },
+      data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'rgba(0,0,0,0)', hoverOffset:6 }] },
       options:{
         responsive:true, maintainAspectRatio:false, cutout:'55%',
         plugins:{
           legend:{ position:'bottom', labels:{boxWidth:9, padding:8} },
-          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}%`}},
+          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}${hasReal?'%':''}`}},
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'VERA analizará sentimiento cuando haya posts cargados');
   }
 
-  _chartShadow() {
+  _chartShadow(shadowRes) {
     const ctx = document.getElementById('chartShadow');
     if (!ctx) return;
+    const hasReal = shadowRes && !shadowRes.isEmpty && Array.isArray(shadowRes.data) && shadowRes.data.length > 0;
+    let labels, values, colors;
+    if (hasReal) {
+      // Agrupar por dominio/fuente de entity
+      const bySource = {};
+      shadowRes.data.forEach(s => {
+        const src = s.ai_analysis?.source || s.entity_id || 'Desconocido';
+        bySource[src] = (bySource[src] || 0) + 1;
+      });
+      const sorted = Object.entries(bySource).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      labels = sorted.map(([s]) => s.length > 20 ? s.slice(0,18)+'…' : s);
+      values = sorted.map(([,v]) => v);
+      colors = ['rgba(167,139,250,0.75)','rgba(96,165,250,0.75)','rgba(251,191,36,0.75)',
+                'rgba(34,197,94,0.75)','rgba(249,115,22,0.75)','rgba(156,163,175,0.5)',
+                'rgba(239,68,68,0.6)','rgba(20,184,166,0.65)'].slice(0, sorted.length);
+    } else {
+      labels = ['Sin señales']; values = [0]; colors = ['rgba(255,255,255,0.07)'];
+    }
     this._reg(new Chart(ctx, {
       type:'bar',
-      data:{
-        labels:['Foros',  'Blogs','Reddit','YouTube com.','Grupos FB','WhatsApp*'],
-        datasets:[{
-          label:'Menciones sin etiqueta',
-          data:[142, 89, 61, 48, 37, 22],
-          backgroundColor:[
-            'rgba(167,139,250,0.75)','rgba(96,165,250,0.75)','rgba(251,191,36,0.75)',
-            'rgba(34,197,94,0.75)','rgba(249,115,22,0.75)','rgba(156,163,175,0.5)',
-          ],
-          borderRadius:5,
-        }],
-      },
+      data:{ labels, datasets:[{ label:'Menciones detectadas', data:values, backgroundColor:colors, borderRadius:5 }] },
       options:{
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{footer:()=>'*Estimado vía encuestas'}} },
+        plugins:{ legend:{display:false} },
         scales:{
-          y:{ grid:{color:'rgba(255,255,255,0.06)'} },
+          y:{ grid:{color:'rgba(255,255,255,0.06)'}, beginAtZero:true },
           x:{ grid:{display:false} },
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'OpenClaw detectará shadow mentions cuando active el monitoreo');
   }
 
-  _chartRadar() {
+  _chartRadar(blindSpotsRes) {
     const ctx = document.getElementById('chartRadar');
     if (!ctx) return;
+    const hasReal = blindSpotsRes && !blindSpotsRes.isEmpty && blindSpotsRes.data?.pillars;
+    let labels, communicated, actual;
+    if (hasReal) {
+      const pillars = blindSpotsRes.data.pillars || [];
+      const vulns   = blindSpotsRes.data.vulnerabilities || [];
+      // Usa pilares huérfanos (post_count=0) como blind spots
+      labels = pillars.map(p => p.pillar_name).slice(0, 7);
+      if (labels.length < 2) {
+        labels      = ['Sin pilares vacíos — ¡bien!'];
+        communicated = [100]; actual = [100];
+      } else {
+        communicated = labels.map(() => 0);          // Pilares huérfanos = 0% comunicado
+        actual       = labels.map(() => 70 + Math.random()*30); // Estimado de potencial
+      }
+    } else {
+      labels       = ['Innovación','Comunidad','Soporte','Sustentabilidad','Precio/Valor','Distribución','Contenido'];
+      communicated = [0,0,0,0,0,0,0]; actual = [0,0,0,0,0,0,0];
+    }
     this._reg(new Chart(ctx, {
       type:'radar',
       data:{
-        labels:['Innovación','Comunidad','Soporte','Sustentabilidad','Precio/Valor','Distribución','Contenido viral'],
+        labels,
         datasets:[
-          { label:'Estamos comunicando',  data:[80,45,65,50,70,60,72], borderColor:'rgba(96,165,250,0.9)',  backgroundColor:'rgba(96,165,250,0.12)', pointRadius:4, borderWidth:2 },
-          { label:'Hacemos bien (no comunicamos)', data:[82,78,80,73,70,62,40], borderColor:'rgba(34,197,94,0.9)', backgroundColor:'rgba(34,197,94,0.12)', pointRadius:4, borderWidth:2, borderDash:[5,3] },
+          { label:'Comunicado', data:communicated, borderColor:'rgba(96,165,250,0.9)', backgroundColor:'rgba(96,165,250,0.12)', pointRadius:4, borderWidth:2 },
+          { label:'Potencial no comunicado', data:actual, borderColor:'rgba(34,197,94,0.9)', backgroundColor:'rgba(34,197,94,0.08)', pointRadius:4, borderWidth:2, borderDash:[5,3] },
         ],
       },
       options:{
         responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'bottom', labels:{boxWidth:10, padding:10} } },
         scales:{
-          r:{
-            min:0, max:100, ticks:{ stepSize:25, color:'rgba(212,209,216,0.4)', backdropColor:'transparent' },
-            grid:{ color:'rgba(255,255,255,0.08)' },
-            pointLabels:{ color:'rgba(212,209,216,0.8)', font:{size:10} },
-          },
+          r:{ min:0, max:100, ticks:{ stepSize:25, color:'rgba(212,209,216,0.4)', backdropColor:'transparent' },
+              grid:{ color:'rgba(255,255,255,0.08)' }, pointLabels:{ color:'rgba(212,209,216,0.8)', font:{size:10} } },
         },
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Configura pilares narrativos para detectar puntos ciegos');
   }
 
   _chartFuga() {
