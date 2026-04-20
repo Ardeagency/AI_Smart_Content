@@ -116,36 +116,34 @@ class LandingView extends PublicBaseView {
 
       <section class="landing-bento" id="landing-3" aria-labelledby="landing-bento-heading">
         <div class="landing-bento__bg" aria-hidden="true"></div>
-        <div class="landing-bento__inner">
-          <header class="landing-bento__header sr-reveal">
-            <h2 id="landing-bento-heading" class="landing-bento__title">Todo Lo Que Necesitas. En Un Solo Lugar.</h2>
-            <p class="landing-bento__subtitle">AISmartContent optimiza cada decisión, elimina fricción y ejecuta en el momento correcto.</p>
-          </header>
-          <div class="landing-bento__grid">
-            <article class="landing-bento__card landing-bento__card--yellow sr-reveal sr-reveal--d1">
-              <div class="landing-bento__card-main" aria-hidden="true">
-                <img class="landing-bento__icon" src="recursos/icons/icono%201.svg" alt="" loading="lazy">
-              </div>
-              <p class="landing-bento__card-label">Ejecución más rápida</p>
-            </article>
-            <article class="landing-bento__card landing-bento__card--cyan sr-reveal sr-reveal--d2">
-              <div class="landing-bento__card-main" aria-hidden="true">
-                <img class="landing-bento__icon" src="recursos/icons/Icono%202.svg" alt="" loading="lazy">
-              </div>
-              <p class="landing-bento__card-label">Datos, contexto y decisiones en un solo sistema</p>
-            </article>
-            <article class="landing-bento__card landing-bento__card--purple sr-reveal sr-reveal--d3">
-              <div class="landing-bento__card-main" aria-hidden="true">
-                <img class="landing-bento__icon" src="recursos/icons/icono%203.svg" alt="" loading="lazy">
-              </div>
-              <p class="landing-bento__card-label">Todo integrado en una herramienta</p>
-            </article>
-            <article class="landing-bento__card landing-bento__card--green sr-reveal sr-reveal--d4">
-              <div class="landing-bento__card-main" aria-hidden="true">
-                <img class="landing-bento__icon" src="recursos/icons/icono%204.svg" alt="" loading="lazy">
-              </div>
-              <p class="landing-bento__card-label">Mayor impacto por acción</p>
-            </article>
+        <div class="landing-bento__mesh" aria-hidden="true"></div>
+        <div class="landing-bento__shell">
+          <div class="landing-bento__main">
+            <header class="landing-bento__header sr-reveal">
+              <h2 id="landing-bento-heading" class="landing-bento__title">Todo lo que necesitas.<br>En un solo lugar.</h2>
+              <p class="landing-bento__subtitle">AISmartContent optimiza cada decisión, elimina fricción y ejecuta en el momento correcto.</p>
+            </header>
+          </div>
+          <div class="landing-bento__footer" role="group" aria-label="Capacidades del sistema">
+            <div class="landing-bento__footer-line" aria-hidden="true"></div>
+            <ul class="landing-bento__stat-row">
+              <li class="landing-bento__stat sr-reveal sr-reveal--d1">
+                <span class="landing-bento__stat-k">Señal</span>
+                <span class="landing-bento__stat-v">Mercado, competencia y contexto en lectura continua.</span>
+              </li>
+              <li class="landing-bento__stat sr-reveal sr-reveal--d2">
+                <span class="landing-bento__stat-k">Criterio</span>
+                <span class="landing-bento__stat-v">Datos, ADN de marca y timing en una sola capa de decisión.</span>
+              </li>
+              <li class="landing-bento__stat sr-reveal sr-reveal--d3">
+                <span class="landing-bento__stat-k">Ejecución</span>
+                <span class="landing-bento__stat-v">Contenido listo para canales, alineado a estrategia.</span>
+              </li>
+              <li class="landing-bento__stat sr-reveal sr-reveal--d4">
+                <span class="landing-bento__stat-k">Aprendizaje</span>
+                <span class="landing-bento__stat-v">Cada resultado informa la siguiente acción.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </section>
