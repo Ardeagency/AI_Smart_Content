@@ -21,6 +21,12 @@
   openFlyout(containerEl) {
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
+    flyout.classList.remove('nav-flyout--header-anchor');
+    flyout.style.top = '';
+    flyout.style.right = '';
+    flyout.style.left = '';
+    flyout.style.transform = '';
+    flyout.style.maxHeight = '';
     const submenu = containerEl.querySelector('.nav-submenu');
     const toggle = containerEl.querySelector('.nav-submenu-toggle');
     const label =
@@ -115,6 +121,12 @@
   closeFlyout() {
     const flyout = document.getElementById('navFlyout');
     if (flyout) {
+      flyout.classList.remove('nav-flyout--header-anchor');
+      flyout.style.top = '';
+      flyout.style.right = '';
+      flyout.style.left = '';
+      flyout.style.transform = '';
+      flyout.style.maxHeight = '';
       if (document.activeElement && flyout.contains(document.activeElement)) {
         try {
           const trigger = this._flyoutContainer?.querySelector('.nav-submenu-toggle');
@@ -144,15 +156,22 @@
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
 
-    const user = window.authService?.getCurrentUser();
-    const supabase = window.authService?.supabase;
+    const user = window.authService?.getCurrentUser?.();
+    let supabase = window.authService?.supabase;
+    if (!supabase?.from && window.supabaseService?.getClient) {
+      try {
+        supabase = await window.supabaseService.getClient();
+      } catch (_) {
+        supabase = null;
+      }
+    }
     if (!user?.id || !supabase?.from) {
       this._renderNotificationsFlyoutContent(flyout, [], null, true);
       this._showNotificationsFlyout(flyout, triggerEl);
       return;
     }
 
-    this._renderNotificationsFlyoutContent(flyout, null, 'Loading…', false);
+    this._renderNotificationsFlyoutContent(flyout, null, 'Cargando…', false);
     this._showNotificationsFlyout(flyout, triggerEl);
 
     const { data: notifications, error } = await supabase
@@ -180,7 +199,7 @@
     } else if (loadingLabel) {
       bodyHtml = `<div class="nav-flyout-notifications-loading">${_escapeHtml(loadingLabel)}</div>`;
     } else if (list.length === 0) {
-      bodyHtml = '<div class="nav-flyout-notifications-empty">No notifications</div>';
+      bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
     } else {
       bodyHtml = '<div class="nav-flyout-list nav-flyout-notifications-list">' + list.map((n) => {
         const type = (n.type || 'info');
@@ -198,7 +217,7 @@
 
     const footerHtml = configHref
       ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Settings <i class="fas fa-chevron-right"></i></a>
+          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="fas fa-chevron-right"></i></a>
         </div>`
       : '';
 
@@ -218,8 +237,15 @@
         btn.addEventListener('click', () => {
           const id = btn.dataset.id;
           const link = btn.dataset.link;
-          if (id && window.authService?.supabase?.from) {
-            window.authService.supabase.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {});
+          if (id) {
+            const client = window.authService?.supabase;
+            if (client?.from) {
+              client.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {});
+            } else if (window.supabaseService?.getClient) {
+              window.supabaseService.getClient().then((c) => {
+                if (c?.from) c.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {});
+              });
+            }
           }
           if (link && window.router) {
             this.closeFlyout();
@@ -234,6 +260,24 @@
       if (route && window.router) window.router.navigate(route);
       this.closeFlyout();
     });
+  },
+
+  /**
+   * Mantiene el panel bajo #headerNotificationsBtn al redimensionar (scroll/resize).
+   */
+  repositionOpenHeaderNotificationsFlyout() {
+    const flyout = document.getElementById('navFlyout');
+    const btn = document.getElementById('headerNotificationsBtn');
+    if (!flyout?.classList.contains('open') || !flyout.classList.contains('nav-flyout--header-anchor') || !btn) return;
+    const rect = btn.getBoundingClientRect();
+    const GAP = 8;
+    const MARGIN = 12;
+    const top = Math.max(MARGIN, rect.bottom + GAP);
+    const right = Math.max(MARGIN, window.innerWidth - rect.right);
+    flyout.style.top = `${top}px`;
+    flyout.style.right = `${right}px`;
+    const maxH = Math.max(160, window.innerHeight - top - MARGIN);
+    flyout.style.maxHeight = `${maxH}px`;
   },
 
   _showNotificationsFlyout(flyout, triggerEl) {
@@ -307,6 +351,7 @@
     document.addEventListener('click', (e) => {
       const flyout = document.getElementById('navFlyout');
       if (!flyout?.classList.contains('open')) return;
+      if (e.target.closest?.('.nav-footer-btn[data-flyout="notifications"]')) return;
       const sidebar = document.getElementById('sideNavigation');
       if (sidebar?.contains(e.target) || flyout.contains(e.target)) return;
       this.closeFlyout();

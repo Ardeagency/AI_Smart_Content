@@ -925,6 +925,18 @@ body.sidebar-collapsed .main-header,
     transform: translateX(0);
 }
 
+/* Panel de notificaciones abierto desde el header: anclado al botón campana (misma idea que #userDropdown). */
+.nav-flyout.nav-flyout--header-anchor.open {
+    left: auto;
+    transform: none;
+    width: min(320px, calc(100vw - 24px));
+    z-index: 10000;
+}
+
+.nav-flyout.nav-flyout--header-anchor .nav-flyout-bridge {
+    display: none;
+}
+
 /* Safe zone: puente invisible entre icono y flyout para no cerrar al mover el cursor */
 .nav-flyout-bridge {
     position: absolute;

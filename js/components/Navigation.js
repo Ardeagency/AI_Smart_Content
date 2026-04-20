@@ -914,6 +914,7 @@ class Navigation {
       userMenuBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (typeof this.closeFlyout === 'function') this.closeFlyout();
         const willOpen = !userDropdown.classList.contains('active');
         userDropdown.classList.toggle('active');
         if (willOpen) {
@@ -969,6 +970,14 @@ class Navigation {
       btn.setAttribute('data-nav-bound', '1');
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        const flyout = document.getElementById('navFlyout');
+        const notifOpen =
+          flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
+        if (notifOpen) {
+          this.closeFlyout();
+          return;
+        }
         this.openNotificationsFlyout(btn);
         const ud = document.getElementById('userDropdown');
         if (ud) ud.classList.remove('active');
@@ -1007,8 +1016,14 @@ class Navigation {
         if (!btn || !dd || !dd.classList.contains('active')) return;
         this.positionUserDropdown(btn, dd);
       };
-      window.addEventListener('resize', reposition);
-      window.addEventListener('scroll', reposition, true);
+      const repositionHeaderPopovers = () => {
+        reposition();
+        if (typeof this.repositionOpenHeaderNotificationsFlyout === 'function') {
+          this.repositionOpenHeaderNotificationsFlyout();
+        }
+      };
+      window.addEventListener('resize', repositionHeaderPopovers);
+      window.addEventListener('scroll', repositionHeaderPopovers, true);
     }
     if (!this._orgNameResizeAttached) {
       this._orgNameResizeAttached = true;
