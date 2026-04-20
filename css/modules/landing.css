@@ -2522,6 +2522,9 @@ body.entrance-done .landing-header {
     width: auto;
     height: 40px;
     display: block;
+    /* Evita fondo claro (#f5f5f7) en algunos motores / overlays al componer el SVG */
+    background: none;
+    background-color: transparent;
 }
 
 .vbento__title {
