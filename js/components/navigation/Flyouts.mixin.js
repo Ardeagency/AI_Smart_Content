@@ -21,6 +21,11 @@
   openFlyout(containerEl) {
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
+    if (flyout.parentNode === document.body && this._navFlyoutRestoreParent) {
+      try {
+        this._navFlyoutRestoreParent.appendChild(flyout);
+      } catch (_) {}
+    }
     flyout.classList.remove('nav-flyout--header-anchor');
     flyout.style.top = '';
     flyout.style.right = '';
@@ -101,6 +106,16 @@
   _bindFlyoutHoverClose() {
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
+    /* Notificaciones desde el header: panel tipo popover (clic + click fuera). El hover-close del sidebar cerraba al instante o confundía. */
+    if (flyout.classList.contains('nav-flyout--header-anchor')) {
+      if (flyout._flyoutEnter) {
+        flyout.removeEventListener('mouseenter', flyout._flyoutEnter);
+        flyout.removeEventListener('mouseleave', flyout._flyoutLeave);
+        flyout._flyoutEnter = null;
+        flyout._flyoutLeave = null;
+      }
+      return;
+    }
     if (flyout._flyoutEnter) {
       flyout.removeEventListener('mouseenter', flyout._flyoutEnter);
       flyout.removeEventListener('mouseleave', flyout._flyoutLeave);
@@ -144,6 +159,11 @@
       }
       flyout.classList.remove('open');
       flyout.setAttribute('aria-hidden', 'true');
+      if (flyout.parentNode === document.body && this._navFlyoutRestoreParent) {
+        try {
+          this._navFlyoutRestoreParent.appendChild(flyout);
+        } catch (_) {}
+      }
     }
     this._flyoutOpen = false;
   },
@@ -183,9 +203,11 @@
 
     if (error) {
       this._renderNotificationsFlyoutContent(flyout, [], null, true, error.message);
+      requestAnimationFrame(() => this.repositionOpenHeaderNotificationsFlyout());
       return;
     }
     this._renderNotificationsFlyoutContent(flyout, notifications || [], null, true);
+    requestAnimationFrame(() => this.repositionOpenHeaderNotificationsFlyout());
   },
 
   _renderNotificationsFlyoutContent(flyout, notifications, loadingLabel, ready, errorMessage) {
@@ -281,6 +303,26 @@
   },
 
   _showNotificationsFlyout(flyout, triggerEl) {
+    const header = document.getElementById('appHeader');
+    const fromHeader = !!(triggerEl && header && header.contains(triggerEl));
+
+    flyout.classList.remove('nav-flyout--header-anchor');
+    flyout.style.top = '';
+    flyout.style.right = '';
+    flyout.style.left = '';
+    flyout.style.transform = '';
+    flyout.style.maxHeight = '';
+
+    if (fromHeader) {
+      if (!this._navFlyoutRestoreParent && flyout.parentNode) {
+        this._navFlyoutRestoreParent = flyout.parentNode;
+      }
+      if (flyout.parentNode !== document.body) {
+        document.body.appendChild(flyout);
+      }
+      flyout.classList.add('nav-flyout--header-anchor');
+    }
+
     flyout.classList.add('open');
     flyout.setAttribute('aria-hidden', 'false');
     this._flyoutContainer = null;
@@ -288,13 +330,27 @@
     this._bindFlyoutHoverClose();
 
     requestAnimationFrame(() => {
-      if (triggerEl) {
+      if (fromHeader && triggerEl) {
+        const rect = triggerEl.getBoundingClientRect();
+        const GAP = 8;
+        const MARGIN = 12;
+        const top = Math.max(MARGIN, rect.bottom + GAP);
+        const right = Math.max(MARGIN, window.innerWidth - rect.right);
+        flyout.style.top = `${top}px`;
+        flyout.style.right = `${right}px`;
+        flyout.style.left = 'auto';
+        flyout.style.transform = 'none';
+        const maxH = Math.max(160, window.innerHeight - top - MARGIN);
+        flyout.style.maxHeight = `${maxH}px`;
+      } else if (triggerEl) {
+        flyout.style.maxHeight = '';
         const rect = triggerEl.getBoundingClientRect();
         const flyoutHeight = flyout.offsetHeight;
         const top = Math.max(8, Math.min(rect.top + rect.height / 2 - flyoutHeight / 2, window.innerHeight - flyoutHeight - 8));
         flyout.style.top = `${top}px`;
       } else {
         flyout.style.top = '';
+        flyout.style.maxHeight = '';
       }
     });
   },
@@ -352,6 +408,7 @@
       const flyout = document.getElementById('navFlyout');
       if (!flyout?.classList.contains('open')) return;
       if (e.target.closest?.('.nav-footer-btn[data-flyout="notifications"]')) return;
+      if (e.target.closest?.('#headerNotificationsBtn')) return;
       const sidebar = document.getElementById('sideNavigation');
       if (sidebar?.contains(e.target) || flyout.contains(e.target)) return;
       this.closeFlyout();

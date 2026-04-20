@@ -930,7 +930,8 @@ body.sidebar-collapsed .main-header,
     left: auto;
     transform: none;
     width: min(320px, calc(100vw - 24px));
-    z-index: 10000;
+    /* Por encima del contenido y alineado con portales (#userDropdown en body usa ~9999; modales ~10001+). */
+    z-index: 10050;
 }
 
 .nav-flyout.nav-flyout--header-anchor .nav-flyout-bridge {
