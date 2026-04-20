@@ -282,6 +282,9 @@ class Navigation {
 
     // Si el modo no ha cambiado y ya está inicializado, actualizar enlaces y refrescar créditos desde BD
     if (this.initialized && this.currentMode === config.mode && this.currentOrgId === config.orgId) {
+      if (config.showHeader) {
+        this.ensureNotificationsDropdown();
+      }
       this.updateActiveLink();
       if (config.mode === 'user' && config.orgId) {
         this.loadCreditsFromDb();
@@ -402,7 +405,28 @@ class Navigation {
     if (panel) {
       panel.classList.remove('active');
       panel.setAttribute('aria-hidden', 'true');
+      panel.style.display = '';
+      panel.style.visibility = '';
+      panel.style.opacity = '';
+      panel.style.pointerEvents = '';
+      panel.style.zIndex = '';
+      panel.style.maxHeight = '';
     }
+  }
+
+  /**
+   * Refuerzo visual: mismo criterio que #userDropdown.active pero por si alguna regla CSS
+   * del layout anula el display del panel en body.
+   */
+  _showNotificationsDropdownPanel(panel) {
+    if (!panel) return;
+    panel.classList.add('active');
+    panel.setAttribute('aria-hidden', 'false');
+    panel.style.setProperty('display', 'flex', 'important');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+    panel.style.pointerEvents = 'auto';
+    panel.style.zIndex = '100500';
   }
 
   /**
@@ -1051,8 +1075,7 @@ class Navigation {
         if (ud && !clickedInsideUserDropdown) ud.classList.remove('active');
         if (od && !clickedInsideOrgDropdown) od.classList.remove('active');
         if (nd && !clickedInsideNotifications) {
-          nd.classList.remove('active');
-          nd.setAttribute('aria-hidden', 'true');
+          this.closeNotificationsDropdown();
         }
       });
     }
@@ -1063,31 +1086,41 @@ class Navigation {
       document.addEventListener('credits-updated', () => this.refreshCredits());
     }
 
-    document.querySelectorAll('.nav-footer-btn[data-flyout="notifications"]:not([data-nav-bound])').forEach((btn) => {
-      btn.setAttribute('data-nav-bound', '1');
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const panel = document.getElementById('notificationsDropdown');
-        const fromHeader = !!document.getElementById('appHeader')?.contains(btn);
-        if (fromHeader && panel?.classList.contains('active')) {
-          this.closeNotificationsDropdown();
-          return;
-        }
-        if (!fromHeader) {
-          const flyout = document.getElementById('navFlyout');
-          const notifFlyoutOpen =
-            flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
-          if (notifFlyoutOpen) {
-            this.closeFlyout();
+    /* Delegación en document: si solo se usa listener en el botón, un re-render u orden de bind puede dejar la campana sin handler (clic no abre nada). */
+    if (!this._notificationsClickDelegation) {
+      this._notificationsClickDelegation = true;
+      document.addEventListener(
+        'click',
+        (e) => {
+          const btn = e.target.closest('.nav-footer-btn[data-flyout="notifications"]');
+          if (!btn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          this.ensureNotificationsDropdown();
+          const panel = document.getElementById('notificationsDropdown');
+          const fromHeader = !!document.getElementById('appHeader')?.contains(btn);
+          if (fromHeader && panel?.classList.contains('active')) {
+            this.closeNotificationsDropdown();
             return;
           }
-        }
-        this.openNotificationsFlyout(btn);
-        const ud = document.getElementById('userDropdown');
-        if (ud) ud.classList.remove('active');
-      });
-    });
+          if (!fromHeader) {
+            const flyout = document.getElementById('navFlyout');
+            const notifFlyoutOpen =
+              flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
+            if (notifFlyoutOpen) {
+              this.closeFlyout();
+              return;
+            }
+          }
+          if (typeof this.openNotificationsFlyout === 'function') {
+            this.openNotificationsFlyout(btn);
+          }
+          const ud = document.getElementById('userDropdown');
+          if (ud) ud.classList.remove('active');
+        },
+        false
+      );
+    }
 
     document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdown a[data-route]:not(#userDropdownSettingsLink):not([data-nav-bound])').forEach((link) => {
       link.setAttribute('data-nav-bound', '1');

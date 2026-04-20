@@ -19,10 +19,8 @@
 
   const FlyoutsMixin = {
   openFlyout(containerEl) {
-    const nd = document.getElementById('notificationsDropdown');
-    if (nd) {
-      nd.classList.remove('active');
-      nd.setAttribute('aria-hidden', 'true');
+    if (typeof this.closeNotificationsDropdown === 'function') {
+      this.closeNotificationsDropdown();
     }
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
@@ -139,10 +137,8 @@
   },
 
   closeFlyout() {
-    const nd = document.getElementById('notificationsDropdown');
-    if (nd) {
-      nd.classList.remove('active');
-      nd.setAttribute('aria-hidden', 'true');
+    if (typeof this.closeNotificationsDropdown === 'function') {
+      this.closeNotificationsDropdown();
     }
     const flyout = document.getElementById('navFlyout');
     if (flyout) {
@@ -187,6 +183,9 @@
     const fromHeader = !!(triggerEl && header && header.contains(triggerEl));
 
     if (fromHeader) {
+      if (typeof this.ensureNotificationsDropdown === 'function') {
+        this.ensureNotificationsDropdown();
+      }
       const panel = document.getElementById('notificationsDropdown');
       if (!panel) return;
 
@@ -203,8 +202,12 @@
       }
 
       const openPanel = () => {
-        panel.classList.add('active');
-        panel.setAttribute('aria-hidden', 'false');
+        if (typeof this._showNotificationsDropdownPanel === 'function') {
+          this._showNotificationsDropdownPanel(panel);
+        } else {
+          panel.classList.add('active');
+          panel.setAttribute('aria-hidden', 'false');
+        }
         requestAnimationFrame(() => {
           if (typeof this.positionUserDropdown === 'function') {
             this.positionUserDropdown(triggerEl, panel);
@@ -349,8 +352,9 @@
             document.dispatchEvent(new CustomEvent('notifications-updated'));
           }
           if (link && window.router) {
-            panel.classList.remove('active');
-            panel.setAttribute('aria-hidden', 'true');
+            if (typeof this.closeNotificationsDropdown === 'function') {
+              this.closeNotificationsDropdown();
+            }
             window.router.navigate(link.startsWith('/') ? link : `/${link}`);
           }
         });
@@ -360,8 +364,9 @@
       e.preventDefault();
       const route = panel.querySelector('.nav-flyout-cta-link')?.dataset?.route;
       if (route && window.router) window.router.navigate(route);
-      panel.classList.remove('active');
-      panel.setAttribute('aria-hidden', 'true');
+      if (typeof this.closeNotificationsDropdown === 'function') {
+        this.closeNotificationsDropdown();
+      }
     });
   },
 
