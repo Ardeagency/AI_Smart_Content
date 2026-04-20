@@ -2332,8 +2332,8 @@ body.entrance-done .landing-header {
    VERA — #landing-4: dos columnas (referencia layout: título / línea / sub / cuerpo / CTA + celdas + logo)
    ═══════════════════════════════════════════════════════════════ */
 .landing-vera-type {
-    /* Mismo tono que el conic del overlay (#landing-4) para fundir bordes del SVG */
-    --vera-type-bg: #0b0b0b;
+    /* Mismo negro que .vbento (#landing-5) para continuidad visual */
+    --vera-type-bg: #000000;
     --vera-type-fg: #ffffff;
     --vera-type-muted: rgba(255, 255, 255, 0.58);
     background: var(--vera-type-bg);
@@ -2442,11 +2442,8 @@ body.entrance-done .landing-header {
 }
 
 .landing-vera-type__brand {
-    position: relative;
     width: 100%;
     margin-top: clamp(0.25rem, 1vw, 0.75rem);
-    border-radius: 4px;
-    overflow: hidden;
 }
 
 .landing-vera-type__brand-img {
@@ -2455,23 +2452,6 @@ body.entrance-done .landing-header {
     max-width: min(100%, 420px);
     height: auto;
     margin-left: auto;
-}
-
-/* Degradado cónico (spec diseño) para fundir Vera-2 con #0b0b0b; caja un poco mayor que el SVG para suavizar bordes */
-.landing-vera-type__brand-shade {
-    position: absolute;
-    inset: -8% -22% -14% -12%;
-    pointer-events: none;
-    background: conic-gradient(
-        from 182.34deg at 54.53% 81.99%,
-        #0b0b0b -135.24deg,
-        #0b0b0b 120.85deg,
-        rgba(11, 11, 11, 0.9) 138.37deg,
-        rgba(11, 11, 11, 0) 174.07deg,
-        rgba(11, 11, 11, 0.659) 202.97deg,
-        #0b0b0b 224.76deg,
-        #0b0b0b 480.85deg
-    );
 }
 
 @media (max-width: 880px) {

@@ -173,7 +173,6 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="landing-vera-type__brand">
                 <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="landing-vera-type__brand-img" width="360" height="138" decoding="async" loading="lazy">
-                <div class="landing-vera-type__brand-shade" aria-hidden="true"></div>
               </div>
             </div>
           </div>
