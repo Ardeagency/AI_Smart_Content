@@ -150,26 +150,31 @@ class LandingView extends PublicBaseView {
 
       <section class="landing-vera-type" id="landing-4" aria-labelledby="vera-type-heading">
         <div class="landing-vera-type__inner">
-          <div class="landing-vera-type__top sr-reveal">
-            <p class="landing-vera-type__charset" aria-hidden="true">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz · 0123456789</p>
-            <p class="landing-vera-type__lede">Genera y ejecuta contenido con el ADN de tu marca, en el momento en que el mercado lo pide.</p>
-            <ul class="landing-vera-type__weights" aria-hidden="true">
-              <li>Space Grotesk Regular</li>
-              <li>Space Grotesk SemiBold</li>
-              <li>Space Grotesk Bold</li>
-            </ul>
-          </div>
-          <div class="landing-vera-type__sample sr-reveal">
-            <p class="landing-vera-type__kicker">Texto de muestra</p>
-            <h2 id="vera-type-heading" class="landing-vera-type__title">La inteligencia opera mientras tú priorizas.</h2>
-            <p class="landing-vera-type__copy">AISmartContent conecta señal, decisión y ejecución. Vera lee el contexto, reduce el ruido y traduce la operación en piezas listas para salir.</p>
-          </div>
-          <div class="landing-vera-type__display sr-reveal" aria-hidden="true">
-            <div class="landing-vera-type__mega-row">
-              <span class="landing-vera-type__mega landing-vera-type__mega--1">V</span>
-              <span class="landing-vera-type__mega landing-vera-type__mega--2">e</span>
-              <span class="landing-vera-type__mega landing-vera-type__mega--3">r</span>
-              <span class="landing-vera-type__mega landing-vera-type__mega--4">a</span>
+          <div class="landing-vera-type__grid">
+            <div class="landing-vera-type__left sr-reveal">
+              <h2 id="vera-type-heading" class="landing-vera-type__title">Muévete antes</h2>
+              <div class="landing-vera-type__rule" aria-hidden="true"></div>
+              <p class="landing-vera-type__subtitle">Muévete antes</p>
+              <p class="landing-vera-type__desc">VERA como el centro de inteligencia de tu marca, operando 24/7. Analiza comportamiento real, movimientos de la competencia y señales del mercado en tiempo real. No reacciona a lo que ya pasó, se anticipa a lo que viene, permitiendo que tu marca actúe en el momento exacto.</p>
+              <a href="/contacto" class="landing-vera-type__cta">Muévete antes</a>
+            </div>
+            <div class="landing-vera-type__right sr-reveal">
+              <div class="landing-vera-type__toprow">
+                <div class="landing-vera-type__cell">
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                </div>
+                <div class="landing-vera-type__cell">
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                  <p class="landing-vera-type__cell-line">Muévete antes</p>
+                </div>
+              </div>
+              <div class="landing-vera-type__brand">
+                <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="landing-vera-type__brand-img" width="360" height="138" decoding="async" loading="lazy">
+                <div class="landing-vera-type__brand-shade" aria-hidden="true"></div>
+              </div>
             </div>
           </div>
         </div>
