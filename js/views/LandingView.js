@@ -148,36 +148,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-intro-cards" id="landing-4" aria-labelledby="lic-heading">
-        <div class="landing-intro-cards__inner">
-          <div class="landing-intro-cards__header">
-            <h2 id="lic-heading" class="landing-intro-cards__title sr-reveal">Un sistema que piensa mientras tu equipo duerme.</h2>
-            <p class="landing-intro-cards__sub sr-reveal">Lee el mercado en tiempo real, conecta señales,<br>detecta oportunidades y ejecuta con criterio.</p>
-          </div>
-          <div class="landing-intro-cards__grid">
-            <article class="landing-intro-cards__card sr-reveal sr-reveal--d1">
-              <div class="landing-intro-cards__card-body">
-                <h3 class="landing-intro-cards__card-title">Lectura continua del mercado</h3>
-                <p class="landing-intro-cards__card-text">Vera monitorea tendencias, competencia y comportamiento real.</p>
-              </div>
-            </article>
-            <article class="landing-intro-cards__card sr-reveal sr-reveal--d2">
-              <div class="landing-intro-cards__card-body">
-                <h3 class="landing-intro-cards__card-title">Decide qué hacer y qué ignorar</h3>
-                <p class="landing-intro-cards__card-text">Prioriza por impacto, timing y relevancia para la marca.</p>
-              </div>
-            </article>
-            <article class="landing-intro-cards__card sr-reveal sr-reveal--d3">
-              <div class="landing-intro-cards__card-body">
-                <h3 class="landing-intro-cards__card-title">Contenido con intención</h3>
-                <p class="landing-intro-cards__card-text">Cada pieza responde a una estrategia. Nada es genérico.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="vbento" id="landing-5" aria-labelledby="vbento-heading">
+      <section class="vbento" id="landing-4" aria-labelledby="vbento-heading">
         <div class="vbento__inner">
           <div class="vbento__header sr-reveal">
             <img src="/recursos/vera/Vera-2.svg" alt="Vera" class="vbento__logo" width="133" height="51">
@@ -233,7 +204,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-statement" id="landing-6">
+      <section class="landing-statement" id="landing-5">
         <div class="landing-statement__inner">
           <h2 class="landing-statement__heading sr-reveal">
             No responde a prompts.<br>
@@ -250,7 +221,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-why" id="landing-7" aria-labelledby="landing-why-heading">
+      <section class="landing-why" id="landing-6" aria-labelledby="landing-why-heading">
         <div class="landing-why__inner">
           <h2 id="landing-why-heading" class="landing-why__title sr-reveal">Por qué AISmartContent cambia cómo opera tu marca.</h2>
         </div>
@@ -306,7 +277,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <section class="landing-different" id="landing-8" aria-labelledby="landing-different-heading">
+      <section class="landing-different" id="landing-7" aria-labelledby="landing-different-heading">
         <div class="landing-different__inner">
           <h2 id="landing-different-heading" class="landing-different__title sr-reveal">Lo que pasa cuando tu marca opera diferente</h2>
           <ul class="landing-different__list">
