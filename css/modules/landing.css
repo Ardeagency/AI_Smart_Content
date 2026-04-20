@@ -378,7 +378,7 @@ body.entrance-done .landing-header {
     100% { transform: translate(5vw,-7vh)  scale(0.95); }
 }
 
-/* Refuerzo inferior: negro puro hacia transparente (encaja con #value-pillars sólido) */
+/* Refuerzo inferior: negro puro hacia transparente (continuidad con bloques oscuros de la landing) */
 .landing-hero::after {
     content: "";
     position: absolute;
@@ -1782,7 +1782,7 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lpf {
-    /* Arriba negro (continuidad con hero); abajo #0a0a0d (misma base que #landing-after-pillars) */
+    /* Arriba negro (continuidad con hero); abajo #0a0a0d (misma base que #landing-2) */
     background: linear-gradient(to bottom, #000000 0%, #0a0a0d 100%);
     padding: 96px 0 112px;
 }
@@ -1924,7 +1924,7 @@ body.entrance-done .landing-header {
 /* ═══════════════════════════════════════════════════════════════
    LANDING FL
 /* ══════════════════════════════════════════════════════════
-   #landing-after-pillars — Full-screen carrusel vertical
+   #landing-2 — Full-screen carrusel vertical (lfw)
    ══════════════════════════════════════════════════════════ */
 
 .lfw {
