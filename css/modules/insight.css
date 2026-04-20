@@ -4623,3 +4623,140 @@
   .td-kpi-strip { grid-template-columns: 1fr; }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   MI MARCA — DATOS REALES · Skeleton, Empty states, Nuevos widgets
+   v20260417-mb-realdata-v1
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Skeleton loader ─────────────────────────────────────────── */
+@keyframes mb-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.mb-skel-block {
+  height: 1.1rem; border-radius: 6px; margin-bottom: 0.6rem;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 800px 100%;
+  animation: mb-shimmer 1.4s ease-in-out infinite;
+}
+.mb-skel-panel {
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;
+}
+.mb-dashboard--loading .mb-kpi-strip .mb-kpi-card {
+  opacity: 0.5;
+}
+
+/* ── Empty state genérico ────────────────────────────────────── */
+.mb-empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 2rem 1rem; text-align: center;
+  color: var(--text-muted, rgba(212,209,216,0.4));
+}
+.mb-empty-state i   { font-size: 1.8rem; opacity: 0.35; }
+.mb-empty-state strong { font-size: 0.9rem; color: var(--text-secondary, rgba(212,209,216,0.6)); }
+.mb-empty-state p   { font-size: 0.78rem; max-width: 260px; line-height: 1.5; opacity: 0.75; }
+
+/* ── Chart empty overlay ─────────────────────────────────────── */
+.mb-chart-empty-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.5rem;
+  color: var(--text-muted, rgba(212,209,216,0.45));
+  pointer-events: none; z-index: 2;
+}
+.mb-chart-empty-overlay i    { font-size: 1.4rem; opacity: 0.3; }
+.mb-chart-empty-overlay span { font-size: 0.77rem; max-width: 180px; text-align: center; line-height: 1.45; }
+
+/* ── Heatmap empty message ────────────────────────────────────── */
+.mb-hm-no-data {
+  font-size: 0.78rem; color: var(--text-muted, rgba(212,209,216,0.45));
+  text-align: center; padding: 0.5rem 0 0; margin: 0;
+}
+.mb-hm-best { outline: 2px solid rgba(251,191,36,0.7); outline-offset: -2px; }
+.mb-badge--green { background: rgba(34,197,94,0.18); color: #22c55e; }
+
+/* ── Datos source footer ─────────────────────────────────────── */
+.mb-data-source-note {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px; padding: 0.7rem 1rem; margin-top: 1rem;
+  font-size: 0.79rem; color: var(--text-muted, rgba(212,209,216,0.5));
+}
+.mb-data-source-note i     { color: #60a5fa; flex-shrink: 0; }
+.mb-data-source-note strong { color: var(--text-secondary, rgba(212,209,216,0.7)); }
+.mb-refresh-btn {
+  margin-left: auto; background: rgba(96,165,250,0.18); border: 1px solid rgba(96,165,250,0.3);
+  color: #60a5fa; border-radius: 6px; padding: 0.3rem 0.75rem;
+  font-size: 0.78rem; cursor: pointer; transition: background 0.2s;
+}
+.mb-refresh-btn:hover { background: rgba(96,165,250,0.28); }
+
+/* ── MAP Table (real data) ───────────────────────────────────── */
+.mb-map-table .mb-map-price  { font-weight: 600; }
+.mb-map-table .mb-map-ref    { color: var(--text-muted, rgba(212,209,216,0.5)); }
+.mb-delta--neg  { color: #f87171; font-weight: 700; }
+.mb-delta--warn { color: #fbbf24; font-weight: 600; }
+.mb-delta--pos  { color: #22c55e; font-weight: 600; }
+.mb-map-badge   { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+.mb-map--ok      { background: rgba(34,197,94,0.15);  color: #22c55e; }
+.mb-map--alert   { background: rgba(239,68,68,0.15);  color: #f87171; }
+.mb-map--warning { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
+/* ── Stock Grid (real data) ──────────────────────────────────── */
+.mb-stock-grid { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; }
+.mb-stock-header-row, .mb-stock-row {
+  display: grid; gap: 0.5rem; padding: 0.35rem 0.6rem;
+  border-radius: 6px; align-items: center;
+}
+.mb-stock-header-row { color: var(--text-muted); font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.mb-stock-row        { background: rgba(255,255,255,0.03); }
+.mb-stock-name       { font-weight: 500; color: var(--text-secondary, rgba(212,209,216,0.8)); }
+.mb-stock-cell       { text-align: center; font-weight: 700; border-radius: 4px; padding: 0.15rem 0.25rem; font-size: 0.8rem; }
+.mb-stock--ok  { color: #22c55e; background: rgba(34,197,94,0.12); }
+.mb-stock--out { color: #f87171; background: rgba(239,68,68,0.12); }
+.mb-stock--low { color: #fbbf24; background: rgba(251,191,36,0.12); }
+
+/* ── Influence list (real data) ──────────────────────────────── */
+.mb-influence-list   { display: flex; flex-direction: column; gap: 0.55rem; }
+.mb-influence-row    { display: flex; align-items: center; gap: 0.6rem; }
+.mb-inf-rank         { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); min-width: 1.5rem; }
+.mb-inf-info         { flex: 1; min-width: 0; }
+.mb-inf-name         { display: block; font-size: 0.82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary, #d4d1d8); }
+.mb-inf-type         { display: block; font-size: 0.72rem; color: var(--text-muted); }
+.mb-inf-platform     { font-size: 0.9rem; color: var(--text-muted); flex-shrink: 0; }
+.mb-inf-score-wrap   { display: flex; align-items: center; gap: 0.4rem; min-width: 70px; }
+.mb-inf-bar          { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #60a5fa, #a78bfa); min-width: 4px; }
+.mb-inf-score        { font-size: 0.72rem; font-weight: 700; color: #a78bfa; white-space: nowrap; }
+
+/* ── Missions (real data) ────────────────────────────────────── */
+.mb-mission { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.81rem; }
+.mb-m--none    { color: rgba(34,197,94,0.8); background: rgba(34,197,94,0.07); }
+.mb-m--running { color: rgba(251,191,36,0.9); background: rgba(251,191,36,0.08); }
+.mb-m--done    { color: rgba(96,165,250,0.8); background: rgba(96,165,250,0.07); }
+.mb-m--alert   { color: rgba(239,68,68,0.85); background: rgba(239,68,68,0.08); }
+
+/* ── SWOT Dinámico ───────────────────────────────────────────── */
+.mb-swot-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+}
+.mb-swot-quad         { border-radius: 10px; padding: 0.85rem 1rem; }
+.mb-swot--strength    { background: rgba(34,197,94,0.07);  border: 1px solid rgba(34,197,94,0.18); }
+.mb-swot--opportunity { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.18); }
+.mb-swot--weakness    { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.18); }
+.mb-swot--threat      { background: rgba(239,68,68,0.06);  border: 1px solid rgba(239,68,68,0.18); }
+.mb-swot-quad-header  { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.mb-swot--strength    .mb-swot-quad-header { color: #22c55e; }
+.mb-swot--opportunity .mb-swot-quad-header { color: #60a5fa; }
+.mb-swot--weakness    .mb-swot-quad-header { color: #fbbf24; }
+.mb-swot--threat      .mb-swot-quad-header { color: #f87171; }
+.mb-swot-list         { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.mb-swot-item         { font-size: 0.79rem; color: var(--text-secondary, rgba(212,209,216,0.75)); padding-left: 0.9rem; position: relative; }
+.mb-swot-item::before { content: '·'; position: absolute; left: 0.2rem; }
+.mb-swot-empty        { opacity: 0.45; font-style: italic; }
+
+@media (max-width: 640px) {
+  .mb-swot-grid { grid-template-columns: 1fr; }
+  .mb-data-source-note { flex-direction: column; align-items: flex-start; }
+  .mb-refresh-btn { margin-left: 0; }
+}

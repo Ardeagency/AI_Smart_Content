@@ -138,8 +138,29 @@ class DashboardView extends BaseView {
 
     // 4. Render completo con datos reales
     body.innerHTML = this._buildMyBrandsHTML(d);
+    window._dashboardView = this;
     this._initAllCharts(d);
     this._animateKPIs();
+
+    // Timestamp de última actualización
+    const lu = document.getElementById('mbLastUpdate');
+    if (lu) lu.textContent = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+
+    // Badge del MAP con alerta count
+    const mapBadge = document.getElementById('mbMAPBadge');
+    if (mapBadge && d?.mapMonitor?.data) {
+      const alerts = (d.mapMonitor.data || []).filter(r => r.status === 'alert').length;
+      mapBadge.textContent = alerts > 0 ? `${alerts} alerta${alerts>1?'s':''}` : 'Todo OK';
+      mapBadge.className = `mb-badge ${alerts > 0 ? 'mb-badge--red' : 'mb-badge--green'}`;
+    }
+  }
+
+  async _refreshMBData() {
+    this._mbData = null; // Limpiar cache
+    const body = document.querySelector('.mb-dashboard')?.closest('[data-tab="my-brands"]') ||
+                 document.getElementById('app-container')?.querySelector('.tab-body');
+    if (body) { this._destroyCharts(); await this._renderMyBrands(body); }
+    else { this._mbData = null; window.location.reload(); }
   }
 
   async _ensureMBService() {
@@ -325,10 +346,10 @@ class DashboardView extends BaseView {
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
           <span class="mb-widget-title"><i class="fas fa-shield-check"></i> Monitor de Cumplimiento de Precios (MAP Monitor)</span>
-          <span class="mb-badge mb-badge--orange">3 alertas</span>
+          <span class="mb-badge mb-badge--orange" id="mbMAPBadge">Cargando…</span>
         </div>
-        <div class="mb-widget-body">
-          ${this._buildMAPTable()}
+        <div class="mb-widget-body" id="mbMAPBody">
+          ${this._emptyState('fa-tag','Cargando datos MAP…','')}
         </div>
       </div>
 
@@ -338,8 +359,8 @@ class DashboardView extends BaseView {
             <span class="mb-widget-title"><i class="fas fa-boxes-stacking"></i> Stock Digital</span>
             <span class="mb-badge mb-badge--teal">Live</span>
           </div>
-          <div class="mb-widget-body">
-            ${this._buildStockGrid()}
+          <div class="mb-widget-body" id="mbStockBody">
+            ${this._emptyState('fa-boxes-stacking','Cargando stock…','')}
           </div>
         </div>
         <div class="mb-widget mb-widget--wide">
@@ -384,8 +405,8 @@ class DashboardView extends BaseView {
             <span class="mb-widget-title"><i class="fas fa-star"></i> Índice de Influencia Real</span>
             <span class="mb-badge mb-badge--teal">Top 5</span>
           </div>
-          <div class="mb-widget-body">
-            ${this._buildInfluenceList()}
+          <div class="mb-widget-body" id="mbInfluenceBody">
+            ${this._emptyState('fa-star','Cargando…','')}
           </div>
         </div>
 
@@ -425,15 +446,27 @@ class DashboardView extends BaseView {
           <span class="mb-widget-title"><i class="fas fa-triangle-exclamation"></i> Detección de Crisis de Baja Intensidad</span>
           <span class="mb-badge mb-badge--red">Monitoreo continuo</span>
         </div>
-        <div class="mb-widget-body">
-          ${this._buildCrisisTimeline()}
+        <div class="mb-widget-body" id="mbCrisisBody">
+          ${this._emptyState('fa-triangle-exclamation','Cargando…','')}
         </div>
       </div>
 
-      <!-- Footer nota demo -->
-      <div class="mb-demo-note">
-        <i class="fas fa-flask"></i>
-        <span>Todos los datos mostrados son <strong>simulados para demostración</strong>. OpenClaw conectará datos reales en tiempo real.</span>
+      <!-- SWOT Dinámico -->
+      <div class="mb-widget mb-widget--full">
+        <div class="mb-widget-header">
+          <span class="mb-widget-title"><i class="fas fa-chess"></i> SWOT Dinámico — Virtudes y Vulnerabilidades</span>
+          <span class="mb-badge mb-badge--purple">OpenClaw IA</span>
+        </div>
+        <div class="mb-widget-body" id="mbSWOTBody">
+          ${this._emptyState('fa-chess','Cargando análisis SWOT…','')}
+        </div>
+      </div>
+
+      <!-- Footer fuente de datos -->
+      <div class="mb-data-source-note">
+        <i class="fas fa-database"></i>
+        <span>Datos obtenidos en tiempo real desde <strong>Supabase</strong>. Última actualización: <strong id="mbLastUpdate">—</strong></span>
+        <button class="mb-refresh-btn" onclick="window._dashboardView?._refreshMBData()"><i class="fas fa-rotate-right"></i> Actualizar</button>
       </div>
 
     </div>`;
@@ -887,76 +920,292 @@ class DashboardView extends BaseView {
     if (!hasReal) this._overlayEmpty(ctx, 'Configura pilares narrativos para detectar puntos ciegos');
   }
 
-  _chartFuga() {
+  _chartFuga(fugaRes) {
     const ctx = document.getElementById('chartFuga');
     if (!ctx) return;
-    const seg = ['0s','5s','10s','15s','20s','25s','30s','45s','60s'];
-    const ret = [100, 78, 62, 51, 44, 40, 37, 29, 22];
+    const hasReal = fugaRes && !fugaRes.isEmpty && fugaRes.data?.curve?.length > 0;
+    let labels, values;
+    if (hasReal) {
+      const curve = fugaRes.data.curve;
+      labels = curve.map((_, i) => `${i}s`);
+      values = curve.map(v => Math.round(v * 10) / 10);
+    } else {
+      labels = ['0s','5s','10s','15s','20s','25s','30s','45s','60s'];
+      values = [0,0,0,0,0,0,0,0,0];
+    }
     this._reg(new Chart(ctx, {
       type:'line',
-      data:{
-        labels: seg,
-        datasets:[{
-          label:'Retención de audiencia (%)',
-          data: ret,
-          borderColor:'rgba(249,115,22,0.9)', borderWidth:2.5,
-          backgroundColor:'rgba(249,115,22,0.12)',
-          fill:true, tension:0.4, pointRadius:4, pointHoverRadius:6,
-        }],
-      },
+      data:{ labels, datasets:[{
+        label:'Retención de audiencia (%)', data:values,
+        borderColor:'rgba(249,115,22,0.9)', borderWidth:2.5,
+        backgroundColor: hasReal ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)',
+        fill:true, tension:0.4, pointRadius: hasReal ? 4 : 0, pointHoverRadius:6,
+      }]},
       options:{
         responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:d=>`Retención: ${d.raw}%`}} },
         scales:{
           y:{ max:100, min:0, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{callback:v=>`${v}%`}, title:{display:true,text:'Retención (%)'} },
-          x:{ grid:{display:false}, title:{display:true,text:'Segundo del contenido'} },
+          x:{ grid:{display:false}, title:{display:true,text:'Segundo'} },
         },
-        annotation:{ annotations:[
-          { type:'line', xMin:4, xMax:4, borderColor:'rgba(239,68,68,0.5)', borderWidth:1.5, label:{content:'Punto crítico',display:true} },
-        ]},
       },
     }));
+    if (!hasReal) this._overlayEmpty(ctx, 'Disponible cuando Meta envíe datos de retención de video');
   }
 
   /* ── Heatmap horario — CSS/HTML puro ─────────────────────── */
-  _buildHeatmap() {
+  _buildHeatmap(heatmapRes) {
     const el = document.getElementById('mbHeatmap');
     if (!el) return;
-    const days  = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-    const hours = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}h`);
-    // Simular: mayor actividad entre 6-9 am, 12-14 pm, y 8-11 pm
-    const peak = (h) => {
-      if (h>=6  && h<=9)  return 0.6 + Math.random()*0.4;
-      if (h>=12 && h<=14) return 0.55 + Math.random()*0.4;
-      if (h>=20 && h<=23) return 0.65 + Math.random()*0.35;
-      return Math.random()*0.35;
+    const hasReal = heatmapRes && !heatmapRes.isEmpty && heatmapRes.data?.hour;
+    const days    = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    const hours   = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}h`);
+
+    let maxVal = 1;
+    const hMap = hasReal ? heatmapRes.data.hour : {};
+    const bestH = hasReal ? heatmapRes.data.bestHour : null;
+
+    if (hasReal) {
+      maxVal = Math.max(1, ...Object.values(hMap).map(Number));
+    }
+
+    const cellVal = (h) => {
+      if (hasReal) return (Number(hMap[h] || hMap[String(h)] || 0) / maxVal);
+      // Demo pattern si no hay datos
+      if (h>=6&&h<=9)  return 0.4 + Math.random()*0.3;
+      if (h>=12&&h<=14)return 0.35+ Math.random()*0.3;
+      if (h>=20&&h<=23)return 0.45+ Math.random()*0.25;
+      return Math.random()*0.18;
     };
+
     let html = `<div class="mb-heatmap-days"><span class="mb-hm-day-spacer"></span>${hours.map(h=>`<span class="mb-hm-hour">${h}</span>`).join('')}</div>`;
     days.forEach(d => {
       html += `<div class="mb-heatmap-row"><span class="mb-hm-day">${d}</span>`;
       for (let h=0;h<24;h++) {
-        const v = peak(h);
-        const alpha = (v*0.85+0.05).toFixed(2);
-        const color = v>0.7 ? `rgba(239,68,68,${alpha})` : v>0.45 ? `rgba(251,191,36,${alpha})` : v>0.2 ? `rgba(96,165,250,${alpha})` : `rgba(255,255,255,0.04)`;
-        html += `<span class="mb-hm-cell" style="background:${color}" title="${d} ${h}:00 — Intensidad: ${Math.round(v*100)}%"></span>`;
+        const v = cellVal(h);
+        const isBest = hasReal && h === bestH;
+        const alpha  = (v*0.85+0.05).toFixed(2);
+        const color  = v>0.7 ? `rgba(239,68,68,${alpha})` : v>0.45 ? `rgba(251,191,36,${alpha})` : v>0.2 ? `rgba(96,165,250,${alpha})` : `rgba(255,255,255,0.04)`;
+        html += `<span class="mb-hm-cell${isBest?' mb-hm-best':''}" style="background:${color}" title="${d} ${h}:00${hasReal?` — Engagement: ${Math.round(v*100)}`:' (estimado)'}%"></span>`;
       }
       html += `</div>`;
     });
+    if (!hasReal) {
+      html += `<p class="mb-hm-no-data"><i class="fas fa-info-circle"></i> Conecta Meta o Google Analytics para ver datos reales de interacción horaria</p>`;
+    }
     el.innerHTML = html;
   }
 
   /* ── Semantic cloud ────────────────────────────────────────── */
-  _buildSemanticCloud() {
+  _buildSemanticCloud(semanticaRes) {
     const el = document.getElementById('mbSemanticCloud');
     if (!el) return;
-    const words = [
-      {w:'calidad',size:2.1,c:'#60a5fa'},{w:'duradero',size:1.6,c:'#34d399'},{w:'confiable',size:1.9,c:'#a78bfa'},
-      {w:'moderno',size:1.4,c:'#fbbf24'},{w:'recomiendo',size:1.7,c:'#f87171'},{w:'fácil de usar',size:1.5,c:'#60a5fa'},
-      {w:'precio justo',size:1.3,c:'#34d399'},{w:'innovador',size:1.8,c:'#a78bfa'},{w:'garantía',size:1.2,c:'#fbbf24'},
-      {w:'soporte',size:1.1,c:'#f87171'},{w:'diseño',size:1.6,c:'#60a5fa'},{w:'eficiente',size:1.4,c:'#34d399'},
-      {w:'potente',size:1.7,c:'#a78bfa'},{w:'rápido',size:1.3,c:'#fbbf24'},{w:'premium',size:1.5,c:'#f87171'},
-    ];
-    el.innerHTML = words.map(w => `<span class="mb-semantic-word" style="font-size:${w.size}rem;color:${w.c}">${w.w}</span>`).join('');
+    const COLORS = ['#60a5fa','#34d399','#a78bfa','#fbbf24','#f87171','#14b8a6','#f472b6'];
+    const hasReal = semanticaRes && !semanticaRes.isEmpty && Array.isArray(semanticaRes.data) && semanticaRes.data.length > 0;
+
+    if (hasReal) {
+      const maxW = Math.max(...semanticaRes.data.map(r=>r.weight), 1);
+      el.innerHTML = semanticaRes.data.map((r, i) => {
+        const size = (1.0 + (r.weight/maxW) * 1.2).toFixed(2);
+        const color = COLORS[i % COLORS.length];
+        return `<span class="mb-semantic-word" style="font-size:${size}rem;color:${color}" title="Peso: ${r.weight}">${this._esc(r.word)}</span>`;
+      }).join('');
+    } else {
+      // Mostrar las palabras clave de los containers si existen
+      const allWords = [];
+      if (window.MiBrandaDataService) {
+        // Las palabras clave ya están en los containers cargados
+      }
+      el.innerHTML = `<p style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0"><i class="fas fa-info-circle" style="margin-right:0.4rem"></i>Las palabras clave y conceptos resonantes aparecerán aquí cuando VERA analice el contenido publicado.</p>`;
+    }
+  }
+
+  /* ── Missions / OpenClaw activity ─────────────────────────── */
+  _buildMBMissions(missionsRes, crisisRes) {
+    const el = document.getElementById('mbMissions');
+    if (!el) return;
+    const hasMissions = missionsRes && !missionsRes.isEmpty && Array.isArray(missionsRes.data) && missionsRes.data.length > 0;
+
+    if (!hasMissions) {
+      el.innerHTML = `<div class="mb-mission mb-m--none"><i class="fas fa-circle-check mb-mission-icon"></i><span class="mb-mission-msg">OpenClaw no tiene misiones activas en este momento. Los datos se actualizarán automáticamente.</span><span class="mb-mission-time">Ahora</span></div>`;
+      return;
+    }
+
+    const statusCls  = { completed:'mb-m--done', running:'mb-m--running', pending:'mb-m--running', failed:'mb-m--alert' };
+    const statusIcon = { completed:'fa-check-circle', running:'fa-spinner fa-spin', pending:'fa-clock', failed:'fa-triangle-exclamation' };
+    el.innerHTML = missionsRes.data.map(m => {
+      const st  = m.status || 'pending';
+      const msg = m.result_reference?.summary || m.action_payload?.description || `Misión: ${m.mission_type}`;
+      const time = this._relTime(m.created_at);
+      return `<div class="mb-mission ${statusCls[st] || 'mb-m--running'}"><i class="fas ${statusIcon[st] || 'fa-clock'} mb-mission-icon"></i><span class="mb-mission-msg">${this._esc(msg)}</span><span class="mb-mission-time">${time}</span></div>`;
+    }).join('');
+  }
+
+  /* ── Widgets HTML que dependen de datos ──────────────────── */
+  _renderMAPWidget(mapRes) {
+    const el = document.getElementById('mbMAPBody');
+    if (!el) return;
+    const hasReal = mapRes && !mapRes.isEmpty && Array.isArray(mapRes.data) && mapRes.data.length > 0;
+    if (!hasReal) {
+      el.innerHTML = this._emptyState('fa-tag', 'Sin datos de precio', 'Cuando OpenClaw capture precios de retailers, aparecerán aquí con semáforo de cumplimiento MAP.');
+      return;
+    }
+    const statusIcon  = { ok:'fa-circle-check', alert:'fa-circle-xmark', warning:'fa-triangle-exclamation' };
+    const statusLabel = { ok:'Cumple', alert:'Viola MAP', warning:'Revisar' };
+    const statusCls   = { ok:'mb-map--ok', alert:'mb-map--alert', warning:'mb-map--warning' };
+    const fmt = (n, cur) => n != null ? `${cur || 'MXN'} $${Number(n).toLocaleString()}` : '—';
+    const fmtDelta = (d, cur) => d == null ? '—' : `${d>=0?'+':''}${cur||'MXN'} $${Math.abs(d).toLocaleString()}`;
+    el.innerHTML = `
+      <div class="mb-map-table-wrap">
+        <table class="mb-map-table">
+          <thead><tr><th>Retailer</th><th>Producto</th><th>Precio actual</th><th>MAP</th><th>Diferencia</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${mapRes.data.slice(0,10).map(r => `<tr>
+              <td>${this._esc(r.retailer)}</td>
+              <td>${this._esc(r.product || r.sku)}</td>
+              <td class="mb-map-price">${fmt(r.price, r.currency)}</td>
+              <td class="mb-map-price mb-map-ref">${fmt(r.map, r.currency)}</td>
+              <td class="mb-map-delta ${r.status==='alert'?'mb-delta--neg':r.status==='warning'?'mb-delta--warn':'mb-delta--pos'}">${fmtDelta(r.delta, r.currency)}</td>
+              <td><span class="mb-map-badge ${statusCls[r.status]}"><i class="fas ${statusIcon[r.status]}"></i> ${statusLabel[r.status]}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  _renderStockWidget(stockRes) {
+    const el = document.getElementById('mbStockBody');
+    if (!el) return;
+    const hasReal = stockRes && !stockRes.isEmpty && Array.isArray(stockRes.data) && stockRes.data.length > 0;
+    if (!hasReal) {
+      el.innerHTML = this._emptyState('fa-boxes-stacking', 'Sin datos de stock', 'OpenClaw mostrará disponibilidad en Amazon, Mercado Libre y otros retailers cuando active el monitoreo.');
+      return;
+    }
+    // Construir grilla dinámica de (sku x retailer)
+    const bySkuRetailer = {};
+    const skus = [], retailers = [];
+    stockRes.data.forEach(r => {
+      if (!skus.includes(r.sku)) skus.push(r.sku);
+      if (!retailers.includes(r.retailer)) retailers.push(r.retailer);
+      bySkuRetailer[`${r.sku}|${r.retailer}`] = r.stock_status;
+    });
+    const icon = { in_stock:'✓', out_of_stock:'✗', low_stock:'!', unknown:'?' };
+    const cls  = { in_stock:'mb-stock--ok', out_of_stock:'mb-stock--out', low_stock:'mb-stock--low', unknown:'mb-stock--low' };
+    el.innerHTML = `
+      <div class="mb-stock-grid">
+        <div class="mb-stock-header-row" style="grid-template-columns:1.5fr ${retailers.map(()=>'1fr').join(' ')}">
+          <span>Producto</span>${retailers.map(r=>`<span>${r}</span>`).join('')}
+        </div>
+        ${skus.slice(0,6).map(sku => `
+          <div class="mb-stock-row" style="grid-template-columns:1.5fr ${retailers.map(()=>'1fr').join(' ')}">
+            <span class="mb-stock-name">${sku}</span>
+            ${retailers.map(ret => {
+              const st = bySkuRetailer[`${sku}|${ret}`] || 'unknown';
+              return `<span class="mb-stock-cell ${cls[st]}">${icon[st]||'?'}</span>`;
+            }).join('')}
+          </div>`).join('')}
+      </div>`;
+  }
+
+  _renderInfluenceWidget(influenciaRes) {
+    const el = document.getElementById('mbInfluenceBody');
+    if (!el) return;
+    const hasReal = influenciaRes && !influenciaRes.isEmpty && Array.isArray(influenciaRes.data) && influenciaRes.data.length > 0;
+    if (!hasReal) {
+      el.innerHTML = this._emptyState('fa-star', 'Sin entidades monitoreadas', 'Agrega intelligence_entities para rastrear influencers reales y su impacto en la marca.');
+      return;
+    }
+    const pIcon = { instagram:'fa-instagram', tiktok:'fa-tiktok', youtube:'fa-youtube', twitter:'fa-twitter', web:'fa-globe', facebook:'fa-facebook-f' };
+    el.innerHTML = `<div class="mb-influence-list">${influenciaRes.data.slice(0,5).map((p, i) => {
+      const score = Math.min(100, Math.round((p.influenceScore || 0)));
+      const plat  = (p.platform || 'web').toLowerCase();
+      const fab   = pIcon[plat] || 'fa-globe';
+      const fam   = fab.startsWith('fa-globe') ? 'fas' : 'fab';
+      return `<div class="mb-influence-row">
+        <span class="mb-inf-rank">#${i+1}</span>
+        <div class="mb-inf-info">
+          <span class="mb-inf-name">${this._esc(p.target_identifier || p.name)}</span>
+          <span class="mb-inf-type">${this._esc(p.name)}${p.followers ? ` · ${p.followers}` : ''}</span>
+        </div>
+        <i class="${fam} ${fab} mb-inf-platform"></i>
+        <div class="mb-inf-score-wrap">
+          <div class="mb-inf-bar" style="width:${score}%"></div>
+          <span class="mb-inf-score">${score}</span>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  _renderCrisisWidget(crisisRes) {
+    const el = document.getElementById('mbCrisisBody');
+    if (!el) return;
+    const hasData = crisisRes && !crisisRes.isEmpty && crisisRes.data;
+    const vulns   = hasData ? (crisisRes.data.vulnerabilities || []) : [];
+    if (!vulns.length) {
+      el.innerHTML = `<div class="mb-crisis-event mb-crisis--none"><div class="mb-crisis-icon"><i class="fas fa-circle-check"></i></div><div class="mb-crisis-body"><p class="mb-crisis-msg">No hay crisis ni vulnerabilidades activas. ✓</p><div class="mb-crisis-meta"><span class="mb-crisis-time">Ahora</span><span class="mb-crisis-action">Todo en orden</span></div></div></div>`;
+      return;
+    }
+    const lvlCls  = { low:'mb-crisis--low', medium:'mb-crisis--low', high:'mb-crisis--med', critical:'mb-crisis--high' };
+    const lvlIcon = { low:'fa-circle-dot', medium:'fa-triangle-exclamation', high:'fa-triangle-exclamation', critical:'fa-circle-xmark' };
+    el.innerHTML = `<div class="mb-crisis-timeline">${vulns.slice(0,5).map(v => `
+      <div class="mb-crisis-event ${lvlCls[v.severity]||'mb-crisis--low'}">
+        <div class="mb-crisis-icon"><i class="fas ${lvlIcon[v.severity]||'fa-circle-dot'}"></i></div>
+        <div class="mb-crisis-body">
+          <p class="mb-crisis-msg">${this._esc(v.title)}${v.description ? ' — ' + this._esc(v.description.slice(0,120)) : ''}</p>
+          <div class="mb-crisis-meta">
+            <span class="mb-crisis-time">${this._relTime(v.created_at)}</span>
+            <span class="mb-crisis-action">${v.status === 'in_progress' ? 'En revisión' : 'Abierta'}</span>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  _renderSWOTWidget(swotRes) {
+    const el = document.getElementById('mbSWOTBody');
+    if (!el) return;
+    const hasReal = swotRes && !swotRes.isEmpty && swotRes.data;
+    if (!hasReal) {
+      el.innerHTML = this._emptyState('fa-chess', 'SWOT en construcción', 'VERA analizará fortalezas, debilidades, oportunidades y amenazas cuando haya suficientes datos.');
+      return;
+    }
+    const d = swotRes.data;
+    const quad = (title, items, cls, icon) => {
+      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty"><i class="fas fa-ellipsis"></i> Sin datos aún</li>`;
+      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header"><i class="fas ${icon}"></i> ${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
+    };
+    el.innerHTML = `<div class="mb-swot-grid">
+      ${quad('Fortalezas',  d.strengths || [],    'mb-swot--strength',    'fa-shield')}
+      ${quad('Oportunidades', d.opportunities||[], 'mb-swot--opportunity', 'fa-bolt')}
+      ${quad('Debilidades',  d.weaknesses || [],  'mb-swot--weakness',   'fa-triangle-exclamation')}
+      ${quad('Amenazas',    d.threats || [],      'mb-swot--threat',     'fa-circle-exclamation')}
+    </div>`;
+  }
+
+  /* ── Helpers UI ─────────────────────────────────────────────── */
+  _overlayEmpty(canvas, msg) {
+    const wrap = canvas.closest('.mb-widget-body') || canvas.parentElement;
+    if (!wrap) return;
+    const ov = document.createElement('div');
+    ov.className = 'mb-chart-empty-overlay';
+    ov.innerHTML = `<i class="fas fa-chart-simple"></i><span>${msg}</span>`;
+    canvas.style.opacity = '0.15';
+    wrap.style.position = 'relative';
+    wrap.appendChild(ov);
+  }
+
+  _emptyState(icon, title, desc) {
+    return `<div class="mb-empty-state"><i class="fas ${icon}"></i><strong>${title}</strong><p>${desc}</p></div>`;
+  }
+
+  _relTime(iso) {
+    if (!iso) return '—';
+    const diff = Date.now() - new Date(iso).getTime();
+    const min  = Math.floor(diff / 60000);
+    if (min < 1)   return 'Ahora';
+    if (min < 60)  return `Hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24)    return `Hace ${h} h`;
+    return `Hace ${Math.floor(h/24)} d`;
   }
 
   /* ── Score ring animation ─────────────────────────────────── */
