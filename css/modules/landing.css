@@ -3354,12 +3354,12 @@ body.entrance-done .landing-header {
     cursor: not-allowed;
 }
 
-/* ─── Landing: “Lo que pasa cuando…” (fondo blanco, dos columnas) ─── */
+/* ─── Landing: “Lo que pasa cuando…” (fondo gris claro, dos columnas) ─── */
 .landing-different {
     position: relative;
     z-index: 4;
     width: 100%;
-    background: #ffffff;
+    background: rgba(245, 245, 247, 1);
     color: #0a0a0b;
     padding: clamp(3rem, 7vw, 5rem) 0;
     box-sizing: border-box;
