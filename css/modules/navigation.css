@@ -2319,6 +2319,32 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     pointer-events: auto;
 }
 
+/* Notifications Modal (global, reemplaza dropdown/flyout en header) */
+#modals-portal .modal.notifications-modal .modal-overlay {
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+#modals-portal .modal.notifications-modal .modal-content {
+    width: 680px;
+    max-width: min(680px, calc(100vw - 48px));
+    min-height: 420px;
+    max-height: min(78vh, 760px);
+    border: 1px solid var(--glass-white-border);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.notifications-modal-body {
+    padding: 12px 14px;
+    max-height: min(62vh, 620px);
+    overflow-y: auto;
+}
+
+.notifications-modal-list {
+    gap: 6px;
+}
+
 .user-settings-modal-body {
     display: grid;
     grid-template-columns: 220px 1fr;

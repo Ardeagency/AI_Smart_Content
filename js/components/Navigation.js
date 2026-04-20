@@ -430,29 +430,84 @@ class Navigation {
   }
 
   /**
-   * Header: apertura inmediata (UX como #userDropdown) y carga async.
+   * Modal global de notificaciones (patrón idéntico a Settings: portal + overlay).
    */
-  async openHeaderNotificationsDropdown(triggerBtn) {
-    this.ensureNotificationsDropdown();
-    const panel = document.getElementById('notificationsDropdown');
-    if (!panel || !triggerBtn) return;
+  ensureNotificationsModal() {
+    const portal = document.getElementById('modals-portal');
+    if (!portal) return;
+    if (document.getElementById('notificationsModal')) return;
 
-    if (panel.classList.contains('active')) {
-      this.closeNotificationsDropdown();
-      return;
+    const html = `
+      <div class="modal user-settings-modal notifications-modal" id="notificationsModal" aria-hidden="true" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="notificationsModalTitle">
+        <div class="modal-overlay" id="notificationsModalOverlay"></div>
+        <div class="modal-content glass-white">
+          <div class="modal-header">
+            <h3 id="notificationsModalTitle">Notificaciones</h3>
+            <button type="button" class="modal-close" id="notificationsModalClose" data-action="close-notifications-modal" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body notifications-modal-body" id="notificationsModalBody">
+            <div class="nav-flyout-notifications-loading">Cargando…</div>
+          </div>
+        </div>
+      </div>`;
+
+    portal.insertAdjacentHTML('beforeend', html);
+
+    const close = () => this.closeNotificationsModal();
+    document.getElementById('notificationsModalOverlay')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    });
+    document.getElementById('notificationsModalClose')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    });
+    const modal = document.getElementById('notificationsModal');
+    if (modal) {
+      modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') this.closeNotificationsModal();
+      });
     }
+    if (!this._notificationsModalDelegatedCloseBound) {
+      this._notificationsModalDelegatedCloseBound = true;
+      document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('[data-action="close-notifications-modal"]');
+        const overlay = e.target.closest('#notificationsModalOverlay');
+        if (closeBtn || overlay) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.closeNotificationsModal();
+        }
+      });
+    }
+  }
 
+  closeNotificationsModal() {
+    const modal = document.getElementById('notificationsModal');
+    if (!modal) return;
+    modal.classList.remove('active', 'modal-open');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = 'none';
+  }
+
+  async openNotificationsModal() {
+    this.ensureNotificationsModal();
+    const modal = document.getElementById('notificationsModal');
+    const body = document.getElementById('notificationsModalBody');
+    if (!modal || !body) return;
+
+    this.closeNotificationsDropdown();
     if (typeof this.closeFlyout === 'function') this.closeFlyout();
     const ud = document.getElementById('userDropdown');
     if (ud) ud.classList.remove('active');
 
-    if (typeof this._renderNotificationsDropdownContent === 'function') {
-      this._renderNotificationsDropdownContent(panel, null, 'Cargando…', false);
-    } else {
-      panel.innerHTML = '<div class="nav-flyout-notifications-loading">Cargando…</div>';
-    }
-    this._showNotificationsDropdownPanel(panel);
-    this.positionUserDropdown(triggerBtn, panel);
+    modal.classList.add('active', 'modal-open');
+    modal.setAttribute('aria-hidden', 'false');
+    modal.style.display = 'flex';
+
+    body.innerHTML = '<div class="nav-flyout-notifications-loading">Cargando…</div>';
 
     const user = window.authService?.getCurrentUser?.();
     let supabase = window.authService?.supabase;
@@ -465,10 +520,7 @@ class Navigation {
     }
 
     if (!user?.id || !supabase?.from) {
-      if (typeof this._renderNotificationsDropdownContent === 'function') {
-        this._renderNotificationsDropdownContent(panel, [], null, true);
-      }
-      this.positionUserDropdown(triggerBtn, panel);
+      body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
       return;
     }
 
@@ -477,13 +529,60 @@ class Navigation {
       .select('id, title, message, type, is_read, created_at, link_to')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(100);
 
-    if (typeof this._renderNotificationsDropdownContent === 'function') {
-      this._renderNotificationsDropdownContent(panel, error ? [] : (data || []), null, true, error?.message);
+    if (error) {
+      body.innerHTML = `<div class="nav-flyout-notifications-error">${_escapeHtml(error.message || 'No se pudieron cargar notificaciones')}</div>`;
+      return;
     }
-    this.positionUserDropdown(triggerBtn, panel);
-    this.refreshNotificationsBadge();
+
+    const list = Array.isArray(data) ? data : [];
+    if (!list.length) {
+      body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
+      return;
+    }
+
+    body.innerHTML =
+      '<div class="nav-flyout-list nav-flyout-notifications-list notifications-modal-list">' +
+      list
+        .map((n) => {
+          const type = n.type || 'info';
+          const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
+          const unread = !n.is_read;
+          const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
+          return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
+            <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
+            <span class="nav-flyout-notification-title">${_escapeHtml(n.title || '')}</span>
+            <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 180))}${(n.message || '').length > 180 ? '…' : ''}</span>
+            <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
+          </button>`;
+        })
+        .join('') +
+      '</div>';
+
+    body.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const link = btn.dataset.link;
+        if (id) {
+          try {
+            let client = window.authService?.supabase;
+            if (!client?.from && window.supabaseService?.getClient) {
+              client = await window.supabaseService.getClient();
+            }
+            if (client?.from) {
+              await client.from('user_notifications').update({ is_read: true }).eq('id', id);
+            }
+          } catch (_) {}
+          this.refreshNotificationsBadge();
+          btn.classList.remove('unread');
+        }
+        if (link && window.router) {
+          this.closeNotificationsModal();
+          window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+        }
+      });
+    });
   }
 
   /**
@@ -1045,6 +1144,7 @@ class Navigation {
    */
   setupEventListeners() {
     this.ensureNotificationsDropdown();
+    this.ensureNotificationsModal();
 
     // Botón del sidebar (icono colapsado): en móvil abre/cierra overlay; en desktop colapsa/expande sidebar
     const sidebarToggle = document.getElementById('sidebarToggleBtn');
@@ -1143,7 +1243,7 @@ class Navigation {
       document.addEventListener('credits-updated', () => this.refreshCredits());
     }
 
-    /* Delegación en document: header se maneja aquí, sidebar sigue en flyout lateral. */
+    /* Delegación en document: notificaciones abren modal global (UX unificada). */
     if (!this._notificationsClickDelegation) {
       this._notificationsClickDelegation = true;
       document.addEventListener(
@@ -1153,23 +1253,7 @@ class Navigation {
           if (!btn) return;
           e.preventDefault();
           e.stopPropagation();
-          const fromHeader = !!document.getElementById('appHeader')?.contains(btn);
-          if (fromHeader) {
-            this.openHeaderNotificationsDropdown(btn);
-            return;
-          }
-          const flyout = document.getElementById('navFlyout');
-          const notifFlyoutOpen =
-            flyout?.classList.contains('open') && flyout.querySelector('.nav-flyout-notifications-body');
-          if (notifFlyoutOpen) {
-            this.closeFlyout();
-            return;
-          }
-          if (typeof this.openNotificationsFlyout === 'function') {
-            this.openNotificationsFlyout(btn);
-          }
-          const ud = document.getElementById('userDropdown');
-          if (ud) ud.classList.remove('active');
+          this.openNotificationsModal();
         },
         false
       );
