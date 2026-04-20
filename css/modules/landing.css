@@ -3150,13 +3150,13 @@ body.entrance-done .landing-header {
     }
 }
 
-/* ─── Landing: carrusel “Por qué…” (fondo #F5F5F7) ─── */
+/* ─── Landing: carrusel “Por qué…” (#landing-7, fondo negro / tarjetas planas) ─── */
 .landing-why {
     position: relative;
     z-index: 4;
     width: 100%;
-    background-color: rgba(245, 245, 247, 1);
-    color: #0a0a0b;
+    background-color: #000000;
+    color: #ffffff;
     padding: clamp(2.75rem, 6vw, 4.25rem) 0 clamp(2rem, 4vw, 2.75rem);
     box-sizing: border-box;
 }
@@ -3222,25 +3222,17 @@ body.entrance-done .landing-header {
     }
 }
 
-/* Borde gradiente (naranja → violeta → azul → cyan) */
 .landing-why__card-wrap {
     flex: 0 0 auto;
     width: min(340px, calc(100vw - 80px));
     max-width: 340px;
     scroll-snap-align: start;
     scroll-snap-stop: normal;
-    padding: 2px;
+    padding: 0;
     border-radius: 28px;
-    background: conic-gradient(
-        from 45deg at 50% 50%,
-        #ff6500 0deg,
-        #c44dff 90deg,
-        #2979ff 180deg,
-        #00e7ff 270deg,
-        #ff6500 360deg
-    );
+    background: transparent;
     box-sizing: border-box;
-    box-shadow: 0 12px 40px rgba(15, 15, 20, 0.08);
+    box-shadow: none;
 }
 
 .landing-why__card {
@@ -3250,14 +3242,14 @@ body.entrance-done .landing-header {
     min-height: min(360px, 72vw);
     padding: clamp(28px, 5vw, 40px);
     border-radius: 26px;
-    background: #ffffff;
+    background: #000000;
     box-sizing: border-box;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
 }
 
 .landing-why__card-wrap:hover .landing-why__card {
     transform: translateY(-4px);
-    box-shadow: 0 20px 52px rgba(15, 15, 20, 0.14);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 .landing-why__card-body {
@@ -3271,7 +3263,7 @@ body.entrance-done .landing-header {
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: -0.02em;
-    color: #0a0a0b;
+    color: #ffffff;
 }
 
 .landing-why__card-desc {
@@ -3279,7 +3271,7 @@ body.entrance-done .landing-header {
     font-size: 0.9375rem;
     line-height: 1.5;
     font-weight: 400;
-    color: rgba(10, 10, 11, 0.72);
+    color: rgba(255, 255, 255, 0.72);
 }
 
 .landing-why__fab {
@@ -3292,9 +3284,10 @@ body.entrance-done .landing-header {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1a1a1e;
+    background: transparent;
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    box-shadow: none;
     pointer-events: none;
 }
 
@@ -3319,20 +3312,21 @@ body.entrance-done .landing-header {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.22);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    color: rgba(10, 10, 11, 0.75);
-    background: #e8e8ed;
-    transition: background 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.08);
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
 }
 
 .landing-why__nav-btn:hover:not(:disabled) {
-    background: #dedee3;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.32);
 }
 
 .landing-why__nav-btn:active:not(:disabled) {
@@ -3340,12 +3334,12 @@ body.entrance-done .landing-header {
 }
 
 .landing-why__nav-btn--next {
-    background: #d2d2d8;
-    color: rgba(10, 10, 11, 0.88);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .landing-why__nav-btn--next:hover:not(:disabled) {
-    background: #c6c6ce;
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .landing-why__nav-btn:disabled,
