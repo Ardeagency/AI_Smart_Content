@@ -623,7 +623,7 @@ body.entrance-done .landing-header {
   cursor: pointer;
   overflow: hidden;
   outline: none;
-  transition: flex 0.55s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s ease;
+  transition: flex 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .lp-pain__col:last-child {
@@ -805,14 +805,6 @@ body.entrance-done .landing-header {
 
 .lp-pain__col:focus-visible {
   box-shadow: inset 0 0 0 2px rgba(124, 77, 255, 0.45);
-}
-
-@media (hover: hover) {
-  .lp-pain__col:not(.lp-pain__col--active):hover {
-    flex: 1.35;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.02);
-  }
 }
 
 @media (max-width: 768px) {

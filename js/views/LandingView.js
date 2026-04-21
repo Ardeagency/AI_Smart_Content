@@ -254,7 +254,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col lp-pain__col--active" role="listitem" tabindex="0" aria-current="true">
+            <article class="lp-pain__col lp-pain__col--active" role="listitem" tabindex="0" aria-current="true" data-pain-default>
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -883,7 +883,10 @@ class LandingView extends PublicBaseView {
     const cols = Array.from(stage.querySelectorAll('.lp-pain__col'));
     if (!cols.length) return;
 
+    const defaultCol = stage.querySelector('.lp-pain__col[data-pain-default]') || cols[Math.min(3, cols.length - 1)];
+
     const setActive = (article) => {
+      if (!article) return;
       cols.forEach((c) => {
         const on = c === article;
         c.classList.toggle('lp-pain__col--active', on);
@@ -891,10 +894,20 @@ class LandingView extends PublicBaseView {
       });
     };
 
-    const onClick = (e) => {
-      const col = e.target.closest('.lp-pain__col');
-      if (!col || !stage.contains(col)) return;
-      setActive(col);
+    const onColEnter = (e) => {
+      const col = e.currentTarget;
+      if (col && cols.includes(col)) setActive(col);
+    };
+
+    const onStageLeave = (e) => {
+      const next = e.relatedTarget;
+      if (next && stage.contains(next)) return;
+      setActive(defaultCol);
+    };
+
+    const onColClick = (e) => {
+      const col = e.currentTarget;
+      if (col && cols.includes(col)) setActive(col);
     };
 
     const onKey = (e) => {
@@ -905,12 +918,35 @@ class LandingView extends PublicBaseView {
       setActive(col);
     };
 
-    stage.addEventListener('click', onClick);
+    const onStageFocusIn = (e) => {
+      const col = e.target.closest('.lp-pain__col');
+      if (col && cols.includes(col)) setActive(col);
+    };
+
+    const onStageFocusOut = () => {
+      requestAnimationFrame(() => {
+        if (!stage.contains(document.activeElement)) setActive(defaultCol);
+      });
+    };
+
+    cols.forEach((col) => {
+      col.addEventListener('mouseenter', onColEnter);
+      col.addEventListener('click', onColClick);
+    });
+    stage.addEventListener('mouseleave', onStageLeave);
+    stage.addEventListener('focusin', onStageFocusIn);
     stage.addEventListener('keydown', onKey);
+    stage.addEventListener('focusout', onStageFocusOut);
 
     this.painRoadmapCleanup = () => {
-      stage.removeEventListener('click', onClick);
+      cols.forEach((col) => {
+        col.removeEventListener('mouseenter', onColEnter);
+        col.removeEventListener('click', onColClick);
+      });
+      stage.removeEventListener('mouseleave', onStageLeave);
+      stage.removeEventListener('focusin', onStageFocusIn);
       stage.removeEventListener('keydown', onKey);
+      stage.removeEventListener('focusout', onStageFocusOut);
     };
   }
 
