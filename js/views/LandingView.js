@@ -192,7 +192,7 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">01</span><span class="lp-pain__col-num-join" aria-hidden="true"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Llegas tarde</span></span>
+                    <span class="lp-pain__col-num-main">01</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Llegas tarde</span></span>
                   </div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Llegan tarde al mercado</h3>
@@ -213,18 +213,21 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
-                  <p class="lp-pain__highlight-title">Aquí impacta</p>
-                  <p class="lp-pain__highlight-sub">Cuando solo reaccionás, el timing ya lo definió otro.</p>
+                  <p class="lp-pain__highlight-eyebrow">Te falta contexto</p>
+                  <p class="lp-pain__highlight-title">Decides con visión parcial</p>
+                  <p class="lp-pain__highlight-sub">Hay contenido funcionando hoy… pero no lo estás viendo.<br>Publicas, pero no necesariamente en la dirección correcta.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">02</div>
+                  <div class="lp-pain__col-num" aria-hidden="true">
+                    <span class="lp-pain__col-num-main">02</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Compiten con información incompleta</span></span>
+                  </div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Compiten con información incompleta</h3>
                     <p class="lp-pain__col-body">Publicas con lo que ya tenías preparado, no con lo que está pasando hoy.<br>Mientras el mercado cambia todos los días, tu contenido sigue un ritmo que ya se quedó atrás.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>Las marcas reactivas pierden el 40% de las oportunidades de timing. La velocidad es ventaja competitiva.</p>
+                      <p>El volumen de contenido y señales en internet cambia constantemente.</p>
+                      <p>Sin una visión actualizada del mercado, es fácil pasar por alto lo que ya está funcionando.</p>
                     </div>
                   </div>
                 </div>
@@ -238,18 +241,21 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
-                  <p class="lp-pain__highlight-title">Aquí impacta</p>
-                  <p class="lp-pain__highlight-sub">El cuello de botella deja de ser creatividad: es capacidad.</p>
+                  <p class="lp-pain__highlight-eyebrow">Se pierde el enfoque</p>
+                  <p class="lp-pain__highlight-title">El mensaje se distorsiona</p>
+                  <p class="lp-pain__highlight-sub">Después de tantos ajustes, la idea pierde claridad.<br>El mensaje llega… pero no con la fuerza que debería.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">03</div>
+                  <div class="lp-pain__col-num" aria-hidden="true">
+                    <span class="lp-pain__col-num-main">03</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Su comunicación pierde consistencia</span></span>
+                  </div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Su comunicación pierde consistencia</h3>
                     <p class="lp-pain__col-body">La idea original se transforma en el proceso.<br>Entre equipos, proveedores y cambios, lo que comunicas deja de ser claro y consistente.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>Los equipos dedican el 60% de su tiempo a tareas repetitivas que un sistema inteligente hace en segundos.</p>
+                      <p>Cuando múltiples actores intervienen en la producción, la interpretación de la marca tiende a variar.</p>
+                      <p>Sin una referencia operativa constante, la consistencia se vuelve difícil de sostener.</p>
                     </div>
                   </div>
                 </div>
@@ -263,18 +269,21 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
-                  <p class="lp-pain__highlight-title">Aquí impacta</p>
-                  <p class="lp-pain__highlight-sub">La IA sin ADN de marca diluye posicionamiento en cada pieza.</p>
+                  <p class="lp-pain__highlight-eyebrow">Todo toma demasiado tiempo</p>
+                  <p class="lp-pain__highlight-title">Tu operación no sigue el ritmo</p>
+                  <p class="lp-pain__highlight-sub">Crear contenido implica tiempo, equipos y múltiples validaciones.<br>Si necesitas cambiar algo, el proceso vuelve a empezar.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">04</div>
+                  <div class="lp-pain__col-num" aria-hidden="true">
+                    <span class="lp-pain__col-num-main">04</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Dependen de producción lenta</span></span>
+                  </div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Dependen de producción lenta</h3>
                     <p class="lp-pain__col-body">Cada contenido implica grabación, diseño, revisiones y aprobaciones que toman días.<br>Cuando finalmente publicas, el momento ya pasó.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>La IA genérica produce contenido genérico. Sin identidad estructurada, cada pieza erosiona tu posicionamiento.</p>
+                      <p>La producción tradicional de contenido implica múltiples etapas y validaciones.</p>
+                      <p>Este flujo limita la velocidad de reacción frente a un mercado que cambia todos los días.</p>
                     </div>
                   </div>
                 </div>
@@ -288,18 +297,21 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
-                  <p class="lp-pain__highlight-title">Aquí impacta</p>
-                  <p class="lp-pain__highlight-sub">Sin memoria operativa, cada campaña arranca desde cero otra vez.</p>
+                  <p class="lp-pain__highlight-eyebrow">No acumulas ventaja</p>
+                  <p class="lp-pain__highlight-title">Sigues empezando desde cero</p>
+                  <p class="lp-pain__highlight-sub">Publicas más…<br>pero no mejoras lo que haces.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">05</div>
+                  <div class="lp-pain__col-num" aria-hidden="true">
+                    <span class="lp-pain__col-num-main">05</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Repiten sin aprender</span></span>
+                  </div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Repiten sin aprender</h3>
                     <p class="lp-pain__col-body">El mercado cambia rápido, pero tu forma de operar no.<br>Sigues repitiendo lo mismo sin convertir lo aprendido en una ventaja real.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>Sin memoria operativa, repites los mismos errores. La ventaja competitiva viene de un sistema que mejora.</p>
+                      <p>Sin sistemas que registren y optimicen decisiones, el aprendizaje se pierde entre campañas.</p>
+                      <p>Esto impide construir una ventaja sostenida en el tiempo.</p>
                     </div>
                   </div>
                 </div>
