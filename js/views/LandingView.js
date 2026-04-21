@@ -191,12 +191,15 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">01</div>
+                  <div class="lp-pain__col-num" aria-hidden="true">
+                    <span class="lp-pain__col-num-main">01</span><span class="lp-pain__col-num-join" aria-hidden="true"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Llegas tarde</span></span>
+                  </div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Llegas tarde</h3>
+                    <h3 class="lp-pain__col-title">Llegan tarde al mercado</h3>
                     <p class="lp-pain__col-body">Las tendencias aparecen, escalan y se saturan rápido.<br>Tu marca llega cuando el impacto ya pasó.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>El ciclo de vida de una tendencia digital puede durar días o incluso horas.<br>Las marcas que reaccionan tarde compiten en un entorno saturado donde es mucho más difícil destacar.</p>
+                      <p>El ciclo de vida de una tendencia digital puede durar días o incluso horas.</p>
+                      <p>Las marcas que reaccionan tarde compiten en un entorno saturado donde es mucho más difícil destacar.</p>
                     </div>
                   </div>
                 </div>
