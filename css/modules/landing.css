@@ -614,13 +614,18 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col {
+  --lp-pain-pad-x: clamp(16px, 2vw, 28px);
+  /* Centro del punto: alineado con el borde izquierdo del contenido + mitad del dot (11px) */
+  --lp-pain-rail-center: calc(var(--lp-pain-pad-x) + 5px);
+  /* La línea empieza bajo el slot del highlight para no cruzar el texto (activo o no) */
+  --lp-pain-rail-line-top: clamp(172px, 26.5vh, 248px);
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 100%;
   height: 100%;
-  padding: clamp(20px, 2.5vw, 32px) clamp(16px, 2vw, 28px) clamp(28px, 4vw, 48px);
+  padding: clamp(20px, 2.5vw, 32px) var(--lp-pain-pad-x) clamp(28px, 4vw, 48px);
   border-right: 1px solid rgba(255, 255, 255, 0.07);
   cursor: pointer;
   overflow: hidden;
@@ -684,10 +689,10 @@ body.entrance-done .landing-header {
 
 .lp-pain__col-rail-line {
   position: absolute;
-  left: 50%;
-  top: clamp(48px, 7vh, 72px);
+  left: var(--lp-pain-rail-center);
+  top: var(--lp-pain-rail-line-top);
   width: 1px;
-  height: calc(var(--lp-pain-timeline-y) - clamp(48px, 7vh, 72px));
+  height: max(1px, calc(var(--lp-pain-timeline-y) - var(--lp-pain-rail-line-top)));
   transform: translateX(-50%);
   background: linear-gradient(
     to bottom,
@@ -698,7 +703,7 @@ body.entrance-done .landing-header {
 
 .lp-pain__col-rail-dot {
   position: absolute;
-  left: 50%;
+  left: var(--lp-pain-rail-center);
   top: var(--lp-pain-timeline-y);
   width: 11px;
   height: 11px;
@@ -717,6 +722,8 @@ body.entrance-done .landing-header {
   flex-direction: column;
   flex: 1;
   min-height: 100%;
+  /* Hueco a la derecha del rail: ancho del punto + separación con títulos/número */
+  padding-left: calc(11px + 12px);
 }
 
 /* Mismo hueco con/sin activo: evita brinco al mostrar highlight */
@@ -727,6 +734,7 @@ body.entrance-done .landing-header {
   flex-shrink: 0;
   box-sizing: border-box;
   min-height: clamp(158px, 24vh, 228px);
+  padding-top: clamp(10px, 1.4vh, 18px);
   padding-bottom: clamp(12px, 2vw, 20px);
   max-width: 34ch;
   opacity: 0;
@@ -877,6 +885,10 @@ body.entrance-done .landing-header {
 
   .lp-pain__col-rail {
     display: none;
+  }
+
+  .lp-pain__col-inner {
+    padding-left: 0;
   }
 
   .lp-pain__col-highlight {
