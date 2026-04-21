@@ -439,14 +439,15 @@ body.entrance-done .landing-header {
   gap: 28px;
 }
 
-.lp-cred__label {
-  font-size: clamp(0.68rem, 1vw, 0.78rem);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
-  text-align: center;
+.lp-cred__title {
   margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.88);
+  text-align: center;
+  max-width: 22em;
 }
 
 .lp-cred__track-wrap {
@@ -459,24 +460,51 @@ body.entrance-done .landing-header {
 .lp-cred__track {
   display: flex;
   align-items: center;
-  gap: clamp(28px, 4vw, 52px);
+  gap: clamp(32px, 5vw, 64px);
   width: max-content;
-  animation: lp-scroll-left 22s linear infinite;
+  animation: lp-scroll-left 38s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lp-cred__track { animation: none; }
 }
 
-.lp-cred__logo {
-  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
+.lp-cred__brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  user-select: none;
+}
+
+.lp-cred__brand--logo .lp-cred__brand-img {
+  display: block;
+  height: clamp(20px, 2.4vw, 26px);
+  width: auto;
+  max-width: min(120px, 22vw);
+  object-fit: contain;
+  /* Logos Simple Icons en color marca → monocromo claro sobre fondo oscuro */
+  filter: brightness(0) invert(1);
+  opacity: 0.72;
+  transition: opacity 0.2s ease;
+}
+
+.lp-cred__brand--logo:hover .lp-cred__brand-img {
+  opacity: 0.95;
+}
+
+.lp-cred__brand--text {
+  font-size: clamp(0.78rem, 1.15vw, 0.95rem);
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.55);
   white-space: nowrap;
-  flex-shrink: 0;
   transition: color 0.2s ease;
-  user-select: none;
+}
+
+.lp-cred__brand--text:hover {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -44,32 +44,75 @@ class LandingView extends PublicBaseView {
       </section>
 
       <!-- ════════ S02: CREDIBILIDAD INMEDIATA ════════ -->
-      <section class="lp-cred" id="landing-2" aria-label="Tecnologías integradas">
+      <section class="lp-cred" id="landing-2" aria-labelledby="lp-cred-heading">
         <div class="lp-cred__inner">
-          <p class="lp-cred__label">Tecnologías que potencian el sistema</p>
+          <h2 id="lp-cred-heading" class="lp-cred__title">Lo que hace que todo funcione</h2>
+          <p class="sr-only">
+            Plataformas e integraciones en el stack: Meta, Google, TikTok, X, Amazon, Mercado Libre, OpenAI, Anthropic, Kling 3.0, Nano Banana PRO, Seedance 2.0, ComfyUI, n8n y Kie AI.
+          </p>
           <div class="lp-cred__track-wrap" aria-hidden="true">
             <div class="lp-cred__track">
-              <span class="lp-cred__logo">OpenAI</span>
-              <span class="lp-cred__logo">Anthropic</span>
-              <span class="lp-cred__logo">Google Gemini</span>
-              <span class="lp-cred__logo">Meta AI</span>
-              <span class="lp-cred__logo">Stability AI</span>
-              <span class="lp-cred__logo">ElevenLabs</span>
-              <span class="lp-cred__logo">Runway</span>
-              <span class="lp-cred__logo">Supabase</span>
-              <span class="lp-cred__logo">Replicate</span>
-              <span class="lp-cred__logo">Perplexity</span>
-              <!-- duplicado para loop continuo -->
-              <span class="lp-cred__logo" aria-hidden="true">OpenAI</span>
-              <span class="lp-cred__logo" aria-hidden="true">Anthropic</span>
-              <span class="lp-cred__logo" aria-hidden="true">Google Gemini</span>
-              <span class="lp-cred__logo" aria-hidden="true">Meta AI</span>
-              <span class="lp-cred__logo" aria-hidden="true">Stability AI</span>
-              <span class="lp-cred__logo" aria-hidden="true">ElevenLabs</span>
-              <span class="lp-cred__logo" aria-hidden="true">Runway</span>
-              <span class="lp-cred__logo" aria-hidden="true">Supabase</span>
-              <span class="lp-cred__logo" aria-hidden="true">Replicate</span>
-              <span class="lp-cred__logo" aria-hidden="true">Perplexity</span>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Meta">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="Meta" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Google">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="Google" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="TikTok">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="TikTok" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="X">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="X" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Amazon">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="Amazon" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Mercado Libre">Mercado Libre</div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="OpenAI">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="OpenAI" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Anthropic">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="Anthropic" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Kling 3.0">Kling 3.0</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Nano Banana PRO">Nano Banana PRO</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Seedance 2.0">Seedance 2.0</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="ComfyUI">ComfyUI</div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="n8n">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg" alt="n8n" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Kie AI">Kie AI</div>
+              <!-- duplicado para carrusel infinito -->
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Meta">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Google">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="TikTok">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="X">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Amazon">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Mercado Libre">Mercado Libre</div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="OpenAI">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="Anthropic">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Kling 3.0">Kling 3.0</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Nano Banana PRO">Nano Banana PRO</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Seedance 2.0">Seedance 2.0</div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="ComfyUI">ComfyUI</div>
+              <div class="lp-cred__brand lp-cred__brand--logo" title="n8n">
+                <img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg" alt="" width="120" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              </div>
+              <div class="lp-cred__brand lp-cred__brand--text" title="Kie AI">Kie AI</div>
             </div>
           </div>
         </div>
