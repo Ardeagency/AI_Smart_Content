@@ -193,8 +193,8 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">01</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Publican sin señal</h3>
-                    <p class="lp-pain__col-body">Crean contenido basado en intuición, no en lo que el mercado está pidiendo en este momento.</p>
+                    <h3 class="lp-pain__col-title">Llegan tarde al mercado</h3>
+                    <p class="lp-pain__col-body">Las tendencias aparecen, escalan y se saturan rápido.<br>Tu marca llega cuando el impacto ya pasó.</p>
                     <div class="lp-pain__col-reveal">
                       <p>Sin escucha activa, cada publicación es una apuesta. El 73% del contenido empresarial no genera engagement real.</p>
                     </div>
@@ -218,8 +218,8 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">02</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Siempre reaccionando</h3>
-                    <p class="lp-pain__col-body">Tu competencia mueve. Tu marca responde. Para cuando actúas, la ventana ya cerró.</p>
+                    <h3 class="lp-pain__col-title">Compiten con información incompleta</h3>
+                    <p class="lp-pain__col-body">Publicas con lo que ya tenías preparado, no con lo que está pasando hoy.<br>Mientras el mercado cambia todos los días, tu contenido sigue un ritmo que ya se quedó atrás.</p>
                     <div class="lp-pain__col-reveal">
                       <p>Las marcas reactivas pierden el 40% de las oportunidades de timing. La velocidad es ventaja competitiva.</p>
                     </div>
@@ -243,8 +243,8 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">03</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Equipos saturados</h3>
-                    <p class="lp-pain__col-body">Más horas, mismo output. La producción manual tiene techo. El sistema nunca descansa.</p>
+                    <h3 class="lp-pain__col-title">Su comunicación pierde consistencia</h3>
+                    <p class="lp-pain__col-body">La idea original se transforma en el proceso.<br>Entre equipos, proveedores y cambios, lo que comunicas deja de ser claro y consistente.</p>
                     <div class="lp-pain__col-reveal">
                       <p>Los equipos dedican el 60% de su tiempo a tareas repetitivas que un sistema inteligente hace en segundos.</p>
                     </div>
@@ -268,8 +268,8 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">04</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">IA sin contexto</h3>
-                    <p class="lp-pain__col-body">Usas herramientas de IA que no conocen tu ADN. Responden prompts, no construyen marca.</p>
+                    <h3 class="lp-pain__col-title">Dependen de producción lenta</h3>
+                    <p class="lp-pain__col-body">Cada contenido implica grabación, diseño, revisiones y aprobaciones que toman días.<br>Cuando finalmente publicas, el momento ya pasó.</p>
                     <div class="lp-pain__col-reveal">
                       <p>La IA genérica produce contenido genérico. Sin identidad estructurada, cada pieza erosiona tu posicionamiento.</p>
                     </div>
@@ -293,8 +293,8 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">05</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Cero aprendizaje</h3>
-                    <p class="lp-pain__col-body">Cada campaña empieza de cero. No hay ventaja acumulada. No hay sistema que aprenda.</p>
+                    <h3 class="lp-pain__col-title">Repiten sin aprender</h3>
+                    <p class="lp-pain__col-body">El mercado cambia rápido, pero tu forma de operar no.<br>Sigues repitiendo lo mismo sin convertir lo aprendido en una ventaja real.</p>
                     <div class="lp-pain__col-reveal">
                       <p>Sin memoria operativa, repites los mismos errores. La ventaja competitiva viene de un sistema que mejora.</p>
                     </div>

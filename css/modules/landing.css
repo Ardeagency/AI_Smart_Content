@@ -552,8 +552,14 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__header {
+  display: flex;
+  justify-content: center;
   text-align: center;
-  padding: clamp(40px, 6vw, 64px) clamp(20px, 6vw, 80px) clamp(12px, 2vw, 22px);
+  padding: 30px clamp(20px, 6vw, 80px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .lp-pain__eyebrow {
@@ -566,13 +572,14 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__title {
+  flex: 0 0 auto;
   margin: 0;
-  font-size: clamp(1.45rem, 3.2vw, 2.35rem);
+  /* Una sola línea: escala en viewport; scroll horizontal solo en anchos muy estrechos */
+  font-size: clamp(0.62rem, 0.48rem + 2.15vw, 2.35rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.14;
-  max-width: 22em;
-  margin-inline: auto;
+  white-space: nowrap;
 }
 
 .lp-pain__sub {
