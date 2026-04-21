@@ -254,7 +254,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col lp-pain__col--active" role="listitem" tabindex="0" aria-current="true" data-pain-default>
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -883,16 +883,15 @@ class LandingView extends PublicBaseView {
     const cols = Array.from(stage.querySelectorAll('.lp-pain__col'));
     if (!cols.length) return;
 
-    const defaultCol = stage.querySelector('.lp-pain__col[data-pain-default]') || cols[Math.min(3, cols.length - 1)];
-
     const setActive = (article) => {
-      if (!article) return;
       cols.forEach((c) => {
-        const on = c === article;
+        const on = article != null && c === article;
         c.classList.toggle('lp-pain__col--active', on);
         c.setAttribute('aria-current', on ? 'true' : 'false');
       });
     };
+
+    setActive(null);
 
     const onColEnter = (e) => {
       const col = e.currentTarget;
@@ -902,7 +901,7 @@ class LandingView extends PublicBaseView {
     const onStageLeave = (e) => {
       const next = e.relatedTarget;
       if (next && stage.contains(next)) return;
-      setActive(defaultCol);
+      setActive(null);
     };
 
     const onColClick = (e) => {
@@ -925,7 +924,7 @@ class LandingView extends PublicBaseView {
 
     const onStageFocusOut = () => {
       requestAnimationFrame(() => {
-        if (!stage.contains(document.activeElement)) setActive(defaultCol);
+        if (!stage.contains(document.activeElement)) setActive(null);
       });
     };
 

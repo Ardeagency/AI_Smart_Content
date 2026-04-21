@@ -595,7 +595,8 @@ body.entrance-done .landing-header {
 .lp-pain__columns {
   position: relative;
   z-index: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   width: 100%;
   min-height: clamp(440px, 62vh, 640px);
 }
@@ -613,7 +614,6 @@ body.entrance-done .landing-header {
 
 .lp-pain__col {
   --lp-pain-accent: #f0a030;
-  flex: 1;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -623,15 +623,10 @@ body.entrance-done .landing-header {
   cursor: pointer;
   overflow: hidden;
   outline: none;
-  transition: flex 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .lp-pain__col:last-child {
   border-right: none;
-}
-
-.lp-pain__col--active {
-  flex: 2.15;
 }
 
 .lp-pain__col-bg {
@@ -817,12 +812,11 @@ body.entrance-done .landing-header {
   }
 
   .lp-pain__columns {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     min-height: auto;
   }
 
   .lp-pain__col {
-    flex: none !important;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: clamp(20px, 4vw, 28px);
