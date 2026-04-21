@@ -542,6 +542,8 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lp-pain {
+  /* Altura reservada del bloque highlight (invisible en reposo): misma en todas las columnas */
+  --lp-pain-highlight-slot: clamp(158px, 24vh, 228px);
   --lp-pain-timeline-y: 46%;
   --lp-pain-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-pain-dur: 0.78s;
@@ -629,8 +631,8 @@ body.entrance-done .landing-header {
   --lp-pain-pad-x: clamp(16px, 2vw, 28px);
   /* Centro del punto: alineado con el borde izquierdo del contenido + mitad del dot (11px) */
   --lp-pain-rail-center: calc(var(--lp-pain-pad-x) + 5px);
-  /* La línea empieza bajo el slot del highlight para no cruzar el texto (activo o no) */
-  --lp-pain-rail-line-top: clamp(172px, 26.5vh, 248px);
+  /* La línea empieza justo bajo la ranura del highlight (misma altura en todas las columnas) */
+  --lp-pain-rail-line-top: calc(var(--lp-pain-highlight-slot) + clamp(6px, 1vh, 14px));
   position: relative;
   display: flex;
   flex-direction: column;
@@ -646,6 +648,11 @@ body.entrance-done .landing-header {
 
 .lp-pain__col:last-child {
   border-right: none;
+}
+
+/* Highlight activo crece: la línea del rail arranca más abajo para no cruzar el texto */
+.lp-pain__col--active {
+  --lp-pain-rail-line-top: clamp(268px, calc(var(--lp-pain-highlight-slot) + clamp(72px, 10vh, 112px)), 400px);
 }
 
 .lp-pain__col[data-pain-gradient="1"] {
@@ -763,17 +770,20 @@ body.entrance-done .landing-header {
   padding-left: calc(11px + 12px);
 }
 
-/* Mismo hueco con/sin activo: evita brinco al mostrar highlight */
+/* Ranura fija en reposo: el copy largo del highlight no empuja el pie (alineación entre columnas) */
 .lp-pain__col-highlight {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex-shrink: 0;
   box-sizing: border-box;
-  min-height: clamp(158px, 24vh, 228px);
+  height: var(--lp-pain-highlight-slot);
+  min-height: 0;
+  max-height: var(--lp-pain-highlight-slot);
   padding-top: clamp(10px, 1.4vh, 18px);
   padding-bottom: clamp(12px, 2vw, 20px);
   max-width: 34ch;
+  overflow: hidden;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -781,6 +791,10 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col--active .lp-pain__col-highlight {
+  height: auto;
+  max-height: none;
+  min-height: var(--lp-pain-highlight-slot);
+  overflow: visible;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -832,6 +846,8 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col-foot {
+  flex-shrink: 0;
+  width: 100%;
   margin-top: auto;
   padding-top: clamp(8px, 1.5vw, 16px);
 }
@@ -881,8 +897,12 @@ body.entrance-done .landing-header {
 
 .lp-pain__col-content {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
+/* Misma reserva vertical para títulos de 2–3 líneas (evita escalera por wraps distintos) */
 .lp-pain__col-title {
   margin: 0 0 8px;
   font-size: clamp(0.88rem, 1.25vw, 1.02rem);
@@ -890,6 +910,7 @@ body.entrance-done .landing-header {
   line-height: 1.28;
   letter-spacing: -0.01em;
   color: #ffffff;
+  min-height: calc(3 * 1.28em);
   transition: color var(--lp-pain-dur-text) var(--lp-pain-ease-smooth);
 }
 
@@ -902,6 +923,8 @@ body.entrance-done .landing-header {
   font-size: clamp(0.76rem, 0.98vw, 0.86rem);
   line-height: 1.58;
   color: rgba(255, 255, 255, 0.48);
+  /* Bloque de cuerpo alineado: ~5 líneas de texto con <br> */
+  min-height: calc(5 * 1.58em);
   transition: color var(--lp-pain-dur-text) var(--lp-pain-ease-smooth);
 }
 
@@ -954,6 +977,10 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 768px) {
+  .lp-pain {
+    --lp-pain-highlight-slot: clamp(120px, 28vw, 160px);
+  }
+
   .lp-pain__stage {
     background: #000000;
   }
@@ -989,8 +1016,15 @@ body.entrance-done .landing-header {
   }
 
   .lp-pain__col-highlight {
-    min-height: clamp(120px, 28vw, 160px);
     padding-bottom: 12px;
+  }
+
+  .lp-pain__col-title {
+    min-height: calc(2.75 * 1.28em);
+  }
+
+  .lp-pain__col-body {
+    min-height: calc(4.75 * 1.58em);
   }
 
   .lp-pain__col:not(.lp-pain__col--active) .lp-pain__col-bg {
