@@ -185,18 +185,18 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
-                  <p class="lp-pain__highlight-title">Aquí impacta</p>
-                  <p class="lp-pain__highlight-sub">Sin señal clara del mercado, cada publicación es una apuesta a ciegas.</p>
+                  <p class="lp-pain__highlight-eyebrow">Llegas tarde</p>
+                  <p class="lp-pain__highlight-title">Pierdes el momento correcto</p>
+                  <p class="lp-pain__highlight-sub">Cuando publicas, la conversación ya cambió.<br>Tu contenido se siente repetido antes de generar impacto.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">01</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Llegan tarde al mercado</h3>
+                    <h3 class="lp-pain__col-title">Llegas tarde</h3>
                     <p class="lp-pain__col-body">Las tendencias aparecen, escalan y se saturan rápido.<br>Tu marca llega cuando el impacto ya pasó.</p>
                     <div class="lp-pain__col-reveal">
-                      <p>Sin escucha activa, cada publicación es una apuesta. El 73% del contenido empresarial no genera engagement real.</p>
+                      <p>El ciclo de vida de una tendencia digital puede durar días o incluso horas.<br>Las marcas que reaccionan tarde compiten en un entorno saturado donde es mucho más difícil destacar.</p>
                     </div>
                   </div>
                 </div>
