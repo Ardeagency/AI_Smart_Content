@@ -866,31 +866,6 @@ body.entrance-done .landing-header {
   color: #ffffff;
 }
 
-/* "NN — …" solo con la columna activa; en reposo solo el número */
-.lp-pain__col-num:has(.lp-pain__col-num-join) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 0.12em;
-}
-
-.lp-pain__col:not(.lp-pain__col--active) .lp-pain__col-num-join {
-  display: none;
-}
-
-.lp-pain__col--active .lp-pain__col-num-join {
-  display: inline;
-  font-size: clamp(0.55em, 0.48em + 0.35vw, 0.72em);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-}
-
-.lp-pain__col-num-sep {
-  font-weight: 500;
-  opacity: 0.85;
-}
-
 .lp-pain__col-reveal p + p {
   margin-top: 0.65em;
 }

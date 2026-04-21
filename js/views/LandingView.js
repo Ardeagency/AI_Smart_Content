@@ -191,9 +191,7 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">01</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Llegas tarde</span></span>
-                  </div>
+                  <div class="lp-pain__col-num" aria-hidden="true">01</div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Llegan tarde al mercado</h3>
                     <p class="lp-pain__col-body">Las tendencias aparecen, escalan y se saturan rápido.<br>Tu marca llega cuando el impacto ya pasó.</p>
@@ -219,9 +217,7 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">02</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Compiten con información incompleta</span></span>
-                  </div>
+                  <div class="lp-pain__col-num" aria-hidden="true">02</div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Compiten con información incompleta</h3>
                     <p class="lp-pain__col-body">Publicas con lo que ya tenías preparado, no con lo que está pasando hoy.<br>Mientras el mercado cambia todos los días, tu contenido sigue un ritmo que ya se quedó atrás.</p>
@@ -247,9 +243,7 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">03</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Su comunicación pierde consistencia</span></span>
-                  </div>
+                  <div class="lp-pain__col-num" aria-hidden="true">03</div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Su comunicación pierde consistencia</h3>
                     <p class="lp-pain__col-body">La idea original se transforma en el proceso.<br>Entre equipos, proveedores y cambios, lo que comunicas deja de ser claro y consistente.</p>
@@ -275,9 +269,7 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">04</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Dependen de producción lenta</span></span>
-                  </div>
+                  <div class="lp-pain__col-num" aria-hidden="true">04</div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Dependen de producción lenta</h3>
                     <p class="lp-pain__col-body">Cada contenido implica grabación, diseño, revisiones y aprobaciones que toman días.<br>Cuando finalmente publicas, el momento ya pasó.</p>
@@ -303,9 +295,7 @@ class LandingView extends PublicBaseView {
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
-                  <div class="lp-pain__col-num" aria-hidden="true">
-                    <span class="lp-pain__col-num-main">05</span><span class="lp-pain__col-num-join"><span class="lp-pain__col-num-sep"> — </span><span class="lp-pain__col-num-tail">Repiten sin aprender</span></span>
-                  </div>
+                  <div class="lp-pain__col-num" aria-hidden="true">05</div>
                   <div class="lp-pain__col-content">
                     <h3 class="lp-pain__col-title">Repiten sin aprender</h3>
                     <p class="lp-pain__col-body">El mercado cambia rápido, pero tu forma de operar no.<br>Sigues repitiendo lo mismo sin convertir lo aprendido en una ventaja real.</p>
