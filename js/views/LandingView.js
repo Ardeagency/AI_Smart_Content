@@ -173,9 +173,7 @@ class LandingView extends PublicBaseView {
       <!-- ════════ S03: DOLOR ESTRUCTURAL — 5 PAIN CARDS ════════ -->
       <section class="lp-pain" id="landing-3" aria-labelledby="lp-pain-heading">
         <div class="lp-pain__header">
-          <p class="lp-pain__eyebrow sr-reveal">El problema real</p>
-          <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">¿Te suena familiar?</h2>
-          <p class="lp-pain__sub sr-reveal sr-reveal--d1">Las marcas no fallan por falta de creatividad.<br>Fallan por falta de sistema.</p>
+          <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">Cinco brechas que frenan el crecimiento de las marcas</h2>
         </div>
         <div class="lp-pain__stage">
           <div class="lp-pain__columns" role="list">
