@@ -177,57 +177,135 @@ class LandingView extends PublicBaseView {
           <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">¿Te suena familiar?</h2>
           <p class="lp-pain__sub sr-reveal sr-reveal--d1">Las marcas no fallan por falta de creatividad.<br>Fallan por falta de sistema.</p>
         </div>
-        <div class="lp-pain__columns" role="list">
-          <article class="lp-pain__col" role="listitem" tabindex="0">
-            <div class="lp-pain__col-num" aria-hidden="true">01</div>
-            <div class="lp-pain__col-content">
-              <h3 class="lp-pain__col-title">Publican sin señal</h3>
-              <p class="lp-pain__col-body">Crean contenido basado en intuición, no en lo que el mercado está pidiendo en este momento.</p>
-            </div>
-            <div class="lp-pain__col-reveal" aria-hidden="true">
-              <p>Sin escucha activa, cada publicación es una apuesta. El 73% del contenido empresarial no genera engagement real.</p>
-            </div>
-          </article>
-          <article class="lp-pain__col" role="listitem" tabindex="0">
-            <div class="lp-pain__col-num" aria-hidden="true">02</div>
-            <div class="lp-pain__col-content">
-              <h3 class="lp-pain__col-title">Siempre reaccionando</h3>
-              <p class="lp-pain__col-body">Tu competencia mueve. Tu marca responde. Para cuando actúas, la ventana ya cerró.</p>
-            </div>
-            <div class="lp-pain__col-reveal" aria-hidden="true">
-              <p>Las marcas reactivas pierden el 40% de las oportunidades de timing. La velocidad es ventaja competitiva.</p>
-            </div>
-          </article>
-          <article class="lp-pain__col" role="listitem" tabindex="0">
-            <div class="lp-pain__col-num" aria-hidden="true">03</div>
-            <div class="lp-pain__col-content">
-              <h3 class="lp-pain__col-title">Equipos saturados</h3>
-              <p class="lp-pain__col-body">Más horas, mismo output. La producción manual tiene techo. El sistema nunca descansa.</p>
-            </div>
-            <div class="lp-pain__col-reveal" aria-hidden="true">
-              <p>Los equipos dedican el 60% de su tiempo a tareas repetitivas que un sistema inteligente hace en segundos.</p>
-            </div>
-          </article>
-          <article class="lp-pain__col" role="listitem" tabindex="0">
-            <div class="lp-pain__col-num" aria-hidden="true">04</div>
-            <div class="lp-pain__col-content">
-              <h3 class="lp-pain__col-title">IA sin contexto</h3>
-              <p class="lp-pain__col-body">Usas herramientas de IA que no conocen tu ADN. Responden prompts, no construyen marca.</p>
-            </div>
-            <div class="lp-pain__col-reveal" aria-hidden="true">
-              <p>La IA genérica produce contenido genérico. Sin identidad estructurada, cada pieza erosiona tu posicionamiento.</p>
-            </div>
-          </article>
-          <article class="lp-pain__col" role="listitem" tabindex="0">
-            <div class="lp-pain__col-num" aria-hidden="true">05</div>
-            <div class="lp-pain__col-content">
-              <h3 class="lp-pain__col-title">Cero aprendizaje</h3>
-              <p class="lp-pain__col-body">Cada campaña empieza de cero. No hay ventaja acumulada. No hay sistema que aprenda.</p>
-            </div>
-            <div class="lp-pain__col-reveal" aria-hidden="true">
-              <p>Sin memoria operativa, repites los mismos errores. La ventaja competitiva viene de un sistema que mejora.</p>
-            </div>
-          </article>
+        <div class="lp-pain__stage">
+          <div class="lp-pain__columns" role="list">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+              <div class="lp-pain__col-bg" aria-hidden="true"></div>
+              <div class="lp-pain__col-rail" aria-hidden="true">
+                <span class="lp-pain__col-rail-line"></span>
+                <span class="lp-pain__col-rail-dot"></span>
+              </div>
+              <div class="lp-pain__col-inner">
+                <div class="lp-pain__col-highlight">
+                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
+                  <p class="lp-pain__highlight-title">Aquí impacta</p>
+                  <p class="lp-pain__highlight-sub">Sin señal clara del mercado, cada publicación es una apuesta a ciegas.</p>
+                </div>
+                <div class="lp-pain__col-spacer" aria-hidden="true"></div>
+                <div class="lp-pain__col-foot">
+                  <div class="lp-pain__col-num" aria-hidden="true">01</div>
+                  <div class="lp-pain__col-content">
+                    <h3 class="lp-pain__col-title">Publican sin señal</h3>
+                    <p class="lp-pain__col-body">Crean contenido basado en intuición, no en lo que el mercado está pidiendo en este momento.</p>
+                    <div class="lp-pain__col-reveal">
+                      <p>Sin escucha activa, cada publicación es una apuesta. El 73% del contenido empresarial no genera engagement real.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+              <div class="lp-pain__col-bg" aria-hidden="true"></div>
+              <div class="lp-pain__col-rail" aria-hidden="true">
+                <span class="lp-pain__col-rail-line"></span>
+                <span class="lp-pain__col-rail-dot"></span>
+              </div>
+              <div class="lp-pain__col-inner">
+                <div class="lp-pain__col-highlight">
+                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
+                  <p class="lp-pain__highlight-title">Aquí impacta</p>
+                  <p class="lp-pain__highlight-sub">Cuando solo reaccionás, el timing ya lo definió otro.</p>
+                </div>
+                <div class="lp-pain__col-spacer" aria-hidden="true"></div>
+                <div class="lp-pain__col-foot">
+                  <div class="lp-pain__col-num" aria-hidden="true">02</div>
+                  <div class="lp-pain__col-content">
+                    <h3 class="lp-pain__col-title">Siempre reaccionando</h3>
+                    <p class="lp-pain__col-body">Tu competencia mueve. Tu marca responde. Para cuando actúas, la ventana ya cerró.</p>
+                    <div class="lp-pain__col-reveal">
+                      <p>Las marcas reactivas pierden el 40% de las oportunidades de timing. La velocidad es ventaja competitiva.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+              <div class="lp-pain__col-bg" aria-hidden="true"></div>
+              <div class="lp-pain__col-rail" aria-hidden="true">
+                <span class="lp-pain__col-rail-line"></span>
+                <span class="lp-pain__col-rail-dot"></span>
+              </div>
+              <div class="lp-pain__col-inner">
+                <div class="lp-pain__col-highlight">
+                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
+                  <p class="lp-pain__highlight-title">Aquí impacta</p>
+                  <p class="lp-pain__highlight-sub">El cuello de botella deja de ser creatividad: es capacidad.</p>
+                </div>
+                <div class="lp-pain__col-spacer" aria-hidden="true"></div>
+                <div class="lp-pain__col-foot">
+                  <div class="lp-pain__col-num" aria-hidden="true">03</div>
+                  <div class="lp-pain__col-content">
+                    <h3 class="lp-pain__col-title">Equipos saturados</h3>
+                    <p class="lp-pain__col-body">Más horas, mismo output. La producción manual tiene techo. El sistema nunca descansa.</p>
+                    <div class="lp-pain__col-reveal">
+                      <p>Los equipos dedican el 60% de su tiempo a tareas repetitivas que un sistema inteligente hace en segundos.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="lp-pain__col lp-pain__col--active" role="listitem" tabindex="0" aria-current="true">
+              <div class="lp-pain__col-bg" aria-hidden="true"></div>
+              <div class="lp-pain__col-rail" aria-hidden="true">
+                <span class="lp-pain__col-rail-line"></span>
+                <span class="lp-pain__col-rail-dot"></span>
+              </div>
+              <div class="lp-pain__col-inner">
+                <div class="lp-pain__col-highlight">
+                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
+                  <p class="lp-pain__highlight-title">Aquí impacta</p>
+                  <p class="lp-pain__highlight-sub">La IA sin ADN de marca diluye posicionamiento en cada pieza.</p>
+                </div>
+                <div class="lp-pain__col-spacer" aria-hidden="true"></div>
+                <div class="lp-pain__col-foot">
+                  <div class="lp-pain__col-num" aria-hidden="true">04</div>
+                  <div class="lp-pain__col-content">
+                    <h3 class="lp-pain__col-title">IA sin contexto</h3>
+                    <p class="lp-pain__col-body">Usas herramientas de IA que no conocen tu ADN. Responden prompts, no construyen marca.</p>
+                    <div class="lp-pain__col-reveal">
+                      <p>La IA genérica produce contenido genérico. Sin identidad estructurada, cada pieza erosiona tu posicionamiento.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+              <div class="lp-pain__col-bg" aria-hidden="true"></div>
+              <div class="lp-pain__col-rail" aria-hidden="true">
+                <span class="lp-pain__col-rail-line"></span>
+                <span class="lp-pain__col-rail-dot"></span>
+              </div>
+              <div class="lp-pain__col-inner">
+                <div class="lp-pain__col-highlight">
+                  <p class="lp-pain__highlight-eyebrow">Mapa del dolor</p>
+                  <p class="lp-pain__highlight-title">Aquí impacta</p>
+                  <p class="lp-pain__highlight-sub">Sin memoria operativa, cada campaña arranca desde cero otra vez.</p>
+                </div>
+                <div class="lp-pain__col-spacer" aria-hidden="true"></div>
+                <div class="lp-pain__col-foot">
+                  <div class="lp-pain__col-num" aria-hidden="true">05</div>
+                  <div class="lp-pain__col-content">
+                    <h3 class="lp-pain__col-title">Cero aprendizaje</h3>
+                    <p class="lp-pain__col-body">Cada campaña empieza de cero. No hay ventaja acumulada. No hay sistema que aprenda.</p>
+                    <div class="lp-pain__col-reveal">
+                      <p>Sin memoria operativa, repites los mismos errores. La ventaja competitiva viene de un sistema que mejora.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+          <div class="lp-pain__timeline" aria-hidden="true"></div>
         </div>
       </section>
 
@@ -731,6 +809,7 @@ class LandingView extends PublicBaseView {
   async init() {
     await super.init();
     this.initHeroReveal();
+    this.initPainRoadmap();
     this.initMetricsCounter();
     this.initFaqAccordion();
     this.initCtaForm();
@@ -741,6 +820,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.heroRevealCleanup === 'function') {
       this.heroRevealCleanup();
       this.heroRevealCleanup = null;
+    }
+    if (typeof this.painRoadmapCleanup === 'function') {
+      this.painRoadmapCleanup();
+      this.painRoadmapCleanup = null;
     }
     if (typeof this.metricsCleanup === 'function') {
       this.metricsCleanup();
@@ -788,6 +871,48 @@ class LandingView extends PublicBaseView {
     };
   }
 
+  initPainRoadmap() {
+    if (typeof this.painRoadmapCleanup === 'function') {
+      this.painRoadmapCleanup();
+      this.painRoadmapCleanup = null;
+    }
+
+    const stage = this.container.querySelector('.lp-pain__stage');
+    if (!stage) return;
+
+    const cols = Array.from(stage.querySelectorAll('.lp-pain__col'));
+    if (!cols.length) return;
+
+    const setActive = (article) => {
+      cols.forEach((c) => {
+        const on = c === article;
+        c.classList.toggle('lp-pain__col--active', on);
+        c.setAttribute('aria-current', on ? 'true' : 'false');
+      });
+    };
+
+    const onClick = (e) => {
+      const col = e.target.closest('.lp-pain__col');
+      if (!col || !stage.contains(col)) return;
+      setActive(col);
+    };
+
+    const onKey = (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const col = e.target.closest('.lp-pain__col');
+      if (!col || !stage.contains(col)) return;
+      e.preventDefault();
+      setActive(col);
+    };
+
+    stage.addEventListener('click', onClick);
+    stage.addEventListener('keydown', onKey);
+
+    this.painRoadmapCleanup = () => {
+      stage.removeEventListener('click', onClick);
+      stage.removeEventListener('keydown', onKey);
+    };
+  }
 
   initMetricsCounter() {
     if (typeof this.metricsCleanup === 'function') {
