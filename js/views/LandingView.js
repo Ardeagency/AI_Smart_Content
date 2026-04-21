@@ -44,7 +44,7 @@ class LandingView extends PublicBaseView {
       </section>
 
       <!-- ════════ S02: CREDIBILIDAD INMEDIATA ════════ -->
-      <section class="lp-cred" id="landing-2" aria-label="Tecnologías integradas y credenciales">
+      <section class="lp-cred" id="landing-2" aria-label="Tecnologías integradas">
         <div class="lp-cred__inner">
           <p class="lp-cred__label">Tecnologías que potencian el sistema</p>
           <div class="lp-cred__track-wrap" aria-hidden="true">
@@ -70,20 +70,6 @@ class LandingView extends PublicBaseView {
               <span class="lp-cred__logo" aria-hidden="true">Supabase</span>
               <span class="lp-cred__logo" aria-hidden="true">Replicate</span>
               <span class="lp-cred__logo" aria-hidden="true">Perplexity</span>
-            </div>
-          </div>
-          <div class="lp-cred__badges" aria-label="Acreditaciones">
-            <div class="lp-cred__badge sr-reveal">
-              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
-              <span>Partner certificado LatamDigital</span>
-            </div>
-            <div class="lp-cred__badge sr-reveal sr-reveal--d1">
-              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
-              <span>Construido en ARDE Agency</span>
-            </div>
-            <div class="lp-cred__badge sr-reveal sr-reveal--d2">
-              <span class="lp-cred__badge-dot" aria-hidden="true"></span>
-              <span>+50 organizaciones en LATAM</span>
             </div>
           </div>
         </div>
