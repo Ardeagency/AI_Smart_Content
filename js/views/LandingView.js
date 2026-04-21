@@ -893,6 +893,39 @@ class LandingView extends PublicBaseView {
 
     setActive(null);
 
+    let autoTimer = null;
+
+    const stopAuto = () => {
+      if (autoTimer != null) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+    };
+
+    const shouldPauseAuto = () => {
+      if (document.visibilityState === 'hidden') return true;
+      if (typeof stage.matches === 'function' && stage.matches(':hover')) return true;
+      if (stage.contains(document.activeElement)) return true;
+      return false;
+    };
+
+    const tickAuto = () => {
+      if (shouldPauseAuto()) return;
+      const i = cols.findIndex((c) => c.classList.contains('lp-pain__col--active'));
+      const next = (i + 1) % cols.length;
+      setActive(cols[next]);
+    };
+
+    const startAuto = () => {
+      stopAuto();
+      autoTimer = setInterval(tickAuto, 3000);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') stopAuto();
+      else startAuto();
+    };
+
     const onColEnter = (e) => {
       const col = e.currentTarget;
       if (col && cols.includes(col)) setActive(col);
@@ -936,8 +969,11 @@ class LandingView extends PublicBaseView {
     stage.addEventListener('focusin', onStageFocusIn);
     stage.addEventListener('keydown', onKey);
     stage.addEventListener('focusout', onStageFocusOut);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    startAuto();
 
     this.painRoadmapCleanup = () => {
+      stopAuto();
       cols.forEach((col) => {
         col.removeEventListener('mouseenter', onColEnter);
         col.removeEventListener('click', onColClick);
@@ -946,6 +982,7 @@ class LandingView extends PublicBaseView {
       stage.removeEventListener('focusin', onStageFocusIn);
       stage.removeEventListener('keydown', onKey);
       stage.removeEventListener('focusout', onStageFocusOut);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }
 

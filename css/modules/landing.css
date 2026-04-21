@@ -543,6 +543,11 @@ body.entrance-done .landing-header {
 
 .lp-pain {
   --lp-pain-timeline-y: 46%;
+  /* Texto sobre degradado activo (legible en fondos claros) */
+  --lp-pain-ink: #0a0a0e;
+  --lp-pain-ink-soft: rgba(10, 10, 16, 0.78);
+  --lp-pain-ink-muted: rgba(12, 12, 18, 0.58);
+  --lp-pain-ease-smooth: cubic-bezier(0.33, 1, 0.32, 1);
   background: #000000;
   color: #ffffff;
   padding-bottom: 0;
@@ -670,7 +675,7 @@ body.entrance-done .landing-header {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.55s var(--lp-pain-ease-smooth);
   z-index: 0;
   background: linear-gradient(168deg, var(--lp-pain-g-from) 0%, var(--lp-pain-g-to) 100%);
   pointer-events: none;
@@ -740,7 +745,7 @@ body.entrance-done .landing-header {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  transition: opacity 0.55s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__col--active .lp-pain__col-highlight {
@@ -756,6 +761,7 @@ body.entrance-done .landing-header {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
+  transition: color 0.5s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__highlight-title {
@@ -765,6 +771,7 @@ body.entrance-done .landing-header {
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: #ffffff;
+  transition: color 0.5s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__highlight-sub {
@@ -772,6 +779,19 @@ body.entrance-done .landing-header {
   font-size: clamp(0.8rem, 1.05vw, 0.92rem);
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.78);
+  transition: color 0.5s var(--lp-pain-ease-smooth);
+}
+
+.lp-pain__col--active .lp-pain__highlight-eyebrow {
+  color: var(--lp-pain-ink-muted);
+}
+
+.lp-pain__col--active .lp-pain__highlight-title {
+  color: var(--lp-pain-ink);
+}
+
+.lp-pain__col--active .lp-pain__highlight-sub {
+  color: var(--lp-pain-ink-soft);
 }
 
 .lp-pain__col-spacer {
@@ -791,11 +811,11 @@ body.entrance-done .landing-header {
   line-height: 1;
   margin-bottom: clamp(10px, 1.5vw, 14px);
   color: var(--lp-pain-accent);
-  transition: color 0.35s ease;
+  transition: color 0.5s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__col--active .lp-pain__col-num {
-  color: #ffffff;
+  color: var(--lp-pain-ink);
 }
 
 .lp-pain__col-content {
@@ -809,6 +829,11 @@ body.entrance-done .landing-header {
   line-height: 1.28;
   letter-spacing: -0.01em;
   color: #ffffff;
+  transition: color 0.5s var(--lp-pain-ease-smooth);
+}
+
+.lp-pain__col--active .lp-pain__col-title {
+  color: var(--lp-pain-ink);
 }
 
 .lp-pain__col-body {
@@ -816,11 +841,11 @@ body.entrance-done .landing-header {
   font-size: clamp(0.76rem, 0.98vw, 0.86rem);
   line-height: 1.58;
   color: rgba(255, 255, 255, 0.48);
-  transition: color 0.3s ease;
+  transition: color 0.5s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__col--active .lp-pain__col-body {
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--lp-pain-ink-soft);
 }
 
 /* Mismo hueco con/sin activo: el segundo párrafo no empuja layout */
@@ -838,14 +863,18 @@ body.entrance-done .landing-header {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s ease, visibility 0.35s ease, border-color 0.25s ease;
+  transition:
+    opacity 0.55s var(--lp-pain-ease-smooth),
+    color 0.5s var(--lp-pain-ease-smooth),
+    border-color 0.45s var(--lp-pain-ease-smooth);
 }
 
 .lp-pain__col--active .lp-pain__col-reveal {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  border-top-color: rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(8, 8, 14, 0.18);
+  color: var(--lp-pain-ink-soft);
 }
 
 .lp-pain__col-reveal p {
