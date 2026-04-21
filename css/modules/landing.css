@@ -627,6 +627,8 @@ body.entrance-done .landing-header {
 
 .lp-pain__col {
   --lp-pain-pad-x: clamp(16px, 2vw, 28px);
+  --lp-pain-pad-y-top: clamp(20px, 2.5vw, 32px);
+  --lp-pain-pad-y-bottom: clamp(28px, 4vw, 48px);
   /* Centro del punto: alineado con el borde izquierdo del contenido + mitad del dot (11px) */
   --lp-pain-rail-center: calc(var(--lp-pain-pad-x) + 5px);
   /* La línea empieza bajo el slot del highlight para no cruzar el texto (activo o no) */
@@ -637,7 +639,7 @@ body.entrance-done .landing-header {
   min-width: 0;
   min-height: 100%;
   height: 100%;
-  padding: clamp(20px, 2.5vw, 32px) var(--lp-pain-pad-x) clamp(28px, 4vw, 48px);
+  padding: var(--lp-pain-pad-y-top) var(--lp-pain-pad-x) var(--lp-pain-pad-y-bottom);
   border-right: 1px solid rgba(255, 255, 255, 0.07);
   cursor: pointer;
   overflow: hidden;
@@ -831,18 +833,33 @@ body.entrance-done .landing-header {
   min-height: clamp(24px, 4vh, 48px);
 }
 
+/* Anclado a la misma Y que la timeline: el pie ya no usa margin-top:auto (la altura del copy desalineaba el 01/02/03…) */
 .lp-pain__col-foot {
-  margin-top: auto;
-  padding-top: clamp(8px, 1.5vw, 16px);
+  position: absolute;
+  z-index: 4;
+  left: calc(var(--lp-pain-pad-x) + 11px + 12px);
+  right: var(--lp-pain-pad-x);
+  top: calc(var(--lp-pain-timeline-y) + 14px);
+  bottom: var(--lp-pain-pad-y-bottom);
+  margin-top: 0;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .lp-pain__col-num {
+  flex-shrink: 0;
   font-size: clamp(1.5rem, 2.8vw, 2.35rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
   margin-bottom: clamp(10px, 1.5vw, 14px);
-  color: var(--lp-pain-accent);
+  color: rgba(255, 255, 255, 0.96);
   transition: color var(--lp-pain-dur-text) var(--lp-pain-ease-smooth);
 }
 
@@ -852,6 +869,8 @@ body.entrance-done .landing-header {
 
 .lp-pain__col-content {
   position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 .lp-pain__col-title {
@@ -945,6 +964,24 @@ body.entrance-done .landing-header {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: clamp(20px, 4vw, 28px);
+  }
+
+  .lp-pain__col-foot {
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    margin-top: auto;
+    padding-top: clamp(8px, 1.5vw, 16px);
+    overflow: visible;
+    min-height: 0;
+    overscroll-behavior: auto;
+  }
+
+  .lp-pain__col-content {
+    flex: none;
+    min-height: 0;
   }
 
   .lp-pain__col:last-child {
