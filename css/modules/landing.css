@@ -251,7 +251,8 @@ body.entrance-done .landing-header {
   background-position: center center;
   background-attachment: fixed;
   color: #ffffff;
-  padding: clamp(90px, 12vh, 140px) clamp(20px, 6vw, 96px) clamp(52px, 8vh, 84px);
+  /* padding-top extra: header fijo (.landing-header) para que el titulo no choque con el logo */
+  padding: clamp(112px, 15vh, 168px) clamp(20px, 6vw, 96px) clamp(52px, 8vh, 84px);
   box-sizing: border-box;
 }
 
