@@ -613,7 +613,6 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col {
-  --lp-pain-accent: #f0a030;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -629,20 +628,43 @@ body.entrance-done .landing-header {
   border-right: none;
 }
 
+.lp-pain__col[data-pain-gradient="1"] {
+  --lp-pain-g-from: #ff0000;
+  --lp-pain-g-to: #ff6500;
+  --lp-pain-accent: #ff6500;
+}
+
+.lp-pain__col[data-pain-gradient="2"] {
+  --lp-pain-g-from: #ffe500;
+  --lp-pain-g-to: #9acc00;
+  --lp-pain-accent: #9acc00;
+}
+
+.lp-pain__col[data-pain-gradient="3"] {
+  --lp-pain-g-from: #00d614;
+  --lp-pain-g-to: #00e7ff;
+  --lp-pain-accent: #00e7ff;
+}
+
+.lp-pain__col[data-pain-gradient="4"] {
+  --lp-pain-g-from: #0018ee;
+  --lp-pain-g-to: #5b00ea;
+  --lp-pain-accent: #5b00ea;
+}
+
+.lp-pain__col[data-pain-gradient="5"] {
+  --lp-pain-g-from: #900090;
+  --lp-pain-g-to: #d10f53;
+  --lp-pain-accent: #d10f53;
+}
+
 .lp-pain__col-bg {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 0.45s ease;
   z-index: 0;
-  background: linear-gradient(
-    168deg,
-    #2a1a4a 0%,
-    #3d2568 28%,
-    #5c2d8a 52%,
-    #b84a18 82%,
-    #e8882a 100%
-  );
+  background: linear-gradient(168deg, var(--lp-pain-g-from) 0%, var(--lp-pain-g-to) 100%);
   pointer-events: none;
 }
 

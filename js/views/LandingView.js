@@ -179,7 +179,7 @@ class LandingView extends PublicBaseView {
         </div>
         <div class="lp-pain__stage">
           <div class="lp-pain__columns" role="list">
-            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="1">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -204,7 +204,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="2">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -229,7 +229,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="3">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -254,7 +254,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="4">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
@@ -279,7 +279,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </article>
-            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false">
+            <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="5">
               <div class="lp-pain__col-bg" aria-hidden="true"></div>
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
