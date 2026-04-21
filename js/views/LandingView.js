@@ -30,33 +30,16 @@ class LandingView extends PublicBaseView {
         </div>
         <div class="lp-hero__noise" aria-hidden="true"></div>
         <div class="lp-hero__inner">
-          <div class="lp-hero__kicker" data-reveal>
-            <span class="lp-hero__kicker-dot" aria-hidden="true"></span>
-            <span>Inteligencia de contenido para marcas en América Latina</span>
-          </div>
-          <h1 class="lp-hero__headline">
-            <span class="lp-hero__line" data-reveal>Tu marca,</span>
-            <span class="lp-hero__line lp-hero__line--accent" data-reveal>operando en</span>
-            <span class="lp-hero__line" data-reveal>tiempo real.</span>
+          <h1 class="lp-hero__headline" data-reveal>
+            <span class="lp-hero__headline-line">Automatizar no es perder control.</span>
+            <span class="lp-hero__headline-line">Es ejecutar mejor.</span>
           </h1>
           <p class="lp-hero__sub" data-reveal>
-            AISmartContent convierte señales del mercado en contenido estratégico.<br>
-            Inteligencia, criterio y ejecución en un solo sistema.
+            Opera bajo tu ADN, aprende del mercado y actúa sin desviarse.
           </p>
           <div class="lp-hero__actions" data-reveal>
-            <a href="/contacto" class="lp-hero__cta lp-hero__cta--primary">Solicitar acceso anticipado</a>
-            <a href="#landing-6" class="lp-hero__cta lp-hero__cta--ghost">Ver cómo funciona</a>
+            <a href="#landing-6" class="lp-hero__cta lp-hero__cta--primary">Ver cómo funciona</a>
           </div>
-          <div class="lp-hero__proof" data-reveal aria-label="Prueba social rápida">
-            <span class="lp-hero__proof-item"><strong>+50</strong> organizaciones</span>
-            <span class="lp-hero__proof-div" aria-hidden="true">|</span>
-            <span class="lp-hero__proof-item"><strong>3×</strong> más rápido</span>
-            <span class="lp-hero__proof-div" aria-hidden="true">|</span>
-            <span class="lp-hero__proof-item"><strong>24/7</strong> operando</span>
-          </div>
-        </div>
-        <div class="lp-hero__scroll-hint" aria-hidden="true">
-          <span class="lp-hero__scroll-line"></span>
         </div>
       </section>
 
@@ -723,6 +706,7 @@ class LandingView extends PublicBaseView {
       reveals.forEach(el => { el.style.transitionDelay = ''; });
     };
   }
+
 
   initMetricsCounter() {
     if (typeof this.metricsCleanup === 'function') {
