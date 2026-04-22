@@ -1119,12 +1119,10 @@ body.entrance-done .landing-header {
 
 @keyframes lp-caps-spot-drift {
   from {
-    opacity: 0.28;
-    transform: var(--lp-caps-spot-xf, rotate(0deg)) scale(0.98);
+    opacity: var(--lp-caps-o-from, 0.22);
   }
   to {
-    opacity: 0.48;
-    transform: var(--lp-caps-spot-xf, rotate(0deg)) scale(1.02);
+    opacity: var(--lp-caps-o-to, 0.38);
   }
 }
 
@@ -1139,11 +1137,10 @@ body.entrance-done .landing-header {
   overflow: hidden;
   isolation: isolate;
   color: #ffffff;
+  /* Origen vertical del haz (~centro del logo en la sección); mismo eje en capas. */
+  --lp-caps-glow-y: clamp(6.75rem, 17.5vh, 11.25rem);
   padding: clamp(96px, 14vw, 148px) clamp(20px, 6vw, 80px);
-  background:
-    radial-gradient(ellipse 100% 65% at 50% -12%, rgba(255, 255, 255, 0.09) 0%, transparent 55%),
-    radial-gradient(ellipse 85% 50% at 50% 12%, rgba(255, 255, 255, 0.045) 0%, transparent 62%),
-    linear-gradient(180deg, #0c0e12 0%, #060708 45%, #050506 100%);
+  background: linear-gradient(180deg, #0c0e12 0%, #07080b 48%, #050506 100%);
 }
 
 .lp-caps__atmos {
@@ -1153,55 +1150,80 @@ body.entrance-done .landing-header {
   pointer-events: none;
 }
 
+/* Columna de luz a altura de sección: el degradado nace en el logo y cae suave hasta abajo. */
+.lp-caps__atmos::before {
+  content: '';
+  position: absolute;
+  inset: -8% -25% -12% -25%;
+  background: radial-gradient(
+    ellipse min(118%, 1280px) 135% at 50% var(--lp-caps-glow-y),
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.055) 34%,
+    rgba(255, 255, 255, 0.022) 58%,
+    rgba(255, 255, 255, 0.007) 78%,
+    transparent 100%
+  );
+  filter: blur(56px);
+  mix-blend-mode: screen;
+  opacity: 0.88;
+  pointer-events: none;
+}
+
 .lp-caps__spotlights {
   position: absolute;
-  left: 50%;
-  top: clamp(40px, 8vw, 96px);
-  width: 0;
-  height: clamp(280px, 56vh, 680px);
-  transform: translateX(-50%);
+  inset: 0;
+  pointer-events: none;
 }
 
 .lp-caps__spotlight {
   position: absolute;
-  left: 50%;
-  top: -8%;
-  width: min(92vmin, 1040px);
-  height: 118%;
-  margin-left: calc(min(92vmin, 1040px) * -0.5);
-  transform-origin: 50% 0;
-  /* Conos duros sustituidos por halos elípticos blancos difusos. */
-  background: radial-gradient(
-    ellipse 42% 22% at 50% 0%,
-    rgba(255, 255, 255, 0.42) 0%,
-    rgba(255, 255, 255, 0.16) 32%,
-    rgba(255, 255, 255, 0.05) 52%,
-    transparent 72%
-  );
-  mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
-  filter: blur(42px);
+  inset: -5% -20% -8% -20%;
+  width: auto;
+  height: auto;
+  margin: 0;
+  filter: blur(48px);
   mix-blend-mode: screen;
-  opacity: 0.42;
   animation: lp-caps-spot-drift var(--lp-caps-spot-dur, 6s) ease-in-out infinite alternate;
 }
 
 .lp-caps__spotlight--l {
   --lp-caps-spot-dur: 5.5s;
-  --lp-caps-spot-xf: rotate(-20deg);
-  transform: rotate(-20deg);
+  --lp-caps-o-from: 0.14;
+  --lp-caps-o-to: 0.28;
+  background: radial-gradient(
+    ellipse 58% 125% at 42% var(--lp-caps-glow-y),
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.032) 40%,
+    rgba(255, 255, 255, 0.012) 68%,
+    transparent 100%
+  );
 }
 
 .lp-caps__spotlight--c {
   --lp-caps-spot-dur: 7.5s;
-  --lp-caps-spot-xf: rotate(0deg);
-  transform: rotate(0deg);
+  --lp-caps-o-from: 0.2;
+  --lp-caps-o-to: 0.36;
+  background: radial-gradient(
+    ellipse 92% 145% at 50% var(--lp-caps-glow-y),
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.045) 36%,
+    rgba(255, 255, 255, 0.016) 64%,
+    rgba(255, 255, 255, 0.005) 88%,
+    transparent 100%
+  );
 }
 
 .lp-caps__spotlight--r {
   --lp-caps-spot-dur: 4.8s;
-  --lp-caps-spot-xf: rotate(20deg);
-  transform: rotate(20deg);
+  --lp-caps-o-from: 0.14;
+  --lp-caps-o-to: 0.28;
+  background: radial-gradient(
+    ellipse 58% 125% at 58% var(--lp-caps-glow-y),
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.032) 40%,
+    rgba(255, 255, 255, 0.012) 68%,
+    transparent 100%
+  );
 }
 
 .lp-caps__inner {
@@ -1211,42 +1233,45 @@ body.entrance-done .landing-header {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(64px, 9vw, 104px);
+  gap: clamp(72px, 10vw, 120px);
 }
 
 .lp-caps__header {
   text-align: center;
   max-width: 720px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 2.8vw, 32px);
 }
 
 .lp-caps__brand {
   position: relative;
-  margin: 0 auto clamp(22px, 3.2vw, 36px);
+  margin: 0 auto 0;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Resplandor suave detrás del logo (solo tonos fríos / blanco). */
+/* Núcleo muy local en el logo (el haz amplio va en .lp-caps__atmos). */
 .lp-caps__brand::before {
   content: '';
   position: absolute;
   left: 50%;
-  top: 42%;
+  top: 50%;
   z-index: -1;
-  width: clamp(180px, 40vw, 340px);
-  height: clamp(88px, 18vw, 150px);
+  width: clamp(140px, 34vw, 260px);
+  height: clamp(72px, 15vw, 120px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(
     ellipse 100% 100% at 50% 50%,
-    rgba(255, 255, 255, 0.28) 0%,
-    rgba(230, 236, 245, 0.1) 42%,
-    transparent 70%
+    rgba(255, 255, 255, 0.32) 0%,
+    rgba(240, 244, 250, 0.12) 45%,
+    transparent 72%
   );
-  filter: blur(20px);
-  opacity: 0.9;
+  filter: blur(18px);
+  opacity: 0.85;
   pointer-events: none;
 }
 
@@ -1263,7 +1288,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-caps__title {
-  margin: 0 0 clamp(18px, 2.4vw, 28px);
+  margin: 0;
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1430,10 +1455,14 @@ body.entrance-done .landing-header {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lp-caps__atmos::before {
+    opacity: 0.78;
+  }
+
   .lp-caps__spotlight {
     animation: none;
-    opacity: 0.38;
-    filter: blur(36px);
+    opacity: 0.32;
+    filter: blur(40px);
   }
 
   .lp-caps__card {
@@ -1455,8 +1484,16 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 600px) {
+  .lp-caps {
+    --lp-caps-glow-y: clamp(5.5rem, 15vh, 9rem);
+  }
+
+  .lp-caps__atmos::before {
+    filter: blur(40px);
+  }
+
   .lp-caps__spotlight {
-    filter: blur(28px);
+    filter: blur(32px);
   }
 
   .lp-caps__brand::before {
