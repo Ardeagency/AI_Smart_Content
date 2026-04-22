@@ -650,11 +650,6 @@ body.entrance-done .landing-header {
   border-right: none;
 }
 
-/* Highlight activo crece: la línea del rail arranca más abajo para no cruzar el texto */
-.lp-pain__col--active {
-  --lp-pain-rail-line-top: clamp(268px, calc(var(--lp-pain-highlight-slot) + clamp(72px, 10vh, 112px)), 400px);
-}
-
 .lp-pain__col[data-pain-gradient="1"] {
   --lp-pain-g-from: #ff0000;
   --lp-pain-g-to: #ff6500;
@@ -762,24 +757,24 @@ body.entrance-done .landing-header {
 .lp-pain__col-inner {
   position: relative;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: var(--lp-pain-highlight-slot) minmax(0, 1fr);
   flex: 1;
   min-height: 100%;
   /* Hueco a la derecha del rail: ancho del punto + separación con títulos/número */
   padding-left: calc(11px + 12px);
 }
 
-/* Ranura fija en reposo: el copy largo del highlight no empuja el pie (alineación entre columnas) */
+/* Arriba y abajo separados: el bloque superior no desplaza el inferior */
 .lp-pain__col-highlight {
+  grid-row: 1;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex-shrink: 0;
   box-sizing: border-box;
-  height: var(--lp-pain-highlight-slot);
-  min-height: 0;
-  max-height: var(--lp-pain-highlight-slot);
+  height: 100%;
   padding-top: clamp(10px, 1.4vh, 18px);
   padding-bottom: clamp(12px, 2vw, 20px);
   max-width: 34ch;
@@ -791,10 +786,6 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col--active .lp-pain__col-highlight {
-  height: auto;
-  max-height: none;
-  min-height: var(--lp-pain-highlight-slot);
-  overflow: visible;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -841,14 +832,17 @@ body.entrance-done .landing-header {
 }
 
 .lp-pain__col-spacer {
-  flex: 1;
-  min-height: clamp(24px, 4vh, 48px);
+  display: none;
 }
 
 .lp-pain__col-foot {
+  grid-row: 2;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   flex-shrink: 0;
   width: 100%;
-  margin-top: auto;
   padding-top: clamp(8px, 1.5vw, 16px);
 }
 
