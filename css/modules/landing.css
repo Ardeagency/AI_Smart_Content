@@ -543,8 +543,8 @@ body.entrance-done .landing-header {
 
 .lp-pain {
   /* Opción 1: dos zonas fijas (arriba/abajo) con divisoria estable */
-  --lp-pain-highlight-slot: clamp(168px, 20vh, 220px);
-  --lp-pain-divider-gap: clamp(6px, 1vh, 12px);
+  --lp-pain-highlight-slot: clamp(198px, 24vh, 268px);
+  --lp-pain-divider-gap: clamp(4px, 0.8vh, 10px);
   --lp-pain-timeline-y: calc(var(--lp-pain-highlight-slot) + var(--lp-pain-divider-gap));
   --lp-pain-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-pain-dur: 0.78s;
@@ -772,17 +772,15 @@ body.entrance-done .landing-header {
   align-self: start;
   align-content: start;
   display: grid;
-  grid-template-rows:
-    minmax(calc(2 * 1.1em), auto)
-    minmax(calc(2.5 * 1.55em), auto);
-  row-gap: 8px;
+  grid-template-rows: auto auto;
+  row-gap: clamp(8px, 1.1vh, 12px);
   flex-shrink: 0;
   box-sizing: border-box;
   height: var(--lp-pain-highlight-slot);
   min-height: var(--lp-pain-highlight-slot);
   max-height: var(--lp-pain-highlight-slot);
-  padding-top: clamp(6px, 1vh, 12px);
-  padding-bottom: clamp(8px, 1.2vh, 14px);
+  padding-top: clamp(8px, 1.3vh, 14px);
+  padding-bottom: clamp(10px, 1.6vh, 18px);
   max-width: 34ch;
   opacity: 0;
   visibility: hidden;
@@ -952,7 +950,7 @@ body.entrance-done .landing-header {
 
 @media (max-width: 768px) {
   .lp-pain {
-    --lp-pain-highlight-slot: clamp(132px, 30vw, 188px);
+    --lp-pain-highlight-slot: clamp(160px, 35vw, 214px);
     --lp-pain-divider-gap: 0px;
   }
 
@@ -991,9 +989,9 @@ body.entrance-done .landing-header {
   }
 
   .lp-pain__col-highlight {
-    row-gap: 6px;
-    padding-top: 6px;
-    padding-bottom: 8px;
+    row-gap: 8px;
+    padding-top: 8px;
+    padding-bottom: 10px;
   }
 
   .lp-pain__col-foot {
