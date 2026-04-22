@@ -359,8 +359,8 @@ class LandingView extends PublicBaseView {
             <div class="lp-caps__brand sr-reveal">
               <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
             </div>
-            <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">Las tres capacidades que cambian cómo opera tu marca</h2>
-            <p class="lp-caps__sub sr-reveal sr-reveal--d1">No son herramientas aisladas. Son un sistema integrado que aprende, decide y ejecuta.</p>
+            <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">No es una herramienta. Es una nueva forma de competir.</h2>
+            <p class="lp-caps__sub sr-reveal sr-reveal--d1">Lee el mercado, decide con criterio y ejecuta a tiempo.</p>
           </header>
           <div class="lp-caps__grid">
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d1">
