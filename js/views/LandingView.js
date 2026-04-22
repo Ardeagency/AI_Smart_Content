@@ -363,7 +363,7 @@ class LandingView extends PublicBaseView {
             <p class="lp-caps__sub sr-reveal sr-reveal--d1">No son herramientas aisladas. Son un sistema integrado que aprende, decide y ejecuta.</p>
           </header>
           <div class="lp-caps__grid">
-            <div class="lp-caps__card sr-reveal sr-reveal--d1">
+            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d1">
               <div class="lp-caps__card-head">
                 <span class="lp-caps__card-num" aria-hidden="true">01</span>
                 <div class="lp-caps__card-icon" aria-hidden="true">
@@ -387,7 +387,7 @@ class LandingView extends PublicBaseView {
               </div>
               </div>
               </div>
-            <div class="lp-caps__card sr-reveal sr-reveal--d2">
+            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d2">
               <div class="lp-caps__card-head">
                 <span class="lp-caps__card-num" aria-hidden="true">02</span>
                 <div class="lp-caps__card-icon" aria-hidden="true">
@@ -410,7 +410,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </div>
-            <div class="lp-caps__card sr-reveal sr-reveal--d3">
+            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d3">
               <div class="lp-caps__card-head">
                 <span class="lp-caps__card-num" aria-hidden="true">03</span>
                 <div class="lp-caps__card-icon" aria-hidden="true">
