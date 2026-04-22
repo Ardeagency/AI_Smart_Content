@@ -1137,13 +1137,18 @@ body.entrance-done .landing-header {
   margin: 0 auto;
 }
 
-.lp-caps__eyebrow {
-  margin: 0 0 12px;
-  font-size: clamp(0.68rem, 1vw, 0.78rem);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7c4dff;
+.lp-caps__brand {
+  margin: 0 auto clamp(10px, 1.6vw, 16px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lp-caps__brand-logo {
+  display: block;
+  width: clamp(168px, 30vw, 280px);
+  height: auto;
+  max-width: 100%;
 }
 
 .lp-caps__title {
