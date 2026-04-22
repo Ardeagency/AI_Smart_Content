@@ -772,7 +772,6 @@ body.entrance-done .landing-header {
   align-self: start;
   display: grid;
   grid-template-rows:
-    minmax(calc(2 * 1.24em), auto)
     minmax(calc(3 * 1.1em), auto)
     minmax(calc(3 * 1.55em), auto);
   row-gap: 10px;

@@ -55,11 +55,11 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="Meta">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Meta</span>
-              </div>
+            </div>
               <div class="lp-cred__brand" title="Google">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Google</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="TikTok">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">TikTok</span>
@@ -67,27 +67,27 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="X">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">X</span>
-              </div>
+            </div>
               <div class="lp-cred__brand" title="Amazon">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Amazon</span>
-              </div>
+          </div>
               <div class="lp-cred__brand lp-cred__brand--wide" title="Mercado Libre">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://upload.wikimedia.org/wikipedia/commons/6/60/Mercado_Libre_wordmark_%28Spanish_version%29.svg" alt="" width="72" height="18" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Mercado Libre</span>
-              </div>
+        </div>
               <div class="lp-cred__brand" title="OpenAI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">OpenAI</span>
-              </div>
+            </div>
               <div class="lp-cred__brand" title="Anthropic">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Anthropic</span>
-              </div>
+                  </div>
               <div class="lp-cred__brand" title="KlingAI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/kling.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">KlingAI</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="Nano Banana PRO">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Nano Banana PRO</span>
@@ -95,11 +95,11 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="Seedance 2.0">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/bytedance.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Seedance 2.0</span>
-              </div>
+                  </div>
               <div class="lp-cred__brand" title="ComfyUI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/comfyui.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">ComfyUI</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="n8n">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">n8n</span>
@@ -107,12 +107,12 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="Kie AI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://kie.ai/logo.png" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Kie AI</span>
-              </div>
+                  </div>
               <!-- duplicado para carrusel infinito -->
               <div class="lp-cred__brand" title="Meta">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Meta</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="Google">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Google</span>
@@ -120,11 +120,11 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="TikTok">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">TikTok</span>
-              </div>
+                  </div>
               <div class="lp-cred__brand" title="X">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">X</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="Amazon">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Amazon</span>
@@ -132,11 +132,11 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand lp-cred__brand--wide" title="Mercado Libre">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://upload.wikimedia.org/wikipedia/commons/6/60/Mercado_Libre_wordmark_%28Spanish_version%29.svg" alt="" width="72" height="18" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Mercado Libre</span>
-              </div>
+                  </div>
               <div class="lp-cred__brand" title="OpenAI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">OpenAI</span>
-              </div>
+                </div>
               <div class="lp-cred__brand" title="Anthropic">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Anthropic</span>
@@ -144,7 +144,7 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="KlingAI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/kling.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">KlingAI</span>
-              </div>
+            </div>
               <div class="lp-cred__brand" title="Nano Banana PRO">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Nano Banana PRO</span>
@@ -174,7 +174,7 @@ class LandingView extends PublicBaseView {
       <section class="lp-pain" id="landing-3" aria-labelledby="lp-pain-heading">
         <div class="lp-pain__header">
           <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">Cinco brechas que frenan el crecimiento de las marcas</h2>
-        </div>
+              </div>
         <div class="lp-pain__stage">
           <div class="lp-pain__columns" role="list">
             <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="1">
@@ -185,10 +185,9 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Llegas tarde</p>
-                  <p class="lp-pain__highlight-title">Pierdes el momento correcto</p>
-                  <p class="lp-pain__highlight-sub">Cuando publicas, la conversación ya cambió.<br>Tu contenido se siente repetido antes de generar impacto.</p>
-                </div>
+                  <p class="lp-pain__highlight-title">Llegas tarde</p>
+                  <p class="lp-pain__highlight-sub">Cuando publicas, la conversación ya cambió.</p>
+              </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">01</div>
@@ -211,9 +210,8 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Te falta contexto</p>
-                  <p class="lp-pain__highlight-title">Decides con visión parcial</p>
-                  <p class="lp-pain__highlight-sub">Hay contenido funcionando hoy… pero no lo estás viendo.<br>Publicas, pero no necesariamente en la dirección correcta.</p>
+                  <p class="lp-pain__highlight-title">Te falta contexto</p>
+                  <p class="lp-pain__highlight-sub">Publicas, pero no necesariamente en la dirección correcta.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
@@ -234,13 +232,12 @@ class LandingView extends PublicBaseView {
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
                 <span class="lp-pain__col-rail-dot"></span>
-              </div>
+          </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Se pierde el enfoque</p>
-                  <p class="lp-pain__highlight-title">El mensaje se distorsiona</p>
-                  <p class="lp-pain__highlight-sub">Después de tantos ajustes, la idea pierde claridad.<br>El mensaje llega… pero no con la fuerza que debería.</p>
-                </div>
+                  <p class="lp-pain__highlight-title">Se pierde el enfoque</p>
+                  <p class="lp-pain__highlight-sub">Después de tantos ajustes, la idea pierde claridad.</p>
+        </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">03</div>
@@ -250,7 +247,7 @@ class LandingView extends PublicBaseView {
                     <div class="lp-pain__col-reveal">
                       <p>Cuando múltiples actores intervienen en la producción, la interpretación de la marca tiende a variar.</p>
                       <p>Sin una referencia operativa constante, la consistencia se vuelve difícil de sostener.</p>
-                    </div>
+          </div>
                   </div>
                 </div>
               </div>
@@ -263,9 +260,8 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">Todo toma demasiado tiempo</p>
-                  <p class="lp-pain__highlight-title">Tu operación no sigue el ritmo</p>
-                  <p class="lp-pain__highlight-sub">Crear contenido implica tiempo, equipos y múltiples validaciones.<br>Si necesitas cambiar algo, el proceso vuelve a empezar.</p>
+                  <p class="lp-pain__highlight-title">Todo toma demasiado tiempo</p>
+                  <p class="lp-pain__highlight-sub">Si necesitas cambiar algo, el proceso vuelve a empezar.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
@@ -289,8 +285,7 @@ class LandingView extends PublicBaseView {
               </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
-                  <p class="lp-pain__highlight-eyebrow">No acumulas ventaja</p>
-                  <p class="lp-pain__highlight-title">Sigues empezando desde cero</p>
+                  <p class="lp-pain__highlight-title">No acumulas ventaja</p>
                   <p class="lp-pain__highlight-sub">Publicas más…<br>pero no mejoras lo que haces.</p>
                 </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
@@ -346,9 +341,9 @@ class LandingView extends PublicBaseView {
               <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
               <span class="lp-agit__ticker-item" aria-hidden="true">Presupuesto desperdiciado</span>
               <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            </div>
           </div>
-        </div>
+                </div>
+              </div>
       </section>
 
       <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->
@@ -368,7 +363,7 @@ class LandingView extends PublicBaseView {
                     <circle cx="11" cy="11" r="3" fill="currentColor"/>
                     <circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-dasharray="4 2.5"/>
                   </svg>
-                </div>
+              </div>
               </div>
               <h3 class="lp-caps__card-title">Señal e inteligencia</h3>
               <p class="lp-caps__card-desc">Monitoreo continuo de mercado, competencia y tendencias. Datos que se convierten en insights accionables antes de que sean evidentes.</p>
@@ -376,14 +371,14 @@ class LandingView extends PublicBaseView {
                 <div class="lp-caps__ba-item lp-caps__ba-item--before">
                   <span class="lp-caps__ba-tag">Antes</span>
                   <span class="lp-caps__ba-text">Intuición y suposiciones</span>
-                </div>
+              </div>
                 <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
                 <div class="lp-caps__ba-item lp-caps__ba-item--after">
                   <span class="lp-caps__ba-tag">Con VERA</span>
                   <span class="lp-caps__ba-text">Señal en tiempo real</span>
-                </div>
               </div>
-            </div>
+              </div>
+              </div>
             <div class="lp-caps__card sr-reveal sr-reveal--d2">
               <div class="lp-caps__card-head">
                 <span class="lp-caps__card-num" aria-hidden="true">02</span>
@@ -523,7 +518,7 @@ class LandingView extends PublicBaseView {
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__url">app.aismartcontent.com / dashboard</span>
-              </div>
+        </div>
               <div class="lp-dash__body">
                 <aside class="lp-dash__sidebar">
                   <div class="lp-dash__nav-item lp-dash__nav-item--active"></div>
@@ -537,47 +532,47 @@ class LandingView extends PublicBaseView {
                     <div class="lp-dash__topbar-left">
                       <div class="lp-dash__mock-line lp-dash__mock-line--h"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
+                </div>
                     <div class="lp-dash__live-badge">● Live</div>
-                  </div>
+              </div>
                   <div class="lp-dash__metrics-row">
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">3×</div>
                       <div class="lp-dash__metric-lbl">Velocidad producción</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:72%"></div></div>
-                    </div>
+                </div>
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">68%</div>
                       <div class="lp-dash__metric-lbl">Reducción decisión</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:68%"></div></div>
-                    </div>
+              </div>
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">+50</div>
                       <div class="lp-dash__metric-lbl">Organizaciones</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:85%"></div></div>
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <div class="lp-dash__cards-row">
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
+                </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
+              </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
+          </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
+        </div>
                   </div>
                 </main>
               </div>
@@ -864,7 +859,7 @@ class LandingView extends PublicBaseView {
     });
 
     // Trigger after layout paint so transition takes effect
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
       hero.classList.add('is-ready');
     }));
 
