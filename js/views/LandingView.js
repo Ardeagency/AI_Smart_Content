@@ -308,42 +308,41 @@ class LandingView extends PublicBaseView {
       </section>
 
       <!-- ════════ S04: AGITACIÓN ════════ -->
-      <section class="lp-agit" id="landing-4" aria-label="El costo de no actuar">
+      <section class="lp-agit" id="landing-4" aria-label="Agitación">
         <div class="lp-agit__inner">
-          <p class="lp-agit__eyebrow sr-reveal">El costo de no actuar</p>
           <h2 class="lp-agit__headline sr-reveal">
             Cada día sin sistema es un día que<br>
             <em class="lp-agit__accent">tu competencia te saca ventaja.</em>
           </h2>
-          <div class="lp-agit__ticker-wrap" aria-label="Consecuencias de operar sin sistema">
-            <div class="lp-agit__ticker" aria-hidden="true">
-              <span class="lp-agit__ticker-item">Oportunidades perdidas</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item">Decisiones tardías</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item">Equipos agotados</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item">Contenido irrelevante</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item">Marca difusa</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item">Presupuesto desperdiciado</span>
-              <span class="lp-agit__ticker-sep">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Oportunidades perdidas</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Decisiones tardías</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Equipos agotados</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Contenido irrelevante</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Marca difusa</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-              <span class="lp-agit__ticker-item" aria-hidden="true">Presupuesto desperdiciado</span>
-              <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+        </div>
+        <div class="lp-agit__ticker-wrap" aria-label="Consecuencias de operar sin sistema">
+          <div class="lp-agit__ticker" aria-hidden="true">
+            <span class="lp-agit__ticker-item">Oportunidades perdidas</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item">Decisiones tardías</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item">Equipos agotados</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item">Contenido irrelevante</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item">Marca difusa</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item">Presupuesto desperdiciado</span>
+            <span class="lp-agit__ticker-sep">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Oportunidades perdidas</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Decisiones tardías</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Equipos agotados</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Contenido irrelevante</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Marca difusa</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
+            <span class="lp-agit__ticker-item" aria-hidden="true">Presupuesto desperdiciado</span>
+            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
           </div>
-                </div>
-              </div>
+        </div>
       </section>
 
       <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->

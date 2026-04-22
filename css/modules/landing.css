@@ -1046,28 +1046,20 @@ body.entrance-done .landing-header {
 .lp-agit {
   background: #000000;
   color: #ffffff;
-  padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
+  padding: clamp(72px, 10vw, 120px) 0 0;
   text-align: center;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .lp-agit__inner {
+  box-sizing: border-box;
   max-width: 900px;
   margin: 0 auto;
+  padding: 0 clamp(20px, 6vw, 80px) clamp(32px, 5vw, 56px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(32px, 5vw, 56px);
-}
-
-.lp-agit__eyebrow {
-  margin: 0;
-  font-size: clamp(0.68rem, 1vw, 0.78rem);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
 }
 
 .lp-agit__headline {
@@ -1076,38 +1068,24 @@ body.entrance-done .landing-header {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
   font-style: normal;
 }
 
 .lp-agit__accent {
   font-style: italic;
-  /* Arcoíris en los bordes (~20% cada lado); núcleo blanco estable en el 20–80% (60% del degradado). */
-  background: linear-gradient(
-    90deg,
-    rgba(255, 112, 112, 0.72) 0%,
-    rgba(255, 160, 96, 0.68) 6%,
-    rgba(122, 188, 88, 0.55) 12%,
-    rgba(124, 98, 216, 0.52) 18%,
-    rgba(255, 255, 255, 0.97) 20%,
-    #ffffff 50%,
-    rgba(255, 255, 255, 0.97) 80%,
-    rgba(90, 166, 238, 0.55) 86%,
-    rgba(176, 86, 176, 0.68) 93%,
-    rgba(255, 112, 112, 0.72) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #ffffff;
 }
 
+/* Carrusel a ancho completo de viewport; fondo blanco y tipografía oscura (tokens de plataforma). */
 .lp-agit__ticker-wrap {
-  width: calc(100vw);
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
-  padding: 20px 0;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: clamp(16px, 2.2vw, 22px) 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .lp-agit__ticker {
@@ -1125,13 +1103,13 @@ body.entrance-done .landing-header {
 .lp-agit__ticker-item {
   font-size: clamp(0.78rem, 1.1vw, 0.92rem);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.3);
+  color: #0b0b0b;
   white-space: nowrap;
   letter-spacing: 0.03em;
 }
 
 .lp-agit__ticker-sep {
-  color: rgba(255, 255, 255, 0.12);
+  color: rgba(11, 11, 11, 0.28);
   flex-shrink: 0;
 }
 
