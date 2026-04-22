@@ -310,6 +310,7 @@ class LandingView extends PublicBaseView {
       <!-- ════════ S04: AGITACIÓN ════════ -->
       <section class="lp-agit" id="landing-4" aria-label="El costo de no actuar">
         <div class="lp-agit__inner">
+          <p class="lp-agit__eyebrow sr-reveal">El costo de no actuar</p>
           <h2 class="lp-agit__headline sr-reveal">
             Cada día sin sistema es un día que<br>
             <em class="lp-agit__accent">tu competencia te saca ventaja.</em>

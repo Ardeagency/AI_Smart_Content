@@ -1053,7 +1053,6 @@ body.entrance-done .landing-header {
 }
 
 .lp-agit__inner {
-  position: relative;
   max-width: 900px;
   margin: 0 auto;
   display: flex;
@@ -1062,54 +1061,41 @@ body.entrance-done .landing-header {
   gap: clamp(32px, 5vw, 56px);
 }
 
+.lp-agit__eyebrow {
+  margin: 0;
+  font-size: clamp(0.68rem, 1vw, 0.78rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
 .lp-agit__headline {
-  position: relative;
-  z-index: 1;
   margin: 0;
   font-size: clamp(1.8rem, 4.5vw, 3.6rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
   font-style: normal;
-}
-
-.lp-agit__headline::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 56%;
-  transform: translate(-50%, -50%);
-  width: min(92%, 18ch);
-  height: clamp(96px, 20vw, 170px);
-  border-radius: 999px;
-  background:
-    radial-gradient(
-      ellipse at center,
-      rgba(255, 255, 255, 0.7) 0%,
-      rgba(255, 255, 255, 0.46) 18%,
-      rgba(255, 255, 255, 0) 40%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 0, 0, 0.34) 0%,
-      rgba(255, 101, 0, 0.32) 15%,
-      rgba(255, 229, 0, 0.3) 30%,
-      rgba(154, 204, 0, 0.28) 45%,
-      rgba(0, 214, 20, 0.28) 58%,
-      rgba(0, 231, 255, 0.3) 72%,
-      rgba(0, 24, 238, 0.32) 86%,
-      rgba(91, 0, 234, 0.34) 100%
-    );
-  filter: blur(36px);
-  opacity: 0.92;
-  pointer-events: none;
-  z-index: -1;
 }
 
 .lp-agit__accent {
   font-style: italic;
-  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 112, 112, 0.72) 0%,
+    rgba(255, 160, 96, 0.72) 14%,
+    rgba(218, 210, 96, 0.7) 28%,
+    rgba(122, 188, 88, 0.68) 42%,
+    rgba(76, 192, 166, 0.68) 57%,
+    rgba(90, 166, 238, 0.7) 72%,
+    rgba(124, 98, 216, 0.72) 86%,
+    rgba(176, 86, 176, 0.72) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .lp-agit__ticker-wrap {
