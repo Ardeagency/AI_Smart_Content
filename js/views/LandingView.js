@@ -347,6 +347,14 @@ class LandingView extends PublicBaseView {
 
       <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->
       <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
+        <div class="lp-caps__atmos" aria-hidden="true">
+          <div class="lp-caps__grid-lines"></div>
+          <div class="lp-caps__spotlights">
+            <div class="lp-caps__spotlight lp-caps__spotlight--l"></div>
+            <div class="lp-caps__spotlight lp-caps__spotlight--c"></div>
+            <div class="lp-caps__spotlight lp-caps__spotlight--r"></div>
+          </div>
+        </div>
         <div class="lp-caps__inner">
           <header class="lp-caps__header">
             <div class="lp-caps__brand sr-reveal">

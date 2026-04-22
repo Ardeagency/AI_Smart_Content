@@ -1117,13 +1117,108 @@ body.entrance-done .landing-header {
    S05 — LAS 3 CAPACIDADES
    ═══════════════════════════════════════════════════════════════ */
 
+@keyframes lp-caps-spot-drift {
+  from {
+    opacity: 0.32;
+    filter: blur(20px);
+  }
+  to {
+    opacity: 0.58;
+    filter: blur(32px);
+  }
+}
+
 .lp-caps {
-  background: #050506;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
+  background:
+    radial-gradient(ellipse 95% 70% at 50% -8%, rgba(124, 77, 255, 0.14) 0%, transparent 52%),
+    radial-gradient(ellipse 80% 55% at 50% 18%, rgba(186, 214, 255, 0.08) 0%, transparent 58%),
+    linear-gradient(180deg, #0a1020 0%, #050508 42%, #050506 100%);
+}
+
+.lp-caps__atmos {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.lp-caps__grid-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 71px,
+      rgba(255, 255, 255, 0.035) 71px,
+      rgba(255, 255, 255, 0.035) 72px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 71px,
+      rgba(255, 255, 255, 0.028) 71px,
+      rgba(255, 255, 255, 0.028) 72px
+    );
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 22%, #000 0%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 22%, #000 0%, transparent 72%);
+}
+
+.lp-caps__spotlights {
+  position: absolute;
+  left: 50%;
+  top: clamp(52px, 9vw, 108px);
+  width: 0;
+  height: clamp(260px, 52vh, 640px);
+  transform: translateX(-50%);
+}
+
+.lp-caps__spotlight {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(78vmin, 920px);
+  height: 100%;
+  margin-left: calc(min(78vmin, 920px) * -0.5);
+  transform-origin: 50% 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(220, 232, 255, 0.45) 0%,
+    rgba(124, 77, 255, 0.18) 28%,
+    rgba(0, 200, 255, 0.08) 52%,
+    transparent 78%
+  );
+  clip-path: polygon(48.8% 0, 51.2% 0, 82% 100%, 18% 100%);
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  animation: lp-caps-spot-drift var(--lp-caps-spot-dur, 6s) ease-in-out infinite alternate;
+}
+
+.lp-caps__spotlight--l {
+  --lp-caps-spot-dur: 5.5s;
+  transform: rotate(-20deg);
+}
+
+.lp-caps__spotlight--c {
+  --lp-caps-spot-dur: 7.5s;
+  transform: rotate(0deg);
+}
+
+.lp-caps__spotlight--r {
+  --lp-caps-spot-dur: 4.8s;
+  transform: rotate(20deg);
 }
 
 .lp-caps__inner {
+  position: relative;
+  z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
   display: flex;
@@ -1138,17 +1233,44 @@ body.entrance-done .landing-header {
 }
 
 .lp-caps__brand {
+  position: relative;
   margin: 0 auto clamp(10px, 1.6vw, 16px);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+/* Resplandor suave que “sale” del logo (capa detrás del SVG). */
+.lp-caps__brand::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: -1;
+  width: clamp(220px, 48vw, 420px);
+  height: clamp(100px, 22vw, 180px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(124, 77, 255, 0.2) 38%,
+    transparent 68%
+  );
+  filter: blur(18px);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
 .lp-caps__brand-logo {
+  position: relative;
+  z-index: 0;
   display: block;
   width: clamp(168px, 30vw, 280px);
   height: auto;
   max-width: 100%;
+  filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.12))
+    drop-shadow(0 18px 48px rgba(124, 77, 255, 0.22));
 }
 
 .lp-caps__title {
@@ -1264,6 +1386,24 @@ body.entrance-done .landing-header {
 
 @media (max-width: 860px) {
   .lp-caps__grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-caps__spotlight {
+    animation: none;
+    opacity: 0.42;
+    filter: blur(22px);
+  }
+}
+
+@media (max-width: 600px) {
+  .lp-caps__spotlight {
+    filter: blur(16px);
+  }
+
+  .lp-caps__brand::before {
+    filter: blur(14px);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
