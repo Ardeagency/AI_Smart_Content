@@ -267,7 +267,7 @@ class LandingView extends PublicBaseView {
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">04</div>
                   <div class="lp-pain__col-content">
-                    <h3 class="lp-pain__col-title">Dependen de producción lenta</h3>
+                    <h3 class="lp-pain__col-title">Demasiado tiempo</h3>
                     <p class="lp-pain__col-body">Cada contenido implica grabación, diseño, revisiones y aprobaciones que toman días.<br>Cuando finalmente publicas, el momento ya pasó.</p>
                     <div class="lp-pain__col-reveal">
                       <p>La producción tradicional de contenido implica múltiples etapas y validaciones.</p>
