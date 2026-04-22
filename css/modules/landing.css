@@ -544,7 +544,7 @@ body.entrance-done .landing-header {
 .lp-pain {
   /* Altura reservada del bloque highlight (invisible en reposo): misma en todas las columnas */
   --lp-pain-highlight-slot: clamp(158px, 24vh, 228px);
-  --lp-pain-timeline-y: 46%;
+  --lp-pain-timeline-y: 34%;
   --lp-pain-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-pain-dur: 0.78s;
   --lp-pain-dur-text: 0.65s;
@@ -758,7 +758,7 @@ body.entrance-done .landing-header {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-rows: var(--lp-pain-highlight-slot) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   flex: 1;
   min-height: 100%;
   /* Hueco a la derecha del rail: ancho del punto + separación con títulos/número */
@@ -774,11 +774,10 @@ body.entrance-done .landing-header {
   gap: 10px;
   flex-shrink: 0;
   box-sizing: border-box;
-  height: 100%;
+  min-height: var(--lp-pain-highlight-slot);
   padding-top: clamp(10px, 1.4vh, 18px);
   padding-bottom: clamp(12px, 2vw, 20px);
   max-width: 34ch;
-  overflow: hidden;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -843,7 +842,7 @@ body.entrance-done .landing-header {
   justify-content: flex-end;
   flex-shrink: 0;
   width: 100%;
-  padding-top: clamp(8px, 1.5vw, 16px);
+  padding-top: clamp(22px, 3vh, 34px);
 }
 
 .lp-pain__col-num {
