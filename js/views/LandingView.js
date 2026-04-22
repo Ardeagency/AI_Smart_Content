@@ -364,38 +364,21 @@ class LandingView extends PublicBaseView {
           </header>
           <div class="lp-caps__grid">
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d1">
-              <div class="lp-caps__card-head">
-                <span class="lp-caps__card-num" aria-hidden="true">01</span>
-                <div class="lp-caps__card-icon" aria-hidden="true">
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <circle cx="11" cy="11" r="3" fill="currentColor"/>
-                    <circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-dasharray="4 2.5"/>
-                  </svg>
-              </div>
-              </div>
               <h3 class="lp-caps__card-title">Señal e inteligencia</h3>
               <p class="lp-caps__card-desc">Monitoreo continuo de mercado, competencia y tendencias. Datos que se convierten en insights accionables antes de que sean evidentes.</p>
               <div class="lp-caps__ba">
                 <div class="lp-caps__ba-item lp-caps__ba-item--before">
                   <span class="lp-caps__ba-tag">Antes</span>
                   <span class="lp-caps__ba-text">Intuición y suposiciones</span>
-              </div>
+                </div>
                 <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
                 <div class="lp-caps__ba-item lp-caps__ba-item--after">
                   <span class="lp-caps__ba-tag">Con VERA</span>
                   <span class="lp-caps__ba-text">Señal en tiempo real</span>
-              </div>
-              </div>
-              </div>
-            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d2">
-              <div class="lp-caps__card-head">
-                <span class="lp-caps__card-num" aria-hidden="true">02</span>
-                <div class="lp-caps__card-icon" aria-hidden="true">
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <path d="M11 2L13.6 7.4L19.7 8.3L15.4 12.5L16.4 18.6L11 15.8L5.6 18.6L6.6 12.5L2.3 8.3L8.4 7.4L11 2Z" stroke="currentColor" stroke-width="1.4" fill="none"/>
-                  </svg>
                 </div>
               </div>
+            </div>
+            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d2">
               <h3 class="lp-caps__card-title">Criterio y estrategia</h3>
               <p class="lp-caps__card-desc">Cruza datos, ADN de marca y contexto para decidir qué hacer, cuándo y cómo. Sin reuniones interminables ni hojas de cálculo.</p>
               <div class="lp-caps__ba">
@@ -411,15 +394,6 @@ class LandingView extends PublicBaseView {
               </div>
             </div>
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d3">
-              <div class="lp-caps__card-head">
-                <span class="lp-caps__card-num" aria-hidden="true">03</span>
-                <div class="lp-caps__card-icon" aria-hidden="true">
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <rect x="2" y="7" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
-                    <path d="M15 7V5.5a4 4 0 00-8 0V7" stroke="currentColor" stroke-width="1.4"/>
-                  </svg>
-                </div>
-              </div>
               <h3 class="lp-caps__card-title">Ejecución y producción</h3>
               <p class="lp-caps__card-desc">Contenido listo para canales, alineado a estrategia y ADN. Imagen, video y copy a escala enterprise sin perder consistencia.</p>
               <div class="lp-caps__ba">

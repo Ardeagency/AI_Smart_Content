@@ -1311,23 +1311,6 @@ body.entrance-done .landing-header {
   gap: 16px;
 }
 
-.lp-caps__card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.lp-caps__card-num {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.lp-caps__card-icon {
-  color: rgba(255, 255, 255, 0.42);
-}
-
 .lp-caps__card-title {
   margin: 0;
   font-size: clamp(1rem, 1.6vw, 1.2rem);
