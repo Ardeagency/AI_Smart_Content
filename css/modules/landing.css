@@ -543,7 +543,7 @@ body.entrance-done .landing-header {
 
 .lp-pain {
   /* Altura reservada del bloque highlight (invisible en reposo): misma en todas las columnas */
-  --lp-pain-highlight-slot: clamp(158px, 24vh, 228px);
+  --lp-pain-highlight-slot: clamp(224px, 30vh, 312px);
   --lp-pain-timeline-y: 34%;
   --lp-pain-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-pain-dur: 0.78s;
@@ -758,7 +758,7 @@ body.entrance-done .landing-header {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: var(--lp-pain-highlight-slot) minmax(0, 1fr);
   flex: 1;
   min-height: 100%;
   /* Hueco a la derecha del rail: ancho del punto + separación con títulos/número */
@@ -774,7 +774,9 @@ body.entrance-done .landing-header {
   gap: 10px;
   flex-shrink: 0;
   box-sizing: border-box;
+  height: var(--lp-pain-highlight-slot);
   min-height: var(--lp-pain-highlight-slot);
+  max-height: var(--lp-pain-highlight-slot);
   padding-top: clamp(10px, 1.4vh, 18px);
   padding-bottom: clamp(12px, 2vw, 20px);
   max-width: 34ch;
