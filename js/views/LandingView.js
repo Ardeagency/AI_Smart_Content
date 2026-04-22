@@ -311,8 +311,8 @@ class LandingView extends PublicBaseView {
       <section class="lp-agit" id="landing-4" aria-label="Agitación">
         <div class="lp-agit__inner">
           <h2 class="lp-agit__headline sr-reveal">
-            Cada día sin sistema es un día que<br>
-            <em class="lp-agit__accent">tu competencia te saca ventaja.</em>
+            El mercado ya está operando distinto.<br>
+            <em class="lp-agit__accent">La pregunta es si tú también.</em>
           </h2>
         </div>
         <div class="lp-agit__ticker-wrap" aria-label="Consecuencias de operar sin sistema">
