@@ -364,47 +364,47 @@ class LandingView extends PublicBaseView {
           </header>
           <div class="lp-caps__grid">
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d1">
-              <h3 class="lp-caps__card-title">Señal e inteligencia</h3>
-              <p class="lp-caps__card-desc">Monitoreo continuo de mercado, competencia y tendencias. Datos que se convierten en insights accionables antes de que sean evidentes.</p>
+              <h3 class="lp-caps__card-title">Ves lo que otros no están viendo</h3>
+              <p class="lp-caps__card-desc">Lees el mercado en tiempo real.<br>No solo lo que pasó… sino lo que está empezando a moverse.</p>
               <div class="lp-caps__ba">
                 <div class="lp-caps__ba-item lp-caps__ba-item--before">
                   <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">Intuición y suposiciones</span>
+                  <span class="lp-caps__ba-text">reaccionas</span>
                 </div>
                 <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
                 <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Con VERA</span>
-                  <span class="lp-caps__ba-text">Señal en tiempo real</span>
+                  <span class="lp-caps__ba-tag">Ahora</span>
+                  <span class="lp-caps__ba-text">anticipas</span>
                 </div>
               </div>
             </div>
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d2">
-              <h3 class="lp-caps__card-title">Criterio y estrategia</h3>
-              <p class="lp-caps__card-desc">Cruza datos, ADN de marca y contexto para decidir qué hacer, cuándo y cómo. Sin reuniones interminables ni hojas de cálculo.</p>
+              <h3 class="lp-caps__card-title">Decides con contexto, no con intuición</h3>
+              <p class="lp-caps__card-desc">Cruzas lo que está pasando con tu ADN y tu objetivo.<br>No decides por presión. Decides con claridad.</p>
               <div class="lp-caps__ba">
                 <div class="lp-caps__ba-item lp-caps__ba-item--before">
                   <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">Decisiones lentas e imprecisas</span>
+                  <span class="lp-caps__ba-text">suposiciones</span>
                 </div>
                 <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
                 <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Con VERA</span>
-                  <span class="lp-caps__ba-text">Criterio estructurado</span>
+                  <span class="lp-caps__ba-tag">Ahora</span>
+                  <span class="lp-caps__ba-text">criterio estructurado</span>
                 </div>
               </div>
             </div>
             <div class="lp-caps__card glass-black sr-reveal sr-reveal--d3">
-              <h3 class="lp-caps__card-title">Ejecución y producción</h3>
-              <p class="lp-caps__card-desc">Contenido listo para canales, alineado a estrategia y ADN. Imagen, video y copy a escala enterprise sin perder consistencia.</p>
+              <h3 class="lp-caps__card-title">Ejecutas sin fricción</h3>
+              <p class="lp-caps__card-desc">Lo que antes tomaba días, ahora sucede en minutos.<br>Sin perder coherencia. Sin empezar desde cero.</p>
               <div class="lp-caps__ba">
                 <div class="lp-caps__ba-item lp-caps__ba-item--before">
                   <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">Producción manual y lenta</span>
+                  <span class="lp-caps__ba-text">procesos</span>
                 </div>
                 <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
                 <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Con VERA</span>
-                  <span class="lp-caps__ba-text">Escala sin fricción</span>
+                  <span class="lp-caps__ba-tag">Ahora</span>
+                  <span class="lp-caps__ba-text">velocidad</span>
                 </div>
               </div>
             </div>
