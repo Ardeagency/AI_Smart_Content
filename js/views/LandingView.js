@@ -348,7 +348,6 @@ class LandingView extends PublicBaseView {
       <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->
       <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
         <div class="lp-caps__atmos" aria-hidden="true">
-          <div class="lp-caps__grid-lines"></div>
           <div class="lp-caps__spotlights">
             <div class="lp-caps__spotlight lp-caps__spotlight--l"></div>
             <div class="lp-caps__spotlight lp-caps__spotlight--c"></div>
@@ -358,7 +357,7 @@ class LandingView extends PublicBaseView {
         <div class="lp-caps__inner">
           <header class="lp-caps__header">
             <div class="lp-caps__brand sr-reveal">
-              <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="240" height="96" loading="lazy" decoding="async">
+              <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
             </div>
             <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">Las tres capacidades que cambian cómo opera tu marca</h2>
             <p class="lp-caps__sub sr-reveal sr-reveal--d1">No son herramientas aisladas. Son un sistema integrado que aprende, decide y ejecuta.</p>

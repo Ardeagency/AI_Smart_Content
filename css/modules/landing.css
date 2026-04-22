@@ -1119,12 +1119,18 @@ body.entrance-done .landing-header {
 
 @keyframes lp-caps-spot-drift {
   from {
-    opacity: 0.32;
-    filter: blur(20px);
+    opacity: 0.28;
+    transform: var(--lp-caps-spot-xf, rotate(0deg)) scale(0.98);
   }
   to {
-    opacity: 0.58;
-    filter: blur(32px);
+    opacity: 0.48;
+    transform: var(--lp-caps-spot-xf, rotate(0deg)) scale(1.02);
+  }
+}
+
+@keyframes lp-caps-card-border-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -1133,11 +1139,11 @@ body.entrance-done .landing-header {
   overflow: hidden;
   isolation: isolate;
   color: #ffffff;
-  padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
+  padding: clamp(96px, 14vw, 148px) clamp(20px, 6vw, 80px);
   background:
-    radial-gradient(ellipse 95% 70% at 50% -8%, rgba(124, 77, 255, 0.14) 0%, transparent 52%),
-    radial-gradient(ellipse 80% 55% at 50% 18%, rgba(186, 214, 255, 0.08) 0%, transparent 58%),
-    linear-gradient(180deg, #0a1020 0%, #050508 42%, #050506 100%);
+    radial-gradient(ellipse 100% 65% at 50% -12%, rgba(255, 255, 255, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse 85% 50% at 50% 12%, rgba(255, 255, 255, 0.045) 0%, transparent 62%),
+    linear-gradient(180deg, #0c0e12 0%, #060708 45%, #050506 100%);
 }
 
 .lp-caps__atmos {
@@ -1147,72 +1153,54 @@ body.entrance-done .landing-header {
   pointer-events: none;
 }
 
-.lp-caps__grid-lines {
-  position: absolute;
-  inset: 0;
-  opacity: 0.85;
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 71px,
-      rgba(255, 255, 255, 0.035) 71px,
-      rgba(255, 255, 255, 0.035) 72px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent 0,
-      transparent 71px,
-      rgba(255, 255, 255, 0.028) 71px,
-      rgba(255, 255, 255, 0.028) 72px
-    );
-  mask-image: radial-gradient(ellipse 85% 70% at 50% 22%, #000 0%, transparent 72%);
-  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 22%, #000 0%, transparent 72%);
-}
-
 .lp-caps__spotlights {
   position: absolute;
   left: 50%;
-  top: clamp(52px, 9vw, 108px);
+  top: clamp(40px, 8vw, 96px);
   width: 0;
-  height: clamp(260px, 52vh, 640px);
+  height: clamp(280px, 56vh, 680px);
   transform: translateX(-50%);
 }
 
 .lp-caps__spotlight {
   position: absolute;
   left: 50%;
-  top: 0;
-  width: min(78vmin, 920px);
-  height: 100%;
-  margin-left: calc(min(78vmin, 920px) * -0.5);
+  top: -8%;
+  width: min(92vmin, 1040px);
+  height: 118%;
+  margin-left: calc(min(92vmin, 1040px) * -0.5);
   transform-origin: 50% 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(220, 232, 255, 0.45) 0%,
-    rgba(124, 77, 255, 0.18) 28%,
-    rgba(0, 200, 255, 0.08) 52%,
-    transparent 78%
+  /* Conos duros sustituidos por halos elípticos blancos difusos. */
+  background: radial-gradient(
+    ellipse 42% 22% at 50% 0%,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.16) 32%,
+    rgba(255, 255, 255, 0.05) 52%,
+    transparent 72%
   );
-  clip-path: polygon(48.8% 0, 51.2% 0, 82% 100%, 18% 100%);
-  filter: blur(24px);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
+  filter: blur(42px);
   mix-blend-mode: screen;
-  opacity: 0.5;
+  opacity: 0.42;
   animation: lp-caps-spot-drift var(--lp-caps-spot-dur, 6s) ease-in-out infinite alternate;
 }
 
 .lp-caps__spotlight--l {
   --lp-caps-spot-dur: 5.5s;
+  --lp-caps-spot-xf: rotate(-20deg);
   transform: rotate(-20deg);
 }
 
 .lp-caps__spotlight--c {
   --lp-caps-spot-dur: 7.5s;
+  --lp-caps-spot-xf: rotate(0deg);
   transform: rotate(0deg);
 }
 
 .lp-caps__spotlight--r {
   --lp-caps-spot-dur: 4.8s;
+  --lp-caps-spot-xf: rotate(20deg);
   transform: rotate(20deg);
 }
 
@@ -1223,42 +1211,42 @@ body.entrance-done .landing-header {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(48px, 7vw, 80px);
+  gap: clamp(64px, 9vw, 104px);
 }
 
 .lp-caps__header {
   text-align: center;
-  max-width: 700px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
 .lp-caps__brand {
   position: relative;
-  margin: 0 auto clamp(10px, 1.6vw, 16px);
+  margin: 0 auto clamp(22px, 3.2vw, 36px);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Resplandor suave que “sale” del logo (capa detrás del SVG). */
+/* Resplandor suave detrás del logo (solo tonos fríos / blanco). */
 .lp-caps__brand::before {
   content: '';
   position: absolute;
   left: 50%;
   top: 42%;
   z-index: -1;
-  width: clamp(220px, 48vw, 420px);
-  height: clamp(100px, 22vw, 180px);
+  width: clamp(180px, 40vw, 340px);
+  height: clamp(88px, 18vw, 150px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(
     ellipse 100% 100% at 50% 50%,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(124, 77, 255, 0.2) 38%,
-    transparent 68%
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(230, 236, 245, 0.1) 42%,
+    transparent 70%
   );
-  filter: blur(18px);
-  opacity: 0.95;
+  filter: blur(20px);
+  opacity: 0.9;
   pointer-events: none;
 }
 
@@ -1266,15 +1254,16 @@ body.entrance-done .landing-header {
   position: relative;
   z-index: 0;
   display: block;
-  width: clamp(168px, 30vw, 280px);
+  width: clamp(120px, 20vw, 200px);
   height: auto;
   max-width: 100%;
-  filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.12))
-    drop-shadow(0 18px 48px rgba(124, 77, 255, 0.22));
+  filter:
+    drop-shadow(0 0 20px rgba(255, 255, 255, 0.1))
+    drop-shadow(0 14px 40px rgba(255, 255, 255, 0.06));
 }
 
 .lp-caps__title {
-  margin: 0 0 16px;
+  margin: 0 0 clamp(18px, 2.4vw, 28px);
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1291,23 +1280,75 @@ body.entrance-done .landing-header {
 .lp-caps__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 2.5vw, 28px);
+  gap: clamp(20px, 3vw, 32px);
 }
 
 .lp-caps__card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: clamp(24px, 3vw, 36px);
+  position: relative;
+  isolation: isolate;
+  border-radius: 18px;
+  padding: clamp(26px, 3.2vw, 38px);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: border-color 0.3s ease, background 0.3s ease;
+  background: rgba(14, 16, 22, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  transform: translateY(0);
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease,
+    border-color 0.35s ease,
+    background 0.35s ease;
+}
+
+/* Anillo luminoso tipo referencia (conic + máscara), animado al hover. */
+.lp-caps__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.04) 22%,
+    rgba(255, 255, 255, 0.18) 48%,
+    rgba(255, 255, 255, 0.04) 72%,
+    rgba(255, 255, 255, 0.28) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  animation: lp-caps-card-border-spin 7s linear infinite;
+  animation-play-state: paused;
+  transition: opacity 0.4s ease;
+}
+
+.lp-caps__card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .lp-caps__card:hover {
-  border-color: rgba(124, 77, 255, 0.25);
-  background: rgba(124, 77, 255, 0.04);
+  transform: translateY(-10px);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(18, 20, 28, 0.9);
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 100px rgba(255, 255, 255, 0.06);
+}
+
+.lp-caps__card:hover::before {
+  opacity: 1;
+  animation-play-state: running;
 }
 
 .lp-caps__card-head {
@@ -1324,7 +1365,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-caps__card-icon {
-  color: rgba(124, 77, 255, 0.7);
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .lp-caps__card-title {
@@ -1368,7 +1409,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-caps__ba-item--before .lp-caps__ba-tag { color: rgba(255,255,255,0.3); }
-.lp-caps__ba-item--after .lp-caps__ba-tag { color: #7c4dff; }
+.lp-caps__ba-item--after .lp-caps__ba-tag { color: rgba(200, 214, 235, 0.85); }
 
 .lp-caps__ba-text {
   font-size: 0.78rem;
@@ -1391,14 +1432,31 @@ body.entrance-done .landing-header {
 @media (prefers-reduced-motion: reduce) {
   .lp-caps__spotlight {
     animation: none;
-    opacity: 0.42;
-    filter: blur(22px);
+    opacity: 0.38;
+    filter: blur(36px);
+  }
+
+  .lp-caps__card {
+    transition-duration: 0.01ms;
+  }
+
+  .lp-caps__card:hover {
+    transform: none;
+  }
+
+  .lp-caps__card::before {
+    animation: none;
+    opacity: 0;
+  }
+
+  .lp-caps__card:hover::before {
+    opacity: 0.55;
   }
 }
 
 @media (max-width: 600px) {
   .lp-caps__spotlight {
-    filter: blur(16px);
+    filter: blur(28px);
   }
 
   .lp-caps__brand::before {
