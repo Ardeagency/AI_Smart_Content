@@ -1083,19 +1083,26 @@ body.entrance-done .landing-header {
   width: min(92%, 18ch);
   height: clamp(96px, 20vw, 170px);
   border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 0, 0, 0.24) 0%,
-    rgba(255, 101, 0, 0.22) 15%,
-    rgba(255, 229, 0, 0.2) 30%,
-    rgba(154, 204, 0, 0.2) 45%,
-    rgba(0, 214, 20, 0.2) 58%,
-    rgba(0, 231, 255, 0.22) 72%,
-    rgba(0, 24, 238, 0.22) 86%,
-    rgba(91, 0, 234, 0.24) 100%
-  );
-  filter: blur(42px);
-  opacity: 0.7;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 255, 0.7) 0%,
+      rgba(255, 255, 255, 0.46) 18%,
+      rgba(255, 255, 255, 0) 40%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.34) 0%,
+      rgba(255, 101, 0, 0.32) 15%,
+      rgba(255, 229, 0, 0.3) 30%,
+      rgba(154, 204, 0, 0.28) 45%,
+      rgba(0, 214, 20, 0.28) 58%,
+      rgba(0, 231, 255, 0.3) 72%,
+      rgba(0, 24, 238, 0.32) 86%,
+      rgba(91, 0, 234, 0.34) 100%
+    );
+  filter: blur(36px);
+  opacity: 0.92;
   pointer-events: none;
   z-index: -1;
 }
