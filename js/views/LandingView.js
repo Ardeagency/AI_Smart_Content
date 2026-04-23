@@ -18,6 +18,7 @@ class LandingView extends PublicBaseView {
     this.metricsCleanup = null;
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
+    this.appPreviewCleanup = null;
   }
 
   renderContent() {
@@ -460,70 +461,146 @@ class LandingView extends PublicBaseView {
             <h2 id="lp-dash-heading" class="lp-dash__title sr-reveal">Un dashboard que piensa mientras tu equipo ejecuta</h2>
             <p class="lp-dash__sub sr-reveal sr-reveal--d1">Señales, decisiones y contenido en tiempo real. Todo en un solo lugar.</p>
           </header>
-          <div class="lp-dash__screen-wrap" aria-label="Vista previa a tamaño de pantalla del dashboard de AISmartContent">
-            <div class="lp-dash__screen">
-              <div class="lp-dash__chrome" aria-hidden="true">
+          <div class="lp-dash__screen-wrap" aria-label="Demostración interactiva de la aplicación AISmartContent">
+            <div class="lp-dash__screen lp-app-preview" data-landing-app-preview role="region" aria-label="Vista previa interactiva (demo)">
+              <div class="lp-dash__chrome lp-app-preview__browser" aria-hidden="true">
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__dot"></span>
-                <span class="lp-dash__url">app.aismartcontent.com / dashboard</span>
+                <span class="lp-dash__url">app.aismartcontent.com / <span data-preview-url>org/acme/dashboard</span></span>
               </div>
-              <div class="lp-dash__body">
-                <aside class="lp-dash__sidebar">
-                  <div class="lp-dash__nav-item lp-dash__nav-item--active"></div>
-                  <div class="lp-dash__nav-item"></div>
-                  <div class="lp-dash__nav-item"></div>
-                  <div class="lp-dash__nav-item"></div>
-                  <div class="lp-dash__nav-item"></div>
+              <div class="lp-app-preview__shell">
+                <aside class="lp-app-preview__sidebar" aria-label="Navegación (demo)">
+                  <div class="lp-app-preview__org">
+                    <span class="lp-app-preview__org-toggle" aria-hidden="true"><i class="fas fa-bars"></i></span>
+                    <span class="lp-app-preview__org-name">Mi organización</span>
+                  </div>
+                  <nav class="lp-app-preview__nav">
+                    <button type="button" class="lp-app-preview__nav-btn lp-app-preview__nav-btn--vera" data-preview-nav="vera" aria-pressed="false">
+                      <img class="lp-app-preview__vera-img" src="/recursos/vera/Vera-2.svg" alt="" width="64" height="24" decoding="async" loading="lazy">
+                    </button>
+                    <p class="lp-app-preview__section">Workspace</p>
+                    <button type="button" class="lp-app-preview__nav-btn is-active" data-preview-nav="dashboard" aria-pressed="true">
+                      <i class="fas fa-chart-line" aria-hidden="true"></i><span>Dashboard</span>
+                    </button>
+                    <button type="button" class="lp-app-preview__nav-btn" data-preview-nav="production" aria-pressed="false">
+                      <i class="fas fa-clipboard-list" aria-hidden="true"></i><span>Production</span>
+                    </button>
+                    <div class="lp-app-preview__nav-group" data-preview-flows-group>
+                      <button type="button" class="lp-app-preview__nav-btn lp-app-preview__nav-btn--subtoggle" data-preview-subtoggle aria-expanded="false" aria-controls="lp-app-preview-flows-sub">
+                        <i class="fas fa-th-large" aria-hidden="true"></i><span>Flows</span><i class="fas fa-chevron-down lp-app-preview__chev" aria-hidden="true"></i>
+                      </button>
+                      <div class="lp-app-preview__sub" id="lp-app-preview-flows-sub" hidden>
+                        <button type="button" class="lp-app-preview__nav-btn lp-app-preview__nav-btn--sub" data-preview-nav="flow-posts" aria-pressed="false">Posts</button>
+                        <button type="button" class="lp-app-preview__nav-btn lp-app-preview__nav-btn--sub" data-preview-nav="flow-reels" aria-pressed="false">Reels</button>
+                      </div>
+                    </div>
+                    <button type="button" class="lp-app-preview__nav-btn" data-preview-nav="brand" aria-pressed="false">
+                      <i class="fas fa-layer-group" aria-hidden="true"></i><span>Brand</span>
+                    </button>
+                  </nav>
+                  <div class="lp-app-preview__credits" aria-hidden="true">
+                    <span class="lp-app-preview__credits-lbl">credits</span>
+                    <span class="lp-app-preview__credits-val">12.4k</span>
+                    <div class="lp-app-preview__credits-bar"><span style="width:62%"></span></div>
+                  </div>
                 </aside>
-                <main class="lp-dash__main">
-                  <div class="lp-dash__topbar">
-                    <div class="lp-dash__topbar-left">
-                      <div class="lp-dash__mock-line lp-dash__mock-line--h"></div>
-                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
+                <div class="lp-app-preview__stage">
+                  <header class="lp-app-preview__topbar">
+                    <h3 class="lp-app-preview__title" data-preview-title>Dashboard</h3>
+                    <span class="lp-app-preview__live">● Live</span>
+                  </header>
+                  <div class="lp-app-preview__panels">
+                    <div class="lp-app-preview__panel" data-preview-panel="vera" id="lp-app-preview-panel-vera" hidden>
+                      <div class="lp-app-preview__vera-feed" data-vera-feed>
+                        <p class="lp-app-preview__bubble lp-app-preview__bubble--ai">¿Qué señal del mercado quieres traducir hoy en contenido?</p>
+                      </div>
+                      <div class="lp-app-preview__vera-chips" role="group" aria-label="Sugerencias demo">
+                        <button type="button" class="lp-app-preview__chip" data-vera-chip>Tendencia TikTok · belleza</button>
+                        <button type="button" class="lp-app-preview__chip" data-vera-chip>Copia para lanzamiento Q3</button>
+                        <button type="button" class="lp-app-preview__chip" data-vera-chip>Audiencia fría · remarketing</button>
+                      </div>
+                      <label class="lp-app-preview__vera-input-wrap">
+                        <span class="sr-only">Mensaje a VERA (demo)</span>
+                        <input type="text" class="lp-app-preview__vera-input" data-vera-input placeholder="Pregunta o pega contexto…" autocomplete="off">
+                      </label>
                     </div>
-                    <div class="lp-dash__live-badge">● Live</div>
+                    <div class="lp-app-preview__panel is-active" data-preview-panel="dashboard" id="lp-app-preview-panel-dashboard">
+                      <div class="lp-app-preview__filters" role="group" aria-label="Rango (demo)">
+                        <button type="button" class="lp-app-preview__filter is-active" data-preview-filter="all">Todo</button>
+                        <button type="button" class="lp-app-preview__filter" data-preview-filter="7d">7 días</button>
+                        <button type="button" class="lp-app-preview__filter" data-preview-filter="30d">30 días</button>
+                      </div>
+                      <p class="lp-app-preview__hint" data-preview-range-label>Actividad — vista completa</p>
+                      <div class="lp-app-preview__metrics">
+                        <div class="lp-app-preview__metric">
+                          <span class="lp-app-preview__metric-val">3×</span>
+                          <span class="lp-app-preview__metric-lbl">Velocidad producción</span>
+                          <div class="lp-app-preview__metric-bar"><span style="width:72%"></span></div>
+                        </div>
+                        <div class="lp-app-preview__metric">
+                          <span class="lp-app-preview__metric-val">68%</span>
+                          <span class="lp-app-preview__metric-lbl">Menos tiempo en decisión</span>
+                          <div class="lp-app-preview__metric-bar"><span style="width:68%"></span></div>
+                        </div>
+                        <div class="lp-app-preview__metric">
+                          <span class="lp-app-preview__metric-val">+24</span>
+                          <span class="lp-app-preview__metric-lbl">Piezas esta semana</span>
+                          <div class="lp-app-preview__metric-bar"><span style="width:81%"></span></div>
+                        </div>
+                      </div>
+                      <div class="lp-app-preview__rows">
+                        <div class="lp-app-preview__row"><span class="lp-app-preview__dot lp-app-preview__dot--ok"></span><span>Reel · aprobado</span><span class="lp-app-preview__muted">hace 2 h</span></div>
+                        <div class="lp-app-preview__row"><span class="lp-app-preview__dot lp-app-preview__dot--wait"></span><span>Carrusel · en revisión</span><span class="lp-app-preview__muted">hace 5 h</span></div>
+                        <div class="lp-app-preview__row"><span class="lp-app-preview__dot lp-app-preview__dot--run"></span><span>Story · generando</span><span class="lp-app-preview__muted">ahora</span></div>
+                      </div>
+                    </div>
+                    <div class="lp-app-preview__panel" data-preview-panel="production" id="lp-app-preview-panel-production" hidden>
+                      <p class="lp-app-preview__hint">Pipeline reciente (demo)</p>
+                      <button type="button" class="lp-app-preview__prow" data-preview-prod-row aria-expanded="false" aria-controls="lp-app-preview-prod-detail">
+                        <span class="lp-app-preview__dot lp-app-preview__dot--ok"></span>
+                        <span class="lp-app-preview__prow-title">Campaña verano · Meta Ads</span>
+                        <i class="fas fa-chevron-down lp-app-preview__prow-chev" aria-hidden="true"></i>
+                      </button>
+                      <div class="lp-app-preview__pdetail" id="lp-app-preview-prod-detail" data-preview-prod-detail hidden>
+                        <p>Brief aprobado · 4 creatividades · presupuesto asignado a conjunto Advantage+.</p>
+                      </div>
+                      <div class="lp-app-preview__prow lp-app-preview__prow--static"><span class="lp-app-preview__dot lp-app-preview__dot--wait"></span><span class="lp-app-preview__prow-title">Lanzamiento producto · LinkedIn</span></div>
+                      <div class="lp-app-preview__prow lp-app-preview__prow--static"><span class="lp-app-preview__dot lp-app-preview__dot--run"></span><span class="lp-app-preview__prow-title">Newsletter · segmentación fría</span></div>
+                    </div>
+                    <div class="lp-app-preview__panel" data-preview-panel="flow-posts" id="lp-app-preview-panel-flow-posts" hidden>
+                      <p class="lp-app-preview__hint">Flujo · Posts</p>
+                      <div class="lp-app-preview__steps" role="tablist" aria-label="Etapas (demo)">
+                        <button type="button" class="lp-app-preview__step is-active" data-preview-step="1" aria-selected="true">1 · Brief</button>
+                        <button type="button" class="lp-app-preview__step" data-preview-step="2" aria-selected="false">2 · Generar</button>
+                        <button type="button" class="lp-app-preview__step" data-preview-step="3" aria-selected="false">3 · Publicar</button>
+                      </div>
+                      <p class="lp-app-preview__step-body" data-preview-step-body>Define objetivo, tono y CTA. VERA cruza con datos de audiencia activos.</p>
+                    </div>
+                    <div class="lp-app-preview__panel" data-preview-panel="flow-reels" id="lp-app-preview-panel-flow-reels" hidden>
+                      <p class="lp-app-preview__hint">Flujo · Reels</p>
+                      <div class="lp-app-preview__storyboard">
+                        <div class="lp-app-preview__sb-card is-active" data-preview-sb tabindex="0">Hook 0–2s</div>
+                        <div class="lp-app-preview__sb-card" data-preview-sb tabindex="0">Desarrollo</div>
+                        <div class="lp-app-preview__sb-card" data-preview-sb tabindex="0">CTA</div>
+                      </div>
+                      <p class="lp-app-preview__step-body" data-preview-sb-caption>Primer impacto: texto superpuesto + ritmo de corte sugerido.</p>
+                    </div>
+                    <div class="lp-app-preview__panel" data-preview-panel="brand" id="lp-app-preview-panel-brand" hidden>
+                      <p class="lp-app-preview__hint">Contenedores de marca (demo)</p>
+                      <div class="lp-app-preview__brand-grid">
+                        <button type="button" class="lp-app-preview__brand-card" data-preview-brand-card>
+                          <span class="lp-app-preview__brand-name">Marca principal</span>
+                          <span class="lp-app-preview__brand-meta">ADN · voz · reglas IA</span>
+                        </button>
+                        <button type="button" class="lp-app-preview__brand-card" data-preview-brand-card>
+                          <span class="lp-app-preview__brand-name">Submarca retail</span>
+                          <span class="lp-app-preview__brand-meta">Productos · 12 activos</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div class="lp-dash__metrics-row">
-                    <div class="lp-dash__metric-tile">
-                      <div class="lp-dash__metric-val">3×</div>
-                      <div class="lp-dash__metric-lbl">Velocidad producción</div>
-                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:72%"></div></div>
-                    </div>
-                    <div class="lp-dash__metric-tile">
-                      <div class="lp-dash__metric-val">68%</div>
-                      <div class="lp-dash__metric-lbl">Reducción decisión</div>
-                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:68%"></div></div>
-                    </div>
-                    <div class="lp-dash__metric-tile">
-                      <div class="lp-dash__metric-val">+50</div>
-                      <div class="lp-dash__metric-lbl">Organizaciones</div>
-                      <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:85%"></div></div>
-                    </div>
-                  </div>
-                  <div class="lp-dash__cards-row">
-                    <div class="lp-dash__mini-card">
-                      <div class="lp-dash__mini-icon"></div>
-                      <div class="lp-dash__mock-line"></div>
-                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
-                    <div class="lp-dash__mini-card">
-                      <div class="lp-dash__mini-icon"></div>
-                      <div class="lp-dash__mock-line"></div>
-                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
-                    <div class="lp-dash__mini-card">
-                      <div class="lp-dash__mini-icon"></div>
-                      <div class="lp-dash__mock-line"></div>
-                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
-                    <div class="lp-dash__mini-card">
-                      <div class="lp-dash__mini-icon"></div>
-                      <div class="lp-dash__mock-line"></div>
-                      <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                    </div>
-                  </div>
-                </main>
+                </div>
               </div>
             </div>
           </div>
@@ -760,6 +837,7 @@ class LandingView extends PublicBaseView {
     this.initMetricsCounter();
     this.initFaqAccordion();
     this.initCtaForm();
+    this.initLandingAppPreview();
   }
 
   async onLeave() {
@@ -783,6 +861,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.ctaFormCleanup === 'function') {
       this.ctaFormCleanup();
       this.ctaFormCleanup = null;
+    }
+    if (typeof this.appPreviewCleanup === 'function') {
+      this.appPreviewCleanup();
+      this.appPreviewCleanup = null;
     }
   }
 
@@ -1014,6 +1096,191 @@ class LandingView extends PublicBaseView {
 
     this.faqCleanup = () => {
       handlers.forEach(({ btn, handler }) => btn.removeEventListener('click', handler));
+    };
+  }
+
+  initLandingAppPreview() {
+    if (typeof this.appPreviewCleanup === 'function') {
+      this.appPreviewCleanup();
+      this.appPreviewCleanup = null;
+    }
+
+    const root = this.container?.querySelector('[data-landing-app-preview]');
+    if (!root) return;
+
+    const titleEl = root.querySelector('[data-preview-title]');
+    const urlEl = root.querySelector('[data-preview-url]');
+    const panels = [...root.querySelectorAll('[data-preview-panel]')];
+    const navBtns = [...root.querySelectorAll('[data-preview-nav]')];
+    const subToggle = root.querySelector('[data-preview-subtoggle]');
+    const subPanel = root.querySelector('[data-preview-flows-group] .lp-app-preview__sub');
+    const flowsGroup = root.querySelector('[data-preview-flows-group]');
+    const veraFeed = root.querySelector('[data-vera-feed]');
+    const veraInput = root.querySelector('[data-vera-input]');
+    const rangeLabel = root.querySelector('[data-preview-range-label]');
+    const prodDetail = root.querySelector('[data-preview-prod-detail]');
+    const prodRow = root.querySelector('[data-preview-prod-row]');
+    const stepBody = root.querySelector('[data-preview-step-body]');
+    const sbCaption = root.querySelector('[data-preview-sb-caption]');
+
+    const TITLES = {
+      vera: 'VERA',
+      dashboard: 'Dashboard',
+      production: 'Production',
+      'flow-posts': 'Flows · Posts',
+      'flow-reels': 'Flows · Reels',
+      brand: 'Brand Organization',
+    };
+    const URL_PATH = {
+      vera: 'org/acme/vera',
+      dashboard: 'org/acme/dashboard',
+      production: 'org/acme/production',
+      'flow-posts': 'org/acme/flows/posts',
+      'flow-reels': 'org/acme/flows/reels',
+      brand: 'org/acme/brand',
+    };
+    const FLOW_IDS = new Set(['flow-posts', 'flow-reels']);
+    const STEP_COPY = {
+      1: 'Define objetivo, tono y CTA. VERA cruza con datos de audiencia activos.',
+      2: 'Generación de variantes, hooks y piezas visuales alineadas al ADN.',
+      3: 'Calendario, aprobaciones y publicación con registro de performance.',
+    };
+    const SB_COPY = [
+      'Primer impacto: texto superpuesto + ritmo de corte sugerido.',
+      'Desarrollo: prueba social, demo de producto o storytelling compacto.',
+      'CTA claro: enlace, comentario guía o sticker según objetivo de campaña.',
+    ];
+
+    const setFlowsOpen = (open) => {
+      if (!subToggle || !subPanel || !flowsGroup) return;
+      subToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      flowsGroup.classList.toggle('is-open', open);
+      if (open) subPanel.removeAttribute('hidden');
+      else subPanel.setAttribute('hidden', '');
+    };
+
+    const setPanel = (id) => {
+      if (!id || !TITLES[id]) return;
+      panels.forEach((p) => {
+        const on = p.dataset.previewPanel === id;
+        p.classList.toggle('is-active', on);
+        if (on) p.removeAttribute('hidden');
+        else p.setAttribute('hidden', '');
+      });
+      navBtns.forEach((b) => {
+        const on = b.dataset.previewNav === id;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      if (titleEl) titleEl.textContent = TITLES[id];
+      if (urlEl) urlEl.textContent = URL_PATH[id] || URL_PATH.dashboard;
+      if (FLOW_IDS.has(id)) setFlowsOpen(true);
+      else setFlowsOpen(false);
+      if (flowsGroup) flowsGroup.classList.toggle('is-child-active', FLOW_IDS.has(id));
+    };
+
+    const onClick = (e) => {
+      const t = e.target;
+      const nav = t.closest('[data-preview-nav]');
+      if (nav && root.contains(nav)) {
+        e.preventDefault();
+        setPanel(nav.dataset.previewNav);
+        return;
+      }
+      const sub = t.closest('[data-preview-subtoggle]');
+      if (sub && root.contains(sub)) {
+        e.preventDefault();
+        const open = sub.getAttribute('aria-expanded') !== 'true';
+        setFlowsOpen(open);
+        return;
+      }
+      const chip = t.closest('[data-vera-chip]');
+      if (chip && root.contains(chip) && veraFeed) {
+        e.preventDefault();
+        const line = document.createElement('p');
+        line.className = 'lp-app-preview__bubble lp-app-preview__bubble--user';
+        line.textContent = chip.textContent.trim();
+        veraFeed.appendChild(line);
+        const reply = document.createElement('p');
+        reply.className = 'lp-app-preview__bubble lp-app-preview__bubble--ai';
+        reply.textContent = 'Recibido. En la app, VERA enlazaría esto con tus datos de marca y mercado.';
+        veraFeed.appendChild(reply);
+        veraFeed.scrollTop = veraFeed.scrollHeight;
+        return;
+      }
+      const fil = t.closest('[data-preview-filter]');
+      if (fil && root.contains(fil)) {
+        e.preventDefault();
+        root.querySelectorAll('[data-preview-filter]').forEach((x) => x.classList.remove('is-active'));
+        fil.classList.add('is-active');
+        const k = fil.dataset.previewFilter;
+        if (rangeLabel) {
+          if (k === '7d') rangeLabel.textContent = 'Actividad — últimos 7 días (demo)';
+          else if (k === '30d') rangeLabel.textContent = 'Actividad — últimos 30 días (demo)';
+          else rangeLabel.textContent = 'Actividad — vista completa';
+        }
+        return;
+      }
+      const prow = t.closest('[data-preview-prod-row]');
+      if (prow && prodDetail && root.contains(prow)) {
+        e.preventDefault();
+        const open = prow.getAttribute('aria-expanded') === 'true';
+        prow.setAttribute('aria-expanded', open ? 'false' : 'true');
+        prodDetail.toggleAttribute('hidden', open);
+        return;
+      }
+      const step = t.closest('[data-preview-step]');
+      if (step && stepBody && root.contains(step)) {
+        e.preventDefault();
+        root.querySelectorAll('[data-preview-step]').forEach((s) => {
+          s.classList.remove('is-active');
+          s.setAttribute('aria-selected', 'false');
+        });
+        step.classList.add('is-active');
+        step.setAttribute('aria-selected', 'true');
+        const n = step.dataset.previewStep;
+        stepBody.textContent = STEP_COPY[n] || STEP_COPY[1];
+        return;
+      }
+      const sb = t.closest('[data-preview-sb]');
+      if (sb && sbCaption && root.contains(sb)) {
+        e.preventDefault();
+        const cards = [...root.querySelectorAll('[data-preview-sb]')];
+        const i = cards.indexOf(sb);
+        cards.forEach((c) => c.classList.remove('is-active'));
+        sb.classList.add('is-active');
+        sbCaption.textContent = SB_COPY[i] || SB_COPY[0];
+        return;
+      }
+      const bc = t.closest('[data-preview-brand-card]');
+      if (bc && root.contains(bc)) {
+        bc.classList.toggle('is-selected');
+      }
+    };
+
+    const onVeraKey = (e) => {
+      if (e.key !== 'Enter' || !veraFeed || !veraInput) return;
+      const v = veraInput.value.trim();
+      if (!v) return;
+      e.preventDefault();
+      const u = document.createElement('p');
+      u.className = 'lp-app-preview__bubble lp-app-preview__bubble--user';
+      u.textContent = v;
+      veraFeed.appendChild(u);
+      const r = document.createElement('p');
+      r.className = 'lp-app-preview__bubble lp-app-preview__bubble--ai';
+      r.textContent = 'Demo: en producción, VERA respondería con contexto de tu organización.';
+      veraFeed.appendChild(r);
+      veraInput.value = '';
+      veraFeed.scrollTop = veraFeed.scrollHeight;
+    };
+
+    root.addEventListener('click', onClick);
+    if (veraInput) veraInput.addEventListener('keydown', onVeraKey);
+
+    this.appPreviewCleanup = () => {
+      root.removeEventListener('click', onClick);
+      if (veraInput) veraInput.removeEventListener('keydown', onVeraKey);
     };
   }
 
