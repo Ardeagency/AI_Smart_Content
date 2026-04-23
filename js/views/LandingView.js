@@ -7,7 +7,7 @@
  *   Zona 1 — Captura:          S01 Hero, S02 Credibilidad
  *   Zona 2 — Problema:         S03 Dolor estructural, S04 Agitación
  *   Zona 3 — Solución:         S05 Capacidades, S06 VERA, S07 Dashboard
- *   Zona 4 — Confianza+Acción: S08 Lo que pasa, S09 Social, S10 FAQ, S11 CTA
+ *   Zona 4 — Confianza+Acción: S08 Lo que pasa, S09 FAQ, S10 CTA
  */
 class LandingView extends PublicBaseView {
   constructor() {
@@ -15,7 +15,6 @@ class LandingView extends PublicBaseView {
     this.activePath = '/';
     this.pageClass = 'public-page--landing';
     this.heroRevealCleanup = null;
-    this.metricsCleanup = null;
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
@@ -674,53 +673,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S09: PRUEBA SOCIAL + MÉTRICAS ════════ -->
-      <section class="lp-social" id="landing-9" aria-labelledby="lp-social-heading">
-        <div class="lp-social__inner">
-          <p class="lp-social__eyebrow sr-reveal">Resultados reales</p>
-          <h2 id="lp-social-heading" class="lp-social__title sr-reveal">Marcas que ya operan con inteligencia</h2>
-          <div class="lp-social__metrics">
-            <div class="lp-social__metric sr-reveal sr-reveal--d1" data-count="3" data-suffix="×">
-              <div class="lp-social__metric-val"><span class="lp-social__count">3</span><span>×</span></div>
-              <p class="lp-social__metric-lbl">Más rápido en producción de contenido</p>
-            </div>
-            <div class="lp-social__metric sr-reveal sr-reveal--d2" data-count="68" data-suffix="%">
-              <div class="lp-social__metric-val"><span class="lp-social__count">68</span><span>%</span></div>
-              <p class="lp-social__metric-lbl">Reducción en tiempo de decisión estratégica</p>
-            </div>
-            <div class="lp-social__metric sr-reveal sr-reveal--d3" data-count="50" data-suffix="+">
-              <div class="lp-social__metric-val"><span>+</span><span class="lp-social__count">50</span></div>
-              <p class="lp-social__metric-lbl">Organizaciones en América Latina</p>
-            </div>
-            <div class="lp-social__metric sr-reveal sr-reveal--d4">
-              <div class="lp-social__metric-val">24<span class="lp-social__sep">/</span>7</div>
-              <p class="lp-social__metric-lbl">El sistema opera sin parar</p>
-            </div>
-          </div>
-          <div class="lp-social__quotes">
-            <blockquote class="lp-social__quote sr-reveal sr-reveal--d1">
-              <p>"Pasamos de publicar por intuición a operar con sistema. La diferencia es brutal."</p>
-              <footer>
-                <cite class="lp-social__cite">
-                  <span class="lp-social__cite-name">Directora de Marketing</span>
-                  <span class="lp-social__cite-co">Empresa retail, LATAM</span>
-                </cite>
-              </footer>
-            </blockquote>
-            <blockquote class="lp-social__quote sr-reveal sr-reveal--d2">
-              <p>"VERA detectó una tendencia tres días antes de que la viera nuestra competencia. Actuamos primero."</p>
-              <footer>
-                <cite class="lp-social__cite">
-                  <span class="lp-social__cite-name">CEO</span>
-                  <span class="lp-social__cite-co">Startup B2B SaaS</span>
-                </cite>
-              </footer>
-            </blockquote>
-          </div>
-        </div>
-      </section>
-
-      <!-- ════════ S10: FAQ ════════ -->
+      <!-- ════════ S09: FAQ ════════ -->
       <section class="lp-faq" id="landing-10" aria-labelledby="lp-faq-heading">
         <div class="lp-faq__inner">
           <header class="lp-faq__header">
@@ -777,7 +730,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S11: CTA FINAL ════════ -->
+      <!-- ════════ S10: CTA FINAL ════════ -->
       <section class="lp-cta" id="landing-11" aria-labelledby="lp-cta-heading">
         <div class="lp-cta__bg" aria-hidden="true">
           <span class="lp-cta__glow" aria-hidden="true"></span>
@@ -834,7 +787,6 @@ class LandingView extends PublicBaseView {
     await super.init();
     this.initHeroReveal();
     this.initPainRoadmap();
-    this.initMetricsCounter();
     this.initFaqAccordion();
     this.initCtaForm();
     this.initLandingAppPreview();
@@ -849,10 +801,6 @@ class LandingView extends PublicBaseView {
     if (typeof this.painRoadmapCleanup === 'function') {
       this.painRoadmapCleanup();
       this.painRoadmapCleanup = null;
-    }
-    if (typeof this.metricsCleanup === 'function') {
-      this.metricsCleanup();
-      this.metricsCleanup = null;
     }
     if (typeof this.faqCleanup === 'function') {
       this.faqCleanup();
@@ -1013,47 +961,6 @@ class LandingView extends PublicBaseView {
       stage.removeEventListener('focusout', onStageFocusOut);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }
-
-  initMetricsCounter() {
-    if (typeof this.metricsCleanup === 'function') {
-      this.metricsCleanup();
-      this.metricsCleanup = null;
-    }
-
-    const metrics = this.container.querySelectorAll('.lp-social__metric[data-count]');
-    if (!metrics.length) return;
-
-    const animate = (el) => {
-      const target = parseInt(el.dataset.count, 10);
-      if (isNaN(target)) return;
-      const countEl = el.querySelector('.lp-social__count');
-      if (!countEl) return;
-
-      const duration = 1400;
-      const start = performance.now();
-      const tick = (now) => {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        countEl.textContent = Math.round(eased * target);
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    };
-
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animate(entry.target);
-          obs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.4 });
-
-    metrics.forEach(m => obs.observe(m));
-
-    this.metricsCleanup = () => obs.disconnect();
   }
 
   initFaqAccordion() {
