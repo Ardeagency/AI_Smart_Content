@@ -353,30 +353,30 @@ class LandingView extends PublicBaseView {
               <div class="lp-caps__brand sr-reveal">
                 <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
               </div>
-              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal sr-reveal--d1">No es una herramienta. Es una nueva forma de competir.</h2>
-              <p class="lp-caps__sub sr-reveal sr-reveal--d2">Lee el mercado, decide con criterio y ejecuta a tiempo.</p>
+              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal sr-reveal--d1">No es una herramienta.<br>Es una nueva forma de competir.</h2>
+              <p class="lp-caps__sub sr-reveal sr-reveal--d2">Lee el mercado en tiempo real,<br>decide con criterio y ejecuta antes que los demás.</p>
             </div>
-            <aside class="lp-caps__block lp-caps__block--tr sr-reveal sr-reveal--d1" aria-label="Resumen">
-              <p class="lp-caps__tr-lead">De la señal a la acción, sin saltar etapas.</p>
+            <aside class="lp-caps__block lp-caps__block--tr sr-reveal sr-reveal--d1" aria-label="Transformación">
+              <p class="lp-caps__tr-lead">Lo que pasa afuera se convierte en acción adentro. En minutos.</p>
               <ul class="lp-caps__tr-list">
-                <li><span class="lp-caps__tr-kicker">Ahora</span> anticipas</li>
-                <li><span class="lp-caps__tr-kicker">Ahora</span> decides con criterio estructurado</li>
-                <li><span class="lp-caps__tr-kicker">Ahora</span> velocidad</li>
+                <li><span class="lp-caps__tr-ahora">AHORA</span> no reaccionas — te adelantas</li>
+                <li><span class="lp-caps__tr-ahora">AHORA</span> no improvisas — operas con criterio</li>
+                <li><span class="lp-caps__tr-ahora">AHORA</span> no produces — ejecutas con ventaja</li>
               </ul>
             </aside>
           </div>
           <div class="lp-caps__block lp-caps__block--bottom">
             <div class="lp-caps__pillar sr-reveal sr-reveal--d1">
-              <h3 class="lp-caps__pillar-title">Ves lo que otros no están viendo</h3>
-              <p class="lp-caps__pillar-desc">Lees el mercado en tiempo real.<br>No solo lo que pasó… sino lo que está empezando a moverse.</p>
+              <h3 class="lp-caps__pillar-title">Detectas lo que el mercado apenas empieza a mostrar</h3>
+              <p class="lp-caps__pillar-desc">Lees el comportamiento real del mercado, no reportes pasados.<br>Identificas lo que está funcionando ahora… antes de que se vuelva obvio.</p>
             </div>
             <div class="lp-caps__pillar sr-reveal sr-reveal--d2">
-              <h3 class="lp-caps__pillar-title">Decides con contexto, no con intuición</h3>
-              <p class="lp-caps__pillar-desc">Cruzas lo que está pasando con tu ADN y tu objetivo.<br>No decides por presión. Decides con claridad.</p>
+              <h3 class="lp-caps__pillar-title">Sabes qué hacer, cuándo hacerlo y por qué</h3>
+              <p class="lp-caps__pillar-desc">No dependes de intuición ni presión interna.<br>Cada decisión responde a datos reales, tu ADN de marca y el momento exacto.</p>
             </div>
             <div class="lp-caps__pillar sr-reveal sr-reveal--d3">
-              <h3 class="lp-caps__pillar-title">Ejecutas sin fricción</h3>
-              <p class="lp-caps__pillar-desc">Lo que antes tomaba días, ahora sucede en minutos.<br>Sin perder coherencia. Sin empezar desde cero.</p>
+              <h3 class="lp-caps__pillar-title">Pasas de idea a ejecución sin perder el momento</h3>
+              <p class="lp-caps__pillar-desc">Lo que antes tomaba días o semanas, ahora sucede en minutos.<br>Sin depender de equipos saturados ni procesos que frenan el ritmo.</p>
             </div>
           </div>
         </div>
