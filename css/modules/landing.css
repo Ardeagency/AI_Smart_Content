@@ -1706,26 +1706,18 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash__inner {
-  max-width: 1100px;
+  width: 100%;
+  max-width: min(1680px, 100%);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(40px, 6vw, 64px);
+  gap: clamp(28px, 4vw, 48px);
 }
 
 .lp-dash__header {
   text-align: center;
   max-width: 640px;
   margin: 0 auto;
-}
-
-.lp-dash__eyebrow {
-  margin: 0 0 12px;
-  font-size: clamp(0.68rem, 1vw, 0.78rem);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7c4dff;
 }
 
 .lp-dash__title {
@@ -1743,9 +1735,12 @@ body.entrance-done .landing-header {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Mock screen */
+/* Mock ventana navegador: proporción 16∶9 (monitor típico), ancho casi real */
 .lp-dash__screen-wrap {
-  border-radius: 16px;
+  width: 100%;
+  max-width: min(1680px, 100%);
+  margin-inline: auto;
+  border-radius: clamp(12px, 1.2vw, 20px);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
@@ -1755,14 +1750,20 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash__screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   background: #0a0a0d;
 }
 
 .lp-dash__chrome {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: clamp(10px, 1.1vw, 14px) clamp(14px, 1.5vw, 20px);
   background: #111116;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -1777,28 +1778,29 @@ body.entrance-done .landing-header {
 
 .lp-dash__url {
   margin-left: 8px;
-  font-size: 0.72rem;
+  font-size: clamp(0.68rem, 0.9vw, 0.8rem);
   color: rgba(255, 255, 255, 0.25);
   letter-spacing: 0.02em;
 }
 
 .lp-dash__body {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 52px 1fr;
-  min-height: 320px;
+  grid-template-columns: clamp(52px, 5.2vw, 88px) minmax(0, 1fr);
 }
 
 .lp-dash__sidebar {
   background: #0d0d12;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 16px 10px;
+  padding: clamp(12px, 1.6vw, 22px) clamp(8px, 1vw, 14px);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(6px, 0.9vw, 10px);
 }
 
 .lp-dash__nav-item {
-  height: 8px;
+  height: clamp(7px, 0.85vw, 10px);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
 }
@@ -1808,10 +1810,11 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash__main {
-  padding: clamp(16px, 2.5vw, 28px);
+  padding: clamp(14px, 2vw, 36px) clamp(14px, 2.2vw, 40px);
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, 2vw, 24px);
+  gap: clamp(12px, 1.8vw, 28px);
+  min-height: 0;
 }
 
 .lp-dash__topbar {
@@ -1829,15 +1832,19 @@ body.entrance-done .landing-header {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.lp-dash__mock-line--h { width: clamp(80px, 15vw, 160px); background: rgba(255,255,255,0.15); height: 9px; }
-.lp-dash__mock-line--s { width: clamp(50px, 9vw, 100px); }
+.lp-dash__mock-line--h {
+  width: clamp(100px, 18%, 220px);
+  background: rgba(255, 255, 255, 0.15);
+  height: clamp(8px, 1vw, 11px);
+}
+.lp-dash__mock-line--s { width: clamp(64px, 12%, 140px); }
 
 .lp-dash__live-badge {
-  padding: 4px 10px;
+  padding: clamp(4px, 0.5vw, 6px) clamp(8px, 1vw, 12px);
   border-radius: 999px;
   background: rgba(0, 200, 100, 0.12);
   border: 1px solid rgba(0, 200, 100, 0.25);
-  font-size: 0.68rem;
+  font-size: clamp(0.62rem, 0.75vw, 0.75rem);
   font-weight: 600;
   color: rgba(0, 200, 100, 0.85);
   letter-spacing: 0.06em;
@@ -1862,14 +1869,14 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash__metric-val {
-  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-size: clamp(1.15rem, 2.2vw, 2rem);
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.02em;
 }
 
 .lp-dash__metric-lbl {
-  font-size: clamp(0.62rem, 0.85vw, 0.7rem);
+  font-size: clamp(0.65rem, 0.95vw, 0.82rem);
   color: rgba(255, 255, 255, 0.35);
   line-height: 1.3;
 }
@@ -1907,8 +1914,8 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash__mini-icon {
-  width: 24px;
-  height: 24px;
+  width: clamp(22px, 2.2vw, 32px);
+  height: clamp(22px, 2.2vw, 32px);
   border-radius: 6px;
   background: rgba(124, 77, 255, 0.15);
 }

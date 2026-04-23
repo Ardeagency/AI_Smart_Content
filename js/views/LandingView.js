@@ -457,18 +457,17 @@ class LandingView extends PublicBaseView {
       <section class="lp-dash" id="landing-7" aria-labelledby="lp-dash-heading">
         <div class="lp-dash__inner">
           <header class="lp-dash__header">
-            <p class="lp-dash__eyebrow sr-reveal">El sistema en acción</p>
             <h2 id="lp-dash-heading" class="lp-dash__title sr-reveal">Un dashboard que piensa mientras tu equipo ejecuta</h2>
             <p class="lp-dash__sub sr-reveal sr-reveal--d1">Señales, decisiones y contenido en tiempo real. Todo en un solo lugar.</p>
           </header>
-          <div class="lp-dash__screen-wrap" aria-label="Vista previa del dashboard de AISmartContent">
+          <div class="lp-dash__screen-wrap" aria-label="Vista previa a tamaño de pantalla del dashboard de AISmartContent">
             <div class="lp-dash__screen">
               <div class="lp-dash__chrome" aria-hidden="true">
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__dot"></span>
                 <span class="lp-dash__url">app.aismartcontent.com / dashboard</span>
-        </div>
+              </div>
               <div class="lp-dash__body">
                 <aside class="lp-dash__sidebar">
                   <div class="lp-dash__nav-item lp-dash__nav-item--active"></div>
@@ -482,47 +481,47 @@ class LandingView extends PublicBaseView {
                     <div class="lp-dash__topbar-left">
                       <div class="lp-dash__mock-line lp-dash__mock-line--h"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                </div>
+                    </div>
                     <div class="lp-dash__live-badge">● Live</div>
-              </div>
+                  </div>
                   <div class="lp-dash__metrics-row">
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">3×</div>
                       <div class="lp-dash__metric-lbl">Velocidad producción</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:72%"></div></div>
-                </div>
+                    </div>
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">68%</div>
                       <div class="lp-dash__metric-lbl">Reducción decisión</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:68%"></div></div>
-              </div>
+                    </div>
                     <div class="lp-dash__metric-tile">
                       <div class="lp-dash__metric-val">+50</div>
                       <div class="lp-dash__metric-lbl">Organizaciones</div>
                       <div class="lp-dash__bar-wrap"><div class="lp-dash__bar" style="width:85%"></div></div>
-                </div>
-              </div>
+                    </div>
+                  </div>
                   <div class="lp-dash__cards-row">
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-                </div>
+                    </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-              </div>
+                    </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-          </div>
+                    </div>
                     <div class="lp-dash__mini-card">
                       <div class="lp-dash__mini-icon"></div>
                       <div class="lp-dash__mock-line"></div>
                       <div class="lp-dash__mock-line lp-dash__mock-line--s"></div>
-        </div>
+                    </div>
                   </div>
                 </main>
               </div>
