@@ -35,7 +35,7 @@
     min-width: 100vw;
     opacity: 0;
     overflow: hidden;
-    background: #000000;
+    background: var(--bg-primary, #0b0b0b);
 }
 
 /* Fondo de la landing: solo visible en ruta / (index.html) */
@@ -100,7 +100,7 @@ body.entrance-done.route-landing #landing-background-wrap {
 /* Al hacer scroll: se mantiene la posición y tamaño originales,
    solo se agrega el fondo efecto cristal (glass). */
 .landing-header.landing-header--floating {
-    background: rgba(10, 10, 10, 0.42);
+    background: rgba(11, 11, 11, 0.42);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -168,14 +168,14 @@ body.entrance-done .landing-header {
     padding: 0 10px;
     border: 1.5px solid rgba(255, 255, 255, 0.22);
     border-radius: 20px;
-    background: #000000;
+    background: var(--bg-primary, #0b0b0b);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     opacity: 1;
 }
 
 .landing-header-login-btn:hover {
-    background: #0a0a0a;
+    background: var(--bg-secondary, #141517);
     border-color: rgba(255, 255, 255, 0.3);
 }
 
@@ -244,7 +244,7 @@ body.entrance-done .landing-header {
   align-items: stretch;
   justify-content: center;
   overflow: hidden;
-  background-color: #000000;
+  background-color: var(--bg-primary, #0b0b0b);
   background-image: url("https://res.cloudinary.com/dmruwjuxn/image/upload/v1776783008/v1_1_awbb5j.png");
   background-repeat: no-repeat;
   background-size: cover;
@@ -426,7 +426,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-cred {
-  background: #050506;
+  background: var(--bg-primary, #0b0b0b);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: clamp(40px, 6vw, 64px) 0;
@@ -549,7 +549,7 @@ body.entrance-done .landing-header {
   --lp-pain-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-pain-dur: 0.78s;
   --lp-pain-dur-text: 0.65s;
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding-bottom: 0;
 }
@@ -604,7 +604,7 @@ body.entrance-done .landing-header {
     linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)) 0 100% / 100% 1px no-repeat,
     radial-gradient(ellipse 80% 55% at 12% 0%, rgba(99, 60, 180, 0.12), transparent 55%),
     radial-gradient(ellipse 70% 50% at 92% 100%, rgba(232, 120, 40, 0.08), transparent 50%),
-    #000000;
+    var(--bg-primary, #0b0b0b);
 }
 
 .lp-pain__columns {
@@ -955,7 +955,7 @@ body.entrance-done .landing-header {
   }
 
   .lp-pain__stage {
-    background: #000000;
+    background: var(--bg-primary, #0b0b0b);
   }
 
   .lp-pain__timeline {
@@ -1044,7 +1044,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-agit {
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) 0 0;
   text-align: center;
@@ -1121,7 +1121,7 @@ body.entrance-done .landing-header {
   position: relative;
   color: #ffffff;
   padding: clamp(72px, 11vw, 120px) clamp(20px, 6vw, 80px);
-  background: #050506;
+  background: var(--bg-primary, #0b0b0b);
 }
 
 .lp-caps__inner {
@@ -1255,7 +1255,7 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
   overflow: hidden;
@@ -1354,7 +1354,7 @@ body.entrance-done .landing-header {
   bottom: -4px;
   height: 55%;
   pointer-events: none;
-  background: linear-gradient(to top, #000000 0%, transparent 100%);
+  background: linear-gradient(to top, var(--bg-primary, #0b0b0b) 0%, transparent 100%);
   opacity: 0.85;
 }
 
@@ -1700,7 +1700,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-dash {
-  background: #050506;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
 }
@@ -1966,7 +1966,7 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lp-social {
-  background: #050506;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -2010,7 +2010,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-social__metric {
-  background: #050506;
+  background: var(--bg-primary, #0b0b0b);
   padding: clamp(24px, 3.5vw, 40px) clamp(20px, 2.5vw, 32px);
   display: flex;
   flex-direction: column;
@@ -2103,7 +2103,7 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lp-faq {
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
 }
@@ -2205,7 +2205,7 @@ body.entrance-done .landing-header {
 
 .lp-cta {
   position: relative;
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding-bottom: clamp(80px, 12vw, 140px);
   overflow: hidden;
@@ -2513,7 +2513,7 @@ body.entrance-done .landing-header {
     position: relative;
     z-index: 4;
     width: 100%;
-    background: #0b0b0b;
+    background: var(--bg-primary, #0b0b0b);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.88);
 }
@@ -2936,7 +2936,7 @@ a.public-nav-access.public-nav-access--glow {
     margin-left: 6px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 22px;
-    background: #000;
+    background: var(--bg-primary, #0b0b0b);
     color: var(--color-white);
     text-decoration: none;
     font-size: 0.92rem;
@@ -2980,7 +2980,7 @@ a.public-nav-access--glow::after {
 }
 
 a.public-nav-access--glow:hover {
-    background: #000;
+    background: var(--bg-primary, #0b0b0b);
     border-color: transparent;
     transform: translateY(-1px);
 }
