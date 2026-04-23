@@ -1364,21 +1364,19 @@ body.entrance-done .landing-header {
   filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.55));
 }
 
-/* Bento grid (3×2 con celdas spanning como referencia) */
+/* Bento: tarjetas sueltas con hueco (referencia), no panel único con rayas */
 .lp-vera__layers {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: minmax(168px, auto) minmax(148px, 1fr) minmax(148px, 1fr);
+  grid-template-rows: minmax(200px, auto) minmax(188px, 1fr) minmax(188px, 1fr);
   grid-template-areas:
     "hero hero side"
     "midA midB tall"
     "wide wide tall";
-  gap: 1px;
-  padding: 1px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: clamp(14px, 1.85vw, 22px);
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .lp-vera__layer {
@@ -1386,22 +1384,34 @@ body.entrance-done .landing-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: clamp(8px, 1.2vw, 12px);
-  padding: clamp(20px, 2.4vw, 28px);
-  background: #0c0c0f;
-  transition: background 0.25s ease;
+  gap: clamp(10px, 1.4vw, 14px);
+  padding: clamp(28px, 3.6vw, 40px);
   min-height: 0;
+  border-radius: clamp(22px, 2.8vw, 30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0d0d0f;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.lp-vera__layer--side,
+.lp-vera__layer--midA,
+.lp-vera__layer--midB,
+.lp-vera__layer--tall,
+.lp-vera__layer--wide {
+  justify-content: flex-end;
 }
 
 .lp-vera__layer:hover {
-  background: #101014;
+  background: #121215;
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .lp-vera__layer--hero {
   grid-area: hero;
   flex-direction: row;
-  align-items: stretch;
-  gap: clamp(16px, 3vw, 28px);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(20px, 3.5vw, 36px);
 }
 
 .lp-vera__layer--side {
@@ -1418,7 +1428,6 @@ body.entrance-done .landing-header {
 
 .lp-vera__layer--tall {
   grid-area: tall;
-  justify-content: flex-end;
 }
 
 .lp-vera__layer--wide {
@@ -1430,7 +1439,8 @@ body.entrance-done .landing-header {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.2vw, 12px);
+  justify-content: flex-end;
+  gap: clamp(10px, 1.4vw, 14px);
 }
 
 .lp-vera__layer-head {
@@ -1454,26 +1464,28 @@ body.entrance-done .landing-header {
   margin: 0;
   flex: 1;
   min-width: 0;
-  font-size: clamp(0.88rem, 1.2vw, 1.02rem);
+  font-size: clamp(0.95rem, 1.35vw, 1.12rem);
   font-weight: 600;
   color: #ffffff;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.22;
 }
 
 .lp-vera__layer-desc {
   margin: 0;
-  font-size: clamp(0.76rem, 1vw, 0.86rem);
+  max-width: 52ch;
+  font-size: clamp(0.78rem, 1.05vw, 0.9rem);
   line-height: 1.62;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.48);
 }
 
-/* Hero: órbitas + mini VERA */
+/* Hero: órbitas + mini VERA (alineado abajo-derecha como referencia) */
 .lp-vera__layer-art {
   position: relative;
-  flex: 0 0 clamp(140px, 28%, 220px);
-  min-height: clamp(120px, 22vw, 180px);
+  flex: 0 0 clamp(150px, 30%, 240px);
+  min-height: clamp(140px, 24vw, 200px);
   align-self: flex-end;
+  margin-bottom: clamp(-4px, -0.5vw, 0px);
 }
 
 .lp-vera__layer-orbit {
@@ -1581,7 +1593,7 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__layer--tall {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 }
 
