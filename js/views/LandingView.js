@@ -350,10 +350,7 @@ class LandingView extends PublicBaseView {
         <div class="lp-caps__inner">
           <div class="lp-caps__row lp-caps__row--top">
             <div class="lp-caps__block lp-caps__block--tl">
-              <div class="lp-caps__brand sr-reveal">
-                <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
-              </div>
-              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal sr-reveal--d1">No es una herramienta.<br>Es una nueva forma de competir.</h2>
+              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">No es una herramienta.<br>Es una nueva forma de competir.</h2>
               <p class="lp-caps__sub sr-reveal sr-reveal--d2">Lee el mercado en tiempo real,<br>decide con criterio y ejecuta antes que los demás.</p>
             </div>
             <aside class="lp-caps__block lp-caps__block--tr sr-reveal sr-reveal--d1" aria-label="Transformación">
@@ -387,24 +384,14 @@ class LandingView extends PublicBaseView {
         <div class="lp-vera__inner">
           <div class="lp-vera__top">
             <div class="lp-vera__text-col">
-              <p class="lp-vera__eyebrow sr-reveal">El motor</p>
               <h2 id="lp-vera-heading" class="lp-vera__title sr-reveal">VERA — La inteligencia que nunca para</h2>
               <p class="lp-vera__sub sr-reveal sr-reveal--d1">No responde a prompts. Opera con inteligencia, criterio y contexto de marca en tiempo real.</p>
               <p class="lp-vera__statement sr-reveal sr-reveal--d2">Cada señal del mercado se transforma en una decisión, cada decisión en acción y cada acción en aprendizaje.</p>
               <a href="/contacto" class="lp-vera__cta sr-reveal sr-reveal--d3">Ver VERA en acción ↗</a>
             </div>
-            <div class="lp-vera__diagram-col" aria-hidden="true">
-              <div class="lp-vera__diagram">
-                <div class="lp-vera__core">
-                  <img src="/recursos/vera/Vera-2.svg" alt="" class="lp-vera__core-logo" width="60" height="23" decoding="async" loading="lazy">
-                </div>
-                <div class="lp-vera__ring lp-vera__ring--1"></div>
-                <div class="lp-vera__ring lp-vera__ring--2"></div>
-                <div class="lp-vera__chip lp-vera__chip--1">Monitoreo</div>
-                <div class="lp-vera__chip lp-vera__chip--2">Inteligencia</div>
-                <div class="lp-vera__chip lp-vera__chip--3">ADN</div>
-                <div class="lp-vera__chip lp-vera__chip--4">Estrategia</div>
-                <div class="lp-vera__chip lp-vera__chip--5">Producción</div>
+            <div class="lp-vera__diagram-col">
+              <div class="lp-vera__mark sr-reveal sr-reveal--d1">
+                <img class="lp-vera__mark-img" src="/recursos/vera/Vera-2.svg" alt="VERA" width="356" height="136" decoding="async" loading="lazy">
               </div>
             </div>
           </div>

@@ -1147,19 +1147,6 @@ body.entrance-done .landing-header {
   text-align: left;
 }
 
-.lp-caps__brand {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.lp-caps__brand-logo {
-  display: block;
-  width: clamp(120px, 20vw, 200px);
-  height: auto;
-  max-width: 100%;
-}
-
 .lp-caps__title {
   margin: 0;
   max-width: 22ch;
@@ -1263,16 +1250,6 @@ body.entrance-done .landing-header {
    S06 — VERA: EL MECANISMO
    ═══════════════════════════════════════════════════════════════ */
 
-@keyframes lp-orbit {
-  from { transform: rotate(var(--orbit-start)) translateX(var(--orbit-r)) rotate(calc(-1 * var(--orbit-start))); }
-  to { transform: rotate(calc(var(--orbit-start) + 360deg)) translateX(var(--orbit-r)) rotate(calc(-1 * (var(--orbit-start) + 360deg))); }
-}
-
-@keyframes lp-ring-pulse {
-  0%, 100% { opacity: 0.12; transform: scale(1); }
-  50% { opacity: 0.22; transform: scale(1.015); }
-}
-
 .lp-vera {
   background: #000000;
   color: #ffffff;
@@ -1292,22 +1269,14 @@ body.entrance-done .landing-header {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(40px, 6vw, 80px);
-  align-items: center;
+  align-items: stretch;
 }
 
 .lp-vera__text-col {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.lp-vera__eyebrow {
-  margin: 0;
-  font-size: clamp(0.68rem, 1vw, 0.78rem);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7c4dff;
+  align-self: start;
 }
 
 .lp-vera__title {
@@ -1356,91 +1325,43 @@ body.entrance-done .landing-header {
   color: #ffffff;
 }
 
-/* Diagram */
+/* Marca VERA (SVG con barra en gradiente — sin órbita) */
 .lp-vera__diagram-col {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  min-height: clamp(180px, 32vw, 340px);
 }
 
-.lp-vera__diagram {
+.lp-vera__mark {
   position: relative;
-  width: clamp(240px, 35vw, 400px);
-  height: clamp(240px, 35vw, 400px);
+  width: 100%;
+  max-width: min(520px, 100%);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-end;
 }
 
-.lp-vera__core {
-  position: relative;
-  z-index: 3;
-  width: clamp(64px, 9vw, 96px);
-  height: clamp(64px, 9vw, 96px);
-  border-radius: 50%;
-  border: 1.5px solid rgba(124, 77, 255, 0.4);
-  background: rgba(124, 77, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-}
-
-.lp-vera__core-logo {
-  width: 60%;
-  height: auto;
-  filter: brightness(0) invert(1);
-}
-
-.lp-vera__ring {
+.lp-vera__mark::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(124, 77, 255, 0.18);
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 55%;
   pointer-events: none;
+  background: linear-gradient(to top, #000000 0%, transparent 100%);
+  opacity: 0.85;
 }
 
-.lp-vera__ring--1 {
-  inset: 18%;
-  animation: lp-ring-pulse 4s ease-in-out infinite;
-}
-
-.lp-vera__ring--2 {
-  inset: 4%;
-  animation: lp-ring-pulse 4s ease-in-out infinite 1s;
-}
-
-.lp-vera__chip {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform-origin: 0 0;
-  font-size: clamp(0.62rem, 0.85vw, 0.72rem);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  padding: 5px 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(124, 77, 255, 0.3);
-  background: rgba(10, 10, 15, 0.9);
-  color: rgba(255, 255, 255, 0.7);
-  --orbit-r: calc(clamp(120px, 17.5vw, 200px));
-  animation: lp-orbit 16s linear infinite;
-}
-
-.lp-vera__chip--1 { --orbit-start: 0deg; }
-.lp-vera__chip--2 { --orbit-start: 72deg; }
-.lp-vera__chip--3 { --orbit-start: 144deg; animation-direction: reverse; }
-.lp-vera__chip--4 { --orbit-start: 216deg; }
-.lp-vera__chip--5 { --orbit-start: 288deg; }
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-vera__chip { animation: none; }
-  .lp-vera__chip--1 { transform: rotate(0deg) translateX(var(--orbit-r)) rotate(0deg); }
-  .lp-vera__chip--2 { transform: rotate(72deg) translateX(var(--orbit-r)) rotate(-72deg); }
-  .lp-vera__chip--3 { transform: rotate(144deg) translateX(var(--orbit-r)) rotate(-144deg); }
-  .lp-vera__chip--4 { transform: rotate(216deg) translateX(var(--orbit-r)) rotate(-216deg); }
-  .lp-vera__chip--5 { transform: rotate(288deg) translateX(var(--orbit-r)) rotate(-288deg); }
+.lp-vera__mark-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.55));
 }
 
 /* Layers grid */
@@ -1494,7 +1415,16 @@ body.entrance-done .landing-header {
 
 @media (max-width: 900px) {
   .lp-vera__top { grid-template-columns: 1fr; }
-  .lp-vera__diagram-col { display: none; }
+  .lp-vera__diagram-col {
+    min-height: 0;
+    align-items: center;
+    padding: clamp(8px, 2vw, 20px) 0 clamp(16px, 3vw, 28px);
+  }
+
+  .lp-vera__mark {
+    max-width: min(400px, 88vw);
+  }
+
   .lp-vera__layers { grid-template-columns: repeat(2, 1fr); }
   .lp-vera__layer:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.06); }
   .lp-vera__layer:nth-child(2n) { border-right: none; }
