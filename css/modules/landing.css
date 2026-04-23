@@ -1251,6 +1251,10 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 .lp-vera {
+  /* Mismas curvas/tiempos que la sección de dolores (hover de columnas) */
+  --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --lp-vera-dur: 0.78s;
+  --lp-vera-dur-text: 0.65s;
   background: #000000;
   color: #ffffff;
   padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
@@ -1381,6 +1385,8 @@ body.entrance-done .landing-header {
 
 .lp-vera__layer {
   box-sizing: border-box;
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1390,7 +1396,10 @@ body.entrance-done .landing-header {
   border-radius: clamp(22px, 2.8vw, 30px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: #0d0d0f;
-  transition: background 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--lp-vera-dur-text) var(--lp-vera-ease-smooth);
 }
 
 .lp-vera__layer--side,
@@ -1401,9 +1410,88 @@ body.entrance-done .landing-header {
   justify-content: flex-end;
 }
 
-.lp-vera__layer:hover {
-  background: #121215;
-  border-color: rgba(255, 255, 255, 0.14);
+.lp-vera__layer:hover,
+.lp-vera__layer:focus-within {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Degradado + grano (misma lógica que .lp-pain__col-bg) */
+.lp-vera__layer-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  transition: opacity var(--lp-vera-dur) var(--lp-vera-ease-smooth);
+}
+
+.lp-vera__layer-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(168deg, var(--lp-vera-g-from) 0%, var(--lp-vera-g-to) 100%);
+  filter: saturate(0.58) brightness(0.94);
+  opacity: 0.78;
+}
+
+.lp-vera__layer-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' fill='white'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+.lp-vera__layer[data-vera-gradient="1"] {
+  --lp-vera-g-from: #ff0000;
+  --lp-vera-g-to: #ff6500;
+}
+
+.lp-vera__layer[data-vera-gradient="2"] {
+  --lp-vera-g-from: #ffe500;
+  --lp-vera-g-to: #9acc00;
+}
+
+.lp-vera__layer[data-vera-gradient="3"] {
+  --lp-vera-g-from: #00d614;
+  --lp-vera-g-to: #00e7ff;
+}
+
+.lp-vera__layer[data-vera-gradient="4"] {
+  --lp-vera-g-from: #0018ee;
+  --lp-vera-g-to: #5b00ea;
+}
+
+.lp-vera__layer[data-vera-gradient="5"] {
+  --lp-vera-g-from: #900090;
+  --lp-vera-g-to: #d10f53;
+}
+
+.lp-vera__layer[data-vera-gradient="6"] {
+  --lp-vera-g-from: #00a8ff;
+  --lp-vera-g-to: #7c4dff;
+}
+
+.lp-vera__layer:hover .lp-vera__layer-bg,
+.lp-vera__layer:focus-within .lp-vera__layer-bg {
+  opacity: 1;
+}
+
+.lp-vera__layer > :not(.lp-vera__layer-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-vera__layer:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(124, 77, 255, 0.45);
 }
 
 .lp-vera__layer--hero {
@@ -1444,31 +1532,18 @@ body.entrance-done .landing-header {
 }
 
 .lp-vera__layer-head {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 10px 12px;
-}
-
-.lp-vera__layer-num {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #7c4dff;
-  flex-shrink: 0;
-  line-height: 1;
+  display: block;
 }
 
 .lp-vera__layer-title {
   margin: 0;
-  flex: 1;
   min-width: 0;
   font-size: clamp(0.95rem, 1.35vw, 1.12rem);
   font-weight: 600;
   color: #ffffff;
   letter-spacing: -0.02em;
   line-height: 1.22;
+  transition: color var(--lp-vera-dur-text) var(--lp-vera-ease-smooth);
 }
 
 .lp-vera__layer-desc {
@@ -1477,6 +1552,12 @@ body.entrance-done .landing-header {
   font-size: clamp(0.78rem, 1.05vw, 0.9rem);
   line-height: 1.62;
   color: rgba(255, 255, 255, 0.48);
+  transition: color var(--lp-vera-dur-text) var(--lp-vera-ease-smooth);
+}
+
+.lp-vera__layer:hover .lp-vera__layer-desc,
+.lp-vera__layer:focus-within .lp-vera__layer-desc {
+  color: rgba(255, 255, 255, 0.84);
 }
 
 /* Hero: órbitas + mini VERA (alineado abajo-derecha como referencia) */
@@ -1554,6 +1635,13 @@ body.entrance-done .landing-header {
   width: min(112px, 52%);
   height: auto;
   z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-vera {
+    --lp-vera-dur: 0.01ms;
+    --lp-vera-dur-text: 0.01ms;
+  }
 }
 
 @media (max-width: 900px) {
