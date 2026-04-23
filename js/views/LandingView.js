@@ -345,68 +345,38 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S05: LAS 3 CAPACIDADES ════════ -->
+      <!-- ════════ S05: PROPUESTA (3 bloques) ════════ -->
       <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
-        <div class="lp-caps__atmos" aria-hidden="true">
-          <div class="lp-caps__spotlights">
-            <div class="lp-caps__spotlight lp-caps__spotlight--l"></div>
-            <div class="lp-caps__spotlight lp-caps__spotlight--c"></div>
-            <div class="lp-caps__spotlight lp-caps__spotlight--r"></div>
-          </div>
-        </div>
         <div class="lp-caps__inner">
-          <header class="lp-caps__header">
-            <div class="lp-caps__brand sr-reveal">
-              <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
-            </div>
-            <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">No es una herramienta. Es una nueva forma de competir.</h2>
-            <p class="lp-caps__sub sr-reveal sr-reveal--d1">Lee el mercado, decide con criterio y ejecuta a tiempo.</p>
-          </header>
-          <div class="lp-caps__grid">
-            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d1">
-              <h3 class="lp-caps__card-title">Ves lo que otros no están viendo</h3>
-              <p class="lp-caps__card-desc">Lees el mercado en tiempo real.<br>No solo lo que pasó… sino lo que está empezando a moverse.</p>
-              <div class="lp-caps__ba">
-                <div class="lp-caps__ba-item lp-caps__ba-item--before">
-                  <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">reaccionas</span>
-                </div>
-                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
-                <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Ahora</span>
-                  <span class="lp-caps__ba-text">anticipas</span>
-                </div>
+          <div class="lp-caps__row lp-caps__row--top">
+            <div class="lp-caps__block lp-caps__block--tl">
+              <div class="lp-caps__brand sr-reveal">
+                <img class="lp-caps__brand-logo" src="/recursos/logos/logo-02.svg" alt="AISmartContent" width="168" height="67" loading="lazy" decoding="async">
               </div>
+              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal sr-reveal--d1">No es una herramienta. Es una nueva forma de competir.</h2>
+              <p class="lp-caps__sub sr-reveal sr-reveal--d2">Lee el mercado, decide con criterio y ejecuta a tiempo.</p>
             </div>
-            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d2">
-              <h3 class="lp-caps__card-title">Decides con contexto, no con intuición</h3>
-              <p class="lp-caps__card-desc">Cruzas lo que está pasando con tu ADN y tu objetivo.<br>No decides por presión. Decides con claridad.</p>
-              <div class="lp-caps__ba">
-                <div class="lp-caps__ba-item lp-caps__ba-item--before">
-                  <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">suposiciones</span>
-                </div>
-                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
-                <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Ahora</span>
-                  <span class="lp-caps__ba-text">criterio estructurado</span>
-                </div>
-              </div>
+            <aside class="lp-caps__block lp-caps__block--tr sr-reveal sr-reveal--d1" aria-label="Resumen">
+              <p class="lp-caps__tr-lead">De la señal a la acción, sin saltar etapas.</p>
+              <ul class="lp-caps__tr-list">
+                <li><span class="lp-caps__tr-kicker">Ahora</span> anticipas</li>
+                <li><span class="lp-caps__tr-kicker">Ahora</span> decides con criterio estructurado</li>
+                <li><span class="lp-caps__tr-kicker">Ahora</span> velocidad</li>
+              </ul>
+            </aside>
+          </div>
+          <div class="lp-caps__block lp-caps__block--bottom">
+            <div class="lp-caps__pillar sr-reveal sr-reveal--d1">
+              <h3 class="lp-caps__pillar-title">Ves lo que otros no están viendo</h3>
+              <p class="lp-caps__pillar-desc">Lees el mercado en tiempo real.<br>No solo lo que pasó… sino lo que está empezando a moverse.</p>
             </div>
-            <div class="lp-caps__card glass-black sr-reveal sr-reveal--d3">
-              <h3 class="lp-caps__card-title">Ejecutas sin fricción</h3>
-              <p class="lp-caps__card-desc">Lo que antes tomaba días, ahora sucede en minutos.<br>Sin perder coherencia. Sin empezar desde cero.</p>
-              <div class="lp-caps__ba">
-                <div class="lp-caps__ba-item lp-caps__ba-item--before">
-                  <span class="lp-caps__ba-tag">Antes</span>
-                  <span class="lp-caps__ba-text">procesos</span>
-                </div>
-                <span class="lp-caps__ba-arrow" aria-hidden="true">→</span>
-                <div class="lp-caps__ba-item lp-caps__ba-item--after">
-                  <span class="lp-caps__ba-tag">Ahora</span>
-                  <span class="lp-caps__ba-text">velocidad</span>
-                </div>
-              </div>
+            <div class="lp-caps__pillar sr-reveal sr-reveal--d2">
+              <h3 class="lp-caps__pillar-title">Decides con contexto, no con intuición</h3>
+              <p class="lp-caps__pillar-desc">Cruzas lo que está pasando con tu ADN y tu objetivo.<br>No decides por presión. Decides con claridad.</p>
+            </div>
+            <div class="lp-caps__pillar sr-reveal sr-reveal--d3">
+              <h3 class="lp-caps__pillar-title">Ejecutas sin fricción</h3>
+              <p class="lp-caps__pillar-desc">Lo que antes tomaba días, ahora sucede en minutos.<br>Sin perder coherencia. Sin empezar desde cero.</p>
             </div>
           </div>
         </div>

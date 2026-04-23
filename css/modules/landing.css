@@ -1114,292 +1114,147 @@ body.entrance-done .landing-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   S05 — LAS 3 CAPACIDADES
+   S05 — PROPUESTA (grid: arriba 2 bloques, abajo 1 bloque ancho)
    ═══════════════════════════════════════════════════════════════ */
-
-@keyframes lp-caps-spot-drift {
-  from {
-    opacity: var(--lp-caps-o-from, 0.22);
-  }
-  to {
-    opacity: var(--lp-caps-o-to, 0.38);
-  }
-}
 
 .lp-caps {
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
   color: #ffffff;
-  /* Origen vertical del haz (~centro del logo en la sección); mismo eje en capas. */
-  --lp-caps-glow-y: clamp(6.75rem, 17.5vh, 11.25rem);
-  padding: clamp(96px, 14vw, 148px) clamp(20px, 6vw, 80px);
-  background: linear-gradient(180deg, #0c0e12 0%, #07080b 48%, #050506 100%);
-}
-
-.lp-caps__atmos {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Columna de luz a altura de sección: el degradado nace en el logo y cae suave hasta abajo. */
-.lp-caps__atmos::before {
-  content: '';
-  position: absolute;
-  inset: -8% -25% -12% -25%;
-  background: radial-gradient(
-    ellipse min(118%, 1280px) 135% at 50% var(--lp-caps-glow-y),
-    rgba(255, 255, 255, 0.13) 0%,
-    rgba(255, 255, 255, 0.055) 34%,
-    rgba(255, 255, 255, 0.022) 58%,
-    rgba(255, 255, 255, 0.007) 78%,
-    transparent 100%
-  );
-  filter: blur(56px);
-  mix-blend-mode: screen;
-  opacity: 0.88;
-  pointer-events: none;
-}
-
-.lp-caps__spotlights {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.lp-caps__spotlight {
-  position: absolute;
-  inset: -5% -20% -8% -20%;
-  width: auto;
-  height: auto;
-  margin: 0;
-  filter: blur(48px);
-  mix-blend-mode: screen;
-  animation: lp-caps-spot-drift var(--lp-caps-spot-dur, 6s) ease-in-out infinite alternate;
-}
-
-.lp-caps__spotlight--l {
-  --lp-caps-spot-dur: 5.5s;
-  --lp-caps-o-from: 0.14;
-  --lp-caps-o-to: 0.28;
-  background: radial-gradient(
-    ellipse 58% 125% at 42% var(--lp-caps-glow-y),
-    rgba(255, 255, 255, 0.09) 0%,
-    rgba(255, 255, 255, 0.032) 40%,
-    rgba(255, 255, 255, 0.012) 68%,
-    transparent 100%
-  );
-}
-
-.lp-caps__spotlight--c {
-  --lp-caps-spot-dur: 7.5s;
-  --lp-caps-o-from: 0.2;
-  --lp-caps-o-to: 0.36;
-  background: radial-gradient(
-    ellipse 92% 145% at 50% var(--lp-caps-glow-y),
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.045) 36%,
-    rgba(255, 255, 255, 0.016) 64%,
-    rgba(255, 255, 255, 0.005) 88%,
-    transparent 100%
-  );
-}
-
-.lp-caps__spotlight--r {
-  --lp-caps-spot-dur: 4.8s;
-  --lp-caps-o-from: 0.14;
-  --lp-caps-o-to: 0.28;
-  background: radial-gradient(
-    ellipse 58% 125% at 58% var(--lp-caps-glow-y),
-    rgba(255, 255, 255, 0.09) 0%,
-    rgba(255, 255, 255, 0.032) 40%,
-    rgba(255, 255, 255, 0.012) 68%,
-    transparent 100%
-  );
+  padding: clamp(72px, 11vw, 120px) clamp(20px, 6vw, 80px);
+  background: #050506;
 }
 
 .lp-caps__inner {
-  position: relative;
-  z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(72px, 10vw, 120px);
+  gap: clamp(48px, 7vw, 88px);
 }
 
-.lp-caps__header {
-  text-align: center;
-  max-width: 720px;
-  margin: 0 auto;
+.lp-caps__row--top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(28px, 5vw, 56px);
+  align-items: start;
+}
+
+.lp-caps__block--tl {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 2.8vw, 32px);
+  align-items: flex-start;
+  gap: clamp(18px, 2.5vw, 28px);
+  text-align: left;
 }
 
 .lp-caps__brand {
-  position: relative;
-  margin: 0 auto 0;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 
-/* Núcleo muy local en el logo (el haz amplio va en .lp-caps__atmos). */
-.lp-caps__brand::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: -1;
-  width: clamp(140px, 34vw, 260px);
-  height: clamp(72px, 15vw, 120px);
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    rgba(255, 255, 255, 0.32) 0%,
-    rgba(240, 244, 250, 0.12) 45%,
-    transparent 72%
-  );
-  filter: blur(18px);
-  opacity: 0.85;
-  pointer-events: none;
-}
-
 .lp-caps__brand-logo {
-  position: relative;
-  z-index: 0;
   display: block;
   width: clamp(120px, 20vw, 200px);
   height: auto;
   max-width: 100%;
-  filter:
-    drop-shadow(0 0 20px rgba(255, 255, 255, 0.1))
-    drop-shadow(0 14px 40px rgba(255, 255, 255, 0.06));
 }
 
 .lp-caps__title {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  max-width: 20ch;
+  font-size: clamp(1.75rem, 3.8vw, 2.85rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.12;
 }
 
 .lp-caps__sub {
   margin: 0;
-  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.5);
+  max-width: 36ch;
+  font-size: clamp(0.92rem, 1.35vw, 1.08rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.52);
 }
 
-.lp-caps__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(20px, 3vw, 32px);
+.lp-caps__block--tr {
+  padding-top: clamp(4px, 0.8vw, 10px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: clamp(20px, 3vw, 36px);
 }
 
-/* Fondo/borde/hover: clase utilitaria .glass-black del bundle (misma capa que el resto de la app). */
-.lp-caps__card {
-  box-sizing: border-box;
-  padding: clamp(26px, 3.2vw, 38px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.lp-caps__card-title {
-  margin: 0;
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
+.lp-caps__tr-lead {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1rem, 1.35vw, 1.15rem);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.88);
 }
 
-.lp-caps__card-desc {
+.lp-caps__tr-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.lp-caps__tr-list li {
+  font-size: clamp(0.88rem, 1.15vw, 0.98rem);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.lp-caps__tr-kicker {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 214, 235, 0.85);
+}
+
+.lp-caps__block--bottom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 40px);
+  padding-top: clamp(32px, 5vw, 48px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lp-caps__pillar-title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(0.98rem, 1.45vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.28;
+  color: #ffffff;
+}
+
+.lp-caps__pillar-desc {
   margin: 0;
   font-size: clamp(0.82rem, 1.1vw, 0.92rem);
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.5);
-  flex-grow: 1;
+  color: rgba(255, 255, 255, 0.52);
 }
 
-.lp-caps__ba {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  flex-wrap: wrap;
-}
-
-.lp-caps__ba-item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 80px;
-}
-
-.lp-caps__ba-tag {
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.lp-caps__ba-item--before .lp-caps__ba-tag { color: rgba(255,255,255,0.3); }
-.lp-caps__ba-item--after .lp-caps__ba-tag { color: rgba(200, 214, 235, 0.85); }
-
-.lp-caps__ba-text {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
-  line-height: 1.4;
-}
-
-.lp-caps__ba-item--after .lp-caps__ba-text { color: rgba(255,255,255,0.8); }
-
-.lp-caps__ba-arrow {
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-
-@media (max-width: 860px) {
-  .lp-caps__grid { grid-template-columns: 1fr; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-caps__atmos::before {
-    opacity: 0.78;
+@media (max-width: 820px) {
+  .lp-caps__row--top {
+    grid-template-columns: 1fr;
   }
 
-  .lp-caps__spotlight {
-    animation: none;
-    opacity: 0.32;
-    filter: blur(40px);
+  .lp-caps__block--tr {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: clamp(24px, 4vw, 36px);
   }
 
-}
-
-@media (max-width: 600px) {
-  .lp-caps {
-    --lp-caps-glow-y: clamp(5.5rem, 15vh, 9rem);
-  }
-
-  .lp-caps__atmos::before {
-    filter: blur(40px);
-  }
-
-  .lp-caps__spotlight {
-    filter: blur(32px);
-  }
-
-  .lp-caps__brand::before {
-    filter: blur(14px);
+  .lp-caps__block--bottom {
+    grid-template-columns: 1fr;
   }
 }
 
