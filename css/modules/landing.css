@@ -1283,6 +1283,9 @@ body.entrance-done .landing-header {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  /* Por encima del carril derecho: el wordmark ancho se solapa al bento y debe quedar DEBAJO de las tarjetas */
+  position: relative;
+  z-index: 2;
 }
 
 .lp-vera__stage {
@@ -1326,7 +1329,7 @@ body.entrance-done .landing-header {
   grid-row: 1;
   align-self: stretch;
   position: relative;
-  z-index: 1;
+  z-index: 0;
   width: 100%;
   min-width: 0;
   min-height: 0;
