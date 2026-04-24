@@ -1320,8 +1320,10 @@ body.entrance-done .landing-header {
   z-index: 2;
   display: grid;
   grid-template-columns: var(--lp-vera-cols);
+  grid-template-rows: 1fr;
   column-gap: var(--lp-vera-gap);
   align-items: stretch;
+  min-height: 0;
   pointer-events: none;
 }
 
@@ -1413,14 +1415,14 @@ body.entrance-done .landing-header {
 
 .lp-vera__sticky-visual-img {
   /*
-   * Grande respecto al carril: puede invadir la col izquierda; L3 (bento) lo pinta encima.
-   * stretch en columna evita el bug flex-end + intrínseco ancho.
+   * width:auto usa el viewBox intrínseco (~89px) → diminuto. Forzamos ancho ≥ carril y
+   * permitimos superar el carril (max + vw) para que se vea grande y pueda pasar bajo L3.
    */
-  width: auto;
-  max-width: min(1180px, 165%);
+  display: block;
+  width: max(100%, min(1180px, 58vw));
+  max-width: min(1180px, 96vw);
   min-width: 0;
   height: auto;
-  display: block;
   flex-shrink: 0;
   object-fit: contain;
   object-position: right center;
