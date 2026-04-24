@@ -1274,7 +1274,6 @@ body.entrance-done .landing-header {
   display: block;
 }
 
-/* Cabecera VERA (solo esta zona activa el pin del SVG; el bento va aparte debajo) */
 .lp-vera__stage {
   display: grid;
   grid-template-columns: minmax(0, 0.94fr) minmax(280px, 0.52fr);
@@ -1289,8 +1288,7 @@ body.entrance-done .landing-header {
   grid-row: 1;
   align-self: start;
   position: relative;
-  /* Debajo del wordmark sticky para que el SVG (centrado en viewport) no quede tapado por el titular */
-  z-index: 10;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1306,30 +1304,29 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: carril grid; el wordmark usa position:sticky dentro de esta columna (no fixed al viewport) */
+/* Capa 2: carril grid — el wordmark no sale de esta columna (sin % >100 ni sticky al viewport) */
 .lp-vera__sticky-rail {
   grid-column: 2;
   grid-row: 1;
   align-self: stretch;
   position: relative;
-  z-index: 22;
+  z-index: 1;
   width: 100%;
   min-width: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
 .lp-vera__sticky-visual {
-  /* Sticky respecto al scroll de página, acotado a la altura del carril (= fila del stage) */
-  position: sticky;
-  top: clamp(72px, 18vh, 132px);
-  z-index: 23;
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-start;
   width: 100%;
   box-sizing: border-box;
-  padding-inline: clamp(0px, 1vw, 10px);
+  padding-inline: 0;
   pointer-events: none;
 }
 
@@ -1337,17 +1334,18 @@ body.entrance-done .landing-header {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-start;
   width: 100%;
-  max-width: min(118%, 920px);
+  max-width: 100%;
 }
 
 .lp-vera__sticky-visual-img {
   width: 100%;
-  max-width: 100%;
+  max-width: min(100%, 420px);
   height: auto;
   display: block;
+  margin-left: auto;
   /* Sin filter: drop-shadow rasteriza el SVG y estropea el degradado del wordmark */
   filter: none;
 }
@@ -1378,8 +1376,6 @@ body.entrance-done .landing-header {
   line-height: 1.04;
   letter-spacing: -0.02em;
   color: #ffffff;
-  /* Contraste cuando el wordmark (blanco) se superpone al titular */
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.9), 0 2px 28px rgba(0, 0, 0, 0.55);
 }
 
 .lp-vera__hero-line {
@@ -1718,11 +1714,6 @@ body.entrance-done .landing-header {
     --lp-vera-dur: 0.01ms;
     --lp-vera-dur-text: 0.01ms;
   }
-
-  .lp-vera__sticky-visual {
-    position: relative;
-    top: auto;
-  }
 }
 
 @media (max-width: 900px) {
@@ -1746,8 +1737,6 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__sticky-visual {
-    position: relative;
-    top: auto;
     align-items: flex-end;
     width: 100%;
     padding-inline: 0;
