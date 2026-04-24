@@ -379,11 +379,12 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S06: VERA — Cabecera + bento (misma sección) ════════ -->
+      <!-- ════════ S06: VERA — Columna copy+bento + columna SVG sticky ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
-          <div class="lp-vera__shell">
-            <div class="lp-vera__hero">
+          <div class="lp-vera__layout">
+            <div class="lp-vera__main-col">
+              <div class="lp-vera__hero">
               <h2 id="lp-vera-heading" class="lp-vera__hero-headline sr-reveal">
                 <span class="lp-vera__hero-line">NO ESPERA ÓRDENES.</span>
                 <span class="lp-vera__hero-line">OPERA POR TI.</span>
@@ -393,17 +394,11 @@ class LandingView extends PublicBaseView {
                 <span class="lp-vera__hero-sub-line">El mercado no premia el esfuerzo.</span>
                 <span class="lp-vera__hero-sub-line">Premia la precisión.</span>
               </p>
-              <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado, prioriza señales y actúa cuando tu equipo aún está procesando información. Cada decisión nace del contexto real de tu marca, no de plantillas genéricas ni de prompts sueltos.</p>
-            </div>
-            <div class="lp-vera__bento-stack">
-              <div class="lp-vera__bento-head">
-                <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
-                  <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
-                  <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
-                </p>
-              </div>
-              <div class="lp-vera__bg-mark sr-reveal sr-reveal--d1" aria-hidden="true">
-                <img class="lp-vera__bg-mark-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+              <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado. Observa lo que está pasando, lo cruza con tu ADN de marca y decide qué hacer, cuándo hacerlo y por qué hacerlo. No sigue instrucciones ni depende de prompts. Aprende de cada resultado, ajusta su criterio y actúa con autonomía, asegurando que cada acción tenga intención, coherencia y timing real.</p>
+              <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
+                <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
+                <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
+              </p>
               </div>
               <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
@@ -459,8 +454,13 @@ class LandingView extends PublicBaseView {
               </header>
               <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
             </article>
+              </div>
             </div>
-            </div>
+            <aside class="lp-vera__mark-col" aria-hidden="true">
+              <div class="lp-vera__sticky-mark sr-reveal sr-reveal--d1">
+                <img class="lp-vera__sticky-mark-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+              </div>
+            </aside>
           </div>
         </div>
       </section>

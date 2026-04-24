@@ -1255,6 +1255,8 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
+  /* Header landing fijo ~60px + respiro */
+  --lp-vera-sticky-top: clamp(68px, 11vh, 104px);
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
@@ -1266,14 +1268,22 @@ body.entrance-done .landing-header {
   margin: 0 auto;
 }
 
-/* Cabecera + bento: un solo bloque vertical (sin “dos secciones”) */
-.lp-vera__shell {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(28px, 4.5vw, 52px);
+/* Maqueta: columna izquierda (copy + bento) | columna derecha (SVG sticky) */
+.lp-vera__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, min(40vw, 420px));
+  gap: clamp(16px, 3.5vw, 44px);
+  align-items: stretch;
 }
 
-/* Cabecera VERA (mockup: titular + rule + subtítulo + cuerpo + fila etiqueta + logo) */
+.lp-vera__main-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vw, 48px);
+  min-width: 0;
+}
+
+/* Cabecera VERA: titular + rule + subtítulo + cuerpo + “VENTAJA EN…” (bloque rojo maqueta) */
 .lp-vera__hero {
   display: flex;
   flex-direction: column;
@@ -1328,31 +1338,14 @@ body.entrance-done .landing-header {
 
 .lp-vera__hero-body {
   margin: 0;
-  max-width: min(560px, 100%);
+  max-width: min(640px, 100%);
   font-size: clamp(0.94rem, 1.12vw, 1.0625rem);
   line-height: 1.65;
   color: #a0a0a0;
 }
 
-/* Cabecera “VENTAJA…” + wordmark detrás del bento (mockup) */
-.lp-vera__bento-stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: clamp(16px, 2.5vw, 28px);
-  overflow: visible;
-}
-
-.lp-vera__bento-head {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  margin: 0 0 clamp(4px, 1vw, 12px);
-}
-
 .lp-vera__hero-tag {
-  margin: 0;
+  margin: clamp(16px, 2.5vw, 28px) 0 0;
   font-family: "Space Grotesk", Inter, system-ui, sans-serif;
   font-size: clamp(0.68rem, 0.95vw, 0.8rem);
   font-weight: 700;
@@ -1365,38 +1358,34 @@ body.entrance-done .landing-header {
   display: block;
 }
 
-/* Wordmark grande: capa bajo las cards (glass deja ver el SVG) */
-.lp-vera__bg-mark {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: min(132%, 1100px);
-  transform: translateX(-50%);
+/* Columna derecha: wordmark con scroll anclado (position: sticky) */
+.lp-vera__mark-col {
+  position: relative;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  pointer-events: none;
+  justify-content: flex-end;
+  align-items: stretch;
+  min-width: 0;
 }
 
-.lp-vera__bg-mark-img {
+.lp-vera__sticky-mark {
+  position: sticky;
+  top: var(--lp-vera-sticky-top);
+  align-self: flex-start;
+  display: flex;
+  justify-content: flex-end;
   width: 100%;
+  padding-bottom: clamp(20px, 3vw, 40px);
+}
+
+.lp-vera__sticky-mark-img {
+  width: min(125%, 440px);
   max-width: none;
   height: auto;
-  max-height: min(104%, clamp(280px, 58vw, 620px));
-  object-fit: contain;
-  object-position: 50% 100%;
   display: block;
-  transform: translateY(clamp(8px, 2.2vw, 36px)) scale(1.08);
-  transform-origin: 50% 100%;
-  filter: drop-shadow(0 18px 48px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 20px 52px rgba(0, 0, 0, 0.42));
 }
 
-/* Bento por encima del wordmark */
 .lp-vera__layers {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: minmax(200px, auto) minmax(188px, 1fr) minmax(188px, 1fr);
@@ -1405,7 +1394,7 @@ body.entrance-done .landing-header {
     "midA midB tall"
     "wide wide tall";
   gap: clamp(14px, 1.85vw, 22px);
-  margin: clamp(-48px, -6.5vw, -20px) 0 0;
+  margin: 0;
   padding: 0;
   background: transparent;
   border: none;
@@ -1674,20 +1663,49 @@ body.entrance-done .landing-header {
     --lp-vera-dur: 0.01ms;
     --lp-vera-dur-text: 0.01ms;
   }
+
+  .lp-vera__sticky-mark {
+    position: relative;
+    top: auto;
+    padding-bottom: 0;
+  }
 }
 
 @media (max-width: 900px) {
-  .lp-vera__bg-mark {
-    width: min(118%, 720px);
+  .lp-vera__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(20px, 5vw, 36px);
   }
 
-  .lp-vera__bg-mark-img {
-    max-height: min(100%, clamp(200px, 56vw, 400px));
-    transform: translateY(clamp(4px, 1.5vw, 20px)) scale(1.04);
+  /* Hero → wordmark → bento (una columna, orden maqueta) */
+  .lp-vera__main-col {
+    display: contents;
+  }
+
+  .lp-vera__hero {
+    order: 1;
+  }
+
+  .lp-vera__mark-col {
+    order: 2;
+    justify-content: center;
+  }
+
+  .lp-vera__sticky-mark {
+    position: relative;
+    top: auto;
+    justify-content: center;
+    padding-bottom: 0;
+  }
+
+  .lp-vera__sticky-mark-img {
+    width: min(72vw, 320px);
+    max-width: 100%;
   }
 
   .lp-vera__layers {
-    margin-top: clamp(-40px, -10vw, -16px);
+    order: 3;
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-template-areas:
