@@ -1261,8 +1261,9 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
-  /* Sin overflow:hidden en el section (rompía sticky histórico); el recorte en X va solo en el carril */
-  overflow: visible;
+  /* Sin overflow-y:hidden en el section; clip en X evita que el wordmark ensanche la página */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .lp-vera__inner {
@@ -1328,6 +1329,10 @@ body.entrance-done .landing-header {
 .lp-vera__vera-l2 .lp-vera__sticky-rail {
   grid-column: 2;
   align-self: stretch;
+  /* No desbordar a la columna del copy ni inflar el scroll horizontal */
+  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .lp-vera__stage {
@@ -1370,8 +1375,9 @@ body.entrance-done .landing-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  /* Visible: el wordmark puede extenderse bajo el bento (L3 lo tapa por z-index) */
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   pointer-events: none;
 }
 
@@ -1403,19 +1409,18 @@ body.entrance-done .landing-header {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: visible;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .lp-vera__sticky-visual-img {
-  /*
-   * width:auto usa el viewBox intrínseco (~89px) → diminuto. Forzamos ancho ≥ carril y
-   * permitimos superar el carril (max + vw) para que se vea grande y pueda pasar bajo L3.
-   */
+  /* Dentro del carril: grande pero acotado (el max(100%,58vw) rompía layout y tapaba el copy) */
   display: block;
-  width: max(100%, min(1180px, 58vw));
-  max-width: min(1180px, 96vw);
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   height: auto;
+  max-height: clamp(108px, min(20vw, 22vh), 240px);
   flex-shrink: 0;
   object-fit: contain;
   object-position: right center;
@@ -1896,14 +1901,15 @@ body.entrance-done .landing-header {
     max-width: 100%;
     min-width: 0;
     margin-left: 0;
-    overflow: visible;
+    overflow-x: clip;
+    overflow-y: visible;
   }
 
   .lp-vera__sticky-visual-img {
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    max-height: none;
+    max-height: clamp(88px, 26vw, 160px);
   }
 
   .lp-vera__layers {
