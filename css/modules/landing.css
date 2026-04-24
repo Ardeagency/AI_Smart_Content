@@ -1360,6 +1360,29 @@ body.entrance-done .landing-header {
   filter: none;
 }
 
+/*
+ * Defensa: JS/CSS viejos en caché añadían .lp-vera__sticky-visual--fixed (viewport centrado).
+ * Si el class reaparece, debe comportarse como bloque normal dentro del carril derecho.
+ */
+#landing-6 .lp-vera__sticky-visual--fixed {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#landing-6 .lp-vera__sticky-visual,
+#landing-6 .lp-vera__sticky-visual-inner,
+#landing-6 .lp-vera__sticky-visual-img {
+  transform: none !important;
+}
+
 /* Bento: hermano del stage; por encima del wordmark */
 .lp-vera__bento-block {
   position: relative;
