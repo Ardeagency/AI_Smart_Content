@@ -2804,7 +2804,7 @@ body.entrance-done .landing-header {
   flex: 0 0 auto;
   width: clamp(240px, 28vw, 300px);
   scroll-snap-align: start;
-  padding: 2px;
+  padding: 3px;
   border-radius: 20px;
   background: conic-gradient(
     from 45deg at 50% 50%,
@@ -2815,7 +2815,7 @@ body.entrance-done .landing-header {
     #ff6500 360deg
   );
   box-sizing: border-box;
-  box-shadow: 0 12px 40px rgba(15, 15, 20, 0.08);
+  box-shadow: 0 12px 40px rgba(15, 15, 20, 0.14);
 }
 
 .lp-why__card {
@@ -2826,13 +2826,17 @@ body.entrance-done .landing-header {
   border-radius: 18px;
   background: #0a0a0d;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
 }
 
 .lp-why__card-wrap:hover .lp-why__card {
   transform: translateY(-4px);
   box-shadow: 0 20px 52px rgba(15, 15, 20, 0.38);
+}
+
+.lp-why__card-wrap:hover {
+  box-shadow: 0 16px 48px rgba(15, 15, 20, 0.22);
 }
 
 .lp-why__card-title {
