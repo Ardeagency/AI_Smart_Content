@@ -384,6 +384,14 @@ class LandingView extends PublicBaseView {
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
+            <!-- Carril primero en el DOM: capa base; copy+bento van encima (z-index en shell) -->
+            <div class="lp-vera__sticky-rail">
+              <aside class="lp-vera__sticky-visual" aria-hidden="true">
+                <div class="lp-vera__sticky-visual-inner">
+                  <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+                </div>
+              </aside>
+            </div>
             <div class="lp-vera__main-col">
             <div class="lp-vera__stage">
               <div class="lp-vera__copy-block">
@@ -462,13 +470,6 @@ class LandingView extends PublicBaseView {
             </article>
                 </div>
             </div>
-            </div>
-            <div class="lp-vera__sticky-rail">
-              <aside class="lp-vera__sticky-visual" aria-hidden="true">
-                <div class="lp-vera__sticky-visual-inner">
-                  <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
-                </div>
-              </aside>
             </div>
           </div>
         </div>

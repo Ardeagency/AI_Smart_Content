@@ -1276,6 +1276,9 @@ body.entrance-done .landing-header {
   grid-template-columns: minmax(0, 0.86fr) minmax(300px, 0.62fr);
   column-gap: clamp(20px, 3.5vw, 44px);
   align-items: stretch;
+  position: relative;
+  /* Contexto de apilamiento único: carril (capa baja) vs main-col (capa alta), sin compartir orden con el grid */
+  isolation: isolate;
 }
 
 .lp-vera__main-col {
@@ -1283,9 +1286,9 @@ body.entrance-done .landing-header {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  /* Por encima del carril derecho: el wordmark ancho se solapa al bento y debe quedar DEBAJO de las tarjetas */
+  /* Capa superior del shell: copy + bento por encima del wordmark que se desborda del carril */
   position: relative;
-  z-index: 2;
+  z-index: 10;
 }
 
 .lp-vera__stage {
@@ -1329,7 +1332,7 @@ body.entrance-done .landing-header {
   grid-row: 1;
   align-self: stretch;
   position: relative;
-  z-index: 0;
+  z-index: 1;
   width: 100%;
   min-width: 0;
   min-height: 0;
@@ -1342,7 +1345,7 @@ body.entrance-done .landing-header {
 
 .lp-vera__sticky-visual {
   position: relative;
-  z-index: 1;
+  z-index: auto;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
