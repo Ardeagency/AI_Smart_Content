@@ -1255,6 +1255,9 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
@@ -1271,13 +1274,13 @@ body.entrance-done .landing-header {
   display: block;
 }
 
-/* Maqueta 3 capas: (1) copy+VENTAJA (2) SVG grande + scroll (3) bento encima */
+/* Cabecera VERA (solo esta zona activa el pin del SVG; el bento va aparte debajo) */
 .lp-vera__stage {
   display: grid;
   grid-template-columns: minmax(0, 0.94fr) minmax(280px, 0.52fr);
-  grid-template-rows: auto auto;
+  grid-template-rows: auto;
   column-gap: clamp(20px, 3.5vw, 44px);
-  row-gap: clamp(24px, 3.2vw, 40px);
+  row-gap: 0;
   align-items: stretch;
 }
 
@@ -1286,7 +1289,7 @@ body.entrance-done .landing-header {
   grid-row: 1;
   align-self: start;
   position: relative;
-  z-index: 4;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1305,10 +1308,10 @@ body.entrance-done .landing-header {
 /* Capa 2: carril grid; el aside puede pasar a fixed centrado vía JS (.lp-vera__sticky-visual--fixed) */
 .lp-vera__sticky-rail {
   grid-column: 2;
-  grid-row: 1 / 3;
+  grid-row: 1;
   align-self: stretch;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   min-width: 0;
   pointer-events: none;
@@ -1335,7 +1338,8 @@ body.entrance-done .landing-header {
   transform: translate(-50%, -50%);
   width: min(94vw, 1040px);
   max-width: min(94vw, 1040px);
-  z-index: 3;
+  /* Por debajo del copy y del bento (stacking dentro de .lp-vera aislado) */
+  z-index: 2;
   margin: 0;
   padding: 0 clamp(10px, 2vw, 22px);
 }
@@ -1358,12 +1362,12 @@ body.entrance-done .landing-header {
   filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.48));
 }
 
-/* Capa 3: bento por encima del SVG (glass); no comparte stacking con la capa azul */
+/* Bento: hermano del stage; por encima del wordmark */
 .lp-vera__bento-block {
-  grid-column: 1 / -1;
-  grid-row: 2;
   position: relative;
-  z-index: 6;
+  z-index: 30;
+  width: 100%;
+  margin-top: clamp(24px, 3.5vw, 44px);
   isolation: isolate;
 }
 

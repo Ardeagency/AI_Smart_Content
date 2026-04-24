@@ -384,7 +384,7 @@ class LandingView extends PublicBaseView {
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
-            <div class="lp-vera__stage">
+            <div class="lp-vera__stage" data-lp-vera-pin-zone>
               <div class="lp-vera__copy-block">
                 <div class="lp-vera__hero">
                   <h2 id="lp-vera-heading" class="lp-vera__hero-headline sr-reveal">
@@ -410,7 +410,8 @@ class LandingView extends PublicBaseView {
                   </div>
                 </aside>
               </div>
-              <div class="lp-vera__bento-block">
+            </div>
+            <div class="lp-vera__bento-block">
                 <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
               <div class="lp-vera__layer-bg" aria-hidden="true"></div>
@@ -466,7 +467,6 @@ class LandingView extends PublicBaseView {
               <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
             </article>
                 </div>
-              </div>
             </div>
           </div>
         </div>
@@ -927,8 +927,9 @@ class LandingView extends PublicBaseView {
   }
 
   /**
-   * S06 VERA: wordmark grande anclado al centro del viewport mientras #landing-6
-   * intersecta la ventana (position:fixed; el sticky nativo fallaba por overflow del shell).
+   * S06 VERA: wordmark grande centrado (position:fixed) solo mientras la cabecera
+   * `[data-lp-vera-pin-zone]` intersecta el viewport — no mientras el scroll sigue
+   * en el bento u otras secciones (#landing-6 entero es demasiado amplio).
    */
   initVeraMarkScroll() {
     if (typeof this.veraMarkCleanup === 'function') {
@@ -942,7 +943,8 @@ class LandingView extends PublicBaseView {
 
     const section = this.container?.querySelector('#landing-6');
     const mark = section?.querySelector('[data-lp-vera-mark]');
-    if (!section || !mark) return;
+    const pinZone = section?.querySelector('[data-lp-vera-pin-zone]');
+    if (!section || !mark || !pinZone) return;
 
     const mqDesk = window.matchMedia('(min-width: 901px)');
 
@@ -951,14 +953,14 @@ class LandingView extends PublicBaseView {
         mark.classList.remove('lp-vera__sticky-visual--fixed');
         return;
       }
-      const r = section.getBoundingClientRect();
+      const z = pinZone.getBoundingClientRect();
       const vh = window.innerHeight || document.documentElement.clientHeight;
-      const visible = r.bottom > 0 && r.top < vh;
-      if (visible) {
-        mark.classList.add('lp-vera__sticky-visual--fixed');
-      } else {
-        mark.classList.remove('lp-vera__sticky-visual--fixed');
-      }
+      const overlapTop = Math.max(z.top, 0);
+      const overlapBottom = Math.min(z.bottom, vh);
+      const overlapPx = Math.max(0, overlapBottom - overlapTop);
+      const minOverlap = Math.min(72, Math.max(24, z.height * 0.12));
+      const pinActive = overlapPx >= minOverlap && z.bottom > 0 && z.top < vh;
+      mark.classList.toggle('lp-vera__sticky-visual--fixed', pinActive);
     };
 
     tick();
