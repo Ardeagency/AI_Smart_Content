@@ -1306,7 +1306,7 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: carril grid; el aside puede pasar a fixed centrado vía JS (.lp-vera__sticky-visual--fixed) */
+/* Capa 2: carril grid; el wordmark usa position:sticky dentro de esta columna (no fixed al viewport) */
 .lp-vera__sticky-rail {
   grid-column: 2;
   grid-row: 1;
@@ -1319,7 +1319,9 @@ body.entrance-done .landing-header {
 }
 
 .lp-vera__sticky-visual {
-  position: relative;
+  /* Sticky respecto al scroll de página, acotado a la altura del carril (= fila del stage) */
+  position: sticky;
+  top: clamp(72px, 18vh, 132px);
   z-index: 23;
   display: flex;
   flex-direction: column;
@@ -1329,20 +1331,6 @@ body.entrance-done .landing-header {
   box-sizing: border-box;
   padding-inline: clamp(0px, 1vw, 10px);
   pointer-events: none;
-}
-
-.lp-vera__sticky-visual--fixed {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  right: auto;
-  transform: translate(-50%, -50%);
-  width: min(94vw, 1040px);
-  max-width: min(94vw, 1040px);
-  /* Sobre el copy (integración con el titular), bajo el bento (z-index 30) */
-  z-index: 25;
-  margin: 0;
-  padding: 0 clamp(10px, 2vw, 22px);
 }
 
 .lp-vera__sticky-visual-inner {
@@ -1731,15 +1719,9 @@ body.entrance-done .landing-header {
     --lp-vera-dur-text: 0.01ms;
   }
 
-  .lp-vera__sticky-visual--fixed {
-    position: relative !important;
-    transform: none !important;
-    left: auto !important;
-    top: auto !important;
-    right: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    padding: 0 !important;
+  .lp-vera__sticky-visual {
+    position: relative;
+    top: auto;
   }
 }
 
@@ -1764,6 +1746,8 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__sticky-visual {
+    position: relative;
+    top: auto;
     align-items: flex-end;
     width: 100%;
     padding-inline: 0;

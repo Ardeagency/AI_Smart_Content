@@ -18,7 +18,6 @@ class LandingView extends PublicBaseView {
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
-    this.veraMarkCleanup = null;
   }
 
   renderContent() {
@@ -384,7 +383,7 @@ class LandingView extends PublicBaseView {
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
-            <div class="lp-vera__stage" data-lp-vera-pin-zone>
+            <div class="lp-vera__stage">
               <div class="lp-vera__copy-block">
                 <div class="lp-vera__hero">
                   <h2 id="lp-vera-heading" class="lp-vera__hero-headline sr-reveal">
@@ -404,7 +403,7 @@ class LandingView extends PublicBaseView {
                 </p>
               </div>
               <div class="lp-vera__sticky-rail">
-                <aside class="lp-vera__sticky-visual" data-lp-vera-mark aria-hidden="true">
+                <aside class="lp-vera__sticky-visual" aria-hidden="true">
                   <div class="lp-vera__sticky-visual-inner">
                     <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
                   </div>
@@ -859,7 +858,6 @@ class LandingView extends PublicBaseView {
     this.initCtaForm();
     this.initLandingAppPreview();
     this.initWhyCarousel();
-    this.initVeraMarkScroll();
   }
 
   async onLeave() {
@@ -887,10 +885,6 @@ class LandingView extends PublicBaseView {
     if (typeof this.whyCarouselCleanup === 'function') {
       this.whyCarouselCleanup();
       this.whyCarouselCleanup = null;
-    }
-    if (typeof this.veraMarkCleanup === 'function') {
-      this.veraMarkCleanup();
-      this.veraMarkCleanup = null;
     }
   }
 
@@ -923,56 +917,6 @@ class LandingView extends PublicBaseView {
     this.heroRevealCleanup = () => {
       hero.classList.remove('is-ready');
       reveals.forEach(el => { el.style.transitionDelay = ''; });
-    };
-  }
-
-  /**
-   * S06 VERA: wordmark grande centrado (position:fixed) solo mientras la cabecera
-   * `[data-lp-vera-pin-zone]` intersecta el viewport — no mientras el scroll sigue
-   * en el bento u otras secciones (#landing-6 entero es demasiado amplio).
-   */
-  initVeraMarkScroll() {
-    if (typeof this.veraMarkCleanup === 'function') {
-      this.veraMarkCleanup();
-      this.veraMarkCleanup = null;
-    }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    const section = this.container?.querySelector('#landing-6');
-    const mark = section?.querySelector('[data-lp-vera-mark]');
-    const pinZone = section?.querySelector('[data-lp-vera-pin-zone]');
-    if (!section || !mark || !pinZone) return;
-
-    const mqDesk = window.matchMedia('(min-width: 901px)');
-
-    const tick = () => {
-      if (!mqDesk.matches) {
-        mark.classList.remove('lp-vera__sticky-visual--fixed');
-        return;
-      }
-      const z = pinZone.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const overlapTop = Math.max(z.top, 0);
-      const overlapBottom = Math.min(z.bottom, vh);
-      const overlapPx = Math.max(0, overlapBottom - overlapTop);
-      const minOverlap = Math.min(72, Math.max(24, z.height * 0.12));
-      const pinActive = overlapPx >= minOverlap && z.bottom > 0 && z.top < vh;
-      mark.classList.toggle('lp-vera__sticky-visual--fixed', pinActive);
-    };
-
-    tick();
-    window.addEventListener('scroll', tick, { passive: true });
-    window.addEventListener('resize', tick);
-    mqDesk.addEventListener('change', tick);
-
-    this.veraMarkCleanup = () => {
-      window.removeEventListener('scroll', tick);
-      window.removeEventListener('resize', tick);
-      mqDesk.removeEventListener('change', tick);
-      mark.classList.remove('lp-vera__sticky-visual--fixed');
     };
   }
 
