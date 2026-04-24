@@ -2783,8 +2783,8 @@ body.entrance-done .landing-header {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  margin: 0 -6px;
-  padding: 14px 6px 28px;
+  margin: 0;
+  padding: 22px 16px 40px;
 }
 
 .lp-why__viewport::-webkit-scrollbar {
@@ -2795,7 +2795,7 @@ body.entrance-done .landing-header {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: 16px;
+  gap: 20px;
   width: max-content;
   min-height: 1px;
 }

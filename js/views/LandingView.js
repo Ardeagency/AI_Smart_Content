@@ -640,14 +640,14 @@ class LandingView extends PublicBaseView {
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Lectura en tiempo real</h3>
                     <p class="lp-why__card-text">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
-                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                   </div>
                 </article>
                 <article class="lp-why__card-wrap sr-reveal sr-reveal--d2" role="listitem">
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Decisiones con contexto</h3>
                     <p class="lp-why__card-text">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
-                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                   </div>
                 </article>
                 <article class="lp-why__card-wrap sr-reveal sr-reveal--d3" role="listitem">
@@ -661,7 +661,7 @@ class LandingView extends PublicBaseView {
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Optimización continua</h3>
                     <p class="lp-why__card-text">Aprende de cada acción para mejorar la siguiente.</p>
-                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                   </div>
                 </article>
               </div>

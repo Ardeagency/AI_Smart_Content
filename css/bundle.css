@@ -17,7 +17,7 @@
    ============================================================ */
 @import url('modules/navigation.css');
 /* Query en landing: bust de caché CDN/navegador (los @import relativos no heredan ?v= del bundle). */
-@import url('modules/landing.css?v=20260424-why-more-bottom-space');
+@import url('modules/landing.css?v=20260424-why-more-all-sides-chevron');
 @import url('modules/auth.css');
 @import url('modules/brands.css');
 @import url('modules/content-management.css');
