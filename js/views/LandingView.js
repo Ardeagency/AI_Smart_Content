@@ -308,13 +308,20 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S04: AGITACIÓN ════════ -->
-      <section class="lp-agit" id="landing-4" aria-label="Agitación">
-        <div class="lp-agit__inner">
-          <h2 class="lp-agit__headline sr-reveal">
-            El mercado ya está operando distinto.<br>
-            <em class="lp-agit__accent">La pregunta es si tú también.</em>
-          </h2>
+      <!-- ════════ S04: AGITACIÓN (escena scroll + texto, sin GSAP) ════════ -->
+      <section class="lp-agit lp-agit--scene" id="landing-4" data-lp-agit-scene aria-labelledby="lp-agit-heading">
+        <h2 id="lp-agit-heading" class="sr-only">El mercado ya está operando distinto. La pregunta es si tú también.</h2>
+        <div class="lp-agit__sticky">
+          <div class="lp-agit__viewport">
+            <div class="lp-agit__track" data-lp-agit-track aria-hidden="true">
+              <p class="lp-agit__line lp-agit__line--lead">
+                <span class="lp-agit__line-el" data-lp-agit-line>El mercado ya está<br>operando distinto.</span>
+              </p>
+              <p class="lp-agit__line lp-agit__line--accent">
+                <em class="lp-agit__line-el lp-agit__accent" data-lp-agit-line>La pregunta es si tú también.</em>
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -841,6 +848,7 @@ class LandingView extends PublicBaseView {
     this.initLandingAppPreview();
     this.initWhyCarousel();
     this.initVeraRailWordmarkScroll();
+    this.initAgitScrollScene();
   }
 
   async onLeave() {
@@ -872,6 +880,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.veraRailScrollCleanup === 'function') {
       this.veraRailScrollCleanup();
       this.veraRailScrollCleanup = null;
+    }
+    if (typeof this.agitScrollCleanup === 'function') {
+      this.agitScrollCleanup();
+      this.agitScrollCleanup = null;
     }
   }
 
@@ -1007,6 +1019,95 @@ class LandingView extends PublicBaseView {
       inner.style.transform = '';
       inner.style.willChange = '';
       this.veraRailScrollCleanup = null;
+    };
+  }
+
+  /**
+   * S04 agitación: “scrollytelling” ligero — sección alta + sticky 100vh;
+   * progreso de scroll mapea a translate/opacity del bloque de texto (sin GSAP).
+   */
+  initAgitScrollScene() {
+    if (typeof this.agitScrollCleanup === 'function') {
+      this.agitScrollCleanup();
+      this.agitScrollCleanup = null;
+    }
+
+    const section = this.container?.querySelector('[data-lp-agit-scene]');
+    const track = section?.querySelector('[data-lp-agit-track]');
+    const lines = section ? Array.from(section.querySelectorAll('[data-lp-agit-line]')) : [];
+    if (!section || !track || lines.length < 2) return;
+
+    const clearStyles = () => {
+      track.style.transform = '';
+      track.style.willChange = '';
+      lines.forEach((el) => {
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.willChange = '';
+      });
+    };
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      clearStyles();
+      return;
+    }
+
+    const smoothstep = (t) => {
+      const x = Math.min(1, Math.max(0, t));
+      return x * x * (3 - 2 * x);
+    };
+
+    const tick = () => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const denom = Math.max(1, rect.height - vh);
+      let p = (-rect.top) / denom;
+      p = Math.min(1, Math.max(0, p));
+
+      const ease = smoothstep(p);
+      const drift = (1 - ease) * Math.min(100, vh * 0.16);
+      track.style.transform = `translate3d(0, ${drift}px, 0)`;
+      track.style.willChange = 'transform';
+
+      const lead = lines[0];
+      const accent = lines[1];
+      const pLead = smoothstep(Math.min(1, p / 0.52));
+      lead.style.opacity = String(0.18 + 0.82 * pLead);
+      lead.style.transform = `translate3d(0, ${(1 - smoothstep(Math.min(1, p / 0.48))) * 22}px, 0)`;
+      lead.style.willChange = 'transform, opacity';
+
+      const pAccent = smoothstep(Math.max(0, (p - 0.34) / 0.66));
+      accent.style.opacity = String(pAccent);
+      accent.style.transform = `translate3d(0, ${(1 - pAccent) * 32}px, 0)`;
+      accent.style.willChange = 'transform, opacity';
+    };
+
+    const shell = document.getElementById('public-shell');
+    let rafId = 0;
+    const onScrollOrResize = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        tick();
+      });
+    };
+
+    tick();
+    window.requestAnimationFrame(() => tick());
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    if (shell) shell.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+
+    this.agitScrollCleanup = () => {
+      window.removeEventListener('scroll', onScrollOrResize);
+      if (shell) shell.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+      clearStyles();
+      this.agitScrollCleanup = null;
     };
   }
 
