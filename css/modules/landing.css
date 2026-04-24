@@ -1348,22 +1348,11 @@ body.entrance-done .landing-header {
   transform: none;
 }
 
-/* Sticky solo en desktop: se mueve solo mientras el carril (altura = copy) cruza el viewport */
-@media (min-width: 901px) {
-  .lp-vera__sticky-visual {
-    position: sticky;
-    top: clamp(76px, 11vh, 132px);
-    align-self: stretch;
-    width: 100%;
-  }
-}
-
 .lp-vera__sticky-visual-inner {
   display: flex;
   justify-content: flex-end;
   width: 100%;
   max-width: 100%;
-  transform: none;
 }
 
 .lp-vera__sticky-visual-img {
@@ -1400,8 +1389,8 @@ body.entrance-done .landing-header {
   padding: 0 !important;
 }
 
+/* inner: sin !important — LandingView aplica translateY dentro del carril */
 #landing-6 .lp-vera__sticky-visual,
-#landing-6 .lp-vera__sticky-visual-inner,
 #landing-6 .lp-vera__sticky-visual-img {
   transform: none !important;
 }

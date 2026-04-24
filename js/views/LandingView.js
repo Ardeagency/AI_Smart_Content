@@ -18,6 +18,7 @@ class LandingView extends PublicBaseView {
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
+    this.veraRailScrollCleanup = null;
   }
 
   renderContent() {
@@ -858,6 +859,7 @@ class LandingView extends PublicBaseView {
     this.initCtaForm();
     this.initLandingAppPreview();
     this.initWhyCarousel();
+    this.initVeraRailWordmarkScroll();
   }
 
   async onLeave() {
@@ -885,6 +887,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.whyCarouselCleanup === 'function') {
       this.whyCarouselCleanup();
       this.whyCarouselCleanup = null;
+    }
+    if (typeof this.veraRailScrollCleanup === 'function') {
+      this.veraRailScrollCleanup();
+      this.veraRailScrollCleanup = null;
     }
   }
 
@@ -917,6 +923,93 @@ class LandingView extends PublicBaseView {
     this.heroRevealCleanup = () => {
       hero.classList.remove('is-ready');
       reveals.forEach(el => { el.style.transitionDelay = ''; });
+    };
+  }
+
+  /**
+   * S06 VERA: el wordmark “acompaña” el scroll solo dentro de la altura del carril derecho
+   * (misma fila del grid que el copy). `position:sticky` fallaba por overflow/scrollport;
+   * se corrige con translateY en `.lp-vera__sticky-visual-inner` (acotado al rect del rail).
+   */
+  initVeraRailWordmarkScroll() {
+    if (typeof this.veraRailScrollCleanup === 'function') {
+      this.veraRailScrollCleanup();
+      this.veraRailScrollCleanup = null;
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const section = this.container?.querySelector('#landing-6');
+    const rail = section?.querySelector('.lp-vera__sticky-rail');
+    const inner = section?.querySelector('.lp-vera__sticky-visual-inner');
+    if (!section || !rail || !inner) return;
+
+    const mq = window.matchMedia('(min-width: 901px)');
+
+    const headerOffset = () => {
+      const hdr = document.querySelector('#public-header-root .public-header');
+      return Math.round((hdr?.offsetHeight || 64) + 10);
+    };
+
+    const tick = () => {
+      if (!mq.matches) {
+        inner.style.transform = '';
+        inner.style.willChange = '';
+        return;
+      }
+      const off = headerOffset();
+      const r = rail.getBoundingClientRect();
+      const h = inner.offsetHeight;
+      if (!h || r.height < 1) {
+        inner.style.transform = '';
+        inner.style.willChange = '';
+        return;
+      }
+      const maxShift = Math.max(0, r.height - h);
+      let shift = 0;
+      if (r.top < off) {
+        shift = Math.min(off - r.top, maxShift);
+      }
+      if (shift > 0.5) {
+        inner.style.transform = `translateY(${Math.round(shift)}px)`;
+        inner.style.willChange = 'transform';
+      } else {
+        inner.style.transform = '';
+        inner.style.willChange = '';
+      }
+    };
+
+    const shell = document.getElementById('public-shell');
+
+    let rafPending = null;
+    const onScrollOrResize = () => {
+      if (rafPending != null) return;
+      rafPending = window.requestAnimationFrame(() => {
+        rafPending = null;
+        tick();
+      });
+    };
+
+    tick();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    if (shell) shell.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    mq.addEventListener('change', onScrollOrResize);
+
+    this.veraRailScrollCleanup = () => {
+      window.removeEventListener('scroll', onScrollOrResize);
+      if (shell) shell.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      mq.removeEventListener('change', onScrollOrResize);
+      if (rafPending != null) {
+        window.cancelAnimationFrame(rafPending);
+        rafPending = null;
+      }
+      inner.style.transform = '';
+      inner.style.willChange = '';
+      this.veraRailScrollCleanup = null;
     };
   }
 
