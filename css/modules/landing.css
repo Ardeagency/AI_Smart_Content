@@ -1348,8 +1348,12 @@ body.entrance-done .landing-header {
 }
 
 .lp-vera__sticky-visual-img {
-  width: auto;
-  max-width: min(420px, 100%);
+  /*
+   * width:auto hace que muchos navegadores tomen el ancho intrínseco del SVG (89px en Vera-2.svg),
+   * ignorando width="356" del HTML → wordmark diminuto. 100% + tope llena el carril derecho.
+   */
+  width: 100%;
+  max-width: min(100%, 620px);
   height: auto;
   display: block;
   flex-shrink: 0;
