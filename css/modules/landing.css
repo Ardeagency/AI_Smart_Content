@@ -1272,8 +1272,8 @@ body.entrance-done .landing-header {
 }
 
 /*
- * Una fila: columna izquierda (copy + bento) z-index 3 | columna 2 spacer z3 | L2 SVG abs z2 detrás.
- * El carril comparte borde superior con el copy (ya no queda “colgado” bajo solo el bento).
+ * Fila 1: copy (col1) + spacer (col2) | Fila 2: bento a ancho completo (1 / -1) como antes del layout en una sola col.
+ * L2 SVG abs sigue cubriendo todo el shell (copy + bento) por detrás donde z-index lo permita.
  */
 .lp-vera__shell {
   --lp-vera-cols: minmax(0, 0.86fr) minmax(300px, 0.62fr);
@@ -1281,8 +1281,9 @@ body.entrance-done .landing-header {
   position: relative;
   display: grid;
   grid-template-columns: var(--lp-vera-cols);
-  grid-template-rows: auto;
+  grid-template-rows: auto auto;
   column-gap: var(--lp-vera-gap);
+  row-gap: clamp(24px, 3.5vw, 44px);
   align-items: stretch;
 }
 
@@ -1293,8 +1294,16 @@ body.entrance-done .landing-header {
   z-index: 3;
   isolation: isolate;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+}
+
+.lp-vera__bento-shell {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  z-index: 3;
+  isolation: isolate;
+  min-width: 0;
+  width: 100%;
 }
 
 .lp-vera__vera-col2-spacer {
@@ -1452,12 +1461,12 @@ body.entrance-done .landing-header {
   transform: none !important;
 }
 
-/* Bento: el apilado sobre el SVG lo resuelve .lp-vera__main-col (z-index 3) */
+/* Bento: ancho completo vía .lp-vera__bento-shell; separación con el copy = row-gap del shell */
 .lp-vera__bento-block {
   position: relative;
   z-index: auto;
   width: 100%;
-  margin-top: clamp(24px, 3.5vw, 44px);
+  margin-top: 0;
 }
 
 /* Cabecera VERA (mockup: titular + rule + subtítulo + cuerpo + fila etiqueta + logo) */
@@ -1838,6 +1847,13 @@ body.entrance-done .landing-header {
     display: contents;
   }
 
+  .lp-vera__bento-shell {
+    order: 3;
+    width: 100%;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
   .lp-vera__vera-col2-spacer {
     display: none !important;
   }
@@ -1878,7 +1894,6 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__bento-block {
-    order: 3;
     width: 100%;
   }
 

@@ -380,7 +380,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S06: VERA — main-col (copy+bento) z3 | L2 SVG abs z2 | spacer col2 z3 ════════ -->
+      <!-- ════════ S06: VERA — fila1 copy|spacer; fila2 bento ancho completo; L2 SVG z2 ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
@@ -405,6 +405,8 @@ class LandingView extends PublicBaseView {
                 </p>
               </div>
             </div>
+            </div>
+            <div class="lp-vera__bento-shell">
             <div class="lp-vera__bento-block">
                 <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
