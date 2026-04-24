@@ -1255,12 +1255,11 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
-  /* Header landing fijo ~60px + respiro */
-  --lp-vera-sticky-top: clamp(68px, 11vh, 104px);
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
-  overflow: hidden;
+  /* Sticky del wordmark: ningún overflow:hidden en esta sección */
+  overflow: visible;
 }
 
 .lp-vera__inner {
@@ -1268,22 +1267,84 @@ body.entrance-done .landing-header {
   margin: 0 auto;
 }
 
-/* Maqueta: columna izquierda (copy + bento) | columna derecha (SVG sticky) */
-.lp-vera__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, min(40vw, 420px));
-  gap: clamp(16px, 3.5vw, 44px);
-  align-items: stretch;
+.lp-vera__shell {
+  display: block;
 }
 
-.lp-vera__main-col {
+/* Maqueta 3 capas: (1) copy+VENTAJA (2) SVG sticky derecha (3) bento encima del SVG */
+.lp-vera__stage {
+  --lp-vera-sticky-top: clamp(68px, 11vh, 96px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(200px, 0.4fr);
+  grid-template-rows: auto auto;
+  column-gap: clamp(20px, 3.5vw, 44px);
+  row-gap: clamp(24px, 3.2vw, 40px);
+  align-items: start;
+}
+
+.lp-vera__copy-block {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 4;
   display: flex;
   flex-direction: column;
-  gap: clamp(24px, 4vw, 48px);
-  min-width: 0;
+  align-items: flex-start;
+  gap: 0;
+  max-width: min(640px, 100%);
 }
 
-/* Cabecera VERA: titular + rule + subtítulo + cuerpo + “VENTAJA EN…” (bloque rojo maqueta) */
+.lp-vera__copy-block .lp-vera__hero {
+  width: 100%;
+}
+
+.lp-vera__copy-block .lp-vera__hero-tag {
+  margin-top: clamp(20px, 3vw, 36px);
+}
+
+/* Capa 2: wordmark “nace” arriba-derecha del bloque copy y recorre con sticky */
+.lp-vera__sticky-visual {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.lp-vera__sticky-visual-inner {
+  position: sticky;
+  top: var(--lp-vera-sticky-top);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  max-height: min(calc(100vh - var(--lp-vera-sticky-top) - 20px), 720px);
+}
+
+.lp-vera__sticky-visual-img {
+  width: min(155%, 540px);
+  max-width: none;
+  height: auto;
+  display: block;
+  margin: 0;
+  transform: scale(1.08);
+  transform-origin: 0 0;
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.42));
+}
+
+/* Capa 3: bento por encima del SVG (glass); no comparte stacking con la capa azul */
+.lp-vera__bento-block {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  z-index: 6;
+  isolation: isolate;
+}
+
+/* Cabecera VERA (mockup: titular + rule + subtítulo + cuerpo + fila etiqueta + logo) */
 .lp-vera__hero {
   display: flex;
   flex-direction: column;
@@ -1338,14 +1399,14 @@ body.entrance-done .landing-header {
 
 .lp-vera__hero-body {
   margin: 0;
-  max-width: min(640px, 100%);
+  max-width: min(560px, 100%);
   font-size: clamp(0.94rem, 1.12vw, 1.0625rem);
   line-height: 1.65;
   color: #a0a0a0;
 }
 
 .lp-vera__hero-tag {
-  margin: clamp(16px, 2.5vw, 28px) 0 0;
+  margin: 0;
   font-family: "Space Grotesk", Inter, system-ui, sans-serif;
   font-size: clamp(0.68rem, 0.95vw, 0.8rem);
   font-weight: 700;
@@ -1358,34 +1419,9 @@ body.entrance-done .landing-header {
   display: block;
 }
 
-/* Columna derecha: wordmark con scroll anclado (position: sticky) */
-.lp-vera__mark-col {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.lp-vera__sticky-mark {
-  position: sticky;
-  top: var(--lp-vera-sticky-top);
-  align-self: flex-start;
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  padding-bottom: clamp(20px, 3vw, 40px);
-}
-
-.lp-vera__sticky-mark-img {
-  width: min(125%, 440px);
-  max-width: none;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 20px 52px rgba(0, 0, 0, 0.42));
-}
-
 .lp-vera__layers {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: minmax(200px, auto) minmax(188px, 1fr) minmax(188px, 1fr);
@@ -1664,48 +1700,55 @@ body.entrance-done .landing-header {
     --lp-vera-dur-text: 0.01ms;
   }
 
-  .lp-vera__sticky-mark {
+  .lp-vera__sticky-visual-inner {
     position: relative;
     top: auto;
-    padding-bottom: 0;
+    max-height: none;
   }
 }
 
 @media (max-width: 900px) {
-  .lp-vera__layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: clamp(20px, 5vw, 36px);
+  .lp-vera__stage {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 4vw, 32px);
   }
 
-  /* Hero → wordmark → bento (una columna, orden maqueta) */
-  .lp-vera__main-col {
-    display: contents;
+  .lp-vera__copy-block {
+    grid-column: auto;
+    grid-row: auto;
+    max-width: none;
   }
 
-  .lp-vera__hero {
-    order: 1;
+  .lp-vera__sticky-visual {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: flex-end;
+    width: 100%;
+    min-height: clamp(120px, 36vw, 200px);
   }
 
-  .lp-vera__mark-col {
-    order: 2;
-    justify-content: center;
-  }
-
-  .lp-vera__sticky-mark {
+  .lp-vera__sticky-visual-inner {
     position: relative;
     top: auto;
-    justify-content: center;
-    padding-bottom: 0;
+    align-items: flex-end;
+    max-height: none;
   }
 
-  .lp-vera__sticky-mark-img {
-    width: min(72vw, 320px);
-    max-width: 100%;
+  .lp-vera__sticky-visual-img {
+    width: min(88%, 400px);
+    transform: scale(1);
+    margin-left: auto;
+  }
+
+  .lp-vera__bento-block {
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
   }
 
   .lp-vera__layers {
-    order: 3;
+    margin-top: 0;
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-template-areas:
