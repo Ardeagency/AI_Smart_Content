@@ -7,7 +7,7 @@
  *   Zona 1 — Captura:          S01 Hero, S02 Credibilidad
  *   Zona 2 — Problema:         S03 Dolor estructural, S04 Agitación
  *   Zona 3 — Solución:         S05 Capacidades, S06 VERA, S07 Dashboard
- *   Zona 4 — Confianza+Acción: S08 Lo que pasa, S09 FAQ, S10 CTA
+ *   Zona 4 — Confianza+Acción: S08 Por qué (carrusel), S09 Lo que pasa, S10 FAQ, S11 CTA
  */
 class LandingView extends PublicBaseView {
   constructor() {
@@ -629,7 +629,48 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S08: LO QUE PASA CUANDO… (conservado) ════════ -->
+      <!-- ════════ S08: POR QUÉ AISmartContent — carrusel ════════ -->
+      <section class="lp-why" id="landing-why" aria-labelledby="lp-why-heading" data-lp-why>
+        <div class="lp-why__inner">
+          <h2 id="lp-why-heading" class="lp-why__title sr-reveal">Por qué AISmartContent cambia cómo opera tu marca.</h2>
+          <div class="lp-why__carousel">
+            <div class="lp-why__viewport" data-lp-why-viewport tabindex="0" aria-label="Tarjetas: valor de la plataforma">
+              <div class="lp-why__track" role="list">
+                <article class="lp-why__card sr-reveal sr-reveal--d1" role="listitem">
+                  <h3 class="lp-why__card-title">Lectura en tiempo real</h3>
+                  <p class="lp-why__card-text">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
+                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                </article>
+                <article class="lp-why__card sr-reveal sr-reveal--d2" role="listitem">
+                  <h3 class="lp-why__card-title">Decisiones con contexto</h3>
+                  <p class="lp-why__card-text">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
+                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                </article>
+                <article class="lp-why__card sr-reveal sr-reveal--d3" role="listitem">
+                  <h3 class="lp-why__card-title">Ejecución alineada</h3>
+                  <p class="lp-why__card-text">Convierte decisiones en contenido listo para salir, sin fricción.</p>
+                  <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                </article>
+                <article class="lp-why__card sr-reveal sr-reveal--d4" role="listitem">
+                  <h3 class="lp-why__card-title">Optimización continua</h3>
+                  <p class="lp-why__card-text">Aprende de cada acción para mejorar la siguiente.</p>
+                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                </article>
+              </div>
+            </div>
+            <div class="lp-why__nav" role="group" aria-label="Desplazar carrusel">
+              <button type="button" class="lp-why__arrow" data-lp-why-prev aria-label="Ver tarjetas anteriores">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="lp-why__arrow" data-lp-why-next aria-label="Ver tarjetas siguientes">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ S09: LO QUE PASA CUANDO… ════════ -->
       <section class="landing-different" id="landing-8" aria-labelledby="landing-different-heading">
         <div class="landing-different__inner">
           <h2 id="landing-different-heading" class="landing-different__title sr-reveal">Lo que pasa cuando tu marca opera diferente</h2>
@@ -673,7 +714,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S09: FAQ ════════ -->
+      <!-- ════════ S10: FAQ ════════ -->
       <section class="lp-faq" id="landing-10" aria-labelledby="lp-faq-heading">
         <div class="lp-faq__inner">
           <header class="lp-faq__header">
@@ -730,7 +771,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S10: CTA FINAL ════════ -->
+      <!-- ════════ S11: CTA FINAL ════════ -->
       <section class="lp-cta" id="landing-11" aria-labelledby="lp-cta-heading">
         <div class="lp-cta__bg" aria-hidden="true">
           <span class="lp-cta__glow" aria-hidden="true"></span>
@@ -790,6 +831,7 @@ class LandingView extends PublicBaseView {
     this.initFaqAccordion();
     this.initCtaForm();
     this.initLandingAppPreview();
+    this.initWhyCarousel();
   }
 
   async onLeave() {
@@ -813,6 +855,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.appPreviewCleanup === 'function') {
       this.appPreviewCleanup();
       this.appPreviewCleanup = null;
+    }
+    if (typeof this.whyCarouselCleanup === 'function') {
+      this.whyCarouselCleanup();
+      this.whyCarouselCleanup = null;
     }
   }
 
@@ -1188,6 +1234,43 @@ class LandingView extends PublicBaseView {
     this.appPreviewCleanup = () => {
       root.removeEventListener('click', onClick);
       if (veraInput) veraInput.removeEventListener('keydown', onVeraKey);
+    };
+  }
+
+  initWhyCarousel() {
+    if (typeof this.whyCarouselCleanup === 'function') {
+      this.whyCarouselCleanup();
+      this.whyCarouselCleanup = null;
+    }
+
+    const root = this.container?.querySelector('[data-lp-why]');
+    if (!root) return;
+
+    const viewport = root.querySelector('[data-lp-why-viewport]');
+    const prevBtn = root.querySelector('[data-lp-why-prev]');
+    const nextBtn = root.querySelector('[data-lp-why-next]');
+    if (!viewport || !prevBtn || !nextBtn) return;
+
+    const gapPx = 16;
+    const scrollStep = () => {
+      const card = viewport.querySelector('.lp-why__card');
+      if (!card) return Math.round(viewport.clientWidth * 0.78);
+      return Math.round(card.getBoundingClientRect().width + gapPx);
+    };
+
+    const onPrev = () => {
+      viewport.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
+    };
+    const onNext = () => {
+      viewport.scrollBy({ left: scrollStep(), behavior: 'smooth' });
+    };
+
+    prevBtn.addEventListener('click', onPrev);
+    nextBtn.addEventListener('click', onNext);
+
+    this.whyCarouselCleanup = () => {
+      prevBtn.removeEventListener('click', onPrev);
+      nextBtn.removeEventListener('click', onNext);
     };
   }
 
