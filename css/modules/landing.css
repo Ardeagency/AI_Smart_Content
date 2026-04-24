@@ -2800,10 +2800,26 @@ body.entrance-done .landing-header {
   min-height: 1px;
 }
 
+.lp-why__card-wrap {
+  flex: 0 0 auto;
+  width: clamp(240px, 28vw, 300px);
+  scroll-snap-align: start;
+  padding: 2px;
+  border-radius: 20px;
+  background: conic-gradient(
+    from 45deg at 50% 50%,
+    #ff6500 0deg,
+    #c44dff 90deg,
+    #2979ff 180deg,
+    #00e7ff 270deg,
+    #ff6500 360deg
+  );
+  box-sizing: border-box;
+  box-shadow: 0 12px 40px rgba(15, 15, 20, 0.08);
+}
+
 .lp-why__card {
   position: relative;
-  flex: 0 0 clamp(240px, 28vw, 300px);
-  scroll-snap-align: start;
   min-height: clamp(168px, 22vw, 210px);
   padding: clamp(18px, 2.2vw, 24px) clamp(18px, 2.2vw, 24px) 52px;
   box-sizing: border-box;
@@ -2811,6 +2827,12 @@ body.entrance-done .landing-header {
   background: #0a0a0d;
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.lp-why__card-wrap:hover .lp-why__card {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 52px rgba(15, 15, 20, 0.38);
 }
 
 .lp-why__card-title {

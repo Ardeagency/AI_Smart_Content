@@ -636,25 +636,33 @@ class LandingView extends PublicBaseView {
           <div class="lp-why__carousel">
             <div class="lp-why__viewport" data-lp-why-viewport tabindex="0" aria-label="Tarjetas: valor de la plataforma">
               <div class="lp-why__track" role="list">
-                <article class="lp-why__card sr-reveal sr-reveal--d1" role="listitem">
-                  <h3 class="lp-why__card-title">Lectura en tiempo real</h3>
-                  <p class="lp-why__card-text">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
-                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                <article class="lp-why__card-wrap sr-reveal sr-reveal--d1" role="listitem">
+                  <div class="lp-why__card">
+                    <h3 class="lp-why__card-title">Lectura en tiempo real</h3>
+                    <p class="lp-why__card-text">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
+                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                  </div>
                 </article>
-                <article class="lp-why__card sr-reveal sr-reveal--d2" role="listitem">
-                  <h3 class="lp-why__card-title">Decisiones con contexto</h3>
-                  <p class="lp-why__card-text">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
-                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                <article class="lp-why__card-wrap sr-reveal sr-reveal--d2" role="listitem">
+                  <div class="lp-why__card">
+                    <h3 class="lp-why__card-title">Decisiones con contexto</h3>
+                    <p class="lp-why__card-text">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
+                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                  </div>
                 </article>
-                <article class="lp-why__card sr-reveal sr-reveal--d3" role="listitem">
-                  <h3 class="lp-why__card-title">Ejecución alineada</h3>
-                  <p class="lp-why__card-text">Convierte decisiones en contenido listo para salir, sin fricción.</p>
-                  <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                <article class="lp-why__card-wrap sr-reveal sr-reveal--d3" role="listitem">
+                  <div class="lp-why__card">
+                    <h3 class="lp-why__card-title">Ejecución alineada</h3>
+                    <p class="lp-why__card-text">Convierte decisiones en contenido listo para salir, sin fricción.</p>
+                    <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                  </div>
                 </article>
-                <article class="lp-why__card sr-reveal sr-reveal--d4" role="listitem">
-                  <h3 class="lp-why__card-title">Optimización continua</h3>
-                  <p class="lp-why__card-text">Aprende de cada acción para mejorar la siguiente.</p>
-                  <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                <article class="lp-why__card-wrap sr-reveal sr-reveal--d4" role="listitem">
+                  <div class="lp-why__card">
+                    <h3 class="lp-why__card-title">Optimización continua</h3>
+                    <p class="lp-why__card-text">Aprende de cada acción para mejorar la siguiente.</p>
+                    <span class="lp-why__card-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                  </div>
                 </article>
               </div>
             </div>
@@ -1253,7 +1261,7 @@ class LandingView extends PublicBaseView {
 
     const gapPx = 16;
     const scrollStep = () => {
-      const card = viewport.querySelector('.lp-why__card');
+      const card = viewport.querySelector('.lp-why__card-wrap');
       if (!card) return Math.round(viewport.clientWidth * 0.78);
       return Math.round(card.getBoundingClientRect().width + gapPx);
     };
