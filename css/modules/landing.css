@@ -1271,8 +1271,8 @@ body.entrance-done .landing-header {
 }
 
 /*
- * Dos columnas: misma plantilla en dos capas — inferior absoluta (solo wordmark),
- * superior en flujo (copy + bento). Así el SVG nunca compite en el mismo plano de pintado que el bento.
+ * Mockup 3 capas — rojo L1 (copy) | azul L2 (SVG) | amarillo L3 (bento encima de L2).
+ * L2 es position:absolute sobre el shell; L1+L3 van en flujo (col1 filas 1–2); spacer col2 da altura al carril.
  */
 .lp-vera__shell {
   --lp-vera-cols: minmax(0, 0.86fr) minmax(300px, 0.62fr);
@@ -1280,31 +1280,44 @@ body.entrance-done .landing-header {
   position: relative;
   display: grid;
   grid-template-columns: var(--lp-vera-cols);
+  grid-template-rows: auto auto;
   column-gap: var(--lp-vera-gap);
-  align-items: stretch;
+  row-gap: 0;
+  align-items: start;
 }
 
-.lp-vera__plate--under {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: grid;
-  grid-template-columns: var(--lp-vera-cols);
-  column-gap: var(--lp-vera-gap);
-  align-items: stretch;
-  pointer-events: none;
-}
-
-.lp-vera__plate--under .lp-vera__plate-spacer {
+/* Capa 1 — copy (debajo del SVG si se solapan; a la izquierda del carril no suele chocar) */
+.lp-vera__vera-l1 {
   grid-column: 1;
-  min-width: 0;
-}
-
-.lp-vera__plate--over {
-  grid-column: 1 / -1;
   grid-row: 1;
   position: relative;
   z-index: 1;
+  min-width: 0;
+}
+
+/* Capa 3 — bento: siempre por encima de L2 (SVG) y de L1 donde haya solape */
+.lp-vera__vera-l3 {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  z-index: 3;
+  isolation: isolate;
+  min-width: 0;
+}
+
+.lp-vera__vera-col2-spacer {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Capa 2 — SVG: entre L1 y L3 en z-order */
+.lp-vera__vera-l2 {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: grid;
   grid-template-columns: var(--lp-vera-cols);
   column-gap: var(--lp-vera-gap);
@@ -1312,21 +1325,14 @@ body.entrance-done .landing-header {
   pointer-events: none;
 }
 
-.lp-vera__plate--over .lp-vera__main-col {
+.lp-vera__vera-l2-spacer {
   grid-column: 1;
-  pointer-events: auto;
+  min-width: 0;
 }
 
-.lp-vera__plate--over > .lp-vera__plate-spacer {
+.lp-vera__vera-l2 .lp-vera__sticky-rail {
   grid-column: 2;
-  min-width: 0;
-}
-
-.lp-vera__main-col {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  align-self: stretch;
 }
 
 .lp-vera__stage {
@@ -1345,7 +1351,7 @@ body.entrance-done .landing-header {
 .lp-vera__copy-block {
   align-self: flex-start;
   position: relative;
-  z-index: 2;
+  z-index: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1361,15 +1367,6 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/*
- * Carril: flex para que el aside ocupe toda la altura de la fila del grid (como el copy).
- * Si el aside solo mide lo del logo, position:sticky no tiene “recorrido” y parece roto.
- */
-.lp-vera__plate--under .lp-vera__sticky-rail {
-  grid-column: 2;
-  align-self: stretch;
-}
-
 .lp-vera__sticky-rail {
   position: relative;
   width: 100%;
@@ -1378,10 +1375,8 @@ body.entrance-done .landing-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  /* Corta cualquier desborde horizontal (p. ej. bug de flex + intrínseco del SVG) */
-  overflow-x: hidden;
-  overflow-x: clip;
-  overflow-y: visible;
+  /* Visible: el wordmark puede extenderse bajo el bento (L3 lo tapa por z-index) */
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -1413,20 +1408,20 @@ body.entrance-done .landing-header {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .lp-vera__sticky-visual-img {
   /*
-   * width:auto + SVG pequeño en archivo → diminuto; 100% del carril con tope 100% del padre.
-   * max-width nunca > 100% del carril (evita desborde por flex/cálculo de %).
+   * Grande respecto al carril: puede invadir la col izquierda; L3 (bento) lo pinta encima.
+   * stretch en columna evita el bug flex-end + intrínseco ancho.
    */
-  width: 100%;
-  max-width: 100%;
+  width: auto;
+  max-width: min(1180px, 165%);
   min-width: 0;
   height: auto;
   display: block;
-  flex-shrink: 1;
+  flex-shrink: 0;
   object-fit: contain;
   object-position: right center;
   transform: none;
@@ -1457,13 +1452,12 @@ body.entrance-done .landing-header {
   transform: none !important;
 }
 
-/* Bento: bajo el stage, misma columna que el copy; por encima del wordmark en z-index */
+/* Bento: capa visual la define .lp-vera__vera-l3 (z-index 3) */
 .lp-vera__bento-block {
   position: relative;
-  z-index: 30;
+  z-index: auto;
   width: 100%;
   margin-top: clamp(24px, 3.5vw, 44px);
-  isolation: isolate;
 }
 
 /* Cabecera VERA (mockup: titular + rule + subtítulo + cuerpo + fila etiqueta + logo) */
@@ -1837,35 +1831,52 @@ body.entrance-done .landing-header {
     flex-direction: column;
     gap: clamp(20px, 4vw, 32px);
     grid-template-columns: none;
+    grid-template-rows: none;
   }
 
-  .lp-vera__plate--under {
-    position: static;
-    z-index: auto;
-    display: contents;
-    grid-template-columns: none;
-  }
-
-  .lp-vera__plate--over {
-    display: contents;
+  .lp-vera__vera-l1 {
     grid-column: auto;
     grid-row: auto;
+    order: 1;
+    width: 100%;
     z-index: auto;
-    grid-template-columns: none;
-    pointer-events: auto;
   }
 
-  .lp-vera__plate--under .lp-vera__plate-spacer,
-  .lp-vera__plate--over > .lp-vera__plate-spacer {
+  .lp-vera__vera-l3 {
+    grid-column: auto;
+    grid-row: auto;
+    order: 3;
+    width: 100%;
+    z-index: auto;
+    isolation: isolate;
+  }
+
+  .lp-vera__vera-col2-spacer {
+    display: none !important;
+  }
+
+  .lp-vera__vera-l2 {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    order: 2;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    pointer-events: none;
+  }
+
+  .lp-vera__vera-l2-spacer {
     display: none;
   }
 
-  .lp-vera__main-col {
-    display: contents;
+  .lp-vera__vera-l2 .lp-vera__sticky-rail {
+    grid-column: auto;
+    align-self: stretch;
   }
 
   .lp-vera__stage {
-    order: 1;
     width: 100%;
   }
 
@@ -1874,13 +1885,11 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__sticky-rail {
-    order: 2;
     width: 100%;
     min-height: clamp(140px, 40vw, 220px);
   }
 
   .lp-vera__bento-block {
-    order: 3;
     width: 100%;
   }
 
@@ -1903,14 +1912,14 @@ body.entrance-done .landing-header {
     max-width: 100%;
     min-width: 0;
     margin-left: 0;
-    overflow-x: hidden;
-    overflow-x: clip;
+    overflow: visible;
   }
 
   .lp-vera__sticky-visual-img {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    max-height: none;
   }
 
   .lp-vera__layers {
