@@ -1276,7 +1276,7 @@ body.entrance-done .landing-header {
 
 .lp-vera__stage {
   display: grid;
-  grid-template-columns: minmax(0, 0.94fr) minmax(280px, 0.52fr);
+  grid-template-columns: minmax(0, 0.86fr) minmax(300px, 0.62fr);
   grid-template-rows: auto;
   column-gap: clamp(20px, 3.5vw, 44px);
   row-gap: 0;
@@ -1353,7 +1353,7 @@ body.entrance-done .landing-header {
    * ignorando width="356" del HTML → wordmark diminuto. 100% + tope llena el carril derecho.
    */
   width: 100%;
-  max-width: min(100%, clamp(560px, 56vw, 960px));
+  max-width: min(100%, clamp(620px, 68vw, 1180px));
   height: auto;
   display: block;
   flex-shrink: 0;
@@ -1785,12 +1785,12 @@ body.entrance-done .landing-header {
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    max-width: min(100%, 560px);
+    max-width: min(100%, 640px);
     margin-left: auto;
   }
 
   .lp-vera__sticky-visual-img {
-    width: min(100%, 520px);
+    width: min(100%, 600px);
     max-width: 100%;
   }
 
