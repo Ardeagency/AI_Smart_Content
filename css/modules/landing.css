@@ -1255,9 +1255,9 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
-  background: var(--bg-primary, #0b0b0b);
+  background: #000000;
   color: #ffffff;
-  padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
+  padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
   overflow: hidden;
 }
 
@@ -1272,153 +1272,137 @@ body.entrance-done .landing-header {
 .lp-vera__top {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 2.8vw, 34px);
+  gap: clamp(24px, 3.5vw, 40px);
 }
 
-.lp-vera__top-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.8fr) minmax(0, 0.75fr);
-  gap: clamp(20px, 3vw, 34px);
-  align-items: start;
+/* Cabecera VERA (mockup: titular + rule + subtítulo + cuerpo + fila etiqueta + logo) */
+.lp-vera__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(18px, 2.6vw, 28px);
+  text-align: left;
 }
 
-.lp-vera__top-main {
+.lp-vera__hero-headline {
   margin: 0;
-  font-size: clamp(2rem, 4.3vw, 3.4rem);
+  font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+  font-size: clamp(2rem, 5.4vw, 3.85rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.06;
-}
-
-.lp-vera__top-col {
-  margin: 0;
-  font-size: clamp(0.88rem, 1.05vw, 1rem);
-  line-height: 1.62;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.lp-vera__top-col--muted {
-  color: rgba(255, 255, 255, 0.48);
-}
-
-.lp-vera__top-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: clamp(18px, 2.6vw, 30px);
-  align-items: stretch;
-}
-
-.lp-vera__top-left {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
-  background: rgba(13, 13, 15, 0.72);
-  padding: clamp(18px, 2.3vw, 26px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.lp-vera__top-kicker {
-  margin: 0;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.lp-vera__top-lead {
-  margin: 0;
-  font-size: clamp(0.94rem, 1.15vw, 1.05rem);
-  line-height: 1.58;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.lp-vera__top-right {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
-  background: rgba(13, 13, 15, 0.72);
-  padding: clamp(16px, 2vw, 24px);
-  display: grid;
-  grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
-  gap: clamp(14px, 2vw, 22px);
-  align-items: end;
-}
-
-.lp-vera__top-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.38);
-  font-size: clamp(0.72rem, 0.85vw, 0.8rem);
-  line-height: 1.35;
-}
-
-.lp-vera__top-meta p {
-  margin: 0;
-}
-
-.lp-vera__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 44px;
-  padding: 0 22px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
-  align-self: flex-start;
-}
-
-.lp-vera__cta:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.32);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
   color: #ffffff;
 }
 
-/* Marca VERA (SVG con barra en gradiente — sin órbita) */
-.lp-vera__diagram-col {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: clamp(180px, 32vw, 340px);
+.lp-vera__hero-line {
+  display: block;
 }
 
-.lp-vera__mark {
+.lp-vera__hero-rule {
+  width: min(300px, 44vw);
+  height: 3px;
+  margin: clamp(2px, 0.5vw, 8px) 0 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    #ff2d55 0%,
+    #ff9500 24%,
+    #ffcc00 48%,
+    #7cb342 72%,
+    #2196f3 100%
+  );
+}
+
+.lp-vera__hero-sub {
+  margin: clamp(4px, 0.8vw, 12px) 0 0;
+  font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+  font-size: clamp(1.12rem, 2.35vw, 1.68rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  max-width: 22em;
+}
+
+.lp-vera__hero-sub-line {
+  display: block;
+}
+
+.lp-vera__hero-body {
+  margin: 0;
+  max-width: min(560px, 100%);
+  font-size: clamp(0.94rem, 1.12vw, 1.0625rem);
+  line-height: 1.65;
+  color: #a0a0a0;
+}
+
+.lp-vera__hero-cta {
+  margin-top: 4px;
+  display: inline-flex;
+  align-self: flex-start;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.lp-vera__hero-cta:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lp-vera__hero-bottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(20px, 5vw, 56px);
+  align-items: end;
+  width: 100%;
+  margin-top: clamp(20px, 3.5vw, 40px);
+  padding-top: clamp(8px, 1.5vw, 20px);
+}
+
+.lp-vera__hero-tag {
+  margin: 0;
+  font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+  font-size: clamp(0.68rem, 0.95vw, 0.8rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.38;
+  color: #ffffff;
+}
+
+.lp-vera__hero-tag-line {
+  display: block;
+}
+
+.lp-vera__hero-mark {
+  position: relative;
+  justify-self: end;
+  width: 100%;
+  max-width: min(760px, 100%);
+}
+
+.lp-vera__hero-mark-inner {
   position: relative;
   width: 100%;
-  max-width: min(540px, 100%);
+  min-height: clamp(168px, 30vw, 360px);
+  overflow: hidden;
   display: flex;
-  justify-content: flex-end;
   align-items: flex-end;
+  justify-content: flex-end;
 }
 
-.lp-vera__mark::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
-  height: 55%;
-  pointer-events: none;
-  background: linear-gradient(to top, var(--bg-primary, #0b0b0b) 0%, transparent 100%);
-  opacity: 0.85;
-}
-
-.lp-vera__mark-img {
+.lp-vera__hero-mark-img {
   position: relative;
   z-index: 1;
-  width: 100%;
+  width: min(132%, 920px);
+  max-width: none;
   height: auto;
-  max-width: 100%;
   display: block;
-  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.55));
+  margin: 0 -14% -18% 0;
+  filter: drop-shadow(0 22px 56px rgba(0, 0, 0, 0.5));
 }
 
 /* Bento: tarjetas sueltas con hueco (referencia), no panel único con rayas */
@@ -1698,28 +1682,23 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 900px) {
-  .lp-vera__top-head {
+  .lp-vera__hero-bottom {
     grid-template-columns: 1fr;
+    gap: clamp(28px, 6vw, 40px);
   }
 
-  .lp-vera__top-body {
-    grid-template-columns: 1fr;
+  .lp-vera__hero-mark {
+    max-width: 100%;
+    justify-self: stretch;
   }
 
-  .lp-vera__top-right {
-    grid-template-columns: 1fr;
+  .lp-vera__hero-mark-inner {
+    min-height: clamp(140px, 42vw, 260px);
   }
 
-  .lp-vera__top-meta {
-    order: 2;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-  }
-
-  .lp-vera__mark {
-    max-width: min(420px, 88vw);
-    justify-content: center;
+  .lp-vera__hero-mark-img {
+    width: min(118%, 640px);
+    margin: 0 -10% -14% 0;
   }
 
   .lp-vera__layers {

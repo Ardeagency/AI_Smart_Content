@@ -383,25 +383,27 @@ class LandingView extends PublicBaseView {
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__top">
-            <div class="lp-vera__top-head">
-              <h2 id="lp-vera-heading" class="lp-vera__top-main sr-reveal">VERA — La inteligencia que nunca para</h2>
-              <p class="lp-vera__top-col sr-reveal sr-reveal--d1">No responde a prompts. Opera con inteligencia, criterio y contexto de marca en tiempo real.</p>
-              <p class="lp-vera__top-col lp-vera__top-col--muted sr-reveal sr-reveal--d2">Cada señal del mercado se transforma en una decisión, cada decisión en acción y cada acción en aprendizaje.</p>
-            </div>
-            <div class="lp-vera__top-body">
-              <div class="lp-vera__top-left sr-reveal sr-reveal--d3">
-                <p class="lp-vera__top-kicker">Movimiento estratégico</p>
-                <p class="lp-vera__top-lead">VERA conecta criterio, ejecución y aprendizaje en un solo flujo operativo.</p>
-                <a href="/contacto" class="lp-vera__cta">Ver VERA en acción ↗</a>
-              </div>
-              <div class="lp-vera__top-right sr-reveal sr-reveal--d1">
-                <div class="lp-vera__top-meta" aria-hidden="true">
-                  <p>Espacio operativo</p>
-                  <p>Tiempo real</p>
-                  <p>Marca viva</p>
-                </div>
-                <div class="lp-vera__mark">
-                  <img class="lp-vera__mark-img" src="/recursos/vera/Vera-2.svg" alt="VERA" width="356" height="136" decoding="async" loading="lazy">
+            <div class="lp-vera__hero">
+              <h2 id="lp-vera-heading" class="lp-vera__hero-headline sr-reveal">
+                <span class="lp-vera__hero-line">NO ESPERA ÓRDENES.</span>
+                <span class="lp-vera__hero-line">OPERA POR TI.</span>
+              </h2>
+              <div class="lp-vera__hero-rule" aria-hidden="true"></div>
+              <p class="lp-vera__hero-sub sr-reveal sr-reveal--d1">
+                <span class="lp-vera__hero-sub-line">El mercado no premia el esfuerzo.</span>
+                <span class="lp-vera__hero-sub-line">Premia la precisión.</span>
+              </p>
+              <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado, prioriza señales y actúa cuando tu equipo aún está procesando información. Cada decisión nace del contexto real de tu marca, no de plantillas genéricas ni de prompts sueltos.</p>
+              <a href="/contacto" class="lp-vera__hero-cta sr-reveal sr-reveal--d2">Ver VERA en acción ↗</a>
+              <div class="lp-vera__hero-bottom">
+                <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
+                  <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
+                  <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
+                </p>
+                <div class="lp-vera__hero-mark sr-reveal sr-reveal--d1" aria-hidden="true">
+                  <div class="lp-vera__hero-mark-inner">
+                    <img class="lp-vera__hero-mark-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+                  </div>
                 </div>
               </div>
             </div>
