@@ -1312,7 +1312,7 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: carril grid — el wordmark no sale de esta columna (sin % >100 ni sticky al viewport) */
+/* Capa 2: carril grid — wordmark acotado; clip horizontal sin cortar sticky vertical */
 .lp-vera__sticky-rail {
   grid-column: 2;
   grid-row: 1;
@@ -1321,7 +1321,8 @@ body.entrance-done .landing-header {
   z-index: 1;
   width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   pointer-events: none;
 }
 
@@ -1337,6 +1338,15 @@ body.entrance-done .landing-header {
   padding-inline: 0;
   pointer-events: none;
   transform: none;
+}
+
+/* Sticky solo en desktop: el recorrido queda limitado a la altura del carril (= fila del stage con el copy) */
+@media (min-width: 901px) {
+  .lp-vera__sticky-visual {
+    position: sticky;
+    top: clamp(88px, 14vh, 168px);
+    width: 100%;
+  }
 }
 
 .lp-vera__sticky-visual-inner {
@@ -1751,6 +1761,11 @@ body.entrance-done .landing-header {
     --lp-vera-dur: 0.01ms;
     --lp-vera-dur-text: 0.01ms;
   }
+
+  .lp-vera__sticky-visual {
+    position: relative;
+    top: auto;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1774,6 +1789,8 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__sticky-visual {
+    position: relative;
+    top: auto;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
