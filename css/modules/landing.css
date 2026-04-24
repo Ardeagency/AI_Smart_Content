@@ -1262,6 +1262,11 @@ body.entrance-done .landing-header {
   overflow: visible;
 }
 
+/* overflow-x:hidden en #public-shell puede impedir sticky respecto al viewport (landing VERA) */
+body.route-public.route-landing #public-shell {
+  overflow: visible;
+}
+
 .lp-vera__inner {
   max-width: 1180px;
   margin: 0 auto;
@@ -1275,16 +1280,18 @@ body.entrance-done .landing-header {
 .lp-vera__stage {
   --lp-vera-sticky-top: clamp(68px, 11vh, 96px);
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(200px, 0.4fr);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.46fr);
   grid-template-rows: auto auto;
   column-gap: clamp(20px, 3.5vw, 44px);
   row-gap: clamp(24px, 3.2vw, 40px);
-  align-items: start;
+  /* start rompe la altura útil del sticky: la columna SVG debe estirar a fila 1+2 */
+  align-items: stretch;
 }
 
 .lp-vera__copy-block {
   grid-column: 1;
   grid-row: 1;
+  align-self: start;
   position: relative;
   z-index: 4;
   display: flex;
@@ -1302,36 +1309,40 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: wordmark “nace” arriba-derecha del bloque copy y recorre con sticky */
+/* Capa 2: sticky en el propio aside (evita contenedores con transform; ocupa alto fila 1+2) */
 .lp-vera__sticky-visual {
   grid-column: 2;
   grid-row: 1 / 3;
-  position: relative;
+  position: sticky;
+  top: var(--lp-vera-sticky-top);
   z-index: 1;
   align-self: stretch;
-  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  padding-inline: clamp(4px, 1.2vw, 12px);
   pointer-events: none;
 }
 
 .lp-vera__sticky-visual-inner {
-  position: sticky;
-  top: var(--lp-vera-sticky-top);
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   width: 100%;
-  max-height: min(calc(100vh - var(--lp-vera-sticky-top) - 20px), 720px);
+  max-width: 400px;
 }
 
 .lp-vera__sticky-visual-img {
-  width: min(155%, 540px);
-  max-width: none;
+  width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
-  margin: 0;
-  transform: scale(1.08);
-  transform-origin: 0 0;
+  margin: 0 auto;
   filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.42));
 }
 
@@ -1700,10 +1711,9 @@ body.entrance-done .landing-header {
     --lp-vera-dur-text: 0.01ms;
   }
 
-  .lp-vera__sticky-visual-inner {
+  .lp-vera__sticky-visual {
     position: relative;
     top: auto;
-    max-height: none;
   }
 }
 
@@ -1723,21 +1733,22 @@ body.entrance-done .landing-header {
   .lp-vera__sticky-visual {
     grid-column: auto;
     grid-row: auto;
+    position: relative;
+    top: auto;
     align-self: flex-end;
     width: 100%;
     min-height: clamp(120px, 36vw, 200px);
+    padding-inline: 0;
   }
 
   .lp-vera__sticky-visual-inner {
-    position: relative;
-    top: auto;
     align-items: flex-end;
-    max-height: none;
+    max-width: 360px;
+    margin-left: auto;
   }
 
   .lp-vera__sticky-visual-img {
-    width: min(88%, 400px);
-    transform: scale(1);
+    width: min(92%, 360px);
     margin-left: auto;
   }
 
