@@ -1261,7 +1261,7 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
-  /* Sticky del wordmark: ningún overflow:hidden en esta sección */
+  /* Sin overflow:hidden en el section (rompía sticky histórico); el recorte en X va solo en el carril */
   overflow: visible;
 }
 
@@ -1378,18 +1378,27 @@ body.entrance-done .landing-header {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  overflow: visible;
+  /* Corta cualquier desborde horizontal (p. ej. bug de flex + intrínseco del SVG) */
+  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   pointer-events: none;
 }
 
+/*
+ * NO usar align-items:flex-end en columna: el ítem no se estira y el <img> puede tomar
+ * ancho intrínseco grande + flex-shrink:0 → el wordmark “invade” la columna del bento
+ * sin ser un problema real de z-index.
+ */
 .lp-vera__sticky-visual {
   position: relative;
   z-index: auto;
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: flex-start;
   width: 100%;
   box-sizing: border-box;
@@ -1403,18 +1412,21 @@ body.entrance-done .landing-header {
   justify-content: flex-end;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .lp-vera__sticky-visual-img {
   /*
-   * width:auto hace que muchos navegadores tomen el ancho intrínseco del SVG (89px en Vera-2.svg),
-   * ignorando width="356" del HTML → wordmark diminuto. 100% + tope llena el carril derecho.
+   * width:auto + SVG pequeño en archivo → diminuto; 100% del carril con tope 100% del padre.
+   * max-width nunca > 100% del carril (evita desborde por flex/cálculo de %).
    */
   width: 100%;
-  max-width: min(100%, clamp(620px, 68vw, 1180px));
+  max-width: 100%;
+  min-width: 0;
   height: auto;
   display: block;
-  flex-shrink: 0;
+  flex-shrink: 1;
   object-fit: contain;
   object-position: right center;
   transform: none;
@@ -1878,7 +1890,8 @@ body.entrance-done .landing-header {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
+    min-width: 0;
     width: 100%;
     padding-inline: 0;
   }
@@ -1887,13 +1900,17 @@ body.entrance-done .landing-header {
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    max-width: min(100%, 640px);
-    margin-left: auto;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .lp-vera__sticky-visual-img {
-    width: min(100%, 600px);
+    width: 100%;
     max-width: 100%;
+    min-width: 0;
   }
 
   .lp-vera__layers {
