@@ -379,10 +379,10 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S06: VERA — EL MECANISMO ════════ -->
+      <!-- ════════ S06: VERA — Cabecera + bento (misma sección) ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
-          <div class="lp-vera__top">
+          <div class="lp-vera__shell">
             <div class="lp-vera__hero">
               <h2 id="lp-vera-heading" class="lp-vera__hero-headline sr-reveal">
                 <span class="lp-vera__hero-line">NO ESPERA ÓRDENES.</span>
@@ -394,7 +394,6 @@ class LandingView extends PublicBaseView {
                 <span class="lp-vera__hero-sub-line">Premia la precisión.</span>
               </p>
               <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado, prioriza señales y actúa cuando tu equipo aún está procesando información. Cada decisión nace del contexto real de tu marca, no de plantillas genéricas ni de prompts sueltos.</p>
-              <a href="/contacto" class="lp-vera__hero-cta sr-reveal sr-reveal--d2">Ver VERA en acción ↗</a>
               <div class="lp-vera__hero-bottom">
                 <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
                   <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
@@ -407,8 +406,7 @@ class LandingView extends PublicBaseView {
                 </div>
               </div>
             </div>
-          </div>
-          <div class="lp-vera__layers" role="list" aria-label="Capacidades del sistema VERA">
+            <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
               <div class="lp-vera__layer-bg" aria-hidden="true"></div>
               <div class="lp-vera__layer-hero-text">
@@ -462,6 +460,7 @@ class LandingView extends PublicBaseView {
               </header>
               <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
             </article>
+            </div>
           </div>
         </div>
       </section>
