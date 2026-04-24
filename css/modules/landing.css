@@ -1271,8 +1271,8 @@ body.entrance-done .landing-header {
 }
 
 /*
- * Mockup 3 capas — rojo L1 (copy) | azul L2 (SVG) | amarillo L3 (bento encima de L2).
- * L2 es position:absolute sobre el shell; L1+L3 van en flujo (col1 filas 1–2); spacer col2 da altura al carril.
+ * Una fila: columna izquierda (copy + bento) z-index 3 | columna 2 spacer z3 | L2 SVG abs z2 detrás.
+ * El carril comparte borde superior con el copy (ya no queda “colgado” bajo solo el bento).
  */
 .lp-vera__shell {
   --lp-vera-cols: minmax(0, 0.86fr) minmax(300px, 0.62fr);
@@ -1280,34 +1280,27 @@ body.entrance-done .landing-header {
   position: relative;
   display: grid;
   grid-template-columns: var(--lp-vera-cols);
-  grid-template-rows: auto auto;
+  grid-template-rows: auto;
   column-gap: var(--lp-vera-gap);
-  row-gap: 0;
-  align-items: start;
+  align-items: stretch;
 }
 
-/* Capa 1 — copy (debajo del SVG si se solapan; a la izquierda del carril no suele chocar) */
-.lp-vera__vera-l1 {
+.lp-vera__main-col {
   grid-column: 1;
   grid-row: 1;
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-}
-
-/* Capa 3 — bento: siempre por encima de L2 (SVG) y de L1 donde haya solape */
-.lp-vera__vera-l3 {
-  grid-column: 1;
-  grid-row: 2;
   position: relative;
   z-index: 3;
   isolation: isolate;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .lp-vera__vera-col2-spacer {
   grid-column: 2;
-  grid-row: 1 / -1;
+  grid-row: 1;
+  position: relative;
+  z-index: 3;
   align-self: stretch;
   min-width: 0;
   min-height: 0;
@@ -1454,7 +1447,7 @@ body.entrance-done .landing-header {
   transform: none !important;
 }
 
-/* Bento: capa visual la define .lp-vera__vera-l3 (z-index 3) */
+/* Bento: el apilado sobre el SVG lo resuelve .lp-vera__main-col (z-index 3) */
 .lp-vera__bento-block {
   position: relative;
   z-index: auto;
@@ -1836,21 +1829,8 @@ body.entrance-done .landing-header {
     grid-template-rows: none;
   }
 
-  .lp-vera__vera-l1 {
-    grid-column: auto;
-    grid-row: auto;
-    order: 1;
-    width: 100%;
-    z-index: auto;
-  }
-
-  .lp-vera__vera-l3 {
-    grid-column: auto;
-    grid-row: auto;
-    order: 3;
-    width: 100%;
-    z-index: auto;
-    isolation: isolate;
+  .lp-vera__main-col {
+    display: contents;
   }
 
   .lp-vera__vera-col2-spacer {
@@ -1879,6 +1859,7 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__stage {
+    order: 1;
     width: 100%;
   }
 
@@ -1892,6 +1873,7 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__bento-block {
+    order: 3;
     width: 100%;
   }
 

@@ -380,12 +380,11 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S06: VERA — 3 capas: L1 copy | L2 SVG (abs) | L3 bento (encima del SVG) ════════ -->
+      <!-- ════════ S06: VERA — main-col (copy+bento) z3 | L2 SVG abs z2 | spacer col2 z3 ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
-            <!-- Capa 1 (mockup rojo): bloque copy -->
-            <div class="lp-vera__vera-l1">
+            <div class="lp-vera__main-col">
             <div class="lp-vera__stage">
               <div class="lp-vera__copy-block">
                 <div class="lp-vera__hero">
@@ -406,9 +405,6 @@ class LandingView extends PublicBaseView {
                 </p>
               </div>
             </div>
-            </div>
-            <!-- Capa 3 (mockup amarillo): bento — z-index por encima de L2 (SVG); no comparte capa con el carril -->
-            <div class="lp-vera__vera-l3">
             <div class="lp-vera__bento-block">
                 <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
@@ -467,9 +463,8 @@ class LandingView extends PublicBaseView {
                 </div>
             </div>
             </div>
-            <!-- Columna derecha en flujo: misma altura que copy+bento para el carril absoluto -->
             <div class="lp-vera__vera-col2-spacer" aria-hidden="true"></div>
-            <!-- Capa 2 (mockup azul): wordmark — entre L1 y L3; pointer-events none -->
+            <!-- Capa SVG (azul): debajo del bloque izquierdo (z3); pointer-events none -->
             <div class="lp-vera__vera-l2" aria-hidden="true">
               <div class="lp-vera__vera-l2-spacer" aria-hidden="true"></div>
               <div class="lp-vera__sticky-rail">
@@ -1004,7 +999,19 @@ class LandingView extends PublicBaseView {
       });
     };
 
+    const img = inner.querySelector('.lp-vera__sticky-visual-img');
+    if (img && !img.complete) {
+      img.addEventListener('load', onScrollOrResize, { once: true });
+    }
+
+    let resizeObs = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObs = new ResizeObserver(() => onScrollOrResize());
+      resizeObs.observe(rail);
+    }
+
     tick();
+    requestAnimationFrame(() => tick());
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     if (shell) shell.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize);
@@ -1015,6 +1022,10 @@ class LandingView extends PublicBaseView {
       if (shell) shell.removeEventListener('scroll', onScrollOrResize);
       window.removeEventListener('resize', onScrollOrResize);
       mq.removeEventListener('change', onScrollOrResize);
+      if (resizeObs) {
+        resizeObs.disconnect();
+        resizeObs = null;
+      }
       if (rafPending != null) {
         window.cancelAnimationFrame(rafPending);
         rafPending = null;
