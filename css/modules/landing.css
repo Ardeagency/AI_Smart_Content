@@ -1262,11 +1262,6 @@ body.entrance-done .landing-header {
   overflow: visible;
 }
 
-/* overflow-x:hidden en #public-shell puede impedir sticky respecto al viewport (landing VERA) */
-body.route-public.route-landing #public-shell {
-  overflow: visible;
-}
-
 .lp-vera__inner {
   max-width: 1180px;
   margin: 0 auto;
@@ -1276,15 +1271,13 @@ body.route-public.route-landing #public-shell {
   display: block;
 }
 
-/* Maqueta 3 capas: (1) copy+VENTAJA (2) SVG sticky derecha (3) bento encima del SVG */
+/* Maqueta 3 capas: (1) copy+VENTAJA (2) SVG grande + scroll (3) bento encima */
 .lp-vera__stage {
-  --lp-vera-sticky-top: clamp(68px, 11vh, 96px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.46fr);
+  grid-template-columns: minmax(0, 0.94fr) minmax(280px, 0.52fr);
   grid-template-rows: auto auto;
   column-gap: clamp(20px, 3.5vw, 44px);
   row-gap: clamp(24px, 3.2vw, 40px);
-  /* start rompe la altura útil del sticky: la columna SVG debe estirar a fila 1+2 */
   align-items: stretch;
 }
 
@@ -1309,22 +1302,42 @@ body.route-public.route-landing #public-shell {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: sticky en el propio aside (evita contenedores con transform; ocupa alto fila 1+2) */
-.lp-vera__sticky-visual {
+/* Capa 2: carril grid; el aside puede pasar a fixed centrado vía JS (.lp-vera__sticky-visual--fixed) */
+.lp-vera__sticky-rail {
   grid-column: 2;
   grid-row: 1 / 3;
-  position: sticky;
-  top: var(--lp-vera-sticky-top);
-  z-index: 1;
   align-self: stretch;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.lp-vera__sticky-visual {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   width: 100%;
   box-sizing: border-box;
-  padding-inline: clamp(4px, 1.2vw, 12px);
+  padding-inline: clamp(0px, 1vw, 10px);
   pointer-events: none;
+}
+
+.lp-vera__sticky-visual--fixed {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  width: min(94vw, 1040px);
+  max-width: min(94vw, 1040px);
+  z-index: 3;
+  margin: 0;
+  padding: 0 clamp(10px, 2vw, 22px);
 }
 
 .lp-vera__sticky-visual-inner {
@@ -1334,7 +1347,7 @@ body.route-public.route-landing #public-shell {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  max-width: 400px;
+  max-width: min(118%, 920px);
 }
 
 .lp-vera__sticky-visual-img {
@@ -1342,8 +1355,7 @@ body.route-public.route-landing #public-shell {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 0 auto;
-  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.42));
+  filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.48));
 }
 
 /* Capa 3: bento por encima del SVG (glass); no comparte stacking con la capa azul */
@@ -1711,9 +1723,15 @@ body.route-public.route-landing #public-shell {
     --lp-vera-dur-text: 0.01ms;
   }
 
-  .lp-vera__sticky-visual {
-    position: relative;
-    top: auto;
+  .lp-vera__sticky-visual--fixed {
+    position: relative !important;
+    transform: none !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
   }
 }
 
@@ -1730,25 +1748,28 @@ body.route-public.route-landing #public-shell {
     max-width: none;
   }
 
-  .lp-vera__sticky-visual {
+  .lp-vera__sticky-rail {
     grid-column: auto;
     grid-row: auto;
-    position: relative;
-    top: auto;
-    align-self: flex-end;
     width: 100%;
-    min-height: clamp(120px, 36vw, 200px);
+    min-height: clamp(140px, 40vw, 220px);
+  }
+
+  .lp-vera__sticky-visual {
+    align-items: flex-end;
+    width: 100%;
     padding-inline: 0;
   }
 
   .lp-vera__sticky-visual-inner {
     align-items: flex-end;
-    max-width: 360px;
+    width: 100%;
+    max-width: 440px;
     margin-left: auto;
   }
 
   .lp-vera__sticky-visual-img {
-    width: min(92%, 360px);
+    width: min(96%, 400px);
     margin-left: auto;
   }
 

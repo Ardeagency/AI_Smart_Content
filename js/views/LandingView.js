@@ -18,6 +18,7 @@ class LandingView extends PublicBaseView {
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
+    this.veraMarkCleanup = null;
   }
 
   renderContent() {
@@ -402,11 +403,13 @@ class LandingView extends PublicBaseView {
                   <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
                 </p>
               </div>
-              <aside class="lp-vera__sticky-visual" aria-hidden="true">
-                <div class="lp-vera__sticky-visual-inner">
-                  <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
-                </div>
-              </aside>
+              <div class="lp-vera__sticky-rail">
+                <aside class="lp-vera__sticky-visual" data-lp-vera-mark aria-hidden="true">
+                  <div class="lp-vera__sticky-visual-inner">
+                    <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+                  </div>
+                </aside>
+              </div>
               <div class="lp-vera__bento-block">
                 <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
@@ -856,6 +859,7 @@ class LandingView extends PublicBaseView {
     this.initCtaForm();
     this.initLandingAppPreview();
     this.initWhyCarousel();
+    this.initVeraMarkScroll();
   }
 
   async onLeave() {
@@ -883,6 +887,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.whyCarouselCleanup === 'function') {
       this.whyCarouselCleanup();
       this.whyCarouselCleanup = null;
+    }
+    if (typeof this.veraMarkCleanup === 'function') {
+      this.veraMarkCleanup();
+      this.veraMarkCleanup = null;
     }
   }
 
@@ -915,6 +923,54 @@ class LandingView extends PublicBaseView {
     this.heroRevealCleanup = () => {
       hero.classList.remove('is-ready');
       reveals.forEach(el => { el.style.transitionDelay = ''; });
+    };
+  }
+
+  /**
+   * S06 VERA: wordmark grande anclado al centro del viewport mientras #landing-6
+   * intersecta la ventana (position:fixed; el sticky nativo fallaba por overflow del shell).
+   */
+  initVeraMarkScroll() {
+    if (typeof this.veraMarkCleanup === 'function') {
+      this.veraMarkCleanup();
+      this.veraMarkCleanup = null;
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const section = this.container?.querySelector('#landing-6');
+    const mark = section?.querySelector('[data-lp-vera-mark]');
+    if (!section || !mark) return;
+
+    const mqDesk = window.matchMedia('(min-width: 901px)');
+
+    const tick = () => {
+      if (!mqDesk.matches) {
+        mark.classList.remove('lp-vera__sticky-visual--fixed');
+        return;
+      }
+      const r = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const visible = r.bottom > 0 && r.top < vh;
+      if (visible) {
+        mark.classList.add('lp-vera__sticky-visual--fixed');
+      } else {
+        mark.classList.remove('lp-vera__sticky-visual--fixed');
+      }
+    };
+
+    tick();
+    window.addEventListener('scroll', tick, { passive: true });
+    window.addEventListener('resize', tick);
+    mqDesk.addEventListener('change', tick);
+
+    this.veraMarkCleanup = () => {
+      window.removeEventListener('scroll', tick);
+      window.removeEventListener('resize', tick);
+      mqDesk.removeEventListener('change', tick);
+      mark.classList.remove('lp-vera__sticky-visual--fixed');
     };
   }
 

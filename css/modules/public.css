@@ -907,3 +907,8 @@ body.route-public.entrance-active #public-shell {
     padding-top: 32px;
     border-top: 1px solid rgba(255,255,255,0.06);
 }
+
+/* Landing home: overflow-x del shell impedía sticky/fixed del wordmark VERA (este archivo carga después que landing.css). */
+body.route-public.route-landing #public-shell {
+    overflow: visible !important;
+}
