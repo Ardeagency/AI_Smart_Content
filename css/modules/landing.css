@@ -1353,7 +1353,7 @@ body.entrance-done .landing-header {
    * ignorando width="356" del HTML → wordmark diminuto. 100% + tope llena el carril derecho.
    */
   width: 100%;
-  max-width: min(100%, 620px);
+  max-width: min(100%, clamp(560px, 56vw, 960px));
   height: auto;
   display: block;
   flex-shrink: 0;
@@ -1785,12 +1785,12 @@ body.entrance-done .landing-header {
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    max-width: 440px;
+    max-width: min(100%, 560px);
     margin-left: auto;
   }
 
   .lp-vera__sticky-visual-img {
-    width: min(96%, 400px);
+    width: min(100%, 520px);
     max-width: 100%;
   }
 
