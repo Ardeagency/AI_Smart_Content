@@ -394,19 +394,18 @@ class LandingView extends PublicBaseView {
                 <span class="lp-vera__hero-sub-line">Premia la precisión.</span>
               </p>
               <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado, prioriza señales y actúa cuando tu equipo aún está procesando información. Cada decisión nace del contexto real de tu marca, no de plantillas genéricas ni de prompts sueltos.</p>
-              <div class="lp-vera__hero-bottom">
+            </div>
+            <div class="lp-vera__bento-stack">
+              <div class="lp-vera__bento-head">
                 <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
                   <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
                   <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
                 </p>
-                <div class="lp-vera__hero-mark sr-reveal sr-reveal--d1" aria-hidden="true">
-                  <div class="lp-vera__hero-mark-inner">
-                    <img class="lp-vera__hero-mark-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
-                  </div>
-                </div>
               </div>
-            </div>
-            <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
+              <div class="lp-vera__bg-mark sr-reveal sr-reveal--d1" aria-hidden="true">
+                <img class="lp-vera__bg-mark-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+              </div>
+              <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
             <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
               <div class="lp-vera__layer-bg" aria-hidden="true"></div>
               <div class="lp-vera__layer-hero-text">
@@ -460,6 +459,7 @@ class LandingView extends PublicBaseView {
               </header>
               <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
             </article>
+            </div>
             </div>
           </div>
         </div>
