@@ -380,10 +380,11 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S06: VERA — Capas: copy | SVG sticky | bento encima ════════ -->
+      <!-- ════════ S06: VERA — shell 2 col: main (copy+bento) | carril SVG altura sección ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
+            <div class="lp-vera__main-col">
             <div class="lp-vera__stage">
               <div class="lp-vera__copy-block">
                 <div class="lp-vera__hero">
@@ -402,13 +403,6 @@ class LandingView extends PublicBaseView {
                   <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
                   <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
                 </p>
-              </div>
-              <div class="lp-vera__sticky-rail">
-                <aside class="lp-vera__sticky-visual" aria-hidden="true">
-                  <div class="lp-vera__sticky-visual-inner">
-                    <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
-                  </div>
-                </aside>
               </div>
             </div>
             <div class="lp-vera__bento-block">
@@ -467,6 +461,14 @@ class LandingView extends PublicBaseView {
               <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
             </article>
                 </div>
+            </div>
+            </div>
+            <div class="lp-vera__sticky-rail">
+              <aside class="lp-vera__sticky-visual" aria-hidden="true">
+                <div class="lp-vera__sticky-visual-inner">
+                  <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+                </div>
+              </aside>
             </div>
           </div>
         </div>

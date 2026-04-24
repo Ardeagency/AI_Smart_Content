@@ -1270,17 +1270,24 @@ body.entrance-done .landing-header {
   margin: 0 auto;
 }
 
+/* Dos columnas: izquierda (copy + bento) | carril wordmark hasta el final de la sección */
 .lp-vera__shell {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(300px, 0.62fr);
+  column-gap: clamp(20px, 3.5vw, 44px);
+  align-items: stretch;
+}
+
+.lp-vera__main-col {
+  grid-column: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .lp-vera__stage {
-  display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(300px, 0.62fr);
-  grid-template-rows: auto;
-  column-gap: clamp(20px, 3.5vw, 44px);
-  row-gap: 0;
-  align-items: stretch;
+  display: block;
+  width: 100%;
 }
 
 /* Sin scroll-reveal en la cabecera VERA: .sr-reveal.is-visible iba después y volvía a aplicar transform */
@@ -1292,9 +1299,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-vera__copy-block {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: start;
+  align-self: flex-start;
   position: relative;
   z-index: 2;
   display: flex;
@@ -1395,7 +1400,7 @@ body.entrance-done .landing-header {
   transform: none !important;
 }
 
-/* Bento: hermano del stage; por encima del wordmark */
+/* Bento: bajo el stage, misma columna que el copy; por encima del wordmark en z-index */
 .lp-vera__bento-block {
   position: relative;
   z-index: 30;
@@ -1770,23 +1775,34 @@ body.entrance-done .landing-header {
 }
 
 @media (max-width: 900px) {
-  .lp-vera__stage {
+  .lp-vera__shell {
     display: flex;
     flex-direction: column;
     gap: clamp(20px, 4vw, 32px);
   }
 
+  .lp-vera__main-col {
+    display: contents;
+  }
+
+  .lp-vera__stage {
+    order: 1;
+    width: 100%;
+  }
+
   .lp-vera__copy-block {
-    grid-column: auto;
-    grid-row: auto;
     max-width: none;
   }
 
   .lp-vera__sticky-rail {
-    grid-column: auto;
-    grid-row: auto;
+    order: 2;
     width: 100%;
     min-height: clamp(140px, 40vw, 220px);
+  }
+
+  .lp-vera__bento-block {
+    order: 3;
+    width: 100%;
   }
 
   .lp-vera__sticky-visual {
@@ -1811,12 +1827,6 @@ body.entrance-done .landing-header {
   .lp-vera__sticky-visual-img {
     width: min(100%, 600px);
     max-width: 100%;
-  }
-
-  .lp-vera__bento-block {
-    grid-column: auto;
-    grid-row: auto;
-    width: 100%;
   }
 
   .lp-vera__layers {
