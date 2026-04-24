@@ -1283,6 +1283,14 @@ body.entrance-done .landing-header {
   align-items: stretch;
 }
 
+/* Sin scroll-reveal en la cabecera VERA: .sr-reveal.is-visible iba después y volvía a aplicar transform */
+.lp-vera__stage .sr-reveal,
+.lp-vera__stage .sr-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
 .lp-vera__copy-block {
   grid-column: 1;
   grid-row: 1;
@@ -1328,24 +1336,26 @@ body.entrance-done .landing-header {
   box-sizing: border-box;
   padding-inline: 0;
   pointer-events: none;
+  transform: none;
 }
 
 .lp-vera__sticky-visual-inner {
-  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-start;
+  justify-content: flex-end;
   width: 100%;
   max-width: 100%;
+  transform: none;
 }
 
 .lp-vera__sticky-visual-img {
-  width: 100%;
-  max-width: min(100%, 420px);
+  width: auto;
+  max-width: min(420px, 100%);
   height: auto;
   display: block;
-  margin-left: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+  object-position: right center;
+  transform: none;
   /* Sin filter: drop-shadow rasteriza el SVG y estropea el degradado del wordmark */
   filter: none;
 }
@@ -1737,13 +1747,16 @@ body.entrance-done .landing-header {
   }
 
   .lp-vera__sticky-visual {
+    display: flex;
+    flex-direction: column;
     align-items: flex-end;
     width: 100%;
     padding-inline: 0;
   }
 
   .lp-vera__sticky-visual-inner {
-    align-items: flex-end;
+    display: flex;
+    justify-content: flex-end;
     width: 100%;
     max-width: 440px;
     margin-left: auto;
@@ -1751,7 +1764,7 @@ body.entrance-done .landing-header {
 
   .lp-vera__sticky-visual-img {
     width: min(96%, 400px);
-    margin-left: auto;
+    max-width: 100%;
   }
 
   .lp-vera__bento-block {
