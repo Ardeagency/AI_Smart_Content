@@ -7,7 +7,7 @@
  *   Zona 1 — Captura:          S01 Hero, S02 Credibilidad
  *   Zona 2 — Problema:         S03 Dolor estructural, S04 Agitación
  *   Zona 3 — Solución:         S05 Capacidades, S06 VERA, S07 Dashboard
- *   Zona 4 — Confianza+Acción: S08 Por qué (carrusel), S09 Lo que pasa, S10 FAQ, S11 CTA
+ *   Zona 4 — Confianza+Acción: S08 Por qué (carrusel), S09 FAQ, S10 CTA
  */
 class LandingView extends PublicBaseView {
   constructor() {
@@ -630,7 +630,7 @@ class LandingView extends PublicBaseView {
       </section>
 
       <!-- ════════ S08: POR QUÉ AISmartContent — carrusel ════════ -->
-      <section class="lp-why" id="landing-why" aria-labelledby="lp-why-heading" data-lp-why>
+      <section class="lp-why" id="landing-8" aria-labelledby="lp-why-heading" data-lp-why>
         <div class="lp-why__inner">
           <h2 id="lp-why-heading" class="lp-why__title sr-reveal">Por qué AISmartContent cambia cómo opera tu marca.</h2>
           <div class="lp-why__carousel">
@@ -670,51 +670,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S09: LO QUE PASA CUANDO… ════════ -->
-      <section class="landing-different" id="landing-8" aria-labelledby="landing-different-heading">
-        <div class="landing-different__inner">
-          <h2 id="landing-different-heading" class="landing-different__title sr-reveal">Lo que pasa cuando tu marca opera diferente</h2>
-          <ul class="landing-different__list">
-            <li class="landing-different__item sr-reveal sr-reveal--d1">
-              <div class="landing-different__row">
-                <span class="landing-different__label">Tiempo real</span>
-                <span class="landing-different__desc">Decisiones cuando importan.</span>
-              </div>
-              <div class="landing-different__divider" aria-hidden="true"></div>
-            </li>
-            <li class="landing-different__item sr-reveal sr-reveal--d2">
-              <div class="landing-different__row">
-                <span class="landing-different__label">Claridad</span>
-                <span class="landing-different__desc">Qué hacer, sin duda.</span>
-              </div>
-              <div class="landing-different__divider" aria-hidden="true"></div>
-            </li>
-            <li class="landing-different__item sr-reveal sr-reveal--d3">
-              <div class="landing-different__row">
-                <span class="landing-different__label">Velocidad</span>
-                <span class="landing-different__desc">De la idea a la ejecución.</span>
-              </div>
-              <div class="landing-different__divider" aria-hidden="true"></div>
-            </li>
-            <li class="landing-different__item sr-reveal sr-reveal--d4">
-              <div class="landing-different__row">
-                <span class="landing-different__label">Impacto</span>
-                <span class="landing-different__desc">Cada acción cuenta.</span>
-              </div>
-              <div class="landing-different__divider" aria-hidden="true"></div>
-            </li>
-            <li class="landing-different__item sr-reveal sr-reveal--d5">
-              <div class="landing-different__row">
-                <span class="landing-different__label">Optimización</span>
-                <span class="landing-different__desc">Siempre mejorando.</span>
-              </div>
-              <div class="landing-different__divider" aria-hidden="true"></div>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- ════════ S10: FAQ ════════ -->
+      <!-- ════════ S09: FAQ ════════ -->
       <section class="lp-faq" id="landing-10" aria-labelledby="lp-faq-heading">
         <div class="lp-faq__inner">
           <header class="lp-faq__header">
@@ -771,7 +727,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S11: CTA FINAL ════════ -->
+      <!-- ════════ S10: CTA FINAL ════════ -->
       <section class="lp-cta" id="landing-11" aria-labelledby="lp-cta-heading">
         <div class="lp-cta__bg" aria-hidden="true">
           <span class="lp-cta__glow" aria-hidden="true"></span>
