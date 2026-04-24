@@ -1312,7 +1312,10 @@ body.entrance-done .landing-header {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
-/* Capa 2: carril grid — wordmark acotado; clip horizontal sin cortar sticky vertical */
+/*
+ * Carril: flex para que el aside ocupe toda la altura de la fila del grid (como el copy).
+ * Si el aside solo mide lo del logo, position:sticky no tiene “recorrido” y parece roto.
+ */
 .lp-vera__sticky-rail {
   grid-column: 2;
   grid-row: 1;
@@ -1321,14 +1324,19 @@ body.entrance-done .landing-header {
   z-index: 1;
   width: 100%;
   min-width: 0;
-  overflow-x: clip;
-  overflow-y: visible;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
   pointer-events: none;
 }
 
 .lp-vera__sticky-visual {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1340,11 +1348,12 @@ body.entrance-done .landing-header {
   transform: none;
 }
 
-/* Sticky solo en desktop: el recorrido queda limitado a la altura del carril (= fila del stage con el copy) */
+/* Sticky solo en desktop: se mueve solo mientras el carril (altura = copy) cruza el viewport */
 @media (min-width: 901px) {
   .lp-vera__sticky-visual {
     position: sticky;
-    top: clamp(88px, 14vh, 168px);
+    top: clamp(76px, 11vh, 132px);
+    align-self: stretch;
     width: 100%;
   }
 }
@@ -1761,7 +1770,10 @@ body.entrance-done .landing-header {
     --lp-vera-dur: 0.01ms;
     --lp-vera-dur-text: 0.01ms;
   }
+}
 
+/* Sin sticky en móvil aunque el sistema pida menos movimiento (el sticky no es animación CSS) */
+@media (prefers-reduced-motion: reduce) and (max-width: 900px) {
   .lp-vera__sticky-visual {
     position: relative;
     top: auto;
@@ -1791,6 +1803,7 @@ body.entrance-done .landing-header {
   .lp-vera__sticky-visual {
     position: relative;
     top: auto;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
