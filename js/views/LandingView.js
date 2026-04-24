@@ -316,34 +316,6 @@ class LandingView extends PublicBaseView {
             <em class="lp-agit__accent">La pregunta es si tú también.</em>
           </h2>
         </div>
-        <div class="lp-agit__ticker-wrap" aria-label="Consecuencias de operar sin sistema">
-          <div class="lp-agit__ticker" aria-hidden="true">
-            <span class="lp-agit__ticker-item">Oportunidades perdidas</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item">Decisiones tardías</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item">Equipos agotados</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item">Contenido irrelevante</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item">Marca difusa</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item">Presupuesto desperdiciado</span>
-            <span class="lp-agit__ticker-sep">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Oportunidades perdidas</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Decisiones tardías</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Equipos agotados</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Contenido irrelevante</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Marca difusa</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-            <span class="lp-agit__ticker-item" aria-hidden="true">Presupuesto desperdiciado</span>
-            <span class="lp-agit__ticker-sep" aria-hidden="true">·</span>
-          </div>
-        </div>
       </section>
 
       <!-- ════════ S05: PROPUESTA (3 bloques) ════════ -->
