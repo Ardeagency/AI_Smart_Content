@@ -382,73 +382,41 @@ class LandingView extends PublicBaseView {
       <!-- ════════ S06: VERA — EL MECANISMO ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
-          <div class="lp-vera__top">
-            <div class="lp-vera__text-col">
-              <h2 id="lp-vera-heading" class="lp-vera__title sr-reveal">VERA — La inteligencia que nunca para</h2>
-              <p class="lp-vera__sub sr-reveal sr-reveal--d1">No responde a prompts. Opera con inteligencia, criterio y contexto de marca en tiempo real.</p>
-              <p class="lp-vera__statement sr-reveal sr-reveal--d2">Cada señal del mercado se transforma en una decisión, cada decisión en acción y cada acción en aprendizaje.</p>
-              <a href="/contacto" class="lp-vera__cta sr-reveal sr-reveal--d3">Ver VERA en acción ↗</a>
+          <div class="lp-vera__editorial">
+            <div class="lp-vera__header-grid">
+              <article class="lp-vera__panel lp-vera__panel--micro sr-reveal sr-reveal--d1">
+                <p class="lp-vera__micro-label">Sistema operativo de marca</p>
+                <p class="lp-vera__micro-copy">Inteligencia, criterio y ejecución conectados en tiempo real.</p>
+              </article>
+              <article class="lp-vera__panel lp-vera__panel--title sr-reveal sr-reveal--d2">
+                <h2 id="lp-vera-heading" class="lp-vera__title">VERA — La inteligencia que nunca para</h2>
+              </article>
+              <article class="lp-vera__panel lp-vera__panel--list sr-reveal sr-reveal--d3">
+                <ul class="lp-vera__meta-list">
+                  <li>Lectura del mercado en vivo</li>
+                  <li>Decisiones alineadas al ADN</li>
+                  <li>Ejecución sin fricción operativa</li>
+                </ul>
+              </article>
             </div>
-            <div class="lp-vera__diagram-col">
-              <div class="lp-vera__mark sr-reveal sr-reveal--d1">
-                <img class="lp-vera__mark-img" src="/recursos/vera/Vera-2.svg" alt="VERA" width="356" height="136" decoding="async" loading="lazy">
+
+            <div class="lp-vera__bottom-grid">
+              <article class="lp-vera__panel lp-vera__panel--left sr-reveal sr-reveal--d1">
+                <h3 class="lp-vera__left-title">Cada señal del mercado se transforma en acción.</h3>
+                <p class="lp-vera__left-copy">VERA interpreta contexto, prioriza lo que importa y convierte la estrategia en piezas listas para ejecutar sin romper consistencia de marca.</p>
+                <a href="/contacto" class="lp-vera__cta">Ver VERA en acción ↗</a>
+              </article>
+
+              <div class="lp-vera__right-split">
+                <article class="lp-vera__panel lp-vera__panel--right-info sr-reveal sr-reveal--d2">
+                  <h4 class="lp-vera__right-title">Decisiones con contexto</h4>
+                  <p class="lp-vera__right-copy">Cruza tendencias, datos internos y objetivos para decidir qué lanzar, cuándo hacerlo y por qué.</p>
+                </article>
+                <article class="lp-vera__panel lp-vera__panel--right-logo sr-reveal sr-reveal--d3">
+                  <img class="lp-vera__logo-xl" src="/recursos/vera/Vera-2.svg" alt="VERA" width="520" height="198" decoding="async" loading="lazy">
+                </article>
               </div>
             </div>
-          </div>
-          <div class="lp-vera__layers" role="list" aria-label="Capacidades del sistema VERA">
-            <article class="lp-vera__layer lp-vera__layer--hero sr-reveal sr-reveal--d1" role="listitem" tabindex="0" data-vera-gradient="1">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <div class="lp-vera__layer-hero-text">
-                <header class="lp-vera__layer-head">
-                  <h3 class="lp-vera__layer-title">Un solo sistema</h3>
-                </header>
-                <p class="lp-vera__layer-desc">Desde inteligencia hasta ejecución. VERA conecta cada parte del proceso sin fricción.</p>
-              </div>
-              <div class="lp-vera__layer-art" aria-hidden="true">
-                <div class="lp-vera__layer-orbit lp-vera__layer-orbit--a"></div>
-                <div class="lp-vera__layer-orbit lp-vera__layer-orbit--b"></div>
-                <div class="lp-vera__layer-orbit lp-vera__layer-orbit--c"></div>
-                <span class="lp-vera__layer-dot lp-vera__layer-dot--1"></span>
-                <span class="lp-vera__layer-dot lp-vera__layer-dot--2"></span>
-                <span class="lp-vera__layer-dot lp-vera__layer-dot--3"></span>
-                <img class="lp-vera__layer-art-logo" src="/recursos/vera/Vera-2.svg" alt="" width="120" height="46" decoding="async" loading="lazy">
-              </div>
-            </article>
-            <article class="lp-vera__layer lp-vera__layer--side sr-reveal sr-reveal--d2" role="listitem" tabindex="0" data-vera-gradient="2">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <header class="lp-vera__layer-head">
-                <h3 class="lp-vera__layer-title">Lectura en tiempo real</h3>
-              </header>
-              <p class="lp-vera__layer-desc">Monitorea tendencias, competencia y comportamiento del consumidor.</p>
-            </article>
-            <article class="lp-vera__layer lp-vera__layer--midA sr-reveal sr-reveal--d3" role="listitem" tabindex="0" data-vera-gradient="3">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <header class="lp-vera__layer-head">
-                <h3 class="lp-vera__layer-title">Decisiones con criterio</h3>
-              </header>
-              <p class="lp-vera__layer-desc">Evalúa qué hacer, cuándo hacerlo y por qué. Prioriza impacto real sobre ruido.</p>
-            </article>
-            <article class="lp-vera__layer lp-vera__layer--midB sr-reveal sr-reveal--d4" role="listitem" tabindex="0" data-vera-gradient="4">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <header class="lp-vera__layer-head">
-                <h3 class="lp-vera__layer-title">Contenido que construye marca</h3>
-              </header>
-              <p class="lp-vera__layer-desc">Imágenes, copys, campañas y piezas alineadas al ADN.</p>
-            </article>
-            <article class="lp-vera__layer lp-vera__layer--tall sr-reveal sr-reveal--d5" role="listitem" tabindex="0" data-vera-gradient="5">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <header class="lp-vera__layer-head">
-                <h3 class="lp-vera__layer-title">Todo conectado</h3>
-              </header>
-              <p class="lp-vera__layer-desc">Investigación, estrategia y ejecución trabajando como un solo sistema.</p>
-            </article>
-            <article class="lp-vera__layer lp-vera__layer--wide sr-reveal sr-reveal--d6" role="listitem" tabindex="0" data-vera-gradient="6">
-              <div class="lp-vera__layer-bg" aria-hidden="true"></div>
-              <header class="lp-vera__layer-head">
-                <h3 class="lp-vera__layer-title">Mejora con cada resultado</h3>
-              </header>
-              <p class="lp-vera__layer-desc">Analiza performance, detecta patrones y ajusta automáticamente.</p>
-            </article>
           </div>
         </div>
       </section>
