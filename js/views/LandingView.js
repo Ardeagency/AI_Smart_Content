@@ -384,14 +384,18 @@ class LandingView extends PublicBaseView {
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
-            <!-- Carril primero en el DOM: capa base; copy+bento van encima (z-index en shell) -->
-            <div class="lp-vera__sticky-rail">
-              <aside class="lp-vera__sticky-visual" aria-hidden="true">
-                <div class="lp-vera__sticky-visual-inner">
-                  <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
-                </div>
-              </aside>
+            <!-- Capa baja (absoluta): wordmark; capa alta (flujo): copy+bento con la misma rejilla → el SVG nunca pinta encima de las tarjetas -->
+            <div class="lp-vera__plate lp-vera__plate--under" aria-hidden="true">
+              <div class="lp-vera__plate-spacer"></div>
+              <div class="lp-vera__sticky-rail">
+                <aside class="lp-vera__sticky-visual" aria-hidden="true">
+                  <div class="lp-vera__sticky-visual-inner">
+                    <img class="lp-vera__sticky-visual-img" src="/recursos/vera/Vera-2.svg" alt="" width="356" height="136" decoding="async" loading="lazy">
+                  </div>
+                </aside>
+              </div>
             </div>
+            <div class="lp-vera__plate lp-vera__plate--over">
             <div class="lp-vera__main-col">
             <div class="lp-vera__stage">
               <div class="lp-vera__copy-block">
@@ -470,6 +474,8 @@ class LandingView extends PublicBaseView {
             </article>
                 </div>
             </div>
+            </div>
+            <div class="lp-vera__plate-spacer" aria-hidden="true"></div>
             </div>
           </div>
         </div>
