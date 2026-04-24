@@ -1255,7 +1255,7 @@ body.entrance-done .landing-header {
   --lp-vera-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --lp-vera-dur: 0.78s;
   --lp-vera-dur-text: 0.65s;
-  background: #000000;
+  background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   padding: clamp(88px, 11vw, 140px) clamp(24px, 7vw, 96px);
   overflow: hidden;
@@ -1413,8 +1413,12 @@ body.entrance-done .landing-header {
   padding: clamp(28px, 3.6vw, 40px);
   min-height: 0;
   border-radius: clamp(22px, 2.8vw, 30px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #0d0d0f;
+  /* Mismo efecto que .glass-black del bundle (tokens + blur) */
+  background: var(--glass-black-bg, rgba(0, 0, 0, 0.5));
+  border: 1px solid var(--glass-black-border, rgba(255, 255, 255, 0.1));
+  color: var(--glass-black-text, #ffffff);
+  backdrop-filter: var(--glass-blur, blur(7px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(7px));
   overflow: hidden;
   outline: none;
   cursor: pointer;
@@ -1431,7 +1435,7 @@ body.entrance-done .landing-header {
 
 .lp-vera__layer:hover,
 .lp-vera__layer:focus-within {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Degradado + grano (misma lógica que .lp-pain__col-bg) */
