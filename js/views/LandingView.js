@@ -1147,7 +1147,7 @@ class LandingView extends PublicBaseView {
       production: 'Production',
       'flow-posts': 'Flows · Posts',
       'flow-reels': 'Flows · Reels',
-      brand: 'Brand Organization',
+      brand: 'Brand Identity',
     };
     const URL_PATH = {
       vera: 'org/acme/vera',

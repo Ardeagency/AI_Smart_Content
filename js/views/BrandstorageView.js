@@ -73,7 +73,7 @@ class BrandstorageView extends BaseView {
 
   renderHTML() {
     return `
-<!-- Brand Storage Library — misma capa skeleton + degradado que Brand Organization -->
+<!-- Brand Storage Library — misma capa skeleton + degradado que Brand Identity -->
 <div class="brand-dashboard-container brand-storage-standalone brand-storage-gallery-view" id="brandsListContainer">
 
     <div class="brand-dashboard-background">
