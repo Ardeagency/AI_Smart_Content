@@ -770,7 +770,6 @@ class LandingView extends PublicBaseView {
     this.initCtaForm();
     this.initLandingAppPreview();
     this.initWhyCarousel();
-    this.initVeraRailWordmarkScroll();
   }
 
   clearLandingAgitHash() {
@@ -859,114 +858,15 @@ class LandingView extends PublicBaseView {
   }
 
   /**
-   * S06 VERA: el wordmark “acompaña” el scroll solo dentro de la altura del carril derecho
-   * (misma fila del grid que el copy). `position:sticky` fallaba por overflow/scrollport;
-   * se corrige con translateY en `.lp-vera__sticky-visual-inner` (acotado al rect del rail).
+   * S06 VERA: desactivado el tracking JS de scroll para evitar jitter visual.
+   * El comportamiento queda 100% estable con layout CSS estático.
    */
   initVeraRailWordmarkScroll() {
     if (typeof this.veraRailScrollCleanup === 'function') {
       this.veraRailScrollCleanup();
       this.veraRailScrollCleanup = null;
     }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    const section = this.container?.querySelector('#landing-6');
-    const rail = section?.querySelector('.lp-vera__sticky-rail');
-    const inner = section?.querySelector('.lp-vera__sticky-visual-inner');
-    if (!section || !rail || !inner) return;
-
-    const mq = window.matchMedia('(min-width: 901px)');
-
-    const headerOffset = () => {
-      const hdr = document.querySelector('#public-header-root .public-header');
-      return Math.round((hdr?.offsetHeight || 64) + 10);
-    };
-    let stickyOffset = headerOffset();
-    let lastShift = -1;
-
-    const setShift = (shiftPx) => {
-      const clamped = Math.max(0, shiftPx);
-      const rounded = Number(clamped.toFixed(1));
-      if (Math.abs(rounded - lastShift) < 0.1) return;
-      lastShift = rounded;
-      inner.style.transform = `translate3d(0, ${rounded}px, 0)`;
-    };
-
-    const tick = () => {
-      if (!mq.matches) {
-        inner.style.transform = '';
-        inner.style.willChange = '';
-        lastShift = -1;
-        return;
-      }
-      const r = rail.getBoundingClientRect();
-      const h = inner.offsetHeight;
-      if (!h || r.height < 1) {
-        setShift(0);
-        return;
-      }
-      const maxShift = Math.max(0, r.height - h);
-      let shift = 0;
-      if (r.top < stickyOffset) {
-        shift = Math.min(stickyOffset - r.top, maxShift);
-      }
-      setShift(shift);
-    };
-
-    const shell = document.getElementById('public-shell');
-    const scrollRoot = (shell && shell.scrollHeight > shell.clientHeight + 2) ? shell : window;
-
-    let rafPending = null;
-    const onScrollOrResize = () => {
-      if (rafPending != null) return;
-      rafPending = window.requestAnimationFrame(() => {
-        rafPending = null;
-        tick();
-      });
-    };
-    const onResizeOrModeChange = () => {
-      stickyOffset = headerOffset();
-      onScrollOrResize();
-    };
-
-    const img = inner.querySelector('.lp-vera__sticky-visual-img');
-    if (img && !img.complete) {
-      img.addEventListener('load', onScrollOrResize, { once: true });
-    }
-
-    let resizeObs = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObs = new ResizeObserver(() => onScrollOrResize());
-      resizeObs.observe(rail);
-    }
-
-    inner.style.willChange = 'transform';
-    tick();
-    requestAnimationFrame(() => tick());
-    scrollRoot.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onResizeOrModeChange);
-    mq.addEventListener('change', onResizeOrModeChange);
-
-    this.veraRailScrollCleanup = () => {
-      scrollRoot.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onResizeOrModeChange);
-      mq.removeEventListener('change', onResizeOrModeChange);
-      if (resizeObs) {
-        resizeObs.disconnect();
-        resizeObs = null;
-      }
-      if (rafPending != null) {
-        window.cancelAnimationFrame(rafPending);
-        rafPending = null;
-      }
-      inner.style.transform = '';
-      inner.style.willChange = '';
-      lastShift = -1;
-      this.veraRailScrollCleanup = null;
-    };
+    this.veraRailScrollCleanup = null;
   }
 
   /**
