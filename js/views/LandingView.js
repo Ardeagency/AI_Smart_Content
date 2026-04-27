@@ -1040,23 +1040,22 @@ class LandingView extends PublicBaseView {
 
     const clamp01 = (n) => Math.max(0, Math.min(1, n));
     let maxTravel = 0;
+    let scrollSpan = 0;
 
     const computeBounds = () => {
       const overflow = Math.max(0, headline.scrollWidth - marquee.clientWidth);
-      // Añade una cola extra para que el usuario "termine" la lectura antes de salir.
-      maxTravel = Math.round(overflow + Math.min(140, marquee.clientWidth * 0.1));
+      maxTravel = Math.round(overflow);
+      // El tramo de scroll que gobierna la animación coincide con el recorrido horizontal.
+      scrollSpan = Math.max(1, maxTravel);
+      section.style.setProperty('--lp-agit-scroll-span', `${scrollSpan}px`);
     };
 
     const tick = () => {
       const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-      const travel = rect.height + vh;
-      const raw = (vh - rect.top) / Math.max(1, travel);
-      const p = clamp01(raw);
-
-      const reveal = clamp01((p - 0.12) / 0.76);
-      const x = -maxTravel * reveal;
-      const alpha = Math.min(1, Math.max(0.22, clamp01((p - 0.02) / 0.12)));
+      // Progreso 0->1 mientras la sección está "pinneada" por sticky.
+      const p = clamp01((-rect.top) / scrollSpan);
+      const x = -maxTravel * p;
+      const alpha = 1;
 
       headline.style.opacity = alpha.toFixed(3);
       headline.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
@@ -1105,6 +1104,7 @@ class LandingView extends PublicBaseView {
       }
       headline.style.opacity = '';
       headline.style.transform = '';
+      section.style.removeProperty('--lp-agit-scroll-span');
       this.agitScrollCleanup = null;
     };
   }

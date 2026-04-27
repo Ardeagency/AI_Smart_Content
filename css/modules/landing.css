@@ -1042,7 +1042,7 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  min-height: clamp(220vh, 250vh, 290vh);
+  min-height: calc(100svh + var(--lp-agit-scroll-span, 0px));
   padding: 0;
   text-align: center;
   overflow: hidden;
@@ -1051,10 +1051,11 @@ body.entrance-done .landing-header {
 
 .lp-agit__inner {
   box-sizing: border-box;
-  max-width: 900px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
   min-height: inherit;
-  padding: 0 clamp(20px, 6vw, 80px);
+  padding: 0;
   position: relative;
 }
 
@@ -1069,9 +1070,9 @@ body.entrance-done .landing-header {
 }
 
 .lp-agit__marquee {
-  width: min(100%, 1600px);
+  width: 100%;
   overflow: hidden;
-  padding-inline: clamp(16px, 3.5vw, 52px);
+  padding-inline: clamp(12px, 2.6vw, 32px);
   box-sizing: border-box;
 }
 
@@ -1102,7 +1103,7 @@ body.entrance-done .landing-header {
 
 @media (prefers-reduced-motion: reduce) {
   .lp-agit {
-    min-height: auto;
+    min-height: 100svh;
     padding: clamp(72px, 10vw, 120px) 0;
   }
 
