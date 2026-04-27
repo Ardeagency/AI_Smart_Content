@@ -249,9 +249,9 @@ body.entrance-done .landing-header {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  /* En desktop usamos `fixed` para mantener el efecto parallax del hero;
-     se sobrescribe a `scroll` en mobile más abajo para evitar el bug de iOS. */
-  background-attachment: fixed;
+  /* `background-attachment: fixed` causa repaints carísimos en cada scroll
+     y se ignora en iOS Safari. Mejor scroll local: el fondo viaja con la sección. */
+  background-attachment: scroll;
   color: #ffffff;
   /* padding-top extra: header fijo (.landing-header) para que el titulo no choque con el logo */
   padding: clamp(112px, 15vh, 168px) clamp(20px, 6vw, 96px) clamp(52px, 8vh, 84px);
@@ -3864,11 +3864,28 @@ a.public-nav-access--glow:hover::after {
     }
 }
 
-/* Suavizar overscroll del shell público y habilitar scroll-behavior suave
-   para anchors (#landing-6 etc.). No usamos `content-visibility: auto` aquí:
-   skipping del subtree posterga el layout y eso impide que `.sr-reveal`
-   reciba el evento del IntersectionObserver con la posición real → los
-   reveals quedan sin animación de entrada. */
+/* ═══════════════════════════════════════════════════════════════
+   PERFORMANCE — Diferir paint/layout de secciones fuera de viewport.
+   `content-visibility: auto` hace que el navegador no pinte ni
+   ejecute layout para subárboles invisibles, mientras que
+   `contain-intrinsic-size` reserva una altura aproximada para
+   evitar saltos en la barra de scroll.
+   ═══════════════════════════════════════════════════════════════ */
+/* `.lp-vera` se excluye porque es target del anchor `#landing-6` (CTA del hero):
+   `content-visibility: auto` puede causar leves saltos al hacer scroll a anchor. */
+.lp-cred,
+.lp-pain,
+.lp-agit,
+.lp-app-preview,
+.lp-why,
+.lp-faq,
+.lp-cta,
+.landing-different {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
+/* Suavizar overscroll y compositar el scroll del shell */
 #public-view-content,
 #public-shell {
   overscroll-behavior-y: contain;
