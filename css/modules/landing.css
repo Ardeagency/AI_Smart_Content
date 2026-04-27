@@ -1208,14 +1208,15 @@ body.entrance-done .landing-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   S05 — PROPUESTA (mock: negro puro, kicker + eje, NECESITAS/VERA, carrusel, 2026)
+   S05 — PROPUESTA (fondo carbón, kicker + eje, NECESITAS + copy, carrusel, nav)
    ═══════════════════════════════════════════════════════════════ */
 
 .lp-caps {
   position: relative;
   color: #ffffff;
   padding: clamp(56px, 9vw, 100px) clamp(18px, 5vw, 64px);
-  background: #000000;
+  /* Carbón muy oscuro (no negro puro), alineado al mock Figma */
+  background: #0a0a0a;
 }
 
 .lp-caps__inner {
@@ -1421,19 +1422,10 @@ body.entrance-done .landing-header {
 .lp-caps__foot {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 24px;
   padding-top: clamp(8px, 2vw, 16px);
-}
-
-.lp-caps__year {
-  font-family: "Space Grotesk", Inter, system-ui, sans-serif;
-  font-size: clamp(2.5rem, 8vw, 4.75rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  color: #ffffff;
 }
 
 .lp-caps__nav {

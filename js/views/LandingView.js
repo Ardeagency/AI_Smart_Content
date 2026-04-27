@@ -293,7 +293,6 @@ class LandingView extends PublicBaseView {
             </div>
           </div>
           <footer class="lp-caps__foot">
-            <span class="lp-caps__year sr-reveal" aria-hidden="true">2026</span>
             <div class="lp-caps__nav" role="group" aria-label="Desplazar tarjetas">
               <button type="button" class="lp-caps__nav-btn" data-lp-caps-prev aria-label="Tarjeta anterior">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
