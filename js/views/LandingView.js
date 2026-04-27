@@ -763,6 +763,7 @@ class LandingView extends PublicBaseView {
 
   async init() {
     await super.init();
+    this.clearLandingAgitHash();
     this.initHeroReveal();
     this.initPainRoadmap();
     this.initFaqAccordion();
@@ -770,7 +771,23 @@ class LandingView extends PublicBaseView {
     this.initLandingAppPreview();
     this.initWhyCarousel();
     this.initVeraRailWordmarkScroll();
-    this.initAgitScroll();
+  }
+
+  clearLandingAgitHash() {
+    if (window.location.hash !== '#landing-4') return;
+    try {
+      const cleanUrl = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState(window.history.state, '', cleanUrl);
+    } catch (_) {
+      // Fallback silencioso: si history falla, al menos evita mantener el hash.
+      window.location.hash = '';
+    }
+    const shell = document.getElementById('public-shell');
+    if (shell && shell.scrollHeight > shell.clientHeight + 2) {
+      shell.scrollTop = 0;
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
   }
 
   async onLeave() {
@@ -953,165 +970,8 @@ class LandingView extends PublicBaseView {
       this.agitScrollCleanup();
       this.agitScrollCleanup = null;
     }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    const section = this.container?.querySelector('#landing-4');
-    const marquee = section?.querySelector('[data-lp-agit-marquee]');
-    const headline = section?.querySelector('[data-lp-agit-headline]');
-    if (!section || !marquee || !headline) return;
-
-    const clamp01 = (n) => Math.max(0, Math.min(1, n));
-    let maxTravel = 0;
-    let progress = 0;
-    let touchY = null;
-
-    const computeBounds = () => {
-      const overflow = Math.max(0, headline.scrollWidth - marquee.clientWidth);
-      maxTravel = Math.round(overflow);
-      if (maxTravel <= 0) progress = 0;
-      render();
-    };
-
-    const render = () => {
-      const x = -maxTravel * progress;
-      headline.style.opacity = '1';
-      headline.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
-    };
-
-    const alignsForCapture = (delta) => {
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-      if (delta > 0) {
-        return rect.top <= 0 && rect.bottom > 0;
-      }
-      if (delta < 0) {
-        return rect.top < vh && rect.bottom >= vh;
-      }
-      return false;
-    };
-
-    const consumeDelta = (delta) => {
-      if (maxTravel <= 0) return false;
-      if (!alignsForCapture(delta)) return false;
-      if (delta > 0 && progress >= 1) return false;
-      if (delta < 0 && progress <= 0) return false;
-      const step = Math.abs(delta) / Math.max(220, maxTravel);
-      progress = clamp01(progress + (delta > 0 ? step : -step));
-      render();
-      return true;
-    };
-
-    const onWheel = (e) => {
-      if (consumeDelta(e.deltaY)) e.preventDefault();
-    };
-
-    const onTouchStart = (e) => {
-      touchY = e.touches && e.touches.length ? e.touches[0].clientY : null;
-    };
-
-    const onTouchMove = (e) => {
-      if (touchY == null || !e.touches || !e.touches.length) return;
-      const y = e.touches[0].clientY;
-      const delta = touchY - y;
-      touchY = y;
-      if (consumeDelta(delta)) e.preventDefault();
-    };
-
-    const onTouchEnd = () => {
-      touchY = null;
-    };
-
-    const onKeyDown = (e) => {
-      const tag = (e.target && e.target.tagName) || '';
-      if (/INPUT|TEXTAREA|SELECT/.test(tag) || e.target?.isContentEditable) return;
-      let delta = 0;
-      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') delta = 120;
-      if (e.key === 'ArrowUp' || e.key === 'PageUp') delta = -120;
-      if (!delta) return;
-      if (consumeDelta(delta)) e.preventDefault();
-    };
-
-    const onResize = () => {
-      computeBounds();
-    };
-
-    let resizeObs = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObs = new ResizeObserver(() => computeBounds());
-      resizeObs.observe(marquee);
-    }
-
-    computeBounds();
-    render();
-    requestAnimationFrame(() => {
-      computeBounds();
-      render();
-    });
-
-    let listenersAttached = false;
-    const attachInputListeners = () => {
-      if (listenersAttached) return;
-      listenersAttached = true;
-      window.addEventListener('wheel', onWheel, { passive: false });
-      window.addEventListener('touchstart', onTouchStart, { passive: true });
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
-      window.addEventListener('touchend', onTouchEnd, { passive: true });
-      window.addEventListener('touchcancel', onTouchEnd, { passive: true });
-      window.addEventListener('keydown', onKeyDown);
-    };
-    const detachInputListeners = () => {
-      if (!listenersAttached) return;
-      listenersAttached = false;
-      window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('touchcancel', onTouchEnd);
-      window.removeEventListener('keydown', onKeyDown);
-      touchY = null;
-    };
-
-    const isSectionNearViewport = () => {
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-      return rect.top < vh * 1.25 && rect.bottom > -vh * 0.25;
-    };
-
-    let activeObs = null;
-    if (typeof IntersectionObserver !== 'undefined') {
-      activeObs = new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
-          if (entry && entry.isIntersecting) attachInputListeners();
-          else detachInputListeners();
-        },
-        { root: null, threshold: 0, rootMargin: '25% 0px 25% 0px' },
-      );
-      activeObs.observe(section);
-    } else if (isSectionNearViewport()) {
-      attachInputListeners();
-    }
-
-    window.addEventListener('resize', onResize);
-
-    this.agitScrollCleanup = () => {
-      detachInputListeners();
-      window.removeEventListener('resize', onResize);
-      if (activeObs) {
-        activeObs.disconnect();
-        activeObs = null;
-      }
-      if (resizeObs) {
-        resizeObs.disconnect();
-        resizeObs = null;
-      }
-      headline.style.opacity = '';
-      headline.style.transform = '';
-      this.agitScrollCleanup = null;
-    };
+    // S04 se mantiene visible en DOM, pero se desactiva la agitación por scroll.
+    this.agitScrollCleanup = null;
   }
 
   initPainRoadmap() {
