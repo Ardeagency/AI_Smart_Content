@@ -1020,8 +1020,9 @@ class LandingView extends PublicBaseView {
   }
 
   /**
-   * S04 AGITACIÓN: texto centrado con progreso de scroll dentro de su sección.
-   * Emula un scrollytelling simple sin librerías externas (sin GSAP).
+   * S04 AGITACIÓN: lock de scroll en viewport fijo.
+   * Al entrar a la sección, captura wheel/touch/teclas para barrer el texto;
+   * al terminar (0% o 100%) libera el scroll del documento.
    */
   initAgitScroll() {
     if (typeof this.agitScrollCleanup === 'function') {
@@ -1040,71 +1041,127 @@ class LandingView extends PublicBaseView {
 
     const clamp01 = (n) => Math.max(0, Math.min(1, n));
     let maxTravel = 0;
-    let scrollSpan = 0;
+    let progress = 0;
+    let touchY = null;
 
     const computeBounds = () => {
       const overflow = Math.max(0, headline.scrollWidth - marquee.clientWidth);
       maxTravel = Math.round(overflow);
-      // El tramo de scroll que gobierna la animación coincide con el recorrido horizontal.
-      scrollSpan = Math.max(1, maxTravel);
-      section.style.setProperty('--lp-agit-scroll-span', `${scrollSpan}px`);
+      if (maxTravel <= 0) progress = 0;
+      render();
     };
 
-    const tick = () => {
-      const rect = section.getBoundingClientRect();
-      // Progreso 0->1 mientras la sección está "pinneada" por sticky.
-      const p = clamp01((-rect.top) / scrollSpan);
-      const x = -maxTravel * p;
-      const alpha = 1;
-
-      headline.style.opacity = alpha.toFixed(3);
+    const render = () => {
+      const x = -maxTravel * progress;
+      headline.style.opacity = '1';
       headline.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
     };
 
-    let rafPending = null;
-    const schedule = () => {
-      if (rafPending != null) return;
-      rafPending = window.requestAnimationFrame(() => {
-        rafPending = null;
-        tick();
-      });
+    const alignsForCapture = (delta) => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+      if (delta > 0) {
+        return rect.top <= 0 && rect.bottom > 0;
+      }
+      if (delta < 0) {
+        return rect.top < vh && rect.bottom >= vh;
+      }
+      return false;
+    };
+
+    const nudgeIntoViewport = (delta) => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+      if (delta > 0) {
+        if (Math.abs(rect.top) > 0.5) window.scrollBy(0, rect.top);
+      } else if (delta < 0) {
+        const dy = rect.bottom - vh;
+        if (Math.abs(dy) > 0.5) window.scrollBy(0, dy);
+      }
+    };
+
+    const consumeDelta = (delta) => {
+      if (maxTravel <= 0) return false;
+      if (!alignsForCapture(delta)) return false;
+      if (delta > 0 && progress >= 1) return false;
+      if (delta < 0 && progress <= 0) return false;
+
+      nudgeIntoViewport(delta);
+      const step = Math.abs(delta) / Math.max(220, maxTravel);
+      progress = clamp01(progress + (delta > 0 ? step : -step));
+      render();
+      return true;
+    };
+
+    const onWheel = (e) => {
+      if (consumeDelta(e.deltaY)) e.preventDefault();
+    };
+
+    const onTouchStart = (e) => {
+      touchY = e.touches && e.touches.length ? e.touches[0].clientY : null;
+    };
+
+    const onTouchMove = (e) => {
+      if (touchY == null || !e.touches || !e.touches.length) return;
+      const y = e.touches[0].clientY;
+      const delta = touchY - y;
+      touchY = y;
+      if (consumeDelta(delta)) e.preventDefault();
+    };
+
+    const onTouchEnd = () => {
+      touchY = null;
+    };
+
+    const onKeyDown = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (/INPUT|TEXTAREA|SELECT/.test(tag) || e.target?.isContentEditable) return;
+      let delta = 0;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') delta = 120;
+      if (e.key === 'ArrowUp' || e.key === 'PageUp') delta = -120;
+      if (!delta) return;
+      if (consumeDelta(delta)) e.preventDefault();
+    };
+
+    const onResize = () => {
+      computeBounds();
     };
 
     let resizeObs = null;
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObs = new ResizeObserver(() => schedule());
-      resizeObs.observe(section);
+      resizeObs = new ResizeObserver(() => computeBounds());
       resizeObs.observe(marquee);
     }
 
     computeBounds();
-    tick();
+    render();
     requestAnimationFrame(() => {
       computeBounds();
-      tick();
+      render();
     });
-    const onResize = () => {
-      computeBounds();
-      schedule();
-    };
 
-    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    window.addEventListener('keydown', onKeyDown);
     window.addEventListener('resize', onResize);
 
     this.agitScrollCleanup = () => {
-      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+      window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('resize', onResize);
       if (resizeObs) {
         resizeObs.disconnect();
         resizeObs = null;
       }
-      if (rafPending != null) {
-        window.cancelAnimationFrame(rafPending);
-        rafPending = null;
-      }
       headline.style.opacity = '';
       headline.style.transform = '';
-      section.style.removeProperty('--lp-agit-scroll-span');
       this.agitScrollCleanup = null;
     };
   }

@@ -1042,7 +1042,8 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  min-height: calc(100svh + var(--lp-agit-scroll-span, 0px));
+  height: 100svh;
+  min-height: 100svh;
   padding: 0;
   text-align: center;
   overflow: hidden;
@@ -1054,7 +1055,7 @@ body.entrance-done .landing-header {
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  min-height: inherit;
+  min-height: 100%;
   padding: 0;
   position: relative;
 }
