@@ -313,10 +313,11 @@ class LandingView extends PublicBaseView {
       <section class="lp-agit" id="landing-4" aria-label="Agitación">
         <div class="lp-agit__inner">
           <div class="lp-agit__pin" data-lp-agit-pin>
-            <h2 class="lp-agit__headline" data-lp-agit-headline>
-              <span class="lp-agit__line">El mercado ya está operando distinto.</span>
-              <em class="lp-agit__accent" data-lp-agit-accent>La pregunta es si tú también.</em>
-            </h2>
+            <div class="lp-agit__marquee" data-lp-agit-marquee>
+              <h2 class="lp-agit__headline" data-lp-agit-headline>
+                <span class="lp-agit__line">EL MERCADO YA ESTÁ OPERANDO DISTINTO. LA PREGUNTA ES SI TÚ TAMBIÉN.</span>
+              </h2>
+            </div>
           </div>
         </div>
       </section>
@@ -1033,12 +1034,18 @@ class LandingView extends PublicBaseView {
     }
 
     const section = this.container?.querySelector('#landing-4');
+    const marquee = section?.querySelector('[data-lp-agit-marquee]');
     const headline = section?.querySelector('[data-lp-agit-headline]');
-    const accent = section?.querySelector('[data-lp-agit-accent]');
-    if (!section || !headline || !accent) return;
+    if (!section || !marquee || !headline) return;
 
     const clamp01 = (n) => Math.max(0, Math.min(1, n));
-    const lerp = (a, b, t) => a + (b - a) * t;
+    let maxTravel = 0;
+
+    const computeBounds = () => {
+      const overflow = Math.max(0, headline.scrollWidth - marquee.clientWidth);
+      // Añade una cola extra para que el usuario "termine" la lectura antes de salir.
+      maxTravel = Math.round(overflow + Math.min(140, marquee.clientWidth * 0.1));
+    };
 
     const tick = () => {
       const rect = section.getBoundingClientRect();
@@ -1047,25 +1054,12 @@ class LandingView extends PublicBaseView {
       const raw = (vh - rect.top) / Math.max(1, travel);
       const p = clamp01(raw);
 
-      // Fade-in early, hold, fade-out late.
-      const fadeIn = clamp01((p - 0.06) / 0.18);
-      const fadeOut = clamp01((1 - p - 0.06) / 0.2);
-      const alpha = Math.max(0.18, Math.min(fadeIn, fadeOut));
-
-      // Headline drift: entra desde abajo, atraviesa centro, sale arriba.
-      const y = lerp(46, -34, p);
-      const scale = lerp(0.92, 1.04, Math.sin(p * Math.PI));
-      const letter = lerp(-0.02, -0.036, p);
+      const reveal = clamp01((p - 0.12) / 0.76);
+      const x = -maxTravel * reveal;
+      const alpha = Math.min(1, Math.max(0.22, clamp01((p - 0.02) / 0.12)));
 
       headline.style.opacity = alpha.toFixed(3);
-      headline.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
-      headline.style.letterSpacing = `${letter.toFixed(3)}em`;
-
-      // Segunda línea con desfase para sensación de profundidad.
-      const ay = lerp(18, -24, p);
-      const aSkew = lerp(5, -4, p);
-      accent.style.transform = `translate3d(0, ${ay.toFixed(1)}px, 0) skewX(${aSkew.toFixed(2)}deg)`;
-      accent.style.opacity = Math.min(1, alpha + 0.08).toFixed(3);
+      headline.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
     };
 
     let rafPending = null;
@@ -1081,16 +1075,26 @@ class LandingView extends PublicBaseView {
     if (typeof ResizeObserver !== 'undefined') {
       resizeObs = new ResizeObserver(() => schedule());
       resizeObs.observe(section);
+      resizeObs.observe(marquee);
     }
 
+    computeBounds();
     tick();
-    requestAnimationFrame(() => tick());
+    requestAnimationFrame(() => {
+      computeBounds();
+      tick();
+    });
+    const onResize = () => {
+      computeBounds();
+      schedule();
+    };
+
     window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    window.addEventListener('resize', onResize);
 
     this.agitScrollCleanup = () => {
       window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
+      window.removeEventListener('resize', onResize);
       if (resizeObs) {
         resizeObs.disconnect();
         resizeObs = null;
@@ -1101,9 +1105,6 @@ class LandingView extends PublicBaseView {
       }
       headline.style.opacity = '';
       headline.style.transform = '';
-      headline.style.letterSpacing = '';
-      accent.style.transform = '';
-      accent.style.opacity = '';
       this.agitScrollCleanup = null;
     };
   }

@@ -1042,7 +1042,7 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  min-height: clamp(170vh, 190vh, 220vh);
+  min-height: clamp(220vh, 250vh, 290vh);
   padding: 0;
   text-align: center;
   overflow: hidden;
@@ -1068,16 +1068,27 @@ body.entrance-done .landing-header {
   justify-content: center;
 }
 
+.lp-agit__marquee {
+  width: min(100%, 1600px);
+  overflow: hidden;
+  padding-inline: clamp(16px, 3.5vw, 52px);
+  box-sizing: border-box;
+}
+
 .lp-agit__headline {
   margin: 0;
-  font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+  width: max-content;
+  font-size: clamp(2.15rem, 6vw, 6rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: -0.025em;
+  line-height: 1.03;
   color: #ffffff;
   font-style: normal;
-  will-change: transform, opacity, letter-spacing;
-  transform-origin: center center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  transform-origin: left center;
 }
 
 .lp-agit__line {
@@ -1085,11 +1096,8 @@ body.entrance-done .landing-header {
 }
 
 .lp-agit__accent {
-  display: block;
-  margin-top: 0.18em;
-  font-style: italic;
-  color: #ffffff;
-  will-change: transform, opacity;
+  font-style: inherit;
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1105,6 +1113,18 @@ body.entrance-done .landing-header {
   .lp-agit__pin {
     position: static;
     min-height: auto;
+  }
+
+  .lp-agit__marquee {
+    overflow: visible;
+  }
+
+  .lp-agit__headline {
+    width: auto;
+    white-space: normal;
+    font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+    line-height: 1.1;
+    text-transform: none;
   }
 }
 
