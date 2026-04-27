@@ -1379,21 +1379,9 @@ class LandingView extends PublicBaseView {
     const cleanups = [];
     const n = PILLARS.length;
     const gapPx = 14;
-    let cachedStep = 0;
     let current = 0;
 
     const getSlides = () => [...(viewport?.querySelectorAll('.lp-caps__slide') ?? [])];
-
-    const measureStep = () => {
-      const slides = getSlides();
-      if (slides.length >= 2) {
-        cachedStep = Math.round(slides[1].offsetLeft - slides[0].offsetLeft);
-      } else if (slides.length === 1) {
-        cachedStep = Math.round(slides[0].getBoundingClientRect().width + gapPx);
-      } else {
-        cachedStep = Math.round((viewport?.clientWidth || 0) * 0.72);
-      }
-    };
 
     const syncTabs = () => {
       if (!axis) return;
@@ -1466,16 +1454,20 @@ class LandingView extends PublicBaseView {
         track.style.paddingInlineEnd = `${pad}px`;
       };
 
+      /**
+       * Índice del slide cuyo borde izquierdo está más alineado con el viewport.
+       * No usar offsetLeft vs scrollLeft (offsetParent inconsistente) ni
+       * scrollLeft >= maxScroll cuando maxScroll === 0 (forzaba siempre el último).
+       */
       const indexFromScrollLeft = () => {
         const slides = getSlides();
         if (!slides.length) return 0;
-        const x = viewport.scrollLeft;
-        const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-        if (x >= maxL - 0.5) return slides.length - 1;
+        const v = viewport.getBoundingClientRect();
         let best = 0;
         let bestDist = Infinity;
         slides.forEach((el, i) => {
-          const d = Math.abs(el.offsetLeft - x);
+          const r = el.getBoundingClientRect();
+          const d = Math.abs(r.left - v.left);
           if (d < bestDist) {
             bestDist = d;
             best = i;
@@ -1486,15 +1478,22 @@ class LandingView extends PublicBaseView {
 
       scrollToSlideIndex = (i) => {
         syncTrackEndPadding();
-        measureStep();
         const slides = getSlides();
         const el = slides[i];
         if (!el) return;
-        const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-        viewport.scrollLeft = Math.min(Math.max(0, el.offsetLeft), maxL);
+
+        const alignOnce = () => {
+          const v = viewport.getBoundingClientRect();
+          const r = el.getBoundingClientRect();
+          const delta = r.left - v.left;
+          const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+          viewport.scrollLeft = Math.min(Math.max(0, viewport.scrollLeft + delta), maxL);
+        };
+
+        alignOnce();
+        requestAnimationFrame(alignOnce);
       };
 
-      measureStep();
       syncTrackEndPadding();
 
       let scrollRaf = null;
@@ -1502,7 +1501,6 @@ class LandingView extends PublicBaseView {
         if (scrollRaf != null) return;
         scrollRaf = requestAnimationFrame(() => {
           scrollRaf = null;
-          measureStep();
           const i = indexFromScrollLeft();
           if (i !== current) applyIndex(i);
         });
@@ -1519,7 +1517,6 @@ class LandingView extends PublicBaseView {
         resizeRaf = requestAnimationFrame(() => {
           resizeRaf = 0;
           syncTrackEndPadding();
-          measureStep();
           scrollToSlideIndex(current);
         });
       };
@@ -1551,6 +1548,9 @@ class LandingView extends PublicBaseView {
     }
 
     setActive(0);
+    requestAnimationFrame(() => {
+      setActive(0);
+    });
 
     this.capsPropostaCleanup = () => {
       cleanups.forEach((fn) => fn());
