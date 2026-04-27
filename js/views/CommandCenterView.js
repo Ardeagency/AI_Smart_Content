@@ -1,6 +1,6 @@
 /**
  * CommandCenterView — v2
- * - Carrusel: audiencias Supabase (nombre + awareness) + modal edición
+ * - Carrusel: audience_personas (nombre + awareness) + modal edición
  * - Fila inferior: campañas Supabase (izq) | targeting + campañas API (der)
  */
 class CommandCenterView extends BaseView {
@@ -235,13 +235,13 @@ class CommandCenterView extends BaseView {
     try {
       const [audRes, campRes, intRes] = await Promise.all([
         supabase
-          .from('audiences')
+          .from('audience_personas')
           .select('id, name, description, awareness_level, datos_demograficos, datos_psicograficos, dolores, deseos, updated_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
         supabase
           .from('campaigns')
-          .select('id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, updated_at, created_at')
+          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, status, platform, platform_objective, updated_at, created_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
         supabase
@@ -440,7 +440,7 @@ class CommandCenterView extends BaseView {
     if (saveBtn) saveBtn.disabled = true;
     try {
       const { error } = await this._supabase
-        .from('audiences')
+        .from('audience_personas')
         .update({
           name,
           awareness_level: awareness || null,
@@ -488,10 +488,19 @@ class CommandCenterView extends BaseView {
   }
 
   _campaignCtaText(c) {
-    const obj = Array.isArray(c.objetivos_estrategicos) ? c.objetivos_estrategicos : [];
-    if (obj.length) return String(obj[0]);
-    const d = c.descripcion_interna ? String(c.descripcion_interna).trim() : '';
-    if (d) return d.length > 72 ? `${d.slice(0, 72)}…` : d;
+    const clip = (s, n) => {
+      const t = String(s || '').trim();
+      if (!t) return '';
+      return t.length > n ? `${t.slice(0, n)}…` : t;
+    };
+    const cta = clip(c.cta, 72);
+    if (cta) return cta;
+    const po = clip(c.platform_objective, 72);
+    if (po) return po;
+    const st = clip(c.status, 48);
+    if (st) return st;
+    const d = clip(c.descripcion_interna, 72);
+    if (d) return d;
     return 'Sin CTA definido';
   }
 
