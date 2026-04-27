@@ -60,6 +60,27 @@ class LandingView extends PublicBaseView {
     return loopBrands.map((brand) => this.renderCredBrand(brand)).join('');
   }
 
+  /** Imagen Cloudinary limitada por ancho (WebP/AVIF con f_auto, peso con q_auto). */
+  cloudinaryDelivered(publicPath, width) {
+    return `https://res.cloudinary.com/dmruwjuxn/image/upload/f_auto,q_auto,w_${width},c_limit/${publicPath}`;
+  }
+
+  /**
+   * <img> para tarjeta S05: srcset para DPR sin pedir el JPG completo.
+   * @param {string} publicPath p.ej. v1776102754/archivo.jpg
+   * @param {string} alt
+   * @param {{ priority?: boolean }} opts priority = primera tarjeta (eager + fetchpriority)
+   */
+  renderCapsSlideImg(publicPath, alt, opts = {}) {
+    const priority = Boolean(opts.priority);
+    const s360 = this.cloudinaryDelivered(publicPath, 360);
+    const s560 = this.cloudinaryDelivered(publicPath, 560);
+    const s840 = this.cloudinaryDelivered(publicPath, 840);
+    const load = priority ? 'eager' : 'lazy';
+    const extra = priority ? ' fetchpriority="high" decoding="sync"' : ' fetchpriority="low" decoding="async"';
+    return `<img class="lp-caps__slide-media" src="${s560}" srcset="${s360} 360w, ${s560} 560w, ${s840} 840w" sizes="(max-width: 900px) 30vw, 190px" alt="${alt}" width="560" height="700" loading="${load}"${extra} referrerpolicy="no-referrer-when-downgrade">`;
+  }
+
   renderContent() {
     return `
       <!-- ════════ S01: HERO ════════ -->
@@ -281,32 +302,32 @@ class LandingView extends PublicBaseView {
                 <div class="lp-caps__track" role="list">
                   <div class="lp-caps__slide is-active" role="listitem" data-index="0" aria-label="PRECISIÓN">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg" alt="Precisión" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg', 'Precisión', { priority: true })}
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="1" aria-label="INTELIGENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg" alt="Inteligencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg', 'Inteligencia')}
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="2" aria-label="VELOCIDAD">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg" alt="Velocidad" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg', 'Velocidad')}
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="3" aria-label="EFICIENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg" alt="Eficiencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg', 'Eficiencia')}
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="4" aria-label="CONSISTENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg" alt="Consistencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg', 'Consistencia')}
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="5" aria-label="CALIDAD">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg" alt="Calidad" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
+                      ${this.renderCapsSlideImg('v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg', 'Calidad')}
                     </div>
                   </div>
                 </div>
