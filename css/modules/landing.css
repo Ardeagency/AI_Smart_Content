@@ -52,7 +52,7 @@ body.entrance-done.route-landing #landing-background-wrap {
 /* Landing header: arriba del todo, ancho completo y sin cristal; al hacer scroll → .landing-header--floating */
 .landing-header {
     --landing-header-ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --landing-header-duration: 0.58s;
+    --landing-header-duration: 0.32s;
     position: fixed;
     top: 0;
     left: 0;
@@ -74,25 +74,18 @@ body.entrance-done.route-landing #landing-background-wrap {
     -webkit-backdrop-filter: blur(0);
     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
     opacity: 0;
+    /* Solo transicionar lo que realmente cambia entre estados → menos repaints en scroll */
     transition:
-        top var(--landing-header-duration) var(--landing-header-ease),
-        left var(--landing-header-duration) var(--landing-header-ease),
-        right var(--landing-header-duration) var(--landing-header-ease),
-        width var(--landing-header-duration) var(--landing-header-ease),
-        max-width var(--landing-header-duration) var(--landing-header-ease),
-        margin var(--landing-header-duration) var(--landing-header-ease),
-        padding var(--landing-header-duration) var(--landing-header-ease),
-        border-radius var(--landing-header-duration) var(--landing-header-ease),
-        background calc(var(--landing-header-duration) * 0.92) var(--landing-header-ease),
-        border-color calc(var(--landing-header-duration) * 0.92) var(--landing-header-ease),
+        background var(--landing-header-duration) var(--landing-header-ease),
+        border-color var(--landing-header-duration) var(--landing-header-ease),
         box-shadow var(--landing-header-duration) var(--landing-header-ease),
-        backdrop-filter calc(var(--landing-header-duration) * 0.85) var(--landing-header-ease),
-        -webkit-backdrop-filter calc(var(--landing-header-duration) * 0.85) var(--landing-header-ease);
+        backdrop-filter var(--landing-header-duration) var(--landing-header-ease),
+        -webkit-backdrop-filter var(--landing-header-duration) var(--landing-header-ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
     .landing-header {
-        --landing-header-duration: 0.12s;
+        --landing-header-duration: 0.01s;
         --landing-header-ease: ease-out;
     }
 }
@@ -100,11 +93,18 @@ body.entrance-done.route-landing #landing-background-wrap {
 /* Al hacer scroll: se mantiene la posición y tamaño originales,
    solo se agrega el fondo efecto cristal (glass). */
 .landing-header.landing-header--floating {
-    background: rgba(11, 11, 11, 0.42);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: rgba(11, 11, 11, 0.55);
+    backdrop-filter: blur(10px) saturate(135%);
+    -webkit-backdrop-filter: blur(10px) saturate(135%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* Fallback para navegadores sin backdrop-filter: opacidad mayor para mantener legibilidad */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .landing-header.landing-header--floating {
+        background: rgba(11, 11, 11, 0.92);
+    }
 }
 
 body.entrance-done .landing-header {
@@ -249,7 +249,9 @@ body.entrance-done .landing-header {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  background-attachment: fixed;
+  /* `background-attachment: fixed` causa repaints carísimos en cada scroll
+     y se ignora en iOS Safari. Mejor scroll local: el fondo viaja con la sección. */
+  background-attachment: scroll;
   color: #ffffff;
   /* padding-top extra: header fijo (.landing-header) para que el titulo no choque con el logo */
   padding: clamp(112px, 15vh, 168px) clamp(20px, 6vw, 96px) clamp(52px, 8vh, 84px);
@@ -268,6 +270,9 @@ body.entrance-done .landing-header {
   border-radius: 50%;
   filter: blur(80px);
   pointer-events: none;
+  /* Forzar capa propia: el blur se rasteriza una sola vez en GPU */
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 .lp-hero__glow--1 {
@@ -286,6 +291,13 @@ body.entrance-done .landing-header {
   right: -5%;
   background: radial-gradient(circle, rgba(0, 200, 255, 0.1) 0%, transparent 70%);
   animation: lp-glow-pulse 10s ease-in-out infinite 2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero__glow {
+    animation: none !important;
+    will-change: auto;
+  }
 }
 
 .lp-hero__noise {
@@ -1086,9 +1098,6 @@ body.entrance-done .landing-header {
   font-style: normal;
   text-transform: uppercase;
   white-space: nowrap;
-  will-change: auto;
-  transform: none;
-  transform-origin: center center;
 }
 
 .lp-agit__line {
@@ -3853,5 +3862,38 @@ a.public-nav-access--glow:hover::after {
         margin-left: 0;
         margin-top: 4px;
     }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERFORMANCE — Diferir paint/layout de secciones fuera de viewport.
+   `content-visibility: auto` hace que el navegador no pinte ni
+   ejecute layout para subárboles invisibles, mientras que
+   `contain-intrinsic-size` reserva una altura aproximada para
+   evitar saltos en la barra de scroll.
+   ═══════════════════════════════════════════════════════════════ */
+/* `.lp-vera` se excluye porque es target del anchor `#landing-6` (CTA del hero):
+   `content-visibility: auto` puede causar leves saltos al hacer scroll a anchor. */
+.lp-cred,
+.lp-pain,
+.lp-agit,
+.lp-app-preview,
+.lp-why,
+.lp-faq,
+.lp-cta,
+.landing-different {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
+/* Suavizar overscroll y compositar el scroll del shell */
+#public-view-content,
+#public-shell {
+  overscroll-behavior-y: contain;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
