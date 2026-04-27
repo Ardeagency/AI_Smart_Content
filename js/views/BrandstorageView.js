@@ -369,27 +369,21 @@ class BrandstorageView extends BaseView {
 
       const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
 
-      const [entitiesResult, audiencesResult, campaignsResult, integrationsResult] = await Promise.allSettled([
-        containerIds.length
-          ? this.supabase
-            .from('brand_entities')
-            .select('id, brand_container_id, name, entity_type, description, created_at, updated_at')
-            .in('brand_container_id', containerIds)
-            .order('updated_at', { ascending: false })
-          : Promise.resolve({ data: [], error: null }),
-        containerIds.length
-          ? this.supabase
-            .from('audiences')
-            .select('id, brand_container_id, name, description, awareness_level, entity_id, datos_demograficos, datos_psicograficos, dolores, deseos, objeciones, gatillos_compra, estilo_lenguaje, created_at, updated_at')
-            .in('brand_container_id', containerIds)
-            .order('updated_at', { ascending: false })
-          : Promise.resolve({ data: [], error: null }),
+      // brand_entities: IdentitiesView usa organization_id; filtrar por sub-marca en cliente si existe brand_container_id.
+      // campaigns: orden por created_at (updated_at puede no existir en algunos esquemas → 400).
+      // audiences: muchos proyectos no exponen la tabla en PostgREST (404); no prefetch aquí para evitar ruido en consola.
+      const [entitiesResult, campaignsResult, integrationsResult] = await Promise.allSettled([
+        this.supabase
+          .from('brand_entities')
+          .select('id, organization_id, name, entity_type, description, created_at')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false }),
         containerIds.length
           ? this.supabase
             .from('campaigns')
-            .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at, updated_at')
+            .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at')
             .in('brand_container_id', containerIds)
-            .order('updated_at', { ascending: false })
+            .order('created_at', { ascending: false })
           : Promise.resolve({ data: [], error: null }),
         containerIds.length
           ? this.supabase
@@ -400,13 +394,14 @@ class BrandstorageView extends BaseView {
           : Promise.resolve({ data: [], error: null })
       ]);
 
-      this.brandEntities = entitiesResult.status === 'fulfilled' && !entitiesResult.value.error
+      const entitiesRaw = entitiesResult.status === 'fulfilled' && !entitiesResult.value.error
         ? (entitiesResult.value.data || [])
         : [];
+      this.brandEntities = containerIds.length
+        ? entitiesRaw.filter((e) => !e.brand_container_id || containerIds.includes(String(e.brand_container_id)))
+        : entitiesRaw;
       this.brandPlaces = [];
-      this.brandAudiences = audiencesResult.status === 'fulfilled' && !audiencesResult.value.error
-        ? (audiencesResult.value.data || [])
-        : [];
+      this.brandAudiences = [];
       this.brandCampaigns = campaignsResult.status === 'fulfilled' && !campaignsResult.value.error
         ? (campaignsResult.value.data || [])
         : [];
@@ -1688,3 +1683,6 @@ class BrandstorageView extends BaseView {
 }
 
 window.BrandstorageView = BrandstorageView;
+['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews'].forEach((k) => {
+  if (typeof window[k] === 'function') window[k]();
+});

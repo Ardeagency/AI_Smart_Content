@@ -425,25 +425,20 @@ class BrandOrganizationView extends BaseView {
 
         const containerIds = this.brandContainers.map((r) => r.id).filter(Boolean);
         if (containerIds.length) {
-          const [audiencesRes, campaignsRes, integrationsRes] = await Promise.allSettled([
-            this.supabase
-              .from('audiences')
-              .select('id, brand_container_id, name, description, awareness_level, entity_id, datos_demograficos, datos_psicograficos, dolores, deseos, objeciones, gatillos_compra, estilo_lenguaje, created_at, updated_at')
-              .in('brand_container_id', containerIds)
-              .order('updated_at', { ascending: false }),
+          // audiences: a menudo no existe en PostgREST (404); esta vista no pinta audiencias en UI → no prefetch.
+          const [campaignsRes, integrationsRes] = await Promise.allSettled([
             this.supabase
               .from('campaigns')
-              .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at, updated_at')
+              .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at')
               .in('brand_container_id', containerIds)
-              .order('updated_at', { ascending: false }),
+              .order('created_at', { ascending: false }),
             this.supabase
               .from('brand_integrations')
               .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
               .in('brand_container_id', containerIds)
               .order('platform', { ascending: true })
           ]);
-          this.brandAudiences = audiencesRes.status === 'fulfilled' && !audiencesRes.value.error
-            ? (audiencesRes.value.data || []) : [];
+          this.brandAudiences = [];
           this.brandCampaigns = campaignsRes.status === 'fulfilled' && !campaignsRes.value.error
             ? (campaignsRes.value.data || []) : [];
           this.brandIntegrations = integrationsRes.status === 'fulfilled' && !integrationsRes.value.error
@@ -1435,3 +1430,6 @@ class BrandOrganizationView extends BaseView {
 }
 
 window.BrandOrganizationView = BrandOrganizationView;
+['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews'].forEach((k) => {
+  if (typeof window[k] === 'function') window[k]();
+});

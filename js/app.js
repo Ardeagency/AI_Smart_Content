@@ -8,7 +8,7 @@
  */
 
 /** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260417-vprompt-perf-cc-published';
+const APP_LAZY_SCRIPT_VER = '20260427-brand-mixins-reapply';
 
 class App {
   constructor() {

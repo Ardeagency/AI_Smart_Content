@@ -154,6 +154,11 @@
     }
   };
 
-  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, TypographyMixin);
-  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, TypographyMixin);
+  function applyTypographyToBrandViews() {
+    if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, TypographyMixin);
+    if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, TypographyMixin);
+  }
+  applyTypographyToBrandViews();
+  /** Tras visitar otra vista de marca, el script del mixin puede estar en caché y no re-ejecutarse; las vistas llaman esto al definirse. */
+  window.__applyTypographyMixinToBrandViews = applyTypographyToBrandViews;
 })();

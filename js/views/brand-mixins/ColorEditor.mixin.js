@@ -322,6 +322,10 @@
     }
   };
 
-  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, ColorEditorMixin);
-  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, ColorEditorMixin);
+  function applyColorEditorToBrandViews() {
+    if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, ColorEditorMixin);
+    if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, ColorEditorMixin);
+  }
+  applyColorEditorToBrandViews();
+  window.__applyColorEditorMixinToBrandViews = applyColorEditorToBrandViews;
 })();

@@ -282,6 +282,10 @@
     }
   };
 
-  if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, UploadsMixin);
-  if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, UploadsMixin);
+  function applyUploadsToBrandViews() {
+    if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, UploadsMixin);
+    if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, UploadsMixin);
+  }
+  applyUploadsToBrandViews();
+  window.__applyUploadsMixinToBrandViews = applyUploadsToBrandViews;
 })();
