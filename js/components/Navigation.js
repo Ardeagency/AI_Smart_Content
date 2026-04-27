@@ -25,7 +25,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'brand-organization',
       label: 'Brand Organization',
       icon: 'fa-layer-group',
-      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      iconSrc: '/recursos/icons/Brands.svg',
       route: 'brand'
     },
     {
@@ -33,7 +33,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'brand-storage',
       label: 'Brand Storage',
       icon: 'fa-layer-group',
-      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      iconSrc: '/recursos/icons/file-storage.svg',
       children: []
     },
     {
@@ -41,7 +41,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'identities',
       label: 'Identities',
       icon: 'fa-id-card',
-      iconSrc: '/recursos/icons/Identity-Brands.svg',
+      iconSrc: '/recursos/icons/Identities.svg',
       route: 'identities'
     },
     { type: 'section', label: 'Create' },
