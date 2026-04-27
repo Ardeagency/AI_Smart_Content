@@ -1360,6 +1360,57 @@ body.entrance-done .landing-header {
   overflow-y: visible;
 }
 
+/*
+ * Backdrop con degradado multi-color (verde abajo-izq, morado centro-der,
+ * azul arriba-der) sobre el fondo oscuro. Cero JS, cero animación: capa
+ * estática de pintura compositada por GPU.
+ *
+ * z-index negativo (-2/-1) lo deja por debajo del contenido en flujo
+ * (.lp-vera__inner). El `isolation: isolate` de .lp-vera mantiene los
+ * negativos contenidos dentro del stacking context de la sección.
+ */
+.lp-vera::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    /* Verde abajo-izquierda */
+    radial-gradient(ellipse 60% 55% at 8% 78%,
+      rgba(10, 228, 72, 0.32) 0%,
+      rgba(10, 228, 72, 0.12) 35%,
+      transparent 65%),
+    /* Morado/violeta centro-derecha */
+    radial-gradient(ellipse 70% 70% at 92% 55%,
+      rgba(124, 0, 224, 0.42) 0%,
+      rgba(124, 0, 224, 0.16) 40%,
+      transparent 70%),
+    /* Azul profundo arriba-derecha */
+    radial-gradient(ellipse 80% 60% at 95% 5%,
+      rgba(0, 60, 220, 0.30) 0%,
+      rgba(0, 60, 220, 0.10) 40%,
+      transparent 70%);
+}
+
+/*
+ * Grano de película encima del gradiente (debajo del contenido).
+ * SVG noise generado con feTurbulence — mismo patrón que el hero
+ * para consistencia. mix-blend-mode: overlay le da textura a las
+ * zonas claras sin oscurecer las puras.
+ */
+.lp-vera::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+
 .lp-vera__inner {
   max-width: 1180px;
   margin: 0 auto;
