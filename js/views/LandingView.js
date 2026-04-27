@@ -242,11 +242,11 @@ class LandingView extends PublicBaseView {
            pin queda anclado al centro. -->
       <section class="lp-agit" id="landing-4" aria-label="Agitación">
         <div class="lp-agit__spacer-top" aria-hidden="true"></div>
-        <div class="lp-agit__pin" data-lp-agit-pin>
-          <div class="lp-agit__marquee" data-lp-agit-marquee>
-            <h2 class="lp-agit__headline" data-lp-agit-headline>
-              <span class="lp-agit__line">EL MERCADO YA ESTÁ OPERANDO DISTINTO. LA PREGUNTA ES SI TÚ TAMBIÉN.</span>
-            </h2>
+          <div class="lp-agit__pin" data-lp-agit-pin>
+            <div class="lp-agit__marquee" data-lp-agit-marquee>
+              <h2 class="lp-agit__headline" data-lp-agit-headline>
+                <span class="lp-agit__line">EL MERCADO YA ESTÁ OPERANDO DISTINTO. LA PREGUNTA ES SI TÚ TAMBIÉN.</span>
+              </h2>
           </div>
         </div>
       </section>
@@ -266,14 +266,11 @@ class LandingView extends PublicBaseView {
               <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="3"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">EFICIENCIA</span></li>
               <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="4"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">CONSISTENCIA</span></li>
               <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="5"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">CALIDAD</span></li>
-            </ul>
+              </ul>
           </header>
           <div class="lp-caps__main">
             <div class="lp-caps__copy">
-              <h3 class="lp-caps__need-block sr-reveal" id="lp-caps-need-heading">
-                <span class="lp-caps__need-line">Necesitas</span>
-                <span class="lp-caps__need-word" data-lp-caps-word>PRECISIÓN</span>
-              </h3>
+              <h3 class="lp-caps__need-block sr-reveal" id="lp-caps-need-heading">Necesitas</h3>
               <div class="lp-caps__detail-wrap sr-reveal sr-reveal--d1">
                 <span class="lp-caps__detail-rule" aria-hidden="true"></span>
                 <p class="lp-caps__detail-body" data-lp-caps-body aria-live="polite">Cruzar datos, tendencias, competencia y ADN de marca para decidir qué comunicar, cuándo hacerlo y por qué.</p>
@@ -282,12 +279,36 @@ class LandingView extends PublicBaseView {
             <div class="lp-caps__carousel" data-lp-caps-carousel>
               <div class="lp-caps__viewport" data-lp-caps-viewport tabindex="0" aria-label="Criterios visuales" aria-roledescription="carrusel">
                 <div class="lp-caps__track" role="list">
-                  <div class="lp-caps__slide" role="listitem" data-index="0" aria-label="Precisión"></div>
-                  <div class="lp-caps__slide" role="listitem" data-index="1" aria-label="Inteligencia"></div>
-                  <div class="lp-caps__slide" role="listitem" data-index="2" aria-label="Velocidad"></div>
-                  <div class="lp-caps__slide" role="listitem" data-index="3" aria-label="Eficiencia"></div>
-                  <div class="lp-caps__slide" role="listitem" data-index="4" aria-label="Consistencia"></div>
-                  <div class="lp-caps__slide" role="listitem" data-index="5" aria-label="Calidad"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="0" aria-label="PRECISIÓN">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/focus.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                  <div class="lp-caps__slide" role="listitem" data-index="1" aria-label="INTELIGENCIA">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/smart.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                  <div class="lp-caps__slide" role="listitem" data-index="2" aria-label="VELOCIDAD">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/speed.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                  <div class="lp-caps__slide" role="listitem" data-index="3" aria-label="EFICIENCIA">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/sales.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                  <div class="lp-caps__slide" role="listitem" data-index="4" aria-label="CONSISTENCIA">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/brand.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                  <div class="lp-caps__slide" role="listitem" data-index="5" aria-label="CALIDAD">
+                    <div class="lp-caps__slide-inner">
+                      <img class="lp-caps__slide-media" src="/recursos/banners/videos.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -900,7 +921,7 @@ class LandingView extends PublicBaseView {
       this.veraRailScrollCleanup();
       this.veraRailScrollCleanup = null;
     }
-    this.veraRailScrollCleanup = null;
+      this.veraRailScrollCleanup = null;
   }
 
   /**
@@ -914,7 +935,7 @@ class LandingView extends PublicBaseView {
       this.agitScrollCleanup = null;
     }
     // S04 se mantiene visible en DOM, pero se desactiva la agitación por scroll.
-    this.agitScrollCleanup = null;
+      this.agitScrollCleanup = null;
   }
 
   initPainRoadmap() {
@@ -1353,7 +1374,6 @@ class LandingView extends PublicBaseView {
     const viewport = shellRoot.querySelector('[data-lp-caps-viewport]');
     const prevBtn = shellRoot.querySelector('[data-lp-caps-prev]');
     const nextBtn = shellRoot.querySelector('[data-lp-caps-next]');
-    const wordEl = shellRoot.querySelector('[data-lp-caps-word]');
     const bodyEl = shellRoot.querySelector('[data-lp-caps-body]');
 
     const cleanups = [];
@@ -1379,11 +1399,14 @@ class LandingView extends PublicBaseView {
       });
     };
 
-    const setActive = (idx) => {
+    const applyIndex = (idx) => {
       current = ((idx % n) + n) % n;
       syncTabs();
-      if (wordEl) wordEl.textContent = PILLARS[current].word;
       if (bodyEl) bodyEl.textContent = PILLARS[current].body;
+    };
+
+    const setActive = (idx) => {
+      applyIndex(idx);
       if (viewport) {
         measureStep();
         viewport.scrollLeft = Math.round(current * cachedStep);
@@ -1420,11 +1443,25 @@ class LandingView extends PublicBaseView {
       cleanups.push(() => axis.removeEventListener('keydown', onAxisKey));
     }
 
-    if (viewport && prevBtn && nextBtn) {
+    if (viewport) {
       measureStep();
 
-      const onPrev = () => setActive(current - 1);
-      const onNext = () => setActive(current + 1);
+      let scrollRaf = null;
+      const onViewportScroll = () => {
+        if (scrollRaf != null) return;
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null;
+          measureStep();
+          if (cachedStep <= 1) return;
+          const i = Math.max(0, Math.min(n - 1, Math.round(viewport.scrollLeft / cachedStep)));
+          if (i !== current) applyIndex(i);
+        });
+      };
+      viewport.addEventListener('scroll', onViewportScroll, { passive: true });
+      cleanups.push(() => {
+        viewport.removeEventListener('scroll', onViewportScroll);
+        if (scrollRaf != null) cancelAnimationFrame(scrollRaf);
+      });
 
       let resizeRaf = 0;
       const onResize = () => {
@@ -1435,16 +1472,31 @@ class LandingView extends PublicBaseView {
           viewport.scrollLeft = Math.round(current * cachedStep);
         });
       };
-
-      prevBtn.addEventListener('click', onPrev);
-      nextBtn.addEventListener('click', onNext);
       window.addEventListener('resize', onResize, { passive: true });
       cleanups.push(() => {
-        prevBtn.removeEventListener('click', onPrev);
-        nextBtn.removeEventListener('click', onNext);
         window.removeEventListener('resize', onResize);
         if (resizeRaf) cancelAnimationFrame(resizeRaf);
       });
+
+      const onViewportKey = (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        if (e.key === 'ArrowLeft') setActive(current - 1);
+        else setActive(current + 1);
+      };
+      viewport.addEventListener('keydown', onViewportKey);
+      cleanups.push(() => viewport.removeEventListener('keydown', onViewportKey));
+
+      if (prevBtn && nextBtn) {
+        const onPrev = () => setActive(current - 1);
+        const onNext = () => setActive(current + 1);
+        prevBtn.addEventListener('click', onPrev);
+        nextBtn.addEventListener('click', onNext);
+        cleanups.push(() => {
+          prevBtn.removeEventListener('click', onPrev);
+          nextBtn.removeEventListener('click', onNext);
+        });
+      }
     }
 
     setActive(0);

@@ -1323,27 +1323,12 @@ body.entrance-done .landing-header {
 .lp-caps__need-block {
   margin: 0 0 clamp(16px, 2.5vw, 28px);
   font-family: "Space Grotesk", Inter, system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.02;
-  text-transform: uppercase;
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(2px, 0.5vw, 8px);
-}
-
-.lp-caps__need-line {
   font-size: clamp(1.35rem, 3.8vw, 2.25rem);
+  font-weight: 600;
   letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.92);
-}
-
-.lp-caps__need-word {
-  font-size: clamp(2.2rem, 7.5vw, 4.25rem);
-  letter-spacing: -0.03em;
-  color: #ffffff;
 }
 
 .lp-caps__detail-wrap {
@@ -1415,8 +1400,31 @@ body.entrance-done .landing-header {
   height: auto;
   scroll-snap-align: start;
   border-radius: 2px;
-  background: #ffffff;
+  overflow: hidden;
   box-sizing: border-box;
+  background: #121212;
+}
+
+.lp-caps__slide-inner {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: clamp(6px, 1.2vw, 12px);
+}
+
+.lp-caps__slide-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lp-caps__slide-media:where(video) {
+  object-fit: cover;
 }
 
 .lp-caps__foot {
