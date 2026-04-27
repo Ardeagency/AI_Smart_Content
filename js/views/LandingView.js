@@ -281,32 +281,32 @@ class LandingView extends PublicBaseView {
                 <div class="lp-caps__track" role="list">
                   <div class="lp-caps__slide is-active" role="listitem" data-index="0" aria-label="PRECISIÓN">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/focus.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102754/f6c61290-16d4-440d-9772-a74f13a80f35-cloud-wonder_2-2x_copia_bxpbfo.jpg" alt="Precisión" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="1" aria-label="INTELIGENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/smart.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102747/Recurso_5Imagen-cloud-wonder_2-2x_copia_mukuoh.jpg" alt="Inteligencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="2" aria-label="VELOCIDAD">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/speed.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102752/Recurso_24Imagen-cloud-wonder_2-2x_copia_gxsset.jpg" alt="Velocidad" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="3" aria-label="EFICIENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/sales.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102749/Recurso_8Imagen-cloud-wonder_2-2x_copia_lg0yej.jpg" alt="Eficiencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="4" aria-label="CONSISTENCIA">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/brand.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102747/Recurso_17dImagen-cloud-wonder_2-2x_copia_y26515.jpg" alt="Consistencia" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                   <div class="lp-caps__slide" role="listitem" data-index="5" aria-label="CALIDAD">
                     <div class="lp-caps__slide-inner">
-                      <img class="lp-caps__slide-media" src="/recursos/banners/videos.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
+                      <img class="lp-caps__slide-media" src="https://res.cloudinary.com/dmruwjuxn/image/upload/v1776102748/Recurso_33Imagen-cloud-wonder_2-2x_copia_y1jknh.jpg" alt="Calidad" width="800" height="1000" loading="lazy" decoding="async" referrerpolicy="no-referrer-when-downgrade">
                     </div>
                   </div>
                 </div>
