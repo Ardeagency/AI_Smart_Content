@@ -1040,28 +1040,34 @@ body.entrance-done .landing-header {
 
 /*
  * S04 AGITACIÓN — barrido horizontal del titular guiado por scroll.
- * Implementación: position: sticky para fijar el pin durante el runway de
- * la sección + animation-timeline view() para mover translateX en función
- * del progreso de la sección por el viewport.
  *
- * Cero JS. La animación corre en compositor (transform/opacity) y no
- * compite con el scroll nativo del navegador.
+ * Diseño: sección compacta de exactamente 1 viewport. El texto barre
+ * de derecha a izquierda usando el view-timeline de la sección con
+ * animation-range: cover 0% → cover 100%. Esto significa que la
+ * animación está sincronizada con el ciclo entero de visibilidad de
+ * la sección: texto entra cuando la sección entra, texto sale cuando
+ * la sección sale. Cero zona vacía por delante o por detrás.
  *
- * Fallback (Safari < 18 / browsers sin scroll-driven animations):
- * @supports degrada a sección estática con el titular centrado.
+ * No usamos position: sticky a propósito: con sticky pin la sección
+ * tiene que ser >100vh para tener runway, y eso deja zona vacía
+ * después de que el texto barre. Con cover-range puro, la sección
+ * encaja exactamente y el usuario transiciona a S05 justo cuando
+ * el texto sale por la izquierda.
+ *
+ * Fallback: @supports degrada a sección estática con texto centrado.
  */
 .lp-agit {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  /* Runway de scroll para que el sticky tenga recorrido (220vh = 1.2 viewports
-     de animación + 1 viewport de pin). */
-  min-height: 220vh;
-  text-align: left;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  /* Cortar overflow horizontal del titular wide; el vertical sigue libre */
+  /* Recortar overflow horizontal del titular wide; vertical libre */
   overflow-x: clip;
-  /* Timeline para animation-timeline: --lp-agit (en navegadores compatibles) */
+  /* Timeline: la propia sección actúa como referencia para el barrido */
   view-timeline-name: --lp-agit;
   view-timeline-axis: block;
 }
@@ -1073,24 +1079,18 @@ body.entrance-done .landing-header {
   margin: 0;
   padding: 0;
   position: relative;
-  height: 100%;
 }
 
 .lp-agit__pin {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100svh;
+  position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  overflow: hidden;
 }
 
 .lp-agit__marquee {
   width: 100%;
-  /* No clip aquí: el clip lo hace .lp-agit__pin (overflow hidden). El texto
-     necesita poder traslarse fuera del flujo del marquee sin interferir. */
   overflow: visible;
   padding: 0;
 }
@@ -1124,34 +1124,32 @@ body.entrance-done .landing-header {
   to   { transform: translateX(-100%); }
 }
 
-/* Activar la animación scroll-driven solo donde el navegador la soporta.
-   `entry 100% exit 0%` = exactamente la fase en que el sticky pin está
-   pegado al top (sección llena el viewport y aún no ha terminado de pasar). */
+/* Animación scroll-driven solo donde el navegador la soporta.
+   `cover 0% cover 100%` = el ciclo completo de visibilidad de la
+   sección por el viewport. */
 @supports (animation-timeline: view()) {
   .lp-agit__headline {
     animation: lp-agit-sweep linear both;
     animation-timeline: --lp-agit;
-    animation-range: entry 100% exit 0%;
+    animation-range: cover 0% cover 100%;
   }
 }
 
-/* Fallback: si no hay scroll-driven animations, no inflar la sección */
+/* Fallback: navegadores sin scroll-driven animations → texto estático
+   centrado (no se ven los bordes wide porque overflow-x: clip recorta) */
 @supports not (animation-timeline: view()) {
   .lp-agit {
     min-height: clamp(280px, 54vh, 560px);
     padding: clamp(56px, 10vh, 120px) 0;
-    overflow: hidden;
+    justify-content: center;
   }
   .lp-agit__pin {
-    position: relative;
-    height: auto;
     justify-content: center;
-    overflow: visible;
   }
   .lp-agit__marquee {
-    overflow: hidden;
     padding-inline: clamp(12px, 2.6vw, 32px);
     box-sizing: border-box;
+    text-align: center;
   }
   .lp-agit__headline {
     transform: none;
@@ -1164,12 +1162,10 @@ body.entrance-done .landing-header {
     min-height: auto;
     padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
     view-timeline-name: none;
+    align-items: flex-start;
   }
   .lp-agit__pin {
-    position: static;
-    height: auto;
     justify-content: flex-start;
-    overflow: visible;
   }
   .lp-agit__marquee {
     overflow: visible;
