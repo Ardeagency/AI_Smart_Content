@@ -153,20 +153,32 @@
 
     const shell = document.getElementById('public-shell');
     const THRESHOLD = 32;
+    const useShell = !!(shell && shell.scrollHeight > shell.clientHeight + 2);
+    const target = useShell ? shell : window;
+    const readScrollY = useShell
+      ? () => shell.scrollTop
+      : () => window.scrollY || document.documentElement.scrollTop || 0;
 
-    const getScrollY = () => {
-      if (shell && shell.scrollHeight > shell.clientHeight + 2) return shell.scrollTop;
-      return window.scrollY || document.documentElement.scrollTop || 0;
+    let isFloating = readScrollY() > THRESHOLD;
+    let ticking = false;
+    header.classList.toggle('landing-header--floating', isFloating);
+
+    const apply = () => {
+      ticking = false;
+      const next = readScrollY() > THRESHOLD;
+      if (next === isFloating) return;
+      isFloating = next;
+      header.classList.toggle('landing-header--floating', next);
     };
 
-    const update = () => {
-      header.classList.toggle('landing-header--floating', getScrollY() > THRESHOLD);
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(apply);
     };
 
-    update();
-    const target = (shell && shell.scrollHeight > shell.clientHeight + 2) ? shell : window;
-    target.addEventListener('scroll', update, { passive: true });
-    scrollCleanup = () => target.removeEventListener('scroll', update);
+    target.addEventListener('scroll', onScroll, { passive: true });
+    scrollCleanup = () => target.removeEventListener('scroll', onScroll);
   }
 
   function attachMobileToggleBehavior() {

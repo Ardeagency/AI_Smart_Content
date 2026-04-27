@@ -1038,41 +1038,61 @@ body.entrance-done .landing-header {
    S04 — AGITACIÓN
    ═══════════════════════════════════════════════════════════════ */
 
+/*
+ * S04 AGITACIÓN — barrido horizontal del titular guiado por scroll.
+ * Implementación: position: sticky para fijar el pin durante el runway de
+ * la sección + animation-timeline view() para mover translateX en función
+ * del progreso de la sección por el viewport.
+ *
+ * Cero JS. La animación corre en compositor (transform/opacity) y no
+ * compite con el scroll nativo del navegador.
+ *
+ * Fallback (Safari < 18 / browsers sin scroll-driven animations):
+ * @supports degrada a sección estática con el titular centrado.
+ */
 .lp-agit {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  min-height: clamp(280px, 54vh, 560px);
-  padding: clamp(56px, 10vh, 120px) 0;
-  text-align: center;
-  overflow: hidden;
+  /* Runway de scroll para que el sticky tenga recorrido (220vh = 1.2 viewports
+     de animación + 1 viewport de pin). */
+  min-height: 220vh;
+  text-align: left;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  /* Cortar overflow horizontal del titular wide; el vertical sigue libre */
+  overflow-x: clip;
+  /* Timeline para animation-timeline: --lp-agit (en navegadores compatibles) */
+  view-timeline-name: --lp-agit;
+  view-timeline-axis: block;
 }
 
 .lp-agit__inner {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
-  margin: 0 auto;
-  min-height: auto;
+  margin: 0;
   padding: 0;
   position: relative;
+  height: 100%;
 }
 
 .lp-agit__pin {
-  position: relative;
-  min-height: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .lp-agit__marquee {
   width: 100%;
-  overflow: hidden;
-  padding-inline: clamp(12px, 2.6vw, 32px);
-  box-sizing: border-box;
+  /* No clip aquí: el clip lo hace .lp-agit__pin (overflow hidden). El texto
+     necesita poder traslarse fuera del flujo del marquee sin interferir. */
+  overflow: visible;
+  padding: 0;
 }
 
 .lp-agit__headline {
@@ -1083,12 +1103,11 @@ body.entrance-done .landing-header {
   letter-spacing: -0.025em;
   line-height: 1.03;
   color: #ffffff;
-  font-style: normal;
   text-transform: uppercase;
   white-space: nowrap;
-  will-change: auto;
-  transform: none;
-  transform-origin: center center;
+  /* Estado inicial: texto fuera de pantalla por la derecha */
+  transform: translateX(100vw);
+  will-change: transform;
 }
 
 .lp-agit__line {
@@ -1100,31 +1119,70 @@ body.entrance-done .landing-header {
   color: inherit;
 }
 
+@keyframes lp-agit-sweep {
+  from { transform: translateX(100vw); }
+  to   { transform: translateX(-100%); }
+}
+
+/* Activar la animación scroll-driven solo donde el navegador la soporta.
+   `entry 100% exit 0%` = exactamente la fase en que el sticky pin está
+   pegado al top (sección llena el viewport y aún no ha terminado de pasar). */
+@supports (animation-timeline: view()) {
+  .lp-agit__headline {
+    animation: lp-agit-sweep linear both;
+    animation-timeline: --lp-agit;
+    animation-range: entry 100% exit 0%;
+  }
+}
+
+/* Fallback: si no hay scroll-driven animations, no inflar la sección */
+@supports not (animation-timeline: view()) {
+  .lp-agit {
+    min-height: clamp(280px, 54vh, 560px);
+    padding: clamp(56px, 10vh, 120px) 0;
+    overflow: hidden;
+  }
+  .lp-agit__pin {
+    position: relative;
+    height: auto;
+    justify-content: center;
+    overflow: visible;
+  }
+  .lp-agit__marquee {
+    overflow: hidden;
+    padding-inline: clamp(12px, 2.6vw, 32px);
+    box-sizing: border-box;
+  }
+  .lp-agit__headline {
+    transform: none;
+    will-change: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp-agit {
-    min-height: 100svh;
-    padding: clamp(72px, 10vw, 120px) 0;
-  }
-
-  .lp-agit__inner {
     min-height: auto;
+    padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
+    view-timeline-name: none;
   }
-
   .lp-agit__pin {
     position: static;
-    min-height: auto;
+    height: auto;
+    justify-content: flex-start;
+    overflow: visible;
   }
-
   .lp-agit__marquee {
     overflow: visible;
   }
-
   .lp-agit__headline {
     width: auto;
     white-space: normal;
     font-size: clamp(1.8rem, 4.5vw, 3.6rem);
     line-height: 1.1;
     text-transform: none;
+    transform: none;
+    animation: none;
+    will-change: auto;
   }
 }
 
@@ -1352,11 +1410,27 @@ body.entrance-done .landing-header {
 
 .lp-vera__vera-l2 .lp-vera__sticky-rail {
   grid-column: 2;
-  align-self: stretch;
+  /* IMPORTANTE: align-self: start permite que sticky tenga recorrido.
+     Con align-self: stretch el item llena toda la pista y sticky no se mueve. */
+  align-self: start;
+  /* Posición sticky pura CSS — sin JS, sin saltos. Se queda pegado al top
+     mientras la sección VERA es visible, y se libera cuando la sección
+     termina. El padre .lp-vera__vera-l2 (position:absolute; inset:0) define
+     el ámbito vertical en que el sticky puede moverse. */
+  position: sticky;
+  top: clamp(96px, 14vh, 160px);
   /* No desbordar a la columna del copy ni inflar el scroll horizontal */
   overflow-x: hidden;
   overflow-x: clip;
   overflow-y: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-vera__vera-l2 .lp-vera__sticky-rail {
+    position: relative;
+    top: auto;
+    align-self: stretch;
+  }
 }
 
 .lp-vera__stage {
@@ -1892,6 +1966,10 @@ body.entrance-done .landing-header {
   .lp-vera__vera-l2 .lp-vera__sticky-rail {
     grid-column: auto;
     align-self: stretch;
+    /* En mobile el padre es position:static y display:flex → no tiene
+       sentido que el rail sea sticky (no hay containing block donde stickear). */
+    position: relative;
+    top: auto;
   }
 
   .lp-vera__stage {
@@ -3853,5 +3931,29 @@ a.public-nav-access--glow:hover::after {
         margin-left: 0;
         margin-top: 4px;
     }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Comportamiento de scroll global — fluidez entre secciones.
+   - scroll-behavior: smooth → anchors (#landing-6 desde el CTA del hero)
+     viajan suave en vez de saltar en seco.
+   - scroll-padding-top → al saltar a un anchor, dejar espacio para el
+     header fijo y no quedar tapado.
+   - overscroll-behavior → corta el "bounce" hacia rutas externas en mac/iOS.
+   - prefers-reduced-motion → respeta usuarios con preferencia de menos
+     movimiento (smooth desactivado).
+   ═══════════════════════════════════════════════════════════════ */
+html {
+  scroll-padding-top: clamp(72px, 10vh, 96px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+#public-shell,
+#public-view-content,
+body.route-public {
+  overscroll-behavior-y: contain;
 }
 
