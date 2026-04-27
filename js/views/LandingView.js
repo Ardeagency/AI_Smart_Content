@@ -19,6 +19,7 @@ class LandingView extends PublicBaseView {
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
     this.veraRailScrollCleanup = null;
+    this.agitScrollCleanup = null;
   }
 
   renderContent() {
@@ -149,11 +150,11 @@ class LandingView extends PublicBaseView {
               <div class="lp-cred__brand" title="Nano Banana PRO">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Nano Banana PRO</span>
-              </div>
+          </div>
               <div class="lp-cred__brand" title="Seedance 2.0">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/bytedance.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Seedance 2.0</span>
-              </div>
+        </div>
               <div class="lp-cred__brand" title="ComfyUI">
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/comfyui.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">ComfyUI</span>
@@ -166,7 +167,7 @@ class LandingView extends PublicBaseView {
                 <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://kie.ai/logo.png" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
                 <span class="lp-cred__brand-label">Kie AI</span>
               </div>
-            </div>
+              </div>
           </div>
         </div>
       </section>
@@ -175,7 +176,7 @@ class LandingView extends PublicBaseView {
       <section class="lp-pain" id="landing-3" aria-labelledby="lp-pain-heading">
         <div class="lp-pain__header">
           <h2 id="lp-pain-heading" class="lp-pain__title sr-reveal">Cinco brechas que frenan el crecimiento de las marcas</h2>
-              </div>
+          </div>
         <div class="lp-pain__stage">
           <div class="lp-pain__columns" role="list">
             <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="1">
@@ -208,12 +209,12 @@ class LandingView extends PublicBaseView {
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
                 <span class="lp-pain__col-rail-dot"></span>
-              </div>
+          </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
                   <p class="lp-pain__highlight-title">Te falta contexto</p>
                   <p class="lp-pain__highlight-sub">Publicas, pero no necesariamente en la dirección correcta.</p>
-                </div>
+        </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">02</div>
@@ -223,9 +224,9 @@ class LandingView extends PublicBaseView {
                     <div class="lp-pain__col-reveal">
                       <p>El volumen de contenido y señales en internet cambia constantemente.</p>
                       <p>Sin una visión actualizada del mercado, es fácil pasar por alto lo que ya está funcionando.</p>
-                    </div>
-                  </div>
+          </div>
                 </div>
+              </div>
               </div>
             </article>
             <article class="lp-pain__col" role="listitem" tabindex="0" aria-current="false" data-pain-gradient="3">
@@ -233,12 +234,12 @@ class LandingView extends PublicBaseView {
               <div class="lp-pain__col-rail" aria-hidden="true">
                 <span class="lp-pain__col-rail-line"></span>
                 <span class="lp-pain__col-rail-dot"></span>
-          </div>
+              </div>
               <div class="lp-pain__col-inner">
                 <div class="lp-pain__col-highlight">
                   <p class="lp-pain__highlight-title">Se pierde el enfoque</p>
                   <p class="lp-pain__highlight-sub">Después de tantos ajustes, la idea pierde claridad.</p>
-        </div>
+              </div>
                 <div class="lp-pain__col-spacer" aria-hidden="true"></div>
                 <div class="lp-pain__col-foot">
                   <div class="lp-pain__col-num" aria-hidden="true">03</div>
@@ -308,19 +309,14 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S04: AGITACIÓN (escena scroll + texto, sin GSAP) ════════ -->
-      <section class="lp-agit lp-agit--scene" id="landing-4" data-lp-agit-scene aria-labelledby="lp-agit-heading">
-        <h2 id="lp-agit-heading" class="sr-only">El mercado ya está operando distinto. La pregunta es si tú también.</h2>
-        <div class="lp-agit__sticky">
-          <div class="lp-agit__viewport">
-            <div class="lp-agit__track" data-lp-agit-track aria-hidden="true">
-              <p class="lp-agit__line lp-agit__line--lead">
-                <span class="lp-agit__line-el" data-lp-agit-line>El mercado ya está<br>operando distinto.</span>
-              </p>
-              <p class="lp-agit__line lp-agit__line--accent">
-                <em class="lp-agit__line-el lp-agit__accent" data-lp-agit-line>La pregunta es si tú también.</em>
-              </p>
-            </div>
+      <!-- ════════ S04: AGITACIÓN ════════ -->
+      <section class="lp-agit" id="landing-4" aria-label="Agitación">
+        <div class="lp-agit__inner">
+          <div class="lp-agit__pin" data-lp-agit-pin>
+            <h2 class="lp-agit__headline" data-lp-agit-headline>
+              <span class="lp-agit__line">El mercado ya está operando distinto.</span>
+              <em class="lp-agit__accent" data-lp-agit-accent>La pregunta es si tú también.</em>
+            </h2>
           </div>
         </div>
       </section>
@@ -377,14 +373,14 @@ class LandingView extends PublicBaseView {
                     <span class="lp-vera__hero-sub-line">Premia la precisión.</span>
                   </p>
                   <p class="lp-vera__hero-body sr-reveal sr-reveal--d2">VERA no ejecuta tareas. Interpreta el mercado, prioriza señales y actúa cuando tu equipo aún está procesando información. Cada decisión nace del contexto real de tu marca, no de plantillas genéricas ni de prompts sueltos.</p>
-                </div>
+        </div>
                 <p class="lp-vera__hero-tag sr-reveal sr-reveal--d3">
                   <span class="lp-vera__hero-tag-line">VENTAJA EN</span>
                   <span class="lp-vera__hero-tag-line">TIEMPO REAL</span>
                 </p>
+                </div>
               </div>
-            </div>
-            </div>
+                </div>
             <div class="lp-vera__bento-shell">
             <div class="lp-vera__bento-block">
                 <div class="lp-vera__layers" role="list" aria-label="Módulos y capacidades de VERA">
@@ -648,38 +644,38 @@ class LandingView extends PublicBaseView {
                     <h3 class="lp-why__card-title">Lectura en tiempo real</h3>
                     <p class="lp-why__card-text">Entiende lo que está pasando en tu mercado antes de que sea evidente.</p>
                     <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
-                  </div>
-                </article>
+              </div>
+            </article>
                 <article class="lp-why__card-wrap sr-reveal sr-reveal--d2" role="listitem">
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Decisiones con contexto</h3>
                     <p class="lp-why__card-text">Cruza datos, tendencias y ADN de marca para definir qué hacer en cada momento.</p>
                     <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
-                  </div>
+                </div>
                 </article>
                 <article class="lp-why__card-wrap sr-reveal sr-reveal--d3" role="listitem">
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Ejecución alineada</h3>
                     <p class="lp-why__card-text">Convierte decisiones en contenido listo para salir, sin fricción.</p>
                     <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
-                  </div>
-                </article>
+              </div>
+            </article>
                 <article class="lp-why__card-wrap sr-reveal sr-reveal--d4" role="listitem">
                   <div class="lp-why__card">
                     <h3 class="lp-why__card-title">Optimización continua</h3>
                     <p class="lp-why__card-text">Aprende de cada acción para mejorar la siguiente.</p>
                     <span class="lp-why__card-icon lp-why__card-icon--chev" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
-                  </div>
+          </div>
                 </article>
-              </div>
+        </div>
             </div>
             <div class="lp-why__nav" role="group" aria-label="Desplazar carrusel">
               <button type="button" class="lp-why__arrow" data-lp-why-prev aria-label="Ver tarjetas anteriores">
                 <i class="fas fa-chevron-left" aria-hidden="true"></i>
-              </button>
+            </button>
               <button type="button" class="lp-why__arrow" data-lp-why-next aria-label="Ver tarjetas siguientes">
                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -848,7 +844,7 @@ class LandingView extends PublicBaseView {
     this.initLandingAppPreview();
     this.initWhyCarousel();
     this.initVeraRailWordmarkScroll();
-    this.initAgitScrollScene();
+    this.initAgitScroll();
   }
 
   async onLeave() {
@@ -950,8 +946,8 @@ class LandingView extends PublicBaseView {
       if (!mq.matches) {
         inner.style.transform = '';
         inner.style.willChange = '';
-        return;
-      }
+      return;
+    }
       const off = headerOffset();
       const r = rail.getBoundingClientRect();
       const h = inner.offsetHeight;
@@ -1023,90 +1019,91 @@ class LandingView extends PublicBaseView {
   }
 
   /**
-   * S04 agitación: “scrollytelling” ligero — sección alta + sticky 100vh;
-   * progreso de scroll mapea a translate/opacity del bloque de texto (sin GSAP).
+   * S04 AGITACIÓN: texto centrado con progreso de scroll dentro de su sección.
+   * Emula un scrollytelling simple sin librerías externas (sin GSAP).
    */
-  initAgitScrollScene() {
+  initAgitScroll() {
     if (typeof this.agitScrollCleanup === 'function') {
       this.agitScrollCleanup();
       this.agitScrollCleanup = null;
     }
 
-    const section = this.container?.querySelector('[data-lp-agit-scene]');
-    const track = section?.querySelector('[data-lp-agit-track]');
-    const lines = section ? Array.from(section.querySelectorAll('[data-lp-agit-line]')) : [];
-    if (!section || !track || lines.length < 2) return;
-
-    const clearStyles = () => {
-      track.style.transform = '';
-      track.style.willChange = '';
-      lines.forEach((el) => {
-        el.style.opacity = '';
-        el.style.transform = '';
-        el.style.willChange = '';
-      });
-    };
-
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      clearStyles();
       return;
     }
 
-    const smoothstep = (t) => {
-      const x = Math.min(1, Math.max(0, t));
-      return x * x * (3 - 2 * x);
-    };
+    const section = this.container?.querySelector('#landing-4');
+    const headline = section?.querySelector('[data-lp-agit-headline]');
+    const accent = section?.querySelector('[data-lp-agit-accent]');
+    if (!section || !headline || !accent) return;
+
+    const clamp01 = (n) => Math.max(0, Math.min(1, n));
+    const lerp = (a, b, t) => a + (b - a) * t;
 
     const tick = () => {
       const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const denom = Math.max(1, rect.height - vh);
-      let p = (-rect.top) / denom;
-      p = Math.min(1, Math.max(0, p));
+      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+      const travel = rect.height + vh;
+      const raw = (vh - rect.top) / Math.max(1, travel);
+      const p = clamp01(raw);
 
-      const ease = smoothstep(p);
-      const drift = (1 - ease) * Math.min(100, vh * 0.16);
-      track.style.transform = `translate3d(0, ${drift}px, 0)`;
-      track.style.willChange = 'transform';
+      // Fade-in early, hold, fade-out late.
+      const fadeIn = clamp01((p - 0.06) / 0.18);
+      const fadeOut = clamp01((1 - p - 0.06) / 0.2);
+      const alpha = Math.max(0.18, Math.min(fadeIn, fadeOut));
 
-      const lead = lines[0];
-      const accent = lines[1];
-      const pLead = smoothstep(Math.min(1, p / 0.52));
-      lead.style.opacity = String(0.18 + 0.82 * pLead);
-      lead.style.transform = `translate3d(0, ${(1 - smoothstep(Math.min(1, p / 0.48))) * 22}px, 0)`;
-      lead.style.willChange = 'transform, opacity';
+      // Headline drift: entra desde abajo, atraviesa centro, sale arriba.
+      const y = lerp(46, -34, p);
+      const scale = lerp(0.92, 1.04, Math.sin(p * Math.PI));
+      const letter = lerp(-0.02, -0.036, p);
 
-      const pAccent = smoothstep(Math.max(0, (p - 0.34) / 0.66));
-      accent.style.opacity = String(pAccent);
-      accent.style.transform = `translate3d(0, ${(1 - pAccent) * 32}px, 0)`;
-      accent.style.willChange = 'transform, opacity';
+      headline.style.opacity = alpha.toFixed(3);
+      headline.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
+      headline.style.letterSpacing = `${letter.toFixed(3)}em`;
+
+      // Segunda línea con desfase para sensación de profundidad.
+      const ay = lerp(18, -24, p);
+      const aSkew = lerp(5, -4, p);
+      accent.style.transform = `translate3d(0, ${ay.toFixed(1)}px, 0) skewX(${aSkew.toFixed(2)}deg)`;
+      accent.style.opacity = Math.min(1, alpha + 0.08).toFixed(3);
     };
 
-    const shell = document.getElementById('public-shell');
-    let rafId = 0;
-    const onScrollOrResize = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = 0;
+    let rafPending = null;
+    const schedule = () => {
+      if (rafPending != null) return;
+      rafPending = window.requestAnimationFrame(() => {
+        rafPending = null;
         tick();
       });
     };
 
+    let resizeObs = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObs = new ResizeObserver(() => schedule());
+      resizeObs.observe(section);
+    }
+
     tick();
-    window.requestAnimationFrame(() => tick());
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    if (shell) shell.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
+    requestAnimationFrame(() => tick());
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
 
     this.agitScrollCleanup = () => {
-      window.removeEventListener('scroll', onScrollOrResize);
-      if (shell) shell.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-      if (rafId) {
-        window.cancelAnimationFrame(rafId);
-        rafId = 0;
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (resizeObs) {
+        resizeObs.disconnect();
+        resizeObs = null;
       }
-      clearStyles();
+      if (rafPending != null) {
+        window.cancelAnimationFrame(rafPending);
+        rafPending = null;
+      }
+      headline.style.opacity = '';
+      headline.style.transform = '';
+      headline.style.letterSpacing = '';
+      accent.style.transform = '';
+      accent.style.opacity = '';
       this.agitScrollCleanup = null;
     };
   }

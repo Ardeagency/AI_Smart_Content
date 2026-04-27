@@ -1038,86 +1038,73 @@ body.entrance-done .landing-header {
    S04 — AGITACIÓN
    ═══════════════════════════════════════════════════════════════ */
 
-/* S04 — escena scroll: altura extra + sticky 100vh; JS anima track/líneas */
-.lp-agit--scene {
-  --lp-agit-scene-mult: 2.2;
-  position: relative;
-  min-height: calc(100vh * var(--lp-agit-scene-mult));
-  padding: 0;
-  overflow: visible;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+.lp-agit {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
+  position: relative;
+  min-height: clamp(170vh, 190vh, 220vh);
+  padding: 0;
   text-align: center;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.lp-agit__sticky {
-  position: sticky;
-  top: 0;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.lp-agit__inner {
   box-sizing: border-box;
-  padding-block: clamp(48px, 8vh, 100px);
-}
-
-.lp-agit__viewport {
-  width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  min-height: inherit;
   padding: 0 clamp(20px, 6vw, 80px);
+  position: relative;
 }
 
-.lp-agit__track {
-  transform: translate3d(0, 0, 0);
+.lp-agit__pin {
+  position: sticky;
+  top: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.lp-agit__line {
+.lp-agit__headline {
   margin: 0;
   font-size: clamp(1.8rem, 4.5vw, 3.6rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.12;
+  line-height: 1.1;
   color: #ffffff;
+  font-style: normal;
+  will-change: transform, opacity, letter-spacing;
+  transform-origin: center center;
 }
 
-.lp-agit__line--accent {
-  margin-top: clamp(16px, 2.2vw, 28px);
-}
-
-.lp-agit__line-el {
-  display: inline-block;
+.lp-agit__line {
+  display: block;
 }
 
 .lp-agit__accent {
+  display: block;
+  margin-top: 0.18em;
   font-style: italic;
-  font-weight: 700;
   color: #ffffff;
-}
-
-@media (max-width: 900px) {
-  .lp-agit--scene {
-    --lp-agit-scene-mult: 1.75;
-  }
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-agit--scene {
-    min-height: 0;
-    padding: clamp(72px, 10vw, 120px) 0 clamp(72px, 10vw, 120px);
+  .lp-agit {
+    min-height: auto;
+    padding: clamp(72px, 10vw, 120px) 0;
   }
 
-  .lp-agit__sticky {
-    position: relative;
-    min-height: 0;
-    padding: 0;
+  .lp-agit__inner {
+    min-height: auto;
   }
 
-  .lp-agit__track,
-  .lp-agit__line-el {
-    transform: none !important;
-    opacity: 1 !important;
+  .lp-agit__pin {
+    position: static;
+    min-height: auto;
   }
 }
 
