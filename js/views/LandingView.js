@@ -20,6 +20,7 @@ class LandingView extends PublicBaseView {
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
     this.whyCarouselCleanup = null;
+    this.capsPropostaCleanup = null;
     this.veraRailScrollCleanup = null;
     this.agitScrollCleanup = null;
   }
@@ -250,37 +251,53 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S05: PROPUESTA (3 bloques) ════════ -->
+      <!-- ════════ S05: PROPUESTA (mock layout: kicker + eje + NECESITAS/VERA + carrusel + 2026) ════════ -->
       <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
-        <div class="lp-caps__inner">
-          <div class="lp-caps__row lp-caps__row--top">
-            <div class="lp-caps__block lp-caps__block--tl">
-              <h2 id="lp-caps-heading" class="lp-caps__title sr-reveal">No es una herramienta.<br>Es una nueva forma de competir.</h2>
-              <p class="lp-caps__sub sr-reveal sr-reveal--d2">Lee el mercado en tiempo real,<br>decide con criterio y ejecuta antes que los demás.</p>
+        <div class="lp-caps__inner" data-lp-caps-root>
+          <header class="lp-caps__head">
+            <h2 id="lp-caps-heading" class="lp-caps__kicker sr-reveal">
+              <span class="lp-caps__kicker-line">No es una herramienta.</span>
+              <span class="lp-caps__kicker-line">Es una nueva forma de competir.</span>
+            </h2>
+            <ul class="lp-caps__axis" role="list" aria-label="Criterios" data-lp-caps-axis>
+              <li class="lp-caps__axis-item is-active" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+            </ul>
+          </header>
+          <div class="lp-caps__main">
+            <div class="lp-caps__copy">
+              <p class="lp-caps__need sr-reveal">Necesitas</p>
+              <div class="lp-caps__vera-wrap sr-reveal sr-reveal--d1">
+                <span class="lp-caps__vera-rule" aria-hidden="true"></span>
+                <p class="lp-caps__vera-copy">
+                  <strong class="lp-caps__vera-name">VERA</strong><span class="lp-caps__vera-body"> no ejecuta tareas. Interpreta el mercado. Observa lo que está pasando, lo cruza con tu ADN de marca y decide qué hacer, cuándo hacerlo y por qué hacerlo. No sigue instrucciones ni depende de prompts. Aprende de cada resultado, ajusta su criterio y actúa con autonomía, asegurando que cada acción tenga intención, coherencia y timing real.</span>
+                </p>
+              </div>
             </div>
-            <aside class="lp-caps__block lp-caps__block--tr sr-reveal sr-reveal--d1" aria-label="Transformación">
-              <p class="lp-caps__tr-lead">Lo que pasa afuera se convierte en acción adentro. En minutos.</p>
-              <ul class="lp-caps__tr-list">
-                <li><span class="lp-caps__tr-ahora">AHORA</span> no reaccionas — te adelantas</li>
-                <li><span class="lp-caps__tr-ahora">AHORA</span> no improvisas — operas con criterio</li>
-                <li><span class="lp-caps__tr-ahora">AHORA</span> no produces — ejecutas con ventaja</li>
-              </ul>
-            </aside>
+            <div class="lp-caps__carousel" data-lp-caps-carousel>
+              <div class="lp-caps__viewport" data-lp-caps-viewport tabindex="0" aria-label="Vista previa de criterios">
+                <div class="lp-caps__track" role="list">
+                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
+                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
+                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="lp-caps__block lp-caps__block--bottom">
-            <div class="lp-caps__pillar sr-reveal sr-reveal--d1">
-              <h3 class="lp-caps__pillar-title">Detectas lo que el mercado apenas empieza a mostrar</h3>
-              <p class="lp-caps__pillar-desc">Lees el comportamiento real del mercado, no reportes pasados.<br>Identificas lo que está funcionando ahora… antes de que se vuelva obvio.</p>
+          <footer class="lp-caps__foot">
+            <span class="lp-caps__year sr-reveal" aria-hidden="true">2026</span>
+            <div class="lp-caps__nav" role="group" aria-label="Desplazar tarjetas">
+              <button type="button" class="lp-caps__nav-btn" data-lp-caps-prev aria-label="Tarjeta anterior">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="lp-caps__nav-btn" data-lp-caps-next aria-label="Tarjeta siguiente">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </button>
             </div>
-            <div class="lp-caps__pillar sr-reveal sr-reveal--d2">
-              <h3 class="lp-caps__pillar-title">Sabes qué hacer, cuándo hacerlo y por qué</h3>
-              <p class="lp-caps__pillar-desc">No dependes de intuición ni presión interna.<br>Cada decisión responde a datos reales, tu ADN de marca y el momento exacto.</p>
-            </div>
-            <div class="lp-caps__pillar sr-reveal sr-reveal--d3">
-              <h3 class="lp-caps__pillar-title">Pasas de idea a ejecución sin perder el momento</h3>
-              <p class="lp-caps__pillar-desc">Lo que antes tomaba días o semanas, ahora sucede en minutos.<br>Sin depender de equipos saturados ni procesos que frenan el ritmo.</p>
-            </div>
-          </div>
+          </footer>
         </div>
       </section>
 
@@ -777,6 +794,7 @@ class LandingView extends PublicBaseView {
     this.initCtaForm();
     this.initLandingAppPreview();
     this.initWhyCarousel();
+    this.initCapsProposta();
   }
 
   clearLandingAgitHash() {
@@ -821,6 +839,10 @@ class LandingView extends PublicBaseView {
     if (typeof this.whyCarouselCleanup === 'function') {
       this.whyCarouselCleanup();
       this.whyCarouselCleanup = null;
+    }
+    if (typeof this.capsPropostaCleanup === 'function') {
+      this.capsPropostaCleanup();
+      this.capsPropostaCleanup = null;
     }
     if (typeof this.veraRailScrollCleanup === 'function') {
       this.veraRailScrollCleanup();
@@ -1284,6 +1306,73 @@ class LandingView extends PublicBaseView {
       nextBtn.removeEventListener('click', onNext);
       window.removeEventListener('resize', onResize);
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    };
+  }
+
+  initCapsProposta() {
+    if (typeof this.capsPropostaCleanup === 'function') {
+      this.capsPropostaCleanup();
+      this.capsPropostaCleanup = null;
+    }
+
+    const shellRoot = this.container?.querySelector('[data-lp-caps-root]');
+    if (!shellRoot) return;
+
+    const axis = shellRoot.querySelector('[data-lp-caps-axis]');
+    const viewport = shellRoot.querySelector('[data-lp-caps-viewport]');
+    const prevBtn = shellRoot.querySelector('[data-lp-caps-prev]');
+    const nextBtn = shellRoot.querySelector('[data-lp-caps-next]');
+
+    const cleanups = [];
+
+    if (axis) {
+      const onAxisClick = (e) => {
+        const item = e.target.closest('.lp-caps__axis-item');
+        if (!item || !axis.contains(item)) return;
+        axis.querySelectorAll('.lp-caps__axis-item').forEach((el) => el.classList.remove('is-active'));
+        item.classList.add('is-active');
+      };
+      axis.addEventListener('click', onAxisClick);
+      cleanups.push(() => axis.removeEventListener('click', onAxisClick));
+    }
+
+    if (viewport && prevBtn && nextBtn) {
+      const gapPx = 14;
+      let cachedStep = 0;
+      const measureStep = () => {
+        const slide = viewport.querySelector('.lp-caps__slide');
+        cachedStep = slide
+          ? Math.round(slide.getBoundingClientRect().width + gapPx)
+          : Math.round(viewport.clientWidth * 0.72);
+      };
+      measureStep();
+
+      const onPrev = () => viewport.scrollBy({ left: -cachedStep, behavior: 'auto' });
+      const onNext = () => viewport.scrollBy({ left: cachedStep, behavior: 'auto' });
+
+      let resizeRaf = 0;
+      const onResize = () => {
+        if (resizeRaf) return;
+        resizeRaf = requestAnimationFrame(() => {
+          resizeRaf = 0;
+          measureStep();
+        });
+      };
+
+      prevBtn.addEventListener('click', onPrev);
+      nextBtn.addEventListener('click', onNext);
+      window.addEventListener('resize', onResize, { passive: true });
+      cleanups.push(() => {
+        prevBtn.removeEventListener('click', onPrev);
+        nextBtn.removeEventListener('click', onNext);
+        window.removeEventListener('resize', onResize);
+        if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      });
+    }
+
+    this.capsPropostaCleanup = () => {
+      cleanups.forEach((fn) => fn());
+      this.capsPropostaCleanup = null;
     };
   }
 
