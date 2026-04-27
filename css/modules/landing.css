@@ -1375,7 +1375,8 @@ body.entrance-done .landing-header {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
+  /* proximity: no fuerza un snap que compita con scrollLeft programático (flechas/eje). */
+  scroll-snap-type: x proximity;
   scroll-padding-inline: 0;
   scroll-behavior: auto;
   scrollbar-width: none;
@@ -1386,6 +1387,7 @@ body.entrance-done .landing-header {
 }
 
 .lp-caps__track {
+  position: relative;
   display: flex;
   flex-direction: row;
   gap: 14px;

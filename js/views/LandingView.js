@@ -1445,6 +1445,10 @@ class LandingView extends PublicBaseView {
     }
 
     if (viewport) {
+      /** Mientras es true, no aplicar índice desde scroll (evita carreras con snap / transform). */
+      let suppressScrollIndexApply = false;
+      let suppressTimerId = 0;
+
       const syncTrackEndPadding = () => {
         const track = viewport.querySelector('.lp-caps__track');
         const slide = viewport.querySelector('.lp-caps__slide');
@@ -1455,19 +1459,24 @@ class LandingView extends PublicBaseView {
       };
 
       /**
-       * Índice del slide cuyo borde izquierdo está más alineado con el viewport.
-       * No usar offsetLeft vs scrollLeft (offsetParent inconsistente) ni
-       * scrollLeft >= maxScroll cuando maxScroll === 0 (forzaba siempre el último).
+       * Índice desde scroll: offsetLeft respecto al track (position: relative) + reglas de borde.
+       * getBoundingClientRect competía con scale/opacity en slides no activos.
        */
       const indexFromScrollLeft = () => {
         const slides = getSlides();
         if (!slides.length) return 0;
-        const v = viewport.getBoundingClientRect();
+        const x = viewport.scrollLeft;
+        const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        if (maxL <= 1) return 0;
+        if (x <= 1) return 0;
+        if (x >= maxL - 1) return slides.length - 1;
+        const last = slides[slides.length - 1];
+        if (last && x >= last.offsetLeft - 2) return slides.length - 1;
+
         let best = 0;
         let bestDist = Infinity;
         slides.forEach((el, i) => {
-          const r = el.getBoundingClientRect();
-          const d = Math.abs(r.left - v.left);
+          const d = Math.abs(el.offsetLeft - x);
           if (d < bestDist) {
             bestDist = d;
             best = i;
@@ -1477,30 +1486,46 @@ class LandingView extends PublicBaseView {
       };
 
       scrollToSlideIndex = (i) => {
-        syncTrackEndPadding();
         const slides = getSlides();
         const el = slides[i];
         if (!el) return;
 
-        const alignOnce = () => {
-          const v = viewport.getBoundingClientRect();
-          const r = el.getBoundingClientRect();
-          const delta = r.left - v.left;
+        if (suppressTimerId) {
+          clearTimeout(suppressTimerId);
+          suppressTimerId = 0;
+        }
+
+        suppressScrollIndexApply = true;
+        syncTrackEndPadding();
+
+        const applyScrollTarget = () => {
           const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-          viewport.scrollLeft = Math.min(Math.max(0, viewport.scrollLeft + delta), maxL);
+          const raw = el.offsetLeft;
+          const target = Math.min(Math.max(0, raw), maxL);
+          viewport.scrollLeft = Math.round(target);
         };
 
-        alignOnce();
-        requestAnimationFrame(alignOnce);
+        requestAnimationFrame(() => {
+          applyScrollTarget();
+          requestAnimationFrame(applyScrollTarget);
+        });
+
+        suppressTimerId = window.setTimeout(() => {
+          suppressTimerId = 0;
+          applyScrollTarget();
+          suppressScrollIndexApply = false;
+        }, 180);
       };
 
       syncTrackEndPadding();
 
       let scrollRaf = null;
       const onViewportScroll = () => {
+        if (suppressScrollIndexApply) return;
         if (scrollRaf != null) return;
         scrollRaf = requestAnimationFrame(() => {
           scrollRaf = null;
+          if (suppressScrollIndexApply) return;
           const i = indexFromScrollLeft();
           if (i !== current) applyIndex(i);
         });
@@ -1509,6 +1534,7 @@ class LandingView extends PublicBaseView {
       cleanups.push(() => {
         viewport.removeEventListener('scroll', onViewportScroll);
         if (scrollRaf != null) cancelAnimationFrame(scrollRaf);
+        if (suppressTimerId) clearTimeout(suppressTimerId);
       });
 
       let resizeRaf = 0;
