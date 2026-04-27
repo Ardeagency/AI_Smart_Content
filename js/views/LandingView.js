@@ -868,18 +868,22 @@ class LandingView extends PublicBaseView {
       return Math.round((hdr?.offsetHeight || 64) + 10);
     };
 
+    const setShift = (shiftPx) => {
+      const clamped = Math.max(0, shiftPx);
+      inner.style.transform = `translate3d(0, ${clamped.toFixed(1)}px, 0)`;
+    };
+
     const tick = () => {
       if (!mq.matches) {
         inner.style.transform = '';
         inner.style.willChange = '';
-      return;
-    }
+        return;
+      }
       const off = headerOffset();
       const r = rail.getBoundingClientRect();
       const h = inner.offsetHeight;
       if (!h || r.height < 1) {
-        inner.style.transform = '';
-        inner.style.willChange = '';
+        setShift(0);
         return;
       }
       const maxShift = Math.max(0, r.height - h);
@@ -887,13 +891,7 @@ class LandingView extends PublicBaseView {
       if (r.top < off) {
         shift = Math.min(off - r.top, maxShift);
       }
-      if (shift > 0.5) {
-        inner.style.transform = `translateY(${Math.round(shift)}px)`;
-        inner.style.willChange = 'transform';
-      } else {
-        inner.style.transform = '';
-        inner.style.willChange = '';
-      }
+      setShift(shift);
     };
 
     const shell = document.getElementById('public-shell');
@@ -918,6 +916,7 @@ class LandingView extends PublicBaseView {
       resizeObs.observe(rail);
     }
 
+    inner.style.willChange = 'transform';
     tick();
     requestAnimationFrame(() => tick());
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
@@ -994,24 +993,11 @@ class LandingView extends PublicBaseView {
       return false;
     };
 
-    const nudgeIntoViewport = (delta) => {
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
-      if (delta > 0) {
-        if (Math.abs(rect.top) > 0.5) window.scrollBy(0, rect.top);
-      } else if (delta < 0) {
-        const dy = rect.bottom - vh;
-        if (Math.abs(dy) > 0.5) window.scrollBy(0, dy);
-      }
-    };
-
     const consumeDelta = (delta) => {
       if (maxTravel <= 0) return false;
       if (!alignsForCapture(delta)) return false;
       if (delta > 0 && progress >= 1) return false;
       if (delta < 0 && progress <= 0) return false;
-
-      nudgeIntoViewport(delta);
       const step = Math.abs(delta) / Math.max(220, maxTravel);
       progress = clamp01(progress + (delta > 0 ? step : -step));
       render();
