@@ -15,11 +15,48 @@ class LandingView extends PublicBaseView {
     this.activePath = '/';
     this.pageClass = 'public-page--landing';
     this.heroRevealCleanup = null;
+    this.painRoadmapCleanup = null;
     this.faqCleanup = null;
     this.ctaFormCleanup = null;
     this.appPreviewCleanup = null;
+    this.whyCarouselCleanup = null;
     this.veraRailScrollCleanup = null;
     this.agitScrollCleanup = null;
+  }
+
+  getCredBrands() {
+    return [
+      { name: 'Meta', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg', width: 32, height: 28 },
+      { name: 'Google', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg', width: 32, height: 28 },
+      { name: 'TikTok', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg', width: 32, height: 28 },
+      { name: 'X', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg', width: 32, height: 28 },
+      { name: 'Amazon', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg', width: 32, height: 28 },
+      { name: 'Mercado Libre', src: 'https://upload.wikimedia.org/wikipedia/commons/6/60/Mercado_Libre_wordmark_%28Spanish_version%29.svg', width: 72, height: 18, wide: true },
+      { name: 'OpenAI', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg', width: 32, height: 28 },
+      { name: 'Anthropic', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg', width: 32, height: 28 },
+      { name: 'KlingAI', src: 'https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/kling.svg', width: 32, height: 28 },
+      { name: 'Nano Banana PRO', src: 'https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg', width: 32, height: 28 },
+      { name: 'Seedance 2.0', src: 'https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/bytedance.svg', width: 32, height: 28 },
+      { name: 'ComfyUI', src: 'https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/comfyui.svg', width: 32, height: 28 },
+      { name: 'n8n', src: 'https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg', width: 32, height: 28 },
+      { name: 'Kie AI', src: 'https://kie.ai/logo.png', width: 32, height: 28 },
+    ];
+  }
+
+  renderCredBrand(brand) {
+    const wideClass = brand.wide ? ' lp-cred__brand--wide' : '';
+    return `
+      <div class="lp-cred__brand${wideClass}" title="${brand.name}">
+        <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="${brand.src}" alt="" width="${brand.width}" height="${brand.height}" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
+        <span class="lp-cred__brand-label">${brand.name}</span>
+      </div>
+    `;
+  }
+
+  renderCredibilityTrack() {
+    const brands = this.getCredBrands();
+    const loopBrands = brands.concat(brands);
+    return loopBrands.map((brand) => this.renderCredBrand(brand)).join('');
   }
 
   renderContent() {
@@ -54,120 +91,8 @@ class LandingView extends PublicBaseView {
           </p>
           <div class="lp-cred__track-wrap" aria-hidden="true">
             <div class="lp-cred__track">
-              <div class="lp-cred__brand" title="Meta">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Meta</span>
+              ${this.renderCredibilityTrack()}
             </div>
-              <div class="lp-cred__brand" title="Google">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Google</span>
-                </div>
-              <div class="lp-cred__brand" title="TikTok">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">TikTok</span>
-              </div>
-              <div class="lp-cred__brand" title="X">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">X</span>
-            </div>
-              <div class="lp-cred__brand" title="Amazon">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Amazon</span>
-          </div>
-              <div class="lp-cred__brand lp-cred__brand--wide" title="Mercado Libre">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://upload.wikimedia.org/wikipedia/commons/6/60/Mercado_Libre_wordmark_%28Spanish_version%29.svg" alt="" width="72" height="18" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Mercado Libre</span>
-        </div>
-              <div class="lp-cred__brand" title="OpenAI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">OpenAI</span>
-            </div>
-              <div class="lp-cred__brand" title="Anthropic">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Anthropic</span>
-                  </div>
-              <div class="lp-cred__brand" title="KlingAI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/kling.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">KlingAI</span>
-                </div>
-              <div class="lp-cred__brand" title="Nano Banana PRO">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Nano Banana PRO</span>
-              </div>
-              <div class="lp-cred__brand" title="Seedance 2.0">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/bytedance.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Seedance 2.0</span>
-                  </div>
-              <div class="lp-cred__brand" title="ComfyUI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/comfyui.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">ComfyUI</span>
-                </div>
-              <div class="lp-cred__brand" title="n8n">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">n8n</span>
-              </div>
-              <div class="lp-cred__brand" title="Kie AI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://kie.ai/logo.png" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Kie AI</span>
-                  </div>
-              <!-- duplicado para carrusel infinito -->
-              <div class="lp-cred__brand" title="Meta">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/meta.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Meta</span>
-                </div>
-              <div class="lp-cred__brand" title="Google">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/google.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Google</span>
-              </div>
-              <div class="lp-cred__brand" title="TikTok">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/tiktok.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">TikTok</span>
-                  </div>
-              <div class="lp-cred__brand" title="X">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/x.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">X</span>
-                </div>
-              <div class="lp-cred__brand" title="Amazon">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/amazon.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Amazon</span>
-              </div>
-              <div class="lp-cred__brand lp-cred__brand--wide" title="Mercado Libre">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://upload.wikimedia.org/wikipedia/commons/6/60/Mercado_Libre_wordmark_%28Spanish_version%29.svg" alt="" width="72" height="18" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Mercado Libre</span>
-                  </div>
-              <div class="lp-cred__brand" title="OpenAI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/openai.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">OpenAI</span>
-                </div>
-              <div class="lp-cred__brand" title="Anthropic">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/anthropic.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Anthropic</span>
-              </div>
-              <div class="lp-cred__brand" title="KlingAI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/kling.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">KlingAI</span>
-            </div>
-              <div class="lp-cred__brand" title="Nano Banana PRO">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/nanobanana.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Nano Banana PRO</span>
-          </div>
-              <div class="lp-cred__brand" title="Seedance 2.0">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/bytedance.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Seedance 2.0</span>
-        </div>
-              <div class="lp-cred__brand" title="ComfyUI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.87.0/icons/comfyui.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">ComfyUI</span>
-              </div>
-              <div class="lp-cred__brand" title="n8n">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://cdn.jsdelivr.net/npm/simple-icons@13.15.0/icons/n8n.svg" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">n8n</span>
-              </div>
-              <div class="lp-cred__brand" title="Kie AI">
-                <span class="lp-cred__brand-mark" aria-hidden="true"><img class="lp-cred__brand-img" src="https://kie.ai/logo.png" alt="" width="32" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>
-                <span class="lp-cred__brand-label">Kie AI</span>
-              </div>
-              </div>
           </div>
         </div>
       </section>
@@ -1140,22 +1065,59 @@ class LandingView extends PublicBaseView {
       render();
     });
 
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('resize', onResize);
-
-    this.agitScrollCleanup = () => {
+    let listenersAttached = false;
+    const attachInputListeners = () => {
+      if (listenersAttached) return;
+      listenersAttached = true;
+      window.addEventListener('wheel', onWheel, { passive: false });
+      window.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd, { passive: true });
+      window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+      window.addEventListener('keydown', onKeyDown);
+    };
+    const detachInputListeners = () => {
+      if (!listenersAttached) return;
+      listenersAttached = false;
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
+      touchY = null;
+    };
+
+    const isSectionNearViewport = () => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+      return rect.top < vh * 1.25 && rect.bottom > -vh * 0.25;
+    };
+
+    let activeObs = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      activeObs = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry && entry.isIntersecting) attachInputListeners();
+          else detachInputListeners();
+        },
+        { root: null, threshold: 0, rootMargin: '25% 0px 25% 0px' },
+      );
+      activeObs.observe(section);
+    } else if (isSectionNearViewport()) {
+      attachInputListeners();
+    }
+
+    window.addEventListener('resize', onResize);
+
+    this.agitScrollCleanup = () => {
+      detachInputListeners();
       window.removeEventListener('resize', onResize);
+      if (activeObs) {
+        activeObs.disconnect();
+        activeObs = null;
+      }
       if (resizeObs) {
         resizeObs.disconnect();
         resizeObs = null;
