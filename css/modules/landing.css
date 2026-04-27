@@ -1361,19 +1361,21 @@ body.entrance-done .landing-header {
 }
 
 /*
- * Backdrop con degradado multi-color (verde abajo-izq, morado centro-der,
- * azul arriba-der) sobre el fondo oscuro. Cero JS, cero animación: capa
- * estática de pintura compositada por GPU.
+ * Stacking de la sección VERA (de abajo hacia arriba):
+ *   1. background sólido de .lp-vera               (--bg-primary)
+ *   2. .lp-vera::before  z-index: -3              (degradado multi-color)
+ *   3. .lp-vera::after   z-index: -2              (grano de película)
+ *   4. .lp-vera__veil    z-index: -1              (vignette top/bottom)
+ *   5. contenido en flujo (.lp-vera__inner)       (texto + bento + wordmark)
  *
- * z-index negativo (-2/-1) lo deja por debajo del contenido en flujo
- * (.lp-vera__inner). El `isolation: isolate` de .lp-vera mantiene los
- * negativos contenidos dentro del stacking context de la sección.
+ * El `isolation: isolate` de .lp-vera mantiene los negativos contenidos
+ * dentro del stacking context de la sección.
  */
 .lp-vera::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: -3;
   pointer-events: none;
   background:
     /* Verde abajo-izquierda */
@@ -1394,7 +1396,7 @@ body.entrance-done .landing-header {
 }
 
 /*
- * Grano de película encima del gradiente (debajo del contenido).
+ * Grano de película encima del gradiente (debajo de la vignette).
  * SVG noise generado con feTurbulence — mismo patrón que el hero
  * para consistencia. mix-blend-mode: overlay le da textura a las
  * zonas claras sin oscurecer las puras.
@@ -1403,12 +1405,32 @@ body.entrance-done .landing-header {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
   opacity: 0.5;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 220px 220px;
+}
+
+/*
+ * Vignette: capa por encima del gradiente y del grano que camufla los
+ * bordes superior e inferior con el color de fondo. El centro queda
+ * transparente, dejando ver el degradado solo en la franja media.
+ *
+ * Va arriba de ::before y ::after pero debajo del contenido en flujo.
+ */
+.lp-vera__veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-primary, #0b0b0b) 0%,
+    rgba(11, 11, 11, 0) 50%,
+    var(--bg-primary, #0b0b0b) 100%
+  );
 }
 
 .lp-vera__inner {

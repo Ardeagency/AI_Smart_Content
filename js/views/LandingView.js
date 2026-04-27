@@ -286,6 +286,10 @@ class LandingView extends PublicBaseView {
 
       <!-- ════════ S06: VERA — fila1 copy|spacer; fila2 bento ancho completo; L2 SVG z2 ════════ -->
       <section class="lp-vera" id="landing-6" aria-labelledby="lp-vera-heading">
+        <!-- Vignette: gris oscuro arriba/abajo, transparente en el centro.
+             Va encima del gradiente (::before) y del grano (::after) pero
+             debajo del contenido (.lp-vera__inner). -->
+        <div class="lp-vera__veil" aria-hidden="true"></div>
         <div class="lp-vera__inner">
           <div class="lp-vera__shell">
             <div class="lp-vera__main-col">
