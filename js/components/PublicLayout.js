@@ -153,33 +153,20 @@
 
     const shell = document.getElementById('public-shell');
     const THRESHOLD = 32;
-    const useShell = !!(shell && shell.scrollHeight > shell.clientHeight + 2);
-    const target = useShell ? shell : window;
 
-    const readScrollY = useShell
-      ? () => shell.scrollTop
-      : () => window.scrollY || document.documentElement.scrollTop || 0;
-
-    let isFloating = readScrollY() > THRESHOLD;
-    let ticking = false;
-    header.classList.toggle('landing-header--floating', isFloating);
-
-    const apply = () => {
-      ticking = false;
-      const next = readScrollY() > THRESHOLD;
-      if (next === isFloating) return;
-      isFloating = next;
-      header.classList.toggle('landing-header--floating', next);
+    const getScrollY = () => {
+      if (shell && shell.scrollHeight > shell.clientHeight + 2) return shell.scrollTop;
+      return window.scrollY || document.documentElement.scrollTop || 0;
     };
 
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(apply);
+    const update = () => {
+      header.classList.toggle('landing-header--floating', getScrollY() > THRESHOLD);
     };
 
-    target.addEventListener('scroll', onScroll, { passive: true });
-    scrollCleanup = () => target.removeEventListener('scroll', onScroll);
+    update();
+    const target = (shell && shell.scrollHeight > shell.clientHeight + 2) ? shell : window;
+    target.addEventListener('scroll', update, { passive: true });
+    scrollCleanup = () => target.removeEventListener('scroll', update);
   }
 
   function attachMobileToggleBehavior() {
@@ -287,14 +274,6 @@
       return;
     }
 
-    const reduceMotion = typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (reduceMotion) {
-      els.forEach(el => el.classList.add('is-visible'));
-      return;
-    }
-
     const io = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
@@ -302,7 +281,7 @@
           io.unobserve(entry.target);
         }
       }
-    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    }, { threshold: 0.1, rootMargin: '0px 0px -4% 0px' });
 
     els.forEach(el => io.observe(el));
     ioCleanup = () => io.disconnect();

@@ -846,13 +846,12 @@ class LandingView extends PublicBaseView {
       el.style.transitionDelay = `${i * 0.11}s`;
     });
 
-    let rafId = requestAnimationFrame(() => {
-      rafId = 0;
+    // Trigger after layout paint so transition takes effect
+      requestAnimationFrame(() => requestAnimationFrame(() => {
       hero.classList.add('is-ready');
-    });
+    }));
 
     this.heroRevealCleanup = () => {
-      if (rafId) cancelAnimationFrame(rafId);
       hero.classList.remove('is-ready');
       reveals.forEach(el => { el.style.transitionDelay = ''; });
     };
@@ -1242,46 +1241,25 @@ class LandingView extends PublicBaseView {
     if (!viewport || !prevBtn || !nextBtn) return;
 
     const gapPx = 16;
-    let cachedStep = 0;
-
-    const measureStep = () => {
+    const scrollStep = () => {
       const card = viewport.querySelector('.lp-why__card-wrap');
-      cachedStep = card
-        ? Math.round(card.getBoundingClientRect().width + gapPx)
-        : Math.round(viewport.clientWidth * 0.78);
+      if (!card) return Math.round(viewport.clientWidth * 0.78);
+      return Math.round(card.getBoundingClientRect().width + gapPx);
     };
-
-    measureStep();
-
-    const reduceMotion = typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const behavior = reduceMotion ? 'auto' : 'smooth';
 
     const onPrev = () => {
-      viewport.scrollBy({ left: -cachedStep, behavior });
+      viewport.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
     };
     const onNext = () => {
-      viewport.scrollBy({ left: cachedStep, behavior });
-    };
-
-    let resizeRaf = 0;
-    const onResize = () => {
-      if (resizeRaf) return;
-      resizeRaf = requestAnimationFrame(() => {
-        resizeRaf = 0;
-        measureStep();
-      });
+      viewport.scrollBy({ left: scrollStep(), behavior: 'smooth' });
     };
 
     prevBtn.addEventListener('click', onPrev);
     nextBtn.addEventListener('click', onNext);
-    window.addEventListener('resize', onResize, { passive: true });
 
     this.whyCarouselCleanup = () => {
       prevBtn.removeEventListener('click', onPrev);
       nextBtn.removeEventListener('click', onNext);
-      window.removeEventListener('resize', onResize);
-      if (resizeRaf) cancelAnimationFrame(resizeRaf);
     };
   }
 
