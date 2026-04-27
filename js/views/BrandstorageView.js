@@ -79,6 +79,7 @@ class BrandstorageView extends BaseView {
     <div class="brand-dashboard-background">
         <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
         <div class="background-gradient" id="backgroundGradient"></div>
+        <div class="background-film-grain" aria-hidden="true"></div>
     </div>
 
     <!-- Biblioteca de marcas -->
