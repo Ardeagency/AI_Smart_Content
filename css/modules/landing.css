@@ -1319,18 +1319,33 @@ body.entrance-done .landing-header {
   min-width: 0;
 }
 
-.lp-caps__need {
+.lp-caps__need-block {
   margin: 0 0 clamp(16px, 2.5vw, 28px);
   font-family: "Space Grotesk", Inter, system-ui, sans-serif;
-  font-size: clamp(2.75rem, 9vw, 5.5rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 0.95;
+  line-height: 1.02;
   text-transform: uppercase;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(2px, 0.5vw, 8px);
+}
+
+.lp-caps__need-line {
+  font-size: clamp(1.35rem, 3.8vw, 2.25rem);
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.lp-caps__need-word {
+  font-size: clamp(2.2rem, 7.5vw, 4.25rem);
+  letter-spacing: -0.03em;
   color: #ffffff;
 }
 
-.lp-caps__vera-wrap {
+.lp-caps__detail-wrap {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -1338,7 +1353,7 @@ body.entrance-done .landing-header {
   max-width: min(52ch, 100%);
 }
 
-.lp-caps__vera-rule {
+.lp-caps__detail-rule {
   flex: 0 0 auto;
   width: clamp(40px, 6vw, 72px);
   height: 3px;
@@ -1352,20 +1367,17 @@ body.entrance-done .landing-header {
   );
 }
 
-.lp-caps__vera-copy {
+.lp-caps__detail-body {
   margin: 0;
   font-size: clamp(0.9rem, 1.25vw, 1.05rem);
   line-height: 1.62;
   font-weight: 400;
-}
-
-.lp-caps__vera-name {
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.lp-caps__vera-body {
   color: rgba(255, 255, 255, 0.52);
+}
+
+.lp-caps__axis-label {
+  position: relative;
+  z-index: 1;
 }
 
 .lp-caps__carousel {
@@ -1391,13 +1403,15 @@ body.entrance-done .landing-header {
   flex-direction: row;
   gap: 14px;
   padding: 2px 0 8px;
-  min-height: clamp(220px, 36vh, 380px);
+  align-items: stretch;
 }
 
 .lp-caps__slide {
-  flex: 0 0 clamp(160px, 42vw, 280px);
-  width: clamp(160px, 42vw, 280px);
-  min-height: clamp(220px, 36vh, 380px);
+  flex: 0 0 clamp(96px, 11.5vw, 168px);
+  width: clamp(96px, 11.5vw, 168px);
+  aspect-ratio: 3 / 4;
+  min-height: 0;
+  height: auto;
   scroll-snap-align: start;
   border-radius: 2px;
   background: #ffffff;
@@ -1472,14 +1486,9 @@ body.entrance-done .landing-header {
     order: -1;
   }
 
-  .lp-caps__track {
-    min-height: clamp(180px, 42vw, 280px);
-  }
-
   .lp-caps__slide {
-    flex-basis: min(72vw, 260px);
-    width: min(72vw, 260px);
-    min-height: clamp(180px, 42vw, 280px);
+    flex-basis: clamp(88px, 22vw, 140px);
+    width: clamp(88px, 22vw, 140px);
   }
 }
 

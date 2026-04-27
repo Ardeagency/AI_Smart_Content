@@ -251,7 +251,7 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S05: PROPUESTA (mock layout: kicker + eje + NECESITAS/VERA + carrusel + 2026) ════════ -->
+      <!-- ════════ S05: PROPUESTA (6 criterios + carrusel 6 slides + copy sincronizado) ════════ -->
       <section class="lp-caps" id="landing-5" aria-labelledby="lp-caps-heading">
         <div class="lp-caps__inner" data-lp-caps-root>
           <header class="lp-caps__head">
@@ -259,30 +259,35 @@ class LandingView extends PublicBaseView {
               <span class="lp-caps__kicker-line">No es una herramienta.</span>
               <span class="lp-caps__kicker-line">Es una nueva forma de competir.</span>
             </h2>
-            <ul class="lp-caps__axis" role="list" aria-label="Criterios" data-lp-caps-axis>
-              <li class="lp-caps__axis-item is-active" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
-              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
-              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
-              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
-              <li class="lp-caps__axis-item" role="listitem"><span class="lp-caps__axis-accent" aria-hidden="true"></span>Eficiencia</li>
+            <ul class="lp-caps__axis" role="tablist" aria-label="Criterios" data-lp-caps-axis>
+              <li class="lp-caps__axis-item is-active" role="tab" tabindex="0" aria-selected="true" data-index="0"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">PRECISIÓN</span></li>
+              <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="1"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">INTELIGENCIA</span></li>
+              <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="2"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">VELOCIDAD</span></li>
+              <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="3"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">EFICIENCIA</span></li>
+              <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="4"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">CONSISTENCIA</span></li>
+              <li class="lp-caps__axis-item" role="tab" tabindex="-1" aria-selected="false" data-index="5"><span class="lp-caps__axis-accent" aria-hidden="true"></span><span class="lp-caps__axis-label">CALIDAD</span></li>
             </ul>
           </header>
           <div class="lp-caps__main">
             <div class="lp-caps__copy">
-              <p class="lp-caps__need sr-reveal">Necesitas</p>
-              <div class="lp-caps__vera-wrap sr-reveal sr-reveal--d1">
-                <span class="lp-caps__vera-rule" aria-hidden="true"></span>
-                <p class="lp-caps__vera-copy">
-                  <strong class="lp-caps__vera-name">VERA</strong><span class="lp-caps__vera-body"> no ejecuta tareas. Interpreta el mercado. Observa lo que está pasando, lo cruza con tu ADN de marca y decide qué hacer, cuándo hacerlo y por qué hacerlo. No sigue instrucciones ni depende de prompts. Aprende de cada resultado, ajusta su criterio y actúa con autonomía, asegurando que cada acción tenga intención, coherencia y timing real.</span>
-                </p>
+              <h3 class="lp-caps__need-block sr-reveal" id="lp-caps-need-heading">
+                <span class="lp-caps__need-line">Necesitas</span>
+                <span class="lp-caps__need-word" data-lp-caps-word>PRECISIÓN</span>
+              </h3>
+              <div class="lp-caps__detail-wrap sr-reveal sr-reveal--d1">
+                <span class="lp-caps__detail-rule" aria-hidden="true"></span>
+                <p class="lp-caps__detail-body" data-lp-caps-body aria-live="polite">Cruzar datos, tendencias, competencia y ADN de marca para decidir qué comunicar, cuándo hacerlo y por qué.</p>
               </div>
             </div>
             <div class="lp-caps__carousel" data-lp-caps-carousel>
-              <div class="lp-caps__viewport" data-lp-caps-viewport tabindex="0" aria-label="Vista previa de criterios">
+              <div class="lp-caps__viewport" data-lp-caps-viewport tabindex="0" aria-label="Criterios visuales" aria-roledescription="carrusel">
                 <div class="lp-caps__track" role="list">
-                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
-                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
-                  <div class="lp-caps__slide" role="listitem" aria-hidden="true"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="0" aria-label="Precisión"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="1" aria-label="Inteligencia"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="2" aria-label="Velocidad"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="3" aria-label="Eficiencia"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="4" aria-label="Consistencia"></div>
+                  <div class="lp-caps__slide" role="listitem" data-index="5" aria-label="Calidad"></div>
                 </div>
               </div>
             </div>
@@ -1318,37 +1323,109 @@ class LandingView extends PublicBaseView {
     const shellRoot = this.container?.querySelector('[data-lp-caps-root]');
     if (!shellRoot) return;
 
+    const PILLARS = [
+      {
+        word: 'PRECISIÓN',
+        body: 'Cruzar datos, tendencias, competencia y ADN de marca para decidir qué comunicar, cuándo hacerlo y por qué.',
+      },
+      {
+        word: 'INTELIGENCIA',
+        body: 'Interpretar el mercado en tiempo real y convertir señales dispersas en decisiones estratégicas accionables.',
+      },
+      {
+        word: 'VELOCIDAD',
+        body: 'Responder antes de que la conversación cambie, antes de que la tendencia se enfríe y antes de que tu competencia llegue.',
+      },
+      {
+        word: 'EFICIENCIA',
+        body: 'Reducir fricción operativa y convertir procesos lentos en un sistema automático de decisión, creación y ejecución.',
+      },
+      {
+        word: 'CONSISTENCIA',
+        body: 'Mantener cada acción alineada con el tono, la identidad y los límites estratégicos de tu marca.',
+      },
+      {
+        word: 'CALIDAD',
+        body: 'Crear contenido visual, textual y audiovisual con estándar profesional, sin sacrificar detalle, intención ni coherencia.',
+      },
+    ];
+
     const axis = shellRoot.querySelector('[data-lp-caps-axis]');
     const viewport = shellRoot.querySelector('[data-lp-caps-viewport]');
     const prevBtn = shellRoot.querySelector('[data-lp-caps-prev]');
     const nextBtn = shellRoot.querySelector('[data-lp-caps-next]');
+    const wordEl = shellRoot.querySelector('[data-lp-caps-word]');
+    const bodyEl = shellRoot.querySelector('[data-lp-caps-body]');
 
     const cleanups = [];
+    const n = PILLARS.length;
+    const gapPx = 14;
+    let cachedStep = 0;
+    let current = 0;
+
+    const measureStep = () => {
+      const slide = viewport?.querySelector('.lp-caps__slide');
+      cachedStep = slide
+        ? Math.round(slide.getBoundingClientRect().width + gapPx)
+        : Math.round((viewport?.clientWidth || 0) * 0.72);
+    };
+
+    const syncTabs = () => {
+      if (!axis) return;
+      axis.querySelectorAll('.lp-caps__axis-item').forEach((el, i) => {
+        const on = i === current;
+        el.classList.toggle('is-active', on);
+        el.setAttribute('aria-selected', on ? 'true' : 'false');
+        el.tabIndex = on ? 0 : -1;
+      });
+    };
+
+    const setActive = (idx) => {
+      current = ((idx % n) + n) % n;
+      syncTabs();
+      if (wordEl) wordEl.textContent = PILLARS[current].word;
+      if (bodyEl) bodyEl.textContent = PILLARS[current].body;
+      if (viewport) {
+        measureStep();
+        viewport.scrollLeft = Math.round(current * cachedStep);
+      }
+    };
 
     if (axis) {
       const onAxisClick = (e) => {
         const item = e.target.closest('.lp-caps__axis-item');
         if (!item || !axis.contains(item)) return;
-        axis.querySelectorAll('.lp-caps__axis-item').forEach((el) => el.classList.remove('is-active'));
-        item.classList.add('is-active');
+        const raw = item.getAttribute('data-index');
+        const i = raw == null ? NaN : parseInt(raw, 10);
+        if (Number.isNaN(i)) return;
+        setActive(i);
       };
       axis.addEventListener('click', onAxisClick);
       cleanups.push(() => axis.removeEventListener('click', onAxisClick));
+
+      const onAxisKey = (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+        const item = e.target.closest('.lp-caps__axis-item');
+        if (!item || !axis.contains(item)) return;
+        e.preventDefault();
+        let i = parseInt(item.getAttribute('data-index') || '0', 10);
+        if (e.key === 'ArrowDown') i = Math.min(n - 1, i + 1);
+        if (e.key === 'ArrowUp') i = Math.max(0, i - 1);
+        if (e.key === 'Home') i = 0;
+        if (e.key === 'End') i = n - 1;
+        setActive(i);
+        const nextTab = axis.querySelector(`.lp-caps__axis-item[data-index="${i}"]`);
+        if (nextTab) nextTab.focus();
+      };
+      axis.addEventListener('keydown', onAxisKey);
+      cleanups.push(() => axis.removeEventListener('keydown', onAxisKey));
     }
 
     if (viewport && prevBtn && nextBtn) {
-      const gapPx = 14;
-      let cachedStep = 0;
-      const measureStep = () => {
-        const slide = viewport.querySelector('.lp-caps__slide');
-        cachedStep = slide
-          ? Math.round(slide.getBoundingClientRect().width + gapPx)
-          : Math.round(viewport.clientWidth * 0.72);
-      };
       measureStep();
 
-      const onPrev = () => viewport.scrollBy({ left: -cachedStep, behavior: 'auto' });
-      const onNext = () => viewport.scrollBy({ left: cachedStep, behavior: 'auto' });
+      const onPrev = () => setActive(current - 1);
+      const onNext = () => setActive(current + 1);
 
       let resizeRaf = 0;
       const onResize = () => {
@@ -1356,6 +1433,7 @@ class LandingView extends PublicBaseView {
         resizeRaf = requestAnimationFrame(() => {
           resizeRaf = 0;
           measureStep();
+          viewport.scrollLeft = Math.round(current * cachedStep);
         });
       };
 
@@ -1369,6 +1447,8 @@ class LandingView extends PublicBaseView {
         if (resizeRaf) cancelAnimationFrame(resizeRaf);
       });
     }
+
+    setActive(0);
 
     this.capsPropostaCleanup = () => {
       cleanups.forEach((fn) => fn());
