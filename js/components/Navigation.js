@@ -62,6 +62,14 @@ const SIDEBAR_USER_CONFIG = {
 
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
+/** Versión en query de iconos del sidebar (SVG/PNG); subir si el navegador/CDN sirve assets viejos sin tocar el JS. */
+const NAV_SIDEBAR_ASSET_VER = '20260427b';
+function _navSidebarIconUrl(src) {
+  if (!src) return src;
+  const sep = src.indexOf('?') === -1 ? '?' : '&';
+  return `${src}${sep}nav=${NAV_SIDEBAR_ASSET_VER}`;
+}
+
 // Delegamos en BaseView.escapeHtml (carga antes que Navigation en index.html).
 // Fallback defensivo por si el orden de scripts cambiara en algún deploy futuro.
 function _escapeHtml(s) {
@@ -738,7 +746,8 @@ class Navigation {
         const extra = item.navIconClass ? ` ${item.navIconClass}` : '';
         const w = item.iconImgWidth != null ? item.iconImgWidth : 16;
         const h = item.iconImgHeight != null ? item.iconImgHeight : 16;
-        return `<img src="${item.iconSrc}" class="nav-icon nav-icon-img${extra}" alt="" width="${w}" height="${h}">`;
+        const src = _navSidebarIconUrl(item.iconSrc);
+        return `<img src="${src}" class="nav-icon nav-icon-img${extra}" alt="" width="${w}" height="${h}">`;
       }
       return `<i class="fas ${item.icon} nav-icon"></i>`;
     };
@@ -816,7 +825,7 @@ class Navigation {
     }).join('');
 
     const footerIconHTML = (f) => f.iconSrc
-      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">`
+      ? `<img src="${_navSidebarIconUrl(f.iconSrc)}" class="nav-icon nav-icon-img" alt="" width="16" height="16">`
       : `<i class="fas ${f.icon} nav-icon"></i>`;
 
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
