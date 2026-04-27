@@ -234,15 +234,18 @@ class LandingView extends PublicBaseView {
         </div>
       </section>
 
-      <!-- ════════ S04: AGITACIÓN ════════ -->
+      <!-- ════════ S04: AGITACIÓN ════════
+           Layout: spacer-top da espacio para que el pin alcance el centro vertical
+           del viewport durante la entrada de la sección. Una vez ahí, sticky engage
+           y la animación scroll-driven barre el headline horizontalmente mientras el
+           pin queda anclado al centro. -->
       <section class="lp-agit" id="landing-4" aria-label="Agitación">
-        <div class="lp-agit__inner">
-          <div class="lp-agit__pin" data-lp-agit-pin>
-            <div class="lp-agit__marquee" data-lp-agit-marquee>
-              <h2 class="lp-agit__headline" data-lp-agit-headline>
-                <span class="lp-agit__line">EL MERCADO YA ESTÁ OPERANDO DISTINTO. LA PREGUNTA ES SI TÚ TAMBIÉN.</span>
-              </h2>
-            </div>
+        <div class="lp-agit__spacer-top" aria-hidden="true"></div>
+        <div class="lp-agit__pin" data-lp-agit-pin>
+          <div class="lp-agit__marquee" data-lp-agit-marquee>
+            <h2 class="lp-agit__headline" data-lp-agit-headline>
+              <span class="lp-agit__line">EL MERCADO YA ESTÁ OPERANDO DISTINTO. LA PREGUNTA ES SI TÚ TAMBIÉN.</span>
+            </h2>
           </div>
         </div>
       </section>

@@ -1039,50 +1039,60 @@ body.entrance-done .landing-header {
    ═══════════════════════════════════════════════════════════════ */
 
 /*
- * S04 AGITACIÓN — barrido horizontal del titular guiado por scroll.
+ * S04 AGITACIÓN — scrollytelling con anclaje al centro vertical.
  *
- * Diseño: sección compacta de exactamente 1 viewport. El texto barre
- * de derecha a izquierda usando el view-timeline de la sección con
- * animation-range: cover 0% → cover 100%. Esto significa que la
- * animación está sincronizada con el ciclo entero de visibilidad de
- * la sección: texto entra cuando la sección entra, texto sale cuando
- * la sección sale. Cero zona vacía por delante o por detrás.
+ * Anatomía:
+ *   .lp-agit               sección 180vh, runway total
+ *   ├ .lp-agit__spacer-top 50vh empty (deja que el pin alcance el centro
+ *   │                       del viewport durante la entrada de la sección)
+ *   └ .lp-agit__pin        sticky con top:50vh + translateY(-50%) → ancla
+ *                          el contenedor en el centro vertical del viewport
  *
- * No usamos position: sticky a propósito: con sticky pin la sección
- * tiene que ser >100vh para tener runway, y eso deja zona vacía
- * después de que el texto barre. Con cover-range puro, la sección
- * encaja exactamente y el usuario transiciona a S05 justo cuando
- * el texto sale por la izquierda.
+ * Timing del scroll:
+ *   1. Sección entra desde abajo. 50vh de spacer empty pasa por el viewport.
+ *   2. Pin entra desde abajo y SUBE hasta el centro de viewport.
+ *   3. Pin alcanza el centro → sticky engage. Pin queda anclado al centro.
+ *   4. animation-range: contain 0% → exit 50% activa el barrido del headline
+ *      exactamente cuando el pin se ancla. El usuario sigue scrolleando, el
+ *      pin no se mueve, el texto barre de derecha a izquierda.
+ *   5. Animación termina cerca del final del pin. Sticky se libera.
+ *   6. Sección termina y entra S05. La salida coincide con la transición.
  *
- * Fallback: @supports degrada a sección estática con texto centrado.
+ * Razón de los 180vh: con S=180vh, V=100vh, pad-top=50vh, el pin se
+ * mantiene sticky durante ~125vh de scroll (suficiente para leer cómodo)
+ * y al disengage la sección está casi en el viewport top → S05 entra
+ * por debajo sin gap perceptible.
+ *
+ * Cero JS. Animación corre en compositor sin pelear con el scroll nativo.
  */
 .lp-agit {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
-  display: flex;
-  align-items: center;
+  /* 180vh = 50vh runway + 5vh pin + 125vh sticky duration aprox */
+  min-height: 180vh;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  /* Recortar overflow horizontal del titular wide; vertical libre */
   overflow-x: clip;
-  /* Timeline: la propia sección actúa como referencia para el barrido */
   view-timeline-name: --lp-agit;
   view-timeline-axis: block;
 }
 
-.lp-agit__inner {
-  box-sizing: border-box;
+/* Spacer empty antes del pin: empuja al pin hacia el centro del viewport
+   durante la fase de entrada de la sección. Sin este spacer, el pin
+   engancharía con sticky cuando aún está cerca del top y el efecto se
+   sentiría "muy temprano". */
+.lp-agit__spacer-top {
+  height: 50vh;
   width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
+  pointer-events: none;
 }
 
 .lp-agit__pin {
-  position: relative;
+  position: sticky;
+  /* top: 50vh ancla el borde superior del pin al centro de viewport;
+     translateY(-50%) lo sube por la mitad de su altura → centrado vertical. */
+  top: 50vh;
+  transform: translateY(-50%);
   width: 100%;
   display: flex;
   align-items: center;
@@ -1092,7 +1102,6 @@ body.entrance-done .landing-header {
 .lp-agit__marquee {
   width: 100%;
   overflow: visible;
-  padding: 0;
 }
 
 .lp-agit__headline {
@@ -1105,7 +1114,9 @@ body.entrance-done .landing-header {
   color: #ffffff;
   text-transform: uppercase;
   white-space: nowrap;
-  /* Estado inicial: texto fuera de pantalla por la derecha */
+  /* Estado inicial: fuera de viewport por la derecha. Si el navegador no
+     soporta scroll-driven, el texto queda invisible — el fallback abajo
+     lo trae a translateX(0) en navegadores viejos. */
   transform: translateX(100vw);
   will-change: transform;
 }
@@ -1125,35 +1136,46 @@ body.entrance-done .landing-header {
 }
 
 /* Animación scroll-driven solo donde el navegador la soporta.
-   `cover 0% cover 100%` = el ciclo completo de visibilidad de la
-   sección por el viewport. */
+   - contain 0% = la sección llena el viewport por primera vez (= el momento
+     en que el pin acaba de hacer engage al centro).
+   - exit 50%   = la sección está saliendo por arriba a la mitad (~ el
+     momento en que el sticky se libera con S=180vh).
+   Resultado: el barrido empieza cuando el contenedor se ancla al centro
+   y termina justo cuando se libera. */
 @supports (animation-timeline: view()) {
   .lp-agit__headline {
     animation: lp-agit-sweep linear both;
     animation-timeline: --lp-agit;
-    animation-range: cover 0% cover 100%;
+    animation-range: contain 0% exit 50%;
   }
 }
 
-/* Fallback: navegadores sin scroll-driven animations → texto estático
-   centrado (no se ven los bordes wide porque overflow-x: clip recorta) */
+/* Fallback: navegadores sin scroll-driven animations → sección estática
+   compacta con titular centrado (sin barrido). */
 @supports not (animation-timeline: view()) {
   .lp-agit {
     min-height: clamp(280px, 54vh, 560px);
-    padding: clamp(56px, 10vh, 120px) 0;
+    padding: clamp(56px, 10vh, 120px) clamp(20px, 6vw, 80px);
+    display: flex;
+    align-items: center;
     justify-content: center;
   }
+  .lp-agit__spacer-top { display: none; }
   .lp-agit__pin {
+    position: relative;
+    top: auto;
+    transform: none;
     justify-content: center;
   }
   .lp-agit__marquee {
-    padding-inline: clamp(12px, 2.6vw, 32px);
-    box-sizing: border-box;
     text-align: center;
   }
   .lp-agit__headline {
     transform: none;
     will-change: auto;
+    white-space: normal;
+    font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+    text-transform: none;
   }
 }
 
@@ -1162,9 +1184,12 @@ body.entrance-done .landing-header {
     min-height: auto;
     padding: clamp(72px, 10vw, 120px) clamp(20px, 6vw, 80px);
     view-timeline-name: none;
-    align-items: flex-start;
   }
+  .lp-agit__spacer-top { display: none; }
   .lp-agit__pin {
+    position: relative;
+    top: auto;
+    transform: none;
     justify-content: flex-start;
   }
   .lp-agit__marquee {
