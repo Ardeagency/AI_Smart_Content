@@ -279,7 +279,7 @@ class LandingView extends PublicBaseView {
             <div class="lp-caps__carousel" data-lp-caps-carousel>
               <div class="lp-caps__viewport" data-lp-caps-viewport tabindex="0" aria-label="Criterios visuales" aria-roledescription="carrusel">
                 <div class="lp-caps__track" role="list">
-                  <div class="lp-caps__slide" role="listitem" data-index="0" aria-label="PRECISIÓN">
+                  <div class="lp-caps__slide is-active" role="listitem" data-index="0" aria-label="PRECISIÓN">
                     <div class="lp-caps__slide-inner">
                       <img class="lp-caps__slide-media" src="/recursos/banners/focus.svg" alt="" width="168" height="224" loading="lazy" decoding="async">
                     </div>
@@ -1382,11 +1382,17 @@ class LandingView extends PublicBaseView {
     let cachedStep = 0;
     let current = 0;
 
+    const getSlides = () => [...(viewport?.querySelectorAll('.lp-caps__slide') ?? [])];
+
     const measureStep = () => {
-      const slide = viewport?.querySelector('.lp-caps__slide');
-      cachedStep = slide
-        ? Math.round(slide.getBoundingClientRect().width + gapPx)
-        : Math.round((viewport?.clientWidth || 0) * 0.72);
+      const slides = getSlides();
+      if (slides.length >= 2) {
+        cachedStep = Math.round(slides[1].offsetLeft - slides[0].offsetLeft);
+      } else if (slides.length === 1) {
+        cachedStep = Math.round(slides[0].getBoundingClientRect().width + gapPx);
+      } else {
+        cachedStep = Math.round((viewport?.clientWidth || 0) * 0.72);
+      }
     };
 
     const syncTabs = () => {
@@ -1399,18 +1405,25 @@ class LandingView extends PublicBaseView {
       });
     };
 
+    const syncSlideActiveClass = () => {
+      if (!viewport) return;
+      viewport.querySelectorAll('.lp-caps__slide').forEach((el, i) => {
+        el.classList.toggle('is-active', i === current);
+      });
+    };
+
     const applyIndex = (idx) => {
       current = ((idx % n) + n) % n;
       syncTabs();
+      syncSlideActiveClass();
       if (bodyEl) bodyEl.textContent = PILLARS[current].body;
     };
 
+    let scrollToSlideIndex = () => {};
+
     const setActive = (idx) => {
       applyIndex(idx);
-      if (viewport) {
-        measureStep();
-        viewport.scrollLeft = Math.round(current * cachedStep);
-      }
+      scrollToSlideIndex(current);
     };
 
     if (axis) {
@@ -1444,7 +1457,45 @@ class LandingView extends PublicBaseView {
     }
 
     if (viewport) {
+      const syncTrackEndPadding = () => {
+        const track = viewport.querySelector('.lp-caps__track');
+        const slide = viewport.querySelector('.lp-caps__slide');
+        if (!track || !slide) return;
+        const w = slide.getBoundingClientRect().width;
+        const pad = Math.max(0, Math.round(viewport.clientWidth - w - gapPx));
+        track.style.paddingInlineEnd = `${pad}px`;
+      };
+
+      const indexFromScrollLeft = () => {
+        const slides = getSlides();
+        if (!slides.length) return 0;
+        const x = viewport.scrollLeft;
+        const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        if (x >= maxL - 0.5) return slides.length - 1;
+        let best = 0;
+        let bestDist = Infinity;
+        slides.forEach((el, i) => {
+          const d = Math.abs(el.offsetLeft - x);
+          if (d < bestDist) {
+            bestDist = d;
+            best = i;
+          }
+        });
+        return best;
+      };
+
+      scrollToSlideIndex = (i) => {
+        syncTrackEndPadding();
+        measureStep();
+        const slides = getSlides();
+        const el = slides[i];
+        if (!el) return;
+        const maxL = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        viewport.scrollLeft = Math.min(Math.max(0, el.offsetLeft), maxL);
+      };
+
       measureStep();
+      syncTrackEndPadding();
 
       let scrollRaf = null;
       const onViewportScroll = () => {
@@ -1452,8 +1503,7 @@ class LandingView extends PublicBaseView {
         scrollRaf = requestAnimationFrame(() => {
           scrollRaf = null;
           measureStep();
-          if (cachedStep <= 1) return;
-          const i = Math.max(0, Math.min(n - 1, Math.round(viewport.scrollLeft / cachedStep)));
+          const i = indexFromScrollLeft();
           if (i !== current) applyIndex(i);
         });
       };
@@ -1468,8 +1518,9 @@ class LandingView extends PublicBaseView {
         if (resizeRaf) return;
         resizeRaf = requestAnimationFrame(() => {
           resizeRaf = 0;
+          syncTrackEndPadding();
           measureStep();
-          viewport.scrollLeft = Math.round(current * cachedStep);
+          scrollToSlideIndex(current);
         });
       };
       window.addEventListener('resize', onResize, { passive: true });
