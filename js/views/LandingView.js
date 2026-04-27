@@ -884,19 +884,24 @@ class LandingView extends PublicBaseView {
       const hdr = document.querySelector('#public-header-root .public-header');
       return Math.round((hdr?.offsetHeight || 64) + 10);
     };
+    let stickyOffset = headerOffset();
+    let lastShift = -1;
 
     const setShift = (shiftPx) => {
       const clamped = Math.max(0, shiftPx);
-      inner.style.transform = `translate3d(0, ${clamped.toFixed(1)}px, 0)`;
+      const rounded = Number(clamped.toFixed(1));
+      if (Math.abs(rounded - lastShift) < 0.1) return;
+      lastShift = rounded;
+      inner.style.transform = `translate3d(0, ${rounded}px, 0)`;
     };
 
     const tick = () => {
       if (!mq.matches) {
         inner.style.transform = '';
         inner.style.willChange = '';
+        lastShift = -1;
         return;
       }
-      const off = headerOffset();
       const r = rail.getBoundingClientRect();
       const h = inner.offsetHeight;
       if (!h || r.height < 1) {
@@ -905,13 +910,14 @@ class LandingView extends PublicBaseView {
       }
       const maxShift = Math.max(0, r.height - h);
       let shift = 0;
-      if (r.top < off) {
-        shift = Math.min(off - r.top, maxShift);
+      if (r.top < stickyOffset) {
+        shift = Math.min(stickyOffset - r.top, maxShift);
       }
       setShift(shift);
     };
 
     const shell = document.getElementById('public-shell');
+    const scrollRoot = (shell && shell.scrollHeight > shell.clientHeight + 2) ? shell : window;
 
     let rafPending = null;
     const onScrollOrResize = () => {
@@ -920,6 +926,10 @@ class LandingView extends PublicBaseView {
         rafPending = null;
         tick();
       });
+    };
+    const onResizeOrModeChange = () => {
+      stickyOffset = headerOffset();
+      onScrollOrResize();
     };
 
     const img = inner.querySelector('.lp-vera__sticky-visual-img');
@@ -936,16 +946,14 @@ class LandingView extends PublicBaseView {
     inner.style.willChange = 'transform';
     tick();
     requestAnimationFrame(() => tick());
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    if (shell) shell.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    mq.addEventListener('change', onScrollOrResize);
+    scrollRoot.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onResizeOrModeChange);
+    mq.addEventListener('change', onResizeOrModeChange);
 
     this.veraRailScrollCleanup = () => {
-      window.removeEventListener('scroll', onScrollOrResize);
-      if (shell) shell.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-      mq.removeEventListener('change', onScrollOrResize);
+      scrollRoot.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onResizeOrModeChange);
+      mq.removeEventListener('change', onResizeOrModeChange);
       if (resizeObs) {
         resizeObs.disconnect();
         resizeObs = null;
@@ -956,6 +964,7 @@ class LandingView extends PublicBaseView {
       }
       inner.style.transform = '';
       inner.style.willChange = '';
+      lastShift = -1;
       this.veraRailScrollCleanup = null;
     };
   }

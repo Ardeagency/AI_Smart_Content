@@ -1042,9 +1042,8 @@ body.entrance-done .landing-header {
   background: var(--bg-primary, #0b0b0b);
   color: #ffffff;
   position: relative;
-  height: 100svh;
-  min-height: 100svh;
-  padding: 0;
+  min-height: clamp(280px, 54vh, 560px);
+  padding: clamp(56px, 10vh, 120px) 0;
   text-align: center;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -1055,15 +1054,14 @@ body.entrance-done .landing-header {
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  min-height: 100%;
+  min-height: auto;
   padding: 0;
   position: relative;
 }
 
 .lp-agit__pin {
-  position: sticky;
-  top: 0;
-  min-height: 100svh;
+  position: relative;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1088,9 +1086,9 @@ body.entrance-done .landing-header {
   font-style: normal;
   text-transform: uppercase;
   white-space: nowrap;
-  will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
-  transform-origin: left center;
+  will-change: auto;
+  transform: none;
+  transform-origin: center center;
 }
 
 .lp-agit__line {
