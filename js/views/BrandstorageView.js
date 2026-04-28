@@ -910,12 +910,9 @@ class BrandstorageView extends BaseView {
       const updatedRaw = item.updated_at
         ? new Date(item.updated_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
-      const createdFallback = item.created_at
-        ? new Date(item.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-        : '';
       const updatedLine = updatedRaw
         ? `Última actualización: ${this.escapeHtml(updatedRaw)}`
-        : (createdFallback ? `Creada: ${this.escapeHtml(createdFallback)}` : 'Sin fecha');
+        : 'Sin actualizaciones';
       const prods = this.getProductionCountForContainer(item.id);
       const prodsStr = this.escapeHtml(String(prods));
 

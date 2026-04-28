@@ -305,7 +305,7 @@
             <div class="brand-storage-info-summary">
               <div class="brand-storage-info-title">${name}</div>
               <div class="brand-storage-info-subtitle">${slogan || 'Sin propuesta de valor definida'}</div>
-              <div class="brand-storage-info-dates">${updated ? `Actualizado ${this.escapeHtml(updated)}` : ''}${created ? ` · Creado ${this.escapeHtml(created)}` : ''}</div>
+              <div class="brand-storage-info-dates">${updated ? `Última actualización ${this.escapeHtml(updated)}` : 'Sin actualizaciones'}</div>
             </div>
           </section>
           ${this.renderIntegrationsSection(item?.id)}
