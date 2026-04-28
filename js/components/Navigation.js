@@ -147,7 +147,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     icon: 'fa-user-shield',
     role_required: 'lead',
     children: [
-      { label: 'registeruser', route: '/dev/provisioning/registeruser' }
+      { label: 'Registrar usuario', route: '/dev/provisioning/users' }
     ]
   },
   {
@@ -1518,7 +1518,7 @@ class Navigation {
       '/dev/test': 'TEST DE FLUJOS',
       '/dev/logs': 'LOGS',
       '/dev/webhooks': 'WEBHOOKS',
-      '/dev/provisioning/registeruser': 'REGISTERUSER',
+      '/dev/provisioning/users': 'REGISTRAR USUARIO',
       '/dev/lead/flows': 'TODOS LOS FLUJOS',
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/crm': 'CRM LEADS',

@@ -4887,80 +4887,6 @@
   padding: 24px;
 }
 
-/* Registeruser (Provisioning) — centrado y visual tipo Builder */
-.dev-lead-user-provisioning .dev-lead-content {
-  background: transparent;
-  border: 0;
-  padding: 0;
-}
-
-.dev-registeruser-card {
-  max-width: min(100%, 1280px);
-  margin: 0 auto;
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
-  border-radius: var(--glass-radius);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  padding: 24px;
-}
-
-.dev-registeruser-grid3,
-.dev-registeruser-grid4 {
-  display: grid;
-  gap: 10px;
-}
-
-.dev-registeruser-grid3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.dev-registeruser-grid4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.dev-registeruser-row-gap {
-  margin-top: 10px;
-}
-
-.dev-registeruser-permissions {
-  display: grid;
-  gap: 8px;
-}
-
-.dev-registeruser-form .input,
-.dev-registeruser-form select,
-.dev-registeruser-form textarea {
-  background: var(--builder-input-bg, var(--glass-white-bg));
-  border: 1px solid var(--builder-input-border, var(--glass-white-border));
-}
-
-.dev-registeruser-actions {
-  margin-top: 16px;
-  gap: 10px;
-}
-
-.dev-registeruser-status {
-  margin-top: 10px;
-}
-
-@media (max-width: 1100px) {
-  .dev-registeruser-grid3,
-  .dev-registeruser-grid4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 760px) {
-  .dev-registeruser-card {
-    padding: 16px;
-  }
-  .dev-registeruser-grid3,
-  .dev-registeruser-grid4 {
-    grid-template-columns: 1fr;
-  }
-}
-
 .dev-lead-placeholder {
   color: var(--text-secondary);
   margin: 0;
@@ -7594,3 +7520,159 @@
 }
 
 
+/* =========================================================
+   User Provisioning Wizard — /dev/provisioning/users
+   ========================================================= */
+
+/* Barra de progreso por pasos */
+.provision-progress {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: var(--spacing-xl, 1.5rem);
+}
+
+.provision-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 6px;
+}
+
+.provision-progress-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border-color, rgba(255,255,255,.12));
+  z-index: 0;
+}
+
+.provision-progress-step.is-done:not(:last-child)::after {
+  background: var(--dev-primary, #7c6ef5);
+}
+
+.provision-progress-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--dev-bg-card, rgba(255,255,255,.06));
+  border: 2px solid var(--border-color, rgba(255,255,255,.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.provision-progress-step.is-active .provision-progress-dot {
+  background: var(--dev-primary, #7c6ef5);
+  border-color: var(--dev-primary, #7c6ef5);
+  color: #fff;
+}
+
+.provision-progress-step.is-done .provision-progress-dot {
+  background: var(--color-success, #22c55e);
+  border-color: var(--color-success, #22c55e);
+  color: #fff;
+}
+
+.provision-progress-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.provision-progress-step.is-active .provision-progress-label {
+  color: var(--text-primary);
+}
+
+/* Grid de permisos */
+.provision-perms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.provision-perm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--dev-bg-card, rgba(255,255,255,.04));
+  border: 1px solid var(--border-color, rgba(255,255,255,.1));
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.provision-perm-item:hover {
+  background: var(--dev-bg-card-hover, rgba(255,255,255,.08));
+  border-color: var(--dev-primary, #7c6ef5);
+}
+
+.provision-perm-item input[type="checkbox"] {
+  accent-color: var(--dev-primary, #7c6ef5);
+  width: 15px;
+  height: 15px;
+}
+
+/* Resumen de confirmación */
+.provision-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.provision-summary > div {
+  padding: 10px 12px;
+  background: var(--dev-bg-card, rgba(255,255,255,.04));
+  border: 1px solid var(--border-color, rgba(255,255,255,.1));
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.provision-summary > div strong {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+/* Barra de navegación inferior del wizard */
+.provision-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-lg, 1.25rem);
+  padding-top: var(--spacing-lg, 1.25rem);
+  border-top: 1px solid var(--border-color, rgba(255,255,255,.1));
+}
+
+.provision-step-counter {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .provision-progress-label { display: none; }
+  .provision-perms-grid { grid-template-columns: 1fr 1fr; }
+  .provision-nav { flex-wrap: wrap; gap: var(--spacing-sm, 0.5rem); }
+}
