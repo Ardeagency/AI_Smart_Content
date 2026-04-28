@@ -109,12 +109,13 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', route: '/dev/dashboard' },
+  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   {
     type: 'container',
     id: 'build',
     label: 'Build',
     icon: 'fa-wrench',
+    iconSrc: '/recursos/icons/Production.svg',
     children: [
       { label: 'Mis Flujos', route: '/dev/flows' },
       { label: 'Builder', route: '/dev/builder' }
@@ -135,6 +136,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'observability',
     label: 'Observability',
     icon: 'fa-chart-area',
+    iconSrc: '/recursos/icons/video.svg',
     children: [
       { label: 'Debug', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' }
@@ -155,6 +157,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'resources',
     label: 'Resources',
     icon: 'fa-book',
+    iconSrc: '/recursos/icons/file-storage.svg',
     children: [
       { label: 'Referencias Visuales', route: '/dev/lead/references' }
     ]
@@ -909,6 +912,14 @@ class Navigation {
    * HTML para navegación de desarrollador PaaS (config-driven: Dashboard, Build, Operations, Observability, Resources, Lead).
    */
   getDeveloperNavigationHTML() {
+    const iconHTML = (item) => {
+      if (item.iconSrc) {
+        const src = _navSidebarIconUrl(item.iconSrc);
+        return `<img src="${src}" class="nav-icon nav-icon-img" alt="" width="16" height="16">`;
+      }
+      return `<i class="fas ${item.icon} nav-icon"></i>`;
+    };
+
     const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
       const isLead = item.role_required === 'lead';
       const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
@@ -918,7 +929,7 @@ class Navigation {
         return `
           <div class="nav-item">
             <a href="${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.label}">
-              <i class="fas ${item.icon} nav-icon"></i>
+              ${iconHTML(item)}
               <span class="nav-text">${item.label}</span>
             </a>
           </div>`;
@@ -936,7 +947,7 @@ class Navigation {
       return `
         <div class="${wrapClass}" data-container-id="${item.id}"${attrs}>
           <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
-            <i class="fas ${item.icon} nav-icon"></i>
+            ${iconHTML(item)}
             <span class="nav-text">${item.label}</span>
             <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
           </button>
@@ -972,7 +983,10 @@ class Navigation {
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
             ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
-          <span class="nav-dev-header-name" id="navDevHeaderName">DEVELOPER PORTAL</span>
+          <div class="nav-dev-header-copy">
+            <h2 class="nav-org-title" id="navDevHeaderName">Developer</h2>
+            <span class="nav-org-name nav-dev-org-name" id="navDevOrgName">Mi organización</span>
+          </div>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
@@ -1962,7 +1976,13 @@ class Navigation {
 
     const headerNameEl = document.getElementById('navDevHeaderName');
     if (headerNameEl) {
-      headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'DEVELOPER PORTAL';
+      headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer';
+    }
+
+    const devOrgNameEl = document.getElementById('navDevOrgName');
+    if (devOrgNameEl) {
+      const orgName = (window.currentOrgName || this._orgCache?.name || '').trim();
+      devOrgNameEl.textContent = orgName || 'Mi organización';
     }
 
     const leadSections = document.querySelectorAll('.nav-dev-lead-section');
