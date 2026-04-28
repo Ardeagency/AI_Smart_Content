@@ -2012,7 +2012,7 @@ class Navigation {
 
     const headerNameEl = document.getElementById('navDevHeaderName');
     if (headerNameEl) {
-      const displayName = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer';
+      const displayName = 'Developer';
       headerNameEl.textContent = displayName;
       this._renderAdaptiveOrgName(displayName, 'navDevHeaderName');
     }
