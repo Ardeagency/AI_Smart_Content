@@ -1,7 +1,7 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
  * Estructura: main[] (Vera primario, Workspace, Create, Studio) + footer[] (Configuración, Créditos).
- * Orden: Vera (primario) → [Workspace] Dashboard, Production, Brand Identity, Brand Storage (2+ sub-marcas), Identities → [Create] Video, Flows.
+ * Orden: Vera (primario) → [Workspace] Dashboard, Production, Brand Identity, Brand Storage (1+ sub-marcas), Identities → [Create] Video, Flows.
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -1738,7 +1738,7 @@ class Navigation {
 
   /**
    * Carga sub-marcas (brand_containers) de la org actual, rellena el submenú de Brand Storage
-   * y muestra u oculta el bloque completo (solo visible con 2+ sub-marcas).
+   * y muestra u oculta el bloque completo (visible con 1+ sub-marcas).
    */
   async loadBrandContainersCount() {
     const orgId = this.currentOrgId;
@@ -1822,7 +1822,7 @@ class Navigation {
    */
   updateBrandStorageLink(count) {
     const wrap = document.getElementById('navBrandStorageContainer');
-    if (wrap) wrap.style.display = count >= 2 ? '' : 'none';
+    if (wrap) wrap.style.display = count >= 1 ? '' : 'none';
   }
 
 
