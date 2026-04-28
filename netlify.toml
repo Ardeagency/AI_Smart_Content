@@ -230,6 +230,7 @@
   [headers.values]
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Hub-Signature-256"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Cache-Control = "no-store"
 
 # Favicons — cache largo
 [[headers]]
@@ -237,12 +238,13 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Imágenes, logos, banners, vera — cache largo + stale-while-revalidate
-# Netlify invalida automáticamente al deployar un archivo con el mismo nombre
+# Imágenes, logos, banners, vera:
+# cache corto con revalidación para evitar que diseño/assets se queden pegados
+# cuando se actualizan con el mismo nombre.
 [[headers]]
   for = "/recursos/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, stale-while-revalidate=604800"
+    Cache-Control = "public, max-age=300, must-revalidate"
 
 # HTML de app shell y rutas SPA: siempre revalidar
 [[headers]]
