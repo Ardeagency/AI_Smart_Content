@@ -124,14 +124,13 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     ]
   },
   {
-    type: 'container',
-    id: 'provisioning',
-    label: 'Users',
+    type: 'page',
+    id: 'user-registration',
+    label: 'User Registration',
     icon: 'fa-user-shield',
-    role_required: 'lead',
-    children: [
-      { label: 'CRM Leads', route: '/dev/lead/crm' }
-    ]
+    iconSrc: '/recursos/icons/user registration.svg',
+    route: '/dev/lead/crm',
+    role_required: 'lead'
   },
   {
     type: 'container',
@@ -147,7 +146,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'container',
     id: 'lead',
-    label: 'Lead',
+    label: 'Admin',
     icon: 'fa-shield-alt',
     iconSrc: '/recursos/icons/settings.svg',
     role_required: 'lead',
