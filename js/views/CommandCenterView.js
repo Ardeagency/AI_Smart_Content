@@ -570,7 +570,10 @@ class CommandCenterView extends BaseView {
     const rows = Array.isArray(this._heatmaps) ? this._heatmaps : [];
 
     if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin datos de heatmap. Se calculan automáticamente al analizar publicaciones.</p>`;
+      const snapN = Array.isArray(this._snapshots) ? this._snapshots.length : 0;
+      root.innerHTML = snapN
+        ? `<p class="cc-api-hint">No hay filas en <code>brand_audience_heatmap</code> para esta marca (0). Arriba sí tienes <strong>${snapN}</strong> snapshot(s) en <code>brand_analytics_snapshots</code>. El heatmap se escribe al flujo de sync Meta / análisis de posts (p. ej. <code>api-brand-sync-meta</code>), no al mismo job que los snapshots.</p>`
+        : `<p class="cc-api-hint">Sin datos de heatmap. Se rellenan al sincronizar Meta o analizar publicaciones del contenedor.</p>`;
       return;
     }
 
