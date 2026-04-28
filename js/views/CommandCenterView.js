@@ -533,6 +533,76 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
+  /**
+   * Convierte `brand_analytics_snapshots.metrics` (JSON anidado) en pares label/value
+   * para la UI. Soporta shapes reales: Facebook (page + metrics.metrics) y GA4 (overview + traffic_sources).
+   */
+  _snapshotTilesFromMetrics(metrics, platform) {
+    const m = metrics && typeof metrics === 'object' ? metrics : {};
+    const p = String(platform || m.platform || '').toLowerCase();
+    const tiles = [];
+    const push = (label, value) => {
+      if (value === undefined || value === null || value === '') return;
+      if (typeof value === 'object') return;
+      const str = typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
+      tiles.push({ label, value: str });
+    };
+
+    if (p.includes('facebook') || p === 'meta' || p.includes('instagram')) {
+      const page = m.page && typeof m.page === 'object' ? m.page : {};
+      const inner = m.metrics && typeof m.metrics === 'object' ? m.metrics : {};
+      push('Página', page.name);
+      push('Categoría', page.category);
+      push('Fans', page.total_fans);
+      push('Seguidores', page.total_followers);
+      push('Engagement', inner.engagement_rate);
+      push('Eng. en posts', inner.post_engagements);
+      push('Vistas página', inner.page_views);
+      push('Nuevos seguidores', inner.new_followers);
+      push('Clics CTA', inner.cta_clicks);
+      push('Dejaron de seguir', inner.unfollows);
+      return tiles;
+    }
+
+    if (p.includes('google_analytics') || p.includes('analytics')) {
+      const ov = m.overview && typeof m.overview === 'object' ? m.overview : {};
+      push('Sesiones', ov.sessions);
+      push('Usuarios', ov.total_users);
+      push('Páginas vistas', ov.page_views);
+      push('Tasa rebote', ov.bounce_rate);
+      push('Nuevos usuarios', ov.new_users);
+      push('Duración media', ov.avg_session_duration);
+      push('Conversiones', ov.conversions);
+      const sources = Array.isArray(m.traffic_sources) ? m.traffic_sources : [];
+      if (sources.length) {
+        const txt = sources.slice(0, 5).map((s) => `${s.channel}: ${s.users ?? s.sessions ?? '—'}`).join(' · ');
+        tiles.push({ label: 'Tráfico', value: txt });
+      }
+      const tops = Array.isArray(m.top_pages) ? m.top_pages : [];
+      if (tops.length) {
+        const line = tops.slice(0, 3).map((pg) => {
+          const t = (pg.title || pg.path || '').trim();
+          const short = t.length > 42 ? `${t.slice(0, 42)}…` : t;
+          return `${short} (${pg.page_views ?? 0} pv)`;
+        }).join(' · ');
+        tiles.push({ label: 'Top páginas', value: line });
+      }
+      return tiles;
+    }
+
+    /* Genérico: solo primitivos en 1 nivel + objetos como conteo */
+    Object.entries(m).forEach(([k, v]) => {
+      if (v === null || v === undefined) return;
+      if (typeof v === 'object' && !Array.isArray(v)) {
+        const inner = Object.entries(v).filter(([, x]) => x !== null && typeof x !== 'object');
+        inner.slice(0, 6).forEach(([ik, iv]) => push(`${k} · ${ik}`, iv));
+      } else if (typeof v !== 'object') {
+        push(k.replace(/_/g, ' '), v);
+      }
+    });
+    return tiles.slice(0, 14);
+  }
+
   /* ── SNAPSHOTS de analytics (derecha) ────────────────────────────── */
   _renderSnapshots() {
     const root = document.getElementById('ccSnapshotsWrap');
@@ -545,20 +615,23 @@ class CommandCenterView extends BaseView {
     }
 
     const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
-    const fmt = (v) => { if (v == null) return '—'; const n = Number(v); return Number.isFinite(n) ? n.toLocaleString('es-ES') : String(v); };
 
     root.innerHTML = rows.map((s) => {
-      const m = s.metrics && typeof s.metrics === 'object' ? s.metrics : {};
-      const metricItems = Object.entries(m).slice(0, 8).map(([k, v]) =>
-        `<span class="cc-snap-item"><b>${fmt(v)}</b><small>${this.escapeHtml(k.replace(/_/g, ' '))}</small></span>`
-      ).join('');
+      const tiles = this._snapshotTilesFromMetrics(s.metrics, s.platform);
+      const metricItems = tiles.length
+        ? tiles.map((t) => `
+          <span class="cc-snap-item">
+            <b>${this.escapeHtml(t.value)}</b>
+            <small>${this.escapeHtml(t.label)}</small>
+          </span>`).join('')
+        : '';
       return `
       <div class="cc-snap-card">
         <div class="cc-snap-head">
           <span class="cc-snap-platform">${this.escapeHtml(s.platform || '—')}</span>
           <span class="cc-snap-period">${this.escapeHtml(s.period_type || '')} · ${fmtDate(s.period_start)}–${fmtDate(s.period_end)}</span>
         </div>
-        ${metricItems ? `<div class="cc-snap-metrics">${metricItems}</div>` : '<p class="cc-api-hint">Sin métricas en este snapshot.</p>'}
+        ${metricItems ? `<div class="cc-snap-metrics">${metricItems}</div>` : '<p class="cc-api-hint">Sin métricas reconocibles en este snapshot.</p>'}
       </div>`;
     }).join('');
   }
@@ -583,7 +656,8 @@ class CommandCenterView extends BaseView {
       const bestDay  = h.best_day  != null ? (days[h.best_day] || h.best_day)            : '—';
 
       const hourEng = h.hour_engagement && typeof h.hour_engagement === 'object' ? h.hour_engagement : {};
-      const maxEng  = Math.max(...Object.values(hourEng).map(Number).filter(Number.isFinite), 1);
+      const engNums = Object.values(hourEng).map(Number).filter(Number.isFinite);
+      const maxEng  = engNums.length ? Math.max(...engNums) : 1;
       const bars    = Object.entries(hourEng).sort(([a], [b]) => Number(a) - Number(b)).map(([hr, val]) => {
         const pct = Math.round((Number(val) / maxEng) * 100);
         const active = Number(hr) === h.best_hour ? ' cc-heat-bar--best' : '';
