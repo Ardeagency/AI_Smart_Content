@@ -957,6 +957,21 @@ class Navigation {
         </div>`;
     }).join('');
 
+    const devPrimaryActionsHTML = `
+      <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
+        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
+          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="Registrar usuario">
+            <span class="nav-text">Registrar usuario</span>
+          </a>
+        </div>
+        <div class="nav-item nav-item--primary">
+          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Builder">
+            <span class="nav-text">Builder</span>
+          </a>
+        </div>
+      </div>
+    `;
+
     return `
       <div class="nav-overlay" id="navOverlay"></div>
 
@@ -989,6 +1004,7 @@ class Navigation {
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
+          ${devPrimaryActionsHTML}
           ${mainHTML}
         </div>
       </nav>
@@ -1990,7 +2006,7 @@ class Navigation {
       this._renderAdaptiveOrgName(displayName, 'navDevHeaderName');
     }
 
-    const leadSections = document.querySelectorAll('.nav-dev-lead-section');
+    const leadSections = document.querySelectorAll('.nav-lead-only');
     const isLead = profile?.dev_role === 'lead';
     leadSections.forEach((section) => {
       section.style.display = isLead ? '' : 'none';

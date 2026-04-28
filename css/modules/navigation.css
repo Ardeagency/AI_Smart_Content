@@ -3065,6 +3065,25 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     margin-bottom: 10px;
 }
 
+/* Dev: dos botones primarios en paralelo (Registrar usuario + Builder) */
+.nav-mode-developer .nav-dev-primary-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-item--primary {
+    margin-bottom: 0;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-link,
+.nav-mode-developer .nav-dev-primary-actions .nav-main-link {
+    justify-content: center;
+    text-align: center;
+    padding: 0 10px;
+}
+
 .nav-item--primary .nav-link,
 .nav-item--primary .nav-main-link {
     min-height: 40px;
@@ -3163,6 +3182,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .side-navigation.collapsed .nav-item--primary .nav-link.active::before,
 .side-navigation.collapsed .nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
     display: none;
 }
 
