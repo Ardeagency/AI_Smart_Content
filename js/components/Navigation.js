@@ -971,13 +971,13 @@ class Navigation {
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="+ user">
-            <span class="nav-text">+ user</span>
+          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="User">
+            <span class="nav-text"><i class="fas fa-plus" aria-hidden="true"></i> User</span>
           </a>
         </div>
         <div class="nav-item nav-item--primary">
-          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="+ flow">
-            <span class="nav-text">+ flow</span>
+          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Flow">
+            <span class="nav-text"><i class="fas fa-plus" aria-hidden="true"></i> Flow</span>
           </a>
         </div>
       </div>
