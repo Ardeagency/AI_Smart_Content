@@ -26,22 +26,7 @@ class SignInView extends BaseView {
         <div class="signin-form-side">
           <div class="signin-card">
             <div class="signin-brand">
-              <svg class="signin-brand-mark" viewBox="0 0 100 100" aria-hidden="true">
-                <defs>
-                  <linearGradient id="signin-mark-grad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0" stop-color="#ba0000"/>
-                    <stop offset=".17" stop-color="#ff6500"/>
-                    <stop offset=".33" stop-color="#ffe500"/>
-                    <stop offset=".5" stop-color="#00d614"/>
-                    <stop offset=".67" stop-color="#00e7ff"/>
-                    <stop offset=".83" stop-color="#0018ee"/>
-                    <stop offset="1" stop-color="#640091"/>
-                  </linearGradient>
-                </defs>
-                <circle cx="50" cy="50" r="32" fill="none" stroke="#fff" stroke-width="6"/>
-                <rect x="6" y="46" width="88" height="8" fill="url(#signin-mark-grad)"/>
-              </svg>
-              <h1 class="signin-brand-title"><sup class="signin-brand-ai">AI</sup>smartcontent</h1>
+              <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
             </div>
 
             <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>

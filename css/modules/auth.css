@@ -161,55 +161,18 @@ body.entrance-done .signin-container {
 
 .signin-brand {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
     margin-bottom: 0.5rem;
     width: 100%;
 }
 
-.signin-brand-mark {
-    width: 56px;
-    height: 56px;
-    display: block;
-}
-
-.signin-brand-title {
-    font-family: inherit;
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0;
-    color: var(--text-primary);
-    line-height: 1;
-}
-
-.signin-brand-ai {
-    font-size: 0.65em;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    margin-right: 0.05em;
-    vertical-align: super;
-}
-
-/* Logo legacy (flujo cambiar contraseña) */
 .signin-brand-logo {
-    max-height: 3.5rem;
-    height: auto;
     width: auto;
+    height: 4.5rem;
     max-width: 100%;
     display: block;
     object-fit: contain;
-}
-
-.signin-brand-logo svg,
-svg.signin-brand-logo {
-    max-height: 3.5rem;
-    width: 100%;
-    height: auto;
-    max-width: 100%;
-    display: block;
 }
 
 /* Campo: label uppercase + input */
