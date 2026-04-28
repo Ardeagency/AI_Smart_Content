@@ -1,5 +1,5 @@
 /**
- * CommandCenterView — v3
+ * CommandCenterView — v4
  * Alineado con schema actual:
  * - audience_personas  (carrusel + modal completo)
  * - audience_segments  (targeting real por plataforma)
@@ -7,6 +7,7 @@
  * - brand_analytics_snapshots / heatmap vía GET /api/insights/snapshots-list
  *   (service role; el cliente Supabase suele ver [] por RLS)
  * - brand_integrations        (estado de sync)
+ * - Dashboard analytics: dedupe por platform+period_type; KPI cards + historial
  */
 class CommandCenterView extends BaseView {
   constructor() {
@@ -171,10 +172,10 @@ class CommandCenterView extends BaseView {
 
         <hr class="cc-published-divider" aria-hidden="true" />
 
-        <!-- Analytics snapshots -->
-        <section class="cc-published-slice" aria-label="Métricas por período">
+        <!-- Dashboard analytics (dedupe + KPIs) -->
+        <section class="cc-published-slice" aria-label="Dashboard analytics">
           <div class="cc-intel-subtitle">
-            <i class="fas fa-chart-bar"></i> Analytics por período
+            <i class="fas fa-chart-line"></i> Dashboard analytics
           </div>
           <div id="ccSnapshotsWrap"></div>
         </section>
@@ -617,37 +618,148 @@ class CommandCenterView extends BaseView {
     return tiles.slice(0, 14);
   }
 
-  /* ── SNAPSHOTS de analytics (derecha) ────────────────────────────── */
+  /** Ordena por fin de período (más reciente primero). */
+  _snapshotSortKey(row) {
+    const t = new Date(row?.period_end || row?.computed_at || 0).getTime();
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  /**
+   * Agrupa snapshots por (platform + period_type). Cada grupo queda ordenado
+   * del más reciente al más viejo — evita listar 20 ventanas mensuales casi iguales.
+   */
+  _groupSnapshotsByPlatformPeriod(rows) {
+    const sorted = [...(Array.isArray(rows) ? rows : [])].sort(
+      (a, b) => this._snapshotSortKey(b) - this._snapshotSortKey(a),
+    );
+    const groups = new Map();
+    sorted.forEach((r) => {
+      const key = `${String(r.platform || '—')}||${String(r.period_type || '—')}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    });
+    return groups;
+  }
+
+  /** KPIs destacados para tarjetas grandes (GA + Facebook). */
+  _snapshotHeroKpis(metrics, platform) {
+    const tiles = this._snapshotTilesFromMetrics(metrics, platform);
+    const pick = (label) => tiles.find((t) => t.label === label);
+    const p = String(platform || '').toLowerCase();
+    if (p.includes('google_analytics') || p.includes('analytics')) {
+      return [
+        pick('Sesiones'),
+        pick('Usuarios'),
+        pick('Páginas vistas'),
+        pick('Tasa rebote'),
+      ].filter(Boolean);
+    }
+    if (p.includes('facebook') || p.includes('meta') || p.includes('instagram')) {
+      return [
+        pick('Fans'),
+        pick('Seguidores'),
+        pick('Engagement'),
+        pick('Eng. en posts'),
+      ].filter(Boolean);
+    }
+    return tiles.slice(0, 4);
+  }
+
+  _renderSnapshotHeroCard(s) {
+    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
+    const plat = String(s.platform || '—');
+    const platLabel = plat.includes('google') ? 'Google Analytics' : plat.includes('facebook') ? 'Facebook (página)' : plat;
+    const kpis = this._snapshotHeroKpis(s.metrics, s.platform);
+    const kpiHtml = kpis.length
+      ? kpis.map((t) => `
+        <div class="cc-dash-kpi">
+          <span class="cc-dash-kpi-val">${this.escapeHtml(t.value)}</span>
+          <span class="cc-dash-kpi-lbl">${this.escapeHtml(t.label)}</span>
+        </div>`).join('')
+      : '<p class="cc-api-hint">Sin KPIs reconocibles.</p>';
+
+    const pLower = plat.toLowerCase();
+    const metaHint = (pLower.includes('facebook') || pLower.includes('meta'))
+      ? `<p class="cc-dash-hint">Métricas de <strong>página</strong>. Ceros en engagement suelen indicar que aún no hay actividad medida en el rango o falta sync de posts/ads.</p>`
+      : '';
+
+    return `
+    <article class="cc-dash-card">
+      <header class="cc-dash-card-head">
+        <h3 class="cc-dash-card-title">${this.escapeHtml(platLabel)}</h3>
+        <span class="cc-dash-card-meta">${this.escapeHtml(s.period_type || '')} · ${fmtDate(s.period_start)} → ${fmtDate(s.period_end)}</span>
+      </header>
+      <div class="cc-dash-kpi-grid">${kpiHtml}</div>
+      ${metaHint}
+    </article>`;
+  }
+
+  /* ── Dashboard analytics (dedupe + historial) ─────────────────────── */
   _renderSnapshots() {
     const root = document.getElementById('ccSnapshotsWrap');
     if (!root) return;
     const rows = Array.isArray(this._snapshots) ? this._snapshots : [];
 
     if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin snapshots de analytics. Se generan automáticamente tras sincronizar campañas.</p>`;
+      root.innerHTML = `<p class="cc-api-hint">Sin snapshots de analytics. Se generan al sincronizar GA / Facebook para esta marca.</p>`;
       return;
     }
 
-    const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+    const groups = this._groupSnapshotsByPlatformPeriod(rows);
+    const primaries = [];
+    groups.forEach((arr) => {
+      if (arr[0]) primaries.push(arr[0]);
+    });
+    primaries.sort((a, b) => {
+      const order = (p) => {
+        const x = String(p.platform || '').toLowerCase();
+        if (x.includes('google_analytics') || x.includes('analytics')) return 0;
+        if (x.includes('facebook') || x.includes('meta')) return 1;
+        return 2;
+      };
+      const oa = order(a);
+      const ob = order(b);
+      if (oa !== ob) return oa - ob;
+      return this._snapshotSortKey(b) - this._snapshotSortKey(a);
+    });
 
-    root.innerHTML = rows.map((s) => {
-      const tiles = this._snapshotTilesFromMetrics(s.metrics, s.platform);
-      const metricItems = tiles.length
-        ? tiles.map((t) => `
-          <span class="cc-snap-item">
-            <b>${this.escapeHtml(t.value)}</b>
-            <small>${this.escapeHtml(t.label)}</small>
-          </span>`).join('')
-        : '';
-      return `
-      <div class="cc-snap-card">
-        <div class="cc-snap-head">
-          <span class="cc-snap-platform">${this.escapeHtml(s.platform || '—')}</span>
-          <span class="cc-snap-period">${this.escapeHtml(s.period_type || '')} · ${fmtDate(s.period_start)}–${fmtDate(s.period_end)}</span>
-        </div>
-        ${metricItems ? `<div class="cc-snap-metrics">${metricItems}</div>` : '<p class="cc-api-hint">Sin métricas reconocibles en este snapshot.</p>'}
-      </div>`;
-    }).join('');
+    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '');
+    const historyRows = [];
+    groups.forEach((arr) => {
+      arr.slice(1).forEach((r) => historyRows.push(r));
+    });
+    historyRows.sort((a, b) => this._snapshotSortKey(b) - this._snapshotSortKey(a));
+    const historyTrim = historyRows.slice(0, 24);
+
+    const heroHtml = `<div class="cc-dash-heroes">${primaries.map((s) => this._renderSnapshotHeroCard(s)).join('')}</div>`;
+
+    const dupNote = rows.length > primaries.length
+      ? `<p class="cc-dash-dup-note"><i class="fas fa-info-circle"></i> Se ocultaron <strong>${rows.length - primaries.length}</strong> filas duplicadas (misma plataforma y tipo de período; se muestra solo el snapshot más reciente arriba).</p>`
+      : '';
+
+    const fmtDt = (d) => (d ? new Date(d).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
+    const histBody = historyTrim.length
+      ? `<table class="cc-dash-hist-table">
+          <thead><tr><th>Plataforma</th><th>Tipo</th><th>Ventana</th><th>Calculado</th></tr></thead>
+          <tbody>
+            ${historyTrim.map((r) => `
+            <tr>
+              <td>${this.escapeHtml(r.platform || '—')}</td>
+              <td>${this.escapeHtml(r.period_type || '—')}</td>
+              <td>${this.escapeHtml(fmtDate(r.period_start))} → ${this.escapeHtml(fmtDate(r.period_end))}</td>
+              <td class="cc-dash-hist-muted">${this.escapeHtml(fmtDt(r.computed_at))}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`
+      : '<p class="cc-api-hint">No hay períodos anteriores agrupados.</p>';
+
+    const historyHtml = `
+    <details class="cc-dash-history">
+      <summary>Historial de snapshots <span class="cc-dash-history-count">(${historyTrim.length})</span></summary>
+      ${histBody}
+    </details>`;
+
+    root.innerHTML = `${dupNote}${heroHtml}${historyHtml}`;
   }
 
   /* ── HEATMAP (derecha) ────────────────────────────────────────────── */
