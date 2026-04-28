@@ -4887,6 +4887,80 @@
   padding: 24px;
 }
 
+/* Registeruser (Provisioning) — centrado y visual tipo Builder */
+.dev-lead-user-provisioning .dev-lead-content {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.dev-registeruser-card {
+  max-width: min(100%, 1280px);
+  margin: 0 auto;
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
+  border-radius: var(--glass-radius);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 24px;
+}
+
+.dev-registeruser-grid3,
+.dev-registeruser-grid4 {
+  display: grid;
+  gap: 10px;
+}
+
+.dev-registeruser-grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dev-registeruser-grid4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dev-registeruser-row-gap {
+  margin-top: 10px;
+}
+
+.dev-registeruser-permissions {
+  display: grid;
+  gap: 8px;
+}
+
+.dev-registeruser-form .input,
+.dev-registeruser-form select,
+.dev-registeruser-form textarea {
+  background: var(--builder-input-bg, var(--glass-white-bg));
+  border: 1px solid var(--builder-input-border, var(--glass-white-border));
+}
+
+.dev-registeruser-actions {
+  margin-top: 16px;
+  gap: 10px;
+}
+
+.dev-registeruser-status {
+  margin-top: 10px;
+}
+
+@media (max-width: 1100px) {
+  .dev-registeruser-grid3,
+  .dev-registeruser-grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dev-registeruser-card {
+    padding: 16px;
+  }
+  .dev-registeruser-grid3,
+  .dev-registeruser-grid4 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dev-lead-placeholder {
   color: var(--text-secondary);
   margin: 0;

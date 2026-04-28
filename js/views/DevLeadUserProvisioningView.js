@@ -20,35 +20,36 @@ class DevLeadUserProvisioningView extends DevBaseView {
       <div class="dev-lead-container dev-lead-user-provisioning">
         <header class="dev-lead-header">
           <div class="dev-header-content">
-            <h1 class="dev-header-title"><i class="fas fa-user-shield"></i> Alta Manual de Usuarios</h1>
+            <h1 class="dev-header-title"><i class="fas fa-user-shield"></i> registeruser</h1>
             <p class="dev-header-subtitle">Sistema independiente para creación de cuentas y afiliación organizacional</p>
           </div>
         </header>
 
         <section class="dev-lead-content">
-          <div class="dev-lead-toolbar" style="margin-bottom:12px;">
-            <span id="provisioningStepLabel">Paso 1 de 4</span>
-          </div>
+          <div class="dev-registeruser-card">
+            <div class="dev-lead-toolbar dev-registeruser-stepbar">
+              <span id="provisioningStepLabel">Paso 1 de 4</span>
+            </div>
 
-          <form id="manualProvisioningForm" class="dev-lead-form">
+            <form id="manualProvisioningForm" class="dev-lead-form dev-registeruser-form">
             <div data-step="1" class="provision-step">
               <h3>Fase 1 · Cuenta base</h3>
-              <div class="dev-lead-toolbar" style="gap:10px;flex-wrap:wrap;">
-                <input class="input" type="text" name="full_name" placeholder="Nombre completo" required style="min-width:260px;">
-                <input class="input" type="email" name="email" placeholder="Correo" required style="min-width:260px;">
-                <input class="input" type="password" name="password" placeholder="Contraseña temporal" required minlength="8" style="min-width:260px;">
+              <div class="dev-lead-toolbar dev-registeruser-grid3">
+                <input class="input" type="text" name="full_name" placeholder="Nombre completo" required>
+                <input class="input" type="email" name="email" placeholder="Correo" required>
+                <input class="input" type="password" name="password" placeholder="Contraseña temporal" required minlength="8">
               </div>
-              <div class="dev-lead-toolbar" style="gap:10px;flex-wrap:wrap;margin-top:10px;">
-                <select class="input" name="platform_role" style="min-width:220px;">
+              <div class="dev-lead-toolbar dev-registeruser-grid3 dev-registeruser-row-gap">
+                <select class="input" name="platform_role">
                   <option value="user">Rol plataforma: user</option>
                   <option value="admin">Rol plataforma: admin</option>
                   <option value="dev">Rol plataforma: dev</option>
                 </select>
-                <select class="input" name="default_view_mode" style="min-width:220px;">
+                <select class="input" name="default_view_mode">
                   <option value="user">Vista por defecto: user</option>
                   <option value="developer">Vista por defecto: developer</option>
                 </select>
-                <select class="input" name="dev_role" style="min-width:220px;">
+                <select class="input" name="dev_role">
                   <option value="">Dev role: none</option>
                   <option value="contributor">Dev role: contributor</option>
                   <option value="lead">Dev role: lead</option>
@@ -58,7 +59,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
             <div data-step="2" class="provision-step" style="display:none;">
               <h3>Fase 2 · Permisos</h3>
-              <div style="display:grid;gap:8px;">
+              <div class="dev-registeruser-permissions">
                 <label><input type="checkbox" name="perm_studio" checked> Acceso Studio</label>
                 <label><input type="checkbox" name="perm_video" checked> Acceso Video</label>
                 <label><input type="checkbox" name="perm_brands" checked> Acceso Brand</label>
@@ -70,17 +71,17 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
             <div data-step="3" class="provision-step" style="display:none;">
               <h3>Fase 3 · Organización</h3>
-              <div class="dev-lead-toolbar" style="gap:10px;flex-wrap:wrap;">
-                <select class="input" id="orgModeSelect" name="org_mode" style="min-width:260px;">
+              <div class="dev-lead-toolbar dev-registeruser-grid4">
+                <select class="input" id="orgModeSelect" name="org_mode">
                   <option value="none">Sin organización inicial</option>
                   <option value="existing">Afiliar a organización existente</option>
                   <option value="create">Crear organización nueva y afiliar</option>
                 </select>
-                <select class="input" id="existingOrgSelect" name="organization_id" style="min-width:300px;display:none;">
+                <select class="input" id="existingOrgSelect" name="organization_id" style="display:none;">
                   <option value="">Seleccionar organización...</option>
                 </select>
-                <input class="input" type="text" id="newOrgNameInput" name="new_organization_name" placeholder="Nombre nueva organización" style="min-width:300px;display:none;">
-                <select class="input" id="orgRoleSelect" name="organization_role" style="min-width:220px;display:none;">
+                <input class="input" type="text" id="newOrgNameInput" name="new_organization_name" placeholder="Nombre nueva organización" style="display:none;">
+                <select class="input" id="orgRoleSelect" name="organization_role" style="display:none;">
                   <option value="member">Rol en organización: member</option>
                   <option value="admin">Rol en organización: admin</option>
                   <option value="viewer">Rol en organización: viewer</option>
@@ -93,7 +94,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
               <div id="provisionSummary" class="dev-lead-placeholder">Revisa los datos antes de crear.</div>
             </div>
 
-            <div class="dev-lead-toolbar" style="margin-top:16px; gap:10px;">
+            <div class="dev-lead-toolbar dev-registeruser-actions">
               <button type="button" class="btn btn-secondary" id="provisionPrevBtn" disabled>
                 <i class="fas fa-arrow-left"></i> Anterior
               </button>
@@ -104,8 +105,9 @@ class DevLeadUserProvisioningView extends DevBaseView {
                 <i class="fas fa-user-plus"></i> Crear usuario
               </button>
             </div>
-            <p id="provisioningStatus" class="pp-form__status" role="status" aria-live="polite" style="margin-top:10px;"></p>
-          </form>
+            <p id="provisioningStatus" class="pp-form__status dev-registeruser-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
         </section>
       </div>
     `;

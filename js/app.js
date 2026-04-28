@@ -373,7 +373,7 @@ class App {
     r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js']), auth);
 
     // ── Dev Lead ──
-    r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);
+    r.register('/dev/provisioning/registeruser', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);
     r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js']), auth);
     r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js']), auth);
     r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js']), auth);
