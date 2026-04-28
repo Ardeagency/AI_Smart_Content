@@ -109,56 +109,78 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'section', label: 'Workspace' },
+  { type: 'section', label: 'Principal' },
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
-  { type: 'page', id: 'flows', label: 'Mis Flujos', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
-  {
-    type: 'container',
-    id: 'operations',
-    label: 'Operations',
-    icon: 'fa-cogs',
-    iconSrc: '/recursos/icons/video.svg',
-    children: [
-      { label: 'Test De Flujos', route: '/dev/test' },
-      { label: 'Logs', route: '/dev/logs' },
-      { label: 'Webhooks', route: '/dev/webhooks' }
-    ]
-  },
-  { type: 'section', label: 'Admin' },
   {
     type: 'page',
     id: 'user-registration',
     label: 'User Registration',
     icon: 'fa-user-shield',
     iconSrc: '/recursos/icons/user registration.svg',
-    route: '/dev/lead/crm',
-    role_required: 'lead'
+    route: '/dev/lead/crm'
+  },
+  { type: 'section', label: 'Code' },
+  { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
+  {
+    type: 'container',
+    id: 'operations',
+    label: 'Operations',
+    icon: 'fa-cogs',
+    iconSrc: '/recursos/icons/coding.svg',
+    children: [
+      { label: 'Test De Flujos', route: '/dev/test' },
+      { label: 'Logs', route: '/dev/logs' },
+      { label: 'Webhooks', route: '/dev/webhooks' }
+    ]
   },
   {
     type: 'container',
     id: 'resources',
     label: 'Library',
     icon: 'fa-book',
-    iconSrc: '/recursos/icons/file-storage.svg',
+    iconSrc: '/recursos/icons/memory.svg',
     children: [
       { label: 'Referencias Visuales', route: '/dev/lead/references' },
       { label: 'Vector Memory', route: '/dev/lead/ai-vectors' }
     ]
   },
+  { type: 'section', label: 'Admin', role_required: 'lead' },
   {
-    type: 'container',
-    id: 'lead',
-    label: 'Management',
-    icon: 'fa-shield-alt',
-    iconSrc: '/recursos/icons/settings.svg',
+    type: 'page',
+    id: 'admin-team',
+    label: 'Equipo',
+    icon: 'fa-users',
+    iconSrc: '/recursos/icons/organization.svg',
     role_required: 'lead',
-    children: [
-      { label: 'Equipo', route: '/dev/lead/team' },
-      { label: 'Categorías', route: '/dev/lead/categories' },
-      { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
-      { label: 'Todos Los Flujos', route: '/dev/lead/flows' }
-    ]
-  }
+    route: '/dev/lead/team'
+  },
+  {
+    type: 'page',
+    id: 'admin-inputs',
+    label: 'Inputs',
+    icon: 'fa-sliders-h',
+    iconSrc: '/recursos/icons/coding.svg',
+    role_required: 'lead',
+    route: '/dev/lead/input-schemas'
+  },
+  {
+    type: 'page',
+    id: 'admin-categorias',
+    label: 'Categorias',
+    icon: 'fa-tags',
+    iconSrc: '/recursos/icons/admin.svg',
+    role_required: 'lead',
+    route: '/dev/lead/categories'
+  },
+  {
+    type: 'page',
+    id: 'admin-flows',
+    label: 'Todos los flujos',
+    icon: 'fa-stream',
+    iconSrc: '/recursos/icons/flows.svg',
+    role_required: 'lead',
+    route: '/dev/lead/flows'
+  },
 ];
 
 /**
@@ -903,16 +925,20 @@ class Navigation {
     };
 
     const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
-      if (item.type === 'section') {
-        return `<div class="nav-section-label" aria-hidden="true">${_escapeHtml(item.label)}</div>`;
-      }
       const isLead = item.role_required === 'lead';
+      if (item.type === 'section') {
+        const sectionClass = isLead ? 'nav-section-label nav-lead-only' : 'nav-section-label';
+        const sectionAttrs = isLead ? ' style="display:none"' : '';
+        return `<div class="${sectionClass}"${sectionAttrs} aria-hidden="true">${_escapeHtml(item.label)}</div>`;
+      }
       const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
       const attrs = isLead ? ` style="display: none;"` : '';
 
       if (item.type === 'page') {
+        const pageClass = isLead ? 'nav-item nav-lead-only' : 'nav-item';
+        const pageAttrs = isLead ? ' style="display: none;"' : '';
         return `
-          <div class="nav-item">
+          <div class="${pageClass}"${pageAttrs}>
             <a href="${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.label}">
               ${iconHTML(item)}
               <span class="nav-text">${item.label}</span>
