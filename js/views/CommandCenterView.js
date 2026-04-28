@@ -664,21 +664,16 @@ class CommandCenterView extends BaseView {
     const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
     const plat = String(s.platform || '—');
     const platLabel = plat.includes('google') ? 'Google Analytics' : plat.includes('facebook') ? 'Facebook (página)' : plat;
-    const kpis = this._snapshotHeroKpis(s.metrics, s.platform);
-    const kpiHtml = kpis.length
-      ? kpis.map((t) => `
-        <div class="cc-dash-kpi">
-          <span class="cc-dash-kpi-val">${this.escapeHtml(t.value)}</span>
-          <span class="cc-dash-kpi-lbl">${this.escapeHtml(t.label)}</span>
-        </div>`).join('')
-      : '<p class="cc-api-hint">Sin KPIs reconocibles.</p>';
-
     const pLower = plat.toLowerCase();
+
     let channelHint = '';
+    let qualitativeSignal = 'Señal integrada para contrastar enfoque de campaña y lectura de mercado.';
     if (pLower.includes('facebook') || pLower.includes('meta')) {
       channelHint = '<p class="cc-dash-hint">Lectura de <strong>página</strong> (no ads). Señal mínima de presencia; la IA la contrasta con tu enfoque conceptual.</p>';
+      qualitativeSignal = 'Actividad social integrada como señal contextual de presencia de marca.';
     } else if (pLower.includes('google_analytics') || pLower.includes('analytics')) {
       channelHint = '<p class="cc-dash-hint">Lectura de <strong>sitio</strong>. Complementa el mercado objetivo con intención de visita, no sustituye a la persona.</p>';
+      qualitativeSignal = 'Intención de visita integrada como señal contextual para decisiones de mensaje.';
     }
 
     const latestAt = s.period_end || s.computed_at || s.updated_at || s.created_at || null;
@@ -689,7 +684,7 @@ class CommandCenterView extends BaseView {
         <h3 class="cc-dash-card-title">${this.escapeHtml(platLabel)}</h3>
         <span class="cc-dash-card-meta">Última actualización: ${this.escapeHtml(fmtDate(latestAt) || '—')}</span>
       </header>
-      <div class="cc-dash-kpi-grid">${kpiHtml}</div>
+      <p class="cc-dash-hint">${this.escapeHtml(qualitativeSignal)}</p>
       ${channelHint}
     </article>`;
   }
