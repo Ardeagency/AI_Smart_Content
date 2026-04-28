@@ -10,10 +10,14 @@ class DashboardView extends BaseView {
     this._activeTab  = 'my-brands';
     this._charts     = [];
     this._chartJsReady = false;
-    this._supabase   = null;
-    this._orgId      = null;
-    this._mbData     = null;   // Cache de datos de la sesión
-    this._mbService  = null;   // Instancia de MiBrandaDataService
+    this._supabase      = null;
+    this._orgId         = null;
+    this._mbData        = null;   // Cache de datos de la sesión
+    this._mbService     = null;   // Instancia de MiBrandaDataService
+    this._stratService  = null;   // Instancia de StrategiaDataService
+    this._stratData     = null;   // Cache de datos de estrategia
+    this._stratHorizon  = 'hoy';  // Horizonte activo del plan
+    this._stratSelected = null;   // Acción seleccionada en el panel
   }
 
   async onEnter() {
@@ -106,12 +110,8 @@ class DashboardView extends BaseView {
       this._renderCompetence(body);
     } else if (tabId === 'tendencies') {
       this._renderTendencies(body);
-    } else {
-      const copy = {
-        strategy: { title: 'Estrategia', icon: 'fa-route', desc: 'Centro de comando: misiones, sensores, acciones estratégicas y salud organizacional.' },
-      };
-      const tab = copy[tabId] || copy.strategy;
-      body.innerHTML = this._pageComingSoon(tab.title, tab.icon, tab.desc);
+    } else if (tabId === 'strategy') {
+      this._renderStrategy(body);
     }
   }
 
@@ -2394,6 +2394,791 @@ class DashboardView extends BaseView {
       </div>`;
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     ESTRATEGIA — Centro de Comando
+  ═══════════════════════════════════════════════════════════ */
+
+  async _ensureStratService() {
+    if (this._stratService) return;
+    if (!window.StrategiaDataService) {
+      try { await this.loadScript('/js/services/StrategiaDataService.js', 'StrategiaDataService', 6000); }
+      catch (_) { return; }
+    }
+    if (!this._supabase || !this._orgId) return;
+    try {
+      this._stratService = await new window.StrategiaDataService().init(this._supabase, this._orgId);
+    } catch (e) { console.warn('[DashboardView] StrategiaDataService init error:', e); }
+  }
+
+  async _renderStrategy(body) {
+    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Sintetizando señales estratégicas…</div>`;
+    this._injectStratCSS();
+    await Promise.allSettled([this._ensureChartJs(), this._ensureStratService()]);
+
+    if (!this._stratData) {
+      this._stratData = this._stratService ? await this._stratService.loadAll() : null;
+    }
+    const d = this._stratData;
+    body.innerHTML = this._buildStratHTML(d);
+    window._stratView = this;
+    this._initStratEvents();
+    const lu = document.getElementById('stLastUpdate');
+    if (lu) lu.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async _refreshStratData() {
+    this._stratData = null;
+    const body = document.getElementById('insightTabBody');
+    if (body) { this._destroyCharts(); await this._renderStrategy(body); }
+  }
+
+  /* ── CSS inyectado una sola vez ──────────────────────────── */
+  _injectStratCSS() {
+    if (document.getElementById('st-dash-css')) return;
+    const s = document.createElement('style');
+    s.id = 'st-dash-css';
+    s.textContent = `
+      .st-dashboard{display:flex;flex-direction:column;gap:16px;padding:20px;max-width:100%}
+      /* ── Status Bar ── */
+      .st-status-bar{display:flex;align-items:center;gap:14px;background:var(--bg-card,#1e2130);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 20px;flex-wrap:wrap}
+      .st-status-item{display:flex;flex-direction:column;gap:2px;flex:1;min-width:140px}
+      .st-status-item--row{flex-direction:row;align-items:center;gap:10px}
+      .st-status-divider{width:1px;height:36px;background:rgba(255,255,255,.08);flex-shrink:0}
+      .st-health-num{font-size:30px;font-weight:800;line-height:1}
+      .st-health-num.green{color:#22c55e}.st-health-num.yellow{color:#f59e0b}.st-health-num.red{color:#ef4444}
+      .st-status-label{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px}
+      .st-threat-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+      .st-threat-badge.bajo{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+      .st-threat-badge.medio{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25)}
+      .st-threat-badge.alto{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+      .st-threat-badge.critico{background:rgba(239,68,68,.2);color:#ff4444;border:1px solid #ef4444;animation:stPulse 1.4s infinite}
+      @keyframes stPulse{0%,100%{opacity:1}50%{opacity:.65}}
+      .st-trend-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:20px;font-size:11px;color:#818cf8;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .st-pending-big{font-size:26px;font-weight:800;color:#f59e0b;line-height:1}
+      .st-last-sync{font-size:11px;color:rgba(255,255,255,.4)}
+      .st-refresh-btn{padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+      .st-refresh-btn:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+      /* ── Briefing ── */
+      .st-briefing{background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.65;color:rgba(255,255,255,.75)}
+      .st-briefing-label{font-size:10px;font-weight:600;color:#818cf8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+      /* ── Main Layout ── */
+      .st-main-layout{display:flex;gap:14px;align-items:flex-start}
+      .st-action-plan{flex:0 0 56%;min-width:0}
+      .st-context-panel-col{flex:0 0 calc(44% - 14px);min-width:0}
+      @media(max-width:1100px){.st-main-layout{flex-direction:column}.st-action-plan,.st-context-panel-col{flex:none;width:100%}}
+      /* ── Horizon Tabs ── */
+      .st-horizon-tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.09);margin-bottom:10px;background:rgba(255,255,255,.03)}
+      .st-ht{flex:1;padding:7px 10px;border:none;background:none;color:rgba(255,255,255,.45);font-size:11px;font-weight:600;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s;text-transform:uppercase}
+      .st-ht-n{background:rgba(255,255,255,.09);color:rgba(255,255,255,.5);border-radius:10px;padding:1px 5px;font-size:10px}
+      .st-ht[data-h="hoy"].active{background:rgba(239,68,68,.14);color:#f87171}.st-ht[data-h="hoy"].active .st-ht-n{background:rgba(239,68,68,.18);color:#f87171}
+      .st-ht[data-h="semana"].active{background:rgba(245,158,11,.14);color:#fbbf24}.st-ht[data-h="semana"].active .st-ht-n{background:rgba(245,158,11,.18);color:#fbbf24}
+      .st-ht[data-h="mes"].active{background:rgba(34,197,94,.14);color:#4ade80}.st-ht[data-h="mes"].active .st-ht-n{background:rgba(34,197,94,.18);color:#4ade80}
+      .st-ht[data-h="historial"].active{background:rgba(99,102,241,.14);color:#818cf8}
+      /* ── Action Cards ── */
+      .st-actions-list{display:flex;flex-direction:column;gap:7px;min-height:200px}
+      .st-action-card{background:var(--bg-card,#1e2130);border:1px solid rgba(255,255,255,.07);border-radius:10px;border-left:3px solid transparent;padding:13px 15px;cursor:pointer;transition:all .18s;position:relative}
+      .st-action-card:hover{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.025)}
+      .st-action-card.selected{border-color:rgba(255,255,255,.2)!important;background:rgba(255,255,255,.04);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+      .st-card--contenido{border-left-color:#3b82f6}.st-card--pauta{border-left-color:#a855f7}
+      .st-card--precio{border-left-color:#ef4444}.st-card--tono{border-left-color:#06b6d4}
+      .st-card--monitoreo{border-left-color:#f59e0b}.st-card--producto{border-left-color:#22c55e}
+      .st-card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+      .st-score-circle{flex-shrink:0;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.7)}
+      .st-score-circle.hi{border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.1)}
+      .st-score-circle.md{border-color:#f59e0b;color:#f59e0b;background:rgba(245,158,11,.1)}
+      .st-score-circle.lo{border-color:#64748b;color:#94a3b8}
+      .st-card-meta{flex:1;min-width:0}
+      .st-card-title{font-size:13px;font-weight:600;color:rgba(255,255,255,.9);line-height:1.4;margin-bottom:5px}
+      .st-card-badges{display:flex;gap:4px;flex-wrap:wrap}
+      .st-b{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.2px;text-transform:uppercase}
+      .st-b--contenido{background:rgba(59,130,246,.14);color:#60a5fa}.st-b--pauta{background:rgba(168,85,247,.14);color:#c084fc}
+      .st-b--precio{background:rgba(239,68,68,.14);color:#f87171}.st-b--tono{background:rgba(6,182,212,.14);color:#22d3ee}
+      .st-b--monitoreo{background:rgba(245,158,11,.14);color:#fbbf24}.st-b--producto{background:rgba(34,197,94,.14);color:#4ade80}
+      .st-b--hoy{background:rgba(239,68,68,.12);color:#f87171}.st-b--semana{background:rgba(245,158,11,.12);color:#fbbf24}.st-b--mes{background:rgba(34,197,94,.12);color:#4ade80}
+      .st-b--auto{background:rgba(34,197,94,.1);color:#4ade80}.st-b--approve{background:rgba(245,158,11,.1);color:#fbbf24}.st-b--alto{background:rgba(239,68,68,.1);color:#f87171}
+      .st-card-reason{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .st-card-btns{display:flex;gap:5px;align-items:center}
+      .st-btn{padding:5px 11px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .14s}
+      .st-btn--ap{background:rgba(34,197,94,.14);color:#22c55e;border:1px solid rgba(34,197,94,.28)}.st-btn--ap:hover{background:rgba(34,197,94,.24)}
+      .st-btn--mo{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.25)}.st-btn--mo:hover{background:rgba(245,158,11,.2)}
+      .st-btn--re{background:rgba(255,255,255,.04);color:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.09)}.st-btn--re:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.3)}
+      .st-btn:disabled,.st-btn-loading{opacity:.55;pointer-events:none}
+      .st-empty-state{text-align:center;padding:40px 20px;color:rgba(255,255,255,.3);font-size:13px}
+      .st-empty-state i{font-size:32px;margin-bottom:10px;display:block;opacity:.35}
+      /* ── Context Panel ── */
+      .st-ctx{background:var(--bg-card,#1e2130);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;min-height:320px;position:sticky;top:16px}
+      .st-ctx-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:rgba(255,255,255,.22);gap:10px;text-align:center}
+      .st-ctx-empty i{font-size:38px;opacity:.25}
+      .st-ctx-empty p{font-size:12px;max-width:180px;line-height:1.5}
+      .st-ctx-title{font-size:14px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:10px;line-height:1.4}
+      .st-ctx-score-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+      .st-ctx-score-pill{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;border:2px solid rgba(255,255,255,.15);flex-shrink:0}
+      .st-ctx-label{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px}
+      .st-ctx-sec{margin-bottom:13px}
+      .st-ctx-sec-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+      .st-ctx-reasoning{font-size:12px;line-height:1.65;color:rgba(255,255,255,.7);background:rgba(99,102,241,.06);padding:10px 12px;border-radius:8px;border-left:2px solid rgba(99,102,241,.35)}
+      .st-ctx-signal{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:5px}
+      .st-ctx-stype{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:8px;background:rgba(99,102,241,.14);color:#818cf8;flex-shrink:0;letter-spacing:.3px}
+      .st-ctx-stext{font-size:11px;color:rgba(255,255,255,.6);line-height:1.45}
+      .st-ctx-payload{background:rgba(0,0,0,.25);border-radius:7px;padding:9px 11px;font-size:10px;color:rgba(255,255,255,.55);font-family:var(--font-mono,monospace);max-height:90px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+      .st-ctx-impact{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px}
+      .st-ctx-impact-item{background:rgba(255,255,255,.05);border-radius:6px;padding:4px 9px;font-size:11px;color:rgba(255,255,255,.55)}
+      .st-ctx-impact-val{font-weight:700;color:#22c55e}
+      .st-ctx-btns{display:flex;gap:7px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)}
+      .st-ctx-btns .st-btn{flex:1;justify-content:center;font-size:11px;padding:7px}
+      /* ── Calendar ── */
+      .st-cal-wrap{background:var(--bg-card,#1e2130);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
+      .st-cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;user-select:none}
+      .st-cal-hdr-title{font-size:13px;font-weight:600;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:8px}
+      .st-cal-toggle{font-size:11px;color:rgba(255,255,255,.4)}
+      .st-cal-body{padding:14px 16px}
+      .st-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+      .st-cal-day{border-radius:8px;border:1px solid rgba(255,255,255,.07);padding:7px 5px;min-height:68px}
+      .st-cal-day.optimal{border-color:rgba(99,102,241,.35);background:rgba(99,102,241,.04)}
+      .st-cal-dname{font-size:9px;color:rgba(255,255,255,.3);text-align:center;text-transform:uppercase;margin-bottom:3px}
+      .st-cal-dnum{font-size:13px;font-weight:600;text-align:center;color:rgba(255,255,255,.65);margin-bottom:4px}
+      .st-cal-dnum.today{color:#818cf8}
+      .st-cal-slot{font-size:9px;padding:2px 3px;border-radius:3px;margin-bottom:2px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .st-cal-slot.approved{background:rgba(34,197,94,.18);color:#4ade80}
+      .st-cal-slot.pending{background:rgba(245,158,11,.16);color:#fbbf24}
+      .st-cal-slot.scheduled{background:rgba(59,130,246,.14);color:#60a5fa}
+      /* ── History ── */
+      .st-hist-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+      .st-hist-row:last-child{border-bottom:none}
+      .st-hist-dot{flex-shrink:0;width:7px;height:7px;border-radius:50%}
+      .st-hist-dot.executed,.st-hist-dot.approved{background:#22c55e}
+      .st-hist-dot.executing{background:#f59e0b;animation:stPulse 1s infinite}
+      .st-hist-dot.failed{background:#ef4444}.st-hist-dot.rejected{background:#475569}
+      .st-hist-text{flex:1;font-size:12px;color:rgba(255,255,255,.65);line-height:1.4}
+      .st-hist-sub{font-size:10px;color:rgba(255,255,255,.32)}
+      .st-hist-time{font-size:10px;color:rgba(255,255,255,.3);flex-shrink:0}
+      .st-hist-empty{text-align:center;padding:28px;color:rgba(255,255,255,.28);font-size:12px}
+    `;
+    document.head.appendChild(s);
+  }
+
+  /* ── HTML principal ──────────────────────────────────────── */
+  _buildStratHTML(d) {
+    const status  = d?.statusBar?.data  || {};
+    const actions = d?.actions?.data    || { hoy: [], semana: [], mes: [] };
+    const cal     = d?.calendar?.data   || {};
+    const hist    = d?.history?.data    || [];
+    const noData  = !d;
+
+    return `
+    <div class="st-dashboard" id="stDashboard">
+
+      ${this._buildStratStatusBar(status, noData)}
+
+      ${status.briefing ? `
+      <div class="st-briefing">
+        <div class="st-briefing-label"><i class="fas fa-brain"></i> Briefing del Día — VERA</div>
+        ${this._esc(status.briefing)}
+      </div>` : ''}
+
+      <div class="st-main-layout">
+
+        <!-- Zona 2: Plan de Acción -->
+        <div class="st-action-plan">
+          <div class="st-horizon-tabs" id="stHorizonTabs">
+            <button class="st-ht active" data-h="hoy">HOY <span class="st-ht-n">${actions.hoy?.length || 0}</span></button>
+            <button class="st-ht" data-h="semana">SEMANA <span class="st-ht-n">${actions.semana?.length || 0}</span></button>
+            <button class="st-ht" data-h="mes">MES <span class="st-ht-n">${actions.mes?.length || 0}</span></button>
+            <button class="st-ht" data-h="historial"><i class="fas fa-history"></i> Historial</button>
+          </div>
+          <div id="stActionsList">
+            ${this._buildStratActionsList(actions.hoy || [], 'hoy', noData)}
+          </div>
+        </div>
+
+        <!-- Zona 3: Panel de Contexto -->
+        <div class="st-context-panel-col">
+          <div class="st-ctx" id="stCtxPanel">
+            ${this._buildStratCtxEmpty()}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Zona 4: Calendario Editorial -->
+      ${this._buildStratCalendar(cal)}
+
+      <div class="mb-demo-note">
+        <i class="fas fa-clock"></i>
+        <span>Síntesis VERA: <strong id="stLastUpdate">—</strong> ·
+        <button class="st-refresh-btn" onclick="window._stratView?._refreshStratData()"><i class="fas fa-sync-alt"></i> Actualizar</button></span>
+      </div>
+
+    </div>`;
+  }
+
+  /* ── Zona 1: Status Bar ──────────────────────────────────── */
+  _buildStratStatusBar(s, noData) {
+    const score       = s.healthScore ?? 0;
+    const scoreColor  = score >= 70 ? 'green' : score >= 40 ? 'yellow' : 'red';
+    const threat      = s.threatLevel || 'bajo';
+    const threatIcons = { bajo: 'fa-shield-halved', medio: 'fa-triangle-exclamation', alto: 'fa-circle-exclamation', critico: 'fa-skull-crossbones' };
+    const threatLabels = { bajo: 'Amenaza Baja', medio: 'Amenaza Media', alto: 'Amenaza Alta', critico: '¡CRÍTICO!' };
+    const trend       = s.topTrend;
+    const syncText    = s.lastSynthesis
+      ? `Síntesis hace ${this._stratTimeAgo(s.lastSynthesis)}`
+      : 'Sin síntesis reciente';
+
+    return `
+    <div class="st-status-bar">
+      <div class="st-status-item">
+        <span class="st-health-num ${scoreColor}">${noData ? '—' : score}</span>
+        <span class="st-status-label">Score de Salud</span>
+      </div>
+
+      <div class="st-status-divider"></div>
+
+      <div class="st-status-item" title="${this._esc(s.threatTooltip || '')}">
+        <span class="st-threat-badge ${threat}">
+          <i class="fas ${threatIcons[threat] || 'fa-shield-halved'}"></i>
+          ${threatLabels[threat] || 'Bajo'}
+        </span>
+        <span class="st-status-label">Amenaza Competitiva</span>
+      </div>
+
+      <div class="st-status-divider"></div>
+
+      <div class="st-status-item">
+        ${trend
+          ? `<span class="st-trend-chip"><i class="fas fa-fire"></i> ${this._esc(trend.keyword)}</span>`
+          : `<span class="st-trend-chip" style="opacity:.4"><i class="fas fa-satellite-dish"></i> Sin señal activa</span>`}
+        <span class="st-status-label">Tendencia urgente</span>
+      </div>
+
+      <div class="st-status-divider"></div>
+
+      <div class="st-status-item">
+        <span class="st-pending-big">${noData ? '—' : (s.pendingCount || 0)}</span>
+        <span class="st-status-label">Acciones pendientes</span>
+      </div>
+
+      <div class="st-status-divider"></div>
+
+      <div class="st-status-item">
+        <span class="st-last-sync">${syncText}</span>
+        <span class="st-status-label">Última síntesis</span>
+      </div>
+    </div>`;
+  }
+
+  /* ── Lista de Action Cards ───────────────────────────────── */
+  _buildStratActionsList(actions, horizon, noData) {
+    if (noData) return `<div class="st-empty-state"><i class="fas fa-satellite-dish"></i> Conectando con OpenClaw…</div>`;
+    if (!actions || actions.length === 0) return `
+      <div class="st-empty-state">
+        <i class="fas fa-check-circle" style="color:rgba(34,197,94,.4)"></i>
+        Sin acciones pendientes para este horizonte.<br>
+        <span style="font-size:11px;opacity:.6">VERA sintetizará nuevas oportunidades cuando lleguen señales.</span>
+      </div>`;
+    return `<div class="st-actions-list">${actions.map(a => this._buildStratActionCard(a, horizon)).join('')}</div>`;
+  }
+
+  _buildStratActionCard(action, horizon) {
+    const cat      = this._stratCategory(action.action_type);
+    const risk     = this._stratRisk(action.action_type);
+    const score    = Math.round((action.vera_confidence || 0) * 100);
+    const scoreC   = score >= 70 ? 'hi' : score >= 40 ? 'md' : 'lo';
+    const title    = this._stratTitle(action);
+    const isAuto   = risk === 'auto';
+
+    const horizonBadge = `<span class="st-b st-b--${horizon}">${horizon.toUpperCase()}</span>`;
+    const typeBadge    = `<span class="st-b st-b--${cat}">${cat.toUpperCase()}</span>`;
+    const riskBadge    = isAuto
+      ? `<span class="st-b st-b--auto"><i class="fas fa-bolt"></i> AUTO</span>`
+      : `<span class="st-b st-b--approve"><i class="fas fa-hand-pointer"></i> APROBAR</span>`;
+
+    const reasoning = action.vera_reasoning
+      ? this._esc(action.vera_reasoning.slice(0, 160) + (action.vera_reasoning.length > 160 ? '…' : ''))
+      : `<em style="opacity:.5">Sin razonamiento disponible.</em>`;
+
+    return `
+    <div class="st-action-card st-card--${cat}" data-action-id="${action.id}" id="stCard-${action.id}">
+      <div class="st-card-top">
+        <div class="st-score-circle ${scoreC}">${score}</div>
+        <div class="st-card-meta">
+          <div class="st-card-title">${this._esc(title)}</div>
+          <div class="st-card-badges">
+            ${horizonBadge}${typeBadge}${riskBadge}
+          </div>
+        </div>
+      </div>
+      <div class="st-card-reason">${reasoning}</div>
+      <div class="st-card-btns">
+        <button class="st-btn st-btn--ap" data-action="approve" data-id="${action.id}">
+          <i class="fas fa-check"></i> Aprobar
+        </button>
+        <button class="st-btn st-btn--mo" data-action="modify" data-id="${action.id}">
+          <i class="fas fa-pen"></i> Modificar
+        </button>
+        <button class="st-btn st-btn--re" data-action="reject" data-id="${action.id}">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>`;
+  }
+
+  /* ── Zona 3: Panel de Contexto ───────────────────────────── */
+  _buildStratCtxEmpty() {
+    return `
+    <div class="st-ctx-empty">
+      <i class="fas fa-hand-pointer"></i>
+      <p>Selecciona una acción del plan para ver el expediente completo</p>
+    </div>`;
+  }
+
+  _buildStratCtxContent(detail) {
+    if (!detail) return this._buildStratCtxEmpty();
+    const { action, signal } = detail;
+    const cat      = this._stratCategory(action.action_type);
+    const score    = Math.round((action.vera_confidence || 0) * 100);
+    const scoreC   = score >= 70 ? 'hi' : score >= 40 ? 'md' : 'lo';
+    const scoreClr = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#94a3b8';
+    const impact   = action.impact_estimate || {};
+    const payload  = action.proposed_payload
+      ? JSON.stringify(action.proposed_payload, null, 2)
+      : null;
+    const risk = this._stratRisk(action.action_type);
+
+    const impactItems = [
+      impact.reach_uplift_pct   ? `<div class="st-ctx-impact-item">Alcance <span class="st-ctx-impact-val">+${impact.reach_uplift_pct}%</span></div>` : '',
+      impact.engagement_uplift_pct ? `<div class="st-ctx-impact-item">Engagement <span class="st-ctx-impact-val">+${impact.engagement_uplift_pct}%</span></div>` : '',
+      impact.risk_level ? `<div class="st-ctx-impact-item">Riesgo: <span style="color:#fbbf24">${this._esc(impact.risk_level)}</span></div>` : '',
+      impact.time_to_see_results ? `<div class="st-ctx-impact-item">Resultado en <span style="color:rgba(255,255,255,.7)">${this._esc(impact.time_to_see_results)}</span></div>` : '',
+    ].filter(Boolean).join('');
+
+    return `
+    <div class="st-ctx-header">
+      <div class="st-ctx-title">${this._esc(this._stratTitle(action))}</div>
+      <div class="st-ctx-score-row">
+        <div class="st-ctx-score-pill ${scoreC}" style="border-color:${scoreClr};color:${scoreClr};background:${scoreClr}18">
+          ${score}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7)">Score de Oportunidad</div>
+          <div class="st-ctx-label">
+            <span class="st-b st-b--${cat}">${cat.toUpperCase()}</span> &nbsp;
+            ${risk === 'auto' ? `<span class="st-b st-b--auto"><i class="fas fa-bolt"></i> AUTO</span>` : `<span class="st-b st-b--approve"><i class="fas fa-hand-pointer"></i> APPROVE</span>`}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${action.vera_reasoning ? `
+    <div class="st-ctx-sec">
+      <div class="st-ctx-sec-title"><i class="fas fa-brain"></i> Razonamiento VERA</div>
+      <div class="st-ctx-reasoning">${this._esc(action.vera_reasoning)}</div>
+    </div>` : ''}
+
+    ${signal ? `
+    <div class="st-ctx-sec">
+      <div class="st-ctx-sec-title"><i class="fas fa-satellite-dish"></i> Señal que la disparó</div>
+      <div class="st-ctx-signal">
+        <span class="st-ctx-stype">${this._esc(signal.signal_type || '')}</span>
+        <span class="st-ctx-stext">${this._esc((signal.content_text || '').slice(0, 120))}
+          ${signal.captured_at ? `<br><span style="opacity:.5;font-size:10px">${this._stratTimeAgo(signal.captured_at)}</span>` : ''}</span>
+      </div>
+    </div>` : ''}
+
+    ${payload ? `
+    <div class="st-ctx-sec">
+      <div class="st-ctx-sec-title"><i class="fas fa-code"></i> Preview de Ejecución</div>
+      <div class="st-ctx-payload">${this._esc(payload)}</div>
+    </div>` : ''}
+
+    ${impactItems ? `
+    <div class="st-ctx-sec">
+      <div class="st-ctx-sec-title"><i class="fas fa-chart-line"></i> Impacto Estimado</div>
+      <div class="st-ctx-impact">${impactItems}</div>
+    </div>` : ''}
+
+    <div class="st-ctx-btns">
+      <button class="st-btn st-btn--ap" data-action="approve" data-id="${action.id}">
+        <i class="fas fa-check"></i> Aprobar
+      </button>
+      <button class="st-btn st-btn--mo" data-action="modify" data-id="${action.id}">
+        <i class="fas fa-pen"></i> Modificar
+      </button>
+      <button class="st-btn st-btn--re" data-action="reject" data-id="${action.id}">
+        <i class="fas fa-times"></i> Rechazar
+      </button>
+    </div>`;
+  }
+
+  /* ── Zona 4: Calendario Editorial ───────────────────────── */
+  _buildStratCalendar(cal) {
+    const schedules  = cal.schedules  || [];
+    const heatmap    = cal.heatmap    || [];
+    const veraSlots  = cal.veraSlots  || [];
+    const bestDays   = new Set(heatmap.map(h => h.best_day).filter(d => d != null));
+
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const today    = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      return d;
+    });
+
+    const calCells = days.map(d => {
+      const dateStr = d.toISOString().slice(0, 10);
+      const isToday = dateStr === todayStr;
+      const dayOfWeek = d.getDay();
+      const isOptimal = bestDays.has(dayOfWeek);
+
+      const dayScheds = schedules.filter(s => s.next_run_at && s.next_run_at.slice(0, 10) === dateStr);
+      const dayVera   = veraSlots.filter(v => v.expires_at && v.expires_at.slice(0, 10) === dateStr);
+
+      const slots = [
+        ...dayScheds.map(() => `<div class="st-cal-slot scheduled"><i class="fas fa-calendar-check"></i> Prog.</div>`),
+        ...dayVera.map(v => `<div class="st-cal-slot pending"><i class="fas fa-bolt"></i> VERA</div>`),
+      ].slice(0, 3).join('');
+
+      return `
+      <div class="st-cal-day ${isOptimal ? 'optimal' : ''}">
+        <div class="st-cal-dname">${dayNames[dayOfWeek]}</div>
+        <div class="st-cal-dnum ${isToday ? 'today' : ''}">${d.getDate()}</div>
+        ${slots || `<div class="st-cal-slot" style="opacity:.3;font-size:9px;text-align:center">—</div>`}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="st-cal-wrap" id="stCalWrap">
+      <div class="st-cal-hdr" id="stCalHdr">
+        <span class="st-cal-hdr-title">
+          <i class="fas fa-calendar-week"></i> Calendario Editorial — Próximos 7 días
+          ${bestDays.size > 0 ? `<span class="st-b" style="background:rgba(99,102,241,.12);color:#818cf8">Días óptimos marcados</span>` : ''}
+        </span>
+        <span class="st-cal-toggle" id="stCalToggle"><i class="fas fa-chevron-up"></i></span>
+      </div>
+      <div class="st-cal-body" id="stCalBody">
+        <div class="st-cal-grid">${calCells}</div>
+        ${schedules.length === 0 && veraSlots.length === 0 ? `
+        <p style="text-align:center;font-size:12px;color:rgba(255,255,255,.3);margin-top:10px;padding-bottom:4px">
+          Sin programaciones activas esta semana.
+        </p>` : ''}
+      </div>
+    </div>`;
+  }
+
+  /* ── Zona 5: Historial de Misiones ───────────────────────── */
+  _buildStratHistory(hist) {
+    if (!hist || hist.length === 0) return `<div class="st-hist-empty"><i class="fas fa-history" style="margin-right:6px;opacity:.4"></i>Sin historial de misiones aún.</div>`;
+
+    const catIcons = { contenido: '✍️', pauta: '📢', precio: '💲', tono: '🎙️', monitoreo: '📡', producto: '📦' };
+    const rows = hist.map(a => {
+      const cat   = this._stratCategory(a.action_type);
+      const title = this._stratTitle(a);
+      const ts    = a.executed_at || a.approved_at || a.rejected_at || a.created_at;
+      const errTip = a.error_message ? ` title="${this._esc(a.error_message)}"` : '';
+      return `
+      <div class="st-hist-row"${errTip}>
+        <div class="st-hist-dot ${a.status}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="st-hist-text">${catIcons[cat] || '⚡'} ${this._esc(title)}</div>
+          <div class="st-hist-sub">
+            <span class="st-b st-b--${cat}" style="font-size:9px">${cat.toUpperCase()}</span>
+            ${a.rejection_reason ? ` · ${this._esc(a.rejection_reason.slice(0, 40))}` : ''}
+          </div>
+        </div>
+        <div class="st-hist-time">${ts ? this._stratTimeAgo(ts) : '—'}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="st-history-wrap">${rows}</div>`;
+  }
+
+  /* ── Event handlers ──────────────────────────────────────── */
+  _initStratEvents() {
+    // Horizon tabs
+    const tabs = document.getElementById('stHorizonTabs');
+    if (tabs) {
+      tabs.addEventListener('click', e => {
+        const btn = e.target.closest('[data-h]');
+        if (!btn) return;
+        this._stratSwitchHorizon(btn.dataset.h);
+      });
+    }
+
+    // Action list (event delegation)
+    const list = document.getElementById('stActionsList');
+    if (list) {
+      list.addEventListener('click', e => {
+        const approveBtn = e.target.closest('[data-action="approve"]');
+        const modifyBtn  = e.target.closest('[data-action="modify"]');
+        const rejectBtn  = e.target.closest('[data-action="reject"]');
+        const card       = e.target.closest('[data-action-id]');
+
+        if (approveBtn) { e.stopPropagation(); this._stratApprove(approveBtn.dataset.id); return; }
+        if (modifyBtn)  { e.stopPropagation(); this._stratModify(modifyBtn.dataset.id);   return; }
+        if (rejectBtn)  { e.stopPropagation(); this._stratReject(rejectBtn.dataset.id);   return; }
+        if (card) this._stratSelectAction(card.dataset.actionId);
+      });
+    }
+
+    // Context panel buttons (delegation)
+    const ctx = document.getElementById('stCtxPanel');
+    if (ctx) {
+      ctx.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        if (btn.dataset.action === 'approve') this._stratApprove(btn.dataset.id);
+        if (btn.dataset.action === 'modify')  this._stratModify(btn.dataset.id);
+        if (btn.dataset.action === 'reject')  this._stratReject(btn.dataset.id);
+      });
+    }
+
+    // Calendar toggle
+    const calHdr = document.getElementById('stCalHdr');
+    if (calHdr) {
+      calHdr.addEventListener('click', () => {
+        const body   = document.getElementById('stCalBody');
+        const toggle = document.getElementById('stCalToggle');
+        if (!body) return;
+        const collapsed = body.style.display === 'none';
+        body.style.display   = collapsed ? '' : 'none';
+        if (toggle) toggle.innerHTML = collapsed ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+      });
+    }
+  }
+
+  _stratSwitchHorizon(horizon) {
+    this._stratHorizon = horizon;
+
+    // Update tab active state
+    document.querySelectorAll('.st-ht').forEach(t => {
+      t.classList.toggle('active', t.dataset.h === horizon);
+    });
+
+    const list    = document.getElementById('stActionsList');
+    if (!list) return;
+    const actions = this._stratData?.actions?.data || { hoy: [], semana: [], mes: [] };
+    const hist    = this._stratData?.history?.data  || [];
+
+    if (horizon === 'historial') {
+      list.innerHTML = this._buildStratHistory(hist);
+    } else {
+      list.innerHTML = this._buildStratActionsList(actions[horizon] || [], horizon, !this._stratData);
+
+      // Re-attach click delegation after re-render
+      list.addEventListener('click', e => {
+        const approveBtn = e.target.closest('[data-action="approve"]');
+        const modifyBtn  = e.target.closest('[data-action="modify"]');
+        const rejectBtn  = e.target.closest('[data-action="reject"]');
+        const card       = e.target.closest('[data-action-id]');
+        if (approveBtn) { e.stopPropagation(); this._stratApprove(approveBtn.dataset.id); return; }
+        if (modifyBtn)  { e.stopPropagation(); this._stratModify(modifyBtn.dataset.id);   return; }
+        if (rejectBtn)  { e.stopPropagation(); this._stratReject(rejectBtn.dataset.id);   return; }
+        if (card) this._stratSelectAction(card.dataset.actionId);
+      }, { once: true });
+    }
+  }
+
+  async _stratSelectAction(actionId) {
+    // Highlight selected card
+    document.querySelectorAll('.st-action-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.actionId === actionId);
+    });
+    this._stratSelected = actionId;
+
+    const ctx = document.getElementById('stCtxPanel');
+    if (!ctx) return;
+    ctx.innerHTML = `<div class="st-ctx-empty"><i class="fas fa-circle-notch fa-spin" style="opacity:.5"></i></div>`;
+
+    if (this._stratService) {
+      const result = await this._stratService.loadActionDetail(actionId);
+      ctx.innerHTML = result.error ? this._buildStratCtxEmpty() : this._buildStratCtxContent(result.data);
+    } else {
+      // Fallback: use cached data
+      const all  = this._stratData?.actions?.data;
+      const flat = [...(all?.hoy || []), ...(all?.semana || []), ...(all?.mes || [])];
+      const a    = flat.find(x => x.id === actionId);
+      ctx.innerHTML = a ? this._buildStratCtxContent({ action: a, signal: null }) : this._buildStratCtxEmpty();
+    }
+  }
+
+  async _stratApprove(actionId) {
+    const btns = document.querySelectorAll(`[data-action="approve"][data-id="${actionId}"]`);
+    btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>'; });
+
+    if (this._stratService) {
+      const r = await this._stratService.approveAction(actionId);
+      if (r.error) {
+        btns.forEach(b => { b.disabled = false; b.innerHTML = '<i class="fas fa-check"></i> Aprobar'; });
+        return;
+      }
+    }
+
+    // Optimistic: remove card, update count, refresh history
+    const card = document.getElementById(`stCard-${actionId}`);
+    if (card) {
+      card.style.transition = 'opacity .3s, transform .3s';
+      card.style.opacity = '0'; card.style.transform = 'translateX(20px)';
+      setTimeout(() => card.remove(), 300);
+    }
+    // Update pending count in status bar
+    const pc = document.querySelector('.st-pending-big');
+    if (pc && !isNaN(parseInt(pc.textContent))) pc.textContent = Math.max(0, parseInt(pc.textContent) - 1);
+    // Invalidate cache
+    if (this._stratData?.actions?.data) {
+      for (const key of ['hoy', 'semana', 'mes']) {
+        if (this._stratData.actions.data[key]) {
+          this._stratData.actions.data[key] = this._stratData.actions.data[key].filter(a => a.id !== actionId);
+        }
+      }
+    }
+    // Clear context panel if this was the selected action
+    if (this._stratSelected === actionId) {
+      const ctx = document.getElementById('stCtxPanel');
+      if (ctx) ctx.innerHTML = this._buildStratCtxEmpty();
+      this._stratSelected = null;
+    }
+  }
+
+  async _stratReject(actionId) {
+    const reason = window.prompt('Motivo de rechazo (opcional):') ?? '';
+    const btns   = document.querySelectorAll(`[data-action="reject"][data-id="${actionId}"]`);
+    btns.forEach(b => { b.disabled = true; });
+
+    if (this._stratService) {
+      await this._stratService.rejectAction(actionId, reason);
+    }
+
+    const card = document.getElementById(`stCard-${actionId}`);
+    if (card) {
+      card.style.transition = 'opacity .3s';
+      card.style.opacity = '0';
+      setTimeout(() => card.remove(), 300);
+    }
+    if (this._stratData?.actions?.data) {
+      for (const key of ['hoy', 'semana', 'mes']) {
+        if (this._stratData.actions.data[key]) {
+          this._stratData.actions.data[key] = this._stratData.actions.data[key].filter(a => a.id !== actionId);
+        }
+      }
+    }
+    if (this._stratSelected === actionId) {
+      const ctx = document.getElementById('stCtxPanel');
+      if (ctx) ctx.innerHTML = this._buildStratCtxEmpty();
+      this._stratSelected = null;
+    }
+  }
+
+  _stratModify(actionId) {
+    // Seleccionar la acción para ver el payload en el panel de contexto
+    this._stratSelectAction(actionId);
+    // Notificar al usuario que debe aprobar tras revisar
+    setTimeout(() => {
+      const ctx = document.getElementById('stCtxPanel');
+      if (!ctx) return;
+      const note = document.createElement('div');
+      note.style.cssText = 'margin:8px 0;padding:8px 12px;background:rgba(245,158,11,.1);border-radius:7px;font-size:11px;color:#fbbf24;border:1px solid rgba(245,158,11,.25)';
+      note.textContent = '✏️ Revisa el payload en "Preview de Ejecución" y aprueba cuando estés listo.';
+      ctx.insertBefore(note, ctx.firstChild);
+    }, 400);
+  }
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  _stratCategory(actionType) {
+    const map = {
+      publish_instagram_post: 'contenido', publish_facebook_post: 'contenido',
+      schedule_instagram_post: 'contenido', schedule_facebook_post: 'contenido',
+      create_brief: 'contenido', update_brief: 'contenido', archive_brief: 'contenido',
+      create_schedule: 'contenido', update_schedule: 'contenido',
+      activate_schedule: 'contenido', pause_schedule: 'contenido',
+      launch_campaign: 'pauta', create_campaign: 'pauta', update_campaign: 'pauta',
+      pause_campaign: 'pauta', archive_campaign: 'pauta',
+      link_brief_to_campaign: 'pauta', unlink_brief_from_campaign: 'pauta',
+      update_brand_container: 'tono', create_brand_rule: 'tono', update_brand_rule: 'tono',
+      delete_brand_rule: 'tono', create_brand_color: 'tono', update_brand_color: 'tono',
+      delete_brand_color: 'tono', create_brand_font: 'tono', update_brand_font: 'tono',
+      delete_brand_font: 'tono',
+      add_intelligence_entity: 'monitoreo', remove_intelligence_entity: 'monitoreo',
+      add_url_watcher: 'monitoreo', remove_url_watcher: 'monitoreo',
+      update_monitoring_trigger: 'monitoreo', add_brand_integration: 'monitoreo',
+      remove_brand_integration: 'monitoreo',
+      create_product: 'producto', update_product: 'producto', delete_product: 'producto',
+      create_service: 'producto', update_service: 'producto', delete_service: 'producto',
+      create_persona: 'producto', update_persona: 'producto', archive_persona: 'producto',
+      delete_persona: 'producto', merge_personas: 'producto',
+      create_segment: 'producto', update_segment: 'producto', delete_segment: 'producto',
+      create_audience: 'producto', update_audience: 'producto', delete_audience: 'producto',
+      merge_audiences: 'producto', archive_audience: 'producto',
+    };
+    return map[actionType] || 'contenido';
+  }
+
+  _stratRisk(actionType) {
+    const auto = [
+      'publish_instagram_post', 'publish_facebook_post',
+      'schedule_instagram_post', 'schedule_facebook_post',
+      'add_intelligence_entity', 'add_url_watcher', 'update_monitoring_trigger',
+      'activate_schedule', 'pause_schedule', 'update_brand_rule',
+    ];
+    const high = [
+      'launch_campaign', 'create_campaign', 'update_campaign', 'pause_campaign',
+      'create_product', 'update_product', 'delete_product', 'delete_persona',
+      'delete_segment', 'add_brand_integration', 'remove_brand_integration',
+    ];
+    if (auto.includes(actionType)) return 'auto';
+    if (high.includes(actionType)) return 'alto';
+    return 'approve';
+  }
+
+  _stratTitle(action) {
+    const titles = {
+      publish_instagram_post:   'Publicar en Instagram',
+      publish_facebook_post:    'Publicar en Facebook',
+      schedule_instagram_post:  'Programar publicación en Instagram',
+      schedule_facebook_post:   'Programar publicación en Facebook',
+      create_brief:             'Crear Brief de Campaña',
+      update_brief:             'Actualizar Brief Activo',
+      launch_campaign:          'Lanzar Campaña',
+      create_campaign:          'Crear Nueva Campaña',
+      update_campaign:          'Ajustar Campaña Activa',
+      pause_campaign:           'Pausar Campaña',
+      update_brand_container:   'Actualizar ADN de Marca',
+      create_brand_rule:        'Agregar Regla de Marca',
+      update_brand_rule:        'Ajustar Regla de Tono',
+      add_intelligence_entity:  'Agregar Entidad al Radar',
+      add_url_watcher:          'Activar Watcher de URL',
+      update_monitoring_trigger:'Ajustar Trigger de Monitoreo',
+      create_product:           'Registrar Nuevo Producto',
+      update_product:           'Actualizar Producto',
+      create_service:           'Registrar Nuevo Servicio',
+      create_persona:           'Crear Buyer Persona',
+      update_persona:           'Actualizar Persona',
+      create_segment:           'Crear Segmento de Audiencia',
+      create_schedule:          'Programar Flujo Automático',
+      activate_schedule:        'Activar Programación',
+    };
+    if (titles[action.action_type]) return titles[action.action_type];
+    if (action.vera_reasoning) {
+      const first = action.vera_reasoning.split('.')[0].trim();
+      if (first.length > 10 && first.length < 90) return first;
+    }
+    return (action.action_type || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  _stratTimeAgo(isoString) {
+    if (!isoString) return '—';
+    const diff = Date.now() - new Date(isoString).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'hace un momento';
+    if (m < 60) return `hace ${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `hace ${h}h`;
+    const d = Math.floor(h / 24);
+    return `hace ${d}d`;
+  }
+
+  /* ── _esc ─────────────────────────────────────────────────── */
   _esc(s) {
     if (s == null) return '';
     const d = document.createElement('div');
