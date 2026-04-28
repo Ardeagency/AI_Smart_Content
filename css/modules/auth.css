@@ -1,6 +1,16 @@
-/* ========== signin.css – Login (misma animación que landing, botones alineados) ========== */
+/* ========== signin.css – Login (botones alineados) ========== */
 
-/* Contenedor: misma animación de entrada que la landing */
+@keyframes landing-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .signin-container {
     min-height: 100vh;
     background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg) center/cover no-repeat;
