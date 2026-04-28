@@ -174,15 +174,6 @@ class CommandCenterView extends BaseView {
           <div id="ccSnapshotsWrap"></div>
         </section>
 
-        <hr class="cc-published-divider" aria-hidden="true" />
-
-        <section class="cc-published-slice" aria-label="Fuentes de datos conectadas">
-          <div class="cc-intel-subtitle">
-            <i class="fas fa-plug"></i> Fuentes conectadas
-          </div>
-          <div id="ccIntegrationsWrap"></div>
-        </section>
-
       </div>
     </div>
   </div>
@@ -350,7 +341,7 @@ class CommandCenterView extends BaseView {
     this._renderCampaigns();
     this._renderSegments();
     this._renderSnapshots();
-    this._renderIntegrations();
+    // Fuentes conectadas removido de esta vista: foco solo en la lectura más reciente.
     this.updateLinksForRouter();
   }
 
@@ -690,18 +681,20 @@ class CommandCenterView extends BaseView {
       channelHint = '<p class="cc-dash-hint">Lectura de <strong>sitio</strong>. Complementa el mercado objetivo con intención de visita, no sustituye a la persona.</p>';
     }
 
+    const latestAt = s.period_end || s.computed_at || s.updated_at || s.created_at || null;
+
     return `
     <article class="cc-dash-card">
       <header class="cc-dash-card-head">
         <h3 class="cc-dash-card-title">${this.escapeHtml(platLabel)}</h3>
-        <span class="cc-dash-card-meta">${this.escapeHtml(s.period_type || '')} · ${fmtDate(s.period_start)} → ${fmtDate(s.period_end)}</span>
+        <span class="cc-dash-card-meta">Última actualización: ${this.escapeHtml(fmtDate(latestAt) || '—')}</span>
       </header>
       <div class="cc-dash-kpi-grid">${kpiHtml}</div>
       ${channelHint}
     </article>`;
   }
 
-  /* ── Lectura del mercado: solo último período por canal (sin historial) ─ */
+  /* ── Lectura del mercado: solo última actualización por canal (sin historial) ─ */
   _renderSnapshots() {
     const root = document.getElementById('ccSnapshotsWrap');
     if (!root) return;
@@ -712,11 +705,15 @@ class CommandCenterView extends BaseView {
       return;
     }
 
-    const groups = this._groupSnapshotsByPlatformPeriod(rows);
-    const primaries = [];
-    groups.forEach((arr) => {
-      if (arr[0]) primaries.push(arr[0]);
+    const latestByPlatform = new Map();
+    rows.forEach((row) => {
+      const key = String(row.platform || '—').toLowerCase();
+      const prev = latestByPlatform.get(key);
+      if (!prev || this._snapshotSortKey(row) > this._snapshotSortKey(prev)) {
+        latestByPlatform.set(key, row);
+      }
     });
+    const primaries = Array.from(latestByPlatform.values());
     primaries.sort((a, b) => {
       const order = (p) => {
         const x = String(p.platform || '').toLowerCase();
@@ -732,39 +729,6 @@ class CommandCenterView extends BaseView {
 
     const heroHtml = `<div class="cc-dash-heroes">${primaries.map((s) => this._renderSnapshotHeroCard(s)).join('')}</div>`;
     root.innerHTML = heroHtml;
-  }
-
-  /* ── INTEGRACIONES: estado de sync ───────────────────────────────── */
-  _renderIntegrations() {
-    const root = document.getElementById('ccIntegrationsWrap');
-    if (!root) return;
-    const rows = Array.isArray(this._integrations) ? this._integrations : [];
-
-    if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin fuentes conectadas. En Brand Storage enlaza Meta/GA para que exista mercado real frente al enfoque conceptual.</p>`;
-      return;
-    }
-
-    const fmtSync = (d) => {
-      if (!d) return 'Nunca';
-      const diff = Date.now() - new Date(d).getTime();
-      const m = Math.round(diff / 60000);
-      if (m < 60)  return `hace ${m} min`;
-      const h = Math.round(m / 60);
-      if (h < 24)  return `hace ${h}h`;
-      return `hace ${Math.round(h / 24)}d`;
-    };
-
-    root.innerHTML = `
-    <div class="cc-integrations-list">
-      ${rows.map((i) => `
-      <div class="cc-intg-row">
-        <span class="cc-intg-dot ${i.is_active ? 'cc-intg-dot--on' : 'cc-intg-dot--off'}"></span>
-        <span class="cc-intg-name">${this.escapeHtml(i.external_account_name || i.platform || '—')}</span>
-        <span class="cc-intg-platform">${this.escapeHtml(i.platform || '')}</span>
-        <span class="cc-intg-sync">${fmtSync(i.last_sync_at)}</span>
-      </div>`).join('')}
-    </div>`;
   }
 
   /* ── MODAL: abrir / cerrar / guardar ─────────────────────────────── */
