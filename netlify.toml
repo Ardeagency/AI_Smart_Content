@@ -84,6 +84,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/insights/snapshots-list"
+  to = "/.netlify/functions/api-insights-snapshots-list"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/brand/analytics-ga4"
   to = "/.netlify/functions/api-brand-analytics-ga4"
   status = 200

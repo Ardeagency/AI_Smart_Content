@@ -4,8 +4,8 @@
  * - audience_personas  (carrusel + modal completo)
  * - audience_segments  (targeting real por plataforma)
  * - campaigns          (KPIs cacheados + status/platform badge)
- * - brand_analytics_snapshots (métricas por periodo)
- * - brand_audience_heatmap    (mejor hora/día)
+ * - brand_analytics_snapshots / heatmap vía GET /api/insights/snapshots-list
+ *   (service role; el cliente Supabase suele ver [] por RLS)
  * - brand_integrations        (estado de sync)
  */
 class CommandCenterView extends BaseView {
@@ -62,6 +62,38 @@ class CommandCenterView extends BaseView {
       localStorage.getItem('selectedOrganizationId') ||
       null
     );
+  }
+
+  /**
+   * Snapshots y heatmap: el cliente Supabase a menudo recibe [] por RLS aunque existan filas.
+   * Misma comprobación de acceso que /api/insights/mybrand; lectura con service role en el edge.
+   */
+  async _fetchSnapshotsHeatmapViaApi(brandContainerId) {
+    if (!this._supabase || !brandContainerId) return null;
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return null;
+      const qs = new URLSearchParams({
+        brand_container_id: String(brandContainerId),
+        limit: '25',
+      });
+      const res = await fetch(`/api/insights/snapshots-list?${qs}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'same-origin',
+      });
+      const raw = await res.text();
+      let json = null;
+      try { json = raw ? JSON.parse(raw) : null; } catch (_) { /* noop */ }
+      if (!res.ok || !json?.ok) {
+        console.warn('CommandCenterView: snapshots-list', res.status, json?.error || raw?.slice?.(0, 200));
+        return null;
+      }
+      return { snapshots: json.snapshots || [], heatmaps: json.heatmaps || [] };
+    } catch (e) {
+      console.warn('CommandCenterView: snapshots-list', e);
+      return null;
+    }
   }
 
   /* ── Lifecycle ────────────────────────────────────────────────────── */
@@ -283,45 +315,27 @@ class CommandCenterView extends BaseView {
     this._containerRow = match;
     const bid = match.id;
 
-    /* Fetch paralelo de todas las tablas necesarias */
+    /* Fetch paralelo (snapshots + heatmap vía API: RLS suele devolver [] al cliente) */
     try {
-      const [audRes, segRes, campRes, snapRes, heatRes, intRes] = await Promise.all([
-        /* audience_personas — carrusel */
+      const [audRes, segRes, campRes, intRes] = await Promise.all([
         supabase
           .from('audience_personas')
           .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_interests, updated_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
-        /* audience_segments — targeting estructurado por plataforma */
         supabase
           .from('audience_segments')
           .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
           .eq('brand_container_id', bid)
           .order('platform', { ascending: true }),
 
-        /* campaigns — con KPIs cacheados */
         supabase
           .from('campaigns')
           .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
-        /* brand_analytics_snapshots — métricas históricas */
-        supabase
-          .from('brand_analytics_snapshots')
-          .select('id, platform, period_type, period_start, period_end, metrics, computed_at')
-          .eq('brand_container_id', bid)
-          .order('period_end', { ascending: false })
-          .limit(10),
-
-        /* brand_audience_heatmap — mejor hora/día */
-        supabase
-          .from('brand_audience_heatmap')
-          .select('id, platform, best_hour, best_day, hour_engagement, day_engagement, computed_at')
-          .eq('brand_container_id', bid),
-
-        /* brand_integrations — estado de sync únicamente */
         supabase
           .from('brand_integrations')
           .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
@@ -332,18 +346,18 @@ class CommandCenterView extends BaseView {
       this._audiences    = !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [];
       this._segments     = !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [];
       this._campaigns    = !campRes.error && Array.isArray(campRes.data) ? campRes.data : [];
-      this._snapshots    = !snapRes.error && Array.isArray(snapRes.data) ? snapRes.data : [];
-      this._heatmaps     = !heatRes.error && Array.isArray(heatRes.data) ? heatRes.data : [];
       this._integrations = !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [];
     } catch (e) {
       console.warn('CommandCenterView: fetch', e);
       this._audiences = [];
       this._segments  = [];
       this._campaigns = [];
-      this._snapshots = [];
-      this._heatmaps  = [];
       this._integrations = [];
     }
+
+    const sh = await this._fetchSnapshotsHeatmapViaApi(bid);
+    this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
+    this._heatmaps  = Array.isArray(sh?.heatmaps)  ? sh.heatmaps  : [];
 
     document.getElementById('ccTwoCol')?.style && (document.getElementById('ccTwoCol').style.display = '');
 
