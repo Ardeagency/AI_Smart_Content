@@ -379,6 +379,7 @@ class App {
     r.register('/dev/lead/ai-vectors', this._lazy('DevLeadVectorsView', [...devBase, '/js/views/DevLeadVectorsView.js']), auth);
     r.register('/dev/lead/references', this._lazy('DevLeadReferencesView', [...devBase, '/js/views/DevLeadReferencesView.js']), auth);
     r.register('/dev/lead/flows', this._lazy('DevLeadAllFlowsView', [...devBase, '/js/views/DevLeadAllFlowsView.js']), auth);
+    r.register('/dev/lead/crm', this._lazy('DevLeadCRMView', [...devBase, '/js/views/DevLeadCRMView.js']), auth);
 
     // ── 404 ──
     const BV = window.BaseView || class {};

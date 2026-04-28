@@ -122,7 +122,7 @@ class ContactoView extends PublicBaseView {
     const status = this.container.querySelector('#contactStatus');
     if (!form || !status) return;
 
-    this.addEventListener(form, 'submit', (e) => {
+    this.addEventListener(form, 'submit', async (e) => {
       e.preventDefault();
       if (!form.checkValidity()) {
         status.textContent = 'Por favor completa los campos requeridos.';
@@ -131,10 +131,63 @@ class ContactoView extends PublicBaseView {
         form.reportValidity();
         return;
       }
-      status.textContent = 'Solicitud recibida. Te contactaremos en 48 horas hábiles.';
-      status.classList.remove('is-error');
-      status.classList.add('is-success');
-      form.reset();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const supabase = await this.getSupabaseClient();
+        if (!supabase) {
+          throw new Error('No se pudo conectar con la base de datos.');
+        }
+
+        const formData = new FormData(form);
+        const sourceMap = {
+          referral: 'referido',
+          linkedin: 'linkedin',
+          search: 'busqueda',
+          event: 'evento',
+          other: 'otro'
+        };
+
+        const numBrandsRaw = (formData.get('brands_count') || '').toString().trim();
+        const numBrands = Number.parseInt(numBrandsRaw, 10);
+        const utm = new URLSearchParams(window.location.search || '');
+
+        const payload = {
+          full_name: (formData.get('full_name') || '').toString().trim(),
+          email: (formData.get('email') || '').toString().trim().toLowerCase(),
+          company_name: (formData.get('company') || '').toString().trim(),
+          job_title: (formData.get('role') || '').toString().trim(),
+          country: (formData.get('market') || '').toString().trim(),
+          phone: (formData.get('phone') || '').toString().trim() || null,
+          website: (formData.get('website') || '').toString().trim() || null,
+          num_brands: Number.isNaN(numBrands) ? null : numBrands,
+          main_challenge: (formData.get('challenge') || '').toString().trim(),
+          how_found: sourceMap[(formData.get('source') || '').toString()] || null,
+          source: 'contact_form',
+          utm_source: (utm.get('utm_source') || '').trim() || null,
+          utm_campaign: (utm.get('utm_campaign') || '').trim() || null,
+          metadata: {
+            form_path: window.location.pathname,
+            form_url: window.location.href
+          }
+        };
+
+        const { error } = await supabase.from('contact_leads').insert(payload);
+        if (error) throw error;
+
+        status.textContent = 'Solicitud recibida. Te contactaremos en 48 horas hábiles.';
+        status.classList.remove('is-error');
+        status.classList.add('is-success');
+        form.reset();
+      } catch (error) {
+        status.textContent = `No pudimos enviar tu solicitud. ${error?.message || 'Intenta de nuevo.'}`;
+        status.classList.remove('is-success');
+        status.classList.add('is-error');
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
   }
 }

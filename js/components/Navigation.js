@@ -157,6 +157,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     role_required: 'lead',
     children: [
       { label: 'Equipo', route: '/dev/lead/team' },
+      { label: 'CRM Leads', route: '/dev/lead/crm' },
       { label: 'Categorías', route: '/dev/lead/categories' },
       { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
       { label: 'Base Conocimiento IA', route: '/dev/lead/ai-vectors' },
@@ -1509,6 +1510,7 @@ class Navigation {
       '/dev/webhooks': 'WEBHOOKS',
       '/dev/lead/flows': 'TODOS LOS FLUJOS',
       '/dev/lead/team': 'EQUIPO',
+      '/dev/lead/crm': 'CRM LEADS',
       '/dev/lead/categories': 'CATEGORÍAS',
       '/dev/lead/input-schemas': 'INPUT SCHEMAS',
       '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA',
