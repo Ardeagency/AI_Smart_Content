@@ -3068,7 +3068,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 /* Dev: acción primaria rápida */
 .nav-mode-developer .nav-dev-primary-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
     margin-bottom: 8px;
 }

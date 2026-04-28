@@ -953,6 +953,11 @@ class Navigation {
             <span class="nav-text">Registrar usuario</span>
           </a>
         </div>
+        <div class="nav-item nav-item--primary">
+          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Builder">
+            <span class="nav-text">Builder</span>
+          </a>
+        </div>
       </div>
     `;
 
