@@ -18,22 +18,22 @@
    cada módulo va en URL propia; sin ?v= aquí el CDN/navegador puede quedarse con CSS viejo.
    Subir APP_CSS_MODULES_VER en todos los imports cuando cambie cualquier modules/*.css.
    ============================================================ */
-@import url('modules/navigation.css?v=20260428-app-css-v8');
-@import url('modules/auth.css?v=20260428-app-css-v8');
-@import url('modules/brands.css?v=20260428-app-css-v8');
-@import url('modules/content-management.css?v=20260428-app-css-v8');
-@import url('modules/living.css?v=20260428-app-css-v8');
-@import url('modules/studio.css?v=20260428-app-css-v8');
-@import url('modules/flow-catalog.css?v=20260428-app-css-v8');
-@import url('modules/products.css?v=20260428-app-css-v8');
-@import url('modules/identities.css?v=20260428-app-css-v8');
+@import url('modules/navigation.css?v=20260428-app-css-v9');
+@import url('modules/auth.css?v=20260428-app-css-v9');
+@import url('modules/brands.css?v=20260428-app-css-v9');
+@import url('modules/content-management.css?v=20260428-app-css-v9');
+@import url('modules/living.css?v=20260428-app-css-v9');
+@import url('modules/studio.css?v=20260428-app-css-v9');
+@import url('modules/flow-catalog.css?v=20260428-app-css-v9');
+@import url('modules/products.css?v=20260428-app-css-v9');
+@import url('modules/identities.css?v=20260428-app-css-v9');
 @import url('modules/command-center.css?v=20260427-cc-focus-v5');
-@import url('modules/organization.css?v=20260428-app-css-v8');
-@import url('modules/developer.css?v=20260428-app-css-v8');
-@import url('modules/payment-modal.css?v=20260428-app-css-v8');
-@import url('modules/video.css?v=20260428-app-css-v8');
-@import url('modules/insight.css?v=20260428-app-css-v8');
-@import url('modules/public.css?v=20260428-app-css-v8');
+@import url('modules/organization.css?v=20260428-app-css-v9');
+@import url('modules/developer.css?v=20260428-app-css-v9');
+@import url('modules/payment-modal.css?v=20260428-app-css-v9');
+@import url('modules/video.css?v=20260428-app-css-v9');
+@import url('modules/insight.css?v=20260428-app-css-v9');
+@import url('modules/public.css?v=20260428-app-css-v9');
 
 /* ============================================================
    Tipografía

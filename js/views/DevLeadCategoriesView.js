@@ -47,8 +47,8 @@ class DevLeadCategoriesView extends DevBaseView {
               <i class="fas fa-plus"></i> Nueva categoría
             </button>
           </div>
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table" id="categoriesTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="categoriesTable">
               <thead>
                 <tr>
                   <th>Orden</th>
@@ -74,8 +74,8 @@ class DevLeadCategoriesView extends DevBaseView {
               <i class="fas fa-plus"></i> Nueva subcategoría
             </button>
           </div>
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table" id="subcategoriesTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="subcategoriesTable">
               <thead>
                 <tr>
                   <th>Orden</th>

@@ -43,8 +43,8 @@ class DevLeadVectorsView extends DevBaseView {
           <div class="dev-lead-toolbar-inline">
             <span class="dev-lead-breadcrumb" id="breadcrumb">bucket</span>
           </div>
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table" id="filesTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="filesTable">
               <thead>
                 <tr>
                   <th>Ruta</th>

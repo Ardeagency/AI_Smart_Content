@@ -124,8 +124,8 @@ class DevDashboardView extends DevBaseView {
             </h2>
             <a href="/dev/runs" class="dev-section-link">Ver todas →</a>
           </div>
-          <div class="dev-runs-table-container">
-            <table class="dev-runs-table" id="devRunsTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="devRunsTable">
               <thead>
                 <tr>
                   <th>Flujo</th>

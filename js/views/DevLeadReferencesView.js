@@ -34,8 +34,8 @@ class DevLeadReferencesView extends DevBaseView {
           </div>
         </header>
         <section class="dev-lead-content">
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table dev-lead-table-references" id="referencesTable">
+          <div class="dev-table-container">
+            <table class="dev-table dev-table-references" id="referencesTable">
               <thead>
                 <tr>
                   <th class="dev-lead-th-preview">Preview</th>

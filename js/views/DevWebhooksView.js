@@ -152,8 +152,8 @@ class DevWebhooksView extends DevBaseView {
         </div>
 
         <!-- Webhooks Table -->
-        <div class="webhooks-table-container">
-          <table class="webhooks-table" id="webhooksTable">
+        <div class="dev-table-container">
+          <table class="dev-table" id="webhooksTable">
             <thead>
               <tr>
                 <th class="col-flow">Flujo</th>
@@ -513,7 +513,7 @@ class DevWebhooksView extends DevBaseView {
   renderTable() {
     const tbody = this.querySelector('#webhooksTableBody');
     const emptyState = this.querySelector('#webhooksEmpty');
-    const tableContainer = this.querySelector('.webhooks-table-container');
+    const tableContainer = this.querySelector('.dev-table-container');
     
     if (!tbody) return;
     

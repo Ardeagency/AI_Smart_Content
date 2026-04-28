@@ -52,8 +52,8 @@ class DevLeadCRMView extends DevBaseView {
             </select>
           </div>
 
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table">
+          <div class="dev-table-container">
+            <table class="dev-table">
               <thead>
                 <tr>
                   <th>Lead</th>

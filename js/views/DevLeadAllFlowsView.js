@@ -35,8 +35,8 @@ class DevLeadAllFlowsView extends DevBaseView {
           </div>
         </header>
         <section class="dev-lead-content">
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table" id="allFlowsTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="allFlowsTable">
               <thead>
                 <tr>
                   <th>Nombre</th>

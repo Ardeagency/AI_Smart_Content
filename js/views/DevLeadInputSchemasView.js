@@ -34,8 +34,8 @@ class DevLeadInputSchemasView extends DevBaseView {
           </div>
         </header>
         <section class="dev-lead-content">
-          <div class="dev-lead-table-wrap">
-            <table class="dev-lead-table" id="inputSchemasTable">
+          <div class="dev-table-container">
+            <table class="dev-table" id="inputSchemasTable">
               <thead>
                 <tr>
                   <th>Orden</th>

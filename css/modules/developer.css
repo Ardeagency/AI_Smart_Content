@@ -554,37 +554,50 @@
 }
 
 /* ==========================================
-   Tabla de ejecuciones
+   Tabla unificada — .dev-table-container > .dev-table
+   Reemplaza los 3 sistemas previos (.dev-runs-table, .dev-lead-table, .webhooks-table)
    ========================================== */
-.dev-runs-table-container {
+.dev-table-container {
+  background: var(--dev-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   overflow-x: auto;
-  overflow-y: hidden;
 }
 
-.dev-runs-table {
+.dev-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: var(--font-size-base);
 }
 
-.dev-runs-table th,
-.dev-runs-table td {
+.dev-table th,
+.dev-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--dev-card-border);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
 }
 
-.dev-runs-table th {
+.dev-table th {
   font-size: var(--font-size-sm);
   font-weight: 600;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-secondary);
 }
 
-.dev-runs-table td {
-  font-size: var(--font-size-base);
+.dev-table td {
   color: var(--text-primary);
+}
+
+.dev-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dev-table tbody tr:hover td {
+  background: var(--bg-hover);
 }
 
 .dev-run-status {
@@ -1204,24 +1217,9 @@
 }
 
 /* ==========================================
-   Modal común (viven en #modals-portal, fuera de #app-container)
+   Modal — Solo overrides scoped al contenedor dev.
+   La base .modal / .modal-overlay / .modal-content vive en bundle.css.
    ========================================== */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--black-70);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2001;
-  padding: 20px;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
 .dev-dashboard-container .modal-content,
 .dev-flows-container .modal-content,
 .dev-logs-container .modal-content {
@@ -4988,38 +4986,6 @@
   color: var(--color-white, #ffffff);
 }
 
-.dev-lead-table-wrap {
-  position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
-}
-
-.dev-lead-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-base);
-}
-
-.dev-lead-table th,
-.dev-lead-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.dev-lead-table th {
-  background: var(--black-20);
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.dev-lead-table tbody tr:hover {
-  background: var(--bg-hover);
-}
-
 .dev-lead-actions {
   white-space: nowrap;
 }
@@ -5186,47 +5152,12 @@
   font-size: var(--font-size-xl);
 }
 
-/* Modal Lead */
-/* Modales Lead: fondo sólido y contraste para que se vean bien */
-/* Modales en portal: fijos al viewport; no scrollan con #app-container */
-#modals-portal .modal {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow-y: auto;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-}
-/* Overlay fijo a viewport */
-#modals-portal .modal .modal-overlay {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: auto;
-}
-/* Contenido centrado; tamaño razonable (no ocupa toda la pantalla) */
-#modals-portal .modal .modal-content {
-  position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 1;
-  width: 100%;
+/* Modales en portal — solo overrides de tamaño.
+   Posicionamiento, overlay y centrado los maneja bundle.css (.modal / .modal-overlay / .modal-content). */
+#modals-portal .modal-content {
   max-width: min(640px, calc(100vw - 40px));
   max-height: min(85vh, calc(100vh - 40px));
-  margin: 0 !important;
-  overflow-y: auto;
 }
-/* Modales wide en portal: un poco más de ancho pero sin llenar pantalla */
 #modals-portal .modal.dev-lead-modal-wide .modal-content {
   max-width: min(720px, calc(100vw - 40px));
 }
@@ -6801,45 +6732,6 @@
   font-size: 0.8125rem;
 }
 
-/* Table */
-.webhooks-table-container {
-  background: var(--dev-bg-card);
-  border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.webhooks-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.webhooks-table th {
-  text-align: left;
-  padding: 14px 16px;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.webhooks-table td {
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
-}
-
-.webhooks-table tr:last-child td {
-  border-bottom: none;
-}
-
-.webhooks-table tr:hover td {
-  background: var(--bg-hover);
-}
-
 .table-loading {
   display: flex;
   align-items: center;
@@ -7370,12 +7262,11 @@
 
 /* Responsive Table */
 @media (max-width: 1200px) {
-  .webhooks-table-container {
+  .dev-table-container {
     overflow-x: auto;
-  overflow-y: hidden;
+    overflow-y: hidden;
   }
-  
-  .webhooks-table {
+  .dev-table {
     min-width: 900px;
   }
 }
@@ -7486,54 +7377,6 @@
   color: var(--text-primary);
   font-size: var(--font-size-base);
 }
-
-/* Responsive Table */
-@media (max-width: 1200px) {
-  .webhooks-table-container {
-    overflow-x: auto;
-  overflow-y: hidden;
-  }
-  
-  .webhooks-table {
-    min-width: 900px;
-  }
-}
-
-@media (max-width: 768px) {
-  .webhooks-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .webhooks-filters {
-    overflow-x: auto;
-  overflow-y: hidden;
-    padding-bottom: 8px;
-  }
-  
-  .webhooks-search-area {
-    flex-direction: column;
-  }
-  
-  .webhooks-search {
-    min-width: 100%;
-  }
-  
-  .platform-filter {
-    width: 100%;
-  }
-  
-  .dev-webhooks-header .dev-header-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .dev-webhooks-header .dev-header-actions button {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
 
 /* =========================================================
    User Provisioning Wizard — /dev/provisioning/users
