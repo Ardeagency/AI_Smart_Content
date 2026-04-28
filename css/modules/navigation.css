@@ -507,6 +507,13 @@ body.sidebar-collapsed .main-header,
 }
 .nav-dev-header-copy .nav-org-title {
     color: var(--sidebar-text-primary, var(--text-primary));
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.18;
 }
 .side-navigation.collapsed .nav-dev-toggle-header {
     justify-content: center;
