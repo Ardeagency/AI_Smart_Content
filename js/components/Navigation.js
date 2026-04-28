@@ -1046,8 +1046,8 @@ class Navigation {
    * Importante: con text-overflow:ellipsis, scrollWidth suele igualar clientWidth aunque
    * el texto esté truncado; la comprobación debe usar ancho de texto medido, no scrollWidth.
    */
-  _renderAdaptiveOrgName(name) {
-    const nameEl = document.getElementById('navOrgName');
+  _renderAdaptiveOrgName(name, targetId = 'navOrgName') {
+    const nameEl = document.getElementById(targetId);
     if (!nameEl) return;
 
     const raw = String(name || '').trim();
@@ -1334,9 +1334,15 @@ class Navigation {
     if (!this._orgNameResizeAttached) {
       this._orgNameResizeAttached = true;
       window.addEventListener('resize', () => {
-        if (this.currentMode !== 'user') return;
-        const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
-        this._renderAdaptiveOrgName(name);
+        if (this.currentMode === 'user') {
+          const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
+          this._renderAdaptiveOrgName(name, 'navOrgName');
+          return;
+        }
+        if (this.currentMode === 'developer') {
+          const name = document.getElementById('navDevHeaderName')?.textContent || '';
+          this._renderAdaptiveOrgName(name, 'navDevHeaderName');
+        }
       });
     }
 
@@ -1563,7 +1569,11 @@ class Navigation {
     this.updateSidebarToggleIcon();
     if (!this.isCollapsed && this.currentMode === 'user') {
       const name = this._orgCache?.name || document.getElementById('navOrgName')?.textContent || '';
-      requestAnimationFrame(() => this._renderAdaptiveOrgName(name));
+      requestAnimationFrame(() => this._renderAdaptiveOrgName(name, 'navOrgName'));
+    }
+    if (!this.isCollapsed && this.currentMode === 'developer') {
+      const name = document.getElementById('navDevHeaderName')?.textContent || '';
+      requestAnimationFrame(() => this._renderAdaptiveOrgName(name, 'navDevHeaderName'));
     }
   }
 
@@ -1975,7 +1985,9 @@ class Navigation {
 
     const headerNameEl = document.getElementById('navDevHeaderName');
     if (headerNameEl) {
-      headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer';
+      const displayName = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer';
+      headerNameEl.textContent = displayName;
+      this._renderAdaptiveOrgName(displayName, 'navDevHeaderName');
     }
 
     const leadSections = document.querySelectorAll('.nav-dev-lead-section');
