@@ -67,9 +67,12 @@
   --bg-card: var(--living-bg-card);
   --bg-hover: var(--bg-hover);
   --border-color: var(--border-color);
-  /* En dev: cards y secciones usan superficie visible (no negro sobre negro) */
-  --dev-bg-card: var(--dev-bg-surface);
-  --dev-bg-card-hover: var(--dev-bg-surface-hover);
+  /* Dev sobrio (alineado a Video/Vera): shell oscuro con borde suave y radio 16 */
+  --dev-bg-card: var(--bg-secondary);
+  --dev-bg-card-hover: var(--white-8);
+  --dev-card-border: var(--border-light, #212126);
+  --dev-shell-radius: 16px;
+  --dev-shell-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 /* Builder: fondo negro para contenido; barras con superficie (jerarquía visual) */
@@ -83,19 +86,19 @@
   background: var(--bg-primary);
 }
 
-/* Builder = identidad dev unificada: blanco/glass (no cian) */
+/* Builder = identidad dev sobria alineada con Organization */
 #app-container:has(.builder-footer) {
-  --warm-1: var(--color-white, #ffffff);
-  --warm-2: rgba(255, 255, 255, 0.9);
-  --warm-10: rgba(255, 255, 255, 0.1);
-  --warm-20: rgba(255, 255, 255, 0.2);
-  --accent-cta: var(--color-white, #ffffff);
-  --dev-primary: var(--color-white, #ffffff);
-  --dev-primary-light: rgba(255, 255, 255, 0.9);
-  --dev-primary-dark: #e0e0e0;
+  --warm-1: var(--accent-warm);
+  --warm-2: rgba(224, 145, 69, 0.9);
+  --warm-10: rgba(224, 145, 69, 0.1);
+  --warm-20: rgba(224, 145, 69, 0.2);
+  --accent-cta: var(--accent-warm);
+  --dev-primary: var(--accent-warm);
+  --dev-primary-light: rgba(224, 145, 69, 0.9);
+  --dev-primary-dark: rgba(181, 112, 48, 1);
   --builder-form-max-width: min(100%, 1280px);
-  --builder-input-bg: var(--glass-white-bg);
-  --builder-input-border: var(--glass-white-border);
+  --builder-input-bg: var(--glass-bg);
+  --builder-input-border: var(--glass-border);
 }
 
 /* En Builder: iconos Phosphor (.ph) no colapsar a 0x0 */
@@ -117,15 +120,15 @@
   --bg-card: var(--dev-bg-surface);
 }
 
-/* Builder: todos los inputs, select, textarea con efecto glass-white */
+/* Builder: inputs sobrios con glass base */
 #app-container:has(.builder-footer) .builder-main input,
 #app-container:has(.builder-footer) .builder-main select,
 #app-container:has(.builder-footer) .builder-main textarea,
 #app-container:has(.builder-footer) .builder-main .form-input,
 #app-container:has(.builder-footer) .builder-main .form-select,
 #app-container:has(.builder-footer) .builder-main .form-textarea {
-  background: var(--glass-white-bg) !important;
-  border: 1px solid var(--glass-white-border) !important;
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--glass-radius);
@@ -134,8 +137,8 @@
 #app-container:has(.builder-footer) .builder-main select:focus,
 #app-container:has(.builder-footer) .builder-main textarea:focus {
   outline: none;
-  border-color: var(--glass-white-border) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+  border-color: var(--accent-warm) !important;
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.2);
 }
 
 /* ==========================================
@@ -154,17 +157,22 @@
   min-height: 100vh;
 }
 
-/* Todas las vistas dev: acento blanco (iconos, botones CTA, glass) */
+/* Todas las vistas dev: acento sobrio (Organization-like) */
 .dev-dashboard-container,
 .dev-flows-container,
 .dev-logs-container,
 .dev-test-container,
 .dev-webhooks-container,
 .dev-lead-container {
-  --dev-primary: var(--color-white, #ffffff);
-  --dev-primary-light: rgba(255, 255, 255, 0.9);
-  --dev-primary-dark: #e0e0e0;
-  --dev-info: var(--color-white, #ffffff);
+  --dev-primary: var(--accent-warm);
+  --dev-primary-light: rgba(224, 145, 69, 0.9);
+  --dev-primary-dark: rgba(181, 112, 48, 1);
+  --dev-info: var(--text-secondary);
+  --dev-bg-card: var(--bg-secondary);
+  --dev-bg-card-hover: var(--white-8);
+  --dev-card-border: var(--border-light, #212126);
+  --dev-shell-radius: 16px;
+  --dev-shell-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 /* Header común */
@@ -224,22 +232,23 @@
   padding: 20px;
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
   transition: var(--transition);
 }
 
 .dev-stat-card:hover {
   background: var(--dev-bg-card-hover);
-  border-color: var(--glass-border);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: none;
 }
 
 .dev-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
+  background: var(--white-8);
+  border: 1px solid var(--border-light, #212126);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   color: var(--color-white, #ffffff);
@@ -255,7 +264,7 @@
 }
 
 .dev-stat-icon.runs {
-  background: var(--color-info-light);
+  background: var(--white-8);
   color: var(--dev-info);
 }
 
@@ -296,7 +305,8 @@
 .dev-section {
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
   overflow: hidden;
 }
 
@@ -319,12 +329,12 @@
 }
 
 .dev-section-title i {
-  color: var(--color-white, #ffffff);
+  color: var(--text-secondary);
 }
 
 .dev-section-link {
   font-size: var(--font-size-base);
-  color: var(--color-white, #ffffff);
+  color: var(--text-secondary);
   text-decoration: none;
   transition: var(--transition);
   opacity: 0.9;
@@ -332,7 +342,7 @@
 
 .dev-section-link:hover {
   opacity: 1;
-  color: var(--color-white, #ffffff);
+  color: var(--text-primary);
 }
 
 /* ==========================================
@@ -369,7 +379,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white, #ffffff);
+  color: var(--text-secondary);
   overflow: hidden;
 }
 
@@ -458,9 +468,9 @@
 }
 
 .dev-flow-action:hover {
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
-  color: var(--color-white, #ffffff);
+  background: var(--white-8);
+  border: 1px solid var(--border-light, #212126);
+  color: var(--text-primary);
 }
 
 /* ==========================================
@@ -697,9 +707,9 @@
 }
 
 .dev-filter-btn.active {
-  background: var(--color-white, #ffffff);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #000000 !important;
+  background: var(--brillo-hover);
+  border-color: var(--accent-warm);
+  color: var(--text-primary) !important;
 }
 
 .dev-flows-search {
@@ -739,7 +749,8 @@
 .dev-flow-card {
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
   overflow: hidden;
   cursor: pointer;
   transition: var(--transition);
@@ -747,8 +758,8 @@
 
 .dev-flow-card:hover {
   background: var(--dev-bg-card-hover);
-  border-color: var(--glass-border);
-  box-shadow: var(--shadow-hover);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
 }
 
 .dev-flow-card-header {
@@ -816,7 +827,7 @@
   gap: 16px;
   padding: 12px 16px;
   border-top: 1px solid var(--dev-card-border);
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--bg-secondary);
 }
 
 .dev-flow-stat {
@@ -993,9 +1004,9 @@
 }
 
 .pagination-btn.active {
-  background: var(--color-white, #ffffff);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #000000 !important;
+  background: var(--brillo-hover);
+  border-color: var(--accent-warm);
+  color: var(--text-primary) !important;
 }
 
 .pagination-btn:disabled {
@@ -1168,9 +1179,9 @@
 .dev-lead-header .btn-primary,
 .dev-lead-toolbar .btn-primary,
 .dev-header-actions .btn-primary {
-  background: var(--color-white, #ffffff);
-  color: #000000 !important;
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--glass-bg);
+  color: var(--text-primary) !important;
+  border-color: var(--glass-border);
 }
 .dev-flows-container .btn-primary:hover:not(:disabled),
 .dev-flows-header .btn-primary:hover:not(:disabled),
@@ -1187,9 +1198,9 @@
 .dev-lead-header .btn-primary:hover:not(:disabled),
 .dev-lead-toolbar .btn-primary:hover:not(:disabled),
 .dev-header-actions .btn-primary:hover:not(:disabled) {
-  background: #e8e8e8;
-  color: #000000 !important;
-  border-color: rgba(255, 255, 255, 0.6);
+  background: var(--brillo-hover);
+  color: var(--text-primary) !important;
+  border-color: var(--accent-warm);
 }
 
 /* ==========================================
@@ -1214,11 +1225,10 @@
 .dev-dashboard-container .modal-content,
 .dev-flows-container .modal-content,
 .dev-logs-container .modal-content {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: var(--glass-radius);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light, #212126);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
@@ -1325,15 +1335,15 @@
 
 /* Estilos de badge de estado: ver bloque unificado .flow-status-badge más arriba */
 
-/* Botones del Builder: blanco con texto negro */
+/* Botones del Builder: estilo sobrio */
 .btn-builder-primary {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--color-white, #ffffff);
-  color: #000000 !important;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--glass-bg);
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
   font-weight: 500;
@@ -1342,8 +1352,9 @@
 }
 
 .btn-builder-primary:hover {
-  background: #e8e8e8;
-  color: #000000;
+  background: var(--brillo-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-warm);
 }
 
 .btn-builder-primary:disabled {
@@ -1947,16 +1958,16 @@
 }
 
 .btn-builder-footer.btn-primary-footer {
-  background: var(--warm-1);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  color: #000000 !important;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary) !important;
   font-weight: 600;
 }
 
 .btn-builder-footer.btn-primary-footer:hover {
-  background: var(--warm-2);
-  border-color: rgba(255, 255, 255, 0.6);
-  color: #000000;
+  background: var(--brillo-hover);
+  border-color: var(--accent-warm);
+  color: var(--text-primary);
   box-shadow: var(--shadow-hover);
 }
 
@@ -1991,15 +2002,15 @@
 }
 
 .btn-builder-footer.btn-approve-publish {
-  background: var(--color-white, #ffffff);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #000000 !important;
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: var(--text-primary) !important;
 }
 
 .btn-builder-footer.btn-approve-publish:hover {
-  background: #e8e8e8;
-  border-color: rgba(255, 255, 255, 0.6);
-  color: #000000;
+  background: var(--brillo-hover);
+  border-color: var(--accent-warm);
+  color: var(--text-primary);
 }
 
 .btn-builder-footer.btn-reject {
@@ -2350,15 +2361,15 @@
 }
 
 .builder-tab.active {
-  background: var(--warm-1);
-  color: #000000 !important;
+  background: var(--warm-20);
+  color: var(--text-primary) !important;
   border-color: transparent;
   box-shadow: var(--shadow-card);
 }
 
-/* Cuando las tabs viven dentro del header principal (Builder), usar fondo blanco en lugar de warm-1 naranja. */
+/* Builder header: mantener tabs sobrias, sin fondo blanco sólido */
 .app-header.app-header--builder .builder-tab.active {
-  background: var(--color-white, #ffffff);
+  background: var(--warm-20);
 }
 
 /* Tab Content */
@@ -3904,8 +3915,8 @@
 .builder-panel-right.is-open {
   width: 380px;
   min-width: 380px;
-  border-left-color: var(--border-color);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.25);
+  border-left-color: var(--border-light, #212126);
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.35);
 }
 
 .builder-panel-right-header {
@@ -3913,9 +3924,9 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-md, 1rem) var(--spacing-lg, 1.25rem);
-  border-bottom: 1px solid var(--border-divider);
+  border-bottom: 1px solid var(--border-light, #212126);
   flex-shrink: 0;
-  background: var(--bg-card);
+  background: var(--bg-secondary);
 }
 
 .builder-panel-right-header h4 {
@@ -4923,9 +4934,9 @@
 }
 
 .dev-lead-tab.active {
-  background: var(--color-white, #ffffff);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #000000 !important;
+  background: var(--brillo-hover);
+  border-color: var(--accent-warm);
+  color: var(--text-primary) !important;
 }
 
 /* Toolbar y tabla Lead */
@@ -5506,7 +5517,8 @@
 .config-section {
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
   padding: 16px;
 }
 
@@ -6099,7 +6111,8 @@
   flex-direction: column;
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
   overflow: hidden;
 }
 
@@ -7141,8 +7154,10 @@
 .test-results-panel {
   margin-top: 24px;
   padding: 16px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
+  background: var(--dev-bg-card);
+  border: 1px solid var(--dev-card-border);
+  border-radius: var(--dev-shell-radius, 16px);
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
 }
 
 .test-results-panel h4 {
