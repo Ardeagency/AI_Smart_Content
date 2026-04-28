@@ -1,13 +1,9 @@
 /**
- * CommandCenterView — v4
- * Alineado con schema actual:
- * - audience_personas  (carrusel + modal completo)
- * - audience_segments  (targeting real por plataforma)
- * - campaigns          (KPIs cacheados + status/platform badge)
- * - brand_analytics_snapshots / heatmap vía GET /api/insights/snapshots-list
- *   (service role; el cliente Supabase suele ver [] por RLS)
- * - brand_integrations        (estado de sync)
- * - Dashboard analytics: dedupe por platform+period_type; KPI cards + historial
+ * CommandCenterView — v5
+ * Centro de control: enfoque de mercado (no historial ni segmentación fina).
+ * - Personas conceptuales + campañas con persona_id
+ * - Última lectura por canal (snapshots dedupe; API por RLS)
+ * - Conexiones existentes: integraciones + segmentos con vínculo a persona
  */
 class CommandCenterView extends BaseView {
   constructor() {
@@ -18,8 +14,7 @@ class CommandCenterView extends BaseView {
     this._audiences       = [];   // audience_personas
     this._segments        = [];   // audience_segments
     this._campaigns       = [];   // campaigns (con cached metrics)
-    this._snapshots       = [];   // brand_analytics_snapshots
-    this._heatmaps        = [];   // brand_audience_heatmap
+    this._snapshots       = [];   // brand_analytics_snapshots (vía API)
     this._integrations    = [];   // brand_integrations (sync status)
     this._supabase        = null;
     this._editingAudience = null;
@@ -119,7 +114,7 @@ class CommandCenterView extends BaseView {
     <div class="cc-section--audiences-body">
       <div class="cc-section-head">
         <div class="cc-section-head-main">
-          <h2 class="cc-section-title">Personas</h2>
+          <h2 class="cc-section-title">Mercado objetivo</h2>
         </div>
         <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
           <span class="cc-aud-head-count-num" id="ccAudCount" aria-label="Total de personas">0</span>
@@ -144,7 +139,7 @@ class CommandCenterView extends BaseView {
     <aside class="cc-col cc-col--left">
       <div class="cc-section-head cc-section-head--campaigns">
         <div class="cc-section-head-main">
-          <h2 class="cc-section-title cc-section-title--campaigns">Campañas</h2>
+          <h2 class="cc-section-title cc-section-title--campaigns">Enfoque de campaña</h2>
         </div>
         <div class="cc-camp-head-count-wrap" aria-live="polite" aria-atomic="true">
           <span class="cc-camp-head-count-num" id="ccCampCount" aria-label="Total de campañas">0</span>
@@ -157,45 +152,33 @@ class CommandCenterView extends BaseView {
       </div>
     </aside>
 
-    <!-- DERECHA: Inteligencia de mercado ────────────────────────── -->
+    <!-- DERECHA: Enfoque de mercado (resumen para org + IA) ───────────── -->
     <div class="cc-col cc-col--right cc-col--intel">
-      <h2 class="cc-published-title">Inteligencia de mercado</h2>
+      <h2 class="cc-published-title">Enfoque de mercado</h2>
+      <p class="cc-focus-lede">Resumen conceptual: a quién apuntas, qué dice la campaña y qué lectura mínima hay del mercado real. Sin historial — para alinear estrategia e IA.</p>
       <div class="cc-published-stack">
 
-        <!-- Segmentos por plataforma -->
-        <section class="cc-published-slice" aria-label="Segmentos de audiencia por plataforma">
+        <section class="cc-published-slice" aria-label="Conexión conceptual con canales">
           <div class="cc-intel-subtitle">
-            <i class="fas fa-crosshairs"></i> Segmentos de audiencia
+            <i class="fas fa-link"></i> Conexión con canales
           </div>
           <div id="ccSegmentsWrap"></div>
         </section>
 
         <hr class="cc-published-divider" aria-hidden="true" />
 
-        <!-- Dashboard analytics (dedupe + KPIs) -->
-        <section class="cc-published-slice" aria-label="Dashboard analytics">
+        <section class="cc-published-slice" aria-label="Lectura del mercado real">
           <div class="cc-intel-subtitle">
-            <i class="fas fa-chart-line"></i> Dashboard analytics
+            <i class="fas fa-signal"></i> Lectura del mercado (último período)
           </div>
           <div id="ccSnapshotsWrap"></div>
         </section>
 
         <hr class="cc-published-divider" aria-hidden="true" />
 
-        <!-- Heatmap -->
-        <section class="cc-published-slice" aria-label="Mejor momento para publicar">
+        <section class="cc-published-slice" aria-label="Fuentes de datos conectadas">
           <div class="cc-intel-subtitle">
-            <i class="fas fa-fire"></i> Mejor momento para publicar
-          </div>
-          <div id="ccHeatmapWrap"></div>
-        </section>
-
-        <hr class="cc-published-divider" aria-hidden="true" />
-
-        <!-- Estado de integraciones -->
-        <section class="cc-published-slice" aria-label="Estado de integraciones">
-          <div class="cc-intel-subtitle">
-            <i class="fas fa-plug"></i> Integraciones
+            <i class="fas fa-plug"></i> Fuentes conectadas
           </div>
           <div id="ccIntegrationsWrap"></div>
         </section>
@@ -354,11 +337,12 @@ class CommandCenterView extends BaseView {
       this._segments  = [];
       this._campaigns = [];
       this._integrations = [];
+      this._snapshots = [];
     }
 
     const sh = await this._fetchSnapshotsHeatmapViaApi(bid);
     this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
-    this._heatmaps  = Array.isArray(sh?.heatmaps)  ? sh.heatmaps  : [];
+    this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
 
     document.getElementById('ccTwoCol')?.style && (document.getElementById('ccTwoCol').style.display = '');
 
@@ -366,7 +350,6 @@ class CommandCenterView extends BaseView {
     this._renderCampaigns();
     this._renderSegments();
     this._renderSnapshots();
-    this._renderHeatmap();
     this._renderIntegrations();
     this.updateLinksForRouter();
   }
@@ -420,12 +403,22 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
+  /** Mapa id → nombre de persona (para enlazar campañas y segmentos). */
+  _personaNameById() {
+    const m = {};
+    (this._audiences || []).forEach((p) => {
+      if (p?.id) m[String(p.id)] = String(p.name || '').trim() || 'Persona';
+    });
+    return m;
+  }
+
   /* ── CAMPAÑAS (izquierda) ─────────────────────────────────────────── */
   _renderCampaigns() {
     const list  = document.getElementById('ccCampList');
     const empty = document.getElementById('ccCampEmpty');
     const count = document.getElementById('ccCampCount');
     const rows  = Array.isArray(this._campaigns) ? this._campaigns : [];
+    const personaById = this._personaNameById();
     if (count) count.textContent = String(rows.length);
     if (!list) return;
 
@@ -467,6 +460,10 @@ class CommandCenterView extends BaseView {
 
       const cta = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
       const ctaRow = cta ? `<p class="cc-camp-cta">${this.escapeHtml(cta.length > 80 ? cta.slice(0, 80) + '…' : cta)}</p>` : '';
+      const pName = c.persona_id ? personaById[String(c.persona_id)] : '';
+      const personaRow = pName
+        ? `<div class="cc-camp-persona"><i class="fas fa-user-circle" aria-hidden="true"></i> Mercado objetivo: <strong>${this.escapeHtml(pName)}</strong></div>`
+        : `<div class="cc-camp-persona cc-camp-persona--missing"><i class="fas fa-unlink" aria-hidden="true"></i> Sin persona vinculada a esta campaña — así la IA no puede cerrar el circuito conceptual.</div>`;
 
       return `
       <div class="cc-camp-row">
@@ -474,6 +471,7 @@ class CommandCenterView extends BaseView {
           <span class="cc-camp-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
         </div>
+        ${personaRow}
         ${ctaRow}
         ${metricsRow}
         ${budgetRow}
@@ -481,14 +479,15 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
-  /* ── SEGMENTOS por plataforma (derecha) ───────────────────────────── */
+  /* ── Conexión con canales (segmentos ↔ persona) ───────────────────── */
   _renderSegments() {
     const root = document.getElementById('ccSegmentsWrap');
     if (!root) return;
     const rows = Array.isArray(this._segments) ? this._segments : [];
+    const personaById = this._personaNameById();
 
     if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">No hay segmentos de audiencia definidos. Créalos o impórtalos desde Brand Storage.</p>`;
+      root.innerHTML = `<p class="cc-api-hint">Cuando existan audiencias enlazadas en Meta/Google con una <strong>persona</strong> de esta marca, verás aquí la <strong>conexión</strong> entre lo conceptual y lo que ya corre en canales — no es un listado de segmentación.</p>`;
       return;
     }
 
@@ -524,12 +523,17 @@ class CommandCenterView extends BaseView {
         const badge = `<span class="cc-badge ${statusClass[s.status] || 'cc-badge--gray'}">${s.status || 'draft'}</span>`;
         const synced = s.last_synced_at
           ? `<span class="cc-seg-sync">Sync: ${new Date(s.last_synced_at).toLocaleDateString('es-ES')}</span>` : '';
+        const pSeg = s.persona_id ? personaById[String(s.persona_id)] : '';
+        const personaLine = pSeg
+          ? `<div class="cc-seg-persona">Persona: <strong>${this.escapeHtml(pSeg)}</strong></div>`
+          : `<div class="cc-seg-persona cc-seg-persona--missing">Sin persona vinculada</div>`;
         return `
         <div class="cc-seg-card">
           <div class="cc-seg-card-head">
-            <span class="cc-seg-name">${this.escapeHtml(s.external_audience_name || s.external_audience_type || 'Segmento')}</span>
+            <span class="cc-seg-name">${this.escapeHtml(s.external_audience_name || s.external_audience_type || 'Audiencia en canal')}</span>
             <div>${badge}${synced}</div>
           </div>
+          ${personaLine}
           ${(age || genders || interests) ? `
           <ul class="cc-api-target-list">
             ${age       ? `<li>${this.escapeHtml(age)}</li>` : ''}
@@ -679,9 +683,12 @@ class CommandCenterView extends BaseView {
       : '<p class="cc-api-hint">Sin KPIs reconocibles.</p>';
 
     const pLower = plat.toLowerCase();
-    const metaHint = (pLower.includes('facebook') || pLower.includes('meta'))
-      ? `<p class="cc-dash-hint">Métricas de <strong>página</strong>. Ceros en engagement suelen indicar que aún no hay actividad medida en el rango o falta sync de posts/ads.</p>`
-      : '';
+    let channelHint = '';
+    if (pLower.includes('facebook') || pLower.includes('meta')) {
+      channelHint = '<p class="cc-dash-hint">Lectura de <strong>página</strong> (no ads). Señal mínima de presencia; la IA la contrasta con tu enfoque conceptual.</p>';
+    } else if (pLower.includes('google_analytics') || pLower.includes('analytics')) {
+      channelHint = '<p class="cc-dash-hint">Lectura de <strong>sitio</strong>. Complementa el mercado objetivo con intención de visita, no sustituye a la persona.</p>';
+    }
 
     return `
     <article class="cc-dash-card">
@@ -690,18 +697,18 @@ class CommandCenterView extends BaseView {
         <span class="cc-dash-card-meta">${this.escapeHtml(s.period_type || '')} · ${fmtDate(s.period_start)} → ${fmtDate(s.period_end)}</span>
       </header>
       <div class="cc-dash-kpi-grid">${kpiHtml}</div>
-      ${metaHint}
+      ${channelHint}
     </article>`;
   }
 
-  /* ── Dashboard analytics (dedupe + historial) ─────────────────────── */
+  /* ── Lectura del mercado: solo último período por canal (sin historial) ─ */
   _renderSnapshots() {
     const root = document.getElementById('ccSnapshotsWrap');
     if (!root) return;
     const rows = Array.isArray(this._snapshots) ? this._snapshots : [];
 
     if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin snapshots de analytics. Se generan al sincronizar GA / Facebook para esta marca.</p>`;
+      root.innerHTML = `<p class="cc-api-hint">Sin lectura reciente del mercado. Conecta GA / Facebook y deja correr el sync para alimentar a la IA con señales mínimas.</p>`;
       return;
     }
 
@@ -723,82 +730,8 @@ class CommandCenterView extends BaseView {
       return this._snapshotSortKey(b) - this._snapshotSortKey(a);
     });
 
-    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '');
-    const historyRows = [];
-    groups.forEach((arr) => {
-      arr.slice(1).forEach((r) => historyRows.push(r));
-    });
-    historyRows.sort((a, b) => this._snapshotSortKey(b) - this._snapshotSortKey(a));
-    const historyTrim = historyRows.slice(0, 24);
-
     const heroHtml = `<div class="cc-dash-heroes">${primaries.map((s) => this._renderSnapshotHeroCard(s)).join('')}</div>`;
-
-    const dupNote = rows.length > primaries.length
-      ? `<p class="cc-dash-dup-note"><i class="fas fa-info-circle"></i> Se ocultaron <strong>${rows.length - primaries.length}</strong> filas duplicadas (misma plataforma y tipo de período; se muestra solo el snapshot más reciente arriba).</p>`
-      : '';
-
-    const fmtDt = (d) => (d ? new Date(d).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
-    const histBody = historyTrim.length
-      ? `<table class="cc-dash-hist-table">
-          <thead><tr><th>Plataforma</th><th>Tipo</th><th>Ventana</th><th>Calculado</th></tr></thead>
-          <tbody>
-            ${historyTrim.map((r) => `
-            <tr>
-              <td>${this.escapeHtml(r.platform || '—')}</td>
-              <td>${this.escapeHtml(r.period_type || '—')}</td>
-              <td>${this.escapeHtml(fmtDate(r.period_start))} → ${this.escapeHtml(fmtDate(r.period_end))}</td>
-              <td class="cc-dash-hist-muted">${this.escapeHtml(fmtDt(r.computed_at))}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>`
-      : '<p class="cc-api-hint">No hay períodos anteriores agrupados.</p>';
-
-    const historyHtml = `
-    <details class="cc-dash-history">
-      <summary>Historial de snapshots <span class="cc-dash-history-count">(${historyTrim.length})</span></summary>
-      ${histBody}
-    </details>`;
-
-    root.innerHTML = `${dupNote}${heroHtml}${historyHtml}`;
-  }
-
-  /* ── HEATMAP (derecha) ────────────────────────────────────────────── */
-  _renderHeatmap() {
-    const root = document.getElementById('ccHeatmapWrap');
-    if (!root) return;
-    const rows = Array.isArray(this._heatmaps) ? this._heatmaps : [];
-
-    if (!rows.length) {
-      const snapN = Array.isArray(this._snapshots) ? this._snapshots.length : 0;
-      root.innerHTML = snapN
-        ? `<p class="cc-api-hint">No hay filas en <code>brand_audience_heatmap</code> para esta marca (0). Arriba sí tienes <strong>${snapN}</strong> snapshot(s) en <code>brand_analytics_snapshots</code>. El heatmap se escribe al flujo de sync Meta / análisis de posts (p. ej. <code>api-brand-sync-meta</code>), no al mismo job que los snapshots.</p>`
-        : `<p class="cc-api-hint">Sin datos de heatmap. Se rellenan al sincronizar Meta o analizar publicaciones del contenedor.</p>`;
-      return;
-    }
-
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    root.innerHTML = rows.map((h) => {
-      const bestHour = h.best_hour != null ? `${String(h.best_hour).padStart(2, '0')}:00` : '—';
-      const bestDay  = h.best_day  != null ? (days[h.best_day] || h.best_day)            : '—';
-
-      const hourEng = h.hour_engagement && typeof h.hour_engagement === 'object' ? h.hour_engagement : {};
-      const engNums = Object.values(hourEng).map(Number).filter(Number.isFinite);
-      const maxEng  = engNums.length ? Math.max(...engNums) : 1;
-      const bars    = Object.entries(hourEng).sort(([a], [b]) => Number(a) - Number(b)).map(([hr, val]) => {
-        const pct = Math.round((Number(val) / maxEng) * 100);
-        const active = Number(hr) === h.best_hour ? ' cc-heat-bar--best' : '';
-        return `<div class="cc-heat-bar${active}" style="height:${pct}%" title="${String(hr).padStart(2,'0')}:00 — ${Number(val).toLocaleString('es-ES')}"></div>`;
-      }).join('');
-
-      return `
-      <div class="cc-heat-card">
-        <div class="cc-heat-head">
-          <span class="cc-api-card-title">${this.escapeHtml(h.platform || 'Plataforma')}</span>
-          <span class="cc-heat-best"><i class="fas fa-clock"></i> ${bestDay} ${bestHour}</span>
-        </div>
-        ${bars ? `<div class="cc-heat-chart" aria-label="Engagement por hora">${bars}</div>` : ''}
-      </div>`;
-    }).join('');
+    root.innerHTML = heroHtml;
   }
 
   /* ── INTEGRACIONES: estado de sync ───────────────────────────────── */
@@ -808,7 +741,7 @@ class CommandCenterView extends BaseView {
     const rows = Array.isArray(this._integrations) ? this._integrations : [];
 
     if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin integraciones. Conéctalas en Brand Storage.</p>`;
+      root.innerHTML = `<p class="cc-api-hint">Sin fuentes conectadas. En Brand Storage enlaza Meta/GA para que exista mercado real frente al enfoque conceptual.</p>`;
       return;
     }
 

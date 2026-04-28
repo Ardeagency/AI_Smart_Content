@@ -439,6 +439,42 @@
   color: var(--text-primary);
 }
 
+/* Lede: propósito del panel (enfoque, no historial) */
+#commandCenterPage .cc-focus-lede {
+  margin: 0.35rem 0 0.85rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  max-width: 52rem;
+}
+
+/* Campaña ↔ persona */
+.cc-camp-persona {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+.cc-camp-persona i {
+  margin-right: 0.35rem;
+  opacity: 0.75;
+}
+.cc-camp-persona--missing {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Segmento ↔ persona */
+.cc-seg-persona {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0.35rem;
+}
+.cc-seg-persona--missing {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 #commandCenterPage .cc-published-stack {
   display: flex;
   flex-direction: column;
