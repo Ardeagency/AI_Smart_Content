@@ -912,7 +912,7 @@ class Navigation {
     const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
       const isLead = item.role_required === 'lead';
       const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
-      const attrs = isLead ? ` id="navLeadSection" style="display: none;"` : '';
+      const attrs = isLead ? ` style="display: none;"` : '';
 
       if (item.type === 'page') {
         return `
@@ -1965,8 +1965,11 @@ class Navigation {
       headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'DEVELOPER PORTAL';
     }
 
-    const leadSection = document.getElementById('navLeadSection');
-    if (leadSection && profile?.dev_role === 'lead') leadSection.style.display = '';
+    const leadSections = document.querySelectorAll('.nav-dev-lead-section');
+    const isLead = profile?.dev_role === 'lead';
+    leadSections.forEach((section) => {
+      section.style.display = isLead ? '' : 'none';
+    });
   }
 
   /**
