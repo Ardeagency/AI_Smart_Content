@@ -126,7 +126,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'operations',
     label: 'Operations',
     icon: 'fa-cogs',
-    iconSrc: '/recursos/icons/coding.svg',
+    iconSrc: '/recursos/icons/video.svg',
     children: [
       { label: 'Test De Flujos', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' },
@@ -168,7 +168,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     id: 'admin-categorias',
     label: 'Categorias',
     icon: 'fa-tags',
-    iconSrc: '/recursos/icons/admin.svg',
+    iconSrc: '/recursos/icons/file-storage.svg',
     role_required: 'lead',
     route: '/dev/lead/categories'
   },
@@ -971,13 +971,13 @@ class Navigation {
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="/dev/lead/crm" class="nav-link nav-main-link nav-link--primary" data-route="/dev/lead/crm" data-tooltip="CRM Leads">
-            <span class="nav-text">CRM Leads</span>
+          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="+ user">
+            <span class="nav-text">+ user</span>
           </a>
         </div>
         <div class="nav-item nav-item--primary">
-          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Builder">
-            <span class="nav-text">Builder</span>
+          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="+ flow">
+            <span class="nav-text">+ flow</span>
           </a>
         </div>
       </div>
