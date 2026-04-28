@@ -31,11 +31,11 @@ class PrivacyPolicyView extends PublicBaseView {
           </section>
           <section class="pp-legal__sec sr-reveal">
             <h2>3. Cómo usamos los datos</h2>
-            <p>Los datos se usan para operar la plataforma (incluido el uso de proveedores de nube e IA descritos en <a href="/seguridad" class="pp-link">Seguridad</a>), procesar solicitudes de contacto, gestionar accesos por invitación, ejecutar flujos de contenido que tú o tu organización activen y generar métricas internas de uso. No vendemos listas de contacto ni utilizamos tus datos de marca para entrenar modelos de terceros fuera de lo estrictamente necesario para prestar el servicio contratado.</p>
+            <p>Los datos se usan para operar la plataforma (incluido el uso de proveedores de nube e IA), procesar solicitudes de contacto, gestionar accesos por invitación, ejecutar flujos de contenido que tú o tu organización activen y generar métricas internas de uso. No vendemos listas de contacto ni utilizamos tus datos de marca para entrenar modelos de terceros fuera de lo estrictamente necesario para prestar el servicio contratado.</p>
           </section>
           <section class="pp-legal__sec sr-reveal">
             <h2>4. Con quién compartimos datos</h2>
-            <p>Compartimos datos con subencargados que intervienen en el funcionamiento de la plataforma (por ejemplo, alojamiento, base de datos, autenticación, modelos de IA e infraestructura de agentes). La lista en evolución aparece resumida en la página de <a href="/seguridad" class="pp-link">Seguridad</a>. Integraciones opcionales (Meta, Google u otras) implican el tratamiento de datos bajo las políticas de dichos proveedores, en la medida en que conectes esas cuentas.</p>
+            <p>Compartimos datos con subencargados que intervienen en el funcionamiento de la plataforma (por ejemplo, alojamiento, base de datos, autenticación, modelos de IA e infraestructura de agentes). Integraciones opcionales (Meta, Google u otras) implican el tratamiento de datos bajo las políticas de dichos proveedores, en la medida en que conectes esas cuentas.</p>
           </section>
           <section class="pp-legal__sec sr-reveal">
             <h2>5. Retención de datos</h2>

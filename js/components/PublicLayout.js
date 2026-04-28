@@ -11,35 +11,9 @@
  * y devolver el control a #app-container.
  */
 (function () {
-  // Items dentro del dropdown de "Nosotros".
-  const NAV_LINKS = [
-    { href: '/plataforma', label: 'Plataforma' },
-    { href: '/soluciones', label: 'Soluciones' },
-    { href: '/casos', label: 'Casos' },
-    { href: '/seguridad', label: 'Seguridad' },
-    { href: '/nosotros', label: 'Nosotros' }
-  ];
+  const NAV_LINKS = [];
 
   const FOOTER_COLS = [
-    {
-      title: 'Plataforma',
-      links: [
-        { href: '/plataforma', label: 'Capacidades' },
-        { href: '/soluciones', label: 'Soluciones' },
-        { href: '/casos', label: 'Casos' },
-        { href: '/seguridad', label: 'Seguridad' },
-        { href: '/como-funciona', label: 'Cómo funciona' }
-      ]
-    },
-    {
-      title: 'Empresa',
-      links: [
-        { href: '/nosotros', label: 'Nosotros' },
-        { href: '/contacto', label: 'Contacto' },
-        { href: '/changelog', label: 'Changelog' },
-        { href: '/status', label: 'Status' }
-      ]
-    },
     {
       title: 'Legal',
       links: [
@@ -50,9 +24,7 @@
   ];
 
   const PUBLIC_ROUTES = new Set([
-    '/',
-    '/plataforma', '/soluciones', '/casos', '/seguridad',
-    '/como-funciona', '/nosotros', '/status', '/contacto', '/changelog',
+    '/contacto',
     '/privacidad', '/terminos',
     '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'
   ]);
@@ -70,15 +42,7 @@
       `<a href="${item.href}" class="public-dropdown-item public-nav-link" data-href="${item.href}" role="menuitem">${item.label}</a>`
     ).join('');
 
-    return `
-      <header class="landing-header public-header" data-public-header>
-        <a href="/" class="landing-header-brand" aria-label="AI Smart Content Home" data-href="/">
-          <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo" width="180" height="36" decoding="async">
-        </a>
-        <button class="public-header-toggle" id="publicHeaderToggle" aria-label="Abrir menú" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-        <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
+    const dropdownHTML = NAV_LINKS.length === 0 ? '' : `
           <div class="public-nav-dropdown" id="publicNavDropdown">
             <button type="button" class="landing-header-link public-nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
               Saber más
@@ -89,7 +53,18 @@
             <div class="public-nav-dropdown-menu" role="menu">
               ${dropdownItems}
             </div>
-          </div>
+          </div>`;
+
+    return `
+      <header class="landing-header public-header" data-public-header>
+        <a href="/login" class="landing-header-brand" aria-label="AI Smart Content Home" data-href="/login">
+          <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="landing-header-logo" width="180" height="36" decoding="async">
+        </a>
+        <button class="public-header-toggle" id="publicHeaderToggle" aria-label="Abrir menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
+          ${dropdownHTML}
           <a href="/contacto" class="public-nav-cta public-nav-request" data-href="/contacto">Solicitar Acceso</a>
           <a href="/login" class="public-nav-access public-nav-access--glow" data-href="/login">Acceder</a>
         </nav>
@@ -111,7 +86,7 @@
       <footer class="landing-footer public-footer" role="contentinfo">
         <div class="landing-footer-main public-footer-main">
           <div class="landing-footer-brand">
-            <a href="/" class="landing-footer-brand-link" aria-label="AI Smart Content Home" data-href="/">
+            <a href="/login" class="landing-footer-brand-link" aria-label="AI Smart Content Home" data-href="/login">
               <img src="/recursos/assets/assets-16.svg" alt="AI Smart Content" class="landing-footer-bar-logo" loading="lazy" decoding="async" width="200" height="48">
             </a>
             <p class="landing-footer-tagline">Inteligencia operativa de marca: menos latencia entre el mercado y tu contenido.</p>

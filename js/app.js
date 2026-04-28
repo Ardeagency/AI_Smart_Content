@@ -111,8 +111,23 @@ class App {
     const devBase = ['/js/views/DevBaseView.js'];
     const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/input-registry.js'];
 
+    // ── Raíz: redirige a /home si hay sesión, a /login si no. Login es la landing. ──
+    const rootRedirectView = class extends (window.BaseView || class {}) {
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        const isAuth = window.router && typeof window.router.checkAuthentication === 'function'
+          ? await window.router.checkAuthentication()
+          : false;
+        const target = isAuth
+          ? (typeof window.router.getAuthenticatedRedirect === 'function' ? await window.router.getAuthenticatedRedirect() : '/home')
+          : '/login';
+        if (window.router) window.router.navigate(target, true);
+      }
+    };
+    r.register('/', rootRedirectView, pub);
+
     // ── Públicas (cargadas sincrónicamente) ──
-    r.register('/', window.LandingView, { requiresAuth: false, redirectIfAuth: true });
     r.register('/login', window.SignInView, pub);
     r.register('/signin', window.SignInView, pub);
 
@@ -123,19 +138,7 @@ class App {
     r.register('/terminos-de-servicio', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
     r.register('/terminos', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
     r.register('/eliminacion-de-datos', this._lazy('DataDeletionView', ['/js/views/DataDeletionView.js']), pub);
-
-    // ── Páginas públicas marketing (lazy).
-    // PublicLayout y PublicBaseView ya vienen cargados sync en index.html,
-    // por lo que solo se carga la vista específica.
-    r.register('/plataforma', this._lazy('PlataformaView', ['/js/views/PlataformaView.js']), pub);
-    r.register('/soluciones', this._lazy('SolucionesView', ['/js/views/SolucionesView.js']), pub);
-    r.register('/casos', this._lazy('CasosView', ['/js/views/CasosView.js']), pub);
-    r.register('/seguridad', this._lazy('SeguridadView', ['/js/views/SeguridadView.js']), pub);
-    r.register('/como-funciona', this._lazy('ComoFuncionaView', ['/js/views/ComoFuncionaView.js']), pub);
-    r.register('/nosotros', this._lazy('NosotrosView', ['/js/views/NosotrosView.js']), pub);
-    r.register('/status', this._lazy('StatusView', ['/js/views/StatusView.js']), pub);
     r.register('/contacto', this._lazy('ContactoView', ['/js/views/ContactoView.js']), pub);
-    r.register('/changelog', this._lazy('ChangelogView', ['/js/views/ChangelogView.js']), pub);
 
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {

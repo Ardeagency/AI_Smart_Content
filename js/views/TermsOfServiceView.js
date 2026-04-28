@@ -47,7 +47,7 @@ class TermsOfServiceView extends PublicBaseView {
           </section>
           <section class="pp-legal__sec sr-reveal">
             <h2>7. SLAs y disponibilidad</h2>
-            <p>Los niveles de servicio, ventanas de mantenimiento y canales de soporte se fijan por escrito. La información de estado operativo se publica en <a href="/status" class="pp-link">/status</a> con carácter informativo y no sustituye los acuerdos contractuales de nivel de servicio.</p>
+            <p>Los niveles de servicio, ventanas de mantenimiento y canales de soporte se fijan por escrito y no sustituyen los acuerdos contractuales de nivel de servicio.</p>
           </section>
           <section class="pp-legal__sec sr-reveal">
             <h2>8. Terminación</h2>
