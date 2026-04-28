@@ -142,6 +142,16 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'container',
+    id: 'provisioning',
+    label: 'Provisioning',
+    icon: 'fa-user-shield',
+    role_required: 'lead',
+    children: [
+      { label: 'Alta De Usuarios', route: '/dev/provisioning/users' }
+    ]
+  },
+  {
+    type: 'container',
     id: 'resources',
     label: 'Resources',
     icon: 'fa-book',
@@ -1508,6 +1518,7 @@ class Navigation {
       '/dev/test': 'TEST DE FLUJOS',
       '/dev/logs': 'LOGS',
       '/dev/webhooks': 'WEBHOOKS',
+      '/dev/provisioning/users': 'ALTA DE USUARIOS',
       '/dev/lead/flows': 'TODOS LOS FLUJOS',
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/crm': 'CRM LEADS',
