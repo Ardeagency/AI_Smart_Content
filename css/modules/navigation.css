@@ -2770,6 +2770,12 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
+/* Dev: sin línea lateral en items seleccionados */
+.nav-mode-developer .nav-link.active::before,
+.nav-mode-developer .nav-main-link.active::before {
+    display: none;
+}
+
 .nav-mode-developer .nav-icon {
     width: 16px;
     height: 16px;

@@ -117,18 +117,9 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     label: 'Operations',
     icon: 'fa-cogs',
     children: [
-      { label: 'Webhooks', route: '/dev/webhooks' }
-    ]
-  },
-  {
-    type: 'container',
-    id: 'observability',
-    label: 'Observability',
-    icon: 'fa-chart-area',
-    iconSrc: '/recursos/icons/video.svg',
-    children: [
       { label: 'Test De Flujos', route: '/dev/test' },
-      { label: 'Logs', route: '/dev/logs' }
+      { label: 'Logs', route: '/dev/logs' },
+      { label: 'Webhooks', route: '/dev/webhooks' }
     ]
   },
   {
