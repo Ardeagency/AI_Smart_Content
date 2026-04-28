@@ -493,23 +493,20 @@ body.sidebar-collapsed .main-header,
 /* Developer: cabecera con botón toggle y nombre del desarrollador */
 .nav-dev-toggle-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-start;
     gap: 10px;
     padding: 12px 10px 14px;
 }
 .nav-dev-header-copy {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    flex-direction: row;
+    align-items: center;
     flex: 1;
     min-width: 0;
 }
 .nav-dev-header-copy .nav-org-title {
     color: var(--sidebar-text-primary, var(--text-primary));
-}
-.nav-dev-org-name {
-    color: var(--text-secondary);
 }
 .side-navigation.collapsed .nav-dev-toggle-header {
     justify-content: center;
@@ -2732,6 +2729,63 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 0.58;
 }
 
+/* Dev visual parity with org sidebar (non-navigation behavior). */
+.nav-mode-developer .nav-link,
+.nav-mode-developer .nav-main-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    transition: background 0.12s ease, color 0.12s ease, opacity 0.15s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    opacity: 0.58;
+}
+
+.nav-mode-developer .nav-link:hover:not(.active),
+.nav-mode-developer .nav-main-link:hover:not(.active) {
+    opacity: 0.82;
+}
+
+.nav-mode-developer .nav-link:hover,
+.nav-mode-developer .nav-main-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-developer .nav-link.active,
+.nav-mode-developer .nav-main-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+    opacity: 1;
+}
+
+.nav-mode-developer .nav-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon-color);
+}
+
+.nav-mode-developer .nav-icon-img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 .nav-mode-user .nav-link:hover:not(.active),
 .nav-mode-user .nav-main-link:hover:not(.active) {
     opacity: 0.82;
@@ -2994,9 +3048,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 /* Lead: gobernanza, diferenciación visual (spacing superior, acento sutil) */
 .nav-mode-developer .nav-dev-lead-section {
-    margin-top: 20px;
-    padding-top: 12px;
-    border-top: 1px solid var(--nav-border);
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .nav-mode-developer .nav-dev-lead-section .nav-link.nav-submenu-toggle .nav-icon {

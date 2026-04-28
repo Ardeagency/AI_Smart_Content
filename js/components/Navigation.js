@@ -985,7 +985,6 @@ class Navigation {
           </button>
           <div class="nav-dev-header-copy">
             <h2 class="nav-org-title" id="navDevHeaderName">Developer</h2>
-            <span class="nav-org-name nav-dev-org-name" id="navDevOrgName">Mi organización</span>
           </div>
         </div>
 
@@ -1977,12 +1976,6 @@ class Navigation {
     const headerNameEl = document.getElementById('navDevHeaderName');
     if (headerNameEl) {
       headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer';
-    }
-
-    const devOrgNameEl = document.getElementById('navDevOrgName');
-    if (devOrgNameEl) {
-      const orgName = (window.currentOrgName || this._orgCache?.name || '').trim();
-      devOrgNameEl.textContent = orgName || 'Mi organización';
     }
 
     const leadSections = document.querySelectorAll('.nav-dev-lead-section');
