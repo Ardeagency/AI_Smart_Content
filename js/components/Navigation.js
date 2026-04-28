@@ -109,6 +109,7 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
+  { type: 'section', label: 'Workspace' },
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   { type: 'page', id: 'flows', label: 'Mis Flujos', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
@@ -123,6 +124,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
       { label: 'Webhooks', route: '/dev/webhooks' }
     ]
   },
+  { type: 'section', label: 'Admin' },
   {
     type: 'page',
     id: 'user-registration',
@@ -146,7 +148,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'container',
     id: 'lead',
-    label: 'Admin',
+    label: 'Management',
     icon: 'fa-shield-alt',
     iconSrc: '/recursos/icons/settings.svg',
     role_required: 'lead',
@@ -901,6 +903,9 @@ class Navigation {
     };
 
     const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
+      if (item.type === 'section') {
+        return `<div class="nav-section-label" aria-hidden="true">${_escapeHtml(item.label)}</div>`;
+      }
       const isLead = item.role_required === 'lead';
       const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
       const attrs = isLead ? ` style="display: none;"` : '';
