@@ -126,21 +126,22 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'container',
     id: 'provisioning',
-    label: 'Provisioning',
+    label: 'Users',
     icon: 'fa-user-shield',
     role_required: 'lead',
     children: [
-      { label: 'Registrar usuario', route: '/dev/provisioning/users' }
+      { label: 'CRM Leads', route: '/dev/lead/crm' }
     ]
   },
   {
     type: 'container',
     id: 'resources',
-    label: 'Resources',
+    label: 'Library',
     icon: 'fa-book',
     iconSrc: '/recursos/icons/file-storage.svg',
     children: [
-      { label: 'Referencias Visuales', route: '/dev/lead/references' }
+      { label: 'Referencias Visuales', route: '/dev/lead/references' },
+      { label: 'Vector Memory', route: '/dev/lead/ai-vectors' }
     ]
   },
   {
@@ -152,10 +153,8 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     role_required: 'lead',
     children: [
       { label: 'Equipo', route: '/dev/lead/team' },
-      { label: 'CRM Leads', route: '/dev/lead/crm' },
       { label: 'Categorías', route: '/dev/lead/categories' },
       { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
-      { label: 'Base Conocimiento IA', route: '/dev/lead/ai-vectors' },
       { label: 'Todos Los Flujos', route: '/dev/lead/flows' }
     ]
   }
@@ -942,8 +941,8 @@ class Navigation {
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="Registrar usuario">
-            <span class="nav-text">Registrar usuario</span>
+          <a href="/dev/lead/crm" class="nav-link nav-main-link nav-link--primary" data-route="/dev/lead/crm" data-tooltip="CRM Leads">
+            <span class="nav-text">CRM Leads</span>
           </a>
         </div>
         <div class="nav-item nav-item--primary">
