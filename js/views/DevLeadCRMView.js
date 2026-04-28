@@ -37,9 +37,9 @@ class DevLeadCRMView extends DevBaseView {
         </header>
 
         <section class="dev-lead-content">
-          <div class="dev-lead-toolbar" style="margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
-            <input type="search" id="crmLeadSearch" class="input" placeholder="Buscar por nombre, email o empresa..." style="min-width: 280px;">
-            <select id="crmLeadStatusFilter" class="input" style="min-width: 220px;">
+          <div class="dev-lead-toolbar dev-lead-toolbar--crm">
+            <input type="search" id="crmLeadSearch" class="input dev-lead-search-input" placeholder="Buscar por nombre, email o empresa...">
+            <select id="crmLeadStatusFilter" class="input dev-lead-filter-select">
               <option value="">Todos los estados</option>
               <option value="nuevo">Nuevo</option>
               <option value="revisando">Revisando</option>
@@ -75,9 +75,9 @@ class DevLeadCRMView extends DevBaseView {
         </section>
       </div>
 
-      <div class="modal dev-lead-modal" id="leadDetailModal" style="display:none;">
+      <div class="modal dev-lead-modal dev-lead-modal-xwide" id="leadDetailModal" style="display:none;">
         <div class="modal-overlay"></div>
-        <div class="modal-content" style="max-width: 840px; width: 95%;">
+        <div class="modal-content">
           <div class="modal-header">
             <h3 id="leadModalTitle">Lead</h3>
             <button type="button" class="modal-close" id="leadModalClose">&times;</button>
@@ -270,15 +270,15 @@ class DevLeadCRMView extends DevBaseView {
     if (!modal || !title || !body) return;
 
     const noteRows = (notes || []).map((note) => `
-      <div class="dev-lead-note-item" style="padding:10px 12px; border:1px solid rgba(255,255,255,.1); border-radius:10px; margin-bottom:8px;">
-        <div style="font-size:12px; opacity:.75; margin-bottom:6px;">${this.escapeHtml(new Date(note.created_at).toLocaleString('es'))}</div>
+      <div class="dev-lead-note-item">
+        <div class="dev-lead-note-item__date">${this.escapeHtml(new Date(note.created_at).toLocaleString('es'))}</div>
         <div>${this.escapeHtml(note.content || '')}</div>
       </div>
     `).join('');
 
     title.textContent = `${lead.full_name || 'Lead'} · ${lead.company_name || ''}`;
     body.innerHTML = `
-      <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:14px;">
+      <div class="dev-lead-detail-grid">
         <div><strong>Email:</strong> ${this.escapeHtml(lead.email || '-')}</div>
         <div><strong>Teléfono:</strong> ${this.escapeHtml(lead.phone || '-')}</div>
         <div><strong>País:</strong> ${this.escapeHtml(lead.country || '-')}</div>
@@ -286,13 +286,13 @@ class DevLeadCRMView extends DevBaseView {
         <div><strong>Estado:</strong> ${this.escapeHtml(this.getStatusLabel(lead.status))}</div>
         <div><strong>Fit score:</strong> ${lead.fit_score || '-'}</div>
       </div>
-      <div style="margin-bottom:14px;">
+      <div class="dev-lead-detail-section">
         <strong>Reto principal:</strong>
-        <p style="margin-top:6px;">${this.escapeHtml(lead.main_challenge || '-')}</p>
+        <p>${this.escapeHtml(lead.main_challenge || '-')}</p>
       </div>
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+      <div class="dev-lead-status-row">
         <label for="leadStatusSelect"><strong>Cambiar estado:</strong></label>
-        <select id="leadStatusSelect" class="input" style="min-width:220px;">
+        <select id="leadStatusSelect" class="input dev-lead-status-select">
           <option value="nuevo"${lead.status === 'nuevo' ? ' selected' : ''}>Nuevo</option>
           <option value="revisando"${lead.status === 'revisando' ? ' selected' : ''}>Revisando</option>
           <option value="contactado"${lead.status === 'contactado' ? ' selected' : ''}>Contactado</option>
@@ -305,13 +305,13 @@ class DevLeadCRMView extends DevBaseView {
         <button type="button" class="btn btn-primary" id="saveLeadStatusBtn">Guardar</button>
       </div>
 
-      <div style="margin-top:14px; border-top:1px solid rgba(255,255,255,.08); padding-top:14px;">
-        <h4 style="margin-bottom:10px;">Notas internas</h4>
+      <div class="dev-lead-notes">
+        <h4>Notas internas</h4>
         <textarea id="leadNoteInput" class="input" rows="3" placeholder="Agregar nota..."></textarea>
-        <div style="margin-top:8px;">
+        <div class="dev-lead-notes-actions">
           <button type="button" class="btn btn-secondary" id="addLeadNoteBtn">Agregar nota</button>
         </div>
-        <div style="margin-top:12px;">
+        <div class="dev-lead-notes-list">
           ${noteRows || '<p class="text-muted">Sin notas.</p>'}
         </div>
       </div>

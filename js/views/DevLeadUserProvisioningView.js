@@ -18,7 +18,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
   renderHTML() {
     return `
       <div class="builder-main">
-        <div class="builder-settings-form" style="max-width:720px; margin:0 auto; padding: var(--spacing-xl, 1.5rem);">
+        <div class="builder-settings-form provision-wizard">
 
           <!-- Progreso -->
           <div class="provision-progress" id="provisionProgress">
@@ -146,7 +146,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
                 <i class="fas fa-arrow-left"></i> Anterior
               </button>
               <span id="provisioningStepLabel" class="provision-step-counter">Paso 1 de 4</span>
-              <div style="display:flex;gap:8px;align-items:center;">
+              <div class="provision-actions-right">
                 <button type="button" class="btn btn-primary" id="provisionNextBtn">
                   Siguiente <i class="fas fa-arrow-right"></i>
                 </button>

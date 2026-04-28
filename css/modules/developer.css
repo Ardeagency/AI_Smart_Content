@@ -127,8 +127,8 @@
 #app-container:has(.builder-footer) .builder-main .form-input,
 #app-container:has(.builder-footer) .builder-main .form-select,
 #app-container:has(.builder-footer) .builder-main .form-textarea {
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--glass-radius);
@@ -137,7 +137,7 @@
 #app-container:has(.builder-footer) .builder-main select:focus,
 #app-container:has(.builder-footer) .builder-main textarea:focus {
   outline: none;
-  border-color: var(--accent-warm) !important;
+  border-color: var(--accent-warm);
   box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.2);
 }
 
@@ -722,7 +722,7 @@
 .dev-filter-btn.active {
   background: var(--brillo-hover);
   border-color: var(--accent-warm);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
 .dev-flows-search {
@@ -1019,7 +1019,7 @@
 .pagination-btn.active {
   background: var(--brillo-hover);
   border-color: var(--accent-warm);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
 .pagination-btn:disabled {
@@ -1193,7 +1193,7 @@
 .dev-lead-toolbar .btn-primary,
 .dev-header-actions .btn-primary {
   background: var(--glass-bg);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   border-color: var(--glass-border);
 }
 .dev-flows-container .btn-primary:hover:not(:disabled),
@@ -1212,7 +1212,7 @@
 .dev-lead-toolbar .btn-primary:hover:not(:disabled),
 .dev-header-actions .btn-primary:hover:not(:disabled) {
   background: var(--brillo-hover);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   border-color: var(--accent-warm);
 }
 
@@ -1340,7 +1340,7 @@
   gap: 6px;
   padding: 8px 16px;
   background: var(--glass-bg);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
@@ -1958,7 +1958,7 @@
 .btn-builder-footer.btn-primary-footer {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -2002,7 +2002,7 @@
 .btn-builder-footer.btn-approve-publish {
   background: var(--glass-bg);
   border-color: var(--glass-border);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
 .btn-builder-footer.btn-approve-publish:hover {
@@ -2360,7 +2360,7 @@
 
 .builder-tab.active {
   background: var(--warm-20);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   border-color: transparent;
   box-shadow: var(--shadow-card);
 }
@@ -3779,7 +3779,7 @@
 }
 
 #moduleNodeModal.modal-overlay[style*="flex"] {
-  display: flex !important;
+  display: flex;
 }
 
 .modal-module-node {
@@ -4934,7 +4934,7 @@
 .dev-lead-tab.active {
   background: var(--brillo-hover);
   border-color: var(--accent-warm);
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
 /* Toolbar y tabla Lead */
@@ -4947,6 +4947,74 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+/* DevLeadCRMView — toolbar y campos */
+.dev-lead-toolbar--crm {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.dev-lead-search-input { min-width: 280px; }
+.dev-lead-filter-select,
+.dev-lead-status-select { min-width: 220px; }
+
+/* Modal extra ancho (CRM detalle de lead) */
+#modals-portal .modal.dev-lead-modal-xwide .modal-content {
+  max-width: min(840px, calc(100vw - 40px));
+}
+
+/* DevLeadCRMView — body del detalle de lead */
+.dev-lead-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.dev-lead-detail-section {
+  margin-bottom: 14px;
+}
+.dev-lead-detail-section p {
+  margin-top: 6px;
+}
+.dev-lead-status-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.dev-lead-notes {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--white-8);
+}
+.dev-lead-notes h4 { margin-bottom: 10px; }
+.dev-lead-notes-actions { margin-top: 8px; }
+.dev-lead-notes-list { margin-top: 12px; }
+.dev-lead-note-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--white-10);
+  border-radius: 10px;
+}
+.dev-lead-note-item__date {
+  font-size: 12px;
+  margin-bottom: 6px;
+  opacity: 0.75;
+}
+
+/* DevLeadUserProvisioningView — wizard layout */
+.provision-wizard {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacing-xl, 1.5rem);
+}
+.provision-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dev-lead-breadcrumb {
@@ -5541,7 +5609,7 @@
 .env-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: #000000 !important;
+  color: #000000;
 }
 
 .webhook-info {
@@ -5666,7 +5734,7 @@
 
 .test-tab.active {
   background: var(--dev-primary);
-  color: #000000 !important;
+  color: #000000;
 }
 
 .tab-badge {
@@ -6686,7 +6754,7 @@
 .filter-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: #000000 !important;
+  color: #000000;
 }
 
 .webhooks-search-area {
