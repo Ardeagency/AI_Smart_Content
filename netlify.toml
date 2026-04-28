@@ -255,18 +255,18 @@
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
-# Assets versionados vía ?v=… en el HTML (bundle.css, app.js, vistas).
-# Usamos cache largo + SWR: el navegador solo revalida en segundo plano si el
-# query string cambia, y Netlify purga CDN al deploy si el archivo cambió.
+# JS/CSS críticos de la app:
+# se sirven con revalidación obligatoria para evitar drift de versión en producción
+# cuando algún query string ?v=... no se incrementa en un deploy.
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/js/*"
   [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL
