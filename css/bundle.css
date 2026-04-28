@@ -18,23 +18,85 @@
    cada módulo va en URL propia; sin ?v= aquí el CDN/navegador puede quedarse con CSS viejo.
    Subir APP_CSS_MODULES_VER en todos los imports cuando cambie cualquier modules/*.css.
    ============================================================ */
-@import url('modules/navigation.css?v=20260428-app-css-v5');
-@import url('modules/landing.css?v=20260428-app-css-v5');
-@import url('modules/auth.css?v=20260428-app-css-v5');
-@import url('modules/brands.css?v=20260428-app-css-v5');
-@import url('modules/content-management.css?v=20260428-app-css-v5');
-@import url('modules/living.css?v=20260428-app-css-v5');
-@import url('modules/studio.css?v=20260428-app-css-v5');
-@import url('modules/flow-catalog.css?v=20260428-app-css-v5');
-@import url('modules/products.css?v=20260428-app-css-v5');
-@import url('modules/identities.css?v=20260428-app-css-v5');
+@import url('modules/navigation.css?v=20260428-app-css-v6');
+@import url('modules/auth.css?v=20260428-app-css-v6');
+@import url('modules/brands.css?v=20260428-app-css-v6');
+@import url('modules/content-management.css?v=20260428-app-css-v6');
+@import url('modules/living.css?v=20260428-app-css-v6');
+@import url('modules/studio.css?v=20260428-app-css-v6');
+@import url('modules/flow-catalog.css?v=20260428-app-css-v6');
+@import url('modules/products.css?v=20260428-app-css-v6');
+@import url('modules/identities.css?v=20260428-app-css-v6');
 @import url('modules/command-center.css?v=20260427-cc-focus-v5');
-@import url('modules/organization.css?v=20260428-app-css-v5');
-@import url('modules/developer.css?v=20260428-app-css-v5');
-@import url('modules/payment-modal.css?v=20260428-app-css-v5');
-@import url('modules/video.css?v=20260428-app-css-v5');
-@import url('modules/insight.css?v=20260428-app-css-v5');
-@import url('modules/public.css?v=20260428-app-css-v5');
+@import url('modules/organization.css?v=20260428-app-css-v6');
+@import url('modules/developer.css?v=20260428-app-css-v6');
+@import url('modules/payment-modal.css?v=20260428-app-css-v6');
+@import url('modules/video.css?v=20260428-app-css-v6');
+@import url('modules/insight.css?v=20260428-app-css-v6');
+@import url('modules/public.css?v=20260428-app-css-v6');
+
+/* ============================================================
+   Tipografía
+   - Apfel Grotezk (Collletttivo, OFL 1.1) → display/UI: headings, botones, inputs
+   - Spline Sans Mono (Sorkin Type, OFL 1.1) → texto cuerpo
+   Self-hosted desde recursos/fonts/. font-display: swap evita FOIT.
+   ============================================================ */
+@font-face {
+    font-family: 'Apfel Grotezk';
+    src: url('../recursos/fonts/ApfelGrotezk-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Apfel Grotezk';
+    src: url('../recursos/fonts/ApfelGrotezk-Mittel.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Apfel Grotezk';
+    src: url('../recursos/fonts/ApfelGrotezk-Satt.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Apfel Grotezk';
+    src: url('../recursos/fonts/ApfelGrotezk-Fett.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Spline Sans Mono';
+    src: url('../recursos/fonts/SplineSansMono-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Spline Sans Mono';
+    src: url('../recursos/fonts/SplineSansMono-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Spline Sans Mono';
+    src: url('../recursos/fonts/SplineSansMono-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Spline Sans Mono';
+    src: url('../recursos/fonts/SplineSansMono-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {
@@ -73,7 +135,14 @@
     --color-white: #ffffff;
     --text-black: #000000;
     --bg-light-gray: #f3f4f6;
-    --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    /* Tipografía
+       - --font-display → headings y UI (botones, inputs, labels): Apfel Grotezk
+       - --font-body    → texto cuerpo (párrafos, descripciones): Spline Sans Mono
+       - --font-family / --font-sans → aliases legacy que apuntan a display (UI mantiene Apfel) */
+    --font-display: 'Apfel Grotezk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-body: 'Spline Sans Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --font-family: var(--font-display);
+    --font-sans: var(--font-display);
     --font-mono: 'Fira Code', 'SF Mono', 'Consolas', monospace;
     --font-size-xs: 0.6875rem;
     --font-size-sm: 0.75rem;
@@ -240,7 +309,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-    font-family: var(--font-family);
+    font-family: var(--font-body);
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -251,6 +320,11 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     accent-color: var(--accent-brand);
+}
+
+/* Headings: Apfel Grotezk para todo lo que sea título */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
 }
 
 /* ========== BOTONES — Design glass unificado ========== */
@@ -733,7 +807,7 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     align-items: center;
     justify-content: center;
     color: var(--text-primary);
-    font-family: var(--font-sans, "Inter", sans-serif);
+    font-family: var(--font-family);
 }
 .entrance-text-block {
     position: absolute;
