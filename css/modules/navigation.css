@@ -3082,6 +3082,36 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     justify-content: center;
     text-align: center;
     padding: 0 10px;
+    min-height: 40px;
+    border-radius: var(--radius-md);
+    background: #0b0b0b !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: none !important;
+    color: var(--sidebar-text-primary) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+    opacity: 1 !important;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-link:hover,
+.nav-mode-developer .nav-dev-primary-actions .nav-main-link:hover {
+    background: #121212 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-link.active,
+.nav-mode-developer .nav-dev-primary-actions .nav-main-link.active {
+    background: #101010 !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28) !important;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-link.active::before,
+.nav-mode-developer .nav-dev-primary-actions .nav-main-link.active::before {
+    display: none;
 }
 
 .nav-item--primary .nav-link,
