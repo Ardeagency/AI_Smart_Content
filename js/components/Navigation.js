@@ -110,24 +110,13 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
-  {
-    type: 'container',
-    id: 'build',
-    label: 'Build',
-    icon: 'fa-wrench',
-    iconSrc: '/recursos/icons/Production.svg',
-    children: [
-      { label: 'Mis Flujos', route: '/dev/flows' },
-      { label: 'Builder', route: '/dev/builder' }
-    ]
-  },
+  { type: 'page', id: 'flows', label: 'Mis Flujos', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
     type: 'container',
     id: 'operations',
     label: 'Operations',
     icon: 'fa-cogs',
     children: [
-      { label: 'Test De Flujos', route: '/dev/test' },
       { label: 'Webhooks', route: '/dev/webhooks' }
     ]
   },
@@ -138,7 +127,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     icon: 'fa-chart-area',
     iconSrc: '/recursos/icons/video.svg',
     children: [
-      { label: 'Debug', route: '/dev/test' },
+      { label: 'Test De Flujos', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' }
     ]
   },
@@ -962,11 +951,6 @@ class Navigation {
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
           <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="Registrar usuario">
             <span class="nav-text">Registrar usuario</span>
-          </a>
-        </div>
-        <div class="nav-item nav-item--primary">
-          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Builder">
-            <span class="nav-text">Builder</span>
           </a>
         </div>
       </div>

@@ -3065,10 +3065,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     margin-bottom: 10px;
 }
 
-/* Dev: dos botones primarios en paralelo (Registrar usuario + Builder) */
+/* Dev: acción primaria rápida */
 .nav-mode-developer .nav-dev-primary-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 8px;
     margin-bottom: 8px;
 }
