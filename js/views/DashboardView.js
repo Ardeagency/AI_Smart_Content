@@ -38,11 +38,34 @@ class DashboardView extends BaseView {
       else if (window.supabase)  this._supabase = window.supabase;
     } catch (_) {}
 
-    this._orgId =
-      this.routeParams?.orgIdShort ||
+    const isUuid = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
+    // El router resuelve /org/:orgIdShort/:orgNameSlug → routeParams.orgId (UUID).
+    // Nunca usar orgIdShort directo: la columna organization_id es uuid → 400 Bad Request.
+    let candidate =
+      this.routeParams?.orgId ||
+      window.currentOrgId ||
       window.appState?.get('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId') ||
       null;
+
+    if (!isUuid(candidate)
+        && this.routeParams?.orgIdShort
+        && this.routeParams?.orgNameSlug
+        && typeof window.resolveOrgIdFromShortAndSlug === 'function') {
+      try {
+        const r = await window.resolveOrgIdFromShortAndSlug(
+          this.routeParams.orgIdShort,
+          this.routeParams.orgNameSlug
+        );
+        if (isUuid(r?.id)) candidate = r.id;
+      } catch (_) {}
+    }
+
+    this._orgId = isUuid(candidate) ? candidate : null;
+    if (!this._orgId) {
+      console.warn('[DashboardView] No se pudo resolver organization_id (UUID).');
+    }
   }
 
   onLeave() {

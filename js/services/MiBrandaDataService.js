@@ -13,6 +13,7 @@ class MiBrandaDataService {
     this.orgId       = null;   // organization_id activa
     this.containerIds = [];    // IDs de brand_containers de la org
     this.containers   = [];    // Objetos completos de brand_containers
+    this.entityIds    = [];    // intelligence_entities de la org (intelligence_signals no tiene organization_id)
     this._cache       = {};    // Cache en-sesión keyed por method name
   }
 
@@ -22,21 +23,40 @@ class MiBrandaDataService {
     this.orgId = orgId;
     this._cache = {};
 
-    const { data, error } = await this.sb
-      .from('brand_containers')
-      .select('id, nombre_marca, verbal_dna, palabras_clave, palabras_prohibidas, arquetipo, propuesta_valor')
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: true });
+    const [bcRes, ieRes] = await Promise.allSettled([
+      this.sb
+        .from('brand_containers')
+        .select('id, nombre_marca, verbal_dna, palabras_clave, palabras_prohibidas, arquetipo, propuesta_valor')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: true }),
+      this.sb
+        .from('intelligence_entities')
+        .select('id')
+        .eq('organization_id', orgId),
+    ]);
 
-    if (error) {
-      console.warn('[MiBrandaDataService] No se pudieron cargar brand_containers:', error.message);
-      this.containerIds = [];
-      this.containers   = [];
-    } else {
-      this.containers   = data || [];
+    if (bcRes.status === 'fulfilled' && !bcRes.value.error) {
+      this.containers   = bcRes.value.data || [];
       this.containerIds = this.containers.map(c => c.id);
+    } else {
+      const e = bcRes.status === 'fulfilled' ? bcRes.value.error : bcRes.reason;
+      console.warn('[MiBrandaDataService] No se pudieron cargar brand_containers:', e?.message);
+      this.containers   = [];
+      this.containerIds = [];
     }
+
+    if (ieRes.status === 'fulfilled' && !ieRes.value.error) {
+      this.entityIds = (ieRes.value.data || []).map(e => e.id);
+    } else {
+      this.entityIds = [];
+    }
+
     return this;
+  }
+
+  /** Sentinela para queries con .in() cuando no hay entities (evita query inválida) */
+  _eidsOrSentinel() {
+    return this.entityIds.length ? this.entityIds : ['00000000-0000-0000-0000-000000000000'];
   }
 
   /** Utilidad: resultado vacío estandarizado */
@@ -155,10 +175,10 @@ class MiBrandaDataService {
         .select('id, severity', { count: 'exact' })
         .eq('organization_id', this.orgId)
         .in('status', ['open', 'in_progress']),
-      // Menciones 24h
+      // Menciones 24h (intelligence_signals scoped via entity_id)
       this.sb.from('intelligence_signals')
         .select('id', { count: 'exact', head: true })
-        .eq('organization_id', this.orgId)
+        .in('entity_id', this._eidsOrSentinel())
         .eq('signal_type', 'mention')
         .gte('captured_at', d1),
     ]);
@@ -565,7 +585,7 @@ class MiBrandaDataService {
     const { data, error } = await this.sb
       .from('intelligence_signals')
       .select('id, signal_type, content_text, ai_analysis, captured_at, entity_id')
-      .eq('organization_id', this.orgId)
+      .in('entity_id', this._eidsOrSentinel())
       .eq('signal_type', 'mention')
       .order('captured_at', { ascending: false })
       .limit(50);
@@ -590,8 +610,7 @@ class MiBrandaDataService {
       const { data: sigData } = await this.sb
         .from('intelligence_signals')
         .select('entity_id, ai_analysis')
-        .in('entity_id', ids)
-        .eq('organization_id', this.orgId);
+        .in('entity_id', ids);
       signals = sigData || [];
     }
 
@@ -692,7 +711,7 @@ class MiBrandaDataService {
         .limit(20),
       this.sb.from('intelligence_signals')
         .select('id, signal_type, content_text, ai_analysis, captured_at')
-        .eq('organization_id', this.orgId)
+        .in('entity_id', this._eidsOrSentinel())
         .eq('signal_type', 'mention')
         .gte('captured_at', new Date(Date.now() - 48 * 3600000).toISOString())
         .order('captured_at', { ascending: false })
