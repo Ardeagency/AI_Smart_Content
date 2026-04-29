@@ -92,7 +92,7 @@
   align-items: center;
   gap: 0.875rem;
   padding: 0.875rem 1rem;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 10px);
   transition: border-color 0.2s;
@@ -163,7 +163,7 @@
   align-items: flex-start;
   gap: 0.875rem;
   padding: 1rem 1.125rem;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 10px);
 }
@@ -200,7 +200,7 @@
 
 /* Sections */
 .insight-section {
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 10px);
   margin-bottom: 1.5rem;
@@ -3723,7 +3723,7 @@
 /* ── Brand Header ── */
 .mb-brand-header {
   display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   padding: 1.25rem 1.5rem;
@@ -3784,7 +3784,7 @@
 .mb-kpi-card {
   display: flex; align-items: flex-start; gap: 0.75rem;
   padding: 0.95rem 1rem;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -3834,7 +3834,7 @@
 }
 .mb-widget {
   flex: 1; min-width: 260px;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
@@ -4076,7 +4076,7 @@
 .cc-header {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 1rem;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   padding: 1.25rem 1.5rem;
@@ -4121,7 +4121,7 @@
 /* ── Widget base (reutiliza mb-widget) ── */
 .cc-widget {
   flex: 1; min-width: 260px;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   overflow: hidden; display: flex; flex-direction: column;
@@ -4310,7 +4310,7 @@
 .td-header {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 1rem;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   padding: 1.25rem 1.5rem;
@@ -4363,7 +4363,7 @@
 /* ── Widget base ── */
 .td-widget {
   flex: 1; min-width: 260px;
-  background: var(--white-8, rgba(255,255,255,0.06));
+  background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md, 12px);
   overflow: hidden; display: flex; flex-direction: column;
