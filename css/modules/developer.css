@@ -7666,22 +7666,21 @@
   pointer-events: none; /* el SVG es decoración: clicks atraviesan a las cells */
 }
 
-/* Grid superpuesto al SVG. Mapeo aproximado del viewBox 1161×190:
-   - Fila superior (0..60 px): 4 pills horizontales del ancho total.
-   - Bajo la pill 1 (~0..210 px en X): hero card alta que llega hasta el final.
-   - El espacio bajo pills 2..4 se queda libre porque el SVG ahí también lo deja
-     (la curva del path baja y la lámina se cierra en diagonal). */
+/* Grid superpuesto al SVG. Mapeo del viewBox 1161×190:
+   - Fila 1 (0..60 px de alto): 4 pills uniformes a lo ancho del marco.
+   - Fila 2 (60..190 px de alto): la lámina del SVG solo cubre los primeros
+     ~525 px / 1161 ≈ 45% del ancho (luego la curva orgánica baja). La hero
+     ocupa 37.5% para quedarse holgada dentro de esa zona segura. */
 .dev-bento-grid {
   position: relative;
   width: 100%;
   height: 100%;
   display: grid;
-  /* Columnas: hero (210/1161 ≈ 18%) + 3 más para las pills 2..4 */
-  grid-template-columns: 18% 18% 18% repeat(4, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   grid-template-rows: 60px 1fr;
   grid-template-areas:
-    "pill1 pill2 pill2 pill3 pill3 pill4 pill4"
-    "hero  hero  hero  .     .     .     .";
+    "pill1 pill1 pill2 pill2 pill3 pill3 pill4 pill4"
+    "hero  hero  hero  .     .     .     .     .";
   gap: 8px;
   padding: 8px;
   box-sizing: border-box;
