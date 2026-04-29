@@ -7636,3 +7636,137 @@
   .provision-perms-grid { grid-template-columns: 1fr 1fr; }
   .provision-nav { flex-wrap: wrap; gap: var(--spacing-sm, 0.5rem); }
 }
+
+/* ==========================================================================
+   Bento Frame — POC en /dev/dashboard
+   El SVG es una lámina decorativa con curva orgánica que actúa de fondo;
+   las cards (.dev-bento-cell) viven encima posicionadas con CSS Grid sobre
+   un viewBox de 1161×190 (mismas proporciones que el SVG) usando porcentajes
+   para que escalen juntos. La superficie clara del marco se controla con la
+   variable --dev-bento-frame para tematizarla por org en el futuro.
+   ========================================================================== */
+.dev-bento-frame {
+  --dev-bento-frame: #D4D1D8;
+  --dev-bento-cell: var(--bg-card);
+  --dev-bento-cell-border: rgba(0, 0, 0, 0.08);
+
+  position: relative;
+  width: 100%;
+  /* Conserva la proporción nativa del SVG sin importar el ancho disponible */
+  aspect-ratio: 1161 / 190;
+  margin-bottom: var(--spacing-xl, 24px);
+  /* Bajo este aspect-ratio, el ancho del viewport manda y el alto se calcula */
+}
+
+.dev-bento-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* el SVG es decoración: clicks atraviesan a las cells */
+}
+
+/* Grid superpuesto al SVG. Mapeo aproximado del viewBox 1161×190:
+   - Fila superior (0..60 px): 4 pills horizontales del ancho total.
+   - Bajo la pill 1 (~0..210 px en X): hero card alta que llega hasta el final.
+   - El espacio bajo pills 2..4 se queda libre porque el SVG ahí también lo deja
+     (la curva del path baja y la lámina se cierra en diagonal). */
+.dev-bento-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* Columnas: hero (210/1161 ≈ 18%) + 3 más para las pills 2..4 */
+  grid-template-columns: 18% 18% 18% repeat(4, 1fr);
+  grid-template-rows: 60px 1fr;
+  grid-template-areas:
+    "pill1 pill2 pill2 pill3 pill3 pill4 pill4"
+    "hero  hero  hero  .     .     .     .";
+  gap: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.dev-bento-cell {
+  background: var(--dev-bento-cell);
+  border: 1px solid var(--dev-bento-cell-border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Pills horizontales (zona alta del frame) */
+.dev-bento-pill {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dev-bento-pill-label {
+  font-size: var(--font-size-xs, 0.6875rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dev-bento-pill-value {
+  font-size: var(--font-size-base, 0.875rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Hero card (zona alta-izquierda del frame, bajo la pill 1) */
+.dev-bento-hero {
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 18px;
+}
+.dev-bento-hero-label {
+  font-size: var(--font-size-xs, 0.6875rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.dev-bento-hero-value {
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.dev-bento-hero-sub {
+  font-size: var(--font-size-sm, 0.75rem);
+  color: var(--text-muted);
+}
+
+/* Responsive: bajo 900px el aspect-ratio comprime demasiado el alto;
+   conviene apilar pills + hero verticalmente y dejar el SVG como adorno. */
+@media (max-width: 900px) {
+  .dev-bento-frame { aspect-ratio: auto; height: auto; }
+  .dev-bento-svg { display: none; }
+  .dev-bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "pill1 pill2"
+      "pill3 pill4"
+      "hero  hero";
+    gap: 12px;
+    padding: 0;
+  }
+  .dev-bento-cell {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    padding: 14px 16px;
+  }
+  .dev-bento-pill { flex-direction: column; align-items: flex-start; gap: 4px; }
+}

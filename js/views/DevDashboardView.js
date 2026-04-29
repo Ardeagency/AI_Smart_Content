@@ -40,45 +40,38 @@ class DevDashboardView extends DevBaseView {
           </div>
         </header>
 
-        <!-- Grid de estadísticas principales -->
-        <section class="dev-stats-grid" id="devStatsGrid">
-          <div class="dev-stat-card">
-            <div class="dev-stat-icon">
-              <i class="fas fa-diagram-project"></i>
-            </div>
-            <div class="dev-stat-content">
-              <div class="dev-stat-value" id="statTotalFlows">-</div>
-              <div class="dev-stat-label">Flujos Creados</div>
-            </div>
-          </div>
+        <!-- Bento frame: el SVG es la lámina decorativa con la curva orgánica;
+             las cards van encima posicionadas con CSS Grid sobre el frame. -->
+        <section class="dev-bento-frame" id="devStatsGrid" aria-label="Estadísticas principales">
+          <svg class="dev-bento-svg" viewBox="0 0 1161 190" preserveAspectRatio="none" aria-hidden="true">
+            <path fill="var(--dev-bento-frame, #d8d8d8)"
+                  d="M0 20C0 8.95431 8.9543 0 20 0H1141C1152.05 0 1161 8.9543 1161 20V39.5C1161 50.5457 1152.38 59.5 1141.34 59.5C1064.72 59.5 783.48 59.5 642.775 59.5C594.483 59.5 551.958 90.9976 537.758 137.155L525.844 175.881C523.262 184.273 515.508 190 506.728 190H20C8.95432 190 0 181.046 0 170V20Z"/>
+          </svg>
 
-          <div class="dev-stat-card">
-            <div class="dev-stat-icon published">
-              <i class="fas fa-globe"></i>
+          <div class="dev-bento-grid">
+            <!-- Fila superior (zona horizontal del SVG): 4 stat pills -->
+            <div class="dev-bento-cell dev-bento-pill" style="grid-area: pill1">
+              <span class="dev-bento-pill-label">Flujos Creados</span>
+              <span class="dev-bento-pill-value" id="statTotalFlows">—</span>
             </div>
-            <div class="dev-stat-content">
-              <div class="dev-stat-value" id="statPublishedFlows">-</div>
-              <div class="dev-stat-label">Flujos Publicados</div>
+            <div class="dev-bento-cell dev-bento-pill" style="grid-area: pill2">
+              <span class="dev-bento-pill-label">Publicados</span>
+              <span class="dev-bento-pill-value" id="statPublishedFlows">—</span>
             </div>
-          </div>
+            <div class="dev-bento-cell dev-bento-pill" style="grid-area: pill3">
+              <span class="dev-bento-pill-label">Ejecuciones</span>
+              <span class="dev-bento-pill-value" id="statSuccessfulRuns">—</span>
+            </div>
+            <div class="dev-bento-cell dev-bento-pill" style="grid-area: pill4">
+              <span class="dev-bento-pill-label">Rating</span>
+              <span class="dev-bento-pill-value" id="statAvgRating">—</span>
+            </div>
 
-          <div class="dev-stat-card">
-            <div class="dev-stat-icon runs">
-              <i class="fas fa-play-circle"></i>
-            </div>
-            <div class="dev-stat-content">
-              <div class="dev-stat-value" id="statSuccessfulRuns">-</div>
-              <div class="dev-stat-label">Ejecuciones Exitosas</div>
-            </div>
-          </div>
-
-          <div class="dev-stat-card">
-            <div class="dev-stat-icon rating">
-              <i class="fas fa-star"></i>
-            </div>
-            <div class="dev-stat-content">
-              <div class="dev-stat-value" id="statAvgRating">-</div>
-              <div class="dev-stat-label">Rating Promedio</div>
+            <!-- Zona alta izquierda (debajo de la pill1): card grande -->
+            <div class="dev-bento-cell dev-bento-hero" style="grid-area: hero">
+              <span class="dev-bento-hero-label">Resumen del mes</span>
+              <span class="dev-bento-hero-value">—</span>
+              <span class="dev-bento-hero-sub">Próximamente</span>
             </div>
           </div>
         </section>
