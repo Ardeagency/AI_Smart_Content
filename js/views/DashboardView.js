@@ -70,17 +70,17 @@ class DashboardView extends BaseView {
 
   _buildShell() {
     const tabs = [
-      { id: 'my-brands',  icon: 'fa-layer-group', label: 'Mi Marca'    },
-      { id: 'competence', icon: 'fa-chess',        label: 'Competencia' },
-      { id: 'tendencies', icon: 'fa-fire',         label: 'Tendencias'  },
-      { id: 'strategy',   icon: 'fa-route',        label: 'Estrategia'  },
+      { id: 'my-brands',  label: 'Mi Marca'    },
+      { id: 'competence', label: 'Competencia' },
+      { id: 'tendencies', label: 'Tendencias'  },
+      { id: 'strategy',   label: 'Estrategia'  },
     ];
     return `
       <div class="insight-page page-content" id="insightPage">
         <nav class="insight-subnav" id="insightSubnav">
           ${tabs.map(t => `
             <button class="insight-subnav-btn${this._activeTab === t.id ? ' active' : ''}" data-tab="${t.id}">
-              <i class="fas ${t.icon}"></i><span>${t.label}</span>
+              <span>${t.label}</span>
             </button>`).join('')}
         </nav>
         <div class="insight-tab-body" id="insightTabBody"></div>
@@ -182,7 +182,6 @@ class DashboardView extends BaseView {
     const skel = n => Array(n).fill('<div class="mb-skel-block"></div>').join('');
     return `
     <div class="mb-dashboard mb-dashboard--loading">
-      <div class="mb-brand-header mb-skel-panel">${skel(4)}</div>
       <div class="mb-kpi-strip">${Array(6).fill(`<div class="mb-kpi-card"><div class="mb-skel-block" style="height:64px;width:100%"></div></div>`).join('')}</div>
       <div class="mb-skel-panel">${skel(3)}</div>
       <div class="mb-dim-row">
@@ -215,57 +214,28 @@ class DashboardView extends BaseView {
     const mentions24h = kpis.mentions24h  != null ? kpis.mentions24h  : '—';
     const brandCount  = kpis.brandCount   != null ? kpis.brandCount   : containers.length;
 
-    // Brand score: computed from real data if available
-    const brandScore  = sentScore !== '—' ? Math.min(100, Math.round(sentScore * 0.6 + (crisisIdx === 0 ? 40 : 20))) : 0;
-
     return `
     <div class="mb-dashboard">
 
-      <!-- ── Header de Mi Marca ── -->
-      <div class="mb-brand-header">
-        <div class="mb-brand-identity">
-          <div class="mb-brand-avatar"><i class="fas fa-layer-group"></i></div>
-          <div>
-            <h2 class="mb-brand-name">${this._esc(window.currentOrgName || 'Mi Organización')}</h2>
-            <p class="mb-brand-tagline">ADN de marca en tiempo real · Demostración</p>
-          </div>
-        </div>
-        <div class="mb-brand-score">
-          <div class="mb-score-ring" id="mbScoreRing">
-            <svg viewBox="0 0 80 80" class="mb-score-svg">
-              <circle cx="40" cy="40" r="32" class="mb-score-track"/>
-              <circle cx="40" cy="40" r="32" class="mb-score-fill" id="mbScoreArc" style="stroke-dasharray:0 201"/>
-            </svg>
-            <span class="mb-score-val" id="mbScoreVal">0</span>
-          </div>
-          <div class="mb-score-label">Brand Health<br>Score</div>
-        </div>
-        <div class="mb-brand-meta">
-          <div class="mb-meta-item"><span class="mb-meta-dot mb-dot-green"></span><span>OpenClaw activo</span></div>
-          <div class="mb-meta-item"><span class="mb-meta-dot mb-dot-blue"></span><span>Última sync hace 4 min</span></div>
-          <div class="mb-meta-item"><span class="mb-meta-dot mb-dot-yellow"></span><span>3 plataformas monitoreadas</span></div>
-        </div>
-      </div>
-
       <!-- ── KPI Strip ── -->
       <div class="mb-kpi-strip">
-        ${this._kpiCard('fa-pen-nib',     'Posts propios / 7d', String(posts7d),   hasAnyData ? 'Últimos 7 días' : 'Sin datos aún',  'blue')}
-        ${this._kpiCard('fa-heart',       'Engagement Rate',    '—',               'API Meta necesaria',                             'pink')}
-        ${this._kpiCard('fa-face-smile',  'Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA', 'green')}
-        ${this._kpiCard('fa-tag',         'Cumplimiento MAP',   mapComp,           mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados', 'orange')}
-        ${this._kpiCard('fa-triangle-exclamation', 'Crisis abiertas', String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención', 'teal')}
-        ${this._kpiCard('fa-users',       'Menciones 24 h',     String(mentions24h), hasAnyData ? 'Shadow + etiquetadas' : 'Sin señales aún', 'purple')}
+        ${this._kpiCard('Posts propios / 7d', String(posts7d), hasAnyData ? 'Últimos 7 días' : 'Sin datos aún',  'blue')}
+        ${this._kpiCard('Engagement Rate',    '—',              'API Meta necesaria',                             'pink')}
+        ${this._kpiCard('Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA', 'green')}
+        ${this._kpiCard('Cumplimiento MAP',   mapComp,          mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados', 'orange')}
+        ${this._kpiCard('Crisis abiertas',    String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención', 'teal')}
+        ${this._kpiCard('Menciones 24 h',     String(mentions24h), hasAnyData ? 'Shadow + etiquetadas' : 'Sin señales aún', 'purple')}
       </div>
 
       <!-- ══════════════════════════════════════════════════════
            DIMENSIÓN A · OPERATIVIDAD Y PULSO
       ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('A', 'fa-pulse', 'Operatividad y Pulso', 'Ritmo de publicación, micro-momentos y formatos')}
+      ${this._dimHeader('Operatividad y Pulso', 'Ritmo de publicación, micro-momentos y formatos')}
       <div class="mb-dim-row">
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-chart-line"></i> Ritmo de Publicación y Latencia</span>
+            <span class="mb-widget-title"> Ritmo de Publicación y Latencia</span>
             <span class="mb-badge mb-badge--blue">30 días</span>
           </div>
           <div class="mb-widget-body">
@@ -275,7 +245,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-fire"></i> Formatos Dominantes</span>
+            <span class="mb-widget-title"> Formatos Dominantes</span>
             <span class="mb-badge mb-badge--green">Hoy</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -288,7 +258,7 @@ class DashboardView extends BaseView {
       <!-- Heatmap Horario (ocupa toda la fila) -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"><i class="fas fa-th"></i> Mapa de Calor de Interacción Horaria</span>
+          <span class="mb-widget-title"> Mapa de Calor de Interacción Horaria</span>
           <span class="mb-badge mb-badge--purple">Últimas 4 semanas</span>
         </div>
         <div class="mb-widget-body">
@@ -304,12 +274,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════════════
            DIMENSIÓN B · IDENTIDAD Y NARRATIVA
       ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('B', 'fa-bullseye', 'Identidad y Narrativa', 'Pilares, tono de voz y semántica de impacto')}
+      ${this._dimHeader('Identidad y Narrativa', 'Pilares, tono de voz y semántica de impacto')}
       <div class="mb-dim-row">
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-layer-group"></i> Dominio de Pilares Narrativos</span>
+            <span class="mb-widget-title"> Dominio de Pilares Narrativos</span>
             <span class="mb-badge mb-badge--blue">Este mes</span>
           </div>
           <div class="mb-widget-body">
@@ -319,7 +289,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-shield-halved"></i> Brand Soul Guard</span>
+            <span class="mb-widget-title"> Brand Soul Guard</span>
             <span class="mb-badge mb-badge--green">Tono</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -330,7 +300,7 @@ class DashboardView extends BaseView {
       </div>
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"><i class="fas fa-comments"></i> Semántica de Impacto — Top palabras resonantes</span>
+          <span class="mb-widget-title"> Semántica de Impacto — Top palabras resonantes</span>
           <span class="mb-badge mb-badge--pink">IA semántica</span>
         </div>
         <div class="mb-widget-body">
@@ -341,11 +311,11 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════════════
            DIMENSIÓN C · COMERCIAL Y DISTRIBUCIÓN
       ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('C', 'fa-store', 'Comercial y Distribución', 'MAP Monitor, stock digital y análisis de ofertas')}
+      ${this._dimHeader('Comercial y Distribución', 'MAP Monitor, stock digital y análisis de ofertas')}
 
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"><i class="fas fa-shield-check"></i> Monitor de Cumplimiento de Precios (MAP Monitor)</span>
+          <span class="mb-widget-title"> Monitor de Cumplimiento de Precios (MAP Monitor)</span>
           <span class="mb-badge mb-badge--orange" id="mbMAPBadge">Cargando…</span>
         </div>
         <div class="mb-widget-body" id="mbMAPBody">
@@ -356,7 +326,7 @@ class DashboardView extends BaseView {
       <div class="mb-dim-row">
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-boxes-stacking"></i> Stock Digital</span>
+            <span class="mb-widget-title"> Stock Digital</span>
             <span class="mb-badge mb-badge--teal">Live</span>
           </div>
           <div class="mb-widget-body" id="mbStockBody">
@@ -365,7 +335,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-percent"></i> Efectividad de Ofertas Dinámicas</span>
+            <span class="mb-widget-title"> Efectividad de Ofertas Dinámicas</span>
             <span class="mb-badge mb-badge--blue">Comparativa</span>
           </div>
           <div class="mb-widget-body">
@@ -377,12 +347,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════════════
            DIMENSIÓN D · SOCIAL Y PERCEPCIÓN
       ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('D', 'fa-users', 'Social y Percepción', 'Sentimiento biométrico, shadow mentions e influencia real')}
+      ${this._dimHeader('Social y Percepción', 'Sentimiento biométrico, shadow mentions e influencia real')}
       <div class="mb-dim-row">
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-face-smile-beam"></i> Sentimiento Biométrico</span>
+            <span class="mb-widget-title"> Sentimiento Biométrico</span>
             <span class="mb-badge mb-badge--pink">Emociones</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -392,7 +362,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-eye-slash"></i> Shadow Mentions</span>
+            <span class="mb-widget-title"> Shadow Mentions</span>
             <span class="mb-badge mb-badge--purple">Sin etiqueta</span>
           </div>
           <div class="mb-widget-body">
@@ -402,7 +372,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-star"></i> Índice de Influencia Real</span>
+            <span class="mb-widget-title"> Índice de Influencia Real</span>
             <span class="mb-badge mb-badge--teal">Top 5</span>
           </div>
           <div class="mb-widget-body" id="mbInfluenceBody">
@@ -415,12 +385,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════════════
            DIMENSIÓN E · DIAGNÓSTICA
       ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('E', 'fa-stethoscope', 'Diagnóstica', 'Puntos ciegos, fuga de audiencia y detección de crisis')}
+      ${this._dimHeader('Diagnóstica', 'Puntos ciegos, fuga de audiencia y detección de crisis')}
       <div class="mb-dim-row">
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-radar"></i> Mapa de Puntos Ciegos</span>
+            <span class="mb-widget-title"> Mapa de Puntos Ciegos</span>
             <span class="mb-badge mb-badge--blue">Blind Spots</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -430,7 +400,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"><i class="fas fa-arrow-trend-down"></i> Análisis de Fuga de Audiencia</span>
+            <span class="mb-widget-title"> Análisis de Fuga de Audiencia</span>
             <span class="mb-badge mb-badge--orange">Retención</span>
           </div>
           <div class="mb-widget-body">
@@ -443,7 +413,7 @@ class DashboardView extends BaseView {
       <!-- Crisis de Baja Intensidad (timeline) -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"><i class="fas fa-triangle-exclamation"></i> Detección de Crisis de Baja Intensidad</span>
+          <span class="mb-widget-title"> Detección de Crisis de Baja Intensidad</span>
           <span class="mb-badge mb-badge--red">Monitoreo continuo</span>
         </div>
         <div class="mb-widget-body" id="mbCrisisBody">
@@ -454,7 +424,7 @@ class DashboardView extends BaseView {
       <!-- SWOT Dinámico -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"><i class="fas fa-chess"></i> SWOT Dinámico — Virtudes y Vulnerabilidades</span>
+          <span class="mb-widget-title"> SWOT Dinámico — Virtudes y Vulnerabilidades</span>
           <span class="mb-badge mb-badge--purple">OpenClaw IA</span>
         </div>
         <div class="mb-widget-body" id="mbSWOTBody">
@@ -464,30 +434,28 @@ class DashboardView extends BaseView {
 
       <!-- Footer fuente de datos -->
       <div class="mb-data-source-note">
-        <i class="fas fa-database"></i>
+        
         <span>Datos obtenidos en tiempo real desde <strong>Supabase</strong>. Última actualización: <strong id="mbLastUpdate">—</strong></span>
-        <button class="mb-refresh-btn" onclick="window._dashboardView?._refreshMBData()"><i class="fas fa-rotate-right"></i> Actualizar</button>
+        <button class="mb-refresh-btn" onclick="window._dashboardView?._refreshMBData()"> Actualizar</button>
       </div>
 
     </div>`;
   }
 
   /* ── Helpers de construcción ─────────────────────────────── */
-  _dimHeader(letter, icon, title, subtitle) {
+  _dimHeader(title, subtitle) {
     return `
       <div class="mb-dim-header">
-        <div class="mb-dim-letter">${this._esc(letter)}</div>
         <div>
-          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
+          <div class="mb-dim-title">${this._esc(title)}</div>
           <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
         </div>
       </div>`;
   }
 
-  _kpiCard(icon, label, value, sub, color) {
+  _kpiCard(label, value, sub, color) {
     return `
       <div class="mb-kpi-card mb-kpi--${color}">
-        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
         <div class="mb-kpi-body">
           <div class="mb-kpi-value" data-target="${value}">${value}</div>
           <div class="mb-kpi-label">${label}</div>
@@ -550,7 +518,7 @@ class DashboardView extends BaseView {
               <td class="mb-map-price">${r.price}</td>
               <td class="mb-map-price mb-map-ref">${r.map}</td>
               <td class="mb-map-delta ${r.status === 'alert' ? 'mb-delta--neg' : r.status === 'warning' ? 'mb-delta--warn' : 'mb-delta--pos'}">${r.delta}</td>
-              <td><span class="mb-map-badge ${statusClass[r.status]}"><i class="fas ${statusIcon[r.status]}"></i> ${statusLabel[r.status]}</span></td>
+              <td><span class="mb-map-badge ${statusClass[r.status]}"> ${statusLabel[r.status]}</span></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -605,7 +573,7 @@ class DashboardView extends BaseView {
               <span class="mb-inf-name">${p.name}</span>
               <span class="mb-inf-type">${p.type} · ${p.followers}</span>
             </div>
-            <i class="fab ${pIcon[p.platform] || 'fa-globe'} mb-inf-platform"></i>
+            
             <div class="mb-inf-score-wrap">
               <div class="mb-inf-bar" style="width:${p.score}%"></div>
               <span class="mb-inf-score">${p.score}</span>
@@ -627,7 +595,7 @@ class DashboardView extends BaseView {
       <div class="mb-crisis-timeline">
         ${events.map(ev => `
           <div class="mb-crisis-event ${levelCls[ev.level]}">
-            <div class="mb-crisis-icon"><i class="fas ${levelIcon[ev.level]}"></i></div>
+            <div class="mb-crisis-icon"></div>
             <div class="mb-crisis-body">
               <p class="mb-crisis-msg">${ev.msg}</p>
               <div class="mb-crisis-meta">
@@ -648,11 +616,6 @@ class DashboardView extends BaseView {
     Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
     Chart.defaults.font.size = 11;
 
-    const kpis = d?.kpis?.data || {};
-    const brandScore = kpis.sentimentScore != null
-      ? Math.min(100, Math.round(kpis.sentimentScore * 0.6 + (kpis.crisisOpen === 0 ? 40 : 20)))
-      : 0;
-
     this._chartPublicacion(d?.ritmo);
     this._chartFormatos(d?.formatos);
     this._chartPilares(d?.pilares);
@@ -669,7 +632,6 @@ class DashboardView extends BaseView {
     this._renderInfluenceWidget(d?.influencia);
     this._renderCrisisWidget(d?.crisis);
     this._renderSWOTWidget(d?.swot);
-    this._animateScoreRing(brandScore);
   }
 
   _reg(chart) { this._charts.push(chart); return chart; }
@@ -991,7 +953,7 @@ class DashboardView extends BaseView {
       html += `</div>`;
     });
     if (!hasReal) {
-      html += `<p class="mb-hm-no-data"><i class="fas fa-info-circle"></i> Conecta Meta o Google Analytics para ver datos reales de interacción horaria</p>`;
+      html += `<p class="mb-hm-no-data"> Conecta Meta o Google Analytics para ver datos reales de interacción horaria</p>`;
     }
     el.innerHTML = html;
   }
@@ -1016,7 +978,7 @@ class DashboardView extends BaseView {
       if (window.MiBrandaDataService) {
         // Las palabras clave ya están en los containers cargados
       }
-      el.innerHTML = `<p style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0"><i class="fas fa-info-circle" style="margin-right:0.4rem"></i>Las palabras clave y conceptos resonantes aparecerán aquí cuando VERA analice el contenido publicado.</p>`;
+      el.innerHTML = `<p style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0">Las palabras clave y conceptos resonantes aparecerán aquí cuando VERA analice el contenido publicado.</p>`;
     }
   }
 
@@ -1027,7 +989,7 @@ class DashboardView extends BaseView {
     const hasMissions = missionsRes && !missionsRes.isEmpty && Array.isArray(missionsRes.data) && missionsRes.data.length > 0;
 
     if (!hasMissions) {
-      el.innerHTML = `<div class="mb-mission mb-m--none"><i class="fas fa-circle-check mb-mission-icon"></i><span class="mb-mission-msg">OpenClaw no tiene misiones activas en este momento. Los datos se actualizarán automáticamente.</span><span class="mb-mission-time">Ahora</span></div>`;
+      el.innerHTML = `<div class="mb-mission mb-m--none"><span class="mb-mission-msg">OpenClaw no tiene misiones activas en este momento. Los datos se actualizarán automáticamente.</span><span class="mb-mission-time">Ahora</span></div>`;
       return;
     }
 
@@ -1037,7 +999,7 @@ class DashboardView extends BaseView {
       const st  = m.status || 'pending';
       const msg = m.result_reference?.summary || m.action_payload?.description || `Misión: ${m.mission_type}`;
       const time = this._relTime(m.created_at);
-      return `<div class="mb-mission ${statusCls[st] || 'mb-m--running'}"><i class="fas ${statusIcon[st] || 'fa-clock'} mb-mission-icon"></i><span class="mb-mission-msg">${this._esc(msg)}</span><span class="mb-mission-time">${time}</span></div>`;
+      return `<div class="mb-mission ${statusCls[st] || 'mb-m--running'}"><span class="mb-mission-msg">${this._esc(msg)}</span><span class="mb-mission-time">${time}</span></div>`;
     }).join('');
   }
 
@@ -1066,7 +1028,7 @@ class DashboardView extends BaseView {
               <td class="mb-map-price">${fmt(r.price, r.currency)}</td>
               <td class="mb-map-price mb-map-ref">${fmt(r.map, r.currency)}</td>
               <td class="mb-map-delta ${r.status==='alert'?'mb-delta--neg':r.status==='warning'?'mb-delta--warn':'mb-delta--pos'}">${fmtDelta(r.delta, r.currency)}</td>
-              <td><span class="mb-map-badge ${statusCls[r.status]}"><i class="fas ${statusIcon[r.status]}"></i> ${statusLabel[r.status]}</span></td>
+              <td><span class="mb-map-badge ${statusCls[r.status]}"> ${statusLabel[r.status]}</span></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1127,7 +1089,7 @@ class DashboardView extends BaseView {
           <span class="mb-inf-name">${this._esc(p.target_identifier || p.name)}</span>
           <span class="mb-inf-type">${this._esc(p.name)}${p.followers ? ` · ${p.followers}` : ''}</span>
         </div>
-        <i class="${fam} ${fab} mb-inf-platform"></i>
+        
         <div class="mb-inf-score-wrap">
           <div class="mb-inf-bar" style="width:${score}%"></div>
           <span class="mb-inf-score">${score}</span>
@@ -1142,14 +1104,14 @@ class DashboardView extends BaseView {
     const hasData = crisisRes && !crisisRes.isEmpty && crisisRes.data;
     const vulns   = hasData ? (crisisRes.data.vulnerabilities || []) : [];
     if (!vulns.length) {
-      el.innerHTML = `<div class="mb-crisis-event mb-crisis--none"><div class="mb-crisis-icon"><i class="fas fa-circle-check"></i></div><div class="mb-crisis-body"><p class="mb-crisis-msg">No hay crisis ni vulnerabilidades activas. ✓</p><div class="mb-crisis-meta"><span class="mb-crisis-time">Ahora</span><span class="mb-crisis-action">Todo en orden</span></div></div></div>`;
+      el.innerHTML = `<div class="mb-crisis-event mb-crisis--none"><div class="mb-crisis-icon"></div><div class="mb-crisis-body"><p class="mb-crisis-msg">No hay crisis ni vulnerabilidades activas. ✓</p><div class="mb-crisis-meta"><span class="mb-crisis-time">Ahora</span><span class="mb-crisis-action">Todo en orden</span></div></div></div>`;
       return;
     }
     const lvlCls  = { low:'mb-crisis--low', medium:'mb-crisis--low', high:'mb-crisis--med', critical:'mb-crisis--high' };
     const lvlIcon = { low:'fa-circle-dot', medium:'fa-triangle-exclamation', high:'fa-triangle-exclamation', critical:'fa-circle-xmark' };
     el.innerHTML = `<div class="mb-crisis-timeline">${vulns.slice(0,5).map(v => `
       <div class="mb-crisis-event ${lvlCls[v.severity]||'mb-crisis--low'}">
-        <div class="mb-crisis-icon"><i class="fas ${lvlIcon[v.severity]||'fa-circle-dot'}"></i></div>
+        <div class="mb-crisis-icon"></div>
         <div class="mb-crisis-body">
           <p class="mb-crisis-msg">${this._esc(v.title)}${v.description ? ' — ' + this._esc(v.description.slice(0,120)) : ''}</p>
           <div class="mb-crisis-meta">
@@ -1170,8 +1132,8 @@ class DashboardView extends BaseView {
     }
     const d = swotRes.data;
     const quad = (title, items, cls, icon) => {
-      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty"><i class="fas fa-ellipsis"></i> Sin datos aún</li>`;
-      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header"><i class="fas ${icon}"></i> ${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
+      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty"> Sin datos aún</li>`;
+      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header"> ${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
     };
     el.innerHTML = `<div class="mb-swot-grid">
       ${quad('Fortalezas',  d.strengths || [],    'mb-swot--strength',    'fa-shield')}
@@ -1187,14 +1149,14 @@ class DashboardView extends BaseView {
     if (!wrap) return;
     const ov = document.createElement('div');
     ov.className = 'mb-chart-empty-overlay';
-    ov.innerHTML = `<i class="fas fa-chart-simple"></i><span>${msg}</span>`;
+    ov.innerHTML = `<span>${msg}</span>`;
     canvas.style.opacity = '0.15';
     wrap.style.position = 'relative';
     wrap.appendChild(ov);
   }
 
   _emptyState(icon, title, desc) {
-    return `<div class="mb-empty-state"><i class="fas ${icon}"></i><strong>${title}</strong><p>${desc}</p></div>`;
+    return `<div class="mb-empty-state"><strong>${title}</strong><p>${desc}</p></div>`;
   }
 
   _relTime(iso) {
@@ -1206,24 +1168,6 @@ class DashboardView extends BaseView {
     const h = Math.floor(min / 60);
     if (h < 24)    return `Hace ${h} h`;
     return `Hace ${Math.floor(h/24)} d`;
-  }
-
-  /* ── Score ring animation ─────────────────────────────────── */
-  _animateScoreRing(score) {
-    const arc = document.getElementById('mbScoreArc');
-    const val = document.getElementById('mbScoreVal');
-    if (!arc || !val) return;
-    const circumference = 2 * Math.PI * 32; // r=32
-    let current = 0;
-    const target = score;
-    const step = () => {
-      current = Math.min(current + 1.5, target);
-      const dash = (current / 100) * circumference;
-      arc.style.strokeDasharray = `${dash} ${circumference}`;
-      val.textContent = Math.round(current);
-      if (current < target) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
   }
 
   _animateKPIs() {
@@ -1243,7 +1187,7 @@ class DashboardView extends BaseView {
      TENDENCIAS — El Pulso del Mundo
   ═══════════════════════════════════════════════════════════ */
   async _renderTendencies(body) {
-    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Escaneando señales del mundo…</div>`;
+    body.innerHTML = `<div class="mb-loading"> Escaneando señales del mundo…</div>`;
     try { await this._ensureChartJs(); } catch (_) {}
     body.innerHTML = this._buildTendenciesHTML();
     this._initTendenciesCharts();
@@ -1253,26 +1197,6 @@ class DashboardView extends BaseView {
   _buildTendenciesHTML() {
     return `
     <div class="td-dashboard">
-
-      <!-- ── Header ── -->
-      <div class="td-header">
-        <div class="td-header-left">
-          <div class="td-pulse-icon"><i class="fas fa-earth-americas"></i></div>
-          <div>
-            <h2 class="td-title">El Pulso del Mundo</h2>
-            <p class="td-subtitle">OpenClaw · Escaneo 360° cada 15 min · Demostración</p>
-          </div>
-        </div>
-        <div class="td-scan-status">
-          <div class="td-scan-ring" id="tdScanRing">
-            <span class="td-scan-line"></span>
-          </div>
-          <div class="td-scan-meta">
-            <span class="td-scan-label">Último escaneo</span>
-            <span class="td-scan-time">Hace 3 min</span>
-          </div>
-        </div>
-      </div>
 
       <!-- ── KPI Strip ── -->
       <div class="td-kpi-strip">
@@ -1287,7 +1211,7 @@ class DashboardView extends BaseView {
       <!-- ── OpenClaw Opportunity Feed ── -->
       <div class="td-opportunity-feed">
         <div class="td-of-header">
-          <span><i class="fas fa-satellite-dish"></i> OpenClaw Opportunity Feed</span>
+          <span> OpenClaw Opportunity Feed</span>
           <span class="cc-pulse-dot"></span>
         </div>
         <div class="td-of-list" id="tdOpFeed"></div>
@@ -1301,7 +1225,7 @@ class DashboardView extends BaseView {
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-signal"></i> Señales Débiles del Nicho</span>
+            <span class="td-widget-title"> Señales Débiles del Nicho</span>
             <span class="td-badge td-badge--yellow">Ascenso</span>
           </div>
           <div class="td-widget-body">
@@ -1310,7 +1234,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-music"></i> Audios y Memes en Ascenso</span>
+            <span class="td-widget-title"> Audios y Memes en Ascenso</span>
             <span class="td-badge td-badge--pink">TikTok · Reels</span>
           </div>
           <div class="td-widget-body">
@@ -1321,7 +1245,7 @@ class DashboardView extends BaseView {
 
       <div class="td-widget td-widget--full">
         <div class="td-widget-header">
-          <span class="td-widget-title"><i class="fas fa-water"></i> Content Gaps — Océanos Azules del Día</span>
+          <span class="td-widget-title"> Content Gaps — Océanos Azules del Día</span>
           <span class="td-badge td-badge--blue">Ningún rival está aquí</span>
         </div>
         <div class="td-widget-body">
@@ -1337,7 +1261,7 @@ class DashboardView extends BaseView {
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-cloud-sun"></i> Sincronización con el Mundo Físico</span>
+            <span class="td-widget-title"> Sincronización con el Mundo Físico</span>
             <span class="td-badge td-badge--green">Oportunidades activas</span>
           </div>
           <div class="td-widget-body">
@@ -1346,7 +1270,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-face-smile"></i> Sentiment Shift Global</span>
+            <span class="td-widget-title"> Sentiment Shift Global</span>
             <span class="td-badge td-badge--yellow">Hoy</span>
           </div>
           <div class="td-widget-body td-widget-body--center">
@@ -1363,7 +1287,7 @@ class DashboardView extends BaseView {
       <div class="td-dim-row">
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-sliders"></i> Algorithmic Watchdog</span>
+            <span class="td-widget-title"> Algorithmic Watchdog</span>
             <span class="td-badge td-badge--orange">Cambios detectados</span>
           </div>
           <div class="td-widget-body">
@@ -1372,7 +1296,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-hashtag"></i> Hashtag & Keyword Velocity</span>
+            <span class="td-widget-title"> Hashtag & Keyword Velocity</span>
             <span class="td-badge td-badge--blue">Aceleración</span>
           </div>
           <div class="td-widget-body">
@@ -1389,7 +1313,7 @@ class DashboardView extends BaseView {
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-palette"></i> Evolución Estética del Minuto</span>
+            <span class="td-widget-title"> Evolución Estética del Minuto</span>
             <span class="td-badge td-badge--pink">Engagement visual</span>
           </div>
           <div class="td-widget-body">
@@ -1398,7 +1322,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"><i class="fas fa-bolt-lightning"></i> Narrative Hooks — Top 3 segundos</span>
+            <span class="td-widget-title"> Narrative Hooks — Top 3 segundos</span>
             <span class="td-badge td-badge--yellow">Anti-scroll</span>
           </div>
           <div class="td-widget-body">
@@ -1410,7 +1334,7 @@ class DashboardView extends BaseView {
       <!-- Keyword velocity trend extra chart -->
       <div class="td-widget td-widget--full">
         <div class="td-widget-header">
-          <span class="td-widget-title"><i class="fas fa-chart-area"></i> Curva de Emergencia de Tendencias — Últimas 48 horas</span>
+          <span class="td-widget-title"> Curva de Emergencia de Tendencias — Últimas 48 horas</span>
           <span class="td-badge td-badge--green">Tiempo real</span>
         </div>
         <div class="td-widget-body">
@@ -1420,7 +1344,7 @@ class DashboardView extends BaseView {
 
       <!-- Footer demo -->
       <div class="mb-demo-note">
-        <i class="fas fa-flask"></i>
+        
         <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará Google Trends, APIs meteorológicas, scraping de plataformas y detección de audio en tiempo real.</span>
       </div>
 
@@ -1431,9 +1355,9 @@ class DashboardView extends BaseView {
   _tdDim(letter, icon, title, subtitle) {
     return `
       <div class="mb-dim-header td-dim-header">
-        <div class="mb-dim-letter td-dim-letter">${this._esc(letter)}</div>
+        
         <div>
-          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
+          <div class="mb-dim-title"> ${this._esc(title)}</div>
           <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
         </div>
       </div>`;
@@ -1442,7 +1366,7 @@ class DashboardView extends BaseView {
   _tdKpi(icon, label, value, sub, color) {
     return `
       <div class="mb-kpi-card mb-kpi--${color} td-kpi-card">
-        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
+        
         <div class="mb-kpi-body">
           <div class="mb-kpi-value">${value}</div>
           <div class="mb-kpi-label">${label}</div>
@@ -1498,7 +1422,7 @@ class DashboardView extends BaseView {
             <span class="td-audio-rank">#${i+1}</span>
             <div class="td-audio-info">
               <span class="td-audio-name">${a.name}</span>
-              <span class="td-audio-uses"><i class="fab ${pIcon[a.platform]}"></i> ${a.uses} usos</span>
+              <span class="td-audio-uses"> ${a.uses} usos</span>
             </div>
             <span class="td-phase-badge ${phaseCls[a.phase]}">${a.phase}</span>
             <div class="td-fit-wrap">
@@ -1529,14 +1453,14 @@ class DashboardView extends BaseView {
             <div class="td-gap-top">
               <span class="td-gap-score" style="--gap-score:${g.score}">${g.score}</span>
               <div class="td-gap-meta">
-                <span class="td-gap-vol"><i class="fas fa-magnifying-glass"></i> ${g.volume.toLocaleString()} búsquedas/mes</span>
+                <span class="td-gap-vol"> ${g.volume.toLocaleString()} búsquedas/mes</span>
                 <span class="td-gap-brands ${g.brands === 0 ? 'td-brands--zero' : 'td-brands--few'}">
-                  <i class="fas fa-building"></i> ${g.brands === 0 ? 'Ninguna marca activa' : g.brands + ' marca(s) activas'}
+                   ${g.brands === 0 ? 'Ninguna marca activa' : g.brands + ' marca(s) activas'}
                 </span>
               </div>
             </div>
             <p class="td-gap-topic">${g.topic}</p>
-            <div class="td-gap-action"><i class="fas fa-bolt"></i> Acción: <strong>${g.action}</strong></div>
+            <div class="td-gap-action"> Acción: <strong>${g.action}</strong></div>
           </div>`).join('')}
       </div>`;
   }
@@ -1555,7 +1479,7 @@ class DashboardView extends BaseView {
       <div class="td-world-list">
         ${events.map(e => `
           <div class="td-world-row" style="--row-bg:${typeClr[e.type]}">
-            <div class="td-world-icon"><i class="fas ${e.icon}"></i></div>
+            <div class="td-world-icon"></div>
             <div class="td-world-body">
               <span class="td-world-title">${e.title}</span>
               <span class="td-world-impact">${e.impact}</span>
@@ -1580,15 +1504,15 @@ class DashboardView extends BaseView {
       <div class="td-algo-list">
         ${platforms.map(p => `
           <div class="td-algo-row ${p.change ? 'td-algo--changed' : ''}">
-            <div class="td-algo-icon"><i class="fab ${p.icon}"></i></div>
+            <div class="td-algo-icon"></div>
             <div class="td-algo-body">
               <span class="td-algo-name">${p.name}</span>
-              <span class="td-algo-format"><i class="fas fa-star"></i> ${p.favFormat}</span>
+              <span class="td-algo-format"> ${p.favFormat}</span>
             </div>
             <div class="td-algo-status">
               ${p.change
-                ? '<span class="td-algo-badge td-algo--alert"><i class="fas fa-triangle-exclamation"></i> Cambio</span>'
-                : '<span class="td-algo-badge td-algo--ok"><i class="fas fa-check"></i> Estable</span>'}
+                ? '<span class="td-algo-badge td-algo--alert"> Cambio</span>'
+                : '<span class="td-algo-badge td-algo--ok"> Estable</span>'}
               <span class="td-algo-note">${p.note}</span>
             </div>
           </div>`).join('')}
@@ -1615,7 +1539,7 @@ class DashboardView extends BaseView {
             </div>
             <div class="td-aes-right">
               <span class="td-aes-badge">${t.badge}</span>
-              <div class="td-aes-eng"><i class="fas fa-heart"></i> ${t.engagement}%</div>
+              <div class="td-aes-eng"> ${t.engagement}%</div>
             </div>
           </div>`).join('')}
       </div>`;
@@ -1755,7 +1679,7 @@ class DashboardView extends BaseView {
     const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
     el.innerHTML = ops.map(o => `
       <div class="cc-mission ${statusCls[o.status]}">
-        <i class="fas ${o.icon} cc-mission-icon"></i>
+        
         <span class="cc-mission-msg">${o.msg}</span>
         <span class="cc-mission-time">${o.time}</span>
       </div>`).join('');
@@ -1775,7 +1699,7 @@ class DashboardView extends BaseView {
      COMPETENCIA — Infiltración Táctica
   ═══════════════════════════════════════════════════════════ */
   async _renderCompetence(body) {
-    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando inteligencia táctica…</div>`;
+    body.innerHTML = `<div class="mb-loading"> Cargando inteligencia táctica…</div>`;
     try { await this._ensureChartJs(); } catch (_) {}
     body.innerHTML = this._buildCompetenceHTML();
     this._initCompetenceCharts();
@@ -1785,23 +1709,6 @@ class DashboardView extends BaseView {
   _buildCompetenceHTML() {
     return `
     <div class="cc-dashboard">
-
-      <!-- ── Header ── -->
-      <div class="cc-header">
-        <div class="cc-header-left">
-          <div class="cc-spy-icon"><i class="fas fa-user-secret"></i></div>
-          <div>
-            <h2 class="cc-title">Infiltración Táctica</h2>
-            <p class="cc-subtitle">OpenClaw · Patrullaje cada 10 min · Demostración</p>
-          </div>
-        </div>
-        <div class="cc-rival-selector">
-          <span class="cc-rival-label">Rival monitoreado:</span>
-          <span class="cc-rival-chip"><i class="fas fa-building"></i> Competidor A</span>
-          <span class="cc-rival-chip cc-chip--dim"><i class="fas fa-building"></i> Competidor B</span>
-          <span class="cc-rival-chip cc-chip--dim"><i class="fas fa-building"></i> Competidor C</span>
-        </div>
-      </div>
 
       <!-- ── KPI Strip ── -->
       <div class="cc-kpi-strip">
@@ -1816,7 +1723,7 @@ class DashboardView extends BaseView {
       <!-- ── OpenClaw Mission Control ── -->
       <div class="cc-mission-control">
         <div class="cc-mc-header">
-          <span><i class="fas fa-satellite-dish"></i> OpenClaw Mission Control</span>
+          <span> OpenClaw Mission Control</span>
           <span class="cc-pulse-dot"></span>
         </div>
         <div class="cc-mc-missions" id="ccMissions"></div>
@@ -1830,7 +1737,7 @@ class DashboardView extends BaseView {
       <div class="cc-dim-row">
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-chart-bar"></i> Monitor de Precios SKU vs SKU</span>
+            <span class="cc-widget-title"> Monitor de Precios SKU vs SKU</span>
             <span class="cc-badge cc-badge--blue">Cross-Platform</span>
           </div>
           <div class="cc-widget-body">
@@ -1839,7 +1746,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-boxes-stacking"></i> Stock Crítico del Rival</span>
+            <span class="cc-widget-title"> Stock Crítico del Rival</span>
             <span class="cc-badge cc-badge--red">Oportunidad</span>
           </div>
           <div class="cc-widget-body">
@@ -1850,7 +1757,7 @@ class DashboardView extends BaseView {
 
       <div class="cc-widget cc-widget--full">
         <div class="cc-widget-header">
-          <span class="cc-widget-title"><i class="fas fa-tags"></i> Análisis de Ofertas y Bundles del Rival</span>
+          <span class="cc-widget-title"> Análisis de Ofertas y Bundles del Rival</span>
           <span class="cc-badge cc-badge--orange">Canibalización</span>
         </div>
         <div class="cc-widget-body">
@@ -1866,7 +1773,7 @@ class DashboardView extends BaseView {
       <div class="cc-dim-row">
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-fire"></i> Temas Ganadores del Rival</span>
+            <span class="cc-widget-title"> Temas Ganadores del Rival</span>
             <span class="cc-badge cc-badge--orange">Fórmula viral</span>
           </div>
           <div class="cc-widget-body">
@@ -1875,7 +1782,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-chart-line"></i> Benchmarking de Engagement Real</span>
+            <span class="cc-widget-title"> Benchmarking de Engagement Real</span>
             <span class="cc-badge cc-badge--blue">Nosotros vs Rival</span>
           </div>
           <div class="cc-widget-body">
@@ -1886,7 +1793,7 @@ class DashboardView extends BaseView {
 
       <div class="cc-widget cc-widget--full">
         <div class="cc-widget-header">
-          <span class="cc-widget-title"><i class="fas fa-eye-slash"></i> Detección de Lanzamientos en la Sombra</span>
+          <span class="cc-widget-title"> Detección de Lanzamientos en la Sombra</span>
           <span class="cc-badge cc-badge--purple">Anticipación</span>
         </div>
         <div class="cc-widget-body">
@@ -1902,7 +1809,7 @@ class DashboardView extends BaseView {
       <div class="cc-dim-row">
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-star-half-stroke"></i> Reviews Negativas del Rival — Puntos de Dolor</span>
+            <span class="cc-widget-title"> Reviews Negativas del Rival — Puntos de Dolor</span>
             <span class="cc-badge cc-badge--red">Explotable</span>
           </div>
           <div class="cc-widget-body">
@@ -1911,7 +1818,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-bomb"></i> Crisis de Reputación del Rival</span>
+            <span class="cc-widget-title"> Crisis de Reputación del Rival</span>
             <span class="cc-badge cc-badge--red">Alerta activa</span>
           </div>
           <div class="cc-widget-body">
@@ -1928,7 +1835,7 @@ class DashboardView extends BaseView {
       <div class="cc-dim-row">
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-radar"></i> Radar de Pauta Digital</span>
+            <span class="cc-widget-title"> Radar de Pauta Digital</span>
             <span class="cc-badge cc-badge--purple">Inversión estimada</span>
           </div>
           <div class="cc-widget-body mb-widget-body--center">
@@ -1937,7 +1844,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-user-tie"></i> Influencer Mapping del Rival</span>
+            <span class="cc-widget-title"> Influencer Mapping del Rival</span>
             <span class="cc-badge cc-badge--blue">Oportunidad de captura</span>
           </div>
           <div class="cc-widget-body">
@@ -1951,7 +1858,7 @@ class DashboardView extends BaseView {
       <div class="cc-dim-row">
         <div class="cc-widget mb-widget-body--center">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-chart-pie"></i> Share of Voice — Nicho</span>
+            <span class="cc-widget-title"> Share of Voice — Nicho</span>
             <span class="cc-badge cc-badge--blue">Tiempo real</span>
           </div>
           <div class="cc-widget-body mb-widget-body--center">
@@ -1960,7 +1867,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"><i class="fas fa-chart-area"></i> Share of Voice — Evolución 30 días</span>
+            <span class="cc-widget-title"> Share of Voice — Evolución 30 días</span>
             <span class="cc-badge cc-badge--green">Tendencia</span>
           </div>
           <div class="cc-widget-body">
@@ -1971,7 +1878,7 @@ class DashboardView extends BaseView {
 
       <!-- Footer demo -->
       <div class="mb-demo-note">
-        <i class="fas fa-flask"></i>
+        
         <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará inteligencia real con scraping y APIs de terceros.</span>
       </div>
 
@@ -1982,9 +1889,9 @@ class DashboardView extends BaseView {
   _ccDim(letter, icon, title, subtitle) {
     return `
       <div class="mb-dim-header cc-dim-header">
-        <div class="mb-dim-letter cc-dim-letter">${this._esc(letter)}</div>
+        
         <div>
-          <div class="mb-dim-title"><i class="fas ${icon}"></i> ${this._esc(title)}</div>
+          <div class="mb-dim-title"> ${this._esc(title)}</div>
           <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
         </div>
       </div>`;
@@ -1993,7 +1900,7 @@ class DashboardView extends BaseView {
   _ccKpi(icon, label, value, sub, color) {
     return `
       <div class="mb-kpi-card mb-kpi--${color} cc-kpi-card">
-        <div class="mb-kpi-icon"><i class="fas ${icon}"></i></div>
+        
         <div class="mb-kpi-body">
           <div class="mb-kpi-value">${value}</div>
           <div class="mb-kpi-label">${label}</div>
@@ -2075,12 +1982,12 @@ class DashboardView extends BaseView {
       <div class="cc-shadow-list">
         ${signals.map(s => `
           <div class="cc-shadow-row">
-            <div class="cc-shadow-icon"><i class="fab ${typeIcon[s.type] || 'fas fa-eye'}"></i></div>
+            <div class="cc-shadow-icon"></div>
             <div class="cc-shadow-body">
               <p class="cc-shadow-msg">${s.signal}</p>
               <div class="cc-shadow-meta">
                 <span class="cc-shadow-date">${s.date}</span>
-                <span class="cc-shadow-action"><i class="fas fa-bolt"></i> ${s.action}</span>
+                <span class="cc-shadow-action"> ${s.action}</span>
               </div>
             </div>
             <div class="cc-shadow-conf">
@@ -2107,12 +2014,12 @@ class DashboardView extends BaseView {
         ${crises.map(c => `
           <div class="cc-crisis-item ${levelCls[c.level]}">
             <div class="cc-crisis-top">
-              <i class="fas ${levelIcon[c.level]}"></i>
+              
               <span class="cc-crisis-product">${c.product}</span>
               <span class="cc-crisis-badge">${levelLbl[c.level]}</span>
             </div>
             <p class="cc-crisis-desc">${c.issue}</p>
-            <div class="cc-crisis-window"><i class="fas fa-clock"></i> ${c.window}</div>
+            <div class="cc-crisis-window"> ${c.window}</div>
           </div>`).join('')}
       </div>`;
   }
@@ -2136,7 +2043,7 @@ class DashboardView extends BaseView {
           <tbody>
             ${list.map(r => `<tr>
               <td style="color:var(--text-primary);font-weight:600">${r.handle}</td>
-              <td><i class="fab ${pIcon[r.plat] || 'fa-globe'}" style="font-size:1rem;color:var(--text-secondary)"></i></td>
+              <td></td>
               <td>${r.followers}</td>
               <td>
                 <div class="cc-reach-bar-wrap">
@@ -2145,7 +2052,7 @@ class DashboardView extends BaseView {
                 </div>
               </td>
               <td>${r.trabajaCon}</td>
-              <td>${r.capturable ? '<span class="cc-cap--yes"><i class="fas fa-check"></i> Sí</span>' : '<span class="cc-cap--no"><i class="fas fa-lock"></i> No</span>'}</td>
+              <td>${r.capturable ? '<span class="cc-cap--yes"> Sí</span>' : '<span class="cc-cap--no"> No</span>'}</td>
               <td style="font-size:0.75rem;color:var(--text-muted)">${r.note}</td>
             </tr>`).join('')}
           </tbody>
@@ -2365,7 +2272,7 @@ class DashboardView extends BaseView {
     const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
     el.innerHTML = missions.map(m => `
       <div class="cc-mission ${statusCls[m.status]}">
-        <i class="fas ${m.icon} cc-mission-icon"></i>
+        
         <span class="cc-mission-msg">${m.msg}</span>
         <span class="cc-mission-time">${m.time}</span>
       </div>`).join('');
@@ -2387,7 +2294,7 @@ class DashboardView extends BaseView {
   _pageComingSoon(title, icon, description) {
     return `
       <div class="insight-coming-soon">
-        <div class="insight-cs-icon"><i class="fas ${icon}"></i></div>
+        <div class="insight-cs-icon"></div>
         <h2 class="insight-cs-title">${this._esc(title)}</h2>
         <p class="insight-cs-desc">${this._esc(description)}</p>
         <span class="insight-cs-badge">Próximamente</span>
@@ -2411,7 +2318,7 @@ class DashboardView extends BaseView {
   }
 
   async _renderStrategy(body) {
-    body.innerHTML = `<div class="mb-loading"><i class="fas fa-circle-notch fa-spin"></i> Sintetizando señales estratégicas…</div>`;
+    body.innerHTML = `<div class="mb-loading"> Sintetizando señales estratégicas…</div>`;
     this._injectStratCSS();
     await Promise.allSettled([this._ensureChartJs(), this._ensureStratService()]);
 
@@ -2572,7 +2479,7 @@ class DashboardView extends BaseView {
 
       ${status.briefing ? `
       <div class="st-briefing">
-        <div class="st-briefing-label"><i class="fas fa-brain"></i> Briefing del Día — VERA</div>
+        <div class="st-briefing-label"> Briefing del Día — VERA</div>
         ${this._esc(status.briefing)}
       </div>` : ''}
 
@@ -2584,7 +2491,7 @@ class DashboardView extends BaseView {
             <button class="st-ht active" data-h="hoy">HOY <span class="st-ht-n">${actions.hoy?.length || 0}</span></button>
             <button class="st-ht" data-h="semana">SEMANA <span class="st-ht-n">${actions.semana?.length || 0}</span></button>
             <button class="st-ht" data-h="mes">MES <span class="st-ht-n">${actions.mes?.length || 0}</span></button>
-            <button class="st-ht" data-h="historial"><i class="fas fa-history"></i> Historial</button>
+            <button class="st-ht" data-h="historial"> Historial</button>
           </div>
           <div id="stActionsList">
             ${this._buildStratActionsList(actions.hoy || [], 'hoy', noData)}
@@ -2604,9 +2511,9 @@ class DashboardView extends BaseView {
       ${this._buildStratCalendar(cal)}
 
       <div class="mb-demo-note">
-        <i class="fas fa-clock"></i>
+        
         <span>Síntesis VERA: <strong id="stLastUpdate">—</strong> ·
-        <button class="st-refresh-btn" onclick="window._stratView?._refreshStratData()"><i class="fas fa-sync-alt"></i> Actualizar</button></span>
+        <button class="st-refresh-btn" onclick="window._stratView?._refreshStratData()"> Actualizar</button></span>
       </div>
 
     </div>`;
@@ -2635,7 +2542,7 @@ class DashboardView extends BaseView {
 
       <div class="st-status-item" title="${this._esc(s.threatTooltip || '')}">
         <span class="st-threat-badge ${threat}">
-          <i class="fas ${threatIcons[threat] || 'fa-shield-halved'}"></i>
+          
           ${threatLabels[threat] || 'Bajo'}
         </span>
         <span class="st-status-label">Amenaza Competitiva</span>
@@ -2645,8 +2552,8 @@ class DashboardView extends BaseView {
 
       <div class="st-status-item">
         ${trend
-          ? `<span class="st-trend-chip"><i class="fas fa-fire"></i> ${this._esc(trend.keyword)}</span>`
-          : `<span class="st-trend-chip" style="opacity:.4"><i class="fas fa-satellite-dish"></i> Sin señal activa</span>`}
+          ? `<span class="st-trend-chip"> ${this._esc(trend.keyword)}</span>`
+          : `<span class="st-trend-chip" style="opacity:.4"> Sin señal activa</span>`}
         <span class="st-status-label">Tendencia urgente</span>
       </div>
 
@@ -2668,10 +2575,10 @@ class DashboardView extends BaseView {
 
   /* ── Lista de Action Cards ───────────────────────────────── */
   _buildStratActionsList(actions, horizon, noData) {
-    if (noData) return `<div class="st-empty-state"><i class="fas fa-satellite-dish"></i> Conectando con OpenClaw…</div>`;
+    if (noData) return `<div class="st-empty-state"> Conectando con OpenClaw…</div>`;
     if (!actions || actions.length === 0) return `
       <div class="st-empty-state">
-        <i class="fas fa-check-circle" style="color:rgba(34,197,94,.4)"></i>
+        
         Sin acciones pendientes para este horizonte.<br>
         <span style="font-size:11px;opacity:.6">VERA sintetizará nuevas oportunidades cuando lleguen señales.</span>
       </div>`;
@@ -2689,8 +2596,8 @@ class DashboardView extends BaseView {
     const horizonBadge = `<span class="st-b st-b--${horizon}">${horizon.toUpperCase()}</span>`;
     const typeBadge    = `<span class="st-b st-b--${cat}">${cat.toUpperCase()}</span>`;
     const riskBadge    = isAuto
-      ? `<span class="st-b st-b--auto"><i class="fas fa-bolt"></i> AUTO</span>`
-      : `<span class="st-b st-b--approve"><i class="fas fa-hand-pointer"></i> APROBAR</span>`;
+      ? `<span class="st-b st-b--auto"> AUTO</span>`
+      : `<span class="st-b st-b--approve"> APROBAR</span>`;
 
     const reasoning = action.vera_reasoning
       ? this._esc(action.vera_reasoning.slice(0, 160) + (action.vera_reasoning.length > 160 ? '…' : ''))
@@ -2710,13 +2617,13 @@ class DashboardView extends BaseView {
       <div class="st-card-reason">${reasoning}</div>
       <div class="st-card-btns">
         <button class="st-btn st-btn--ap" data-action="approve" data-id="${action.id}">
-          <i class="fas fa-check"></i> Aprobar
+           Aprobar
         </button>
         <button class="st-btn st-btn--mo" data-action="modify" data-id="${action.id}">
-          <i class="fas fa-pen"></i> Modificar
+           Modificar
         </button>
         <button class="st-btn st-btn--re" data-action="reject" data-id="${action.id}">
-          <i class="fas fa-times"></i>
+          
         </button>
       </div>
     </div>`;
@@ -2726,7 +2633,7 @@ class DashboardView extends BaseView {
   _buildStratCtxEmpty() {
     return `
     <div class="st-ctx-empty">
-      <i class="fas fa-hand-pointer"></i>
+      
       <p>Selecciona una acción del plan para ver el expediente completo</p>
     </div>`;
   }
@@ -2762,7 +2669,7 @@ class DashboardView extends BaseView {
           <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7)">Score de Oportunidad</div>
           <div class="st-ctx-label">
             <span class="st-b st-b--${cat}">${cat.toUpperCase()}</span> &nbsp;
-            ${risk === 'auto' ? `<span class="st-b st-b--auto"><i class="fas fa-bolt"></i> AUTO</span>` : `<span class="st-b st-b--approve"><i class="fas fa-hand-pointer"></i> APPROVE</span>`}
+            ${risk === 'auto' ? `<span class="st-b st-b--auto"> AUTO</span>` : `<span class="st-b st-b--approve"> APPROVE</span>`}
           </div>
         </div>
       </div>
@@ -2770,13 +2677,13 @@ class DashboardView extends BaseView {
 
     ${action.vera_reasoning ? `
     <div class="st-ctx-sec">
-      <div class="st-ctx-sec-title"><i class="fas fa-brain"></i> Razonamiento VERA</div>
+      <div class="st-ctx-sec-title"> Razonamiento VERA</div>
       <div class="st-ctx-reasoning">${this._esc(action.vera_reasoning)}</div>
     </div>` : ''}
 
     ${signal ? `
     <div class="st-ctx-sec">
-      <div class="st-ctx-sec-title"><i class="fas fa-satellite-dish"></i> Señal que la disparó</div>
+      <div class="st-ctx-sec-title"> Señal que la disparó</div>
       <div class="st-ctx-signal">
         <span class="st-ctx-stype">${this._esc(signal.signal_type || '')}</span>
         <span class="st-ctx-stext">${this._esc((signal.content_text || '').slice(0, 120))}
@@ -2786,25 +2693,25 @@ class DashboardView extends BaseView {
 
     ${payload ? `
     <div class="st-ctx-sec">
-      <div class="st-ctx-sec-title"><i class="fas fa-code"></i> Preview de Ejecución</div>
+      <div class="st-ctx-sec-title"> Preview de Ejecución</div>
       <div class="st-ctx-payload">${this._esc(payload)}</div>
     </div>` : ''}
 
     ${impactItems ? `
     <div class="st-ctx-sec">
-      <div class="st-ctx-sec-title"><i class="fas fa-chart-line"></i> Impacto Estimado</div>
+      <div class="st-ctx-sec-title"> Impacto Estimado</div>
       <div class="st-ctx-impact">${impactItems}</div>
     </div>` : ''}
 
     <div class="st-ctx-btns">
       <button class="st-btn st-btn--ap" data-action="approve" data-id="${action.id}">
-        <i class="fas fa-check"></i> Aprobar
+         Aprobar
       </button>
       <button class="st-btn st-btn--mo" data-action="modify" data-id="${action.id}">
-        <i class="fas fa-pen"></i> Modificar
+         Modificar
       </button>
       <button class="st-btn st-btn--re" data-action="reject" data-id="${action.id}">
-        <i class="fas fa-times"></i> Rechazar
+         Rechazar
       </button>
     </div>`;
   }
@@ -2836,8 +2743,8 @@ class DashboardView extends BaseView {
       const dayVera   = veraSlots.filter(v => v.expires_at && v.expires_at.slice(0, 10) === dateStr);
 
       const slots = [
-        ...dayScheds.map(() => `<div class="st-cal-slot scheduled"><i class="fas fa-calendar-check"></i> Prog.</div>`),
-        ...dayVera.map(v => `<div class="st-cal-slot pending"><i class="fas fa-bolt"></i> VERA</div>`),
+        ...dayScheds.map(() => `<div class="st-cal-slot scheduled"> Prog.</div>`),
+        ...dayVera.map(v => `<div class="st-cal-slot pending"> VERA</div>`),
       ].slice(0, 3).join('');
 
       return `
@@ -2852,10 +2759,10 @@ class DashboardView extends BaseView {
     <div class="st-cal-wrap" id="stCalWrap">
       <div class="st-cal-hdr" id="stCalHdr">
         <span class="st-cal-hdr-title">
-          <i class="fas fa-calendar-week"></i> Calendario Editorial — Próximos 7 días
+           Calendario Editorial — Próximos 7 días
           ${bestDays.size > 0 ? `<span class="st-b" style="background:rgba(99,102,241,.12);color:#818cf8">Días óptimos marcados</span>` : ''}
         </span>
-        <span class="st-cal-toggle" id="stCalToggle"><i class="fas fa-chevron-up"></i></span>
+        <span class="st-cal-toggle" id="stCalToggle"></span>
       </div>
       <div class="st-cal-body" id="stCalBody">
         <div class="st-cal-grid">${calCells}</div>
@@ -2869,7 +2776,7 @@ class DashboardView extends BaseView {
 
   /* ── Zona 5: Historial de Misiones ───────────────────────── */
   _buildStratHistory(hist) {
-    if (!hist || hist.length === 0) return `<div class="st-hist-empty"><i class="fas fa-history" style="margin-right:6px;opacity:.4"></i>Sin historial de misiones aún.</div>`;
+    if (!hist || hist.length === 0) return `<div class="st-hist-empty">Sin historial de misiones aún.</div>`;
 
     const catIcons = { contenido: '✍️', pauta: '📢', precio: '💲', tono: '🎙️', monitoreo: '📡', producto: '📦' };
     const rows = hist.map(a => {
@@ -2943,7 +2850,7 @@ class DashboardView extends BaseView {
         if (!body) return;
         const collapsed = body.style.display === 'none';
         body.style.display   = collapsed ? '' : 'none';
-        if (toggle) toggle.innerHTML = collapsed ? '<i class="fas fa-chevron-up"></i>' : '<i class="fas fa-chevron-down"></i>';
+        if (toggle) toggle.innerHTML = collapsed ? '' : '';
       });
     }
   }
@@ -2989,7 +2896,7 @@ class DashboardView extends BaseView {
 
     const ctx = document.getElementById('stCtxPanel');
     if (!ctx) return;
-    ctx.innerHTML = `<div class="st-ctx-empty"><i class="fas fa-circle-notch fa-spin" style="opacity:.5"></i></div>`;
+    ctx.innerHTML = `<div class="st-ctx-empty"></div>`;
 
     if (this._stratService) {
       const result = await this._stratService.loadActionDetail(actionId);
@@ -3005,12 +2912,12 @@ class DashboardView extends BaseView {
 
   async _stratApprove(actionId) {
     const btns = document.querySelectorAll(`[data-action="approve"][data-id="${actionId}"]`);
-    btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>'; });
+    btns.forEach(b => { b.disabled = true; b.innerHTML = ''; });
 
     if (this._stratService) {
       const r = await this._stratService.approveAction(actionId);
       if (r.error) {
-        btns.forEach(b => { b.disabled = false; b.innerHTML = '<i class="fas fa-check"></i> Aprobar'; });
+        btns.forEach(b => { b.disabled = false; b.innerHTML = ' Aprobar'; });
         return;
       }
     }
