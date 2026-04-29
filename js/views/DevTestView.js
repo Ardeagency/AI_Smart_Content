@@ -167,7 +167,7 @@ class DevTestView extends DevBaseView {
             <section class="config-section">
               <h3>
                 <i class="ph ph-folder-simple"></i> Test Cases
-                <button class="btn-icon-small" id="saveTestCaseBtn" title="Guardar configuración actual">
+                <button class="btn-icon-ghost" id="saveTestCaseBtn" title="Guardar configuración actual">
                   <i class="ph ph-plus"></i>
                 </button>
               </h3>
@@ -241,10 +241,10 @@ class DevTestView extends DevBaseView {
                     <span>0ms</span>
                   </div>
                   <div class="response-actions">
-                    <button class="btn-icon-small" id="copyResponseBtn" title="Copiar">
+                    <button class="btn-icon-ghost" id="copyResponseBtn" title="Copiar">
                       <i class="ph ph-copy"></i>
                     </button>
-                    <button class="btn-icon-small" id="expandResponseBtn" title="Expandir">
+                    <button class="btn-icon-ghost" id="expandResponseBtn" title="Expandir">
                       <i class="ph ph-arrows-out"></i>
                     </button>
                   </div>
@@ -295,17 +295,17 @@ class DevTestView extends DevBaseView {
           <aside class="test-history-panel">
             <div class="history-header">
               <h3><i class="ph ph-clock-counter-clockwise"></i> Historial</h3>
-              <button class="btn-icon-small" id="refreshHistoryBtn" title="Actualizar">
+              <button class="btn-icon-ghost" id="refreshHistoryBtn" title="Actualizar">
                 <i class="ph ph-arrows-clockwise"></i>
               </button>
             </div>
             <div class="history-list" id="historyList"></div>
             <div class="history-pagination" id="historyPagination" hidden>
-              <button type="button" class="btn-icon-small" id="historyPrevBtn" title="Página anterior" disabled>
+              <button type="button" class="btn-icon-ghost" id="historyPrevBtn" title="Página anterior" disabled>
                 <i class="ph ph-caret-left"></i>
               </button>
               <span class="history-page-info" id="historyPageInfo"></span>
-              <button type="button" class="btn-icon-small" id="historyNextBtn" title="Página siguiente">
+              <button type="button" class="btn-icon-ghost" id="historyNextBtn" title="Página siguiente">
                 <i class="ph ph-caret-right"></i>
               </button>
             </div>
@@ -1257,7 +1257,7 @@ class DevTestView extends DevBaseView {
             </div>
             <div class="history-status-text">${this.getStatusLabel(run.status)}</div>
           </div>
-          <button class="btn-icon-small view-run-btn" title="Ver detalles">
+          <button class="btn-icon-ghost view-run-btn" title="Ver detalles">
             <i class="ph ph-arrow-right"></i>
           </button>
         </div>
@@ -1555,10 +1555,10 @@ class DevTestView extends DevBaseView {
           ${tc.description ? `<span class="test-case-desc">${tc.description}</span>` : ''}
         </div>
         <div class="test-case-actions">
-          <button class="btn-icon-small load-test-case" title="Cargar">
+          <button class="btn-icon-ghost load-test-case" title="Cargar">
             <i class="ph ph-download"></i>
           </button>
-          <button class="btn-icon-small delete-test-case" title="Eliminar">
+          <button class="btn-icon-ghost delete-test-case" title="Eliminar">
             <i class="ph ph-trash"></i>
           </button>
         </div>

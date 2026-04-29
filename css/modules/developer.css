@@ -1,11 +1,44 @@
-/* ========== developer.css (6826 lineas) ========== */
+/* ========== developer.css ========== */
 
 /**
  * Developer Portal CSS
  * Estilos para el portal PaaS de desarrolladores
  */
 
-/* Variables --dev-* definidas en base.css :root (fuente única) */
+/* Variables --dev-* definidas en bundle.css :root (fuente única) */
+
+/* ==========================================
+   Convención de namespaces — usar el prefijo correcto al añadir clases nuevas
+   ==========================================
+   Sub-módulos:
+     .dev-*           → contenedores y elementos genéricos del portal dev
+     .dev-lead-*      → vistas Lead (DevLead*View): listados, modales, forms
+     .dev-flows-*     → DevFlowsView (grid de flujos)
+     .dev-logs-*      → DevLogsView
+     .dev-test-*      → DevTestView
+     .dev-webhooks-*  → cabecera/header de DevWebhooksView (preferir éste sobre webhooks-*)
+     .builder-*       → flow builder (DevBuilderView). Reusable: DevLeadUserProvisioningView
+                        comparte .builder-settings-form para wizards similares al builder.
+     .webhooks-*      → DevWebhooksView (toolbar, filters, search, notification, etc.)
+                        legado del módulo webhooks; mantener mientras no haya churn justificado.
+
+   Componentes globales (definidos en bundle.css, NO duplicar en developer.css):
+     .modal / .modal-overlay / .modal-content / .modal-header / .modal-body / .modal-footer
+     .btn / .btn-primary / .btn-secondary / .btn-icon / .btn-icon-sm / .btn-icon-xs
+     .form-input / .form-select / .form-textarea / .form-label / .form-group
+     .dev-table / .dev-table-container (tabla unificada del portal dev)
+     .hidden / .d-none (utility)
+
+   Botones icono — dos sistemas distintos:
+     .btn-icon-sm    (28×28, glass, default UI)         | bundle.css
+     .btn-icon-xs    (24×24, glass, default UI)         | bundle.css
+     .btn-icon-ghost     (28×28, transparent, sin border) | developer.css
+     .btn-icon-ghost-xs  (24×24, transparent, sin border) | developer.css
+
+   Visibilidad: usar atributo HTML `hidden` para esconder por defecto,
+   o clase utility `.hidden` / `.d-none`. NO inline `style="display: none;"`.
+   Para modales, usar la clase `.is-open` (dev-lead) / `.active` / `.modal-open`.
+   ========================================== */
 
 /* ==========================================
    Navegación modo desarrollador
@@ -6425,7 +6458,7 @@
   font-size: var(--font-size-base);
 }
 
-.btn-icon-small {
+.btn-icon-ghost {
   width: 28px;
   height: 28px;
   background: transparent;
@@ -6438,7 +6471,7 @@
   cursor: pointer;
   transition: var(--transition);
 }
-.btn-icon-small:hover {
+.btn-icon-ghost:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
@@ -6914,7 +6947,7 @@
   font-style: italic;
 }
 
-.btn-icon-tiny {
+.btn-icon-ghost-xs {
   width: 24px;
   height: 24px;
   display: flex;
@@ -6929,11 +6962,11 @@
   transition: var(--transition);
 }
 
-.webhook-url-cell:hover .btn-icon-tiny {
+.webhook-url-cell:hover .btn-icon-ghost-xs {
   opacity: 1;
 }
 
-.btn-icon-tiny:hover {
+.btn-icon-ghost-xs:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
@@ -6994,15 +7027,15 @@
   gap: 4px;
 }
 
-.actions-cell .btn-icon-small {
+.actions-cell .btn-icon-ghost {
   opacity: 0.6;
 }
 
-.actions-cell .btn-icon-small:hover {
+.actions-cell .btn-icon-ghost:hover {
   opacity: 1;
 }
 
-.actions-cell .btn-icon-small:disabled {
+.actions-cell .btn-icon-ghost:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }

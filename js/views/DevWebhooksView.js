@@ -595,7 +595,7 @@ class DevWebhooksView extends DevBaseView {
           <div class="webhook-url-cell ${hasTest ? '' : 'empty'}">
             ${hasTest ? `
               <span class="url-text" title="${tech.webhook_url_test}">${truncateUrl(tech.webhook_url_test)}</span>
-              <button class="btn-icon-tiny copy-url" data-url="${tech.webhook_url_test}" title="Copiar">
+              <button class="btn-icon-ghost-xs copy-url" data-url="${tech.webhook_url_test}" title="Copiar">
                 <i class="ph ph-copy"></i>
               </button>
             ` : '<span class="no-url">No configurado</span>'}
@@ -605,7 +605,7 @@ class DevWebhooksView extends DevBaseView {
           <div class="webhook-url-cell ${hasProd ? '' : 'empty'}">
             ${hasProd ? `
               <span class="url-text" title="${tech.webhook_url_prod}">${truncateUrl(tech.webhook_url_prod)}</span>
-              <button class="btn-icon-tiny copy-url" data-url="${tech.webhook_url_prod}" title="Copiar">
+              <button class="btn-icon-ghost-xs copy-url" data-url="${tech.webhook_url_prod}" title="Copiar">
                 <i class="ph ph-copy"></i>
               </button>
             ` : '<span class="no-url">No configurado</span>'}
@@ -634,19 +634,19 @@ class DevWebhooksView extends DevBaseView {
         </td>
         <td class="col-actions">
           <div class="actions-cell">
-            <button class="btn-icon-small health-check-btn" data-flow-id="${webhook.flowId}" title="Health Check" ${!isConfigured ? 'disabled' : ''}>
+            <button class="btn-icon-ghost health-check-btn" data-flow-id="${webhook.flowId}" title="Health Check" ${!isConfigured ? 'disabled' : ''}>
               <i class="ph ph-heartbeat"></i>
             </button>
-            <button class="btn-icon-small edit-btn" data-flow-id="${webhook.flowId}" title="Editar">
+            <button class="btn-icon-ghost edit-btn" data-flow-id="${webhook.flowId}" title="Editar">
               <i class="ph ph-pencil"></i>
             </button>
             ${tech?.editor_url ? `
-              <a href="${tech.editor_url}" target="_blank" class="btn-icon-small" title="Abrir en plataforma">
+              <a href="${tech.editor_url}" target="_blank" class="btn-icon-ghost" title="Abrir en plataforma">
                 <i class="ph ph-arrow-square-out"></i>
               </a>
             ` : ''}
             ${tech ? `
-              <button class="btn-icon-small delete-btn" data-flow-id="${webhook.flowId}" title="Eliminar configuración">
+              <button class="btn-icon-ghost delete-btn" data-flow-id="${webhook.flowId}" title="Eliminar configuración">
                 <i class="ph ph-trash"></i>
               </button>
             ` : ''}
