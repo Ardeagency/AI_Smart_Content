@@ -29,7 +29,10 @@ body.entrance-done .signin-container {
 
 /* Hero layout: imagen full-bleed + card glass a la derecha */
 .signin-container--hero {
-    background: var(--bg-primary) url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1777469392/image_33_ehg7wd.png') center/cover no-repeat;
+    background:
+        linear-gradient(rgba(11, 11, 11, 0.55), rgba(11, 11, 11, 0.55)),
+        url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1777469392/image_33_ehg7wd.png') center/cover no-repeat;
+    background-color: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: flex-end;
