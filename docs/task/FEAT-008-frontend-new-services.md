@@ -4,6 +4,9 @@ title: Crear CompetenciaDataService y TendenciasDataService
 severity: medium
 type: feature
 status: open
+auto_eligible: no
+auto_eligible_reason: requiere diseño visual de widgets nuevos — decisión humana
+est_duration: long
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-006]

@@ -4,6 +4,9 @@ title: brand_indexer corre sin errores pero ai_*_vectors siguen vacíos
 severity: high
 type: bug
 status: open
+auto_eligible: yes
+auto_eligible_reason: debug + posible fix en JS del ai-engine; reversible vía git revert
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

@@ -4,6 +4,9 @@ title: pg_cron jobs para refresh de matviews (5/15/60 min)
 severity: medium
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: 6 cron.schedule(...) calls; verificable con SELECT cron.job
+est_duration: short
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-002]

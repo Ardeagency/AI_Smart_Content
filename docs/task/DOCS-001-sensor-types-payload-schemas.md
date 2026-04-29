@@ -4,6 +4,9 @@ title: Documentar todos los sensor_type con su payload schema
 severity: low
 type: docs
 status: open
+auto_eligible: yes
+auto_eligible_reason: leer handlers en ai-engine + escribir doc; sin afectar runtime
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

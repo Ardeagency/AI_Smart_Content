@@ -4,6 +4,9 @@ title: Crear dashboard_competencia/tendencias/estrategia + v2 de mi_marca
 severity: medium
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: sigue patrón canónico de dashboard_mi_marca aplicado; auth check incluido
+est_duration: long
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-002]

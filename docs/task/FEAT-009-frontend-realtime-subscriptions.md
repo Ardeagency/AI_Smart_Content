@@ -4,6 +4,9 @@ title: Suscripciones realtime en DashboardView
 severity: medium
 type: feature
 status: open
+auto_eligible: no
+auto_eligible_reason: toca UX visible — testing visual en browser necesario
+est_duration: medium
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-005]

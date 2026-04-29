@@ -4,6 +4,9 @@ title: Test suite — foundation con smoke tests de RPCs y endpoints
 severity: low
 type: test
 status: open
+auto_eligible: no
+auto_eligible_reason: decisión de stack (Vitest vs node:test) + setup CI requiere alineamiento
+est_duration: long
 created: 2026-04-29
 owner: -
 ---

@@ -4,6 +4,9 @@ title: Backup del .env del ai-engine en secret manager
 severity: low
 type: ops
 status: open
+auto_eligible: no
+auto_eligible_reason: decisión estratégica (Vault vs 1Password vs gpg) + toca secrets críticos
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

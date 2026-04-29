@@ -4,6 +4,9 @@ title: 5 matviews precomputadas para los 4 dashboards
 severity: high
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: SQL puro, refresh CONCURRENTLY safe; verificable con count(*) > 0
+est_duration: long
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-001]

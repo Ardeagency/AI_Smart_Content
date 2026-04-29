@@ -4,6 +4,9 @@ title: 5 tablas con organization_id NULL en filas viejas
 severity: high
 type: data
 status: open
+auto_eligible: yes
+auto_eligible_reason: UPDATE SQL idempotente; criterio de done = count NULL = 0; reversible
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

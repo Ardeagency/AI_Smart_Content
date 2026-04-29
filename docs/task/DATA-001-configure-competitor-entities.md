@@ -4,6 +4,9 @@ title: Faltan intelligence_entities competidoras → 4 tablas vacías
 severity: high
 type: data
 status: open
+auto_eligible: no
+auto_eligible_reason: requiere input del usuario sobre qué marcas son competidoras reales
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

@@ -4,6 +4,9 @@ title: Habilitar realtime en 7 tablas más
 severity: medium
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: 7 ALTER PUBLICATION; verificable con pg_publication_tables; reversible
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

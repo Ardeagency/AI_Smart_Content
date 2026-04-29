@@ -4,6 +4,9 @@ title: Tabla brand_metrics_daily + cron 00:00 UTC para snapshots
 severity: medium
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: schema + función + backfill SQL puro; idempotente con UPSERT
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

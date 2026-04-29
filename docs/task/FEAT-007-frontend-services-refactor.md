@@ -4,6 +4,9 @@ title: Refactor MiBrandaDataService + StrategiaDataService → 1 RPC
 severity: medium
 type: feature
 status: open
+auto_eligible: no
+auto_eligible_reason: toca UX visible — requiere validación manual en browser que dashboards renderizan idénticos
+est_duration: medium
 created: 2026-04-29
 owner: -
 blocked_by: [FEAT-006]

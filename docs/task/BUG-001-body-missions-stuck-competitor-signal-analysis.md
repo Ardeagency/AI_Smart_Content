@@ -4,6 +4,9 @@ title: Body missions tipo competitor_signal_analysis colgadas desde 27/4
 severity: critical
 type: bug
 status: open
+auto_eligible: no
+auto_eligible_reason: investigación inicial sí, pero el fix puede requerir entender el cambio del 28/4 con el usuario
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

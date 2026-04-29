@@ -4,6 +4,9 @@ title: Limpiar archivos .bak.* con > 30 días en ai-engine
 severity: low
 type: ops
 status: open
+auto_eligible: yes
+auto_eligible_reason: find -mtime +30 -delete; git history preserva todo
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

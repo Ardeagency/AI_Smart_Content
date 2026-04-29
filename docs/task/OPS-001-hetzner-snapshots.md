@@ -4,6 +4,9 @@ title: Configurar snapshots semanales de Hetzner CCX33
 severity: low
 type: ops
 status: open
+auto_eligible: no
+auto_eligible_reason: requiere acceso a Hetzner Console del usuario
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

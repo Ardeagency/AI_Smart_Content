@@ -4,6 +4,9 @@ title: Uptime monitor externo (Better Stack / UptimeRobot)
 severity: low
 type: ops
 status: open
+auto_eligible: no
+auto_eligible_reason: requiere registrarse en servicio externo con cuenta del usuario
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

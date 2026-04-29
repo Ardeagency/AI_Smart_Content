@@ -4,6 +4,9 @@ title: Configurar supabase CLI con migraciones versionadas
 severity: low
 type: ops
 status: open
+auto_eligible: no
+auto_eligible_reason: supabase link pide DB password interactiva del usuario
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---

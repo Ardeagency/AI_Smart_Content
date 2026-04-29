@@ -4,6 +4,9 @@ title: Triggers BEFORE INSERT que rellenen organization_id desde FK
 severity: medium
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: 8 triggers SQL puros; verificable con INSERT de prueba; reversible
+est_duration: short
 created: 2026-04-29
 owner: -
 ---

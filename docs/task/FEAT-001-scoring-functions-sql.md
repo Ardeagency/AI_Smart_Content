@@ -4,6 +4,9 @@ title: Funciones SQL puras de scoring (health, threat, velocity)
 severity: high
 type: feature
 status: open
+auto_eligible: yes
+auto_eligible_reason: SQL puro STABLE, idempotente; verificable con SELECT en rango esperado
+est_duration: medium
 created: 2026-04-29
 owner: -
 ---
