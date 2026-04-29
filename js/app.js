@@ -7,8 +7,14 @@
  * - Desarrollador: /dev/... (sidebar PaaS)
  */
 
-/** Query `?v=` en JS lazy para evitar caché obsoleto tras deploy (subir al publicar cambios en vistas). */
-const APP_LAZY_SCRIPT_VER = '20260429-icons-purge';
+/** Query `?v=` en JS lazy: en cada deploy de Netlify, el comando `[build]` reemplaza
+ * `__BUILD_ID__` por `$COMMIT_REF` (el SHA del commit), garantizando un cache key único.
+ * En dev local (sin pasar por el build), el placeholder permanece literal y caemos a un
+ * timestamp por sesión, así el navegador trae JS fresco sin necesidad de hard reload. */
+const APP_LAZY_SCRIPT_VER = (() => {
+  const v = '__BUILD_ID__';
+  return v.startsWith('__') ? String(Date.now()) : v;
+})();
 
 class App {
   constructor() {

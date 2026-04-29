@@ -4,7 +4,12 @@
 # Netlify Configuration for AI Smart Content (SPA)
 
 [build]
-  # No build command needed for static site
+  # Cache busting automático: reemplaza el placeholder __BUILD_ID__ por el SHA del
+  # commit que está siendo deployado. Cada deploy genera un cache key único en
+  # los `?v=...` de index.html, css/bundle.css y js/app.js, sin intervención manual.
+  # COMMIT_REF lo expone Netlify; en local sin build, el placeholder permanece y
+  # js/app.js cae a Date.now() en runtime para que tampoco haya cache stale en dev.
+  command = "sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js"
   publish = "."
 
 [functions]
