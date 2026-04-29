@@ -35,7 +35,7 @@ body.entrance-done .signin-container {
     background-color: var(--bg-primary);
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     padding: 2.5rem clamp(2rem, 6vw, 5rem);
     min-height: 100vh;
     position: relative;
@@ -59,20 +59,6 @@ body.entrance-done .signin-container {
     padding: 2.25rem;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     z-index: 2;
-}
-
-.signin-year {
-    position: absolute;
-    bottom: 4.25rem;
-    left: clamp(2rem, 6vw, 5rem);
-    font-family: var(--font-display, var(--font-family));
-    font-size: clamp(4rem, 9vw, 7.5rem);
-    font-weight: 600;
-    line-height: 0.9;
-    color: var(--color-white);
-    letter-spacing: -0.02em;
-    pointer-events: none;
-    z-index: 1;
 }
 
 .signin-footer {
@@ -106,16 +92,10 @@ body.entrance-done .signin-container {
 
 @media (max-width: 900px) {
     .signin-container--hero {
-        justify-content: center;
-        padding: 4rem 1.5rem 7rem;
+        padding: 4rem 1.5rem 6rem;
     }
     .signin-container--hero .signin-card {
         max-width: 420px;
-    }
-    .signin-year {
-        font-size: 3.5rem;
-        bottom: 5rem;
-        left: 1.5rem;
     }
     .signin-footer {
         flex-direction: column;

@@ -63,8 +63,6 @@ class SignInView extends BaseView {
           </div>
         </div>
 
-        <div class="signin-year" aria-hidden="true">${year}</div>
-
         <footer class="signin-footer">
           <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. Todos los derechos reservados.</span>
           <span class="signin-footer-links">
