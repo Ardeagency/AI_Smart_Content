@@ -61,14 +61,14 @@ class DevLeadCategoriesView extends DevBaseView {
               </thead>
               <tbody id="categoriesBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="categoriesEmpty" style="display: none;">
+            <div class="dev-lead-empty" id="categoriesEmpty" hidden>
               <i class="fas fa-folder"></i>
               <p>No hay categorías. Crea la primera.</p>
             </div>
           </div>
         </section>
 
-        <section class="dev-lead-content dev-lead-subcategories-panel" id="subcategoriesPanel" style="display: none;">
+        <section class="dev-lead-content dev-lead-subcategories-panel" id="subcategoriesPanel" hidden>
           <div class="dev-lead-toolbar">
             <button type="button" class="btn btn-primary" id="addSubcategoryBtn">
               <i class="fas fa-plus"></i> Nueva subcategoría
@@ -86,7 +86,7 @@ class DevLeadCategoriesView extends DevBaseView {
               </thead>
               <tbody id="subcategoriesBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="subcategoriesEmpty" style="display: none;">
+            <div class="dev-lead-empty" id="subcategoriesEmpty" hidden>
               <i class="fas fa-folder-open"></i>
               <p>No hay subcategorías. Crea la primera.</p>
             </div>
@@ -95,7 +95,7 @@ class DevLeadCategoriesView extends DevBaseView {
       </div>
 
       <!-- Modal categoría -->
-      <div class="modal dev-lead-modal" id="categoryModal" style="display: none;">
+      <div class="modal dev-lead-modal" id="categoryModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content">
           <div class="modal-header">
@@ -140,7 +140,7 @@ class DevLeadCategoriesView extends DevBaseView {
       </div>
 
       <!-- Modal subcategoría -->
-      <div class="modal dev-lead-modal" id="subcategoryModal" style="display: none;">
+      <div class="modal dev-lead-modal" id="subcategoryModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content">
           <div class="modal-header">
@@ -193,11 +193,11 @@ class DevLeadCategoriesView extends DevBaseView {
         tabs.forEach(x => x.classList.remove('active'));
         tab.classList.add('active');
         if (t === 'categories') {
-          categoriesPanel.style.display = '';
+          categoriesPanel.hidden = false; categoriesPanel.style.display = '';
           subcategoriesPanel.style.display = 'none';
         } else {
           categoriesPanel.style.display = 'none';
-          subcategoriesPanel.style.display = '';
+          subcategoriesPanel.hidden = false; subcategoriesPanel.style.display = '';
         }
         this.activeTab = t;
       });

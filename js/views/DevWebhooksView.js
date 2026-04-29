@@ -179,7 +179,7 @@ class DevWebhooksView extends DevBaseView {
         </div>
 
         <!-- Empty State -->
-        <div class="webhooks-empty" id="webhooksEmpty" style="display: none;">
+        <div class="webhooks-empty" id="webhooksEmpty" hidden>
           <i class="ph ph-webhooks-logo"></i>
           <h3>Sin webhooks configurados</h3>
           <p>Configura webhooks para conectar tus flujos de IA</p>
@@ -191,7 +191,7 @@ class DevWebhooksView extends DevBaseView {
       </div>
 
       <!-- Modal: Editar/Crear Webhook -->
-      <div class="modal" id="webhookModal" style="display: none;">
+      <div class="modal" id="webhookModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg">
           <div class="modal-header">
@@ -299,7 +299,7 @@ class DevWebhooksView extends DevBaseView {
             </form>
 
             <!-- Test Results -->
-            <div class="test-results-panel" id="testResultsPanel" style="display: none;">
+            <div class="test-results-panel" id="testResultsPanel" hidden>
               <h4><i class="ph ph-terminal"></i> Resultado del Test</h4>
               <div class="test-result" id="testResult">
                 <!-- Resultado dinámico -->
@@ -317,7 +317,7 @@ class DevWebhooksView extends DevBaseView {
       </div>
 
       <!-- Modal: Health Check Results -->
-      <div class="modal" id="healthCheckModal" style="display: none;">
+      <div class="modal" id="healthCheckModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-md">
           <div class="modal-header">
@@ -342,7 +342,7 @@ class DevWebhooksView extends DevBaseView {
       </div>
 
       <!-- Modal: Confirmar Eliminación -->
-      <div class="modal" id="deleteWebhookModal" style="display: none;">
+      <div class="modal" id="deleteWebhookModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">

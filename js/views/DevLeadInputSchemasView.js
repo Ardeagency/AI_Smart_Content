@@ -49,7 +49,7 @@ class DevLeadInputSchemasView extends DevBaseView {
               </thead>
               <tbody id="inputSchemasBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="inputSchemasEmpty" style="display: none;">
+            <div class="dev-lead-empty" id="inputSchemasEmpty" hidden>
               <i class="fas fa-puzzle-piece"></i>
               <p>No hay plantillas de input. Crea la primera.</p>
             </div>
@@ -57,7 +57,7 @@ class DevLeadInputSchemasView extends DevBaseView {
         </section>
       </div>
 
-      <div class="modal dev-lead-modal dev-lead-modal-wide" id="inputSchemaModal" style="display: none;">
+      <div class="modal dev-lead-modal dev-lead-modal-wide" id="inputSchemaModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content">
           <div class="modal-header">

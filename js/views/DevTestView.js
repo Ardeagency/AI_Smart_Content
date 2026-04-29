@@ -111,7 +111,7 @@ class DevTestView extends DevBaseView {
                   <i class="ph ph-arrows-clockwise"></i>
                 </button>
               </div>
-              <div class="flow-info" id="flowInfo" style="display: none;">
+              <div class="flow-info" id="flowInfo" hidden>
                 <div class="flow-info-row">
                   <span class="info-label">Estado:</span>
                   <span class="info-value" id="flowStatus">-</span>
@@ -190,12 +190,12 @@ class DevTestView extends DevBaseView {
               <button class="test-tab" data-tab="response">
                 <i class="ph ph-code"></i>
                 Respuesta
-                <span class="tab-badge" id="responseBadge" style="display: none;"></span>
+                <span class="tab-badge" id="responseBadge" hidden></span>
               </button>
               <button class="test-tab" data-tab="logs">
                 <i class="ph ph-list-bullets"></i>
                 Logs
-                <span class="tab-badge" id="logsBadge" style="display: none;"></span>
+                <span class="tab-badge" id="logsBadge" hidden></span>
               </button>
             </div>
 
@@ -206,7 +206,7 @@ class DevTestView extends DevBaseView {
                 <h4>Selecciona un flujo</h4>
                 <p>Elige un flujo para ver sus campos de entrada</p>
               </div>
-              <div class="inputs-form" id="inputsForm" style="display: none;">
+              <div class="inputs-form" id="inputsForm" hidden>
                 <div class="form-fields" id="formFields">
                   <!-- Campos dinámicos -->
                 </div>
@@ -230,7 +230,7 @@ class DevTestView extends DevBaseView {
                 <h4>Sin respuesta</h4>
                 <p>Ejecuta un test para ver la respuesta</p>
               </div>
-              <div class="response-content" id="responseContent" style="display: none;">
+              <div class="response-content" id="responseContent" hidden>
                 <div class="response-header">
                   <div class="response-status" id="responseStatus">
                     <span class="status-code"></span>
@@ -280,7 +280,7 @@ class DevTestView extends DevBaseView {
             </div>
 
             <!-- Progress Bar -->
-            <div class="test-progress" id="testProgress" style="display: none;">
+            <div class="test-progress" id="testProgress" hidden>
               <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
               </div>
@@ -300,7 +300,7 @@ class DevTestView extends DevBaseView {
               </button>
             </div>
             <div class="history-list" id="historyList"></div>
-            <div class="history-pagination" id="historyPagination" style="display: none;">
+            <div class="history-pagination" id="historyPagination" hidden>
               <button type="button" class="btn-icon-small" id="historyPrevBtn" title="Página anterior" disabled>
                 <i class="ph ph-caret-left"></i>
               </button>
@@ -314,7 +314,7 @@ class DevTestView extends DevBaseView {
       </div>
 
       <!-- Modal: Guardar Test Case -->
-      <div class="modal" id="saveTestCaseModal" style="display: none;">
+      <div class="modal" id="saveTestCaseModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">
@@ -339,7 +339,7 @@ class DevTestView extends DevBaseView {
       </div>
 
       <!-- Modal: Ver Run Detalle -->
-      <div class="modal" id="runDetailModal" style="display: none;">
+      <div class="modal" id="runDetailModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg">
           <div class="modal-header">
@@ -353,7 +353,7 @@ class DevTestView extends DevBaseView {
       </div>
 
       <!-- Modal: Expandir Respuesta -->
-      <div class="modal" id="expandResponseModal" style="display: none;">
+      <div class="modal" id="expandResponseModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-xl">
           <div class="modal-header">

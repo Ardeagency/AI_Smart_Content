@@ -69,7 +69,7 @@ class DevFlowsView extends DevBaseView {
         <div class="dev-flows-grid" id="devFlowsGrid"></div>
 
         <!-- Estado vacío (se mostrará si no hay flujos) -->
-        <div class="dev-flows-empty" id="devFlowsEmpty" style="display: none;">
+        <div class="dev-flows-empty" id="devFlowsEmpty" hidden>
           <div class="dev-empty-icon">
             <i class="fas fa-diagram-project"></i>
           </div>
@@ -83,7 +83,7 @@ class DevFlowsView extends DevBaseView {
       </div>
 
       <!-- Modal de confirmación para eliminar -->
-      <div class="modal" id="deleteFlowModal" style="display: none;">
+      <div class="modal" id="deleteFlowModal" hidden>
         <div class="modal-content">
           <div class="modal-header">
             <h3>Eliminar Flujo</h3>

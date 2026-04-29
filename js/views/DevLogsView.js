@@ -112,7 +112,7 @@ class DevLogsView extends DevBaseView {
         </div>
 
         <!-- Estado vacío -->
-        <div class="dev-logs-empty" id="logsEmpty" style="display: none;">
+        <div class="dev-logs-empty" id="logsEmpty" hidden>
           <div class="dev-empty-icon">
             <i class="fas fa-check-circle"></i>
           </div>
@@ -122,7 +122,7 @@ class DevLogsView extends DevBaseView {
       </div>
 
       <!-- Modal de detalle del log -->
-      <div class="modal" id="logDetailModal" style="display: none;">
+      <div class="modal" id="logDetailModal" hidden>
         <div class="modal-content modal-lg">
           <div class="modal-header">
             <h3>Detalle del Log</h3>

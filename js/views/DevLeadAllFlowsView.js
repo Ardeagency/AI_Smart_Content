@@ -50,7 +50,7 @@ class DevLeadAllFlowsView extends DevBaseView {
               </thead>
               <tbody id="allFlowsBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="allFlowsEmpty" style="display: none;">
+            <div class="dev-lead-empty" id="allFlowsEmpty" hidden>
               <i class="fas fa-diagram-project"></i>
               <p>No hay flujos en la plataforma.</p>
             </div>
@@ -58,7 +58,7 @@ class DevLeadAllFlowsView extends DevBaseView {
         </section>
       </div>
 
-      <div class="modal dev-lead-modal" id="deleteFlowLeadModal" style="display: none;">
+      <div class="modal dev-lead-modal" id="deleteFlowLeadModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content">
           <div class="modal-header">

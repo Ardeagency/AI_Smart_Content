@@ -50,7 +50,7 @@ class DevLeadReferencesView extends DevBaseView {
               </thead>
               <tbody id="referencesBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="referencesEmpty" style="display: none;">
+            <div class="dev-lead-empty" id="referencesEmpty" hidden>
               <i class="fas fa-images"></i>
               <p>No hay referencias visuales en el bucket visual-references.</p>
             </div>
@@ -114,7 +114,7 @@ class DevLeadReferencesView extends DevBaseView {
         : '-';
       const preview = imgSrc
         ? `<img src="${this.escapeHtml(imgSrc)}" alt="" class="dev-lead-ref-thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-             <span class="dev-lead-ref-no-thumb" style="display:none;"><i class="fas fa-image"></i></span>`
+             <span class="dev-lead-ref-no-thumb" hidden><i class="fas fa-image"></i></span>`
         : '<span class="dev-lead-ref-no-thumb"><i class="fas fa-image"></i></span>';
       return `
         <tr data-id="${r.id}">

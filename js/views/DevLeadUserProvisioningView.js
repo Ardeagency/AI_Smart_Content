@@ -81,7 +81,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
             </div>
 
             <!-- PASO 2: Permisos -->
-            <div data-step="2" class="provision-step" style="display:none;">
+            <div data-step="2" class="provision-step" hidden>
               <div class="settings-section">
                 <h4><i class="fas fa-lock-open"></i> Permisos de acceso</h4>
                 <p class="section-description">Módulos habilitados para este usuario.</p>
@@ -97,7 +97,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
             </div>
 
             <!-- PASO 3: Organización -->
-            <div data-step="3" class="provision-step" style="display:none;">
+            <div data-step="3" class="provision-step" hidden>
               <div class="settings-section">
                 <h4><i class="fas fa-building"></i> Organización</h4>
                 <p class="section-description">Define la afiliación organizacional del usuario.</p>
@@ -110,17 +110,17 @@ class DevLeadUserProvisioningView extends DevBaseView {
                     <option value="create">Crear nueva organización y afiliar</option>
                   </select>
                 </div>
-                <div class="settings-field" id="existingOrgField" style="display:none;">
+                <div class="settings-field" id="existingOrgField" hidden>
                   <label>Organización existente</label>
                   <select id="existingOrgSelect" name="organization_id">
                     <option value="">Cargando...</option>
                   </select>
                 </div>
-                <div class="settings-field" id="newOrgField" style="display:none;">
+                <div class="settings-field" id="newOrgField" hidden>
                   <label>Nombre de la nueva organización</label>
                   <input type="text" id="newOrgNameInput" name="new_organization_name" placeholder="Ej. ACME Corp">
                 </div>
-                <div class="settings-field" id="orgRoleField" style="display:none;">
+                <div class="settings-field" id="orgRoleField" hidden>
                   <label>Rol dentro de la organización</label>
                   <select id="orgRoleSelect" name="organization_role">
                     <option value="member">Member</option>
@@ -132,7 +132,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
             </div>
 
             <!-- PASO 4: Confirmación -->
-            <div data-step="4" class="provision-step" style="display:none;">
+            <div data-step="4" class="provision-step" hidden>
               <div class="settings-section">
                 <h4><i class="fas fa-check-circle"></i> Confirmar registro</h4>
                 <p class="section-description">Revisa los datos antes de crear la cuenta.</p>
@@ -150,7 +150,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
                 <button type="button" class="btn btn-primary" id="provisionNextBtn">
                   Siguiente <i class="fas fa-arrow-right"></i>
                 </button>
-                <button type="submit" class="btn btn-primary" id="provisionSubmitBtn" style="display:none;">
+                <button type="submit" class="btn btn-primary" id="provisionSubmitBtn" hidden>
                   <i class="fas fa-user-plus"></i> Registrar usuario
                 </button>
               </div>

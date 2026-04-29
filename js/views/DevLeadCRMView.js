@@ -67,7 +67,7 @@ class DevLeadCRMView extends DevBaseView {
               </thead>
               <tbody id="crmLeadsBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="crmLeadsEmpty" style="display:none;">
+            <div class="dev-lead-empty" id="crmLeadsEmpty" hidden>
               <i class="fas fa-inbox"></i>
               <p>No hay leads registrados.</p>
             </div>
@@ -75,7 +75,7 @@ class DevLeadCRMView extends DevBaseView {
         </section>
       </div>
 
-      <div class="modal dev-lead-modal dev-lead-modal-xwide" id="leadDetailModal" style="display:none;">
+      <div class="modal dev-lead-modal dev-lead-modal-xwide" id="leadDetailModal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
           <div class="modal-header">
@@ -172,10 +172,10 @@ class DevLeadCRMView extends DevBaseView {
 
     if (!rows.length) {
       tbody.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      if (empty) empty.hidden = false;
       return;
     }
-    if (empty) empty.style.display = 'none';
+    if (empty) empty.hidden = true;
 
     tbody.innerHTML = rows.map((lead) => {
       const owner = lead.profiles?.full_name || lead.profiles?.email || 'Sin asignar';
@@ -247,7 +247,6 @@ class DevLeadCRMView extends DevBaseView {
   closeLeadModal() {
     const modal = this.container.querySelector('#leadDetailModal');
     if (!modal) return;
-    modal.style.display = 'none';
     modal.classList.remove('is-open');
     this.currentLead = null;
   }
@@ -323,7 +322,6 @@ class DevLeadCRMView extends DevBaseView {
     if (saveStatusBtn) this.addEventListener(saveStatusBtn, 'click', () => this.saveLeadStatus(lead.id));
     if (addNoteBtn) this.addEventListener(addNoteBtn, 'click', () => this.addLeadNote(lead.id));
 
-    modal.style.display = 'flex';
     modal.classList.add('is-open');
   }
 

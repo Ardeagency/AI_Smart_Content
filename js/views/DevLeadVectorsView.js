@@ -55,7 +55,7 @@ class DevLeadVectorsView extends DevBaseView {
               </thead>
               <tbody id="filesBody"></tbody>
             </table>
-            <div class="dev-lead-empty" id="filesEmpty" style="display:none;">
+            <div class="dev-lead-empty" id="filesEmpty" hidden>
               <i class="fas fa-folder-open"></i>
               <p id="filesEmptyText">No hay archivos en el bucket.</p>
               <p class="dev-lead-empty-hint" id="filesEmptyHint">Sube archivos para que se procesen y alimenten los vectores de IA.</p>
@@ -65,7 +65,7 @@ class DevLeadVectorsView extends DevBaseView {
             </div>
           </div>
         </section>
-        <div class="modal dev-lead-modal" id="uploadModal" style="display:none;">
+        <div class="modal dev-lead-modal" id="uploadModal" hidden>
           <div class="modal-overlay"></div>
           <div class="modal-content">
             <div class="modal-header">
@@ -238,7 +238,7 @@ class DevLeadVectorsView extends DevBaseView {
       tbody.innerHTML = rows.join('');
 
       if (folders.length || files.length) {
-        if (table) table.style.display = '';
+        if (table) { table.hidden = false; table.style.display = ''; }
         if (empty) empty.style.display = 'none';
         tbody.querySelectorAll('.dev-lead-file-row.folder').forEach(row => {
           row.addEventListener('click', (e) => {

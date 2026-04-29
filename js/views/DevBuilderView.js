@@ -118,7 +118,7 @@ class DevBuilderView extends DevBaseView {
       <!-- Main Builder Container -->
       <main class="builder-main">
         <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
-        <aside class="builder-sidebar builder-components" style="display: none;">
+        <aside class="builder-sidebar builder-components" hidden>
           <div class="builder-sidebar-header builder-components-header">
             <h3 class="builder-components-title">Componentes</h3>
             <div class="builder-components-search-wrap">
@@ -142,10 +142,10 @@ class DevBuilderView extends DevBaseView {
                     <span>Subir portada</span>
                   </div>
                   <div class="flow-cover-actions" aria-hidden="true">
-                    <button type="button" class="flow-cover-btn glass-black" id="removeImageBtn" title="Quitar portada" aria-label="Quitar portada" style="display: none;"><i class="ph ph-trash"></i></button>
+                    <button type="button" class="flow-cover-btn glass-black" id="removeImageBtn" title="Quitar portada" aria-label="Quitar portada" hidden><i class="ph ph-trash"></i></button>
                     <button type="button" class="flow-cover-btn glass-black" id="changeCoverBtn" title="Cambiar portada" aria-label="Cambiar portada"><i class="ph ph-image"></i></button>
                   </div>
-                  <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
+                  <input type="file" id="flowImageInput" accept="image/*,video/*" hidden>
                 </div>
                 <div class="builder-config-meta">
                   <label class="toggle-switch-row">
@@ -228,7 +228,7 @@ class DevBuilderView extends DevBaseView {
                       </div>
                     </div>
                     <!-- Modal: editar nodo (doble clic en un nodo) -->
-                    <div class="modal-overlay" id="moduleNodeModal" role="dialog" aria-labelledby="moduleNodeModalTitle" aria-modal="true" style="display: none;">
+                    <div class="modal-overlay" id="moduleNodeModal" role="dialog" aria-labelledby="moduleNodeModalTitle" aria-modal="true" hidden>
                       <div class="modal-content modal-module-node">
                         <div class="modal-header">
                           <h3 id="moduleNodeModalTitle">Editar módulo</h3>
@@ -282,7 +282,7 @@ class DevBuilderView extends DevBaseView {
                     <option value="">— Seleccionar módulo —</option>
                     </select>
                   </div>
-                <div id="techDetailsFormWrap" class="tech-details-form" style="display: none;">
+                <div id="techDetailsFormWrap" class="tech-details-form" hidden>
                   <div class="settings-field">
                     <label for="techDetailsWebhookMethod">Método HTTP</label>
                     <select id="techDetailsWebhookMethod">
@@ -345,7 +345,7 @@ class DevBuilderView extends DevBaseView {
                 <h4>Arrastra componentes aquí</h4>
                 <p>Construye el formulario de entrada de tu flujo</p>
               </div>
-              <div class="canvas-empty-state canvas-automated-state" id="canvasAutomatedState" style="display: none;">
+              <div class="canvas-empty-state canvas-automated-state" id="canvasAutomatedState" hidden>
                 <i class="ph ph-robot"></i>
                 <h4>Flujo automatizado</h4>
                 <p>Este flujo se ejecuta automáticamente por el sistema (Cron/Trigger). No requiere intervención del usuario final, por lo que no tiene formulario de entrada.</p>
@@ -376,7 +376,7 @@ class DevBuilderView extends DevBaseView {
         </div>
 
         <!-- Panel derecho: Propiedades (oculto por defecto; solo visible en pestaña Inputs) -->
-        <aside class="builder-sidebar builder-properties" style="display: none;">
+        <aside class="builder-sidebar builder-properties" hidden>
           <div class="builder-sidebar-header">
             <h3><i class="ph ph-sliders-horizontal"></i> Propiedades</h3>
           </div>
@@ -393,19 +393,19 @@ class DevBuilderView extends DevBaseView {
       <footer class="builder-footer" id="builderFooter">
         <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
         <div class="builder-footer-actions" id="builderFooterActions">
-          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">Guardar flujo</button>
-          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">Actualizar flujo</button>
+          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" hidden>Guardar flujo</button>
+          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" hidden>Actualizar flujo</button>
           <button type="button" class="btn-builder-footer" id="testFlowBtn">Probar</button>
-          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">Publicar</button>
-          <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" style="display: none;">Solicitar revisión</button>
-          <button type="button" class="btn-builder-footer btn-approve-publish" id="btnApprovePublish" style="display: none;">Aprobar y publicar</button>
-          <button type="button" class="btn-builder-footer btn-reject" id="btnReject" style="display: none;">Rechazar</button>
-          <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">Despublicar</button>
+          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" hidden>Publicar</button>
+          <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" hidden>Solicitar revisión</button>
+          <button type="button" class="btn-builder-footer btn-approve-publish" id="btnApprovePublish" hidden>Aprobar y publicar</button>
+          <button type="button" class="btn-builder-footer btn-reject" id="btnReject" hidden>Rechazar</button>
+          <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" hidden>Despublicar</button>
         </div>
       </footer>
 
       <!-- Modal: Test -->
-      <div class="modal builder-modal" id="testModal" style="display: none;">
+      <div class="modal builder-modal" id="testModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-lg">
           <div class="modal-header">
@@ -417,7 +417,7 @@ class DevBuilderView extends DevBaseView {
               <div class="test-form" id="testFormContainer">
                 <!-- Formulario de prueba -->
               </div>
-              <div class="test-results" id="testResults" style="display: none;">
+              <div class="test-results" id="testResults" hidden>
                 <h4>Resultado:</h4>
                 <pre id="testResultOutput"></pre>
               </div>
@@ -433,7 +433,7 @@ class DevBuilderView extends DevBaseView {
       </div>
 
       <!-- Modal: Confirmar eliminar -->
-      <div class="modal builder-modal" id="deleteModal" style="display: none;">
+      <div class="modal builder-modal" id="deleteModal" hidden>
         <div class="modal-overlay"></div>
         <div class="modal-content modal-sm">
           <div class="modal-header">
@@ -873,7 +873,7 @@ class DevBuilderView extends DevBaseView {
       builderCanvas.classList.remove('builder-canvas--automated');
     }
     if (componentsSidebar) {
-      componentsSidebar.style.display = '';
+      componentsSidebar.hidden = false; componentsSidebar.style.display = '';
     }
     if (canvasEmpty) {
       canvasEmpty.style.display = (this.inputSchema.length === 0) ? 'flex' : 'none';
@@ -897,10 +897,10 @@ class DevBuilderView extends DevBaseView {
       uiShowInCatalog.checked = isSystem ? false : !!this.flowData.show_in_catalog;
     }
     if (testFlowBtn) {
-      testFlowBtn.style.display = '';
+      testFlowBtn.hidden = false; testFlowBtn.style.display = '';
     }
     if (tabModules) {
-      tabModules.style.display = '';
+      tabModules.hidden = false; tabModules.style.display = '';
     }
     this.renderCanvas();
     this.updateJsonPreview();
