@@ -235,7 +235,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Ritmo de Publicación y Latencia</span>
+            <span class="mb-widget-title">Ritmo de Publicación y Latencia</span>
             <span class="mb-badge mb-badge--blue">30 días</span>
           </div>
           <div class="mb-widget-body">
@@ -245,7 +245,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Formatos Dominantes</span>
+            <span class="mb-widget-title">Formatos Dominantes</span>
             <span class="mb-badge mb-badge--green">Hoy</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -258,7 +258,7 @@ class DashboardView extends BaseView {
       <!-- Heatmap Horario (ocupa toda la fila) -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"> Mapa de Calor de Interacción Horaria</span>
+          <span class="mb-widget-title">Mapa de Calor de Interacción Horaria</span>
           <span class="mb-badge mb-badge--purple">Últimas 4 semanas</span>
         </div>
         <div class="mb-widget-body">
@@ -279,7 +279,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Dominio de Pilares Narrativos</span>
+            <span class="mb-widget-title">Dominio de Pilares Narrativos</span>
             <span class="mb-badge mb-badge--blue">Este mes</span>
           </div>
           <div class="mb-widget-body">
@@ -289,7 +289,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Brand Soul Guard</span>
+            <span class="mb-widget-title">Brand Soul Guard</span>
             <span class="mb-badge mb-badge--green">Tono</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -300,7 +300,7 @@ class DashboardView extends BaseView {
       </div>
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"> Semántica de Impacto — Top palabras resonantes</span>
+          <span class="mb-widget-title">Semántica de Impacto — Top palabras resonantes</span>
           <span class="mb-badge mb-badge--pink">IA semántica</span>
         </div>
         <div class="mb-widget-body">
@@ -315,27 +315,27 @@ class DashboardView extends BaseView {
 
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"> Monitor de Cumplimiento de Precios (MAP Monitor)</span>
+          <span class="mb-widget-title">Monitor de Cumplimiento de Precios (MAP Monitor)</span>
           <span class="mb-badge mb-badge--orange" id="mbMAPBadge">Cargando…</span>
         </div>
         <div class="mb-widget-body" id="mbMAPBody">
-          ${this._emptyState('fa-tag','Cargando datos MAP…','')}
+          ${this._emptyState('Cargando datos MAP…','')}
         </div>
       </div>
 
       <div class="mb-dim-row">
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Stock Digital</span>
+            <span class="mb-widget-title">Stock Digital</span>
             <span class="mb-badge mb-badge--teal">Live</span>
           </div>
           <div class="mb-widget-body" id="mbStockBody">
-            ${this._emptyState('fa-boxes-stacking','Cargando stock…','')}
+            ${this._emptyState('Cargando stock…','')}
           </div>
         </div>
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Efectividad de Ofertas Dinámicas</span>
+            <span class="mb-widget-title">Efectividad de Ofertas Dinámicas</span>
             <span class="mb-badge mb-badge--blue">Comparativa</span>
           </div>
           <div class="mb-widget-body">
@@ -352,7 +352,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Sentimiento Biométrico</span>
+            <span class="mb-widget-title">Sentimiento Biométrico</span>
             <span class="mb-badge mb-badge--pink">Emociones</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -362,7 +362,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Shadow Mentions</span>
+            <span class="mb-widget-title">Shadow Mentions</span>
             <span class="mb-badge mb-badge--purple">Sin etiqueta</span>
           </div>
           <div class="mb-widget-body">
@@ -372,11 +372,11 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Índice de Influencia Real</span>
+            <span class="mb-widget-title">Índice de Influencia Real</span>
             <span class="mb-badge mb-badge--teal">Top 5</span>
           </div>
           <div class="mb-widget-body" id="mbInfluenceBody">
-            ${this._emptyState('fa-star','Cargando…','')}
+            ${this._emptyState('Cargando…','')}
           </div>
         </div>
 
@@ -390,7 +390,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Mapa de Puntos Ciegos</span>
+            <span class="mb-widget-title">Mapa de Puntos Ciegos</span>
             <span class="mb-badge mb-badge--blue">Blind Spots</span>
           </div>
           <div class="mb-widget-body mb-widget-body--center">
@@ -400,7 +400,7 @@ class DashboardView extends BaseView {
 
         <div class="mb-widget mb-widget--wide">
           <div class="mb-widget-header">
-            <span class="mb-widget-title"> Análisis de Fuga de Audiencia</span>
+            <span class="mb-widget-title">Análisis de Fuga de Audiencia</span>
             <span class="mb-badge mb-badge--orange">Retención</span>
           </div>
           <div class="mb-widget-body">
@@ -413,22 +413,22 @@ class DashboardView extends BaseView {
       <!-- Crisis de Baja Intensidad (timeline) -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"> Detección de Crisis de Baja Intensidad</span>
+          <span class="mb-widget-title">Detección de Crisis de Baja Intensidad</span>
           <span class="mb-badge mb-badge--red">Monitoreo continuo</span>
         </div>
         <div class="mb-widget-body" id="mbCrisisBody">
-          ${this._emptyState('fa-triangle-exclamation','Cargando…','')}
+          ${this._emptyState('Cargando…','')}
         </div>
       </div>
 
       <!-- SWOT Dinámico -->
       <div class="mb-widget mb-widget--full">
         <div class="mb-widget-header">
-          <span class="mb-widget-title"> SWOT Dinámico — Virtudes y Vulnerabilidades</span>
+          <span class="mb-widget-title">SWOT Dinámico — Virtudes y Vulnerabilidades</span>
           <span class="mb-badge mb-badge--purple">OpenClaw IA</span>
         </div>
         <div class="mb-widget-body" id="mbSWOTBody">
-          ${this._emptyState('fa-chess','Cargando análisis SWOT…','')}
+          ${this._emptyState('Cargando análisis SWOT…','')}
         </div>
       </div>
 
@@ -500,7 +500,6 @@ class DashboardView extends BaseView {
       { retailer: 'Liverpool',      product: 'Oster Classic 800', price: '$975',  map: '$950',   status: 'warning', delta: '+$25' },
       { retailer: 'Amazon MX',      product: 'Oster Mini Chef',  price: '$549',  map: '$499',   status: 'warning', delta: '+$50' },
     ];
-    const statusIcon = { ok: 'fa-circle-check', alert: 'fa-circle-xmark', warning: 'fa-triangle-exclamation' };
     const statusLabel = { ok: 'Cumple', alert: 'Viola MAP', warning: 'Revisar' };
     const statusClass = { ok: 'mb-map--ok', alert: 'mb-map--alert', warning: 'mb-map--warning' };
     return `
@@ -563,7 +562,6 @@ class DashboardView extends BaseView {
       { name: '@recetashogar',  platform: 'ig',  score: 79, type: 'Cliente real',   followers: '9K'  },
       { name: 'ForoCocinaMX',   platform: 'web', score: 72, type: 'Comunidad',      followers: '55K' },
     ];
-    const pIcon = { ig: 'fa-instagram', tt: 'fa-tiktok', web: 'fa-globe', yt: 'fa-youtube' };
     return `
       <div class="mb-influence-list">
         ${list.map((p, i) => `
@@ -590,7 +588,6 @@ class DashboardView extends BaseView {
       { time: 'Hace 2 d',  level: 'none', msg: 'Spike orgánico positivo tras publicación de @chefrodri — sin riesgo detectado.', action: 'Cerrado' },
     ];
     const levelCls = { low: 'mb-crisis--low', med: 'mb-crisis--med', high: 'mb-crisis--high', none: 'mb-crisis--none' };
-    const levelIcon = { low: 'fa-circle-dot', med: 'fa-triangle-exclamation', high: 'fa-circle-xmark', none: 'fa-circle-check' };
     return `
       <div class="mb-crisis-timeline">
         ${events.map(ev => `
@@ -994,7 +991,6 @@ class DashboardView extends BaseView {
     }
 
     const statusCls  = { completed:'mb-m--done', running:'mb-m--running', pending:'mb-m--running', failed:'mb-m--alert' };
-    const statusIcon = { completed:'fa-check-circle', running:'fa-spinner fa-spin', pending:'fa-clock', failed:'fa-triangle-exclamation' };
     el.innerHTML = missionsRes.data.map(m => {
       const st  = m.status || 'pending';
       const msg = m.result_reference?.summary || m.action_payload?.description || `Misión: ${m.mission_type}`;
@@ -1009,10 +1005,9 @@ class DashboardView extends BaseView {
     if (!el) return;
     const hasReal = mapRes && !mapRes.isEmpty && Array.isArray(mapRes.data) && mapRes.data.length > 0;
     if (!hasReal) {
-      el.innerHTML = this._emptyState('fa-tag', 'Sin datos de precio', 'Cuando OpenClaw capture precios de retailers, aparecerán aquí con semáforo de cumplimiento MAP.');
+      el.innerHTML = this._emptyState('Sin datos de precio', 'Cuando OpenClaw capture precios de retailers, aparecerán aquí con semáforo de cumplimiento MAP.');
       return;
     }
-    const statusIcon  = { ok:'fa-circle-check', alert:'fa-circle-xmark', warning:'fa-triangle-exclamation' };
     const statusLabel = { ok:'Cumple', alert:'Viola MAP', warning:'Revisar' };
     const statusCls   = { ok:'mb-map--ok', alert:'mb-map--alert', warning:'mb-map--warning' };
     const fmt = (n, cur) => n != null ? `${cur || 'MXN'} $${Number(n).toLocaleString()}` : '—';
@@ -1040,7 +1035,7 @@ class DashboardView extends BaseView {
     if (!el) return;
     const hasReal = stockRes && !stockRes.isEmpty && Array.isArray(stockRes.data) && stockRes.data.length > 0;
     if (!hasReal) {
-      el.innerHTML = this._emptyState('fa-boxes-stacking', 'Sin datos de stock', 'OpenClaw mostrará disponibilidad en Amazon, Mercado Libre y otros retailers cuando active el monitoreo.');
+      el.innerHTML = this._emptyState('Sin datos de stock', 'OpenClaw mostrará disponibilidad en Amazon, Mercado Libre y otros retailers cuando active el monitoreo.');
       return;
     }
     // Construir grilla dinámica de (sku x retailer)
@@ -1074,15 +1069,12 @@ class DashboardView extends BaseView {
     if (!el) return;
     const hasReal = influenciaRes && !influenciaRes.isEmpty && Array.isArray(influenciaRes.data) && influenciaRes.data.length > 0;
     if (!hasReal) {
-      el.innerHTML = this._emptyState('fa-star', 'Sin entidades monitoreadas', 'Agrega intelligence_entities para rastrear influencers reales y su impacto en la marca.');
+      el.innerHTML = this._emptyState('Sin entidades monitoreadas', 'Agrega intelligence_entities para rastrear influencers reales y su impacto en la marca.');
       return;
     }
-    const pIcon = { instagram:'fa-instagram', tiktok:'fa-tiktok', youtube:'fa-youtube', twitter:'fa-twitter', web:'fa-globe', facebook:'fa-facebook-f' };
     el.innerHTML = `<div class="mb-influence-list">${influenciaRes.data.slice(0,5).map((p, i) => {
       const score = Math.min(100, Math.round((p.influenceScore || 0)));
       const plat  = (p.platform || 'web').toLowerCase();
-      const fab   = pIcon[plat] || 'fa-globe';
-      const fam   = fab.startsWith('fa-globe') ? 'fas' : 'fab';
       return `<div class="mb-influence-row">
         <span class="mb-inf-rank">#${i+1}</span>
         <div class="mb-inf-info">
@@ -1108,7 +1100,6 @@ class DashboardView extends BaseView {
       return;
     }
     const lvlCls  = { low:'mb-crisis--low', medium:'mb-crisis--low', high:'mb-crisis--med', critical:'mb-crisis--high' };
-    const lvlIcon = { low:'fa-circle-dot', medium:'fa-triangle-exclamation', high:'fa-triangle-exclamation', critical:'fa-circle-xmark' };
     el.innerHTML = `<div class="mb-crisis-timeline">${vulns.slice(0,5).map(v => `
       <div class="mb-crisis-event ${lvlCls[v.severity]||'mb-crisis--low'}">
         <div class="mb-crisis-icon"></div>
@@ -1127,19 +1118,19 @@ class DashboardView extends BaseView {
     if (!el) return;
     const hasReal = swotRes && !swotRes.isEmpty && swotRes.data;
     if (!hasReal) {
-      el.innerHTML = this._emptyState('fa-chess', 'SWOT en construcción', 'VERA analizará fortalezas, debilidades, oportunidades y amenazas cuando haya suficientes datos.');
+      el.innerHTML = this._emptyState('SWOT en construcción', 'VERA analizará fortalezas, debilidades, oportunidades y amenazas cuando haya suficientes datos.');
       return;
     }
     const d = swotRes.data;
-    const quad = (title, items, cls, icon) => {
-      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty"> Sin datos aún</li>`;
-      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header"> ${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
+    const quad = (title, items, cls) => {
+      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty">Sin datos aún</li>`;
+      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header">${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
     };
     el.innerHTML = `<div class="mb-swot-grid">
-      ${quad('Fortalezas',  d.strengths || [],    'mb-swot--strength',    'fa-shield')}
-      ${quad('Oportunidades', d.opportunities||[], 'mb-swot--opportunity', 'fa-bolt')}
-      ${quad('Debilidades',  d.weaknesses || [],  'mb-swot--weakness',   'fa-triangle-exclamation')}
-      ${quad('Amenazas',    d.threats || [],      'mb-swot--threat',     'fa-circle-exclamation')}
+      ${quad('Fortalezas',    d.strengths || [],     'mb-swot--strength')}
+      ${quad('Oportunidades', d.opportunities || [], 'mb-swot--opportunity')}
+      ${quad('Debilidades',   d.weaknesses || [],    'mb-swot--weakness')}
+      ${quad('Amenazas',      d.threats || [],       'mb-swot--threat')}
     </div>`;
   }
 
@@ -1155,7 +1146,7 @@ class DashboardView extends BaseView {
     wrap.appendChild(ov);
   }
 
-  _emptyState(icon, title, desc) {
+  _emptyState(title, desc) {
     return `<div class="mb-empty-state"><strong>${title}</strong><p>${desc}</p></div>`;
   }
 
@@ -1200,12 +1191,12 @@ class DashboardView extends BaseView {
 
       <!-- ── KPI Strip ── -->
       <div class="td-kpi-strip">
-        ${this._tdKpi('fa-bolt',          'Señales activas',         '47',   'Esta hora',               'yellow')}
-        ${this._tdKpi('fa-water',         'Content Gaps / día',      '12',   'Océanos azules',          'blue')}
-        ${this._tdKpi('fa-arrow-trend-up','Alcance potencial',       '+38%', 'vs publicación normal',   'green')}
-        ${this._tdKpi('fa-gear',          'Cambios algorítmicos',    '3',    'Hoy en plataformas',      'orange')}
-        ${this._tdKpi('fa-face-grin-wide','Sentimiento global',      '😊',   'Optimista / Nostálgico',  'pink')}
-        ${this._tdKpi('fa-eye',           'Oportunidades capturadas','9',    'Últimas 24 h',            'purple')}
+        ${this._tdKpi('Señales activas',         '47',   'Esta hora',               'yellow')}
+        ${this._tdKpi('Content Gaps / día',      '12',   'Océanos azules',          'blue')}
+        ${this._tdKpi('Alcance potencial',       '+38%', 'vs publicación normal',   'green')}
+        ${this._tdKpi('Cambios algorítmicos',    '3',    'Hoy en plataformas',      'orange')}
+        ${this._tdKpi('Sentimiento global',      '😊',   'Optimista / Nostálgico',  'pink')}
+        ${this._tdKpi('Oportunidades capturadas','9',    'Últimas 24 h',            'purple')}
       </div>
 
       <!-- ── OpenClaw Opportunity Feed ── -->
@@ -1220,12 +1211,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM A · THE EARLY DETECTION
       ══════════════════════════════════════════════ -->
-      ${this._tdDim('A', 'fa-radar', 'The Early Detection', 'Señales débiles de nicho, audios virales y content gaps')}
+      ${this._tdDim('The Early Detection', 'Señales débiles de nicho, audios virales y content gaps')}
 
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Señales Débiles del Nicho</span>
+            <span class="td-widget-title">Señales Débiles del Nicho</span>
             <span class="td-badge td-badge--yellow">Ascenso</span>
           </div>
           <div class="td-widget-body">
@@ -1234,7 +1225,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Audios y Memes en Ascenso</span>
+            <span class="td-widget-title">Audios y Memes en Ascenso</span>
             <span class="td-badge td-badge--pink">TikTok · Reels</span>
           </div>
           <div class="td-widget-body">
@@ -1245,7 +1236,7 @@ class DashboardView extends BaseView {
 
       <div class="td-widget td-widget--full">
         <div class="td-widget-header">
-          <span class="td-widget-title"> Content Gaps — Océanos Azules del Día</span>
+          <span class="td-widget-title">Content Gaps — Océanos Azules del Día</span>
           <span class="td-badge td-badge--blue">Ningún rival está aquí</span>
         </div>
         <div class="td-widget-body">
@@ -1256,12 +1247,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM B · THE REAL WORLD SYNC
       ══════════════════════════════════════════════ -->
-      ${this._tdDim('B', 'fa-globe', 'The Real World Sync', 'Contexto climático, eventos culturales y sentiment shift global')}
+      ${this._tdDim('The Real World Sync', 'Contexto climático, eventos culturales y sentiment shift global')}
 
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Sincronización con el Mundo Físico</span>
+            <span class="td-widget-title">Sincronización con el Mundo Físico</span>
             <span class="td-badge td-badge--green">Oportunidades activas</span>
           </div>
           <div class="td-widget-body">
@@ -1270,7 +1261,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Sentiment Shift Global</span>
+            <span class="td-widget-title">Sentiment Shift Global</span>
             <span class="td-badge td-badge--yellow">Hoy</span>
           </div>
           <div class="td-widget-body td-widget-body--center">
@@ -1282,12 +1273,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM C · THE PLATFORM PULSE
       ══════════════════════════════════════════════ -->
-      ${this._tdDim('C', 'fa-microchip', 'The Platform Pulse', 'Cambios algorítmicos, velocidad de hashtags y keywords')}
+      ${this._tdDim('The Platform Pulse', 'Cambios algorítmicos, velocidad de hashtags y keywords')}
 
       <div class="td-dim-row">
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Algorithmic Watchdog</span>
+            <span class="td-widget-title">Algorithmic Watchdog</span>
             <span class="td-badge td-badge--orange">Cambios detectados</span>
           </div>
           <div class="td-widget-body">
@@ -1296,7 +1287,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Hashtag & Keyword Velocity</span>
+            <span class="td-widget-title">Hashtag & Keyword Velocity</span>
             <span class="td-badge td-badge--blue">Aceleración</span>
           </div>
           <div class="td-widget-body">
@@ -1308,12 +1299,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM D · THE VISUAL TREND
       ══════════════════════════════════════════════ -->
-      ${this._tdDim('D', 'fa-palette', 'The Visual Trend', 'Estética del minuto, paletas dominantes y ganchos de atención')}
+      ${this._tdDim('The Visual Trend', 'Estética del minuto, paletas dominantes y ganchos de atención')}
 
       <div class="td-dim-row">
         <div class="td-widget td-widget--wide">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Evolución Estética del Minuto</span>
+            <span class="td-widget-title">Evolución Estética del Minuto</span>
             <span class="td-badge td-badge--pink">Engagement visual</span>
           </div>
           <div class="td-widget-body">
@@ -1322,7 +1313,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="td-widget">
           <div class="td-widget-header">
-            <span class="td-widget-title"> Narrative Hooks — Top 3 segundos</span>
+            <span class="td-widget-title">Narrative Hooks — Top 3 segundos</span>
             <span class="td-badge td-badge--yellow">Anti-scroll</span>
           </div>
           <div class="td-widget-body">
@@ -1334,7 +1325,7 @@ class DashboardView extends BaseView {
       <!-- Keyword velocity trend extra chart -->
       <div class="td-widget td-widget--full">
         <div class="td-widget-header">
-          <span class="td-widget-title"> Curva de Emergencia de Tendencias — Últimas 48 horas</span>
+          <span class="td-widget-title">Curva de Emergencia de Tendencias — Últimas 48 horas</span>
           <span class="td-badge td-badge--green">Tiempo real</span>
         </div>
         <div class="td-widget-body">
@@ -1352,21 +1343,19 @@ class DashboardView extends BaseView {
   }
 
   /* ── Helpers tendencias ─────────────────────────────── */
-  _tdDim(letter, icon, title, subtitle) {
+  _tdDim(title, subtitle) {
     return `
       <div class="mb-dim-header td-dim-header">
-        
         <div>
-          <div class="mb-dim-title"> ${this._esc(title)}</div>
+          <div class="mb-dim-title">${this._esc(title)}</div>
           <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
         </div>
       </div>`;
   }
 
-  _tdKpi(icon, label, value, sub, color) {
+  _tdKpi(label, value, sub, color) {
     return `
       <div class="mb-kpi-card mb-kpi--${color} td-kpi-card">
-        
         <div class="mb-kpi-body">
           <div class="mb-kpi-value">${value}</div>
           <div class="mb-kpi-label">${label}</div>
@@ -1413,7 +1402,6 @@ class DashboardView extends BaseView {
       { name: '"Motivational Morning"', platform: 'yt',  phase: 'Emergencia',  uses: '12K', fit: 74 },
       { name: '"Viral Cooking Reel"',   platform: 'ig',  phase: 'Emergencia',  uses: '8K',  fit: 68 },
     ];
-    const pIcon = { tt: 'fa-tiktok', ig: 'fa-instagram', yt: 'fa-youtube' };
     const phaseCls = { Exponencial: 'td-phase--exp', Crecimiento: 'td-phase--grow', Emergencia: 'td-phase--early' };
     return `
       <div class="td-audios-list">
@@ -1467,11 +1455,11 @@ class DashboardView extends BaseView {
 
   _tdWorldSync() {
     const events = [
-      { type: 'weather', icon: 'fa-temperature-high', title: 'Ola de calor — CDMX / MTY',    impact: 'Licuadoras granizados +68% búsquedas', urgency: 'high', action: 'Publicar HOY' },
-      { type: 'event',   icon: 'fa-futbol',           title: 'Partido Final Liga MX — sábado', impact: 'Contenido de snacks y botanas en vivo', urgency: 'med',  action: 'Preparar para sábado' },
-      { type: 'calendar',icon: 'fa-calendar-day',     title: 'Día del Niño — 30 de abril',    impact: 'Aparatos fáciles de usar para toda la familia', urgency: 'med', action: 'Campaña 28–30 abr' },
-      { type: 'news',    icon: 'fa-newspaper',        title: 'Boom de dietas sin gluten',     impact: 'Contenido de recetas saludables +31%',  urgency: 'low',  action: 'Blog esta semana' },
-      { type: 'weather', icon: 'fa-cloud-rain',       title: 'Lluvias en GDL esta tarde',     impact: 'Recetas de interior / Sopas calientes',  urgency: 'low',  action: 'Post vespertino' },
+      { type: 'weather', title: 'Ola de calor — CDMX / MTY',    impact: 'Licuadoras granizados +68% búsquedas', urgency: 'high', action: 'Publicar HOY' },
+      { type: 'event',   title: 'Partido Final Liga MX — sábado', impact: 'Contenido de snacks y botanas en vivo', urgency: 'med',  action: 'Preparar para sábado' },
+      { type: 'calendar',title: 'Día del Niño — 30 de abril',    impact: 'Aparatos fáciles de usar para toda la familia', urgency: 'med', action: 'Campaña 28–30 abr' },
+      { type: 'news',    title: 'Boom de dietas sin gluten',     impact: 'Contenido de recetas saludables +31%',  urgency: 'low',  action: 'Blog esta semana' },
+      { type: 'weather', title: 'Lluvias en GDL esta tarde',     impact: 'Recetas de interior / Sopas calientes',  urgency: 'low',  action: 'Post vespertino' },
     ];
     const urg = { high: 'td-urg--high', med: 'td-urg--med', low: 'td-urg--low' };
     const typeClr = { weather: 'rgba(96,165,250,0.15)', event: 'rgba(34,197,94,0.1)', calendar: 'rgba(251,191,36,0.1)', news: 'rgba(167,139,250,0.1)' };
@@ -1493,12 +1481,12 @@ class DashboardView extends BaseView {
 
   _tdAlgoWatchdog() {
     const platforms = [
-      { name: 'Instagram',  icon: 'fa-instagram',  favFormat: 'Carrusel',         change: true,  note: '↑ Prioridad vs Reels esta semana' },
-      { name: 'TikTok',     icon: 'fa-tiktok',     favFormat: 'Video < 30 seg',   change: false, note: 'Sin cambios — sigue igual' },
-      { name: 'YouTube',    icon: 'fa-youtube',    favFormat: 'Shorts 60 seg',    change: true,  note: '↑ Shorts sobre videos largos' },
-      { name: 'Facebook',   icon: 'fa-facebook-f', favFormat: 'Reels nativos',    change: false, note: 'Sin cambios' },
-      { name: 'LinkedIn',   icon: 'fa-linkedin-in',favFormat: 'Carrusel + Texto', change: true,  note: '↑ Documentos PDF convertidos' },
-      { name: 'Pinterest',  icon: 'fa-pinterest-p',favFormat: 'Idea Pin vertical',change: false, note: 'Sin cambios' },
+      { name: 'Instagram',  favFormat: 'Carrusel',         change: true,  note: '↑ Prioridad vs Reels esta semana' },
+      { name: 'TikTok',     favFormat: 'Video < 30 seg',   change: false, note: 'Sin cambios — sigue igual' },
+      { name: 'YouTube',    favFormat: 'Shorts 60 seg',    change: true,  note: '↑ Shorts sobre videos largos' },
+      { name: 'Facebook',   favFormat: 'Reels nativos',    change: false, note: 'Sin cambios' },
+      { name: 'LinkedIn',   favFormat: 'Carrusel + Texto', change: true,  note: '↑ Documentos PDF convertidos' },
+      { name: 'Pinterest',  favFormat: 'Idea Pin vertical',change: false, note: 'Sin cambios' },
     ];
     return `
       <div class="td-algo-list">
@@ -1671,10 +1659,10 @@ class DashboardView extends BaseView {
     const el = document.getElementById('tdOpFeed');
     if (!el) return;
     const ops = [
-      { status: 'done',    icon: 'fa-check-circle', msg: 'Detectada tendencia "Cocina Retro 90s" — Generado set de 4 visuales con estética neon. Alcance estimado: +40%.', time: 'Hace 8 min' },
-      { status: 'running', icon: 'fa-spinner fa-spin', msg: 'Analizando Content Gap "licuadoras para smoothies proteicos" — Redactando guía SEO + script de Reel.', time: 'En curso' },
-      { status: 'alert',   icon: 'fa-triangle-exclamation', msg: 'Ola de calor detectada en Monterrey — Oportunidad de publicación en 2 h. Requiere aprobación.', time: 'Hace 12 min' },
-      { status: 'done',    icon: 'fa-check-circle', msg: 'Audio "Lo-fi Cocina Mix" en fase exponencial en TikTok — Video generado y programado para las 8pm.', time: 'Hace 31 min' },
+      { status: 'done',    msg: 'Detectada tendencia "Cocina Retro 90s" — Generado set de 4 visuales con estética neon. Alcance estimado: +40%.', time: 'Hace 8 min' },
+      { status: 'running', msg: 'Analizando Content Gap "licuadoras para smoothies proteicos" — Redactando guía SEO + script de Reel.', time: 'En curso' },
+      { status: 'alert',   msg: 'Ola de calor detectada en Monterrey — Oportunidad de publicación en 2 h. Requiere aprobación.', time: 'Hace 12 min' },
+      { status: 'done',    msg: 'Audio "Lo-fi Cocina Mix" en fase exponencial en TikTok — Video generado y programado para las 8pm.', time: 'Hace 31 min' },
     ];
     const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
     el.innerHTML = ops.map(o => `
@@ -1712,12 +1700,12 @@ class DashboardView extends BaseView {
 
       <!-- ── KPI Strip ── -->
       <div class="cc-kpi-strip">
-        ${this._ccKpi('fa-bullhorn',          'Share of Voice',          '34%',  'Nosotros vs mercado',    'blue')}
-        ${this._ccKpi('fa-pen-nib',           'Posts rival / sem',       '31',   '−3 vs semana ant.',      'orange')}
-        ${this._ccKpi('fa-face-frown',        'Reviews neg. detectadas', '247',  '↑ 18 esta semana',       'red')}
-        ${this._ccKpi('fa-rectangle-ad',      'Anuncios activos',        '14',   'Meta · Google · TikTok', 'purple')}
-        ${this._ccKpi('fa-triangle-exclamation','Vulnerabilidades',      '6',    'Explotables hoy',        'yellow')}
-        ${this._ccKpi('fa-box-open',          'SKUs sin stock rival',    '3',    'Oportunidad inmediata',  'green')}
+        ${this._ccKpi('Share of Voice',          '34%',  'Nosotros vs mercado',    'blue')}
+        ${this._ccKpi('Posts rival / sem',       '31',   '−3 vs semana ant.',      'orange')}
+        ${this._ccKpi('Reviews neg. detectadas', '247',  '↑ 18 esta semana',       'red')}
+        ${this._ccKpi('Anuncios activos',        '14',   'Meta · Google · TikTok', 'purple')}
+        ${this._ccKpi('Vulnerabilidades',      '6',    'Explotables hoy',        'yellow')}
+        ${this._ccKpi('SKUs sin stock rival',    '3',    'Oportunidad inmediata',  'green')}
       </div>
 
       <!-- ── OpenClaw Mission Control ── -->
@@ -1732,12 +1720,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM A · THE PRICE WAR
       ══════════════════════════════════════════════ -->
-      ${this._ccDim('A', 'fa-sack-dollar', 'The Price War', 'Precios cross-platform, stock crítico y bundles del rival')}
+      ${this._ccDim('The Price War', 'Precios cross-platform, stock crítico y bundles del rival')}
 
       <div class="cc-dim-row">
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Monitor de Precios SKU vs SKU</span>
+            <span class="cc-widget-title">Monitor de Precios SKU vs SKU</span>
             <span class="cc-badge cc-badge--blue">Cross-Platform</span>
           </div>
           <div class="cc-widget-body">
@@ -1746,7 +1734,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Stock Crítico del Rival</span>
+            <span class="cc-widget-title">Stock Crítico del Rival</span>
             <span class="cc-badge cc-badge--red">Oportunidad</span>
           </div>
           <div class="cc-widget-body">
@@ -1757,7 +1745,7 @@ class DashboardView extends BaseView {
 
       <div class="cc-widget cc-widget--full">
         <div class="cc-widget-header">
-          <span class="cc-widget-title"> Análisis de Ofertas y Bundles del Rival</span>
+          <span class="cc-widget-title">Análisis de Ofertas y Bundles del Rival</span>
           <span class="cc-badge cc-badge--orange">Canibalización</span>
         </div>
         <div class="cc-widget-body">
@@ -1768,12 +1756,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM B · THE CONTENT BATTLE
       ══════════════════════════════════════════════ -->
-      ${this._ccDim('B', 'fa-swords', 'The Content Battle', 'Temas ganadores, engagement real y lanzamientos en la sombra')}
+      ${this._ccDim('The Content Battle', 'Temas ganadores, engagement real y lanzamientos en la sombra')}
 
       <div class="cc-dim-row">
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Temas Ganadores del Rival</span>
+            <span class="cc-widget-title">Temas Ganadores del Rival</span>
             <span class="cc-badge cc-badge--orange">Fórmula viral</span>
           </div>
           <div class="cc-widget-body">
@@ -1782,7 +1770,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Benchmarking de Engagement Real</span>
+            <span class="cc-widget-title">Benchmarking de Engagement Real</span>
             <span class="cc-badge cc-badge--blue">Nosotros vs Rival</span>
           </div>
           <div class="cc-widget-body">
@@ -1793,7 +1781,7 @@ class DashboardView extends BaseView {
 
       <div class="cc-widget cc-widget--full">
         <div class="cc-widget-header">
-          <span class="cc-widget-title"> Detección de Lanzamientos en la Sombra</span>
+          <span class="cc-widget-title">Detección de Lanzamientos en la Sombra</span>
           <span class="cc-badge cc-badge--purple">Anticipación</span>
         </div>
         <div class="cc-widget-body">
@@ -1804,12 +1792,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM C · ATTACK SURFACE
       ══════════════════════════════════════════════ -->
-      ${this._ccDim('C', 'fa-crosshairs', 'Attack Surface', 'Reviews negativas explotables y crisis de reputación del rival')}
+      ${this._ccDim('Attack Surface', 'Reviews negativas explotables y crisis de reputación del rival')}
 
       <div class="cc-dim-row">
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Reviews Negativas del Rival — Puntos de Dolor</span>
+            <span class="cc-widget-title">Reviews Negativas del Rival — Puntos de Dolor</span>
             <span class="cc-badge cc-badge--red">Explotable</span>
           </div>
           <div class="cc-widget-body">
@@ -1818,7 +1806,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Crisis de Reputación del Rival</span>
+            <span class="cc-widget-title">Crisis de Reputación del Rival</span>
             <span class="cc-badge cc-badge--red">Alerta activa</span>
           </div>
           <div class="cc-widget-body">
@@ -1830,12 +1818,12 @@ class DashboardView extends BaseView {
       <!-- ══════════════════════════════════════════════
            DIM D · AD INTELLIGENCE
       ══════════════════════════════════════════════ -->
-      ${this._ccDim('D', 'fa-satellite', 'Ad Intelligence', 'Radar de pauta digital e influencer mapping del rival')}
+      ${this._ccDim('Ad Intelligence', 'Radar de pauta digital e influencer mapping del rival')}
 
       <div class="cc-dim-row">
         <div class="cc-widget">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Radar de Pauta Digital</span>
+            <span class="cc-widget-title">Radar de Pauta Digital</span>
             <span class="cc-badge cc-badge--purple">Inversión estimada</span>
           </div>
           <div class="cc-widget-body mb-widget-body--center">
@@ -1844,7 +1832,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Influencer Mapping del Rival</span>
+            <span class="cc-widget-title">Influencer Mapping del Rival</span>
             <span class="cc-badge cc-badge--blue">Oportunidad de captura</span>
           </div>
           <div class="cc-widget-body">
@@ -1854,11 +1842,11 @@ class DashboardView extends BaseView {
       </div>
 
       <!-- ── Share of Voice ── -->
-      ${this._ccDim('+', 'fa-chart-pie', 'Share of Voice', 'Cuota de atención del nicho — quién domina la conversación')}
+      ${this._ccDim('Share of Voice', 'Cuota de atención del nicho — quién domina la conversación')}
       <div class="cc-dim-row">
         <div class="cc-widget mb-widget-body--center">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Share of Voice — Nicho</span>
+            <span class="cc-widget-title">Share of Voice — Nicho</span>
             <span class="cc-badge cc-badge--blue">Tiempo real</span>
           </div>
           <div class="cc-widget-body mb-widget-body--center">
@@ -1867,7 +1855,7 @@ class DashboardView extends BaseView {
         </div>
         <div class="cc-widget cc-widget--wide">
           <div class="cc-widget-header">
-            <span class="cc-widget-title"> Share of Voice — Evolución 30 días</span>
+            <span class="cc-widget-title">Share of Voice — Evolución 30 días</span>
             <span class="cc-badge cc-badge--green">Tendencia</span>
           </div>
           <div class="cc-widget-body">
@@ -1886,21 +1874,19 @@ class DashboardView extends BaseView {
   }
 
   /* ── Helpers competencia ─────────────────────────────── */
-  _ccDim(letter, icon, title, subtitle) {
+  _ccDim(title, subtitle) {
     return `
       <div class="mb-dim-header cc-dim-header">
-        
         <div>
-          <div class="mb-dim-title"> ${this._esc(title)}</div>
+          <div class="mb-dim-title">${this._esc(title)}</div>
           <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
         </div>
       </div>`;
   }
 
-  _ccKpi(icon, label, value, sub, color) {
+  _ccKpi(label, value, sub, color) {
     return `
       <div class="mb-kpi-card mb-kpi--${color} cc-kpi-card">
-        
         <div class="mb-kpi-body">
           <div class="mb-kpi-value">${value}</div>
           <div class="mb-kpi-label">${label}</div>
@@ -1976,7 +1962,6 @@ class DashboardView extends BaseView {
       { date: 'Hace 8 d',  confidence: 62, signal: 'Pico de contrataciones en LinkedIn: 4 diseñadores de packaging en los últimos 15 días.', type: 'linkedin', action: 'Monitorear lanzamientos Q2' },
       { date: 'Hace 12 d', confidence: 41, signal: 'Cambio en pie de página: eliminaronSKU de producto — posible discontinuación.', type: 'web', action: 'Oportunidad en ese segmento' },
     ];
-    const typeIcon = { dominio: 'fa-globe', web: 'fa-code', linkedin: 'fa-linkedin' };
     const confColor = (c) => c>=80 ? '#f87171' : c>=60 ? '#fbbf24' : '#60a5fa';
     return `
       <div class="cc-shadow-list">
@@ -2007,7 +1992,6 @@ class DashboardView extends BaseView {
       { level: 'low',  product: 'Rival Classic',   issue: 'Retraso de envíos en Walmart — 34 comentarios. Riesgo bajo de escalar.',              window: 'Monitoreo pasivo' },
     ];
     const levelCls  = { high: 'cc-crisis--high', med: 'cc-crisis--med', low: 'cc-crisis--low' };
-    const levelIcon = { high: 'fa-circle-xmark', med: 'fa-triangle-exclamation', low: 'fa-circle-dot' };
     const levelLbl  = { high: 'Crisis activa', med: 'En desarrollo', low: 'Latente' };
     return `
       <div class="cc-crisis-list">
@@ -2032,7 +2016,6 @@ class DashboardView extends BaseView {
       { handle: '@cocinafusion',    plat: 'ig', followers: '55K',  reach: 71, trabajaCon: 'Rival B', capturable: true,  note: 'Microinfluencer de alto CTR'  },
       { handle: 'ForoCocinaMX',     plat: 'web',followers: '31K', reach: 65, trabajaCon: 'Rival A', capturable: true,  note: 'Comunidad orgánica valiosa'  },
     ];
-    const pIcon = { ig:'fa-instagram', yt:'fa-youtube', tt:'fa-tiktok', web:'fa-globe' };
     return `
       <div class="cc-inf-table-wrap">
         <table class="mb-map-table cc-table cc-inf-table">
@@ -2063,10 +2046,10 @@ class DashboardView extends BaseView {
   /* ── Mission Control (OpenClaw autonomous actions) ── */
   _buildMissions() {
     return [
-      { status: 'done',    icon: 'fa-check-circle', msg: 'Misión: Neutralizar oferta rival en Amazon MX — Generados 4 activos comparativos. Estado: Al aire.', time: 'Hace 22 min' },
-      { status: 'running', icon: 'fa-spinner fa-spin', msg: 'Misión: Capturar clientes de crisis "Rival Pro 3000" — Redactando 3 variantes de contenido.', time: 'En curso' },
-      { status: 'alert',   icon: 'fa-triangle-exclamation', msg: 'Alerta: Rival B bajó precio en Mercado Libre −$130 — Requiere aprobación para igualar.', time: 'Hace 5 min' },
-      { status: 'done',    icon: 'fa-check-circle', msg: 'Misión: Counter al bundle "Kit Cocina Pro" — Publicado bundle Oster con ahorro adicional de $200.', time: 'Hace 2 h' },
+      { status: 'done',    msg: 'Misión: Neutralizar oferta rival en Amazon MX — Generados 4 activos comparativos. Estado: Al aire.', time: 'Hace 22 min' },
+      { status: 'running', msg: 'Misión: Capturar clientes de crisis "Rival Pro 3000" — Redactando 3 variantes de contenido.', time: 'En curso' },
+      { status: 'alert',   msg: 'Alerta: Rival B bajó precio en Mercado Libre −$130 — Requiere aprobación para igualar.', time: 'Hace 5 min' },
+      { status: 'done',    msg: 'Misión: Counter al bundle "Kit Cocina Pro" — Publicado bundle Oster con ahorro adicional de $200.', time: 'Hace 2 h' },
     ];
   }
 
@@ -2524,7 +2507,6 @@ class DashboardView extends BaseView {
     const score       = s.healthScore ?? 0;
     const scoreColor  = score >= 70 ? 'green' : score >= 40 ? 'yellow' : 'red';
     const threat      = s.threatLevel || 'bajo';
-    const threatIcons = { bajo: 'fa-shield-halved', medio: 'fa-triangle-exclamation', alto: 'fa-circle-exclamation', critico: 'fa-skull-crossbones' };
     const threatLabels = { bajo: 'Amenaza Baja', medio: 'Amenaza Media', alto: 'Amenaza Alta', critico: '¡CRÍTICO!' };
     const trend       = s.topTrend;
     const syncText    = s.lastSynthesis
