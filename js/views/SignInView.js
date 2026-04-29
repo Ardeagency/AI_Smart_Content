@@ -2,6 +2,10 @@
  * SignInView - Acceso para usuarios existentes.
  * Patrón SPA: HTML inline, sin template.
  * Sin opción de registro — la plataforma es por invitación.
+ * Tres estados intercambiables sobre la misma card:
+ *   1. signin-main      → login (email + password)
+ *   2. signin-recover   → recuperar contraseña
+ *   3. signin-request   → solicitar acceso (lead → contact_leads)
  */
 class SignInView extends BaseView {
   constructor() {
@@ -10,6 +14,7 @@ class SignInView extends BaseView {
     this.form = null;
     this.signinMain = null;
     this.signinRecover = null;
+    this.signinRequest = null;
   }
 
   async updateHeader() {
@@ -46,7 +51,7 @@ class SignInView extends BaseView {
               </div>
             </form>
 
-            <p class="signin-invite">¿No tienes acceso? <a href="/contacto" class="signin-invite-link" data-href="/contacto">Solicítalo aquí</a></p>
+            <p class="signin-invite">¿No tienes acceso? <button type="button" class="signin-invite-link" id="linkRequestAccess">Solicítalo aquí</button></p>
           </div>
 
           <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
@@ -60,6 +65,58 @@ class SignInView extends BaseView {
               <p class="signin-recover-success-text">Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.</p>
             </div>
             <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRecoverBack">Volver al inicio de sesión</button>
+          </div>
+
+          <div class="signin-request" id="signinRequest" aria-hidden="true" hidden>
+            <h2 class="signin-request-title">Solicitar acceso</h2>
+            <p class="signin-request-desc">Revisamos cada solicitud manualmente y te contactamos en 48 horas hábiles.</p>
+
+            <form class="signin-request-form" id="requestForm" novalidate>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqFullName">Nombre completo</label>
+                <input type="text" class="form-input" id="reqFullName" name="full_name" autocomplete="name" required>
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqEmail">Correo corporativo</label>
+                <input type="email" class="form-input" id="reqEmail" name="email" autocomplete="email" required>
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqCompany">Empresa / marca</label>
+                <input type="text" class="form-input" id="reqCompany" name="company" autocomplete="organization" required>
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqRole">Cargo / rol</label>
+                <input type="text" class="form-input" id="reqRole" name="role" autocomplete="organization-title">
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqMarket">País / mercado principal</label>
+                <input type="text" class="form-input" id="reqMarket" name="market">
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqChallenge">Reto principal en producción de contenido</label>
+                <textarea class="form-input signin-request-textarea" id="reqChallenge" name="challenge" rows="3"></textarea>
+              </div>
+              <div class="signin-field">
+                <label class="signin-field-label" for="reqSource">¿Cómo nos encontraste?</label>
+                <select class="form-input" id="reqSource" name="source">
+                  <option value="">Selecciona</option>
+                  <option value="referral">Referido</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="search">Búsqueda</option>
+                  <option value="event">Evento</option>
+                  <option value="other">Otro</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary signin-submit" id="btnSendRequest">Enviar solicitud</button>
+              <p class="signin-request-status" id="requestStatus" role="status" aria-live="polite"></p>
+            </form>
+
+            <div class="signin-request-success" id="requestSuccess" hidden>
+              <p class="signin-request-success-text">Solicitud recibida. Te contactaremos en 48 horas hábiles.</p>
+            </div>
+
+            <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRequestBack">Volver al inicio de sesión</button>
           </div>
         </div>
 
@@ -108,6 +165,7 @@ class SignInView extends BaseView {
 
     this.signinMain = this.querySelector('#signinMain');
     this.signinRecover = this.querySelector('#signinRecover');
+    this.signinRequest = this.querySelector('#signinRequest');
     if (linkForgot) {
       this.addEventListener(linkForgot, 'click', (e) => {
         e.preventDefault();
@@ -126,7 +184,30 @@ class SignInView extends BaseView {
       });
     }
 
-    // Navegación SPA para footer + invite link (sin full reload)
+    // Solicitar acceso → estado request
+    const linkRequest = this.querySelector('#linkRequestAccess');
+    const requestForm = this.querySelector('#requestForm');
+    const linkRequestBack = this.querySelector('#linkRequestBack');
+    if (linkRequest) {
+      this.addEventListener(linkRequest, 'click', (e) => {
+        e.preventDefault();
+        this.showRequestState();
+      });
+    }
+    if (requestForm) {
+      this.addEventListener(requestForm, 'submit', (e) => {
+        e.preventDefault();
+        this.handleSendRequest();
+      });
+    }
+    if (linkRequestBack) {
+      this.addEventListener(linkRequestBack, 'click', (e) => {
+        e.preventDefault();
+        this.hideRequestState();
+      });
+    }
+
+    // Navegación SPA para footer (sin full reload)
     const spaLinks = this.querySelectorAll('a[data-href]');
     spaLinks.forEach((link) => {
       this.addEventListener(link, 'click', (e) => {
@@ -204,6 +285,109 @@ class SignInView extends BaseView {
     if (this.signinRecover) {
       this.signinRecover.setAttribute('hidden', '');
       this.signinRecover.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  showRequestState() {
+    if (this.signinMain) this.signinMain.style.display = 'none';
+    if (this.signinRecover) {
+      this.signinRecover.setAttribute('hidden', '');
+      this.signinRecover.setAttribute('aria-hidden', 'true');
+    }
+    if (this.signinRequest) {
+      this.signinRequest.removeAttribute('hidden');
+      this.signinRequest.setAttribute('aria-hidden', 'false');
+    }
+    const form = this.querySelector('#requestForm');
+    const success = this.querySelector('#requestSuccess');
+    const status = this.querySelector('#requestStatus');
+    if (form) form.hidden = false;
+    if (success) success.hidden = true;
+    if (status) {
+      status.textContent = '';
+      status.classList.remove('is-success', 'is-error');
+    }
+    const first = this.querySelector('#reqFullName');
+    if (first) first.focus();
+  }
+
+  hideRequestState() {
+    if (this.signinMain) this.signinMain.style.display = '';
+    if (this.signinRequest) {
+      this.signinRequest.setAttribute('hidden', '');
+      this.signinRequest.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  async handleSendRequest() {
+    const form = this.querySelector('#requestForm');
+    const status = this.querySelector('#requestStatus');
+    const submitBtn = this.querySelector('#btnSendRequest');
+    if (!form || !status) return;
+
+    if (!form.checkValidity()) {
+      status.textContent = 'Por favor completa los campos requeridos.';
+      status.classList.remove('is-success');
+      status.classList.add('is-error');
+      form.reportValidity();
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+    }
+    status.textContent = '';
+    status.classList.remove('is-success', 'is-error');
+
+    try {
+      const supabase = await this.getSupabaseClient();
+      if (!supabase) throw new Error('No se pudo conectar con la base de datos.');
+
+      const formData = new FormData(form);
+      const sourceMap = {
+        referral: 'referido',
+        linkedin: 'linkedin',
+        search: 'busqueda',
+        event: 'evento',
+        other: 'otro'
+      };
+      const utm = new URLSearchParams(window.location.search || '');
+
+      const payload = {
+        full_name: (formData.get('full_name') || '').toString().trim(),
+        email: (formData.get('email') || '').toString().trim().toLowerCase(),
+        company_name: (formData.get('company') || '').toString().trim(),
+        job_title: (formData.get('role') || '').toString().trim() || null,
+        country: (formData.get('market') || '').toString().trim() || null,
+        main_challenge: (formData.get('challenge') || '').toString().trim() || null,
+        how_found: sourceMap[(formData.get('source') || '').toString()] || null,
+        source: 'contact_form',
+        utm_source: (utm.get('utm_source') || '').trim() || null,
+        utm_campaign: (utm.get('utm_campaign') || '').trim() || null,
+        metadata: {
+          form_path: window.location.pathname,
+          form_url: window.location.href,
+          submitted_from: 'login_request_state'
+        }
+      };
+
+      const { error } = await supabase.from('contact_leads').insert(payload);
+      if (error) throw error;
+
+      form.hidden = true;
+      const success = this.querySelector('#requestSuccess');
+      if (success) success.hidden = false;
+      form.reset();
+    } catch (err) {
+      status.textContent = `No pudimos enviar tu solicitud. ${err?.message || 'Intenta de nuevo.'}`;
+      status.classList.remove('is-success');
+      status.classList.add('is-error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Enviar solicitud';
+      }
     }
   }
 

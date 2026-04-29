@@ -138,7 +138,6 @@ class App {
     r.register('/terminos-de-servicio', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
     r.register('/terminos', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
     r.register('/eliminacion-de-datos', this._lazy('DataDeletionView', ['/js/views/DataDeletionView.js']), pub);
-    r.register('/contacto', this._lazy('ContactoView', ['/js/views/ContactoView.js']), pub);
 
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {
