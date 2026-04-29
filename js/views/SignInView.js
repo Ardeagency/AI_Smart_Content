@@ -92,16 +92,62 @@ class SignInView extends BaseView {
                 </div>
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqRole">Rol / Cargo</label>
-                  <input type="text" class="form-input" id="reqRole" name="role" placeholder="Tu cargo" autocomplete="organization-title">
+                  <select class="form-input" id="reqRole" name="role">
+                    <option value="">Selecciona</option>
+                    <option value="ceo_fundador">CEO / Fundador/a</option>
+                    <option value="cmo_dir_marketing">CMO / Director/a de Marketing</option>
+                    <option value="head_of_content">Head of Content</option>
+                    <option value="marketing_manager">Marketing Manager</option>
+                    <option value="brand_manager">Brand Manager</option>
+                    <option value="content_manager">Content Manager</option>
+                    <option value="growth">Growth / Performance</option>
+                    <option value="ecommerce">E-commerce Manager</option>
+                    <option value="comms">Comunicaciones / PR</option>
+                    <option value="creativo">Director/a Creativo/a</option>
+                    <option value="agencia">Agencia / Consultor</option>
+                    <option value="otro">Otro</option>
+                  </select>
                 </div>
 
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqCountry">País</label>
-                  <input type="text" class="form-input" id="reqCountry" name="country" placeholder="Colombia, México, España...">
+                  <select class="form-input" id="reqCountry" name="country">
+                    <option value="">Selecciona</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="México">México</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Perú">Perú</option>
+                    <option value="Ecuador">Ecuador</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Bolivia">Bolivia</option>
+                    <option value="Venezuela">Venezuela</option>
+                    <option value="Costa Rica">Costa Rica</option>
+                    <option value="Panamá">Panamá</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="República Dominicana">República Dominicana</option>
+                    <option value="Puerto Rico">Puerto Rico</option>
+                    <option value="España">España</option>
+                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Otro">Otro</option>
+                  </select>
                 </div>
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqMarket">Mercado</label>
-                  <input type="text" class="form-input" id="reqMarket" name="market" placeholder="LATAM, US, Europa...">
+                  <select class="form-input" id="reqMarket" name="market">
+                    <option value="">Selecciona</option>
+                    <option value="LATAM">LATAM</option>
+                    <option value="Hispanoamérica">Hispanoamérica</option>
+                    <option value="Norteamérica">Norteamérica (US/CA)</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Europa">Europa</option>
+                    <option value="España">España</option>
+                    <option value="Local">Local / un solo país</option>
+                    <option value="Global">Global / multi-región</option>
+                    <option value="Otro">Otro</option>
+                  </select>
                 </div>
 
                 <div class="signin-field">
