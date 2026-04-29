@@ -386,7 +386,7 @@ class DevLeadCategoriesView extends DevBaseView {
     const id = document.getElementById('categoryId').value;
     const name = (document.getElementById('categoryName').value || '').trim();
     if (!name) {
-      alert('El nombre es obligatorio.');
+      this.showNotification('El nombre es obligatorio.', 'warning');
       return;
     }
     const description = (document.getElementById('categoryDescription').value || '').trim();
@@ -430,7 +430,7 @@ class DevLeadCategoriesView extends DevBaseView {
           payload.cover_storage_path = storagePath;
         } catch (err) {
           console.error('Error subiendo portada:', err);
-          alert('Error al subir la portada: ' + (err && err.message ? err.message : ''));
+          this.showNotification('Error al subir la portada: ' + (err && err.message ? err.message : ''), 'error');
           return;
         }
       }
@@ -440,7 +440,7 @@ class DevLeadCategoriesView extends DevBaseView {
         .eq('id', id);
       if (error) {
         console.error(error);
-        alert('Error al actualizar: ' + (error.message || ''));
+        this.showNotification('Error al actualizar: ' + (error.message || ''), 'error');
         return;
       }
     } else {
@@ -452,7 +452,7 @@ class DevLeadCategoriesView extends DevBaseView {
         .single();
       if (error) {
         console.error(error);
-        alert('Error al crear: ' + (error.message || ''));
+        this.showNotification('Error al crear: ' + (error.message || ''), 'error');
         return;
       }
       const newId = data && data.id;
@@ -502,13 +502,13 @@ class DevLeadCategoriesView extends DevBaseView {
       .select('*', { count: 'exact', head: true })
       .eq('category_id', id);
     if (count > 0) {
-      alert(`No se puede eliminar: ${count} flujo(s) usan esta categoría. Asigna otra categoría a esos flujos primero.`);
+      this.showNotification(`No se puede eliminar: ${count} flujo(s) usan esta categoría. Asigna otra categoría a esos flujos primero.`, 'warning');
       return;
     }
     if (!confirm('¿Eliminar esta categoría?')) return;
     const { error } = await this.supabase.from('content_categories').delete().eq('id', id);
     if (error) {
-      alert('Error al eliminar: ' + (error.message || ''));
+      this.showNotification('Error al eliminar: ' + (error.message || ''), 'error');
       return;
     }
     await this.loadCategories();
@@ -539,7 +539,7 @@ class DevLeadCategoriesView extends DevBaseView {
     const id = document.getElementById('subcategoryId').value;
     const name = (document.getElementById('subcategoryName').value || '').trim();
     if (!name) {
-      alert('El nombre es obligatorio.');
+      this.showNotification('El nombre es obligatorio.', 'warning');
       return;
     }
     const description = (document.getElementById('subcategoryDescription').value || '').trim();
@@ -552,7 +552,7 @@ class DevLeadCategoriesView extends DevBaseView {
         .eq('id', id);
       if (error) {
         console.error(error);
-        alert('Error al actualizar: ' + (error.message || ''));
+        this.showNotification('Error al actualizar: ' + (error.message || ''), 'error');
         return;
       }
     } else {
@@ -561,7 +561,7 @@ class DevLeadCategoriesView extends DevBaseView {
         .insert({ name, description, order_index: orderIndex });
       if (error) {
         console.error(error);
-        alert('Error al crear: ' + (error.message || ''));
+        this.showNotification('Error al crear: ' + (error.message || ''), 'error');
         return;
       }
     }
@@ -576,13 +576,13 @@ class DevLeadCategoriesView extends DevBaseView {
       .select('*', { count: 'exact', head: true })
       .eq('subcategory_id', id);
     if (count > 0) {
-      alert(`No se puede eliminar: ${count} flujo(s) usan esta subcategoría. Asigna otra subcategoría a esos flujos primero.`);
+      this.showNotification(`No se puede eliminar: ${count} flujo(s) usan esta subcategoría. Asigna otra subcategoría a esos flujos primero.`, 'warning');
       return;
     }
     if (!confirm('¿Eliminar esta subcategoría?')) return;
     const { error } = await this.supabase.from('content_subcategories').delete().eq('id', id);
     if (error) {
-      alert('Error al eliminar: ' + (error.message || ''));
+      this.showNotification('Error al eliminar: ' + (error.message || ''), 'error');
       return;
     }
     await this.loadSubcategories();

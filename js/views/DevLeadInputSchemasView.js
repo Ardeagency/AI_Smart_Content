@@ -230,19 +230,19 @@ class DevLeadInputSchemasView extends DevBaseView {
     const id = document.getElementById('inputSchemaId').value;
     const name = (document.getElementById('inputSchemaName').value || '').trim();
     if (!name) {
-      alert('El nombre es obligatorio.');
+      this.showNotification('El nombre es obligatorio.', 'warning');
       return;
     }
     const baseSchemaRaw = document.getElementById('inputSchemaBaseSchema').value || '{}';
     const baseSchema = this.parseJson(baseSchemaRaw, 'base_schema');
     if (baseSchema === null) {
-      alert('base_schema debe ser JSON válido.');
+      this.showNotification('base_schema debe ser JSON válido.', 'warning');
       return;
     }
     const defaultUiConfigRaw = document.getElementById('inputSchemaDefaultUiConfig').value || '{}';
     const defaultUiConfig = this.parseJson(defaultUiConfigRaw, 'default_ui_config');
     if (defaultUiConfig === null) {
-      alert('default_ui_config debe ser JSON válido.');
+      this.showNotification('default_ui_config debe ser JSON válido.', 'warning');
       return;
     }
 
@@ -264,7 +264,7 @@ class DevLeadInputSchemasView extends DevBaseView {
         .update(payload)
         .eq('id', id);
       if (error) {
-        alert('Error al actualizar: ' + (error.message || ''));
+        this.showNotification('Error al actualizar: ' + (error.message || ''), 'error');
         return;
       }
     } else {
@@ -281,7 +281,7 @@ class DevLeadInputSchemasView extends DevBaseView {
           order_index: payload.order_index
         });
       if (error) {
-        alert('Error al crear: ' + (error.message || ''));
+        this.showNotification('Error al crear: ' + (error.message || ''), 'error');
         return;
       }
     }
@@ -294,7 +294,7 @@ class DevLeadInputSchemasView extends DevBaseView {
     if (!confirm('¿Eliminar esta plantilla de input? Los flujos que la usen podrían verse afectados.')) return;
     const { error } = await this.supabase.from('ui_component_templates').delete().eq('id', id);
     if (error) {
-      alert('Error al eliminar: ' + (error.message || ''));
+      this.showNotification('Error al eliminar: ' + (error.message || ''), 'error');
       return;
     }
     await this.loadTemplates();

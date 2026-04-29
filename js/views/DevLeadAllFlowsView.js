@@ -221,7 +221,7 @@ class DevLeadAllFlowsView extends DevBaseView {
     const d = document.getElementById('deleteFlowLeadModal');
     if (d) { d.style.display = 'none'; d.classList.remove('is-open'); }
     if (error) {
-      alert('Error al eliminar: ' + (error.message || ''));
+      this.showNotification('Error al eliminar: ' + (error.message || ''), 'error');
       return;
     }
     this.flows = this.flows.filter(f => f.id !== this.flowToDelete);

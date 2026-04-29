@@ -142,7 +142,7 @@ class DevLeadReferencesView extends DevBaseView {
     if (!confirm('¿Eliminar esta referencia visual? El archivo en el bucket no se borra automáticamente.')) return;
     const { error } = await this.supabase.from('visual_references').delete().eq('id', id);
     if (error) {
-      alert('Error al eliminar: ' + (error.message || ''));
+      this.showNotification('Error al eliminar: ' + (error.message || ''), 'error');
       return;
     }
     await this.loadReferences();

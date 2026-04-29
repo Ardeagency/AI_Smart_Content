@@ -437,7 +437,7 @@ class DevFlowsView extends DevBaseView {
   async testFlow(flowId) {
     // TODO: Implementar prueba de flujo
     console.log('Testing flow:', flowId);
-    alert('Funcionalidad de prueba en desarrollo');
+    this.showNotification('Funcionalidad de prueba en desarrollo', 'info');
   }
 
   /**
@@ -513,7 +513,7 @@ class DevFlowsView extends DevBaseView {
       this.hideDeleteModal();
     } catch (error) {
       console.error('Error eliminando flujo:', error);
-      alert('Error al eliminar el flujo');
+      this.showNotification('Error al eliminar el flujo', 'error');
     } finally {
       if (confirmBtn) {
         confirmBtn.disabled = false;

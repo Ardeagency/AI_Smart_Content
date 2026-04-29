@@ -68,16 +68,20 @@ class DevBaseView extends BaseView {
   }
 
   /**
-   * Mostrar notificación toast
+   * Mostrar notificación toast (usa el sistema global .app-notification de bundle.css).
    * @param {string} message
    * @param {string} [type] - 'info' | 'success' | 'error' | 'warning'
    */
   showNotification(message, type = 'info') {
     const el = document.createElement('div');
-    el.className = 'dev-lead-notification dev-lead-notification-' + type;
-    el.textContent = message;
+    el.className = `app-notification ${type}`;
+    el.innerHTML = `<div class="notification-content">${this.escapeHtml(message)}</div>`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 4000);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 4000);
   }
 
   /**
