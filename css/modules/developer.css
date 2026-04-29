@@ -7677,23 +7677,27 @@
   height: 100%;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: 60px 1fr;
+  /* Filas en la misma proporción que el viewBox del SVG (60/190 vs 130/190) para
+     que las cards encajen verticalmente sin importar el ancho del viewport. */
+  grid-template-rows: 60fr 130fr;
   grid-template-areas:
     "pill1 pill1 pill2 pill2 pill3 pill3 pill4 pill4"
     "hero  hero  hero  .     .     .     .     .";
-  gap: 8px;
-  padding: 8px;
+  gap: 6px;
+  padding: 6px;
   box-sizing: border-box;
 }
 
 .dev-bento-cell {
   background: var(--dev-bento-cell);
   border: 1px solid var(--dev-bento-cell-border);
-  border-radius: 14px;
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 8px 14px;
   display: flex;
   min-width: 0;
-  overflow: hidden;
+  min-height: 0;       /* permite que la cell se comprima a la altura del row */
+  overflow: hidden;    /* contenido que no quepa se recorta en lugar de desbordar */
+  box-sizing: border-box;
 }
 
 /* Pills horizontales (zona alta del frame) */
@@ -7704,7 +7708,7 @@
   gap: 8px;
 }
 .dev-bento-pill-label {
-  font-size: var(--font-size-xs, 0.6875rem);
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -7714,7 +7718,7 @@
   text-overflow: ellipsis;
 }
 .dev-bento-pill-value {
-  font-size: var(--font-size-base, 0.875rem);
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
@@ -7726,24 +7730,24 @@
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 6px;
-  padding: 16px 18px;
+  gap: 4px;
+  padding: 10px 14px;
 }
 .dev-bento-hero-label {
-  font-size: var(--font-size-xs, 0.6875rem);
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 .dev-bento-hero-value {
-  font-size: var(--font-size-2xl, 1.5rem);
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
 }
 .dev-bento-hero-sub {
-  font-size: var(--font-size-sm, 0.75rem);
+  font-size: 0.7rem;
   color: var(--text-muted);
 }
 
