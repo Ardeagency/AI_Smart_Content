@@ -27,57 +27,99 @@ body.entrance-done .signin-container {
     animation: landing-fade-in 0.6s ease-out 0.1s forwards;
 }
 
-/* Layout 2 columnas: panel visual + form */
-.signin-container--split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: stretch;
-    padding: 1.5rem;
-    gap: 1.5rem;
-    box-sizing: border-box;
-}
-
-.signin-container--split .signin-visual {
-    border-radius: 24px;
-    overflow: hidden;
-    min-height: calc(100vh - 3rem);
-    position: relative;
-}
-
-.signin-container--split .signin-visual-frame {
-    width: 100%;
-    height: 100%;
-    background: url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1777469392/image_33_ehg7wd.png') center/cover no-repeat;
-}
-
-.signin-container--split .signin-form-side {
+/* Hero layout: imagen full-bleed + card glass a la derecha */
+.signin-container--hero {
+    background: var(--bg-primary) url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1777469392/image_33_ehg7wd.png') center/cover no-repeat;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: var(--spacing-xl);
-    min-height: calc(100vh - 3rem);
-    box-sizing: border-box;
+    justify-content: flex-end;
+    padding: 2.5rem clamp(2rem, 6vw, 5rem);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Card del login: sin glass, plano sobre el fondo */
-.signin-container--split .signin-card {
+.signin-container--hero .signin-card {
     width: 100%;
-    max-width: 360px;
-    margin: 0 auto;
+    max-width: 380px;
+    margin: 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
     align-items: stretch;
-    background: transparent;
-    border: 0;
-    padding: 0;
+    background: rgba(11, 11, 11, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border-radius: 28px;
+    padding: 2.25rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+}
+
+.signin-year {
+    position: absolute;
+    bottom: 4.25rem;
+    left: clamp(2rem, 6vw, 5rem);
+    font-family: var(--font-display, var(--font-family));
+    font-size: clamp(4rem, 9vw, 7.5rem);
+    font-weight: 600;
+    line-height: 0.9;
+    color: var(--color-white);
+    letter-spacing: -0.02em;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.signin-footer {
+    position: absolute;
+    bottom: 1.5rem;
+    left: clamp(2rem, 6vw, 5rem);
+    right: clamp(2rem, 6vw, 5rem);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.signin-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.18s ease;
+}
+
+.signin-footer a:hover { color: var(--text-primary); }
+
+.signin-footer-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 @media (max-width: 900px) {
-    .signin-container--split { grid-template-columns: 1fr; }
-    .signin-container--split .signin-visual { display: none; }
-    .signin-container--split .signin-form-side { min-height: calc(100vh - 3rem); }
+    .signin-container--hero {
+        justify-content: center;
+        padding: 4rem 1.5rem 7rem;
+    }
+    .signin-container--hero .signin-card {
+        max-width: 420px;
+    }
+    .signin-year {
+        font-size: 3.5rem;
+        bottom: 5rem;
+        left: 1.5rem;
+    }
+    .signin-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        left: 1.5rem;
+        right: 1.5rem;
+    }
 }
 
 /* Wrapper centrado: solo se usa en flujos legacy (cambiar contraseña) */
@@ -94,8 +136,8 @@ body.entrance-done .signin-container {
     box-sizing: border-box;
 }
 
-/* Card legacy (cambiar contraseña) — mantiene estilo glass */
-.signin-container:not(.signin-container--split) .signin-card {
+/* Card legacy (cambiar contraseña) — mantiene estilo glass centrado */
+.signin-container:not(.signin-container--hero) .signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
     margin: 0 auto;
@@ -248,7 +290,7 @@ body.entrance-done .signin-container {
 .signin-container .auth-state.active { display: flex; }
 
 /* Inputs y botones del split layout: planos, sin glass-blur */
-.signin-container--split .form-input {
+.signin-container--hero .form-input {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: none;
@@ -258,12 +300,12 @@ body.entrance-done .signin-container {
     font-size: 0.9rem;
 }
 
-.signin-container--split .form-input:focus {
+.signin-container--hero .form-input:focus {
     border-color: rgba(255, 255, 255, 0.25);
     box-shadow: none;
 }
 
-.signin-container--split .signin-submit {
+.signin-container--hero .signin-submit {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: none;
@@ -274,13 +316,13 @@ body.entrance-done .signin-container {
     margin-top: 0.25rem;
 }
 
-.signin-container--split .signin-submit:hover:not(:disabled) {
+.signin-container--hero .signin-submit:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-.signin-container--split .signin-forgot,
-.signin-container--split .signin-forgot-btn {
+.signin-container--hero .signin-forgot,
+.signin-container--hero .signin-forgot-btn {
     color: var(--text-muted);
     font-size: 0.8rem;
     margin-top: -0.25rem;
@@ -289,8 +331,8 @@ body.entrance-done .signin-container {
     text-underline-offset: 2px;
 }
 
-.signin-container--split .signin-forgot:hover,
-.signin-container--split .signin-forgot-btn:hover {
+.signin-container--hero .signin-forgot:hover,
+.signin-container--hero .signin-forgot-btn:hover {
     color: var(--text-primary);
 }
 

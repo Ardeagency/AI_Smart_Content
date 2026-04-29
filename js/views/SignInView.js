@@ -17,56 +17,62 @@ class SignInView extends BaseView {
   }
 
   renderHTML() {
+    const year = new Date().getFullYear();
     return `
-      <div class="signin-container signin-container--split">
-        <aside class="signin-visual" aria-hidden="true">
-          <div class="signin-visual-frame"></div>
-        </aside>
+      <div class="signin-container signin-container--hero">
+        <div class="signin-card">
+          <div class="signin-brand">
+            <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
+          </div>
 
-        <div class="signin-form-side">
-          <div class="signin-card">
-            <div class="signin-brand">
-              <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-brand-logo" width="180" height="72" decoding="async">
-            </div>
+          <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>
+            <span class="signin-success-banner-icon" aria-hidden="true">✓</span>
+            <span>Contraseña actualizada. Inicia sesión con tu nueva contraseña.</span>
+          </div>
 
-            <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>
-              <span class="signin-success-banner-icon" aria-hidden="true">✓</span>
-              <span>Contraseña actualizada. Inicia sesión con tu nueva contraseña.</span>
-            </div>
-
-            <div class="signin-main" id="signinMain">
-              <form id="form_signin" novalidate>
-                <div class="auth-state active" data-state="signin">
-                  <div class="signin-field">
-                    <label class="signin-field-label" for="signinEmail">Email Address</label>
-                    <input type="email" class="form-input" id="signinEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
-                  </div>
-                  <div class="signin-field">
-                    <label class="signin-field-label" for="signinPassword">Password</label>
-                    <input type="password" class="form-input" id="signinPassword" name="password" placeholder="********" autocomplete="current-password" required>
-                  </div>
-                  <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">¿Olvidaste tu contraseña?</button>
-                  <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">Login</button>
+          <div class="signin-main" id="signinMain">
+            <form id="form_signin" novalidate>
+              <div class="auth-state active" data-state="signin">
+                <div class="signin-field">
+                  <label class="signin-field-label" for="signinEmail">Email Address</label>
+                  <input type="email" class="form-input" id="signinEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
                 </div>
-              </form>
-
-              <p class="signin-invite">¿No tienes acceso? <a href="/contacto" class="signin-invite-link" data-href="/contacto">Solicítalo aquí</a></p>
-            </div>
-
-            <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
-              <h2 class="signin-recover-title">Recuperar contraseña</h2>
-              <p class="signin-recover-desc">Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.</p>
-              <div class="signin-recover-form" id="recoverForm">
-                <input type="email" class="form-input" id="recoverEmail" placeholder="Correo electrónico" autocomplete="email" required>
-                <button type="button" class="btn btn-primary" id="btnSendRecover">Enviar enlace</button>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="signinPassword">Password</label>
+                  <input type="password" class="form-input" id="signinPassword" name="password" placeholder="********" autocomplete="current-password" required>
+                </div>
+                <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">¿Olvidaste tu contraseña?</button>
+                <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">Login</button>
               </div>
-              <div class="signin-recover-success" id="recoverSuccess" hidden>
-                <p class="signin-recover-success-text">Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.</p>
-              </div>
-              <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRecoverBack">Volver al inicio de sesión</button>
+            </form>
+
+            <p class="signin-invite">¿No tienes acceso? <a href="/contacto" class="signin-invite-link" data-href="/contacto">Solicítalo aquí</a></p>
+          </div>
+
+          <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
+            <h2 class="signin-recover-title">Recuperar contraseña</h2>
+            <p class="signin-recover-desc">Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.</p>
+            <div class="signin-recover-form" id="recoverForm">
+              <input type="email" class="form-input" id="recoverEmail" placeholder="Correo electrónico" autocomplete="email" required>
+              <button type="button" class="btn btn-primary" id="btnSendRecover">Enviar enlace</button>
             </div>
+            <div class="signin-recover-success" id="recoverSuccess" hidden>
+              <p class="signin-recover-success-text">Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.</p>
+            </div>
+            <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkRecoverBack">Volver al inicio de sesión</button>
           </div>
         </div>
+
+        <div class="signin-year" aria-hidden="true">${year}</div>
+
+        <footer class="signin-footer">
+          <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. Todos los derechos reservados.</span>
+          <span class="signin-footer-links">
+            <a href="/privacidad" data-href="/privacidad">Privacidad</a>
+            <span aria-hidden="true">·</span>
+            <a href="/terminos" data-href="/terminos">Términos</a>
+          </span>
+        </footer>
       </div>
     `;
   }
@@ -121,6 +127,16 @@ class SignInView extends BaseView {
         this.hideRecoverState();
       });
     }
+
+    // Navegación SPA para footer + invite link (sin full reload)
+    const spaLinks = this.querySelectorAll('a[data-href]');
+    spaLinks.forEach((link) => {
+      this.addEventListener(link, 'click', (e) => {
+        e.preventDefault();
+        const target = link.getAttribute('data-href');
+        if (target && window.router) window.router.navigate(target);
+      });
+    });
   }
 
   async handleSignIn() {
