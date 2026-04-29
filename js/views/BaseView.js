@@ -151,7 +151,16 @@ class BaseView {
 
     // Usar ruta absoluta para que funcione en rutas profundas (ej: /org/:id/production)
     // Si no, js/living.js se resuelve bajo el segmento de org y el servidor devuelve HTML → SyntaxError
-    const resolvedSrc = scriptSrc.startsWith('http') ? scriptSrc : (scriptSrc.startsWith('/') ? scriptSrc : '/' + scriptSrc);
+    let resolvedSrc = scriptSrc.startsWith('http') ? scriptSrc : (scriptSrc.startsWith('/') ? scriptSrc : '/' + scriptSrc);
+
+    // Cache-bust con el mismo BUILD_ID que app.js — evita que Cloudflare sirva un service stale.
+    // Solo aplica a JS local sin query string previo.
+    if (!/^https?:\/\//i.test(resolvedSrc) && !resolvedSrc.includes('?')) {
+      const ver = (typeof APP_LAZY_SCRIPT_VER !== 'undefined' && APP_LAZY_SCRIPT_VER)
+        ? APP_LAZY_SCRIPT_VER
+        : String(Date.now());
+      resolvedSrc = `${resolvedSrc}?v=${ver}`;
+    }
 
     // Verificar si el script ya está cargado en el DOM
     const existingScript = document.querySelector(`script[src="${resolvedSrc}"]`) || document.querySelector(`script[src="${scriptSrc}"]`);

@@ -98,12 +98,12 @@
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- URL base del ai-engine (opcional). Ver js/runtime-config.js -->
-    <script src="js/runtime-config.js" defer></script>
+    <script src="js/runtime-config.js?v=__BUILD_ID__" defer></script>
 
     <!-- Core: loader + entrada animada (rutas relativas a <base href="/">) -->
     <script src="js/app-loader.js?v=__BUILD_ID__" defer></script>
-    <script src="js/views/BaseView.js" defer></script>
-    <script src="js/router.js" defer></script>
+    <script src="js/views/BaseView.js?v=__BUILD_ID__" defer></script>
+    <script src="js/router.js?v=__BUILD_ID__" defer></script>
 
     <!-- Modal primitiva compartida (window.Modal.show) -->
     <script src="js/utils/modal.js?v=__BUILD_ID__" defer></script>
@@ -113,13 +113,13 @@
     <script src="js/utils/brand-colors.js?v=__BUILD_ID__" defer></script>
 
     <!-- Services (AuthService imprescindible: si falla 404/redirect, el router redirige a onboarding) -->
-    <script src="js/services/MiBrandaDataService.js" defer></script>
-    <script src="js/services/SupabaseService.js" defer></script>
-    <script src="js/services/AuthService.js" defer></script>
+    <script src="js/services/MiBrandaDataService.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/SupabaseService.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/AuthService.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/OrgBrandTheme.js?v=__BUILD_ID__" defer></script>
-    <script src="js/org-url.js" defer></script>
-    <script src="js/services/AppState.js" defer></script>
-    <script src="js/session-utils.js" defer></script>
+    <script src="js/org-url.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/AppState.js?v=__BUILD_ID__" defer></script>
+    <script src="js/session-utils.js?v=__BUILD_ID__" defer></script>
 
     <!-- Shell público (header + footer persistentes) — se usa en páginas legales -->
     <script src="js/components/PublicLayout.js?v=__BUILD_ID__" defer></script>
