@@ -68,47 +68,70 @@ class SignInView extends BaseView {
           </div>
 
           <div class="signin-request" id="signinRequest" aria-hidden="true" hidden>
-            <h2 class="signin-request-title">Solicitar acceso</h2>
-            <p class="signin-request-desc">Revisamos cada solicitud manualmente y te contactamos en 48 horas hábiles.</p>
+            <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-request-logo" decoding="async">
 
             <form class="signin-request-form" id="requestForm" novalidate>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqFullName">Nombre completo</label>
-                <input type="text" class="form-input" id="reqFullName" name="full_name" autocomplete="name" required>
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqEmail">Correo corporativo</label>
-                <input type="email" class="form-input" id="reqEmail" name="email" autocomplete="email" required>
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqCompany">Empresa / marca</label>
-                <input type="text" class="form-input" id="reqCompany" name="company" autocomplete="organization" required>
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqRole">Cargo / rol</label>
-                <input type="text" class="form-input" id="reqRole" name="role" autocomplete="organization-title">
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqMarket">País / mercado principal</label>
-                <input type="text" class="form-input" id="reqMarket" name="market">
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqChallenge">Reto principal en producción de contenido</label>
-                <textarea class="form-input signin-request-textarea" id="reqChallenge" name="challenge" rows="3"></textarea>
-              </div>
-              <div class="signin-field">
-                <label class="signin-field-label" for="reqSource">¿Cómo nos encontraste?</label>
-                <select class="form-input" id="reqSource" name="source">
-                  <option value="">Selecciona</option>
-                  <option value="referral">Referido</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="search">Búsqueda</option>
-                  <option value="event">Evento</option>
-                  <option value="other">Otro</option>
-                </select>
+              <div class="signin-request-grid">
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqFullName">Nombre completo</label>
+                  <input type="text" class="form-input" id="reqFullName" name="full_name" placeholder="Tu nombre" autocomplete="name" required>
+                </div>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqEmail">Correo electrónico</label>
+                  <input type="email" class="form-input" id="reqEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
+                </div>
+
+                <div class="signin-field signin-field--full">
+                  <label class="signin-field-label" for="reqPhone">Número</label>
+                  <input type="tel" class="form-input" id="reqPhone" name="phone" placeholder="+57 ..." autocomplete="tel">
+                </div>
+
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqCompany">Empresa</label>
+                  <input type="text" class="form-input" id="reqCompany" name="company" placeholder="Nombre de la empresa" autocomplete="organization" required>
+                </div>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqRole">Rol / Cargo</label>
+                  <input type="text" class="form-input" id="reqRole" name="role" placeholder="Tu cargo" autocomplete="organization-title">
+                </div>
+
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqCountry">País</label>
+                  <input type="text" class="form-input" id="reqCountry" name="country" placeholder="Colombia, México, España...">
+                </div>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqMarket">Mercado</label>
+                  <input type="text" class="form-input" id="reqMarket" name="market" placeholder="LATAM, US, Europa...">
+                </div>
+
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqWebsite">Sitio web</label>
+                  <input type="url" class="form-input" id="reqWebsite" name="website" placeholder="https://" autocomplete="url">
+                </div>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqBrands">Marcas / Líneas de producción</label>
+                  <input type="text" class="form-input" id="reqBrands" name="brands" placeholder="Número o descripción">
+                </div>
+
+                <div class="signin-field signin-field--full">
+                  <label class="signin-field-label" for="reqChallenge">Comentario</label>
+                  <textarea class="form-input signin-request-textarea" id="reqChallenge" name="challenge" rows="4" placeholder="Cuéntanos sobre tu marca o tu reto principal en producción de contenido"></textarea>
+                </div>
+
+                <div class="signin-field signin-field--full">
+                  <label class="signin-field-label" for="reqSource">Cómo nos encontraste</label>
+                  <select class="form-input" id="reqSource" name="source">
+                    <option value="">Selecciona una opción</option>
+                    <option value="referral">Referido</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="search">Búsqueda</option>
+                    <option value="event">Evento</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
               </div>
 
-              <button type="submit" class="btn btn-primary signin-submit" id="btnSendRequest">Enviar solicitud</button>
+              <button type="submit" class="signin-request-submit" id="btnSendRequest">Enviar</button>
               <p class="signin-request-status" id="requestStatus" role="status" aria-live="polite"></p>
             </form>
 
@@ -354,12 +377,19 @@ class SignInView extends BaseView {
       };
       const utm = new URLSearchParams(window.location.search || '');
 
+      const brandsRaw = (formData.get('brands') || '').toString().trim();
+      const brandsInt = Number.parseInt(brandsRaw, 10);
+      const market = (formData.get('market') || '').toString().trim();
+
       const payload = {
         full_name: (formData.get('full_name') || '').toString().trim(),
         email: (formData.get('email') || '').toString().trim().toLowerCase(),
         company_name: (formData.get('company') || '').toString().trim(),
         job_title: (formData.get('role') || '').toString().trim() || null,
-        country: (formData.get('market') || '').toString().trim() || null,
+        country: (formData.get('country') || '').toString().trim() || null,
+        phone: (formData.get('phone') || '').toString().trim() || null,
+        website: (formData.get('website') || '').toString().trim() || null,
+        num_brands: Number.isNaN(brandsInt) ? null : brandsInt,
         main_challenge: (formData.get('challenge') || '').toString().trim() || null,
         how_found: sourceMap[(formData.get('source') || '').toString()] || null,
         source: 'contact_form',
@@ -368,7 +398,9 @@ class SignInView extends BaseView {
         metadata: {
           form_path: window.location.pathname,
           form_url: window.location.href,
-          submitted_from: 'login_request_state'
+          submitted_from: 'login_request_state',
+          market: market || null,
+          brands_raw: brandsRaw || null
         }
       };
 
