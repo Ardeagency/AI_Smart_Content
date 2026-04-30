@@ -3428,33 +3428,20 @@ class DashboardView extends BaseView {
         </label>
       </div>
 
-      <!-- KPIs strip -->
+      <!-- KPIs strip — minimalista (valor grande + label corto) -->
       <div class="mb-v2-kpis">
-        ${this._kpiCardV2('Competidores activos', String(kpis.active_competitors ?? '—'),
-            kpis.total_competitors ? `${kpis.total_competitors} totales` : 'Sin datos')}
-        ${this._kpiCardV2('Posts capturados', String(kpis.total_posts ?? '—'),
-            kpis.distinct_platforms ? `${kpis.distinct_platforms} plataformas` : 'Sin datos')}
-        ${this._kpiCardV2('Engagement total', fmt(kpis.total_engagement),
-            kpis.avg_engagement_per_post ? `avg ${fmt(kpis.avg_engagement_per_post)}/post` : 'Sin datos')}
-        ${this._kpiCardV2('Sentiment dominante',
-            (kpis.dominant_sentiment || '—').toString().replace(/^\w/, c => c.toUpperCase()),
-            kpis.sentiment_distribution
-              ? `${kpis.sentiment_distribution.positive || 0} pos · ${kpis.sentiment_distribution.negative || 0} neg`
-              : 'Sin análisis')}
-        ${this._kpiCardV2('Plataforma estrella', kpis.dominant_platform || '—',
-            kpis.dominant_hashtag ? `#${kpis.dominant_hashtag}` : 'Sin hashtag')}
-        ${this._kpiCardV2('Tema dominante',
-            kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 24) : '—',
-            'En posts capturados')}
+        ${this._kpiMin(String(kpis.active_competitors ?? '0'),  'Competidores')}
+        ${this._kpiMin(String(kpis.total_posts ?? '0'),         'Contenido')}
+        ${this._kpiMin(fmt(kpis.total_engagement),              'Engagement')}
+        ${this._kpiMin((kpis.dominant_sentiment || '—').toString().replace(/^\w/, c => c.toUpperCase()), 'Sentimiento')}
+        ${this._kpiMin(kpis.dominant_platform ? this._capCase(kpis.dominant_platform) : '—', 'Plataforma')}
+        ${this._kpiMin(kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 18) : '—', 'Tema')}
       </div>
 
       <!-- Row 1: Featured + Top ranking | Posting hours heatmap -->
       <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Competidor destacado</h3>
-            <span class="mb-v2-widget-sub">Score multi-criterio del período</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Destacado</h3></header>
           <div class="mb-v2-widget-body">
             <div class="cc-v2-featured">
               ${featured ? `
@@ -3464,9 +3451,9 @@ class DashboardView extends BaseView {
                 <div class="cc-v2-featured-meta">
                   <span>${fmt(featured.total_posts)} posts</span>
                   <span>${fmt(featured.total_engagement)} eng</span>
-                  <span>${Math.round((featured.positive_sentiment_ratio || 0) * 100)}% positivo</span>
+                  <span>${Math.round((featured.positive_sentiment_ratio || 0) * 100)}% pos</span>
                 </div>
-              ` : '<div class="mb-v2-empty">Sin competidor destacado en el período</div>'}
+              ` : '<div class="mb-v2-empty">Sin destacado</div>'}
             </div>
             <div class="cc-v2-top-list" id="ccV2TopList">
               ${top.slice(0, 6).map((t, i) => `
@@ -3481,10 +3468,7 @@ class DashboardView extends BaseView {
         </section>
 
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Heatmap horario de la competencia</h3>
-            <span class="mb-v2-widget-sub">Cuándo publican (DOW × Hora · America/Bogota)</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Horarios</h3></header>
           <div class="mb-v2-widget-body">
             <div id="ccV2HeatmapHost" class="cc-v2-heatmap"></div>
           </div>
@@ -3494,15 +3478,15 @@ class DashboardView extends BaseView {
       <!-- Row 2: Distribuciones (3 columnas) -->
       <div class="cc-v2-distros">
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head"><h3>¿En qué redes publican?</h3></header>
+          <header class="mb-v2-widget-head"><h3>Redes</h3></header>
           <div class="mb-v2-chart-wrap"><canvas id="ccV2PlatformCanvas"></canvas></div>
         </section>
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head"><h3>¿Qué sentimientos dominan?</h3></header>
+          <header class="mb-v2-widget-head"><h3>Sentimiento</h3></header>
           <div class="mb-v2-chart-wrap"><canvas id="ccV2SentimentCanvas"></canvas></div>
         </section>
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head"><h3>¿Qué tonos usan?</h3></header>
+          <header class="mb-v2-widget-head"><h3>Tonos</h3></header>
           <div class="mb-v2-chart-wrap"><canvas id="ccV2ToneCanvas"></canvas></div>
         </section>
       </div>
@@ -3510,18 +3494,15 @@ class DashboardView extends BaseView {
       <!-- Row 3: Top topics + hashtags | Top posts -->
       <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Temas y hashtags rivales</h3>
-            <span class="mb-v2-widget-sub">Lo que la competencia está empujando</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Temas y hashtags</h3></header>
           <div class="mb-v2-widget-body">
             <div class="cc-v2-tags-cols">
               <div class="cc-v2-tags-col">
-                <div class="cc-v2-tags-label">TOP TEMAS</div>
+                <div class="cc-v2-tags-label">Temas</div>
                 <div id="ccV2TopicsHost" class="cc-v2-tags-list"></div>
               </div>
               <div class="cc-v2-tags-col">
-                <div class="cc-v2-tags-label">TOP HASHTAGS</div>
+                <div class="cc-v2-tags-label">Hashtags</div>
                 <div id="ccV2HashtagsHost" class="cc-v2-tags-list"></div>
               </div>
             </div>
@@ -3529,10 +3510,7 @@ class DashboardView extends BaseView {
         </section>
 
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Top posts virales</h3>
-            <span class="mb-v2-widget-sub">Mayor engagement de la competencia</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Top posts</h3></header>
           <div class="mb-v2-widget-body">
             <div id="ccV2TopPostsHost" class="cc-v2-posts-list"></div>
           </div>
@@ -3541,57 +3519,63 @@ class DashboardView extends BaseView {
 
       <!-- Row 4: Activity history timeline (full width) -->
       <section class="mb-v2-widget mb-v2-widget--wide">
-        <header class="mb-v2-widget-head">
-          <h3>Actividad de la competencia en el tiempo</h3>
-          <span class="mb-v2-widget-sub">Posts y engagement por día</span>
-        </header>
-        <div class="mb-v2-chart-wrap" style="height:220px"><canvas id="ccV2TimelineCanvas"></canvas></div>
+        <header class="mb-v2-widget-head"><h3>Actividad</h3></header>
+        <div class="mb-v2-chart-wrap" style="height:240px"><canvas id="ccV2TimelineCanvas"></canvas></div>
       </section>
 
       <!-- Row 5: Brand vs Comp + Risk alerts -->
       <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Tu marca vs Competencia</h3>
-            <span class="mb-v2-widget-sub">Head-to-head del período</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Tú vs Competencia</h3></header>
           <div class="mb-v2-widget-body">
             <div class="cc-v2-vs">
               <div class="cc-v2-vs-side">
-                <div class="cc-v2-vs-label">TU MARCA</div>
+                <div class="cc-v2-vs-label">Tú</div>
                 <div class="cc-v2-vs-value">${fmt(brandVsComp?.brand?.engagement)}</div>
-                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.brand?.posts)} posts · avg ${fmt(brandVsComp?.brand?.avg_engagement_per_post)}</div>
+                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.brand?.posts)} posts</div>
               </div>
               <div class="cc-v2-vs-divider">vs</div>
               <div class="cc-v2-vs-side cc-v2-vs-side--rival">
-                <div class="cc-v2-vs-label">COMPETENCIA</div>
+                <div class="cc-v2-vs-label">Competencia</div>
                 <div class="cc-v2-vs-value">${fmt(brandVsComp?.competencia?.engagement)}</div>
-                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.competencia?.posts)} posts · avg ${fmt(brandVsComp?.competencia?.avg_engagement_per_post)}</div>
+                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.competencia?.posts)} posts</div>
               </div>
             </div>
             <div class="cc-v2-vs-verdict cc-v2-vs-verdict--${brandVsComp?.comparison?.who_leads_engagement || 'tie'}">
               ${brandVsComp?.comparison?.who_leads_engagement === 'brand'
-                ? '🏆 Lideras en engagement'
+                ? 'Liderás'
                 : brandVsComp?.comparison?.who_leads_engagement === 'competencia'
-                  ? '⚠️ La competencia te supera'
-                  : '⚖️ Empate técnico'}
+                  ? 'La competencia supera'
+                  : 'Empate'}
             </div>
           </div>
         </section>
 
         <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Alertas de riesgo</h3>
-            <span class="mb-v2-widget-sub">Competidores con tono agresivo o crisis</span>
-          </header>
+          <header class="mb-v2-widget-head"><h3>Alertas</h3></header>
           <div class="mb-v2-widget-body">
             <div id="ccV2RiskHost" class="cc-v2-risk-list">
-              ${risk.length ? '' : '<div class="mb-v2-empty">Sin alertas activas ✓</div>'}
+              ${risk.length ? '' : '<div class="mb-v2-empty">Sin alertas</div>'}
             </div>
           </div>
         </section>
       </div>
     </div>`;
+  }
+
+  /** KPI minimalista: valor grande arriba, label corta abajo (estilo maqueta). */
+  _kpiMin(value, label) {
+    return `
+      <div class="mb-v2-kpi mb-v2-kpi--min">
+        <div class="mb-v2-kpi-min-value">${this._esc(value)}</div>
+        <div class="mb-v2-kpi-min-label">${this._esc(label)}</div>
+      </div>`;
+  }
+
+  _capCase(s) {
+    if (!s) return s;
+    const str = String(s);
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
   _initCompetenceV2Charts(d) {
@@ -3743,11 +3727,10 @@ class DashboardView extends BaseView {
       `).join('');
     }
 
-    // Activity history timeline
+    // Activity history timeline — versión minimalista
     const ahHost = document.getElementById('ccV2TimelineCanvas');
     const ah = d?.activityHistory?.data || [];
     if (ahHost && ah.length) {
-      // Agrupar por period_start summing all entities
       const byPeriod = new Map();
       ah.forEach(r => {
         const k = r.period_start;
@@ -3760,21 +3743,70 @@ class DashboardView extends BaseView {
       const labels = sorted.map(([, v]) => v.label);
       const posts  = sorted.map(([, v]) => v.posts);
       const eng    = sorted.map(([, v]) => v.eng);
+
       this._charts.push(new Chart(ahHost, {
         data: {
           labels,
           datasets: [
-            { type: 'line', label: 'Engagement', data: eng,   borderColor: '#ff5400', backgroundColor: 'rgba(255,84,0,0.15)', tension: 0.3, fill: true, yAxisID: 'y1', pointRadius: 2 },
-            { type: 'bar',  label: 'Posts',      data: posts, backgroundColor: 'rgba(255,255,255,0.18)', yAxisID: 'y2' },
+            { type: 'line', label: 'Engagement', data: eng,
+              borderColor: '#ff5400', backgroundColor: 'rgba(255,84,0,0.18)',
+              tension: 0.4, fill: true, yAxisID: 'y1',
+              pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#ff5400',
+              borderWidth: 2 },
+            { type: 'bar',  label: 'Posts',      data: posts,
+              backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: 3,
+              yAxisID: 'y2', barPercentage: 0.55, categoryPercentage: 0.7 },
           ],
         },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)' } } },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              align: 'end',
+              labels: { color: 'rgba(255,255,255,0.6)', boxWidth: 8, boxHeight: 8, font: { size: 11 }, usePointStyle: true, pointStyle: 'rect' },
+            },
+            tooltip: {
+              backgroundColor: 'rgba(20,21,23,0.95)',
+              borderColor: 'rgba(255,255,255,0.08)',
+              borderWidth: 1,
+              titleColor: '#fff',
+              bodyColor: 'rgba(255,255,255,0.85)',
+              padding: 10,
+              cornerRadius: 8,
+              displayColors: true,
+              boxPadding: 4,
+              callbacks: {
+                label(ctx) {
+                  const v = ctx.parsed.y;
+                  if (ctx.dataset.label === 'Engagement') {
+                    if (v >= 1_000_000) return `Engagement: ${(v/1_000_000).toFixed(1)}M`;
+                    if (v >= 1_000)     return `Engagement: ${(v/1_000).toFixed(1)}K`;
+                    return `Engagement: ${v}`;
+                  }
+                  return `${ctx.dataset.label}: ${v}`;
+                },
+              },
+            },
+          },
           scales: {
-            x: { ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 10 }, grid: { display: false } },
-            y1:{ position: 'left',  ticks: { color: 'rgba(255,84,0,0.85)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            y2:{ position: 'right', ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { display: false }, beginAtZero: true },
+            x: {
+              ticks: { color: 'rgba(255,255,255,0.45)', maxTicksLimit: 8, font: { size: 11 } },
+              grid: { display: false }, border: { display: false },
+            },
+            y1: {
+              position: 'left', beginAtZero: true,
+              ticks: {
+                color: 'rgba(255,84,0,0.7)', font: { size: 10 },
+                callback(v) { if (v >= 1_000_000) return (v/1_000_000).toFixed(1)+'M'; if (v >= 1_000) return (v/1_000).toFixed(0)+'K'; return v; },
+              },
+              grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false }, border: { display: false },
+            },
+            y2: {
+              position: 'right', beginAtZero: true,
+              ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 }, precision: 0 },
+              grid: { display: false }, border: { display: false },
+            },
           },
         },
       }));
