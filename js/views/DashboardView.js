@@ -5,6 +5,16 @@
  */
 class DashboardView extends BaseView {
 
+  // Activación granular por tab. Cuando un tab está en false, se renderiza el
+  // placeholder "Próximamente". El resto del código (services, RPCs) queda
+  // intacto. Cuando el tab esté listo se flipea a true.
+  static TABS_ENABLED = {
+    'my-brands':  true,    // Mi Marca v2 — barra ardiente nueva
+    'competence': false,
+    'tendencies': false,
+    'strategy':   false,
+  };
+
   constructor() {
     super();
     this._activeTab  = 'my-brands';
@@ -92,20 +102,33 @@ class DashboardView extends BaseView {
   }
 
   _buildShell() {
-    const tabs = [
+    // Grupo izquierdo (Mi Marca / Competencia / Tendencias) y Estrategia separado a la derecha.
+    const leftTabs  = [
       { id: 'my-brands',  label: 'Mi Marca'    },
       { id: 'competence', label: 'Competencia' },
       { id: 'tendencies', label: 'Tendencias'  },
+    ];
+    const rightTabs = [
       { id: 'strategy',   label: 'Estrategia'  },
     ];
+    const pill = (t) => `
+      <button class="mb-firebar-tab${this._activeTab === t.id ? ' is-active' : ''}" data-tab="${t.id}">
+        <span>${t.label}</span>
+      </button>`;
     return `
       <div class="insight-page page-content" id="insightPage">
-        <nav class="insight-subnav" id="insightSubnav">
-          ${tabs.map(t => `
-            <button class="insight-subnav-btn${this._activeTab === t.id ? ' active' : ''}" data-tab="${t.id}">
-              <span>${t.label}</span>
-            </button>`).join('')}
-        </nav>
+        <div class="mb-firebar" id="insightSubnav" data-mb-firebar>
+          <div class="mb-firebar-bg" aria-hidden="true">
+            <div class="mb-firebar-gradient"></div>
+            <div class="background-film-grain"></div>
+          </div>
+          <div class="mb-firebar-tabs mb-firebar-tabs--left">
+            ${leftTabs.map(pill).join('')}
+          </div>
+          <div class="mb-firebar-tabs mb-firebar-tabs--right">
+            ${rightTabs.map(pill).join('')}
+          </div>
+        </div>
         <div class="insight-tab-body" id="insightTabBody"></div>
       </div>`;
   }
@@ -118,8 +141,8 @@ class DashboardView extends BaseView {
       if (!btn) return;
       this._destroyCharts();
       this._activeTab = btn.dataset.tab;
-      nav.querySelectorAll('.insight-subnav-btn')
-        .forEach(b => b.classList.toggle('active', b.dataset.tab === this._activeTab));
+      nav.querySelectorAll('.mb-firebar-tab')
+        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === this._activeTab));
       this._renderTab(this._activeTab);
     });
   }
@@ -127,6 +150,10 @@ class DashboardView extends BaseView {
   _renderTab(tabId) {
     const body = document.getElementById('insightTabBody');
     if (!body) return;
+    if (!DashboardView.TABS_ENABLED?.[tabId]) {
+      this._renderComingSoon(tabId, body);
+      return;
+    }
     if (tabId === 'my-brands') {
       this._renderMyBrands(body);
     } else if (tabId === 'competence') {
@@ -136,6 +163,37 @@ class DashboardView extends BaseView {
     } else if (tabId === 'strategy') {
       this._renderStrategy(body);
     }
+  }
+
+  _renderComingSoon(tabId, body) {
+    const meta = {
+      'my-brands':  { title: 'Mi Marca',    desc: 'Pulso operativo, identidad narrativa, comercial y diagnóstico de salud de marca.' },
+      'competence': { title: 'Competencia', desc: 'Precios, narrativa rival, vulnerabilidades y mapa de inversión publicitaria.' },
+      'tendencies': { title: 'Tendencias',  desc: 'Señales emergentes, contexto cultural, cambios de algoritmo y estética dominante.' },
+      'strategy':   { title: 'Estrategia',  desc: 'Sintetizador del plan diario / semanal / mensual con score de salud y nivel de amenaza.' },
+    }[tabId] || { title: 'Dashboard', desc: '' };
+
+    body.innerHTML = `
+      <div class="dash-coming-soon" style="
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        min-height:60vh;padding:48px 24px;text-align:center;gap:16px;
+      ">
+        <div style="
+          width:72px;height:72px;border-radius:50%;
+          background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(236,72,153,.15));
+          display:flex;align-items:center;justify-content:center;
+          font-size:32px;
+        ">⏳</div>
+        <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-.02em;">
+          ${meta.title} — Próximamente
+        </h2>
+        <p style="margin:0;max-width:560px;color:var(--text-muted,#6b7280);line-height:1.6;font-size:15px;">
+          ${meta.desc}
+        </p>
+        <p style="margin:0;font-size:13px;color:var(--text-muted,#9ca3af);">
+          Estamos puliendo este panel. Volvé pronto.
+        </p>
+      </div>`;
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -159,23 +217,11 @@ class DashboardView extends BaseView {
     }
     const d = this._mbData;
 
-    // 4. Render completo con datos reales
-    body.innerHTML = this._buildMyBrandsHTML(d);
+    // 4. Render completo con datos reales — v2 layout (firebar + 6 KPIs + 3 widgets)
+    body.innerHTML = this._buildMyBrandsV2HTML(d);
     window._dashboardView = this;
-    this._initAllCharts(d);
-    this._animateKPIs();
-
-    // Timestamp de última actualización
-    const lu = document.getElementById('mbLastUpdate');
-    if (lu) lu.textContent = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
-
-    // Badge del MAP con alerta count
-    const mapBadge = document.getElementById('mbMAPBadge');
-    if (mapBadge && d?.mapMonitor?.data) {
-      const alerts = (d.mapMonitor.data || []).filter(r => r.status === 'alert').length;
-      mapBadge.textContent = alerts > 0 ? `${alerts} alerta${alerts>1?'s':''}` : 'Todo OK';
-      mapBadge.className = `mb-badge ${alerts > 0 ? 'mb-badge--red' : 'mb-badge--green'}`;
-    }
+    this._initMyBrandsV2Charts(d);
+    this._animateKPIs?.();
   }
 
   async _refreshMBData() {
@@ -3096,6 +3142,206 @@ class DashboardView extends BaseView {
     const d = document.createElement('div');
     d.textContent = String(s);
     return d.innerHTML;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     MI MARCA V2 — layout limpio (filtros + 6 KPIs + 3 widgets)
+     ════════════════════════════════════════════════════════════ */
+  _buildMyBrandsV2HTML(d) {
+    const containers = d?.containers || [];
+    const kpis       = d?.kpis?.data || {};
+    const hasData    = containers.length > 0;
+
+    const posts7d     = kpis.posts7d      != null ? kpis.posts7d      : '—';
+    const sentScore   = kpis.sentimentScore != null ? kpis.sentimentScore : '—';
+    const mapComp     = kpis.mapCompliance != null ? `${kpis.mapCompliance}%` : '—';
+    const crisisIdx   = kpis.crisisOpen   != null ? kpis.crisisOpen   : '—';
+    const mentions24h = kpis.mentions24h  != null ? kpis.mentions24h  : '—';
+
+    const brandOptions = [
+      `<option value="">Todas las marcas</option>`,
+      ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
+    ].join('');
+
+    return `
+    <div class="mb-v2-dashboard">
+      <!-- Filtros -->
+      <div class="mb-v2-filters">
+        <label class="mb-v2-select">
+          <select id="mbV2BrandFilter">${brandOptions}</select>
+        </label>
+        <label class="mb-v2-select">
+          <select id="mbV2DateFilter">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- 6 KPI cards -->
+      <div class="mb-v2-kpis">
+        ${this._kpiCardV2('Posts propios / 7d', String(posts7d), hasData ? 'Últimos 7 días' : 'Sin datos aún')}
+        ${this._kpiCardV2('Engagement Rate',    '—',              'API Meta necesaria')}
+        ${this._kpiCardV2('Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA')}
+        ${this._kpiCardV2('Cumplimiento MAP',   mapComp,          mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados')}
+        ${this._kpiCardV2('Crisis abiertas',    String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención')}
+        ${this._kpiCardV2('Menciones 24 h',     String(mentions24h), hasData ? 'Shadow + etiquetadas' : 'Sin señales aún')}
+      </div>
+
+      <!-- 2 widgets grandes lado a lado -->
+      <div class="mb-v2-widgets-row">
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Ritmo &amp; Mapa de calor</h3>
+            <span class="mb-v2-widget-sub">Posts propios + horarios óptimos</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div class="mb-v2-chart-wrap"><canvas id="mbV2RitmoCanvas"></canvas></div>
+            <div id="mbV2HeatmapHost" class="mb-v2-heatmap"></div>
+          </div>
+        </section>
+
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Sentimiento &amp; Crisis</h3>
+            <span class="mb-v2-widget-sub">Emociones en posts propios + alertas activas</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div class="mb-v2-chart-wrap"><canvas id="mbV2SentimentCanvas"></canvas></div>
+            <div id="mbV2CrisisHost" class="mb-v2-crisis-list"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Widget inferior ancho completo: SWOT -->
+      <section class="mb-v2-widget mb-v2-widget--wide">
+        <header class="mb-v2-widget-head">
+          <h3>SWOT dinámico</h3>
+          <span class="mb-v2-widget-sub">Fortalezas, debilidades, oportunidades, amenazas</span>
+        </header>
+        <div id="mbV2SwotHost" class="mb-v2-swot-grid"></div>
+      </section>
+    </div>`;
+  }
+
+  _kpiCardV2(label, value, sub) {
+    return `
+      <div class="mb-v2-kpi">
+        <div class="mb-v2-kpi-label">${this._esc(label)}</div>
+        <div class="mb-v2-kpi-value">${this._esc(value)}</div>
+        <div class="mb-v2-kpi-sub">${this._esc(sub)}</div>
+      </div>`;
+  }
+
+  _initMyBrandsV2Charts(d) {
+    if (!window.Chart) return;
+    this._destroyCharts();
+
+    // 1. Ritmo (line chart)
+    const ritmo = d?.ritmo?.data || [];
+    const rCanvas = document.getElementById('mbV2RitmoCanvas');
+    if (rCanvas && ritmo.length) {
+      this._charts.push(new Chart(rCanvas, {
+        type: 'line',
+        data: {
+          labels: ritmo.map(r => r.label),
+          datasets: [{
+            label: 'Posts/día',
+            data: ritmo.map(r => r.count),
+            borderColor: '#ff5400',
+            backgroundColor: 'rgba(255,84,0,0.15)',
+            tension: 0.3, fill: true, pointRadius: 2,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 8 }, grid: { display: false } },
+            y: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true },
+          },
+        },
+      }));
+    }
+
+    // 2. Heatmap simple (host div, render manual)
+    const hHost = document.getElementById('mbV2HeatmapHost');
+    const hm    = d?.heatmap?.data;
+    if (hHost && hm?.hour && Object.keys(hm.hour).length) {
+      const max = Math.max(...Object.values(hm.hour).map(Number));
+      const cells = [];
+      for (let h = 0; h < 24; h++) {
+        const v = Number(hm.hour[h] || 0);
+        const intensity = max ? v / max : 0;
+        cells.push(`<div class="mb-v2-heat-cell" title="${h}:00 — ${v}" style="background:rgba(255,84,0,${intensity.toFixed(2)})"></div>`);
+      }
+      hHost.innerHTML = `
+        <div class="mb-v2-heatmap-title">Mejor hora: ${hm.bestHour ?? '—'}h · Mejor día: ${hm.bestDay ?? '—'}</div>
+        <div class="mb-v2-heatmap-grid">${cells.join('')}</div>
+      `;
+    } else if (hHost) {
+      hHost.innerHTML = `<div class="mb-v2-empty">Sin datos de heatmap</div>`;
+    }
+
+    // 3. Sentiment biométrico (doughnut)
+    const sent = d?.sentimiento?.data;
+    const sCanvas = document.getElementById('mbV2SentimentCanvas');
+    if (sCanvas && sent && sent.total) {
+      this._charts.push(new Chart(sCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: ['Positivo', 'Negativo', 'Neutro'],
+          datasets: [{
+            data: [sent.positivo || 0, sent.negativo || 0, Math.max(0, sent.total - (sent.positivo || 0) - (sent.negativo || 0))],
+            backgroundColor: ['#22c55e', '#ef4444', '#6b7280'],
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 12 } } },
+        },
+      }));
+    } else if (sCanvas) {
+      sCanvas.parentElement.innerHTML = `<div class="mb-v2-empty">Sin datos de sentimiento</div>`;
+    }
+
+    // 4. Crisis recientes (lista)
+    const crisis = d?.crisis?.data;
+    const cHost  = document.getElementById('mbV2CrisisHost');
+    if (cHost) {
+      const vulns = crisis?.vulnerabilities || [];
+      if (vulns.length) {
+        cHost.innerHTML = vulns.slice(0, 5).map(v => `
+          <div class="mb-v2-crisis-row mb-v2-crisis-row--${this._esc(v.severity || 'low')}">
+            <span class="mb-v2-crisis-sev">${this._esc((v.severity || 'low').toUpperCase())}</span>
+            <span class="mb-v2-crisis-title">${this._esc(v.title || 'Sin título')}</span>
+          </div>
+        `).join('');
+      } else {
+        cHost.innerHTML = `<div class="mb-v2-empty">Sin crisis abiertas ✓</div>`;
+      }
+    }
+
+    // 5. SWOT
+    const swot = d?.swot?.data;
+    const swotHost = document.getElementById('mbV2SwotHost');
+    if (swotHost) {
+      const cuad = (cls, label, items) => `
+        <div class="mb-v2-swot-cell mb-v2-swot-cell--${cls}">
+          <div class="mb-v2-swot-label">${label}</div>
+          <ul class="mb-v2-swot-list">
+            ${(items || []).slice(0, 4).map(i => `<li>${this._esc(i.text || i)}</li>`).join('') || '<li class="mb-v2-empty">—</li>'}
+          </ul>
+        </div>`;
+      swotHost.innerHTML = `
+        ${cuad('s', 'Fortalezas',     swot?.strengths)}
+        ${cuad('w', 'Debilidades',    swot?.weaknesses)}
+        ${cuad('o', 'Oportunidades',  swot?.opportunities)}
+        ${cuad('t', 'Amenazas',       swot?.threats)}
+      `;
+    }
   }
 }
 
