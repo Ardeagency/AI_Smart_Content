@@ -114,7 +114,8 @@ exports.handler = async (event) => {
       'public_profile', 'email', 'pages_show_list', 'pages_read_engagement',
       'pages_read_user_content', 'instagram_basic', 'instagram_manage_insights',
       'instagram_manage_comments', 'instagram_content_publish', 'read_insights',
-      'business_management'
+      'business_management',
+      'ads_read'
     ].join(',');
 
     authorizeUrl =

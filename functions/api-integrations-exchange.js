@@ -258,16 +258,24 @@ exports.handler = async (event) => {
       const userToken = longJson.access_token;
       const expiresAt = expiresIso(longJson.expires_in);
 
-      // Step 3: perfil del usuario + TODAS las páginas concedidas en paralelo
+      // Step 3: perfil + páginas + permisos concedidos en paralelo
       // metaGraphGetPaged asegura que no se pierdan páginas por truncación del primer batch
-      const [profile, pagesData] = await Promise.all([
+      // /me/permissions devuelve los scopes que el usuario realmente concedió (Meta puede
+      // omitir los que rechazó), persistirlos permite saber qué APIs son válidas sin
+      // tener que adivinar a partir del scope solicitado.
+      const [profile, pagesData, permissionsResp] = await Promise.all([
         metaGraphGet('/me', userToken, appSecret, {
           fields: 'id,name,email,picture.type(normal)'
         }).catch(() => ({})),
         metaGraphGetPaged('/me/accounts', userToken, appSecret, {
           fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id,name,username,profile_picture_url}'
-        }, 100).catch(() => [])
+        }, 100).catch(() => []),
+        metaGraphGet('/me/permissions', userToken, appSecret).catch(() => ({}))
       ]);
+
+      const grantedScopes = (permissionsResp?.data || [])
+        .filter((p) => p.status === 'granted')
+        .map((p) => p.permission);
 
       console.log(`[exchange] páginas concedidas: ${pagesData.length} (usuario: ${profile?.name || sessionUser.id})`);
 
@@ -298,7 +306,7 @@ exports.handler = async (event) => {
           refresh_token:   null,
           token_expires_at: expiresAt,
           is_active: true,
-          scope: [],
+          scope: grantedScopes,
           account_url: null, encryption_iv: null,
           metadata: {
             provider:         'facebook',
