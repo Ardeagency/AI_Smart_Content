@@ -3428,8 +3428,13 @@ class DashboardView extends BaseView {
         </label>
       </div>
 
-      <!-- KPIs strip — pirámide de info: icono · valor · label · meta -->
-      <div class="mb-v2-kpis">
+      <!-- ═══ SECCIÓN: Visión general ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Visión general</h2>
+          <p>Indicadores rápidos del período seleccionado</p>
+        </header>
+        <div class="mb-v2-kpis">
         ${this._kpiMin({
           icon: 'fa-users', value: String(kpis.active_competitors ?? '0'),
           label: 'Competidores',
@@ -3464,10 +3469,16 @@ class DashboardView extends BaseView {
           label: 'Tema',
           meta: kpis.total_posts ? `en ${kpis.total_posts} posts` : '',
         })}
-      </div>
+        </div>
+      </section>
 
-      <!-- Row 1: Featured + Top ranking | Posting hours heatmap -->
-      <div class="mb-v2-widgets-row">
+      <!-- ═══ SECCIÓN: Inteligencia de competidores ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Inteligencia de competidores</h2>
+          <p>Quién lidera el período · ranking por engagement · mejores días y horas</p>
+        </header>
+        <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
           <header class="mb-v2-widget-head"><h3>Destacado</h3></header>
           <div class="mb-v2-widget-body">
@@ -3501,10 +3512,16 @@ class DashboardView extends BaseView {
             <div id="ccV2HeatmapHost" class="cc-v2-heatmap"></div>
           </div>
         </section>
-      </div>
+        </div>
+      </section>
 
-      <!-- Row 2: Distribuciones (3 columnas) -->
-      <div class="cc-v2-distros">
+      <!-- ═══ SECCIÓN: Análisis del contenido ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Análisis del contenido</h2>
+          <p>Cómo se comunica la competencia · qué temas, hashtags y tonos usan</p>
+        </header>
+        <div class="cc-v2-distros">
         <section class="mb-v2-widget">
           <header class="mb-v2-widget-head"><h3>Redes</h3></header>
           <div class="mb-v2-chart-wrap"><canvas id="ccV2PlatformCanvas"></canvas></div>
@@ -3517,10 +3534,8 @@ class DashboardView extends BaseView {
           <header class="mb-v2-widget-head"><h3>Tonos</h3></header>
           <div class="mb-v2-chart-wrap"><canvas id="ccV2ToneCanvas"></canvas></div>
         </section>
-      </div>
-
-      <!-- Row 3: Top topics + hashtags | Top posts -->
-      <div class="mb-v2-widgets-row">
+        </div>
+        <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
           <header class="mb-v2-widget-head"><h3>Temas y hashtags</h3></header>
           <div class="mb-v2-widget-body">
@@ -3543,16 +3558,28 @@ class DashboardView extends BaseView {
             <div id="ccV2TopPostsHost" class="cc-v2-posts-list"></div>
           </div>
         </section>
-      </div>
-
-      <!-- Row 4: Activity history timeline (full width) -->
-      <section class="mb-v2-widget mb-v2-widget--wide">
-        <header class="mb-v2-widget-head"><h3>Actividad</h3></header>
-        <div class="mb-v2-chart-wrap" style="height:240px"><canvas id="ccV2TimelineCanvas"></canvas></div>
+        </div>
       </section>
 
-      <!-- Row 5: Brand vs Comp + Risk alerts -->
-      <div class="mb-v2-widgets-row">
+      <!-- ═══ SECCIÓN: Análisis longitudinal ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Análisis longitudinal</h2>
+          <p>Actividad de cada competidor en el tiempo · clic en leyenda para aislar</p>
+        </header>
+        <section class="mb-v2-widget mb-v2-widget--wide">
+          <header class="mb-v2-widget-head"><h3>Actividad por competidor</h3></header>
+          <div class="mb-v2-chart-wrap" style="height:280px"><canvas id="ccV2TimelineCanvas"></canvas></div>
+        </section>
+      </section>
+
+      <!-- ═══ SECCIÓN: Inteligencia estratégica ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Inteligencia estratégica</h2>
+          <p>Tu posición vs el ecosistema · alertas activas que requieren atención</p>
+        </header>
+        <div class="mb-v2-widgets-row">
         <section class="mb-v2-widget">
           <header class="mb-v2-widget-head"><h3>Tú vs Competencia</h3></header>
           <div class="mb-v2-widget-body">
@@ -3587,7 +3614,8 @@ class DashboardView extends BaseView {
             </div>
           </div>
         </section>
-      </div>
+        </div>
+      </section>
     </div>`;
   }
 
