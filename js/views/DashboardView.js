@@ -10,7 +10,7 @@ class DashboardView extends BaseView {
   // intacto. Cuando el tab esté listo se flipea a true.
   static TABS_ENABLED = {
     'my-brands':  true,    // Mi Marca v2 — barra ardiente nueva
-    'competence': false,
+    'competence': true,    // Competencia v2 — adaptado de Partner para marketing estratégico
     'tendencies': false,
     'strategy':   false,
   };
@@ -1753,14 +1753,57 @@ class DashboardView extends BaseView {
   }
 
   /* ═══════════════════════════════════════════════════════════
-     COMPETENCIA — Infiltración Táctica
+     COMPETENCIA v2 — adaptación marketing estratégico desde Partner
   ═══════════════════════════════════════════════════════════ */
   async _renderCompetence(body) {
-    body.innerHTML = `<div class="mb-loading"> Cargando inteligencia táctica…</div>`;
-    try { await this._ensureChartJs(); } catch (_) {}
-    body.innerHTML = this._buildCompetenceHTML();
-    this._initCompetenceCharts();
-    this._animateCC();
+    // 1. Skeleton inmediato
+    body.innerHTML = this._buildCompetenceSkeleton();
+
+    // 2. Cargar dependencias + service
+    await Promise.allSettled([
+      this._ensureChartJs(),
+      this._ensureCompService(),
+    ]);
+
+    // 3. Cargar datos
+    if (!this._compData && this._compService) {
+      this._compData = await this._compService.loadAll(30);
+    }
+    const d = this._compData;
+
+    // 4. Render
+    body.innerHTML = this._buildCompetenceV2HTML(d);
+    window._dashboardView = this;
+    this._initCompetenceV2Charts(d);
+    this._animateKPIs?.();
+  }
+
+  async _ensureCompService() {
+    if (this._compService) return;
+    if (!window.CompetenciaDataService) {
+      try {
+        await this.loadScript('/js/services/CompetenciaDataService.js', 'CompetenciaDataService', 6000);
+      } catch (_) { return; }
+    }
+    if (!this._supabase || !this._orgId) return;
+    try {
+      this._compService = await new window.CompetenciaDataService().init(this._supabase, this._orgId);
+    } catch (e) {
+      console.warn('[DashboardView] CompetenciaDataService init error:', e);
+    }
+  }
+
+  _buildCompetenceSkeleton() {
+    const sk = (n) => Array(n).fill('<div class="mb-skel-block"></div>').join('');
+    return `
+    <div class="cc-v2-dashboard cc-v2-dashboard--loading">
+      <div class="mb-v2-filters">${sk(2)}</div>
+      <div class="mb-v2-kpis">${Array(6).fill('<div class="mb-v2-kpi"><div class="mb-skel-block" style="height:64px"></div></div>').join('')}</div>
+      <div class="mb-v2-widgets-row">
+        <div class="mb-v2-widget" style="min-height:280px">${sk(3)}</div>
+        <div class="mb-v2-widget" style="min-height:280px">${sk(3)}</div>
+      </div>
+    </div>`;
   }
 
   _buildCompetenceHTML() {
@@ -3341,6 +3384,402 @@ class DashboardView extends BaseView {
         ${cuad('o', 'Oportunidades',  swot?.opportunities)}
         ${cuad('t', 'Amenazas',       swot?.threats)}
       `;
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     COMPETENCIA V2 — adaptado de Partner para marketing estratégico
+     ════════════════════════════════════════════════════════════ */
+  _buildCompetenceV2HTML(d) {
+    const entities    = d?.entities || [];
+    const kpis        = d?.kpis?.data || {};
+    const featured    = (d?.featured?.data || [])[0];
+    const top         = d?.top?.data || [];
+    const brandVsComp = d?.brandVsComp?.data || {};
+    const risk        = d?.risk?.data || [];
+
+    const fmt = (n) => {
+      if (n == null) return '—';
+      const v = Number(n);
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+      if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'K';
+      return String(v);
+    };
+
+    const entityOptions = [
+      `<option value="">Todos los competidores</option>`,
+      ...entities.map(e => `<option value="${this._esc(e.id)}">${this._esc(e.name)}</option>`),
+    ].join('');
+
+    return `
+    <div class="cc-v2-dashboard">
+
+      <!-- Filtros -->
+      <div class="mb-v2-filters">
+        <label class="mb-v2-select">
+          <select id="ccV2EntityFilter">${entityOptions}</select>
+        </label>
+        <label class="mb-v2-select">
+          <select id="ccV2DateFilter">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- KPIs strip -->
+      <div class="mb-v2-kpis">
+        ${this._kpiCardV2('Competidores activos', String(kpis.active_competitors ?? '—'),
+            kpis.total_competitors ? `${kpis.total_competitors} totales` : 'Sin datos')}
+        ${this._kpiCardV2('Posts capturados', String(kpis.total_posts ?? '—'),
+            kpis.distinct_platforms ? `${kpis.distinct_platforms} plataformas` : 'Sin datos')}
+        ${this._kpiCardV2('Engagement total', fmt(kpis.total_engagement),
+            kpis.avg_engagement_per_post ? `avg ${fmt(kpis.avg_engagement_per_post)}/post` : 'Sin datos')}
+        ${this._kpiCardV2('Sentiment dominante',
+            (kpis.dominant_sentiment || '—').toString().replace(/^\w/, c => c.toUpperCase()),
+            kpis.sentiment_distribution
+              ? `${kpis.sentiment_distribution.positive || 0} pos · ${kpis.sentiment_distribution.negative || 0} neg`
+              : 'Sin análisis')}
+        ${this._kpiCardV2('Plataforma estrella', kpis.dominant_platform || '—',
+            kpis.dominant_hashtag ? `#${kpis.dominant_hashtag}` : 'Sin hashtag')}
+        ${this._kpiCardV2('Tema dominante',
+            kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 24) : '—',
+            'En posts capturados')}
+      </div>
+
+      <!-- Row 1: Featured + Top ranking | Posting hours heatmap -->
+      <div class="mb-v2-widgets-row">
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Competidor destacado</h3>
+            <span class="mb-v2-widget-sub">Score multi-criterio del período</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div class="cc-v2-featured">
+              ${featured ? `
+                <div class="cc-v2-featured-name">${this._esc(featured.entity_name)}</div>
+                <div class="cc-v2-featured-handle">${this._esc(featured.handle || '')}</div>
+                <div class="cc-v2-featured-score">${Math.round(featured.score || 0)}<span>/100</span></div>
+                <div class="cc-v2-featured-meta">
+                  <span>${fmt(featured.total_posts)} posts</span>
+                  <span>${fmt(featured.total_engagement)} eng</span>
+                  <span>${Math.round((featured.positive_sentiment_ratio || 0) * 100)}% positivo</span>
+                </div>
+              ` : '<div class="mb-v2-empty">Sin competidor destacado en el período</div>'}
+            </div>
+            <div class="cc-v2-top-list" id="ccV2TopList">
+              ${top.slice(0, 6).map((t, i) => `
+                <div class="cc-v2-top-row">
+                  <span class="cc-v2-top-rank">${i + 1}</span>
+                  <span class="cc-v2-top-name">${this._esc(t.entity_name)}</span>
+                  <span class="cc-v2-top-eng">${fmt(t.total_engagement)}</span>
+                </div>
+              `).join('') || '<div class="mb-v2-empty">Sin competidores</div>'}
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Heatmap horario de la competencia</h3>
+            <span class="mb-v2-widget-sub">Cuándo publican (DOW × Hora · America/Bogota)</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div id="ccV2HeatmapHost" class="cc-v2-heatmap"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Row 2: Distribuciones (3 columnas) -->
+      <div class="cc-v2-distros">
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head"><h3>¿En qué redes publican?</h3></header>
+          <div class="mb-v2-chart-wrap"><canvas id="ccV2PlatformCanvas"></canvas></div>
+        </section>
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head"><h3>¿Qué sentimientos dominan?</h3></header>
+          <div class="mb-v2-chart-wrap"><canvas id="ccV2SentimentCanvas"></canvas></div>
+        </section>
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head"><h3>¿Qué tonos usan?</h3></header>
+          <div class="mb-v2-chart-wrap"><canvas id="ccV2ToneCanvas"></canvas></div>
+        </section>
+      </div>
+
+      <!-- Row 3: Top topics + hashtags | Top posts -->
+      <div class="mb-v2-widgets-row">
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Temas y hashtags rivales</h3>
+            <span class="mb-v2-widget-sub">Lo que la competencia está empujando</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div class="cc-v2-tags-cols">
+              <div class="cc-v2-tags-col">
+                <div class="cc-v2-tags-label">TOP TEMAS</div>
+                <div id="ccV2TopicsHost" class="cc-v2-tags-list"></div>
+              </div>
+              <div class="cc-v2-tags-col">
+                <div class="cc-v2-tags-label">TOP HASHTAGS</div>
+                <div id="ccV2HashtagsHost" class="cc-v2-tags-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Top posts virales</h3>
+            <span class="mb-v2-widget-sub">Mayor engagement de la competencia</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div id="ccV2TopPostsHost" class="cc-v2-posts-list"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Row 4: Activity history timeline (full width) -->
+      <section class="mb-v2-widget mb-v2-widget--wide">
+        <header class="mb-v2-widget-head">
+          <h3>Actividad de la competencia en el tiempo</h3>
+          <span class="mb-v2-widget-sub">Posts y engagement por día</span>
+        </header>
+        <div class="mb-v2-chart-wrap" style="height:220px"><canvas id="ccV2TimelineCanvas"></canvas></div>
+      </section>
+
+      <!-- Row 5: Brand vs Comp + Risk alerts -->
+      <div class="mb-v2-widgets-row">
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Tu marca vs Competencia</h3>
+            <span class="mb-v2-widget-sub">Head-to-head del período</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div class="cc-v2-vs">
+              <div class="cc-v2-vs-side">
+                <div class="cc-v2-vs-label">TU MARCA</div>
+                <div class="cc-v2-vs-value">${fmt(brandVsComp?.brand?.engagement)}</div>
+                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.brand?.posts)} posts · avg ${fmt(brandVsComp?.brand?.avg_engagement_per_post)}</div>
+              </div>
+              <div class="cc-v2-vs-divider">vs</div>
+              <div class="cc-v2-vs-side cc-v2-vs-side--rival">
+                <div class="cc-v2-vs-label">COMPETENCIA</div>
+                <div class="cc-v2-vs-value">${fmt(brandVsComp?.competencia?.engagement)}</div>
+                <div class="cc-v2-vs-meta">${fmt(brandVsComp?.competencia?.posts)} posts · avg ${fmt(brandVsComp?.competencia?.avg_engagement_per_post)}</div>
+              </div>
+            </div>
+            <div class="cc-v2-vs-verdict cc-v2-vs-verdict--${brandVsComp?.comparison?.who_leads_engagement || 'tie'}">
+              ${brandVsComp?.comparison?.who_leads_engagement === 'brand'
+                ? '🏆 Lideras en engagement'
+                : brandVsComp?.comparison?.who_leads_engagement === 'competencia'
+                  ? '⚠️ La competencia te supera'
+                  : '⚖️ Empate técnico'}
+            </div>
+          </div>
+        </section>
+
+        <section class="mb-v2-widget">
+          <header class="mb-v2-widget-head">
+            <h3>Alertas de riesgo</h3>
+            <span class="mb-v2-widget-sub">Competidores con tono agresivo o crisis</span>
+          </header>
+          <div class="mb-v2-widget-body">
+            <div id="ccV2RiskHost" class="cc-v2-risk-list">
+              ${risk.length ? '' : '<div class="mb-v2-empty">Sin alertas activas ✓</div>'}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>`;
+  }
+
+  _initCompetenceV2Charts(d) {
+    if (!window.Chart) return;
+    this._destroyCharts();
+    const fmt = (n) => {
+      if (n == null) return '—';
+      const v = Number(n);
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+      if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'K';
+      return String(v);
+    };
+
+    const dist = d?.distributions?.data || {};
+    const sharedOpts = {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 10, font: { size: 11 } } } },
+    };
+
+    // Platform donut
+    const pHost = document.getElementById('ccV2PlatformCanvas');
+    if (pHost && dist.platform) {
+      const labels = Object.keys(dist.platform);
+      const values = labels.map(k => dist.platform[k]);
+      this._charts.push(new Chart(pHost, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: ['#3b82f6','#ec4899','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'], borderWidth: 0 }] },
+        options: sharedOpts,
+      }));
+    }
+
+    // Sentiment donut
+    const sHost = document.getElementById('ccV2SentimentCanvas');
+    if (sHost && dist.sentiment) {
+      const labels = Object.keys(dist.sentiment);
+      const values = labels.map(k => dist.sentiment[k]);
+      const colors = labels.map(l =>
+        /pos/i.test(l) ? '#22c55e' : /neg/i.test(l) ? '#ef4444' : '#6b7280');
+      this._charts.push(new Chart(sHost, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+        options: sharedOpts,
+      }));
+    }
+
+    // Tone bar
+    const tHost = document.getElementById('ccV2ToneCanvas');
+    if (tHost && dist.tone && Object.keys(dist.tone).length) {
+      const sortedTones = Object.entries(dist.tone).sort((a,b) => b[1]-a[1]).slice(0, 8);
+      this._charts.push(new Chart(tHost, {
+        type: 'bar',
+        data: {
+          labels: sortedTones.map(([k]) => k),
+          datasets: [{ data: sortedTones.map(([,v]) => v), backgroundColor: '#ff5400', borderRadius: 4 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: 'rgba(255,255,255,0.6)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { display: false } },
+          },
+        },
+      }));
+    } else if (tHost) {
+      tHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin tonos analizados aún</div>';
+    }
+
+    // Heatmap DOW × HOUR
+    const hHost = document.getElementById('ccV2HeatmapHost');
+    const ph    = d?.postingHours?.data || [];
+    if (hHost && ph.length) {
+      const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const matrix = Array.from({ length: 7 }, () => Array(24).fill(0));
+      let max = 0;
+      ph.forEach(c => {
+        const v = Number(c.total_engagement || 0);
+        if (c.day_of_week >= 0 && c.day_of_week < 7 && c.hour_of_day >= 0 && c.hour_of_day < 24) {
+          matrix[c.day_of_week][c.hour_of_day] += v;
+          if (matrix[c.day_of_week][c.hour_of_day] > max) max = matrix[c.day_of_week][c.hour_of_day];
+        }
+      });
+      const cells = [];
+      for (let dy = 0; dy < 7; dy++) {
+        for (let h = 0; h < 24; h++) {
+          const v = matrix[dy][h];
+          const intensity = max ? v / max : 0;
+          cells.push(`<div class="cc-v2-heat-cell" title="${days[dy]} ${h}:00 — ${fmt(v)} eng" style="background:rgba(255,84,0,${intensity.toFixed(2)})"></div>`);
+        }
+      }
+      hHost.innerHTML = `
+        <div class="cc-v2-heat-grid">
+          <div class="cc-v2-heat-corner"></div>
+          ${Array.from({ length: 24 }, (_, h) => `<div class="cc-v2-heat-hr">${h % 3 === 0 ? h : ''}</div>`).join('')}
+          ${days.map((label, dy) => `
+            <div class="cc-v2-heat-day">${label}</div>
+            ${matrix[dy].map((v, h) => {
+              const intensity = max ? v / max : 0;
+              return `<div class="cc-v2-heat-cell" title="${label} ${h}:00 — ${fmt(v)} eng" style="background:rgba(255,84,0,${intensity.toFixed(2)})"></div>`;
+            }).join('')}
+          `).join('')}
+        </div>
+      `;
+    } else if (hHost) {
+      hHost.innerHTML = '<div class="mb-v2-empty">Sin datos de horarios</div>';
+    }
+
+    // Top topics + hashtags
+    const topicsHost   = document.getElementById('ccV2TopicsHost');
+    const hashtagsHost = document.getElementById('ccV2HashtagsHost');
+    const topics   = d?.topTopics?.data   || [];
+    const hashtags = d?.topHashtags?.data || [];
+    const renderTagList = (items, label) => items.length
+      ? items.slice(0, 8).map(t => `
+          <div class="cc-v2-tag-row">
+            <span class="cc-v2-tag-name">${this._esc(t.topic_name || t.hashtag_name || t.topic || t.hashtag || '—')}</span>
+            <span class="cc-v2-tag-eng">${fmt(t.total_engagement)}</span>
+          </div>`).join('')
+      : `<div class="mb-v2-empty">${label}</div>`;
+    if (topicsHost)   topicsHost.innerHTML   = renderTagList(topics, 'Sin temas extraídos');
+    if (hashtagsHost) hashtagsHost.innerHTML = renderTagList(hashtags, 'Sin hashtags');
+
+    // Top posts
+    const tpHost = document.getElementById('ccV2TopPostsHost');
+    const tp = d?.topPosts?.data || [];
+    if (tpHost) {
+      tpHost.innerHTML = tp.length
+        ? tp.slice(0, 6).map(p => `
+          <div class="cc-v2-post-row">
+            <div class="cc-v2-post-head">
+              <span class="cc-v2-post-name">${this._esc(p.entity_name)}</span>
+              <span class="cc-v2-post-net">${this._esc(p.network)}</span>
+              <span class="cc-v2-post-eng">${fmt(p.engagement_total)}</span>
+            </div>
+            <div class="cc-v2-post-content">${this._esc((p.content_preview || '').slice(0, 180))}</div>
+          </div>`).join('')
+        : '<div class="mb-v2-empty">Sin top posts en el período</div>';
+    }
+
+    // Risk list
+    const riskHost = document.getElementById('ccV2RiskHost');
+    const risk = d?.risk?.data || [];
+    if (riskHost && risk.length) {
+      riskHost.innerHTML = risk.slice(0, 5).map(r => `
+        <div class="mb-v2-crisis-row mb-v2-crisis-row--high">
+          <span class="mb-v2-crisis-sev">${Math.round(r.risk_score || 0)}</span>
+          <span class="mb-v2-crisis-title">${this._esc(r.entity_name)} — ${this._esc(r.description)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Activity history timeline
+    const ahHost = document.getElementById('ccV2TimelineCanvas');
+    const ah = d?.activityHistory?.data || [];
+    if (ahHost && ah.length) {
+      // Agrupar por period_start summing all entities
+      const byPeriod = new Map();
+      ah.forEach(r => {
+        const k = r.period_start;
+        const cur = byPeriod.get(k) || { posts: 0, eng: 0, label: r.period_label };
+        cur.posts += Number(r.posts_count || 0);
+        cur.eng   += Number(r.total_engagement || 0);
+        byPeriod.set(k, cur);
+      });
+      const sorted = [...byPeriod.entries()].sort();
+      const labels = sorted.map(([, v]) => v.label);
+      const posts  = sorted.map(([, v]) => v.posts);
+      const eng    = sorted.map(([, v]) => v.eng);
+      this._charts.push(new Chart(ahHost, {
+        data: {
+          labels,
+          datasets: [
+            { type: 'line', label: 'Engagement', data: eng,   borderColor: '#ff5400', backgroundColor: 'rgba(255,84,0,0.15)', tension: 0.3, fill: true, yAxisID: 'y1', pointRadius: 2 },
+            { type: 'bar',  label: 'Posts',      data: posts, backgroundColor: 'rgba(255,255,255,0.18)', yAxisID: 'y2' },
+          ],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)' } } },
+          scales: {
+            x: { ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 10 }, grid: { display: false } },
+            y1:{ position: 'left',  ticks: { color: 'rgba(255,84,0,0.85)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y2:{ position: 'right', ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { display: false }, beginAtZero: true },
+          },
+        },
+      }));
+    } else if (ahHost) {
+      ahHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin actividad en el período</div>';
     }
   }
 }
