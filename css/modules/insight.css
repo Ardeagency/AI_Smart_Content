@@ -5267,11 +5267,9 @@
   border-radius: 3px;
   min-height: 16px;
   background: rgba(255,255,255,0.025);
-  transition: transform 0.15s ease;
 }
 .cc-v2-heat-cell:hover {
-  transform: scale(1.15);
-  outline: 1px solid rgba(255,84,0,0.4);
+  outline: 1px solid rgba(255,84,0,0.5);
 }
 .cc-v2-heat-day {
   font-size: 12px;
@@ -5344,14 +5342,9 @@
   min-height: 110px;
   gap: 2px;
   background: linear-gradient(135deg, rgba(255,255,255,0.025), rgba(255,255,255,0.012));
-  animation: cardFadeInUp 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(1) { animation-delay: 0.02s; }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(2) { animation-delay: 0.06s; }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(3) { animation-delay: 0.10s; }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(4) { animation-delay: 0.14s; }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(5) { animation-delay: 0.18s; }
-.mb-v2-kpis .mb-v2-kpi--min:nth-child(6) { animation-delay: 0.22s; }
+/* NOTA: animaciones fadeInUp removidas — causaban paint storms al mount.
+   Si se reactivan: solo via IntersectionObserver al primer scroll-into-view. */
 
 .mb-v2-kpi-min-icon {
   position: absolute; top: 14px; right: 16px;
@@ -5382,12 +5375,9 @@
   margin-top: 2px;
 }
 
-/* Hover sutil estilo Partner */
+/* Hover sutil sin transitions costosas (solo color cambios, no reflow) */
 .mb-v2-kpi--min:hover {
-  transform: translateY(-2px);
   border-color: rgba(255,255,255,0.14);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 .mb-v2-kpi--min:hover .mb-v2-kpi-min-icon {
   color: rgba(255,84,0,0.85);
@@ -5405,19 +5395,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Widgets también con fadeInUp staggered */
-.cc-v2-dashboard .mb-v2-widget,
-.cc-v2-distros .mb-v2-widget {
-  animation: cardFadeInUp 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.16s backwards;
-}
-
-/* Hover en widgets — sutil */
-.mb-v2-widget {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
+/* Hover en widgets — solo color (sin reflow) */
 .mb-v2-widget:hover {
   border-color: rgba(255,255,255,0.10);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
 /* Widget header con espacio para acciones (estilo Partner) */
@@ -5447,15 +5427,13 @@
   pointer-events: none;
 }
 
-/* Top list — más jerarquía */
+/* Top list — más jerarquía (sin transitions) */
 .cc-v2-top-row {
   padding: 10px 12px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
-  transition: all 0.18s ease;
+  background: rgba(255,255,255,0.025);
 }
 .cc-v2-top-row:hover {
-  transform: translateX(2px);
-  background: rgba(255,84,0,0.06);
+  background: rgba(255,84,0,0.08);
   border-color: rgba(255,84,0,0.18);
 }
 .cc-v2-top-rank {
