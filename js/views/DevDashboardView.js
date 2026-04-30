@@ -172,6 +172,21 @@ class DevDashboardView extends DevBaseView {
   }
 
   /**
+   * Intenta ejecutar un RPC. Si falla por cualquier razón (no aplicado,
+   * permisos, etc.) devuelve null y el caller usa el fallback legacy.
+   */
+  async tryRpc(name, args) {
+    try {
+      const { data, error } = await this.supabase.rpc(name, args || {});
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.warn(`[DevDashboard] RPC ${name} no disponible (${e?.message || e}); usando queries directas`);
+      return null;
+    }
+  }
+
+  /**
    * Intercepta clicks en <a href="/..."> internos para usar el router SPA.
    */
   bindLinkInterception() {
@@ -280,6 +295,30 @@ class DevDashboardView extends DevBaseView {
   // Zona 1 — Tira de salud
   // ============================================================
   async loadHealth() {
+    const data = await this.tryRpc('dev_dashboard_health');
+    if (data) {
+      this.renderHealthFromRpc(data);
+      return;
+    }
+    return this.loadHealthLegacy();
+  }
+
+  renderHealthFromRpc(d) {
+    const el = document.getElementById('devHealthStrip');
+    if (!el) return;
+    const pills = [];
+    if (d.is_lead) {
+      pills.push(this.healthPill('fa-heart-pulse',          'Sistema',       this.healthLevel(d.unhealthy_flows, 0, 1),    this.fmtCount(d.unhealthy_flows, 'flujo no sano', 'flujos no sanos')));
+      pills.push(this.healthPill('fa-plug',                 'Integraciones', this.healthLevel(d.expiring_tokens, 0, 1),    this.fmtCount(d.expiring_tokens, 'token a expirar', 'tokens a expirar')));
+      pills.push(this.healthPill('fa-triangle-exclamation', 'Errores 24h',   this.healthLevel(d.recent_errors_24h, 5, 20), this.fmtCount(d.recent_errors_24h, 'evento', 'eventos')));
+      pills.push(this.healthPill('fa-server',               'Provisioning',  this.healthLevel(d.prov_failures_7d, 0, 2),   this.fmtCount(d.prov_failures_7d, 'incidente 7d', 'incidentes 7d')));
+    } else {
+      pills.push(this.healthPill('fa-triangle-exclamation', 'Errores 24h',   this.healthLevel(d.recent_errors_24h, 5, 20), this.fmtCount(d.recent_errors_24h, 'evento', 'eventos')));
+    }
+    el.innerHTML = pills.join('');
+  }
+
+  async loadHealthLegacy() {
     const el = document.getElementById('devHealthStrip');
     if (!el) return;
 
@@ -356,6 +395,102 @@ class DevDashboardView extends DevBaseView {
   // Zona 2 — Atención hoy
   // ============================================================
   async loadAttention() {
+    const data = await this.tryRpc('dev_dashboard_attention');
+    if (data) {
+      this.renderAttentionFromRpc(data);
+      return;
+    }
+    return this.loadAttentionLegacy();
+  }
+
+  renderAttentionFromRpc(d) {
+    const grid = document.getElementById('devAttentionGrid');
+    const meta = document.getElementById('devAttentionMeta');
+    if (!grid) return;
+
+    const cards = [];
+
+    if (d.is_lead) {
+      const u = d.unverified_users?.count ?? 0;
+      if (u > 0) cards.push(this.attentionCard({
+        tone: 'info', icon: 'fa-user-clock', title: 'Usuarios sin verificar',
+        count: u, subtitle: 'Forms incompletos en perfil',
+        href: '/dev/provisioning/users', cta: 'Provisioning →'
+      }));
+
+      const e = d.expiring_tokens || {};
+      if ((e.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'warn', icon: 'fa-plug-circle-exclamation', title: 'Tokens OAuth a expirar',
+        count: e.count, subtitle: 'En los próximos 7 días',
+        items: (e.preview || []).map(r => `${this.escapeHtml(r.platform)} · vence ${this.formatTimeUntil(r.token_expires_at)}`),
+        href: '/dev/lead/team', cta: 'Ver integraciones →'
+      }));
+
+      const lc = d.low_credits_orgs || {};
+      if ((lc.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'warn', icon: 'fa-coins', title: 'Créditos bajos',
+        count: lc.count, subtitle: '< 10% disponibles',
+        items: (lc.preview || []).map(c => `${c.credits_available} / ${c.credits_total} créditos`),
+        href: '/dev/lead/team', cta: 'Revisar orgs →'
+      }));
+
+      const nl = d.new_leads || {};
+      if ((nl.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'info', icon: 'fa-headset', title: 'Leads sin atender',
+        count: nl.count, subtitle: 'Estado: nuevo',
+        items: (nl.preview || []).map(l => `${this.escapeHtml(l.full_name)} · ${this.escapeHtml(l.company_name)}`),
+        href: '/dev/lead/crm', cta: 'Abrir CRM →'
+      }));
+
+      const ce = d.critical_errors_24h || {};
+      if ((ce.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'crit', icon: 'fa-circle-exclamation', title: 'Errores críticos 24h',
+        count: ce.count, subtitle: 'Revisar y reproducir',
+        items: (ce.preview || []).map(l => `${l.severity === 'critical' ? '🔴' : '🟠'} ${this.escapeHtml(l.flow_name || 'Sin flujo')} — ${this.escapeHtml(this.truncateText(l.error_message || '', 50))}`),
+        href: '/dev/logs', cta: 'Ver logs →'
+      }));
+
+      const pf = d.provisioning_failures_24h || {};
+      if ((pf.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'crit', icon: 'fa-server', title: 'Provisioning con fallas',
+        count: pf.count, subtitle: 'Health checks fallidos en 24h',
+        items: (pf.preview || []).map(p => `${this.escapeHtml(p.event_type)} — ${this.escapeHtml(this.truncateText(p.message || '', 50))}`),
+        href: '/dev/lead/team', cta: 'Investigar →'
+      }));
+    } else {
+      const er = d.my_errors_24h || {};
+      if ((er.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'crit', icon: 'fa-circle-exclamation', title: 'Errores en tus flujos',
+        count: er.count, subtitle: 'Últimas 24h',
+        items: (er.preview || []).map(l => `${l.severity === 'critical' ? '🔴' : '🟠'} ${this.escapeHtml(l.flow_name || 'Sin flujo')} — ${this.escapeHtml(this.truncateText(l.error_message || '', 50))}`),
+        href: '/dev/logs', cta: 'Ver logs →'
+      }));
+
+      const un = d.my_unread_notifications || {};
+      if ((un.count ?? 0) > 0) cards.push(this.attentionCard({
+        tone: 'info', icon: 'fa-bell', title: 'Notificaciones sin leer',
+        count: un.count, subtitle: 'Mensajes del sistema para ti',
+        items: (un.preview || []).map(n => this.escapeHtml(this.truncateText(n.title || '', 60))),
+        cta: ''
+      }));
+
+      // Fallback informativo si dev sin flows
+      if (cards.length === 0 && this.myFlowIds.length === 0) {
+        cards.push(this.attentionCard({
+          tone: 'info', icon: 'fa-lightbulb', title: 'Aún no tienes flujos',
+          count: 0, subtitle: 'Crea tu primer flujo en el Builder',
+          href: '/dev/builder', cta: 'Ir al Builder →'
+        }));
+      }
+    }
+
+    if (meta) meta.textContent = cards.length === 0 ? 'todo en orden' : `${cards.length} ${cards.length === 1 ? 'pendiente' : 'pendientes'}`;
+    grid.innerHTML = cards.length === 0
+      ? `<div class="dev-attention-empty"><i class="fas fa-circle-check"></i><span>No hay nada pendiente — buen trabajo.</span></div>`
+      : cards.join('');
+  }
+
+  async loadAttentionLegacy() {
     const grid = document.getElementById('devAttentionGrid');
     const meta = document.getElementById('devAttentionMeta');
     if (!grid) return;
@@ -563,6 +698,39 @@ class DevDashboardView extends DevBaseView {
   // Zona 3 — KPIs
   // ============================================================
   async loadKPIs() {
+    const data = await this.tryRpc('dev_dashboard_kpis');
+    if (data) {
+      this.renderKPIsFromRpc(data);
+      return;
+    }
+    return this.loadKPIsLegacy();
+  }
+
+  renderKPIsFromRpc(d) {
+    const grid = document.getElementById('devKpiGrid');
+    if (!grid) return;
+    if (d.is_lead) {
+      grid.innerHTML = [
+        this.kpiCard('Usuarios',                this.formatNumber(d.users_total ?? 0),         'totales en plataforma'),
+        this.kpiCard('Organizaciones activas',  this.formatNumber(d.orgs_active ?? 0),         'sin eliminar'),
+        this.kpiCard('Flujos publicados',       this.formatNumber(d.flows_published ?? 0),     'estado published'),
+        this.kpiCard('Runs completados 24h',    this.formatNumber(d.runs_24h_completed ?? 0),  d.success_rate_24h != null ? `tasa éxito ${d.success_rate_24h}%` : '—'),
+        this.kpiCard('Créditos consumidos',     this.formatNumber(d.credits_consumed_7d ?? 0), 'últimos 7 días'),
+        this.kpiCard('Errores / runs 24h',      d.error_rate_24h != null ? `${d.error_rate_24h}%` : '—', `${this.formatNumber(d.errors_24h ?? 0)} eventos`)
+      ].join('');
+    } else {
+      grid.innerHTML = [
+        this.kpiCard('Mis flujos',     this.formatNumber(d.my_flows_total ?? 0),     'creados por mí'),
+        this.kpiCard('Publicados',     this.formatNumber(d.my_flows_published ?? 0), 'visibles a usuarios'),
+        this.kpiCard('Runs 24h',       this.formatNumber(d.my_runs_24h_total ?? 0),  'todas ejecuciones'),
+        this.kpiCard('Tasa éxito 24h', d.my_success_rate_24h != null ? `${d.my_success_rate_24h}%` : '—', `${this.formatNumber(d.my_runs_24h_completed ?? 0)} completados`),
+        this.kpiCard('Errores 24h',    this.formatNumber(d.my_errors_24h ?? 0),      'severidad error/critical'),
+        this.kpiCard('Borradores',     this.formatNumber(d.my_flows_drafts ?? 0),    'pendientes de publicar')
+      ].join('');
+    }
+  }
+
+  async loadKPIsLegacy() {
     const grid = document.getElementById('devKpiGrid');
     if (!grid) return;
 
@@ -643,18 +811,58 @@ class DevDashboardView extends DevBaseView {
   // Zona 4 — Top flujos 24h
   // ============================================================
   async loadTopFlows() {
-    const tbody = document.getElementById('devTopFlowsBody');
+    // Configurar columnas/links según rol siempre
     const ownerCol = document.getElementById('devTopOwnerCol');
     const link = document.getElementById('devTopFlowsLink');
-    if (!tbody) return;
-
     if (!this.isLead) {
-      // dev no-lead: oculta columna dueño y enlaza a /dev/flows
       if (ownerCol) ownerCol.style.display = 'none';
       if (link) link.href = '/dev/flows';
-    } else {
-      if (link) link.href = '/dev/lead/flows';
+    } else if (link) {
+      link.href = '/dev/lead/flows';
     }
+
+    const data = await this.tryRpc('dev_dashboard_top_flows', { p_hours: 24, p_limit: 10 });
+    if (data) {
+      this.renderTopFlowsFromRpc(data);
+      return;
+    }
+    return this.loadTopFlowsLegacy();
+  }
+
+  renderTopFlowsFromRpc(d) {
+    const tbody = document.getElementById('devTopFlowsBody');
+    if (!tbody) return;
+    const rows = Array.isArray(d.rows) ? d.rows : [];
+    const cols = this.isLead ? 6 : 5;
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="${cols}" class="dev-table-empty"><i class="fas fa-inbox"></i> Sin runs en 24h</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(t => {
+      const successPct = t.success_pct ?? 0;
+      const lvl = successPct >= 90 ? 'ok' : successPct >= 70 ? 'warn' : 'crit';
+      const ownerCell = this.isLead
+        ? `<td class="dev-cell-owner">${this.escapeHtml(t.owner_name || '—')}</td>`
+        : '';
+      const lastBadge = `<span class="dev-run-status status-${t.last_status}">${this.getRunStatusLabel(t.last_status)}</span>`;
+      return `
+        <tr>
+          <td class="dev-cell-flow"><a href="/dev/builder?flow=${t.flow_id}">${this.escapeHtml(t.flow_name || 'Sin nombre')}</a></td>
+          ${ownerCell}
+          <td class="num">${this.formatNumber(t.total)}</td>
+          <td class="num"><span class="dev-success-badge level-${lvl}">${successPct}%</span></td>
+          <td class="num">${this.formatNumber(t.tokens)}</td>
+          <td>${lastBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async loadTopFlowsLegacy() {
+    const tbody = document.getElementById('devTopFlowsBody');
+    if (!tbody) return;
 
     const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
 
@@ -753,6 +961,73 @@ class DevDashboardView extends DevBaseView {
   // Zona 5 — Actividad reciente
   // ============================================================
   async loadActivity() {
+    const data = await this.tryRpc('dev_dashboard_activity', { p_limit: 20 });
+    if (data) {
+      this.renderActivityFromRpc(data);
+      return;
+    }
+    return this.loadActivityLegacy();
+  }
+
+  renderActivityFromRpc(d) {
+    const list = document.getElementById('devActivityList');
+    if (!list) return;
+    const rows = Array.isArray(d.rows) ? d.rows : [];
+    if (rows.length === 0) {
+      list.innerHTML = `<li class="dev-empty-state"><i class="fas fa-circle-info"></i><span>Sin actividad reciente</span></li>`;
+      return;
+    }
+    list.innerHTML = rows.map(ev => this.renderActivityItem(ev)).join('');
+  }
+
+  renderActivityItem(ev) {
+    if (ev.kind === 'log') {
+      const sev = ev.severity || 'info';
+      return `
+        <li class="dev-activity-item kind-log severity-${sev}">
+          <span class="dev-activity-icon"><i class="fas ${this.getSeverityIcon(sev)}"></i></span>
+          <div class="dev-activity-body">
+            <div class="dev-activity-title">${this.escapeHtml(this.truncateText(ev.message || '', 90))}</div>
+            <div class="dev-activity-meta">
+              <span>${this.escapeHtml(ev.flow_name || 'Sin flujo')}</span>
+              <span>${ev.env || '—'}</span>
+              <span>${this.formatTimeAgo(ev.ts)}</span>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+    if (ev.kind === 'prov') {
+      const isFail = ['provisioning_failed', 'health_check_failed', 'server_degraded'].includes(ev.event_type);
+      return `
+        <li class="dev-activity-item kind-prov ${isFail ? 'severity-error' : ''}">
+          <span class="dev-activity-icon"><i class="fas fa-server"></i></span>
+          <div class="dev-activity-body">
+            <div class="dev-activity-title">${this.escapeHtml(ev.event_type || '')}${ev.message ? ' — ' + this.escapeHtml(this.truncateText(ev.message, 80)) : ''}</div>
+            <div class="dev-activity-meta">
+              <span>provisioning</span>
+              <span>${this.formatTimeAgo(ev.ts)}</span>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+    const sev = ev.severity || 'info';
+    return `
+      <li class="dev-activity-item kind-notif severity-${sev}">
+        <span class="dev-activity-icon"><i class="fas fa-bell"></i></span>
+        <div class="dev-activity-body">
+          <div class="dev-activity-title">${this.escapeHtml(ev.title || '—')}</div>
+          <div class="dev-activity-meta">
+            <span>notificación</span>
+            <span>${this.formatTimeAgo(ev.ts)}</span>
+          </div>
+        </div>
+      </li>
+    `;
+  }
+
+  async loadActivityLegacy() {
     const list = document.getElementById('devActivityList');
     if (!list) return;
 
@@ -777,7 +1052,7 @@ class DevDashboardView extends DevBaseView {
         kind: 'log',
         ts: l.created_at,
         severity: l.severity,
-        flow: l.content_flows?.name,
+        flow_name: l.content_flows?.name,
         env: l.environment,
         message: l.error_message
       }));
@@ -792,7 +1067,7 @@ class DevDashboardView extends DevBaseView {
         (data || []).forEach(p => events.push({
           kind: 'prov',
           ts: p.created_at,
-          eventType: p.event_type,
+          event_type: p.event_type,
           message: p.message
         }));
       } else {
@@ -820,55 +1095,7 @@ class DevDashboardView extends DevBaseView {
     }
 
     events.sort((a, b) => new Date(b.ts) - new Date(a.ts));
-    const top = events.slice(0, 20);
-
-    list.innerHTML = top.map(ev => {
-      if (ev.kind === 'log') {
-        const sev = ev.severity || 'info';
-        return `
-          <li class="dev-activity-item kind-log severity-${sev}">
-            <span class="dev-activity-icon"><i class="fas ${this.getSeverityIcon(sev)}"></i></span>
-            <div class="dev-activity-body">
-              <div class="dev-activity-title">${this.escapeHtml(this.truncateText(ev.message, 90))}</div>
-              <div class="dev-activity-meta">
-                <span>${this.escapeHtml(ev.flow || 'Sin flujo')}</span>
-                <span>${ev.env || '—'}</span>
-                <span>${this.formatTimeAgo(ev.ts)}</span>
-              </div>
-            </div>
-          </li>
-        `;
-      }
-      if (ev.kind === 'prov') {
-        const isFail = ['provisioning_failed', 'health_check_failed', 'server_degraded'].includes(ev.eventType);
-        return `
-          <li class="dev-activity-item kind-prov ${isFail ? 'severity-error' : ''}">
-            <span class="dev-activity-icon"><i class="fas fa-server"></i></span>
-            <div class="dev-activity-body">
-              <div class="dev-activity-title">${this.escapeHtml(ev.eventType)}${ev.message ? ' — ' + this.escapeHtml(this.truncateText(ev.message, 80)) : ''}</div>
-              <div class="dev-activity-meta">
-                <span>provisioning</span>
-                <span>${this.formatTimeAgo(ev.ts)}</span>
-              </div>
-            </div>
-          </li>
-        `;
-      }
-      // notif
-      const sev = ev.severity || 'info';
-      return `
-        <li class="dev-activity-item kind-notif severity-${sev}">
-          <span class="dev-activity-icon"><i class="fas fa-bell"></i></span>
-          <div class="dev-activity-body">
-            <div class="dev-activity-title">${this.escapeHtml(ev.title || '—')}</div>
-            <div class="dev-activity-meta">
-              <span>notificación</span>
-              <span>${this.formatTimeAgo(ev.ts)}</span>
-            </div>
-          </div>
-        </li>
-      `;
-    }).join('');
+    list.innerHTML = events.slice(0, 20).map(ev => this.renderActivityItem(ev)).join('');
   }
 
   // ============================================================
