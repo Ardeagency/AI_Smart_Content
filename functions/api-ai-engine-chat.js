@@ -71,11 +71,11 @@ exports.handler = async (event) => {
   const targetUrl = `${aiEngineBaseUrl}/chat`;
 
   // ai-engine responde con { status: "processing" } tras auth + 4 llamadas a Supabase.
-  // En condiciones normales tarda 1-3s, pero con Supabase lento puede llegar a ~15s.
-  // Usamos 25s — justo por debajo del límite de Lambda de Netlify (~26s) — para
-  // garantizar que el error sea nuestro mensaje amigable y no un 502 crudo.
+  // En condiciones normales tarda 1-3s. Las Netlify Functions tienen timeout
+  // default de 10s — abortamos a 9s para que el catch devuelva un JSON 504
+  // amigable en vez de que el edge mate la función y devuelva 502 crudo.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25_000);
+  const timeoutId = setTimeout(() => controller.abort(), 9_000);
 
   let upstream;
   try {

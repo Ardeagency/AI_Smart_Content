@@ -689,7 +689,8 @@ class VeraView extends (window.BaseView || class {}) {
       organization_id: null,
       active_conversation_id: null,
       messages: [],
-      isLoading: false
+      isLoading: false,
+      pendingAttachments: []
     };
     this.organizationName = '';
     this.supabase = null;
@@ -766,6 +767,7 @@ class VeraView extends (window.BaseView || class {}) {
           </div>
           <div class="gpt-composer-wrap" id="chatInputOverlay">
             <div class="gpt-composer" id="veraInputWrap">
+              <div class="gpt-attach-chips" id="veraAttachChips" hidden></div>
               <textarea
                 class="gpt-composer-textarea"
                 id="veraInput"
@@ -782,6 +784,14 @@ class VeraView extends (window.BaseView || class {}) {
                   <i class="fas fa-arrow-up"></i>
                 </button>
               </div>
+              <input type="file" id="veraFileInput" multiple hidden
+                accept="image/*,application/pdf,audio/*,video/*,
+                       .doc,.docx,.xls,.xlsx,.csv,.txt,.md,
+                       application/msword,
+                       application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                       application/vnd.ms-excel,
+                       application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                       text/csv,text/plain,text/markdown" />
             </div>
           </div>
         </div>
@@ -967,15 +977,42 @@ class VeraView extends (window.BaseView || class {}) {
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
+  /* ── Render adjuntos dentro de un mensaje del usuario ── */
+  _renderUserAttachments(attachments) {
+    const list = Array.isArray(attachments) ? attachments : [];
+    if (!list.length) return '';
+    const items = list.map(a => {
+      const type = String(a.type || '').toLowerCase();
+      const name = escapeHtml(a.name || 'archivo');
+      const url = a.url || '#';
+      if (type === 'image') {
+        return `<a class="gpt-msg-att gpt-msg-att--image" href="${escapeHtml(url)}" target="_blank" rel="noopener">
+          <img src="${escapeHtml(url)}" alt="${name}" loading="lazy" />
+        </a>`;
+      }
+      const icon = this._attachmentIconClass(type);
+      return `<a class="gpt-msg-att gpt-msg-att--file" href="${escapeHtml(url)}" target="_blank" rel="noopener" title="${name}">
+        <i class="fas ${icon}"></i>
+        <span>${name}</span>
+      </a>`;
+    }).join('');
+    return `<div class="gpt-msg-attachments">${items}</div>`;
+  }
+
   _msgHTML(m) {
     const id = escapeHtml(m.id || '');
     const isUser = m.role === 'user';
     const isError = m.role === 'error';
 
     if (isUser) {
+      const attHTML = this._renderUserAttachments(m.attachments);
+      const bubble = m.content
+        ? `<div class="gpt-msg-bubble">${escapeHtml(m.content).replace(/\n/g, '<br>')}</div>`
+        : '';
       return `
         <div class="gpt-msg gpt-msg--user" data-message-id="${id}">
-          <div class="gpt-msg-bubble">${escapeHtml(m.content).replace(/\n/g, '<br>')}</div>
+          ${attHTML}
+          ${bubble}
         </div>`;
     }
 
@@ -1113,8 +1150,12 @@ class VeraView extends (window.BaseView || class {}) {
     };
 
     const syncSendBtn = () => {
-      if (sendBtn) sendBtn.disabled = !(input.value || '').trim() || this.aiState.isLoading;
+      if (!sendBtn) return;
+      const hasText = !!(input.value || '').trim();
+      const hasReadyAttachment = this.aiState.pendingAttachments.some(a => a.status === 'ready');
+      sendBtn.disabled = (!hasText && !hasReadyAttachment) || this.aiState.isLoading;
     };
+    this._syncSendBtn = syncSendBtn;
 
     this.addEventListener(input, 'input', () => { autoResize(); syncSendBtn(); });
     autoResize();
@@ -1122,7 +1163,8 @@ class VeraView extends (window.BaseView || class {}) {
 
     const send = () => {
       const text = (input.value || '').trim();
-      if (!text || this.aiState.isLoading) return;
+      const hasReadyAttachment = this.aiState.pendingAttachments.some(a => a.status === 'ready');
+      if ((!text && !hasReadyAttachment) || this.aiState.isLoading) return;
       this.sendMessage(text);
       input.value = '';
       input.style.height = 'auto';
@@ -1135,14 +1177,165 @@ class VeraView extends (window.BaseView || class {}) {
 
     if (sendBtn) this.addEventListener(sendBtn, 'click', send);
 
-    // Plus / mic — placeholder
+    // Adjuntos: paperclip → file picker
     const plusBtn = document.getElementById('veraPlus');
-    if (plusBtn) this.addEventListener(plusBtn, 'click', () => {});
+    const fileInput = document.getElementById('veraFileInput');
+    if (plusBtn && fileInput) {
+      this.addEventListener(plusBtn, 'click', () => {
+        if (this.aiState.isLoading) return;
+        fileInput.click();
+      });
+      this.addEventListener(fileInput, 'change', (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        this._handleFileSelection(files);
+      });
+    }
+  }
+
+  /* ── Adjuntos: tipo MIME → backend type ──────────────── */
+  _inferAttachmentType(file) {
+    const mime = (file.type || '').toLowerCase();
+    const name = (file.name || '').toLowerCase();
+    if (mime.startsWith('image/')) return 'image';
+    if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+    if (mime.startsWith('audio/')) return 'audio';
+    if (mime.startsWith('video/')) return 'video';
+    if (name.endsWith('.docx') ||
+        mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        mime === 'application/msword' || name.endsWith('.doc')) return 'word';
+    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv') ||
+        mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        mime === 'application/vnd.ms-excel' || mime === 'text/csv') return 'spreadsheet';
+    if (mime.startsWith('text/') || name.endsWith('.md') || name.endsWith('.txt')) return 'text';
+    return 'other';
+  }
+
+  /* ── Adjuntos: ícono visual por tipo ─────────────────── */
+  _attachmentIconClass(type) {
+    return ({
+      image: 'fa-image',
+      pdf: 'fa-file-pdf',
+      audio: 'fa-file-audio',
+      video: 'fa-file-video',
+      word: 'fa-file-word',
+      spreadsheet: 'fa-file-excel',
+      text: 'fa-file-lines'
+    })[type] || 'fa-file';
+  }
+
+  /* ── Adjuntos: subir a Supabase Storage ─────────────── */
+  async _uploadAttachment(att, file) {
+    if (!this.supabase?.storage) throw new Error('Supabase storage no disponible');
+    const orgId = this.aiState.organization_id;
+    const userId = this.userId || 'anon';
+    const safeName = (file.name || 'archivo')
+      .replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    // Path con orgId al inicio para alinear con las policies de Storage
+    // (storage.foldername(name)[1] = orgId → match con organization_members).
+    const path = `${orgId}/chat/${userId}/${Date.now()}-${att.id}-${safeName}`;
+    const { error } = await this.supabase.storage
+      .from('org-assets')
+      .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+    if (error) throw error;
+    const { data } = this.supabase.storage.from('org-assets').getPublicUrl(path);
+    if (!data?.publicUrl) throw new Error('No se obtuvo URL pública');
+    att.url = data.publicUrl;
+    att.path = path;
+  }
+
+  /* ── Adjuntos: manejar selección + subir en paralelo ──── */
+  _handleFileSelection(files) {
+    if (!files?.length) return;
+    const MAX_BYTES = 25 * 1024 * 1024; // 25MB por archivo
+    for (const file of files) {
+      if (file.size > MAX_BYTES) {
+        console.warn(`[VeraView] archivo excede 25MB, ignorado: ${file.name}`);
+        continue;
+      }
+      const att = {
+        id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name,
+        mime: file.type,
+        size: file.size,
+        type: this._inferAttachmentType(file),
+        url: null,
+        status: 'uploading'
+      };
+      this.aiState.pendingAttachments.push(att);
+      this._renderAttachChips();
+      this._uploadAttachment(att, file)
+        .then(() => { att.status = 'ready'; })
+        .catch((err) => {
+          console.error('[VeraView] upload falló:', err?.message || err);
+          att.status = 'error';
+          att.error = err?.message || 'Error al subir';
+        })
+        .finally(() => {
+          this._renderAttachChips();
+          this._syncSendBtn?.();
+        });
+    }
+  }
+
+  /* ── Adjuntos: render de chips en composer ───────────── */
+  _renderAttachChips() {
+    const wrap = document.getElementById('veraAttachChips');
+    if (!wrap) return;
+    const list = this.aiState.pendingAttachments;
+    if (!list.length) { wrap.hidden = true; wrap.innerHTML = ''; return; }
+    wrap.hidden = false;
+    wrap.innerHTML = list.map(a => {
+      const icon = this._attachmentIconClass(a.type);
+      const stateClass = a.status === 'error' ? ' gpt-attach-chip--error'
+                        : a.status === 'uploading' ? ' gpt-attach-chip--uploading' : '';
+      const spinner = a.status === 'uploading' ? '<i class="fas fa-spinner fa-spin"></i>' : '';
+      const errorTitle = a.status === 'error' ? ` title="${escapeHtml(a.error || 'Error')}"` : '';
+      return `
+        <span class="gpt-attach-chip${stateClass}" data-att-id="${escapeHtml(a.id)}"${errorTitle}>
+          <i class="fas ${icon}"></i>
+          <span class="gpt-attach-chip-name">${escapeHtml(a.name)}</span>
+          ${spinner}
+          <button type="button" class="gpt-attach-chip-remove" data-remove-id="${escapeHtml(a.id)}" aria-label="Quitar">
+            <i class="fas fa-times"></i>
+          </button>
+        </span>`;
+    }).join('');
+
+    if (!wrap.__bound) {
+      wrap.__bound = true;
+      wrap.addEventListener('click', (e) => {
+        const btn = e.target.closest?.('[data-remove-id]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-remove-id');
+        const idx = this.aiState.pendingAttachments.findIndex(a => a.id === id);
+        if (idx >= 0) {
+          const att = this.aiState.pendingAttachments[idx];
+          // Best-effort cleanup del archivo subido
+          if (att.path && this.supabase?.storage) {
+            this.supabase.storage.from('org-assets').remove([att.path]).catch(() => {});
+          }
+          this.aiState.pendingAttachments.splice(idx, 1);
+          this._renderAttachChips();
+          this._syncSendBtn?.();
+        }
+      });
+    }
   }
 
   /* ── Send message ────────────────────────────────────── */
   async sendMessage(text) {
     if (!this.aiState.organization_id || this.aiState.isLoading) return;
+
+    // Tomamos snapshot de adjuntos listos y limpiamos pendientes antes de enviar.
+    const ready = this.aiState.pendingAttachments.filter(a => a.status === 'ready');
+    if (!text && !ready.length) return;
+    const attachments = ready.map(a => ({
+      url: a.url, type: a.type, name: a.name, mime: a.mime
+    }));
+    this.aiState.pendingAttachments = [];
+    this._renderAttachChips();
+
     this.aiState.isLoading = true;
 
     const sendBtn = document.getElementById('veraSend');
@@ -1154,6 +1347,7 @@ class VeraView extends (window.BaseView || class {}) {
       id: `local-user-${Date.now()}`,
       role: 'user',
       content: text,
+      attachments,
       created_at: new Date().toISOString()
     };
     this.aiState.messages.push(userMsg);
@@ -1177,7 +1371,8 @@ class VeraView extends (window.BaseView || class {}) {
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
           conversation_id: this.aiState.active_conversation_id || undefined,
-          message: text
+          message: text,
+          attachments
         })
       });
 

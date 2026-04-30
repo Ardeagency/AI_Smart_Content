@@ -2689,6 +2689,93 @@
   justify-content: space-between;
 }
 
+/* ── Adjuntos en composer ───────────────────────────── */
+.gpt-attach-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0 0;
+}
+.gpt-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  background: var(--white-8);
+  border: 1px solid var(--white-10);
+  border-radius: 12px;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  max-width: 220px;
+}
+.gpt-attach-chip i { color: var(--text-muted); font-size: 0.85rem; }
+.gpt-attach-chip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.gpt-attach-chip-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+.gpt-attach-chip-remove:hover { color: var(--text-primary); background: var(--white-10); }
+.gpt-attach-chip--uploading { opacity: 0.7; }
+.gpt-attach-chip--error {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+.gpt-attach-chip--error i:first-child { color: rgb(239, 68, 68); }
+
+/* ── Adjuntos dentro de mensajes del usuario ──────────── */
+.gpt-msg-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+  justify-content: flex-end;
+}
+.gpt-msg-att {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--white-8);
+  border: 1px solid var(--white-10);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  text-decoration: none;
+  max-width: 220px;
+}
+.gpt-msg-att i { color: var(--text-muted); }
+.gpt-msg-att span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gpt-msg-att--image {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 240px;
+  max-height: 240px;
+}
+.gpt-msg-att--image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  object-fit: cover;
+}
+
 .gpt-composer-btns {
   display: flex;
   align-items: center;

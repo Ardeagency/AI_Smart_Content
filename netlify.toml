@@ -160,13 +160,6 @@
   status = 200
   force = true
 
-# Netlify Functions — path directo
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true
-
 # Archivos JS - servir directamente
 [[redirects]]
   from = "/js/*"
