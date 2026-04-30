@@ -3759,47 +3759,117 @@ class DashboardView extends BaseView {
       `).join('');
     }
 
-    // Activity history timeline — versión minimalista
+    // Activity history timeline — DIMENSIÓN POR COMPETIDOR
+    // Una línea de engagement por cada competidor + barras stacked de posts.
+    // Permite responder: "¿quién publicó cuándo?", "¿de quién fue ese pico?".
     const ahHost = document.getElementById('ccV2TimelineCanvas');
     const ah = d?.activityHistory?.data || [];
     if (ahHost && ah.length) {
-      const byPeriod = new Map();
+      // Paleta: Red Bull al naranja primario, resto en familia complementaria
+      const palette = ['#ff5400', '#fbbf24', '#ec4899', '#06b6d4', '#a855f7', '#10b981', '#f43f5e', '#0ea5e9'];
+
+      // Step 1: ranking de entities por total engagement (top primero)
+      const entityTotals = new Map();
       ah.forEach(r => {
-        const k = r.period_start;
-        const cur = byPeriod.get(k) || { posts: 0, eng: 0, label: r.period_label };
-        cur.posts += Number(r.posts_count || 0);
-        cur.eng   += Number(r.total_engagement || 0);
-        byPeriod.set(k, cur);
+        entityTotals.set(r.entity_name, (entityTotals.get(r.entity_name) || 0) + Number(r.total_engagement || 0));
       });
-      const sorted = [...byPeriod.entries()].sort();
-      const labels = sorted.map(([, v]) => v.label);
-      const posts  = sorted.map(([, v]) => v.posts);
-      const eng    = sorted.map(([, v]) => v.eng);
+      const sortedEntities = [...entityTotals.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n);
+
+      // Step 2: períodos únicos en orden temporal + sus labels
+      const periodMap = new Map(); // period_start → { label }
+      ah.forEach(r => { if (!periodMap.has(r.period_start)) periodMap.set(r.period_start, r.period_label); });
+      const periods = [...periodMap.keys()].sort();
+      const labels  = periods.map(p => periodMap.get(p));
+
+      // Step 3: matriz [entity][period] → {posts, eng}
+      const matrix = {};
+      ah.forEach(r => {
+        if (!matrix[r.entity_name]) matrix[r.entity_name] = {};
+        matrix[r.entity_name][r.period_start] = { posts: Number(r.posts_count || 0), eng: Number(r.total_engagement || 0) };
+      });
+
+      // Step 4: datasets — una línea de engagement por entity + stacked bars de posts
+      const datasets = [];
+      sortedEntities.forEach((entity, idx) => {
+        const color = palette[idx % palette.length];
+        const engData   = periods.map(p => matrix[entity]?.[p]?.eng || 0);
+        const postsData = periods.map(p => matrix[entity]?.[p]?.posts || 0);
+
+        // Línea de engagement
+        datasets.push({
+          type: 'line',
+          label: entity,
+          data: engData,
+          borderColor: color,
+          backgroundColor: color + '20',  // hex + alpha (12%)
+          yAxisID: 'y1',
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 1,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+          stack: undefined,
+          order: 1,  // líneas encima de barras
+          // Marca este dataset como el "primario" para legenda
+          _isEngagement: true,
+        });
+
+        // Barras stacked de posts (mismo color, más translúcido) — ocultas en leyenda
+        datasets.push({
+          type: 'bar',
+          label: entity + ' (posts)',
+          data: postsData,
+          backgroundColor: color + '55',  // ~33% opacity
+          borderRadius: 2,
+          yAxisID: 'y2',
+          stack: 'posts',
+          barPercentage: 0.7,
+          categoryPercentage: 0.85,
+          order: 2,
+          _hideFromLegend: true,
+        });
+      });
 
       this._charts.push(new Chart(ahHost, {
-        data: {
-          labels,
-          datasets: [
-            { type: 'line', label: 'Engagement', data: eng,
-              borderColor: '#ff5400', backgroundColor: 'rgba(255,84,0,0.18)',
-              tension: 0.4, fill: true, yAxisID: 'y1',
-              pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#ff5400',
-              borderWidth: 2 },
-            { type: 'bar',  label: 'Posts',      data: posts,
-              backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: 3,
-              yAxisID: 'y2', barPercentage: 0.55, categoryPercentage: 0.7 },
-          ],
-        },
+        data: { labels, datasets },
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
               align: 'end',
-              labels: { color: 'rgba(255,255,255,0.6)', boxWidth: 8, boxHeight: 8, font: { size: 11 }, usePointStyle: true, pointStyle: 'rect' },
+              position: 'top',
+              labels: {
+                color: 'rgba(255,255,255,0.7)',
+                boxWidth: 10, boxHeight: 10,
+                font: { size: 11 },
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                padding: 12,
+                // Esconder los datasets de barras (los de "(posts)") de la leyenda
+                filter(item, chartData) {
+                  const ds = chartData.datasets[item.datasetIndex];
+                  return !ds._hideFromLegend;
+                },
+              },
+              onClick(e, legendItem, legend) {
+                // Toggle ambos datasets (línea + barras del mismo entity)
+                const ci = legend.chart;
+                const entity = legendItem.text;
+                ci.data.datasets.forEach((ds, idx) => {
+                  if (ds.label === entity || ds.label === entity + ' (posts)') {
+                    const meta = ci.getDatasetMeta(idx);
+                    meta.hidden = !meta.hidden;
+                  }
+                });
+                ci.update();
+              },
             },
             tooltip: {
-              backgroundColor: 'rgba(20,21,23,0.95)',
+              backgroundColor: 'rgba(20,21,23,0.96)',
               borderColor: 'rgba(255,255,255,0.08)',
               borderWidth: 1,
               titleColor: '#fff',
@@ -3811,12 +3881,14 @@ class DashboardView extends BaseView {
               callbacks: {
                 label(ctx) {
                   const v = ctx.parsed.y;
-                  if (ctx.dataset.label === 'Engagement') {
-                    if (v >= 1_000_000) return `Engagement: ${(v/1_000_000).toFixed(1)}M`;
-                    if (v >= 1_000)     return `Engagement: ${(v/1_000).toFixed(1)}K`;
-                    return `Engagement: ${v}`;
-                  }
-                  return `${ctx.dataset.label}: ${v}`;
+                  const name = ctx.dataset.label.replace(' (posts)', '');
+                  const fmtN = (n) => {
+                    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+                    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+                    return String(n);
+                  };
+                  if (ctx.dataset.type === 'line') return `${name} · ${fmtN(v)} eng`;
+                  return `${name} · ${v} posts`;
                 },
               },
             },
@@ -3829,15 +3901,19 @@ class DashboardView extends BaseView {
             y1: {
               position: 'left', beginAtZero: true,
               ticks: {
-                color: 'rgba(255,84,0,0.7)', font: { size: 10 },
-                callback(v) { if (v >= 1_000_000) return (v/1_000_000).toFixed(1)+'M'; if (v >= 1_000) return (v/1_000).toFixed(0)+'K'; return v; },
+                color: 'rgba(255,255,255,0.5)', font: { size: 10 },
+                callback(v) { if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M'; if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K'; return v; },
               },
-              grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false }, border: { display: false },
+              grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+              border: { display: false },
+              title: { display: true, text: 'Engagement', color: 'rgba(255,255,255,0.4)', font: { size: 10 } },
             },
             y2: {
-              position: 'right', beginAtZero: true,
+              position: 'right', beginAtZero: true, stacked: true,
               ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 }, precision: 0 },
-              grid: { display: false }, border: { display: false },
+              grid: { display: false },
+              border: { display: false },
+              title: { display: true, text: 'Posts', color: 'rgba(255,255,255,0.4)', font: { size: 10 } },
             },
           },
         },
