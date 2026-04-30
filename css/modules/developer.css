@@ -7921,47 +7921,78 @@
   opacity: 0.6;
 }
 
-/* ---------- Zona 6: Quick actions ---------- */
-.dev-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+/* ---------- KPI especial: donut por categoría ---------- */
+.dev-kpi-card.dev-kpi-donut {
+  grid-column: span 2;
+  min-width: 0;
+}
+.dev-donut-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+.dev-donut-svg {
+  flex-shrink: 0;
+  color: var(--dh-text);
+}
+.dev-donut-empty {
+  color: var(--dh-text-muted);
+  font-size: 0.85rem;
   margin-top: 8px;
 }
-.dev-quick-link {
+.dev-donut-empty i { margin-right: 6px; }
+.dev-donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 14px 10px;
-  background: var(--dh-bg);
-  border: 1px solid var(--dh-border);
-  border-radius: var(--dh-radius);
-  color: var(--dh-text);
-  text-decoration: none;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
   font-size: 0.78rem;
-  font-weight: 500;
-  text-align: center;
-  transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
-.dev-quick-link i {
-  font-size: 1.1rem;
+.dev-donut-legend li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  color: var(--dh-text);
+}
+.dev-donut-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dev-donut-name {
   color: var(--dh-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.dev-quick-link:hover {
-  background: var(--dh-bg-hover);
-  border-color: rgba(224, 145, 69, 0.4);
-  transform: translateY(-1px);
+.dev-donut-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--dh-text);
 }
-.dev-quick-link:hover i { color: var(--accent-warm, #e09145); }
+
+/* ---------- Activity: nuevos kinds (audit log) ---------- */
+.dev-activity-item.kind-user   .dev-activity-icon { color: #3b82f6; }
+.dev-activity-item.kind-org    .dev-activity-icon { color: #a855f7; }
+.dev-activity-item.kind-brand  .dev-activity-icon { color: #14b8a6; }
+.dev-activity-item.kind-member .dev-activity-icon { color: #64748b; }
+.dev-activity-item.kind-flow   .dev-activity-icon { color: var(--accent-warm, #e09145); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .dev-dashboard-v2 .dev-section-header { flex-wrap: wrap; }
   .dev-health-strip { grid-template-columns: 1fr 1fr; }
   .dev-kpi-card .dev-kpi-value { font-size: 1.35rem; }
-  .dev-quick-actions { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .dev-kpi-card.dev-kpi-donut { grid-column: span 1; }
+  .dev-donut-body { flex-direction: column; align-items: flex-start; }
+  .dev-donut-legend { width: 100%; }
 }
 @media (max-width: 480px) {
   .dev-health-strip { grid-template-columns: 1fr; }
