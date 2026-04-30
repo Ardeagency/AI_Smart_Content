@@ -7638,138 +7638,331 @@
 }
 
 /* ==========================================================================
-   Bento Frame — POC en /dev/dashboard
-   El SVG es una lámina decorativa con curva orgánica que actúa de fondo;
-   las cards (.dev-bento-cell) viven encima posicionadas con CSS Grid sobre
-   un viewBox de 1161×190 (mismas proporciones que el SVG) usando porcentajes
-   para que escalen juntos. La superficie clara del marco se controla con la
-   variable --dev-bento-frame para tematizarla por org en el futuro.
+   Dashboard Admin v2 — /dev/dashboard
+   Layout denso, utilitario. Sin decoración SVG. Datos primero.
+   Variables locales para tematizado consistente con el resto de /dev.
    ========================================================================== */
-.dev-bento-frame {
-  --dev-bento-frame: #D4D1D8;
-  --dev-bento-cell: var(--bg-card);
-  --dev-bento-cell-border: rgba(0, 0, 0, 0.08);
-
-  position: relative;
-  width: 100%;
-  /* Conserva la proporción nativa del SVG sin importar el ancho disponible */
-  aspect-ratio: 1161 / 190;
-  margin-bottom: var(--spacing-xl, 24px);
-  /* Bajo este aspect-ratio, el ancho del viewport manda y el alto se calcula */
+.dev-dashboard-v2 {
+  --dh-radius: 12px;
+  --dh-border: var(--border-color, rgba(255, 255, 255, 0.08));
+  --dh-bg: var(--bg-card, #18181c);
+  --dh-bg-hover: var(--bg-card-hover, rgba(255, 255, 255, 0.04));
+  --dh-text: var(--text-primary, #f5f5f7);
+  --dh-text-muted: var(--text-muted, #8a8a92);
+  --dh-ok: #22c55e;
+  --dh-warn: #f59e0b;
+  --dh-crit: #ef4444;
+  --dh-info: #3b82f6;
+  --dh-gap: 14px;
 }
 
-.dev-bento-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* el SVG es decoración: clicks atraviesan a las cells */
-}
-
-/* Grid superpuesto al SVG. Mapeo del viewBox 1161×190:
-   - Fila 1 (0..60 px de alto): 4 pills uniformes a lo ancho del marco.
-   - Fila 2 (60..190 px de alto): la lámina del SVG solo cubre los primeros
-     ~525 px / 1161 ≈ 45% del ancho (luego la curva orgánica baja). La hero
-     ocupa 37.5% para quedarse holgada dentro de esa zona segura. */
-.dev-bento-grid {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* ---------- Zona 1: Tira de salud ---------- */
+.dev-health-strip {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  /* Filas en la misma proporción que el viewBox del SVG (60/190 vs 130/190) para
-     que las cards encajen verticalmente sin importar el ancho del viewport. */
-  grid-template-rows: 60fr 130fr;
-  grid-template-areas:
-    "pill1 pill1 pill2 pill2 pill3 pill3 pill4 pill4"
-    "hero  hero  hero  .     .     .     .     .";
-  gap: 6px;
-  padding: 6px;
-  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--dh-gap);
+  margin-bottom: 24px;
 }
-
-.dev-bento-cell {
-  background: var(--dev-bento-cell);
-  border: 1px solid var(--dev-bento-cell-border);
-  border-radius: 12px;
-  padding: 8px 14px;
+.dev-health-pill {
   display: flex;
-  min-width: 0;
-  min-height: 0;       /* permite que la cell se comprima a la altura del row */
-  overflow: hidden;    /* contenido que no quepa se recorta en lugar de desbordar */
-  box-sizing: border-box;
-}
-
-/* Pills horizontales (zona alta del frame) */
-.dev-bento-pill {
-  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-radius: var(--dh-radius);
+  font-size: 0.85rem;
+  color: var(--dh-text);
 }
-.dev-bento-pill-label {
-  font-size: 0.65rem;
+.dev-health-pill .dev-health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dh-text-muted);
+  flex-shrink: 0;
+}
+.dev-health-pill i { color: var(--dh-text-muted); width: 14px; }
+.dev-health-pill .dev-health-label {
   font-weight: 600;
+  margin-right: auto;
+}
+.dev-health-pill .dev-health-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--dh-text-muted);
+  font-size: 0.78rem;
+}
+.dev-health-pill.level-ok       .dev-health-dot { background: var(--dh-ok); box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
+.dev-health-pill.level-warn     .dev-health-dot { background: var(--dh-warn); box-shadow: 0 0 0 3px rgba(245,158,11,0.18); }
+.dev-health-pill.level-critical .dev-health-dot { background: var(--dh-crit); box-shadow: 0 0 0 3px rgba(239,68,68,0.22); }
+.dev-health-pill.level-warn     { border-color: rgba(245, 158, 11, 0.35); }
+.dev-health-pill.level-critical { border-color: rgba(239, 68, 68, 0.45); }
+.dev-health-pill.loading        { opacity: 0.55; }
+
+/* ---------- Zona 2: Atención ---------- */
+.dev-attention { margin-bottom: 28px; }
+.dev-section-meta {
+  font-size: 0.75rem;
+  color: var(--dh-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  font-weight: 600;
+}
+.dev-attention-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--dh-gap);
+}
+.dev-attention-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  background: var(--dh-bg);
+  border: 1px dashed var(--dh-border);
+  border-radius: var(--dh-radius);
+  color: var(--dh-text-muted);
+  font-size: 0.9rem;
+}
+.dev-attention-empty i { color: var(--dh-ok); }
+.dev-attention-card {
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-left: 3px solid var(--dh-text-muted);
+  border-radius: var(--dh-radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dev-attention-card.tone-info { border-left-color: var(--dh-info); }
+.dev-attention-card.tone-warn { border-left-color: var(--dh-warn); }
+.dev-attention-card.tone-crit { border-left-color: var(--dh-crit); }
+.dev-attention-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dev-attention-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  color: var(--dh-text-muted);
+}
+.dev-attention-card.tone-info .dev-attention-icon { color: var(--dh-info); }
+.dev-attention-card.tone-warn .dev-attention-icon { color: var(--dh-warn); }
+.dev-attention-card.tone-crit .dev-attention-icon { color: var(--dh-crit); }
+.dev-attention-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--dh-text);
+}
+.dev-attention-card h3 {
+  margin: 4px 0 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dh-text);
+}
+.dev-attention-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--dh-text-muted);
+}
+.dev-attention-items {
+  list-style: none;
+  margin: 6px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--dh-text-muted);
+}
+.dev-attention-items li {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.dev-bento-pill-value {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+.dev-attention-cta {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-warm, #e09145);
+  text-decoration: none;
 }
+.dev-attention-cta:hover { text-decoration: underline; }
 
-/* Hero card (zona alta-izquierda del frame, bajo la pill 1) */
-.dev-bento-hero {
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 10px 14px;
+/* ---------- Zona 3: KPIs ---------- */
+.dev-kpis { margin-bottom: 28px; }
+.dev-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--dh-gap);
 }
-.dev-bento-hero-label {
-  font-size: 0.65rem;
+.dev-kpi-card {
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-radius: var(--dh-radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dev-kpi-card.loading { opacity: 0.5; }
+.dev-kpi-label {
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  color: var(--dh-text-muted);
 }
-.dev-bento-hero-value {
-  font-size: 1.25rem;
+.dev-kpi-value {
+  font-size: 1.6rem;
   font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.1;
+  color: var(--dh-text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
 }
-.dev-bento-hero-sub {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+.dev-kpi-sub {
+  font-size: 0.75rem;
+  color: var(--dh-text-muted);
 }
 
-/* Responsive: bajo 900px el aspect-ratio comprime demasiado el alto;
-   conviene apilar pills + hero verticalmente y dejar el SVG como adorno. */
-@media (max-width: 900px) {
-  .dev-bento-frame { aspect-ratio: auto; height: auto; }
-  .dev-bento-svg { display: none; }
-  .dev-bento-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto;
-    grid-template-areas:
-      "pill1 pill2"
-      "pill3 pill4"
-      "hero  hero";
-    gap: 12px;
-    padding: 0;
-  }
-  .dev-bento-cell {
-    background: var(--bg-card);
-    border-color: var(--border-color);
-    padding: 14px 16px;
-  }
-  .dev-bento-pill { flex-direction: column; align-items: flex-start; gap: 4px; }
+/* ---------- Zona 4: Top flujos (tabla densa) ---------- */
+.dev-top-flows { margin-bottom: 28px; }
+.dev-table.dev-table-dense th,
+.dev-table.dev-table-dense td {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+.dev-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.dev-cell-flow a {
+  color: var(--dh-text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.dev-cell-flow a:hover { color: var(--accent-warm, #e09145); }
+.dev-cell-owner {
+  color: var(--dh-text-muted);
+  font-size: 0.8rem;
+}
+.dev-success-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dev-success-badge.level-ok   { background: rgba(34,197,94,0.15);  color: var(--dh-ok); }
+.dev-success-badge.level-warn { background: rgba(245,158,11,0.15); color: var(--dh-warn); }
+.dev-success-badge.level-crit { background: rgba(239,68,68,0.18);  color: var(--dh-crit); }
+
+/* ---------- Zona 5: Actividad ---------- */
+.dev-activity { margin-bottom: 28px; }
+.dev-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-radius: var(--dh-radius);
+  overflow: hidden;
+}
+.dev-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--dh-border);
+  font-size: 0.85rem;
+}
+.dev-activity-item:last-child { border-bottom: 0; }
+.dev-activity-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  color: var(--dh-text-muted);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.dev-activity-item.severity-info     .dev-activity-icon { color: var(--dh-info); }
+.dev-activity-item.severity-warning  .dev-activity-icon { color: var(--dh-warn); }
+.dev-activity-item.severity-error    .dev-activity-icon { color: var(--dh-crit); }
+.dev-activity-item.severity-critical .dev-activity-icon { color: var(--dh-crit); }
+.dev-activity-body { flex: 1; min-width: 0; }
+.dev-activity-title {
+  color: var(--dh-text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dev-activity-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--dh-text-muted);
+}
+.dev-activity-meta span:not(:last-child)::after {
+  content: '·';
+  margin-left: 12px;
+  color: var(--dh-text-muted);
+  opacity: 0.6;
+}
+
+/* ---------- Zona 6: Quick actions ---------- */
+.dev-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.dev-quick-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: var(--dh-bg);
+  border: 1px solid var(--dh-border);
+  border-radius: var(--dh-radius);
+  color: var(--dh-text);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.dev-quick-link i {
+  font-size: 1.1rem;
+  color: var(--dh-text-muted);
+}
+.dev-quick-link:hover {
+  background: var(--dh-bg-hover);
+  border-color: rgba(224, 145, 69, 0.4);
+  transform: translateY(-1px);
+}
+.dev-quick-link:hover i { color: var(--accent-warm, #e09145); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .dev-dashboard-v2 .dev-section-header { flex-wrap: wrap; }
+  .dev-health-strip { grid-template-columns: 1fr 1fr; }
+  .dev-kpi-card .dev-kpi-value { font-size: 1.35rem; }
+  .dev-quick-actions { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
+@media (max-width: 480px) {
+  .dev-health-strip { grid-template-columns: 1fr; }
 }
