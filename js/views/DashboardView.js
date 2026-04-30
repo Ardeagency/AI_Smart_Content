@@ -3428,14 +3428,42 @@ class DashboardView extends BaseView {
         </label>
       </div>
 
-      <!-- KPIs strip — minimalista (valor grande + label corto) -->
+      <!-- KPIs strip — pirámide de info: icono · valor · label · meta -->
       <div class="mb-v2-kpis">
-        ${this._kpiMin(String(kpis.active_competitors ?? '0'),  'Competidores')}
-        ${this._kpiMin(String(kpis.total_posts ?? '0'),         'Contenido')}
-        ${this._kpiMin(fmt(kpis.total_engagement),              'Engagement')}
-        ${this._kpiMin((kpis.dominant_sentiment || '—').toString().replace(/^\w/, c => c.toUpperCase()), 'Sentimiento')}
-        ${this._kpiMin(kpis.dominant_platform ? this._capCase(kpis.dominant_platform) : '—', 'Plataforma')}
-        ${this._kpiMin(kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 18) : '—', 'Tema')}
+        ${this._kpiMin({
+          icon: 'fa-users', value: String(kpis.active_competitors ?? '0'),
+          label: 'Competidores',
+          meta: kpis.total_competitors ? `${kpis.total_competitors} totales` : '',
+        })}
+        ${this._kpiMin({
+          icon: 'fa-image', value: String(kpis.total_posts ?? '0'),
+          label: 'Contenido',
+          meta: kpis.distinct_platforms ? `${kpis.distinct_platforms} plataforma${kpis.distinct_platforms === 1 ? '' : 's'}` : '',
+        })}
+        ${this._kpiMin({
+          icon: 'fa-heart', value: fmt(kpis.total_engagement),
+          label: 'Engagement',
+          meta: kpis.avg_engagement_per_post ? `avg ${fmt(kpis.avg_engagement_per_post)}/post` : '',
+        })}
+        ${this._kpiMin({
+          icon: kpis.dominant_sentiment === 'positive' ? 'fa-face-smile' : kpis.dominant_sentiment === 'negative' ? 'fa-face-frown' : 'fa-face-meh',
+          value: (kpis.dominant_sentiment || '—').toString().replace(/^\w/, c => c.toUpperCase()),
+          label: 'Sentimiento',
+          meta: kpis.sentiment_distribution
+            ? `${kpis.sentiment_distribution.positive || 0} pos · ${kpis.sentiment_distribution.negative || 0} neg`
+            : '',
+          tone: kpis.dominant_sentiment === 'positive' ? 'positive' : kpis.dominant_sentiment === 'negative' ? 'negative' : null,
+        })}
+        ${this._kpiMin({
+          icon: 'fa-signal', value: kpis.dominant_platform ? this._capCase(kpis.dominant_platform) : '—',
+          label: 'Plataforma',
+          meta: kpis.dominant_hashtag ? `#${this._esc(kpis.dominant_hashtag).slice(0, 18)}` : '',
+        })}
+        ${this._kpiMin({
+          icon: 'fa-hashtag', value: kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 16) : '—',
+          label: 'Tema',
+          meta: kpis.total_posts ? `en ${kpis.total_posts} posts` : '',
+        })}
       </div>
 
       <!-- Row 1: Featured + Top ranking | Posting hours heatmap -->
@@ -3563,12 +3591,16 @@ class DashboardView extends BaseView {
     </div>`;
   }
 
-  /** KPI minimalista: valor grande arriba, label corta abajo (estilo maqueta). */
-  _kpiMin(value, label) {
+  /** KPI con pirámide de info: icono · valor · label · meta (opcional). */
+  _kpiMin({ icon, value, label, meta = '', tone = null }) {
+    const toneCls = tone === 'positive' ? ' mb-v2-kpi--positive'
+                  : tone === 'negative' ? ' mb-v2-kpi--negative' : '';
     return `
-      <div class="mb-v2-kpi mb-v2-kpi--min">
+      <div class="mb-v2-kpi mb-v2-kpi--min${toneCls}">
+        ${icon ? `<div class="mb-v2-kpi-min-icon"><i class="fas ${icon}"></i></div>` : ''}
         <div class="mb-v2-kpi-min-value">${this._esc(value)}</div>
         <div class="mb-v2-kpi-min-label">${this._esc(label)}</div>
+        ${meta ? `<div class="mb-v2-kpi-min-meta">${this._esc(meta)}</div>` : ''}
       </div>`;
   }
 

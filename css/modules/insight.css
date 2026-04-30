@@ -5327,3 +5327,142 @@
   border-radius: 12px;
 }
 .cc-v2-post-row + .cc-v2-post-row { margin-top: 0; }
+
+/* ════════════════════════════════════════════════════════════
+   Lenguaje visual rico (inspirado en Partner)
+   - Pirámide de info: icono · valor · label · meta
+   - fadeInUp staggered al cargar
+   - hover translateY + box-shadow
+   - tone variants para sentiment
+   - gradients sutiles en cards
+   ════════════════════════════════════════════════════════════ */
+
+/* KPI con pirámide completa */
+.mb-v2-kpi--min {
+  position: relative;
+  padding: 14px 16px 12px;
+  min-height: 110px;
+  gap: 2px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.025), rgba(255,255,255,0.012));
+  animation: cardFadeInUp 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(1) { animation-delay: 0.02s; }
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(2) { animation-delay: 0.06s; }
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(3) { animation-delay: 0.10s; }
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(4) { animation-delay: 0.14s; }
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(5) { animation-delay: 0.18s; }
+.mb-v2-kpis .mb-v2-kpi--min:nth-child(6) { animation-delay: 0.22s; }
+
+.mb-v2-kpi-min-icon {
+  position: absolute; top: 14px; right: 16px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.32);
+}
+.mb-v2-kpi-min-value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-top: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mb-v2-kpi-min-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+}
+.mb-v2-kpi-min-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+
+/* Hover sutil estilo Partner */
+.mb-v2-kpi--min:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.mb-v2-kpi--min:hover .mb-v2-kpi-min-icon {
+  color: rgba(255,84,0,0.85);
+}
+
+/* Tone variants para sentiment dominante */
+.mb-v2-kpi--positive .mb-v2-kpi-min-icon { color: rgba(34,197,94,0.7); }
+.mb-v2-kpi--positive .mb-v2-kpi-min-value { color: #86efac; }
+.mb-v2-kpi--negative .mb-v2-kpi-min-icon { color: rgba(239,68,68,0.7); }
+.mb-v2-kpi--negative .mb-v2-kpi-min-value { color: #fca5a5; }
+
+/* Animación fadeInUp shared */
+@keyframes cardFadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Widgets también con fadeInUp staggered */
+.cc-v2-dashboard .mb-v2-widget,
+.cc-v2-distros .mb-v2-widget {
+  animation: cardFadeInUp 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.16s backwards;
+}
+
+/* Hover en widgets — sutil */
+.mb-v2-widget {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.mb-v2-widget:hover {
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+
+/* Widget header con espacio para acciones (estilo Partner) */
+.mb-v2-widget-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mb-v2-widget-head h3 {
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* Featured con gradient interno más rico */
+.cc-v2-featured {
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(255,84,0,0.14) 0%, rgba(255,84,0,0.04) 60%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,84,0,0.22);
+  overflow: hidden;
+}
+.cc-v2-featured::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(255,84,0,0.28), transparent 70%);
+  pointer-events: none;
+}
+
+/* Top list — más jerarquía */
+.cc-v2-top-row {
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  transition: all 0.18s ease;
+}
+.cc-v2-top-row:hover {
+  transform: translateX(2px);
+  background: rgba(255,84,0,0.06);
+  border-color: rgba(255,84,0,0.18);
+}
+.cc-v2-top-rank {
+  background: rgba(255,84,0,0.12);
+  color: #ff8800;
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+}
