@@ -1,0 +1,284 @@
+/* ════════════════════════════════════════════════════════════
+   MONITORING — Centro de Monitoreo (perfiles / sensores / URL watchers)
+   Reusa firebar (.mb-firebar*) y skeleton blocks (.mb-skel-block) del dashboard.
+   ════════════════════════════════════════════════════════════ */
+
+.monitoring-page { padding: 0; }
+
+.mn-page {
+  padding: 16px 20px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Toolbar ── */
+.mn-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.mn-section-title {
+  font-size: 18px; font-weight: 600; color: #fff;
+  margin: 0; letter-spacing: -0.01em;
+}
+.mn-count {
+  display: inline-block; margin-left: 8px;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px; font-weight: 600;
+}
+.mn-toolbar-note {
+  font-size: 11px; color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+/* ── Buttons ── */
+.mn-btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px;
+  background: #ff5400; color: #fff;
+  border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  transition: background 0.15s ease;
+}
+.mn-btn-primary:hover { background: #e64a00; }
+.mn-btn-primary i { font-size: 11px; }
+
+.mn-btn-secondary {
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;
+  font-size: 13px;
+}
+.mn-btn-secondary:hover { background: rgba(255, 255, 255, 0.08); }
+
+.mn-btn-icon {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease;
+  font-size: 11px;
+}
+.mn-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.mn-btn-icon--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* ── Table ── */
+.mn-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mn-table thead th {
+  padding: 10px 12px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.mn-table tbody td {
+  padding: 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+.mn-table tbody tr:last-child td { border-bottom: none; }
+.mn-table tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+.mn-cell-strong { font-weight: 600; color: #fff; }
+.mn-cell-sub {
+  font-size: 11px; color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+}
+
+.mn-actions {
+  white-space: nowrap;
+  display: flex; gap: 4px;
+}
+
+/* ── Pills ── */
+.mn-pill {
+  display: inline-block; padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+}
+.mn-pill--competidor { background: rgba(239, 68, 68, 0.12);  color: #fca5a5; }
+.mn-pill--referencia { background: rgba(168, 85, 247, 0.12); color: #c4b5fd; }
+.mn-pill--owned      { background: rgba(34, 197, 94, 0.12);  color: #86efac; }
+.mn-pill--ok         { background: rgba(34, 197, 94, 0.12);  color: #86efac; }
+.mn-pill--warn       { background: rgba(245, 158, 11, 0.12); color: #fcd34d; }
+.mn-pill--muted      { background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.5); }
+
+/* ── Toggle ── */
+.mn-toggle {
+  display: inline-block;
+  position: relative;
+  width: 36px; height: 20px;
+  cursor: pointer;
+}
+.mn-toggle input { opacity: 0; width: 0; height: 0; }
+.mn-toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+.mn-toggle-track::before {
+  content: '';
+  position: absolute; left: 2px; top: 2px;
+  width: 16px; height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.mn-toggle input:checked + .mn-toggle-track { background: #ff5400; }
+.mn-toggle input:checked + .mn-toggle-track::before { transform: translateX(16px); }
+
+/* ── Empty state ── */
+.mn-empty {
+  padding: 48px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+}
+.mn-empty p { margin: 0; }
+
+/* ── Skeleton row ── */
+.mn-row-skel {
+  height: 50px; padding: 12px;
+  margin-bottom: 6px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.mn-row-skel .mb-skel-block { height: 100%; width: 100%; }
+
+/* ════════════════════════════════════════════════════════════
+   MODAL
+   ════════════════════════════════════════════════════════════ */
+.mn-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: mn-fade-in 0.15s ease;
+}
+@keyframes mn-fade-in { from { opacity: 0 } to { opacity: 1 } }
+
+.mn-modal {
+  background: #1a1a1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto;
+  animation: mn-slide-up 0.2s ease;
+}
+@keyframes mn-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mn-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.mn-modal-head h3 {
+  margin: 0; font-size: 16px; font-weight: 600; color: #fff;
+}
+.mn-modal-close {
+  width: 28px; height: 28px;
+  background: transparent; border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mn-modal-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.mn-form {
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.mn-form label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+.mn-form input,
+.mn-form select {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+}
+.mn-form input:focus,
+.mn-form select:focus {
+  outline: none;
+  border-color: rgba(255, 84, 0, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+.mn-form small {
+  font-size: 10px; color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+.mn-form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.mn-checkbox {
+  flex-direction: row !important;
+  align-items: center; gap: 8px !important;
+  cursor: pointer;
+}
+.mn-checkbox input { width: auto; }
+
+.mn-modal-foot {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 -20px -20px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .mn-form-grid { grid-template-columns: 1fr; }
+  .mn-table { font-size: 12px; }
+  .mn-table thead { display: none; }
+  .mn-table tbody td { display: block; padding: 8px 12px; border: none; }
+  .mn-table tbody tr {
+    display: block;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+  }
+}

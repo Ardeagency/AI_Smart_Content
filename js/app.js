@@ -229,6 +229,11 @@ class App {
     const productionLoader = this._lazy('ProductionView', ['/js/views/ProductionView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/production', productionLoader, auth);
     r.register('/production', productionLoader, auth);
+
+    // ── Org: Monitoring (centro de monitoreo: perfiles + sensores + url watchers) ──
+    const monitoringLoader = this._lazy('MonitoringView', ['/js/views/MonitoringView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/monitoring', monitoringLoader, auth);
+    r.register('/monitoring', monitoringLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/historial', legacyRouteRedirectView, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/living', legacyRouteRedirectView, auth);
     r.register('/historial', legacyRouteRedirectView, auth);

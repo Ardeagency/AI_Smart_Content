@@ -44,6 +44,13 @@ const SIDEBAR_USER_CONFIG = {
       iconSrc: '/recursos/icons/Identities.svg',
       route: 'identities'
     },
+    {
+      type: 'page',
+      id: 'monitoring',
+      label: 'Monitoreo',
+      icon: 'fa-satellite-dish',
+      route: 'monitoring'
+    },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
