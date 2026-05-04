@@ -199,37 +199,37 @@ class DashboardView extends BaseView {
   /* ═══════════════════════════════════════════════════════════
      MI MARCA — datos reales desde Supabase
   ═══════════════════════════════════════════════════════════ */
-  async _renderMyBrands(body) {
+  async _renderMyBrands(body, opts = null) {
+    this._mbBody = body;
+    if (!this._mbFilters) this._mbFilters = { brandId: '', windowDays: 30 };
+
     // 1. Skeleton inmediato
     body.innerHTML = this._buildMyBrandsSkeleton();
 
     // 2. Cargar dependencias en paralelo
-    const [,] = await Promise.allSettled([
+    await Promise.allSettled([
       this._ensureChartJs(),
       this._ensureMBService(),
     ]);
 
-    // 3. Cargar datos (usa cache de sesión si ya se cargaron)
-    if (!this._mbData) {
+    // 3. Cargar datos — sin cache si llegan opts (cambio de filtro)
+    if (opts || !this._mbData) {
+      const f = this._mbFilters;
+      const loadOpts = {
+        windowDays: f.windowDays,
+        brandIds:   f.brandId ? [f.brandId] : null,
+      };
       this._mbData = this._mbService
-        ? await this._mbService.loadAll()
+        ? await this._mbService.loadAll(loadOpts)
         : null;
     }
     const d = this._mbData;
 
-    // 4. Render completo con datos reales — v2 layout (firebar + 6 KPIs + 3 widgets)
+    // 4. Render completo con datos reales — v3 layout (Partner-style)
     body.innerHTML = this._buildMyBrandsV2HTML(d);
     window._dashboardView = this;
     this._initMyBrandsV2Charts(d);
     this._animateKPIs?.();
-  }
-
-  async _refreshMBData() {
-    this._mbData = null; // Limpiar cache
-    const body = document.querySelector('.mb-dashboard')?.closest('[data-tab="my-brands"]') ||
-                 document.getElementById('app-container')?.querySelector('.tab-body');
-    if (body) { this._destroyCharts(); await this._renderMyBrands(body); }
-    else { this._mbData = null; window.location.reload(); }
   }
 
   async _ensureMBService() {
@@ -269,966 +269,8 @@ class DashboardView extends BaseView {
     this._chartJsReady = true;
   }
 
-  _buildMyBrandsHTML(d) {
-    const noData = !d;
-    const containers  = d?.containers || [];
-    const kpis        = d?.kpis?.data || {};
-    const hasAnyData  = containers.length > 0;
-
-    // KPI values — real o placeholder
-    const posts7d     = kpis.posts7d      != null ? kpis.posts7d      : '—';
-    const sentScore   = kpis.sentimentScore != null ? kpis.sentimentScore : '—';
-    const mapComp     = kpis.mapCompliance != null ? `${kpis.mapCompliance}%` : '—';
-    const crisisIdx   = kpis.crisisOpen   != null ? kpis.crisisOpen   : '—';
-    const mentions24h = kpis.mentions24h  != null ? kpis.mentions24h  : '—';
-    const brandCount  = kpis.brandCount   != null ? kpis.brandCount   : containers.length;
-
-    return `
-    <div class="mb-dashboard">
-
-      <!-- ── KPI Strip ── -->
-      <div class="mb-kpi-strip">
-        ${this._kpiCard('Posts propios / 7d', String(posts7d), hasAnyData ? 'Últimos 7 días' : 'Sin datos aún',  'blue')}
-        ${this._kpiCard('Engagement Rate',    '—',              'API Meta necesaria',                             'pink')}
-        ${this._kpiCard('Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA', 'green')}
-        ${this._kpiCard('Cumplimiento MAP',   mapComp,          mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados', 'orange')}
-        ${this._kpiCard('Crisis abiertas',    String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención', 'teal')}
-        ${this._kpiCard('Menciones 24 h',     String(mentions24h), hasAnyData ? 'Shadow + etiquetadas' : 'Sin señales aún', 'purple')}
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════
-           DIMENSIÓN A · OPERATIVIDAD Y PULSO
-      ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('Operatividad y Pulso', 'Ritmo de publicación, micro-momentos y formatos')}
-      <div class="mb-dim-row">
-
-        <div class="mb-widget mb-widget--wide">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Ritmo de Publicación y Latencia</span>
-            <span class="mb-badge mb-badge--blue">30 días</span>
-          </div>
-          <div class="mb-widget-body">
-            <canvas id="chartPublicacion" height="140"></canvas>
-          </div>
-        </div>
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Formatos Dominantes</span>
-            <span class="mb-badge mb-badge--green">Hoy</span>
-          </div>
-          <div class="mb-widget-body mb-widget-body--center">
-            <canvas id="chartFormatos" height="190"></canvas>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Heatmap Horario (ocupa toda la fila) -->
-      <div class="mb-widget mb-widget--full">
-        <div class="mb-widget-header">
-          <span class="mb-widget-title">Mapa de Calor de Interacción Horaria</span>
-          <span class="mb-badge mb-badge--purple">Últimas 4 semanas</span>
-        </div>
-        <div class="mb-widget-body">
-          <div class="mb-heatmap-wrap" id="mbHeatmap"></div>
-          <div class="mb-heatmap-legend">
-            <span class="mb-hm-low">Bajo</span>
-            <div class="mb-hm-gradient"></div>
-            <span class="mb-hm-high">Alto</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════
-           DIMENSIÓN B · IDENTIDAD Y NARRATIVA
-      ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('Identidad y Narrativa', 'Pilares, tono de voz y semántica de impacto')}
-      <div class="mb-dim-row">
-
-        <div class="mb-widget mb-widget--wide">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Dominio de Pilares Narrativos</span>
-            <span class="mb-badge mb-badge--blue">Este mes</span>
-          </div>
-          <div class="mb-widget-body">
-            <canvas id="chartPilares" height="180"></canvas>
-          </div>
-        </div>
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Brand Soul Guard</span>
-            <span class="mb-badge mb-badge--green">Tono</span>
-          </div>
-          <div class="mb-widget-body mb-widget-body--center">
-            ${this._buildToneGauge()}
-          </div>
-        </div>
-
-      </div>
-      <div class="mb-widget mb-widget--full">
-        <div class="mb-widget-header">
-          <span class="mb-widget-title">Semántica de Impacto — Top palabras resonantes</span>
-          <span class="mb-badge mb-badge--pink">IA semántica</span>
-        </div>
-        <div class="mb-widget-body">
-          <div class="mb-semantic-cloud" id="mbSemanticCloud"></div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════
-           DIMENSIÓN C · COMERCIAL Y DISTRIBUCIÓN
-      ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('Comercial y Distribución', 'MAP Monitor, stock digital y análisis de ofertas')}
-
-      <div class="mb-widget mb-widget--full">
-        <div class="mb-widget-header">
-          <span class="mb-widget-title">Monitor de Cumplimiento de Precios (MAP Monitor)</span>
-          <span class="mb-badge mb-badge--orange" id="mbMAPBadge">Cargando…</span>
-        </div>
-        <div class="mb-widget-body" id="mbMAPBody">
-          ${this._emptyState('Cargando datos MAP…','')}
-        </div>
-      </div>
-
-      <div class="mb-dim-row">
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Stock Digital</span>
-            <span class="mb-badge mb-badge--teal">Live</span>
-          </div>
-          <div class="mb-widget-body" id="mbStockBody">
-            ${this._emptyState('Cargando stock…','')}
-          </div>
-        </div>
-        <div class="mb-widget mb-widget--wide">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Efectividad de Ofertas Dinámicas</span>
-            <span class="mb-badge mb-badge--blue">Comparativa</span>
-          </div>
-          <div class="mb-widget-body">
-            <canvas id="chartOfertas" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════
-           DIMENSIÓN D · SOCIAL Y PERCEPCIÓN
-      ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('Social y Percepción', 'Sentimiento biométrico, shadow mentions e influencia real')}
-      <div class="mb-dim-row">
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Sentimiento Biométrico</span>
-            <span class="mb-badge mb-badge--pink">Emociones</span>
-          </div>
-          <div class="mb-widget-body mb-widget-body--center">
-            <canvas id="chartSentimiento" height="200"></canvas>
-          </div>
-        </div>
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Shadow Mentions</span>
-            <span class="mb-badge mb-badge--purple">Sin etiqueta</span>
-          </div>
-          <div class="mb-widget-body">
-            <canvas id="chartShadow" height="180"></canvas>
-          </div>
-        </div>
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Índice de Influencia Real</span>
-            <span class="mb-badge mb-badge--teal">Top 5</span>
-          </div>
-          <div class="mb-widget-body" id="mbInfluenceBody">
-            ${this._emptyState('Cargando…','')}
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════
-           DIMENSIÓN E · DIAGNÓSTICA
-      ══════════════════════════════════════════════════════ -->
-      ${this._dimHeader('Diagnóstica', 'Puntos ciegos, fuga de audiencia y detección de crisis')}
-      <div class="mb-dim-row">
-
-        <div class="mb-widget">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Mapa de Puntos Ciegos</span>
-            <span class="mb-badge mb-badge--blue">Blind Spots</span>
-          </div>
-          <div class="mb-widget-body mb-widget-body--center">
-            <canvas id="chartRadar" height="230"></canvas>
-          </div>
-        </div>
-
-        <div class="mb-widget mb-widget--wide">
-          <div class="mb-widget-header">
-            <span class="mb-widget-title">Análisis de Fuga de Audiencia</span>
-            <span class="mb-badge mb-badge--orange">Retención</span>
-          </div>
-          <div class="mb-widget-body">
-            <canvas id="chartFuga" height="200"></canvas>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Crisis de Baja Intensidad (timeline) -->
-      <div class="mb-widget mb-widget--full">
-        <div class="mb-widget-header">
-          <span class="mb-widget-title">Detección de Crisis de Baja Intensidad</span>
-          <span class="mb-badge mb-badge--red">Monitoreo continuo</span>
-        </div>
-        <div class="mb-widget-body" id="mbCrisisBody">
-          ${this._emptyState('Cargando…','')}
-        </div>
-      </div>
-
-      <!-- SWOT Dinámico -->
-      <div class="mb-widget mb-widget--full">
-        <div class="mb-widget-header">
-          <span class="mb-widget-title">SWOT Dinámico — Virtudes y Vulnerabilidades</span>
-          <span class="mb-badge mb-badge--purple">OpenClaw IA</span>
-        </div>
-        <div class="mb-widget-body" id="mbSWOTBody">
-          ${this._emptyState('Cargando análisis SWOT…','')}
-        </div>
-      </div>
-
-      <!-- Footer fuente de datos -->
-      <div class="mb-data-source-note">
-        
-        <span>Datos obtenidos en tiempo real desde <strong>Supabase</strong>. Última actualización: <strong id="mbLastUpdate">—</strong></span>
-        <button class="mb-refresh-btn" onclick="window._dashboardView?._refreshMBData()"> Actualizar</button>
-      </div>
-
-    </div>`;
-  }
-
-  /* ── Helpers de construcción ─────────────────────────────── */
-  _dimHeader(title, subtitle) {
-    return `
-      <div class="mb-dim-header">
-        <div>
-          <div class="mb-dim-title">${this._esc(title)}</div>
-          <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
-        </div>
-      </div>`;
-  }
-
-  _kpiCard(label, value, sub, color) {
-    return `
-      <div class="mb-kpi-card mb-kpi--${color}">
-        <div class="mb-kpi-body">
-          <div class="mb-kpi-value" data-target="${value}">${value}</div>
-          <div class="mb-kpi-label">${label}</div>
-          <div class="mb-kpi-sub">${sub}</div>
-        </div>
-      </div>`;
-  }
-
-  _buildToneGauge() {
-    // SVG semicircular gauge - desviación de tono
-    const tones = [
-      { label: 'Muy formal',  pct: 8,  color: '#6366f1' },
-      { label: 'Formal',      pct: 22, color: '#818cf8' },
-      { label: 'Balanceado',  pct: 42, color: '#22c55e' },
-      { label: 'Emocional',   pct: 21, color: '#f59e0b' },
-      { label: 'Muy emocional', pct: 7, color: '#ef4444' },
-    ];
-    const bars = tones.map(t => `
-      <div class="mb-tone-row">
-        <span class="mb-tone-label">${t.label}</span>
-        <div class="mb-tone-bar-wrap">
-          <div class="mb-tone-bar" style="width:${t.pct}%;background:${t.color}"></div>
-        </div>
-        <span class="mb-tone-pct">${t.pct}%</span>
-      </div>`).join('');
-    return `
-      <div class="mb-tone-gauge">
-        <div class="mb-tone-score">
-          <div class="mb-tone-score-val">88<span>%</span></div>
-          <div class="mb-tone-score-lbl">Coherencia</div>
-        </div>
-        <div class="mb-tone-bars">${bars}</div>
-      </div>`;
-  }
-
-  _buildMAPTable() {
-    const rows = [
-      { retailer: 'Amazon MX',      product: 'Oster Pro 1200',   price: '$1,299', map: '$1,250', status: 'ok',      delta: '+$49' },
-      { retailer: 'Mercado Libre',  product: 'Oster Pro 1200',   price: '$1,180', map: '$1,250', status: 'alert',   delta: '-$70' },
-      { retailer: 'Walmart MX',     product: 'Oster Pro 1200',   price: '$1,250', map: '$1,250', status: 'ok',      delta: '±$0'  },
-      { retailer: 'Coppel',         product: 'Oster Classic 800', price: '$899',  map: '$950',   status: 'alert',   delta: '-$51' },
-      { retailer: 'Liverpool',      product: 'Oster Classic 800', price: '$975',  map: '$950',   status: 'warning', delta: '+$25' },
-      { retailer: 'Amazon MX',      product: 'Oster Mini Chef',  price: '$549',  map: '$499',   status: 'warning', delta: '+$50' },
-    ];
-    const statusLabel = { ok: 'Cumple', alert: 'Viola MAP', warning: 'Revisar' };
-    const statusClass = { ok: 'mb-map--ok', alert: 'mb-map--alert', warning: 'mb-map--warning' };
-    return `
-      <div class="mb-map-table-wrap">
-        <table class="mb-map-table">
-          <thead><tr>
-            <th>Retailer</th><th>Producto</th><th>Precio actual</th>
-            <th>MAP acordado</th><th>Diferencia</th><th>Estado</th>
-          </tr></thead>
-          <tbody>
-            ${rows.map(r => `
-            <tr>
-              <td>${r.retailer}</td>
-              <td>${r.product}</td>
-              <td class="mb-map-price">${r.price}</td>
-              <td class="mb-map-price mb-map-ref">${r.map}</td>
-              <td class="mb-map-delta ${r.status === 'alert' ? 'mb-delta--neg' : r.status === 'warning' ? 'mb-delta--warn' : 'mb-delta--pos'}">${r.delta}</td>
-              <td><span class="mb-map-badge ${statusClass[r.status]}"> ${statusLabel[r.status]}</span></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  _buildStockGrid() {
-    const items = [
-      { name: 'Oster Pro 1200',    amazon: 'ok', ml: 'ok',    walmart: 'low',  coppel: 'out'  },
-      { name: 'Oster Classic 800', amazon: 'ok', ml: 'low',   walmart: 'ok',   coppel: 'ok'   },
-      { name: 'Oster Mini Chef',   amazon: 'out',ml: 'ok',    walmart: 'ok',   coppel: 'low'  },
-      { name: 'Oster Compact',     amazon: 'ok', ml: 'ok',    walmart: 'out',  coppel: 'ok'   },
-    ];
-    const icon = { ok: '✓', low: '!', out: '✗' };
-    const cls  = { ok: 'mb-stock--ok', low: 'mb-stock--low', out: 'mb-stock--out' };
-    return `
-      <div class="mb-stock-grid">
-        <div class="mb-stock-header-row">
-          <span></span><span>Amazon</span><span>MLibre</span><span>Walmart</span><span>Coppel</span>
-        </div>
-        ${items.map(p => `
-          <div class="mb-stock-row">
-            <span class="mb-stock-name">${p.name}</span>
-            <span class="mb-stock-cell ${cls[p.amazon]}">${icon[p.amazon]}</span>
-            <span class="mb-stock-cell ${cls[p.ml]}">${icon[p.ml]}</span>
-            <span class="mb-stock-cell ${cls[p.walmart]}">${icon[p.walmart]}</span>
-            <span class="mb-stock-cell ${cls[p.coppel]}">${icon[p.coppel]}</span>
-          </div>`).join('')}
-        <div class="mb-stock-legend">
-          <span class="mb-stock--ok">✓ Disponible</span>
-          <span class="mb-stock--low">! Stock bajo</span>
-          <span class="mb-stock--out">✗ Agotado</span>
-        </div>
-      </div>`;
-  }
-
-  _buildInfluenceList() {
-    const list = [
-      { name: '@cocina_mex',    platform: 'ig',  score: 94, type: 'Cliente real',   followers: '42K' },
-      { name: 'Blog Foodie MX', platform: 'web', score: 88, type: 'Blogger',        followers: '18K' },
-      { name: '@chefrodri',     platform: 'tt',  score: 83, type: 'Micro-influencer', followers: '31K' },
-      { name: '@recetashogar',  platform: 'ig',  score: 79, type: 'Cliente real',   followers: '9K'  },
-      { name: 'ForoCocinaMX',   platform: 'web', score: 72, type: 'Comunidad',      followers: '55K' },
-    ];
-    return `
-      <div class="mb-influence-list">
-        ${list.map((p, i) => `
-          <div class="mb-influence-row">
-            <span class="mb-inf-rank">#${i+1}</span>
-            <div class="mb-inf-info">
-              <span class="mb-inf-name">${p.name}</span>
-              <span class="mb-inf-type">${p.type} · ${p.followers}</span>
-            </div>
-            
-            <div class="mb-inf-score-wrap">
-              <div class="mb-inf-bar" style="width:${p.score}%"></div>
-              <span class="mb-inf-score">${p.score}</span>
-            </div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _buildCrisisTimeline() {
-    const events = [
-      { time: 'Hace 2 h',  level: 'low',  msg: '14 comentarios sobre retraso en envío de Amazon MX — patrón repetitivo detectado.', action: 'Monitoreo activo' },
-      { time: 'Hace 6 h',  level: 'med',  msg: 'Pico de menciones negativas en ForoCocinaMX sobre Oster Mini Chef — posible defecto de lote.', action: 'Alerta enviada' },
-      { time: 'Hace 18 h', level: 'low',  msg: 'Precio de Oster Classic 800 en Coppel cayó a $899 (viola MAP). OpenClaw activó revisión.', action: 'Revisión en curso' },
-      { time: 'Hace 2 d',  level: 'none', msg: 'Spike orgánico positivo tras publicación de @chefrodri — sin riesgo detectado.', action: 'Cerrado' },
-    ];
-    const levelCls = { low: 'mb-crisis--low', med: 'mb-crisis--med', high: 'mb-crisis--high', none: 'mb-crisis--none' };
-    return `
-      <div class="mb-crisis-timeline">
-        ${events.map(ev => `
-          <div class="mb-crisis-event ${levelCls[ev.level]}">
-            <div class="mb-crisis-icon"></div>
-            <div class="mb-crisis-body">
-              <p class="mb-crisis-msg">${ev.msg}</p>
-              <div class="mb-crisis-meta">
-                <span class="mb-crisis-time">${ev.time}</span>
-                <span class="mb-crisis-action">${ev.action}</span>
-              </div>
-            </div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  /* ─────────────────────────────────────────────────────────
-     CHART.JS — inicialización con datos reales + fallback demo
-  ───────────────────────────────────────────────────────── */
-  _initAllCharts(d) {
-    if (!window.Chart) { return; }
-    Chart.defaults.color = 'rgba(212,209,216,0.7)';
-    Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-    Chart.defaults.font.size = 11;
-
-    this._chartPublicacion(d?.ritmo);
-    this._chartFormatos(d?.formatos);
-    this._chartPilares(d?.pilares);
-    this._chartOfertas(d?.ofertas);
-    this._chartSentimiento(d?.sentimiento);
-    this._chartShadow(d?.shadowMentions);
-    this._chartRadar(d?.blindSpots);
-    this._chartFuga(d?.fuga);
-    this._buildHeatmap(d?.heatmap);
-    this._buildSemanticCloud(d?.semantica);
-    this._buildMBMissions(d?.missions, d?.crisis);
-    this._renderMAPWidget(d?.mapMonitor);
-    this._renderStockWidget(d?.stock);
-    this._renderInfluenceWidget(d?.influencia);
-    this._renderCrisisWidget(d?.crisis);
-    this._renderSWOTWidget(d?.swot);
-  }
-
+  /** Registrar Chart.js en this._charts para destruirlo en onLeave. Compartido por Tendencias V1. */
   _reg(chart) { this._charts.push(chart); return chart; }
-
-  _chartPublicacion(ritmoRes) {
-    const ctx = document.getElementById('chartPublicacion');
-    if (!ctx) return;
-    const hasReal = ritmoRes && !ritmoRes.isEmpty && Array.isArray(ritmoRes.data) && ritmoRes.data.length > 0;
-    let labels, posts;
-    if (hasReal) {
-      labels = ritmoRes.data.map(r => r.label);
-      posts  = ritmoRes.data.map(r => r.count);
-    } else {
-      labels = Array.from({length:30},(_,i)=>{const d=new Date(); d.setDate(d.getDate()-29+i); return `${d.getDate()}/${d.getMonth()+1}`;});
-      posts  = Array(30).fill(0); // No hay datos — barras en cero
-    }
-    this._reg(new Chart(ctx, {
-      data: {
-        labels,
-        datasets: [
-          { type:'bar', label:'Posts propios', data:posts, backgroundColor:'rgba(96,165,250,0.45)', borderColor:'rgba(96,165,250,0.8)', borderWidth:1, yAxisID:'y',
-            ...(hasReal ? {} : { backgroundColor: 'rgba(255,255,255,0.07)' }) },
-        ],
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{
-          legend:{ position:'top', labels:{boxWidth:12, padding:16} },
-          tooltip:{mode:'index',intersect:false},
-          ...(hasReal ? {} : { annotation: {} }),
-        },
-        scales:{
-          y:{ position:'left', grid:{color:'rgba(255,255,255,0.06)'}, ticks:{stepSize:1}, beginAtZero:true },
-          x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{maxTicksLimit:10} },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Conecta redes sociales para ver el ritmo de publicación');
-  }
-
-  _chartFormatos(formatosRes) {
-    const ctx = document.getElementById('chartFormatos');
-    if (!ctx) return;
-    const hasReal = formatosRes && !formatosRes.isEmpty && Array.isArray(formatosRes.data) && formatosRes.data.length > 0;
-    const COLORS = ['rgba(239,68,68,0.8)','rgba(96,165,250,0.8)','rgba(34,197,94,0.8)','rgba(251,191,36,0.8)','rgba(167,139,250,0.8)','rgba(20,184,166,0.8)'];
-    const labels = hasReal ? formatosRes.data.map(r => r.label) : ['Sin datos'];
-    const values = hasReal ? formatosRes.data.map(r => r.pct)   : [100];
-    const colors = hasReal ? COLORS.slice(0, labels.length) : ['rgba(255,255,255,0.07)'];
-    this._reg(new Chart(ctx, {
-      type:'doughnut',
-      data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'rgba(0,0,0,0)', borderWidth:0, hoverOffset:6 }] },
-      options:{
-        responsive:true, maintainAspectRatio:false, cutout:'62%',
-        plugins:{
-          legend:{position:'bottom', labels:{boxWidth:10, padding:10}},
-          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}${hasReal ? '%' : ''}`}},
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Sin posts cargados aún');
-  }
-
-  _chartPilares(pilaresRes) {
-    const ctx = document.getElementById('chartPilares');
-    if (!ctx) return;
-    const hasReal = pilaresRes && !pilaresRes.isEmpty && Array.isArray(pilaresRes.data) && pilaresRes.data.length > 0;
-    const rows    = hasReal ? pilaresRes.data.slice(0, 8) : [];
-    const labels  = hasReal ? rows.map(r => r.pillar_name) : ['Sin pilares configurados'];
-    const counts  = hasReal ? rows.map(r => r.post_count || 0) : [0];
-    const eng     = hasReal ? rows.map(r => Math.round((r.avg_engagement || 0) * 10) / 10) : [0];
-    this._reg(new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels,
-        datasets:[
-          { label:'Posts', data:counts, backgroundColor:'rgba(96,165,250,0.7)', borderRadius:4, yAxisID:'y' },
-          { label:'Eng. promedio', data:eng, backgroundColor:'rgba(167,139,250,0.5)', borderRadius:4, yAxisID:'y2' },
-        ],
-      },
-      options:{
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'top', labels:{boxWidth:10, padding:14} }, tooltip:{mode:'index',intersect:false} },
-        scales:{
-          y:  { grid:{display:false} },
-          ...(hasReal ? {
-            y:  { grid:{display:false} },
-            yAxisID: {},
-          } : {}),
-          x:  { grid:{color:'rgba(255,255,255,0.06)'} },
-          y2: { position:'right', grid:{drawOnChartArea:false}, display: hasReal },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Configura pilares narrativos en tu brand container');
-  }
-
-  _chartOfertas(ofertasRes) {
-    const ctx = document.getElementById('chartOfertas');
-    if (!ctx) return;
-    const hasReal = ofertasRes && !ofertasRes.isEmpty && Array.isArray(ofertasRes.data) && ofertasRes.data.length > 0;
-    let labels, datasets;
-    if (hasReal) {
-      // Agrupar por retailer / promo_label
-      const byPromo = {};
-      const retailers = [...new Set(ofertasRes.data.map(r => r.retailer))].slice(0, 6);
-      ofertasRes.data.forEach(r => {
-        const lbl = r.promo_label || 'Promo';
-        if (!byPromo[lbl]) byPromo[lbl] = {};
-        byPromo[lbl][r.retailer] = (byPromo[lbl][r.retailer] || 0) + 1;
-      });
-      labels = retailers;
-      const COLORS = ['rgba(34,197,94,0.7)','rgba(96,165,250,0.7)','rgba(251,191,36,0.7)','rgba(239,68,68,0.6)'];
-      datasets = Object.entries(byPromo).slice(0, 4).map(([promo, byR], i) => ({
-        label: promo, data: retailers.map(r => byR[r] || 0),
-        backgroundColor: COLORS[i % COLORS.length], borderRadius: 4,
-      }));
-    } else {
-      labels = ['Sin datos de retailer'];
-      datasets = [{ label: 'Sin datos', data: [0], backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 4 }];
-    }
-    this._reg(new Chart(ctx, {
-      type:'bar',
-      data:{ labels, datasets },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'top', labels:{boxWidth:10} }, tooltip:{mode:'index', intersect:false} },
-        scales:{
-          y:{ title:{display:true, text: hasReal ? 'Usos de promo' : ''}, grid:{color:'rgba(255,255,255,0.06)'} },
-          x:{ grid:{display:false} },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Carga precios y promociones en retail_prices para activar este widget');
-  }
-
-  _chartSentimiento(sentRes) {
-    const ctx = document.getElementById('chartSentimiento');
-    if (!ctx) return;
-    const hasReal = sentRes && !sentRes.isEmpty && sentRes.data?.emotions && Object.keys(sentRes.data.emotions).length > 0;
-    const EMOTION_COLORS = {
-      alegria:'rgba(34,197,94,0.85)', alegría:'rgba(34,197,94,0.85)', joy:'rgba(34,197,94,0.85)',
-      confianza:'rgba(96,165,250,0.85)', trust:'rgba(96,165,250,0.85)',
-      sorpresa:'rgba(251,191,36,0.85)', surprise:'rgba(251,191,36,0.85)',
-      confusion:'rgba(167,139,250,0.85)', confusión:'rgba(167,139,250,0.85)',
-      decepcion:'rgba(156,163,175,0.85)', sadness:'rgba(156,163,175,0.85)',
-      ironia:'rgba(249,115,22,0.85)', ironía:'rgba(249,115,22,0.85)',
-      enojo:'rgba(239,68,68,0.85)', anger:'rgba(239,68,68,0.85)',
-    };
-    let labels, values, colors;
-    if (hasReal) {
-      const entries = Object.entries(sentRes.data.emotions).sort((a,b)=>b[1]-a[1]).slice(0,8);
-      const total = entries.reduce((s,[,v])=>s+v, 0);
-      labels = entries.map(([e]) => e.charAt(0).toUpperCase() + e.slice(1));
-      values = entries.map(([,v]) => total > 0 ? Math.round(v/total*100) : 0);
-      colors = entries.map(([e]) => EMOTION_COLORS[e.toLowerCase()] || 'rgba(156,163,175,0.7)');
-    } else {
-      labels = ['Sin análisis de sentimiento']; values = [100]; colors = ['rgba(255,255,255,0.07)'];
-    }
-    this._reg(new Chart(ctx, {
-      type:'doughnut',
-      data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderColor:'rgba(0,0,0,0)', hoverOffset:6 }] },
-      options:{
-        responsive:true, maintainAspectRatio:false, cutout:'55%',
-        plugins:{
-          legend:{ position:'bottom', labels:{boxWidth:9, padding:8} },
-          tooltip:{callbacks:{label:d=>`${d.label}: ${d.raw}${hasReal?'%':''}`}},
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'VERA analizará sentimiento cuando haya posts cargados');
-  }
-
-  _chartShadow(shadowRes) {
-    const ctx = document.getElementById('chartShadow');
-    if (!ctx) return;
-    const hasReal = shadowRes && !shadowRes.isEmpty && Array.isArray(shadowRes.data) && shadowRes.data.length > 0;
-    let labels, values, colors;
-    if (hasReal) {
-      // Agrupar por dominio/fuente de entity
-      const bySource = {};
-      shadowRes.data.forEach(s => {
-        const src = s.ai_analysis?.source || s.entity_id || 'Desconocido';
-        bySource[src] = (bySource[src] || 0) + 1;
-      });
-      const sorted = Object.entries(bySource).sort((a,b)=>b[1]-a[1]).slice(0,8);
-      labels = sorted.map(([s]) => s.length > 20 ? s.slice(0,18)+'…' : s);
-      values = sorted.map(([,v]) => v);
-      colors = ['rgba(167,139,250,0.75)','rgba(96,165,250,0.75)','rgba(251,191,36,0.75)',
-                'rgba(34,197,94,0.75)','rgba(249,115,22,0.75)','rgba(156,163,175,0.5)',
-                'rgba(239,68,68,0.6)','rgba(20,184,166,0.65)'].slice(0, sorted.length);
-    } else {
-      labels = ['Sin señales']; values = [0]; colors = ['rgba(255,255,255,0.07)'];
-    }
-    this._reg(new Chart(ctx, {
-      type:'bar',
-      data:{ labels, datasets:[{ label:'Menciones detectadas', data:values, backgroundColor:colors, borderRadius:5 }] },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          y:{ grid:{color:'rgba(255,255,255,0.06)'}, beginAtZero:true },
-          x:{ grid:{display:false} },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'OpenClaw detectará shadow mentions cuando active el monitoreo');
-  }
-
-  _chartRadar(blindSpotsRes) {
-    const ctx = document.getElementById('chartRadar');
-    if (!ctx) return;
-    const hasReal = blindSpotsRes && !blindSpotsRes.isEmpty && blindSpotsRes.data?.pillars;
-    let labels, communicated, actual;
-    if (hasReal) {
-      const pillars = blindSpotsRes.data.pillars || [];
-      const vulns   = blindSpotsRes.data.vulnerabilities || [];
-      // Usa pilares huérfanos (post_count=0) como blind spots
-      labels = pillars.map(p => p.pillar_name).slice(0, 7);
-      if (labels.length < 2) {
-        labels      = ['Sin pilares vacíos — ¡bien!'];
-        communicated = [100]; actual = [100];
-      } else {
-        communicated = labels.map(() => 0);          // Pilares huérfanos = 0% comunicado
-        actual       = labels.map(() => 70 + Math.random()*30); // Estimado de potencial
-      }
-    } else {
-      labels       = ['Innovación','Comunidad','Soporte','Sustentabilidad','Precio/Valor','Distribución','Contenido'];
-      communicated = [0,0,0,0,0,0,0]; actual = [0,0,0,0,0,0,0];
-    }
-    this._reg(new Chart(ctx, {
-      type:'radar',
-      data:{
-        labels,
-        datasets:[
-          { label:'Comunicado', data:communicated, borderColor:'rgba(96,165,250,0.9)', backgroundColor:'rgba(96,165,250,0.12)', pointRadius:4, borderWidth:2 },
-          { label:'Potencial no comunicado', data:actual, borderColor:'rgba(34,197,94,0.9)', backgroundColor:'rgba(34,197,94,0.08)', pointRadius:4, borderWidth:2, borderDash:[5,3] },
-        ],
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'bottom', labels:{boxWidth:10, padding:10} } },
-        scales:{
-          r:{ min:0, max:100, ticks:{ stepSize:25, color:'rgba(212,209,216,0.4)', backdropColor:'transparent' },
-              grid:{ color:'rgba(255,255,255,0.08)' }, pointLabels:{ color:'rgba(212,209,216,0.8)', font:{size:10} } },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Configura pilares narrativos para detectar puntos ciegos');
-  }
-
-  _chartFuga(fugaRes) {
-    const ctx = document.getElementById('chartFuga');
-    if (!ctx) return;
-    const hasReal = fugaRes && !fugaRes.isEmpty && fugaRes.data?.curve?.length > 0;
-    let labels, values;
-    if (hasReal) {
-      const curve = fugaRes.data.curve;
-      labels = curve.map((_, i) => `${i}s`);
-      values = curve.map(v => Math.round(v * 10) / 10);
-    } else {
-      labels = ['0s','5s','10s','15s','20s','25s','30s','45s','60s'];
-      values = [0,0,0,0,0,0,0,0,0];
-    }
-    this._reg(new Chart(ctx, {
-      type:'line',
-      data:{ labels, datasets:[{
-        label:'Retención de audiencia (%)', data:values,
-        borderColor:'rgba(249,115,22,0.9)', borderWidth:2.5,
-        backgroundColor: hasReal ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)',
-        fill:true, tension:0.4, pointRadius: hasReal ? 4 : 0, pointHoverRadius:6,
-      }]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:d=>`Retención: ${d.raw}%`}} },
-        scales:{
-          y:{ max:100, min:0, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{callback:v=>`${v}%`}, title:{display:true,text:'Retención (%)'} },
-          x:{ grid:{display:false}, title:{display:true,text:'Segundo'} },
-        },
-      },
-    }));
-    if (!hasReal) this._overlayEmpty(ctx, 'Disponible cuando Meta envíe datos de retención de video');
-  }
-
-  /* ── Heatmap horario — CSS/HTML puro ─────────────────────── */
-  _buildHeatmap(heatmapRes) {
-    const el = document.getElementById('mbHeatmap');
-    if (!el) return;
-    const hasReal = heatmapRes && !heatmapRes.isEmpty && heatmapRes.data?.hour;
-    const days    = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-    const hours   = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}h`);
-
-    let maxVal = 1;
-    const hMap = hasReal ? heatmapRes.data.hour : {};
-    const bestH = hasReal ? heatmapRes.data.bestHour : null;
-
-    if (hasReal) {
-      maxVal = Math.max(1, ...Object.values(hMap).map(Number));
-    }
-
-    const cellVal = (h) => {
-      if (hasReal) return (Number(hMap[h] || hMap[String(h)] || 0) / maxVal);
-      // Demo pattern si no hay datos
-      if (h>=6&&h<=9)  return 0.4 + Math.random()*0.3;
-      if (h>=12&&h<=14)return 0.35+ Math.random()*0.3;
-      if (h>=20&&h<=23)return 0.45+ Math.random()*0.25;
-      return Math.random()*0.18;
-    };
-
-    let html = `<div class="mb-heatmap-days"><span class="mb-hm-day-spacer"></span>${hours.map(h=>`<span class="mb-hm-hour">${h}</span>`).join('')}</div>`;
-    days.forEach(d => {
-      html += `<div class="mb-heatmap-row"><span class="mb-hm-day">${d}</span>`;
-      for (let h=0;h<24;h++) {
-        const v = cellVal(h);
-        const isBest = hasReal && h === bestH;
-        const alpha  = (v*0.85+0.05).toFixed(2);
-        const color  = v>0.7 ? `rgba(239,68,68,${alpha})` : v>0.45 ? `rgba(251,191,36,${alpha})` : v>0.2 ? `rgba(96,165,250,${alpha})` : `rgba(255,255,255,0.04)`;
-        html += `<span class="mb-hm-cell${isBest?' mb-hm-best':''}" style="background:${color}" title="${d} ${h}:00${hasReal?` — Engagement: ${Math.round(v*100)}`:' (estimado)'}%"></span>`;
-      }
-      html += `</div>`;
-    });
-    if (!hasReal) {
-      html += `<p class="mb-hm-no-data"> Conecta Meta o Google Analytics para ver datos reales de interacción horaria</p>`;
-    }
-    el.innerHTML = html;
-  }
-
-  /* ── Semantic cloud ────────────────────────────────────────── */
-  _buildSemanticCloud(semanticaRes) {
-    const el = document.getElementById('mbSemanticCloud');
-    if (!el) return;
-    const COLORS = ['#60a5fa','#34d399','#a78bfa','#fbbf24','#f87171','#14b8a6','#f472b6'];
-    const hasReal = semanticaRes && !semanticaRes.isEmpty && Array.isArray(semanticaRes.data) && semanticaRes.data.length > 0;
-
-    if (hasReal) {
-      const maxW = Math.max(...semanticaRes.data.map(r=>r.weight), 1);
-      el.innerHTML = semanticaRes.data.map((r, i) => {
-        const size = (1.0 + (r.weight/maxW) * 1.2).toFixed(2);
-        const color = COLORS[i % COLORS.length];
-        return `<span class="mb-semantic-word" style="font-size:${size}rem;color:${color}" title="Peso: ${r.weight}">${this._esc(r.word)}</span>`;
-      }).join('');
-    } else {
-      // Mostrar las palabras clave de los containers si existen
-      const allWords = [];
-      if (window.MiBrandaDataService) {
-        // Las palabras clave ya están en los containers cargados
-      }
-      el.innerHTML = `<p style="color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0">Las palabras clave y conceptos resonantes aparecerán aquí cuando VERA analice el contenido publicado.</p>`;
-    }
-  }
-
-  /* ── Missions / OpenClaw activity ─────────────────────────── */
-  _buildMBMissions(missionsRes, crisisRes) {
-    const el = document.getElementById('mbMissions');
-    if (!el) return;
-    const hasMissions = missionsRes && !missionsRes.isEmpty && Array.isArray(missionsRes.data) && missionsRes.data.length > 0;
-
-    if (!hasMissions) {
-      el.innerHTML = `<div class="mb-mission mb-m--none"><span class="mb-mission-msg">OpenClaw no tiene misiones activas en este momento. Los datos se actualizarán automáticamente.</span><span class="mb-mission-time">Ahora</span></div>`;
-      return;
-    }
-
-    const statusCls  = { completed:'mb-m--done', running:'mb-m--running', pending:'mb-m--running', failed:'mb-m--alert' };
-    el.innerHTML = missionsRes.data.map(m => {
-      const st  = m.status || 'pending';
-      const msg = m.result_reference?.summary || m.action_payload?.description || `Misión: ${m.mission_type}`;
-      const time = this._relTime(m.created_at);
-      return `<div class="mb-mission ${statusCls[st] || 'mb-m--running'}"><span class="mb-mission-msg">${this._esc(msg)}</span><span class="mb-mission-time">${time}</span></div>`;
-    }).join('');
-  }
-
-  /* ── Widgets HTML que dependen de datos ──────────────────── */
-  _renderMAPWidget(mapRes) {
-    const el = document.getElementById('mbMAPBody');
-    if (!el) return;
-    const hasReal = mapRes && !mapRes.isEmpty && Array.isArray(mapRes.data) && mapRes.data.length > 0;
-    if (!hasReal) {
-      el.innerHTML = this._emptyState('Sin datos de precio', 'Cuando OpenClaw capture precios de retailers, aparecerán aquí con semáforo de cumplimiento MAP.');
-      return;
-    }
-    const statusLabel = { ok:'Cumple', alert:'Viola MAP', warning:'Revisar' };
-    const statusCls   = { ok:'mb-map--ok', alert:'mb-map--alert', warning:'mb-map--warning' };
-    const fmt = (n, cur) => n != null ? `${cur || 'MXN'} $${Number(n).toLocaleString()}` : '—';
-    const fmtDelta = (d, cur) => d == null ? '—' : `${d>=0?'+':''}${cur||'MXN'} $${Math.abs(d).toLocaleString()}`;
-    el.innerHTML = `
-      <div class="mb-map-table-wrap">
-        <table class="mb-map-table">
-          <thead><tr><th>Retailer</th><th>Producto</th><th>Precio actual</th><th>MAP</th><th>Diferencia</th><th>Estado</th></tr></thead>
-          <tbody>
-            ${mapRes.data.slice(0,10).map(r => `<tr>
-              <td>${this._esc(r.retailer)}</td>
-              <td>${this._esc(r.product || r.sku)}</td>
-              <td class="mb-map-price">${fmt(r.price, r.currency)}</td>
-              <td class="mb-map-price mb-map-ref">${fmt(r.map, r.currency)}</td>
-              <td class="mb-map-delta ${r.status==='alert'?'mb-delta--neg':r.status==='warning'?'mb-delta--warn':'mb-delta--pos'}">${fmtDelta(r.delta, r.currency)}</td>
-              <td><span class="mb-map-badge ${statusCls[r.status]}"> ${statusLabel[r.status]}</span></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  _renderStockWidget(stockRes) {
-    const el = document.getElementById('mbStockBody');
-    if (!el) return;
-    const hasReal = stockRes && !stockRes.isEmpty && Array.isArray(stockRes.data) && stockRes.data.length > 0;
-    if (!hasReal) {
-      el.innerHTML = this._emptyState('Sin datos de stock', 'OpenClaw mostrará disponibilidad en Amazon, Mercado Libre y otros retailers cuando active el monitoreo.');
-      return;
-    }
-    // Construir grilla dinámica de (sku x retailer)
-    const bySkuRetailer = {};
-    const skus = [], retailers = [];
-    stockRes.data.forEach(r => {
-      if (!skus.includes(r.sku)) skus.push(r.sku);
-      if (!retailers.includes(r.retailer)) retailers.push(r.retailer);
-      bySkuRetailer[`${r.sku}|${r.retailer}`] = r.stock_status;
-    });
-    const icon = { in_stock:'✓', out_of_stock:'✗', low_stock:'!', unknown:'?' };
-    const cls  = { in_stock:'mb-stock--ok', out_of_stock:'mb-stock--out', low_stock:'mb-stock--low', unknown:'mb-stock--low' };
-    el.innerHTML = `
-      <div class="mb-stock-grid">
-        <div class="mb-stock-header-row" style="grid-template-columns:1.5fr ${retailers.map(()=>'1fr').join(' ')}">
-          <span>Producto</span>${retailers.map(r=>`<span>${r}</span>`).join('')}
-        </div>
-        ${skus.slice(0,6).map(sku => `
-          <div class="mb-stock-row" style="grid-template-columns:1.5fr ${retailers.map(()=>'1fr').join(' ')}">
-            <span class="mb-stock-name">${sku}</span>
-            ${retailers.map(ret => {
-              const st = bySkuRetailer[`${sku}|${ret}`] || 'unknown';
-              return `<span class="mb-stock-cell ${cls[st]}">${icon[st]||'?'}</span>`;
-            }).join('')}
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _renderInfluenceWidget(influenciaRes) {
-    const el = document.getElementById('mbInfluenceBody');
-    if (!el) return;
-    const hasReal = influenciaRes && !influenciaRes.isEmpty && Array.isArray(influenciaRes.data) && influenciaRes.data.length > 0;
-    if (!hasReal) {
-      el.innerHTML = this._emptyState('Sin entidades monitoreadas', 'Agrega intelligence_entities para rastrear influencers reales y su impacto en la marca.');
-      return;
-    }
-    el.innerHTML = `<div class="mb-influence-list">${influenciaRes.data.slice(0,5).map((p, i) => {
-      const score = Math.min(100, Math.round((p.influenceScore || 0)));
-      const plat  = (p.platform || 'web').toLowerCase();
-      return `<div class="mb-influence-row">
-        <span class="mb-inf-rank">#${i+1}</span>
-        <div class="mb-inf-info">
-          <span class="mb-inf-name">${this._esc(p.target_identifier || p.name)}</span>
-          <span class="mb-inf-type">${this._esc(p.name)}${p.followers ? ` · ${p.followers}` : ''}</span>
-        </div>
-        
-        <div class="mb-inf-score-wrap">
-          <div class="mb-inf-bar" style="width:${score}%"></div>
-          <span class="mb-inf-score">${score}</span>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
-  }
-
-  _renderCrisisWidget(crisisRes) {
-    const el = document.getElementById('mbCrisisBody');
-    if (!el) return;
-    const hasData = crisisRes && !crisisRes.isEmpty && crisisRes.data;
-    const vulns   = hasData ? (crisisRes.data.vulnerabilities || []) : [];
-    if (!vulns.length) {
-      el.innerHTML = `<div class="mb-crisis-event mb-crisis--none"><div class="mb-crisis-icon"></div><div class="mb-crisis-body"><p class="mb-crisis-msg">No hay crisis ni vulnerabilidades activas. ✓</p><div class="mb-crisis-meta"><span class="mb-crisis-time">Ahora</span><span class="mb-crisis-action">Todo en orden</span></div></div></div>`;
-      return;
-    }
-    const lvlCls  = { low:'mb-crisis--low', medium:'mb-crisis--low', high:'mb-crisis--med', critical:'mb-crisis--high' };
-    el.innerHTML = `<div class="mb-crisis-timeline">${vulns.slice(0,5).map(v => `
-      <div class="mb-crisis-event ${lvlCls[v.severity]||'mb-crisis--low'}">
-        <div class="mb-crisis-icon"></div>
-        <div class="mb-crisis-body">
-          <p class="mb-crisis-msg">${this._esc(v.title)}${v.description ? ' — ' + this._esc(v.description.slice(0,120)) : ''}</p>
-          <div class="mb-crisis-meta">
-            <span class="mb-crisis-time">${this._relTime(v.created_at)}</span>
-            <span class="mb-crisis-action">${v.status === 'in_progress' ? 'En revisión' : 'Abierta'}</span>
-          </div>
-        </div>
-      </div>`).join('')}</div>`;
-  }
-
-  _renderSWOTWidget(swotRes) {
-    const el = document.getElementById('mbSWOTBody');
-    if (!el) return;
-    const hasReal = swotRes && !swotRes.isEmpty && swotRes.data;
-    if (!hasReal) {
-      el.innerHTML = this._emptyState('SWOT en construcción', 'VERA analizará fortalezas, debilidades, oportunidades y amenazas cuando haya suficientes datos.');
-      return;
-    }
-    const d = swotRes.data;
-    const quad = (title, items, cls) => {
-      const list = items.length ? items.map(i=>`<li class="mb-swot-item">${this._esc(i.text || i)}</li>`).join('') : `<li class="mb-swot-item mb-swot-empty">Sin datos aún</li>`;
-      return `<div class="mb-swot-quad ${cls}"><div class="mb-swot-quad-header">${title}</div><ul class="mb-swot-list">${list}</ul></div>`;
-    };
-    el.innerHTML = `<div class="mb-swot-grid">
-      ${quad('Fortalezas',    d.strengths || [],     'mb-swot--strength')}
-      ${quad('Oportunidades', d.opportunities || [], 'mb-swot--opportunity')}
-      ${quad('Debilidades',   d.weaknesses || [],    'mb-swot--weakness')}
-      ${quad('Amenazas',      d.threats || [],       'mb-swot--threat')}
-    </div>`;
-  }
-
-  /* ── Helpers UI ─────────────────────────────────────────────── */
-  _overlayEmpty(canvas, msg) {
-    const wrap = canvas.closest('.mb-widget-body') || canvas.parentElement;
-    if (!wrap) return;
-    const ov = document.createElement('div');
-    ov.className = 'mb-chart-empty-overlay';
-    ov.innerHTML = `<span>${msg}</span>`;
-    canvas.style.opacity = '0.15';
-    wrap.style.position = 'relative';
-    wrap.appendChild(ov);
-  }
-
-  _emptyState(title, desc) {
-    return `<div class="mb-empty-state"><strong>${title}</strong><p>${desc}</p></div>`;
-  }
-
-  _relTime(iso) {
-    if (!iso) return '—';
-    const diff = Date.now() - new Date(iso).getTime();
-    const min  = Math.floor(diff / 60000);
-    if (min < 1)   return 'Ahora';
-    if (min < 60)  return `Hace ${min} min`;
-    const h = Math.floor(min / 60);
-    if (h < 24)    return `Hace ${h} h`;
-    return `Hace ${Math.floor(h/24)} d`;
-  }
 
   _animateKPIs() {
     // small pop-in animation for KPI cards
@@ -1806,598 +848,8 @@ class DashboardView extends BaseView {
     </div>`;
   }
 
-  _buildCompetenceHTML() {
-    return `
-    <div class="cc-dashboard">
-
-      <!-- ── KPI Strip ── -->
-      <div class="cc-kpi-strip">
-        ${this._ccKpi('Share of Voice',          '34%',  'Nosotros vs mercado',    'blue')}
-        ${this._ccKpi('Posts rival / sem',       '31',   '−3 vs semana ant.',      'orange')}
-        ${this._ccKpi('Reviews neg. detectadas', '247',  '↑ 18 esta semana',       'red')}
-        ${this._ccKpi('Anuncios activos',        '14',   'Meta · Google · TikTok', 'purple')}
-        ${this._ccKpi('Vulnerabilidades',      '6',    'Explotables hoy',        'yellow')}
-        ${this._ccKpi('SKUs sin stock rival',    '3',    'Oportunidad inmediata',  'green')}
-      </div>
-
-      <!-- ── OpenClaw Mission Control ── -->
-      <div class="cc-mission-control">
-        <div class="cc-mc-header">
-          <span> OpenClaw Mission Control</span>
-          <span class="cc-pulse-dot"></span>
-        </div>
-        <div class="cc-mc-missions" id="ccMissions"></div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
-           DIM A · THE PRICE WAR
-      ══════════════════════════════════════════════ -->
-      ${this._ccDim('The Price War', 'Precios cross-platform, stock crítico y bundles del rival')}
-
-      <div class="cc-dim-row">
-        <div class="cc-widget cc-widget--wide">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Monitor de Precios SKU vs SKU</span>
-            <span class="cc-badge cc-badge--blue">Cross-Platform</span>
-          </div>
-          <div class="cc-widget-body">
-            <canvas id="ccChartPrecios" height="200"></canvas>
-          </div>
-        </div>
-        <div class="cc-widget">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Stock Crítico del Rival</span>
-            <span class="cc-badge cc-badge--red">Oportunidad</span>
-          </div>
-          <div class="cc-widget-body">
-            ${this._ccStockRival()}
-          </div>
-        </div>
-      </div>
-
-      <div class="cc-widget cc-widget--full">
-        <div class="cc-widget-header">
-          <span class="cc-widget-title">Análisis de Ofertas y Bundles del Rival</span>
-          <span class="cc-badge cc-badge--orange">Canibalización</span>
-        </div>
-        <div class="cc-widget-body">
-          ${this._ccBundlesTable()}
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
-           DIM B · THE CONTENT BATTLE
-      ══════════════════════════════════════════════ -->
-      ${this._ccDim('The Content Battle', 'Temas ganadores, engagement real y lanzamientos en la sombra')}
-
-      <div class="cc-dim-row">
-        <div class="cc-widget">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Temas Ganadores del Rival</span>
-            <span class="cc-badge cc-badge--orange">Fórmula viral</span>
-          </div>
-          <div class="cc-widget-body">
-            <canvas id="ccChartTemas" height="220"></canvas>
-          </div>
-        </div>
-        <div class="cc-widget cc-widget--wide">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Benchmarking de Engagement Real</span>
-            <span class="cc-badge cc-badge--blue">Nosotros vs Rival</span>
-          </div>
-          <div class="cc-widget-body">
-            <canvas id="ccChartEngagement" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="cc-widget cc-widget--full">
-        <div class="cc-widget-header">
-          <span class="cc-widget-title">Detección de Lanzamientos en la Sombra</span>
-          <span class="cc-badge cc-badge--purple">Anticipación</span>
-        </div>
-        <div class="cc-widget-body">
-          ${this._ccShadowLaunches()}
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
-           DIM C · ATTACK SURFACE
-      ══════════════════════════════════════════════ -->
-      ${this._ccDim('Attack Surface', 'Reviews negativas explotables y crisis de reputación del rival')}
-
-      <div class="cc-dim-row">
-        <div class="cc-widget cc-widget--wide">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Reviews Negativas del Rival — Puntos de Dolor</span>
-            <span class="cc-badge cc-badge--red">Explotable</span>
-          </div>
-          <div class="cc-widget-body">
-            <canvas id="ccChartPain" height="180"></canvas>
-          </div>
-        </div>
-        <div class="cc-widget">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Crisis de Reputación del Rival</span>
-            <span class="cc-badge cc-badge--red">Alerta activa</span>
-          </div>
-          <div class="cc-widget-body">
-            ${this._ccCrisisRival()}
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════
-           DIM D · AD INTELLIGENCE
-      ══════════════════════════════════════════════ -->
-      ${this._ccDim('Ad Intelligence', 'Radar de pauta digital e influencer mapping del rival')}
-
-      <div class="cc-dim-row">
-        <div class="cc-widget">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Radar de Pauta Digital</span>
-            <span class="cc-badge cc-badge--purple">Inversión estimada</span>
-          </div>
-          <div class="cc-widget-body mb-widget-body--center">
-            <canvas id="ccChartAds" height="230"></canvas>
-          </div>
-        </div>
-        <div class="cc-widget cc-widget--wide">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Influencer Mapping del Rival</span>
-            <span class="cc-badge cc-badge--blue">Oportunidad de captura</span>
-          </div>
-          <div class="cc-widget-body">
-            ${this._ccInfluencerMap()}
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Share of Voice ── -->
-      ${this._ccDim('Share of Voice', 'Cuota de atención del nicho — quién domina la conversación')}
-      <div class="cc-dim-row">
-        <div class="cc-widget mb-widget-body--center">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Share of Voice — Nicho</span>
-            <span class="cc-badge cc-badge--blue">Tiempo real</span>
-          </div>
-          <div class="cc-widget-body mb-widget-body--center">
-            <canvas id="ccChartSOV" height="240"></canvas>
-          </div>
-        </div>
-        <div class="cc-widget cc-widget--wide">
-          <div class="cc-widget-header">
-            <span class="cc-widget-title">Share of Voice — Evolución 30 días</span>
-            <span class="cc-badge cc-badge--green">Tendencia</span>
-          </div>
-          <div class="cc-widget-body">
-            <canvas id="ccChartSOVLine" height="210"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer demo -->
-      <div class="mb-demo-note">
-        
-        <span>Datos <strong>simulados para demostración</strong>. OpenClaw conectará inteligencia real con scraping y APIs de terceros.</span>
-      </div>
-
-    </div>`;
-  }
-
-  /* ── Helpers competencia ─────────────────────────────── */
-  _ccDim(title, subtitle) {
-    return `
-      <div class="mb-dim-header cc-dim-header">
-        <div>
-          <div class="mb-dim-title">${this._esc(title)}</div>
-          <div class="mb-dim-subtitle">${this._esc(subtitle)}</div>
-        </div>
-      </div>`;
-  }
-
-  _ccKpi(label, value, sub, color) {
-    return `
-      <div class="mb-kpi-card mb-kpi--${color} cc-kpi-card">
-        <div class="mb-kpi-body">
-          <div class="mb-kpi-value">${value}</div>
-          <div class="mb-kpi-label">${label}</div>
-          <div class="mb-kpi-sub">${sub}</div>
-        </div>
-      </div>`;
-  }
-
-  _ccStockRival() {
-    const rows = [
-      { product: 'Rival Pro 3000',   amazon: 'out', ml: 'out',  walmart: 'ok',  note: '🟢 Lanzar campaña Amazon' },
-      { product: 'Rival Compact X',  amazon: 'ok',  ml: 'low',  walmart: 'low', note: '🟡 Vigilar MLibre' },
-      { product: 'Rival Classic',    amazon: 'low', ml: 'ok',   walmart: 'out', note: '🟢 Lanzar en Walmart' },
-      { product: 'Rival Mini',       amazon: 'ok',  ml: 'ok',   walmart: 'ok',  note: '⚪ Sin oportunidad' },
-    ];
-    const icon = { ok: '✓', low: '!', out: '✗' };
-    const cls  = { ok: 'mb-stock--ok', low: 'mb-stock--low', out: 'mb-stock--out' };
-    return `
-      <div class="mb-stock-grid cc-stock">
-        <div class="mb-stock-header-row cc-stock-hdr">
-          <span>Producto rival</span><span>AMZ</span><span>ML</span><span>WMT</span><span>Acción</span>
-        </div>
-        ${rows.map(r => `
-          <div class="mb-stock-row cc-stock-row5">
-            <span class="mb-stock-name">${r.product}</span>
-            <span class="mb-stock-cell ${cls[r.amazon]}">${icon[r.amazon]}</span>
-            <span class="mb-stock-cell ${cls[r.ml]}">${icon[r.ml]}</span>
-            <span class="mb-stock-cell ${cls[r.walmart]}">${icon[r.walmart]}</span>
-            <span class="cc-stock-action">${r.note}</span>
-          </div>`).join('')}
-        <div class="mb-stock-legend">
-          <span class="mb-stock--ok">✓ Con stock</span>
-          <span class="mb-stock--low">! Bajo</span>
-          <span class="mb-stock--out">✗ Agotado</span>
-        </div>
-      </div>`;
-  }
-
-  _ccBundlesTable() {
-    const bundles = [
-      { rival: 'Rival A', bundle: 'Kit Cocina Pro (3 pzas)', plataforma: 'Amazon MX',     precio: '$2,499', tipo: '2x1',       impacto: 'Alto',  accion: 'Lanzar bundle superior' },
-      { rival: 'Rival A', bundle: 'Combo Hogar Esencial',    plataforma: 'Mercado Libre',  precio: '$1,199', tipo: '20% dto',   impacto: 'Medio', accion: 'Igualar precio' },
-      { rival: 'Rival B', bundle: 'Pack Mini + Accesorios',  plataforma: 'Walmart MX',     precio: '$899',   tipo: 'Bundle',    impacto: 'Alto',  accion: 'Crear contra-bundle' },
-      { rival: 'Rival B', bundle: 'Flash Sale 48h',          plataforma: 'Tienda propia',  precio: '$749',   tipo: 'Flash',     impacto: 'Bajo',  accion: 'Monitorear' },
-    ];
-    const impactoCls = { Alto: 'cc-impact--high', Medio: 'cc-impact--med', Bajo: 'cc-impact--low' };
-    return `
-      <div class="cc-table-wrap">
-        <table class="mb-map-table cc-table">
-          <thead><tr>
-            <th>Rival</th><th>Bundle / Oferta</th><th>Plataforma</th>
-            <th>Precio</th><th>Tipo</th><th>Impacto</th><th>Acción sugerida</th>
-          </tr></thead>
-          <tbody>
-            ${bundles.map(b => `<tr>
-              <td>${b.rival}</td>
-              <td style="color:var(--text-primary);font-weight:500">${b.bundle}</td>
-              <td>${b.plataforma}</td>
-              <td class="mb-map-price">${b.precio}</td>
-              <td><span class="cc-type-badge">${b.tipo}</span></td>
-              <td><span class="cc-impact ${impactoCls[b.impacto]}">${b.impacto}</span></td>
-              <td class="cc-action-cell">${b.accion}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  _ccShadowLaunches() {
-    const signals = [
-      { date: 'Hace 3 d',  confidence: 87, signal: 'Registro de dominio "rivalpromax.mx" detectado — posible línea premium.', type: 'dominio', action: 'Preparar contenido anticipatorio' },
-      { date: 'Hace 5 d',  confidence: 74, signal: 'Nueva categoría "Profesional" apareció en menú de su web (etiqueta "coming-soon" oculta en HTML).', type: 'web', action: 'Auditar sus webs cada 6h' },
-      { date: 'Hace 8 d',  confidence: 62, signal: 'Pico de contrataciones en LinkedIn: 4 diseñadores de packaging en los últimos 15 días.', type: 'linkedin', action: 'Monitorear lanzamientos Q2' },
-      { date: 'Hace 12 d', confidence: 41, signal: 'Cambio en pie de página: eliminaronSKU de producto — posible discontinuación.', type: 'web', action: 'Oportunidad en ese segmento' },
-    ];
-    const confColor = (c) => c>=80 ? '#f87171' : c>=60 ? '#fbbf24' : '#60a5fa';
-    return `
-      <div class="cc-shadow-list">
-        ${signals.map(s => `
-          <div class="cc-shadow-row">
-            <div class="cc-shadow-icon"></div>
-            <div class="cc-shadow-body">
-              <p class="cc-shadow-msg">${s.signal}</p>
-              <div class="cc-shadow-meta">
-                <span class="cc-shadow-date">${s.date}</span>
-                <span class="cc-shadow-action"> ${s.action}</span>
-              </div>
-            </div>
-            <div class="cc-shadow-conf">
-              <div class="cc-conf-ring" style="--conf-color:${confColor(s.confidence)}">
-                <span>${s.confidence}%</span>
-              </div>
-              <span class="cc-conf-label">confianza</span>
-            </div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _ccCrisisRival() {
-    const crises = [
-      { level: 'high', product: 'Rival Pro 3000', issue: 'Defecto de motor — 312 quejas en Amazon en 48 h. Hashtag #RivalFalla trending.',      window: '72 h para capturar' },
-      { level: 'med',  product: 'Rival Compact X', issue: 'Soporte al cliente no responde — foro ForoCocinaMX con 89 posts negativos.',          window: '5 días activo' },
-      { level: 'low',  product: 'Rival Classic',   issue: 'Retraso de envíos en Walmart — 34 comentarios. Riesgo bajo de escalar.',              window: 'Monitoreo pasivo' },
-    ];
-    const levelCls  = { high: 'cc-crisis--high', med: 'cc-crisis--med', low: 'cc-crisis--low' };
-    const levelLbl  = { high: 'Crisis activa', med: 'En desarrollo', low: 'Latente' };
-    return `
-      <div class="cc-crisis-list">
-        ${crises.map(c => `
-          <div class="cc-crisis-item ${levelCls[c.level]}">
-            <div class="cc-crisis-top">
-              
-              <span class="cc-crisis-product">${c.product}</span>
-              <span class="cc-crisis-badge">${levelLbl[c.level]}</span>
-            </div>
-            <p class="cc-crisis-desc">${c.issue}</p>
-            <div class="cc-crisis-window"> ${c.window}</div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  _ccInfluencerMap() {
-    const list = [
-      { handle: '@chefcarlos_mx',   plat: 'ig', followers: '128K', reach: 94, trabajaCon: 'Rival A', capturable: true,  note: 'Audiencia alineada al 100%'  },
-      { handle: '@recetasfaciles',  plat: 'yt', followers: '240K', reach: 88, trabajaCon: 'Rival B', capturable: true,  note: 'Contrato vence en 60 días'   },
-      { handle: '@hogarmoderno',    plat: 'tt', followers: '87K',  reach: 76, trabajaCon: 'Rival A', capturable: false, note: 'Contrato exclusivo 1 año'    },
-      { handle: '@cocinafusion',    plat: 'ig', followers: '55K',  reach: 71, trabajaCon: 'Rival B', capturable: true,  note: 'Microinfluencer de alto CTR'  },
-      { handle: 'ForoCocinaMX',     plat: 'web',followers: '31K', reach: 65, trabajaCon: 'Rival A', capturable: true,  note: 'Comunidad orgánica valiosa'  },
-    ];
-    return `
-      <div class="cc-inf-table-wrap">
-        <table class="mb-map-table cc-table cc-inf-table">
-          <thead><tr>
-            <th>Perfil</th><th>Red</th><th>Seguidores</th>
-            <th>Afinidad</th><th>Trabaja con</th><th>Capturable</th><th>Nota OpenClaw</th>
-          </tr></thead>
-          <tbody>
-            ${list.map(r => `<tr>
-              <td style="color:var(--text-primary);font-weight:600">${r.handle}</td>
-              <td></td>
-              <td>${r.followers}</td>
-              <td>
-                <div class="cc-reach-bar-wrap">
-                  <div class="cc-reach-bar" style="width:${r.reach}%"></div>
-                  <span>${r.reach}</span>
-                </div>
-              </td>
-              <td>${r.trabajaCon}</td>
-              <td>${r.capturable ? '<span class="cc-cap--yes"> Sí</span>' : '<span class="cc-cap--no"> No</span>'}</td>
-              <td style="font-size:0.75rem;color:var(--text-muted)">${r.note}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  }
-
-  /* ── Mission Control (OpenClaw autonomous actions) ── */
-  _buildMissions() {
-    return [
-      { status: 'done',    msg: 'Misión: Neutralizar oferta rival en Amazon MX — Generados 4 activos comparativos. Estado: Al aire.', time: 'Hace 22 min' },
-      { status: 'running', msg: 'Misión: Capturar clientes de crisis "Rival Pro 3000" — Redactando 3 variantes de contenido.', time: 'En curso' },
-      { status: 'alert',   msg: 'Alerta: Rival B bajó precio en Mercado Libre −$130 — Requiere aprobación para igualar.', time: 'Hace 5 min' },
-      { status: 'done',    msg: 'Misión: Counter al bundle "Kit Cocina Pro" — Publicado bundle Oster con ahorro adicional de $200.', time: 'Hace 2 h' },
-    ];
-  }
-
-  /* ─────────────────────────────────────────────────────────
-     CHART.JS — Gráficos de Competencia
-  ───────────────────────────────────────────────────────── */
-  _initCompetenceCharts() {
-    if (!window.Chart) return;
-    this._ccChartPrecios();
-    this._ccChartTemas();
-    this._ccChartEngagement();
-    this._ccChartPain();
-    this._ccChartAds();
-    this._ccChartSOV();
-    this._ccChartSOVLine();
-    this._buildMissionControl();
-  }
-
-  _ccChartPrecios() {
-    const ctx = document.getElementById('ccChartPrecios');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Oster Pro 1200\nvs Rival Pro 3000', 'Oster Classic 800\nvs Rival Classic', 'Oster Mini Chef\nvs Rival Mini', 'Oster Compact\nvs Rival Compact X'],
-        datasets: [
-          { label: 'Nosotros — Amazon',  data: [1299,899,549,699], backgroundColor: 'rgba(96,165,250,0.75)',  borderRadius: 4 },
-          { label: 'Rival — Amazon',     data: [1249,920,579,679], backgroundColor: 'rgba(239,68,68,0.65)',   borderRadius: 4 },
-          { label: 'Nosotros — M.Libre', data: [1180,870,539,685], backgroundColor: 'rgba(96,165,250,0.4)',   borderRadius: 4, borderColor: 'rgba(96,165,250,0.7)', borderWidth: 1 },
-          { label: 'Rival — M.Libre',    data: [1199,855,559,690], backgroundColor: 'rgba(239,68,68,0.35)',   borderRadius: 4, borderColor: 'rgba(239,68,68,0.6)',  borderWidth: 1 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `$${v.toLocaleString()}` } },
-          x: { grid: { display: false }, ticks: { maxRotation: 0, font: { size: 10 } } },
-        },
-      },
-    }));
-  }
-
-  _ccChartTemas() {
-    const ctx = document.getElementById('ccChartTemas');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Recetas fáciles', 'Unboxing', 'Comparativas', 'Lifestyle', 'Tutoriales', 'Humor/tendencia'],
-        datasets: [
-          { label: 'Rival (engagement promedio)',  data: [8.4, 6.1, 5.9, 7.2, 4.8, 9.3], backgroundColor: 'rgba(239,68,68,0.7)',  borderRadius: 4 },
-          { label: 'Nosotros (engagement promedio)', data: [6.2, 4.4, 7.1, 5.5, 5.9, 3.1], backgroundColor: 'rgba(96,165,250,0.7)', borderRadius: 4 },
-        ],
-      },
-      options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          x: { max: 12, grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Engagement (%)' } },
-          y: { grid: { display: false } },
-        },
-      },
-    }));
-  }
-
-  _ccChartEngagement() {
-    const ctx = document.getElementById('ccChartEngagement');
-    if (!ctx) return;
-    const labels = Array.from({length: 12}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 33 + i * 3); return `${d.getDate()}/${d.getMonth()+1}`; });
-    this._reg(new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Nosotros', data: [4.1,4.3,3.8,4.6,4.9,4.4,5.1,4.8,4.7,5.3,4.6,4.8], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.1)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
-          { label: 'Rival A',  data: [5.2,5.8,5.1,6.2,5.7,4.9,5.4,5.8,6.1,5.5,6.3,5.9], borderColor: 'rgba(239,68,68,0.9)',  backgroundColor: 'rgba(239,68,68,0.07)',  borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
-          { label: 'Rival B',  data: [3.4,3.6,3.9,3.2,3.8,4.1,3.7,3.5,3.9,4.0,3.6,3.8], borderColor: 'rgba(251,191,36,0.9)', backgroundColor: 'rgba(251,191,36,0.06)',  borderWidth: 2, tension: 0.4, fill: false, borderDash: [5,3], pointRadius: 2 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `${v}%` }, title: { display: true, text: 'Engagement rate (%)' } },
-          x: { grid: { display: false } },
-        },
-      },
-    }));
-  }
-
-  _ccChartPain() {
-    const ctx = document.getElementById('ccChartPain');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['"Se rompe fácil"', '"Soporte lento"', '"Cable muy corto"', '"Ruido excesivo"', '"Difícil limpiar"', '"Garantía no cumple"', '"Precio no justificado"'],
-        datasets: [{
-          label: 'Menciones negativas detectadas',
-          data: [312, 247, 189, 156, 134, 98, 87],
-          backgroundColor: [
-            'rgba(239,68,68,0.85)', 'rgba(239,68,68,0.75)', 'rgba(249,115,22,0.75)',
-            'rgba(249,115,22,0.7)', 'rgba(251,191,36,0.7)', 'rgba(251,191,36,0.65)', 'rgba(156,163,175,0.6)',
-          ],
-          borderRadius: 5,
-        }],
-      },
-      options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { afterLabel: () => '→ Crear contenido que ataque este punto' } },
-        },
-        scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Menciones negativas' } },
-          y: { grid: { display: false } },
-        },
-      },
-    }));
-  }
-
-  _ccChartAds() {
-    const ctx = document.getElementById('ccChartAds');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: ['Meta (video)', 'Meta (carrusel)', 'Google Search', 'Google Display', 'TikTok', 'YouTube Pre-roll'],
-        datasets: [
-          { label: 'Rival A — inversión estimada',   data: [85, 62, 78, 45, 90, 55], borderColor: 'rgba(239,68,68,0.9)',  backgroundColor: 'rgba(239,68,68,0.1)',  pointRadius: 4, borderWidth: 2 },
-          { label: 'Rival B — inversión estimada',   data: [55, 80, 40, 70, 35, 60], borderColor: 'rgba(251,191,36,0.9)', backgroundColor: 'rgba(251,191,36,0.08)', pointRadius: 4, borderWidth: 2 },
-          { label: 'Nosotros — posicionamiento',     data: [70, 55, 85, 60, 50, 45], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.1)',  pointRadius: 4, borderWidth: 2 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } },
-        scales: {
-          r: {
-            min: 0, max: 100,
-            ticks: { stepSize: 25, color: 'rgba(212,209,216,0.4)', backdropColor: 'transparent' },
-            grid: { color: 'rgba(255,255,255,0.08)' },
-            pointLabels: { color: 'rgba(212,209,216,0.8)', font: { size: 10 } },
-          },
-        },
-      },
-    }));
-  }
-
-  _ccChartSOV() {
-    const ctx = document.getElementById('ccChartSOV');
-    if (!ctx) return;
-    this._reg(new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Nosotros', 'Rival A', 'Rival B', 'Rival C', 'Otros'],
-        datasets: [{
-          data: [34, 28, 19, 11, 8],
-          backgroundColor: ['rgba(96,165,250,0.85)', 'rgba(239,68,68,0.8)', 'rgba(251,191,36,0.8)', 'rgba(167,139,250,0.8)', 'rgba(156,163,175,0.6)'],
-          borderColor: 'rgba(0,0,0,0)', hoverOffset: 8,
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '58%',
-        plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } },
-          tooltip: { callbacks: { label: d => `${d.label}: ${d.raw}%` } },
-        },
-      },
-    }));
-  }
-
-  _ccChartSOVLine() {
-    const ctx = document.getElementById('ccChartSOVLine');
-    if (!ctx) return;
-    const labels = Array.from({length: 10}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 27 + i * 3); return `${d.getDate()}/${d.getMonth()+1}`; });
-    this._reg(new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Nosotros', data: [29,30,31,30,32,33,31,34,33,34], borderColor: 'rgba(96,165,250,0.9)', backgroundColor: 'rgba(96,165,250,0.12)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 3 },
-          { label: 'Rival A',  data: [31,30,30,31,29,28,30,28,29,28], borderColor: 'rgba(239,68,68,0.8)',  backgroundColor: 'rgba(239,68,68,0.07)',  borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 },
-          { label: 'Rival B',  data: [20,21,20,19,21,20,19,20,20,19], borderColor: 'rgba(251,191,36,0.8)', borderWidth: 2, borderDash: [4,3], tension: 0.4, fill: false, pointRadius: 2 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          y: { max: 45, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => `${v}%` } },
-          x: { grid: { display: false } },
-        },
-      },
-    }));
-  }
-
-  _buildMissionControl() {
-    const el = document.getElementById('ccMissions');
-    if (!el) return;
-    const missions = this._buildMissions();
-    const statusCls = { done: 'cc-m--done', running: 'cc-m--running', alert: 'cc-m--alert' };
-    el.innerHTML = missions.map(m => `
-      <div class="cc-mission ${statusCls[m.status]}">
-        
-        <span class="cc-mission-msg">${m.msg}</span>
-        <span class="cc-mission-time">${m.time}</span>
-      </div>`).join('');
-  }
-
-  _animateCC() {
-    document.querySelectorAll('.cc-kpi-card').forEach((card, i) => {
-      card.style.opacity = '0'; card.style.transform = 'translateY(10px)';
-      setTimeout(() => {
-        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
-        card.style.opacity = '1'; card.style.transform = 'none';
-      }, i * 60);
-    });
-  }
-
-  /* ─────────────────────────────────────────────────────────
-     Coming Soon (otros tabs)
-  ───────────────────────────────────────────────────────── */
-  _pageComingSoon(title, icon, description) {
-    return `
-      <div class="insight-coming-soon">
-        <div class="insight-cs-icon"></div>
-        <h2 class="insight-cs-title">${this._esc(title)}</h2>
-        <p class="insight-cs-desc">${this._esc(description)}</p>
-        <span class="insight-cs-badge">Próximamente</span>
-      </div>`;
-  }
-
   /* ═══════════════════════════════════════════════════════════
-     ESTRATEGIA — Centro de Comando
+     ESTRATEGIA — Centro de Comando (tab actualmente deshabilitada)
   ═══════════════════════════════════════════════════════════ */
 
   async _ensureStratService() {
@@ -2434,7 +886,6 @@ class DashboardView extends BaseView {
     if (body) { this._destroyCharts(); await this._renderStrategy(body); }
   }
 
-  /* ── CSS inyectado una sola vez ──────────────────────────── */
   _injectStratCSS() {
     if (document.getElementById('st-dash-css')) return;
     const s = document.createElement('style');
@@ -3188,203 +1639,581 @@ class DashboardView extends BaseView {
   }
 
   /* ════════════════════════════════════════════════════════════
-     MI MARCA V2 — layout limpio (filtros + 6 KPIs + 3 widgets)
+     MI MARCA V3 — Partner-style: filtros + 6 KPIs + 6 highlights
+     + análisis longitudinal + arquitectura estrategia + top + vs.
+     Datos vienen de RPCs dashboard_brand_* + dashboard_estrategia_*.
      ════════════════════════════════════════════════════════════ */
   _buildMyBrandsV2HTML(d) {
     const containers = d?.containers || [];
     const kpis       = d?.kpis?.data || {};
-    const hasData    = containers.length > 0;
+    const f          = this._mbFilters || { brandId: '', windowDays: 30 };
 
-    const posts7d     = kpis.posts7d      != null ? kpis.posts7d      : '—';
-    const sentScore   = kpis.sentimentScore != null ? kpis.sentimentScore : '—';
-    const mapComp     = kpis.mapCompliance != null ? `${kpis.mapCompliance}%` : '—';
-    const crisisIdx   = kpis.crisisOpen   != null ? kpis.crisisOpen   : '—';
-    const mentions24h = kpis.mentions24h  != null ? kpis.mentions24h  : '—';
+    const fmt = (n) => {
+      if (n == null) return '—';
+      const v = Number(n);
+      if (!isFinite(v)) return '—';
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+      if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'K';
+      return String(Math.round(v * 100) / 100);
+    };
 
     const brandOptions = [
       `<option value="">Todas las marcas</option>`,
-      ...containers.map(c => `<option value="${this._esc(c.id)}">${this._esc(c.nombre_marca)}</option>`),
+      ...containers.map(c => `<option value="${this._esc(c.id)}"${c.id === f.brandId ? ' selected' : ''}>${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
+    const dateOptions = [7, 30, 90].map(v =>
+      `<option value="${v}"${v === f.windowDays ? ' selected' : ''}>Últimos ${v} días</option>`
+    ).join('');
+
+    // ── KPI strip (kpis_strip) ───────────────────────────────
+    const sentDist  = kpis.sentiment_distribution || {};
+    const platDist  = kpis.platform_distribution  || {};
+    const engBreak  = kpis.engagement_breakdown   || {};
+
+    const kpiStrip = `
+      ${this._kpiMin({ icon: 'fa-bullseye', value: String(kpis.active_brands ?? containers.length ?? 0), label: 'Marcas activas',
+        meta: containers.length ? `${containers.length} en cuenta` : '' })}
+      ${this._kpiMin({ icon: 'fa-image', value: String(kpis.total_publications ?? 0), label: 'Publicaciones',
+        meta: kpis.posts_last_7d != null ? `${kpis.posts_last_7d} en 7d` : '' })}
+      ${this._kpiMin({ icon: 'fa-heart', value: fmt(kpis.total_engagement), label: 'Engagement',
+        meta: kpis.avg_engagement_per_post ? `avg ${fmt(kpis.avg_engagement_per_post)}/post` : '' })}
+      ${this._kpiMin({
+        icon: kpis.dominant_sentiment === 'positive' ? 'fa-face-smile'
+              : kpis.dominant_sentiment === 'negative' ? 'fa-face-frown' : 'fa-face-meh',
+        value: this._capCase(kpis.dominant_sentiment) || '—',
+        label: 'Sentimiento',
+        meta: `${sentDist.positive || 0} pos · ${sentDist.negative || 0} neg`,
+        tone: kpis.dominant_sentiment === 'positive' ? 'positive' : kpis.dominant_sentiment === 'negative' ? 'negative' : null,
+      })}
+      ${this._kpiMin({ icon: 'fa-signal',
+        value: kpis.dominant_platform ? this._capCase(kpis.dominant_platform) : '—',
+        label: 'Plataforma',
+        meta: Object.keys(platDist).length > 1 ? `${Object.keys(platDist).length} redes` : '' })}
+      ${this._kpiMin({ icon: 'fa-hashtag',
+        value: kpis.dominant_hashtag
+          ? '#' + this._esc(kpis.dominant_hashtag).slice(0, 14)
+          : (kpis.dominant_topic ? this._esc(kpis.dominant_topic).slice(0, 16) : '—'),
+        label: 'Tema dominante',
+        meta: engBreak.likes ? `${fmt(engBreak.likes)} likes` : '' })}
+    `;
+
+    // ── 6 highlights (featured_*) ───────────────────────────
+    const fe = d?.featured || {};
+    const fp = (fe.profile?.data  || [])[0];
+    const ft = (fe.topic?.data    || [])[0];
+    const fh = (fe.hashtag?.data  || [])[0];
+    const fhr = (fe.hour?.data    || [])[0];
+    const fpl = (fe.platform?.data || [])[0];
+    const fg = (fe.growth?.data   || [])[0];
+
+    const highlight = (label, value, desc) => `
+      <article class="mb-v3-highlight">
+        <div class="mb-v3-highlight-label">${this._esc(label)}</div>
+        <div class="mb-v3-highlight-value">${this._esc(value || '—')}</div>
+        <div class="mb-v3-highlight-desc">${this._esc(desc || '')}</div>
+      </article>`;
+
+    const highlights = `
+      ${highlight('Marca destacada', fp?.brand_name,
+        fp ? `${fmt(fp.total_engagement)} eng · ${Math.round(fp.score || 0)}/100` : 'Sin datos')}
+      ${highlight('Tema más usado', ft?.topic,
+        ft ? `${ft.usage_count} menciones · ${fmt(ft.total_engagement)} eng` : 'Sin datos')}
+      ${highlight('Hashtag dominante', fh?.hashtag ? '#' + fh.hashtag : '',
+        fh ? `${fh.usage_count} usos · ${fmt(fh.total_engagement)} eng` : 'Sin datos')}
+      ${highlight('Hora pico', fhr?.hour != null ? `${fhr.hour}:00` : '',
+        fhr ? `${fhr.posts_count} posts · ${fmt(fhr.avg_engagement_per_post)} avg` : 'Sin datos')}
+      ${highlight('Plataforma efectiva', this._capCase(fpl?.platform || ''),
+        fpl ? `${fpl.total_posts} posts · ${fmt(fpl.avg_reactions_per_post)}/post` : 'Sin datos')}
+      ${highlight('Mayor crecimiento', fg?.brand_name,
+        fg ? `${(fg.growth_score >= 0 ? '+' : '')}${Math.round(fg.engagement_growth_percent || 0)}% eng` : 'Sin datos')}
+    `;
+
+    // ── Riesgo crítico ──────────────────────────────────────
+    const alerts = d?.alerts?.data || [];
+    const riskRows = alerts.length
+      ? alerts.slice(0, 5).map(a => `
+          <div class="mb-v3-risk-row">
+            <div class="mb-v3-risk-name">${this._esc(a.brand_name || '—')}</div>
+            <div class="mb-v3-risk-bar"><div class="mb-v3-risk-fill" style="width:${Math.min(100, Math.round(Number(a.risk_score) || 0))}%"></div></div>
+            <div class="mb-v3-risk-score">${Math.round(Number(a.risk_score) || 0)}</div>
+          </div>
+        `).join('')
+      : '<div class="mb-v2-empty">Sin alertas de riesgo ✓</div>';
+
+    // ── Marcas monitoreadas ─────────────────────────────────
+    const brandsList = containers.length
+      ? containers.map(c => `
+          <div class="mb-v3-brand-row" data-brand-id="${this._esc(c.id)}">
+            <div class="mb-v3-brand-avatar">${this._esc((c.nombre_marca || '?').charAt(0).toUpperCase())}</div>
+            <div class="mb-v3-brand-info">
+              <div class="mb-v3-brand-name">${this._esc(c.nombre_marca || '—')}</div>
+              <div class="mb-v3-brand-sub">brand_container</div>
+            </div>
+          </div>
+        `).join('')
+      : '<div class="mb-v2-empty">Sin marcas configuradas</div>';
+
+    // ── vs Competencia ──────────────────────────────────────
+    const vs = d?.vsCompetencia?.data || {};
+    const vsBrand = vs.brand || {};
+    const vsComp  = vs.competencia || {};
+    const vsCmp   = vs.comparison || {};
+    const verdict = vsCmp.who_leads_engagement === 'brand' ? 'Tú lideras'
+                  : vsCmp.who_leads_engagement === 'competencia' ? 'Te supera la competencia'
+                  : vsCmp.who_leads_engagement ? 'Empate' : '—';
+
     return `
-    <div class="mb-v2-dashboard">
+    <div class="mb-v2-dashboard mb-v3-dashboard">
+
       <!-- Filtros -->
       <div class="mb-v2-filters">
         <label class="mb-v2-select">
           <select id="mbV2BrandFilter">${brandOptions}</select>
         </label>
         <label class="mb-v2-select">
-          <select id="mbV2DateFilter">
-            <option value="7">Últimos 7 días</option>
-            <option value="30" selected>Últimos 30 días</option>
-            <option value="90">Últimos 90 días</option>
-          </select>
+          <select id="mbV2DateFilter">${dateOptions}</select>
         </label>
       </div>
 
-      <!-- 6 KPI cards -->
-      <div class="mb-v2-kpis">
-        ${this._kpiCardV2('Posts propios / 7d', String(posts7d), hasData ? 'Últimos 7 días' : 'Sin datos aún')}
-        ${this._kpiCardV2('Engagement Rate',    '—',              'API Meta necesaria')}
-        ${this._kpiCardV2('Sentiment Score',    sentScore !== '—' ? `${sentScore}/100` : '—', sentScore !== '—' ? '↑ Coherencia de tono' : 'Requiere análisis VERA')}
-        ${this._kpiCardV2('Cumplimiento MAP',   mapComp,          mapComp !== '—' ? 'Precios monitoreados' : 'Sin precios cargados')}
-        ${this._kpiCardV2('Crisis abiertas',    String(crisisIdx), crisisIdx === 0 ? '✓ Sin alertas activas' : 'Requieren atención')}
-        ${this._kpiCardV2('Menciones 24 h',     String(mentions24h), hasData ? 'Shadow + etiquetadas' : 'Sin señales aún')}
-      </div>
-
-      <!-- 2 widgets grandes lado a lado -->
-      <div class="mb-v2-widgets-row">
-        <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Ritmo &amp; Mapa de calor</h3>
-            <span class="mb-v2-widget-sub">Posts propios + horarios óptimos</span>
-          </header>
-          <div class="mb-v2-widget-body">
-            <div class="mb-v2-chart-wrap"><canvas id="mbV2RitmoCanvas"></canvas></div>
-            <div id="mbV2HeatmapHost" class="mb-v2-heatmap"></div>
-          </div>
-        </section>
-
-        <section class="mb-v2-widget">
-          <header class="mb-v2-widget-head">
-            <h3>Sentimiento &amp; Crisis</h3>
-            <span class="mb-v2-widget-sub">Emociones en posts propios + alertas activas</span>
-          </header>
-          <div class="mb-v2-widget-body">
-            <div class="mb-v2-chart-wrap"><canvas id="mbV2SentimentCanvas"></canvas></div>
-            <div id="mbV2CrisisHost" class="mb-v2-crisis-list"></div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Widget inferior ancho completo: SWOT -->
-      <section class="mb-v2-widget mb-v2-widget--wide">
-        <header class="mb-v2-widget-head">
-          <h3>SWOT dinámico</h3>
-          <span class="mb-v2-widget-sub">Fortalezas, debilidades, oportunidades, amenazas</span>
+      <!-- ═══ Visión general (KPI strip) ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Visión general</h2>
+          <p>Indicadores rápidos del período seleccionado · post_source = own</p>
         </header>
-        <div id="mbV2SwotHost" class="mb-v2-swot-grid"></div>
+        <div class="mb-v2-kpis">${kpiStrip}</div>
+      </section>
+
+      <!-- ═══ Insights estratégicos (6 highlights) ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Insights estratégicos</h2>
+          <p>Lo más relevante en cada dimensión · ranking auto-calculado</p>
+        </header>
+        <div class="mb-v3-highlights">${highlights}</div>
+      </section>
+
+      <!-- ═══ Salud de marca (Riesgo + Marcas monitoreadas) ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Salud de marca</h2>
+          <p>Riesgo por marca y composición de tu portafolio monitoreado</p>
+        </header>
+        <div class="mb-v2-widgets-row">
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Riesgo crítico</h3></header>
+            <div class="mb-v2-widget-body">
+              <div class="mb-v3-risk-list">${riskRows}</div>
+            </div>
+          </section>
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Marcas monitoreadas</h3></header>
+            <div class="mb-v2-widget-body">
+              <div class="mb-v3-brands-list">${brandsList}</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ═══ Análisis longitudinal ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Análisis longitudinal</h2>
+          <p>Cómo evoluciona tu publicación, engagement y sentimiento en el tiempo</p>
+        </header>
+        <section class="mb-v2-widget mb-v2-widget--wide">
+          <header class="mb-v2-widget-head"><h3>Historial de actividad</h3></header>
+          <div class="mb-v2-widget-body">
+            <div class="mb-v2-chart-wrap" style="height:240px"><canvas id="mbV3ActivityCanvas"></canvas></div>
+          </div>
+        </section>
+        <div class="mb-v2-widgets-row">
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Tendencia de engagement</h3></header>
+            <div class="mb-v2-widget-body">
+              <div class="mb-v2-chart-wrap" style="height:200px"><canvas id="mbV3EngagementCanvas"></canvas></div>
+            </div>
+          </section>
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Actividad de sentimiento</h3></header>
+            <div class="mb-v2-widget-body">
+              <div class="mb-v2-chart-wrap" style="height:200px"><canvas id="mbV3SentimentCanvas"></canvas></div>
+            </div>
+          </section>
+        </div>
+        <section class="mb-v2-widget mb-v2-widget--wide">
+          <header class="mb-v2-widget-head"><h3>Patrón de horas de publicación</h3></header>
+          <div class="mb-v2-widget-body">
+            <div id="mbV3HeatmapHost" class="cc-v2-heatmap"></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ═══ Arquitectura de estrategia ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Arquitectura de estrategia</h2>
+          <p>Temas, hashtags, tonos y plataformas que definen tu narrativa</p>
+        </header>
+        <div class="mb-v2-widgets-row">
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Temas dominantes</h3></header>
+            <div class="mb-v2-widget-body"><div id="mbV3TopicsHost" class="cc-v2-tags-list"></div></div>
+          </section>
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Hashtags más usados</h3></header>
+            <div class="mb-v2-widget-body"><div id="mbV3HashtagsHost" class="cc-v2-tags-list"></div></div>
+          </section>
+        </div>
+        <div class="cc-v2-distros">
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Tonos</h3></header>
+            <div class="mb-v2-chart-wrap"><canvas id="mbV3TonesCanvas"></canvas></div>
+          </section>
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Plataformas</h3></header>
+            <div class="mb-v2-chart-wrap"><canvas id="mbV3PlatformCanvas"></canvas></div>
+          </section>
+          <section class="mb-v2-widget">
+            <header class="mb-v2-widget-head"><h3>Sentimiento por marca</h3></header>
+            <div class="mb-v2-widget-body"><div id="mbV3SentByBrandHost" class="mb-v3-sent-list"></div></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ═══ Top publicaciones ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Top publicaciones</h2>
+          <p>Tus posts con mayor engagement total en el período</p>
+        </header>
+        <section class="mb-v2-widget mb-v2-widget--wide">
+          <div class="mb-v2-widget-body">
+            <div id="mbV3TopPostsHost" class="cc-v2-posts-list"></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ═══ Mi Marca vs Competencia ═══ -->
+      <section class="dash-section">
+        <header class="dash-section-head">
+          <h2>Mi Marca vs Competencia</h2>
+          <p>Comparativa directa de volumen, engagement y eficiencia</p>
+        </header>
+        <section class="mb-v2-widget mb-v2-widget--wide">
+          <div class="mb-v2-widget-body">
+            <div class="cc-v2-vs">
+              <div class="cc-v2-vs-side">
+                <div class="cc-v2-vs-label">Tú</div>
+                <div class="cc-v2-vs-value">${fmt(vsBrand.engagement)}</div>
+                <div class="cc-v2-vs-meta">${fmt(vsBrand.posts)} posts · ${fmt(vsBrand.avg_engagement_per_post)}/post</div>
+              </div>
+              <div class="cc-v2-vs-divider">vs</div>
+              <div class="cc-v2-vs-side cc-v2-vs-side--rival">
+                <div class="cc-v2-vs-label">Competencia</div>
+                <div class="cc-v2-vs-value">${fmt(vsComp.engagement)}</div>
+                <div class="cc-v2-vs-meta">${fmt(vsComp.posts)} posts · ${fmt(vsComp.avg_engagement_per_post)}/post</div>
+              </div>
+            </div>
+            <div class="cc-v2-vs-verdict cc-v2-vs-verdict--${vsCmp.who_leads_engagement || 'tie'}">${this._esc(verdict)}</div>
+            ${vsCmp.avg_per_post_ratio != null ? `
+              <div class="mb-v3-vs-meta">
+                Eficiencia por post: <strong>${(Number(vsCmp.avg_per_post_ratio)).toFixed(2)}×</strong> ·
+                Brecha de volumen: <strong>${vsCmp.posts_diff != null ? (vsCmp.posts_diff > 0 ? '+' : '') + vsCmp.posts_diff : '—'} posts</strong>
+              </div>` : ''}
+          </div>
+        </section>
       </section>
     </div>`;
-  }
-
-  _kpiCardV2(label, value, sub) {
-    return `
-      <div class="mb-v2-kpi">
-        <div class="mb-v2-kpi-label">${this._esc(label)}</div>
-        <div class="mb-v2-kpi-value">${this._esc(value)}</div>
-        <div class="mb-v2-kpi-sub">${this._esc(sub)}</div>
-      </div>`;
   }
 
   _initMyBrandsV2Charts(d) {
     if (!window.Chart) return;
     this._destroyCharts();
 
-    // 1. Ritmo (line chart)
-    const ritmo = d?.ritmo?.data || [];
-    const rCanvas = document.getElementById('mbV2RitmoCanvas');
-    if (rCanvas && ritmo.length) {
-      this._charts.push(new Chart(rCanvas, {
+    const fmt = (n) => {
+      if (n == null) return '—';
+      const v = Number(n);
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+      if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'K';
+      return String(Math.round(v));
+    };
+    const axisOpts = {
+      x: { ticks: { color: 'rgba(255,255,255,0.55)', maxTicksLimit: 8 }, grid: { display: false } },
+      y: { ticks: { color: 'rgba(255,255,255,0.55)' }, grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true },
+    };
+    const donutOpts = {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 10, font: { size: 11 } } } },
+    };
+
+    // 1. Historial de actividad — agregar posts_count por period
+    const activity = d?.activity?.data || [];
+    const aHost = document.getElementById('mbV3ActivityCanvas');
+    if (aHost && activity.length) {
+      const byPeriod = new Map();
+      activity.forEach(r => {
+        const k = r.period_label || r.period_start;
+        const cur = byPeriod.get(k) || { label: k, posts: 0, eng: 0, ts: r.period_start };
+        cur.posts += Number(r.posts_count || 0);
+        cur.eng   += Number(r.total_engagement || 0);
+        byPeriod.set(k, cur);
+      });
+      const rows = Array.from(byPeriod.values()).sort((a, b) =>
+        new Date(a.ts) - new Date(b.ts));
+      this._charts.push(new Chart(aHost, {
         type: 'line',
         data: {
-          labels: ritmo.map(r => r.label),
-          datasets: [{
-            label: 'Posts/día',
-            data: ritmo.map(r => r.count),
-            borderColor: '#ff5400',
-            backgroundColor: 'rgba(255,84,0,0.15)',
-            tension: 0.3, fill: true, pointRadius: 2,
-          }],
+          labels: rows.map(r => r.label),
+          datasets: [
+            { label: 'Posts', data: rows.map(r => r.posts), borderColor: '#ff5400',
+              backgroundColor: 'rgba(255,84,0,0.18)', tension: 0.3, fill: true,
+              pointRadius: 2, yAxisID: 'y' },
+            { label: 'Engagement', data: rows.map(r => r.eng), borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.10)', tension: 0.3, fill: false,
+              pointRadius: 2, yAxisID: 'y1' },
+          ],
         },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 10 } } },
           scales: {
-            x: { ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 8 }, grid: { display: false } },
-            y: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true },
+            x: axisOpts.x,
+            y:  { ...axisOpts.y, position: 'left', title: { display: true, text: 'Posts', color: 'rgba(255,255,255,0.55)' } },
+            y1: { ...axisOpts.y, position: 'right', title: { display: true, text: 'Eng', color: 'rgba(255,255,255,0.55)' }, grid: { display: false } },
           },
         },
       }));
+    } else if (aHost) {
+      aHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin actividad en el período</div>';
     }
 
-    // 2. Heatmap simple (host div, render manual)
-    const hHost = document.getElementById('mbV2HeatmapHost');
-    const hm    = d?.heatmap?.data;
-    if (hHost && hm?.hour && Object.keys(hm.hour).length) {
-      const max = Math.max(...Object.values(hm.hour).map(Number));
-      const cells = [];
-      for (let h = 0; h < 24; h++) {
-        const v = Number(hm.hour[h] || 0);
-        const intensity = max ? v / max : 0;
-        cells.push(`<div class="mb-v2-heat-cell" title="${h}:00 — ${v}" style="background:rgba(255,84,0,${intensity.toFixed(2)})"></div>`);
-      }
-      hHost.innerHTML = `
-        <div class="mb-v2-heatmap-title">Mejor hora: ${hm.bestHour ?? '—'}h · Mejor día: ${hm.bestDay ?? '—'}</div>
-        <div class="mb-v2-heatmap-grid">${cells.join('')}</div>
-      `;
+    // 2. Tendencia de engagement (avg_engagement_per_post)
+    const eng = d?.engagement?.data || [];
+    const eHost = document.getElementById('mbV3EngagementCanvas');
+    if (eHost && eng.length) {
+      const byPeriod = new Map();
+      eng.forEach(r => {
+        const k = r.period_label || r.period_start;
+        const cur = byPeriod.get(k) || { label: k, avg: 0, count: 0, ts: r.period_start };
+        cur.avg += Number(r.avg_engagement_per_post || 0);
+        cur.count += 1;
+        byPeriod.set(k, cur);
+      });
+      const rows = Array.from(byPeriod.values())
+        .map(r => ({ label: r.label, value: r.count ? r.avg / r.count : 0, ts: r.ts }))
+        .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+      this._charts.push(new Chart(eHost, {
+        type: 'line',
+        data: { labels: rows.map(r => r.label),
+          datasets: [{ label: 'Avg eng/post', data: rows.map(r => r.value),
+            borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.15)',
+            tension: 0.3, fill: true, pointRadius: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } }, scales: axisOpts },
+      }));
+    } else if (eHost) {
+      eHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin engagement registrado</div>';
+    }
+
+    // 3. Actividad de sentimiento (stacked bar)
+    const sent = d?.sentiment?.data || [];
+    const sHost = document.getElementById('mbV3SentimentCanvas');
+    if (sHost && sent.length) {
+      const byPeriod = new Map();
+      sent.forEach(r => {
+        const k = r.period_label || r.period_start;
+        const cur = byPeriod.get(k) || { label: k, pos: 0, neu: 0, neg: 0, ts: r.period_start };
+        cur.pos += Number(r.positive_posts || 0);
+        cur.neu += Number(r.neutral_posts  || 0);
+        cur.neg += Number(r.negative_posts || 0);
+        byPeriod.set(k, cur);
+      });
+      const rows = Array.from(byPeriod.values()).sort((a, b) => new Date(a.ts) - new Date(b.ts));
+      this._charts.push(new Chart(sHost, {
+        type: 'bar',
+        data: {
+          labels: rows.map(r => r.label),
+          datasets: [
+            { label: 'Positivo', data: rows.map(r => r.pos), backgroundColor: '#22c55e' },
+            { label: 'Neutro',   data: rows.map(r => r.neu), backgroundColor: '#6b7280' },
+            { label: 'Negativo', data: rows.map(r => r.neg), backgroundColor: '#ef4444' },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 10 } } },
+          scales: { x: { ...axisOpts.x, stacked: true }, y: { ...axisOpts.y, stacked: true } } },
+      }));
+    } else if (sHost) {
+      sHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin posts con sentimiento</div>';
+    }
+
+    // 4. Heatmap day_of_week × hour_of_day
+    const ph = d?.postingHours?.data || [];
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const hHost = document.getElementById('mbV3HeatmapHost');
+    if (hHost && ph.length) {
+      const matrix = Array.from({ length: 7 }, () => Array(24).fill(0));
+      let max = 0;
+      ph.forEach(c => {
+        const dow = Number(c.day_of_week);
+        const hr  = Number(c.hour_of_day);
+        const v   = Number(c.total_engagement || 0);
+        if (dow >= 0 && dow < 7 && hr >= 0 && hr < 24) {
+          matrix[dow][hr] += v;
+          if (matrix[dow][hr] > max) max = matrix[dow][hr];
+        }
+      });
+      const corner = '<div class="cc-v2-heat-corner"></div>';
+      const hrCols = Array.from({ length: 24 }, (_, h) =>
+        `<div class="cc-v2-heat-hr">${h % 3 === 0 ? h : ''}</div>`).join('');
+      const rows = days.map((label, dy) => `
+        <div class="cc-v2-heat-day">${label}</div>
+        ${matrix[dy].map((v, h) => {
+          const intensity = max ? v / max : 0;
+          return `<div class="cc-v2-heat-cell" title="${label} ${h}:00 — ${fmt(v)} eng" style="background:rgba(255,84,0,${intensity.toFixed(2)})"></div>`;
+        }).join('')}`).join('');
+      hHost.innerHTML = `<div class="cc-v2-heat-grid">${corner}${hrCols}${rows}</div>`;
     } else if (hHost) {
-      hHost.innerHTML = `<div class="mb-v2-empty">Sin datos de heatmap</div>`;
+      hHost.innerHTML = '<div class="mb-v2-empty">Sin datos de horarios</div>';
     }
 
-    // 3. Sentiment biométrico (doughnut)
-    const sent = d?.sentimiento?.data;
-    const sCanvas = document.getElementById('mbV2SentimentCanvas');
-    if (sCanvas && sent && sent.total) {
-      this._charts.push(new Chart(sCanvas, {
+    // 5. Topics — barras horizontales por usage_count
+    const renderTagList = (host, items, getLabel, getCount, getEng) => {
+      if (!host) return;
+      if (!items || !items.length) {
+        host.innerHTML = '<div class="mb-v2-empty">Sin datos</div>';
+        return;
+      }
+      host.innerHTML = items.slice(0, 10).map(t => `
+        <div class="cc-v2-tag-row">
+          <span class="cc-v2-tag-name">${this._esc(getLabel(t))}</span>
+          <span class="cc-v2-tag-eng">${getCount(t)} · ${fmt(getEng(t))}</span>
+        </div>`).join('');
+    };
+
+    renderTagList(
+      document.getElementById('mbV3TopicsHost'),
+      d?.strategy?.topics?.data || [],
+      t => t.topic, t => Number(t.usage_count || 0), t => Number(t.total_engagement || 0)
+    );
+    renderTagList(
+      document.getElementById('mbV3HashtagsHost'),
+      d?.strategy?.hashtags?.data || [],
+      h => '#' + h.hashtag, h => Number(h.usage_count || 0), h => Number(h.total_engagement || 0)
+    );
+
+    // 6. Tonos — bar horizontal
+    const tones = d?.strategy?.tones?.data || [];
+    const tHost = document.getElementById('mbV3TonesCanvas');
+    if (tHost && tones.length) {
+      const sorted = [...tones].sort((a, b) => Number(b.posts_count || 0) - Number(a.posts_count || 0)).slice(0, 8);
+      this._charts.push(new Chart(tHost, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(t => t.tone || '—'),
+          datasets: [{ data: sorted.map(t => Number(t.posts_count || 0)),
+            backgroundColor: '#ff5400', borderRadius: 4 }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: 'rgba(255,255,255,0.6)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { display: false } },
+          },
+        },
+      }));
+    } else if (tHost) {
+      tHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin tonos analizados</div>';
+    }
+
+    // 7. Plataformas — donut por posts_count
+    const platforms = d?.strategy?.platforms?.data || [];
+    const pHost = document.getElementById('mbV3PlatformCanvas');
+    if (pHost && platforms.length) {
+      this._charts.push(new Chart(pHost, {
         type: 'doughnut',
         data: {
-          labels: ['Positivo', 'Negativo', 'Neutro'],
+          labels: platforms.map(p => this._capCase(p.network || '—')),
           datasets: [{
-            data: [sent.positivo || 0, sent.negativo || 0, Math.max(0, sent.total - (sent.positivo || 0) - (sent.negativo || 0))],
-            backgroundColor: ['#22c55e', '#ef4444', '#6b7280'],
+            data: platforms.map(p => Number(p.posts_count || 0)),
+            backgroundColor: ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ef4444'],
             borderWidth: 0,
           }],
         },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: '65%',
-          plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)', boxWidth: 12 } } },
-        },
+        options: donutOpts,
       }));
-    } else if (sCanvas) {
-      sCanvas.parentElement.innerHTML = `<div class="mb-v2-empty">Sin datos de sentimiento</div>`;
+    } else if (pHost) {
+      pHost.parentElement.innerHTML = '<div class="mb-v2-empty">Sin plataformas</div>';
     }
 
-    // 4. Crisis recientes (lista)
-    const crisis = d?.crisis?.data;
-    const cHost  = document.getElementById('mbV2CrisisHost');
-    if (cHost) {
-      const vulns = crisis?.vulnerabilities || [];
-      if (vulns.length) {
-        cHost.innerHTML = vulns.slice(0, 5).map(v => `
-          <div class="mb-v2-crisis-row mb-v2-crisis-row--${this._esc(v.severity || 'low')}">
-            <span class="mb-v2-crisis-sev">${this._esc((v.severity || 'low').toUpperCase())}</span>
-            <span class="mb-v2-crisis-title">${this._esc(v.title || 'Sin título')}</span>
-          </div>
-        `).join('');
+    // 8. Sentimiento por marca — barras horizontales segmentadas
+    const sbb = d?.strategy?.sentimentsByBrand?.data || [];
+    const sbbHost = document.getElementById('mbV3SentByBrandHost');
+    if (sbbHost) {
+      if (!sbb.length) {
+        sbbHost.innerHTML = '<div class="mb-v2-empty">Sin datos</div>';
       } else {
-        cHost.innerHTML = `<div class="mb-v2-empty">Sin crisis abiertas ✓</div>`;
+        sbbHost.innerHTML = sbb.slice(0, 8).map(r => {
+          const total = Number(r.total_posts || 1);
+          const pos = Number(r.positive_count || 0);
+          const neu = Number(r.neutral_count || 0);
+          const neg = Number(r.negative_count || 0);
+          const pPos = (pos / total * 100).toFixed(1);
+          const pNeu = (neu / total * 100).toFixed(1);
+          const pNeg = (neg / total * 100).toFixed(1);
+          return `
+            <div class="mb-v3-sent-row">
+              <div class="mb-v3-sent-name">${this._esc(r.brand_name || '—')}</div>
+              <div class="mb-v3-sent-bar">
+                <div class="mb-v3-sent-seg mb-v3-sent-seg--pos" style="width:${pPos}%" title="Positivo ${pos}"></div>
+                <div class="mb-v3-sent-seg mb-v3-sent-seg--neu" style="width:${pNeu}%" title="Neutro ${neu}"></div>
+                <div class="mb-v3-sent-seg mb-v3-sent-seg--neg" style="width:${pNeg}%" title="Negativo ${neg}"></div>
+              </div>
+              <div class="mb-v3-sent-meta">${total}</div>
+            </div>`;
+        }).join('');
       }
     }
 
-    // 5. SWOT
-    const swot = d?.swot?.data;
-    const swotHost = document.getElementById('mbV2SwotHost');
-    if (swotHost) {
-      const cuad = (cls, label, items) => `
-        <div class="mb-v2-swot-cell mb-v2-swot-cell--${cls}">
-          <div class="mb-v2-swot-label">${label}</div>
-          <ul class="mb-v2-swot-list">
-            ${(items || []).slice(0, 4).map(i => `<li>${this._esc(i.text || i)}</li>`).join('') || '<li class="mb-v2-empty">—</li>'}
-          </ul>
-        </div>`;
-      swotHost.innerHTML = `
-        ${cuad('s', 'Fortalezas',     swot?.strengths)}
-        ${cuad('w', 'Debilidades',    swot?.weaknesses)}
-        ${cuad('o', 'Oportunidades',  swot?.opportunities)}
-        ${cuad('t', 'Amenazas',       swot?.threats)}
-      `;
+    // 9. Top posts — tabla
+    const tp = d?.topPosts?.data || [];
+    const tpHost = document.getElementById('mbV3TopPostsHost');
+    if (tpHost) {
+      if (!tp.length) {
+        tpHost.innerHTML = '<div class="mb-v2-empty">Sin publicaciones destacadas</div>';
+      } else {
+        tpHost.innerHTML = tp.slice(0, 10).map((p, i) => {
+          const date = p.captured_at ? new Date(p.captured_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) : '';
+          return `
+            <article class="cc-v2-post-row">
+              <div class="cc-v2-post-head">
+                <span class="cc-v2-post-name">#${i + 1} · ${this._esc(p.brand_name || '—')}</span>
+                <span class="cc-v2-post-net">${this._esc(this._capCase(p.network || ''))}</span>
+                <span style="font-size:11px;color:rgba(255,255,255,0.5)">${this._esc(p.profile_handle || '')} · ${date}</span>
+                <span class="cc-v2-post-eng">${fmt(p.engagement_total)}</span>
+              </div>
+              <div class="cc-v2-post-content">${this._esc(p.content_preview || '')}</div>
+            </article>`;
+        }).join('');
+      }
     }
+
+    // 10. Wire de filtros
+    const brandSel = document.getElementById('mbV2BrandFilter');
+    const dateSel  = document.getElementById('mbV2DateFilter');
+    const onChange = () => {
+      this._mbFilters = {
+        brandId: brandSel?.value || '',
+        windowDays: Number(dateSel?.value || 30),
+      };
+      this._mbData = null;
+      if (this._mbBody) this._renderMyBrands(this._mbBody, this._mbFilters);
+    };
+    brandSel?.addEventListener('change', onChange);
+    dateSel?.addEventListener('change', onChange);
   }
 
   /* ════════════════════════════════════════════════════════════
