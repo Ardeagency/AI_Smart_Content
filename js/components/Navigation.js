@@ -910,6 +910,16 @@ class Navigation {
 
         ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="Administración organizacional">${footerHTML}</div>` : ''}
 
+        <div class="nav-system-stats" aria-hidden="true">
+          <div class="nav-system-stats-row">
+            <span class="nav-system-stats-label">RAM</span>
+            <span class="nav-system-stats-value" id="navSystemStatsValue">0MB / 8GB</span>
+          </div>
+          <a href="${this.getUserSidebarRoute('credits')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('credits')}">
+            <span>Upgrade to Starter</span>
+          </a>
+        </div>
+
         <div class="nav-brand-footer" role="contentinfo">
           <a href="/home" class="nav-brand-footer-logo-link" aria-label="AI Smart Content">
             <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="AI Smart Content">
@@ -1091,8 +1101,8 @@ class Navigation {
     const raw = String(name || '').trim();
     if (!raw) return;
 
-    const MAX_SIZE = 20;
-    const MIN_SIZE = 13;
+    const MAX_SIZE = 24;
+    const MIN_SIZE = 14;
 
     const layoutOnce = () => {
       nameEl.classList.remove('nav-org-title--two-lines');
@@ -1136,20 +1146,20 @@ class Navigation {
     }
   }
 
-  _applyTwoLineOrgName(nameEl, raw, maxSize = 20) {
+  _applyTwoLineOrgName(nameEl, raw, maxSize = 24) {
     if (!nameEl) return;
     nameEl.classList.add('nav-org-title--two-lines');
     const maxWidth = Math.max(1, nameEl.clientWidth);
     const words = raw.split(/\s+/).filter(Boolean);
 
     if (words.length < 2) {
-      nameEl.style.setProperty('--nav-org-title-size', `${Math.min(maxSize, 18)}px`);
+      nameEl.style.setProperty('--nav-org-title-size', `${Math.min(maxSize, 22)}px`);
       nameEl.innerHTML = _escapeHtml(raw);
       return;
     }
 
     let chosen = _formatOrgNameTwoLines(raw);
-    for (let size = maxSize; size >= 13; size -= 1) {
+    for (let size = maxSize; size >= 14; size -= 1) {
       nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
       const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
       if (lines && lines[0] && lines[1]) {
