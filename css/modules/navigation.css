@@ -502,17 +502,20 @@ body.sidebar-collapsed .main-header,
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
 
-/* Header del sidebar: título de organización (uppercase) + créditos en columna */
+/* Header del sidebar: título de organización (uppercase) + créditos en columna.
+   Altura fija 100px (spec Figma Frame 86) para que el primer item de .nav-menu
+   quede en el mismo y-pos en colapsado y expandido. */
 .nav-mode-user .nav-workspace-header {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
     gap: 10px;
     min-width: 0;
     max-width: 100%;
     overflow: visible;
-    min-height: min-content;
-    padding: 16px 16px 14px;
+    height: 100px;
+    padding: 0 16px;
     box-sizing: border-box;
     border-bottom: 1px solid var(--nav-border);
 }
@@ -816,8 +819,15 @@ body.sidebar-collapsed .main-header,
     padding-right: 16px;
 }
 
-/* Sidebar usuario colapsado: sin cabecera (org-title y créditos están ocultos) */
+/* Sidebar usuario colapsado: la cabecera mantiene 100px (igual que expandido) para que los items NO salten al togglear; sus hijos se ocultan, y el border-bottom queda como separador visual. */
 .side-navigation.collapsed.nav-mode-user .nav-workspace-header {
+    display: block;
+    height: 100px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-workspace-header > * {
     display: none;
 }
 
