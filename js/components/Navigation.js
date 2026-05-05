@@ -1466,17 +1466,22 @@ class Navigation {
       });
     });
 
-    document.querySelectorAll('.nav-submenu-toggle:not([data-hover-bound])').forEach((toggle) => {
-      toggle.setAttribute('data-hover-bound', '1');
-      const parent = toggle.closest('.nav-item.has-submenu');
+    /* Brand Storage en colapsado: el chevron está oculto, así que el page link
+       (icono de carpeta) también dispara el flyout para que se comporte como Flows. */
+    const hoverTriggers = document.querySelectorAll(
+      '.nav-submenu-toggle:not([data-hover-bound]), .nav-brand-storage-page:not([data-hover-bound])'
+    );
+    hoverTriggers.forEach((trigger) => {
+      trigger.setAttribute('data-hover-bound', '1');
+      const parent = trigger.closest('.nav-item.has-submenu');
       if (!parent) return;
-      toggle.addEventListener('mouseenter', () => {
+      trigger.addEventListener('mouseenter', () => {
         if (!sidebar?.classList.contains('collapsed')) return;
         clearTimeout(this._flyoutCloseTimer);
         this._flyoutCloseTimer = null;
         this._flyoutHoverTimer = setTimeout(() => this.openFlyout(parent), 120);
       });
-      toggle.addEventListener('mouseleave', () => {
+      trigger.addEventListener('mouseleave', () => {
         clearTimeout(this._flyoutHoverTimer);
         if (this._flyoutOpen) {
           this._flyoutCloseTimer = setTimeout(() => this.closeFlyout(), 200);

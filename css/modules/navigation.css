@@ -442,7 +442,7 @@ body.sidebar-collapsed .main-header,
     display: none;
 }
 
-/* Brand Storage colapsado: ocultar el chevron secundario y dejar la fila como un solo cuadrado de 40x40 (evita que el icono de la carpeta se recorte por desbordamiento). */
+/* Brand Storage colapsado: ocultar el chevron secundario y dejar la fila como un solo cuadrado (evita que el icono de la carpeta se recorte por desbordamiento). */
 .side-navigation.collapsed .nav-brand-storage-expand-btn {
     display: none;
 }
@@ -452,6 +452,50 @@ body.sidebar-collapsed .main-header,
     min-width: 40px;
     margin: 0 auto;
     overflow: visible;
+}
+
+/* =========================================
+   COLAPSADO USER — Mantener altura/spacing del estado expandido
+   para evitar saltos visibles al toggle. Las secciones se vuelven
+   un divisor horizontal en lugar de un label de texto.
+   ========================================= */
+
+.side-navigation.collapsed.nav-mode-user .nav-link,
+.side-navigation.collapsed.nav-mode-user .nav-submenu-toggle,
+.side-navigation.collapsed.nav-mode-user .nav-brand-storage-head {
+    height: auto;
+    min-height: 30px;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link,
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link {
+    height: auto;
+    min-height: 30px;
+    width: 40px;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-menu .nav-item,
+.side-navigation.collapsed.nav-mode-user .nav-menu .nav-group {
+    margin-bottom: 0;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-section-label {
+    display: block;
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-section-label::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 50%;
+    height: 1px;
+    background: var(--nav-border);
+    transform: translateY(-50%);
 }
 
 /* =========================================
