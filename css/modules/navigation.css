@@ -575,7 +575,7 @@ body.sidebar-collapsed .main-header,
 /* Título único del header del sidebar (solo nombre de la organización) */
 .nav-org-title {
     font-family: Inter, system-ui, sans-serif;
-    font-size: var(--nav-org-title-size, clamp(22px, 2.2vw, 32px));
+    font-size: var(--nav-org-title-size, clamp(15px, 1.3vw, 20px));
     font-weight: 700;
     /* Interlineado suficiente para descendentes; 1.05 recortaba g/y con overflow+ellipsis */
     line-height: 1.22;
@@ -3134,7 +3134,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-item--primary .nav-link,
 .nav-item--primary .nav-main-link {
-    min-height: 40px;
+    min-height: 32px;
     border-radius: var(--radius-md);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -3190,8 +3190,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
     width: auto !important;
-    height: 24px !important;
-    max-width: min(148px, calc(100% - 8px));
+    height: 14px !important;
+    max-width: min(96px, calc(100% - 8px));
     object-fit: contain;
 }
 

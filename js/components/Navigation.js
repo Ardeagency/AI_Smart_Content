@@ -1091,8 +1091,8 @@ class Navigation {
     const raw = String(name || '').trim();
     if (!raw) return;
 
-    const MAX_SIZE = 32;
-    const MIN_SIZE = 16;
+    const MAX_SIZE = 20;
+    const MIN_SIZE = 13;
 
     const layoutOnce = () => {
       nameEl.classList.remove('nav-org-title--two-lines');
@@ -1136,20 +1136,20 @@ class Navigation {
     }
   }
 
-  _applyTwoLineOrgName(nameEl, raw, maxSize = 32) {
+  _applyTwoLineOrgName(nameEl, raw, maxSize = 20) {
     if (!nameEl) return;
     nameEl.classList.add('nav-org-title--two-lines');
     const maxWidth = Math.max(1, nameEl.clientWidth);
     const words = raw.split(/\s+/).filter(Boolean);
 
     if (words.length < 2) {
-      nameEl.style.setProperty('--nav-org-title-size', `${Math.min(maxSize, 22)}px`);
+      nameEl.style.setProperty('--nav-org-title-size', `${Math.min(maxSize, 18)}px`);
       nameEl.innerHTML = _escapeHtml(raw);
       return;
     }
 
     let chosen = _formatOrgNameTwoLines(raw);
-    for (let size = maxSize; size >= 16; size -= 1) {
+    for (let size = maxSize; size >= 13; size -= 1) {
       nameEl.style.setProperty('--nav-org-title-size', `${size}px`);
       const lines = this._getBestTwoLineSplit(words, maxWidth, size, nameEl);
       if (lines && lines[0] && lines[1]) {

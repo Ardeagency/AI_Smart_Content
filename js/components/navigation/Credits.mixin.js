@@ -27,7 +27,7 @@
     if (credits >= 1000) {
       return (Math.floor(credits / 100) / 10).toFixed(1) + 'K';
     }
-    return String(credits);
+    return String(Math.round(credits));
   },
 
   /**
