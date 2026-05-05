@@ -1136,7 +1136,12 @@ class Navigation {
         return true;
       }
 
-      this._applyTwoLineOrgName(nameEl, raw, MAX_SIZE);
+      // Si no cabe ni en MIN_SIZE: dejar al texto en MIN_SIZE y que el CSS
+      // (white-space:nowrap + text-overflow:ellipsis) lo trunque con "…".
+      // Antes hacíamos fallback a two-lines, lo cual rompía el layout
+      // del header de altura fija 100px y hacía que el nombre se viera
+      // partido aunque cupiera en una línea.
+      nameEl.style.setProperty('--nav-org-title-size', `${MIN_SIZE}px`);
       return true;
     };
 

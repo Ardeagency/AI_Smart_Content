@@ -1247,14 +1247,14 @@ body.sidebar-collapsed .main-header,
     min-height: 0;
 }
 
-/* Sidebar usuario: padding-top para separar Vera del header (el rule
-   .nav-item:first-child{margin-top:0} gana en especificidad sobre
-   .nav-item--primary, así que el spacing se aplica en el contenedor).
-   gap:4px da aire entre items de forma idéntica en colapsado y expandido,
-   manteniendo los y-positions sincronizados. */
+/* Sidebar usuario: padding-top da el aire entre el header de la
+   organización y Vera (el rule .nav-item:first-child{margin-top:0}
+   gana en especificidad sobre .nav-item--primary, así que el spacing
+   se aplica en el contenedor). gap:2px = ritmo apretado pero respirable
+   entre items, idéntico en colapsado y expandido. */
 .nav-mode-user .nav-menu {
-    padding-top: 16px;
-    gap: 4px;
+    padding-top: 12px;
+    gap: 2px;
 }
 
 .nav-section {
@@ -3161,8 +3161,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
    ========================================= */
 
 .nav-item--primary {
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-top: 0;
+    margin-bottom: 4px;
 }
 
 /* Dev: acción primaria rápida */
@@ -3295,7 +3295,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.28);
-    padding: 14px 12px 4px;
+    padding: 10px 12px 4px;
     margin: 0;
     line-height: 1;
     pointer-events: none;
