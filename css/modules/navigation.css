@@ -442,6 +442,18 @@ body.sidebar-collapsed .main-header,
     display: none;
 }
 
+/* Brand Storage colapsado: ocultar el chevron secundario y dejar la fila como un solo cuadrado de 40x40 (evita que el icono de la carpeta se recorte por desbordamiento). */
+.side-navigation.collapsed .nav-brand-storage-expand-btn {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-brand-storage-head {
+    width: 40px;
+    min-width: 40px;
+    margin: 0 auto;
+    overflow: visible;
+}
+
 /* =========================================
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
@@ -3521,6 +3533,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-brand-footer .nav-sidebar-toggle:hover {
     background: var(--bg-hover);
     border-color: var(--border-light);
+}
+
+.nav-brand-footer .nav-sidebar-toggle:focus-visible {
+    outline: 1px solid var(--border-light);
+    outline-offset: 2px;
 }
 
 .nav-brand-footer .nav-sidebar-toggle .nav-sidebar-toggle-icon {
