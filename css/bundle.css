@@ -178,7 +178,7 @@
     --z-modal: 10001;
     --z-popover: 10002;
     --z-notification: 10000;
-    --nav-width: 260px;
+    --nav-width: 220px;
     --nav-width-collapsed: 51px;
     --nav-transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);

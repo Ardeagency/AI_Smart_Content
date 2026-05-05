@@ -11,7 +11,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'vera',
       label: 'Vera',
       icon: 'fa-brain',
-      iconSrc: '/recursos/vera/Vera-2.svg',
+      iconSrc: '/recursos/vera/Logoverablanco.svg',
       route: 'vera',
       primary: true,
       hideLabel: true,
@@ -892,10 +892,14 @@ class Navigation {
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
-          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
-          </button>
           <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
+          <div class="nav-org-credits" id="navOrgCreditsBlock">
+            <div class="nav-org-credits-row">
+              <span class="nav-org-credits-label">credits</span>
+              <span class="nav-org-credits-value" id="navTokensValue">—</span>
+            </div>
+            <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
+          </div>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Navegación del workspace">
@@ -904,15 +908,15 @@ class Navigation {
 
         <div class="nav-spacer" aria-hidden="true"></div>
 
-        <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
-          ${footerHTML}
-          <div class="nav-org-credits" id="navOrgCreditsBlock">
-            <div class="nav-org-credits-row">
-              <span class="nav-org-credits-label">credits</span>
-              <span class="nav-org-credits-value" id="navTokensValue">—</span>
-            </div>
-            <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
-          </div>
+        ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="Administración organizacional">${footerHTML}</div>` : ''}
+
+        <div class="nav-brand-footer" role="contentinfo">
+          <a href="/home" class="nav-brand-footer-logo-link" aria-label="AI Smart Content">
+            <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="AI Smart Content">
+          </a>
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
+          </button>
         </div>
       </nav>
       <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>

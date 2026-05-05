@@ -13,9 +13,9 @@
 .main-header {
     position: fixed;
     top: 0;
-    left: var(--nav-width, 260px);
+    left: var(--nav-width, 220px);
     right: 0;
-    max-width: calc(100vw - var(--nav-width, 260px));
+    max-width: calc(100vw - var(--nav-width, 220px));
     background: transparent;
     border-bottom: none;
     padding: 8px 16px;
@@ -446,19 +446,19 @@ body.sidebar-collapsed .main-header,
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
 
-/* Header del sidebar (solo nombre de la organización, sin card) */
+/* Header del sidebar: título de organización (uppercase) + créditos en columna */
 .nav-mode-user .nav-workspace-header {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
     min-width: 0;
     max-width: 100%;
-    /* No recortar descendentes (g, y, etc.); el ancho lo limitan el flex + el título */
     overflow: visible;
     min-height: min-content;
-    /* Alineado con .nav-menu (padding horizontal) + aire inferior para descendentes */
-    padding: 12px 10px 14px;
+    padding: 16px 16px 14px;
     box-sizing: border-box;
+    border-bottom: 1px solid var(--nav-border);
 }
 
 /* Botón abrir/cerrar sidebar (icono colapsado) */
@@ -600,6 +600,13 @@ body.sidebar-collapsed .main-header,
     word-break: break-word;
     line-height: 1.2;
     padding: 0.04em 0 0.1em;
+}
+
+/* Sidebar usuario: nombre de organización en mayúsculas tipo display */
+.nav-mode-user .nav-org-title {
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-weight: 800;
 }
 
 .nav-org-type {
@@ -751,6 +758,11 @@ body.sidebar-collapsed .main-header,
     align-items: center;
     padding-left: 16px;
     padding-right: 16px;
+}
+
+/* Sidebar usuario colapsado: sin cabecera (org-title y créditos están ocultos) */
+.side-navigation.collapsed.nav-mode-user .nav-workspace-header {
+    display: none;
 }
 
 .side-navigation.collapsed .nav-identity-card {
@@ -1759,8 +1771,8 @@ body.has-header-only #app-container {
 
 /* === LAYOUT: CON SIDEBAR (Org y Dev) === */
 body.has-sidebar #app-container {
-    margin-left: var(--nav-width, 260px);
-    max-width: calc(100vw - var(--nav-width, 260px));
+    margin-left: var(--nav-width, 220px);
+    max-width: calc(100vw - var(--nav-width, 220px));
     padding: 0;
     padding-top: 45px; /* Solo padding superior para quedar debajo del header principal */
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1855,8 +1867,8 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
 
 /* Header con sidebar: efecto glass-black. Con filtros (Production) pasa a dos filas. */
 .app-header.with-sidebar {
-    left: var(--nav-width, 260px);
-    max-width: calc(100vw - var(--nav-width, 260px));
+    left: var(--nav-width, 220px);
+    max-width: calc(100vw - var(--nav-width, 220px));
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
     border-radius: 0;
@@ -2662,7 +2674,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     position: fixed;
     top: 0;
     left: 0;
-    width: var(--nav-width, 260px);
+    width: var(--nav-width, 220px);
     height: 100vh;
     background-color: var(--sidebar-background, var(--bg-primary));
     border-right: 1px solid var(--glass-black-border);
@@ -3124,8 +3136,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-item--primary .nav-main-link {
     min-height: 40px;
     border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     font-size: 13px !important;
     font-weight: 600 !important;
     color: var(--sidebar-text-primary) !important;
@@ -3135,15 +3147,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-item--primary .nav-link:hover,
 .nav-item--primary .nav-main-link:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    background: var(--bg-hover) !important;
+    border-color: var(--border-light) !important;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 .nav-item--primary .nav-link.active,
 .nav-item--primary .nav-main-link.active {
-    background: rgba(255, 255, 255, 0.11) !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
+    background: var(--brillo-active) !important;
+    border-color: var(--border-light) !important;
     box-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
 }
 
@@ -3152,27 +3164,27 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
-/* Vera: wordmark (Vera-2.svg) centrado, chip #0b0b0b, sin label visible */
+/* Vera: wordmark centrado, mismo color que cards (--bg-card) y borde estándar */
 .nav-item--primary .nav-link.nav-link--no-label,
 .nav-item--primary .nav-main-link.nav-link--no-label {
     justify-content: center;
     gap: 0;
-    background: #0b0b0b !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
     box-shadow: none !important;
 }
 
 .nav-item--primary .nav-link.nav-link--no-label:hover,
 .nav-item--primary .nav-main-link.nav-link--no-label:hover {
-    background: #121212 !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    background: var(--bg-hover) !important;
+    border-color: var(--border-light) !important;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
 }
 
 .nav-item--primary .nav-link.nav-link--no-label.active,
 .nav-item--primary .nav-main-link.nav-link--no-label.active {
-    background: #101010 !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
+    background: var(--brillo-active) !important;
+    border-color: var(--border-light) !important;
     box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28) !important;
 }
 
@@ -3195,19 +3207,19 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--sidebar-text-primary) !important;
 }
 
-/* En collapsed: Vera (único primario) — mismo chip #0b0b0b, logo más compacto */
+/* En collapsed: Vera (único primario) — mismo chip color de cards, logo más compacto */
 .side-navigation.collapsed .nav-item--primary .nav-link,
 .side-navigation.collapsed .nav-item--primary .nav-main-link {
-    background: #0b0b0b !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
     width: 40px;
     height: 40px;
 }
 
 .side-navigation.collapsed .nav-item--primary .nav-link.active,
 .side-navigation.collapsed .nav-item--primary .nav-main-link.active {
-    background: #101010 !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
+    background: var(--brillo-active) !important;
+    border-color: var(--border-light) !important;
 }
 
 .side-navigation.collapsed .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
@@ -3308,14 +3320,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--sidebar-text-primary);
 }
 
-/* Créditos de la organización: fila credits | total/usado + barra */
+/* Créditos de la organización: fila credits | total/usado + barra (vive en .nav-workspace-header) */
 .nav-org-credits {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--nav-border);
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    width: 100%;
 }
 
 .nav-org-credits-row {
@@ -3393,4 +3406,69 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 /* .error-actions usa .btn-primary y .btn-secondary globales (design system v2) */
+
+/* =========================================
+   NAV BRAND FOOTER — Logo aismartcontent + toggle colapsar
+   ========================================= */
+
+.nav-brand-footer {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--nav-border);
+    box-sizing: border-box;
+}
+
+.nav-brand-footer-logo-link {
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    line-height: 0;
+}
+
+.nav-brand-footer-logo {
+    height: 18px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.nav-brand-footer .nav-sidebar-toggle {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: 50%;
+}
+
+.nav-brand-footer .nav-sidebar-toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+}
+
+.nav-brand-footer .nav-sidebar-toggle .nav-sidebar-toggle-icon {
+    width: 12px;
+    height: 10px;
+}
+
+/* Collapsed: stack logo y toggle en columna; ocultar logo (no cabe) y centrar toggle */
+.side-navigation.collapsed .nav-brand-footer {
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 6px 14px;
+    gap: 0;
+}
+
+.side-navigation.collapsed .nav-brand-footer-logo-link {
+    display: none;
+}
 
