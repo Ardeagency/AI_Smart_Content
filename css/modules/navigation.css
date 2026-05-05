@@ -455,23 +455,40 @@ body.sidebar-collapsed .main-header,
 }
 
 /* =========================================
-   COLAPSADO USER — Mantener altura/spacing del estado expandido
-   para evitar saltos visibles al toggle. Las secciones se vuelven
-   un divisor horizontal en lugar de un label de texto.
+   COLAPSADO USER — Hereda dimensiones del expandido
+   El item NO cambia de altura, padding ni border-radius al colapsar.
+   Solo se ocultan .nav-text y .nav-chevron, y el icono se centra
+   en el rail (justify-content:center). Spacing vertical idéntico al
+   expandido para que ningún elemento "salte" al togglear.
    ========================================= */
 
 .side-navigation.collapsed.nav-mode-user .nav-link,
-.side-navigation.collapsed.nav-mode-user .nav-submenu-toggle,
-.side-navigation.collapsed.nav-mode-user .nav-brand-storage-head {
+.side-navigation.collapsed.nav-mode-user .nav-main-link,
+.side-navigation.collapsed.nav-mode-user .nav-submenu-toggle {
+    width: 100%;
+    min-width: 0;
     height: auto;
     min-height: 30px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--radius-sm);
 }
 
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link,
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link {
+    width: 100%;
+    min-width: 0;
     height: auto;
     min-height: 30px;
-    width: 40px;
+    padding: 0;
+    justify-content: center;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-brand-storage-head {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    min-height: 30px;
 }
 
 .side-navigation.collapsed.nav-mode-user .nav-menu .nav-item,
@@ -504,18 +521,19 @@ body.sidebar-collapsed .main-header,
 
 /* Header del sidebar: título de organización (uppercase) + créditos en columna.
    Altura fija 100px (spec Figma Frame 86) para que el primer item de .nav-menu
-   quede en el mismo y-pos en colapsado y expandido. */
+   quede en el mismo y-pos en colapsado y expandido. justify-content:
+   space-between separa la org arriba y los créditos abajo, respetando el
+   padding 16/14 sin hijos pegados al borde. */
 .nav-mode-user .nav-workspace-header {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-between;
     min-width: 0;
     max-width: 100%;
     overflow: visible;
     height: 100px;
-    padding: 0 16px;
+    padding: 16px 16px 14px;
     box-sizing: border-box;
     border-bottom: 1px solid var(--nav-border);
 }
@@ -3146,7 +3164,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
    ========================================= */
 
 .nav-item--primary {
-    margin-top: 12px;
+    margin-top: 20px;
     margin-bottom: 10px;
 }
 
