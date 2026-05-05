@@ -83,6 +83,52 @@
       console.warn('Navigation: loadCreditsFromDb', e);
     }
   },
+  /**
+   * Lee uso de almacenamiento desde storage_usage (BD) y actualiza el DOM del sidebar.
+   * Schema: storage_usage(organization_id, used_mb, max_mb). max_mb se sincroniza con
+   * el plan activo via trigger subscriptions_storage_max_sync; used_mb via trigger
+   * brand_assets_storage_recompute.
+   * @param {string|null} [organizationId]
+   */
+  async loadStorageFromDb(organizationId) {
+    const orgId = organizationId || this.currentOrgId;
+    if (!orgId) return;
+    const supabase = await this.getSupabase();
+    if (!supabase) return;
+    const valueEl = document.getElementById('navStorageValue');
+    if (!valueEl) return;
+    try {
+      const { data, error } = await supabase
+        .from('storage_usage')
+        .select('used_mb, max_mb')
+        .eq('organization_id', orgId)
+        .maybeSingle();
+      if (error) {
+        valueEl.textContent = '—';
+        return;
+      }
+      const used = data ? Number(data.used_mb) || 0 : 0;
+      const max = data ? Number(data.max_mb) || 0 : 0;
+      const next = max > 0
+        ? `${this._formatStorageDisplay(used)} / ${this._formatStorageDisplay(max)}`
+        : this._formatStorageDisplay(used);
+      if (valueEl.textContent !== next) valueEl.textContent = next;
+    } catch (e) {
+      console.warn('Navigation: loadStorageFromDb', e);
+      valueEl.textContent = '—';
+    }
+  },
+
+  /**
+   * MB → "12 MB", "1.4 GB", "1 TB" (sin overflow de decimales).
+   */
+  _formatStorageDisplay(mb) {
+    const v = Number(mb) || 0;
+    if (v >= 1048576) return (Math.floor(v / 104857.6) / 10).toFixed(1) + ' TB';
+    if (v >= 1024) return (Math.floor(v / 102.4) / 10).toFixed(1) + ' GB';
+    return Math.round(v) + ' MB';
+  },
+
   _startCreditsRefreshInterval() {
     this._stopCreditsRefreshInterval();
     if (this.currentMode !== 'user' || !this.currentOrgId) return;

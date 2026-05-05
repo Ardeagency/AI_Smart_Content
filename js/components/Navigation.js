@@ -322,6 +322,7 @@ class Navigation {
       this.updateActiveLink();
       if (config.mode === 'user' && config.orgId) {
         this.loadCreditsFromDb();
+        this.loadStorageFromDb();
       }
       if (config.showHeader) {
         this.refreshNotificationsBadge();
@@ -920,10 +921,10 @@ class Navigation {
 
         ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="Administración organizacional">${footerHTML}</div>` : ''}
 
-        <div class="nav-system-stats" aria-hidden="true">
+        <div class="nav-system-stats">
           <div class="nav-system-stats-row">
-            <span class="nav-system-stats-label">RAM</span>
-            <span class="nav-system-stats-value" id="navSystemStatsValue">0MB / 8GB</span>
+            <span class="nav-system-stats-label">Storage</span>
+            <span class="nav-system-stats-value" id="navStorageValue">—</span>
           </div>
           <a href="${this.getUserSidebarRoute('credits')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('credits')}">
             <span>Upgrade to Starter</span>
@@ -1831,6 +1832,9 @@ class Navigation {
 
       // Siempre leer créditos desde la BD (tabla organization_credits) para mostrar el valor real
       await this.loadCreditsFromDb();
+      // Storage usage (storage_usage). Trigger en brand_assets mantiene used_mb fresco;
+      // basta con leer al cargar el sidebar (no necesita polling).
+      this.loadStorageFromDb();
       this._startCreditsRefreshInterval();
       await this.loadOrganizationsList();
       // Cargar conteo de sub-marcas para mostrar/ocultar link Brand Storage
