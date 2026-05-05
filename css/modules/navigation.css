@@ -1270,6 +1270,16 @@ body.sidebar-collapsed .main-header,
     min-height: 0;
 }
 
+/* Sidebar usuario: padding-top para separar Vera del header (el rule
+   .nav-item:first-child{margin-top:0} gana en especificidad sobre
+   .nav-item--primary, así que el spacing se aplica en el contenedor).
+   gap:4px da aire entre items de forma idéntica en colapsado y expandido,
+   manteniendo los y-positions sincronizados. */
+.nav-mode-user .nav-menu {
+    padding-top: 16px;
+    gap: 4px;
+}
+
 .nav-section {
     margin-bottom: 0;
 }
@@ -3247,6 +3257,25 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-item--primary .nav-link.active::before,
 .nav-item--primary .nav-main-link.active::before {
     display: none;
+}
+
+/* Vera hereda la misma escala de opacidad que el resto del menú user
+   (.nav-mode-user .nav-link es 0.58 / hover 0.82 / active 1, pero con
+   especificidad (2,0) se queda igualada por reglas de .nav-item--primary
+   y necesita un override explícito para garantizar el dimming). */
+.nav-mode-user .nav-item--primary .nav-link,
+.nav-mode-user .nav-item--primary .nav-main-link {
+    opacity: 0.58;
+}
+
+.nav-mode-user .nav-item--primary .nav-link:hover:not(.active),
+.nav-mode-user .nav-item--primary .nav-main-link:hover:not(.active) {
+    opacity: 0.82;
+}
+
+.nav-mode-user .nav-item--primary .nav-link.active,
+.nav-mode-user .nav-item--primary .nav-main-link.active {
+    opacity: 1;
 }
 
 /* Vera: wordmark centrado, mismo color que cards (--bg-card) y borde estándar */
