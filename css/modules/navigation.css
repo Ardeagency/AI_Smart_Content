@@ -374,8 +374,11 @@ body.sidebar-collapsed .main-header,
     display: none;
 }
 
-.side-navigation.collapsed .nav-link,
-.side-navigation.collapsed .nav-submenu-toggle {
+/* Chip 40x40 en colapsado SOLO para modos no-user (developer y futuros).
+   El sidebar de usuario tiene su propio contrato unificado (mismo item en
+   ambos estados, ver bloque "COLAPSADO USER" más abajo). */
+.side-navigation.collapsed:not(.nav-mode-user) .nav-link,
+.side-navigation.collapsed:not(.nav-mode-user) .nav-submenu-toggle {
     justify-content: center;
     padding: 0;
     position: relative;
@@ -395,14 +398,15 @@ body.sidebar-collapsed .main-header,
     margin: 0;
 }
 
-/* Vertical spacing entre ítems (reducido) */
-.side-navigation.collapsed .nav-menu .nav-item,
-.side-navigation.collapsed .nav-menu .nav-group {
+/* Vertical spacing entre ítems (reducido) — solo dev/no-user; el sidebar
+   user mantiene gap del menu en ambos estados. */
+.side-navigation.collapsed:not(.nav-mode-user) .nav-menu .nav-item,
+.side-navigation.collapsed:not(.nav-mode-user) .nav-menu .nav-group {
     margin-bottom: 6px;
 }
 
-.side-navigation.collapsed .nav-menu .nav-item:last-child,
-.side-navigation.collapsed .nav-menu .nav-group:last-child {
+.side-navigation.collapsed:not(.nav-mode-user) .nav-menu .nav-item:last-child,
+.side-navigation.collapsed:not(.nav-mode-user) .nav-menu .nav-group:last-child {
     margin-bottom: 0;
 }
 
@@ -447,58 +451,30 @@ body.sidebar-collapsed .main-header,
     display: none;
 }
 
+/* Brand Storage colapsado: el head queda como un único item siguiendo el
+   contrato unificado (sin tamaños forzados; hereda min-height del page-link). */
 .side-navigation.collapsed .nav-brand-storage-head {
-    width: 40px;
-    min-width: 40px;
-    margin: 0 auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
     overflow: visible;
 }
 
 /* =========================================
-   COLAPSADO USER — Hereda dimensiones del expandido
-   El item NO cambia de altura, padding ni border-radius al colapsar.
-   Solo se ocultan .nav-text y .nav-chevron, y el icono se centra
-   en el rail (justify-content:center). Spacing vertical idéntico al
-   expandido para que ningún elemento "salte" al togglear.
+   COLAPSADO USER — Patrón shadcn/Linear
+   El item ES EXACTAMENTE el mismo en ambos estados (min-height 32, padding
+   0 8, gap 8, radius 6, width 100%). El sidebar se reduce a --nav-width-collapsed
+   y overflow-x:hidden recorta los labels. Iconos quedan anchored a x=8px del
+   item left → x≈16-18px del sidebar left. Misma posición vertical garantizada.
    ========================================= */
 
-.side-navigation.collapsed.nav-mode-user .nav-link,
-.side-navigation.collapsed.nav-mode-user .nav-main-link,
-.side-navigation.collapsed.nav-mode-user .nav-submenu-toggle {
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    min-height: 30px;
-    padding: 0;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-}
-
-.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link,
-.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link {
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    min-height: 30px;
-    padding: 0;
-    justify-content: center;
-}
-
-.side-navigation.collapsed.nav-mode-user .nav-brand-storage-head {
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-    min-height: 30px;
-}
-
-.side-navigation.collapsed.nav-mode-user .nav-menu .nav-item,
-.side-navigation.collapsed.nav-mode-user .nav-menu .nav-group {
-    margin-bottom: 0;
-}
-
+/* Sección labels: se vuelven línea divisoria en colapsado.
+   visibility:hidden mantiene la altura del label original (~28px),
+   y ::before pinta una línea fina centrada — los items siguientes no saltan. */
 .side-navigation.collapsed.nav-mode-user .nav-section-label {
     display: block;
     position: relative;
+    visibility: hidden;
     color: transparent;
     pointer-events: none;
     user-select: none;
@@ -513,6 +489,7 @@ body.sidebar-collapsed .main-header,
     height: 1px;
     background: var(--nav-border);
     transform: translateY(-50%);
+    visibility: visible;
 }
 
 /* =========================================
@@ -2775,7 +2752,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: flex;
     flex-direction: column;
     z-index: var(--z-nav-sidebar);
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    /* overflow-x:hidden permite que los labels de los items se "recorten"
+       cuando el sidebar pasa a ancho colapsado, en vez de tener que ocultarlos
+       con display:none por item (patrón shadcn/Linear). */
+    overflow-x: hidden;
+    transition: width 0.2s ease, color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     /* Colores para legibilidad sobre glass-black */
     --sidebar-text-primary: var(--glass-black-text);
     --sidebar-text-secondary: rgba(255, 255, 255, 0.85);
@@ -2812,15 +2793,19 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     min-height: 0;
 }
 
-/* Reglas visuales sidebar usuario: menos altura y padding, texto 12px, iconos 16px */
+/* Contrato unificado del item user — IDÉNTICO en colapsado y expandido.
+   Solo cambia el ancho del padre (.side-navigation con overflow-x:hidden
+   recorta los labels), nunca las dimensiones del item. Patrón shadcn/Linear. */
 .nav-mode-user .nav-link,
-.nav-mode-user .nav-main-link {
+.nav-mode-user .nav-main-link,
+.nav-mode-user .nav-submenu-toggle {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 30px;
-    padding: 0 12px;
-    border-radius: var(--radius-sm);
+    width: 100%;
+    min-height: 32px;
+    padding: 0 8px;
+    border-radius: 6px;
     color: var(--sidebar-text-secondary);
     text-decoration: none;
     font-size: 12px;
@@ -2830,7 +2815,6 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     cursor: pointer;
     border: none;
     background: none;
-    width: 100%;
     text-align: left;
     opacity: 0.58;
 }
@@ -2899,18 +2883,21 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-mode-user .nav-link:hover:not(.active),
-.nav-mode-user .nav-main-link:hover:not(.active) {
+.nav-mode-user .nav-main-link:hover:not(.active),
+.nav-mode-user .nav-submenu-toggle:hover:not(.active) {
     opacity: 0.82;
 }
 
 .nav-mode-user .nav-link:hover,
-.nav-mode-user .nav-main-link:hover {
+.nav-mode-user .nav-main-link:hover,
+.nav-mode-user .nav-submenu-toggle:hover {
     background: var(--sidebar-hover);
     color: var(--sidebar-text-primary);
 }
 
 .nav-mode-user .nav-link.active,
-.nav-mode-user .nav-main-link.active {
+.nav-mode-user .nav-main-link.active,
+.nav-mode-user .nav-submenu-toggle.active {
     background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
     opacity: 1;
@@ -3227,123 +3214,70 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
-.nav-item--primary .nav-link,
-.nav-item--primary .nav-main-link {
-    min-height: 30px;
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: var(--sidebar-text-primary) !important;
-    letter-spacing: 0.01em;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
-}
+/* Vera — item primario user mode. Hereda el contrato base (.nav-mode-user .nav-link)
+   y agrega chip color-cards con borde. Sin !important: la especificidad
+   .nav-mode-user .nav-item--primary (3,0) supera la base (2,0). */
 
-.nav-item--primary .nav-link:hover,
-.nav-item--primary .nav-main-link:hover {
-    background: var(--bg-hover) !important;
-    border-color: var(--border-light) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
-}
-
-.nav-item--primary .nav-link.active,
-.nav-item--primary .nav-main-link.active {
-    background: var(--brillo-active) !important;
-    border-color: var(--border-light) !important;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
-}
-
-.nav-item--primary .nav-link.active::before,
-.nav-item--primary .nav-main-link.active::before {
-    display: none;
-}
-
-/* Vera hereda la misma escala de opacidad que el resto del menú user
-   (.nav-mode-user .nav-link es 0.58 / hover 0.82 / active 1, pero con
-   especificidad (2,0) se queda igualada por reglas de .nav-item--primary
-   y necesita un override explícito para garantizar el dimming). */
 .nav-mode-user .nav-item--primary .nav-link,
 .nav-mode-user .nav-item--primary .nav-main-link {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--sidebar-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     opacity: 0.58;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
 .nav-mode-user .nav-item--primary .nav-link:hover:not(.active),
 .nav-mode-user .nav-item--primary .nav-main-link:hover:not(.active) {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
     opacity: 0.82;
 }
 
 .nav-mode-user .nav-item--primary .nav-link.active,
 .nav-mode-user .nav-item--primary .nav-main-link.active {
+    background: var(--brillo-active);
+    border-color: var(--border-light);
     opacity: 1;
 }
 
-/* Vera: wordmark centrado, mismo color que cards (--bg-card) y borde estándar */
-.nav-item--primary .nav-link.nav-link--no-label,
-.nav-item--primary .nav-main-link.nav-link--no-label {
+.nav-mode-user .nav-item--primary .nav-link.active::before,
+.nav-mode-user .nav-item--primary .nav-main-link.active::before {
+    display: none;
+}
+
+/* Vera --no-label: wordmark/mark centrado dentro del chip */
+.nav-mode-user .nav-item--primary .nav-link.nav-link--no-label,
+.nav-mode-user .nav-item--primary .nav-main-link.nav-link--no-label {
     justify-content: center;
     gap: 0;
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow: none !important;
 }
 
-.nav-item--primary .nav-link.nav-link--no-label:hover,
-.nav-item--primary .nav-main-link.nav-link--no-label:hover {
-    background: var(--bg-hover) !important;
-    border-color: var(--border-light) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
-}
-
-.nav-item--primary .nav-link.nav-link--no-label.active,
-.nav-item--primary .nav-main-link.nav-link--no-label.active {
-    background: var(--brillo-active) !important;
-    border-color: var(--border-light) !important;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28) !important;
-}
-
-.nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
-    width: auto !important;
-    height: 14px !important;
+/* Wordmark expandido: SVG horizontal "Vera" a 14px de alto */
+#sideNavigation .nav-menu .nav-item--primary .nav-icon-img--expanded.nav-icon-img--vera-logo {
+    width: auto;
+    height: 14px;
     max-width: min(96px, calc(100% - 8px));
     object-fit: contain;
 }
 
-.nav-item--primary .nav-icon-img {
-    width: 20px !important;
-    height: 20px !important;
+/* Brain mark colapsado: 16×16 cuadrado */
+#sideNavigation .nav-menu .nav-item--primary .nav-icon-img--collapsed.nav-icon-img--vera-mark {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
 }
 
-.nav-item--primary .nav-icon {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 18px !important;
-    color: var(--sidebar-text-primary) !important;
+/* Toggle visibilidad del icono de Vera según estado del sidebar.
+   Patrón shadcn: ambas imgs en el DOM, CSS muestra una. */
+.side-navigation:not(.collapsed) .nav-icon-img--collapsed {
+    display: none;
 }
 
-/* En collapsed: Vera (único primario) — mismo chip color de cards, logo más compacto */
-.side-navigation.collapsed .nav-item--primary .nav-link,
-.side-navigation.collapsed .nav-item--primary .nav-main-link {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    width: 40px;
-    height: 40px;
-}
-
-.side-navigation.collapsed .nav-item--primary .nav-link.active,
-.side-navigation.collapsed .nav-item--primary .nav-main-link.active {
-    background: var(--brillo-active) !important;
-    border-color: var(--border-light) !important;
-}
-
-.side-navigation.collapsed .nav-item--primary .nav-icon-img.nav-icon-img--vera-logo {
-    max-width: 36px;
-    height: auto !important;
-    max-height: 14px;
-}
-
-.side-navigation.collapsed .nav-item--primary .nav-link.active::before,
-.side-navigation.collapsed .nav-item--primary .nav-main-link.active::before {
+.side-navigation.collapsed .nav-icon-img--expanded {
     display: none;
 }
 
@@ -3368,7 +3302,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     user-select: none;
 }
 
-.side-navigation.collapsed .nav-section-label {
+/* En modos no-user (developer) el section-label sí se oculta del todo.
+   Para nav-mode-user, el bloque "COLAPSADO USER" más arriba lo convierte
+   en línea divisoria sin perder altura. */
+.side-navigation.collapsed:not(.nav-mode-user) .nav-section-label {
     display: none;
 }
 

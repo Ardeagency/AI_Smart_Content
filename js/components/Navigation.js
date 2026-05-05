@@ -12,6 +12,7 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Vera',
       icon: 'fa-brain',
       iconSrc: '/recursos/vera/Logoverablanco.svg',
+      iconSrcCollapsed: '/recursos/vera/Vera.svg',
       route: 'vera',
       primary: true,
       hideLabel: true,
@@ -772,6 +773,15 @@ class Navigation {
         const w = item.iconImgWidth != null ? item.iconImgWidth : 16;
         const h = item.iconImgHeight != null ? item.iconImgHeight : 16;
         const src = _navSidebarIconUrl(item.iconSrc);
+        // Vera usa wordmark expandido + brain mark colapsado: ambas imgs en
+        // el DOM, CSS muestra una según el estado del sidebar (sin reflow JS).
+        if (item.iconSrcCollapsed) {
+          const srcCol = _navSidebarIconUrl(item.iconSrcCollapsed);
+          return `
+            <img src="${src}" class="nav-icon nav-icon-img${extra} nav-icon-img--expanded" alt="" width="${w}" height="${h}">
+            <img src="${srcCol}" class="nav-icon nav-icon-img nav-icon-img--vera-mark nav-icon-img--collapsed" alt="" width="16" height="16">
+          `;
+        }
         return `<img src="${src}" class="nav-icon nav-icon-img${extra}" alt="" width="${w}" height="${h}">`;
       }
       return `<i class="fas ${item.icon} nav-icon"></i>`;
