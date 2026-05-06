@@ -219,7 +219,17 @@ class App {
     r.register('/hogar', redirectToDefaultView, auth);
 
     // ── Org: Dashboard ──
-    const dashboardLoader = this._lazy('DashboardView', ['/js/views/DashboardView.js']);
+    // El god-class fue dividido en core + 4 mixins (uno por tab). Los mixins
+    // aplican Object.assign sobre DashboardView.prototype al cargarse, así que
+    // deben ir DESPUÉS de DashboardView.js. El orden secuencial está garantizado
+    // por _loadScripts (await por cada src).
+    const dashboardLoader = this._lazy('DashboardView', [
+      '/js/views/DashboardView.js',
+      '/js/views/dashboard/MyBrands.mixin.js',
+      '/js/views/dashboard/Competence.mixin.js',
+      '/js/views/dashboard/Tendencies.mixin.js',
+      '/js/views/dashboard/Strategy.mixin.js',
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/insight', legacyRouteRedirectView, auth);
