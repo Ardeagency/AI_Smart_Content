@@ -3329,19 +3329,28 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Linea arcoiris bajo el pill — firma Vera */
+/* Trazo arcoiris siguiendo el contorno inferior del pill — firma Vera.
+   Ring gradient creado con padding + mask-composite, recortado por clip-path
+   para que solo la mitad inferior curva sea visible. */
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
     position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: -1px;
-    height: 2px;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
     background: var(--brand-gradient);
-    border-radius: 999px;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+            mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    clip-path: inset(60% 0 -1px 0 round 20px);
     pointer-events: none;
-    filter: blur(0.4px);
+    filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
 
 /* =========================================
