@@ -3329,28 +3329,18 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Trazo arcoiris siguiendo el contorno inferior del pill — firma Vera.
-   Ring gradient (capas 1+2 con xor) intersectado con elipse radial (capa 3)
-   para que el trazo solo aparezca en la mitad inferior y los extremos se
-   afinen en punta hacia los lados. */
+/* Trazo arcoiris bajo el pill — SVG inline con stroke gradient.
+   Stops con stop-opacity=0 en 0% y 100% → extremos en punta natural.
+   El interior del pill queda #141517 porque el SVG solo dibuja el path. */
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    padding: 1.5px;
-    background: var(--brand-gradient);
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0),
-        radial-gradient(ellipse 70% 100% at 50% 110%, #fff 40%, rgba(255,255,255,0.6) 70%, transparent 95%);
-            mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0),
-        radial-gradient(ellipse 70% 100% at 50% 110%, #fff 40%, rgba(255,255,255,0.6) 70%, transparent 95%);
-    -webkit-mask-composite: xor, source-in;
-            mask-composite: exclude, intersect;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 204 30' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23ff0000' stop-opacity='0'/><stop offset='0.08' stop-color='%23ff0000' stop-opacity='1'/><stop offset='0.2' stop-color='%23ff6500'/><stop offset='0.32' stop-color='%23ffe500'/><stop offset='0.44' stop-color='%239acc00'/><stop offset='0.56' stop-color='%2300d614'/><stop offset='0.68' stop-color='%2300e7ff'/><stop offset='0.8' stop-color='%230018ee'/><stop offset='0.92' stop-color='%235b00ea' stop-opacity='1'/><stop offset='1' stop-color='%23900090' stop-opacity='0'/></linearGradient></defs><path d='M 0.75 15 A 14.25 14.25 0 0 0 15 29.25 L 189 29.25 A 14.25 14.25 0 0 0 203.25 15' stroke='url(%23g)' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
     pointer-events: none;
     filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
@@ -3397,26 +3387,16 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Trazo arcoiris circular — ring intersectado con elipse radial inferior
-   para que el arco termine en punta hacia los lados. */
+/* Arco arcoiris bajo el chip circular colapsado — SVG inline. */
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 50%;
-    padding: 1.5px;
-    background: var(--brand-gradient);
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0),
-        radial-gradient(ellipse 80% 90% at 50% 110%, #fff 35%, rgba(255,255,255,0.55) 65%, transparent 95%);
-            mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0),
-        radial-gradient(ellipse 80% 90% at 50% 110%, #fff 35%, rgba(255,255,255,0.55) 65%, transparent 95%);
-    -webkit-mask-composite: xor, source-in;
-            mask-composite: exclude, intersect;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' preserveAspectRatio='none'><defs><linearGradient id='g2' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23ff0000' stop-opacity='0'/><stop offset='0.1' stop-color='%23ff0000' stop-opacity='1'/><stop offset='0.25' stop-color='%23ff6500'/><stop offset='0.4' stop-color='%23ffe500'/><stop offset='0.55' stop-color='%2300d614'/><stop offset='0.7' stop-color='%2300e7ff'/><stop offset='0.85' stop-color='%235b00ea'/><stop offset='1' stop-color='%23900090' stop-opacity='0'/></linearGradient></defs><path d='M 1.5 18 A 16.5 16.5 0 0 0 34.5 18' stroke='url(%23g2)' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
     pointer-events: none;
     filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
