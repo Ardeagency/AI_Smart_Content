@@ -3554,13 +3554,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
-.side-navigation.collapsed.nav-mode-user .nav-credits-vertical {
+/* Override la regla `.nav-workspace-header > * { display: none }` que aplica a colapsado */
+.side-navigation.collapsed.nav-mode-user .nav-workspace-header > .nav-credits-vertical {
     display: flex;
     align-items: flex-end;
     justify-content: center;
     width: 6px;
-    height: 80px;
-    margin: 8px auto 12px;
+    height: 70px;
+    margin: 16px auto 0;
     border-radius: 3px;
     background: rgba(255, 255, 255, 0.08);
     overflow: hidden;

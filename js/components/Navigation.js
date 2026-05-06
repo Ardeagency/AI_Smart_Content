@@ -911,6 +911,9 @@ class Navigation {
             </div>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
+          <div class="nav-credits-vertical" aria-hidden="true">
+            <div class="nav-credits-vertical-fill" style="height:0%"></div>
+          </div>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Navegación del workspace">
@@ -929,10 +932,6 @@ class Navigation {
           <a href="${this.getUserSidebarRoute('credits')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('credits')}">
             <span>Upgrade to Starter</span>
           </a>
-        </div>
-
-        <div class="nav-credits-vertical" aria-hidden="true">
-          <div class="nav-credits-vertical-fill" style="height:0%"></div>
         </div>
 
         <div class="nav-brand-footer" role="contentinfo">
