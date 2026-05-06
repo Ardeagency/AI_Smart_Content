@@ -3353,6 +3353,70 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
 
+/* Vera colapsado: misma firma pero en chip circular 36x36 */
+.side-navigation.collapsed.nav-mode-user .nav-item--primary {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto 8px;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link,
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link {
+    position: relative;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    background: #141517;
+    border: 0;
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    filter: drop-shadow(0 4px 4px rgba(174, 183, 79, 0.25));
+    opacity: 1;
+    overflow: visible;
+    justify-content: center;
+    align-items: center;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link:hover,
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link:hover {
+    background: #1a1c20;
+    border: 0;
+    opacity: 1;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link.active,
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link.active {
+    background: #141517;
+    border: 0;
+    opacity: 1;
+}
+
+/* Trazo arcoiris circular — recorta arriba 55%, deja la curva inferior */
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link::after,
+.side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 1.5px;
+    background: var(--brand-gradient);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+            mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    clip-path: inset(55% -3px -3px -3px);
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
+}
+
 /* =========================================
    NAV SECTION LABELS — Separadores de grupo
    ========================================= */
