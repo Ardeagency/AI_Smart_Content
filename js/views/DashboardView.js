@@ -242,34 +242,15 @@ class DashboardView extends BaseView {
     if (tabId === 'strategy')   return this._renderStrategy(body);
   }
 
-  _renderComingSoon(tabId, body) {
-    const meta = {
-      'my-brands':  { title: 'Mi Marca',    desc: 'Pulso operativo, identidad narrativa, comercial y diagnóstico de salud de marca.' },
-      'competence': { title: 'Competencia', desc: 'Precios, narrativa rival, vulnerabilidades y mapa de inversión publicitaria.' },
-      'tendencies': { title: 'Tendencias',  desc: 'Señales emergentes, contexto cultural, cambios de algoritmo y estética dominante.' },
-      'strategy':   { title: 'Estrategia',  desc: 'Sintetizador del plan diario / semanal / mensual con score de salud y nivel de amenaza.' },
-    }[tabId] || { title: 'Dashboard', desc: '' };
-
+  _renderComingSoon(_tabId, body) {
     body.innerHTML = `
       <div class="dash-coming-soon" style="
-        display:flex;flex-direction:column;align-items:center;justify-content:center;
-        min-height:60vh;padding:48px 24px;text-align:center;gap:16px;
+        display:flex;align-items:center;justify-content:center;
+        min-height:60vh;padding:48px 24px;
       ">
-        <div style="
-          width:72px;height:72px;border-radius:50%;
-          background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(236,72,153,.15));
-          display:flex;align-items:center;justify-content:center;
-          font-size:32px;
-        ">⏳</div>
         <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-.02em;">
-          ${meta.title} — Próximamente
+          Próximamente
         </h2>
-        <p style="margin:0;max-width:560px;color:var(--text-muted,#6b7280);line-height:1.6;font-size:15px;">
-          ${meta.desc}
-        </p>
-        <p style="margin:0;font-size:13px;color:var(--text-muted,#9ca3af);">
-          Estamos puliendo este panel. Volvé pronto.
-        </p>
       </div>`;
   }
 
