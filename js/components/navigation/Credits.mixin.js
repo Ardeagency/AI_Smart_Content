@@ -44,9 +44,11 @@
     if (!supabase) return;
     const tokensEl = document.getElementById('navTokensValue');
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
+    const verticalFill = document.querySelector('.nav-credits-vertical-fill');
     if (!silent) {
       if (tokensEl) tokensEl.textContent = '…';
       if (barFill) barFill.style.width = '0%';
+      if (verticalFill) verticalFill.style.height = '0%';
     }
     try {
       const { data, error } = await supabase
@@ -73,6 +75,9 @@
       }
       if (barFill && barFill.style.width !== nextWidth) {
         barFill.style.width = nextWidth;
+      }
+      if (verticalFill && verticalFill.style.height !== nextWidth) {
+        verticalFill.style.height = nextWidth;
       }
       if (this._orgCache && this._orgCacheId === orgId) {
         this._orgCache.credits = available;

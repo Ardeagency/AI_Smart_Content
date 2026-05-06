@@ -3547,6 +3547,40 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 /* =========================================
+   CREDITOS — Barra vertical visible solo en colapsado, en el footer
+   ========================================= */
+
+.nav-credits-vertical {
+    display: none;
+}
+
+.side-navigation.collapsed.nav-mode-user .nav-credits-vertical {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 6px;
+    height: 80px;
+    margin: 8px auto 12px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.nav-credits-vertical-fill {
+    width: 100%;
+    height: 0%;
+    border-radius: 3px;
+    background: var(--brand-gradient-dynamic-vertical, var(--brand-gradient-dynamic, rgba(255, 255, 255, 0.18)));
+    transition: height 0.3s ease;
+}
+
+/* En expandido: ocultar la barra vertical (ya hay barra horizontal arriba) */
+.side-navigation:not(.collapsed) .nav-credits-vertical {
+    display: none;
+}
+
+/* =========================================
    PÁGINA DE ERROR
    ========================================= */
 
@@ -3663,6 +3697,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     min-width: 0;
     text-decoration: none;
     line-height: 0;
+    cursor: default;
+    pointer-events: none;
+    user-select: none;
 }
 
 .nav-brand-footer-logo {

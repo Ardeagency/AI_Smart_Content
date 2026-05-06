@@ -931,10 +931,14 @@ class Navigation {
           </a>
         </div>
 
+        <div class="nav-credits-vertical" aria-hidden="true">
+          <div class="nav-credits-vertical-fill" style="height:0%"></div>
+        </div>
+
         <div class="nav-brand-footer" role="contentinfo">
-          <a href="/home" class="nav-brand-footer-logo-link" aria-label="AI Smart Content">
-            <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="AI Smart Content">
-          </a>
+          <span class="nav-brand-footer-logo-link" aria-hidden="true">
+            <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="">
+          </span>
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
             ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
