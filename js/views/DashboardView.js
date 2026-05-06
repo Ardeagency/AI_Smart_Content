@@ -33,14 +33,29 @@ class DashboardView extends BaseView {
 
   constructor() {
     super();
-    // Default al primer tab habilitado (si todos están off, queda 'my-brands').
-    const enabled = Object.entries(DashboardView.TABS_ENABLED || {}).find(([, v]) => v === true);
-    this._activeTab     = enabled ? enabled[0] : 'my-brands';
+    this._activeTab     = this._resolveInitialTab();
     this._charts        = [];
     this._chartJsReady  = false;
     this._supabase      = null;
     this._orgId         = null;
     this._channels      = []; // Suscripciones realtime activas (limpiar en onLeave)
+    this._onHashChange  = null;
+  }
+
+  /**
+   * Resuelve el tab activo al cargar la vista:
+   *   1. URL hash (#tendencies) si es un tab habilitado
+   *   2. Primer tab habilitado en TABS_ENABLED
+   *   3. Fallback a 'my-brands'
+   * Permite que recargar en /dashboard#tendencies preserve el tab activo
+   * y que la URL sea compartible (/dashboard#strategy abre directo en Estrategia).
+   */
+  _resolveInitialTab() {
+    const enabled = DashboardView.TABS_ENABLED || {};
+    const hash = (typeof location !== 'undefined' ? (location.hash || '') : '').replace(/^#/, '');
+    if (hash && enabled[hash] === true) return hash;
+    const firstEnabled = Object.entries(enabled).find(([, v]) => v === true);
+    return firstEnabled ? firstEnabled[0] : 'my-brands';
   }
 
   async onEnter() {
@@ -96,6 +111,10 @@ class DashboardView extends BaseView {
   onLeave() {
     this._unsubscribeRealtime();
     this._destroyCharts();
+    if (this._onHashChange) {
+      window.removeEventListener('hashchange', this._onHashChange);
+      this._onHashChange = null;
+    }
   }
 
   /* ── Realtime subscriptions ─────────────────────────────────
@@ -220,15 +239,47 @@ class DashboardView extends BaseView {
   _setupTabs() {
     const nav = document.getElementById('insightSubnav');
     if (!nav) return;
+
     nav.addEventListener('click', e => {
       const btn = e.target.closest('[data-tab]');
       if (!btn) return;
-      this._destroyCharts();
-      this._activeTab = btn.dataset.tab;
-      nav.querySelectorAll('.mb-firebar-tab')
-        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === this._activeTab));
-      this._renderTab(this._activeTab);
+      this._switchTab(btn.dataset.tab, /* fromUser */ true);
     });
+
+    // hashchange: que el back/forward del browser cambie el tab.
+    // Solo registrar una vez (este método se llama en cada render).
+    if (!this._onHashChange) {
+      this._onHashChange = () => {
+        const target = this._resolveInitialTab();
+        if (target !== this._activeTab) this._switchTab(target, /* fromUser */ false);
+      };
+      window.addEventListener('hashchange', this._onHashChange);
+    }
+  }
+
+  _switchTab(tabId, fromUser) {
+    if (!tabId || tabId === this._activeTab) return;
+    this._destroyCharts();
+    this._activeTab = tabId;
+
+    // Persistir en URL para que recargar conserve el tab y la URL sea compartible.
+    // replaceState evita saturar el history con cada click; el back/forward sigue
+    // funcionando porque hashchange dispara aunque el path sea el mismo.
+    if (fromUser) {
+      try {
+        const newUrl = location.pathname + location.search + '#' + tabId;
+        history.replaceState(history.state, '', newUrl);
+      } catch (_) {
+        location.hash = tabId;
+      }
+    }
+
+    const nav = document.getElementById('insightSubnav');
+    if (nav) {
+      nav.querySelectorAll('.mb-firebar-tab')
+        .forEach(b => b.classList.toggle('is-active', b.dataset.tab === tabId));
+    }
+    this._renderTab(tabId);
   }
 
   _renderTab(tabId) {
