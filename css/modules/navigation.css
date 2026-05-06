@@ -3286,6 +3286,65 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 /* =========================================
+   VERA PILL — diseño Group 101 (expandido)
+   Pill 204×30 #141517 + blur + drop-shadow oliva + linea arcoiris
+   ========================================= */
+
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 8px;
+}
+
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link,
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link {
+    position: relative;
+    width: 100%;
+    max-width: 204px;
+    height: 30px;
+    min-height: 30px;
+    padding: 0;
+    background: #141517;
+    border: 0;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    filter: drop-shadow(0 4px 4px rgba(174, 183, 79, 0.25));
+    opacity: 1;
+    overflow: visible;
+}
+
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link:hover,
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link:hover {
+    background: #1a1c20;
+    border: 0;
+    opacity: 1;
+}
+
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link.active,
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link.active {
+    background: #141517;
+    border: 0;
+    opacity: 1;
+}
+
+/* Linea arcoiris bajo el pill — firma Vera */
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
+.side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--brand-gradient);
+    border-radius: 999px;
+    pointer-events: none;
+    filter: blur(0.4px);
+}
+
+/* =========================================
    NAV SECTION LABELS — Separadores de grupo
    ========================================= */
 
