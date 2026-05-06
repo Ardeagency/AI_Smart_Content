@@ -505,6 +505,7 @@
         showTimeout = setTimeout(() => {
           if (!sidebar.classList.contains('collapsed')) return;
           if (el.classList.contains('nav-submenu-toggle')) return;
+          if (el.classList.contains('nav-brand-storage-page')) return;
           const text = el.dataset.tooltip || '';
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
