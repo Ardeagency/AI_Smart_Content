@@ -95,7 +95,13 @@
     this._bindFlyoutHoverClose();
 
     requestAnimationFrame(() => {
-      const triggerRect = toggle?.getBoundingClientRect();
+      /* Brand Storage en colapsado oculta el chevron (.nav-submenu-toggle), asi que su rect
+         tiene height 0 y posiciona el flyout arriba. Fallback al page link visible. */
+      const toggleVisible = toggle && toggle.offsetHeight > 0;
+      const anchor = toggleVisible
+        ? toggle
+        : (containerEl.querySelector('.nav-brand-storage-page') || containerEl);
+      const triggerRect = anchor?.getBoundingClientRect();
       if (triggerRect) {
         const flyoutHeight = flyout.offsetHeight;
         const top = Math.max(8, Math.min(triggerRect.top + triggerRect.height / 2 - flyoutHeight / 2, window.innerHeight - flyoutHeight - 8));
