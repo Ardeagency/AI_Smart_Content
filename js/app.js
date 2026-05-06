@@ -373,6 +373,11 @@ class App {
     r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
     r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']), auth);
 
+    // ── Planes (comparativa 5 tiers + plan actual) ──
+    const planesLoader = this._lazy('PlanesView', ['/js/views/PlanesView.js']);
+    r.register('/plans', planesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/plans', planesLoader, auth);
+
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 

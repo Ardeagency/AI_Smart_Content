@@ -52,6 +52,14 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
+    {
+      type: 'page',
+      id: 'tasks',
+      label: 'Tasks',
+      icon: 'fa-list-check',
+      iconSrc: '/recursos/icons/task.svg',
+      route: 'tasks'
+    },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -285,7 +293,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -677,6 +685,7 @@ class Navigation {
     const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/form_org';
     // Si hay org activa, mostrar la tienda de créditos de esa org.
     const creditsHref = this.currentOrgId ? this.getUserSidebarRoute('credits') : '/credits';
+    const plansHref = this.currentOrgId ? this.getUserSidebarRoute('plans') : '/plans';
     return `
       <div class="user-dropdown glass-black" id="userDropdown">
         <div class="user-dropdown-header">
@@ -691,6 +700,10 @@ class Navigation {
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
           <i class="fas fa-building"></i>
           <span>Organization</span>
+        </a>
+        <a href="${plansHref}" class="user-dropdown-item" data-route="${plansHref}" id="userDropdownPlansLink">
+          <i class="fas fa-layer-group"></i>
+          <span>Planes</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
           <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
@@ -1603,6 +1616,8 @@ class Navigation {
       '/video': 'VIDEO',
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',
+      '/plans': 'PLANES',
+      '/monitoring': 'MONITOREO',
       '/dev/dashboard': 'DASHBOARD',
       '/dev/flows': 'MIS FLUJOS',
       '/dev/builder': 'BUILDER',
