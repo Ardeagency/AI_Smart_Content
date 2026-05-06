@@ -51,6 +51,20 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
+    {
+      type: 'page',
+      id: 'activity',
+      label: 'Activity',
+      icon: 'fa-stream',
+      route: 'activity'
+    },
+    {
+      type: 'page',
+      id: 'health',
+      label: 'Health',
+      icon: 'fa-heart-pulse',
+      route: 'health'
+    },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     {
@@ -197,6 +211,14 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     role_required: 'lead',
     route: '/dev/lead/flows'
   },
+  {
+    type: 'page',
+    id: 'admin-lexicon',
+    label: 'Léxico',
+    icon: 'fa-book',
+    role_required: 'lead',
+    route: '/dev/lead/lexicon'
+  },
 ];
 
 /**
@@ -293,7 +315,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring', '/activity', '/health'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1625,6 +1647,9 @@ class Navigation {
       '/credits': 'CREDITS',
       '/plans': 'PLANES',
       '/monitoring': 'MONITOREO',
+      '/activity': 'ACTIVITY',
+      '/health': 'HEALTH',
+      '/dev/lead/lexicon': 'LÉXICO',
       '/dev/dashboard': 'DASHBOARD',
       '/dev/flows': 'MIS FLUJOS',
       '/dev/builder': 'BUILDER',
