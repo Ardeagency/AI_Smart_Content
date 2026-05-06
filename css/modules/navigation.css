@@ -3330,8 +3330,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 /* Trazo arcoiris siguiendo el contorno inferior del pill — firma Vera.
-   Ring gradient creado con padding + mask-composite, recortado por clip-path
-   para que solo la mitad inferior curva sea visible. */
+   Ring gradient (capas 1+2 con xor) intersectado con elipse radial (capa 3)
+   para que el trazo solo aparezca en la mitad inferior y los extremos se
+   afinen en punta hacia los lados. */
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
@@ -3342,13 +3343,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     background: var(--brand-gradient);
     -webkit-mask:
         linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
+        linear-gradient(#fff 0 0),
+        radial-gradient(ellipse 70% 100% at 50% 110%, #fff 40%, rgba(255,255,255,0.6) 70%, transparent 95%);
             mask:
         linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
-    clip-path: inset(60% 0 -1px 0 round 20px);
+        linear-gradient(#fff 0 0),
+        radial-gradient(ellipse 70% 100% at 50% 110%, #fff 40%, rgba(255,255,255,0.6) 70%, transparent 95%);
+    -webkit-mask-composite: xor, source-in;
+            mask-composite: exclude, intersect;
     pointer-events: none;
     filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
@@ -3395,7 +3397,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Trazo arcoiris circular — recorta arriba 55%, deja la curva inferior */
+/* Trazo arcoiris circular — ring intersectado con elipse radial inferior
+   para que el arco termine en punta hacia los lados. */
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
@@ -3406,13 +3409,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     background: var(--brand-gradient);
     -webkit-mask:
         linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
+        linear-gradient(#fff 0 0),
+        radial-gradient(ellipse 80% 90% at 50% 110%, #fff 35%, rgba(255,255,255,0.55) 65%, transparent 95%);
             mask:
         linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
-    clip-path: inset(55% -3px -3px -3px);
+        linear-gradient(#fff 0 0),
+        radial-gradient(ellipse 80% 90% at 50% 110%, #fff 35%, rgba(255,255,255,0.55) 65%, transparent 95%);
+    -webkit-mask-composite: xor, source-in;
+            mask-composite: exclude, intersect;
     pointer-events: none;
     filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
