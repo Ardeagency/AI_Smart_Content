@@ -445,6 +445,72 @@ function renderButtonsBlock(code) {
   }
 }
 
+/* ─── Lazy loaders para Mermaid (diagramas) y Prism (syntax highlighting) ─── */
+const VERA_RICH_LIBS = {
+  mermaidLoading: null,
+  prismLoading: null,
+};
+
+function _loadScriptOnce(src, integrity = null) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    if (integrity) { s.integrity = integrity; s.crossOrigin = 'anonymous'; s.referrerPolicy = 'no-referrer'; }
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
+function _loadStyleOnce(href, integrity = null) {
+  if (document.querySelector(`link[href="${href}"]`)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = href;
+    if (integrity) { l.integrity = integrity; l.crossOrigin = 'anonymous'; l.referrerPolicy = 'no-referrer'; }
+    l.onload = () => resolve();
+    l.onerror = () => reject(new Error(`Failed to load ${href}`));
+    document.head.appendChild(l);
+  });
+}
+
+async function ensureMermaid() {
+  if (window.mermaid) return window.mermaid;
+  if (VERA_RICH_LIBS.mermaidLoading) return VERA_RICH_LIBS.mermaidLoading;
+  VERA_RICH_LIBS.mermaidLoading = (async () => {
+    await _loadScriptOnce('https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js');
+    if (window.mermaid?.initialize) {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'strict',
+        fontFamily: 'inherit',
+      });
+    }
+    return window.mermaid;
+  })();
+  return VERA_RICH_LIBS.mermaidLoading;
+}
+
+async function ensurePrism() {
+  if (window.Prism) return window.Prism;
+  if (VERA_RICH_LIBS.prismLoading) return VERA_RICH_LIBS.prismLoading;
+  VERA_RICH_LIBS.prismLoading = (async () => {
+    await _loadStyleOnce('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css');
+    await _loadScriptOnce('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js');
+    await _loadScriptOnce('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js');
+    if (window.Prism?.plugins?.autoloader) {
+      window.Prism.plugins.autoloader.languages_path =
+        'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+    }
+    return window.Prism;
+  })();
+  return VERA_RICH_LIBS.prismLoading;
+}
+
 function renderMarkdown(text, opts = {}) {
   const raw = String(text ?? '');
   let h = escapeHtml(raw);
@@ -502,6 +568,41 @@ function renderMarkdown(text, opts = {}) {
     });
     return `@@CODEBLOCK_${idx}@@`;
   });
+
+  // --- GFM Tables (| col | col |\n|---|---|\n| a | b |) ---
+  // Detecta bloques de tabla: header row + delimiter row + N data rows.
+  // El delimiter usa | --- | :--- | ---: | :---: | para alineación.
+  const tableBlocks = [];
+  h = h.replace(
+    /(^|\n)((?:\|[^\n]+\|\s*\n)(?:\|\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)+\|\s*\n)(?:\|[^\n]+\|\s*\n?)+)/g,
+    (full, prefix, block) => {
+      const rows = block.trim().split('\n').map(r => r.trim());
+      if (rows.length < 2) return full;
+      const headerCells = rows[0].slice(1, -1).split('|').map(c => c.trim());
+      const aligns = rows[1].slice(1, -1).split('|').map(c => {
+        const t = c.trim();
+        if (/^:-+:$/.test(t)) return 'center';
+        if (/^-+:$/.test(t)) return 'right';
+        if (/^:-+$/.test(t)) return 'left';
+        return null;
+      });
+      const bodyRows = rows.slice(2)
+        .map(r => r.slice(1, -1).split('|').map(c => c.trim()));
+      const headHtml = '<thead><tr>' + headerCells.map((c, i) => {
+        const a = aligns[i] ? ` style="text-align:${aligns[i]}"` : '';
+        return `<th${a}>${c}</th>`;
+      }).join('') + '</tr></thead>';
+      const bodyHtml = '<tbody>' + bodyRows.map(r =>
+        '<tr>' + r.map((c, i) => {
+          const a = aligns[i] ? ` style="text-align:${aligns[i]}"` : '';
+          return `<td${a}>${c}</td>`;
+        }).join('') + '</tr>'
+      ).join('') + '</tbody>';
+      const idx = tableBlocks.length;
+      tableBlocks.push(`<div class="gpt-md-table-wrap"><table class="gpt-md-table">${headHtml}${bodyHtml}</table></div>`);
+      return `${prefix}@@TABLE_${idx}@@`;
+    }
+  );
 
   // Inline code (backticks) — apply before emphasis
   h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
@@ -619,8 +720,13 @@ function renderMarkdown(text, opts = {}) {
   }
   if (listType) out.push(`</${listType}>`);
 
-  // Restore fenced code blocks
+  // Restore tables first (no further inline processing needed inside)
   let joined = out.join('\n');
+  joined = joined.replace(/@@TABLE_(\d+)@@/g, (_, idxStr) => {
+    return tableBlocks[Number(idxStr)] || '';
+  });
+
+  // Restore fenced code blocks
   joined = joined.replace(/@@CODEBLOCK_(\d+)@@/g, (_, idxStr) => {
     const idx = Number(idxStr);
     const item = codeBlocks[idx];
@@ -632,6 +738,11 @@ function renderMarkdown(text, opts = {}) {
     if (lang === 'buttons' || lang === 'quickreplies' || lang === 'quick-replies' || lang === 'actions') {
       return renderButtonsBlock(item.code);
     }
+    if (lang === 'mermaid') {
+      // Placeholder — el código fuente queda en data-mermaid; un hook post-render
+      // lo procesa y reemplaza por el SVG. Si Mermaid falla, queda visible el código.
+      return `<div class="gpt-md-mermaid" data-mermaid="${escapeHtml(item.code)}"><pre class="gpt-md-mermaid-fallback"><code>${escapeHtml(item.code)}</code></pre></div>`;
+    }
     const langClass = item.lang ? ` class="language-${escapeHtml(item.lang)}"` : '';
     return `<pre><code${langClass}>${escapeHtml(item.code)}</code></pre>`;
   });
@@ -640,7 +751,7 @@ function renderMarkdown(text, opts = {}) {
   return joined.split(/\n{2,}/).map(p => {
     p = p.trim();
     if (!p) return '';
-    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img|div)/.test(p)) return p;
+    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img|div|table)/.test(p)) return p;
     return `<p>${p.replace(/\n/g, '<br>')}</p>`;
   }).filter(Boolean).join('');
 }
@@ -974,6 +1085,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
+    this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
   }
 
@@ -1035,7 +1147,52 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
+    this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
+  }
+
+  /* ── Post-render: Mermaid (diagramas) + Prism (syntax highlighting) ──
+     Se llama después de inyectar HTML al DOM. Procesa solo elementos NO
+     marcados aún con data-vera-processed para idempotencia (evita re-render
+     en cada appendMessage). Falla suavemente: si Mermaid/Prism no cargan,
+     queda el code block plano. */
+  _processChatRichContent(scope) {
+    if (!scope) return;
+
+    // Mermaid: convertir <div class="gpt-md-mermaid" data-mermaid="..."> → SVG
+    const mermaidNodes = scope.querySelectorAll('.gpt-md-mermaid:not([data-vera-processed])');
+    if (mermaidNodes.length) {
+      ensureMermaid().then((mermaid) => {
+        if (!mermaid?.render) return;
+        mermaidNodes.forEach(async (node, i) => {
+          if (node.dataset.veraProcessed) return;
+          node.dataset.veraProcessed = '1';
+          const src = node.dataset.mermaid || '';
+          if (!src) return;
+          try {
+            const id = `vera-mmd-${Date.now()}-${i}`;
+            const { svg } = await mermaid.render(id, src);
+            node.innerHTML = svg;
+          } catch (e) {
+            // Deja el fallback <pre> visible; solo marca el error en console.
+            console.warn('Mermaid render error:', e?.message || e);
+          }
+        });
+      }).catch((e) => console.warn('Mermaid load error:', e?.message || e));
+    }
+
+    // Prism: highlight de <pre><code class="language-XXX"> que aún no esté procesado
+    const codeNodes = scope.querySelectorAll('pre > code[class*="language-"]:not([data-vera-processed])');
+    if (codeNodes.length) {
+      ensurePrism().then((Prism) => {
+        if (!Prism?.highlightElement) return;
+        codeNodes.forEach((node) => {
+          if (node.dataset.veraProcessed) return;
+          node.dataset.veraProcessed = '1';
+          try { Prism.highlightElement(node); } catch (_) {}
+        });
+      }).catch((e) => console.warn('Prism load error:', e?.message || e));
+    }
   }
 
   /* ── Typing / Activity indicator ────────────────────── */
@@ -1323,8 +1480,10 @@ class VeraView extends (window.BaseView || class {}) {
     }
   }
 
-  /* ── Send message ────────────────────────────────────── */
-  async sendMessage(text) {
+  /* ── Send message ──────────────────────────────────────
+     opts.confirmedHighCost — pasa true cuando el usuario aceptó la
+     advertencia de costo y queremos que el backend salte el pre-check. */
+  async sendMessage(text, opts = {}) {
     if (!this.aiState.organization_id || this.aiState.isLoading) return;
 
     // Tomamos snapshot de adjuntos listos y limpiamos pendientes antes de enviar.
@@ -1333,8 +1492,12 @@ class VeraView extends (window.BaseView || class {}) {
     const attachments = ready.map(a => ({
       url: a.url, type: a.type, name: a.name, mime: a.mime
     }));
-    this.aiState.pendingAttachments = [];
-    this._renderAttachChips();
+    if (!opts.confirmedHighCost) {
+      // Solo limpiamos los adjuntos en el primer intento — si llega
+      // confirmación y reenviamos, ya no hay attachments para mostrar como chips.
+      this.aiState.pendingAttachments = [];
+      this._renderAttachChips();
+    }
 
     this.aiState.isLoading = true;
 
@@ -1342,16 +1505,19 @@ class VeraView extends (window.BaseView || class {}) {
     const input = document.getElementById('veraInput');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Mostrar mensaje del usuario inmediatamente (optimistic UI)
-    const userMsg = {
-      id: `local-user-${Date.now()}`,
-      role: 'user',
-      content: text,
-      attachments,
-      created_at: new Date().toISOString()
-    };
-    this.aiState.messages.push(userMsg);
-    this.appendMessage(userMsg);
+    // Mostrar mensaje del usuario inmediatamente solo en el primer intento.
+    let userMsg = null;
+    if (!opts.confirmedHighCost) {
+      userMsg = {
+        id: `local-user-${Date.now()}`,
+        role: 'user',
+        content: text,
+        attachments,
+        created_at: new Date().toISOString()
+      };
+      this.aiState.messages.push(userMsg);
+      this.appendMessage(userMsg);
+    }
     this.showTypingIndicator();
 
     try {
@@ -1372,7 +1538,8 @@ class VeraView extends (window.BaseView || class {}) {
           organization_id: this.aiState.organization_id,
           conversation_id: this.aiState.active_conversation_id || undefined,
           message: text,
-          attachments
+          attachments,
+          confirmed_high_cost: opts.confirmedHighCost === true,
         })
       });
 
@@ -1386,10 +1553,25 @@ class VeraView extends (window.BaseView || class {}) {
 
       const convId = json?.conversation_id || this.aiState.active_conversation_id;
 
-      if (json?.status === 'processing') {
+      if (json?.status === 'cost_confirmation_required') {
+        // ── Pre-flight: backend estima alto costo y pide confirmación ───────
+        this.hideTypingIndicator();
+        this.aiState.isLoading = false;
+        const accepted = await this._confirmHighCost(json.estimate);
+        if (accepted) {
+          // Reintentar con flag confirmed_high_cost=true. Mantenemos el
+          // mismo userMsg en pantalla; el backend insertará el row real
+          // y vendrá vía realtime.
+          await this.sendMessage(text, { confirmedHighCost: true });
+        } else {
+          // Usuario canceló: removemos el bubble optimista para que no
+          // quede como si Vera lo hubiera ignorado.
+          if (userMsg) this._removeMessage(userMsg.id);
+        }
+        return;
+
+      } else if (json?.status === 'processing') {
         // ── Modo async: Vera procesa en background ──────────────────────────
-        // El servidor respondió inmediatamente. Esperamos la respuesta real
-        // vía Supabase Realtime (con polling como fallback).
         await this._waitForAsyncResponse(convId, token);
 
       } else {
@@ -1422,6 +1604,30 @@ class VeraView extends (window.BaseView || class {}) {
       this.aiState.isLoading = false;
       if (sendBtn) sendBtn.disabled = !(input?.value || '').trim();
     }
+  }
+
+  /* Pregunta al usuario si quiere continuar con una tarea costosa.
+     v1 con window.confirm() — modal custom queda para iteración futura. */
+  async _confirmHighCost(estimate) {
+    if (!estimate) return true;
+    const usdMin = Number(estimate.usd_min || 0).toFixed(2);
+    const usdMax = Number(estimate.usd_max || 0).toFixed(2);
+    const minutesRange = `${estimate.minutes_min || 1}-${estimate.minutes_max || 10} min`;
+    const reasons = (estimate.reasons || []).map(r => `  • ${r}`).join('\n');
+    const msg =
+      `⚠️ Vera detectó una tarea potencialmente costosa.\n\n` +
+      `Costo estimado: $${usdMin} – $${usdMax} USD\n` +
+      `Duración estimada: ${minutesRange}\n\n` +
+      `Razones:\n${reasons}\n\n` +
+      `¿Continuar con esta tarea?\n` +
+      `(Aceptar = ejecutar · Cancelar = replantear o descartar)`;
+    return window.confirm(msg);
+  }
+
+  _removeMessage(id) {
+    const idx = this.aiState.messages.findIndex(m => m.id === id);
+    if (idx >= 0) this.aiState.messages.splice(idx, 1);
+    document.querySelector(`[data-msg-id="${id}"]`)?.remove();
   }
 
   /* ── Mensajes de espera cíclicos (cuando no hay status del backend) ─────── */
