@@ -27,13 +27,15 @@ class DashboardView extends BaseView {
   static TABS_ENABLED = {
     'my-brands':  false,
     'competence': false,
-    'tendencies': false,
+    'tendencies': true,
     'strategy':   false,
   };
 
   constructor() {
     super();
-    this._activeTab     = 'my-brands';
+    // Default al primer tab habilitado (si todos están off, queda 'my-brands').
+    const enabled = Object.entries(DashboardView.TABS_ENABLED || {}).find(([, v]) => v === true);
+    this._activeTab     = enabled ? enabled[0] : 'my-brands';
     this._charts        = [];
     this._chartJsReady  = false;
     this._supabase      = null;

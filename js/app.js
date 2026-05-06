@@ -224,6 +224,7 @@ class App {
     // deben ir DESPUÉS de DashboardView.js. El orden secuencial está garantizado
     // por _loadScripts (await por cada src).
     const dashboardLoader = this._lazy('DashboardView', [
+      '/js/services/TendenciasDataService.js',
       '/js/views/DashboardView.js',
       '/js/views/dashboard/MyBrands.mixin.js',
       '/js/views/dashboard/Competence.mixin.js',
@@ -378,6 +379,16 @@ class App {
     r.register('/plans', planesLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/plans', planesLoader, auth);
 
+    // ── Health (salud del sistema) — shell "Próximamente" (sprint D9) ──
+    const healthLoader = this._lazy('HealthView', ['/js/views/HealthView.js']);
+    r.register('/health', healthLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/health', healthLoader, auth);
+
+    // ── Activity Timeline — shell "Próximamente" (sprint D8) ──
+    const activityLoader = this._lazy('ActivityView', ['/js/views/ActivityView.js']);
+    r.register('/activity', activityLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/activity', activityLoader, auth);
+
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
@@ -409,6 +420,7 @@ class App {
     r.register('/dev/lead/references', this._lazy('DevLeadReferencesView', [...devBase, '/js/views/DevLeadReferencesView.js']), auth);
     r.register('/dev/lead/flows', this._lazy('DevLeadAllFlowsView', [...devBase, '/js/views/DevLeadAllFlowsView.js']), auth);
     r.register('/dev/lead/crm', this._lazy('DevLeadCRMView', [...devBase, '/js/views/DevLeadCRMView.js']), auth);
+    r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
 
     // ── 404 ──
     const BV = window.BaseView || class {};
