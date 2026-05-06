@@ -53,6 +53,14 @@ const SIDEBAR_USER_CONFIG = {
     },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    {
+      type: 'page',
+      id: 'tasks',
+      label: 'Tasks',
+      icon: 'fa-list-check',
+      iconSrc: '/recursos/icons/task.svg',
+      route: 'tasks'
+    },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
@@ -61,14 +69,6 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
-    },
-    {
-      type: 'page',
-      id: 'tasks',
-      label: 'Tasks',
-      icon: 'fa-list-check',
-      iconSrc: '/recursos/icons/task.svg',
-      route: 'tasks'
     }
   ],
   footer: [
