@@ -116,11 +116,10 @@ class DevLeadCRMView extends DevBaseView {
         full_name,
         email,
         company_name,
-        job_title,
+        niche,
         country,
         phone,
         website,
-        num_brands,
         main_challenge,
         how_found,
         status,
@@ -188,7 +187,7 @@ class DevLeadCRMView extends DevBaseView {
           </td>
           <td>
             <strong>${this.escapeHtml(lead.company_name || '-')}</strong><br>
-            <span class="dev-lead-flow-desc">${this.escapeHtml(lead.job_title || '')}</span>
+            <span class="dev-lead-flow-desc">${this.escapeHtml(lead.niche || '')}</span>
           </td>
           <td><span class="dev-lead-status dev-lead-status-${this.escapeHtml(lead.status || 'nuevo')}">${this.getStatusLabel(lead.status)}</span></td>
           <td>${this.escapeHtml(this.getSourceLabel(lead))}</td>
@@ -282,6 +281,7 @@ class DevLeadCRMView extends DevBaseView {
         <div><strong>Teléfono:</strong> ${this.escapeHtml(lead.phone || '-')}</div>
         <div><strong>País:</strong> ${this.escapeHtml(lead.country || '-')}</div>
         <div><strong>Sitio web:</strong> ${this.escapeHtml(lead.website || '-')}</div>
+        <div><strong>Nicho:</strong> ${this.escapeHtml(lead.niche || '-')}</div>
         <div><strong>Estado:</strong> ${this.escapeHtml(this.getStatusLabel(lead.status))}</div>
         <div><strong>Fit score:</strong> ${lead.fit_score || '-'}</div>
       </div>

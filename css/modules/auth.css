@@ -30,8 +30,8 @@ body.entrance-done .signin-container {
 /* Hero layout: imagen full-bleed + card glass a la derecha */
 .signin-container--hero {
     background:
-        linear-gradient(rgba(11, 11, 11, 0.55), rgba(11, 11, 11, 0.55)),
-        url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1777469392/image_33_ehg7wd.png') center/cover no-repeat;
+        linear-gradient(rgba(11, 11, 11, 0.18), rgba(11, 11, 11, 0.18)),
+        url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1775848278/image_24_tmzsde.png') center/cover no-repeat;
     background-color: var(--bg-primary);
     display: flex;
     align-items: center;
@@ -536,12 +536,12 @@ body.entrance-done .signin-container {
     text-decoration: underline;
 }
 
-/* Estado: Solicitar acceso (formulario de lead → contact_leads) */
+/* Estado: Solicitar acceso (formulario de lead → contact_leads) — wizard por pasos */
 .signin-request {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.25rem;
     text-align: left;
 }
 
@@ -549,52 +549,103 @@ body.entrance-done .signin-container {
     display: none !important;
 }
 
-.signin-request-logo {
-    display: block;
-    height: 5rem;
-    width: auto;
-    margin: 0 auto;
+.signin-request-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.signin-request-title {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.signin-request-progress {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.signin-request-progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0%;
+    background: var(--brand-gradient);
+    border-radius: 999px;
+    transition: width 0.3s ease;
 }
 
 .signin-request-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     width: 100%;
 }
 
-.signin-request-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.1rem 1.5rem;
+.signin-request-step {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
 }
 
-.signin-field--full {
-    grid-column: 1 / -1;
+.signin-request-step[hidden] {
+    display: none !important;
 }
 
 .signin-request-textarea {
     resize: vertical;
-    min-height: 7rem;
+    min-height: 6rem;
     font-family: inherit;
 }
 
-.signin-request-submit {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: var(--color-white);
-    color: var(--text-black);
+.signin-request-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.signin-request-back {
+    background: none;
     border: 0;
-    border-radius: 999px;
+    padding: 0.5rem 0;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+
+.signin-request-back:hover { color: var(--text-primary); }
+.signin-request-back[hidden] { display: none; }
+
+.signin-request-submit {
+    flex: 1;
+    padding: 0.85rem 1.25rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
     font-family: inherit;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.18s ease, transform 0.18s ease;
+    transition: background 0.18s ease, border-color 0.18s ease;
 }
 
 .signin-request-submit:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .signin-request-submit:disabled {
@@ -629,30 +680,14 @@ body.entrance-done .signin-container {
     line-height: 1.45;
 }
 
-/* Cuando el estado request está visible, la card se ensancha y cambia a fondo plano #141517 */
-.signin-container--hero .signin-card:has(.signin-request:not([hidden])) {
-    max-width: 1100px;
-    background: #141517;
-    border-color: rgba(255, 255, 255, 0.04);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    padding: 3rem clamp(2rem, 5vw, 4rem);
-    max-height: calc(100vh - 6rem);
-    overflow-y: auto;
-}
-
-/* En estado request el logo del login queda redundante con .signin-request-logo */
+/* En estado request: ocultamos el brand logo y banner para dar espacio al wizard */
 .signin-card:has(.signin-request:not([hidden])) .signin-brand,
 .signin-card:has(.signin-request:not([hidden])) .signin-success-banner {
     display: none;
 }
 
 @media (max-width: 720px) {
-    .signin-request-grid { grid-template-columns: 1fr; }
-    .signin-container--hero .signin-card:has(.signin-request:not([hidden])) {
-        padding: 2rem 1.5rem;
-    }
-    .signin-request-logo { height: 3.5rem; }
+    .signin-request-title { font-size: 1.6rem; }
 }
 
 .signin-invite-link {

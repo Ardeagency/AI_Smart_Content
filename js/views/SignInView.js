@@ -15,6 +15,14 @@ class SignInView extends BaseView {
     this.signinMain = null;
     this.signinRecover = null;
     this.signinRequest = null;
+    this.requestStep = 1;
+    this.requestStepTitles = [
+      'Cuéntanos quién eres',
+      'Háblanos de tu empresa',
+      'Sobre tu marca y nicho',
+      'Tu reto principal'
+    ];
+    this.requestTotalSteps = 4;
   }
 
   async updateHeader() {
@@ -68,10 +76,15 @@ class SignInView extends BaseView {
           </div>
 
           <div class="signin-request" id="signinRequest" aria-hidden="true" hidden>
-            <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="signin-request-logo" decoding="async">
+            <div class="signin-request-header">
+              <h2 class="signin-request-title" id="requestStepTitle">Cuéntanos quién eres</h2>
+              <div class="signin-request-progress" aria-hidden="true">
+                <div class="signin-request-progress-fill" id="requestProgressFill"></div>
+              </div>
+            </div>
 
             <form class="signin-request-form" id="requestForm" novalidate>
-              <div class="signin-request-grid">
+              <div class="signin-request-step" data-step="1">
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqFullName">Nombre completo</label>
                   <input type="text" class="form-input" id="reqFullName" name="full_name" placeholder="Tu nombre" autocomplete="name" required>
@@ -80,35 +93,21 @@ class SignInView extends BaseView {
                   <label class="signin-field-label" for="reqEmail">Correo electrónico</label>
                   <input type="email" class="form-input" id="reqEmail" name="email" placeholder="name@company.com" autocomplete="email" required>
                 </div>
-
-                <div class="signin-field signin-field--full">
+                <div class="signin-field">
                   <label class="signin-field-label" for="reqPhone">Número</label>
                   <input type="tel" class="form-input" id="reqPhone" name="phone" placeholder="+57 ..." autocomplete="tel">
                 </div>
+              </div>
 
+              <div class="signin-request-step" data-step="2" hidden>
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqCompany">Empresa</label>
                   <input type="text" class="form-input" id="reqCompany" name="company" placeholder="Nombre de la empresa" autocomplete="organization" required>
                 </div>
                 <div class="signin-field">
-                  <label class="signin-field-label" for="reqRole">Rol / Cargo</label>
-                  <select class="form-input" id="reqRole" name="role">
-                    <option value="">Selecciona</option>
-                    <option value="ceo_fundador">CEO / Fundador/a</option>
-                    <option value="cmo_dir_marketing">CMO / Director/a de Marketing</option>
-                    <option value="head_of_content">Head of Content</option>
-                    <option value="marketing_manager">Marketing Manager</option>
-                    <option value="brand_manager">Brand Manager</option>
-                    <option value="content_manager">Content Manager</option>
-                    <option value="growth">Growth / Performance</option>
-                    <option value="ecommerce">E-commerce Manager</option>
-                    <option value="comms">Comunicaciones / PR</option>
-                    <option value="creativo">Director/a Creativo/a</option>
-                    <option value="agencia">Agencia / Consultor</option>
-                    <option value="otro">Otro</option>
-                  </select>
+                  <label class="signin-field-label" for="reqWebsite">Sitio web</label>
+                  <input type="url" class="form-input" id="reqWebsite" name="website" placeholder="https://" autocomplete="url">
                 </div>
-
                 <div class="signin-field">
                   <label class="signin-field-label" for="reqCountry">País</label>
                   <select class="form-input" id="reqCountry" name="country">
@@ -134,37 +133,14 @@ class SignInView extends BaseView {
                     <option value="Otro">Otro</option>
                   </select>
                 </div>
-                <div class="signin-field">
-                  <label class="signin-field-label" for="reqMarket">Mercado</label>
-                  <select class="form-input" id="reqMarket" name="market">
-                    <option value="">Selecciona</option>
-                    <option value="LATAM">LATAM</option>
-                    <option value="Hispanoamérica">Hispanoamérica</option>
-                    <option value="Norteamérica">Norteamérica (US/CA)</option>
-                    <option value="Brasil">Brasil</option>
-                    <option value="Europa">Europa</option>
-                    <option value="España">España</option>
-                    <option value="Local">Local / un solo país</option>
-                    <option value="Global">Global / multi-región</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                </div>
+              </div>
 
+              <div class="signin-request-step" data-step="3" hidden>
                 <div class="signin-field">
-                  <label class="signin-field-label" for="reqWebsite">Sitio web</label>
-                  <input type="url" class="form-input" id="reqWebsite" name="website" placeholder="https://" autocomplete="url">
+                  <label class="signin-field-label" for="reqNiche">Nicho</label>
+                  <input type="text" class="form-input" id="reqNiche" name="niche" placeholder="Ej. moda sostenible, café especial, fitness premium" required>
                 </div>
                 <div class="signin-field">
-                  <label class="signin-field-label" for="reqBrands">Marcas / Líneas de producción</label>
-                  <input type="text" class="form-input" id="reqBrands" name="brands" placeholder="Número o descripción">
-                </div>
-
-                <div class="signin-field signin-field--full">
-                  <label class="signin-field-label" for="reqChallenge">Comentario</label>
-                  <textarea class="form-input signin-request-textarea" id="reqChallenge" name="challenge" rows="4" placeholder="Cuéntanos sobre tu marca o tu reto principal en producción de contenido"></textarea>
-                </div>
-
-                <div class="signin-field signin-field--full">
                   <label class="signin-field-label" for="reqSource">Cómo nos encontraste</label>
                   <select class="form-input" id="reqSource" name="source">
                     <option value="">Selecciona una opción</option>
@@ -177,7 +153,17 @@ class SignInView extends BaseView {
                 </div>
               </div>
 
-              <button type="submit" class="signin-request-submit" id="btnSendRequest">Enviar</button>
+              <div class="signin-request-step" data-step="4" hidden>
+                <div class="signin-field">
+                  <label class="signin-field-label" for="reqChallenge">Tu reto principal</label>
+                  <textarea class="form-input signin-request-textarea" id="reqChallenge" name="challenge" rows="4" placeholder="Cuéntanos sobre tu marca o tu reto principal en producción de contenido"></textarea>
+                </div>
+              </div>
+
+              <div class="signin-request-nav">
+                <button type="button" class="signin-request-back" id="btnRequestBack" hidden>← Atrás</button>
+                <button type="submit" class="signin-request-submit" id="btnSendRequest">Continuar</button>
+              </div>
               <p class="signin-request-status" id="requestStatus" role="status" aria-live="polite"></p>
             </form>
 
@@ -253,10 +239,11 @@ class SignInView extends BaseView {
       });
     }
 
-    // Solicitar acceso → estado request
+    // Solicitar acceso → estado request (wizard por pasos)
     const linkRequest = this.querySelector('#linkRequestAccess');
     const requestForm = this.querySelector('#requestForm');
     const linkRequestBack = this.querySelector('#linkRequestBack');
+    const btnRequestBack = this.querySelector('#btnRequestBack');
     if (linkRequest) {
       this.addEventListener(linkRequest, 'click', (e) => {
         e.preventDefault();
@@ -266,7 +253,13 @@ class SignInView extends BaseView {
     if (requestForm) {
       this.addEventListener(requestForm, 'submit', (e) => {
         e.preventDefault();
-        this.handleSendRequest();
+        this.handleRequestNext();
+      });
+    }
+    if (btnRequestBack) {
+      this.addEventListener(btnRequestBack, 'click', (e) => {
+        e.preventDefault();
+        this.handleRequestBack();
       });
     }
     if (linkRequestBack) {
@@ -376,6 +369,8 @@ class SignInView extends BaseView {
       status.textContent = '';
       status.classList.remove('is-success', 'is-error');
     }
+    this.requestStep = 1;
+    this.renderRequestStep();
     const first = this.querySelector('#reqFullName');
     if (first) first.focus();
   }
@@ -388,26 +383,84 @@ class SignInView extends BaseView {
     }
   }
 
-  async handleSendRequest() {
+  renderRequestStep() {
+    const total = this.requestTotalSteps;
+    const current = this.requestStep;
+
+    this.querySelectorAll('.signin-request-step').forEach((stepEl) => {
+      const stepNum = Number.parseInt(stepEl.getAttribute('data-step'), 10);
+      stepEl.hidden = stepNum !== current;
+    });
+
+    const titleEl = this.querySelector('#requestStepTitle');
+    if (titleEl) titleEl.textContent = this.requestStepTitles[current - 1] || '';
+
+    const fillEl = this.querySelector('#requestProgressFill');
+    if (fillEl) fillEl.style.width = `${(current / total) * 100}%`;
+
+    const submitBtn = this.querySelector('#btnSendRequest');
+    if (submitBtn) submitBtn.textContent = current === total ? 'Enviar solicitud' : 'Continuar';
+
+    const backBtn = this.querySelector('#btnRequestBack');
+    if (backBtn) backBtn.hidden = current === 1;
+
+    const focusable = this.querySelector(`.signin-request-step[data-step="${current}"] input, .signin-request-step[data-step="${current}"] select, .signin-request-step[data-step="${current}"] textarea`);
+    if (focusable) focusable.focus();
+  }
+
+  validateRequestStep(step) {
+    const stepEl = this.querySelector(`.signin-request-step[data-step="${step}"]`);
+    if (!stepEl) return true;
+    const fields = stepEl.querySelectorAll('input, select, textarea');
+    for (const field of fields) {
+      if (!field.checkValidity()) {
+        field.reportValidity();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  handleRequestBack() {
+    if (this.requestStep <= 1) return;
+    this.requestStep -= 1;
+    this.renderRequestStep();
+  }
+
+  async handleRequestNext() {
+    const status = this.querySelector('#requestStatus');
+    if (status) {
+      status.textContent = '';
+      status.classList.remove('is-success', 'is-error');
+    }
+
+    if (!this.validateRequestStep(this.requestStep)) {
+      if (status) {
+        status.textContent = 'Por favor completa los campos requeridos.';
+        status.classList.add('is-error');
+      }
+      return;
+    }
+
+    if (this.requestStep < this.requestTotalSteps) {
+      this.requestStep += 1;
+      this.renderRequestStep();
+      return;
+    }
+
+    await this.submitRequest();
+  }
+
+  async submitRequest() {
     const form = this.querySelector('#requestForm');
     const status = this.querySelector('#requestStatus');
     const submitBtn = this.querySelector('#btnSendRequest');
     if (!form || !status) return;
 
-    if (!form.checkValidity()) {
-      status.textContent = 'Por favor completa los campos requeridos.';
-      status.classList.remove('is-success');
-      status.classList.add('is-error');
-      form.reportValidity();
-      return;
-    }
-
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando...';
     }
-    status.textContent = '';
-    status.classList.remove('is-success', 'is-error');
 
     try {
       const supabase = await this.getSupabaseClient();
@@ -423,19 +476,14 @@ class SignInView extends BaseView {
       };
       const utm = new URLSearchParams(window.location.search || '');
 
-      const brandsRaw = (formData.get('brands') || '').toString().trim();
-      const brandsInt = Number.parseInt(brandsRaw, 10);
-      const market = (formData.get('market') || '').toString().trim();
-
       const payload = {
         full_name: (formData.get('full_name') || '').toString().trim(),
         email: (formData.get('email') || '').toString().trim().toLowerCase(),
         company_name: (formData.get('company') || '').toString().trim(),
-        job_title: (formData.get('role') || '').toString().trim() || null,
         country: (formData.get('country') || '').toString().trim() || null,
         phone: (formData.get('phone') || '').toString().trim() || null,
         website: (formData.get('website') || '').toString().trim() || null,
-        num_brands: Number.isNaN(brandsInt) ? null : brandsInt,
+        niche: (formData.get('niche') || '').toString().trim() || null,
         main_challenge: (formData.get('challenge') || '').toString().trim() || null,
         how_found: sourceMap[(formData.get('source') || '').toString()] || null,
         source: 'contact_form',
@@ -444,9 +492,7 @@ class SignInView extends BaseView {
         metadata: {
           form_path: window.location.pathname,
           form_url: window.location.href,
-          submitted_from: 'login_request_state',
-          market: market || null,
-          brands_raw: brandsRaw || null
+          submitted_from: 'login_request_state'
         }
       };
 
@@ -461,7 +507,6 @@ class SignInView extends BaseView {
       status.textContent = `No pudimos enviar tu solicitud. ${err?.message || 'Intenta de nuevo.'}`;
       status.classList.remove('is-success');
       status.classList.add('is-error');
-    } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Enviar solicitud';
