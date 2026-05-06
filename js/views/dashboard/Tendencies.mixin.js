@@ -1,17 +1,19 @@
 /**
- * DashboardView — Tendencies mixin (tab "Tendencias").
+ * DashboardView — Tendencies mixin (tab "Tendencias") · V2 narrativa.
  *
- * Consume las 7 RPCs `dashboard_tendencias_*` (ver
- * SQL/migrations/migration_FEAT-016_dashboard_tendencias_rpcs.sql) vía
- * `TendenciasDataService` y renderiza secciones verticales:
+ * Diseño storytelling, no BI tool. La pregunta que responde:
+ *   "¿Qué está en tendencia esta semana que mi marca debería usar?"
  *
- *   1. KPIs strip                    (7 cards)
- *   2. Demanda de Audiencia          (chart by intent + lista high-intent + donuts geo/source)
- *   3. Targeted Trends               (bar by_origin + line velocity diaria + tabla top match)
- *   4. Marcas Emergentes             (cards aprobar/rechazar)
- *   5. Niche Signals                 (donut by source + tabla top velocity)
- *   6. Lexicon Emergence             (stacked bar by dimension + lista pending)
- *   7. Market Pulse                  (velocity_by_type + category templates + aviso de gaps)
+ * Estructura visual:
+ *   1. Hero narrativo                — 1 frase grande generada de los datos
+ *   2. Bubble pack "Lo que vibra"    — temas + tonos + intents en burbujas
+ *   3. Lo que tu audiencia busca     — cards conversacionales con CTA
+ *   4. Marcas emergentes             — cards aprobar/rechazar (solo si hay)
+ *   5. El mercado habla de…          — 2-3 noticias top + lexicon emergente
+ *   6. (collapsable) Detalles        — datos raw para power users
+ *
+ * Usa el design system del proyecto: --bg-primary, --bg-secondary,
+ * --brand-gradient, --warm-1, --color-success, --color-info, etc.
  *
  * Aplica sobre DashboardView.prototype al cargarse.
  */
@@ -23,7 +25,6 @@
 
     /* ── Entry point ─────────────────────────────────────────── */
     async _renderTendencies(body) {
-      // Lazy state init
       if (!this._tendInit) {
         this._tendData    = null;
         this._tendService = null;
@@ -33,25 +34,19 @@
       }
       this._tendBody = body;
 
-      // 1. Skeleton inmediato
       body.innerHTML = this._buildTendenciesSkeleton();
-
-      // 2. Cargar Chart.js + service en paralelo
       await Promise.allSettled([
-        this._ensureChartJs(),
         this._ensureTendenciasService(),
       ]);
 
-      // 3. Cargar datos
       if (!this._tendData && this._tendService) {
         this._tendData = await this._tendService.loadAll({
           windowDays: this._tendWindow,
         });
       }
 
-      // 4. Render con datos
+      this._injectTendenciesCSS();
       body.innerHTML = this._buildTendenciesHTML(this._tendData);
-      this._initTendenciesCharts(this._tendData);
       this._wireTendenciesEvents();
     },
 
@@ -72,558 +67,419 @@
 
     /* ── Skeleton ────────────────────────────────────────────── */
     _buildTendenciesSkeleton() {
-      const skel = (h) => `<div class="mb-skel-block" style="height:${h}px"></div>`;
       return `
         <div class="tnd-page">
-          <div class="tnd-kpis">${Array(7).fill('<div class="tnd-kpi"><div class="mb-skel-block" style="height:64px"></div></div>').join('')}</div>
-          <div class="tnd-section">${skel(220)}</div>
-          <div class="tnd-section">${skel(220)}</div>
-          <div class="tnd-section">${skel(180)}</div>
+          <div class="tnd-skeleton tnd-skel-hero"></div>
+          <div class="tnd-skeleton tnd-skel-bubbles"></div>
+          <div class="tnd-skeleton tnd-skel-section"></div>
+          <div class="tnd-skeleton tnd-skel-section"></div>
         </div>`;
     },
 
     /* ── HTML principal ──────────────────────────────────────── */
     _buildTendenciesHTML(d) {
-      this._injectTendenciesCSS();
-
       if (!d) {
         return `<div class="tnd-page"><div class="tnd-empty-large">No se pudo cargar el servicio de Tendencias.</div></div>`;
       }
 
-      const k       = d.kpis?.data?.kpis || {};
-      const window_ = d.windowDays || 30;
+      const k        = d.kpis?.data?.kpis || {};
       const audience = d.audience?.data || {};
       const targeted = d.targeted?.data || {};
       const emerging = d.emerging?.data || {};
       const niche    = d.niche?.data    || {};
       const lexicon  = d.lexicon?.data  || {};
-      const pulse    = d.pulse?.data    || {};
 
       return `
         <div class="tnd-page">
-
-          <!-- ─── Header ─────────────────────────────────────── -->
-          <header class="tnd-header">
-            <div>
-              <h1 class="tnd-title">Tendencias del mercado</h1>
-              <p class="tnd-subtitle">Pulso de audiencia, trends y marcas emergentes en tu nicho · ventana ${window_} días</p>
-            </div>
-            <div class="tnd-header-actions">
-              <select class="tnd-window-select" id="tndWindowSelect" aria-label="Ventana de tiempo">
-                <option value="7"  ${window_ === 7  ? 'selected' : ''}>7 días</option>
-                <option value="30" ${window_ === 30 ? 'selected' : ''}>30 días</option>
-                <option value="90" ${window_ === 90 ? 'selected' : ''}>90 días</option>
-              </select>
-              <button type="button" class="tnd-refresh-btn" id="tndRefreshBtn" title="Recargar">↻</button>
-            </div>
-          </header>
-
-          <!-- ─── KPIs strip ─────────────────────────────────── -->
-          <section class="tnd-kpis">
-            ${this._buildTndKpi('Topics tracked',     k.topicsTracked,    'palabras únicas detectadas')}
-            ${this._buildTndKpi('Demanda audiencia',  k.audienceSignals,  'señales de intent capturadas')}
-            ${this._buildTndKpi('Targeted trends',    k.targetedTrends,   'noticias filtradas por nicho')}
-            ${this._buildTndKpi('Marcas emergentes',  k.emergingBrandsPending, 'pendientes de revisión', 'accent')}
-            ${this._buildTndKpi('Velocidad 24h',      k.velocityLast24h,  'eventos en últimas 24h')}
-            ${this._buildTndKpi('Lexicón aprobado',   k.lexiconApproved,  'términos ya validados')}
-            ${this._buildTndKpi('Lexicón pendiente',  k.lexiconPending,   'esperan revisión', 'warn')}
-          </section>
-
-          <!-- ─── 1. Demanda de Audiencia ───────────────────── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Demanda de Audiencia</h2>
-              <p>Lo que tu nicho está buscando en Google y YouTube — separado por intención comercial</p>
-            </header>
-            <div class="tnd-grid-2">
-              <article class="tnd-widget">
-                <header><h3>Por intención × valor comercial</h3></header>
-                <div class="tnd-chart-wrap"><canvas id="tndChartIntent"></canvas></div>
-                ${(audience.by_intent || []).length === 0 ? `<div class="tnd-empty">Sin señales en este período</div>` : ''}
-              </article>
-              <article class="tnd-widget">
-                <header><h3>Top consultas con valor comercial alto/medio</h3></header>
-                ${this._buildTndHighIntentList(audience.top_high_intent)}
-              </article>
-            </div>
-            <div class="tnd-grid-2">
-              <article class="tnd-widget">
-                <header><h3>Distribución geográfica</h3></header>
-                <div class="tnd-chart-wrap" style="height:200px"><canvas id="tndChartGeo"></canvas></div>
-              </article>
-              <article class="tnd-widget">
-                <header><h3>Por fuente</h3></header>
-                <div class="tnd-chart-wrap" style="height:200px"><canvas id="tndChartSource"></canvas></div>
-              </article>
-            </div>
-          </section>
-
-          <!-- ─── 2. Targeted Trends (Google News smart query) ── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Targeted Trends</h2>
-              <p>Noticias capturadas por keywords de tu marca, productos, audiencia y competidores</p>
-            </header>
-            <div class="tnd-grid-2">
-              <article class="tnd-widget">
-                <header><h3>Volumen por origen de keyword</h3></header>
-                <div class="tnd-chart-wrap"><canvas id="tndChartOrigin"></canvas></div>
-              </article>
-              <article class="tnd-widget">
-                <header><h3>Velocidad diaria</h3></header>
-                <div class="tnd-chart-wrap"><canvas id="tndChartVelocity"></canvas></div>
-              </article>
-            </div>
-            <article class="tnd-widget tnd-widget--wide">
-              <header>
-                <h3>Top noticias por match con tus keywords</h3>
-                <span class="tnd-vera-safe-pill">${this._buildTndVeraSafePill(targeted.vera_safe_breakdown)}</span>
-              </header>
-              ${this._buildTndTrendsTable(targeted.top_by_match)}
-            </article>
-          </section>
-
-          <!-- ─── 3. Marcas Emergentes ──────────────────────── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Marcas Emergentes</h2>
-              <p>Competidores nuevos detectados antes de que sean masivos · aprueba para auto-provisionar sensores</p>
-            </header>
-            ${this._buildTndEmergingSection(emerging)}
-          </section>
-
-          <!-- ─── 4. Niche Signals ──────────────────────────── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Niche Signals</h2>
-              <p>Keywords que vibran en tus redes monitoreadas · ordenadas por velocity</p>
-            </header>
-            <div class="tnd-grid-2">
-              <article class="tnd-widget">
-                <header><h3>Por red social</h3></header>
-                <div class="tnd-chart-wrap" style="height:240px"><canvas id="tndChartNicheSource"></canvas></div>
-              </article>
-              <article class="tnd-widget">
-                <header><h3>Top keywords por velocidad</h3></header>
-                ${this._buildTndNicheTable(niche.top_velocity)}
-              </article>
-            </div>
-          </section>
-
-          <!-- ─── 5. Lexicon Emergence ──────────────────────── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Lexicon Emergence</h2>
-              <p>Vocabulario aprendido por dimensión · catálogo global compartido</p>
-            </header>
-            <div class="tnd-grid-2">
-              <article class="tnd-widget">
-                <header><h3>Por dimensión</h3></header>
-                <div class="tnd-chart-wrap"><canvas id="tndChartLexicon"></canvas></div>
-              </article>
-              <article class="tnd-widget">
-                <header><h3>Pendientes de revisión</h3></header>
-                ${this._buildTndLexiconPendingList(lexicon.pending)}
-              </article>
-            </div>
-          </section>
-
-          <!-- ─── 6. Market Pulse ───────────────────────────── -->
-          <section class="tnd-section">
-            <header class="tnd-section-head">
-              <h2>Pulso del Mercado</h2>
-              <p>Velocity por tipo de señal y plantillas de categoría disponibles</p>
-            </header>
-            ${this._buildTndPulseSection(pulse)}
-          </section>
-
+          ${this._buildTndHero(d)}
+          ${this._buildTndBubbles(niche, audience, lexicon)}
+          ${this._buildTndAudienceSearches(audience)}
+          ${this._buildTndEmerging(emerging)}
+          ${this._buildTndMarketTalks(targeted, lexicon)}
+          ${this._buildTndDetailsCollapsed(d, k)}
         </div>`;
     },
 
-    /* ── KPI card ────────────────────────────────────────────── */
-    _buildTndKpi(label, value, sub, tone = '') {
-      const fmt = (n) => {
-        const v = Number(n);
-        if (n == null || !isFinite(v)) return '—';
-        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
-        if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'k';
-        return String(v);
-      };
+    /* ── 1. Hero narrativo ──────────────────────────────────── */
+    _buildTndHero(d) {
+      const k        = d.kpis?.data?.kpis || {};
+      const audience = d.audience?.data || {};
+      const top      = (audience.top_high_intent || [])[0];
+      const topGeo   = (audience.by_geo || [])[0];
+      const emerging = d.emerging?.data?.pending || [];
+      const lex      = d.lexicon?.data?.recent_approved || [];
+
+      // Construye 1 frase principal a partir de los datos. Cae a fallbacks
+      // si no hay top_high_intent, top_geo, etc.
+      let mainLine;
+      if (top?.discovered_term) {
+        const intent = top.commercial_intent || 'media';
+        const geo    = top.geo || (topGeo?.geo || '—');
+        mainLine = `
+          Tu audiencia está buscando
+          <em class="tnd-hero-em">"${this._esc(top.discovered_term)}"</em>
+          ${geo !== '—' ? `en <span class="tnd-hero-geo">${this._esc(geo)}</span>,` : ','}
+          con <span class="tnd-hero-intent tnd-hero-intent--${intent}">intención ${this._esc(intent)}</span>.
+        `;
+      } else if (k.audienceSignals > 0) {
+        mainLine = `Capturamos <em class="tnd-hero-em">${k.audienceSignals} señales de audiencia</em> esta ventana de tiempo.`;
+      } else {
+        mainLine = `Aún estamos escuchando el mercado para tu marca. Vuelve en unas horas.`;
+      }
+
+      // Subtítulo: contexto adicional en lenguaje natural
+      const bits = [];
+      if (k.audienceSignals)        bits.push(`${k.audienceSignals} señales`);
+      if (lex[0]?.category_value)   bits.push(`tono dominante: <strong>${this._esc(lex[0].category_value)}</strong>`);
+      if (emerging.length)          bits.push(`<strong>${emerging.length}</strong> ${emerging.length === 1 ? 'marca' : 'marcas'} emergiendo`);
+      if (k.targetedTrends)         bits.push(`${k.targetedTrends} noticias capturadas`);
+      const subtitle = bits.length ? bits.join(' · ') : 'Refresca en unos minutos para ver más datos.';
+
       return `
-        <article class="tnd-kpi ${tone ? 'tnd-kpi--' + tone : ''}">
-          <div class="tnd-kpi-label">${this._esc(label)}</div>
-          <div class="tnd-kpi-value">${fmt(value)}</div>
-          <div class="tnd-kpi-sub">${this._esc(sub || '')}</div>
-        </article>`;
+        <header class="tnd-hero">
+          <div class="tnd-hero-eyebrow">
+            <span class="tnd-hero-eyebrow-dot"></span>
+            Tendencias · últimos ${this._tendWindow} días
+          </div>
+          <h1 class="tnd-hero-title">${mainLine}</h1>
+          <p class="tnd-hero-subtitle">${subtitle}</p>
+          <div class="tnd-hero-actions">
+            <div class="tnd-window-tabs" role="tablist">
+              ${[7, 30, 90].map(n => `
+                <button type="button" class="tnd-window-tab ${this._tendWindow === n ? 'is-active' : ''}" data-window="${n}">${n}d</button>
+              `).join('')}
+            </div>
+            <button type="button" class="tnd-refresh" id="tndRefreshBtn" title="Recargar">
+              <i class="fas fa-rotate"></i>
+            </button>
+          </div>
+        </header>`;
     },
 
-    /* ── Audience: lista high-intent ─────────────────────────── */
-    _buildTndHighIntentList(items) {
-      if (!Array.isArray(items) || !items.length) {
-        return `<div class="tnd-empty">Sin consultas de alta intención en este período</div>`;
+    /* ── 2. Bubble pack — lo que vibra ──────────────────────── */
+    _buildTndBubbles(niche, audience, lexicon) {
+      // Combinar fuentes en una sola lista de "items" con type, label, value, color.
+      const items = [];
+
+      // Niche keywords (top 6)
+      (niche.top_velocity || []).slice(0, 6).forEach(k => {
+        items.push({
+          type: 'keyword',
+          label: k.keyword,
+          value: Number(k.velocity_score) || 1,
+          tone: 'cool', // cyan
+        });
+      });
+
+      // Tonos del lexicon recent_approved (top 4 únicos por category_value)
+      const seenTones = new Set();
+      (lexicon.recent_approved || []).forEach(l => {
+        if (l.dimension !== 'tone' && l.dimension !== 'mood') return;
+        if (seenTones.has(l.category_value)) return;
+        seenTones.add(l.category_value);
+        if (items.length < 14) {
+          items.push({
+            type: 'tone',
+            label: l.category_value,
+            value: 6, // peso moderado
+            tone: 'warm', // naranja brand
+          });
+        }
+      });
+
+      // Intent categories (top 3)
+      (audience.by_intent || []).slice(0, 4).forEach(r => {
+        if (items.length >= 16) return;
+        const label = `${r.intent_category} · ${r.commercial_intent}`;
+        items.push({
+          type: 'intent',
+          label,
+          value: Math.max(2, Math.log10(Number(r.total) + 1) * 4),
+          tone: r.commercial_intent === 'high' ? 'success' : (r.commercial_intent === 'medium' ? 'warning' : 'neutral'),
+        });
+      });
+
+      if (!items.length) {
+        return `
+          <section class="tnd-section tnd-bubbles-section">
+            <h2 class="tnd-section-title">Lo que vibra ahora</h2>
+            <p class="tnd-section-sub">Temas y tonos dominantes en tu nicho</p>
+            <div class="tnd-empty">Aún no detectamos suficiente actividad — vuelve en unas horas.</div>
+          </section>`;
       }
-      // Deduplicar por discovered_term + geo (mismas queries pueden repetirse en distintos scrapes)
+
+      // Calcular tamaño en px proporcional al value (40-140 px diameter)
+      const max = Math.max(...items.map(i => i.value));
+      const min = Math.min(...items.map(i => i.value));
+      const range = Math.max(1, max - min);
+      const sizeFor = (v) => Math.round(56 + (v - min) / range * 100); // 56..156
+
+      // Asignar colores del brand gradient en orden
+      const toneColors = {
+        cool:    { bg: 'rgba(0, 231, 255, 0.18)',  border: 'rgba(0, 231, 255, 0.45)',  text: '#7be9ff' },
+        warm:    { bg: 'rgba(255, 101, 0, 0.18)',  border: 'rgba(255, 101, 0, 0.50)',  text: '#ffac6e' },
+        success: { bg: 'rgba(0, 214, 20, 0.18)',   border: 'rgba(0, 214, 20, 0.45)',   text: '#7ee896' },
+        warning: { bg: 'rgba(255, 229, 0, 0.16)',  border: 'rgba(255, 229, 0, 0.45)',  text: '#ffe97a' },
+        neutral: { bg: 'rgba(212, 209, 216, 0.06)', border: 'rgba(212, 209, 216, 0.20)', text: 'rgba(212, 209, 216, 0.75)' },
+      };
+
+      // Mezclar items para que no agrupados por tipo (visual más natural)
+      const shuffled = [...items].sort((a, b) => b.value - a.value);
+
+      const bubbles = shuffled.map((it, i) => {
+        const size = sizeFor(it.value);
+        const c = toneColors[it.tone] || toneColors.neutral;
+        const fontSize = Math.max(10, Math.min(15, size / 9));
+        return `
+          <div class="tnd-bubble" style="
+            width:${size}px;height:${size}px;
+            background:${c.bg};
+            border-color:${c.border};
+            color:${c.text};
+            font-size:${fontSize}px;
+            animation-delay:${i * 60}ms;
+          " title="${this._esc(it.type)}: ${this._esc(it.label)}">
+            <span class="tnd-bubble-label">${this._esc(it.label)}</span>
+          </div>`;
+      }).join('');
+
+      return `
+        <section class="tnd-section tnd-bubbles-section">
+          <header class="tnd-section-head">
+            <h2 class="tnd-section-title">Lo que vibra ahora</h2>
+            <p class="tnd-section-sub">Temas, tonos e intenciones que dominan en tu nicho · tamaño según volumen</p>
+          </header>
+          <div class="tnd-bubbles-stage">
+            ${bubbles}
+          </div>
+          <div class="tnd-bubbles-legend">
+            <span class="tnd-legend-dot" style="background:${toneColors.cool.bg};border-color:${toneColors.cool.border}"></span> palabras
+            <span class="tnd-legend-dot" style="background:${toneColors.warm.bg};border-color:${toneColors.warm.border}"></span> tonos
+            <span class="tnd-legend-dot" style="background:${toneColors.success.bg};border-color:${toneColors.success.border}"></span> alta intención
+            <span class="tnd-legend-dot" style="background:${toneColors.warning.bg};border-color:${toneColors.warning.border}"></span> media
+          </div>
+        </section>`;
+    },
+
+    /* ── 3. Lo que tu audiencia busca ───────────────────────── */
+    _buildTndAudienceSearches(audience) {
+      const items = audience.top_high_intent || [];
+      if (!items.length) return '';
+
+      // Dedup por discovered_term + geo
       const seen = new Set();
       const dedup = items.filter(it => {
         const k = `${it.discovered_term}|${it.geo}`;
         if (seen.has(k)) return false;
         seen.add(k);
         return true;
-      }).slice(0, 12);
+      }).slice(0, 5);
 
-      const rows = dedup.map(it => {
+      const cards = dedup.map((it, i) => {
         const intent = it.commercial_intent || '—';
-        const tone = intent === 'high' ? 'tnd-pill--high' : intent === 'medium' ? 'tnd-pill--med' : 'tnd-pill--low';
+        const icon = intent === 'high' ? '🔥' : (intent === 'medium' ? '⚡' : '💡');
+        const intentLabel = intent === 'high' ? 'alta intención' : intent === 'medium' ? 'intención media' : 'intención baja';
         return `
-          <li class="tnd-hi-row">
-            <div class="tnd-hi-text">
-              <span class="tnd-hi-term">${this._esc(it.discovered_term || '')}</span>
-              <span class="tnd-hi-meta">${this._esc(it.intent_category || '')} · ${this._esc(it.geo || '')}</span>
+          <article class="tnd-search-card" style="animation-delay:${i * 80}ms">
+            <div class="tnd-search-icon">${icon}</div>
+            <div class="tnd-search-body">
+              <div class="tnd-search-term">${this._esc(it.discovered_term || '—')}</div>
+              <div class="tnd-search-meta">
+                <span class="tnd-meta-pill tnd-meta-pill--geo">${this._esc(it.geo || '—')}</span>
+                <span class="tnd-meta-pill tnd-meta-pill--${intent}">${intentLabel}</span>
+                ${it.intent_category ? `<span class="tnd-meta-tag">${this._esc(it.intent_category)}</span>` : ''}
+              </div>
             </div>
-            <span class="tnd-pill ${tone}">${intent}</span>
-          </li>`;
+            <button type="button" class="tnd-search-cta" data-action="create-content" data-term="${this._esc(it.discovered_term || '')}">
+              Crear contenido
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </article>`;
       }).join('');
-      return `<ul class="tnd-hi-list">${rows}</ul>`;
-    },
-
-    /* ── Targeted: vera_safe pill ────────────────────────────── */
-    _buildTndVeraSafePill(b) {
-      if (!b || !b.total) return '';
-      const pct = Math.round(100 * (b.safe || 0) / b.total);
-      return `<span class="tnd-pill tnd-pill--info" title="${b.safe} safe / ${b.unsafe} unsafe / ${b.total} total">vera_safe ${pct}%</span>`;
-    },
-
-    /* ── Targeted: tabla de top by match ─────────────────────── */
-    _buildTndTrendsTable(items) {
-      if (!Array.isArray(items) || !items.length) {
-        return `<div class="tnd-empty">Sin trends capturados en este período</div>`;
-      }
-      const rows = items.slice(0, 15).map(it => {
-        const safeIcon = it.vera_safe ? '🟢' : '⚠️';
-        const match = Number(it.match_strength || 0).toFixed(2);
-        return `
-          <tr>
-            <td><span class="tnd-mono">${safeIcon} ${match}</span></td>
-            <td>
-              <a href="${this._esc(it.url || '#')}" target="_blank" rel="noopener" class="tnd-tt-title">${this._esc(it.title || 'Sin título')}</a>
-              <div class="tnd-tt-meta">${this._esc(it.source || '')} · ${this._esc(it.geo || '')} · ${this._esc(it.keyword_origin || '')}: <em>${this._esc(it.trigger_keyword || '')}</em></div>
-            </td>
-          </tr>`;
-      }).join('');
-      return `
-        <div class="tnd-table-wrap">
-          <table class="tnd-table">
-            <thead><tr><th style="width:80px">Match</th><th>Noticia</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-    },
-
-    /* ── Emerging brands section ─────────────────────────────── */
-    _buildTndEmergingSection(emerging) {
-      const pending  = emerging?.pending  || [];
-      const approved = emerging?.approved || [];
-
-      const pendingCards = pending.length
-        ? pending.map(c => this._buildTndEmergingCard(c, true)).join('')
-        : `<div class="tnd-empty">No hay marcas pendientes de revisión</div>`;
-
-      const approvedRows = approved.length
-        ? `<ul class="tnd-emerg-approved">${approved.map(c => `
-            <li>
-              <strong>${this._esc(c.candidate_name || '—')}</strong>
-              <span class="tnd-meta">${this._esc(c.niche || '—')} · ${(c.detected_geos || []).join(', ')} · ${c.approved_entities_count || 0} entities</span>
-            </li>`).join('')}</ul>`
-        : '';
 
       return `
-        <div class="tnd-emerg-pending">${pendingCards}</div>
-        ${approved.length ? `
-          <div class="tnd-emerg-approved-wrap">
-            <h3 class="tnd-emerg-h3">Aprobadas recientemente</h3>
-            ${approvedRows}
-          </div>` : ''}
-      `;
+        <section class="tnd-section">
+          <header class="tnd-section-head">
+            <h2 class="tnd-section-title">Lo que tu audiencia está buscando</h2>
+            <p class="tnd-section-sub">Consultas reales en Google y YouTube · ordenadas por intención comercial</p>
+          </header>
+          <div class="tnd-search-cards">${cards}</div>
+        </section>`;
     },
 
-    _buildTndEmergingCard(c, withActions) {
-      const geos  = (c.detected_geos || []).join(', ') || '—';
-      const seeds = (c.detected_in_seeds || []).slice(0, 3).join(', ') || '—';
-      return `
-        <article class="tnd-emerg-card" data-cid="${this._esc(c.id)}">
-          <header class="tnd-emerg-card-head">
+    /* ── 4. Marcas emergentes ───────────────────────────────── */
+    _buildTndEmerging(emerging) {
+      const pending  = emerging.pending  || [];
+      const approved = emerging.approved || [];
+      if (!pending.length && !approved.length) return '';
+
+      const pendingCards = pending.length ? pending.slice(0, 6).map((c, i) => `
+        <article class="tnd-emerg-card" style="animation-delay:${i * 80}ms" data-cid="${this._esc(c.id)}">
+          <div class="tnd-emerg-card-head">
             <div>
               <h3 class="tnd-emerg-name">${this._esc(c.candidate_name || '—')}</h3>
               <div class="tnd-emerg-niche">${this._esc(c.niche || 'sin nicho')}</div>
             </div>
-            <span class="tnd-pill tnd-pill--info">${c.detection_count || 0} detecciones</span>
-          </header>
+            <span class="tnd-emerg-detection">${c.detection_count || 0} detecciones</span>
+          </div>
           <div class="tnd-emerg-meta">
-            <div><span>Geos:</span> ${this._esc(geos)}</div>
-            <div><span>Detectada en seeds:</span> ${this._esc(seeds)}</div>
-            <div><span>Rank avg:</span> ${c.avg_rank_position != null ? Number(c.avg_rank_position).toFixed(1) : '—'}</div>
+            <i class="fas fa-globe-americas"></i>
+            ${(c.detected_geos || []).join(', ') || '—'}
           </div>
-          ${withActions ? `
-            <div class="tnd-emerg-actions">
-              <button type="button" class="tnd-btn tnd-btn--approve" data-action="approve" data-id="${this._esc(c.id)}">✓ Aprobar</button>
-              <button type="button" class="tnd-btn tnd-btn--reject"  data-action="reject"  data-id="${this._esc(c.id)}">✕ Rechazar</button>
-            </div>` : ''}
-        </article>`;
+          <div class="tnd-emerg-actions">
+            <button type="button" class="tnd-btn tnd-btn--approve" data-action="approve-emerg" data-id="${this._esc(c.id)}">
+              <i class="fas fa-check"></i> Aprobar
+            </button>
+            <button type="button" class="tnd-btn tnd-btn--reject" data-action="reject-emerg" data-id="${this._esc(c.id)}">
+              <i class="fas fa-xmark"></i> Rechazar
+            </button>
+          </div>
+        </article>`).join('') : '';
+
+      const approvedRow = approved.length ? `
+        <div class="tnd-emerg-approved-strip">
+          <span class="tnd-emerg-approved-label"><i class="fas fa-check-circle"></i> Aprobadas:</span>
+          ${approved.slice(0, 5).map(c => `<span class="tnd-emerg-approved-pill">${this._esc(c.candidate_name)}</span>`).join('')}
+        </div>` : '';
+
+      return `
+        <section class="tnd-section">
+          <header class="tnd-section-head">
+            <h2 class="tnd-section-title">Marcas emergiendo en tu categoría</h2>
+            <p class="tnd-section-sub">Competidores nuevos detectados antes de que sean masivos · 1 click los provisiona en multi-plataforma</p>
+          </header>
+          ${pending.length ? `<div class="tnd-emerg-grid">${pendingCards}</div>` : `<div class="tnd-empty">No hay marcas pendientes ahora.</div>`}
+          ${approvedRow}
+        </section>`;
     },
 
-    /* ── Niche signals tabla ─────────────────────────────────── */
-    _buildTndNicheTable(items) {
-      if (!Array.isArray(items) || !items.length) {
-        return `<div class="tnd-empty">Sin niche signals en este período</div>`;
-      }
-      const rows = items.slice(0, 15).map(it => `
-        <tr>
-          <td><strong>${this._esc(it.keyword || '—')}</strong></td>
-          <td><span class="tnd-mono">${this._esc(it.source || '—')}</span></td>
-          <td><span class="tnd-mono">${Number(it.velocity_score || 0).toFixed(1)}</span></td>
-        </tr>`).join('');
+    /* ── 5. El mercado habla ────────────────────────────────── */
+    _buildTndMarketTalks(targeted, lexicon) {
+      const news = (targeted.top_by_match || []).filter(n => n.vera_safe).slice(0, 3);
+      const newWords = (lexicon.pending || []).slice(0, 4);
+
+      if (!news.length && !newWords.length) return '';
+
+      const newsItems = news.length ? news.map((n, i) => `
+        <article class="tnd-talk-row tnd-talk-row--news" style="animation-delay:${i * 70}ms">
+          <div class="tnd-talk-icon"><i class="fas fa-newspaper"></i></div>
+          <div class="tnd-talk-body">
+            <a href="${this._esc(n.url || '#')}" target="_blank" rel="noopener" class="tnd-talk-title">${this._esc(n.title || 'Sin título')}</a>
+            <div class="tnd-talk-meta">
+              match <strong>${Number(n.match_strength || 0).toFixed(2)}</strong>
+              <span class="tnd-meta-sep">·</span>
+              <em>${this._esc(n.trigger_keyword || '')}</em>
+              <span class="tnd-meta-sep">·</span>
+              ${this._esc(n.geo || '')}
+            </div>
+          </div>
+        </article>`).join('') : '';
+
+      const wordsItems = newWords.length ? newWords.map((w, i) => `
+        <article class="tnd-talk-row tnd-talk-row--word" style="animation-delay:${(news.length + i) * 70}ms">
+          <div class="tnd-talk-icon"><i class="fas fa-spell-check"></i></div>
+          <div class="tnd-talk-body">
+            <div class="tnd-talk-title">Nueva palabra: <em>${this._esc(w.word)}</em></div>
+            <div class="tnd-talk-meta">
+              dimensión <strong>${this._esc(w.dimension)}</strong>
+              ${w.category_value ? `<span class="tnd-meta-sep">·</span> ${this._esc(w.category_value)}` : ''}
+              <span class="tnd-meta-sep">·</span>
+              fuente: ${this._esc(w.source || 'auto')}
+            </div>
+          </div>
+        </article>`).join('') : '';
+
       return `
-        <div class="tnd-table-wrap">
-          <table class="tnd-table">
-            <thead><tr><th>Keyword</th><th style="width:120px">Red</th><th style="width:80px">Velocity</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+        <section class="tnd-section">
+          <header class="tnd-section-head">
+            <h2 class="tnd-section-title">El mercado habla de…</h2>
+            <p class="tnd-section-sub">Noticias top relacionadas con tu marca y vocabulario emergente</p>
+          </header>
+          <div class="tnd-talks">
+            ${newsItems}
+            ${wordsItems}
+          </div>
+        </section>`;
+    },
+
+    /* ── 6. Detalles colapsables ────────────────────────────── */
+    _buildTndDetailsCollapsed(d, k) {
+      const audience = d.audience?.data || {};
+      const targeted = d.targeted?.data || {};
+      const niche    = d.niche?.data    || {};
+      const lexicon  = d.lexicon?.data  || {};
+
+      // KPIs raw
+      const kpiRow = (label, value) => `
+        <div class="tnd-detail-kpi">
+          <div class="tnd-detail-kpi-value">${this._fmtNum(value)}</div>
+          <div class="tnd-detail-kpi-label">${this._esc(label)}</div>
         </div>`;
-    },
 
-    /* ── Lexicon pending list ────────────────────────────────── */
-    _buildTndLexiconPendingList(items) {
-      if (!Array.isArray(items) || !items.length) {
-        return `<div class="tnd-empty">No hay términos pendientes de revisión</div>`;
-      }
-      const rows = items.slice(0, 12).map(it => `
-        <li class="tnd-lex-row">
-          <div>
-            <strong>${this._esc(it.word || '—')}</strong>
-            <span class="tnd-meta">${this._esc(it.dimension || '')} · ${this._esc(it.category_value || '')}</span>
-          </div>
-          <span class="tnd-pill tnd-pill--low">${this._esc(it.source || 'auto')}</span>
-        </li>`).join('');
-      return `<ul class="tnd-lex-list">${rows}</ul>`;
-    },
-
-    /* ── Pulse section ───────────────────────────────────────── */
-    _buildTndPulseSection(pulse) {
-      const velocity = pulse?.velocity_by_type || {};
-      const sentiment = pulse?.sentiment_breakdown || {};
-      const formats = pulse?.format_breakdown || [];
-      const templates = pulse?.category_templates || [];
-
-      const velocityCards = Object.keys(velocity).length
-        ? Object.entries(velocity).map(([type, v]) => `
-            <article class="tnd-pulse-card">
-              <div class="tnd-pulse-type">${this._esc(type)}</div>
-              <div class="tnd-pulse-now">${v.last_24h || 0}</div>
-              <div class="tnd-pulse-meta">${v.last_1h || 0} en 1h · ${v.last_6h || 0} en 6h · ${v.total || 0} total</div>
-            </article>`).join('')
-        : `<div class="tnd-empty">Sin velocity data en este período</div>`;
-
-      const tplPills = templates.length
-        ? templates.slice(0, 10).map(t => `<span class="tnd-tpl-pill" title="${this._esc(t.description || '')}">${this._esc(t.display_name || t.id || '?')}</span>`).join('')
-        : '';
-
-      const sentTotal = sentiment.total || 0;
-      const sentValid = (sentiment.positivo || 0) + (sentiment.negativo || 0) + (sentiment.neutro || 0);
-      const sentNote = sentTotal > 0 && sentValid === 0
-        ? `<div class="tnd-pulse-note">⚠ Sentiment computado sobre ${sentTotal} posts pero sin clasificación poblada upstream — pendiente fix</div>`
-        : '';
-
-      const fmtNote = formats.length && formats.every(f => f.asset_type === 'unknown')
-        ? `<div class="tnd-pulse-note">⚠ Asset type sin clasificar (${formats[0]?.posts || 0} posts) — pendiente clasificador upstream</div>`
-        : '';
+      // Breakdown helpers
+      const breakdownList = (items, getLabel, getValue) => items.length
+        ? `<ul class="tnd-detail-list">${items.slice(0, 8).map(i => `
+            <li><span>${this._esc(getLabel(i))}</span><strong>${this._fmtNum(getValue(i))}</strong></li>
+          `).join('')}</ul>`
+        : `<div class="tnd-empty tnd-empty--small">Sin datos</div>`;
 
       return `
-        <div class="tnd-pulse-grid">${velocityCards}</div>
-        ${templates.length ? `
-          <div class="tnd-pulse-templates">
-            <div class="tnd-pulse-templates-title">Plantillas disponibles para tu categoría</div>
-            <div class="tnd-tpl-pills">${tplPills}</div>
-          </div>` : ''}
-        ${sentNote}
-        ${fmtNote}
-      `;
+        <details class="tnd-details">
+          <summary class="tnd-details-summary">
+            <i class="fas fa-chevron-right"></i>
+            <span>Ver detalles técnicos</span>
+            <span class="tnd-details-meta">${this._fmtNum(k.audienceSignals + k.targetedTrends)} señales · ${this._fmtNum(k.topicsTracked)} keywords · ${this._fmtNum(k.lexiconApproved)} términos</span>
+          </summary>
+          <div class="tnd-details-body">
+
+            <div class="tnd-detail-grid tnd-detail-grid--kpis">
+              ${kpiRow('Topics distintos', k.topicsTracked)}
+              ${kpiRow('Señales audiencia', k.audienceSignals)}
+              ${kpiRow('Trends capturados', k.targetedTrends)}
+              ${kpiRow('Marcas pending', k.emergingBrandsPending)}
+              ${kpiRow('Velocidad 24h', k.velocityLast24h)}
+              ${kpiRow('Lexicón aprobado', k.lexiconApproved)}
+              ${kpiRow('Lexicón pendiente', k.lexiconPending)}
+            </div>
+
+            <div class="tnd-detail-grid tnd-detail-grid--3">
+              <div class="tnd-detail-card">
+                <h4>Audiencia · por geo</h4>
+                ${breakdownList(audience.by_geo || [], i => i.geo, i => i.total)}
+              </div>
+              <div class="tnd-detail-card">
+                <h4>Audiencia · por fuente</h4>
+                ${breakdownList(audience.by_source || [], i => i.source, i => i.total)}
+              </div>
+              <div class="tnd-detail-card">
+                <h4>Targeted · por origen</h4>
+                ${breakdownList(targeted.by_origin || [], i => i.keyword_origin, i => i.total)}
+              </div>
+              <div class="tnd-detail-card">
+                <h4>Niche · por red social</h4>
+                ${breakdownList(niche.by_source || [], i => i.source, i => i.total)}
+              </div>
+              <div class="tnd-detail-card">
+                <h4>Lexicón · por dimensión</h4>
+                ${breakdownList(lexicon.by_dimension || [], i => i.dimension, i => i.total)}
+              </div>
+              <div class="tnd-detail-card">
+                <h4>Audiencia · por intención</h4>
+                ${breakdownList(audience.by_intent || [], i => `${i.intent_category} · ${i.commercial_intent}`, i => i.total)}
+              </div>
+            </div>
+
+          </div>
+        </details>`;
     },
 
-    /* ── Charts ──────────────────────────────────────────────── */
-    _initTendenciesCharts(d) {
-      if (!window.Chart || !d) return;
-
-      const colors = ['#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#8b5cf6', '#22c55e', '#ef4444'];
-      const trans  = (hex, a) => {
-        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-        return `rgba(${r},${g},${b},${a})`;
-      };
-
-      // 1. Audience by_intent — stacked horizontal bar (intent_category × commercial_intent)
-      const intentCanvas = document.getElementById('tndChartIntent');
-      const byIntent = d.audience?.data?.by_intent || [];
-      if (intentCanvas && byIntent.length) {
-        const cats = [...new Set(byIntent.map(r => r.intent_category))];
-        const intents = ['high', 'medium', 'low'];
-        const intentColor = { high: '#22c55e', medium: '#f59e0b', low: '#94a3b8' };
-        const datasets = intents.map(int => ({
-          label: int,
-          data: cats.map(c => {
-            const m = byIntent.find(r => r.intent_category === c && r.commercial_intent === int);
-            return m ? Number(m.total) : 0;
-          }),
-          backgroundColor: intentColor[int],
-          borderRadius: 4,
-          borderWidth: 0,
-        }));
-        this._reg(new Chart(intentCanvas, {
-          type: 'bar',
-          data: { labels: cats, datasets },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            indexAxis: 'y',
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } },
-            scales: {
-              x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
-              y: { stacked: true, ticks: { color: '#cbd5e1' }, grid: { display: false } },
-            },
-          },
-        }));
-      }
-
-      // 2. Audience by_geo — donut
-      const geoCanvas = document.getElementById('tndChartGeo');
-      const byGeo = d.audience?.data?.by_geo || [];
-      if (geoCanvas && byGeo.length) {
-        this._reg(new Chart(geoCanvas, {
-          type: 'doughnut',
-          data: {
-            labels: byGeo.map(r => r.geo || '?'),
-            datasets: [{ data: byGeo.map(r => Number(r.total)), backgroundColor: colors, borderColor: '#0f172a', borderWidth: 2 }],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } },
-          },
-        }));
-      }
-
-      // 3. Audience by_source — donut
-      const srcCanvas = document.getElementById('tndChartSource');
-      const bySrc = d.audience?.data?.by_source || [];
-      if (srcCanvas && bySrc.length) {
-        this._reg(new Chart(srcCanvas, {
-          type: 'doughnut',
-          data: {
-            labels: bySrc.map(r => r.source || '?'),
-            datasets: [{ data: bySrc.map(r => Number(r.total)), backgroundColor: colors.slice(2), borderColor: '#0f172a', borderWidth: 2 }],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } },
-          },
-        }));
-      }
-
-      // 4. Targeted by_origin — bar chart
-      const originCanvas = document.getElementById('tndChartOrigin');
-      const byOrigin = d.targeted?.data?.by_origin || [];
-      if (originCanvas && byOrigin.length) {
-        this._reg(new Chart(originCanvas, {
-          type: 'bar',
-          data: {
-            labels: byOrigin.map(r => r.keyword_origin || '?'),
-            datasets: [{
-              label: 'Filas',
-              data: byOrigin.map(r => Number(r.total)),
-              backgroundColor: trans(colors[0], 0.7),
-              borderColor: colors[0],
-              borderWidth: 1,
-              borderRadius: 4,
-            }],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { ticks: { color: '#94a3b8', maxRotation: 30 }, grid: { display: false } },
-              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
-            },
-          },
-        }));
-      }
-
-      // 5. Targeted velocity_series — line
-      const velCanvas = document.getElementById('tndChartVelocity');
-      const series = d.targeted?.data?.velocity_series || [];
-      if (velCanvas && series.length) {
-        this._reg(new Chart(velCanvas, {
-          type: 'line',
-          data: {
-            labels: series.map(r => r.day),
-            datasets: [{
-              label: 'Trends por día',
-              data: series.map(r => Number(r.total)),
-              borderColor: colors[1],
-              backgroundColor: trans(colors[1], 0.15),
-              fill: true,
-              tension: 0.3,
-              pointRadius: 2,
-              pointBackgroundColor: colors[1],
-            }],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { ticks: { color: '#94a3b8', maxRotation: 0, autoSkipPadding: 20 }, grid: { display: false } },
-              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
-            },
-          },
-        }));
-      }
-
-      // 6. Niche by_source — donut
-      const nicheSrcCanvas = document.getElementById('tndChartNicheSource');
-      const nicheBySrc = d.niche?.data?.by_source || [];
-      if (nicheSrcCanvas && nicheBySrc.length) {
-        this._reg(new Chart(nicheSrcCanvas, {
-          type: 'doughnut',
-          data: {
-            labels: nicheBySrc.map(r => r.source || '?'),
-            datasets: [{ data: nicheBySrc.map(r => Number(r.total)), backgroundColor: colors, borderColor: '#0f172a', borderWidth: 2 }],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } },
-          },
-        }));
-      }
-
-      // 7. Lexicon by_dimension — stacked bar
-      const lexCanvas = document.getElementById('tndChartLexicon');
-      const byDim = d.lexicon?.data?.by_dimension || [];
-      if (lexCanvas && byDim.length) {
-        this._reg(new Chart(lexCanvas, {
-          type: 'bar',
-          data: {
-            labels: byDim.map(r => r.dimension),
-            datasets: [
-              { label: 'Aprobados', data: byDim.map(r => Number(r.approved)), backgroundColor: '#22c55e', borderRadius: 4 },
-              { label: 'Pendientes', data: byDim.map(r => Number(r.proposed)), backgroundColor: '#f59e0b', borderRadius: 4 },
-              { label: 'Rechazados', data: byDim.map(r => Number(r.rejected)), backgroundColor: '#94a3b8', borderRadius: 4 },
-            ],
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } },
-            scales: {
-              x: { stacked: true, ticks: { color: '#cbd5e1' }, grid: { display: false } },
-              y: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.1)' } },
-            },
-          },
-        }));
-      }
+    /* ── Helpers ─────────────────────────────────────────────── */
+    _fmtNum(n) {
+      const v = Number(n);
+      if (n == null || !isFinite(v)) return '—';
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+      if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'k';
+      return String(v);
     },
 
     /* ── Eventos ─────────────────────────────────────────────── */
@@ -631,139 +487,609 @@
       const refreshBtn = document.getElementById('tndRefreshBtn');
       if (refreshBtn) {
         refreshBtn.addEventListener('click', async () => {
+          refreshBtn.classList.add('is-spinning');
           this._tendData = null;
-          this._destroyCharts();
           await this._renderTendencies(this._tendBody);
         });
       }
-      const sel = document.getElementById('tndWindowSelect');
-      if (sel) {
-        sel.addEventListener('change', async (e) => {
-          this._tendWindow = Number(e.target.value) || 30;
+
+      // Window tabs (7d / 30d / 90d)
+      document.querySelectorAll('.tnd-window-tab').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const w = Number(btn.dataset.window) || 30;
+          if (w === this._tendWindow) return;
+          this._tendWindow = w;
           this._tendData = null;
-          this._destroyCharts();
           await this._renderTendencies(this._tendBody);
         });
-      }
-      // Emerging brand actions: stub UI (sin endpoint hookeado todavía)
-      document.querySelectorAll('.tnd-emerg-actions [data-action]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const action = btn.dataset.action;
-          const id = btn.dataset.id;
-          // TODO: hook a /emerging-brands/approve|reject del ai-engine
-          alert(`${action === 'approve' ? 'Aprobar' : 'Rechazar'} marca emergente ${id} — endpoint del ai-engine pendiente de cablear`);
+      });
+
+      // Acciones (delegación a futuro endpoint del ai-engine; hoy stub)
+      document.querySelectorAll('[data-action="approve-emerg"], [data-action="reject-emerg"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action === 'approve-emerg' ? 'aprobar' : 'rechazar';
+          alert(`${action} marca emergente — endpoint del ai-engine pendiente de cablear`);
+        });
+      });
+
+      document.querySelectorAll('[data-action="create-content"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const term = btn.dataset.term || '';
+          alert(`Crear contenido para "${term}" — flujo a Studio pendiente de cablear`);
         });
       });
     },
 
-    /* ── CSS scoped al tab ───────────────────────────────────── */
+    /* ── CSS ─────────────────────────────────────────────────── */
     _injectTendenciesCSS() {
-      if (document.getElementById('tnd-css')) return;
+      if (document.getElementById('tnd-css')) {
+        // Si cambia algo, removemos para reinyectar la última versión
+        document.getElementById('tnd-css').remove();
+      }
       const css = `
-        .tnd-page { padding: 16px 0; color: #e2e8f0; }
-        .tnd-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; padding:0 4px; }
-        .tnd-title { margin:0; font-size:24px; font-weight:600; letter-spacing:-.02em; color:#f1f5f9; }
-        .tnd-subtitle { margin:4px 0 0; font-size:13px; color:#94a3b8; }
-        .tnd-header-actions { display:flex; gap:8px; align-items:center; }
-        .tnd-window-select { background:#1e293b; border:1px solid #334155; color:#e2e8f0; padding:6px 10px; border-radius:6px; font-size:13px; cursor:pointer; }
-        .tnd-window-select:hover { border-color:#475569; }
-        .tnd-refresh-btn { background:#1e293b; border:1px solid #334155; color:#e2e8f0; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
-        .tnd-refresh-btn:hover { border-color:#6366f1; color:#6366f1; transform:rotate(90deg); }
+        /* ═══ Tendencies Dashboard V2 — narrative & visual ═══ */
+        .tnd-page {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 24px 16px 64px;
+          color: var(--text-primary, #D4D1D8);
+        }
 
-        .tnd-kpis { display:grid; grid-template-columns:repeat(7, 1fr); gap:12px; margin-bottom:32px; }
-        @media (max-width: 1280px) { .tnd-kpis { grid-template-columns:repeat(4, 1fr); } }
-        @media (max-width: 768px)  { .tnd-kpis { grid-template-columns:repeat(2, 1fr); } }
-        .tnd-kpi { background:linear-gradient(135deg, rgba(30,41,59,.6), rgba(15,23,42,.6)); border:1px solid #1e293b; border-radius:10px; padding:14px 16px; transition: all .2s; }
-        .tnd-kpi:hover { border-color:#334155; transform:translateY(-2px); }
-        .tnd-kpi--accent { border-color:#6366f1; background:linear-gradient(135deg, rgba(99,102,241,.1), rgba(99,102,241,.05)); }
-        .tnd-kpi--warn   { border-color:#f59e0b; background:linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.05)); }
-        .tnd-kpi-label { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin-bottom:4px; }
-        .tnd-kpi-value { font-size:28px; font-weight:600; color:#f1f5f9; line-height:1; }
-        .tnd-kpi-sub   { font-size:11px; color:#64748b; margin-top:6px; }
+        /* ── Skeleton ── */
+        .tnd-skeleton {
+          background: linear-gradient(90deg,
+            rgba(255,255,255,0.04) 0%,
+            rgba(255,255,255,0.08) 50%,
+            rgba(255,255,255,0.04) 100%);
+          background-size: 200% 100%;
+          animation: tndShimmer 1.4s ease-in-out infinite;
+          border-radius: var(--radius-lg, 16px);
+          margin-bottom: 24px;
+        }
+        .tnd-skel-hero    { height: 200px; }
+        .tnd-skel-bubbles { height: 320px; }
+        .tnd-skel-section { height: 280px; }
+        @keyframes tndShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        .tnd-section { margin-bottom:40px; }
-        .tnd-section-head { margin-bottom:14px; }
-        .tnd-section-head h2 { margin:0; font-size:18px; font-weight:600; color:#f1f5f9; letter-spacing:-.01em; }
-        .tnd-section-head p  { margin:2px 0 0; font-size:13px; color:#94a3b8; }
+        /* ── Hero narrativo ── */
+        .tnd-hero {
+          padding: 32px 8px 28px;
+          border-bottom: 1px solid var(--border-divider, #242424);
+          margin-bottom: 40px;
+          animation: tndFadeIn .5s ease both;
+        }
+        .tnd-hero-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-muted, rgba(212,209,216,0.6));
+          margin-bottom: 14px;
+        }
+        .tnd-hero-eyebrow-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--color-success, #00d614);
+          box-shadow: 0 0 8px rgba(0, 214, 20, .55);
+          animation: tndPulse 2s ease-in-out infinite;
+        }
+        @keyframes tndPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+        .tnd-hero-title {
+          margin: 0;
+          font-size: clamp(24px, 3.4vw, 38px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          line-height: 1.25;
+          color: #fff;
+        }
+        .tnd-hero-em {
+          font-style: normal;
+          background: var(--brand-gradient-1, linear-gradient(90deg,#ff0000,#ff6500,#ffe500));
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          font-weight: 700;
+        }
+        .tnd-hero-geo {
+          background: var(--brand-gradient-2, linear-gradient(90deg,#9acc00,#00d614,#00e7ff));
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          font-weight: 700;
+        }
+        .tnd-hero-intent {
+          display: inline-block;
+          padding: 2px 12px;
+          border-radius: var(--radius-pill, 9999px);
+          font-size: 0.6em;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          vertical-align: middle;
+          transform: translateY(-3px);
+          text-transform: uppercase;
+        }
+        .tnd-hero-intent--high   { background: rgba(0, 214, 20, .15); color: #7ee896; }
+        .tnd-hero-intent--medium { background: rgba(255, 229, 0, .15); color: #ffe97a; }
+        .tnd-hero-intent--low    { background: rgba(212, 209, 216, .1); color: var(--text-muted); }
+        .tnd-hero-subtitle {
+          margin: 14px 0 22px;
+          font-size: 14px;
+          color: var(--text-secondary, rgba(212,209,216,0.85));
+          line-height: 1.6;
+        }
+        .tnd-hero-subtitle strong { color: var(--text-primary, #D4D1D8); }
+        .tnd-hero-actions { display: flex; gap: 10px; align-items: center; }
+        .tnd-window-tabs {
+          display: inline-flex;
+          background: var(--white-8, rgba(255,255,255,.06));
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-sm, 8px);
+          padding: 3px;
+          gap: 2px;
+        }
+        .tnd-window-tab {
+          padding: 6px 14px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          color: var(--text-muted);
+          background: transparent;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: var(--transition-fast);
+        }
+        .tnd-window-tab:hover { color: var(--text-primary); }
+        .tnd-window-tab.is-active {
+          background: var(--white-10, rgba(255,255,255,.1));
+          color: #fff;
+        }
+        .tnd-refresh {
+          width: 34px; height: 34px;
+          border-radius: var(--radius-sm, 8px);
+          border: 1px solid var(--border-divider, #242424);
+          background: var(--white-8, rgba(255,255,255,.06));
+          color: var(--text-secondary);
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: color .15s, background .15s, transform .4s;
+        }
+        .tnd-refresh:hover { color: #fff; background: var(--white-15, rgba(255,255,255,.15)); }
+        .tnd-refresh.is-spinning i { animation: tndSpin .6s linear infinite; }
+        @keyframes tndSpin { to { transform: rotate(360deg); } }
 
-        .tnd-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-        @media (max-width: 1024px) { .tnd-grid-2 { grid-template-columns:1fr; } }
+        /* ── Sections genéricas ── */
+        .tnd-section { margin-bottom: 56px; animation: tndFadeIn .6s ease both; }
+        .tnd-section-head { margin-bottom: 24px; padding: 0 4px; }
+        .tnd-section-title {
+          margin: 0;
+          font-size: 22px;
+          font-weight: 600;
+          color: #fff;
+          letter-spacing: -0.01em;
+        }
+        .tnd-section-sub {
+          margin: 4px 0 0;
+          font-size: 13px;
+          color: var(--text-muted, rgba(212,209,216,0.6));
+        }
+        .tnd-empty {
+          padding: 40px 16px;
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 13px;
+          background: var(--bg-secondary, #141517);
+          border-radius: var(--radius-lg, 16px);
+        }
+        .tnd-empty--small { padding: 16px 12px; font-size: 12px; }
+        .tnd-empty-large { padding: 80px 16px; text-align: center; color: var(--text-muted); }
 
-        .tnd-widget { background:rgba(30,41,59,.4); border:1px solid #1e293b; border-radius:12px; padding:16px; }
-        .tnd-widget--wide { grid-column: 1 / -1; }
-        .tnd-widget header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-        .tnd-widget header h3 { margin:0; font-size:13px; font-weight:600; color:#cbd5e1; text-transform:uppercase; letter-spacing:.04em; }
+        @keyframes tndFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-        .tnd-chart-wrap { position:relative; height:240px; }
+        /* ── Bubble pack ── */
+        .tnd-bubbles-section .tnd-section-head { margin-bottom: 16px; }
+        .tnd-bubbles-stage {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          padding: 32px 16px;
+          min-height: 320px;
+          background:
+            radial-gradient(ellipse at top, rgba(255, 101, 0, .04), transparent 60%),
+            radial-gradient(ellipse at bottom, rgba(0, 231, 255, .04), transparent 60%),
+            var(--bg-secondary, #141517);
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-lg, 16px);
+        }
+        .tnd-bubble {
+          border-radius: 50%;
+          border: 1.5px solid;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          text-align: center;
+          line-height: 1.15;
+          transition: transform .25s ease, box-shadow .25s ease;
+          cursor: default;
+          opacity: 0;
+          animation: tndBubbleIn .6s cubic-bezier(.34,1.56,.64,1) forwards;
+          backdrop-filter: blur(2px);
+        }
+        .tnd-bubble:hover {
+          transform: scale(1.08);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+          z-index: 2;
+        }
+        .tnd-bubble-label {
+          word-break: break-word;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+        }
+        @keyframes tndBubbleIn {
+          0%   { opacity: 0; transform: scale(.5); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .tnd-bubbles-legend {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 18px;
+          justify-content: center;
+          margin-top: 14px;
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+        .tnd-legend-dot {
+          display: inline-block;
+          width: 10px; height: 10px;
+          border-radius: 50%;
+          border: 1px solid;
+          margin-right: 4px;
+          vertical-align: middle;
+        }
 
-        .tnd-empty { padding:32px 16px; text-align:center; color:#64748b; font-size:13px; }
-        .tnd-empty-large { padding:80px 16px; text-align:center; color:#64748b; font-size:14px; }
+        /* ── Search cards ── */
+        .tnd-search-cards { display: flex; flex-direction: column; gap: 12px; }
+        .tnd-search-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 18px 22px;
+          background: var(--bg-secondary, #141517);
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-lg, 16px);
+          transition: all .2s ease;
+          opacity: 0;
+          animation: tndFadeIn .5s ease forwards;
+        }
+        .tnd-search-card:hover {
+          border-color: rgba(255,255,255,0.15);
+          background: var(--bg-card, #18181c);
+          transform: translateX(4px);
+        }
+        .tnd-search-icon {
+          font-size: 28px;
+          flex-shrink: 0;
+          width: 48px; height: 48px;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--white-8, rgba(255,255,255,.06));
+          border-radius: 12px;
+        }
+        .tnd-search-body { flex: 1; min-width: 0; }
+        .tnd-search-term {
+          font-size: 16px;
+          font-weight: 600;
+          color: #fff;
+          margin-bottom: 6px;
+          line-height: 1.3;
+        }
+        .tnd-search-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          align-items: center;
+        }
+        .tnd-meta-pill {
+          display: inline-block;
+          padding: 3px 10px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          border-radius: var(--radius-pill, 9999px);
+          text-transform: uppercase;
+        }
+        .tnd-meta-pill--geo { background: var(--white-8); color: var(--text-secondary); }
+        .tnd-meta-pill--high { background: rgba(0, 214, 20, .15); color: #7ee896; }
+        .tnd-meta-pill--medium { background: rgba(255, 229, 0, .15); color: #ffe97a; }
+        .tnd-meta-pill--low { background: var(--white-8); color: var(--text-muted); }
+        .tnd-meta-tag {
+          font-size: 11px;
+          color: var(--text-muted);
+          font-style: italic;
+        }
+        .tnd-search-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #fff;
+          background: linear-gradient(135deg, var(--warm-1, #ff6500), var(--warm-2, #ff0000));
+          border: none;
+          border-radius: var(--radius-sm, 8px);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: all .2s ease;
+          opacity: 0.92;
+        }
+        .tnd-search-cta:hover { opacity: 1; transform: translateX(2px); box-shadow: 0 4px 16px rgba(255, 101, 0, .35); }
+        .tnd-search-cta i { font-size: 11px; }
 
-        /* Lists */
-        .tnd-hi-list, .tnd-lex-list { list-style:none; margin:0; padding:0; max-height:280px; overflow-y:auto; }
-        .tnd-hi-row, .tnd-lex-row { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #1e293b; gap:12px; }
-        .tnd-hi-row:last-child, .tnd-lex-row:last-child { border-bottom:none; }
-        .tnd-hi-text, .tnd-lex-row > div { display:flex; flex-direction:column; min-width:0; flex:1; }
-        .tnd-hi-term { font-size:13px; color:#f1f5f9; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .tnd-hi-meta, .tnd-meta { font-size:11px; color:#64748b; margin-top:2px; }
+        /* ── Emerging brands ── */
+        .tnd-emerg-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 12px;
+        }
+        .tnd-emerg-card {
+          padding: 18px 20px;
+          background: var(--bg-secondary, #141517);
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-lg, 16px);
+          opacity: 0;
+          animation: tndFadeIn .5s ease forwards;
+          transition: border-color .2s, transform .2s;
+        }
+        .tnd-emerg-card:hover {
+          border-color: rgba(255,255,255,0.15);
+          transform: translateY(-2px);
+        }
+        .tnd-emerg-card-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+        .tnd-emerg-name {
+          margin: 0;
+          font-size: 17px;
+          font-weight: 600;
+          color: #fff;
+          text-transform: capitalize;
+          line-height: 1.3;
+        }
+        .tnd-emerg-niche {
+          font-size: 11px;
+          color: var(--text-muted);
+          margin-top: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .tnd-emerg-detection {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--color-info, #00e7ff);
+          background: rgba(0, 231, 255, .1);
+          padding: 4px 10px;
+          border-radius: var(--radius-pill, 9999px);
+          flex-shrink: 0;
+        }
+        .tnd-emerg-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: var(--text-secondary);
+          margin-bottom: 16px;
+        }
+        .tnd-emerg-meta i { color: var(--text-muted); }
+        .tnd-emerg-actions { display: flex; gap: 8px; }
+        .tnd-btn {
+          flex: 1;
+          padding: 9px 12px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          border: 1px solid;
+          border-radius: var(--radius-sm, 8px);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: transparent;
+          transition: all .15s ease;
+        }
+        .tnd-btn i { font-size: 10px; }
+        .tnd-btn--approve {
+          color: var(--color-success, #00d614);
+          border-color: rgba(0, 214, 20, .35);
+        }
+        .tnd-btn--approve:hover {
+          background: rgba(0, 214, 20, .15);
+          border-color: var(--color-success);
+        }
+        .tnd-btn--reject {
+          color: var(--color-error, #ff0000);
+          border-color: rgba(255, 0, 0, .35);
+        }
+        .tnd-btn--reject:hover {
+          background: rgba(255, 0, 0, .12);
+          border-color: var(--color-error);
+        }
+        .tnd-emerg-approved-strip {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+          margin-top: 18px;
+          padding: 14px 18px;
+          background: rgba(0, 214, 20, .04);
+          border: 1px solid rgba(0, 214, 20, .12);
+          border-radius: var(--radius-sm, 8px);
+        }
+        .tnd-emerg-approved-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #7ee896;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+        .tnd-emerg-approved-pill {
+          padding: 3px 10px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-primary);
+          background: var(--white-8);
+          border-radius: var(--radius-pill, 9999px);
+          text-transform: capitalize;
+        }
 
-        /* Pills */
-        .tnd-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:500; text-transform:lowercase; }
-        .tnd-pill--high { background:rgba(34,197,94,.15); color:#22c55e; }
-        .tnd-pill--med  { background:rgba(245,158,11,.15); color:#f59e0b; }
-        .tnd-pill--low  { background:rgba(148,163,184,.15); color:#94a3b8; }
-        .tnd-pill--info { background:rgba(99,102,241,.15); color:#818cf8; }
+        /* ── Talks (news + lexicon) ── */
+        .tnd-talks { display: flex; flex-direction: column; gap: 8px; }
+        .tnd-talk-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+          padding: 14px 18px;
+          background: var(--bg-secondary, #141517);
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-md, 12px);
+          opacity: 0;
+          animation: tndFadeIn .5s ease forwards;
+          transition: background .15s, border-color .15s;
+        }
+        .tnd-talk-row:hover { background: var(--bg-card, #18181c); border-color: rgba(255,255,255,0.12); }
+        .tnd-talk-icon {
+          width: 34px; height: 34px;
+          flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 8px;
+          font-size: 14px;
+        }
+        .tnd-talk-row--news .tnd-talk-icon { background: rgba(0, 231, 255, .1); color: var(--color-info, #00e7ff); }
+        .tnd-talk-row--word .tnd-talk-icon { background: rgba(255, 101, 0, .1); color: var(--warm-1, #ff6500); }
+        .tnd-talk-body { flex: 1; min-width: 0; }
+        .tnd-talk-title {
+          display: block;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--text-primary, #D4D1D8);
+          line-height: 1.4;
+          text-decoration: none;
+          margin-bottom: 4px;
+        }
+        a.tnd-talk-title:hover { color: #fff; text-decoration: underline; }
+        .tnd-talk-title em { font-style: normal; color: #fff; font-weight: 600; }
+        .tnd-talk-meta {
+          font-size: 11px;
+          color: var(--text-muted);
+          letter-spacing: 0.02em;
+        }
+        .tnd-talk-meta strong { color: var(--text-secondary); font-weight: 600; }
+        .tnd-talk-meta em { font-style: normal; color: var(--text-secondary); font-weight: 500; }
+        .tnd-meta-sep { margin: 0 6px; opacity: .4; }
 
-        /* Tablas */
-        .tnd-table-wrap { max-height:340px; overflow-y:auto; }
-        .tnd-table { width:100%; border-collapse:collapse; font-size:13px; }
-        .tnd-table thead th { position:sticky; top:0; background:#0f172a; padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; text-align:left; border-bottom:1px solid #1e293b; }
-        .tnd-table tbody td { padding:10px 12px; border-bottom:1px solid #1e293b; color:#cbd5e1; vertical-align:top; }
-        .tnd-table tbody tr:last-child td { border-bottom:none; }
-        .tnd-table tbody tr:hover { background:rgba(99,102,241,.03); }
-        .tnd-mono { font-family:'SF Mono', Menlo, monospace; font-size:12px; color:#94a3b8; }
-        .tnd-tt-title { color:#e2e8f0; text-decoration:none; font-weight:500; }
-        .tnd-tt-title:hover { color:#818cf8; text-decoration:underline; }
-        .tnd-tt-meta { font-size:11px; color:#64748b; margin-top:4px; }
-        .tnd-tt-meta em { color:#94a3b8; font-style:normal; font-weight:500; }
+        /* ── Details (collapsable) ── */
+        .tnd-details {
+          margin-top: 32px;
+          background: var(--bg-secondary, #141517);
+          border: 1px solid var(--border-divider, #242424);
+          border-radius: var(--radius-lg, 16px);
+          overflow: hidden;
+        }
+        .tnd-details-summary {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 20px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          list-style: none;
+          transition: background .15s;
+        }
+        .tnd-details-summary::-webkit-details-marker { display: none; }
+        .tnd-details-summary:hover { background: var(--white-5, rgba(255,255,255,.04)); color: var(--text-primary); }
+        .tnd-details-summary i {
+          transition: transform .2s ease;
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+        .tnd-details[open] .tnd-details-summary i { transform: rotate(90deg); }
+        .tnd-details-meta {
+          margin-left: auto;
+          font-size: 11px;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
+        .tnd-details-body {
+          padding: 8px 20px 24px;
+          border-top: 1px solid var(--border-divider, #242424);
+        }
+        .tnd-detail-grid--kpis {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 8px;
+          margin: 16px 0 24px;
+        }
+        .tnd-detail-kpi {
+          padding: 12px 14px;
+          background: var(--white-5, rgba(255,255,255,.04));
+          border-radius: var(--radius-sm, 8px);
+        }
+        .tnd-detail-kpi-value { font-size: 20px; font-weight: 600; color: #fff; line-height: 1; }
+        .tnd-detail-kpi-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        .tnd-detail-grid--3 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+        }
+        @media (max-width: 1024px) { .tnd-detail-grid--3 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .tnd-detail-grid--3 { grid-template-columns: 1fr; } }
+        .tnd-detail-card {
+          padding: 14px 16px;
+          background: var(--white-5);
+          border-radius: var(--radius-sm, 8px);
+        }
+        .tnd-detail-card h4 {
+          margin: 0 0 10px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .tnd-detail-list { list-style: none; margin: 0; padding: 0; }
+        .tnd-detail-list li {
+          display: flex;
+          justify-content: space-between;
+          padding: 6px 0;
+          font-size: 12px;
+          color: var(--text-secondary);
+          border-bottom: 1px solid var(--border-divider);
+        }
+        .tnd-detail-list li:last-child { border-bottom: none; }
+        .tnd-detail-list li strong { color: #fff; font-weight: 600; }
 
-        /* Vera safe pill in widget header */
-        .tnd-vera-safe-pill { font-size:11px; }
-
-        /* Emerging cards */
-        .tnd-emerg-pending { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
-        .tnd-emerg-card { background:linear-gradient(135deg, rgba(99,102,241,.08), rgba(30,41,59,.4)); border:1px solid #334155; border-radius:12px; padding:14px; }
-        .tnd-emerg-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:12px; }
-        .tnd-emerg-name { margin:0; font-size:16px; font-weight:600; color:#f1f5f9; text-transform:capitalize; }
-        .tnd-emerg-niche { font-size:12px; color:#94a3b8; margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
-        .tnd-emerg-meta { font-size:12px; color:#cbd5e1; line-height:1.7; margin-bottom:12px; }
-        .tnd-emerg-meta span { color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-right:6px; }
-        .tnd-emerg-actions { display:flex; gap:8px; }
-        .tnd-btn { flex:1; padding:8px 12px; border-radius:6px; border:none; font-size:13px; font-weight:500; cursor:pointer; transition: all .15s; }
-        .tnd-btn--approve { background:rgba(34,197,94,.15); color:#22c55e; }
-        .tnd-btn--approve:hover { background:#22c55e; color:#fff; }
-        .tnd-btn--reject  { background:rgba(239,68,68,.15); color:#ef4444; }
-        .tnd-btn--reject:hover { background:#ef4444; color:#fff; }
-
-        .tnd-emerg-approved-wrap { margin-top:20px; padding-top:14px; border-top:1px solid #1e293b; }
-        .tnd-emerg-h3 { margin:0 0 8px; font-size:12px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
-        .tnd-emerg-approved { list-style:none; margin:0; padding:0; }
-        .tnd-emerg-approved li { padding:8px 0; font-size:13px; }
-        .tnd-emerg-approved li strong { color:#e2e8f0; text-transform:capitalize; }
-        .tnd-emerg-approved li .tnd-meta { margin-left:8px; }
-
-        /* Pulse */
-        .tnd-pulse-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; margin-bottom:16px; }
-        .tnd-pulse-card { background:rgba(30,41,59,.5); border:1px solid #1e293b; border-radius:10px; padding:14px 16px; }
-        .tnd-pulse-type { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; margin-bottom:6px; }
-        .tnd-pulse-now  { font-size:24px; font-weight:600; color:#f1f5f9; line-height:1; }
-        .tnd-pulse-meta { font-size:11px; color:#64748b; margin-top:6px; }
-        .tnd-pulse-templates { padding:14px 0; }
-        .tnd-pulse-templates-title { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin-bottom:10px; }
-        .tnd-tpl-pills { display:flex; flex-wrap:wrap; gap:6px; }
-        .tnd-tpl-pill { display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.3); color:#a5b4fc; font-size:11px; cursor:default; }
-        .tnd-tpl-pill:hover { background:rgba(99,102,241,.2); }
-        .tnd-pulse-note { margin-top:10px; padding:10px 14px; background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.3); border-radius:8px; font-size:12px; color:#fbbf24; }
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+          .tnd-page { padding: 16px 12px 48px; }
+          .tnd-section { margin-bottom: 40px; }
+          .tnd-search-card { flex-direction: column; align-items: stretch; }
+          .tnd-search-cta { width: 100%; justify-content: center; }
+        }
       `;
       const style = document.createElement('style');
       style.id = 'tnd-css';
