@@ -20,7 +20,6 @@ const SIDEBAR_USER_CONFIG = {
     },
     { type: 'section', label: 'Workspace' },
     { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
-    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     {
       type: 'page',
       id: 'brand-organization',
@@ -52,15 +51,8 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
-    {
-      type: 'page',
-      id: 'tasks',
-      label: 'Tasks',
-      icon: 'fa-list-check',
-      iconSrc: '/recursos/icons/task.svg',
-      route: 'tasks'
-    },
     { type: 'section', label: 'Create' },
+    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
@@ -69,6 +61,14 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
+    },
+    {
+      type: 'page',
+      id: 'tasks',
+      label: 'Tasks',
+      icon: 'fa-list-check',
+      iconSrc: '/recursos/icons/task.svg',
+      route: 'tasks'
     }
   ],
   footer: [
@@ -824,6 +824,7 @@ class Navigation {
       if (item.id === 'brand-storage') {
         const storageHref = full('brand-storage');
         const subHtml = this._buildBrandStorageSubmenuChildrenHtml();
+        const commandCenterIconSrc = _navSidebarIconUrl('/recursos/icons/commandcenter.svg');
         return `
         <div class="nav-item has-submenu nav-brand-storage-wrap ${isOpen ? 'submenu-open' : ''}" id="navBrandStorageContainer" style="display:none" data-container-id="brand-storage">
           <div class="nav-brand-storage-head">
@@ -838,6 +839,12 @@ class Navigation {
           <div class="nav-submenu" id="nav-sub-brand-storage" role="group" aria-label="${_escapeHtml(item.label)}">
             ${subHtml}
           </div>
+        </div>
+        <div class="nav-item" id="navCommandCenterSingle" style="display:none">
+          <a href="#" class="nav-link nav-main-link" id="navCommandCenterSingleLink" data-route="" data-tooltip="Command Center">
+            <img src="${commandCenterIconSrc}" class="nav-icon nav-icon-img" alt="" width="16" height="16">
+            <span class="nav-text">Command Center</span>
+          </a>
         </div>`;
       }
       let childItems = item.children || [];
@@ -1944,11 +1951,39 @@ class Navigation {
 
   /**
    * Muestra u oculta el bloque Brand Storage (enlace + desplegable) según el número de sub-marcas.
+   * - 0 sub-marcas: ambos ocultos
+   * - 1 sub-marca: ítem único Command Center directo (icono commandcenter.svg)
+   * - 2+ sub-marcas: desplegable Brand Storage con todas
    * @param {number} count - Número de brand_containers de la organización
    */
   updateBrandStorageLink(count) {
     const wrap = document.getElementById('navBrandStorageContainer');
-    if (wrap) wrap.style.display = count >= 1 ? '' : 'none';
+    const single = document.getElementById('navCommandCenterSingle');
+
+    if (count >= 2) {
+      if (wrap) wrap.style.display = '';
+      if (single) single.style.display = 'none';
+      return;
+    }
+    if (count === 1) {
+      if (wrap) wrap.style.display = 'none';
+      if (single) {
+        const sub = (this._brandStorageSubbrands && this._brandStorageSubbrands[0]) || null;
+        const rawName = String(((sub && sub.nombre_marca) || 'Sub-marca').trim() || 'Sub-marca');
+        const slug = typeof window.getOrgSlug === 'function' ? window.getOrgSlug(rawName) : 'sub-marca';
+        const href = this.getUserSidebarRoute(`command-center/${slug}`);
+        const link = single.querySelector('#navCommandCenterSingleLink');
+        if (link) {
+          link.setAttribute('href', href);
+          link.setAttribute('data-route', href);
+          link.setAttribute('data-tooltip', rawName);
+        }
+        single.style.display = '';
+      }
+      return;
+    }
+    if (wrap) wrap.style.display = 'none';
+    if (single) single.style.display = 'none';
   }
 
 
