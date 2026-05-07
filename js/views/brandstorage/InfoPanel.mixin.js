@@ -211,15 +211,22 @@
     }
 
     const items = rows.slice(0, 8).map((row) => {
-      const objetivo = Array.isArray(row.objetivos_estrategicos) ? row.objetivos_estrategicos[0] : '';
-      const tono = Array.isArray(row.tono_modificador) ? row.tono_modificador.join(', ') : String(row.tono_modificador || '');
+      const platform = String(row.platform || '').trim();
+      const status   = String(row.status || '').trim();
+      const meta = row.descripcion_interna || row.platform_objective || 'Sin descripción';
+      const platformLabel = platform
+        ? platform.charAt(0).toUpperCase() + platform.slice(1)
+        : '';
+      const statusBadge = status ? `<span class="info-asset-meta">Estado: ${this.escapeHtml(status)}</span>` : '';
+      const platformBadge = platformLabel ? `<span class="info-asset-meta">Plataforma: ${this.escapeHtml(platformLabel)}</span>` : '';
       return `
         <li class="info-asset-row">
           <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-bullhorn"></i></span></div>
           <div class="info-asset-main">
             <span class="info-asset-name">${this.escapeHtml(row.nombre_campana || 'Campaña')}</span>
-            <span class="info-asset-meta">${this.escapeHtml(row.descripcion_interna || row.contexto_temporal || objetivo || 'Sin descripción')}</span>
-            ${tono ? `<span class="info-asset-meta">Tono: ${this.escapeHtml(tono)}</span>` : ''}
+            <span class="info-asset-meta">${this.escapeHtml(meta)}</span>
+            ${platformBadge}
+            ${statusBadge}
           </div>
           <span class="info-connect-external" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
         </li>`;

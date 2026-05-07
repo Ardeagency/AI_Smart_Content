@@ -381,7 +381,7 @@ class BrandstorageView extends BaseView {
         containerIds.length
           ? this.supabase
             .from('campaigns')
-            .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at')
+            .select('id, brand_container_id, nombre_campana, descripcion_interna, platform, status, starts_at, ends_at, platform_objective, created_at')
             .in('brand_container_id', containerIds)
             .order('created_at', { ascending: false })
           : Promise.resolve({ data: [], error: null }),
