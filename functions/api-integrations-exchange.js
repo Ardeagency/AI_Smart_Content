@@ -369,7 +369,7 @@ exports.handler = async (event) => {
       // GET /shop.json para metadata (plan, country, currency, timezone, etc.)
       let shopInfo = {};
       try {
-        const apiVer = process.env.SHOPIFY_API_VERSION || '2024-10';
+        const apiVer = process.env.SHOPIFY_API_VERSION || '2026-04';
         const shopRes = await fetch(`https://${stateObj.shop}/admin/api/${apiVer}/shop.json`, {
           headers: { 'X-Shopify-Access-Token': tokenJson.access_token }
         });
@@ -463,7 +463,7 @@ exports.handler = async (event) => {
 
       // Registrar webhooks vía Shopify API (best-effort, errores en metadata)
       const SITE_URL_BASE = (process.env.SITE_URL || 'https://aismartcontent.io').replace(/\/$/, '');
-      const apiVer = process.env.SHOPIFY_API_VERSION || '2024-10';
+      const apiVer = process.env.SHOPIFY_API_VERSION || '2026-04';
       const TOPICS = [
         'products/create','products/update','products/delete',
         'orders/create','orders/updated','orders/cancelled',
