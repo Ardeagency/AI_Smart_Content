@@ -530,71 +530,82 @@
         return SHOP_REGEX.test(cleaned) ? cleaned : null;
       };
 
+      // Single-resolve guard (onClose dispara después de submit; evita doble resolve)
+      let resolved = false;
+      const safeResolve = (v) => { if (!resolved) { resolved = true; resolve(v); } };
+
       // Usar window.Modal si está disponible; sino fallback a prompt nativo.
       if (window.Modal && typeof window.Modal.show === 'function') {
-        const html = `
-          <div class="bs-shopify-modal">
-            <h3 style="margin-top:0">Conectar Shopify</h3>
-            <p style="margin-bottom:1rem;color:var(--text-secondary,#a0a0a0)">
-              Ingresa el dominio de tu tienda Shopify. Lo encontrarás como
-              <code>mitienda.myshopify.com</code>.
-            </p>
-            <input
-              type="text"
-              id="bs-shopify-input"
-              placeholder="mitienda.myshopify.com"
-              autocomplete="off"
-              autofocus
-              style="width:100%;padding:.6rem .8rem;border:1px solid var(--border-soft,#444);border-radius:6px;background:var(--bg-input,#1a1a1a);color:var(--text-primary,#ecebda);font-size:1rem"
-            />
-            <p id="bs-shopify-err" style="margin:.5rem 0 0;color:#e74c3c;font-size:.85rem;min-height:1.2em"></p>
-            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
-              <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">Cancelar</button>
-              <button type="button" id="bs-shopify-ok" class="btn btn-primary">Continuar</button>
-            </div>
+        // Body HTML — el título y close button los pone el Modal automáticamente.
+        const bodyHtml = `
+          <p style="margin:0 0 1rem;color:var(--text-secondary,#a0a0a0)">
+            Ingresa el dominio de tu tienda Shopify. Lo encontrarás como
+            <code>mitienda.myshopify.com</code>.
+          </p>
+          <input
+            type="text"
+            id="bs-shopify-input"
+            placeholder="mitienda.myshopify.com"
+            autocomplete="off"
+            style="width:100%;padding:.6rem .8rem;border:1px solid var(--border-soft,#444);border-radius:6px;background:var(--bg-input,#1a1a1a);color:var(--text-primary,#ecebda);font-size:1rem;box-sizing:border-box"
+          />
+          <p id="bs-shopify-err" style="margin:.5rem 0 0;color:#e74c3c;font-size:.85rem;min-height:1.2em"></p>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+            <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">Cancelar</button>
+            <button type="button" id="bs-shopify-ok" class="btn btn-primary">Continuar</button>
           </div>`;
-        const close = window.Modal.show(html, { closeOnBackdrop: false });
 
-        setTimeout(() => {
-          const input  = document.getElementById('bs-shopify-input');
-          const err    = document.getElementById('bs-shopify-err');
-          const ok     = document.getElementById('bs-shopify-ok');
-          const cancel = document.getElementById('bs-shopify-cancel');
-          if (!input || !ok || !cancel) return;
+        const { bodyEl, close } = window.Modal.show({
+          title:     'Conectar Shopify',
+          body:      bodyHtml,
+          className: 'bs-shopify-modal',
+          onClose:   () => safeResolve(null)
+        });
 
-          input.focus();
+        // bodyEl es el contenedor del body — buscar dentro de él (no en document)
+        // por si hay 2 modales simultáneos con mismos IDs.
+        const input  = bodyEl.querySelector('#bs-shopify-input');
+        const err    = bodyEl.querySelector('#bs-shopify-err');
+        const ok     = bodyEl.querySelector('#bs-shopify-ok');
+        const cancel = bodyEl.querySelector('#bs-shopify-cancel');
 
-          const submit = () => {
-            const normalized = normalize(input.value);
-            if (!normalized) {
-              if (err) err.textContent = 'Formato inválido. Usa: mitienda.myshopify.com';
-              input.focus();
-              return;
-            }
-            close && close();
-            resolve(normalized);
-          };
+        if (!input || !ok || !cancel) {
+          // Sanity check — no debería pasar, pero failsafe
+          close();
+          safeResolve(null);
+          return;
+        }
 
-          ok.addEventListener('click', submit);
-          input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); submit(); }
-            if (e.key === 'Escape') { close && close(); resolve(null); }
-          });
-          cancel.addEventListener('click', () => {
-            close && close();
-            resolve(null);
-          });
-        }, 50);
+        // Focus después del primer paint
+        setTimeout(() => input.focus(), 50);
+
+        const submit = () => {
+          const normalized = normalize(input.value);
+          if (!normalized) {
+            if (err) err.textContent = 'Formato inválido. Usa: mitienda.myshopify.com';
+            input.focus();
+            return;
+          }
+          safeResolve(normalized);
+          close();
+        };
+
+        ok.addEventListener('click', submit);
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter')  { e.preventDefault(); submit(); }
+          if (e.key === 'Escape') { close(); }  // onClose disparará safeResolve(null)
+        });
+        cancel.addEventListener('click', () => close());
       } else {
         // Fallback: prompt nativo
         const raw = window.prompt('Ingresa tu dominio Shopify (ej. mitienda.myshopify.com):');
-        if (raw == null) return resolve(null);
+        if (raw == null) return safeResolve(null);
         const normalized = normalize(raw);
         if (!normalized) {
           alert('Formato inválido. Debe ser mitienda.myshopify.com');
-          return resolve(null);
+          return safeResolve(null);
         }
-        resolve(normalized);
+        safeResolve(normalized);
       }
     });
     },
