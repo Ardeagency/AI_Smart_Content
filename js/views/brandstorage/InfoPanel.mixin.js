@@ -77,8 +77,11 @@
     const dashboardHref = this.getOrgDashboardHref();
     const google = this._pickBrandIntegrationForContainer(brandContainerId, 'google');
     const facebook = this._pickBrandIntegrationForContainer(brandContainerId, 'facebook');
+    const shopify = this._pickBrandIntegrationForContainer(brandContainerId, 'shopify');
     const gOk = this._integrationUsable(google);
     const fOk = this._integrationUsable(facebook);
+    const sOk = this._integrationUsable(shopify);
+    const shopUrl = sOk && shopify?.account_url ? shopify.account_url : null;
 
     return [
       {
@@ -110,6 +113,16 @@
         actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
+      },
+      {
+        key: 'shopify',
+        label: 'Shopify',
+        iconClass: 'fab fa-shopify',
+        connected: sOk,
+        oauthProvider: 'shopify',
+        actionHref: shopUrl || dashboardHref,
+        actionExternal: !!shopUrl,
+        hint: sOk && shopify?.shop_domain ? shopify.shop_domain : ''
       }
     ];
     },
@@ -429,15 +442,12 @@
   async startBrandIntegrationOAuth(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
-    if (!brandId || (normalizedProvider !== 'google' && normalizedProvider !== 'facebook')) return;
+    const SUPPORTED = ['google', 'facebook', 'shopify'];
+    if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
     if (!this.supabase) {
       alert('Supabase no disponible para conectar integración.');
       return;
     }
-
-    const endpoint = normalizedProvider === 'facebook'
-      ? '/api/integrations/facebook/start'
-      : '/api/integrations/google/start';
 
     try {
       if (actionButton) {
@@ -452,6 +462,35 @@
         alert('Sesión no válida. Inicia sesión y vuelve a intentar.');
         return;
       }
+
+      // ── Shopify: pedir shop_domain primero, luego llamar al ai-engine ──────
+      // (Meta/Google usan Netlify Functions; Shopify vive en api.aismartcontent.io)
+      if (normalizedProvider === 'shopify') {
+        const shopDomain = await this._promptShopDomain();
+        if (!shopDomain) return;
+
+        const aiEngineBase = (window.AI_ENGINE_BASE_URL && window.AI_ENGINE_BASE_URL.trim().replace(/\/+$/, ''))
+          || 'https://api.aismartcontent.io';
+        const qs = new URLSearchParams({
+          shop:               shopDomain,
+          brand_container_id: brandId
+        });
+        const res = await fetch(`${aiEngineBase}/integrations/shopify/install?${qs.toString()}`, {
+          method:  'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json?.authorize_url) {
+          throw new Error(json?.error || `No se pudo iniciar OAuth Shopify (${res.status})`);
+        }
+        window.location.href = json.authorize_url;
+        return;
+      }
+
+      // ── Meta / Google: Netlify Functions (patrón existente) ────────────────
+      const endpoint = normalizedProvider === 'facebook'
+        ? '/api/integrations/facebook/start'
+        : '/api/integrations/google/start';
 
       const returnTo = this.getBrandStorageReturnPath();
       const qs = new URLSearchParams({
@@ -480,10 +519,97 @@
     }
     },
 
+  /**
+   * Modal para que el usuario ingrese su dominio Shopify (mitienda.myshopify.com).
+   * Acepta input libre y lo normaliza: https://, trailing slashes, mayúsculas.
+   * Devuelve string normalizado o null si cancela.
+   */
+  _promptShopDomain() {
+    return new Promise((resolve) => {
+      const SHOP_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
+
+      const normalize = (raw) => {
+        const cleaned = String(raw || '')
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//, '')
+          .replace(/\/+$/, '');
+        return SHOP_REGEX.test(cleaned) ? cleaned : null;
+      };
+
+      // Usar window.Modal si está disponible; sino fallback a prompt nativo.
+      if (window.Modal && typeof window.Modal.show === 'function') {
+        const html = `
+          <div class="bs-shopify-modal">
+            <h3 style="margin-top:0">Conectar Shopify</h3>
+            <p style="margin-bottom:1rem;color:var(--text-secondary,#a0a0a0)">
+              Ingresa el dominio de tu tienda Shopify. Lo encontrarás como
+              <code>mitienda.myshopify.com</code>.
+            </p>
+            <input
+              type="text"
+              id="bs-shopify-input"
+              placeholder="mitienda.myshopify.com"
+              autocomplete="off"
+              autofocus
+              style="width:100%;padding:.6rem .8rem;border:1px solid var(--border-soft,#444);border-radius:6px;background:var(--bg-input,#1a1a1a);color:var(--text-primary,#ecebda);font-size:1rem"
+            />
+            <p id="bs-shopify-err" style="margin:.5rem 0 0;color:#e74c3c;font-size:.85rem;min-height:1.2em"></p>
+            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+              <button type="button" id="bs-shopify-cancel" class="btn btn-secondary">Cancelar</button>
+              <button type="button" id="bs-shopify-ok" class="btn btn-primary">Continuar</button>
+            </div>
+          </div>`;
+        const close = window.Modal.show(html, { closeOnBackdrop: false });
+
+        setTimeout(() => {
+          const input  = document.getElementById('bs-shopify-input');
+          const err    = document.getElementById('bs-shopify-err');
+          const ok     = document.getElementById('bs-shopify-ok');
+          const cancel = document.getElementById('bs-shopify-cancel');
+          if (!input || !ok || !cancel) return;
+
+          input.focus();
+
+          const submit = () => {
+            const normalized = normalize(input.value);
+            if (!normalized) {
+              if (err) err.textContent = 'Formato inválido. Usa: mitienda.myshopify.com';
+              input.focus();
+              return;
+            }
+            close && close();
+            resolve(normalized);
+          };
+
+          ok.addEventListener('click', submit);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submit(); }
+            if (e.key === 'Escape') { close && close(); resolve(null); }
+          });
+          cancel.addEventListener('click', () => {
+            close && close();
+            resolve(null);
+          });
+        }, 50);
+      } else {
+        // Fallback: prompt nativo
+        const raw = window.prompt('Ingresa tu dominio Shopify (ej. mitienda.myshopify.com):');
+        if (raw == null) return resolve(null);
+        const normalized = normalize(raw);
+        if (!normalized) {
+          alert('Formato inválido. Debe ser mitienda.myshopify.com');
+          return resolve(null);
+        }
+        resolve(normalized);
+      }
+    });
+    },
+
   async disconnectBrandIntegration(provider, brandContainerId, actionButton = null) {
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
-    if (!brandId || (normalizedProvider !== 'google' && normalizedProvider !== 'facebook')) return;
+    if (!brandId || !['google', 'facebook', 'shopify'].includes(normalizedProvider)) return;
     if (!this.supabase) {
       alert('Supabase no disponible para desconectar integración.');
       return;

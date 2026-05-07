@@ -40,6 +40,27 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
 
       const params = new URLSearchParams(window.location.search || '');
       const oauthError = params.get('error');
+      const platform   = params.get('platform');
+
+      // ── Shopify: el ai-engine YA hizo el exchange y nos redirige con ──────
+      // ── ?platform=shopify&shop=...&integration_id=...&reconnected=0|1 ─────
+      // Aquí solo confirmamos el resultado y redirigimos.
+      if (platform === 'shopify') {
+        if (oauthError) throw new Error(`Shopify: ${oauthError}`);
+        const integrationId = params.get('integration_id');
+        const shop          = params.get('shop');
+        if (!integrationId || !shop) {
+          throw new Error('Faltan integration_id o shop en el callback Shopify.');
+        }
+        // Limpiar URL para que un re-render del router no reintente
+        if (window.history?.replaceState) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+        // Volver a la vista de brand storage (donde se inició el flow)
+        this._redirect('/brand-storage');
+        return;
+      }
+
       const code  = params.get('code');
       const state = params.get('state');
 

@@ -91,7 +91,7 @@ exports.handler = async (event) => {
   if (!brandContainerId || !platform) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Missing brand_container_id or platform' }) };
   }
-  if (!['google', 'facebook'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
 
@@ -127,12 +127,35 @@ exports.handler = async (event) => {
       await revokeMetaToken(userId, integ.access_token, process.env.META_APP_SECRET);
     }
 
-    // Delete integration from DB (hard delete for clean state)
-    await supabaseRest({
-      url: env.url, serviceKey: env.serviceKey,
-      path: 'brand_integrations', method: 'DELETE',
-      searchParams: { id: `eq.${integ.id}` }
-    });
+    if (platform === 'shopify') {
+      // D7: SOFT DELETE — preservar row + external_resource_map + history.
+      // metadata.disconnected_at marca el inicio del periodo de retención (90 días).
+      // Job cron separado purga tras 90d. La cancelación de webhooks Shopify se
+      // hace desde ai-engine (TODO fase 2 — endpoint /integrations/shopify/disconnect
+      // que llame a DELETE /admin/api/.../webhooks/{id}.json por cada one).
+      const updatedMetadata = {
+        ...(integ.metadata || {}),
+        disconnected_at: new Date().toISOString(),
+      };
+      await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'PATCH',
+        searchParams: { id: `eq.${integ.id}` },
+        body: [{
+          is_active: false,
+          metadata:  updatedMetadata,
+          updated_at: new Date().toISOString(),
+        }]
+      });
+    } else {
+      // Meta / Google: HARD DELETE (comportamiento actual)
+      // TODO: unificar a soft delete cuando se cierre OPS-007 (cifrado vault)
+      await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'DELETE',
+        searchParams: { id: `eq.${integ.id}` }
+      });
+    }
   }
 
   return {
