@@ -156,7 +156,7 @@ exports.handler = async (event) => {
   const brandContainerId = String(stateObj.brand_container_id || '').trim();
   const returnTo         = sanitizeReturnTo(String(stateObj.return_to || '/home'));
 
-  if (!['google', 'facebook'].includes(platform)) {
+  if (!['google', 'facebook', 'shopify'].includes(platform)) {
     return { statusCode: 400, headers: corsHeaders(event), body: JSON.stringify({ error: 'Unsupported platform' }) };
   }
   if (!brandContainerId) {
@@ -321,6 +321,220 @@ exports.handler = async (event) => {
       });
     }
 
+    // ── Shopify ──────────────────────────────────────────────────────────────
+    let shopifyIntegId = null;
+    if (platform === 'shopify') {
+      const apiKey    = process.env.SHOPIFY_API_KEY || '';
+      const apiSecret = process.env.SHOPIFY_API_SECRET || '';
+      if (!apiKey || !apiSecret) throw new Error('Missing SHOPIFY_API_KEY/SHOPIFY_API_SECRET env vars');
+
+      // Shopify firma el redirect query string. Verificarlo aquí (anti-tampering).
+      // body NO contiene hmac/shop — vienen en queryStringParameters del callback.
+      // El frontend nos los pasa en `body` también — los aceptamos para verify.
+      const shopifyHmac = body.hmac || null;
+      const shopFromCallback = String(body.shop || '').toLowerCase();
+      if (!shopFromCallback || shopFromCallback !== stateObj.shop) {
+        throw new Error('Shop mismatch entre callback y state');
+      }
+
+      // Verificar HMAC del redirect (params del callback excepto hmac mismo)
+      // El frontend debe pasar todos los params del callback en body.callback_params
+      const cbp = body.callback_params || {};
+      if (cbp.hmac) {
+        const { hmac: _hmac, signature: _sig, ...rest } = cbp;
+        const sortedQs = Object.keys(rest).sort()
+          .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(rest[k])}`)
+          .join('&');
+        const expectedHmac = crypto.createHmac('sha256', apiSecret).update(sortedQs).digest('hex');
+        const a = Buffer.from(expectedHmac, 'utf8');
+        const b = Buffer.from(cbp.hmac, 'utf8');
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          throw new Error('Shopify callback HMAC verification failed');
+        }
+      }
+
+      // Exchange code → access_token (offline, no expira)
+      const tokenRes = await fetch(`https://${stateObj.shop}/admin/oauth/access_token`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ client_id: apiKey, client_secret: apiSecret, code: String(code) })
+      });
+      const tokenJson = await tokenRes.json().catch(() => ({}));
+      if (!tokenRes.ok) throw new Error(tokenJson?.errors || tokenJson?.error || 'Shopify token exchange failed');
+
+      const grantedScopes = typeof tokenJson.scope === 'string'
+        ? tokenJson.scope.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+
+      // GET /shop.json para metadata (plan, country, currency, timezone, etc.)
+      let shopInfo = {};
+      try {
+        const apiVer = process.env.SHOPIFY_API_VERSION || '2024-10';
+        const shopRes = await fetch(`https://${stateObj.shop}/admin/api/${apiVer}/shop.json`, {
+          headers: { 'X-Shopify-Access-Token': tokenJson.access_token }
+        });
+        if (shopRes.ok) {
+          const j = await shopRes.json().catch(() => ({}));
+          shopInfo = j?.shop || {};
+        }
+      } catch (e) { console.warn('[exchange] shop.json (non-blocking):', e.message); }
+
+      const baseMetadata = {
+        platform_key:        'shopify',
+        shop_id:             shopInfo.id != null ? String(shopInfo.id) : null,
+        shop_name:           shopInfo.name || null,
+        shop_email:          shopInfo.email || null,
+        shop_country:        shopInfo.country_code || null,
+        shop_currency:       shopInfo.currency || null,
+        shop_timezone:       shopInfo.iana_timezone || null,
+        shopify_plan_name:   shopInfo.plan_display_name || shopInfo.plan_name || null,
+        myshopify_domain:    shopInfo.myshopify_domain || stateObj.shop,
+        primary_locale:      shopInfo.primary_locale || null,
+        scope_at_last_oauth: grantedScopes
+      };
+
+      // D8: si ya existe (mismo brand_container + shop_domain) → UPDATE preservando id
+      const existing = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: {
+          select: 'id,metadata',
+          brand_container_id: `eq.${brandContainerId}`,
+          platform:           'eq.shopify',
+          shop_domain:        `eq.${stateObj.shop}`,
+          limit:              '1'
+        }
+      });
+      const existingRow = Array.isArray(existing) ? existing[0] : null;
+      let isReconnection = false;
+
+      if (existingRow?.id) {
+        isReconnection = true;
+        const prevMeta = existingRow.metadata || {};
+        const reconnHistory = Array.isArray(prevMeta.reconnection_history) ? [...prevMeta.reconnection_history] : [];
+        reconnHistory.push({
+          at:             nowIso(),
+          previous_scope: prevMeta.scope_at_last_oauth || null,
+          new_scope:      grantedScopes,
+          trigger:        'user_reauth'
+        });
+
+        await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'brand_integrations', method: 'PATCH',
+          searchParams: { id: `eq.${existingRow.id}` },
+          body: [{
+            access_token:          tokenJson.access_token,
+            scope:                 grantedScopes,
+            external_account_id:   shopInfo.id != null ? String(shopInfo.id) : null,
+            external_account_name: shopInfo.name || stateObj.shop,
+            account_url:           `https://${stateObj.shop}`,
+            is_active:             true,
+            metadata: { ...prevMeta, ...baseMetadata, reconnection_history: reconnHistory, disconnected_at: null },
+            updated_at:    nowIso(),
+            last_sync_at:  nowIso()
+          }]
+        });
+        shopifyIntegId = existingRow.id;
+      } else {
+        const inserted = await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'brand_integrations', method: 'POST',
+          searchParams: { select: 'id' },
+          body: [{
+            brand_container_id:    brandContainerId,
+            platform:              'shopify',
+            shop_domain:           stateObj.shop,
+            external_account_id:   shopInfo.id != null ? String(shopInfo.id) : null,
+            external_account_name: shopInfo.name || stateObj.shop,
+            account_url:           `https://${stateObj.shop}`,
+            access_token:          tokenJson.access_token,
+            scope:                 grantedScopes,
+            is_active:             true,
+            bootstrap_status:      'pending',
+            metadata:              { ...baseMetadata, reconnection_history: [] },
+            updated_at:            nowIso(),
+            last_sync_at:          nowIso()
+          }]
+        });
+        const insertedRow = Array.isArray(inserted) ? inserted[0] : null;
+        shopifyIntegId = insertedRow?.id || null;
+      }
+
+      // Registrar webhooks vía Shopify API (best-effort, errores en metadata)
+      const SITE_URL_BASE = (process.env.SITE_URL || 'https://aismartcontent.io').replace(/\/$/, '');
+      const apiVer = process.env.SHOPIFY_API_VERSION || '2024-10';
+      const TOPICS = [
+        'products/create','products/update','products/delete',
+        'orders/create','orders/updated','orders/cancelled',
+        'customers/create','customers/update','customers/delete',
+        'app/uninstalled',
+        'customers/data_request','customers/redact','shop/redact'
+      ];
+      const webhookResults = [];
+      for (const topic of TOPICS) {
+        const address = `${SITE_URL_BASE}/api/webhooks/shopify/${topic}`;
+        try {
+          const r = await fetch(`https://${stateObj.shop}/admin/api/${apiVer}/webhooks.json`, {
+            method:  'POST',
+            headers: { 'X-Shopify-Access-Token': tokenJson.access_token, 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ webhook: { topic, address, format: 'json' } })
+          });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j?.webhook?.id) {
+            webhookResults.push({ topic, webhook_id: j.webhook.id, address });
+          } else {
+            const errStr = JSON.stringify(j?.errors || {});
+            const alreadyRegistered = /already/i.test(errStr);
+            webhookResults.push({ topic, error: alreadyRegistered ? 'already_registered' : (j?.errors || `${r.status}`), address, already_registered: alreadyRegistered });
+          }
+        } catch (e) {
+          webhookResults.push({ topic, error: String(e?.message || e), address });
+        }
+      }
+      // Persistir lista en metadata
+      if (shopifyIntegId) {
+        const cur = await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'brand_integrations', method: 'GET',
+          searchParams: { select: 'metadata', id: `eq.${shopifyIntegId}`, limit: '1' }
+        });
+        const curMeta = (Array.isArray(cur) && cur[0]?.metadata) || {};
+        const successful = webhookResults.filter((w) => !w.error || w.already_registered);
+        const failed     = webhookResults.filter((w) => w.error && !w.already_registered);
+        await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'brand_integrations', method: 'PATCH',
+          searchParams: { id: `eq.${shopifyIntegId}` },
+          body: [{ metadata: { ...curMeta, webhooks_registered: successful, webhook_registration_errors: failed, webhook_registered_at: nowIso() } }]
+        });
+      }
+
+      // Encolar bootstrap (solo si NO es reconnection)
+      if (!isReconnection && shopifyIntegId && stateObj.organization_id) {
+        try {
+          await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'agent_queue_jobs', method: 'POST',
+            body: [{
+              organization_id: stateObj.organization_id,
+              job_type:        'mission',
+              priority:        5,
+              payload: {
+                mission_type:         'shopify_initial_bootstrap',
+                brand_integration_id: shopifyIntegId,
+                brand_container_id:   brandContainerId,
+                shop_domain:          stateObj.shop
+              },
+              status: 'queued'
+            }]
+          });
+        } catch (e) {
+          console.warn('[exchange] enqueue bootstrap (non-blocking):', e.message);
+        }
+      }
+    }
+
     // Obtener el id de la integración guardada para devolverlo al callback
     const savedIntegRow = platform === 'facebook'
       ? await (async () => {
@@ -349,6 +563,10 @@ exports.handler = async (event) => {
         ...(platform === 'facebook' ? {
           integ_id: savedIntegRow?.id || null,
           pages:    storedPages
+        } : {}),
+        ...(platform === 'shopify' ? {
+          integ_id:    shopifyIntegId,
+          shop_domain: stateObj.shop
         } : {})
       })
     };

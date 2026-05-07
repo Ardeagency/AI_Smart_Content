@@ -40,32 +40,16 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
 
       const params = new URLSearchParams(window.location.search || '');
       const oauthError = params.get('error');
-      const platform   = params.get('platform');
-
-      // ── Shopify: el ai-engine YA hizo el exchange y nos redirige con ──────
-      // ── ?platform=shopify&shop=...&integration_id=...&reconnected=0|1 ─────
-      // Aquí solo confirmamos el resultado y redirigimos.
-      if (platform === 'shopify') {
-        if (oauthError) throw new Error(`Shopify: ${oauthError}`);
-        const integrationId = params.get('integration_id');
-        const shop          = params.get('shop');
-        if (!integrationId || !shop) {
-          throw new Error('Faltan integration_id o shop en el callback Shopify.');
-        }
-        // Limpiar URL para que un re-render del router no reintente
-        if (window.history?.replaceState) {
-          window.history.replaceState({}, '', window.location.pathname);
-        }
-        // Volver a la vista de brand storage (donde se inició el flow)
-        this._redirect('/brand-storage');
-        return;
-      }
-
       const code  = params.get('code');
       const state = params.get('state');
 
       if (oauthError) throw new Error(oauthError);
       if (!code || !state) throw new Error('Faltan parámetros OAuth (code/state).');
+
+      // Shopify firma el redirect con HMAC sobre el query string ordenado.
+      // Capturamos los params del callback para que el backend los verifique.
+      const callbackParams = {};
+      for (const [k, v] of params.entries()) callbackParams[k] = v;
 
       // Protección contra doble envío del mismo código (Facebook solo permite 1 uso)
       const codeKey = `_obic_${code.slice(-12)}`;
@@ -85,10 +69,18 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
       if (!token) throw new Error('Sesión no válida. Inicia sesión y vuelve a intentarlo.');
 
       // Intercambiar el código por tokens (backend también captura /me/accounts)
+      // callback_params + shop + hmac: necesarios para verificar HMAC de Shopify
+      // (los Meta/Google ignoran estos campos extra)
       const res = await fetch(`${location.origin}/api/integrations/exchange`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ code, state })
+        body: JSON.stringify({
+          code,
+          state,
+          shop:            callbackParams.shop || undefined,
+          hmac:            callbackParams.hmac || undefined,
+          callback_params: callbackParams
+        })
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || `Error ${res.status}`);

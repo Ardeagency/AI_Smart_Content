@@ -463,45 +463,31 @@
         return;
       }
 
-      // ── Shopify: pedir shop_domain primero, luego llamar al ai-engine ──────
-      // (Meta/Google usan Netlify Functions; Shopify vive en api.aismartcontent.io)
+      // ── Shopify requiere shop_domain antes del start ───────────────────────
+      let shopDomain = null;
       if (normalizedProvider === 'shopify') {
-        const shopDomain = await this._promptShopDomain();
+        shopDomain = await this._promptShopDomain();
         if (!shopDomain) return;
-
-        const aiEngineBase = (window.AI_ENGINE_BASE_URL && window.AI_ENGINE_BASE_URL.trim().replace(/\/+$/, ''))
-          || 'https://api.aismartcontent.io';
-        const qs = new URLSearchParams({
-          shop:               shopDomain,
-          brand_container_id: brandId
-        });
-        const res = await fetch(`${aiEngineBase}/integrations/shopify/install?${qs.toString()}`, {
-          method:  'GET',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok || !json?.authorize_url) {
-          throw new Error(json?.error || `No se pudo iniciar OAuth Shopify (${res.status})`);
-        }
-        window.location.href = json.authorize_url;
-        return;
       }
 
-      // ── Meta / Google: Netlify Functions (patrón existente) ────────────────
-      const endpoint = normalizedProvider === 'facebook'
-        ? '/api/integrations/facebook/start'
-        : '/api/integrations/google/start';
+      // Endpoint Netlify (idéntico patrón para Meta/Google/Shopify)
+      const endpoint = (
+        normalizedProvider === 'facebook' ? '/api/integrations/facebook/start' :
+        normalizedProvider === 'google'   ? '/api/integrations/google/start'   :
+        /* shopify */                       '/api/integrations/shopify/start'
+      );
 
       const returnTo = this.getBrandStorageReturnPath();
-      const qs = new URLSearchParams({
+      const qsParams = {
         brand_container_id: brandId,
         return_to: returnTo
-      });
+      };
+      if (normalizedProvider === 'shopify') qsParams.shop = shopDomain;
+
+      const qs = new URLSearchParams(qsParams);
       const res = await fetch(`${location.origin}${endpoint}?${qs.toString()}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json?.authorize_url) {

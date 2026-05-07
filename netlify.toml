@@ -149,6 +149,21 @@
   force = true
 
 [[redirects]]
+  from = "/api/integrations/shopify/start"
+  to = "/.netlify/functions/api-integrations-shopify-start"
+  status = 200
+  force = true
+
+# Shopify webhooks — catch-all 2 segmentos (resource/action).
+# Topics: products/{create,update,delete}, orders/{create,updated,cancelled},
+#         customers/{create,update,delete,data_request,redact}, shop/redact, app/uninstalled
+[[redirects]]
+  from = "/api/webhooks/shopify/*"
+  to = "/.netlify/functions/api-webhooks-shopify"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/webhooks/meta"
   to = "/.netlify/functions/api-webhooks-meta"
   status = 200
