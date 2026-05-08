@@ -166,6 +166,53 @@ function checkBodySize(event, maxBytes = 5 * 1024 * 1024) {
   return null;
 }
 
+/**
+ * logUserAudit — registra una acción de usuario en `user_audit_log`.
+ * Best-effort: si la inserción falla, no aborta la request principal.
+ *
+ * @param {object} args
+ *   - env: { url, serviceKey } de getSupabaseEnv()
+ *   - event: el event Netlify (para extraer ip + user-agent + request-id)
+ *   - user: objeto user con id + email
+ *   - organizationId: uuid de la org
+ *   - action: ej. 'integration.connect', 'integration.disconnect'
+ *   - resourceType: ej. 'brand_integrations'
+ *   - resourceId: uuid o key del recurso
+ *   - metadata: jsonb con info adicional (platform, page_id, etc.)
+ */
+async function logUserAudit({ env, event, user, organizationId, action, resourceType, resourceId, metadata }) {
+  if (!env || !organizationId || !action) return;
+  try {
+    const h = event?.headers || {};
+    const ip =
+      h['x-nf-client-connection-ip'] ||
+      h['x-forwarded-for']?.split(',')[0]?.trim() ||
+      h['client-ip'] || null;
+    const userAgent = h['user-agent'] || null;
+    const requestId = h['x-nf-request-id'] || null;
+
+    await supabaseRest({
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'user_audit_log', method: 'POST',
+      body: [{
+        organization_id: organizationId,
+        user_id:         user?.id || null,
+        user_email:      user?.email || null,
+        action,
+        resource_type:   resourceType || null,
+        resource_id:     resourceId ? String(resourceId) : null,
+        metadata:        metadata || {},
+        ip_address:      ip,
+        user_agent:      userAgent,
+        request_id:      requestId,
+      }]
+    });
+  } catch (e) {
+    // Audit log es best-effort: no romper la request por un fallo aquí.
+    console.warn('[audit-log]', action, '→', e?.message || e);
+  }
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
@@ -174,6 +221,7 @@ module.exports = {
   requireAuth,
   supabaseRest,
   assertOrgMember,
-  checkBodySize
+  checkBodySize,
+  logUserAudit
 };
 

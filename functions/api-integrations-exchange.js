@@ -5,8 +5,10 @@ const {
   getBearerToken,
   fetchSupabaseUser,
   supabaseRest,
-  assertOrgMember
+  assertOrgMember,
+  logUserAudit
 } = require('./lib/ai-shared');
+const { encryptIntegrationPayload, encryptToken } = require('./lib/integration-token-vault');
 const { getMetaGraphVersion, metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 const { checkRateLimit } = require('./lib/rate-limiter');
 
@@ -131,17 +133,22 @@ async function upsertBrandIntegration({ env, payload }) {
 
   if (row?.id) {
     const next = { ...payload };
+    // Si el caller no trae refresh_token nuevo pero la fila existente lo tiene
+    // (encriptado o no), preservarlo as-is (el helper encrypt es idempotente).
     if (next.refresh_token == null && row.refresh_token != null) next.refresh_token = row.refresh_token;
+    encryptIntegrationPayload(next);
     await supabaseRest({
       url: env.url, serviceKey: env.serviceKey,
       path: 'brand_integrations', method: 'PATCH',
       searchParams: { id: `eq.${row.id}` }, body: [next]
     });
   } else {
+    const encPayload = { ...payload };
+    encryptIntegrationPayload(encPayload);
     await supabaseRest({
       url: env.url, serviceKey: env.serviceKey,
       path: 'brand_integrations', method: 'POST',
-      body: [payload]
+      body: [encPayload]
     });
   }
 }
@@ -477,7 +484,7 @@ exports.handler = async (event) => {
           path: 'brand_integrations', method: 'PATCH',
           searchParams: { id: `eq.${existingRow.id}` },
           body: [{
-            access_token:          tokenJson.access_token,
+            access_token:          encryptToken(tokenJson.access_token),
             scope:                 grantedScopes,
             external_account_id:   shopInfo.id != null ? String(shopInfo.id) : null,
             external_account_name: shopInfo.name || stateObj.shop,
@@ -501,7 +508,7 @@ exports.handler = async (event) => {
             external_account_id:   shopInfo.id != null ? String(shopInfo.id) : null,
             external_account_name: shopInfo.name || stateObj.shop,
             account_url:           `https://${stateObj.shop}`,
-            access_token:          tokenJson.access_token,
+            access_token:          encryptToken(tokenJson.access_token),
             scope:                 grantedScopes,
             is_active:             true,
             bootstrap_status:      'pending',
@@ -593,6 +600,27 @@ exports.handler = async (event) => {
           return Array.isArray(rows) ? rows[0] : null;
         })()
       : null;
+
+    // Audit log: registrar la conexión exitosa para que el admin de la org
+    // vea quién conectó qué integración y cuándo (style Sprout Social).
+    if (stateObj.organization_id) {
+      const integId = platform === 'shopify' ? shopifyIntegId : (savedIntegRow?.id || null);
+      await logUserAudit({
+        env,
+        event,
+        user: sessionUser,
+        organizationId: stateObj.organization_id,
+        action: 'integration.connect',
+        resourceType: 'brand_integrations',
+        resourceId: integId,
+        metadata: {
+          platform,
+          brand_container_id: brandContainerId,
+          ...(platform === 'shopify' ? { shop_domain: stateObj.shop } : {}),
+          ...(platform === 'facebook' ? { pages_count: storedPages.length } : {}),
+        }
+      });
+    }
 
     return {
       statusCode: 200,

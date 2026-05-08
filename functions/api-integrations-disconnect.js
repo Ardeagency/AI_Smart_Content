@@ -16,8 +16,10 @@ const {
   getBearerToken,
   fetchSupabaseUser,
   supabaseRest,
-  assertOrgMember
+  assertOrgMember,
+  logUserAudit
 } = require('./lib/ai-shared');
+const { decryptIntegrationRow } = require('./lib/integration-token-vault');
 const { buildMetaGraphUrl } = require('./lib/meta-graph');
 
 // ── Brand container auth ──────────────────────────────────────────────────────
@@ -37,7 +39,7 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
     if (!bc.organization_id) { throw Object.assign(new Error('No autorizado'), { statusCode: 403 }); }
     await assertOrgMember({ url: env.url, serviceKey: env.serviceKey, organizationId: bc.organization_id, userId: user.id });
   }
-  return { user };
+  return { user, organizationId: bc.organization_id };
 }
 
 // ── Revoke Google token ───────────────────────────────────────────────────────
@@ -96,8 +98,9 @@ exports.handler = async (event) => {
   }
 
   // Verify user access to this brand
+  let auth;
   try {
-    await assertBrandContainerAccess({ env, accessToken, brandContainerId });
+    auth = await assertBrandContainerAccess({ env, accessToken, brandContainerId });
   } catch (e) {
     return { statusCode: e.statusCode || 500, headers: corsHeaders(event), body: JSON.stringify({ error: e.message }) };
   }
@@ -115,6 +118,7 @@ exports.handler = async (event) => {
     }
   });
   const integ = Array.isArray(rows) ? rows[0] : null;
+  if (integ) decryptIntegrationRow(integ);
 
   if (integ?.id) {
     // Revoke token at provider before removing from DB
@@ -157,6 +161,23 @@ exports.handler = async (event) => {
       });
     }
   }
+
+  // Audit log: registrar la desconexión (visible al admin de la org)
+  await logUserAudit({
+    env,
+    event,
+    user: auth.user,
+    organizationId: auth.organizationId,
+    action: 'integration.disconnect',
+    resourceType: 'brand_integrations',
+    resourceId: integ?.id,
+    metadata: {
+      platform,
+      brand_container_id: brandContainerId,
+      hard_delete: platform !== 'shopify',
+      external_account_id: integ?.external_account_id || null,
+    }
+  });
 
   return {
     statusCode: 200,

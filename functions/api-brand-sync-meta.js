@@ -33,6 +33,7 @@
 const {
   corsHeaders, getSupabaseEnv, getBearerToken, fetchSupabaseUser, supabaseRest
 } = require('./lib/ai-shared');
+const { decryptIntegrationRow } = require('./lib/integration-token-vault');
 const { metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 
 const appSecret = () => process.env.META_APP_SECRET || '';
@@ -575,6 +576,7 @@ exports.handler = async (event) => {
       }
     });
     integ = Array.isArray(integRows) ? integRows[0] : null;
+    if (integ) decryptIntegrationRow(integ);
   } catch (e) {
     console.error('[brand-sync-meta] setup/db:', e?.message, e?.details || '');
     const code = e.statusCode >= 400 && e.statusCode < 600 ? e.statusCode : 500;

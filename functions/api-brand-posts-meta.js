@@ -18,6 +18,7 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
+const { decryptIntegrationRow } = require('./lib/integration-token-vault');
 const { metaGraphGet, metaGraphGetPaged } = require('./lib/meta-graph');
 
 // ── Campos de Graph API ───────────────────────────────────────────────────────
@@ -151,6 +152,7 @@ exports.handler = async (event) => {
     }
   });
   const integ = Array.isArray(integRows) ? integRows[0] : null;
+  if (integ) decryptIntegrationRow(integ);
   if (!integ)
     return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'No active Meta integration' }) };
 

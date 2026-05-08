@@ -14,6 +14,7 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
+const { decryptIntegrationRow, encryptToken } = require('./lib/integration-token-vault');
 const { getMetaGraphVersion, metaGraphGet } = require('./lib/meta-graph');
 
 // ── Token refresh helpers ─────────────────────────────────────────────────────
@@ -168,6 +169,7 @@ exports.handler = async (event) => {
   });
   const integration = Array.isArray(rows) ? rows[0] : null;
   if (!integration) return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'Integration not found' }) };
+  decryptIntegrationRow(integration);
 
   // ── Verify user owns or is a member of the brand container ───────────────
   const containers = await supabaseRest({
@@ -210,7 +212,7 @@ exports.handler = async (event) => {
             url: env.url, serviceKey: env.serviceKey,
             path: 'brand_integrations', method: 'PATCH',
             searchParams: { id: `eq.${integration_id}` },
-            body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
+            body: [{ access_token: encryptToken(token), token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
           });
         } catch (e) {
           console.error('[insights] Google token refresh failed:', e?.message);
@@ -237,7 +239,7 @@ exports.handler = async (event) => {
             url: env.url, serviceKey: env.serviceKey,
             path: 'brand_integrations', method: 'PATCH',
             searchParams: { id: `eq.${integration_id}` },
-            body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
+            body: [{ access_token: encryptToken(token), token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
           });
         } catch (e) {
           // Log but don't fail — current token may still work

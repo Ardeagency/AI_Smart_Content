@@ -334,6 +334,23 @@ exports.handler = async (event) => {
   const object  = String(payload?.object || '');
   const entries = Array.isArray(payload?.entry) ? payload.entry : [];
 
+  // Replay window: las entries de Meta traen `time` en segundos. Si TODAS
+  // están a más de 5 min de divergencia, asumir replay y rechazar 401.
+  // (data_deletion no tiene `time`; se evalúa solo cuando hay entries.)
+  if (entries.length > 0) {
+    const REPLAY_WINDOW_MS = 5 * 60 * 1000;
+    const nowMs = Date.now();
+    const allStale = entries.every(e => {
+      const t = Number(e?.time);
+      if (!Number.isFinite(t)) return false;  // sin time válido → no rechaces por replay (HMAC ya validó)
+      return Math.abs(nowMs - t * 1000) > REPLAY_WINDOW_MS;
+    });
+    if (allStale) {
+      console.warn('[webhook-meta] replay protection: all entries stale');
+      return { statusCode: 401, headers: corsHeaders(event), body: JSON.stringify({ error: 'Stale webhook (replay protection)' }) };
+    }
+  }
+
   // Inicializar Supabase
   let env = null;
   try { env = getSupabaseEnv(); } catch (e) {

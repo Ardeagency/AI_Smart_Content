@@ -62,6 +62,18 @@ exports.handler = async (event) => {
   const hmacHeader         = h['x-shopify-hmac-sha256']      || null;
   const externalWebhookId  = h['x-shopify-webhook-id']       || null;
   const apiVersion         = h['x-shopify-api-version']      || null;
+  const triggeredAt        = h['x-shopify-triggered-at']     || null;
+
+  // Replay window: rechazar si triggered_at > 5 min de divergencia con now()
+  // (estilo HubSpot v3). Bloquea ataques de replay con HMAC capturado.
+  const REPLAY_WINDOW_MS = 5 * 60 * 1000;
+  let replayValid = true;
+  if (triggeredAt) {
+    const t = Date.parse(triggeredAt);
+    if (Number.isFinite(t)) {
+      replayValid = Math.abs(Date.now() - t) <= REPLAY_WINDOW_MS;
+    }
+  }
 
   // event.body puede venir base64-encoded si Netlify detecta binario
   const rawBody = event.isBase64Encoded
@@ -119,10 +131,11 @@ exports.handler = async (event) => {
         gdpr_action_taken:    null,
         payload,
         headers: {
-          'x-shopify-topic':       topic,
-          'x-shopify-shop-domain': shopDomain,
-          'x-shopify-webhook-id':  externalWebhookId,
-          'x-shopify-api-version': apiVersion
+          'x-shopify-topic':         topic,
+          'x-shopify-shop-domain':   shopDomain,
+          'x-shopify-webhook-id':    externalWebhookId,
+          'x-shopify-api-version':   apiVersion,
+          'x-shopify-triggered-at':  triggeredAt
         },
         processed: false
       }]
@@ -134,6 +147,10 @@ exports.handler = async (event) => {
 
   // HMAC inválido → 401 (después de loggear)
   if (!hmacValid) return { statusCode: 401, body: 'Invalid HMAC' };
+
+  // Replay window inválido → 401 (timestamp fuera de ±5min). Atacante con
+  // captura de un webhook viejo no puede reenviarlo aunque tenga el HMAC OK.
+  if (!replayValid) return { statusCode: 401, body: 'Stale webhook (replay protection)' };
 
   // Encolar job para procesamiento async (ai-engine fase 2B)
   if (organizationId && webhookLogId) {

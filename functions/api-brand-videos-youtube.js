@@ -17,6 +17,7 @@ const {
   fetchSupabaseUser,
   supabaseRest
 } = require('./lib/ai-shared');
+const { decryptIntegrationRow, encryptToken } = require('./lib/integration-token-vault');
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 
@@ -138,6 +139,7 @@ exports.handler = async (event) => {
     }
   });
   const integ = Array.isArray(integRows) ? integRows[0] : null;
+  if (integ) decryptIntegrationRow(integ);
   if (!integ) {
     return { statusCode: 404, headers: corsHeaders(event), body: JSON.stringify({ error: 'No active Google integration' }) };
   }
@@ -160,7 +162,7 @@ exports.handler = async (event) => {
           url: env.url, serviceKey: env.serviceKey,
           path: 'brand_integrations', method: 'PATCH',
           searchParams: { id: `eq.${integ.id}` },
-          body: [{ access_token: token, token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
+          body: [{ access_token: encryptToken(token), token_expires_at: newExpiry, updated_at: new Date().toISOString() }]
         });
       } catch (e) {
         console.warn('[videos-youtube] token refresh failed:', e?.message);

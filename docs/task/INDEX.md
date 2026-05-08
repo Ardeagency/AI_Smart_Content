@@ -32,6 +32,7 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
+| [AUDIT-002](./AUDIT-002-ai-engine-housekeeping.md) | ai-engine housekeeping — bug histórico enum tipo_producto + repo sin commits + .bak files | ops | 👤 | medium | — |
 | [FEAT-007](./FEAT-007-frontend-services-refactor.md) | Refactor services frontend para llamar 1 RPC por dashboard | feature | 👤 | medium | — |
 | [FEAT-008](./FEAT-008-frontend-new-services.md) | Crear `TendenciasDataService` (Competencia ya existe) + render | feature | 👤 | long | — |
 | [FEAT-013](./FEAT-013-monitoring-crud.md) | CRUD de sensores y URL watchers en MonitoringView | feature | 👤 | medium | — |
