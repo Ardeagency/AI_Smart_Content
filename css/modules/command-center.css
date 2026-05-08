@@ -1162,3 +1162,144 @@
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* ── Bandeja de Vera (pending_actions) ───────────────────────────────── */
+.cc-vera-inbox {
+  background: linear-gradient(180deg, rgba(224,145,69,0.08), rgba(224,145,69,0.02));
+  border: 1px solid var(--accent-warm, #e09145);
+  border-radius: var(--radius-md, 12px);
+  padding: 1.25rem 1.5rem;
+  margin: 0 0 1.5rem 0;
+}
+
+.cc-vera-inbox-head {
+  margin-bottom: 0.75rem;
+}
+
+.cc-vera-inbox-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-vera-inbox-title .fa-wand-magic-sparkles {
+  color: var(--accent-warm, #e09145);
+}
+
+.cc-vera-inbox-lede {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0 0;
+}
+
+.cc-vera-inbox-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.cc-vera-inbox-card {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm, 8px);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cc-vera-inbox-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cc-vera-inbox-card-type {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-warm, #e09145);
+  font-weight: 600;
+}
+
+.cc-vera-inbox-conf {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+}
+
+.cc-vera-inbox-summary {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cc-vera-inbox-reason {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.cc-vera-inbox-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cc-vera-inbox-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.cc-vera-inbox-actions .btn {
+  flex: 1;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+}
+
+/* ── Dropdown "Vincular persona" inline (capa 4 manual) ──────────────── */
+.cc-link-picker {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  padding: 0.2rem 0.4rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  max-width: 200px;
+}
+
+.cc-link-picker:hover {
+  border-color: var(--accent-warm, #e09145);
+}
+
+.cc-link-picker:focus {
+  outline: 1px solid var(--accent-warm, #e09145);
+  outline-offset: 1px;
+}
+
+.cc-camp-persona,
+.cc-seg-persona {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.cc-camp-persona-label {
+  font-size: 0.85rem;
+}

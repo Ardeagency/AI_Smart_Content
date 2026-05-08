@@ -154,6 +154,25 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/integrations/link"
+  to = "/.netlify/functions/api-integrations-link"
+  status = 200
+  force = true
+
+# Vera pending actions: list + per-id approve/reject (catch-all)
+[[redirects]]
+  from = "/api/vera/pending-actions"
+  to = "/.netlify/functions/api-vera-pending-actions"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/vera/pending-actions/*"
+  to = "/.netlify/functions/api-vera-pending-actions"
+  status = 200
+  force = true
+
 # Shopify webhooks — catch-all 2 segmentos (resource/action).
 # Topics: products/{create,update,delete}, orders/{create,updated,cancelled},
 #         customers/{create,update,delete,data_request,redact}, shop/redact, app/uninstalled

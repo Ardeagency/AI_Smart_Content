@@ -16,6 +16,7 @@ class CommandCenterView extends BaseView {
     this._campaigns       = [];   // campaigns (con cached metrics)
     this._snapshots       = [];   // brand_analytics_snapshots (vía API)
     this._integrations    = [];   // brand_integrations (sync status)
+    this._pendingActions  = [];   // vera_pending_actions (status='pending')
     this._supabase        = null;
     this._editingAudience = null;
   }
@@ -107,6 +108,18 @@ class CommandCenterView extends BaseView {
   renderHTML() {
     return `
 <div class="cc-page" id="commandCenterPage">
+
+  <!-- BANDEJA DE VERA (pending_actions) ─────────────────────────────── -->
+  <section class="cc-vera-inbox" id="ccVeraInbox" style="display:none;" aria-label="Sugerencias de Vera">
+    <div class="cc-vera-inbox-head">
+      <h2 class="cc-vera-inbox-title">
+        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+        Vera tiene <span id="ccVeraInboxCount">0</span> <span id="ccVeraInboxLabel">sugerencias</span> para ti
+      </h2>
+      <p class="cc-vera-inbox-lede">Decisiones estratégicas que Vera propone. Aprueba lo que tenga sentido para tu marca.</p>
+    </div>
+    <div class="cc-vera-inbox-list" id="ccVeraInboxList"></div>
+  </section>
 
   <!-- PERSONAS ────────────────────────────────────────────────────── -->
   <section class="cc-section cc-section--audiences">
@@ -333,16 +346,199 @@ class CommandCenterView extends BaseView {
 
     const sh = await this._fetchSnapshotsHeatmapViaApi(bid);
     this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
-    this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
+
+    // Bandeja de Vera: pending_actions sin resolver para esta marca
+    this._pendingActions = await this._fetchPendingActions(bid);
 
     document.getElementById('ccTwoCol')?.style && (document.getElementById('ccTwoCol').style.display = '');
 
+    this._renderVeraInbox();
     this._renderAudiencesCarousel();
     this._renderCampaigns();
     this._renderSegments();
     this._renderSnapshots();
     // Fuentes conectadas removido de esta vista: foco solo en la lectura más reciente.
     this.updateLinksForRouter();
+  }
+
+  /* ── Vera Inbox: pending_actions ──────────────────────────────────────── */
+  async _fetchPendingActions(brandContainerId) {
+    if (!brandContainerId || !this._supabase) return [];
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return [];
+      const qs = new URLSearchParams({ brand_container_id: String(brandContainerId), status: 'pending' });
+      const res = await fetch(`/api/vera/pending-actions?${qs}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return Array.isArray(json?.actions) ? json.actions : [];
+    } catch (e) {
+      console.warn('CommandCenterView: fetchPendingActions:', e?.message);
+      return [];
+    }
+  }
+
+  /* ── BANDEJA DE VERA ──────────────────────────────────────────────── */
+  _renderVeraInbox() {
+    const root  = document.getElementById('ccVeraInbox');
+    const list  = document.getElementById('ccVeraInboxList');
+    const count = document.getElementById('ccVeraInboxCount');
+    const label = document.getElementById('ccVeraInboxLabel');
+    if (!root || !list) return;
+
+    const actions = Array.isArray(this._pendingActions) ? this._pendingActions : [];
+    if (actions.length === 0) {
+      root.style.display = 'none';
+      return;
+    }
+    root.style.display = '';
+    if (count) count.textContent = String(actions.length);
+    if (label) label.textContent = actions.length === 1 ? 'sugerencia' : 'sugerencias';
+
+    const personaNameById = this._personaNameById();
+    const fmtPct = (n) => Number.isFinite(Number(n)) ? `${Math.round(Number(n) * 100)}%` : '—';
+    const labelByType = {
+      link_campaign_to_persona:    'Vincular campaña a persona',
+      link_segment_to_persona:     'Vincular audiencia a persona',
+      update_persona:              'Actualizar persona',
+      create_audience:             'Crear nueva audiencia',
+      update_audience:             'Actualizar audiencia',
+      update_brand_container:      'Actualizar marca',
+      strategic_recommendation_for_campaign: 'Recomendación estratégica',
+      update_shopify_product_seo:  'Optimizar SEO de producto',
+    };
+
+    list.innerHTML = actions.map((a) => {
+      const summary = a.proposed_payload?.summary || a.vera_reasoning || '';
+      const typeLabel = labelByType[a.action_type] || a.action_type;
+      const personaTarget = a.proposed_payload?.persona_id ? (personaNameById[String(a.proposed_payload.persona_id)] || '') : '';
+      const reasoningRow = a.vera_reasoning && summary !== a.vera_reasoning
+        ? `<p class="cc-vera-inbox-reason">${this.escapeHtml(a.vera_reasoning.slice(0, 200))}</p>`
+        : '';
+      const conf = Number.isFinite(Number(a.vera_confidence)) ? fmtPct(a.vera_confidence) : null;
+      const confBadge = conf ? `<span class="cc-vera-inbox-conf" title="Confianza de Vera">${conf}</span>` : '';
+      const personaRow = personaTarget ? `<span class="cc-vera-inbox-meta"><i class="fas fa-user"></i> ${this.escapeHtml(personaTarget)}</span>` : '';
+      return `
+      <article class="cc-vera-inbox-card" data-action-id="${a.id}">
+        <div class="cc-vera-inbox-card-head">
+          <span class="cc-vera-inbox-card-type">${this.escapeHtml(typeLabel)}</span>
+          ${confBadge}
+        </div>
+        ${summary ? `<p class="cc-vera-inbox-summary">${this.escapeHtml(summary)}</p>` : ''}
+        ${reasoningRow}
+        ${personaRow}
+        <div class="cc-vera-inbox-actions">
+          <button type="button" class="btn btn-sm btn-primary cc-vera-inbox-btn-approve" data-id="${a.id}">
+            <i class="fas fa-check"></i> Aprobar
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary cc-vera-inbox-btn-reject" data-id="${a.id}">
+            <i class="fas fa-times"></i> Descartar
+          </button>
+        </div>
+      </article>`;
+    }).join('');
+
+    // Listeners
+    list.querySelectorAll('.cc-vera-inbox-btn-approve').forEach((btn) => {
+      btn.addEventListener('click', (e) => this._approvePendingAction(e.currentTarget.dataset.id));
+    });
+    list.querySelectorAll('.cc-vera-inbox-btn-reject').forEach((btn) => {
+      btn.addEventListener('click', (e) => this._rejectPendingAction(e.currentTarget.dataset.id));
+    });
+  }
+
+  async _approvePendingAction(actionId) {
+    if (!actionId) return;
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/vera/pending-actions/${actionId}/approve`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) {
+        const err = await res.text().catch(() => '');
+        alert(`No se pudo aprobar: ${err.slice(0, 120)}`);
+        return;
+      }
+      // Quitar localmente y re-renderizar
+      this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
+      this._renderVeraInbox();
+    } catch (e) {
+      console.error('approve action:', e);
+    }
+  }
+
+  async _rejectPendingAction(actionId) {
+    if (!actionId) return;
+    const reason = window.prompt('¿Por qué descartas esta sugerencia? (opcional)') || '';
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/vera/pending-actions/${actionId}/reject`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ reason }),
+      });
+      if (!res.ok) {
+        const err = await res.text().catch(() => '');
+        alert(`No se pudo descartar: ${err.slice(0, 120)}`);
+        return;
+      }
+      this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
+      this._renderVeraInbox();
+    } catch (e) {
+      console.error('reject action:', e);
+    }
+  }
+
+  /* ── Manual link inline (entity → persona) ────────────────────────── */
+  async _linkEntityToPersona({ entityType, entityId, personaId }) {
+    if (!entityType || !entityId) return false;
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return false;
+      const res = await fetch('/api/integrations/link', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ entity_type: entityType, entity_id: entityId, persona_id: personaId || null }),
+      });
+      if (!res.ok) {
+        const err = await res.text().catch(() => '');
+        alert(`No se pudo vincular: ${err.slice(0, 200)}`);
+        return false;
+      }
+      // Refrescar la fila localmente y re-render
+      const list = entityType === 'campaign' ? this._campaigns : this._segments;
+      const row = list.find((x) => x.id === entityId);
+      if (row) row.persona_id = personaId || null;
+      if (entityType === 'campaign') this._renderCampaigns();
+      else this._renderSegments();
+      return true;
+    } catch (e) {
+      console.error('link entity:', e);
+      return false;
+    }
+  }
+
+  _personaPickerHTML(currentPersonaId, entityType, entityId) {
+    const personas = Array.isArray(this._audiences) ? this._audiences : [];
+    const opts = personas.map((p) => `<option value="${p.id}" ${currentPersonaId === p.id ? 'selected' : ''}>${this.escapeHtml(p.name || 'Persona')}</option>`).join('');
+    return `
+      <select class="cc-link-picker" data-entity-type="${entityType}" data-entity-id="${entityId}" aria-label="Vincular a persona">
+        <option value="">— Sin vincular —</option>
+        ${opts}
+      </select>`;
   }
 
   /* ── CARRUSEL: audience_personas ──────────────────────────────────── */
@@ -452,9 +648,12 @@ class CommandCenterView extends BaseView {
       const cta = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
       const ctaRow = cta ? `<p class="cc-camp-cta">${this.escapeHtml(cta.length > 80 ? cta.slice(0, 80) + '…' : cta)}</p>` : '';
       const pName = c.persona_id ? personaById[String(c.persona_id)] : '';
-      const personaRow = pName
-        ? `<div class="cc-camp-persona"><i class="fas fa-user-circle" aria-hidden="true"></i> Mercado objetivo: <strong>${this.escapeHtml(pName)}</strong></div>`
-        : `<div class="cc-camp-persona cc-camp-persona--missing"><i class="fas fa-unlink" aria-hidden="true"></i> Sin persona vinculada a esta campaña — así la IA no puede cerrar el circuito conceptual.</div>`;
+      const personaRow = `
+        <div class="cc-camp-persona ${pName ? '' : 'cc-camp-persona--missing'}">
+          <i class="fas ${pName ? 'fa-user-circle' : 'fa-unlink'}" aria-hidden="true"></i>
+          <span class="cc-camp-persona-label">${pName ? 'Mercado objetivo:' : 'Sin persona vinculada — la IA no puede cerrar el circuito.'}</span>
+          ${this._personaPickerHTML(c.persona_id || '', 'campaign', c.id)}
+        </div>`;
 
       return `
       <div class="cc-camp-row">
@@ -515,9 +714,11 @@ class CommandCenterView extends BaseView {
         const synced = s.last_synced_at
           ? `<span class="cc-seg-sync">Sync: ${new Date(s.last_synced_at).toLocaleDateString('es-ES')}</span>` : '';
         const pSeg = s.persona_id ? personaById[String(s.persona_id)] : '';
-        const personaLine = pSeg
-          ? `<div class="cc-seg-persona">Persona: <strong>${this.escapeHtml(pSeg)}</strong></div>`
-          : `<div class="cc-seg-persona cc-seg-persona--missing">Sin persona vinculada</div>`;
+        const personaLine = `
+          <div class="cc-seg-persona ${pSeg ? '' : 'cc-seg-persona--missing'}">
+            <span>${pSeg ? 'Persona:' : 'Sin persona vinculada'}</span>
+            ${this._personaPickerHTML(s.persona_id || '', 'segment', s.id)}
+          </div>`;
         return `
         <div class="cc-seg-card">
           <div class="cc-seg-card-head">
@@ -751,6 +952,24 @@ class CommandCenterView extends BaseView {
     if (cancelBtn) cancelBtn.onclick = () => this._closeAudienceModal();
     if (backdrop)  backdrop.onclick  = (ev) => { if (ev.target === backdrop) this._closeAudienceModal(); };
     if (form)      form.addEventListener('submit', async (ev) => { ev.preventDefault(); await this._saveAudienceFromModal(); });
+
+    // Delegated listener para los dropdowns "Vincular persona" en campaigns + segments.
+    // Live: aunque _renderCampaigns/_renderSegments re-rendericen, el listener sobrevive
+    // porque está colgado del page root.
+    const page = document.getElementById('commandCenterPage');
+    if (page) {
+      page.addEventListener('change', async (ev) => {
+        const sel = ev.target.closest && ev.target.closest('.cc-link-picker');
+        if (!sel) return;
+        const entityType = sel.getAttribute('data-entity-type');
+        const entityId   = sel.getAttribute('data-entity-id');
+        const personaId  = sel.value || null;
+        sel.disabled = true;
+        const ok = await this._linkEntityToPersona({ entityType, entityId, personaId });
+        sel.disabled = false;
+        if (!ok) sel.value = personaId === null ? '' : personaId; // revert visual si falló
+      });
+    }
   }
 
   _openAudienceModal(audienceId) {
