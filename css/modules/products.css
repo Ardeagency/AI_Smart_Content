@@ -985,7 +985,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.67);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: -1;
@@ -1059,17 +1059,19 @@
 .product-view-main-wrap {
   flex: 1;
   min-width: 0;
+  height: 100%;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
 }
 
 .product-view-main-wrap img {
   width: 100%;
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   display: block;
+  border-radius: 5px;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .product-view-thumbnails {
