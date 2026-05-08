@@ -599,15 +599,14 @@ exports.handler = async (event) => {
   const summary = { pages_synced: 0, posts_synced: 0, ig_posts_synced: 0, snapshots_updated: 0 };
 
   try {
-    // Obtener páginas
-    const pagesData = await meta('/me/accounts', userToken, {
-      fields: 'id,name,fan_count,picture{url},instagram_business_account{id,username,profile_picture_url}'
-    });
-    const pages = pagesData.data || [];
+    // PRIVACY: usar SOLO las páginas explícitamente concedidas en el OAuth
+    // (guardadas en metadata.pages). NO re-llamar /me/accounts porque devuelve
+    // todas las páginas que el user puede manejar (cross-brand contamination).
+    const pages = Array.isArray(integ.metadata?.pages) ? integ.metadata.pages : [];
 
     if (pages.length === 0) {
       return { statusCode: 200, headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ok: true, summary: { ...summary, message: 'No Facebook Pages found' } }) };
+        body: JSON.stringify({ ok: true, summary: { ...summary, message: 'No granted pages in metadata. Reconnect Meta selecting the page.' } }) };
     }
 
     for (const page of pages.slice(0, 3)) {

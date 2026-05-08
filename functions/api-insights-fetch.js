@@ -52,13 +52,44 @@ async function renewMetaToken(currentToken, appId, appSecret) {
 
 // ── Meta insights ─────────────────────────────────────────────────────────────
 
-async function fetchMetaInsights({ token, datePreset, appSecret }) {
+// PRIVACY: solo leer ad accounts que pertenecen al business de las pages que el
+// usuario explícitamente concedió en el OAuth. /me/adaccounts devuelve TODAS
+// las cuentas que el user puede ver (incluyendo otras marcas que maneja como
+// agency) — eso filtra cross-tenant data.
+async function resolveAllowedAdAccountIds({ token, appSecret, grantedPages }) {
+  if (!Array.isArray(grantedPages) || grantedPages.length === 0) return new Set();
+  const businessIds = new Set();
+  for (const page of grantedPages) {
+    try {
+      const resp = await metaGraphGet(`/${page.id}`, token, appSecret, { fields: 'business' });
+      if (resp?.business?.id) businessIds.add(resp.business.id);
+    } catch (_) { /* sin business → no agrega nada */ }
+  }
+  const allowed = new Set();
+  for (const businessId of businessIds) {
+    for (const rel of ['owned_ad_accounts', 'client_ad_accounts']) {
+      try {
+        const resp = await metaGraphGet(`/${businessId}/${rel}`, token, appSecret, { fields: 'id', limit: '50' });
+        for (const acct of (resp.data || [])) allowed.add(acct.id);
+      } catch (_) { /* permisos insuficientes → ignora */ }
+    }
+  }
+  return allowed;
+}
+
+async function fetchMetaInsights({ token, datePreset, appSecret, grantedPages }) {
+  const allowedIds = await resolveAllowedAdAccountIds({ token, appSecret, grantedPages });
+  if (allowedIds.size === 0) {
+    return { accounts: [], adAccountId: null, insights: null, campaigns: [],
+      message: 'No granted pages or ad accounts associated. Reconnect Meta selecting the page.' };
+  }
+
+  // Trae todas las cuentas y filtra a las permitidas
   const accountsJson = await metaGraphGet('/me/adaccounts', token, appSecret, {
     fields: 'name,account_id,currency,account_status',
-    limit: '10'
+    limit: '50'
   });
-
-  const accounts = accountsJson.data || [];
+  const accounts = (accountsJson.data || []).filter((a) => allowedIds.has(a.id));
   if (accounts.length === 0) return { accounts: [], adAccountId: null, insights: null, campaigns: [] };
 
   const adAccountId = accounts[0].id;
@@ -227,7 +258,8 @@ exports.handler = async (event) => {
 
     if (platform === 'facebook') {
       const appSecret = process.env.META_APP_SECRET || '';
-      data = await fetchMetaInsights({ token, datePreset, appSecret });
+      const grantedPages = Array.isArray(integration.metadata?.pages) ? integration.metadata.pages : [];
+      data = await fetchMetaInsights({ token, datePreset, appSecret, grantedPages });
       // Persistir en Supabase para que el SPA (p. ej. Command Center) lea `metadata` sin llamar a Graph desde el navegador.
       const prev = integration.metadata && typeof integration.metadata === 'object' ? integration.metadata : {};
       const nowIso = new Date().toISOString();

@@ -188,7 +188,33 @@ exports.handler = async (event) => {
       };
     }
 
-    const ch = channels[0];
+    // PRIVACY: si la metadata tiene un youtube_channel_id explícito, usarlo.
+    // Si no, y el user tiene múltiples canales (Brand Accounts), pedir
+    // selección explícita en lugar de elegir channels[0] arbitrariamente.
+    const preferredChannelId = integ.metadata?.youtube_channel_id || null;
+    let ch = null;
+    if (preferredChannelId) {
+      ch = channels.find((c) => c.id === preferredChannelId) || null;
+    }
+    if (!ch && channels.length === 1) {
+      ch = channels[0];
+    }
+    if (!ch) {
+      return {
+        statusCode: 200,
+        headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ok: true,
+          channel: null,
+          videos: [],
+          available_channels: channels.map((c) => ({
+            id: c.id, title: c.snippet?.title || '', subscribers: Number(c.statistics?.subscriberCount || 0),
+          })),
+          requires_selection: true,
+          message: `Esta cuenta de Google maneja ${channels.length} canales de YouTube. Selecciona explícitamente cuál corresponde a esta marca.`
+        })
+      };
+    }
     const uploadsId = ch.contentDetails?.relatedPlaylists?.uploads;
     const stats = ch.statistics || {};
 

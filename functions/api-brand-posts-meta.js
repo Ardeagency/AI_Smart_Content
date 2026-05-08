@@ -171,18 +171,11 @@ exports.handler = async (event) => {
       activePage = allPages[0];
     }
 
-    // Fallback: llamar /me/accounts si no hay páginas en metadata todavía
-    if (!activePage) {
-      const livePages = await metaGraphGetPaged('/me/accounts', userToken, appSecret, {
-        fields: 'id,name,access_token,picture{url},fan_count,instagram_business_account{id,username,profile_picture_url}'
-      }, 100).catch(() => []);
-
-      if (livePages.length > 0) {
-        activePage = selectedId
-          ? (livePages.find((p) => p.id === selectedId) || livePages[0])
-          : livePages[0];
-      }
-    }
+    // PRIVACY: NO hay fallback a /me/accounts. Si metadata.pages está vacío
+    // significa que el OAuth no capturó las páginas concedidas (o fueron
+    // limpiadas). Caer a /me/accounts y `livePages[0]` mostraría páginas de
+    // OTRAS marcas que el user maneja como agency. El user debe reconectar
+    // Meta para refrescar metadata.pages con las páginas que SÍ quiere usar.
 
     // Sin página activa: diagnóstico
     if (!activePage) {

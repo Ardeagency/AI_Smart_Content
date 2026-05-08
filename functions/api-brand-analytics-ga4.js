@@ -81,7 +81,11 @@ function pickProperty(properties, preferredId, preferredName) {
     const hit = properties.find((p) => p.displayName === preferredName);
     if (hit) return hit;
   }
-  return properties[0];
+  // PRIVACY: si NO hay un preferred id/name guardado en metadata, NO elegir
+  // la primera arbitrariamente. El usuario maneja varias propiedades GA4 (una
+  // por marca) y mostrarle la equivocada es cross-tenant data leak. Devolver
+  // null fuerza al frontend a pedir selección explícita.
+  return null;
 }
 
 function parseRunReport(report) {
@@ -239,6 +243,10 @@ exports.handler = async (event) => {
     const selected = pickProperty(properties, preferredId, preferredName);
 
     if (!selected) {
+      // Sin propiedad seleccionada: o no hay ninguna disponible, o hay varias y
+      // ninguna está marcada como preferida (caso multi-marca). Devolver la lista
+      // de candidatos para que el frontend pida selección explícita al usuario.
+      const candidates = properties.map((p) => ({ id: p.id, displayName: p.displayName, accountName: p.accountName || null }));
       return {
         statusCode: 200,
         headers: { ...corsHeaders(event), 'Content-Type': 'application/json' },
@@ -247,9 +255,11 @@ exports.handler = async (event) => {
           property: null,
           metrics: null,
           date_range: { range, label: rangeLabel[range], startDate, endDate },
-          message:
-            'No se encontró ninguna propiedad de Google Analytics 4 en esta cuenta. ' +
-            'Comprueba que tengas acceso a un flujo GA4 con la misma cuenta de Google.'
+          available_properties: candidates,
+          requires_selection: candidates.length > 0,
+          message: candidates.length === 0
+            ? 'No se encontró ninguna propiedad de Google Analytics 4 en esta cuenta.'
+            : `Selecciona explícitamente la propiedad GA4 que quieres usar. Disponibles: ${candidates.length}.`
         })
       };
     }
