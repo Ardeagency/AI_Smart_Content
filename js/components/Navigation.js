@@ -51,9 +51,9 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
+    { type: 'page', id: 'content', label: 'Content', icon: 'fa-photo-film', route: 'content' },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'content', label: 'Content', icon: 'fa-photo-film', route: 'content' },
     {
       type: 'page',
       id: 'tasks',
