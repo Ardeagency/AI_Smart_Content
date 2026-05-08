@@ -561,34 +561,7 @@ class Navigation {
 
     body.innerHTML = '<div class="nav-flyout-notifications-loading">Cargando…</div>';
 
-    const user = window.authService?.getCurrentUser?.();
-    let supabase = window.authService?.supabase;
-    if (!supabase?.from && window.supabaseService?.getClient) {
-      try {
-        supabase = await window.supabaseService.getClient();
-      } catch (_) {
-        supabase = null;
-      }
-    }
-
-    if (!user?.id || !supabase?.from) {
-      body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('user_notifications')
-      .select('id, title, message, type, is_read, created_at, link_to')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error) {
-      body.innerHTML = `<div class="nav-flyout-notifications-error">${_escapeHtml(error.message || 'No se pudieron cargar notificaciones')}</div>`;
-      return;
-    }
-
-    const list = Array.isArray(data) ? data : [];
+    const list = await this._orgNotificationsList('all', 100);
     if (!list.length) {
       body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
       return;
@@ -617,15 +590,7 @@ class Navigation {
         const id = btn.dataset.id;
         const link = btn.dataset.link;
         if (id) {
-          try {
-            let client = window.authService?.supabase;
-            if (!client?.from && window.supabaseService?.getClient) {
-              client = await window.supabaseService.getClient();
-            }
-            if (client?.from) {
-              await client.from('user_notifications').update({ is_read: true }).eq('id', id);
-            }
-          } catch (_) {}
+          await this._orgNotificationsMark(id, 'read');
           this.refreshNotificationsBadge();
           btn.classList.remove('unread');
         }
@@ -637,38 +602,82 @@ class Navigation {
     });
   }
 
+  // ───────────────────────────────────────── Org notifications (sistema nuevo)
   /**
-   * Actualiza el punto rojo si hay filas con is_read = false en user_notifications.
+   * Helpers que consumen las 3 RPCs de notificaciones por org:
+   *   list_my_org_notifications(p_org_id, p_state, p_limit)  → jsonb[]
+   *   my_unread_org_notifications_count(p_org_id)            → int
+   *   mark_org_notification_state(p_notification_id, p_state) → jsonb
+   *
+   * Cada item llega con: id, type, severity, title, body, action_url,
+   * action_label, metadata, created_at, expires_at, my_state, my_read_at.
+   *
+   * Para no romper los renders/handlers viejos (que esperan el shape de
+   * user_notifications: title, message, type, is_read, link_to), normalizamos.
    */
+  async _supabase() {
+    let sb = window.authService?.supabase;
+    if (!sb?.rpc && window.supabaseService?.getClient) {
+      try { sb = await window.supabaseService.getClient(); } catch (_) { sb = null; }
+    }
+    return sb?.rpc ? sb : null;
+  }
+
+  async _orgNotificationsCount() {
+    const sb = await this._supabase();
+    if (!sb) return 0;
+    const { data, error } = await sb.rpc('my_unread_org_notifications_count', {
+      p_org_id: this.currentOrgId || null,
+    });
+    if (error) { console.warn('[notifs] count error:', error.message); return 0; }
+    return Number(data) || 0;
+  }
+
+  async _orgNotificationsList(state = 'unread', limit = 50) {
+    const sb = await this._supabase();
+    if (!sb) return [];
+    const { data, error } = await sb.rpc('list_my_org_notifications', {
+      p_org_id: this.currentOrgId || null,
+      p_state:  state,
+      p_limit:  limit,
+    });
+    if (error) { console.warn('[notifs] list error:', error.message); return []; }
+    const arr = Array.isArray(data) ? data : [];
+    return arr.map(this._normalizeOrgNotification);
+  }
+
+  async _orgNotificationsMark(id, state) {
+    const sb = await this._supabase();
+    if (!sb || !id) return false;
+    const { error } = await sb.rpc('mark_org_notification_state', {
+      p_notification_id: id, p_state: state,
+    });
+    if (error) { console.warn('[notifs] mark error:', error.message); return false; }
+    return true;
+  }
+
+  _normalizeOrgNotification(n) {
+    if (!n) return n;
+    return {
+      id:         n.id,
+      title:      n.title || '',
+      message:    n.body || '',                       // body → message para render legacy
+      type:       n.type || 'info',
+      severity:   n.severity || 'info',               // nuevo, para color
+      is_read:    n.my_state && n.my_state !== 'unread',
+      created_at: n.created_at,
+      link_to:    n.action_url || '',                 // action_url → link_to para render legacy
+      action_label: n.action_label || '',             // nuevo, opcional
+      metadata:   n.metadata || {},
+    };
+  }
+
   async refreshNotificationsBadge() {
     const badge = document.getElementById('headerNotificationsBadge');
     if (!badge) return;
     try {
-      const user = window.authService?.getCurrentUser?.();
-      let supabase = window.authService?.supabase;
-      if (!supabase?.from && window.supabaseService?.getClient) {
-        try {
-          supabase = await window.supabaseService.getClient();
-        } catch (_) {
-          supabase = null;
-        }
-      }
-      if (!user?.id || !supabase?.from) {
-        badge.hidden = true;
-        badge.setAttribute('aria-hidden', 'true');
-        return;
-      }
-      const { count, error } = await supabase
-        .from('user_notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      if (error) {
-        badge.hidden = true;
-        badge.setAttribute('aria-hidden', 'true');
-        return;
-      }
-      if ((count ?? 0) > 0) {
+      const count = await this._orgNotificationsCount();
+      if (count > 0) {
         badge.hidden = false;
         badge.removeAttribute('aria-hidden');
       } else {

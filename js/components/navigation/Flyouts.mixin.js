@@ -181,7 +181,7 @@
   },
 
   /**
-   * Abre el flyout de notificaciones (user_notifications). Carga desde Supabase y muestra en #navFlyout.
+   * Abre el flyout de notificaciones (org_notifications via RPC). Muestra en panel header (dropdown) o #navFlyout (sidebar).
    * @param {HTMLElement} [triggerEl] - Botón que abrió el flyout (para posicionar).
    */
   async openNotificationsFlyout(triggerEl) {
@@ -197,16 +197,6 @@
 
       this.closeFlyout();
 
-      const user = window.authService?.getCurrentUser?.();
-      let supabase = window.authService?.supabase;
-      if (!supabase?.from && window.supabaseService?.getClient) {
-        try {
-          supabase = await window.supabaseService.getClient();
-        } catch (_) {
-          supabase = null;
-        }
-      }
-
       const openPanel = () => {
         if (typeof this._showNotificationsDropdownPanel === 'function') {
           this._showNotificationsDropdownPanel(panel);
@@ -221,27 +211,17 @@
         });
       };
 
-      if (!user?.id || !supabase?.from) {
-        this._renderNotificationsDropdownContent(panel, [], null, true);
-        openPanel();
-        return;
-      }
-
       this._renderNotificationsDropdownContent(panel, null, 'Cargando…', false);
       openPanel();
 
-      const { data: notifications, error } = await supabase
-        .from('user_notifications')
-        .select('id, title, message, type, is_read, created_at, link_to')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      let notifications = [];
+      let error = null;
+      try {
+        notifications = await this._orgNotificationsList('all', 50);
+      } catch (e) { error = e; }
 
-      if (error) {
-        this._renderNotificationsDropdownContent(panel, [], null, true, error.message);
-      } else {
-        this._renderNotificationsDropdownContent(panel, notifications || [], null, true);
-      }
+      this._renderNotificationsDropdownContent(panel, notifications, null, true,
+        error ? (error.message || 'No se pudieron cargar notificaciones') : null);
       requestAnimationFrame(() => {
         if (typeof this.positionUserDropdown === 'function') {
           this.positionUserDropdown(triggerEl, panel);
@@ -253,30 +233,14 @@
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
 
-    const user = window.authService?.getCurrentUser?.();
-    let supabase = window.authService?.supabase;
-    if (!supabase?.from && window.supabaseService?.getClient) {
-      try {
-        supabase = await window.supabaseService.getClient();
-      } catch (_) {
-        supabase = null;
-      }
-    }
-    if (!user?.id || !supabase?.from) {
-      this._renderNotificationsFlyoutContent(flyout, [], null, true);
-      this._showNotificationsFlyout(flyout, triggerEl);
-      return;
-    }
-
     this._renderNotificationsFlyoutContent(flyout, null, 'Cargando…', false);
     this._showNotificationsFlyout(flyout, triggerEl);
 
-    const { data: notifications, error } = await supabase
-      .from('user_notifications')
-      .select('id, title, message, type, is_read, created_at, link_to')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    let notifications = [];
+    let error = null;
+    try {
+      notifications = await this._orgNotificationsList('all', 50);
+    } catch (e) { error = e; }
 
     if (error) {
       this._renderNotificationsFlyoutContent(flyout, [], null, true, error.message);
@@ -339,21 +303,10 @@
         btn.addEventListener('click', () => {
           const id = btn.dataset.id;
           const link = btn.dataset.link;
-          if (id) {
-            const client = window.authService?.supabase;
-            if (client?.from) {
-              client.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {
-                document.dispatchEvent(new CustomEvent('notifications-updated'));
-              });
-            } else if (window.supabaseService?.getClient) {
-              window.supabaseService.getClient().then((c) => {
-                if (c?.from) {
-                  c.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {
-                    document.dispatchEvent(new CustomEvent('notifications-updated'));
-                  });
-                }
-              });
-            }
+          if (id && typeof this._orgNotificationsMark === 'function') {
+            this._orgNotificationsMark(id, 'read').then(() => {
+              document.dispatchEvent(new CustomEvent('notifications-updated'));
+            });
           } else {
             document.dispatchEvent(new CustomEvent('notifications-updated'));
           }
@@ -425,21 +378,10 @@
         btn.addEventListener('click', () => {
           const id = btn.dataset.id;
           const link = btn.dataset.link;
-          if (id) {
-            const client = window.authService?.supabase;
-            if (client?.from) {
-              client.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {
-                document.dispatchEvent(new CustomEvent('notifications-updated'));
-              });
-            } else if (window.supabaseService?.getClient) {
-              window.supabaseService.getClient().then((c) => {
-                if (c?.from) {
-                  c.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {
-                    document.dispatchEvent(new CustomEvent('notifications-updated'));
-                  });
-                }
-              });
-            }
+          if (id && typeof this._orgNotificationsMark === 'function') {
+            this._orgNotificationsMark(id, 'read').then(() => {
+              document.dispatchEvent(new CustomEvent('notifications-updated'));
+            });
           }
           if (link && window.router) {
             this.closeFlyout();
