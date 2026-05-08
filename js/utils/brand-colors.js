@@ -2,8 +2,7 @@
  * BrandColors — utilidades puras de manipulación de color para temas de marca.
  *
  * Antes existían 4+ copias idénticas de `hexToHSL` / `hslToHex` / `hexToRgba`
- * repartidas entre BrandstorageView, BrandOrganizationView, HogarView,
- * OrgBrandTheme e input-registry. Esta es la fuente única.
+ * repartidas entre varios views. Esta es la fuente única.
  *
  * Todas las funciones son puras (sin estado, sin `this`), se exponen en
  * `window.BrandColors` para consumirlas desde vistas y services clásicos.

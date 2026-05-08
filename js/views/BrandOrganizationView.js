@@ -575,7 +575,7 @@ class BrandOrganizationView extends BaseView {
   static get TYPOGRAPHY_FONTS()      { return window.BrandSchema.TYPOGRAPHY_FONTS; }
 
   // ============================================
-  // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)
+  // DEGRADADO INTELIGENTE
   // Usa brand_colors para construir un degradado primary → secondary.
   // ============================================
 
