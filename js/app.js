@@ -381,11 +381,6 @@ class App {
     r.register('/plans', planesLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/plans', planesLoader, auth);
 
-    // ── Health (salud del sistema) — shell "Próximamente" (sprint D9) ──
-    const healthLoader = this._lazy('HealthView', ['/js/views/HealthView.js']);
-    r.register('/health', healthLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/health', healthLoader, auth);
-
     // ── Activity Timeline — shell "Próximamente" (sprint D8) ──
     const activityLoader = this._lazy('ActivityView', ['/js/views/ActivityView.js']);
     r.register('/activity', activityLoader, auth);
