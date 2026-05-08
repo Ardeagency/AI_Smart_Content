@@ -933,13 +933,13 @@ class Navigation {
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
-          <div class="nav-org-credits" id="navOrgCreditsBlock">
+          <a href="${this.getUserSidebarRoute('credits')}" class="nav-org-credits" id="navOrgCreditsBlock" data-route="${this.getUserSidebarRoute('credits')}" aria-label="Ir a créditos">
             <div class="nav-org-credits-row">
               <span class="nav-org-credits-label">credits</span>
               <span class="nav-org-credits-value" id="navTokensValue">—</span>
             </div>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
-          </div>
+          </a>
           <div class="nav-credits-vertical" aria-hidden="true">
             <div class="nav-credits-vertical-fill" style="height:0%"></div>
           </div>
@@ -958,7 +958,7 @@ class Navigation {
             <span class="nav-system-stats-label">Storage</span>
             <span class="nav-system-stats-value" id="navStorageValue">—</span>
           </div>
-          <a href="${this.getUserSidebarRoute('credits')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('credits')}">
+          <a href="${this.getUserSidebarRoute('plans')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('plans')}">
             <span>Upgrade to Starter</span>
           </a>
         </div>

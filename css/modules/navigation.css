@@ -3496,6 +3496,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     flex-direction: column;
     gap: 6px;
     width: 100%;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity .15s ease;
+}
+
+.nav-org-credits:hover {
+    opacity: .85;
 }
 
 .nav-org-credits-row {
