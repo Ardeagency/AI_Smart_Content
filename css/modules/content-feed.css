@@ -181,54 +181,32 @@
 
 .content-feed-media {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
   background: var(--bg-card, rgba(255, 255, 255, 0.025));
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
-  min-height: 0;
+  overflow: hidden;
 }
 
+/* Patrón Partner / Instagram: el media SIEMPRE llena el ancho del card.
+   La altura crece naturalmente según el aspect ratio. Cero aire lateral.
+   Para reels 9:16 esto produce un card alto — esperado, igual que Instagram. */
 .content-feed-media img,
 .content-feed-media video {
   display: block;
-  width: auto;
-  height: auto;
+  width: 100%;
   max-width: 100%;
-  margin: 0 auto;
+  height: auto;
   background: transparent;
 }
 
-/* ── Límites por aspect ratio detectado en runtime (data-aspect) ── */
-/* Sin data-aspect (mientras carga): cap de altura genérico */
+/* Mientras se detecta el aspect (sin data-aspect aún): cap suave para
+   evitar saltos visuales gigantes en el primer frame antes de que load
+   reporte naturalWidth/Height. Una vez detectado, las reglas específicas
+   del aspect quitan el cap. */
 .content-feed-media:not([data-aspect]) img,
 .content-feed-media:not([data-aspect]) video {
   max-height: 540px;
   object-fit: contain;
-}
-
-/* Vertical (9:16, reels): width limitado a 500px, alto natural */
-.content-feed-media[data-aspect="vertical"] img,
-.content-feed-media[data-aspect="vertical"] video {
-  max-width: 500px;
-  max-height: 800px;
-}
-
-/* Horizontal (16:9, paisajes): ocupa todo el ancho */
-.content-feed-media[data-aspect="horizontal"] img,
-.content-feed-media[data-aspect="horizontal"] video {
-  width: 100%;
-  max-width: 100%;
-  max-height: 540px;
-}
-
-/* Square (1:1): centrado con ancho moderado */
-.content-feed-media[data-aspect="square"] img,
-.content-feed-media[data-aspect="square"] video {
-  max-width: 600px;
-  max-height: 600px;
 }
 
 .content-feed-media-placeholder {
@@ -691,11 +669,9 @@
 
 .content-feed-carousel-img {
   display: none;
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: auto;
-  max-height: 600px;
-  object-fit: contain;
   background: transparent;
   position: relative;
   z-index: 1;
