@@ -8,9 +8,11 @@ auto_eligible: no
 auto_eligible_reason: toca UX visible — requiere validación manual en browser que dashboards renderizan idénticos
 est_duration: medium
 created: 2026-04-29
+updated: 2026-05-05
 owner: -
-blocked_by: [FEAT-006]
 ---
+
+> **Nota 2026-05-05**: FEAT-006 (Dashboard RPCs remaining) se cerró en sesión autónoma del 2026-04-30 — esta task ya no tiene bloqueadores y está lista para tomarse.
 
 # FEAT-007 · Refactor frontend services para 1 RPC
 
@@ -64,7 +66,7 @@ Voto: A primero, B en una segunda iteración cuando las claves nuevas estén est
 
 ## Pasos
 
-1. Resolver [FEAT-006](./FEAT-006-dashboard-rpcs-remaining.md) (RPCs aplicadas).
+1. ~~Resolver FEAT-006~~ ✅ cerrada el 2026-04-30 — `dashboard_competencia`, `_tendencias`, `_estrategia` y `_mi_marca_v2` aplicadas.
 2. Refactor `MiBrandaDataService.js`:
    - Reemplazar todas las queries individuales por una sola `supabase.rpc(...)`.
    - Adapter para mantener shape de retorno.

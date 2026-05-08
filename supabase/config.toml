@@ -1,0 +1,11 @@
+# Supabase CLI configuration. Doc: https://supabase.com/docs/reference/cli/config
+project_id = "tsdpbqcwjckbfsdqacam"
+
+[db]
+major_version = 15
+
+[db.migrations]
+schema_paths = []
+
+[functions]
+verify_jwt = true

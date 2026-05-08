@@ -115,7 +115,7 @@ O simplemente abrir `index.html` (sin functions, supabase-js corre desde browser
 VM CCX33 (32GB RAM, 8 vCPU, 226GB SSD) — ~€33/mes. ARM64 architecture.
 
 **Paquetes instalados** (a inferir, no auditados todos):
-- Node.js (Express + Playwright)
+- Node.js (Express + apify-client; Playwright in-house fue removido en migración Apify del 2026-04-28)
 - Python3 (fail2ban, scripts)
 - nginx (no detectado, probablemente no usado — Cloudflared expone :3000 directo)
 - pm2 instalado pero **vacío** — todo va por systemd

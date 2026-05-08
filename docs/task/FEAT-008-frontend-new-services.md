@@ -8,18 +8,20 @@ auto_eligible: no
 auto_eligible_reason: requiere diseño visual de widgets nuevos — decisión humana
 est_duration: long
 created: 2026-04-29
+updated: 2026-05-05
 owner: -
-blocked_by: [FEAT-006]
 ---
+
+> **Nota 2026-05-05**: FEAT-006 ya cerrada → sin bloqueadores. Actualización de scope: `js/services/CompetenciaDataService.js` (5.9 KB) **ya existe** desde 2026-04-30. Solo falta crear `TendenciasDataService.js` y conectar ambos services al render.
 
 # FEAT-008 · Services frontend nuevos
 
 ## Objetivo
 
-Los tabs Mi Competencia y Tendencias del `DashboardView` no tienen su propio service todavía. Crear:
+El tab Tendencias del `DashboardView` no tiene su propio service. Crear:
 
-- `js/services/CompetenciaDataService.js`
-- `js/services/TendenciasDataService.js`
+- ~~`js/services/CompetenciaDataService.js`~~ ✅ ya existe (verificar que use el RPC `dashboard_competencia` y no queries individuales)
+- `js/services/TendenciasDataService.js` 🚧 falta crear
 
 ## Plantilla
 
@@ -80,11 +82,12 @@ async _renderCompetence(body) {
 
 ## Pasos
 
-1. Resolver [FEAT-006](./FEAT-006-dashboard-rpcs-remaining.md).
-2. Crear `CompetenciaDataService.js` y `TendenciasDataService.js`.
-3. Implementar `_renderCompetence` y `_renderTendencies` en `DashboardView`.
-4. Diseñar widgets HTML según los specs (`/docs/DASHBOARD-MI-COMPETENCIA.txt` y `/docs/DASHBOARD-TENDENCIAS.txt`).
-5. Push y validar visualmente.
+1. ~~Resolver FEAT-006~~ ✅ cerrada el 2026-04-30.
+2. Auditar `CompetenciaDataService.js` existente: confirmar que usa `supabase.rpc('dashboard_competencia', ...)` y no queries individuales.
+3. Crear `TendenciasDataService.js` (mirror de Competencia, llamando `dashboard_tendencias`).
+4. Implementar `_renderCompetence` y `_renderTendencies` en `DashboardView`.
+5. Diseñar widgets HTML según los specs (`/docs/DASHBOARD-MI-COMPETENCIA.txt` y `/docs/DASHBOARD-TENDENCIAS.txt`).
+6. Push y validar visualmente.
 
 ## Criterio de done
 

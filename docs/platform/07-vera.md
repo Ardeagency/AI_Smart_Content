@@ -285,7 +285,7 @@ En esos casos crea `user_notifications` con `priority='high'` y `requires_action
 
 | Trabajo | Quién lo hace | Por qué |
 |---|---|---|
-| Scrape Instagram | `advanced-scraper.service` | Browser headless, cero LLM |
+| Scrape Instagram | `apify.client` (Apify actor) | Cero LLM, cache TTL global, créditos contabilizados en `apify_runs` |
 | Detectar virality del rival | `threat-detector.service` | Estadística pura |
 | Generar embedding de un post | `brand-indexer.service` (OpenAI encoder) | Encoder, no razonamiento |
 | Convertir pending → mission | `mission-generator.service` | Pura traducción |

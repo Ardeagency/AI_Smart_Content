@@ -99,33 +99,38 @@ AI Smart Content/
 
 Toda la documentacion tecnica y de producto esta en `docs/`:
 
-### Arquitectura y seguridad
-- `SEGURIDAD_RLS_MAPA_PAGINAS.md` -- Mapa de seguridad RLS por pagina
-- `OPTIMIZACIONES_RENDIMIENTO.md` -- Optimizaciones de rendimiento
-- `SIDEBAR_USUARIO_SPEC.md` -- Arquitectura del sidebar de usuario
-- `NETLIFY-FUNCTIONS-404.md` -- Troubleshooting de funciones Netlify
+### Arquitectura de plataforma (carpeta `docs/platform/`)
+Documentacion viva, mantenida en cada cambio estructural:
+- `01-overview.md` -- Vision general (empezar aqui)
+- `02-architecture.md` -- Arquitectura completa
+- `03-database.md` -- Schema, RLS, mat-views, RPCs
+- `04-ai-engine.md` -- Control plane Node + Python analyzer
+- `05-frontend.md` -- SPA vanilla + servicios + vistas
+- `06-data-flows.md` -- Flujos de datos sensor->signal->mision->UI
+- `07-vera.md` -- Agente Vera (chat + strategist + outcomes)
+- `08-deployment.md` -- Hetzner, Netlify, Cloudflared
+- `09-current-state.md` -- Snapshot del estado actual
+- `10-extending.md` -- Como anadir features nuevas
+- `sensor-types-catalog.md` -- 13 sensores documentados
+- `ESTADO_EXPANDIDO_2026-05-05.md` -- Snapshot expandido (referencia historica)
 
-### Sistema de inputs y flows
-- `INPUT_TAXONOMY.md` -- Taxonomia completa de tipos de input
-- `UI_TEMPLATES_CATALOG.md` -- Catalogo de componentes del Builder
+### Sprint y tareas activas (carpeta `docs/task/`)
+- `INDEX.md` -- Tracker de todas las tareas activas (severidad + owner)
+- `SPRINT-FRONTEND-100-2026-05-06.md` -- Sprint critico actual
+- `AUDIT-001-frontend-vs-backend-2026-05-05.md` -- Auditoria frontend vs backend
+- `BUG-*.md`, `FEAT-*.md`, `OPS-*.md`, `DATA-*.md` -- Tareas individuales
+
+### Integraciones y APIs
+- `webhook-meta-setup.md` -- Configuracion webhooks Meta
+- `KIE-VIDEO-API.md` -- API de KIE (Kling 3.0 video)
+
+### Specs de Dashboards
+- `DASHBOARD-MI-MARCA.txt` -- Spec dashboard 1
+- `DASHBOARD-MI-COMPETENCIA.txt` -- Spec dashboard 2
+- `DASHBOARD-TENDENCIAS.txt` -- Spec dashboard 3
+
+### Schedules y flows
 - `AUTOMATED_FLOW_SCHEDULE_INPUTS.md` -- Schema de inputs para flows programados
-- `FLOW_SCHEDULES_VERIFICACION.md` -- Verificacion de scheduling
-
-### Video (KIE)
-- `KIE-VIDEO-API.md` -- Documentacion de la API KIE
-- `ANALISIS-VIDEO-KIE-KLING.md` -- Analisis de implementacion de video
-- `FLUJO-VIDEO-OPENAI-KIE.md` -- Flujo OpenAI -> KIE
-- `VIDEO-BODY-LOGICA-KIE.md` -- Logica del request body
-
-### Integraciones
-- `webhook-meta-setup.md` -- Configuracion de webhooks de Meta
-- `VERIFICACION-SYSTEM-AI-OUTPUTS.md` -- Verificacion de outputs de IA
-
-### Specs de producto
-- `AI-SMART-CONTENT-VISION.txt` -- Vision de la plataforma
-- `DASHBOARD-MI-MARCA.txt` -- Spec del dashboard de marca
-- `DASHBOARD-MI-COMPETENCIA.txt` -- Spec del dashboard de competencia
-- `DASHBOARD-TENDENCIAS.txt` -- Spec del dashboard de tendencias
 
 ---
 

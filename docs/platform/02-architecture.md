@@ -2,7 +2,7 @@
 title: 02 — Arquitectura de la plataforma
 author: Shenoa — Arde Agency S.A.S.
 since: 2025-09
-last_review: 2026-04-29
+last_review: 2026-05-05
 audience: humanos del equipo + LLMs
 ---
 
@@ -18,7 +18,7 @@ La plataforma se entiende como **5 capas que viven juntas pero hacen cosas disti
 │                                                                    │
 │  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────┐  │
 │  │ Scrapers Hetzner   │  │ Meta/Google APIs   │  │ Inputs UI    │  │
-│  │ (Playwright/proxy) │  │ (sensores diarios) │  │ (manual)     │  │
+│  │ (Apify actors)     │  │ (sensores diarios) │  │ (manual)     │  │
 │  └─────────┬──────────┘  └─────────┬──────────┘  └──────┬───────┘  │
 └────────────┼────────────────────────┼────────────────────┼──────────┘
              │                        │                    │
@@ -231,7 +231,7 @@ El servicio `org-sync.service` mantiene esto en sincronía. Cuando se crea una o
 |---|---|---|
 | Capa 1 (ingesta) | ✅ funcional | Scrapers Meta/GA4 corren bien; tablas como `competitor_ads`, `retail_prices` están vacías por falta de `intelligence_entities` configuradas |
 | Capa 2 (tablas) | ✅ esquema completo | algunos `organization_id` están NULL por jobs viejos — necesita backfill |
-| Capa 3 (inteligencia) | ⚠️ parcial | threat-detector y brand-indexer corren; brand-indexer no genera vectors (debug pendiente); 13 body_missions tipo `competitor_signal_analysis` colgadas desde 27/4 |
+| Capa 3 (inteligencia) | ⚠️ parcial | threat-detector y brand-indexer corren; brand-indexer no genera vectors (BUG-003: HTTP 429 OpenAI quota — bloqueado por billing); flujo `competitor_signal_analysis` ✅ eliminado 2026-05-05 (BUG-001 opción A post-Apify) |
 | Capa 4 (precomputado) | 🚧 proyectada | Solo existe `v_orphan_topics`. Las matviews del plan están pendientes de implementar |
 | Capa 5 (lectura) | 🚧 parcial | `dashboard_mi_marca` aplicada (v1). Las otras 3 RPCs pendientes. Frontend tiene 2 services (Mi Marca, Estrategia) con queries directas — los otros 2 dashboards no tienen service aún |
 

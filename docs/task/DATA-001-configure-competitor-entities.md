@@ -8,6 +8,7 @@ auto_eligible: no
 auto_eligible_reason: requiere input del usuario sobre qué marcas son competidoras reales
 est_duration: short
 created: 2026-04-29
+updated: 2026-05-05
 owner: -
 ---
 
@@ -19,7 +20,9 @@ Las tablas `competitor_ads`, `retail_prices`, `url_watchers`, `visual_references
 
 Causa: solo hay **7 filas** en `intelligence_entities`, ninguna probablemente configurada como competidor real (con `domain` apropiado y `target_identifier` válido).
 
-Sin entities competidoras configuradas, los scrapers corren pero no tienen target → escriben 0 filas.
+Sin entities competidoras configuradas, los **Apify actors** invocados por los sensores corren pero no tienen target → escriben 0 filas. Y peor: gastan créditos. Hoy `apify_runs` muestra **35 charged + 8 timed-out** en gran parte por sensores corriendo "en vacío".
+
+> **Contexto 2026-05-05**: tras la migración a Apify (commit "droplegacy" del 28/4) los scrapers in-house Playwright fueron deprecados. Hoy todo el scraping pasa por `src/lib/apify.client.js` que invoca actors registrados en la tabla `scraper_actors`. La lógica del sensor no cambió desde el punto de vista de las entidades vigiladas, solo cambió el motor de ejecución. **Esta task sigue siendo válida tal cual.**
 
 ## Evidencia
 

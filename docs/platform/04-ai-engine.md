@@ -2,7 +2,7 @@
 title: 04 — AI Engine (Hetzner)
 author: Shenoa — Arde Agency S.A.S.
 since: 2025-09
-last_review: 2026-04-29
+last_review: 2026-05-05
 audience: humanos del equipo + LLMs
 ---
 
@@ -13,7 +13,7 @@ audience: humanos del equipo + LLMs
 El **AI Engine** es el cerebro server-side de la plataforma. Una app Express en Node.js que corre en una VM dedicada Hetzner, expone un API a través de Cloudflared tunnel, y orquesta toda la lógica que no vive en Postgres:
 
 - Conversación con Vera (chat con humanos).
-- Scrapers (Playwright stealth para IG/TikTok/YouTube/Amazon/FB).
+- Scrapers (Apify actors para IG/TikTok/X/YouTube/Amazon/FB invocados desde `src/lib/apify.client.js`).
 - Sensores periódicos (Meta Insights, GA4, demographics, heatmap).
 - Detección de threats sin LLM.
 - Generación de embeddings.
@@ -71,8 +71,7 @@ Procesos extras:
 │   │   └── internal.routes.js
 │   ├── services/                      — lógica core
 │   │   ├── ai.service.js              ← orquestador del flow de chat
-│   │   ├── social-scraper.service.js  ← scheduler cada 10 min
-│   │   ├── advanced-scraper.service.js ← Playwright stealth
+│   │   ├── social-scraper.service.js  ← scheduler cada 10 min, orquesta Apify
 │   │   ├── threat-detector.service.js ← detección sin LLM
 │   │   ├── brand-indexer.service.js   ← embeddings 1536-dim
 │   │   ├── mission-generator.service.js ← pending → mission cada 5 min
@@ -222,23 +221,28 @@ Cuando un sensor corre, escribe a `sensor_runs` con `status` (success/failed) y 
 
 - `startScraperScheduler(intervalMinutes=10)` — arranca el ciclo.
 - `runCompetitorScraper(brandContainerId=null)` — corre scrapers de competencia.
-- Internamente delega a `advanced-scraper.service` para la captura.
+- Internamente delega a `src/lib/apify.client.js` para la captura (post-migración 2026-04-28 "droplegacy"; el motor in-house basado en Playwright fue removido).
 - Escribe a `intelligence_signals`, `brand_posts` (con `is_competitor=true`), `competitor_ads`.
 - Idempotencia por `signal_type + entity_id + content_text` (evita duplicados).
 
-### `advanced-scraper.service.js`
+### Apify integration (`src/lib/apify.client.js`)
 
-Motor anti-bot inspirado en SocialCrabs y crawlee.dev.
+Hoy todo el scraping pasa por Apify. La biblioteca expone:
 
-Técnicas:
-1. Playwright headless con `puppeteer-extra-plugin-stealth` (oculta flags de automatización).
-2. Pool de ~20 User-Agents reales (Chrome/Safari/Firefox).
-3. Delays humanos (random 1.5–4s entre acciones).
-4. Warm-up scrolling antes de extraer.
-5. Viewport/timezone/idioma realistas.
-6. Detección de bloqueo + retry con backoff exponencial.
+- `runActor({ actorKey, input, organizationId, brandContainerId, entityId })` — ejecuta el actor, contabiliza créditos, escribe en `apify_runs`.
+- `lookupActor(actorKey)` — resuelve el `actor_id` registrado en la tabla `scraper_actors`.
+- Cache global con TTL por plan (free/pro/enterprise) — antes de invocar Apify revisa si hay un `apify_runs` reciente con el mismo input hash.
 
-Cubre: Instagram (perfiles públicos, hasta 12 posts), TikTok (JSON hidratación), YouTube (InnerTube API sin key), Amazon (axios + cheerio + fallback Playwright), Facebook (pages públicas).
+Tablas asociadas:
+
+| Tabla | Función |
+|---|---|
+| `scraper_actors` | Registry de actors disponibles por plataforma con costos en créditos. |
+| `apify_runs` | Una fila por ejecución, con `status` (`SUCCEEDED`, `TIMED-OUT`, `FAILED`, `CHARGED`), `input_hash`, `output_dataset_id`, créditos consumidos. |
+| `organization_credits` | Saldo por org, decrementado por trigger después de cada `runActor` exitoso. |
+| `credit_usage` | Ledger inmutable de cada cargo de créditos (para auditoría). |
+
+Plataformas cubiertas hoy: Instagram, TikTok, X/Twitter, YouTube, Amazon, Facebook. Apify gestiona Playwright/Puppeteer bajo el capó pero el control plane no lo ve. Los únicos paths legacy locales que sobreviven: Instagram web API y TikTok HTML scrape como fallback de bajo costo.
 
 ### `threat-detector.service.js`
 

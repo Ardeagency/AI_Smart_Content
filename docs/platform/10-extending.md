@@ -459,7 +459,7 @@ Antes de declarar "listo":
 
 ## Recursos
 
-- **Spec docs**: `/docs/DASHBOARD-*.txt`, `/docs/VERA_BRAIN_MASTER.md.pdf`, `/docs/AI-SMART-CONTENT-VISION.txt`.
+- **Spec docs**: `/docs/DASHBOARD-*.txt` (specs de los 3 dashboards de marca/competencia/tendencias).
 - **Schema fuente**: `SQL/schema.sql`.
 - **RLS fuente**: `SQL/security_RLS.sql`.
 - **Storage fuente**: `SQL/storage_buckets.sql`.
