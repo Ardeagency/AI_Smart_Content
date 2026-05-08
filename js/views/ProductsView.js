@@ -265,7 +265,6 @@ class ProductsView extends BaseView {
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
           <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
-          <span class="product-view-thumb-glass" aria-hidden="true"></span>
           <button type="button" class="product-view-thumb-delete" title="Eliminar foto" aria-label="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
           ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
         </div>
@@ -301,8 +300,9 @@ class ProductsView extends BaseView {
       </div>
     `;
 
+    const bgStyleAttr = mainImage ? ` style="--product-bg-image: url('${String(mainImage).replace(/'/g, "\\'")}')"` : '';
     return `
-      <div class="product-view">
+      <div class="product-view"${bgStyleAttr}>
         <a href="${backUrl}" class="product-view-back back-to-products-btn" data-back-url="${backUrl}" data-router-link>
           <i class="fas fa-arrow-left"></i> Volver a Identities
         </a>
@@ -573,12 +573,17 @@ class ProductsView extends BaseView {
       <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
         <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
           <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
-          <span class="product-view-thumb-glass" aria-hidden="true"></span>
           <button type="button" class="product-view-thumb-delete" title="Eliminar foto" aria-label="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-times"></i></button>
           ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
         </div>
       </div>`;
     }).join('');
+
+    const productView = this.container.querySelector('.product-view');
+    if (productView) {
+      if (mainImage) productView.style.setProperty('--product-bg-image', `url("${mainImage}")`);
+      else productView.style.removeProperty('--product-bg-image');
+    }
 
     if (thumbnailsWrap) {
       thumbnailsWrap.innerHTML = thumbsHtml;

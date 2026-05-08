@@ -955,6 +955,7 @@
    CONTENEDOR
    ============================================ */
 .product-view {
+  position: relative;
   height: 100vh;
   background: var(--living-bg-deep, var(--bg-primary));
   padding: var(--app-header-height, 45.8px) 2rem 2rem; /* Arriba: altura header fijo; #app-container no aplica padding en esta vista */
@@ -964,6 +965,31 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  isolation: isolate;
+}
+
+/* Fondo: imagen del producto + capa glass-black 80% */
+.product-view::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--product-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px);
+  transform: scale(1.15);
+  z-index: -2;
+  pointer-events: none;
+}
+.product-view::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* ============================================
@@ -1024,7 +1050,8 @@
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-start;
   height: 100%;
   min-height: 0;
 }
@@ -1083,22 +1110,6 @@
   object-fit: cover;
   display: block;
 }
-.product-view-thumb-glass {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  pointer-events: none;
-  transition: background 0.2s, backdrop-filter 0.2s;
-}
-.product-view-thumb-wrap .product-view-thumb:hover .product-view-thumb-glass {
-  background: rgba(0, 0, 0, 0.45);
-}
-.product-view-thumb-wrap .product-view-thumb.active .product-view-thumb-glass {
-  background: rgba(0, 0, 0, 0.25);
-}
-
 /* Botón eliminar: X en esquina superior derecha, aparece en hover */
 .product-view-thumb-delete,
 .product-view-thumb-set-principal {
