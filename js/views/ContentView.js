@@ -551,48 +551,101 @@ class ContentView extends BaseView {
   // ───────────────────────────────────────── media (carousel + video + single)
 
   /**
-   * Decide qué media renderizar según media_assets:
-   *  - video_url + thumbnail → muestra thumbnail con badge "Video", carga el
-   *    video al entrar en viewport (autoplay con IntersectionObserver).
-   *  - images[] con > 1 → carrusel con flechas + indicador 1/N.
-   *  - 1 imagen (display_url o thumbnail) → single image.
-   *  - sin media → no renderiza nada.
+   * Decide qué media renderizar según media_assets. Si no hay nada cargable,
+   * NO renderiza el contenedor (el post queda solo con texto).
+   *
+   * Cascada de URLs (cuando una falla, prueba la siguiente):
+   *   display_url → media_urls[] → thumbnails[] → cover_image → main_image_url
+   *
+   * Decisión:
+   *   - video_url + cualquier thumb → card con badge "Video" + autoplay.
+   *   - images[] con > 1 imagen real → carrusel.
+   *   - 1 imagen → single.
+   *   - nada → string vacío (sin contenedor).
    */
   _renderMedia(item) {
     const ma = item.media_assets || {};
     const id = `media-${item.id}`;
-    const thumb = item.url_medios || ma.display_url || null;
     const videoUrl = ma.video_url || null;
+    const postUrl = item.url_publicacion || '';
 
-    // extracción defensiva de array de imágenes
-    const rawImages = (Array.isArray(ma.images) && ma.images.length)
-      ? ma.images
-      : (Array.isArray(ma.media_urls) && ma.media_urls.length ? ma.media_urls : []);
-    const images = rawImages
-      .map((x) => typeof x === 'string' ? x : (x?.url || x?.display_url || x?.src || ''))
-      .filter(Boolean);
+    // ── pool de URLs candidatas para thumbnail/single (ordenado por prioridad)
+    const thumbCandidates = this._collectImageUrls(ma, item.url_medios);
+
+    // ── pool específico de imágenes del post (carrusel)
+    const carouselUrls = this._extractStrings(ma.images);
 
     if (videoUrl) {
+      const primary = thumbCandidates[0] || '';
+      const fallbacks = thumbCandidates.slice(1).join('|');
       return `
-        <div class="content-feed-media" id="${id}" data-video-url="${this.escapeHtml(videoUrl)}" data-poster="${this.escapeHtml(thumb || '')}" data-post-url="${this.escapeHtml(item.url_publicacion || '')}">
-          ${thumb ? `<img class="content-feed-media-thumb" src="${this.escapeHtml(thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="content-feed-media-placeholder"><i class="fas fa-image"></i></div>'}
+        <div class="content-feed-media" id="${id}"
+             data-video-url="${this.escapeHtml(videoUrl)}"
+             data-poster="${this.escapeHtml(primary)}"
+             data-post-url="${this.escapeHtml(postUrl)}">
+          ${primary
+            ? `<img class="content-feed-media-thumb" src="${this.escapeHtml(primary)}" alt=""
+                    loading="lazy" referrerpolicy="no-referrer"
+                    data-fallbacks="${this.escapeHtml(fallbacks)}">`
+            : '<div class="content-feed-media-placeholder"><i class="fas fa-image"></i></div>'}
           <span class="content-feed-video-badge"><i class="fas fa-play"></i> Video</span>
         </div>`;
     }
 
-    if (images.length > 1) {
-      return this._createCarouselHtml(images, id, item.url_publicacion);
+    if (carouselUrls.length > 1) {
+      return this._createCarouselHtml(carouselUrls, id, postUrl);
     }
 
-    const singleUrl = images[0] || thumb;
-    if (singleUrl) {
+    const singleCandidates = carouselUrls.length === 1
+      ? [carouselUrls[0], ...thumbCandidates.filter(u => u !== carouselUrls[0])]
+      : thumbCandidates;
+
+    if (singleCandidates.length) {
+      const primary = singleCandidates[0];
+      const fallbacks = singleCandidates.slice(1).join('|');
       return `
-        <div class="content-feed-media" id="${id}" data-post-url="${this.escapeHtml(item.url_publicacion || '')}">
-          <img src="${this.escapeHtml(singleUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <div class="content-feed-media" id="${id}" data-post-url="${this.escapeHtml(postUrl)}">
+          <img src="${this.escapeHtml(primary)}" alt="" loading="lazy" referrerpolicy="no-referrer"
+               data-fallbacks="${this.escapeHtml(fallbacks)}">
         </div>`;
     }
 
+    // No hay nada renderizable → sin contenedor
     return '';
+  }
+
+  /** Devuelve URLs candidatas en orden de preferencia, deduplicadas. */
+  _collectImageUrls(ma, primaryThumb) {
+    const out = [];
+    const push = (v) => {
+      if (typeof v !== 'string') return;
+      const t = v.trim();
+      if (!t) return;
+      if (!out.includes(t)) out.push(t);
+    };
+    push(primaryThumb);
+    push(ma?.display_url);
+    push(ma?.thumbnail_url);
+    push(ma?.cover_image);
+    push(ma?.main_image_url);
+    this._extractStrings(ma?.media_urls).forEach(push);
+    this._extractStrings(ma?.thumbnails).forEach(push);
+    this._extractStrings(ma?.images).forEach(push);
+    return out;
+  }
+
+  /** Extrae array de strings desde un jsonb que puede ser array de strings o de objetos. */
+  _extractStrings(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((x) => {
+        if (typeof x === 'string') return x;
+        if (x && typeof x === 'object') {
+          return x.url || x.display_url || x.src || x.image_url || x.thumbnail_url || '';
+        }
+        return '';
+      })
+      .filter(Boolean);
   }
 
   _createCarouselHtml(urls, id, postUrl) {
@@ -632,9 +685,10 @@ class ContentView extends BaseView {
       this._videoObserver = null;
     }
 
-    // 1) Manejo de imágenes rotas (CORS Meta CDN, links expirados)
+    // 1) Manejo de imágenes rotas (CORS Meta CDN, links expirados):
+    //    intenta la cadena data-fallbacks="url2|url3|..." antes de marcar broken.
     container.querySelectorAll('.content-feed-media img').forEach((img) => {
-      img.addEventListener('error', () => this._handleMediaError(img));
+      img.addEventListener('error', () => this._tryNextFallback(img));
     });
 
     // 2) Carrusel
@@ -735,6 +789,19 @@ class ContentView extends BaseView {
     });
     const ind = car.querySelector('.content-feed-carousel-indicator');
     if (ind) ind.textContent = `${cur + 1}/${total}`;
+  }
+
+  _tryNextFallback(img) {
+    if (!img || !img.parentNode) return;
+    const raw = img.getAttribute('data-fallbacks') || '';
+    const list = raw ? raw.split('|').filter(Boolean) : [];
+    if (list.length) {
+      const nextUrl = list.shift();
+      img.setAttribute('data-fallbacks', list.join('|'));
+      img.src = nextUrl;
+      return;
+    }
+    this._handleMediaError(img);
   }
 
   _handleMediaError(target) {
