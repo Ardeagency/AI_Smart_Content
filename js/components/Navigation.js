@@ -51,13 +51,6 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
-    {
-      type: 'page',
-      id: 'activity',
-      label: 'Activity',
-      icon: 'fa-stream',
-      route: 'activity'
-    },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'page', id: 'content', label: 'Content', icon: 'fa-photo-film', route: 'content' },
@@ -309,7 +302,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring', '/activity'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -764,7 +757,7 @@ class Navigation {
    */
   getUserSidebarRoute(routeSuffix) {
     const basePath = this.getOrgBasePath();
-    // Con org: Créditos → tienda org/.../credits; sin org: /credits (CreditsView redirige)
+    // Créditos: con org → /org/.../credits; sin org → /credits (ambos: CreditsShopView)
     const globalRoutes = {};
     if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
     if (basePath) return `${basePath}/${routeSuffix}`;
@@ -1641,7 +1634,6 @@ class Navigation {
       '/credits': 'CREDITS',
       '/plans': 'PLANES',
       '/monitoring': 'MONITOREO',
-      '/activity': 'ACTIVITY',
       '/dev/lead/lexicon': 'LÉXICO',
       '/dev/dashboard': 'DASHBOARD',
       '/dev/flows': 'MIS FLUJOS',

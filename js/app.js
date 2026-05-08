@@ -372,19 +372,15 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
-    // ── Créditos (sin org: redirige; en org: tienda de créditos) ──
-    r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']), auth);
+    // ── Créditos (tienda de créditos — paquetes desde Supabase) ──
+    const creditsLoader = this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']);
+    r.register('/credits', creditsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/credits', creditsLoader, auth);
 
     // ── Planes (comparativa 5 tiers + plan actual) ──
     const planesLoader = this._lazy('PlanesView', ['/js/views/PlanesView.js']);
     r.register('/plans', planesLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/plans', planesLoader, auth);
-
-    // ── Activity Timeline — shell "Próximamente" (sprint D8) ──
-    const activityLoader = this._lazy('ActivityView', ['/js/views/ActivityView.js']);
-    r.register('/activity', activityLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/activity', activityLoader, auth);
 
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);

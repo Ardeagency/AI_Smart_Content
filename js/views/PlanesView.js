@@ -1,6 +1,7 @@
 /**
  * PlanesView - Vista de planes (solo visualización y selección).
- * Registro e inicio de sesión se hacen en /login (SignInView).
+ * Lee planes activos desde la tabla `plans` (Supabase). Anual = mensual * 10
+ * (≈ 2 meses gratis). Registro/login se hacen en /login (SignInView).
  */
 class PlanesView extends BaseView {
   constructor() {
@@ -8,6 +9,88 @@ class PlanesView extends BaseView {
     this.templatePath = null;
     this.selectedPlan = null;
     this.billingPeriod = 'monthly';
+    this.plans = [];
+    this.supabase = null;
+  }
+
+  async onEnter() {}
+
+  async updateHeader() {}
+
+  async render() {
+    await super.render();
+    await this.initSupabase();
+    await this.loadPlans();
+    this.renderPlansList();
+    this.init();
+  }
+
+  async initSupabase() {
+    try {
+      if (window.supabaseService) {
+        this.supabase = await window.supabaseService.getClient();
+      } else if (window.supabase) {
+        this.supabase = window.supabase;
+      } else if (typeof waitForSupabase === 'function') {
+        this.supabase = await waitForSupabase();
+      }
+    } catch (e) {
+      console.error('PlanesView initSupabase:', e);
+    }
+  }
+
+  async loadPlans() {
+    if (!this.supabase) return;
+    try {
+      const { data, error } = await this.supabase
+        .from('plans')
+        .select('id, name, description, price_usd_month, credits_monthly, max_handles, storage_mb, features, display_order, is_active')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      this.plans = data || [];
+    } catch (e) {
+      console.error('PlanesView loadPlans:', e);
+      this.plans = [];
+    }
+  }
+
+  formatStorage(mb) {
+    if (!mb || mb <= 0) return null;
+    if (mb >= 1024) {
+      const gb = mb / 1024;
+      return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
+    }
+    return `${mb} MB`;
+  }
+
+  formatPrice(monthlyUsd) {
+    const m = Number(monthlyUsd) || 0;
+    return {
+      monthly: m,
+      annual: m * 10
+    };
+  }
+
+  buildFeatureList(plan) {
+    const items = [];
+    if (plan.credits_monthly > 0) {
+      items.push(`${plan.credits_monthly.toLocaleString('es')} créditos/mes`);
+    } else if (plan.features?.custom) {
+      items.push('Créditos personalizados');
+    }
+    if (plan.max_handles > 0) {
+      items.push(`${plan.max_handles} handles`);
+    } else if (plan.features?.custom) {
+      items.push('Handles ilimitados');
+    }
+    const storage = this.formatStorage(plan.storage_mb);
+    if (storage) items.push(`${storage} de almacenamiento`);
+    if (plan.features?.trial) {
+      items.push(`Prueba gratis ${plan.features.duration_days || 14} días`);
+    }
+    if (plan.description) items.push(plan.description);
+    return items;
   }
 
   renderHTML() {
@@ -24,42 +107,7 @@ class PlanesView extends BaseView {
                   </div>
                   <p class="planes-hero-subtitle">Elige tu plan.</p>
                   <div class="planes-plans" id="planesList">
-                      <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29" data-price-annual="290">
-                          <h3 class="plan-card-name">Básico</h3>
-                          <div class="plan-card-price">
-                              <span class="price-monthly">$29<span>/mes</span></span>
-                              <span class="price-annual">$290<span>/año</span></span>
-                          </div>
-                          <div class="plan-card-credits">50 créditos</div>
-                          <ul class="plan-card-details">
-                              <li>Uso personal y proyectos pequeños</li>
-                              <li>Soporte por email</li>
-                          </ul>
-                      </div>
-                      <div class="plan-card-small" data-plan="pro" data-credits="150" data-price="79" data-price-annual="790">
-                          <h3 class="plan-card-name">Pro</h3>
-                          <div class="plan-card-price">
-                              <span class="price-monthly">$79<span>/mes</span></span>
-                              <span class="price-annual">$790<span>/año</span></span>
-                          </div>
-                          <div class="plan-card-credits">150 créditos</div>
-                          <ul class="plan-card-details">
-                              <li>Freelancers y equipos pequeños</li>
-                              <li>Uso moderado de contenido</li>
-                          </ul>
-                      </div>
-                      <div class="plan-card-small" data-plan="enterprise" data-credits="500" data-price="199" data-price-annual="1990">
-                          <h3 class="plan-card-name">Enterprise</h3>
-                          <div class="plan-card-price">
-                              <span class="price-monthly">$199<span>/mes</span></span>
-                              <span class="price-annual">$1990<span>/año</span></span>
-                          </div>
-                          <div class="plan-card-credits">500 créditos</div>
-                          <ul class="plan-card-details">
-                              <li>Soporte prioritario</li>
-                              <li>Personalización</li>
-                          </ul>
-                      </div>
+                      <div class="planes-loading" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando planes…</div>
                   </div>
                   <p class="planes-cta-login">
                       <a href="/login" class="planes-link-login">Iniciar sesión o registrarse</a>
@@ -71,9 +119,35 @@ class PlanesView extends BaseView {
     `;
   }
 
-  async onEnter() {}
-
-  async updateHeader() {}
+  renderPlansList() {
+    const container = this.container?.querySelector('#planesList');
+    if (!container) return;
+    if (!this.plans.length) {
+      container.innerHTML = `<div class="planes-empty" style="padding:32px;text-align:center;color:var(--text-muted);">No hay planes disponibles.</div>`;
+      return;
+    }
+    const cards = this.plans.map((plan) => {
+      const { monthly, annual } = this.formatPrice(plan.price_usd_month);
+      const isCustom = !!plan.features?.custom;
+      const priceMonthly = isCustom ? 'Custom' : `$${monthly}`;
+      const priceAnnual = isCustom ? 'Custom' : `$${annual}`;
+      const features = this.buildFeatureList(plan);
+      return `
+        <div class="plan-card-small" data-plan="${plan.id}" data-credits="${plan.credits_monthly}" data-price="${monthly}" data-price-annual="${annual}">
+          <h3 class="plan-card-name">${plan.name}</h3>
+          <div class="plan-card-price">
+            <span class="price-monthly">${priceMonthly}${isCustom ? '' : '<span>/mes</span>'}</span>
+            <span class="price-annual">${priceAnnual}${isCustom ? '' : '<span>/año</span>'}</span>
+          </div>
+          <div class="plan-card-credits">${plan.credits_monthly > 0 ? `${plan.credits_monthly.toLocaleString('es')} créditos` : (isCustom ? 'A medida' : '—')}</div>
+          <ul class="plan-card-details">
+            ${features.map(f => `<li>${f}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }).join('');
+    container.innerHTML = cards;
+  }
 
   init() {
     const container = this.container;
