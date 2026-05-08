@@ -186,8 +186,6 @@
 .featured-card-visual,
 .content-card-image-container,
 .product-card-image,
-.product-view-main-wrap,
-.product-view-thumb,
 .flow-card-media,
 .flow-hero-slide-media,
 .dev-flow-card-image,
@@ -211,8 +209,6 @@
 .product-card--masonry-2 .product-card-image { aspect-ratio: 3 / 4; }
 .product-card--masonry-3 .product-card-image { aspect-ratio: 3 / 2; }
 .product-card--masonry-4 .product-card-image { aspect-ratio: 2 / 3; }
-.product-view-main-wrap { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-.product-view-thumb { aspect-ratio: 1; width: 72px; height: 72px; flex-shrink: 0; border: 2px solid var(--border-color); cursor: pointer; }
 .flow-card-media { aspect-ratio: 4 / 5; }
 .flow-hero-slide-media { aspect-ratio: 16 / 10; }
 .dev-flow-card-image { aspect-ratio: 16 / 10; }
@@ -225,8 +221,6 @@
 .content-card-image,
 .content-card-image-container img,
 .product-card-image img,
-.product-view-main-wrap img,
-.product-view-thumb img,
 .flow-card-img,
 .flow-hero-slide-img,
 .dev-flow-card-image img,
