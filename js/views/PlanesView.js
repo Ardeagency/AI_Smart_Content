@@ -44,7 +44,7 @@ class PlanesView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('plans')
-        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, display_order, is_active')
+        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, display_order, is_active')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
       if (error) throw error;
@@ -125,8 +125,11 @@ class PlanesView extends BaseView {
     const cards = this.plans.map((plan) => {
       const { monthly, annual } = this.formatPrice(plan);
       const features = this.buildFeatureList(plan);
+      const popularClass = plan.is_popular ? ' plan-card-small--popular' : '';
+      const popularBadge = plan.is_popular ? '<span class="plan-card-badge">Recomendado</span>' : '';
       return `
-        <div class="plan-card-small" data-plan="${plan.id}" data-credits="${plan.credits_monthly}" data-price="${monthly}" data-price-annual="${annual}">
+        <div class="plan-card-small${popularClass}" data-plan="${plan.id}" data-credits="${plan.credits_monthly}" data-price="${monthly}" data-price-annual="${annual}">
+          ${popularBadge}
           <h3 class="plan-card-name">${plan.name}</h3>
           <div class="plan-card-price">
             <span class="price-monthly">$${monthly}<span>/mes</span></span>

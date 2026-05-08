@@ -118,6 +118,26 @@
     box-shadow: 0 0 0 1px var(--accent-warm, #e09145);
 }
 
+.plan-card-small--popular {
+    border-color: var(--accent-warm, #e09145);
+    box-shadow: 0 0 0 1px var(--accent-warm, #e09145);
+    position: relative;
+}
+
+.plan-card-badge {
+    position: absolute;
+    top: -0.6rem;
+    right: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #0b0b0b;
+    background: var(--accent-warm, #e09145);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm, 6px);
+}
+
 .plan-card-name {
     font-size: 1.1rem;
     font-weight: 600;

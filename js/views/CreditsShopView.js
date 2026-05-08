@@ -57,17 +57,17 @@ class CreditsShopView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('credit_packages')
-        .select('id, name, credits, price_usd, bonus_credits, display_order, is_active')
+        .select('id, name, credits, price_usd, bonus_credits, is_popular, display_order, is_active')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
       if (error) throw error;
-      this.packages = (data || []).map((p, i, arr) => ({
+      this.packages = (data || []).map((p) => ({
         id: p.id,
         name: p.name,
         credits: p.credits,
         price: Number(p.price_usd) || 0,
         bonus: p.bonus_credits || 0,
-        popular: arr.length >= 2 && i === 1
+        popular: !!p.is_popular
       }));
     } catch (e) {
       console.error('CreditsShopView loadPackages:', e);
