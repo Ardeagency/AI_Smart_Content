@@ -1,7 +1,7 @@
 /**
  * PlanesView - Vista de planes (solo visualización y selección).
- * Lee planes activos desde la tabla `plans` (Supabase). Anual = mensual * 10
- * (≈ 2 meses gratis). Registro/login se hacen en /login (SignInView).
+ * Lee planes activos desde la tabla `plans` (Supabase) con price_usd_month
+ * y price_usd_year. Registro/login se hacen en /login (SignInView).
  */
 class PlanesView extends BaseView {
   constructor() {
@@ -44,7 +44,7 @@ class PlanesView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('plans')
-        .select('id, name, description, price_usd_month, credits_monthly, max_handles, storage_mb, features, display_order, is_active')
+        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, display_order, is_active')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
       if (error) throw error;
@@ -64,25 +64,21 @@ class PlanesView extends BaseView {
     return `${mb} MB`;
   }
 
-  formatPrice(monthlyUsd) {
-    const m = Number(monthlyUsd) || 0;
-    return {
-      monthly: m,
-      annual: m * 10
-    };
+  formatPrice(plan) {
+    const monthly = Number(plan.price_usd_month) || 0;
+    const annual = plan.price_usd_year != null
+      ? (Number(plan.price_usd_year) || 0)
+      : monthly * 10;
+    return { monthly, annual };
   }
 
   buildFeatureList(plan) {
     const items = [];
     if (plan.credits_monthly > 0) {
       items.push(`${plan.credits_monthly.toLocaleString('es')} créditos/mes`);
-    } else if (plan.features?.custom) {
-      items.push('Créditos personalizados');
     }
     if (plan.max_handles > 0) {
       items.push(`${plan.max_handles} handles`);
-    } else if (plan.features?.custom) {
-      items.push('Handles ilimitados');
     }
     const storage = this.formatStorage(plan.storage_mb);
     if (storage) items.push(`${storage} de almacenamiento`);
@@ -127,19 +123,16 @@ class PlanesView extends BaseView {
       return;
     }
     const cards = this.plans.map((plan) => {
-      const { monthly, annual } = this.formatPrice(plan.price_usd_month);
-      const isCustom = !!plan.features?.custom;
-      const priceMonthly = isCustom ? 'Custom' : `$${monthly}`;
-      const priceAnnual = isCustom ? 'Custom' : `$${annual}`;
+      const { monthly, annual } = this.formatPrice(plan);
       const features = this.buildFeatureList(plan);
       return `
         <div class="plan-card-small" data-plan="${plan.id}" data-credits="${plan.credits_monthly}" data-price="${monthly}" data-price-annual="${annual}">
           <h3 class="plan-card-name">${plan.name}</h3>
           <div class="plan-card-price">
-            <span class="price-monthly">${priceMonthly}${isCustom ? '' : '<span>/mes</span>'}</span>
-            <span class="price-annual">${priceAnnual}${isCustom ? '' : '<span>/año</span>'}</span>
+            <span class="price-monthly">$${monthly}<span>/mes</span></span>
+            <span class="price-annual">$${annual}<span>/año</span></span>
           </div>
-          <div class="plan-card-credits">${plan.credits_monthly > 0 ? `${plan.credits_monthly.toLocaleString('es')} créditos` : (isCustom ? 'A medida' : '—')}</div>
+          <div class="plan-card-credits">${plan.credits_monthly > 0 ? `${plan.credits_monthly.toLocaleString('es')} créditos` : '—'}</div>
           <ul class="plan-card-details">
             ${features.map(f => `<li>${f}</li>`).join('')}
           </ul>
