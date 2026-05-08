@@ -1,0 +1,209 @@
+/* ========== Planes (vista de suscripciones) ========== */
+.planes-main {
+    padding: calc(48px + 2rem) 2rem 4rem;
+    min-height: 100vh;
+}
+
+.planes-layout-single {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.planes-hero {
+    position: relative;
+    text-align: center;
+}
+
+.planes-hero-background {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: var(--radius-lg, 16px);
+}
+
+.planes-background-gradient {
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(
+        ellipse at 50% 0%,
+        rgba(224, 145, 69, 0.08) 0%,
+        transparent 60%
+    );
+}
+
+.planes-hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.planes-hero-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.planes-billing-toggle {
+    display: inline-flex;
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.planes-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition, .2s), color var(--transition, .2s);
+}
+
+.planes-toggle-btn:hover {
+    color: var(--text-primary);
+}
+
+.planes-toggle-btn.active {
+    background: var(--accent-warm, #e09145);
+    color: #0b0b0b;
+}
+
+.planes-hero-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.planes-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.plan-card-small {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md, 12px);
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition, .2s), box-shadow var(--transition, .2s), transform var(--transition, .2s);
+}
+
+.plan-card-small:hover {
+    border-color: var(--glass-border, rgba(255, 255, 255, 0.15));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.plan-card-small.selected {
+    border-color: var(--accent-warm, #e09145);
+    box-shadow: 0 0 0 1px var(--accent-warm, #e09145);
+}
+
+.plan-card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.plan-card-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--accent-warm, #e09145);
+    line-height: 1.1;
+}
+
+.plan-card-price span span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-left: 0.25rem;
+}
+
+/* Toggle mensual/anual: una sola visible */
+.plan-card-price .price-annual { display: none; }
+.planes-hero.billing-annual .plan-card-price .price-monthly { display: none; }
+.planes-hero.billing-annual .plan-card-price .price-annual { display: inline; }
+
+.plan-card-credits {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border-divider);
+    border-bottom: 1px solid var(--border-divider);
+}
+
+.plan-card-details {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.plan-card-details li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding-left: 1rem;
+    position: relative;
+}
+
+.plan-card-details li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--accent-warm, #e09145);
+    font-weight: 700;
+}
+
+.planes-cta-login {
+    margin-top: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.planes-link-login {
+    color: var(--accent-warm, #e09145);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.planes-link-login:hover {
+    text-decoration: underline;
+}
+
+.planes-loading,
+.planes-empty {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+    .planes-main {
+        padding: calc(48px + 1rem) 1rem 2rem;
+    }
+    .planes-plans {
+        grid-template-columns: 1fr;
+    }
+}
