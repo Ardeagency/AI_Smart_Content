@@ -172,6 +172,13 @@ get_paginated_content_feed(
 - [x] CSS nuevo `css/modules/content-feed.css` registrado en `bundle.css`.
 - [x] Lazy loader `app.js` actualizado para cargar `ContentFeedService.js` antes de `ContentView.js`.
 - [x] `node --check` pasa en los 4 archivos modificados/creados.
+- [x] **Refinamiento Partner** (sesión 2 del 2026-05-08): análisis profundo del Activity de IA_Partner y portado de las 3 brechas críticas más fallback elegante y persistencia:
+  - Carrusel multi-imagen con flechas + indicador 1/N (`_createCarouselHtml`, `_carouselStep`).
+  - Video autoplay con IntersectionObserver (threshold 0.3, rootMargin 50px) — pause/play según viewport (`_attachMediaInteractions`).
+  - Carga progresiva en 2 fases idéntica al patrón Partner: thumbnail visible inmediatamente, probe video oculto, reemplazo solo si `onloadedmetadata` (`_attemptLoadVideo`).
+  - Fallback elegante "Ver en publicación original" con link al post si la imagen/video falla (CORS Meta CDN, links expirados) — reemplaza el broken icon.
+  - localStorage de filtros entre sesiones (`_loadFiltersFromStorage` / `_saveFiltersToStorage`).
+  - Custom range con `<input type="date">` HTML5 (sin flatpickr para evitar dependencia).
 - [ ] **G** — Smoke test E2E visual en `aismartcontent.io/org/.../content` con la org Arde Agency (359 posts competidor + 357 signals esperados).
 
 ### Archivo SQL fuente

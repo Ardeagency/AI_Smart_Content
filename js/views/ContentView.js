@@ -39,10 +39,13 @@ class ContentView extends BaseView {
       preset: 'last30',
       includeAds: true,
       includeSignals: true,
+      dateFromCustom: null,     // ISO date YYYY-MM-DD si preset === 'custom'
+      dateToCustom: null,
     };
 
     this._panelOpen = false;
     this._onResizeBound = null;
+    this._videoObserver = null;
   }
 
   // ───────────────────────────────────────── lifecycle
@@ -61,6 +64,7 @@ class ContentView extends BaseView {
       window.appState?.get('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId') ||
       null;
+    this._loadFiltersFromStorage();
   }
 
   async render() {
@@ -75,6 +79,10 @@ class ContentView extends BaseView {
     if (this._onResizeBound) {
       window.removeEventListener('resize', this._onResizeBound);
       this._onResizeBound = null;
+    }
+    if (this._videoObserver) {
+      try { this._videoObserver.disconnect(); } catch (_) {}
+      this._videoObserver = null;
     }
   }
 
@@ -147,6 +155,19 @@ class ContentView extends BaseView {
           <button type="button" class="content-feed-preset${this.filters.preset === p.key ? ' active' : ''}"
                   data-preset="${p.key}">${p.label}</button>
         `).join('')}
+        <button type="button" class="content-feed-preset${this.filters.preset === 'custom' ? ' active' : ''}"
+                data-preset="custom">Personalizado</button>
+      </div>
+      <div class="content-feed-custom-range" id="contentFeedCustomWrap"
+           style="${this.filters.preset === 'custom' ? '' : 'display:none;'}">
+        <label>
+          <span>Desde</span>
+          <input type="date" id="contentFeedCustomFrom" value="${this.escapeHtml(this.filters.dateFromCustom || '')}">
+        </label>
+        <label>
+          <span>Hasta</span>
+          <input type="date" id="contentFeedCustomTo" value="${this.escapeHtml(this.filters.dateToCustom || '')}">
+        </label>
       </div>
     </div>
 
@@ -183,6 +204,12 @@ class ContentView extends BaseView {
   // ───────────────────────────────────────── data loading
 
   _getDateRange() {
+    if (this.filters.preset === 'custom' && this.filters.dateFromCustom && this.filters.dateToCustom) {
+      const from = new Date(this.filters.dateFromCustom + 'T00:00:00');
+      const to = new Date(this.filters.dateToCustom + 'T23:59:59');
+      const fmt = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+      return { from, to, label: `${fmt(from)} – ${fmt(to)}` };
+    }
     const preset = CONTENT_FEED_PRESETS.find((p) => p.key === this.filters.preset)
                 || CONTENT_FEED_PRESETS.find((p) => p.default);
     const to = new Date();
@@ -291,21 +318,7 @@ class ContentView extends BaseView {
     this._setCount(this.feed.length);
     this._setLoadMoreVisible(this.hasMore);
 
-    // carga progresiva: si hay video, reemplazar img por video
-    list.querySelectorAll('[data-video-url]').forEach((el) => {
-      const url = el.getAttribute('data-video-url');
-      if (!url) return;
-      const v = document.createElement('video');
-      v.src = url;
-      v.controls = true;
-      v.playsInline = true;
-      v.preload = 'metadata';
-      v.poster = el.getAttribute('data-poster') || '';
-      v.onerror = () => { /* deja el thumbnail si video falla */ };
-      v.onloadedmetadata = () => {
-        if (el.parentNode) el.parentNode.replaceChild(v, el);
-      };
-    });
+    this._attachMediaInteractions(list);
   }
 
   _renderItem(item) {
@@ -321,25 +334,7 @@ class ContentView extends BaseView {
 
     const text = (item.contenido || '').replace(/\s*(https?:\/\/\S+)\s*$/i, '').trim();
 
-    const videoUrl = item.media_assets?.video_url || null;
-    const thumbUrl = item.url_medios || null;
-
-    let mediaHtml = '';
-    if (thumbUrl || videoUrl) {
-      const id = `media-${item.id}`;
-      if (videoUrl) {
-        mediaHtml = `
-          <div class="content-feed-media" id="${id}" data-video-url="${this.escapeHtml(videoUrl)}" data-poster="${this.escapeHtml(thumbUrl || '')}">
-            ${thumbUrl ? `<img src="${this.escapeHtml(thumbUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('content-feed-media-broken'); this.style.display='none';">` : ''}
-            <span class="content-feed-video-badge"><i class="fas fa-play"></i> Video</span>
-          </div>`;
-      } else {
-        mediaHtml = `
-          <div class="content-feed-media" id="${id}">
-            <img src="${this.escapeHtml(thumbUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('content-feed-media-broken'); this.style.display='none';">
-          </div>`;
-      }
-    }
+    const mediaHtml = this._renderMedia(item);
 
     const metrics = item.metrics || {};
     const metricChips = [];
@@ -481,6 +476,10 @@ class ContentView extends BaseView {
       el.onclick = () => {
         document.querySelectorAll('.content-feed-preset').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
+        const wrap = document.getElementById('contentFeedCustomWrap');
+        if (wrap) {
+          wrap.style.display = el.getAttribute('data-preset') === 'custom' ? '' : 'none';
+        }
       };
     });
   }
@@ -500,6 +499,17 @@ class ContentView extends BaseView {
     const activePreset = document.querySelector('.content-feed-preset.active');
     if (activePreset) this.filters.preset = activePreset.getAttribute('data-preset') || 'last30';
 
+    // custom range (solo si preset === 'custom')
+    if (this.filters.preset === 'custom') {
+      const fromEl = document.getElementById('contentFeedCustomFrom');
+      const toEl = document.getElementById('contentFeedCustomTo');
+      this.filters.dateFromCustom = fromEl?.value || null;
+      this.filters.dateToCustom = toEl?.value || null;
+    } else {
+      this.filters.dateFromCustom = null;
+      this.filters.dateToCustom = null;
+    }
+
     // entities
     const ids = [];
     document.querySelectorAll('#contentFeedEntities input[type="checkbox"]').forEach((el) => {
@@ -512,10 +522,16 @@ class ContentView extends BaseView {
     const sigs = document.getElementById('contentFeedToggleSignals');
     if (ads)  this.filters.includeAds = !!ads.checked;
     if (sigs) this.filters.includeSignals = !!sigs.checked;
+
+    this._saveFiltersToStorage();
   }
 
   _resetFilters() {
-    this.filters = { entityIds: [], preset: 'last30', includeAds: true, includeSignals: true };
+    this.filters = {
+      entityIds: [], preset: 'last30',
+      includeAds: true, includeSignals: true,
+      dateFromCustom: null, dateToCustom: null,
+    };
     document.querySelectorAll('.content-feed-preset').forEach((el) => {
       el.classList.toggle('active', el.getAttribute('data-preset') === 'last30');
     });
@@ -526,7 +542,238 @@ class ContentView extends BaseView {
     const sigs = document.getElementById('contentFeedToggleSignals');
     if (ads)  ads.checked = true;
     if (sigs) sigs.checked = true;
+    const customWrap = document.getElementById('contentFeedCustomWrap');
+    if (customWrap) customWrap.style.display = 'none';
     this._updateFilterBadge();
+    this._saveFiltersToStorage();
+  }
+
+  // ───────────────────────────────────────── media (carousel + video + single)
+
+  /**
+   * Decide qué media renderizar según media_assets:
+   *  - video_url + thumbnail → muestra thumbnail con badge "Video", carga el
+   *    video al entrar en viewport (autoplay con IntersectionObserver).
+   *  - images[] con > 1 → carrusel con flechas + indicador 1/N.
+   *  - 1 imagen (display_url o thumbnail) → single image.
+   *  - sin media → no renderiza nada.
+   */
+  _renderMedia(item) {
+    const ma = item.media_assets || {};
+    const id = `media-${item.id}`;
+    const thumb = item.url_medios || ma.display_url || null;
+    const videoUrl = ma.video_url || null;
+
+    // extracción defensiva de array de imágenes
+    const rawImages = (Array.isArray(ma.images) && ma.images.length)
+      ? ma.images
+      : (Array.isArray(ma.media_urls) && ma.media_urls.length ? ma.media_urls : []);
+    const images = rawImages
+      .map((x) => typeof x === 'string' ? x : (x?.url || x?.display_url || x?.src || ''))
+      .filter(Boolean);
+
+    if (videoUrl) {
+      return `
+        <div class="content-feed-media" id="${id}" data-video-url="${this.escapeHtml(videoUrl)}" data-poster="${this.escapeHtml(thumb || '')}" data-post-url="${this.escapeHtml(item.url_publicacion || '')}">
+          ${thumb ? `<img class="content-feed-media-thumb" src="${this.escapeHtml(thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="content-feed-media-placeholder"><i class="fas fa-image"></i></div>'}
+          <span class="content-feed-video-badge"><i class="fas fa-play"></i> Video</span>
+        </div>`;
+    }
+
+    if (images.length > 1) {
+      return this._createCarouselHtml(images, id, item.url_publicacion);
+    }
+
+    const singleUrl = images[0] || thumb;
+    if (singleUrl) {
+      return `
+        <div class="content-feed-media" id="${id}" data-post-url="${this.escapeHtml(item.url_publicacion || '')}">
+          <img src="${this.escapeHtml(singleUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        </div>`;
+    }
+
+    return '';
+  }
+
+  _createCarouselHtml(urls, id, postUrl) {
+    return `
+      <div class="content-feed-media content-feed-carousel" id="${id}" data-current="0" data-total="${urls.length}" data-post-url="${this.escapeHtml(postUrl || '')}">
+        ${urls.map((u, i) => `
+          <img class="content-feed-carousel-img${i === 0 ? ' active' : ''}"
+               src="${this.escapeHtml(u)}"
+               alt=""
+               loading="${i === 0 ? 'eager' : 'lazy'}"
+               referrerpolicy="no-referrer"
+               style="${i === 0 ? '' : 'display:none;'}">
+        `).join('')}
+        <button type="button" class="content-feed-carousel-prev" data-direction="-1" aria-label="Anterior">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button type="button" class="content-feed-carousel-next" data-direction="1" aria-label="Siguiente">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <span class="content-feed-carousel-indicator">1/${urls.length}</span>
+      </div>`;
+  }
+
+  /**
+   * Bind de interacciones después de renderizar el feed:
+   *  1. Image error → marca media-broken y muestra fallback "Ver original"
+   *  2. Carrusel: click en flechas
+   *  3. Video: carga progresiva en 2 fases (test load → reemplazar) +
+   *     IntersectionObserver para autoplay/pause según viewport.
+   */
+  _attachMediaInteractions(container) {
+    if (!container) return;
+
+    // Limpia observer anterior si existía (re-render con filtros nuevos)
+    if (this._videoObserver) {
+      try { this._videoObserver.disconnect(); } catch (_) {}
+      this._videoObserver = null;
+    }
+
+    // 1) Manejo de imágenes rotas (CORS Meta CDN, links expirados)
+    container.querySelectorAll('.content-feed-media img').forEach((img) => {
+      img.addEventListener('error', () => this._handleMediaError(img));
+    });
+
+    // 2) Carrusel
+    container.querySelectorAll('.content-feed-carousel').forEach((car) => {
+      const prev = car.querySelector('.content-feed-carousel-prev');
+      const next = car.querySelector('.content-feed-carousel-next');
+      if (prev) prev.addEventListener('click', (e) => { e.stopPropagation(); this._carouselStep(car, -1); });
+      if (next) next.addEventListener('click', (e) => { e.stopPropagation(); this._carouselStep(car, 1); });
+    });
+
+    // 3) Video: setup IntersectionObserver para autoplay
+    if ('IntersectionObserver' in window) {
+      this._videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const t = entry.target;
+          if (!t || t.tagName !== 'VIDEO') return;
+          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+            t.muted = true;
+            const p = t.play(); if (p && p.catch) p.catch(() => {});
+          } else {
+            try { t.pause(); } catch (_) {}
+          }
+        });
+      }, { threshold: [0.3, 0.7], rootMargin: '50px' });
+    }
+
+    // 4) Carga progresiva de videos
+    container.querySelectorAll('.content-feed-media[data-video-url]').forEach((el) => {
+      const url = el.getAttribute('data-video-url');
+      const poster = el.getAttribute('data-poster') || '';
+      if (!url) return;
+      this._attemptLoadVideo(el, url, poster);
+    });
+  }
+
+  /**
+   * Carga progresiva en 2 fases (patrón IA_Partner):
+   *  - Fase 1: el thumbnail (img) ya está visible, sin video.
+   *  - Fase 2: probamos cargar metadata del video; si funciona, lo
+   *    insertamos como <video> y dejamos que el observer haga play.
+   *  - Si falla, mantenemos el thumbnail. Cero ruido visual al usuario.
+   */
+  _attemptLoadVideo(mediaEl, videoUrl, posterUrl) {
+    const probe = document.createElement('video');
+    probe.preload = 'metadata';
+    probe.muted = true;
+    probe.playsInline = true;
+    probe.style.position = 'absolute';
+    probe.style.opacity = '0';
+    probe.style.width = '1px';
+    probe.style.height = '1px';
+    probe.style.pointerEvents = 'none';
+
+    const cleanup = () => {
+      probe.onloadedmetadata = null;
+      probe.onerror = null;
+      probe.remove();
+    };
+
+    probe.onloadedmetadata = () => {
+      cleanup();
+      // ¿el contenedor sigue en DOM? (puede haber hecho re-render)
+      if (!mediaEl.isConnected) return;
+      mediaEl.innerHTML = '';
+      const v = document.createElement('video');
+      v.src = videoUrl;
+      v.controls = true;
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.preload = 'metadata';
+      if (posterUrl) v.poster = posterUrl;
+      mediaEl.appendChild(v);
+      if (this._videoObserver) this._videoObserver.observe(v);
+    };
+
+    probe.onerror = () => {
+      cleanup();
+      // mantiene el thumbnail. Si tampoco hay thumbnail, marca broken.
+      if (mediaEl.isConnected && !mediaEl.querySelector('img')) {
+        this._handleMediaError(mediaEl);
+      }
+    };
+
+    probe.src = videoUrl;
+    document.body.appendChild(probe);
+  }
+
+  _carouselStep(car, dir) {
+    const total = parseInt(car.getAttribute('data-total') || '1', 10);
+    let cur = parseInt(car.getAttribute('data-current') || '0', 10);
+    cur = (cur + dir + total) % total;
+    car.setAttribute('data-current', String(cur));
+    const imgs = car.querySelectorAll('.content-feed-carousel-img');
+    imgs.forEach((img, i) => {
+      img.style.display = (i === cur) ? '' : 'none';
+      img.classList.toggle('active', i === cur);
+    });
+    const ind = car.querySelector('.content-feed-carousel-indicator');
+    if (ind) ind.textContent = `${cur + 1}/${total}`;
+  }
+
+  _handleMediaError(target) {
+    const mediaEl = target.closest ? target.closest('.content-feed-media') : target;
+    if (!mediaEl) return;
+    if (mediaEl.classList.contains('content-feed-media-broken')) return;
+    mediaEl.classList.add('content-feed-media-broken');
+    const postUrl = mediaEl.getAttribute('data-post-url') || '';
+    mediaEl.innerHTML = postUrl
+      ? `<a href="${this.escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="content-feed-media-fallback">
+           <i class="fas fa-external-link-alt"></i>
+           <span>Ver en publicación original</span>
+         </a>`
+      : `<div class="content-feed-media-fallback">
+           <i class="fas fa-image"></i>
+           <span>Imagen no disponible</span>
+         </div>`;
+  }
+
+  // ───────────────────────────────────────── localStorage de filtros
+
+  _loadFiltersFromStorage() {
+    try {
+      const raw = localStorage.getItem('contentFeedFilters');
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved.entityIds))           this.filters.entityIds = saved.entityIds;
+      if (typeof saved.preset === 'string')         this.filters.preset = saved.preset;
+      if (typeof saved.includeAds === 'boolean')    this.filters.includeAds = saved.includeAds;
+      if (typeof saved.includeSignals === 'boolean')this.filters.includeSignals = saved.includeSignals;
+      if (typeof saved.dateFromCustom === 'string') this.filters.dateFromCustom = saved.dateFromCustom;
+      if (typeof saved.dateToCustom === 'string')   this.filters.dateToCustom = saved.dateToCustom;
+    } catch (_) {}
+  }
+
+  _saveFiltersToStorage() {
+    try {
+      localStorage.setItem('contentFeedFilters', JSON.stringify(this.filters));
+    } catch (_) {}
   }
 
   // ───────────────────────────────────────── utils
