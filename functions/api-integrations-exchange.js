@@ -83,6 +83,37 @@ async function assertBrandContainerAccess({ env, accessToken, brandContainerId }
   return { user, brand_container_id: brandContainerId };
 }
 
+// ── Bootstrap genérico (cualquier platform con populator registrado) ─────────
+// Encola un job '<platform>_initial_bootstrap' para que el ai-engine arranque
+// el populator correspondiente. No-op si ya existe un bootstrap en curso para
+// la integración (evita duplicar al re-loguear con scopes idénticos).
+async function enqueueIntegrationBootstrap({ env, platform, integrationId, brandContainerId, organizationId, extras = {} }) {
+  if (!platform || !integrationId || !brandContainerId || !organizationId) return;
+  try {
+    await supabaseRest({
+      url: env.url, serviceKey: env.serviceKey,
+      path: 'agent_queue_jobs', method: 'POST',
+      body: [{
+        organization_id: organizationId,
+        job_type:        'mission',
+        priority:        5,
+        payload: {
+          mission_type:         `${platform}_initial_bootstrap`,
+          brand_integration_id: integrationId,
+          brand_container_id:   brandContainerId,
+          platform,
+          ...extras
+        },
+        status: 'queued'
+      }]
+    });
+  } catch (e) {
+    // No bloquear el OAuth callback por un fallo en el queue — el usuario
+    // puede reintentar manualmente desde la UI con "Reconectar".
+    console.warn(`[exchange] enqueue ${platform} bootstrap (non-blocking):`, e?.message || e);
+  }
+}
+
 // ── Upsert integration ────────────────────────────────────────────────────────
 
 async function upsertBrandIntegration({ env, payload }) {
@@ -510,28 +541,16 @@ exports.handler = async (event) => {
         });
       }
 
-      // Encolar bootstrap (solo si NO es reconnection)
+      // Encolar bootstrap (solo si NO es reconnection) usando el helper genérico
       if (!isReconnection && shopifyIntegId && stateObj.organization_id) {
-        try {
-          await supabaseRest({
-            url: env.url, serviceKey: env.serviceKey,
-            path: 'agent_queue_jobs', method: 'POST',
-            body: [{
-              organization_id: stateObj.organization_id,
-              job_type:        'mission',
-              priority:        5,
-              payload: {
-                mission_type:         'shopify_initial_bootstrap',
-                brand_integration_id: shopifyIntegId,
-                brand_container_id:   brandContainerId,
-                shop_domain:          stateObj.shop
-              },
-              status: 'queued'
-            }]
-          });
-        } catch (e) {
-          console.warn('[exchange] enqueue bootstrap (non-blocking):', e.message);
-        }
+        await enqueueIntegrationBootstrap({
+          env,
+          platform:         'shopify',
+          integrationId:    shopifyIntegId,
+          brandContainerId,
+          organizationId:   stateObj.organization_id,
+          extras:           { shop_domain: stateObj.shop }
+        });
       }
     }
 
