@@ -350,6 +350,28 @@ exports.handler = async (event) => {
           updated_at: nowIso(), last_sync_at: nowIso()
         }
       });
+
+      // Encolar bootstrap del populator (campañas + audiencias). Idempotente:
+      // si la integración ya tiene bootstrap_status='completed', el populator
+      // simplemente refresca con upsert.
+      const fbIntegRow = await supabaseRest({
+        url: env.url, serviceKey: env.serviceKey,
+        path: 'brand_integrations', method: 'GET',
+        searchParams: {
+          select: 'id', brand_container_id: `eq.${brandContainerId}`,
+          platform: 'eq.facebook', is_active: 'eq.true', limit: '1'
+        }
+      });
+      const fbIntegId = Array.isArray(fbIntegRow) && fbIntegRow[0] ? fbIntegRow[0].id : null;
+      if (fbIntegId && stateObj.organization_id) {
+        await enqueueIntegrationBootstrap({
+          env,
+          platform:         'facebook',
+          integrationId:    fbIntegId,
+          brandContainerId,
+          organizationId:   stateObj.organization_id,
+        });
+      }
     }
 
     // ── Shopify ──────────────────────────────────────────────────────────────
