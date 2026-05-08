@@ -13,6 +13,7 @@ class IdentitiesView extends BaseView {
     this.services = [];
     this.products = [];
     this.productImageById = {};
+    this._fallbackEntityId = null;
     this._onResizeBound = null;
   }
 
@@ -130,19 +131,39 @@ class IdentitiesView extends BaseView {
           .from('product_images')
           .select('product_id, image_url, image_order')
           .in('product_id', productIds)
+          .not('image_url', 'is', null)
           .order('image_order', { ascending: true });
         if (imagesError) throw imagesError;
         (imagesData || []).forEach((img) => {
+          const url = (img.image_url || '').trim();
+          if (!url) return;
           if (!this.productImageById[img.product_id]) {
-            this.productImageById[img.product_id] = img.image_url;
+            this.productImageById[img.product_id] = url;
           }
         });
+      }
+
+      // Fallback de entity_id para productos huérfanos (entity_id NULL):
+      // permite que el click abra el detalle reusando la primera entity activa
+      // de la org. Solo se hace una vez por carga.
+      const orphan = this.products.some((p) => !p.entity_id);
+      if (orphan) {
+        const { data: ents } = await this.supabase
+          .from('brand_entities')
+          .select('id')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: true })
+          .limit(1);
+        this._fallbackEntityId = ents?.[0]?.id || null;
+      } else {
+        this._fallbackEntityId = null;
       }
     } catch (e) {
       console.error('IdentitiesView _loadData:', e);
       this.services = [];
       this.products = [];
       this.productImageById = {};
+      this._fallbackEntityId = null;
     }
   }
 
@@ -342,14 +363,16 @@ class IdentitiesView extends BaseView {
   _renderProductCard(p, _i) {
     const imageUrl = this.productImageById[p.id] || '';
     const name = p.nombre_producto || 'Producto';
+    const entityId = p.entity_id || this._fallbackEntityId || '';
+    const safeName = this.escapeHtml(name);
     return `
       <div class="living-masonry-item">
-        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${p.entity_id || ''}" role="button" tabindex="0"${imageUrl ? '' : ` aria-label="${this.escapeHtml(name)}"`}>
+        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${entityId}" role="button" tabindex="0" aria-label="${safeName}">
           ${imageUrl
-            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(name)}" loading="lazy">`
+            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('identity-product-card-broken'); this.outerHTML='<div class=&quot;identity-product-card-placeholder&quot;><i class=&quot;fas fa-image&quot; aria-hidden=&quot;true&quot;></i></div>';">`
             : `<div class="identity-product-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
           }
-          <div class="history-card-flow-name">${this.escapeHtml(name)}</div>
+          <div class="history-card-flow-name">${safeName}</div>
         </article>
       </div>
     `;
