@@ -314,17 +314,17 @@ class ProductsView extends BaseView {
         </nav>
         <div class="product-view-grid">
           <div class="product-view-gallery">
-            <div class="product-view-main-wrap">
-              ${mainImage
-                ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}">`
-                : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
-              }
-            </div>
             <div class="product-view-thumbnails-wrap">
               <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
               <input type="file" id="productViewImageUpload" accept="image/*" multiple style="position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; pointer-events: none;" aria-label="Añadir fotos al producto">
               <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="Añadir fotos" style="${thumbnails.length >= MAX_PRODUCT_IMAGES ? 'display: none;' : ''}"><i class="fas fa-plus"></i></label>
               ${thumbnails.length >= MAX_PRODUCT_IMAGES ? `<span class="product-view-max-hint" aria-live="polite">Máx. ${MAX_PRODUCT_IMAGES} imágenes</span>` : ''}
+            </div>
+            <div class="product-view-main-wrap">
+              ${mainImage
+                ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}">`
+                : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
+              }
             </div>
           </div>
           <div class="product-view-info">

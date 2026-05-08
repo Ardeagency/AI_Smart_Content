@@ -955,12 +955,15 @@
    CONTENEDOR
    ============================================ */
 .product-view {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--living-bg-deep, var(--bg-primary));
   padding: var(--app-header-height, 45.8px) 2rem 2rem; /* Arriba: altura header fijo; #app-container no aplica padding en esta vista */
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* ============================================
@@ -1016,35 +1019,61 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {
+  .product-view {
+    height: auto;
+    overflow: visible;
+  }
   .product-view-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
+    overflow: visible;
+  }
+  .product-view-info {
+    overflow: visible;
+    height: auto;
   }
 }
 
 /* ============================================
-   GALERÍA (IZQUIERDA)
+   GALERÍA (IZQUIERDA): miniaturas verticales + imagen principal
    ============================================ */
 .product-view-gallery {
-  background: var(--living-bg-card);
-  border: 1px solid var(--border-divider);
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: flex-start;
+  height: 100%;
+  min-height: 0;
+}
+
+.product-view-main-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.product-view-main-wrap img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
   border-radius: var(--radius-md);
-  overflow: hidden;
-  position: sticky;
-  top: 1.5rem;
+  display: block;
 }
 
 .product-view-thumbnails {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  border-top: 1px solid var(--border-divider);
 }
 
 .product-view-thumb:hover {
@@ -1100,9 +1129,10 @@
 }
 .product-view-thumbnails-wrap {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 .product-view-add-btn {
   flex-shrink: 0;
@@ -1132,12 +1162,16 @@
 }
 
 /* ============================================
-   INFO (DERECHA)
+   INFO (DERECHA) — scroll independiente
    ============================================ */
 .product-view-info {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 /* Fila del nombre (editable) */
