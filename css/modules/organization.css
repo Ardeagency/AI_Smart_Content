@@ -904,10 +904,33 @@
     flex: 1;
 }
 
+.credits-shop-card-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+    letter-spacing: -0.01em;
+}
+
 .credits-shop-card-credits {
     font-size: var(--font-size-xl);
     font-weight: 700;
     color: var(--text-primary);
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.credits-shop-bonus {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-warm, #e09145);
+    background: rgba(224, 145, 69, 0.12);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .credits-shop-card-price {

@@ -109,8 +109,6 @@ class CreditsShopView extends BaseView {
       this.creditsTotal = Number(data?.credits_total ?? 0);
       const elAvail = this.querySelector('#creditsShopAvailable');
       if (elAvail) elAvail.textContent = this.creditsAvailable.toLocaleString('es');
-      const elTotal = this.querySelector('#creditsShopTotal');
-      if (elTotal) elTotal.textContent = this.creditsTotal.toLocaleString('es');
     } catch (e) {
       console.error('CreditsShopView loadCredits:', e);
     }
