@@ -177,40 +177,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  max-height: 600px;
   overflow: hidden;
   background: var(--bg-card, rgba(255, 255, 255, 0.025));
-}
-
-/* Trampa estilo Instagram: para evitar bandas grises feas en videos verticales,
-   replicamos el thumbnail como background blureado y oscurecido detrás del media.
-   El thumbnail real va encima centrado. Para imágenes horizontales el background
-   queda invisible porque el contenido cubre todo el ancho. */
-.content-feed-media::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--thumb-bg, none);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: blur(36px) brightness(0.45) saturate(1.2);
-  transform: scale(1.15);
-  z-index: 0;
-  pointer-events: none;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 0;
 }
 
 .content-feed-media img,
 .content-feed-media video {
-  position: relative;
-  z-index: 1;
   display: block;
   width: auto;
-  max-width: 100%;
   height: auto;
-  max-height: 600px;
-  object-fit: contain;
+  max-width: 100%;
+  margin: 0 auto;
   background: transparent;
+}
+
+/* ── Límites por aspect ratio detectado en runtime (data-aspect) ── */
+/* Sin data-aspect (mientras carga): cap de altura genérico */
+.content-feed-media:not([data-aspect]) img,
+.content-feed-media:not([data-aspect]) video {
+  max-height: 540px;
+  object-fit: contain;
+}
+
+/* Vertical (9:16, reels): width limitado a 500px, alto natural */
+.content-feed-media[data-aspect="vertical"] img,
+.content-feed-media[data-aspect="vertical"] video {
+  max-width: 500px;
+  max-height: 800px;
+}
+
+/* Horizontal (16:9, paisajes): ocupa todo el ancho */
+.content-feed-media[data-aspect="horizontal"] img,
+.content-feed-media[data-aspect="horizontal"] video {
+  width: 100%;
+  max-width: 100%;
+  max-height: 540px;
+}
+
+/* Square (1:1): centrado con ancho moderado */
+.content-feed-media[data-aspect="square"] img,
+.content-feed-media[data-aspect="square"] video {
+  max-width: 600px;
+  max-height: 600px;
 }
 
 .content-feed-media-placeholder {

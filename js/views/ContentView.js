@@ -669,10 +669,8 @@ class ContentView extends BaseView {
     if (videoUrl) {
       const primary = thumbCandidates[0] || '';
       const fallbacks = thumbCandidates.slice(1).join('|');
-      const bgStyle = primary ? `--thumb-bg:url('${this._escapeUrlForCss(primary)}')` : '';
       return `
         <div class="content-feed-media" id="${id}"
-             style="${bgStyle}"
              data-video-url="${this.escapeHtml(videoUrl)}"
              data-poster="${this.escapeHtml(primary)}"
              data-post-url="${this.escapeHtml(postUrl)}">
@@ -696,9 +694,8 @@ class ContentView extends BaseView {
     if (singleCandidates.length) {
       const primary = singleCandidates[0];
       const fallbacks = singleCandidates.slice(1).join('|');
-      const bgStyle = `--thumb-bg:url('${this._escapeUrlForCss(primary)}')`;
       return `
-        <div class="content-feed-media" id="${id}" style="${bgStyle}" data-post-url="${this.escapeHtml(postUrl)}">
+        <div class="content-feed-media" id="${id}" data-post-url="${this.escapeHtml(postUrl)}">
           <img src="${this.escapeHtml(primary)}" alt="" loading="lazy" referrerpolicy="no-referrer"
                data-fallbacks="${this.escapeHtml(fallbacks)}">
         </div>`;
@@ -706,12 +703,6 @@ class ContentView extends BaseView {
 
     // No hay nada renderizable → sin contenedor
     return '';
-  }
-
-  /** Escapa una URL para usarla en una CSS custom property. */
-  _escapeUrlForCss(url) {
-    if (!url) return '';
-    return String(url).replace(/'/g, "%27").replace(/"/g, "%22").replace(/\\/g, "\\\\");
   }
 
   /** Devuelve URLs candidatas en orden de preferencia, deduplicadas. */
@@ -749,10 +740,8 @@ class ContentView extends BaseView {
   }
 
   _createCarouselHtml(urls, id, postUrl) {
-    const bgStyle = urls[0] ? `--thumb-bg:url('${this._escapeUrlForCss(urls[0])}')` : '';
     return `
       <div class="content-feed-media content-feed-carousel" id="${id}"
-           style="${bgStyle}"
            data-current="0" data-total="${urls.length}"
            data-post-url="${this.escapeHtml(postUrl || '')}">
         ${urls.map((u, i) => `
@@ -791,8 +780,12 @@ class ContentView extends BaseView {
 
     // 1) Manejo de imágenes rotas (CORS Meta CDN, links expirados):
     //    intenta la cadena data-fallbacks="url2|url3|..." antes de marcar broken.
+    //    Además: al cargar, detecta aspect ratio y lo pone en data-aspect.
     container.querySelectorAll('.content-feed-media img').forEach((img) => {
       img.addEventListener('error', () => this._tryNextFallback(img));
+      const setIfReady = () => this._setAspectFromImg(img);
+      if (img.complete && img.naturalWidth) setIfReady();
+      else img.addEventListener('load', setIfReady, { once: true });
     });
 
     // 2) Carrusel
@@ -853,9 +846,13 @@ class ContentView extends BaseView {
     };
 
     probe.onloadedmetadata = () => {
+      const probeW = probe.videoWidth;
+      const probeH = probe.videoHeight;
       cleanup();
       // ¿el contenedor sigue en DOM? (puede haber hecho re-render)
       if (!mediaEl.isConnected) return;
+      // Aplicar aspect detectado del probe ya, antes de pintar el video real
+      if (probeW && probeH) this._applyAspect(mediaEl, probeW / probeH);
       mediaEl.innerHTML = '';
       const v = document.createElement('video');
       v.src = videoUrl;
@@ -865,6 +862,12 @@ class ContentView extends BaseView {
       v.playsInline = true;
       v.preload = 'metadata';
       if (posterUrl) v.poster = posterUrl;
+      v.addEventListener('loadedmetadata', () => {
+        if (v.videoWidth && v.videoHeight) {
+          v.setAttribute('data-aspect', this._aspectName(v.videoWidth / v.videoHeight));
+          this._applyAspect(mediaEl, v.videoWidth / v.videoHeight);
+        }
+      }, { once: true });
       mediaEl.appendChild(v);
       if (this._videoObserver) this._videoObserver.observe(v);
     };
@@ -879,6 +882,35 @@ class ContentView extends BaseView {
 
     probe.src = videoUrl;
     document.body.appendChild(probe);
+  }
+
+  /**
+   * Detecta vertical / horizontal / square según ratio. Umbrales:
+   *   ratio < 0.9   → vertical (más alto que ancho — reels, stories)
+   *   ratio > 1.1   → horizontal (paisaje)
+   *   else          → square
+   */
+  _aspectName(ratio) {
+    if (!isFinite(ratio) || ratio <= 0) return 'square';
+    if (ratio < 0.9) return 'vertical';
+    if (ratio > 1.1) return 'horizontal';
+    return 'square';
+  }
+
+  _applyAspect(mediaEl, ratio) {
+    if (!mediaEl) return;
+    const aspect = this._aspectName(ratio);
+    mediaEl.setAttribute('data-aspect', aspect);
+  }
+
+  _setAspectFromImg(img) {
+    if (!img || !img.naturalWidth || !img.naturalHeight) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    img.setAttribute('data-aspect', this._aspectName(ratio));
+    const mediaEl = img.closest('.content-feed-media');
+    if (mediaEl && !mediaEl.hasAttribute('data-aspect')) {
+      this._applyAspect(mediaEl, ratio);
+    }
   }
 
   _carouselStep(car, dir) {
