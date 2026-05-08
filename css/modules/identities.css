@@ -24,6 +24,15 @@
   letter-spacing: -0.02em;
 }
 
+.identities-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .identities-section {
   margin-bottom: 2rem;
 }

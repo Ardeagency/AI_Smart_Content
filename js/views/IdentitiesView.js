@@ -21,44 +21,36 @@ class IdentitiesView extends BaseView {
 <div class="identities-page" id="identitiesPage">
   <div class="identities-header">
     <h1 class="identities-title">Identities</h1>
+    <div class="identities-header-actions">
+      <button type="button" class="identities-add-btn" id="identitiesAddProductBtn" aria-label="Agregar producto">
+        <span>+ Producto</span>
+      </button>
+      <button type="button" class="identities-add-btn" id="identitiesAddServiceBtn" aria-label="Agregar servicio">
+        <span>+ Servicio</span>
+      </button>
+    </div>
   </div>
 
-  <section class="identities-section">
+  <section class="identities-section" id="identitiesServicesSection" style="display:none;">
     <div class="identities-section-head">
       <div class="identities-section-head-main">
         <h2 class="identities-section-title">Servicios</h2>
         <span class="identities-section-count" id="servicesCount">0</span>
       </div>
-      <button type="button" class="identities-add-btn" id="identitiesAddServiceBtn" aria-label="Agregar servicio">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>Agregar servicio</span>
-      </button>
     </div>
     <div class="identities-services-carousel-wrap">
       <div class="identities-services-carousel" id="identitiesServicesCarousel"></div>
     </div>
-    <div class="identities-empty" id="servicesEmpty" style="display:none;">
-      <i class="fas fa-concierge-bell"></i>
-      <p>No hay servicios para esta organizacion.</p>
-    </div>
   </section>
 
-  <section class="identities-section">
+  <section class="identities-section" id="identitiesProductsSection" style="display:none;">
     <div class="identities-section-head">
       <div class="identities-section-head-main">
         <h2 class="identities-section-title">Productos</h2>
         <span class="identities-section-count" id="productsCount">0</span>
       </div>
-      <button type="button" class="identities-add-btn" id="identitiesAddProductBtn" aria-label="Agregar producto">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>Agregar producto</span>
-      </button>
     </div>
     <div class="identities-products-masonry" id="identitiesProductsMasonry"></div>
-    <div class="identities-empty" id="productsEmpty" style="display:none;">
-      <i class="fas fa-box-open"></i>
-      <p>No hay productos para esta organizacion.</p>
-    </div>
   </section>
 </div>`;
   }
@@ -264,8 +256,8 @@ class IdentitiesView extends BaseView {
   }
 
   _renderServices() {
+    const section = document.getElementById('identitiesServicesSection');
     const carousel = document.getElementById('identitiesServicesCarousel');
-    const empty = document.getElementById('servicesEmpty');
     const count = document.getElementById('servicesCount');
     if (!carousel) return;
 
@@ -273,10 +265,10 @@ class IdentitiesView extends BaseView {
 
     if (!this.services.length) {
       carousel.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
+      if (section) section.style.display = 'none';
       return;
     }
-    if (empty) empty.style.display = 'none';
+    if (section) section.style.display = '';
 
     carousel.innerHTML = this.services.map((s) => {
       const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';
@@ -304,8 +296,8 @@ class IdentitiesView extends BaseView {
   }
 
   _renderProductsMasonry() {
+    const section = document.getElementById('identitiesProductsSection');
     const container = document.getElementById('identitiesProductsMasonry');
-    const empty = document.getElementById('productsEmpty');
     const count = document.getElementById('productsCount');
     if (!container) return;
 
@@ -313,10 +305,10 @@ class IdentitiesView extends BaseView {
 
     if (!this.products.length) {
       container.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
+      if (section) section.style.display = 'none';
       return;
     }
-    if (empty) empty.style.display = 'none';
+    if (section) section.style.display = '';
 
     const colsCount = this._getMasonryColumns();
     const cols = Array.from({ length: colsCount }, () => []);
