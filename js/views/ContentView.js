@@ -348,21 +348,8 @@ class ContentView extends BaseView {
       ? `<a href="${this.escapeHtml(item.url_publicacion)}" target="_blank" rel="noopener noreferrer" class="content-feed-external" title="Abrir original"><i class="fas fa-external-link-alt"></i></a>`
       : '';
 
-    const tagsHtml = [];
-    (item.hashtags || []).slice(0, 8).forEach((h) => {
-      tagsHtml.push(`<span class="content-feed-tag hashtag">#${this.escapeHtml(h)}</span>`);
-    });
-    (item.menciones || []).slice(0, 6).forEach((m) => {
-      tagsHtml.push(`<span class="content-feed-tag mention">@${this.escapeHtml(m)}</span>`);
-    });
-    if (item.sentiment) {
-      const cls = ['positive','negative','neutral'].includes(item.sentiment.toLowerCase())
-        ? `sentiment-${item.sentiment.toLowerCase()}`
-        : '';
-      tagsHtml.push(`<span class="content-feed-tag ${cls}">${this.escapeHtml(item.sentiment)}</span>`);
-    }
-    if (item.tone)     tagsHtml.push(`<span class="content-feed-tag">tono: ${this.escapeHtml(item.tone)}</span>`);
-    if (item.locacion) tagsHtml.push(`<span class="content-feed-tag"><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(item.locacion)}</span>`);
+    const tagsBlock = this._renderTagsBlock(item);
+    const footerDate = `<div class="content-feed-footer-date">${this.escapeHtml(this._formatAbsoluteDate(item.fecha))}</div>`;
 
     return `
       <article class="content-feed-item" data-id="${item.id}">
@@ -376,11 +363,13 @@ class ContentView extends BaseView {
             </div>
             <div class="content-feed-author-meta">
               <span class="content-feed-platform-icon">${platformIcon}</span>
-              <span>${this.escapeHtml(item.network || '')}</span>
               <span class="content-feed-meta-separator">•</span>
               <span>${this.escapeHtml(fechaText)}</span>
             </div>
           </div>
+          <button type="button" class="content-feed-header-menu" aria-label="Más opciones" tabindex="-1">
+            <i class="fas fa-ellipsis"></i>
+          </button>
         </header>
 
         ${text ? `<div class="content-feed-text">${this.escapeHtml(text)}</div>` : ''}
@@ -393,8 +382,110 @@ class ContentView extends BaseView {
             ${externalLink}
           </div>` : ''}
 
-        ${tagsHtml.length ? `<div class="content-feed-tags">${tagsHtml.join('')}</div>` : ''}
+        ${tagsBlock}
+
+        ${footerDate}
       </article>`;
+  }
+
+  /**
+   * Renderiza tags en bloques etiquetados estilo Partner:
+   *   - Línea 1 (inline): hashtags + menciones (azul, sin label)
+   *   - "Etiquetados:" + chips (si tagged_users tiene datos en flags[])
+   *   - "Temas:" + chips
+   *   - "Alertas:" + chips rojos (cuando existan)
+   *   - "Sentimiento:" + chip color
+   *   - "Tono:" + chip
+   *   - "Ubicación:" si hay
+   */
+  _renderTagsBlock(item) {
+    const rows = [];
+
+    // Línea inline de hashtags + mentions
+    const inline = [];
+    (item.hashtags || []).slice(0, 12).forEach((h) => {
+      inline.push(`<a href="#" class="content-feed-link" onclick="return false;">#${this.escapeHtml(h)}</a>`);
+    });
+    (item.menciones || []).slice(0, 12).forEach((m) => {
+      inline.push(`<a href="#" class="content-feed-link" onclick="return false;">@${this.escapeHtml(m)}</a>`);
+    });
+    if (inline.length) {
+      rows.push(`<div class="content-feed-tag-row inline">${inline.join('')}</div>`);
+    }
+
+    // Etiquetados (flags = tagged_users en nuestra RPC)
+    if (Array.isArray(item.flags) && item.flags.length) {
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label">Etiquetados:</span>
+          ${item.flags.slice(0, 10).map((f) => `<span class="content-feed-chip">${this.escapeHtml(f)}</span>`).join('')}
+        </div>`);
+    }
+
+    // Temas
+    if (Array.isArray(item.topics) && item.topics.length) {
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label">Temas:</span>
+          ${item.topics.slice(0, 10).map((t) => `<span class="content-feed-chip">${this.escapeHtml(t)}</span>`).join('')}
+        </div>`);
+    }
+
+    // Alertas: campos del ai_analysis cuando existan (no los hay en posts orgánicos
+    // pero sí cuando intelligence_signals tiene crisis/critic flags).
+    const alertSource = item.ai_analysis?.alerts || item.ai_analysis?.flags;
+    if (Array.isArray(alertSource) && alertSource.length) {
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label alerts">Alertas:</span>
+          ${alertSource.slice(0, 10).map((a) => `<span class="content-feed-chip alert">${this.escapeHtml(a)}</span>`).join('')}
+        </div>`);
+    }
+
+    // Sentimiento
+    if (item.sentiment) {
+      const norm = String(item.sentiment).toLowerCase();
+      const sentimentLabel = { positive: 'Positivo', negative: 'Negativo', neutral: 'Neutro' }[norm] || item.sentiment;
+      const cls = ['positive', 'negative', 'neutral'].includes(norm) ? `sentiment-${norm}` : '';
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label">Sentimiento:</span>
+          <span class="content-feed-chip ${cls}">${this.escapeHtml(sentimentLabel)}</span>
+        </div>`);
+    }
+
+    // Tono
+    if (item.tone) {
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label">Tono:</span>
+          <span class="content-feed-chip">${this.escapeHtml(this._capitalize(item.tone))}</span>
+        </div>`);
+    }
+
+    // Ubicación
+    if (item.locacion) {
+      rows.push(`
+        <div class="content-feed-tag-row">
+          <span class="content-feed-tag-label">Ubicación:</span>
+          <span class="content-feed-chip location"><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(item.locacion)}</span>
+        </div>`);
+    }
+
+    return rows.length ? `<div class="content-feed-tags-block">${rows.join('')}</div>` : '';
+  }
+
+  _capitalize(s) {
+    if (!s) return '';
+    const t = String(s);
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  _formatAbsoluteDate(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+    } catch { return ''; }
   }
 
   _renderEntitiesList() {
