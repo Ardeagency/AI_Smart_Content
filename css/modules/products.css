@@ -985,7 +985,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.67);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: -1;
@@ -1069,7 +1069,6 @@
   height: auto;
   max-height: 100%;
   object-fit: contain;
-  border-radius: var(--radius-md);
   display: block;
 }
 
