@@ -3,9 +3,13 @@
    Inspirado en feed estilo Instagram del proyecto IA_Partner.
    ============================================================ */
 
+/* ── Estructura de 2 niveles tipo Partner / Instagram ──
+   .content-feed-page = wrapper exterior (max 900px) — da aire al feed
+   .content-feed-list = container interior fijo (614px desktop) — el feed real
+   Los cards llenan el container interior, NO el wrapper. */
 .content-feed-page {
   padding: 1.5rem 1rem 6rem 1rem;
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -13,7 +17,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin: 0 auto 1.5rem auto;
+  max-width: 614px;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -56,6 +61,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+  max-width: 614px;
+  margin: 0 auto;
 }
 
 .content-feed-item {
@@ -816,6 +823,8 @@
 .content-feed-loadmore {
   text-align: center;
   padding: 1.5rem;
+  max-width: 614px;
+  margin: 0 auto;
 }
 
 .content-feed-loadmore-btn {
