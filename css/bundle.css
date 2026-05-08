@@ -35,6 +35,7 @@
 @import url('modules/insight.css?v=__BUILD_ID__');
 @import url('modules/monitoring.css?v=__BUILD_ID__');
 @import url('modules/public.css?v=__BUILD_ID__');
+@import url('modules/content-feed.css?v=__BUILD_ID__');
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
 :root {

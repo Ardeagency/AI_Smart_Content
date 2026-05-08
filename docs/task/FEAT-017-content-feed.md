@@ -163,14 +163,24 @@ get_paginated_content_feed(
 
 ### 2026-05-08
 
-- [x] Auditoría de zombies hecha.
-- [x] HogarView eliminado (634 líneas).
-- [x] Comentarios huérfanos limpios (brand-colors, BrandstorageView, BrandOrganizationView).
-- [x] Ticket creado.
-- [ ] Diseño RPC SQL.
-- [ ] Aplicación RPC vía Management API.
-- [ ] Reescritura ContentView.
+- [x] **A** — Auditoría de zombies + cleanup (HogarView −634 líneas, comentarios huérfanos limpios) + ticket creado.
+- [x] **B** — RPC `get_paginated_content_feed` diseñada y aplicada en Supabase prod vía Management API. Validada con 5 posts reales de Red Bull / Monster Energy en org Arde Agency: thumbnails JPG correctos, `has_video` detectado, hashtags/mentions parseados.
+- [x] **C** — `ContentFeedService.js` creado (90 líneas) + `ContentView.js` reescrito completo (~520 líneas). Cards estilo Instagram con avatar, autor, plataforma, fecha relativa, texto, media, métricas (likes/comments/shares/views/plays), hashtags, menciones, sentiment, tone, location.
+- [x] **D** — Filtros: FAB con badge contador + panel deslizante con presets de fecha (Hoy/7d/30d/90d), multi-select de entidades, toggles para incluir ads/signals.
+- [x] **E** — Carga progresiva: thumbnail JPG visible primero, video reemplaza al `onloadedmetadata`. Fallback al thumbnail si falla.
+- [x] **F** — Limpieza: `'/content': 'IDENTITY'` → `'CONTENT'`. Fix bug `Navigation.js:69` (Production tenía `id: 'activity'` duplicado → `id: 'production'`). Eliminada ruta vestigial `/content/:contentId` (la nueva ContentView no tiene vista de detalle propia, los items linkean al post original).
+- [x] CSS nuevo `css/modules/content-feed.css` registrado en `bundle.css`.
+- [x] Lazy loader `app.js` actualizado para cargar `ContentFeedService.js` antes de `ContentView.js`.
+- [x] `node --check` pasa en los 4 archivos modificados/creados.
+- [ ] **G** — Smoke test E2E visual en `aismartcontent.io/org/.../content` con la org Arde Agency (359 posts competidor + 357 signals esperados).
+
+### Archivo SQL fuente
+
+⚠️ La carpeta `SQL/` está en `.gitignore` por decisión del proyecto ("no exponer
+estructura interna"). El archivo
+`SQL/functions/content/get_paginated_content_feed.sql` queda en disco local
+como referencia. La fuente de verdad es la RPC viva en Supabase prod.
 
 ---
 
-_Última actualización: 2026-05-08_
+_Última actualización: 2026-05-08 — Bloques A-F cerrados, falta validación visual G._

@@ -66,7 +66,7 @@ const SIDEBAR_USER_CONFIG = {
       route: 'health'
     },
     { type: 'section', label: 'Create' },
-    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'page', id: 'content', label: 'Content', icon: 'fa-photo-film', route: 'content' },
     {
       type: 'page',
@@ -1642,7 +1642,7 @@ class Navigation {
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
-      '/content': 'IDENTITY',
+      '/content': 'CONTENT',
       '/video': 'VIDEO',
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',

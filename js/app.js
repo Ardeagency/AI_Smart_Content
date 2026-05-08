@@ -359,10 +359,12 @@ class App {
     r.register('/campaigns/:campaignId', legacyRouteRedirectView, auth);
     r.register('/marketing', legacyRouteRedirectView, auth);
 
-    // ── Org: Content ──
-    const contentLoader = this._lazy('ContentView', ['/js/views/ContentView.js']);
+    // ── Org: Content (feed unificado de scraping — FEAT-017) ──
+    const contentLoader = this._lazy('ContentView', [
+      '/js/services/ContentFeedService.js',
+      '/js/views/ContentView.js',
+    ]);
     r.register('/org/:orgIdShort/:orgNameSlug/content', contentLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/content/:contentId', contentLoader, auth);
     r.register('/content', contentLoader, auth);
 
     // ── Org: Video (Kling 3.0 / KIE) ──
