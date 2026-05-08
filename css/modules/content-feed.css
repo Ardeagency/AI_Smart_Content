@@ -174,22 +174,41 @@
 
 .content-feed-media {
   position: relative;
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.03));
   display: flex;
   align-items: center;
   justify-content: center;
-  max-height: 540px;
+  max-height: 600px;
   overflow: hidden;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card, rgba(255, 255, 255, 0.025));
+}
+
+/* Trampa estilo Instagram: para evitar bandas grises feas en videos verticales,
+   replicamos el thumbnail como background blureado y oscurecido detrás del media.
+   El thumbnail real va encima centrado. Para imágenes horizontales el background
+   queda invisible porque el contenido cubre todo el ancho. */
+.content-feed-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--thumb-bg, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(36px) brightness(0.45) saturate(1.2);
+  transform: scale(1.15);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .content-feed-media img,
 .content-feed-media video {
+  position: relative;
+  z-index: 1;
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  max-height: 540px;
+  max-height: 600px;
   object-fit: contain;
   background: transparent;
 }
@@ -654,11 +673,14 @@
 
 .content-feed-carousel-img {
   display: none;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  max-height: 540px;
+  max-height: 600px;
   object-fit: contain;
   background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .content-feed-carousel-img.active {

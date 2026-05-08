@@ -669,8 +669,10 @@ class ContentView extends BaseView {
     if (videoUrl) {
       const primary = thumbCandidates[0] || '';
       const fallbacks = thumbCandidates.slice(1).join('|');
+      const bgStyle = primary ? `--thumb-bg:url('${this._escapeUrlForCss(primary)}')` : '';
       return `
         <div class="content-feed-media" id="${id}"
+             style="${bgStyle}"
              data-video-url="${this.escapeHtml(videoUrl)}"
              data-poster="${this.escapeHtml(primary)}"
              data-post-url="${this.escapeHtml(postUrl)}">
@@ -694,8 +696,9 @@ class ContentView extends BaseView {
     if (singleCandidates.length) {
       const primary = singleCandidates[0];
       const fallbacks = singleCandidates.slice(1).join('|');
+      const bgStyle = `--thumb-bg:url('${this._escapeUrlForCss(primary)}')`;
       return `
-        <div class="content-feed-media" id="${id}" data-post-url="${this.escapeHtml(postUrl)}">
+        <div class="content-feed-media" id="${id}" style="${bgStyle}" data-post-url="${this.escapeHtml(postUrl)}">
           <img src="${this.escapeHtml(primary)}" alt="" loading="lazy" referrerpolicy="no-referrer"
                data-fallbacks="${this.escapeHtml(fallbacks)}">
         </div>`;
@@ -703,6 +706,12 @@ class ContentView extends BaseView {
 
     // No hay nada renderizable → sin contenedor
     return '';
+  }
+
+  /** Escapa una URL para usarla en una CSS custom property. */
+  _escapeUrlForCss(url) {
+    if (!url) return '';
+    return String(url).replace(/'/g, "%27").replace(/"/g, "%22").replace(/\\/g, "\\\\");
   }
 
   /** Devuelve URLs candidatas en orden de preferencia, deduplicadas. */
@@ -740,8 +749,12 @@ class ContentView extends BaseView {
   }
 
   _createCarouselHtml(urls, id, postUrl) {
+    const bgStyle = urls[0] ? `--thumb-bg:url('${this._escapeUrlForCss(urls[0])}')` : '';
     return `
-      <div class="content-feed-media content-feed-carousel" id="${id}" data-current="0" data-total="${urls.length}" data-post-url="${this.escapeHtml(postUrl || '')}">
+      <div class="content-feed-media content-feed-carousel" id="${id}"
+           style="${bgStyle}"
+           data-current="0" data-total="${urls.length}"
+           data-post-url="${this.escapeHtml(postUrl || '')}">
         ${urls.map((u, i) => `
           <img class="content-feed-carousel-img${i === 0 ? ' active' : ''}"
                src="${this.escapeHtml(u)}"
