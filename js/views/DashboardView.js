@@ -27,7 +27,7 @@ class DashboardView extends BaseView {
   static TABS_ENABLED = {
     'my-brands':  false,
     'competence': false,
-    'tendencies': true,
+    'tendencies': false,
     'strategy':   false,
   };
 
