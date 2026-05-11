@@ -286,29 +286,12 @@
       </div>`;
 
     if (ready && list.length) {
-      panel.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.id;
-          const link = btn.dataset.link;
-          if (id && typeof this._orgNotificationsMark === 'function') {
-            this._orgNotificationsMark(id, 'read').then(() => {
-              document.dispatchEvent(new CustomEvent('notifications-updated'));
-            });
-          } else {
-            document.dispatchEvent(new CustomEvent('notifications-updated'));
-          }
-          if (link && window.router) {
-            if (typeof this.closeNotificationsDropdown === 'function') {
-              this.closeNotificationsDropdown();
-            }
-            if (/^https?:\/\//i.test(link)) {
-              window.open(link, '_blank', 'noopener,noreferrer');
-            } else {
-              window.router.navigate(link.startsWith('/') ? link : `/${link}`);
-            }
-          }
-        });
-      });
+      const onClose = () => {
+        if (typeof this.closeNotificationsDropdown === 'function') {
+          this.closeNotificationsDropdown();
+        }
+      };
+      this._attachNotificationListeners(panel, onClose, list);
     }
     panel.querySelector('.nav-flyout-cta-link')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -333,18 +316,9 @@
     } else if (list.length === 0) {
       bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
     } else {
-      bodyHtml = '<div class="nav-flyout-list nav-flyout-notifications-list">' + list.map((n) => {
-        const type = (n.type || 'info');
-        const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
-        const unread = !n.is_read;
-        const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
-        return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
-          <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
-          <span class="nav-flyout-notification-title">${_escapeHtml(n.title)}</span>
-          <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}</span>
-          <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
-        </button>`;
-      }).join('') + '</div>';
+      bodyHtml = '<div class="notif-list">' +
+        list.map((n) => this._renderRichNotificationCard(n)).join('') +
+        '</div>';
     }
 
     const footerHtml = configHref
@@ -365,25 +339,7 @@
       </div>`;
 
     if (ready && list.length) {
-      flyout.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.id;
-          const link = btn.dataset.link;
-          if (id && typeof this._orgNotificationsMark === 'function') {
-            this._orgNotificationsMark(id, 'read').then(() => {
-              document.dispatchEvent(new CustomEvent('notifications-updated'));
-            });
-          }
-          if (link && window.router) {
-            this.closeFlyout();
-            if (/^https?:\/\//i.test(link)) {
-              window.open(link, '_blank', 'noopener,noreferrer');
-            } else {
-              window.router.navigate(link.startsWith('/') ? link : `/${link}`);
-            }
-          }
-        });
-      });
+      this._attachNotificationListeners(flyout, () => this.closeFlyout(), list);
     }
     flyout.querySelector('.nav-flyout-cta-link')?.addEventListener('click', (e) => {
       e.preventDefault();

@@ -1,0 +1,298 @@
+/* ============================================================
+   Notifications — modelo rico (FEAT-018)
+   Card con: etiqueta · urgencia · título · resumen · detalles
+   colapsables · subject · checklist · estado · acciones.
+   Se aplica en 3 contenedores: dropdown del header, flyout del
+   sidebar y modal global.
+   ============================================================ */
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.notif-card {
+  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.85rem 1rem 0.7rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.notif-card.unread::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent-brand, #6366f1);
+}
+
+/* ── Header (etiqueta · urgencia · fecha) ─────────── */
+
+.notif-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+}
+
+.notif-label {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary, var(--text-muted));
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.notif-sev-pill {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+}
+
+.notif-sev-pill.sev-info        { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+.notif-sev-pill.sev-opportunity { background: rgba(34, 197, 94,  0.15); color: #4ade80; }
+.notif-sev-pill.sev-warning     { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.notif-sev-pill.sev-critical    { background: rgba(239, 68, 68,  0.18); color: #f87171; }
+.notif-sev-pill.sev-success     { background: rgba(34, 197, 94,  0.15); color: #4ade80; }
+
+.notif-date {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* ── Hero (título + resumen) ──────────────────────── */
+
+.notif-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.notif-summary {
+  font-size: 0.82rem;
+  color: var(--text-secondary, var(--text-muted));
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ── Detalles (expandible) ────────────────────────── */
+
+.notif-details {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.5rem;
+}
+
+.notif-details > summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+}
+
+.notif-details > summary::-webkit-details-marker { display: none; }
+
+.notif-details > summary::before {
+  content: '▶';
+  font-size: 0.6rem;
+  transition: transform 0.15s ease;
+}
+
+.notif-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.notif-body {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Subject (referencia al objeto) ───────────────── */
+
+.notif-subject {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.notif-subject:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--text-muted);
+}
+
+.notif-subject-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-subject-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.notif-subject-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-subject-arrow {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Checklist (sub-tareas) ───────────────────────── */
+
+.notif-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+}
+
+.notif-checklist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  margin-bottom: 0.2rem;
+}
+
+.notif-checklist-progress {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.notif-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.25rem 0;
+  line-height: 1.4;
+}
+
+.notif-step input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-top: 0.1rem;
+  accent-color: var(--accent-brand, #6366f1);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.notif-step.done > span {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.notif-step-optional {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+/* ── Estado de tarea ──────────────────────────────── */
+
+.notif-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary, var(--text-muted));
+  padding-top: 0.2rem;
+}
+
+.notif-status strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── Acciones ─────────────────────────────────────── */
+
+.notif-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.notif-action {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.notif-action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--text-muted);
+}
+
+.notif-action:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.notif-action.primary {
+  background: var(--accent-brand, #6366f1);
+  border-color: var(--accent-brand, #6366f1);
+  color: #fff;
+}
+
+.notif-action.primary:hover:not(:disabled) {
+  background: var(--accent-secondary, #4f46e5);
+  border-color: var(--accent-secondary, #4f46e5);
+}
