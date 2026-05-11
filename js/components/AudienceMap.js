@@ -174,6 +174,22 @@
     const canvas = container.querySelector('canvas');
     const ctx = canvas.getContext('2d');
 
+    // Pinta directamente vía dataset.backgroundColor — más confiable que
+    // scales.color en todos los entornos. Apply alpha por intensidad para
+    // que los países con más audiencia se vean dominantes.
+    const fillFor = (value) => {
+      if (value == null) return 'rgba(255,255,255,0.04)';
+      const t = Math.max(0, Math.min(1, value / maxVal));
+      // Color base interpolado en el degradado brand (toda la rampa)
+      const base = interpolateColors(gradientStops, t);
+      // Alpha 0.3 (bajo) → 1.0 (top) para jerarquía visual clara
+      const alpha = 0.30 + 0.70 * t;
+      // Convertir rgb(R,G,B) a rgba con el alpha calculado
+      const m = base.match(/rgb\((\d+),(\d+),(\d+)\)/);
+      if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha.toFixed(2)})`;
+      return base;
+    };
+
     const chart = new window.Chart(ctx, {
       type: 'choropleth',
       data: {
@@ -181,8 +197,9 @@
         datasets: [{
           label: 'Audience',
           data,
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 0.5,
+          backgroundColor: (ctx) => fillFor(ctx.dataset.data[ctx.dataIndex]?.value),
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 0.4,
         }]
       },
       options: {
@@ -206,14 +223,9 @@
         },
         scales: {
           projection: { axis: 'x', projection: 'naturalEarth1' },
-          // Color scale: interpolación contra el degradado de marca
-          color: {
-            axis: 'x',
-            interpolate: (t) => interpolateColors(gradientStops, t),
-            missing: 'rgba(255,255,255,0.05)', // países sin data: casi invisibles
-            quantize: 0,                        // suave, sin escalones
-            legend: { display: false },         // sin barra azul -1..1 a la derecha
-          },
+          // Color scale neutralizada: el painting real lo hace dataset.backgroundColor.
+          // Mantenemos `display:false` para evitar la barra azul -1..1 a la derecha.
+          color: { display: false },
         },
       },
     });

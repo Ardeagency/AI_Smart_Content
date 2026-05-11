@@ -2173,3 +2173,27 @@
   .cc-entorno-legend { bottom: 10px; left: 10px; padding: 10px; min-width: 160px; }
   .cc-entorno-filter-btn { bottom: 10px; right: 10px; width: 40px; height: 40px; }
 }
+
+/* ── Full-width override cuando el layout Entorno está activo ──────── */
+/* .cc-page tiene max-width:1280px; cuando hay .cc-entorno-layout queremos
+   full screen útil (~1800px max, centrado). Usa :has() — soporte moderno. */
+.cc-page:has(#ccTwoCol) {
+  max-width: 1800px;
+  padding: 12px 20px;
+}
+
+/* En viewports muy anchos (>1900px) seguimos centrado con 1800px */
+
+/* ── Custom cursor sobre el mapa: punto blanco + halo gradiente brand ─ */
+/* SVG cursor data URI: círculo blanco con halo radial naranja brand.
+   Hotspot en el centro (16,16). 32×32 px funciona en todos los navegadores. */
+.cc-entorno-map,
+.cc-entorno-map * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><defs><radialGradient id='g' cx='50%25' cy='50%25' r='50%25'><stop offset='35%25' stop-color='%23ffffff' stop-opacity='1'/><stop offset='55%25' stop-color='%23ff6500' stop-opacity='0.65'/><stop offset='100%25' stop-color='%23ff0000' stop-opacity='0'/></radialGradient></defs><circle cx='16' cy='16' r='14' fill='url(%23g)'/><circle cx='16' cy='16' r='4.5' fill='%23ffffff'/></svg>") 16 16, auto;
+}
+
+/* Los botones (zoom, filter) recuperan el cursor pointer */
+.cc-entorno-controls .cc-entorno-ctrl-btn,
+.cc-entorno-filter-btn {
+  cursor: pointer;
+}
