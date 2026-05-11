@@ -158,6 +158,22 @@
     return `rgb(${r},${g},${b})`;
   }
 
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0; const l = (max + min) / 2;
+    let s = 0;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r)      h = ((g - b) / d) + (g < b ? 6 : 0);
+      else if (max === g) h = ((b - r) / d) + 2;
+      else                h = ((r - g) / d) + 4;
+      h *= 60;
+    }
+    return [h, s * 100, l * 100];
+  }
+
   // ── Desktop: choropleth con chartjs-chart-geo ────────────────────────────
   async function renderChoropleth(container, distribution) {
     await ensureScripts();
@@ -185,27 +201,27 @@
     const maxVal = Math.max(0.0001, ...valuedEntries.map(d => d.value));
     const total  = valuedEntries.reduce((s, d) => s + d.value, 0);
 
-    // Lee el degradado de marca al momento de render (refleja la marca actual)
+    // Lee el degradado de marca y extrae hue+saturation del último stop.
+    // La intensidad se controla con LIGHTNESS en HSL: más actividad = lightness
+    // baja (color más oscuro/profundo), menos actividad = lightness alta
+    // (color pálido). Mucho más legible que variar alpha sobre fondo oscuro.
     const gradientStops = readBrandGradientColors();
+    const baseHex = gradientStops[gradientStops.length - 1] || '#e09145';
+    const [br, bg, bb] = hexToRgb(baseHex);
+    const [brandHue, brandSat] = rgbToHsl(br, bg, bb);
 
     container.innerHTML = `<canvas class="cc-map-canvas" aria-label="Mapa de distribución de audiencia por país"></canvas><div class="cc-map-legend"></div>`;
     const canvas = container.querySelector('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Pinta directamente vía dataset.backgroundColor — más confiable que
-    // scales.color en todos los entornos. Apply alpha por intensidad para
-    // que los países con más audiencia se vean dominantes.
     const fillFor = (value) => {
-      if (value == null) return 'rgba(255,255,255,0.04)';
+      if (value == null) return 'rgba(255,255,255,0.04)'; // missing → casi invisible
       const t = Math.max(0, Math.min(1, value / maxVal));
-      // Color base interpolado en el degradado brand (toda la rampa)
-      const base = interpolateColors(gradientStops, t);
-      // Alpha 0.3 (bajo) → 1.0 (top) para jerarquía visual clara
-      const alpha = 0.30 + 0.70 * t;
-      // Convertir rgb(R,G,B) a rgba con el alpha calculado
-      const m = base.match(/rgb\((\d+),(\d+),(\d+)\)/);
-      if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha.toFixed(2)})`;
-      return base;
+      // Lightness: 78% (t=0, casi blanco-pálido) → 28% (t=1, oscuro/profundo)
+      const lightness = 78 - (50 * t);
+      // Saturation alta y constante para que el color se lea como brand
+      const sat = Math.max(60, brandSat);
+      return `hsl(${brandHue.toFixed(1)}, ${sat.toFixed(1)}%, ${lightness.toFixed(1)}%)`;
     };
 
     const chart = new window.Chart(ctx, {
@@ -244,8 +260,11 @@
           // pisas los defaults del controller. SIEMPRE declara `type` + `axis`
           // explícitos o el scale builder de chart.js lanza
           // "Cannot read properties of undefined (reading 'axis')".
+          // `display:false` apaga la barra "0/0.5/1.0/1.5/2.0" auto-generada
+          // del LegendScale en la esquina; `legend.display:false` es la opción
+          // documentada pero en v4.3.1 no la respeta — `display:false` sí.
           projection: { axis: 'x', type: 'projection', projection: 'naturalEarth1' },
-          color: { axis: 'x', type: 'color', legend: { display: false } },
+          color: { axis: 'x', type: 'color', display: false, legend: { display: false } },
         },
       },
     });
