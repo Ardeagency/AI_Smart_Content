@@ -431,16 +431,29 @@ class CommandCenterView extends BaseView {
 
     const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
     const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
+    // Label de "Resultados" según el objetivo real de la campaña (Meta/Google).
+    // Si no podemos inferir el tipo, default a "resultados" (genérico).
+    const resultLabel = (obj) => {
+      const s = String(obj || '').toLowerCase();
+      if (s.includes('lead'))                                     return 'leads';
+      if (s.includes('purchase') || s.includes('sales') || s.includes('conversion')) return 'compras';
+      if (s.includes('install') || s.includes('app'))             return 'instalaciones';
+      if (s.includes('message') || s.includes('chat'))            return 'mensajes';
+      if (s.includes('engagement') || s.includes('reach'))        return 'interacciones';
+      if (s.includes('traffic') || s.includes('link_click'))      return 'clics';
+      if (s.includes('view') || s.includes('thruplay'))           return 'vistas';
+      return 'resultados';
+    };
     const fmtCompact = (v) => {
       const n = Number(v);
-      if (!Number.isFinite(n)) return '—';
+      if (!Number.isFinite(n)) return '0';
       if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
       if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
       return n.toLocaleString('es-ES');
     };
     const fmtMoney = (v, currency) => {
       const n = Number(v);
-      if (!Number.isFinite(n)) return '—';
+      if (!Number.isFinite(n)) return `0 ${currency || 'USD'}`;
       const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
       return `${compact} ${currency || 'USD'}`;
     };
@@ -457,10 +470,12 @@ class CommandCenterView extends BaseView {
       const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
       const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
 
-      // Engagement: cached_clicks como proxy primario (clicks/interacciones).
-      // Si no hay clicks, usa impressions como señal de exposición.
-      const engagementVal = c.cached_clicks ?? c.cached_impressions;
-      const engagementLbl = c.cached_clicks ? 'interacciones' : (c.cached_impressions ? 'impresiones' : '');
+      // Resultados = conversiones del objetivo (leads/compras/etc.). Si la
+      // campaña está sincronizada pero el dato es null, mostramos 0 (real:
+      // existe en plataforma pero aún no convirtió). Igual para spend.
+      const resultsN = Number(c.cached_conversions);
+      const resultsValue = Number.isFinite(resultsN) ? resultsN : 0;
+      const resultsLbl   = resultLabel(c.platform_objective || c.cta);
 
       return `
       <div class="cc-camp-row">
@@ -470,8 +485,8 @@ class CommandCenterView extends BaseView {
         </div>
         <dl class="cc-camp-stats">
           <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Engagement</dt><dd>${engagementVal != null ? `${fmtCompact(engagementVal)}${engagementLbl ? ` <small>${engagementLbl}</small>` : ''}` : '—'}</dd></div>
-          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${c.cached_spend != null ? this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency)) : '—'}</dd></div>
+          <div class="cc-camp-stat"><dt>Resultados</dt><dd>${fmtCompact(resultsValue)} <small>${this.escapeHtml(resultsLbl)}</small></dd></div>
+          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency))}</dd></div>
         </dl>
       </div>`;
     }).join('');
