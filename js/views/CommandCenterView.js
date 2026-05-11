@@ -124,10 +124,21 @@ class CommandCenterView extends BaseView {
         <span class="cc-entorno-bc-item">Panel</span>
         <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
         <span class="cc-entorno-bc-item cc-entorno-bc-current">Campañas</span>
-        <button class="cc-panel-expand-btn" id="ccPanelExpandBtn" title="Ver análisis del entorno" aria-label="Expandir panel">
-          <i class="fas fa-expand-alt"></i>
-          <i class="fas fa-compress-alt"></i>
-        </button>
+        <div class="cc-panel-actions">
+          <!-- Visibles solo en analysis mode (CSS las oculta en reading). -->
+          <button class="cc-panel-action-btn" id="ccBtnCreateCampaign" type="button" title="Crear campaña">
+            <i class="fas fa-bullhorn"></i>
+            <span>Crear campaña</span>
+          </button>
+          <button class="cc-panel-action-btn" id="ccBtnCreateAudience" type="button" title="Crear audiencia">
+            <i class="fas fa-user-plus"></i>
+            <span>Crear audiencia</span>
+          </button>
+          <button class="cc-panel-expand-btn" id="ccPanelExpandBtn" title="Ver análisis del entorno" aria-label="Expandir panel">
+            <i class="fas fa-expand-alt"></i>
+            <i class="fas fa-compress-alt"></i>
+          </button>
+        </div>
       </div>
 
       <!-- MODO 1: lectura (default) — lista compacta de campañas -->
@@ -145,13 +156,25 @@ class CommandCenterView extends BaseView {
       <div class="cc-panel-analysis">
         <section class="cc-entorno-section">
           <div class="cc-entorno-subsection-head">
-            <h3 class="cc-entorno-section-title">Campañas</h3>
+            <h3 class="cc-entorno-section-title">Campañas reales</h3>
             <span class="cc-entorno-subsection-count" id="ccGalleryCampCount">0</span>
           </div>
           <div class="cc-gallery" id="ccGalleryCamp"></div>
           <div class="cc-empty cc-empty--compact" id="ccGalleryCampEmpty" style="display:none;">
             <i class="fas fa-bullhorn"></i>
             <span>Sin campañas sincronizadas.</span>
+          </div>
+        </section>
+
+        <section class="cc-entorno-section">
+          <div class="cc-entorno-subsection-head">
+            <h3 class="cc-entorno-section-title">Campañas conceptuales</h3>
+            <span class="cc-entorno-subsection-count" id="ccGalleryConceptCount">0</span>
+          </div>
+          <div class="cc-gallery" id="ccGalleryConcept"></div>
+          <div class="cc-empty cc-empty--compact" id="ccGalleryConceptEmpty" style="display:none;">
+            <i class="fas fa-lightbulb"></i>
+            <span>Sin campañas conceptuales. Crea una con el botón de arriba.</span>
           </div>
         </section>
 
@@ -524,6 +547,7 @@ class CommandCenterView extends BaseView {
   /* ── GALERÍA (analysis mode): grilla detallada de campañas + audiencias ── */
   _renderGallery() {
     this._renderGalleryCampaigns();
+    this._renderGalleryConceptCampaigns();
     this._renderGalleryAudiences();
   }
 
@@ -601,6 +625,65 @@ class CommandCenterView extends BaseView {
           <div class="cc-camp-stat"><dt>Impresiones</dt><dd>${fmtCompact(c.cached_impressions || 0)}</dd></div>
           <div class="cc-camp-stat"><dt>Clics</dt><dd>${fmtCompact(c.cached_clicks || 0)}</dd></div>
           <div class="cc-camp-stat"><dt>ROAS</dt><dd>${c.cached_roas != null ? `${Number(c.cached_roas).toFixed(2)}x` : '—'}</dd></div>
+        </dl>
+      </article>`;
+    }).join('');
+  }
+
+  _renderGalleryConceptCampaigns() {
+    const grid  = document.getElementById('ccGalleryConcept');
+    const empty = document.getElementById('ccGalleryConceptEmpty');
+    const count = document.getElementById('ccGalleryConceptCount');
+    if (!grid) return;
+
+    // Conceptuales = creadas localmente, sin sync de plataforma.
+    const rows = (Array.isArray(this._campaigns) ? this._campaigns : []).filter(c => !c?.last_synced_at);
+    if (count) count.textContent = String(rows.length);
+
+    if (!rows.length) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
+    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
+    const fmtMoney = (v, currency) => {
+      const n = Number(v);
+      if (!Number.isFinite(n) || n === 0) return '—';
+      const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+      return `${compact} ${currency || 'USD'}`;
+    };
+    const fmtDate = (d) => {
+      if (!d) return '—';
+      const t = new Date(d);
+      return Number.isFinite(t.getTime())
+        ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+    };
+    const personaById = this._personaNameById();
+
+    grid.innerHTML = rows.map((c) => {
+      const stBadge   = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
+      const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
+      const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
+      const ctaText   = String(c.cta || c.descripcion_interna || c.platform_objective || '').trim();
+      const ctaShort  = ctaText.length > 140 ? ctaText.slice(0, 140) + '…' : ctaText;
+      const pName     = c.persona_id ? personaById[String(c.persona_id)] : '';
+
+      return `
+      <article class="cc-gallery-card cc-gallery-card--concept">
+        <header class="cc-gallery-card-head">
+          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
+          <div class="cc-camp-badges">${stBadge}${platBadge}</div>
+        </header>
+        ${ctaShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(ctaShort)}</p>` : ''}
+        <dl class="cc-gallery-stats cc-gallery-stats--concept">
+          <div class="cc-camp-stat"><dt>Creada</dt><dd>${this.escapeHtml(fmtDate(c.created_at))}</dd></div>
+          <div class="cc-camp-stat"><dt>Inicio plan</dt><dd>${this.escapeHtml(fmtDate(c.starts_at))}</dd></div>
+          <div class="cc-camp-stat"><dt>Presupuesto/día</dt><dd>${this.escapeHtml(fmtMoney(c.budget_daily, c.budget_currency))}</dd></div>
+          <div class="cc-camp-stat"><dt>Audiencia</dt><dd>${this.escapeHtml(pName || '—')}</dd></div>
         </dl>
       </article>`;
     }).join('');
@@ -802,18 +885,39 @@ class CommandCenterView extends BaseView {
     if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
 
-  /* ── Listeners: toggle expand/compress del panel ──────────────────── */
+  /* ── Listeners: toggle del panel + botones de acción ────────────────
+     Los botones "crear campaña/audiencia" disparan CustomEvents globales
+     (cc:create-campaign / cc:create-audience) con el brand_container_id en
+     el detail. Cuando definamos el flujo (modal, wizard, ruta), nos
+     conectamos a esos eventos. Fallback alert para que la UI no se sienta
+     muerta mientras tanto. */
   _setupEventListeners() {
-    const btn      = document.getElementById('ccPanelExpandBtn');
-    const sidebar  = document.getElementById('ccSidebar');
-    const layout   = document.getElementById('ccTwoCol');
-    if (!btn || !sidebar || !layout) return;
-    btn.addEventListener('click', () => {
-      const expanded = sidebar.classList.toggle('cc-sidebar--expanded');
-      layout.classList.toggle('cc-entorno-layout--expanded', expanded);
-      btn.setAttribute('title', expanded ? 'Cerrar análisis' : 'Ver análisis del entorno');
-      btn.setAttribute('aria-label', expanded ? 'Cerrar panel' : 'Expandir panel');
-    });
+    const sidebar = document.getElementById('ccSidebar');
+    const layout  = document.getElementById('ccTwoCol');
+    const btnExp  = document.getElementById('ccPanelExpandBtn');
+    if (btnExp && sidebar && layout) {
+      btnExp.addEventListener('click', () => {
+        const expanded = sidebar.classList.toggle('cc-sidebar--expanded');
+        layout.classList.toggle('cc-entorno-layout--expanded', expanded);
+        btnExp.setAttribute('title', expanded ? 'Cerrar análisis' : 'Ver análisis del entorno');
+        btnExp.setAttribute('aria-label', expanded ? 'Cerrar panel' : 'Expandir panel');
+      });
+    }
+
+    const dispatch = (eventName, label) => {
+      const brandContainerId = this._containerRow?.id || null;
+      const detail = { brandContainerId, source: 'command-center' };
+      const ev = new CustomEvent(eventName, { detail, bubbles: true, cancelable: true });
+      const dispatched = window.dispatchEvent(ev);
+      // Si ningún listener detuvo/manejó el evento, fallback con alert para
+      // que el UX no quede en silencio. Quita esto cuando wirees el flujo.
+      if (dispatched && !ev.defaultPrevented) {
+        window.alert(`${label}: aún no hay flujo conectado. (Event: ${eventName}, brand: ${brandContainerId || '—'})`);
+      }
+    };
+
+    document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => dispatch('cc:create-campaign', 'Crear campaña'));
+    document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => dispatch('cc:create-audience', 'Crear audiencia'));
   }
 
   /* ── Error state ──────────────────────────────────────────────────── */

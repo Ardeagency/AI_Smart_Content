@@ -728,9 +728,42 @@
 .cc-entorno-section .cc-list::-webkit-scrollbar-thumb:hover,
 .cc-panel-analysis::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-/* ── Botón expand/compress en el breadcrumb ────────────────────────── */
-.cc-panel-expand-btn {
+/* ── Acciones del breadcrumb (Crear + expand/compress) ─────────────── */
+.cc-panel-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Botones "Crear campaña/audiencia": visibles SOLO en analysis mode */
+.cc-panel-action-btn {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  height: 32px;
+  padding: 0 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-divider);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.cc-panel-action-btn i { font-size: 0.72rem; opacity: 0.85; }
+.cc-panel-action-btn:hover {
+  background: var(--brand-primary, var(--accent-warm, #e09145));
+  color: #0b0b0b;
+  border-color: var(--brand-primary, var(--accent-warm, #e09145));
+}
+.cc-sidebar--expanded .cc-panel-action-btn,
+#ccSidebar.cc-sidebar--expanded .cc-panel-action-btn { display: inline-flex; }
+
+.cc-panel-expand-btn {
   width: 32px;
   height: 32px;
   background: rgba(255, 255, 255, 0.04);
@@ -862,6 +895,20 @@
   gap: 0.55rem 0.5rem;
   margin: 0.15rem 0 0;
   min-width: 0;
+}
+
+.cc-gallery-stats--concept {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Card de campaña conceptual: tonalidad sutil para distinguirla de las
+   sincronizadas, sin ser intrusiva. Borde y fondo apenas distintos. */
+.cc-gallery-card--concept {
+  background: linear-gradient(180deg, rgba(90, 170, 255, 0.04), rgba(20, 21, 23, 1));
+  border-color: rgba(90, 170, 255, 0.18);
+}
+.cc-gallery-card--concept:hover {
+  border-color: rgba(90, 170, 255, 0.32);
 }
 
 /* Badges de awareness/score reutilizados en audiencias */
