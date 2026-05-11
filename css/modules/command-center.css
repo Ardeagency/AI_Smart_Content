@@ -755,15 +755,15 @@
   white-space: nowrap;
 }
 .cc-panel-action-btn i { font-size: 0.72rem; opacity: 0.85; }
+/* Hover = degradado dinámico de la marca (patrón estándar de la plataforma:
+   .nav-badge, studio, content-management). NO usar --brand-primary solo:
+   en marcas con primario opaco queda sin contraste con el texto oscuro. */
 .cc-panel-action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  border-color: var(--brand-primary, var(--accent-warm, #e09145));
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  color: var(--bg-primary, #0b0b0b);
+  border-color: transparent;
 }
-.cc-panel-action-btn:hover i {
-  opacity: 1;
-  color: var(--brand-primary, var(--accent-warm, #e09145));
-}
+.cc-panel-action-btn:hover i { opacity: 1; }
 .cc-sidebar--expanded .cc-panel-action-btn,
 #ccSidebar.cc-sidebar--expanded .cc-panel-action-btn { display: inline-flex; }
 
@@ -783,9 +783,9 @@
   flex-shrink: 0;
 }
 .cc-panel-expand-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  border-color: var(--brand-primary, var(--accent-warm, #e09145));
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  color: var(--bg-primary, #0b0b0b);
+  border-color: transparent;
 }
 .cc-panel-expand-btn i { display: none; }
 .cc-sidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt,
