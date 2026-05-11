@@ -1141,7 +1141,7 @@
 
 /* ════════════════════════════════════════════════════════════
    Mi Marca v2 — Firebar (header con barra ardiente)
-   gradient dinámico (--brand-gradient-dynamic) + film-grain.
+   gradient dinámico (--brand-gradient-dynamic).
    ════════════════════════════════════════════════════════════ */
 .mb-firebar {
   position: relative;
@@ -1170,11 +1170,6 @@
   background: var(--brand-gradient-dynamic,
     linear-gradient(90deg, #e30000 0%, #ff3000 28%, #ff5400 55%, #ff8800 100%));
   z-index: 0;
-}
-.mb-firebar-bg .background-film-grain {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
 }
 .mb-firebar-tabs {
   position: relative;

@@ -314,7 +314,11 @@
             if (typeof this.closeNotificationsDropdown === 'function') {
               this.closeNotificationsDropdown();
             }
-            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+            if (/^https?:\/\//i.test(link)) {
+              window.open(link, '_blank', 'noopener,noreferrer');
+            } else {
+              window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+            }
           }
         });
       });
@@ -385,7 +389,11 @@
           }
           if (link && window.router) {
             this.closeFlyout();
-            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+            if (/^https?:\/\//i.test(link)) {
+              window.open(link, '_blank', 'noopener,noreferrer');
+            } else {
+              window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+            }
           }
         });
       });

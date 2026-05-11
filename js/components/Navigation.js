@@ -596,7 +596,11 @@ class Navigation {
         }
         if (link && window.router) {
           this.closeNotificationsModal();
-          window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+          if (/^https?:\/\//i.test(link)) {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          } else {
+            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+          }
         }
       });
     });
@@ -643,7 +647,7 @@ class Navigation {
     });
     if (error) { console.warn('[notifs] list error:', error.message); return []; }
     const arr = Array.isArray(data) ? data : [];
-    return arr.map(this._normalizeOrgNotification);
+    return arr.map((n) => this._normalizeOrgNotification(n));
   }
 
   async _orgNotificationsMark(id, state) {
@@ -661,15 +665,58 @@ class Navigation {
     return {
       id:         n.id,
       title:      n.title || '',
-      message:    n.body || '',                       // body → message para render legacy
+      message:    n.body || '',                          // body → message para render legacy
       type:       n.type || 'info',
-      severity:   n.severity || 'info',               // nuevo, para color
+      severity:   n.severity || 'info',                  // nuevo, para color
       is_read:    n.my_state && n.my_state !== 'unread',
       created_at: n.created_at,
-      link_to:    n.action_url || '',                 // action_url → link_to para render legacy
-      action_label: n.action_label || '',             // nuevo, opcional
+      link_to:    this._resolveActionUrl(n.action_url),  // ⭐ prefija org path si falta
+      action_label: n.action_label || '',                // nuevo, opcional
       metadata:   n.metadata || {},
     };
+  }
+
+  /**
+   * Resuelve la URL de acción de una notificación.
+   *
+   * Las notificaciones del backend guardan action_url SIN el prefijo org
+   * (ej. `/dashboard/strategy/...`). El router de la SPA exige
+   * `/org/{orgIdShort}/{orgNameSlug}/...` para resolver el contexto multi-tenant.
+   * Este helper aplica el prefijo cuando hace falta.
+   *
+   * Reglas:
+   *   - vacío / null → ''
+   *   - http(s)://...  → externo, devuelto tal cual (abrirá target=_blank en el handler)
+   *   - /org/...       → ya tiene prefijo, devuelto tal cual
+   *   - /algo          → prefija con getOrgPathPrefix(orgId, orgName) si hay org activa
+   *   - algo (sin /)   → tratado como path relativo, prefija con `/` y org prefix
+   *
+   * Si no podemos resolver el prefix (no hay orgId), devuelve la URL original
+   * para evitar mandar al user a una ruta inválida sin contexto.
+   */
+  _resolveActionUrl(rawUrl) {
+    const u = (rawUrl || '').trim();
+    if (!u) return '';
+    if (/^https?:\/\//i.test(u)) return u;
+    if (u.startsWith('/org/')) return u;
+
+    const path = u.startsWith('/') ? u : `/${u}`;
+    const orgId = this.currentOrgId || window.currentOrgId || null;
+    const orgName = window.currentOrgName || this.currentOrgName || '';
+    if (!orgId) return path;
+
+    if (typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, orgName);
+      if (prefix) return `${prefix}${path}`;
+    }
+
+    // Fallback manual: shortId = últimos 12 chars sin guiones; slug = name slugificado.
+    const shortId = String(orgId).replace(/-/g, '').slice(-12);
+    const slug = orgName
+      ? String(orgName).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      : 'org';
+    return `/org/${shortId}/${slug}${path}`;
   }
 
   async refreshNotificationsBadge() {

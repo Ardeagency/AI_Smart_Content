@@ -382,10 +382,11 @@ class CommandCenterView extends BaseView {
 
   /* ── OPTIMIZACIÓN — comentarios de Vera ──────────────────────────── */
   _renderVeraInbox() {
-    const list  = document.getElementById('ccVeraInboxList');
-    const count = document.getElementById('ccVeraInboxCount');
-    const label = document.getElementById('ccVeraInboxLabel');
-    const empty = document.getElementById('ccOptimEmpty');
+    const section = document.getElementById('ccOptimSection');
+    const list    = document.getElementById('ccVeraInboxList');
+    const count   = document.getElementById('ccVeraInboxCount');
+    const label   = document.getElementById('ccVeraInboxLabel');
+    const empty   = document.getElementById('ccOptimEmpty');
     if (!list) return;
 
     // Filtrar placeholders/stubs: cualquier acción marcada como tal o con un
@@ -397,14 +398,19 @@ class CommandCenterView extends BaseView {
       if (typeof a?.vera_reasoning === 'string' && /bootstrap\s*stub/i.test(a.vera_reasoning)) return false;
       return true;
     });
-    if (count) count.textContent = String(actions.length);
-    if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
 
+    // Si no hay comentarios reales, ocultar la sección entera (no mostrar
+    // header con "0 comentarios" — ruido visual sin valor).
     if (actions.length === 0) {
+      if (section) section.style.display = 'none';
       list.innerHTML = '';
-      if (empty) empty.style.display = '';
+      if (empty) empty.style.display = 'none';
       return;
     }
+    if (section) section.style.display = '';
+
+    if (count) count.textContent = String(actions.length);
+    if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
     if (empty) empty.style.display = 'none';
 
     const personaNameById = this._personaNameById();
