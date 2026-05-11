@@ -240,10 +240,18 @@
         plugins: {
           legend: { display: false },
           tooltip: {
+            // No mostrar tooltip para países sin datos, ni para los que
+            // redondean a 0% (actividad despreciable). El feature se
+            // colorea levemente pero numéricamente no aporta nada.
+            filter: (tooltipItem) => {
+              const v = Number(tooltipItem.raw?.value);
+              if (!Number.isFinite(v) || v <= 0) return false;
+              const pct = total > 0 ? Math.round((v / total) * 100) : 0;
+              return pct >= 1;
+            },
             callbacks: {
               label: (ctx) => {
-                const v = ctx.raw?.value;
-                if (v == null) return null;
+                const v = Number(ctx.raw?.value);
                 const pct = total > 0 ? Math.round((v / total) * 100) : 0;
                 return `${ctx.raw.feature.properties.name}: ${pct}%`;
               },
