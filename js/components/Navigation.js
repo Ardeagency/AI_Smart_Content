@@ -51,7 +51,6 @@ const SIDEBAR_USER_CONFIG = {
       icon: 'fa-satellite-dish',
       route: 'monitoring'
     },
-    { type: 'page', id: 'content', label: 'Content', icon: 'fa-photo-film', route: 'content' },
     { type: 'section', label: 'Create' },
     { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     {
@@ -302,7 +301,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/content', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -695,7 +694,6 @@ class Navigation {
       case 'production_output':       path = id ? `/production-detail/${id}` : '/production'; break;
       case 'video':                   path = id ? `/video/${id}` : '/video'; break;
       case 'flow_run':                path = id ? `/studio/run/${id}` : '/studio'; break;
-      case 'brand_post':              path = id ? `/content?post=${id}` : '/content'; break;
       default:                        path = '';
     }
     return path ? this._resolveActionUrl(path) : '';
@@ -2054,7 +2052,6 @@ class Navigation {
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
-      '/content': 'CONTENT',
       '/video': 'VIDEO',
       '/organization': 'SETTINGS',
       '/credits': 'CREDITS',

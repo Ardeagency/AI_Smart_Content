@@ -45,25 +45,9 @@
         }
     </style>
 </head>
-<body class="entrance-active">
-    <!-- Entrance: rectángulo con degradado (amarillo/verde) + logo -->
-    <div class="entrance-overlay" id="entranceOverlay" aria-hidden="true">
-        <div class="entrance-animation">
-            <div class="entrance-text-block entrance-text-2">
-                <div class="entrance-reveal-frame">
-                    <span class="entrance-reveal-box" aria-hidden="true"></span>
-                    <img src="/recursos/logos/logo-03.svg" alt="AI Smart Content" class="entrance-logo" width="320" height="64" fetchpriority="high" decoding="async">
-                </div>
-            </div>
-        </div>
-        <!-- Barra de progreso: aparece después del logo, se llena hasta que la web carga -->
-        <div class="entrance-progress" id="entranceProgress">
-            <div class="entrance-progress__bar" id="entranceProgressBar"></div>
-        </div>
-    </div>
-
-    <!-- Loader global: solo visible si la landing no ha terminado de renderizar (show/hide vía appLoader) -->
-    <div class="loader-overlay loader-overlay--hidden" id="globalSpinner" aria-hidden="true">
+<body>
+    <!-- Loader global: visible solo cuando algún proceso lo solicita explícitamente vía appLoader.showSpinner -->
+    <div class="loader-overlay loader-overlay--hidden loader-overlay--gone" id="globalSpinner" aria-hidden="true">
         <div class="loader">
             <div class="loader-line"></div>
         </div>

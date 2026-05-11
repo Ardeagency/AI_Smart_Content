@@ -223,13 +223,11 @@
         },
         scales: {
           projection: { axis: 'x', projection: 'naturalEarth1' },
-          // Color scale FULL-OFF: el painting real lo hace dataset.backgroundColor.
-          // `display:false` solo oculta los ticks del eje; el legend (barra con gradient
-          // y números 0/0.4/0.8) es una capa aparte que requiere su propio display:false.
+          // chartjs-chart-geo REQUIERE scales.color para choropleth — setear
+          // `display:false` rompe el render. Solo hide del legend (barra a la
+          // derecha con 0/0.4/0.8). El painting real lo hace dataset.backgroundColor.
           color: {
-            display: false,
             legend: { display: false },
-            ticks: { display: false },
           },
         },
       },

@@ -35,7 +35,6 @@
 @import url('modules/insight.css?v=__BUILD_ID__');
 @import url('modules/monitoring.css?v=__BUILD_ID__');
 @import url('modules/public.css?v=__BUILD_ID__');
-@import url('modules/content-feed.css?v=__BUILD_ID__');
 @import url('modules/planes.css?v=__BUILD_ID__');
 @import url('modules/notifications.css?v=__BUILD_ID__');
 
@@ -668,10 +667,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
   overflow: hidden !important;
   padding: 0 !important;
 }
-body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
-/* Mientras la entrada está activa o antes de que la landing pinte: mismo tono que el canvas
-   para que el fade del overlay no revele un color distinto del body */
-body.entrance-active,
+/* Landing usa el tono del canvas para evitar flash de fondo distinto. */
 body.route-landing { background: #0b0b0b; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
 body.route-landing #app-container { background: transparent; padding-top: 0; }
