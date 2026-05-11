@@ -568,7 +568,7 @@ class Navigation {
     }
     body.innerHTML =
       '<div class="notif-list notifications-modal-list">' +
-      list.map((n) => this._renderRichNotificationCard(n, { mode: 'expanded' })).join('') +
+      list.map((n) => this._renderRichNotificationCard(n)).join('') +
       '</div>';
     this._attachNotificationListeners(body, () => this.closeNotificationsModal(), list);
   }
@@ -795,24 +795,14 @@ class Navigation {
    * trae metadata.{summary, subject, checklist, actions}, cae al render plano
    * para no romper notifs legacy.
    *
-   * Modos:
-   *   - 'compact' (default en dropdown/flyout): header + título + resumen + acciones.
-   *     Botón "Ver detalles" expande in-place.
-   *   - 'expanded' (default en modal): todo el contenido incl. body, subject,
-   *     outputs (miniaturas), checklist y estado.
-   *
-   * @param {object} n        - notif normalizada
-   * @param {object} [opts]
-   * @param {'compact'|'expanded'} [opts.mode='compact']
+   * @param {object} n - notif normalizada (resultado de _normalizeOrgNotification)
    * @returns {string} HTML string del card
    */
-  _renderRichNotificationCard(n, opts = {}) {
+  _renderRichNotificationCard(n) {
     if (!n) return '';
-    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length) || (n.outputs?.length));
+    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length));
     if (!hasRich) return this._renderLegacyNotificationCard(n);
 
-    const mode = opts.mode === 'expanded' ? 'expanded' : 'compact';
-    const isExpanded = mode === 'expanded';
     const unread = !n.is_read;
     const sev = (n.severity || 'info').toLowerCase();
     const labelText = n.label || (n.type || 'info').toUpperCase();
@@ -908,36 +898,23 @@ class Navigation {
     };
     const st = statusMap[n.status] || statusMap.pending;
 
-    // Toggle CSS-only: el HTML siempre incluye TODOS los bloques. La clase
-    // `mode-compact` / `mode-expanded` controla su visibilidad vía CSS. Mucho
-    // más robusto que re-renderizar (no se pierden listeners ni state).
-    //
-    // Por ahora la NAVEGACIÓN está desactivada (subject/outputs/actions no
-    // disparan router.navigate) hasta resolver el bug de URLs huérfanas.
-    // Sólo el botón de toggle de expansión es interactivo.
-    const hasExpandableContent = !!(n.body || n.subject || n.outputs?.length || n.checklist?.length);
-    const toggleBtnHtml = hasExpandableContent ? `
-      <button type="button" class="notif-toggle" data-toggle-expand aria-label="Expandir/colapsar">
-        <i class="fas fa-chevron-down notif-toggle-icon"></i>
-      </button>` : '';
-
     return `
-      <article class="notif-card mode-${mode} ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}" data-mode="${mode}">
+      <article class="notif-card ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
         <header class="notif-card-header">
           <span class="notif-label">${_escapeHtml(labelText)}</span>
           <span class="notif-sev-pill sev-${_escapeHtml(sev)}">${_escapeHtml(sev)}</span>
           <span class="notif-date">${_escapeHtml(dateStr)}</span>
-          ${toggleBtnHtml}
         </header>
         <h4 class="notif-title">${_escapeHtml(n.title || '')}</h4>
         ${n.summary ? `<p class="notif-summary">${_escapeHtml(n.summary)}</p>` : ''}
-        <div class="notif-expandable">
-          ${n.body ? `<div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>` : ''}
-          ${subjectHtml}
-          ${outputsHtml}
-          ${checklistHtml}
-          <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
-        </div>
+        ${n.body ? `<details class="notif-details">
+          <summary>Detalles del plan de acción</summary>
+          <div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>
+        </details>` : ''}
+        ${subjectHtml}
+        ${outputsHtml}
+        ${checklistHtml}
+        <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
         ${actionsHtml}
       </article>`;
   }
@@ -974,24 +951,40 @@ class Navigation {
       const id = card.dataset.id;
       const n = byId.get(id);
 
-      // Toggle compact ↔ expanded (CSS-only, no re-render)
-      const toggleBtn = card.querySelector('[data-toggle-expand]');
-      if (toggleBtn) {
-        toggleBtn.addEventListener('click', (e) => {
+      // Outputs click → navega al asset/run específico
+      card.querySelectorAll('.notif-output[data-output-url]').forEach((out) => {
+        const url = out.getAttribute('data-output-url');
+        if (!url) return;
+        out.addEventListener('click', async (e) => {
           e.stopPropagation();
-          const nextMode = card.dataset.mode === 'expanded' ? 'compact' : 'expanded';
-          card.dataset.mode = nextMode;
-          card.classList.toggle('mode-expanded', nextMode === 'expanded');
-          card.classList.toggle('mode-compact',  nextMode === 'compact');
+          await this._orgNotificationsMark(id, 'read');
+          this.refreshNotificationsBadge();
+          if (typeof onClose === 'function') onClose();
+          if (window.router) window.router.navigate(url);
         });
+      });
+
+      // Subject click → navega al recurso real
+      const subj = card.querySelector('.notif-subject[data-subject-url]');
+      if (subj) {
+        const url = subj.getAttribute('data-subject-url');
+        if (url) {
+          subj.style.cursor = 'pointer';
+          subj.addEventListener('click', async () => {
+            await this._orgNotificationsMark(id, 'read');
+            this.refreshNotificationsBadge();
+            if (typeof onClose === 'function') onClose();
+            if (window.router) window.router.navigate(url);
+          });
+        }
       }
 
-      // Checklist toggle (optimistic + persist server-side via RPC).
-      // Único click handler que persiste; no navega a ningún lado.
+      // Checklist toggle (optimistic + persist server-side via RPC)
       card.querySelectorAll('.notif-step input[type="checkbox"]').forEach((cb) => {
         cb.addEventListener('click', (e) => e.stopPropagation());
         cb.addEventListener('change', async () => {
           const stepId = cb.dataset.stepId;
+          // Optimistic update visual
           cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
           const total = n?.checklist?.length || 0;
           const counter = card.querySelector('[data-progress]');
@@ -1001,7 +994,9 @@ class Navigation {
             if (counter) counter.textContent = `${doneCount} de ${total}`;
           };
           updateCounter();
+          // Persist server-side (revertirá si falla)
           await this._toggleChecklistStep(id, stepId, cb.checked);
+          // Resync visual con el cache (por si hubo revert por error)
           const finalState = this._loadChecklistProgress(id);
           cb.checked = !!finalState[stepId];
           cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
@@ -1009,9 +1004,45 @@ class Navigation {
         });
       });
 
-      // NAVEGACIÓN DESACTIVADA temporalmente (subject/outputs/actions no
-      // disparan router.navigate hasta que el ai-engine genere action_url
-      // con prefix correcto). Las cards son solo de lectura por ahora.
+      // Acciones
+      card.querySelectorAll('.notif-action').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const idx = Number(btn.dataset.actionIdx);
+          const action = n?.actions?.[idx];
+          if (!action) return;
+          btn.disabled = true;
+          try {
+            await this._runAction(action, id);
+            if (action.kind === 'navigate' || action.kind === 'external') {
+              if (typeof onClose === 'function') onClose();
+            }
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    });
+
+    // ── Cards legacy
+    container.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const link = btn.dataset.link;
+        if (id) {
+          await this._orgNotificationsMark(id, 'read');
+          this.refreshNotificationsBadge();
+          btn.classList.remove('unread');
+        }
+        if (link) {
+          if (typeof onClose === 'function') onClose();
+          if (/^https?:\/\//i.test(link)) {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          } else if (window.router) {
+            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+          }
+        }
+      });
     });
   }
 

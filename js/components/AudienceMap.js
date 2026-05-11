@@ -223,9 +223,14 @@
         },
         scales: {
           projection: { axis: 'x', projection: 'naturalEarth1' },
-          // Color scale neutralizada: el painting real lo hace dataset.backgroundColor.
-          // Mantenemos `display:false` para evitar la barra azul -1..1 a la derecha.
-          color: { display: false },
+          // Color scale FULL-OFF: el painting real lo hace dataset.backgroundColor.
+          // `display:false` solo oculta los ticks del eje; el legend (barra con gradient
+          // y números 0/0.4/0.8) es una capa aparte que requiere su propio display:false.
+          color: {
+            display: false,
+            legend: { display: false },
+            ticks: { display: false },
+          },
         },
       },
     });

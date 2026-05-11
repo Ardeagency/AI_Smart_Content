@@ -140,7 +140,7 @@ class CommandCenterView extends BaseView {
         <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
       </div>
 
-      <!-- Legend (bottom-left card) -->
+      <!-- Legend overlay (bottom-left, top-5 países con dot del gradient) -->
       <div class="cc-entorno-legend" id="ccEntornoLegend" style="display:none;">
         <div class="cc-entorno-legend-title">Leyenda</div>
         <div class="cc-entorno-legend-list" id="ccEntornoLegendList"></div>
@@ -385,7 +385,7 @@ class CommandCenterView extends BaseView {
       const [audRes, segRes, campRes, intRes] = await Promise.all([
         supabase
           .from('audience_personas')
-          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
+          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_interests, updated_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
