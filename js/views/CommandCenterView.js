@@ -17,7 +17,6 @@ class CommandCenterView extends BaseView {
     this._integrations    = [];   // brand_integrations (sync status)
     this._pendingActions  = [];   // vera_pending_actions (status='pending')
     this._supabase        = null;
-    this._editingAudience = null;
   }
 
   /* ── Redirect legacy ──────────────────────────────────────────────── */
@@ -107,187 +106,35 @@ class CommandCenterView extends BaseView {
         <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
       </div>
 
-      <!-- Legend overlay (bottom-left, top-5 países con dot del gradient) -->
-      <div class="cc-entorno-legend" id="ccEntornoLegend" style="display:none;">
-        <div class="cc-entorno-legend-title">Leyenda</div>
-        <div class="cc-entorno-legend-list" id="ccEntornoLegendList"></div>
-      </div>
-
       <!-- Choropleth canvas container -->
       <div class="cc-entorno-map-canvas" id="ccAudienceMap"></div>
+
+      <!-- Demographic overlay (bottom-left, sin fondo) — sustituye a la leyenda -->
+      <div class="cc-entorno-demog" id="ccEntornoDemog" style="display:none;">
+        <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
+      </div>
     </div>
 
-    <!-- DERECHA: Sidebar (breadcrumb + secciones scrollable) ────────── -->
+    <!-- DERECHA: Sidebar (solo campañas reales sincronizadas) ──────── -->
     <aside class="cc-entorno-sidebar">
-      <!-- Breadcrumb -->
       <div class="cc-entorno-breadcrumb">
         <span class="cc-entorno-bc-item">Panel</span>
         <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
-        <span class="cc-entorno-bc-item cc-entorno-bc-current" id="ccEntornoBcCurrent">Lectura del mercado</span>
-        <button class="cc-entorno-bc-expand" id="ccEntornoExpand" title="Expandir" aria-label="Expandir">
-          <i class="fas fa-up-right-and-down-left-from-center"></i>
-        </button>
+        <span class="cc-entorno-bc-item cc-entorno-bc-current">Lectura del mercado</span>
       </div>
 
-      <!-- ENTORNO GLOBAL -->
       <section class="cc-entorno-section">
-        <h3 class="cc-entorno-section-title">Entorno Global</h3>
-        <div class="cc-entorno-kpi-grid">
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiCountries">—</div>
-            <div class="cc-entorno-kpi-label">Países activos</div>
-          </div>
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiAudiences">—</div>
-            <div class="cc-entorno-kpi-label">Audiencias</div>
-          </div>
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiCampaigns">—</div>
-            <div class="cc-entorno-kpi-label">Campañas</div>
-          </div>
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiPersonas">—</div>
-            <div class="cc-entorno-kpi-label">Personas</div>
-          </div>
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiIntegrations">—</div>
-            <div class="cc-entorno-kpi-label">Integraciones</div>
-          </div>
-          <div class="cc-entorno-kpi">
-            <div class="cc-entorno-kpi-value" id="ccKpiPending">—</div>
-            <div class="cc-entorno-kpi-label">Pendientes Vera</div>
-          </div>
+        <div class="cc-entorno-subsection-head">
+          <h3 class="cc-entorno-section-title">Campañas reales</h3>
+          <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
         </div>
-        <div class="cc-entorno-kpi cc-entorno-kpi--wide">
-          <div class="cc-entorno-kpi-value" id="ccKpiActive">—</div>
-          <div class="cc-entorno-kpi-label">Audiencia activa (últimos 30 días)</div>
-        </div>
-      </section>
-
-      <!-- ENTORNO ESTRATÉGICO -->
-      <section class="cc-entorno-section">
-        <h3 class="cc-entorno-section-title">Entorno Estratégico</h3>
-
-        <!-- País destacado -->
-        <div class="cc-entorno-subsection">
-          <h4 class="cc-entorno-subsection-title">País destacado</h4>
-          <div class="cc-entorno-featured" id="ccFeaturedCountry">
-            <div class="cc-entorno-featured-header">
-              <div class="cc-entorno-featured-avatar" id="ccFeaturedFlag">🌐</div>
-              <div class="cc-entorno-featured-info">
-                <h5 id="ccFeaturedName">Sin datos</h5>
-                <p id="ccFeaturedSub">Conecta una integración para ver tu mercado real</p>
-              </div>
-            </div>
-            <div class="cc-entorno-featured-stats">
-              <div class="cc-entorno-featured-stat">
-                <div class="cc-entorno-featured-stat-value" id="ccFeaturedShare">—</div>
-                <div class="cc-entorno-featured-stat-label">% audiencia</div>
-              </div>
-              <div class="cc-entorno-featured-stat">
-                <div class="cc-entorno-featured-stat-value" id="ccFeaturedAge">—</div>
-                <div class="cc-entorno-featured-stat-label">Edad top</div>
-              </div>
-              <div class="cc-entorno-featured-stat">
-                <div class="cc-entorno-featured-stat-value" id="ccFeaturedGender">—</div>
-                <div class="cc-entorno-featured-stat-label">Género top</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Audiencias conceptuales -->
-        <div class="cc-entorno-subsection">
-          <div class="cc-entorno-subsection-head">
-            <h4 class="cc-entorno-subsection-title">Audiencias conceptuales</h4>
-            <span class="cc-entorno-subsection-count" id="ccAudCount">0</span>
-          </div>
-          <div class="cc-carousel-wrap">
-            <div class="cc-carousel" id="ccAudCarousel">
-              <div class="cc-loading"><span></span><span></span><span></span></div>
-            </div>
-          </div>
-          <div class="cc-empty cc-empty--compact" id="ccAudEmpty" style="display:none;">
-            <i class="fas fa-users-slash"></i>
-            <span>Sin personas</span>
-          </div>
-        </div>
-
-        <!-- Top campañas -->
-        <div class="cc-entorno-subsection">
-          <div class="cc-entorno-subsection-head">
-            <h4 class="cc-entorno-subsection-title">Top campañas</h4>
-            <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
-          </div>
-          <div class="cc-list" id="ccCampList"></div>
-          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
-            <i class="fas fa-bullhorn"></i>
-            <span>Sin campañas</span>
-          </div>
-        </div>
-
-        <!-- Comparación demográfica (género + edad) -->
-        <div class="cc-entorno-subsection">
-          <h4 class="cc-entorno-subsection-title">Comparación demográfica</h4>
-          <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
+        <div class="cc-list" id="ccCampList"></div>
+        <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+          <i class="fas fa-bullhorn"></i>
+          <span>Sin campañas sincronizadas. Conecta una integración (Meta, Google, etc.).</span>
         </div>
       </section>
     </aside>
-  </div>
-</div>
-
-<!-- MODAL: Editar persona ───────────────────────────────────────── -->
-<div class="cc-modal-backdrop" id="ccAudienceModalBackdrop" style="display:none;">
-  <div class="cc-modal cc-modal--wide" role="dialog" aria-modal="true" aria-labelledby="ccAudienceModalTitle">
-    <div class="cc-modal-head">
-      <h3 class="cc-modal-title" id="ccAudienceModalTitle">Editar persona</h3>
-      <button class="cc-modal-close" type="button" id="ccAudienceModalClose" aria-label="Cerrar">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <form class="cc-modal-form" id="ccAudienceForm">
-      <div class="cc-modal-grid">
-        <label class="cc-field cc-field--full">
-          <span>Nombre</span>
-          <input id="ccAudFormName" type="text" required maxlength="120" />
-        </label>
-        <label class="cc-field">
-          <span>Awareness level</span>
-          <select id="ccAudFormAwareness">
-            <option value="">Sin definir</option>
-            <option value="unaware">Unaware</option>
-            <option value="problem_aware">Problem aware</option>
-            <option value="solution_aware">Solution aware</option>
-            <option value="product_aware">Product aware</option>
-            <option value="most_aware">Most aware</option>
-          </select>
-        </label>
-        <label class="cc-field cc-field--full">
-          <span>Descripción</span>
-          <textarea id="ccAudFormDescription" rows="2" maxlength="1200"></textarea>
-        </label>
-        <label class="cc-field">
-          <span>Dolores <small>(uno por línea)</small></span>
-          <textarea id="ccAudFormPains" rows="3" placeholder="Dolor 1&#10;Dolor 2"></textarea>
-        </label>
-        <label class="cc-field">
-          <span>Deseos <small>(uno por línea)</small></span>
-          <textarea id="ccAudFormDesires" rows="3" placeholder="Deseo 1&#10;Deseo 2"></textarea>
-        </label>
-        <label class="cc-field">
-          <span>Objeciones <small>(uno por línea)</small></span>
-          <textarea id="ccAudFormObjeciones" rows="3" placeholder="Objeción 1&#10;Objeción 2"></textarea>
-        </label>
-        <label class="cc-field">
-          <span>Gatillos de compra <small>(uno por línea)</small></span>
-          <textarea id="ccAudFormGatillos" rows="3" placeholder="Gatillo 1&#10;Gatillo 2"></textarea>
-        </label>
-      </div>
-      <div class="cc-modal-actions">
-        <button class="btn btn-secondary btn-sm" type="button" id="ccAudienceCancelBtn">Cancelar</button>
-        <button class="btn btn-primary btn-sm" type="submit" id="ccAudienceSaveBtn">Guardar cambios</button>
-      </div>
-    </form>
   </div>
 </div>`;
   }
@@ -394,12 +241,8 @@ class CommandCenterView extends BaseView {
     if (twoCol) twoCol.style.display = '';
 
     this._renderVeraInbox();
-    this._renderAudiencesCarousel();
     this._renderCampaigns();
     this._renderAudienceMap();
-    this._renderEntornoKpis();
-    this._renderFeaturedCountry();
-    // Fuentes conectadas removido de esta vista: foco solo en la lectura más reciente.
     this.updateLinksForRouter();
   }
 
@@ -593,56 +436,7 @@ class CommandCenterView extends BaseView {
       </select>`;
   }
 
-  /* ── CARRUSEL: audience_personas ──────────────────────────────────── */
-  _renderAudiencesCarousel() {
-    const carousel = document.getElementById('ccAudCarousel');
-    const count    = document.getElementById('ccAudCount');
-    const empty    = document.getElementById('ccAudEmpty');
-    if (!carousel) return;
-
-    const rows = Array.isArray(this._audiences) ? this._audiences : [];
-    if (count) count.textContent = String(rows.length);
-
-    if (!rows.length) {
-      carousel.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
-      return;
-    }
-    if (empty) empty.style.display = 'none';
-
-    const awarenessOrder = ['unaware', 'problem_aware', 'solution_aware', 'product_aware', 'most_aware'];
-    const awarenessLabel = {
-      unaware: 'Unaware', problem_aware: 'Problem aware', solution_aware: 'Solution aware',
-      product_aware: 'Product aware', most_aware: 'Most aware',
-    };
-
-    carousel.innerHTML = rows.map((a) => {
-      const scoreNum  = a.alignment_score != null ? Math.round(Number(a.alignment_score) * 100) : null;
-      const scoreBadge = scoreNum != null
-        ? `<span class="cc-aud-score cc-aud-score--${scoreNum >= 70 ? 'hi' : scoreNum >= 40 ? 'mid' : 'lo'}" title="Alignment score">${scoreNum}%</span>`
-        : '';
-      const awarenessIdx = awarenessOrder.indexOf(a.awareness_level || '');
-      const levelClass   = awarenessIdx >= 0 ? `cc-aud-level--${a.awareness_level}` : '';
-      const levelText    = awarenessLabel[a.awareness_level] || 'Sin awareness';
-      const dolorCount   = Array.isArray(a.dolores) ? a.dolores.length : 0;
-      const deseoCount   = Array.isArray(a.deseos)  ? a.deseos.length  : 0;
-      return `
-      <article class="cc-aud-card" data-audience-id="${this.escapeHtml(String(a.id))}" role="button" tabindex="0" title="Editar persona">
-        <div class="cc-aud-card-top">
-          <h3 class="cc-aud-name">${this.escapeHtml(a.name || 'Sin nombre')}</h3>
-          ${scoreBadge}
-        </div>
-        <span class="cc-aud-level ${levelClass}">${this.escapeHtml(levelText)}</span>
-        ${(dolorCount || deseoCount) ? `
-        <div class="cc-aud-card-stats">
-          ${dolorCount ? `<span><i class="fas fa-bolt"></i> ${dolorCount} dolor${dolorCount !== 1 ? 'es' : ''}</span>` : ''}
-          ${deseoCount ? `<span><i class="fas fa-star"></i> ${deseoCount} deseo${deseoCount !== 1 ? 's' : ''}</span>` : ''}
-        </div>` : ''}
-      </article>`;
-    }).join('');
-  }
-
-  /** Mapa id → nombre de persona (para enlazar campañas y segmentos). */
+  /** Mapa id → nombre de persona (para enlazar campañas). */
   _personaNameById() {
     const m = {};
     (this._audiences || []).forEach((p) => {
@@ -651,12 +445,15 @@ class CommandCenterView extends BaseView {
     return m;
   }
 
-  /* ── CAMPAÑAS (izquierda) ─────────────────────────────────────────── */
+  /* ── CAMPAÑAS reales: solo las sincronizadas desde una integración ─── */
   _renderCampaigns() {
     const list  = document.getElementById('ccCampList');
     const empty = document.getElementById('ccCampEmpty');
     const count = document.getElementById('ccCampCount');
-    const rows  = Array.isArray(this._campaigns) ? this._campaigns : [];
+    const all   = Array.isArray(this._campaigns) ? this._campaigns : [];
+    // "Real" = importada de Meta/Google/TikTok/LinkedIn/etc. Indicador robusto:
+    // last_synced_at no nulo (la fila vino de un sync, no fue creada a mano).
+    const rows = all.filter((c) => c?.last_synced_at);
     const personaById = this._personaNameById();
     if (count) count.textContent = String(rows.length);
     if (!list) return;
@@ -725,163 +522,6 @@ class CommandCenterView extends BaseView {
         ${ctaRow}
         ${metricsRow}
         ${budgetRow}
-      </div>`;
-    }).join('');
-  }
-
-  /* ── ENTORNO GLOBAL · KPI grid ───────────────────────────────────── */
-  _renderEntornoKpis() {
-    const audiences    = Array.isArray(this._audiences) ? this._audiences : [];
-    const campaigns    = Array.isArray(this._campaigns) ? this._campaigns : [];
-    const integrations = Array.isArray(this._integrations) ? this._integrations.filter(i => i.is_active) : [];
-    const pending      = Array.isArray(this._pendingActions) ? this._pendingActions.filter(a => !a?.proposed_payload?.placeholder) : [];
-
-    // Países activos: contar países con data agregada (campañas + personas)
-    const countrySet = new Set();
-    for (const c of campaigns) {
-      const cc = c?.real_demographics?.country;
-      if (!cc) continue;
-      for (const [k, v] of Object.entries(cc)) {
-        const imp = Number(v?.impressions) || 0;
-        if (imp > 0 && /^[A-Z]{2}$/.test(k)) countrySet.add(k);
-      }
-    }
-    for (const p of audiences) {
-      const cc = p?.real_location_distribution?.countries;
-      if (!cc) continue;
-      for (const [k, v] of Object.entries(cc)) {
-        if (k.startsWith('_')) continue;
-        if (/^[A-Z]{2}$/.test(k) && Number(v) > 0) countrySet.add(k);
-      }
-    }
-
-    // Activos últimos 30d = campañas con last_synced_at < 30d O snapshots recientes
-    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const activeCount = campaigns.filter(c => {
-      const t = c.last_synced_at ? Date.parse(c.last_synced_at) : NaN;
-      return Number.isFinite(t) && t > cutoff;
-    }).length;
-
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    const fmt = (n) => Number.isFinite(n) ? n.toLocaleString('es') : '—';
-
-    setText('ccKpiCountries',    fmt(countrySet.size));
-    setText('ccKpiAudiences',    fmt(Array.isArray(this._segments) ? this._segments.length : 0));
-    setText('ccKpiCampaigns',    fmt(campaigns.length));
-    setText('ccKpiPersonas',     fmt(audiences.length));
-    setText('ccKpiIntegrations', fmt(integrations.length));
-    setText('ccKpiPending',      fmt(pending.length));
-    setText('ccKpiActive',       activeCount > 0 ? `${fmt(activeCount)} campañas` : 'Sin actividad reciente');
-  }
-
-  /* ── ENTORNO ESTRATÉGICO · País destacado ─────────────────────────── */
-  _renderFeaturedCountry() {
-    const FLAG = (iso2) => {
-      if (!iso2 || iso2.length !== 2) return '🌐';
-      const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-      try { return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return '🌐'; }
-    };
-    const COUNTRY_NAMES = {
-      MX: 'México', CO: 'Colombia', US: 'Estados Unidos', AR: 'Argentina', PE: 'Perú',
-      CL: 'Chile', EC: 'Ecuador', VE: 'Venezuela', ES: 'España', BR: 'Brasil',
-      CA: 'Canadá', FR: 'Francia', DE: 'Alemania', IT: 'Italia', GB: 'Reino Unido',
-      PT: 'Portugal', JP: 'Japón', CN: 'China', IN: 'India', AU: 'Australia',
-    };
-
-    // Agregar país top desde personas (campañas paused tienen 0 data)
-    const countryAgg = {};
-    for (const p of (this._audiences || [])) {
-      const cc = p?.real_location_distribution?.countries;
-      if (!cc) continue;
-      for (const [k, v] of Object.entries(cc)) {
-        if (k.startsWith('_')) continue;
-        if (!/^[A-Z]{2}$/.test(k)) continue;
-        countryAgg[k] = (countryAgg[k] || 0) + (Number(v) || 0);
-      }
-    }
-    const total = Object.values(countryAgg).reduce((s, v) => s + v, 0);
-    const top = Object.entries(countryAgg).sort((a, b) => b[1] - a[1])[0];
-
-    if (!top || total === 0) return; // mantiene placeholder "Sin datos"
-
-    // Inferir top age + gender de personas con location de ese país
-    const ageAgg = {}, genderAgg = {};
-    for (const p of (this._audiences || [])) {
-      const cc = p?.real_location_distribution?.countries || {};
-      if (!Object.keys(cc).includes(top[0])) continue;
-      for (const [k, v] of Object.entries(p?.real_age_distribution || {})) {
-        if (k.startsWith('_')) continue;
-        ageAgg[k] = (ageAgg[k] || 0) + (Number(v) || 0);
-      }
-      for (const [k, v] of Object.entries(p?.real_gender_distribution || {})) {
-        if (k.startsWith('_') || k === 'unknown') continue;
-        genderAgg[k] = (genderAgg[k] || 0) + (Number(v) || 0);
-      }
-    }
-    const topAge    = Object.entries(ageAgg).sort((a, b) => b[1] - a[1])[0];
-    const topGender = Object.entries(genderAgg).sort((a, b) => b[1] - a[1])[0];
-
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setText('ccFeaturedFlag',   FLAG(top[0]));
-    setText('ccFeaturedName',   COUNTRY_NAMES[top[0]] || top[0]);
-    setText('ccFeaturedSub',    'País con mayor presencia en tu audiencia real');
-    setText('ccFeaturedShare',  `${Math.round((top[1] / total) * 100)}%`);
-    setText('ccFeaturedAge',    topAge ? topAge[0] : '—');
-    setText('ccFeaturedGender', topGender ? (topGender[0] === 'male' ? 'Hombres' : topGender[0] === 'female' ? 'Mujeres' : topGender[0]) : '—');
-  }
-
-  /* ── Leyenda overlay del mapa (bottom-left card) ──────────────────── */
-  _renderEntornoLegend(countryAgg) {
-    const root = document.getElementById('ccEntornoLegend');
-    const list = document.getElementById('ccEntornoLegendList');
-    if (!root || !list) return;
-
-    const entries = Object.entries(countryAgg || {})
-      .filter(([k, v]) => /^[A-Z]{2}$/.test(k) && Number(v) > 0)
-      .sort((a, b) => Number(b[1]) - Number(a[1]))
-      .slice(0, 5);
-
-    if (entries.length === 0) {
-      root.style.display = 'none';
-      return;
-    }
-    root.style.display = '';
-
-    const FLAG = (iso2) => {
-      const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-      try { return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return '🌐'; }
-    };
-    const total = entries.reduce((s, [, v]) => s + Number(v), 0);
-
-    // Lee el degradado de marca para colorear el dot por intensidad rank
-    let gradientStops = ['#e09145'];
-    try {
-      const cs = getComputedStyle(document.documentElement);
-      const grad = (cs.getPropertyValue('--brand-gradient-dynamic') || cs.getPropertyValue('--brand-gradient') || '').trim();
-      const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
-      if (hexes && hexes.length > 0) gradientStops = hexes;
-    } catch (_) { /* noop */ }
-    const hex2rgb = (hex) => { let h = hex.replace('#','').slice(0,6); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
-    const interp = (t) => {
-      if (gradientStops.length === 1) return gradientStops[0];
-      const segs = gradientStops.length - 1;
-      const tt = Math.max(0, Math.min(1, t));
-      const idx = Math.min(Math.floor(tt * segs), segs - 1);
-      const lt = (tt * segs) - idx;
-      const [r1,g1,b1] = hex2rgb(gradientStops[idx]);
-      const [r2,g2,b2] = hex2rgb(gradientStops[idx+1]);
-      return `rgb(${Math.round(r1+(r2-r1)*lt)},${Math.round(g1+(g2-g1)*lt)},${Math.round(b1+(b2-b1)*lt)})`;
-    };
-    const maxVal = Math.max(...entries.map(([,v]) => Number(v)));
-
-    list.innerHTML = entries.map(([cc, v]) => {
-      const pct = Math.round((Number(v) / total) * 100);
-      const color = interp(Number(v) / maxVal);
-      return `<div class="cc-entorno-legend-item">
-        <span class="cc-entorno-legend-dot" style="background:${color}"></span>
-        <span class="cc-entorno-legend-flag">${FLAG(cc)}</span>
-        <span class="cc-entorno-legend-code">${cc}</span>
-        <span class="cc-entorno-legend-pct">${pct}%</span>
       </div>`;
     }).join('');
   }
@@ -960,24 +600,38 @@ class CommandCenterView extends BaseView {
       }
     }
 
+    const demogEl = document.getElementById('ccEntornoDemog');
+
     if (!source) {
       mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).</p></div>`;
       if (breakEl) breakEl.innerHTML = '';
+      if (demogEl) demogEl.style.display = 'none';
       return;
     }
 
-    // Mapa choropleth (country) — pasa números directos al AudienceMap component
+    // Mapa choropleth (country). Si AudienceMap.render dispara su fallback
+    // interno de lista, lo detectamos por DOM y mostramos un chip visible para
+    // poder diagnosticar el motivo real desde la consola del usuario.
     if (window.AudienceMap) {
-      try { await window.AudienceMap.render(mapEl, agg.country); }
-      catch (e) { console.warn('AudienceMap render:', e?.message); }
+      try {
+        await window.AudienceMap.render(mapEl, agg.country);
+        const fellBack = !!mapEl.querySelector('.cc-map-fallback');
+        if (fellBack) {
+          const errMsg = mapEl.__lastError || 'razón desconocida (revisa consola)';
+          const chip = document.createElement('div');
+          chip.className = 'cc-map-error-chip';
+          chip.innerHTML = `<i class="fas fa-triangle-exclamation"></i> Mapa no disponible: ${this.escapeHtml(errMsg)}`;
+          mapEl.appendChild(chip);
+        }
+      } catch (e) {
+        console.warn('AudienceMap render:', e?.message);
+        mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-triangle-exclamation"></i><p>Error al cargar el mapa: ${this.escapeHtml(e?.message || String(e))}</p></div>`;
+      }
     } else {
       mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
     }
 
-    // Poblar la leyenda overlay externa (bottom-left del mapa) con top-5 países
-    this._renderEntornoLegend(agg.country);
-
-    // Breakdowns: género + edad como mini-barras CSS
+    // Breakdowns: género + edad como mini-barras CSS (overlay sobre el mapa)
     if (breakEl) {
       const totalGender = Object.values(agg.gender).reduce((s, v) => s + Number(v || 0), 0);
       const totalAge    = Object.values(agg.age).reduce((s, v) => s + Number(v || 0), 0);
@@ -1014,131 +668,34 @@ class CommandCenterView extends BaseView {
       breakEl.innerHTML = `
         ${genderRows ? `<div class="cc-break-group"><h4 class="cc-break-title">Género</h4>${genderRows}</div>` : ''}
         ${ageRows    ? `<div class="cc-break-group"><h4 class="cc-break-title">Edad</h4>${ageRows}</div>` : ''}`;
+      if (demogEl) demogEl.style.display = (genderRows || ageRows) ? '' : 'none';
     }
   }
 
-  /* ── MODAL: abrir / cerrar / guardar ─────────────────────────────── */
+  /* ── Listeners: solo el picker "vincular persona" en campañas ────── */
   _setupEventListeners() {
-    const carousel     = document.getElementById('ccAudCarousel');
-    const backdrop     = document.getElementById('ccAudienceModalBackdrop');
-    const closeBtn     = document.getElementById('ccAudienceModalClose');
-    const cancelBtn    = document.getElementById('ccAudienceCancelBtn');
-    const form         = document.getElementById('ccAudienceForm');
-
-    if (carousel) {
-      carousel.addEventListener('click', (ev) => {
-        const card = ev.target.closest('.cc-aud-card[data-audience-id]');
-        if (card) this._openAudienceModal(card.getAttribute('data-audience-id'));
-      });
-      carousel.addEventListener('keydown', (ev) => {
-        if (ev.key !== 'Enter' && ev.key !== ' ') return;
-        const card = ev.target.closest('.cc-aud-card[data-audience-id]');
-        if (!card) return;
-        ev.preventDefault();
-        this._openAudienceModal(card.getAttribute('data-audience-id'));
-      });
-    }
-    if (closeBtn)  closeBtn.onclick  = () => this._closeAudienceModal();
-    if (cancelBtn) cancelBtn.onclick = () => this._closeAudienceModal();
-    if (backdrop)  backdrop.onclick  = (ev) => { if (ev.target === backdrop) this._closeAudienceModal(); };
-    if (form)      form.addEventListener('submit', async (ev) => { ev.preventDefault(); await this._saveAudienceFromModal(); });
-
-    // Delegated listener para los dropdowns "Vincular persona" en campañas.
-    // Live: aunque _renderCampaigns re-renderice, el listener sobrevive
-    // porque está colgado del page root.
     const page = document.getElementById('commandCenterPage');
-    if (page) {
-      page.addEventListener('change', async (ev) => {
-        const sel = ev.target.closest && ev.target.closest('.cc-link-picker');
-        if (!sel) return;
-        const entityType = sel.getAttribute('data-entity-type');
-        const entityId   = sel.getAttribute('data-entity-id');
-        const personaId  = sel.value || null;
-        sel.disabled = true;
-        const ok = await this._linkEntityToPersona({ entityType, entityId, personaId });
-        sel.disabled = false;
-        if (!ok) sel.value = personaId === null ? '' : personaId; // revert visual si falló
-      });
-    }
-  }
-
-  _openAudienceModal(audienceId) {
-    const row = this._audiences.find((a) => String(a.id) === String(audienceId));
-    if (!row) return;
-    this._editingAudience = row;
-    const $ = (id) => document.getElementById(id);
-    const toLines = (arr) => (Array.isArray(arr) ? arr.join('\n') : '');
-
-    if ($('ccAudFormName'))        $('ccAudFormName').value        = row.name || '';
-    if ($('ccAudFormAwareness'))   $('ccAudFormAwareness').value   = row.awareness_level || '';
-    if ($('ccAudFormDescription')) $('ccAudFormDescription').value = row.description || '';
-    if ($('ccAudFormPains'))       $('ccAudFormPains').value       = toLines(row.dolores);
-    if ($('ccAudFormDesires'))     $('ccAudFormDesires').value     = toLines(row.deseos);
-    if ($('ccAudFormObjeciones'))  $('ccAudFormObjeciones').value  = toLines(row.objeciones);
-    if ($('ccAudFormGatillos'))    $('ccAudFormGatillos').value    = toLines(row.gatillos_compra);
-
-    const backdrop = $('ccAudienceModalBackdrop');
-    if (backdrop) backdrop.style.display = 'flex';
-    setTimeout(() => $('ccAudFormName')?.focus(), 0);
-  }
-
-  _closeAudienceModal() {
-    this._editingAudience = null;
-    const backdrop = document.getElementById('ccAudienceModalBackdrop');
-    if (backdrop) backdrop.style.display = 'none';
-  }
-
-  async _saveAudienceFromModal() {
-    if (!this._supabase || !this._editingAudience?.id) return;
-    const $ = (id) => document.getElementById(id);
-    const saveBtn = $('ccAudienceSaveBtn');
-    const toArr   = (raw) => String(raw || '').split('\n').map((v) => v.trim()).filter(Boolean);
-
-    const name       = $('ccAudFormName')?.value?.trim() || '';
-    const awareness  = $('ccAudFormAwareness')?.value || null;
-    const description = $('ccAudFormDescription')?.value?.trim() || null;
-    const dolores     = toArr($('ccAudFormPains')?.value);
-    const deseos      = toArr($('ccAudFormDesires')?.value);
-    const objeciones  = toArr($('ccAudFormObjeciones')?.value);
-    const gatillos_compra = toArr($('ccAudFormGatillos')?.value);
-
-    if (!name) { window.alert('El nombre es obligatorio.'); return; }
-    if (saveBtn) saveBtn.disabled = true;
-
-    try {
-      const payload = {
-        name, awareness_level: awareness || null, description,
-        dolores, deseos, objeciones, gatillos_compra,
-        updated_at: new Date().toISOString(),
-      };
-      const { error } = await this._supabase
-        .from('audience_personas')
-        .update(payload)
-        .eq('id', this._editingAudience.id);
-      if (error) throw error;
-
-      const idx = this._audiences.findIndex((a) => String(a.id) === String(this._editingAudience.id));
-      if (idx >= 0) this._audiences[idx] = { ...this._audiences[idx], ...payload };
-
-      this._renderAudiencesCarousel();
-      this._closeAudienceModal();
-    } catch (e) {
-      console.error('CommandCenterView save persona:', e);
-      window.alert(e?.message || 'No se pudo guardar la persona.');
-    } finally {
-      if (saveBtn) saveBtn.disabled = false;
-    }
+    if (!page) return;
+    page.addEventListener('change', async (ev) => {
+      const sel = ev.target.closest && ev.target.closest('.cc-link-picker');
+      if (!sel) return;
+      const entityType = sel.getAttribute('data-entity-type');
+      const entityId   = sel.getAttribute('data-entity-id');
+      const personaId  = sel.value || null;
+      sel.disabled = true;
+      const ok = await this._linkEntityToPersona({ entityType, entityId, personaId });
+      sel.disabled = false;
+      if (!ok) sel.value = personaId === null ? '' : personaId;
+    });
   }
 
   /* ── Error state ──────────────────────────────────────────────────── */
   _setError(msg) {
-    const twoCol  = document.getElementById('ccTwoCol');
-    const carousel = document.getElementById('ccAudCarousel');
-    const empty   = document.getElementById('ccAudEmpty');
-    const count   = document.getElementById('ccAudCount');
-    if (twoCol)   twoCol.style.display = 'none';
-    if (carousel) carousel.innerHTML   = '';
-    if (count)    count.textContent    = '0';
+    const twoCol = document.getElementById('ccTwoCol');
+    const empty  = document.getElementById('ccCampEmpty');
+    const count  = document.getElementById('ccCampCount');
+    if (twoCol) twoCol.style.display = 'none';
+    if (count)  count.textContent    = '0';
     if (empty) {
       empty.style.display = 'flex';
       empty.innerHTML = `<i class="fas fa-exclamation-triangle"></i><p>${this.escapeHtml(msg)}</p>`;

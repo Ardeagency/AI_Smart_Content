@@ -283,7 +283,10 @@
       }
       return await renderChoropleth(container, distribution);
     } catch (e) {
+      // Antes: fallback silencioso. Ahora exponemos el error real al DOM
+      // (CommandCenterView lo detecta vía .cc-map-fallback y muestra chip).
       console.error('AudienceMap: fallback to list because choropleth failed:', e?.message, e);
+      container.__lastError = e?.message || String(e);
       renderListFallback(container, distribution);
       return null;
     }
