@@ -223,6 +223,13 @@
           backgroundColor: (ctx) => fillFor(ctx.dataset.data[ctx.dataIndex]?.value),
           borderColor: 'rgba(255,255,255,0.12)',
           borderWidth: 0.4,
+          // Hover: por defecto chart.js calcula un hoverBackgroundColor
+          // oscureciendo el base → con nuestros HSL claros sale casi negro
+          // (el "blob" sobre el cursor). Sobrescribimos a blanco translúcido
+          // con borde blanco para que el highlight se vea como un "spotlight".
+          hoverBackgroundColor: 'rgba(255, 255, 255, 0.55)',
+          hoverBorderColor: 'rgba(255, 255, 255, 0.95)',
+          hoverBorderWidth: 1.2,
         }]
       },
       options: {
