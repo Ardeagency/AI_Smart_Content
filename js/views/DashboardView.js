@@ -223,7 +223,6 @@ class DashboardView extends BaseView {
         <div class="mb-firebar" id="insightSubnav" data-mb-firebar>
           <div class="mb-firebar-bg" aria-hidden="true">
             <div class="mb-firebar-gradient"></div>
-            <div class="background-film-grain"></div>
           </div>
           <div class="mb-firebar-tabs mb-firebar-tabs--left">
             ${leftTabs.map(pill).join('')}

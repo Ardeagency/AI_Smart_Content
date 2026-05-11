@@ -138,7 +138,6 @@ class MonitoringView extends BaseView {
         <div class="mb-firebar" id="monitoringSubnav">
           <div class="mb-firebar-bg" aria-hidden="true">
             <div class="mb-firebar-gradient"></div>
-            <div class="background-film-grain"></div>
           </div>
           <div class="mb-firebar-tabs mb-firebar-tabs--left">
             ${tabs.map(pill).join('')}

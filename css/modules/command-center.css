@@ -1330,12 +1330,6 @@
   opacity: 0.65;
 }
 
-/* La capa de granos vive sobre el degradado pero debajo del contenido */
-.cc-section--optim .background-film-grain {
-  z-index: 1;
-  opacity: 0.45;
-}
-
 /* Velo oscuro arriba del degradado para garantizar contraste del texto */
 .cc-optim-bg::after {
   content: "";

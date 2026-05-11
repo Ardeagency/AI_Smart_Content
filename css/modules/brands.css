@@ -102,25 +102,11 @@
     display: none;
 }
 
-.background-film-grain {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0.52;
-    mix-blend-mode: soft-light;
-    /* Tile 128px, ruido más fino (baseFrequency ↑); stitchTiles evita costuras */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.98' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 128px 128px;
-    background-position: 0 0;
-    animation: none !important;
-    transform: none !important;
-}
-
+/* Film grain eliminado por preferencia del usuario (2026-05-11).
+   Se deja la clase sin efecto para no romper código heredado que aún la referencie. */
+.background-film-grain,
 .brand-dashboard-container .background-film-grain {
-    animation: none !important;
-    transform: none !important;
+    display: none !important;
 }
 
 .brand-dashboard-container .background-gradient,

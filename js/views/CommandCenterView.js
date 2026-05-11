@@ -113,7 +113,6 @@ class CommandCenterView extends BaseView {
   <section class="cc-section cc-section--optim" id="ccOptimSection" aria-label="Optimización propuesta por Vera">
     <div class="cc-optim-bg" aria-hidden="true">
       <div class="cc-optim-gradient"></div>
-      <div class="background-film-grain"></div>
     </div>
     <div class="cc-optim-body">
       <div class="cc-section-head">
@@ -389,7 +388,15 @@ class CommandCenterView extends BaseView {
     const empty = document.getElementById('ccOptimEmpty');
     if (!list) return;
 
-    const actions = Array.isArray(this._pendingActions) ? this._pendingActions : [];
+    // Filtrar placeholders/stubs: cualquier acción marcada como tal o con un
+    // reasoning que indique "bootstrap stub" no es análisis real y no debe
+    // ensuciar la bandeja de Optimización.
+    const rawActions = Array.isArray(this._pendingActions) ? this._pendingActions : [];
+    const actions = rawActions.filter((a) => {
+      if (a?.proposed_payload?.placeholder === true) return false;
+      if (typeof a?.vera_reasoning === 'string' && /bootstrap\s*stub/i.test(a.vera_reasoning)) return false;
+      return true;
+    });
     if (count) count.textContent = String(actions.length);
     if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
 
