@@ -273,7 +273,7 @@ class Navigation {
     }
     
     // Home / onboarding: solo header sin sidebar
-    if (path === '/home' || path === '/hogar' || path === '/form_org' || path.startsWith('/form_org?')) {
+    if (path === '/home' || path === '/hogar' || path === '/create' || path.startsWith('/create?')) {
       return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -1233,7 +1233,7 @@ class Navigation {
 
   getUserDropdownHTML(settingsHref = '/home') {
     // Si hay org activa, navegar a su configuración; si no, ir al onboarding de organización.
-    const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/form_org';
+    const orgHref = this.currentOrgId ? this.getUserSidebarRoute('organization') : '/create';
     // Si hay org activa, mostrar la tienda de créditos de esa org.
     const creditsHref = this.currentOrgId ? this.getUserSidebarRoute('credits') : '/credits';
     const plansHref = this.currentOrgId ? this.getUserSidebarRoute('plans') : '/plans';
@@ -2628,7 +2628,7 @@ class Navigation {
           if (orgId && orgId !== this.currentOrgId && typeof window.getOrgPathPrefix === 'function') {
             document.getElementById('navOrgDropdown')?.classList.remove('active');
             const prefix = window.getOrgPathPrefix(orgId, orgName);
-            window.router?.navigate(prefix ? `${prefix}/production` : '/form_org');
+            window.router?.navigate(prefix ? `${prefix}/production` : '/create');
           }
         });
       });
@@ -2644,7 +2644,7 @@ class Navigation {
       listEl.querySelector('.nav-org-create')?.addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('navOrgDropdown')?.classList.remove('active');
-        window.router?.navigate('/form_org');
+        window.router?.navigate('/create');
       });
     } catch (err) {
       console.error('Error loading organizations list:', err);

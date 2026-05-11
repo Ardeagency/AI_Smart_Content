@@ -173,48 +173,6 @@ class App {
       }
     };
 
-    /**
-     * Redirecciones legacy: mapea rutas viejas (pre-refactor) a su equivalente actual.
-     * Data-driven para que añadir/retirar rutas sea una línea. Cuando analytics confirme
-     * que una entrada tiene cero tráfico, borrar la línea y su `r.register(...)` abajo.
-     *
-     * TODO(2026-Q3): revisar con analytics y eliminar las que nadie use.
-     */
-    const LEGACY_ROUTE_REDIRECTS = [
-      { match: /(^|\/)insight$/,            replace: (p) => p.replace(/\/?insight$/, '/dashboard').replace(/^\/?dashboard/, '/dashboard') },
-      { match: /(^|\/)brain$/,              replace: (p) => p === '/brain' ? '/vera'       : p.replace(/\/brain$/, '/vera') },
-      { match: /(^|\/)(living|historial)$/, replace: (p) => (p === '/living' || p === '/historial') ? '/production' : p.replace(/\/(living|historial)$/, '/production') },
-      { match: /\/audiences(\/|$)/,         replace: (p) => p.replace(/\/audiences(\/.*)?$/, '/dashboard') },
-      { match: /\/marketing(\/|$)/,         replace: (p) => p.replace(/\/marketing(\/.*)?$/, '/dashboard') },
-      { match: /\/campaigns(\/|$)/,         replace: (p) => p.replace(/\/campaigns(\/.*)?$/, '/dashboard') }
-    ];
-
-    const legacyRouteRedirectView = class extends (window.BaseView || class {}) {
-      async render() {
-        const q = window.location.search || '';
-        let path = window.location.pathname || '/';
-        if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-
-        const hit = LEGACY_ROUTE_REDIRECTS.find((r) => r.match.test(path));
-        const target = hit ? hit.replace(path) : '/dashboard';
-
-        // Tracking en localStorage (visible incluso en prod donde console.warn está
-        // silenciado). Revisar: localStorage.getItem('_legacy_route_hits')
-        try {
-          const hits = JSON.parse(localStorage.getItem('_legacy_route_hits') || '{}');
-          hits[path] = (hits[path] || 0) + 1;
-          hits._total = (hits._total || 0) + 1;
-          hits._last = new Date().toISOString();
-          localStorage.setItem('_legacy_route_hits', JSON.stringify(hits));
-        } catch (_) {}
-        console.warn('[legacy-route]', path, '→', target);
-
-        const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
-        if (window.router) window.router.navigate(target + q, true);
-      }
-    };
-
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
@@ -233,8 +191,6 @@ class App {
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/insight', legacyRouteRedirectView, auth);
-    r.register('/insight', legacyRouteRedirectView, auth);
 
     // ── Org: Production ──
     const productionLoader = this._lazy('ProductionView', ['/js/views/ProductionView.js']);
@@ -245,10 +201,6 @@ class App {
     const monitoringLoader = this._lazy('MonitoringView', ['/js/views/MonitoringView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/monitoring', monitoringLoader, auth);
     r.register('/monitoring', monitoringLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/historial', legacyRouteRedirectView, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/living', legacyRouteRedirectView, auth);
-    r.register('/historial', legacyRouteRedirectView, auth);
-    r.register('/living', legacyRouteRedirectView, auth);
 
     // ── Org: Tasks (registrar pronto para que /org/.../tasks coincida con prioridad) ──
     const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
@@ -344,20 +296,6 @@ class App {
     const veraLoader = this._lazy('VeraView', ['/js/views/VeraView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/vera', veraLoader, auth);
     r.register('/vera', veraLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/brain', legacyRouteRedirectView, auth);
-    r.register('/brain', legacyRouteRedirectView, auth);
-
-    // ── Audiences / Campaigns / Marketing: vistas retiradas → redirección legacy ──
-    r.register('/org/:orgIdShort/:orgNameSlug/audiences', legacyRouteRedirectView, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/audiences/:audienceId', legacyRouteRedirectView, auth);
-    r.register('/audiences', legacyRouteRedirectView, auth);
-    r.register('/audiences/:audienceId', legacyRouteRedirectView, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/marketing', legacyRouteRedirectView, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/campaigns', legacyRouteRedirectView, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/campaigns/:campaignId', legacyRouteRedirectView, auth);
-    r.register('/campaigns', legacyRouteRedirectView, auth);
-    r.register('/campaigns/:campaignId', legacyRouteRedirectView, auth);
-    r.register('/marketing', legacyRouteRedirectView, auth);
 
     // ── Org: Video (Kling 3.0 / KIE) ──
     const videoLoader = this._lazy('VideoView', ['/js/views/VideoView.js']);
@@ -377,9 +315,8 @@ class App {
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
-    // ── Create / Form ──
+    // ── Create ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);
-    r.register('/form_org', this._lazy('FormRecordView', ['/js/views/FormRecordView.js']), auth);
 
     // ── Dev: Portal PaaS ──
     r.register('/dev/dashboard', this._lazy('DevDashboardView', [...devBase, '/js/views/DevDashboardView.js']), auth);
