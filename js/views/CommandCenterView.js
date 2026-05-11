@@ -378,7 +378,7 @@ class CommandCenterView extends BaseView {
       const [audRes, segRes, campRes, intRes] = await Promise.all([
         supabase
           .from('audience_personas')
-          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_interests, updated_at')
+          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
@@ -390,7 +390,7 @@ class CommandCenterView extends BaseView {
 
         supabase
           .from('campaigns')
-          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
+          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics, external_campaign_id, external_campaign_name')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
