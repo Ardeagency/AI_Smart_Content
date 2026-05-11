@@ -15,7 +15,9 @@
  */
 (function () {
   const CHARTJS_URL    = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
-  const GEO_PLUGIN_URL = 'https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.1';
+  // chartjs-chart-geo v4: UMD bundle explícito (sin path defaultea a ESM y NO
+  // crea window.ChartGeo → caía al fallback list).
+  const GEO_PLUGIN_URL = 'https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.1/build/index.umd.min.js';
   const ATLAS_URL      = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
   let _topology = null;
@@ -38,7 +40,23 @@
     if (_scriptsReady) return _scriptsReady;
     _scriptsReady = (async () => {
       await loadScript(CHARTJS_URL, 'Chart');
-      await loadScript(GEO_PLUGIN_URL); // registra controllers/elements en Chart globalmente
+      await loadScript(GEO_PLUGIN_URL, 'ChartGeo');
+      // Algunos builds del UMD de chartjs-chart-geo no auto-registran sus
+      // controllers en Chart.js. Si Chart no conoce 'choropleth', registramos
+      // explícitamente desde el namespace ChartGeo.
+      try {
+        const C = window.Chart;
+        const G = window.ChartGeo;
+        if (C && G && typeof C.register === 'function') {
+          if (!C.registry?.controllers?.get('choropleth')) {
+            const items = [G.ChoroplethController, G.GeoFeature, G.ProjectionScale, G.ColorScale, G.SizeScale, G.BubbleMapController]
+              .filter(Boolean);
+            if (items.length > 0) C.register(...items);
+          }
+        }
+      } catch (e) {
+        console.warn('AudienceMap: register controllers:', e?.message);
+      }
     })();
     return _scriptsReady;
   }
@@ -265,7 +283,7 @@
       }
       return await renderChoropleth(container, distribution);
     } catch (e) {
-      console.warn('AudienceMap: fallback to list because choropleth failed:', e?.message);
+      console.error('AudienceMap: fallback to list because choropleth failed:', e?.message, e);
       renderListFallback(container, distribution);
       return null;
     }

@@ -689,10 +689,8 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 
 /* ========== APP — Transiciones, loader, notificaciones ========== */
 @keyframes spin { to { transform: rotate(360deg); } }
+/* viewFadeIn lo usa el panel INFO de Brands; el router ya no aplica fade por cada navegación. */
 @keyframes viewFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes viewFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
-.view-enter { animation: viewFadeIn 0.55s ease-out both; }
-.view-leave { animation: viewFadeOut 0.2s ease both; }
 
 .loader-overlay {
     position: fixed;
@@ -717,107 +715,6 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     animation: loader-gradient-cycle 6s linear infinite;
 }
 @keyframes loader-gradient-cycle { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-.entrance-overlay {
-    position: fixed;
-    z-index: 2001;
-    inset: 0;
-    background: var(--bg-primary, #0b0b0b);
-    pointer-events: auto;
-    transition: opacity 0.25s ease-out;
-}
-.entrance-overlay.entrance-overlay--hidden { opacity: 0; pointer-events: none; visibility: hidden; }
-
-/* Secuencia de entrada (presentación inicial); la secuencia la controla JS */
-.entrance-animation {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-primary);
-    font-family: var(--font-family);
-}
-.entrance-text-block {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.entrance-text-block p {
-    margin: 0;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-.entrance-text-block p.entrance-visible { opacity: 1; transform: translateY(0); }
-.entrance-text-block p.entrance-out { opacity: 0; transform: translateY(-30px); }
-.entrance-reveal-frame {
-    position: relative;
-    padding: 0 32px;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.entrance-reveal-box {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0;
-    background:
-        linear-gradient(98deg, #ff0000 0%, #ff6500 14%, #ffe500 28%, #00e7ff 52%, #0018ee 72%, #5b00ea 88%, #900090 100%),
-        linear-gradient(82deg, rgba(255,229,0,0.35) 20%, rgba(0,231,255,0.3) 50%, rgba(91,0,234,0.35) 80%);
-    z-index: 2;
-    opacity: 0;
-    transition: opacity 0.12s ease-out, width 0.3s ease-out, left 0s, right 0s;
-}
-.entrance-reveal-box.entrance-reveal-show { opacity: 1; }
-.entrance-reveal-box.entrance-reveal-expand { width: 100%; }
-.entrance-reveal-box.entrance-reveal-away { left: auto; right: 0; width: 0; transition: width 0.25s ease-out; }
-.entrance-logo {
-    position: relative;
-    z-index: 3;
-    max-width: min(280px, 75vw);
-    width: 100%;
-    height: auto;
-    display: block;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.22s ease-out, transform 0.22s ease-out;
-}
-.entrance-logo.entrance-visible { opacity: 1; transform: translateY(0); }
-.entrance-logo.entrance-out { opacity: 0; transform: translateY(-20px); }
-
-/* Barra de progreso de carga */
-.entrance-progress {
-    position: absolute;
-    top: 54%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(320px, 60vw);
-    height: 2.5px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 3px;
-    overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.35s ease;
-    pointer-events: none;
-}
-.entrance-progress.is-active { opacity: 1; }
-.entrance-progress.is-done { opacity: 0; transition: opacity 0.3s ease 0.2s; }
-.entrance-progress__bar {
-    height: 100%;
-    width: 0%;
-    background: var(--brand-gradient);
-    background-size: 200% 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease-out;
-}
 
 .app-notification {
     position: fixed;

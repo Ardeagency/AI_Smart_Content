@@ -58,8 +58,10 @@ class BaseView {
       this.moveModalsToPortal();
       this.updateLinksForRouter();
       await this.init();
-      await this.updateHeader();
       this.initialized = true;
+      // updateHeader hace un fetch a Supabase para los datos del avatar; no hace
+      // falta bloquear el render por eso (el header ya pintó con su layout).
+      this.updateHeader().catch(err => console.warn('updateHeader:', err));
     } catch (error) {
       console.error('Error renderizando vista:', error);
       if (window.errorHandler) {

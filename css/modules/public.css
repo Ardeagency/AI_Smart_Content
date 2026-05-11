@@ -138,10 +138,6 @@ body.route-public #app-container {
 body.route-public #navigation-container {
     display: none !important;
 }
-/* Shell debe ser visible aunque todavía no se haya completado el entrance */
-body.route-public.entrance-active #public-shell {
-    display: block;
-}
 
 /* Contenedor interno del contenido de la vista pública */
 #public-view-content,

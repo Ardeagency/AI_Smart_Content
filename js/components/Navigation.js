@@ -330,19 +330,13 @@ class Navigation {
       return;
     }
 
-    // Si el modo no ha cambiado y ya está inicializado, actualizar enlaces y refrescar créditos desde BD
+    // Si el modo no ha cambiado y ya está inicializado, solo actualizar enlace activo.
+    // Créditos / storage / notificaciones ya se refrescan en su propio intervalo
+    // (loadCreditsFromDb cada 25s + visibilitychange); no hace falta volver a pegarle
+    // a la DB en cada navegación interna.
     if (this.initialized && this.currentMode === config.mode && this.currentOrgId === config.orgId) {
-      if (config.showHeader) {
-        this.ensureNotificationsDropdown();
-      }
       this.updateActiveLink();
-      if (config.mode === 'user' && config.orgId) {
-        this.loadCreditsFromDb();
-        this.loadStorageFromDb();
-      }
-      if (config.showHeader) {
-        this.refreshNotificationsBadge();
-      }
+      this.updateHeaderTitle();
       return;
     }
 
@@ -373,21 +367,20 @@ class Navigation {
     this.updateHeaderTitle();
     this.updateBodyLayout(config);
 
-    // Cargar información del usuario
-    await this.loadUserInfo();
-
-    // Cargar información según el modo
+    // Carga de datos en paralelo: usuario + (org|dev). Cada uno actualiza el DOM
+    // cuando llega; no hace falta serializarlos ni bloquear a quien llama (el
+    // sidebar ya pintó con su layout en innerHTML).
+    const dataTasks = [this.loadUserInfo().catch((e) => console.warn('Nav.loadUserInfo', e))];
     if (config.mode === 'developer') {
-      await this.loadDeveloperInfo();
+      dataTasks.push(this.loadDeveloperInfo().catch((e) => console.warn('Nav.loadDeveloperInfo', e)));
     } else if (config.mode === 'user') {
-      await this.loadOrganizationInfo();
+      dataTasks.push(this.loadOrganizationInfo().catch((e) => console.warn('Nav.loadOrganizationInfo', e)));
     }
-
     if (config.showHeader) {
       this.refreshNotificationsBadge();
     }
-
     this.initialized = true;
+    await Promise.allSettled(dataTasks);
   }
 
   /**

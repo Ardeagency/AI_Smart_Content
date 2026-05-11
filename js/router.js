@@ -266,22 +266,10 @@ class Router {
             this.currentView = prevView;
             this.currentRoute = path;
             prevView.routeParams = routeParams;
-
-            if (path === '/') {
-              document.body.classList.add('route-landing');
-            } else {
-              document.body.classList.remove('route-landing');
-            }
+            document.body.classList.toggle('route-landing', path === '/');
 
             if (window.appNavigation && typeof window.appNavigation.render === 'function') {
-              await window.appNavigation.render();
-            }
-
-            const publicNoEntrance = ['/', '/login', '/signin', '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'];
-            if (!publicNoEntrance.includes(path)) {
-              container.classList.remove('view-enter');
-              void container.offsetHeight;
-              container.classList.add('view-enter');
+              window.appNavigation.render();
             }
 
             window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
@@ -292,8 +280,9 @@ class Router {
         }
       }
 
-      // Montaje completo: destruir vista anterior (no vaciar innerHTML aquí: el flash en blanco
-      // y un paint extra; la nueva vista reemplaza el DOM en BaseView.render()).
+      // Montaje completo: destruir vista anterior. No vaciar innerHTML aquí:
+      // la nueva vista reemplaza el DOM en BaseView.render() y así evitamos un
+      // frame en blanco entre ambas vistas.
       if (prevView) {
         this.currentView = null;
         if (typeof prevView.onLeave === 'function') {
@@ -304,14 +293,7 @@ class Router {
         }
       }
 
-      container.classList.remove('view-leave', 'view-enter');
-
-      // Mostrar/ocultar fondo de la landing (imagen en index.html #landing-background-wrap)
-      if (path === '/') {
-        document.body.classList.add('route-landing');
-      } else {
-        document.body.classList.remove('route-landing');
-      }
+      document.body.classList.toggle('route-landing', path === '/');
 
       this.currentView = new ViewClass();
       this.currentRoute = path;
@@ -319,19 +301,15 @@ class Router {
         this.currentView.routeParams = routeParams;
       }
 
-      if (window.appNavigation && typeof window.appNavigation.render === 'function') {
-        await window.appNavigation.render();
-      }
+      // Navigation render en paralelo con el render de la vista: no bloquea el
+      // pintado de la vista nueva y evita que el sidebar se quede mostrando el
+      // estado anterior durante la transición.
+      const navRenderPromise = (window.appNavigation && typeof window.appNavigation.render === 'function')
+        ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
+        : Promise.resolve();
 
       await this.currentView.render();
-
-      // Animación de entrada suave en todas las páginas (igual que landing/login). Landing y login ya usan body.entrance-done.
-      const publicNoEntrance = ['/', '/login', '/signin', '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'];
-      if (!publicNoEntrance.includes(path)) {
-        container.classList.remove('view-enter');
-        void container.offsetHeight;
-        container.classList.add('view-enter');
-      }
+      await navRenderPromise;
 
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
