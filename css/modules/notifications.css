@@ -91,35 +91,55 @@
   margin: 0;
 }
 
-/* ── Toggle compact ↔ expanded ────────────────────── */
+/* ── Toggle compact ↔ expanded (flecha en el header) ── */
 
 .notif-toggle {
-  align-self: flex-start;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: transparent;
-  border: none;
-  padding: 0.2rem 0;
-  margin-top: 0.15rem;
-  font-size: 0.72rem;
-  font-weight: 600;
+  justify-content: center;
   color: var(--text-muted);
   cursor: pointer;
   font-family: inherit;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .notif-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
-.notif-toggle i {
-  font-size: 0.7rem;
-  transition: transform 0.15s ease;
+.notif-toggle-icon {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
 }
 
-/* ── Body (sección de detalles, solo en mode-expanded) ───── */
+/* Cuando la card está expandida, la flecha apunta arriba */
+.notif-card.mode-expanded .notif-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* ── Wrapper del contenido expandible ───────────────── */
+/* Por defecto oculto en compact; visible en expanded. */
+
+.notif-card.mode-compact .notif-expandable {
+  display: none;
+}
+
+.notif-card.mode-expanded .notif-expandable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* ── Body (texto largo · plan de acción de Vera) ───── */
 
 .notif-body {
   padding-top: 0.5rem;
@@ -131,13 +151,14 @@
   word-break: break-word;
 }
 
-/* En compact, el card es más compacto */
-.notif-card.mode-compact {
-  padding-bottom: 0.55rem;
+/* La fecha en el header pierde el margin-left:auto porque el toggle lo toma */
+.notif-card .notif-date {
+  margin-left: 0;
 }
 
-.notif-card.mode-expanded {
-  padding-bottom: 0.85rem;
+/* Cuando NO hay toggle (notifs sin expandable), la fecha sí va a la derecha */
+.notif-card-header:not(:has(.notif-toggle)) .notif-date {
+  margin-left: auto;
 }
 
 /* ── Subject (referencia al objeto) ───────────────── */
@@ -150,12 +171,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.notif-subject:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: var(--text-muted);
+  cursor: default; /* navegación desactivada — ver Navigation.js */
 }
 
 .notif-subject-meta {
@@ -225,23 +241,11 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  cursor: pointer;
+  cursor: default; /* navegación desactivada — ver Navigation.js */
   overflow: hidden;
   text-align: left;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   color: var(--text-primary);
   font-family: inherit;
-}
-
-.notif-output:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: var(--text-muted);
-  transform: translateY(-1px);
-}
-
-.notif-output:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 .notif-output-thumb {

@@ -140,16 +140,10 @@ class CommandCenterView extends BaseView {
         <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
       </div>
 
-      <!-- Bottom-left panel: Campañas reales + tráfico generado por cada una -->
-      <div class="cc-entorno-bl-panel" id="ccEntornoBlPanel" style="display:none;">
-        <div class="cc-entorno-bl-head">
-          <span class="cc-entorno-bl-title">Campañas reales</span>
-          <span class="cc-entorno-bl-count" id="ccEntornoBlCount">0</span>
-        </div>
-        <div class="cc-entorno-bl-list" id="ccEntornoBlList"></div>
-        <div class="cc-entorno-bl-empty" id="ccEntornoBlEmpty" style="display:none;">
-          Sin campañas en integraciones conectadas todavía.
-        </div>
+      <!-- Legend (bottom-left card) -->
+      <div class="cc-entorno-legend" id="ccEntornoLegend" style="display:none;">
+        <div class="cc-entorno-legend-title">Leyenda</div>
+        <div class="cc-entorno-legend-list" id="ccEntornoLegendList"></div>
       </div>
 
       <!-- Choropleth canvas container -->
@@ -249,6 +243,19 @@ class CommandCenterView extends BaseView {
           <div class="cc-empty cc-empty--compact" id="ccAudEmpty" style="display:none;">
             <i class="fas fa-users-slash"></i>
             <span>Sin personas</span>
+          </div>
+        </div>
+
+        <!-- Top campañas -->
+        <div class="cc-entorno-subsection">
+          <div class="cc-entorno-subsection-head">
+            <h4 class="cc-entorno-subsection-title">Top campañas</h4>
+            <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
+          </div>
+          <div class="cc-list" id="ccCampList"></div>
+          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+            <i class="fas fa-bullhorn"></i>
+            <span>Sin campañas</span>
           </div>
         </div>
 
@@ -378,7 +385,7 @@ class CommandCenterView extends BaseView {
       const [audRes, segRes, campRes, intRes] = await Promise.all([
         supabase
           .from('audience_personas')
-          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
+          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_interests, updated_at')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
@@ -390,7 +397,7 @@ class CommandCenterView extends BaseView {
 
         supabase
           .from('campaigns')
-          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics, external_campaign_id, external_campaign_name')
+          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
@@ -865,95 +872,59 @@ class CommandCenterView extends BaseView {
     setText('ccFeaturedGender', topGender ? (topGender[0] === 'male' ? 'Hombres' : topGender[0] === 'female' ? 'Mujeres' : topGender[0]) : '—');
   }
 
-  /* ── Panel bottom-left del mapa: campañas reales + tráfico generado ──── */
-  _renderRealCampaignsPanel() {
-    const root  = document.getElementById('ccEntornoBlPanel');
-    const list  = document.getElementById('ccEntornoBlList');
-    const count = document.getElementById('ccEntornoBlCount');
-    const empty = document.getElementById('ccEntornoBlEmpty');
+  /* ── Leyenda overlay del mapa (bottom-left card) ──────────────────── */
+  _renderEntornoLegend(countryAgg) {
+    const root = document.getElementById('ccEntornoLegend');
+    const list = document.getElementById('ccEntornoLegendList');
     if (!root || !list) return;
 
-    // "Reales" = campañas pulled de integraciones (tienen external_campaign_id)
-    // de cualquier plataforma — Meta, TikTok, X, Google Ads, etc. cuando existan
-    const camps = (Array.isArray(this._campaigns) ? this._campaigns : [])
-      .filter(c => c && c.external_campaign_id);
+    const entries = Object.entries(countryAgg || {})
+      .filter(([k, v]) => /^[A-Z]{2}$/.test(k) && Number(v) > 0)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 5);
 
-    if (count) count.textContent = String(camps.length);
-    root.style.display = '';
-
-    if (camps.length === 0) {
-      list.innerHTML = '';
-      if (empty) empty.style.display = '';
+    if (entries.length === 0) {
+      root.style.display = 'none';
       return;
     }
-    if (empty) empty.style.display = 'none';
+    root.style.display = '';
 
-    // Mapeo plataforma → label corto + clase de color
-    const platLabel = {
-      meta_facebook:  { code: 'FB',  klass: 'meta' },
-      meta_instagram: { code: 'IG',  klass: 'meta' },
-      google_ads:     { code: 'GA',  klass: 'google' },
-      tiktok_ads:     { code: 'TT',  klass: 'tiktok' },
-      linkedin_ads:   { code: 'LI',  klass: 'linkedin' },
-      pinterest_ads:  { code: 'PT',  klass: 'pinterest' },
-      twitter_ads:    { code: 'X',   klass: 'twitter' },
-      organic:        { code: '∼',   klass: 'organic' },
-      internal:       { code: 'IN',  klass: 'internal' },
-    };
-
-    const statusClass = { active: 'on', paused: 'mute', draft: 'mute', ended: 'mute', archived: 'mute' };
-    const fmtNum = (n) => {
-      const x = Number(n);
-      if (!Number.isFinite(x) || x === 0) return null;
-      if (x >= 1_000_000) return `${(x/1_000_000).toFixed(1)}M`;
-      if (x >= 1_000)     return `${(x/1_000).toFixed(1)}K`;
-      return String(Math.round(x));
-    };
     const FLAG = (iso2) => {
-      if (!iso2 || iso2.length !== 2) return '';
-      try { const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0); return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return ''; }
+      const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+      try { return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return '🌐'; }
     };
+    const total = entries.reduce((s, [, v]) => s + Number(v), 0);
 
-    // Ordenar: activas primero, luego por impressions desc
-    const sorted = [...camps].sort((a, b) => {
-      const ar = (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1);
-      if (ar !== 0) return ar;
-      return (Number(b.cached_impressions) || 0) - (Number(a.cached_impressions) || 0);
-    });
+    // Lee el degradado de marca para colorear el dot por intensidad rank
+    let gradientStops = ['#e09145'];
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const grad = (cs.getPropertyValue('--brand-gradient-dynamic') || cs.getPropertyValue('--brand-gradient') || '').trim();
+      const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
+      if (hexes && hexes.length > 0) gradientStops = hexes;
+    } catch (_) { /* noop */ }
+    const hex2rgb = (hex) => { let h = hex.replace('#','').slice(0,6); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
+    const interp = (t) => {
+      if (gradientStops.length === 1) return gradientStops[0];
+      const segs = gradientStops.length - 1;
+      const tt = Math.max(0, Math.min(1, t));
+      const idx = Math.min(Math.floor(tt * segs), segs - 1);
+      const lt = (tt * segs) - idx;
+      const [r1,g1,b1] = hex2rgb(gradientStops[idx]);
+      const [r2,g2,b2] = hex2rgb(gradientStops[idx+1]);
+      return `rgb(${Math.round(r1+(r2-r1)*lt)},${Math.round(g1+(g2-g1)*lt)},${Math.round(b1+(b2-b1)*lt)})`;
+    };
+    const maxVal = Math.max(...entries.map(([,v]) => Number(v)));
 
-    list.innerHTML = sorted.slice(0, 20).map((c) => {
-      const pl = platLabel[c.platform] || { code: (c.platform || '?').slice(0, 2).toUpperCase(), klass: 'other' };
-      const sCls = statusClass[c.status] || 'mute';
-      const imp = fmtNum(c.cached_impressions);
-      // Top país y top edad de real_demographics si existe
-      const rd = c.real_demographics || {};
-      const countries = rd.country || {};
-      const topCountry = Object.entries(countries)
-        .filter(([k]) => /^[A-Z]{2}$/.test(k))
-        .sort((a, b) => (Number(b[1]?.impressions) || 0) - (Number(a[1]?.impressions) || 0))[0];
-      const topCountryCode = topCountry?.[0] || null;
-      const ages = rd.age || {};
-      const topAge = Object.entries(ages).sort((a, b) => (Number(b[1]?.impressions) || 0) - (Number(a[1]?.impressions) || 0))[0]?.[0] || null;
-
-      const trafficBits = [
-        imp ? `<span class="cc-bl-traffic-bit"><i class="fas fa-eye"></i> ${imp}</span>` : '',
-        topCountryCode ? `<span class="cc-bl-traffic-bit">${FLAG(topCountryCode)} ${topCountryCode}</span>` : '',
-        topAge ? `<span class="cc-bl-traffic-bit"><i class="fas fa-user"></i> ${topAge}</span>` : '',
-      ].filter(Boolean).join('');
-
-      const trafficRow = trafficBits
-        ? `<div class="cc-bl-traffic">${trafficBits}</div>`
-        : `<div class="cc-bl-traffic cc-bl-traffic--empty">Sin tráfico reciente</div>`;
-
-      return `
-        <div class="cc-bl-item" data-campaign-id="${c.id}">
-          <div class="cc-bl-item-head">
-            <span class="cc-bl-platform cc-bl-platform--${pl.klass}">${pl.code}</span>
-            <span class="cc-bl-name">${this.escapeHtml(c.nombre_campana || c.external_campaign_name || 'Campaña')}</span>
-            <span class="cc-bl-status cc-bl-status--${sCls}">${this.escapeHtml(c.status || 'draft')}</span>
-          </div>
-          ${trafficRow}
-        </div>`;
+    list.innerHTML = entries.map(([cc, v]) => {
+      const pct = Math.round((Number(v) / total) * 100);
+      const color = interp(Number(v) / maxVal);
+      return `<div class="cc-entorno-legend-item">
+        <span class="cc-entorno-legend-dot" style="background:${color}"></span>
+        <span class="cc-entorno-legend-flag">${FLAG(cc)}</span>
+        <span class="cc-entorno-legend-code">${cc}</span>
+        <span class="cc-entorno-legend-pct">${pct}%</span>
+      </div>`;
     }).join('');
   }
 
@@ -1045,8 +1016,8 @@ class CommandCenterView extends BaseView {
       mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
     }
 
-    // Panel bottom-left: lista de campañas reales (todas las integraciones) + tráfico
-    this._renderRealCampaignsPanel();
+    // Poblar la leyenda overlay externa (bottom-left del mapa) con top-5 países
+    this._renderEntornoLegend(agg.country);
 
     // Breakdowns: género + edad como mini-barras CSS
     if (breakEl) {

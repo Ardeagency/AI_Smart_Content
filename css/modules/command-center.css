@@ -1746,170 +1746,71 @@
   color: var(--text-secondary);
 }
 
-/* ── Panel bottom-left: Campañas reales + tráfico generado ─────────── */
-.cc-entorno-bl-panel {
+/* Legend overlay (bottom-left card) */
+.cc-entorno-legend {
   position: absolute;
   bottom: 16px;
   left: 16px;
   z-index: 5;
-  background: rgba(20, 21, 23, 0.94);
-  backdrop-filter: blur(10px);
+  background: rgba(20, 21, 23, 0.92);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border-divider);
   border-radius: 12px;
   padding: 12px 14px;
-  width: 340px;
-  max-height: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.cc-entorno-bl-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-bottom: 0.5rem;
+.cc-entorno-legend-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--border-divider);
 }
 
-.cc-entorno-bl-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
+.cc-entorno-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.cc-entorno-bl-count {
-  font-size: 0.78rem;
-  font-weight: 700;
+.cc-entorno-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
 }
 
-.cc-entorno-bl-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.cc-entorno-bl-list::-webkit-scrollbar { width: 4px; }
-.cc-entorno-bl-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-
-.cc-entorno-bl-empty {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  padding: 0.5rem 0.25rem;
-  font-style: italic;
-}
-
-.cc-bl-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 7px 8px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid var(--border-divider);
-  border-radius: 8px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-  cursor: pointer;
-}
-
-.cc-bl-item:hover {
-  background: rgba(255, 255, 255, 0.045);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.cc-bl-item-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.cc-bl-platform {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 18px;
-  padding: 0 5px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  border-radius: 4px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+.cc-entorno-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
-.cc-bl-platform--meta     { background: #1877f2; }
-.cc-bl-platform--google   { background: #4285f4; }
-.cc-bl-platform--tiktok   { background: #000; border: 1px solid rgba(255,255,255,0.2); }
-.cc-bl-platform--twitter  { background: #000; border: 1px solid rgba(255,255,255,0.2); }
-.cc-bl-platform--linkedin { background: #0a66c2; }
-.cc-bl-platform--pinterest{ background: #e60023; }
-.cc-bl-platform--organic  { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
-.cc-bl-platform--internal { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
-.cc-bl-platform--other    { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
-
-.cc-bl-name {
-  flex: 1;
-  font-size: 0.82rem;
-  color: var(--text-primary);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.cc-entorno-legend-flag {
+  font-size: 1rem;
+  line-height: 1;
 }
 
-.cc-bl-status {
-  font-size: 0.62rem;
+.cc-entorno-legend-code {
   font-weight: 600;
-  text-transform: lowercase;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-
-.cc-bl-status--on   { color: #4ade80; background: rgba(74, 222, 128, 0.12); }
-.cc-bl-status--mute { color: var(--text-muted); background: rgba(255,255,255,0.05); }
-
-.cc-bl-traffic {
-  display: flex;
-  gap: 0.6rem;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
-  padding-left: 30px;
+  min-width: 24px;
 }
 
-.cc-bl-traffic--empty {
-  font-style: italic;
-  color: var(--text-muted);
-  font-size: 0.68rem;
-}
-
-.cc-bl-traffic-bit {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.cc-bl-traffic-bit i {
-  font-size: 0.65rem;
-  opacity: 0.7;
-}
-
-/* Force-hide la barra/legend interna de chartjs-chart-geo: el plugin a veces
-   renderiza una barra vertical (color scale) aunque scales.color.display=false.
-   Su contenedor es un div hermano del canvas dentro de cc-entorno-map-canvas. */
-.cc-entorno-map-canvas > div:not(:first-child),
-.cc-entorno-map-canvas > canvas + div {
-  display: none !important;
+.cc-entorno-legend-pct {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.8rem;
 }
 
 /* ── SIDEBAR (right, 380px) ────────────────────────────────────────── */
@@ -2205,10 +2106,7 @@
 }
 
 @media (max-width: 768px) {
-  .cc-entorno-controls { top: 10px; left: 10px; }
-  .cc-entorno-ctrl-btn { width: 36px; height: 36px; }
   .cc-entorno-legend { bottom: 10px; left: 10px; padding: 10px; min-width: 160px; }
-  .cc-entorno-filter-btn { bottom: 10px; right: 10px; width: 40px; height: 40px; }
 }
 
 /* ── Full-width override cuando el layout Entorno está activo ──────── */
@@ -2229,8 +2127,3 @@
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><defs><radialGradient id='g' cx='50%25' cy='50%25' r='50%25'><stop offset='35%25' stop-color='%23ffffff' stop-opacity='1'/><stop offset='55%25' stop-color='%23ff6500' stop-opacity='0.65'/><stop offset='100%25' stop-color='%23ff0000' stop-opacity='0'/></radialGradient></defs><circle cx='16' cy='16' r='14' fill='url(%23g)'/><circle cx='16' cy='16' r='4.5' fill='%23ffffff'/></svg>") 16 16, auto;
 }
 
-/* Los botones (zoom, filter) recuperan el cursor pointer */
-.cc-entorno-controls .cc-entorno-ctrl-btn,
-.cc-entorno-filter-btn {
-  cursor: pointer;
-}
