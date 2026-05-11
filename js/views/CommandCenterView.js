@@ -401,45 +401,7 @@ class CommandCenterView extends BaseView {
     }
   }
 
-  /* ── Manual link inline (campaign → persona) ──────────────────────── */
-  async _linkEntityToPersona({ entityType, entityId, personaId }) {
-    if (entityType !== 'campaign' || !entityId) return false;
-    try {
-      const { data: { session } } = await this._supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return false;
-      const res = await fetch('/api/integrations/link', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ entity_type: entityType, entity_id: entityId, persona_id: personaId || null }),
-      });
-      if (!res.ok) {
-        const err = await res.text().catch(() => '');
-        alert(`No se pudo vincular: ${err.slice(0, 200)}`);
-        return false;
-      }
-      const row = this._campaigns.find((x) => x.id === entityId);
-      if (row) row.persona_id = personaId || null;
-      this._renderCampaigns();
-      return true;
-    } catch (e) {
-      console.error('link entity:', e);
-      return false;
-    }
-  }
-
-  _personaPickerHTML(currentPersonaId, entityType, entityId) {
-    const personas = Array.isArray(this._audiences) ? this._audiences : [];
-    const opts = personas.map((p) => `<option value="${p.id}" ${currentPersonaId === p.id ? 'selected' : ''}>${this.escapeHtml(p.name || 'Persona')}</option>`).join('');
-    return `
-      <select class="cc-link-picker" data-entity-type="${entityType}" data-entity-id="${entityId}" aria-label="Vincular a persona">
-        <option value="">— Sin vincular —</option>
-        ${opts}
-      </select>`;
-  }
-
-  /** Mapa id → nombre de persona (para enlazar campañas). */
+  /** Mapa id → nombre de persona (legacy, queda por si se usa en otro lado). */
   _personaNameById() {
     const m = {};
     (this._audiences || []).forEach((p) => {
@@ -457,7 +419,6 @@ class CommandCenterView extends BaseView {
     // "Real" = importada de Meta/Google/TikTok/LinkedIn/etc. Indicador robusto:
     // last_synced_at no nulo (la fila vino de un sync, no fue creada a mano).
     const rows = all.filter((c) => c?.last_synced_at);
-    const personaById = this._personaNameById();
     if (count) count.textContent = String(rows.length);
     if (!list) return;
 
@@ -470,61 +431,48 @@ class CommandCenterView extends BaseView {
 
     const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
     const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
-    const fmt = (v) => { if (v == null || v === '') return '—'; const n = Number(v); return Number.isFinite(n) ? n.toLocaleString('es-ES') : String(v); };
-    const fmtMoney = (v, currency) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? `${n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency || 'USD'}` : null; };
-    const fmtPct = (v) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? `${(n * 100).toFixed(2)}%` : null; };
+    const fmtCompact = (v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return '—';
+      if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+      if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+      return n.toLocaleString('es-ES');
+    };
+    const fmtMoney = (v, currency) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return '—';
+      const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+      return `${compact} ${currency || 'USD'}`;
+    };
+    const fmtDate = (d) => {
+      if (!d) return '—';
+      const t = new Date(d);
+      return Number.isFinite(t.getTime())
+        ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+    };
 
     list.innerHTML = rows.map((c) => {
-      const stBadge  = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
+      const stBadge   = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
       const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
       const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
 
-      const hasMetrics = c.cached_impressions || c.cached_clicks || c.cached_spend || c.cached_roas;
-      const metricsRow = hasMetrics ? `
-        <div class="cc-camp-metrics">
-          ${c.cached_impressions ? `<span class="cc-kpi"><i class="fas fa-eye"></i> ${fmt(c.cached_impressions)}</span>` : ''}
-          ${c.cached_clicks      ? `<span class="cc-kpi"><i class="fas fa-mouse-pointer"></i> ${fmt(c.cached_clicks)}</span>` : ''}
-          ${c.cached_roas        ? `<span class="cc-kpi cc-kpi--roas"><i class="fas fa-chart-line"></i> ${fmt(c.cached_roas)}x ROAS</span>` : ''}
-          ${c.cached_ctr         ? `<span class="cc-kpi">${fmtPct(c.cached_ctr) || '—'} CTR</span>` : ''}
-          ${c.cached_spend       ? `<span class="cc-kpi cc-kpi--spend"><i class="fas fa-dollar-sign"></i> ${fmtMoney(c.cached_spend, c.budget_currency) || '—'}</span>` : ''}
-        </div>` : '';
-
-      const budgetStr = fmtMoney(c.budget_daily, c.budget_currency);
-      const totalStr  = fmtMoney(c.budget_total, c.budget_currency);
-      const budgetRow = (budgetStr || totalStr) ? `
-        <div class="cc-camp-budget">
-          ${budgetStr ? `<span><i class="fas fa-calendar-day"></i> ${budgetStr}/día</span>` : ''}
-          ${totalStr  ? `<span><i class="fas fa-wallet"></i> ${totalStr} total</span>` : ''}
-        </div>` : '';
-
-      const cta = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
-      const ctaRow = cta ? `<p class="cc-camp-cta">${this.escapeHtml(cta.length > 80 ? cta.slice(0, 80) + '…' : cta)}</p>` : '';
-      const pName = c.persona_id ? personaById[String(c.persona_id)] : '';
-      const personaRow = `
-        <div class="cc-camp-persona ${pName ? '' : 'cc-camp-persona--missing'}">
-          <i class="fas ${pName ? 'fa-user-circle' : 'fa-unlink'}" aria-hidden="true"></i>
-          <span class="cc-camp-persona-label">${pName ? 'Mercado objetivo:' : 'Sin persona vinculada — la IA no puede cerrar el circuito.'}</span>
-          ${this._personaPickerHTML(c.persona_id || '', 'campaign', c.id)}
-        </div>`;
-
-      // MatchBars: solo si hay persona linkada y match_scores tiene contenido evaluable
-      const ms = c.match_scores || {};
-      const hasMatch = pName && (ms.age != null || ms.gender != null || ms.geo != null);
-      const matchBars = hasMatch && window.MatchBars
-        ? `<div class="cc-camp-match">${window.MatchBars.render(ms)}</div>`
-        : '';
+      // Engagement: cached_clicks como proxy primario (clicks/interacciones).
+      // Si no hay clicks, usa impressions como señal de exposición.
+      const engagementVal = c.cached_clicks ?? c.cached_impressions;
+      const engagementLbl = c.cached_clicks ? 'interacciones' : (c.cached_impressions ? 'impresiones' : '');
 
       return `
       <div class="cc-camp-row">
         <div class="cc-camp-row-head">
-          <span class="cc-camp-name">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
+          <span class="cc-camp-name" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</span>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
         </div>
-        ${personaRow}
-        ${matchBars}
-        ${ctaRow}
-        ${metricsRow}
-        ${budgetRow}
+        <dl class="cc-camp-stats">
+          <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
+          <div class="cc-camp-stat"><dt>Engagement</dt><dd>${engagementVal != null ? `${fmtCompact(engagementVal)}${engagementLbl ? ` <small>${engagementLbl}</small>` : ''}` : '—'}</dd></div>
+          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${c.cached_spend != null ? this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency)) : '—'}</dd></div>
+        </dl>
       </div>`;
     }).join('');
   }
@@ -674,22 +622,8 @@ class CommandCenterView extends BaseView {
     if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
 
-  /* ── Listeners: solo el picker "vincular persona" en campañas ────── */
-  _setupEventListeners() {
-    const page = document.getElementById('commandCenterPage');
-    if (!page) return;
-    page.addEventListener('change', async (ev) => {
-      const sel = ev.target.closest && ev.target.closest('.cc-link-picker');
-      if (!sel) return;
-      const entityType = sel.getAttribute('data-entity-type');
-      const entityId   = sel.getAttribute('data-entity-id');
-      const personaId  = sel.value || null;
-      sel.disabled = true;
-      const ok = await this._linkEntityToPersona({ entityType, entityId, personaId });
-      sel.disabled = false;
-      if (!ok) sel.value = personaId === null ? '' : personaId;
-    });
-  }
+  /* ── Listeners: vacío por ahora (las cards no tienen interacción) ── */
+  _setupEventListeners() { /* noop */ }
 
   /* ── Error state ──────────────────────────────────────────────────── */
   _setError(msg) {
