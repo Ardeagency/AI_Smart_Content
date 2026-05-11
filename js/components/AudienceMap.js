@@ -105,33 +105,70 @@
       </div>`;
   }
 
+  // ── Helpers de color: lee --brand-gradient-dynamic y produce una función
+  //    de interpolación t∈[0,1] → color (rgb string). Si el degradado no
+  //    está disponible, fallback a un naranja cálido sólido.
+  function readBrandGradientColors() {
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
+                    cs.getPropertyValue('--brand-gradient') || '').trim();
+      const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
+      if (hexes && hexes.length > 0) return hexes;
+    } catch (_) { /* noop */ }
+    return ['#e09145']; // fallback
+  }
+
+  function hexToRgb(hex) {
+    let h = hex.replace('#', '');
+    if (h.length === 8) h = h.slice(0, 6);
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+
+  function interpolateColors(stops, t) {
+    if (!stops || stops.length === 0) return 'rgb(255,255,255)';
+    if (stops.length === 1) return stops[0];
+    const tt = Math.max(0, Math.min(1, t));
+    const segs = stops.length - 1;
+    const idx = Math.min(Math.floor(tt * segs), segs - 1);
+    const segT = (tt * segs) - idx;
+    const [r1, g1, b1] = hexToRgb(stops[idx]);
+    const [r2, g2, b2] = hexToRgb(stops[idx + 1]);
+    const r = Math.round(r1 + (r2 - r1) * segT);
+    const g = Math.round(g1 + (g2 - g1) * segT);
+    const b = Math.round(b1 + (b2 - b1) * segT);
+    return `rgb(${r},${g},${b})`;
+  }
+
   // ── Desktop: choropleth con chartjs-chart-geo ────────────────────────────
   async function renderChoropleth(container, distribution) {
     await ensureScripts();
     const topology = await ensureTopology();
 
     if (!window.ChartGeo) {
-      // Fallback si el plugin no exportó el namespace esperado
       renderListFallback(container, distribution);
       return null;
     }
 
-    // Construir features
     const countries = window.ChartGeo.topojson.feature(topology, topology.objects.countries).features;
 
-    // Mapa N3 → iso2 invertido
     const N3_TO_ISO2 = {};
     for (const [iso2, n3] of Object.entries(ISO2_TO_N3)) N3_TO_ISO2[n3] = iso2;
 
+    // value=null para países sin data → caen en `scales.color.missing`
     const data = countries.map((f) => {
       const n3 = parseInt(f.id, 10);
       const iso2 = N3_TO_ISO2[n3];
-      const value = iso2 ? Number(distribution[iso2] || 0) : 0;
-      return { feature: f, value };
+      const raw  = iso2 ? Number(distribution[iso2] || 0) : 0;
+      return { feature: f, value: raw > 0 ? raw : null };
     });
 
-    const maxVal = Math.max(1, ...data.map(d => d.value));
-    const total  = data.reduce((s, d) => s + d.value, 0);
+    const valuedEntries = data.filter(d => d.value != null);
+    const maxVal = Math.max(0.0001, ...valuedEntries.map(d => d.value));
+    const total  = valuedEntries.reduce((s, d) => s + d.value, 0);
+
+    // Lee el degradado de marca al momento de render (refleja la marca actual)
+    const gradientStops = readBrandGradientColors();
 
     container.innerHTML = `<canvas class="cc-map-canvas" aria-label="Mapa de distribución de audiencia por país"></canvas><div class="cc-map-legend"></div>`;
     const canvas = container.querySelector('canvas');
@@ -142,15 +179,9 @@
       data: {
         labels: data.map(d => d.feature.properties.name),
         datasets: [{
-          label: 'Impressions',
+          label: 'Audience',
           data,
-          backgroundColor: (ctx) => {
-            const v = ctx.dataset.data[ctx.dataIndex]?.value || 0;
-            if (v === 0) return 'rgba(255,255,255,0.04)';
-            const alpha = 0.25 + 0.75 * (v / maxVal);  // intensidad escalada
-            return `rgba(224,145,69,${alpha})`;
-          },
-          borderColor: 'rgba(255,255,255,0.06)',
+          borderColor: 'rgba(255,255,255,0.1)',
           borderWidth: 0.5,
         }]
       },
@@ -164,10 +195,10 @@
           tooltip: {
             callbacks: {
               label: (ctx) => {
-                const v = ctx.raw?.value || 0;
-                if (v === 0) return null;
+                const v = ctx.raw?.value;
+                if (v == null) return null;
                 const pct = total > 0 ? Math.round((v / total) * 100) : 0;
-                return `${ctx.raw.feature.properties.name}: ${v.toLocaleString('es')} imp (${pct}%)`;
+                return `${ctx.raw.feature.properties.name}: ${pct}%`;
               },
               title: () => null,
             }
@@ -175,13 +206,20 @@
         },
         scales: {
           projection: { axis: 'x', projection: 'naturalEarth1' },
+          // Color scale: interpolación contra el degradado de marca
+          color: {
+            axis: 'x',
+            interpolate: (t) => interpolateColors(gradientStops, t),
+            missing: 'rgba(255,255,255,0.05)', // países sin data: casi invisibles
+            quantize: 0,                        // suave, sin escalones
+            legend: { display: false },         // sin barra azul -1..1 a la derecha
+          },
         },
       },
     });
 
-    // Leyenda compacta: top-5 países
-    const top5 = [...data]
-      .filter(d => d.value > 0)
+    // Leyenda compacta: top-5 países, con un punto del color real del choropleth
+    const top5 = [...valuedEntries]
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
     const legend = container.querySelector('.cc-map-legend');
@@ -189,7 +227,12 @@
       legend.innerHTML = top5.map(d => {
         const iso2 = N3_TO_ISO2[parseInt(d.feature.id, 10)] || '';
         const pct = Math.round((d.value / total) * 100);
-        return `<span class="cc-map-legend-item">${FLAG(iso2)} ${d.feature.properties.name} <strong>${pct}%</strong></span>`;
+        const t = d.value / maxVal;
+        const color = interpolateColors(gradientStops, t);
+        return `<span class="cc-map-legend-item">
+          <span class="cc-map-legend-dot" style="background:${color}"></span>
+          ${FLAG(iso2)} ${d.feature.properties.name} <strong>${pct}%</strong>
+        </span>`;
       }).join('');
     }
 
