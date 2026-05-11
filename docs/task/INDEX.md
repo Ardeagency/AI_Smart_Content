@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-06** (sprint frontend 100% iniciado).
+Última actualización: **2026-05-11** (auditoría post-cleanup leads/zombie routes).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -22,6 +22,7 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 |---|---|---|---|---|---|
 | [DATA-001](./DATA-001-configure-competitor-entities.md) | Faltan `intelligence_entities` competidoras → 4 tablas vacías + Apify gastando créditos en vacío | data | 👤 | short | — |
 | [BUG-003](./BUG-003-openai-quota-brand-indexer.md) | `brand_indexer` no genera vectors — quota OpenAI agotada (BLOQUEADO por billing) | bug | 👤 | short | — |
+| [BUG-005](./BUG-005-legacy-audiences-brands-references.md) | Frontend consulta tablas legacy `audiences` y `brands` que ya no existen — TasksView muestra "—", StudioView/VideoView no cargan contexto, living.js degradado | bug | 🤖 | medium | — |
 | [FEAT-014](./FEAT-014-anthropic-proxy-metering-cap.md) | Anthropic proxy + cap + notifications (3 fases). Solo falta deploy SSH en VM piloto (~5 min). | ops | 👤 | short | — |
 | [FEAT-015](./FEAT-015-cost-confirmation-pre-flight.md) | Pre-flight cost confirmation — heurística + confirm() en VeraView. Falta validación visual humana. | feature | 👤 | short | — |
 | [FEAT-011](./FEAT-011-studio-programar-button.md) | Botón "Programar" en StudioView — desbloquea cadena schedule end-to-end | feature | 👤 | medium | — |
@@ -51,15 +52,15 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 ---
 
-**Total:** 15 tareas activas (0 auto-eligibles 🤖 + 15 requieren humano 👤).
+**Total:** 20 tareas activas (1 auto-eligible 🤖 + 19 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
-| 🔴 critical | 0 | 0 | 0 |
-| 🟠 high | 6 | 0 | 6 |
-| 🟡 medium | 4 | 0 | 4 |
-| 🟢 low | 5 | 0 | 5 |
-| **Suma** | **15** | **0** | **15** |
+| 🔴 critical | 1 | 0 | 1 |
+| 🟠 high | 8 | 1 | 7 |
+| 🟡 medium | 5 | 0 | 5 |
+| 🟢 low | 6 | 0 | 6 |
+| **Suma** | **20** | **1** | **19** |
 
 ## Resueltas el 2026-05-05
 
