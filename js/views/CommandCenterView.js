@@ -619,9 +619,10 @@ class CommandCenterView extends BaseView {
       const ctaText   = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
       const ctaShort  = ctaText.length > 120 ? ctaText.slice(0, 120) + '…' : ctaText;
 
+      // Campañas reales = view-only (vienen de Meta/Google). No se editan
+      // ni se eliminan localmente — el ground truth vive en la plataforma.
       return `
-      <article class="cc-gallery-card" data-entity-type="campaign-real" data-entity-id="${this.escapeHtml(String(c.id))}">
-        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña" title="Eliminar campaña"><i class="fas fa-times"></i></button>
+      <article class="cc-gallery-card cc-gallery-card--readonly">
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
@@ -947,12 +948,13 @@ class CommandCenterView extends BaseView {
     });
   }
 
-  /* ── Confirmación + delete (campañas reales / conceptuales / audiencias) ── */
+  /* ── Confirmación + delete (campañas conceptuales / audiencias) ──────
+     Las campañas REALES no se eliminan ni editan desde el frontend — son
+     espejo de lo que vive en Meta/Google. Solo se visualizan. */
   async _confirmAndDelete(entityType, entityId, cardEl) {
     if (!this._supabase) return;
 
     const isAudience = entityType === 'audience';
-    const isReal     = entityType === 'campaign-real';
     const isConcept  = entityType === 'campaign-concept';
 
     let warning;
@@ -961,8 +963,6 @@ class CommandCenterView extends BaseView {
       warning = `¿Eliminar esta audiencia?\n\nADVERTENCIA: ${linkedCount > 0
         ? `${linkedCount} campaña${linkedCount === 1 ? '' : 's'} quedarán sin mercado objetivo y la IA no podrá cerrar el circuito con ellas.`
         : 'No tiene campañas vinculadas, pero perderás el perfil completo (dolores, deseos, objeciones, gatillos).'}\n\nEsta acción no se puede deshacer.`;
-    } else if (isReal) {
-      warning = '¿Eliminar esta campaña?\n\nADVERTENCIA: NO afecta la campaña en Meta/Google — solo borra el registro local y sus métricas históricas del dashboard. Si vuelve a sincronizar la integración, podría reaparecer.\n\nEsta acción no se puede deshacer.';
     } else if (isConcept) {
       warning = '¿Eliminar esta campaña conceptual?\n\nADVERTENCIA: Se perderá el plan, sus vínculos con la audiencia y cualquier configuración de presupuesto y objetivos.\n\nEsta acción no se puede deshacer.';
     } else {
@@ -980,16 +980,16 @@ class CommandCenterView extends BaseView {
       const { error } = await this._supabase.from(table).delete().eq('id', entityId);
       if (error) throw error;
 
-      // Quitar localmente del state y re-render
+      // Quitar localmente del state y re-render. Las galerías de campañas
+      // reales no se tocan: no se pueden eliminar desde aquí.
       if (isAudience) {
         this._audiences = (this._audiences || []).filter(a => String(a.id) !== String(entityId));
         this._renderGalleryAudiences();
-      } else {
-        this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
-        this._renderCampaigns();
-        this._renderGalleryCampaigns();
-        this._renderGalleryConceptCampaigns();
         this._renderAudienceMap();
+      } else {
+        // isConcept
+        this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
+        this._renderGalleryConceptCampaigns();
       }
     } catch (e) {
       console.error('CommandCenterView delete:', e);
