@@ -624,7 +624,10 @@
   display: flex;
   gap: 1.25rem;
   width: 100%;
-  height: calc(100vh - 200px);
+  /* Toma todo el alto disponible del padre (.cc-page es flex column). Antes
+     tenía `height: calc(100vh - 200px)` que dejaba ~150px de espacio muerto
+     debajo porque el padre tiene min-height: calc(100vh - 46px). */
+  flex: 1 1 auto;
   min-height: 600px;
 }
 
@@ -849,18 +852,14 @@
   opacity: 0.6;
 }
 
-/* Override: la lista de campañas dentro del sidebar es compacta vertical */
+/* Override: la lista de campañas dentro del sidebar es compacta vertical.
+   El scroll lo gestiona .cc-entorno-sidebar (overflow-y:auto), no la lista,
+   para que el sidebar se vea como una sola pieza scrolleable. */
 .cc-entorno-section .cc-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(100vh - 280px);
-  overflow-y: auto;
-  padding-right: 4px;
 }
-
-.cc-entorno-section .cc-list::-webkit-scrollbar { width: 4px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 2px; }
 
 /* Responsive */
 @media (max-width: 1200px) {
@@ -888,10 +887,15 @@
 
 /* ── Full-width override cuando el layout Entorno está activo ──────── */
 /* .cc-page tiene max-width:1280px; cuando hay .cc-entorno-layout queremos
-   full screen útil (~1800px max, centrado). Usa :has() — soporte moderno. */
+   full screen útil (~1800px max, centrado). Además convertimos .cc-page en
+   flex column para que el layout #ccTwoCol pueda usar `flex:1` y llenar el
+   alto real del contenedor (antes tenía `height: 100vh - 200px` fijo y
+   quedaba ~150px de espacio muerto debajo). Usa :has() — soporte moderno. */
 .cc-page:has(#ccTwoCol) {
   max-width: 1800px;
   padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* En viewports muy anchos (>1900px) seguimos centrado con 1800px */
