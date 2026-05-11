@@ -560,7 +560,7 @@ class Navigation {
     }
     body.innerHTML =
       '<div class="notif-list notifications-modal-list">' +
-      list.map((n) => this._renderRichNotificationCard(n)).join('') +
+      list.map((n) => this._renderRichNotificationCard(n, { mode: 'expanded' })).join('') +
       '</div>';
     this._attachNotificationListeners(body, () => this.closeNotificationsModal(), list);
   }
@@ -789,11 +789,12 @@ class Navigation {
    * @param {object} n - notif normalizada (resultado de _normalizeOrgNotification)
    * @returns {string} HTML string del card
    */
-  _renderRichNotificationCard(n) {
+  _renderRichNotificationCard(n, opts = {}) {
     if (!n) return '';
-    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length));
+    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length) || (n.outputs?.length));
     if (!hasRich) return this._renderLegacyNotificationCard(n);
 
+    const mode = opts.mode === 'expanded' ? 'expanded' : 'compact';
     const unread = !n.is_read;
     const sev = (n.severity || 'info').toLowerCase();
     const labelText = n.label || (n.type || 'info').toUpperCase();
@@ -889,39 +890,115 @@ class Navigation {
     };
     const st = statusMap[n.status] || statusMap.pending;
 
+    // Toggle CSS-only: el HTML siempre incluye TODOS los bloques en
+    // .notif-expandable. La visibilidad se controla con classlist
+    // mode-compact / mode-expanded (ver notifications.css).
+    const hasExpandable = !!(n.body || n.subject || n.outputs?.length || n.checklist?.length);
+    const toggleBtnHtml = hasExpandable ? `
+      <button type="button" class="notif-toggle" data-toggle-expand aria-label="Expandir/colapsar">
+        <i class="fas fa-chevron-down notif-toggle-icon"></i>
+      </button>` : '';
+
+    const bodyHtml = n.body ? this._renderMarkdownLite(n.body) : '';
+
     return `
-      <article class="notif-card ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
+      <article class="notif-card mode-${mode} ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}" data-mode="${mode}">
+        <header class="notif-card-header">
+          <span class="notif-label">${_escapeHtml(labelText)}</span>
+          <span class="notif-sev-pill sev-${_escapeHtml(sev)}">${_escapeHtml(sev)}</span>
+          <span class="notif-date">${_escapeHtml(dateStr)}</span>
+          ${toggleBtnHtml}
+        </header>
+        <h4 class="notif-title">${_escapeHtml(n.title || '')}</h4>
+        ${n.summary ? `<p class="notif-summary">${_escapeHtml(n.summary)}</p>` : ''}
+        <div class="notif-expandable">
+          ${bodyHtml ? `<div class="notif-body">${bodyHtml}</div>` : ''}
+          ${subjectHtml}
+          ${outputsHtml}
+          ${checklistHtml}
+          <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
+        </div>
+        ${actionsHtml}
+      </article>`;
+  }
+
+  /**
+   * Render para notifs sin metadata rica. Misma estructura visual base
+   * que la rica (.notif-card) para evitar mezcla de estilos. Sin
+   * checklist/subject/outputs/acciones, solo título + body markdown.
+   */
+  _renderLegacyNotificationCard(n) {
+    const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
+    const unread = !n.is_read;
+    const sev = (n.severity || 'info').toLowerCase();
+    const labelText = (n.type || 'info').toUpperCase();
+    const bodyHtml = this._renderMarkdownLite(n.body || n.message || '');
+    return `
+      <article class="notif-card legacy mode-expanded ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
         <header class="notif-card-header">
           <span class="notif-label">${_escapeHtml(labelText)}</span>
           <span class="notif-sev-pill sev-${_escapeHtml(sev)}">${_escapeHtml(sev)}</span>
           <span class="notif-date">${_escapeHtml(dateStr)}</span>
         </header>
         <h4 class="notif-title">${_escapeHtml(n.title || '')}</h4>
-        ${n.summary ? `<p class="notif-summary">${_escapeHtml(n.summary)}</p>` : ''}
-        ${n.body ? `<details class="notif-details">
-          <summary>Detalles del plan de acción</summary>
-          <div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>
-        </details>` : ''}
-        ${subjectHtml}
-        ${outputsHtml}
-        ${checklistHtml}
-        <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
-        ${actionsHtml}
+        ${bodyHtml ? `<div class="notif-body">${bodyHtml}</div>` : ''}
       </article>`;
   }
 
-  /** Render plano para notifs legacy sin metadata rica. */
-  _renderLegacyNotificationCard(n) {
-    const type = n.type || 'info';
-    const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
-    const unread = !n.is_read;
-    const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
-    return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${_escapeHtml(n.id)}"${link}>
-      <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
-      <span class="nav-flyout-notification-title">${_escapeHtml(n.title || '')}</span>
-      <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 180))}${(n.message || '').length > 180 ? '…' : ''}</span>
-      <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
-    </button>`;
+  /**
+   * Mini-parser markdown sin dependencias externas. Soporta:
+   *   - Headings (##, ###)
+   *   - **bold**, *italic*
+   *   - Listas con guion (- item)
+   *   - Tablas simples (header + separador + filas)
+   *   - Párrafos (líneas en blanco) y saltos simples
+   *
+   * Escape HTML primero (seguridad), luego transformaciones sobre el
+   * texto escapado. Los tags HTML que insertamos pasan tras el escape,
+   * así nunca exponemos input crudo del LLM como markup.
+   */
+  _renderMarkdownLite(text) {
+    if (!text) return '';
+    let s = _escapeHtml(String(text));
+
+    // 1) Tablas markdown
+    s = s.replace(
+      /(^\|[^\n]+\|$\n^\|[\s\-:|]+\|$\n(?:^\|[^\n]+\|$\n?)+)/gm,
+      (block) => {
+        const rows = block.trim().split('\n').map(r => r.trim());
+        if (rows.length < 2) return block;
+        const split = (r) => r.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+        const head = split(rows[0]);
+        const data = rows.slice(2).map(split);
+        const th = head.map(c => `<th>${c}</th>`).join('');
+        const tb = data.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+        return `<table class="notif-md-table"><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table>\n`;
+      }
+    );
+
+    // 2) Headings
+    s = s.replace(/^### (.+)$/gm, '<div class="notif-md-h3">$1</div>');
+    s = s.replace(/^## (.+)$/gm,  '<div class="notif-md-h2">$1</div>');
+    s = s.replace(/^# (.+)$/gm,   '<div class="notif-md-h1">$1</div>');
+
+    // 3) Bold + italic
+    s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
+
+    // 4) Listas con guión
+    s = s.replace(/((?:^- .+$\n?)+)/gm, (block) => {
+      const items = block.trim().split('\n').map(l => l.replace(/^- /, '').trim());
+      return '<ul class="notif-md-list">' + items.map(i => `<li>${i}</li>`).join('') + '</ul>\n';
+    });
+
+    // 5) Párrafos: dobles saltos = bloque separado; simples = <br>
+    return s.split(/\n\n+/).map(chunk => {
+      const t = chunk.trim();
+      if (!t) return '';
+      // Si ya es bloque (tabla/lista/heading), no envolver en <p>
+      if (/^<(table|ul|div class="notif-md-h)/.test(t)) return t;
+      return '<p>' + t.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
   }
 
   /**
@@ -937,45 +1014,29 @@ class Navigation {
     const byId = new Map();
     (notifs || []).forEach((n) => n?.id && byId.set(n.id, n));
 
-    // ── Cards ricas
+    // ── Cards ricas: toggle compact↔expanded + checklist (única persistencia)
     container.querySelectorAll('.notif-card').forEach((card) => {
       const id = card.dataset.id;
       const n = byId.get(id);
 
-      // Outputs click → navega al asset/run específico
-      card.querySelectorAll('.notif-output[data-output-url]').forEach((out) => {
-        const url = out.getAttribute('data-output-url');
-        if (!url) return;
-        out.addEventListener('click', async (e) => {
+      // Toggle compact ↔ expanded (CSS-only, sin re-render)
+      const toggleBtn = card.querySelector('[data-toggle-expand]');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          await this._orgNotificationsMark(id, 'read');
-          this.refreshNotificationsBadge();
-          if (typeof onClose === 'function') onClose();
-          if (window.router) window.router.navigate(url);
+          const nextMode = card.dataset.mode === 'expanded' ? 'compact' : 'expanded';
+          card.dataset.mode = nextMode;
+          card.classList.toggle('mode-expanded', nextMode === 'expanded');
+          card.classList.toggle('mode-compact',  nextMode === 'compact');
         });
-      });
-
-      // Subject click → navega al recurso real
-      const subj = card.querySelector('.notif-subject[data-subject-url]');
-      if (subj) {
-        const url = subj.getAttribute('data-subject-url');
-        if (url) {
-          subj.style.cursor = 'pointer';
-          subj.addEventListener('click', async () => {
-            await this._orgNotificationsMark(id, 'read');
-            this.refreshNotificationsBadge();
-            if (typeof onClose === 'function') onClose();
-            if (window.router) window.router.navigate(url);
-          });
-        }
       }
 
-      // Checklist toggle (optimistic + persist server-side via RPC)
+      // Checklist: optimistic update + persist via RPC (única interacción
+      // que toca BD por ahora).
       card.querySelectorAll('.notif-step input[type="checkbox"]').forEach((cb) => {
         cb.addEventListener('click', (e) => e.stopPropagation());
         cb.addEventListener('change', async () => {
           const stepId = cb.dataset.stepId;
-          // Optimistic update visual
           cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
           const total = n?.checklist?.length || 0;
           const counter = card.querySelector('[data-progress]');
@@ -985,9 +1046,7 @@ class Navigation {
             if (counter) counter.textContent = `${doneCount} de ${total}`;
           };
           updateCounter();
-          // Persist server-side (revertirá si falla)
           await this._toggleChecklistStep(id, stepId, cb.checked);
-          // Resync visual con el cache (por si hubo revert por error)
           const finalState = this._loadChecklistProgress(id);
           cb.checked = !!finalState[stepId];
           cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
@@ -995,45 +1054,10 @@ class Navigation {
         });
       });
 
-      // Acciones
-      card.querySelectorAll('.notif-action').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const idx = Number(btn.dataset.actionIdx);
-          const action = n?.actions?.[idx];
-          if (!action) return;
-          btn.disabled = true;
-          try {
-            await this._runAction(action, id);
-            if (action.kind === 'navigate' || action.kind === 'external') {
-              if (typeof onClose === 'function') onClose();
-            }
-          } finally {
-            btn.disabled = false;
-          }
-        });
-      });
-    });
-
-    // ── Cards legacy
-    container.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        const link = btn.dataset.link;
-        if (id) {
-          await this._orgNotificationsMark(id, 'read');
-          this.refreshNotificationsBadge();
-          btn.classList.remove('unread');
-        }
-        if (link) {
-          if (typeof onClose === 'function') onClose();
-          if (/^https?:\/\//i.test(link)) {
-            window.open(link, '_blank', 'noopener,noreferrer');
-          } else if (window.router) {
-            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
-          }
-        }
-      });
+      // NAVEGACIÓN DESACTIVADA hasta resolver el bug de URLs huérfanas.
+      // Sin handlers para .notif-subject, .notif-output ni .notif-action.
+      // El render legacy (.nav-flyout-notification-item) ya no se emite —
+      // ahora .notif-card.legacy reusa la misma estructura visual.
     });
   }
 
@@ -1807,13 +1831,38 @@ class Navigation {
 
     document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdown a[data-route]:not(#userDropdownSettingsLink):not([data-nav-bound])').forEach((link) => {
       link.setAttribute('data-nav-bound', '1');
+
+      // Resolver el path una sola vez por enlace (lo usamos tanto para prefetch
+      // como para navigate). El prefetch carga los scripts de la vista en cuanto
+      // el cursor pasa por encima — cuando el usuario hace click, ya están en caché.
+      const resolvePath = () => {
+        const route = link.dataset.route || (link.getAttribute && link.getAttribute('href'));
+        if (!route) return null;
+        return route.indexOf('/') === 0 ? route : new URL(route, window.location.origin).pathname;
+      };
+
+      const triggerPrefetch = () => {
+        if (link._prefetchTriggered) return;
+        link._prefetchTriggered = true;
+        const path = resolvePath();
+        if (path && window.router && typeof window.router.prefetch === 'function') {
+          // requestIdleCallback evita competir con interacciones inmediatas; fallback a setTimeout 0.
+          const fire = () => window.router.prefetch(path);
+          if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(fire, { timeout: 250 });
+          } else {
+            setTimeout(fire, 0);
+          }
+        }
+      };
+      link.addEventListener('pointerenter', triggerPrefetch);
+      link.addEventListener('focus', triggerPrefetch);
+      link.addEventListener('touchstart', triggerPrefetch, { passive: true });
+
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const route = link.dataset.route || (link.getAttribute && link.getAttribute('href'));
-        if (route && window.router) {
-          const path = route.indexOf('/') === 0 ? route : new URL(route, window.location.origin).pathname;
-          window.router.navigate(path);
-        }
+        const path = resolvePath();
+        if (path && window.router) window.router.navigate(path);
         const ud = document.getElementById('userDropdown');
         if (ud) ud.classList.remove('active');
       });

@@ -139,16 +139,100 @@
   gap: 0.55rem;
 }
 
-/* ── Body (texto largo · plan de acción de Vera) ───── */
+/* ── Body (texto largo · plan de acción de Vera, con markdown lite) ── */
 
 .notif-body {
-  padding-top: 0.5rem;
+  padding-top: 0.55rem;
   border-top: 1px solid var(--border-color);
   font-size: 0.82rem;
   line-height: 1.55;
   color: var(--text-primary);
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.notif-body p {
+  margin: 0 0 0.55rem 0;
+}
+
+.notif-body p:last-child {
+  margin-bottom: 0;
+}
+
+.notif-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.notif-body em {
+  font-style: italic;
+  color: var(--text-secondary, var(--text-muted));
+}
+
+.notif-md-h1,
+.notif-md-h2,
+.notif-md-h3 {
+  margin: 0.85rem 0 0.35rem 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.notif-md-h1 { font-size: 0.95rem; }
+.notif-md-h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, var(--text-muted));
+}
+.notif-md-h3 {
+  font-size: 0.8rem;
+  color: var(--text-secondary, var(--text-muted));
+}
+
+.notif-md-h2:first-child,
+.notif-md-h1:first-child,
+.notif-md-h3:first-child {
+  margin-top: 0;
+}
+
+.notif-md-list {
+  margin: 0.35rem 0 0.55rem 0;
+  padding-left: 1.1rem;
+}
+
+.notif-md-list li {
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.notif-md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.55rem 0;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.notif-md-table th,
+.notif-md-table td {
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notif-md-table th {
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notif-md-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* La fecha en el header pierde el margin-left:auto porque el toggle lo toma */
