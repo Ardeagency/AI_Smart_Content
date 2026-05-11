@@ -4983,62 +4983,6 @@
   flex-wrap: wrap;
 }
 
-/* DevLeadCRMView — toolbar y campos */
-.dev-lead-toolbar--crm {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.dev-lead-search-input { min-width: 280px; }
-.dev-lead-filter-select,
-.dev-lead-status-select { min-width: 220px; }
-
-/* Modal extra ancho (CRM detalle de lead) */
-#modals-portal .modal.dev-lead-modal-xwide .modal-content {
-  max-width: min(840px, calc(100vw - 40px));
-}
-
-/* DevLeadCRMView — body del detalle de lead */
-.dev-lead-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.dev-lead-detail-section {
-  margin-bottom: 14px;
-}
-.dev-lead-detail-section p {
-  margin-top: 6px;
-}
-.dev-lead-status-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.dev-lead-notes {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--white-8);
-}
-.dev-lead-notes h4 { margin-bottom: 10px; }
-.dev-lead-notes-actions { margin-top: 8px; }
-.dev-lead-notes-list { margin-top: 12px; }
-.dev-lead-note-item {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border: 1px solid var(--white-10);
-  border-radius: 10px;
-}
-.dev-lead-note-item__date {
-  font-size: 12px;
-  margin-bottom: 6px;
-  opacity: 0.75;
-}
-
 /* DevLeadUserProvisioningView — wizard layout */
 .provision-wizard {
   max-width: 720px;

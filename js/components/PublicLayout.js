@@ -64,7 +64,6 @@
         </button>
         <nav class="landing-header-nav public-header-nav" aria-label="Navegación principal">
           ${dropdownHTML}
-          <a href="/login" class="public-nav-cta public-nav-request" data-href="/login">Solicitar Acceso</a>
           <a href="/login" class="public-nav-access public-nav-access--glow" data-href="/login">Acceder</a>
         </nav>
       </header>

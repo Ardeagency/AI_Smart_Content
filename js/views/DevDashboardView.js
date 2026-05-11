@@ -379,14 +379,6 @@ class DevDashboardView extends DevBaseView {
         href: '/dev/lead/team', cta: 'Revisar orgs →'
       }));
 
-      const nl = d.new_leads || {};
-      if ((nl.count ?? 0) > 0) cards.push(this.attentionCard({
-        tone: 'info', icon: 'fa-headset', title: 'Leads sin atender',
-        count: nl.count, subtitle: 'Estado: nuevo',
-        items: (nl.preview || []).map(l => `${this.escapeHtml(l.full_name)} · ${this.escapeHtml(l.company_name)}`),
-        href: '/dev/lead/crm', cta: 'Abrir CRM →'
-      }));
-
       const ce = d.critical_errors_24h || {};
       if ((ce.count ?? 0) > 0) cards.push(this.attentionCard({
         tone: 'crit', icon: 'fa-circle-exclamation', title: 'Errores críticos 24h',
@@ -448,15 +440,13 @@ class DevDashboardView extends DevBaseView {
       const tasks = await Promise.allSettled([
         this.supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('form_verified', false),
         this.supabase.from('organization_credits').select('organization_id, credits_available, credits_total').limit(50),
-        this.supabase.from('contact_leads').select('id, full_name, company_name, created_at', { count: 'exact' })
-          .eq('status', 'nuevo').order('created_at', { ascending: false }).limit(3),
         this.supabase.from('developer_logs').select('id, error_message, severity, flow_id, created_at, content_flows(name)', { count: 'exact' })
           .in('severity', ['error', 'critical']).gte('created_at', dayAgo).order('created_at', { ascending: false }).limit(3),
         this.supabase.from('provisioning_events').select('id, event_type, organization_id, created_at, message', { count: 'exact' })
           .in('event_type', ['provisioning_failed', 'health_check_failed']).gte('created_at', dayAgo).order('created_at', { ascending: false }).limit(3)
       ]);
 
-      const [unverified, credits, leads, errors, provFails] = tasks.map(t => t.status === 'fulfilled' ? t.value : null);
+      const [unverified, credits, errors, provFails] = tasks.map(t => t.status === 'fulfilled' ? t.value : null);
 
       // Card: usuarios sin verificar
       const unverifiedCount = unverified?.count ?? 0;
@@ -484,22 +474,6 @@ class DevDashboardView extends DevBaseView {
           items: lowCredits.slice(0, 3).map(c => `${c.credits_available} / ${c.credits_total} créditos`),
           href: '/dev/lead/team',
           cta: 'Revisar orgs →'
-        }));
-      }
-
-      // Card: leads CRM nuevos
-      const leadsCount = leads?.count ?? 0;
-      if (leadsCount > 0) {
-        const items = (leads?.data || []).map(l => `${this.escapeHtml(l.full_name)} · ${this.escapeHtml(l.company_name)}`);
-        cards.push(this.attentionCard({
-          tone: 'info',
-          icon: 'fa-headset',
-          title: 'Leads sin atender',
-          count: leadsCount,
-          subtitle: 'Estado: nuevo',
-          items,
-          href: '/dev/lead/crm',
-          cta: 'Abrir CRM →'
         }));
       }
 

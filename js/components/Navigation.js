@@ -127,14 +127,6 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
 const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'section', label: 'Principal' },
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
-  {
-    type: 'page',
-    id: 'user-registration',
-    label: 'User Registration',
-    icon: 'fa-user-shield',
-    iconSrc: '/recursos/icons/user registration.svg',
-    route: '/dev/lead/crm'
-  },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
   {
@@ -2218,7 +2210,6 @@ class Navigation {
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
       '/dev/lead/flows': 'TODOS LOS FLUJOS',
       '/dev/lead/team': 'EQUIPO',
-      '/dev/lead/crm': 'CRM LEADS',
       '/dev/lead/categories': 'CATEGORÍAS',
       '/dev/lead/input-schemas': 'INPUT SCHEMAS',
       '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA',
