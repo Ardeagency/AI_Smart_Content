@@ -211,9 +211,10 @@ Helper `_buildSubjectUrl(subject)` en `Navigation.js` aplica este mapeo.
 | **1C** | Backfill SQL para las 3 notifs actuales con `metadata.{label, summary, subject, checklist, actions}` | 🟢 ESTE TURNO |
 | **1D** | `_buildSubjectUrl(subject)` helper + integración en card | 🟢 ESTE TURNO |
 | **1E** | `_runAction(action)` ejecutor unificado de navigate/external/rpc/modal | 🟢 ESTE TURNO |
-| **2A** | DDL: `org_notification_user_state` + columna `checklist_progress jsonb` | 🟡 después |
-| **2B** | RPC `mark_org_notification_checklist_step(notif_id, step_id, done)` | 🟡 después |
-| **2C** | Frontend persiste checklist via RPC (deja localStorage como fallback) | 🟡 después |
+| **2A** | DDL: `org_notification_user_state` + columna `checklist_progress jsonb DEFAULT '{}'` | ✅ 2026-05-11 |
+| **2B** | RPC `mark_org_notification_checklist_step(notif_id, step_id, done)` + GRANT authenticated | ✅ 2026-05-11 |
+| **2C** | `list_my_org_notifications` extendida con `my_checklist_progress` en el output | ✅ 2026-05-11 |
+| **2D** | Frontend: cache `_checklistCache` Map + toggle optimista + RPC en background con revert si falla | ✅ 2026-05-11 |
 | **3A** | Backend (ai-engine): productores escriben `metadata` rico desde el origen | 🔴 requiere SSH ai-engine |
 | **3B** | Mapeo automático de Vera → notif (cuando Vera ejecuta una acción autónoma, dispara una notif con su plan) | 🔴 backend |
 

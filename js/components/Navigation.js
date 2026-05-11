@@ -647,6 +647,10 @@ class Navigation {
       checklist:    Array.isArray(md.checklist) ? md.checklist : [],
       actions:      Array.isArray(md.actions) ? md.actions : [],
       vera:         md.vera || null,
+      // Estado per-user del checklist (server-side · FEAT-018 Fase 2)
+      checklist_progress: (n.my_checklist_progress && typeof n.my_checklist_progress === 'object')
+        ? n.my_checklist_progress
+        : {},
       // Legacy compat
       message:      n.body || '',
       link_to:      this._resolveActionUrl(n.action_url),
@@ -726,27 +730,55 @@ class Navigation {
     }
   }
 
-  // ───────────────────────────────────────── Checklist local-state (Fase 1B)
+  // ───────────────────────────────────────── Checklist persistido server-side (Fase 2)
 
-  _checklistStorageKey(notifId) {
-    const userId = window.authService?.getCurrentUser?.()?.id || 'anon';
-    return `notif_checklist:${userId}:${notifId}`;
-  }
+  /**
+   * Cache en memoria del progreso del checklist, indexado por notif id.
+   * Se inicializa al render con `my_checklist_progress` que viene de
+   * list_my_org_notifications. Los toggles optimistas actualizan este map
+   * inmediatamente y la RPC mark_org_notification_checklist_step persiste
+   * en BD en background.
+   */
+  _checklistCache = new Map(); // notifId → { stepId: bool }
 
   _loadChecklistProgress(notifId) {
-    try {
-      const raw = localStorage.getItem(this._checklistStorageKey(notifId));
-      return raw ? JSON.parse(raw) : {};
-    } catch (_) { return {}; }
+    return this._checklistCache.get(notifId) || {};
   }
 
-  _toggleChecklistStep(notifId, stepId, done) {
-    try {
-      const map = this._loadChecklistProgress(notifId);
-      if (done) map[stepId] = true; else delete map[stepId];
-      localStorage.setItem(this._checklistStorageKey(notifId), JSON.stringify(map));
-      return map;
-    } catch (_) { return {}; }
+  _seedChecklistProgress(notifId, fromServer) {
+    if (!notifId) return;
+    this._checklistCache.set(notifId, { ...(fromServer || {}) });
+  }
+
+  /**
+   * Toggle optimistic: actualiza el cache local y dispara la RPC en background.
+   * Si la RPC falla, revierte el cambio y avisa al user. Devuelve el map
+   * actualizado para que el caller refresque el contador visual.
+   */
+  async _toggleChecklistStep(notifId, stepId, done) {
+    const map = { ...(this._checklistCache.get(notifId) || {}) };
+    map[stepId] = !!done;
+    this._checklistCache.set(notifId, map);
+
+    // Persistencia en background
+    const sb = await this._supabase();
+    if (!sb) return map; // sin sb (offline) → cache local solamente
+    const { error } = await sb.rpc('mark_org_notification_checklist_step', {
+      p_notification_id: notifId,
+      p_step_id:         stepId,
+      p_done:            !!done,
+    });
+    if (error) {
+      console.warn('[notif checklist] persist error:', error.message);
+      // Revertir
+      const reverted = { ...(this._checklistCache.get(notifId) || {}) };
+      reverted[stepId] = !done;
+      this._checklistCache.set(notifId, reverted);
+      document.dispatchEvent(new CustomEvent('notif-checklist-revert', {
+        detail: { notifId, stepId, expected: done },
+      }));
+    }
+    return this._checklistCache.get(notifId);
   }
 
   // ───────────────────────────────────────── Renderer rico
@@ -788,9 +820,11 @@ class Navigation {
     // Checklist
     let checklistHtml = '';
     if (n.checklist?.length) {
+      // Sembrar el cache local con el estado del server antes de pintar.
+      this._seedChecklistProgress(n.id, n.checklist_progress);
       const progress = this._loadChecklistProgress(n.id);
       const total = n.checklist.length;
-      const doneCount = n.checklist.filter((s) => !!progress[s.id || s.label]).length;
+      const doneCount = n.checklist.filter((s, i) => !!progress[s.id || `step_${i}`]).length;
       const items = n.checklist.map((step, i) => {
         const stepId = step.id || `step_${i}`;
         const checked = !!progress[stepId];
@@ -898,19 +932,28 @@ class Navigation {
         }
       }
 
-      // Checklist toggle
+      // Checklist toggle (optimistic + persist server-side via RPC)
       card.querySelectorAll('.notif-step input[type="checkbox"]').forEach((cb) => {
         cb.addEventListener('click', (e) => e.stopPropagation());
-        cb.addEventListener('change', () => {
+        cb.addEventListener('change', async () => {
           const stepId = cb.dataset.stepId;
-          this._toggleChecklistStep(id, stepId, cb.checked);
+          // Optimistic update visual
           cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
-          // Actualizar contador
-          const progress = this._loadChecklistProgress(id);
           const total = n?.checklist?.length || 0;
-          const doneCount = (n?.checklist || []).filter((s, i) => !!progress[s.id || `step_${i}`]).length;
           const counter = card.querySelector('[data-progress]');
-          if (counter) counter.textContent = `${doneCount} de ${total}`;
+          const updateCounter = () => {
+            const progress = this._loadChecklistProgress(id);
+            const doneCount = (n?.checklist || []).filter((s, i) => !!progress[s.id || `step_${i}`]).length;
+            if (counter) counter.textContent = `${doneCount} de ${total}`;
+          };
+          updateCounter();
+          // Persist server-side (revertirá si falla)
+          await this._toggleChecklistStep(id, stepId, cb.checked);
+          // Resync visual con el cache (por si hubo revert por error)
+          const finalState = this._loadChecklistProgress(id);
+          cb.checked = !!finalState[stepId];
+          cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
+          updateCounter();
         });
       });
 
