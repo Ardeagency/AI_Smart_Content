@@ -14,7 +14,6 @@ class CommandCenterView extends BaseView {
     this._audiences       = [];   // audience_personas
     this._segments        = [];   // audience_segments
     this._campaigns       = [];   // campaigns (con cached metrics)
-    this._snapshots       = [];   // brand_analytics_snapshots (vía API)
     this._integrations    = [];   // brand_integrations (sync status)
     this._pendingActions  = [];   // vera_pending_actions (status='pending')
     this._supabase        = null;
@@ -59,38 +58,6 @@ class CommandCenterView extends BaseView {
       localStorage.getItem('selectedOrganizationId') ||
       null
     );
-  }
-
-  /**
-   * Snapshots y heatmap: el cliente Supabase a menudo recibe [] por RLS aunque existan filas.
-   * Misma comprobación de acceso que /api/insights/mybrand; lectura con service role en el edge.
-   */
-  async _fetchSnapshotsHeatmapViaApi(brandContainerId) {
-    if (!this._supabase || !brandContainerId) return null;
-    try {
-      const { data: { session } } = await this._supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return null;
-      const qs = new URLSearchParams({
-        brand_container_id: String(brandContainerId),
-        limit: '25',
-      });
-      const res = await fetch(`/api/insights/snapshots-list?${qs}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'same-origin',
-      });
-      const raw = await res.text();
-      let json = null;
-      try { json = raw ? JSON.parse(raw) : null; } catch (_) { /* noop */ }
-      if (!res.ok || !json?.ok) {
-        console.warn('CommandCenterView: snapshots-list', res.status, json?.error || raw?.slice?.(0, 200));
-        return null;
-      }
-      return { snapshots: json.snapshots || [], heatmaps: json.heatmaps || [] };
-    } catch (e) {
-      console.warn('CommandCenterView: snapshots-list', e);
-      return null;
-    }
   }
 
   /* ── Lifecycle ────────────────────────────────────────────────────── */
@@ -418,16 +385,13 @@ class CommandCenterView extends BaseView {
       this._segments  = [];
       this._campaigns = [];
       this._integrations = [];
-      this._snapshots = [];
     }
-
-    const sh = await this._fetchSnapshotsHeatmapViaApi(bid);
-    this._snapshots = Array.isArray(sh?.snapshots) ? sh.snapshots : [];
 
     // Bandeja de Vera: pending_actions sin resolver para esta marca
     this._pendingActions = await this._fetchPendingActions(bid);
 
-    document.getElementById('ccTwoCol')?.style && (document.getElementById('ccTwoCol').style.display = '');
+    const twoCol = document.getElementById('ccTwoCol');
+    if (twoCol) twoCol.style.display = '';
 
     this._renderVeraInbox();
     this._renderAudiencesCarousel();
@@ -466,7 +430,6 @@ class CommandCenterView extends BaseView {
     const list    = document.getElementById('ccVeraInboxList');
     const count   = document.getElementById('ccVeraInboxCount');
     const label   = document.getElementById('ccVeraInboxLabel');
-    const empty   = document.getElementById('ccOptimEmpty');
     if (!list) return;
 
     // Filtrar placeholders/stubs: cualquier acción marcada como tal o con un
@@ -484,14 +447,12 @@ class CommandCenterView extends BaseView {
     if (actions.length === 0) {
       if (section) section.style.display = 'none';
       list.innerHTML = '';
-      if (empty) empty.style.display = 'none';
       return;
     }
     if (section) section.style.display = '';
 
     if (count) count.textContent = String(actions.length);
     if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
-    if (empty) empty.style.display = 'none';
 
     const personaNameById = this._personaNameById();
     const fmtPct = (n) => Number.isFinite(Number(n)) ? `${Math.round(Number(n) * 100)}%` : '—';
@@ -594,9 +555,9 @@ class CommandCenterView extends BaseView {
     }
   }
 
-  /* ── Manual link inline (entity → persona) ────────────────────────── */
+  /* ── Manual link inline (campaign → persona) ──────────────────────── */
   async _linkEntityToPersona({ entityType, entityId, personaId }) {
-    if (!entityType || !entityId) return false;
+    if (entityType !== 'campaign' || !entityId) return false;
     try {
       const { data: { session } } = await this._supabase.auth.getSession();
       const token = session?.access_token;
@@ -612,12 +573,9 @@ class CommandCenterView extends BaseView {
         alert(`No se pudo vincular: ${err.slice(0, 200)}`);
         return false;
       }
-      // Refrescar la fila localmente y re-render
-      const list = entityType === 'campaign' ? this._campaigns : this._segments;
-      const row = list.find((x) => x.id === entityId);
+      const row = this._campaigns.find((x) => x.id === entityId);
       if (row) row.persona_id = personaId || null;
-      if (entityType === 'campaign') this._renderCampaigns();
-      else this._renderSegments();
+      this._renderCampaigns();
       return true;
     } catch (e) {
       console.error('link entity:', e);
@@ -1059,264 +1017,6 @@ class CommandCenterView extends BaseView {
     }
   }
 
-  /* ── Conexión con canales (segmentos ↔ persona) — legacy, sin render ─ */
-  _renderSegments() {
-    const root = document.getElementById('ccSegmentsWrap');
-    if (!root) return;
-    const rows = Array.isArray(this._segments) ? this._segments : [];
-    const personaById = this._personaNameById();
-
-    if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Cuando existan audiencias enlazadas en Meta/Google con una <strong>persona</strong> de esta marca, verás aquí la <strong>conexión</strong> entre lo conceptual y lo que ya corre en canales — no es un listado de segmentación.</p>`;
-      return;
-    }
-
-    const genderMap = { male: 'Hombres', female: 'Mujeres', 1: 'Hombres', 2: 'Mujeres' };
-    const platLabel = { meta: 'Meta', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest' };
-    const statusClass = { active: 'cc-badge--green', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', deleted: 'cc-badge--red', error: 'cc-badge--red' };
-    const fmtSize = (n) => { if (!n) return null; const num = Number(n); return num >= 1e6 ? `${(num / 1e6).toFixed(1)}M` : num >= 1e3 ? `${(num / 1e3).toFixed(0)}K` : String(num); };
-
-    /* Agrupar por plataforma */
-    const byPlatform = {};
-    rows.forEach((s) => {
-      const p = s.platform || 'otros';
-      (byPlatform[p] = byPlatform[p] || []).push(s);
-    });
-
-    root.innerHTML = Object.entries(byPlatform).map(([plat, segs]) => {
-      const platName = platLabel[plat] || plat;
-      const cards = segs.map((s) => {
-        const age = s.age_range && typeof s.age_range === 'object'
-          ? `Edades: ${s.age_range.min ?? s.age_range.age_min ?? '?'}–${s.age_range.max ?? s.age_range.age_max ?? '?'}`
-          : '';
-        const genders = Array.isArray(s.genders) && s.genders.length
-          ? `Género: ${s.genders.map((g) => genderMap[g] || genderMap[String(g).toLowerCase()] || g).join(', ')}`
-          : '';
-        const interestList = Array.isArray(s.interests) ? s.interests : [];
-        const interests = interestList.length
-          ? `Intereses: ${interestList.map((i) => (i && (i.name || i.id || String(i)))).filter(Boolean).slice(0, 8).join(', ')}`
-          : '';
-        const sizeStr = fmtSize(s.estimated_size) ||
-          (fmtSize(s.size_lower_bound) && fmtSize(s.size_upper_bound)
-            ? `${fmtSize(s.size_lower_bound)}–${fmtSize(s.size_upper_bound)}`
-            : null);
-        const badge = `<span class="cc-badge ${statusClass[s.status] || 'cc-badge--gray'}">${s.status || 'draft'}</span>`;
-        const synced = s.last_synced_at
-          ? `<span class="cc-seg-sync">Sync: ${new Date(s.last_synced_at).toLocaleDateString('es-ES')}</span>` : '';
-        const pSeg = s.persona_id ? personaById[String(s.persona_id)] : '';
-        const personaLine = `
-          <div class="cc-seg-persona ${pSeg ? '' : 'cc-seg-persona--missing'}">
-            <span>${pSeg ? 'Persona:' : 'Sin persona vinculada'}</span>
-            ${this._personaPickerHTML(s.persona_id || '', 'segment', s.id)}
-          </div>`;
-        return `
-        <div class="cc-seg-card">
-          <div class="cc-seg-card-head">
-            <span class="cc-seg-name">${this.escapeHtml(s.external_audience_name || s.external_audience_type || 'Audiencia en canal')}</span>
-            <div>${badge}${synced}</div>
-          </div>
-          ${personaLine}
-          ${(age || genders || interests) ? `
-          <ul class="cc-api-target-list">
-            ${age       ? `<li>${this.escapeHtml(age)}</li>` : ''}
-            ${genders   ? `<li>${this.escapeHtml(genders)}</li>` : ''}
-            ${interests ? `<li>${this.escapeHtml(interests)}</li>` : ''}
-          </ul>` : ''}
-          ${sizeStr ? `<div class="cc-seg-size"><i class="fas fa-users"></i> ${this.escapeHtml(sizeStr)} personas</div>` : ''}
-        </div>`;
-      }).join('');
-
-      return `
-      <div class="cc-api-card">
-        <div class="cc-api-card-head"><span class="cc-api-card-title">${this.escapeHtml(platName)}</span></div>
-        ${cards}
-      </div>`;
-    }).join('');
-  }
-
-  /**
-   * Convierte `brand_analytics_snapshots.metrics` (JSON anidado) en pares label/value
-   * para la UI. Soporta shapes reales: Facebook (page + metrics.metrics) y GA4 (overview + traffic_sources).
-   */
-  _snapshotTilesFromMetrics(metrics, platform) {
-    const m = metrics && typeof metrics === 'object' ? metrics : {};
-    const p = String(platform || m.platform || '').toLowerCase();
-    const tiles = [];
-    const push = (label, value) => {
-      if (value === undefined || value === null || value === '') return;
-      if (typeof value === 'object') return;
-      const str = typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
-      tiles.push({ label, value: str });
-    };
-
-    if (p.includes('facebook') || p === 'meta' || p.includes('instagram')) {
-      const page = m.page && typeof m.page === 'object' ? m.page : {};
-      const inner = m.metrics && typeof m.metrics === 'object' ? m.metrics : {};
-      push('Página', page.name);
-      push('Categoría', page.category);
-      push('Fans', page.total_fans);
-      push('Seguidores', page.total_followers);
-      push('Engagement', inner.engagement_rate);
-      push('Eng. en posts', inner.post_engagements);
-      push('Vistas página', inner.page_views);
-      push('Nuevos seguidores', inner.new_followers);
-      push('Clics CTA', inner.cta_clicks);
-      push('Dejaron de seguir', inner.unfollows);
-      return tiles;
-    }
-
-    if (p.includes('google_analytics') || p.includes('analytics')) {
-      const ov = m.overview && typeof m.overview === 'object' ? m.overview : {};
-      push('Sesiones', ov.sessions);
-      push('Usuarios', ov.total_users);
-      push('Páginas vistas', ov.page_views);
-      push('Tasa rebote', ov.bounce_rate);
-      push('Nuevos usuarios', ov.new_users);
-      push('Duración media', ov.avg_session_duration);
-      push('Conversiones', ov.conversions);
-      const sources = Array.isArray(m.traffic_sources) ? m.traffic_sources : [];
-      if (sources.length) {
-        const txt = sources.slice(0, 5).map((s) => `${s.channel}: ${s.users ?? s.sessions ?? '—'}`).join(' · ');
-        tiles.push({ label: 'Tráfico', value: txt });
-      }
-      const tops = Array.isArray(m.top_pages) ? m.top_pages : [];
-      if (tops.length) {
-        const line = tops.slice(0, 3).map((pg) => {
-          const t = (pg.title || pg.path || '').trim();
-          const short = t.length > 42 ? `${t.slice(0, 42)}…` : t;
-          return `${short} (${pg.page_views ?? 0} pv)`;
-        }).join(' · ');
-        tiles.push({ label: 'Top páginas', value: line });
-      }
-      return tiles;
-    }
-
-    /* Genérico: solo primitivos en 1 nivel + objetos como conteo */
-    Object.entries(m).forEach(([k, v]) => {
-      if (v === null || v === undefined) return;
-      if (typeof v === 'object' && !Array.isArray(v)) {
-        const inner = Object.entries(v).filter(([, x]) => x !== null && typeof x !== 'object');
-        inner.slice(0, 6).forEach(([ik, iv]) => push(`${k} · ${ik}`, iv));
-      } else if (typeof v !== 'object') {
-        push(k.replace(/_/g, ' '), v);
-      }
-    });
-    return tiles.slice(0, 14);
-  }
-
-  /** Ordena por fin de período (más reciente primero). */
-  _snapshotSortKey(row) {
-    const t = new Date(row?.period_end || row?.computed_at || 0).getTime();
-    return Number.isFinite(t) ? t : 0;
-  }
-
-  /**
-   * Agrupa snapshots por (platform + period_type). Cada grupo queda ordenado
-   * del más reciente al más viejo — evita listar 20 ventanas mensuales casi iguales.
-   */
-  _groupSnapshotsByPlatformPeriod(rows) {
-    const sorted = [...(Array.isArray(rows) ? rows : [])].sort(
-      (a, b) => this._snapshotSortKey(b) - this._snapshotSortKey(a),
-    );
-    const groups = new Map();
-    sorted.forEach((r) => {
-      const key = `${String(r.platform || '—')}||${String(r.period_type || '—')}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(r);
-    });
-    return groups;
-  }
-
-  /** KPIs destacados para tarjetas grandes (GA + Facebook). */
-  _snapshotHeroKpis(metrics, platform) {
-    const tiles = this._snapshotTilesFromMetrics(metrics, platform);
-    const pick = (label) => tiles.find((t) => t.label === label);
-    const p = String(platform || '').toLowerCase();
-    if (p.includes('google_analytics') || p.includes('analytics')) {
-      return [
-        pick('Sesiones'),
-        pick('Usuarios'),
-        pick('Páginas vistas'),
-        pick('Tasa rebote'),
-      ].filter(Boolean);
-    }
-    if (p.includes('facebook') || p.includes('meta') || p.includes('instagram')) {
-      return [
-        pick('Fans'),
-        pick('Seguidores'),
-        pick('Engagement'),
-        pick('Eng. en posts'),
-      ].filter(Boolean);
-    }
-    return tiles.slice(0, 4);
-  }
-
-  _renderSnapshotHeroCard(s) {
-    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
-    const plat = String(s.platform || '—');
-    const platLabel = plat.includes('google') ? 'Google Analytics' : plat.includes('facebook') ? 'Facebook (página)' : plat;
-    const pLower = plat.toLowerCase();
-
-    let channelHint = '';
-    let qualitativeSignal = 'Señal integrada para contrastar enfoque de campaña y lectura de mercado.';
-    if (pLower.includes('facebook') || pLower.includes('meta')) {
-      channelHint = '<p class="cc-dash-hint">Lectura de <strong>página</strong> (no ads). Señal mínima de presencia; la IA la contrasta con tu enfoque conceptual.</p>';
-      qualitativeSignal = 'Actividad social integrada como señal contextual de presencia de marca.';
-    } else if (pLower.includes('google_analytics') || pLower.includes('analytics')) {
-      channelHint = '<p class="cc-dash-hint">Lectura de <strong>sitio</strong>. Complementa el mercado objetivo con intención de visita, no sustituye a la persona.</p>';
-      qualitativeSignal = 'Intención de visita integrada como señal contextual para decisiones de mensaje.';
-    }
-
-    const latestAt = s.period_end || s.computed_at || s.updated_at || s.created_at || null;
-
-    return `
-    <article class="cc-dash-card">
-      <header class="cc-dash-card-head">
-        <h3 class="cc-dash-card-title">${this.escapeHtml(platLabel)}</h3>
-        <span class="cc-dash-card-meta">Última actualización: ${this.escapeHtml(fmtDate(latestAt) || '—')}</span>
-      </header>
-      <p class="cc-dash-hint">${this.escapeHtml(qualitativeSignal)}</p>
-      ${channelHint}
-    </article>`;
-  }
-
-  /* ── Lectura del mercado: solo última actualización por canal (sin historial) ─ */
-  _renderSnapshots() {
-    const root = document.getElementById('ccSnapshotsWrap');
-    if (!root) return;
-    const rows = Array.isArray(this._snapshots) ? this._snapshots : [];
-
-    if (!rows.length) {
-      root.innerHTML = `<p class="cc-api-hint">Sin lectura reciente del mercado. Conecta GA / Facebook y deja correr el sync para alimentar a la IA con señales mínimas.</p>`;
-      return;
-    }
-
-    const latestByPlatform = new Map();
-    rows.forEach((row) => {
-      const key = String(row.platform || '—').toLowerCase();
-      const prev = latestByPlatform.get(key);
-      if (!prev || this._snapshotSortKey(row) > this._snapshotSortKey(prev)) {
-        latestByPlatform.set(key, row);
-      }
-    });
-    const primaries = Array.from(latestByPlatform.values());
-    primaries.sort((a, b) => {
-      const order = (p) => {
-        const x = String(p.platform || '').toLowerCase();
-        if (x.includes('google_analytics') || x.includes('analytics')) return 0;
-        if (x.includes('facebook') || x.includes('meta')) return 1;
-        return 2;
-      };
-      const oa = order(a);
-      const ob = order(b);
-      if (oa !== ob) return oa - ob;
-      return this._snapshotSortKey(b) - this._snapshotSortKey(a);
-    });
-
-    const heroHtml = `<div class="cc-dash-heroes">${primaries.map((s) => this._renderSnapshotHeroCard(s)).join('')}</div>`;
-    root.innerHTML = heroHtml;
-  }
-
   /* ── MODAL: abrir / cerrar / guardar ─────────────────────────────── */
   _setupEventListeners() {
     const carousel     = document.getElementById('ccAudCarousel');
@@ -1343,8 +1043,8 @@ class CommandCenterView extends BaseView {
     if (backdrop)  backdrop.onclick  = (ev) => { if (ev.target === backdrop) this._closeAudienceModal(); };
     if (form)      form.addEventListener('submit', async (ev) => { ev.preventDefault(); await this._saveAudienceFromModal(); });
 
-    // Delegated listener para los dropdowns "Vincular persona" en campaigns + segments.
-    // Live: aunque _renderCampaigns/_renderSegments re-rendericen, el listener sobrevive
+    // Delegated listener para los dropdowns "Vincular persona" en campañas.
+    // Live: aunque _renderCampaigns re-renderice, el listener sobrevive
     // porque está colgado del page root.
     const page = document.getElementById('commandCenterPage');
     if (page) {
