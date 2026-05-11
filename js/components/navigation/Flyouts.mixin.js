@@ -262,21 +262,8 @@
       bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
     } else {
       bodyHtml =
-        '<div class="nav-flyout-list nav-flyout-notifications-list">' +
-        list
-          .map((n) => {
-            const type = n.type || 'info';
-            const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
-            const unread = !n.is_read;
-            const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
-            return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
-          <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
-          <span class="nav-flyout-notification-title">${_escapeHtml(n.title)}</span>
-          <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}</span>
-          <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
-        </button>`;
-          })
-          .join('') +
+        '<div class="notif-list">' +
+        list.map((n) => this._renderRichNotificationCard(n)).join('') +
         '</div>';
     }
 

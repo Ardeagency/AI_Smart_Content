@@ -693,10 +693,25 @@ class CommandCenterView extends BaseView {
     const breakEl  = document.getElementById('ccAudienceBreakdowns');
     if (!mapEl) return;
 
-    // Agregar real_demographics de TODAS las campañas con data
-    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
+    // Filtra claves "_raw", "_totals", "_sources", "_updated_at" del jsonb de personas
+    const isInternalKey = (k) => typeof k === 'string' && k.startsWith('_');
+
+    // Acepta dos shapes:
+    //   campaigns.real_demographics: { age: { "25-34": {impressions, reach} } }
+    //   personas.real_*:             { age: { "25-34": 0.45 } }  (fracción 0-1)
+    // Devuelve número absoluto o fracción según el caso. El choropleth normaliza por max.
+    const toNumeric = (v) => {
+      if (typeof v === 'number') return v;
+      if (v && typeof v === 'object' && typeof v.impressions === 'number') return v.impressions;
+      return 0;
+    };
+
     const agg = { age: {}, gender: {}, country: {} };
-    let hasAnyData = false;
+    let source = null;  // 'campaigns' | 'personas' | null
+
+    // ── 1) Intento PRIMERO: agregar campaigns.real_demographics (data por
+    //    campaña, granular). Solo si tiene cualquier valor > 0.
+    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
     for (const c of camps) {
       const rd = c.real_demographics;
       if (!rd || typeof rd !== 'object') continue;
@@ -704,27 +719,57 @@ class CommandCenterView extends BaseView {
         const dist = rd[axis];
         if (!dist || typeof dist !== 'object') continue;
         for (const [k, v] of Object.entries(dist)) {
-          const imp = Number(v?.impressions) || 0;
-          if (imp === 0) continue;
-          hasAnyData = true;
-          agg[axis][k] = agg[axis][k] || { impressions: 0, reach: 0 };
-          agg[axis][k].impressions += imp;
-          agg[axis][k].reach       += Number(v?.reach) || 0;
+          if (isInternalKey(k)) continue;
+          const n = toNumeric(v);
+          if (n <= 0) continue;
+          agg[axis][k] = (agg[axis][k] || 0) + n;
+          source = 'campaigns';
         }
       }
     }
 
-    if (!hasAnyData) {
-      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Cuando tus campañas generen tráfico, verás aquí países, géneros y edades agregados.</p></div>`;
+    // ── 2) Fallback: si campañas no aportaron data, agregar audience_personas.real_*
+    //    (data brand-wide poblada por sensores meta_audience_demographics + ga4)
+    if (!source) {
+      const personas = Array.isArray(this._audiences) ? this._audiences : [];
+      for (const p of personas) {
+        const ageDist     = p.real_age_distribution      || {};
+        const genderDist  = p.real_gender_distribution   || {};
+        const locDist     = p.real_location_distribution || {};
+        for (const [k, v] of Object.entries(ageDist)) {
+          if (isInternalKey(k)) continue;
+          const n = toNumeric(v); if (n <= 0) continue;
+          agg.age[k] = (agg.age[k] || 0) + n;
+          source = 'personas';
+        }
+        for (const [k, v] of Object.entries(genderDist)) {
+          if (isInternalKey(k) || k === 'unknown') continue;
+          const n = toNumeric(v); if (n <= 0) continue;
+          agg.gender[k] = (agg.gender[k] || 0) + n;
+          source = 'personas';
+        }
+        const countries = locDist.countries || {};
+        for (const [k, v] of Object.entries(countries)) {
+          if (isInternalKey(k)) continue;
+          // Solo aceptamos ISO-A2 (2 letras mayúsculas); descartamos nombres
+          // ("Colombia", "United States") que vienen del fallback GA4 raw.
+          if (typeof k !== 'string' || k.length !== 2 || !/^[A-Z]{2}$/.test(k)) continue;
+          const n = toNumeric(v); if (n <= 0) continue;
+          agg.country[k] = (agg.country[k] || 0) + n;
+          source = 'personas';
+        }
+      }
+    }
+
+    if (!source) {
+      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).</p></div>`;
       if (breakEl) breakEl.innerHTML = '';
       return;
     }
 
-    // Mapa choropleth (country)
-    const countryAgg = {};
-    for (const [cc, v] of Object.entries(agg.country)) countryAgg[cc] = v.impressions;
+    // Mapa choropleth (country) — pasa números directos al AudienceMap component
     if (window.AudienceMap) {
-      try { await window.AudienceMap.render(mapEl, countryAgg); }
+      try { await window.AudienceMap.render(mapEl, agg.country); }
       catch (e) { console.warn('AudienceMap render:', e?.message); }
     } else {
       mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
@@ -732,15 +777,15 @@ class CommandCenterView extends BaseView {
 
     // Breakdowns: género + edad como mini-barras CSS
     if (breakEl) {
-      const totalGender = Object.values(agg.gender).reduce((s, v) => s + v.impressions, 0);
-      const totalAge    = Object.values(agg.age).reduce((s, v) => s + v.impressions, 0);
+      const totalGender = Object.values(agg.gender).reduce((s, v) => s + Number(v || 0), 0);
+      const totalAge    = Object.values(agg.age).reduce((s, v) => s + Number(v || 0), 0);
 
       const genderRows = totalGender > 0
         ? Object.entries(agg.gender)
-            .sort((a, b) => b[1].impressions - a[1].impressions)
+            .sort((a, b) => Number(b[1]) - Number(a[1]))
             .slice(0, 4)
             .map(([k, v]) => {
-              const pct = Math.round((v.impressions / totalGender) * 100);
+              const pct = Math.round((Number(v) / totalGender) * 100);
               const label = k === 'male' ? 'Hombres' : k === 'female' ? 'Mujeres' : k;
               return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="${label}: ${pct}%">
                 <span class="cc-break-label">${label}</span>
@@ -752,10 +797,10 @@ class CommandCenterView extends BaseView {
 
       const ageRows = totalAge > 0
         ? Object.entries(agg.age)
-            .sort((a, b) => b[1].impressions - a[1].impressions)
+            .sort((a, b) => Number(b[1]) - Number(a[1]))
             .slice(0, 6)
             .map(([k, v]) => {
-              const pct = Math.round((v.impressions / totalAge) * 100);
+              const pct = Math.round((Number(v) / totalAge) * 100);
               return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="Edad ${k}: ${pct}%">
                 <span class="cc-break-label">${k}</span>
                 <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>

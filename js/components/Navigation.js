@@ -566,44 +566,11 @@ class Navigation {
       body.innerHTML = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
       return;
     }
-
     body.innerHTML =
-      '<div class="nav-flyout-list nav-flyout-notifications-list notifications-modal-list">' +
-      list
-        .map((n) => {
-          const type = n.type || 'info';
-          const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
-          const unread = !n.is_read;
-          const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
-          return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
-            <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
-            <span class="nav-flyout-notification-title">${_escapeHtml(n.title || '')}</span>
-            <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 180))}${(n.message || '').length > 180 ? '…' : ''}</span>
-            <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
-          </button>`;
-        })
-        .join('') +
+      '<div class="notif-list notifications-modal-list">' +
+      list.map((n) => this._renderRichNotificationCard(n)).join('') +
       '</div>';
-
-    body.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        const link = btn.dataset.link;
-        if (id) {
-          await this._orgNotificationsMark(id, 'read');
-          this.refreshNotificationsBadge();
-          btn.classList.remove('unread');
-        }
-        if (link && window.router) {
-          this.closeNotificationsModal();
-          if (/^https?:\/\//i.test(link)) {
-            window.open(link, '_blank', 'noopener,noreferrer');
-          } else {
-            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
-          }
-        }
-      });
-    });
+    this._attachNotificationListeners(body, () => this.closeNotificationsModal(), list);
   }
 
   // ───────────────────────────────────────── Org notifications (sistema nuevo)
@@ -662,18 +629,331 @@ class Navigation {
 
   _normalizeOrgNotification(n) {
     if (!n) return n;
+    const md = n.metadata || {};
     return {
-      id:         n.id,
-      title:      n.title || '',
-      message:    n.body || '',                          // body → message para render legacy
-      type:       n.type || 'info',
-      severity:   n.severity || 'info',                  // nuevo, para color
-      is_read:    n.my_state && n.my_state !== 'unread',
-      created_at: n.created_at,
-      link_to:    this._resolveActionUrl(n.action_url),  // ⭐ prefija org path si falta
-      action_label: n.action_label || '',                // nuevo, opcional
-      metadata:   n.metadata || {},
+      // Núcleo
+      id:           n.id,
+      title:        n.title || '',
+      body:         n.body || '',                          // markdown / texto largo
+      severity:     n.severity || 'info',                  // urgencia
+      type:         n.type || 'info',
+      status:       n.status || 'pending',                 // estado de tarea
+      is_read:      n.my_state && n.my_state !== 'unread',
+      created_at:   n.created_at,
+      // Modelo rico (metadata)
+      label:        md.label || '',                        // etiqueta corta
+      summary:      md.summary || '',                      // TL;DR
+      subject:      md.subject || null,                    // referencia al objeto
+      checklist:    Array.isArray(md.checklist) ? md.checklist : [],
+      actions:      Array.isArray(md.actions) ? md.actions : [],
+      vera:         md.vera || null,
+      // Legacy compat
+      message:      n.body || '',
+      link_to:      this._resolveActionUrl(n.action_url),
+      action_label: n.action_label || '',
+      metadata:     md,
     };
+  }
+
+  // ───────────────────────────────────────── Subject → ruta canónica
+
+  /**
+   * Mapea un subject {type, id, ...} a una ruta del router (con prefix de org
+   * ya aplicado). Cuando no podemos resolver (subject inválido/sin id), devolvemos
+   * string vacío y el caller decide (típicamente: no renderiza link).
+   *
+   * Vocabulario soportado (ver docs/task/FEAT-018-notifications-rich-model.md §1.4).
+   */
+  _buildSubjectUrl(subject) {
+    if (!subject || !subject.type) return '';
+    const s = subject;
+    const id = s.id || s.ids?.[0] || '';
+    const entity = s.entity_id || s.related_ids?.entity_id || '';
+    let path = '';
+    switch (s.type) {
+      case 'product':
+        if (entity && id) path = `/identities/product-detail/${entity}/${id}`;
+        else path = '/identities';
+        break;
+      case 'campaign':                path = id ? `/brand/campaign/${id}` : '/brand'; break;
+      case 'audience':                path = id ? `/brand/audience/${id}` : '/brand'; break;
+      case 'flow':                    path = id ? `/studio/flows/${id}` : '/studio/flows'; break;
+      case 'identity':                path = '/identities'; break;
+      case 'production':              path = id ? `/production-detail/${id}` : '/production'; break;
+      case 'entity':                  path = id ? `/monitoring?entity=${id}` : '/monitoring'; break;
+      case 'brand_container':         path = id ? `/brand-storage/${id}` : '/brand-storage'; break;
+      case 'recommendation_batch':    path = '/dashboard#strategy'; break;
+      case 'trend_batch':             path = '/dashboard#tendencies'; break;
+      case 'emerging_brand_batch':    path = '/monitoring?tab=emerging'; break;
+      default:                        path = '';
+    }
+    return path ? this._resolveActionUrl(path) : '';
+  }
+
+  /** Ejecuta una acción de notificación según su `kind`. */
+  async _runAction(action, notifId) {
+    if (!action) return;
+    switch (action.kind) {
+      case 'navigate': {
+        const url = this._resolveActionUrl(action.target);
+        if (url && window.router) window.router.navigate(url);
+        break;
+      }
+      case 'external':
+        if (action.target) window.open(action.target, '_blank', 'noopener,noreferrer');
+        break;
+      case 'rpc': {
+        const sb = await this._supabase();
+        if (!sb || !action.target) return;
+        const { error } = await sb.rpc(action.target, action.params || {});
+        if (error) {
+          console.warn('[notif action rpc]', action.target, error.message);
+          return;
+        }
+        if (notifId) await this._orgNotificationsMark(notifId, 'actioned');
+        document.dispatchEvent(new CustomEvent('notifications-updated'));
+        break;
+      }
+      case 'modal':
+        // El modal específico lo maneja el caller. Disparamos un evento para que
+        // el view actual (StrategyMixin, etc) lo abra con el contexto correcto.
+        document.dispatchEvent(new CustomEvent('notification-modal-open', {
+          detail: { modal: action.target, params: action.params || {}, notifId },
+        }));
+        break;
+      default:
+        console.warn('[notif] unknown action kind:', action.kind);
+    }
+  }
+
+  // ───────────────────────────────────────── Checklist local-state (Fase 1B)
+
+  _checklistStorageKey(notifId) {
+    const userId = window.authService?.getCurrentUser?.()?.id || 'anon';
+    return `notif_checklist:${userId}:${notifId}`;
+  }
+
+  _loadChecklistProgress(notifId) {
+    try {
+      const raw = localStorage.getItem(this._checklistStorageKey(notifId));
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) { return {}; }
+  }
+
+  _toggleChecklistStep(notifId, stepId, done) {
+    try {
+      const map = this._loadChecklistProgress(notifId);
+      if (done) map[stepId] = true; else delete map[stepId];
+      localStorage.setItem(this._checklistStorageKey(notifId), JSON.stringify(map));
+      return map;
+    } catch (_) { return {}; }
+  }
+
+  // ───────────────────────────────────────── Renderer rico
+
+  /**
+   * Renderiza una notificación con el modelo rico (FEAT-018). Si la notif NO
+   * trae metadata.{summary, subject, checklist, actions}, cae al render plano
+   * para no romper notifs legacy.
+   *
+   * @param {object} n - notif normalizada (resultado de _normalizeOrgNotification)
+   * @returns {string} HTML string del card
+   */
+  _renderRichNotificationCard(n) {
+    if (!n) return '';
+    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length));
+    if (!hasRich) return this._renderLegacyNotificationCard(n);
+
+    const unread = !n.is_read;
+    const sev = (n.severity || 'info').toLowerCase();
+    const labelText = n.label || (n.type || 'info').toUpperCase();
+    const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
+
+    // Subject card
+    let subjectHtml = '';
+    if (n.subject?.type) {
+      const subjUrl = this._buildSubjectUrl(n.subject);
+      const subjLabel = n.subject.label || n.subject.id || '';
+      const subjType = String(n.subject.type).replace(/_/g, ' ');
+      subjectHtml = `
+        <div class="notif-subject" data-subject-url="${_escapeHtml(subjUrl)}">
+          <div class="notif-subject-meta">
+            <span class="notif-subject-type">${_escapeHtml(subjType)}</span>
+            <span class="notif-subject-label">${_escapeHtml(subjLabel)}</span>
+          </div>
+          ${subjUrl ? '<i class="fas fa-arrow-right notif-subject-arrow"></i>' : ''}
+        </div>`;
+    }
+
+    // Checklist
+    let checklistHtml = '';
+    if (n.checklist?.length) {
+      const progress = this._loadChecklistProgress(n.id);
+      const total = n.checklist.length;
+      const doneCount = n.checklist.filter((s) => !!progress[s.id || s.label]).length;
+      const items = n.checklist.map((step, i) => {
+        const stepId = step.id || `step_${i}`;
+        const checked = !!progress[stepId];
+        const opt = step.optional ? ' <span class="notif-step-optional">(opcional)</span>' : '';
+        return `
+          <label class="notif-step ${checked ? 'done' : ''}">
+            <input type="checkbox" data-step-id="${_escapeHtml(stepId)}" ${checked ? 'checked' : ''}>
+            <span>${_escapeHtml(step.label || '')}${opt}</span>
+          </label>`;
+      }).join('');
+      checklistHtml = `
+        <div class="notif-checklist">
+          <div class="notif-checklist-head">
+            <span><i class="far fa-clipboard"></i> Tareas a completar</span>
+            <span class="notif-checklist-progress" data-progress>${doneCount} de ${total}</span>
+          </div>
+          ${items}
+        </div>`;
+    }
+
+    // Acciones
+    let actionsHtml = '';
+    if (n.actions?.length) {
+      const btns = n.actions.map((a, i) => {
+        const cls = a.primary ? 'notif-action primary' : 'notif-action';
+        const icon = a.icon ? `<i class="${_escapeHtml(a.icon)}"></i> ` : '';
+        return `<button type="button" class="${cls}" data-action-idx="${i}">${icon}${_escapeHtml(a.label || 'Acción')}</button>`;
+      }).join('');
+      actionsHtml = `<div class="notif-actions">${btns}</div>`;
+    }
+
+    // Estado de tarea (status)
+    const statusMap = {
+      pending:    { icon: '⏳', label: 'Pendiente' },
+      in_progress:{ icon: '🟡', label: 'En progreso' },
+      completed:  { icon: '✅', label: 'Completada' },
+      dismissed:  { icon: '⏭', label: 'Descartada' },
+    };
+    const st = statusMap[n.status] || statusMap.pending;
+
+    return `
+      <article class="notif-card ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
+        <header class="notif-card-header">
+          <span class="notif-label">${_escapeHtml(labelText)}</span>
+          <span class="notif-sev-pill sev-${_escapeHtml(sev)}">${_escapeHtml(sev)}</span>
+          <span class="notif-date">${_escapeHtml(dateStr)}</span>
+        </header>
+        <h4 class="notif-title">${_escapeHtml(n.title || '')}</h4>
+        ${n.summary ? `<p class="notif-summary">${_escapeHtml(n.summary)}</p>` : ''}
+        ${n.body ? `<details class="notif-details">
+          <summary>Detalles del plan de acción</summary>
+          <div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>
+        </details>` : ''}
+        ${subjectHtml}
+        ${checklistHtml}
+        <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
+        ${actionsHtml}
+      </article>`;
+  }
+
+  /** Render plano para notifs legacy sin metadata rica. */
+  _renderLegacyNotificationCard(n) {
+    const type = n.type || 'info';
+    const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
+    const unread = !n.is_read;
+    const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
+    return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${_escapeHtml(n.id)}"${link}>
+      <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
+      <span class="nav-flyout-notification-title">${_escapeHtml(n.title || '')}</span>
+      <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 180))}${(n.message || '').length > 180 ? '…' : ''}</span>
+      <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
+    </button>`;
+  }
+
+  /**
+   * Cablea los listeners de un contenedor que tiene tarjetas renderizadas por
+   * _renderRichNotificationCard + _renderLegacyNotificationCard.
+   *
+   * @param {HTMLElement} container - donde están las `.notif-card` y `.nav-flyout-notification-item`
+   * @param {function} onClose - callback que cierra el dropdown/modal/flyout (para el navigate)
+   * @param {Array} notifs - lista normalizada (para resolver actions por idx)
+   */
+  _attachNotificationListeners(container, onClose, notifs) {
+    if (!container) return;
+    const byId = new Map();
+    (notifs || []).forEach((n) => n?.id && byId.set(n.id, n));
+
+    // ── Cards ricas
+    container.querySelectorAll('.notif-card').forEach((card) => {
+      const id = card.dataset.id;
+      const n = byId.get(id);
+
+      // Subject click → navega al recurso real
+      const subj = card.querySelector('.notif-subject[data-subject-url]');
+      if (subj) {
+        const url = subj.getAttribute('data-subject-url');
+        if (url) {
+          subj.style.cursor = 'pointer';
+          subj.addEventListener('click', async () => {
+            await this._orgNotificationsMark(id, 'read');
+            this.refreshNotificationsBadge();
+            if (typeof onClose === 'function') onClose();
+            if (window.router) window.router.navigate(url);
+          });
+        }
+      }
+
+      // Checklist toggle
+      card.querySelectorAll('.notif-step input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener('click', (e) => e.stopPropagation());
+        cb.addEventListener('change', () => {
+          const stepId = cb.dataset.stepId;
+          this._toggleChecklistStep(id, stepId, cb.checked);
+          cb.closest('.notif-step')?.classList.toggle('done', cb.checked);
+          // Actualizar contador
+          const progress = this._loadChecklistProgress(id);
+          const total = n?.checklist?.length || 0;
+          const doneCount = (n?.checklist || []).filter((s, i) => !!progress[s.id || `step_${i}`]).length;
+          const counter = card.querySelector('[data-progress]');
+          if (counter) counter.textContent = `${doneCount} de ${total}`;
+        });
+      });
+
+      // Acciones
+      card.querySelectorAll('.notif-action').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const idx = Number(btn.dataset.actionIdx);
+          const action = n?.actions?.[idx];
+          if (!action) return;
+          btn.disabled = true;
+          try {
+            await this._runAction(action, id);
+            if (action.kind === 'navigate' || action.kind === 'external') {
+              if (typeof onClose === 'function') onClose();
+            }
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    });
+
+    // ── Cards legacy
+    container.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const link = btn.dataset.link;
+        if (id) {
+          await this._orgNotificationsMark(id, 'read');
+          this.refreshNotificationsBadge();
+          btn.classList.remove('unread');
+        }
+        if (link) {
+          if (typeof onClose === 'function') onClose();
+          if (/^https?:\/\//i.test(link)) {
+            window.open(link, '_blank', 'noopener,noreferrer');
+          } else if (window.router) {
+            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+          }
+        }
+      });
+    });
   }
 
   /**
