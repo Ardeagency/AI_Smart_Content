@@ -97,13 +97,9 @@
     background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%);
 }
 
-/* Textura antigua (pesada) — sustituida por .background-film-grain */
-.background-texture {
-    display: none;
-}
-
-/* Film grain eliminado por preferencia del usuario (2026-05-11).
-   Se deja la clase sin efecto para no romper código heredado que aún la referencie. */
+/* Texturas/film grain eliminados (2026-05-11). Clases conservadas como shim
+   con display:none para no romper código heredado que aún las referencie. */
+.background-texture,
 .background-film-grain,
 .brand-dashboard-container .background-film-grain {
     display: none !important;

@@ -1395,32 +1395,6 @@
   backdrop-filter: blur(6px);
 }
 
-.cc-optim-empty {
-  margin-top: 1rem;
-  padding: 1.5rem;
-  background: rgba(0,0,0,0.45);
-  border: 1px dashed rgba(255,255,255,0.18);
-  border-radius: var(--radius-sm, 8px);
-  text-align: center;
-  color: rgba(255,255,255,0.78);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  backdrop-filter: blur(4px);
-}
-
-.cc-optim-empty i {
-  font-size: 1.5rem;
-  color: rgba(255,255,255,0.55);
-}
-
-.cc-optim-empty p {
-  margin: 0;
-  font-size: 0.9rem;
-  max-width: 50ch;
-}
-
 /* ── Personas carrusel en la columna derecha (más compacto) ──────────── */
 .cc-personas-slice .cc-section-head--personas {
   display: flex;

@@ -109,8 +109,8 @@ class CommandCenterView extends BaseView {
     return `
 <div class="cc-page" id="commandCenterPage">
 
-  <!-- OPTIMIZACIÓN: comentarios de Vera (sustituye Mercado objetivo + Bandeja Vera) -->
-  <section class="cc-section cc-section--optim" id="ccOptimSection" aria-label="Optimización propuesta por Vera">
+  <!-- OPTIMIZACIÓN: comentarios de Vera. Sección oculta hasta que haya comentarios reales -->
+  <section class="cc-section cc-section--optim" id="ccOptimSection" style="display:none;" aria-label="Optimización propuesta por Vera">
     <div class="cc-optim-bg" aria-hidden="true">
       <div class="cc-optim-gradient"></div>
     </div>
@@ -126,10 +126,6 @@ class CommandCenterView extends BaseView {
         </div>
       </div>
       <div class="cc-optim-list" id="ccVeraInboxList"></div>
-      <div class="cc-optim-empty" id="ccOptimEmpty" style="display:none;">
-        <i class="fas fa-comments"></i>
-        <p>Vera no tiene comentarios pendientes. A medida que tus campañas generen tráfico, aquí aparecerán sus lecturas y propuestas.</p>
-      </div>
     </div>
   </section>
 
