@@ -123,7 +123,7 @@ class CommandCenterView extends BaseView {
       <div class="cc-entorno-breadcrumb">
         <span class="cc-entorno-bc-item">Panel</span>
         <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
-        <span class="cc-entorno-bc-item cc-entorno-bc-current">Lectura del mercado</span>
+        <span class="cc-entorno-bc-item cc-entorno-bc-current">Campañas</span>
       </div>
 
       <section class="cc-entorno-section">

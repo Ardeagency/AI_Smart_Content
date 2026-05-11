@@ -784,24 +784,25 @@
   border-radius: 4px;
 }
 
-/* ── SIDEBAR (right, 380px) ────────────────────────────────────────── */
+/* ── SIDEBAR (right, 380px) ──────────────────────────────────────────
+   Flex column: breadcrumb arriba (alto natural) + section que ocupa el
+   resto del alto y maneja su propio scroll interno. El aside ya no
+   scrollea — eso permitía que la section "flotara" sin llenar el alto. */
 .cc-entorno-sidebar {
   width: 380px;
   min-width: 320px;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider);
   border-radius: 16px;
-  overflow-y: auto;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.cc-entorno-sidebar::-webkit-scrollbar { width: 6px; }
-.cc-entorno-sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); border-radius: 3px; }
-.cc-entorno-sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
-.cc-entorno-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
-
-/* Breadcrumb */
+/* Breadcrumb (alto fijo, no se encoge) */
 .cc-entorno-breadcrumb {
   display: flex;
   align-items: center;
@@ -811,14 +812,21 @@
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-divider);
+  flex: 0 0 auto;
 }
 
 .cc-entorno-bc-item { color: var(--text-secondary); }
 .cc-entorno-bc-current { color: var(--text-primary); font-weight: 500; }
 .cc-entorno-bc-sep { font-size: 0.65rem; opacity: 0.6; }
 
+/* Section que ocupa el resto del aside; flex column para que su .cc-list
+   pueda crecer y scrollear. */
 .cc-entorno-section {
-  margin-bottom: 1.5rem;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
 }
 
 .cc-entorno-section-title {
@@ -865,14 +873,23 @@
   opacity: 0.6;
 }
 
-/* Override: la lista de campañas dentro del sidebar es compacta vertical.
-   El scroll lo gestiona .cc-entorno-sidebar (overflow-y:auto), no la lista,
-   para que el sidebar se vea como una sola pieza scrolleable. */
+/* Lista de campañas: ocupa el alto sobrante de la section y scrollea ella
+   (no el aside). min-height:0 es indispensable para que flex permita
+   encoger por debajo del contenido natural y se active overflow. */
 .cc-entorno-section .cc-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
+
+.cc-entorno-section .cc-list::-webkit-scrollbar { width: 4px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); border-radius: 2px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 2px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
 /* Responsive */
 @media (max-width: 1200px) {
