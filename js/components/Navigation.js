@@ -666,28 +666,91 @@ class Navigation {
     const s = subject;
     const id = s.id || s.ids?.[0] || '';
     const entity = s.entity_id || s.related_ids?.entity_id || '';
+    // Si Vera incluyó url explícita en el subject (override), la usamos
+    // directo. Sino, mapeamos por type a las rutas REALES del router
+    // (ver js/app.js · r.register).
+    if (s.url && typeof s.url === 'string') {
+      return this._resolveActionUrl(s.url);
+    }
     let path = '';
     switch (s.type) {
+      // ── Productos (entity_id + product_id) ──
       case 'product':
         if (entity && id) path = `/identities/product-detail/${entity}/${id}`;
-        else path = '/identities';
+        else if (id)      path = `/identities`; // sin entity no hay detalle, llevamos a la lista
+        else              path = '/identities';
         break;
-      case 'campaign':                path = id ? `/brand/campaign/${id}` : '/brand'; break;
-      case 'audience':                path = id ? `/brand/audience/${id}` : '/brand'; break;
-      case 'flow':                    path = id ? `/studio/flows/${id}` : '/studio/flows'; break;
-      case 'identity':                path = '/identities'; break;
-      case 'production':              path = id ? `/production-detail/${id}` : '/production'; break;
-      case 'entity':                  path = id ? `/monitoring?entity=${id}` : '/monitoring'; break;
-      case 'brand_container':         path = id ? `/brand-storage/${id}` : '/brand-storage'; break;
-      case 'recommendation_batch':    path = '/dashboard#strategy'; break;
-      case 'trend_batch':             path = '/dashboard#tendencies'; break;
-      case 'emerging_brand_batch':    path = '/monitoring?tab=emerging'; break;
-      // Outputs / producciones que Vera generó
-      case 'production_run':          path = id ? `/production-detail/${id}` : '/production'; break;
-      case 'production_output':       path = id ? `/production-detail/${id}` : '/production'; break;
-      case 'video':                   path = id ? `/video/${id}` : '/video'; break;
-      case 'flow_run':                path = id ? `/studio/run/${id}` : '/studio'; break;
-      default:                        path = '';
+
+      // ── Identities ──
+      case 'identity':
+        path = id ? `/identities/${id}` : '/identities';
+        break;
+
+      // ── Producciones (runs y outputs) ──
+      // /production es una lista; ProductionView puede leer ?run o ?asset
+      // para enfocarse en uno específico (si soporta query params).
+      case 'production':
+      case 'production_run':
+        path = id ? `/production?run=${id}` : '/production';
+        break;
+      case 'production_output':
+        path = id ? `/production?asset=${id}` : '/production';
+        break;
+
+      // ── Flows / Studio ──
+      // Studio acepta /studio/:flowSlug; si el id es un slug, va directo.
+      // /studio/flows muestra el catálogo de categorías.
+      case 'flow':
+        path = id ? `/studio/${id}` : '/studio/flows';
+        break;
+      case 'flow_run':
+        // No hay /studio/run/:id; pasamos ?run para que StudioView pueda
+        // abrir el detalle desde su panel lateral si lo soporta.
+        path = id ? `/studio?run=${id}` : '/studio';
+        break;
+
+      // ── Video (ruta única sin params; el id va como query) ──
+      case 'video':
+        path = id ? `/video?id=${id}` : '/video';
+        break;
+
+      // ── Brand / brand_container ──
+      // /brand/:brandId existe; para sub-brand específico.
+      case 'brand_container':
+        path = id ? `/brand/${id}` : '/brand';
+        break;
+      // /brand también para campaign/audience que viven dentro
+      case 'campaign':
+        path = id ? `/brand?campaign=${id}` : '/brand';
+        break;
+      case 'audience':
+        path = id ? `/brand?audience=${id}` : '/brand';
+        break;
+
+      // ── Posts (capturados o publicados) ──
+      // /content existe como página para el feed.
+      case 'brand_post':
+        path = id ? `/content?post=${id}` : '/content';
+        break;
+
+      // ── Monitoring / Entities (competidores monitoreados) ──
+      case 'entity':
+        path = id ? `/monitoring?entity=${id}` : '/monitoring';
+        break;
+
+      // ── Batches que abren un tab del Dashboard ──
+      case 'recommendation_batch': path = '/dashboard#strategy';   break;
+      case 'trend_batch':          path = '/dashboard#tendencies'; break;
+      case 'emerging_brand_batch': path = '/monitoring?tab=emerging'; break;
+
+      // ── Tasks / Command Center ──
+      case 'task':                 path = id ? `/tasks/${id}` : '/tasks'; break;
+      case 'sub_brand':            path = id ? `/command-center/${id}` : '/dashboard'; break;
+
+      // ── Vera misma ──
+      case 'vera_session':         path = id ? `/vera?session=${id}` : '/vera'; break;
+
+      default:                     path = '';
     }
     return path ? this._resolveActionUrl(path) : '';
   }
@@ -1054,10 +1117,56 @@ class Navigation {
         });
       });
 
-      // NAVEGACIÓN DESACTIVADA hasta resolver el bug de URLs huérfanas.
-      // Sin handlers para .notif-subject, .notif-output ni .notif-action.
-      // El render legacy (.nav-flyout-notification-item) ya no se emite —
-      // ahora .notif-card.legacy reusa la misma estructura visual.
+      // ── Navegación reactivada (rutas mapeadas con _buildSubjectUrl)
+      // Subject card → ruta del recurso motivador
+      const subj = card.querySelector('.notif-subject[data-subject-url]');
+      if (subj) {
+        const url = subj.getAttribute('data-subject-url');
+        if (url) {
+          subj.classList.add('clickable');
+          subj.addEventListener('click', async () => {
+            await this._orgNotificationsMark(id, 'read');
+            this.refreshNotificationsBadge();
+            if (typeof onClose === 'function') onClose();
+            if (window.router) window.router.navigate(url);
+          });
+        }
+      }
+
+      // Outputs (producciones que Vera generó) → ruta de cada asset
+      card.querySelectorAll('.notif-output[data-output-url]').forEach((out) => {
+        const url = out.getAttribute('data-output-url');
+        if (!url) return;
+        out.classList.add('clickable');
+        out.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await this._orgNotificationsMark(id, 'read');
+          this.refreshNotificationsBadge();
+          if (typeof onClose === 'function') onClose();
+          if (window.router) window.router.navigate(url);
+        });
+      });
+
+      // Acciones primarias/secundarias (navigate, external, rpc, modal).
+      // _runAction encapsula la lógica por kind.
+      card.querySelectorAll('.notif-action').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const idx = Number(btn.dataset.actionIdx);
+          const action = n?.actions?.[idx];
+          if (!action) return;
+          btn.disabled = true;
+          try {
+            await this._runAction(action, id);
+            // Para navegaciones cerramos el dropdown/modal
+            if (action.kind === 'navigate' || action.kind === 'external') {
+              if (typeof onClose === 'function') onClose();
+            }
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
     });
   }
 

@@ -255,7 +255,17 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  cursor: default; /* navegación desactivada — ver Navigation.js */
+  cursor: default;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.notif-subject.clickable {
+  cursor: pointer;
+}
+
+.notif-subject.clickable:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--text-muted);
 }
 
 .notif-subject-meta {
@@ -325,11 +335,22 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  cursor: default; /* navegación desactivada — ver Navigation.js */
+  cursor: default;
   overflow: hidden;
   text-align: left;
   color: var(--text-primary);
   font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.notif-output.clickable {
+  cursor: pointer;
+}
+
+.notif-output.clickable:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
 }
 
 .notif-output-thumb {
