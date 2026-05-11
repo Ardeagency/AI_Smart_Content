@@ -643,7 +643,8 @@ class Navigation {
       // Modelo rico (metadata)
       label:        md.label || '',                        // etiqueta corta
       summary:      md.summary || '',                      // TL;DR
-      subject:      md.subject || null,                    // referencia al objeto
+      subject:      md.subject || null,                    // referencia al objeto motivador
+      outputs:      Array.isArray(md.outputs) ? md.outputs : [], // producciones que Vera generó
       checklist:    Array.isArray(md.checklist) ? md.checklist : [],
       actions:      Array.isArray(md.actions) ? md.actions : [],
       vera:         md.vera || null,
@@ -689,6 +690,12 @@ class Navigation {
       case 'recommendation_batch':    path = '/dashboard#strategy'; break;
       case 'trend_batch':             path = '/dashboard#tendencies'; break;
       case 'emerging_brand_batch':    path = '/monitoring?tab=emerging'; break;
+      // Outputs / producciones que Vera generó
+      case 'production_run':          path = id ? `/production-detail/${id}` : '/production'; break;
+      case 'production_output':       path = id ? `/production-detail/${id}` : '/production'; break;
+      case 'video':                   path = id ? `/video/${id}` : '/video'; break;
+      case 'flow_run':                path = id ? `/studio/run/${id}` : '/studio'; break;
+      case 'brand_post':              path = id ? `/content?post=${id}` : '/content'; break;
       default:                        path = '';
     }
     return path ? this._resolveActionUrl(path) : '';
@@ -801,7 +808,7 @@ class Navigation {
     const labelText = n.label || (n.type || 'info').toUpperCase();
     const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
 
-    // Subject card
+    // Subject card (el objeto motivador del análisis)
     let subjectHtml = '';
     if (n.subject?.type) {
       const subjUrl = this._buildSubjectUrl(n.subject);
@@ -814,6 +821,32 @@ class Navigation {
             <span class="notif-subject-label">${_escapeHtml(subjLabel)}</span>
           </div>
           ${subjUrl ? '<i class="fas fa-arrow-right notif-subject-arrow"></i>' : ''}
+        </div>`;
+    }
+
+    // Outputs grid (producciones que Vera generó como parte del análisis)
+    let outputsHtml = '';
+    if (n.outputs?.length) {
+      const items = n.outputs.map((o) => {
+        const url = this._buildSubjectUrl(o);
+        const oType = String(o.type || 'asset').replace(/_/g, ' ');
+        const oLabel = o.label || o.id || '';
+        const thumb = o.preview_url
+          ? `<img src="${_escapeHtml(o.preview_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+          : '<div class="notif-output-placeholder"><i class="fas fa-image"></i></div>';
+        return `
+          <button type="button" class="notif-output" data-output-url="${_escapeHtml(url)}" ${url ? '' : 'disabled'}>
+            <div class="notif-output-thumb">${thumb}</div>
+            <div class="notif-output-meta">
+              <span class="notif-output-type">${_escapeHtml(oType)}</span>
+              <span class="notif-output-label">${_escapeHtml(oLabel)}</span>
+            </div>
+          </button>`;
+      }).join('');
+      outputsHtml = `
+        <div class="notif-outputs">
+          <div class="notif-outputs-head"><i class="fas fa-sparkles"></i> Producciones generadas</div>
+          <div class="notif-outputs-grid">${items}</div>
         </div>`;
     }
 
@@ -879,6 +912,7 @@ class Navigation {
           <div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>
         </details>` : ''}
         ${subjectHtml}
+        ${outputsHtml}
         ${checklistHtml}
         <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
         ${actionsHtml}
@@ -916,6 +950,19 @@ class Navigation {
     container.querySelectorAll('.notif-card').forEach((card) => {
       const id = card.dataset.id;
       const n = byId.get(id);
+
+      // Outputs click → navega al asset/run específico
+      card.querySelectorAll('.notif-output[data-output-url]').forEach((out) => {
+        const url = out.getAttribute('data-output-url');
+        if (!url) return;
+        out.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await this._orgNotificationsMark(id, 'read');
+          this.refreshNotificationsBadge();
+          if (typeof onClose === 'function') onClose();
+          if (window.router) window.router.navigate(url);
+        });
+      });
 
       // Subject click → navega al recurso real
       const subj = card.querySelector('.notif-subject[data-subject-url]');

@@ -102,6 +102,7 @@ Vera, no una traducción separada.
 | Resumen | `metadata.summary` | text | TL;DR, 1-2 líneas |
 | Detalles | `body` | text | Markdown · plan de acción de Vera completo |
 | Subject | `metadata.subject` | jsonb | `{type, id, label, preview_url?, related_ids?}` |
+| Outputs (producciones generadas) | `metadata.outputs` | jsonb[] | `[{type, id, label, preview_url?}]` — assets/runs/videos que Vera produjo |
 | Checklist | `metadata.checklist` | jsonb[] | `[{id, label, optional?}]` |
 | Estado tarea | `status` | text | `pending`\|`in_progress`\|`completed`\|`dismissed` |
 | Acciones | `metadata.actions` | jsonb[] | `[{label, kind, target, params?, primary?, icon?}]` |
@@ -124,6 +125,39 @@ Forma `CATEGORÍA · TIPO`. Etiqueta visible como chip pequeño.
 | `MERCADO · TENDENCIA` | Trend detectado, lexicon emergente, brand emergente |
 | `COMPETENCIA · MOVIMIENTO` | Competidor publicó algo relevante |
 | `MARCA · CAMBIO` | Algo cambió en una marca propia (post viral, crisis, etc.) |
+
+### 1.3.1 Outputs · producciones generadas por Vera
+
+Cuando Vera ejecuta un análisis que produce assets (videos, imágenes,
+copy, runs), la notif lleva esos outputs en `metadata.outputs[]` y el
+frontend los muestra como mini-cards clickeables debajo del subject.
+
+```json
+{
+  "subject": { "type": "product", "id": "...", "label": "Snowboard Pro" },
+  "outputs": [
+    {
+      "type":        "production_run",
+      "id":          "uuid-del-run",
+      "label":       "Reel adaptado · Monster style",
+      "preview_url": "https://.../thumb.jpg"
+    },
+    {
+      "type":        "production_output",
+      "id":          "uuid-del-asset",
+      "label":       "Key visual v2",
+      "preview_url": "https://.../kv.jpg"
+    }
+  ]
+}
+```
+
+Tipos de output soportados (mismo mapping de subject, ver §1.4):
+- `production_run` — un run completo (puede tener varios assets)
+- `production_output` — un asset individual (imagen, video, copy)
+- `video` — video específico (KIE/Kling/etc)
+- `flow_run` — ejecución de un flow
+- `brand_post` — post publicado (cuando Vera ya publicó autónoma)
 
 ### 1.4 Subject types y mapeo a rutas
 
