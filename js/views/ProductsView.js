@@ -15,6 +15,7 @@ class ProductsView extends BaseView {
     this.brandId = null;
     this.productData = null;
     this.productImages = [];
+    this.productVariants = [];
     this.brandName = '';
   }
 
@@ -138,16 +139,19 @@ class ProductsView extends BaseView {
       let product = null;
       let images = [];
       let brandName = '';
+      let variants = [];
 
       try {
         product = await this.loadProductForDetail(productId);
         if (product) {
-          const [imgs, entityName] = await Promise.all([
+          const [imgs, entityName, vrs] = await Promise.all([
             this.loadProductImagesForDetail(productId),
-            product.entity_id ? this.loadEntityName(product.entity_id) : Promise.resolve('')
+            product.entity_id ? this.loadEntityName(product.entity_id) : Promise.resolve(''),
+            this.loadProductVariants(productId)
           ]);
           images = imgs;
           brandName = entityName;
+          variants = vrs;
         }
       } catch (e) {
         console.error('Error cargando detalle:', e);
@@ -173,11 +177,12 @@ class ProductsView extends BaseView {
       this.productData = product;
       this.productImages = images;
       this.brandName = brandName || 'Marca';
+      this.productVariants = variants;
 
       const backUrl = orgId && typeof window.getOrgPathPrefix === 'function'
         ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/identities')
         : (orgId ? `/org/${orgId}/identities` : '/identities');
-      const html = this.getProductDetailHTML(product, images, brandName || 'Marca', backUrl);
+      const html = this.getProductDetailHTML(product, images, brandName || 'Marca', backUrl, variants);
       this.container.innerHTML = html;
       this.updateLinksForRouter();
       await this.init();
@@ -252,7 +257,7 @@ class ProductsView extends BaseView {
   /**
    * Generar HTML del detalle: ficha técnica con todos los campos editables
    */
-  getProductDetailHTML(product, images, brandName, backUrl) {
+  getProductDetailHTML(product, images, brandName, backUrl, variants = []) {
     const mainImage = images.length > 0 ? images[0].image_url : '';
     const thumbnails = images.slice(0, 20);
     const precio = product.precio_producto != null ? String(product.precio_producto) : '';
@@ -293,9 +298,10 @@ class ProductsView extends BaseView {
         <select class="product-view-select product-view-input-inline" data-field="${field}">${optionsHtml}</select>
       </div>
     `;
-    const sectionTextarea = (title, field, value) => `
+    const sectionTextarea = (title, field, value, hint = '') => `
       <div class="product-view-sheet-section">
         <h3 class="product-view-sheet-title">${this.escapeHtml(title)}</h3>
+        ${hint ? `<p class="product-view-sheet-hint">${this.escapeHtml(hint)}</p>` : ''}
         <textarea class="product-view-textarea product-view-editable" data-field="${field}" rows="3" placeholder="Opcional">${this.escapeHtml(String(value ?? ''))}</textarea>
       </div>
     `;
@@ -332,13 +338,13 @@ class ProductsView extends BaseView {
               ${rowSelect('Moneda', 'moneda', monedaOptionsHtml)}
               ${rowInput('URL producto', 'url_producto', v('url_producto'), 'url', 'https://')}
             </div>
-            ${sectionTextarea('Descripción', 'descripcion_producto', v('descripcion_producto'))}
-            ${sectionTextarea('Beneficios principales (uno por línea)', 'beneficios_principales', vArr('beneficios_principales'))}
-            ${sectionTextarea('Diferenciadores (uno por línea)', 'diferenciadores', vArr('diferenciadores'))}
-            ${sectionTextarea('Variantes (uno por línea)', 'variantes', vArr('variantes'))}
-            ${sectionTextarea('Casos de uso', 'casos_de_uso', vArr('casos_de_uso'))}
-            ${sectionTextarea('Materiales / composición', 'materiales_composicion', vArr('materiales_composicion'))}
-            ${sectionTextarea('Características visuales (una por línea)', 'caracteristicas_visuales', vArr('caracteristicas_visuales'))}
+            ${sectionTextarea('Descripción', 'descripcion_producto', v('descripcion_producto'), 'Resumen general del producto. Lo primero que Vera lee antes de generar.')}
+            ${sectionTextarea('Beneficios principales (uno por línea)', 'beneficios_principales', vArr('beneficios_principales'), 'Resultados o promesas para el cliente: qué consigue al usarlo.')}
+            ${sectionTextarea('Diferenciadores (uno por línea)', 'diferenciadores', vArr('diferenciadores'), 'Qué lo separa del mercado o de productos similares.')}
+            ${sectionTextarea('Casos de uso', 'casos_de_uso', vArr('casos_de_uso'), 'Momentos, contextos o escenarios concretos donde se usa.')}
+            ${sectionTextarea('Materiales / composición', 'materiales_composicion', vArr('materiales_composicion'), 'De qué está hecho: ingredientes, materiales, ratios.')}
+            ${sectionTextarea('Características visuales (una por línea)', 'caracteristicas_visuales', vArr('caracteristicas_visuales'), 'Lo que Vera necesita ver para representarlo: textura, acabado, color base, formato.')}
+            ${this.getProductVariantsHTML(variants || [])}
           </div>
         </div>
       </div>
@@ -651,7 +657,7 @@ class ProductsView extends BaseView {
   async saveProductField(fieldName, value) {
     if (!this.supabase || !this.productId) return;
     const payload = { updated_at: new Date().toISOString() };
-    const arrayFields = ['beneficios_principales', 'diferenciadores', 'variantes', 'casos_de_uso', 'materiales_composicion', 'caracteristicas_visuales'];
+    const arrayFields = ['beneficios_principales', 'diferenciadores', 'casos_de_uso', 'materiales_composicion', 'caracteristicas_visuales'];
     if (arrayFields.includes(fieldName)) {
       const arr = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
       payload[fieldName] = arr.length ? arr : [];
@@ -670,6 +676,331 @@ class ProductsView extends BaseView {
       console.error('Error guardando:', err);
       this.showNotification('Error al guardar', 'error');
     }
+  }
+
+  /**
+   * Cargar variantes del producto ordenadas por position
+   */
+  async loadProductVariants(productId) {
+    if (!this.supabase || !productId) return [];
+    const { data, error } = await this.supabase
+      .from('product_variants')
+      .select('*')
+      .eq('product_id', productId)
+      .order('position', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('Error cargando variantes:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  /**
+   * HTML de la sección "Variantes" (header + lista + empty state)
+   */
+  getProductVariantsHTML(variants) {
+    const cards = (variants && variants.length)
+      ? variants.map(v => this.getVariantCardHTML(v)).join('')
+      : `<div class="product-view-variants-empty">Sin variantes. Añade una para dar a Vera contexto sobre versiones específicas del producto.</div>`;
+    return `
+      <div class="product-view-sheet-section product-view-variants-section">
+        <div class="product-view-variants-header">
+          <div class="product-view-variants-titlebox">
+            <h3 class="product-view-sheet-title">Variantes</h3>
+            <p class="product-view-sheet-hint">Versiones específicas del producto (tamaño, color, edición). Cada variante puede tener su propio contexto narrativo para Vera.</p>
+          </div>
+          <button type="button" class="product-view-variant-add-btn" id="addVariantBtn">
+            <i class="fas fa-plus"></i> Añadir variante
+          </button>
+        </div>
+        <div class="product-view-variants-list" id="productVariantsList">${cards}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * HTML de una variante (header colapsado + body con los campos relevantes para Vera + acordeón "Detalles")
+   */
+  getVariantCardHTML(variant) {
+    const id = variant.id;
+    const name = variant.variant_name || '';
+    const img = variant.imagen_url || '';
+    const moneda = variant.moneda || (this.productData && this.productData.moneda) || 'USD';
+    const monedas = [{ v: 'USD', l: 'USD' }, { v: 'EUR', l: 'EUR' }, { v: 'MXN', l: 'MXN' }, { v: 'COP', l: 'COP' }, { v: 'ARS', l: 'ARS' }, { v: 'CLP', l: 'CLP' }];
+    const monedaOpts = monedas.map(m => `<option value="${m.v}" ${moneda === m.v ? 'selected' : ''}>${m.l}</option>`).join('');
+    const stockStatuses = ['in_stock', 'out_of_stock', 'pre_order', 'discontinued'];
+    const stockOpts = stockStatuses.map(s => `<option value="${s}" ${variant.stock_status === s ? 'selected' : ''}>${s.replace('_', ' ')}</option>`).join('');
+    const pesoUnits = ['kg', 'g', 'lb', 'oz'];
+    const pesoOpts = pesoUnits.map(u => `<option value="${u}" ${variant.peso_unidad === u ? 'selected' : ''}>${u}</option>`).join('');
+    const dimUnits = ['cm', 'mm', 'in'];
+    const dimOpts = dimUnits.map(u => `<option value="${u}" ${variant.dimension_unidad === u ? 'selected' : ''}>${u}</option>`).join('');
+    const arrToText = (a) => Array.isArray(a) ? a.join('\n') : (a || '');
+    const numVal = (n) => (n == null ? '' : String(n));
+
+    return `
+      <div class="product-view-variant-card" data-variant-id="${id}">
+        <div class="product-view-variant-header">
+          <div class="product-view-variant-thumb">
+            ${img
+              ? `<img src="${this.escapeHtml(img)}" alt="${this.escapeHtml(name)}">`
+              : `<i class="fas fa-cube"></i>`}
+          </div>
+          <input type="text" class="product-view-variant-name" data-variant-id="${id}" data-variant-field="variant_name" value="${this.escapeHtml(name)}" placeholder="Nombre de la variante">
+          <button type="button" class="product-view-variant-toggle" aria-label="Expandir"><i class="fas fa-chevron-down"></i></button>
+          <button type="button" class="product-view-variant-delete" aria-label="Eliminar variante"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="product-view-variant-body">
+          <div class="product-view-variant-grid">
+            <div class="product-view-sheet-row">
+              <span class="product-view-sheet-label">Precio</span>
+              <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="precio" value="${numVal(variant.precio)}" placeholder="0">
+            </div>
+            <div class="product-view-sheet-row">
+              <span class="product-view-sheet-label">Precio comparación</span>
+              <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="precio_comparacion" value="${numVal(variant.precio_comparacion)}" placeholder="0">
+            </div>
+            <div class="product-view-sheet-row">
+              <span class="product-view-sheet-label">Moneda</span>
+              <select class="product-view-select product-view-input-inline" data-variant-id="${id}" data-variant-field="moneda">${monedaOpts}</select>
+            </div>
+          </div>
+
+          <div class="product-view-sheet-section">
+            <h4 class="product-view-sheet-subtitle">Descripción de la variante</h4>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="descripcion_variante" rows="2" placeholder="Qué hace única a esta variante">${this.escapeHtml(variant.descripcion_variante || '')}</textarea>
+          </div>
+
+          <div class="product-view-sheet-section">
+            <h4 class="product-view-sheet-subtitle">Notas para Vera</h4>
+            <p class="product-view-sheet-hint">Contexto libre que no encaje en otros campos. Tono, asociaciones, lo idiosincrático.</p>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="notas_contenido" rows="2" placeholder="Notas libres">${this.escapeHtml(variant.notas_contenido || '')}</textarea>
+          </div>
+
+          <div class="product-view-sheet-section">
+            <h4 class="product-view-sheet-subtitle">Beneficios adicionales (uno por línea)</h4>
+            <p class="product-view-sheet-hint">Lo que esta variante suma sobre los beneficios del producto.</p>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="beneficios_adicionales" rows="2" placeholder="Opcional">${this.escapeHtml(arrToText(variant.beneficios_adicionales))}</textarea>
+          </div>
+
+          <div class="product-view-sheet-section">
+            <h4 class="product-view-sheet-subtitle">Características visuales (una por línea)</h4>
+            <p class="product-view-sheet-hint">Lo visual específico de esta variante: color, acabado, packaging.</p>
+            <textarea class="product-view-textarea product-view-editable" data-variant-id="${id}" data-variant-field="caracteristicas_visuales" rows="2" placeholder="Opcional">${this.escapeHtml(arrToText(variant.caracteristicas_visuales))}</textarea>
+          </div>
+
+          <div class="product-view-sheet-row">
+            <span class="product-view-sheet-label">URL imagen principal</span>
+            <input type="url" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="imagen_url" value="${this.escapeHtml(variant.imagen_url || '')}" placeholder="https://">
+          </div>
+
+          <details class="product-view-variant-details">
+            <summary>Detalles logísticos</summary>
+            <div class="product-view-variant-grid">
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">SKU</span>
+                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="sku" value="${this.escapeHtml(variant.sku || '')}" placeholder="Opcional">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Barcode</span>
+                <input type="text" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="barcode" value="${this.escapeHtml(variant.barcode || '')}" placeholder="Opcional">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Stock</span>
+                <input type="number" step="1" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="stock_quantity" value="${numVal(variant.stock_quantity)}" placeholder="0">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Estado stock</span>
+                <select class="product-view-select product-view-input-inline" data-variant-id="${id}" data-variant-field="stock_status">${stockOpts}</select>
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Peso</span>
+                <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="peso" value="${numVal(variant.peso)}" placeholder="0">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Unidad peso</span>
+                <select class="product-view-select product-view-input-inline" data-variant-id="${id}" data-variant-field="peso_unidad">${pesoOpts}</select>
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Alto</span>
+                <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="alto" value="${numVal(variant.alto)}" placeholder="0">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Ancho</span>
+                <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="ancho" value="${numVal(variant.ancho)}" placeholder="0">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Largo</span>
+                <input type="number" step="any" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="largo" value="${numVal(variant.largo)}" placeholder="0">
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Unidad dimensión</span>
+                <select class="product-view-select product-view-input-inline" data-variant-id="${id}" data-variant-field="dimension_unidad">${dimOpts}</select>
+              </div>
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Orden</span>
+                <input type="number" step="1" class="product-view-input product-view-input-inline" data-variant-id="${id}" data-variant-field="position" value="${numVal(variant.position)}" placeholder="1">
+              </div>
+              <div class="product-view-sheet-row product-view-checkrow">
+                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="disponible" ${variant.disponible !== false ? 'checked' : ''}> Disponible</label>
+                <label><input type="checkbox" data-variant-id="${id}" data-variant-field="is_active" ${variant.is_active !== false ? 'checked' : ''}> Activa</label>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Insertar una variante nueva con defaults heredados del producto
+   */
+  async addVariant() {
+    if (!this.supabase || !this.productId || !this.productData) return;
+    const orgId = this.productData.organization_id;
+    if (!orgId) {
+      this.showNotification('Producto sin organización asociada', 'error');
+      return;
+    }
+    try {
+      const { data, error } = await this.supabase
+        .from('product_variants')
+        .insert({
+          product_id: this.productId,
+          organization_id: orgId,
+          variant_name: 'Nueva variante',
+          moneda: this.productData.moneda || 'USD',
+          is_active: true,
+          disponible: true,
+          stock_status: 'in_stock',
+          peso_unidad: 'kg',
+          dimension_unidad: 'cm',
+          position: (this.productVariants || []).length + 1
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      this.productVariants = [...(this.productVariants || []), data];
+      this.refreshVariantsList();
+      this.showNotification('Variante añadida', 'success');
+    } catch (err) {
+      console.error('Error añadiendo variante:', err);
+      this.showNotification('Error al añadir variante', 'error');
+    }
+  }
+
+  /**
+   * Eliminar variante (también elimina relaciones y imágenes asociadas por FK cascade)
+   */
+  async deleteVariant(variantId) {
+    if (!this.supabase || !variantId) return;
+    if (!confirm('¿Eliminar esta variante? Se borrarán también sus imágenes y valores de opción asociados.')) return;
+    try {
+      const { error } = await this.supabase.from('product_variants').delete().eq('id', variantId);
+      if (error) throw error;
+      this.productVariants = (this.productVariants || []).filter(v => v.id !== variantId);
+      this.refreshVariantsList();
+      this.showNotification('Variante eliminada', 'success');
+    } catch (err) {
+      console.error('Error eliminando variante:', err);
+      this.showNotification('Error al eliminar variante', 'error');
+    }
+  }
+
+  /**
+   * Guardar un campo individual de una variante
+   */
+  async saveVariantField(variantId, fieldName, value) {
+    if (!this.supabase || !variantId) return;
+    const payload = { updated_at: new Date().toISOString() };
+    const arrayFields = ['beneficios_adicionales', 'caracteristicas_visuales'];
+    const numericFields = ['precio', 'precio_comparacion', 'stock_quantity', 'peso', 'alto', 'ancho', 'largo', 'position'];
+
+    if (arrayFields.includes(fieldName)) {
+      const arr = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
+      payload[fieldName] = arr.length ? arr : null;
+    } else if (numericFields.includes(fieldName)) {
+      const num = value === '' ? null : parseFloat(value);
+      payload[fieldName] = isNaN(num) ? null : num;
+    } else if (typeof value === 'boolean') {
+      payload[fieldName] = value;
+    } else {
+      payload[fieldName] = value === '' ? null : value;
+    }
+
+    try {
+      const { error } = await this.supabase
+        .from('product_variants')
+        .update(payload)
+        .eq('id', variantId);
+      if (error) throw error;
+      const v = (this.productVariants || []).find(x => x.id === variantId);
+      if (v) v[fieldName] = payload[fieldName];
+      this.showNotification('Guardado', 'success');
+    } catch (err) {
+      console.error('Error guardando variante:', err);
+      this.showNotification('Error al guardar variante', 'error');
+    }
+  }
+
+  /**
+   * Re-renderizar lista de variantes y volver a enlazar eventos (tras add/delete)
+   */
+  refreshVariantsList() {
+    if (!this.container) return;
+    const list = this.container.querySelector('#productVariantsList');
+    if (!list) return;
+    const variants = this.productVariants || [];
+    list.innerHTML = variants.length
+      ? variants.map(v => this.getVariantCardHTML(v)).join('')
+      : `<div class="product-view-variants-empty">Sin variantes. Añade una para dar a Vera contexto sobre versiones específicas del producto.</div>`;
+    this.bindVariantEvents();
+  }
+
+  /**
+   * Enlazar eventos de variantes: toggle expand, delete, edición inline con autosave
+   */
+  bindVariantEvents() {
+    if (!this.container) return;
+    const list = this.container.querySelector('#productVariantsList');
+    if (!list) return;
+
+    // Delegación: toggle expand + delete
+    list.onclick = (e) => {
+      const toggle = e.target.closest('.product-view-variant-toggle');
+      if (toggle) {
+        const card = toggle.closest('.product-view-variant-card');
+        card?.classList.toggle('expanded');
+        return;
+      }
+      const del = e.target.closest('.product-view-variant-delete');
+      if (del) {
+        const card = del.closest('.product-view-variant-card');
+        const id = card?.getAttribute('data-variant-id');
+        if (id) this.deleteVariant(id);
+      }
+    };
+
+    // Autosave en cada campo
+    list.querySelectorAll('[data-variant-field]').forEach(el => {
+      const variantId = el.getAttribute('data-variant-id');
+      const fieldName = el.getAttribute('data-variant-field');
+      if (!variantId || !fieldName) return;
+      const getVal = () => el.type === 'checkbox' ? el.checked : el.value;
+      let initial = getVal();
+      const saveIfChanged = () => {
+        const current = getVal();
+        if (current !== initial) {
+          this.saveVariantField(variantId, fieldName, current);
+          initial = current;
+        }
+      };
+      if (el.tagName === 'SELECT' || el.type === 'checkbox') {
+        el.addEventListener('change', saveIfChanged);
+      } else {
+        el.addEventListener('blur', saveIfChanged);
+      }
+    });
   }
 
   escapeHtml(text) {
@@ -754,6 +1085,15 @@ class ProductsView extends BaseView {
     }
 
     this.bindGalleryEvents();
+    this.bindVariantEvents();
+
+    const addVariantBtn = container.querySelector('#addVariantBtn');
+    if (addVariantBtn) {
+      addVariantBtn.onclick = (e) => {
+        e.preventDefault();
+        this.addVariant();
+      };
+    }
 
     // Campos editables: guardar al perder foco (blur) o al cambiar (select)
     container.querySelectorAll('[data-field]').forEach(el => {
