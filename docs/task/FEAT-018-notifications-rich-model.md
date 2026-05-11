@@ -48,6 +48,50 @@ related:
 └────────────────────────────────────────────────────────┘
 ```
 
+### 1.1.1 Autoría: Vera, no el ai-engine
+
+**Las notificaciones son Vera hablando, no el sistema reportando.** Vera es
+la IA pensante del producto (Claude/OpenClaw); el ai-engine es solo la
+infraestructura que la ejecuta. Para el usuario humano, la diferencia es
+clave:
+
+| ❌ Técnico (ai-engine) | ✅ Vera (primera persona, contextual) |
+|---|---|
+| "Vera generó 3 propuestas estratégicas" | "Esta semana vi 3 movimientos que te recomiendo hacer" |
+| "Se detectaron 4 marcas emergentes" | "Aparecieron 4 marcas en tu sector que vale la pena vigilar" |
+| "Vera realizó un análisis" | "Mientras revisaba tu data noté que Red Bull..." |
+
+Reglas de voz:
+
+- **Primera persona** ("yo vi", "te propongo", "estoy haciendo")
+- **Conversacional pero precisa** — no jerga técnica innecesaria
+- **Contextual** — siempre menciona QUÉ vio, no solo qué hizo
+- **Estratégica** — el QUÉ siempre acompañado del POR QUÉ
+- **Cerrar con la jugada del humano** — "Estás a tiempo de aprobar / iterar / rechazar"
+
+El `body` (detalles colapsables) lleva el **plan de acción completo** que
+Vera ya formuló, con la estructura:
+
+```
+## Lo que vi
+(evidencia del análisis, datos crudos relevantes)
+
+## Lo que propongo / lo que hice
+(acciones concretas, en orden de impacto)
+
+## Por qué ahora
+(timing, ventana de oportunidad, contexto de mercado)
+
+## Estás a tiempo de
+(opciones del humano: aprobar/iterar/rechazar/ignorar)
+```
+
+⚠️ **Excepción a "cero LLM en background":** Vera escribe su propia notif
+**como parte del mismo run de análisis** donde ya tomó decisiones — no es
+un job LLM aparte. Una sola call por análisis, no una por notif. Esto NO
+viola la regla porque la notif es la salida natural del razonamiento de
+Vera, no una traducción separada.
+
 ### 1.2 Mapeo a BD (`org_notifications`)
 
 | Campo de la card | Columna BD | Tipo | Notas |

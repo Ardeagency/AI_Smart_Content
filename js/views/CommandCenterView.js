@@ -129,61 +129,161 @@ class CommandCenterView extends BaseView {
     </div>
   </section>
 
-  <!-- DOS COLUMNAS: campañas (left) · personas + mapa (right stack) ──── -->
-  <div class="cc-two-col" id="ccTwoCol" style="display:none;">
+  <!-- LAYOUT ENTORNO: mapa LEFT (flex 1) + sidebar derecho 380px ────── -->
+  <div class="cc-entorno-layout" id="ccTwoCol" style="display:none;">
 
-    <!-- IZQUIERDA: Campañas ─────────────────────────────────────── -->
-    <aside class="cc-col cc-col--left">
-      <div class="cc-section-head cc-section-head--campaigns">
-        <div class="cc-section-head-main">
-          <h2 class="cc-section-title cc-section-title--campaigns">Enfoque de campaña</h2>
-        </div>
-        <div class="cc-camp-head-count-wrap" aria-live="polite" aria-atomic="true">
-          <span class="cc-camp-head-count-num" id="ccCampCount" aria-label="Total de campañas">0</span>
-        </div>
+    <!-- IZQUIERDA: Mapa con overlays (controles, leyenda, filtro) ───── -->
+    <div class="cc-entorno-map">
+      <!-- Loading overlay -->
+      <div class="cc-entorno-loading" id="ccEntornoLoading" style="display:none;">
+        <div class="cc-entorno-spinner"></div>
+        <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
       </div>
-      <div class="cc-list" id="ccCampList"></div>
-      <div class="cc-empty cc-empty--inline" id="ccCampEmpty" style="display:none;">
-        <i class="fas fa-bullhorn"></i>
-        <p>No hay campañas para esta sub-marca.</p>
+
+      <!-- Map controls (top-left, vertical stack) -->
+      <div class="cc-entorno-controls">
+        <button class="cc-entorno-ctrl-btn" id="ccMapZoomIn" title="Acercar" aria-label="Acercar">
+          <i class="fas fa-plus"></i>
+        </button>
+        <button class="cc-entorno-ctrl-btn" id="ccMapZoomOut" title="Alejar" aria-label="Alejar">
+          <i class="fas fa-minus"></i>
+        </button>
+        <button class="cc-entorno-ctrl-btn" id="ccMapReset" title="Restablecer vista" aria-label="Restablecer vista">
+          <i class="fas fa-compress-arrows-alt"></i>
+        </button>
       </div>
-    </aside>
 
-    <!-- DERECHA: stack (audiencias conceptuales + mapa segmentación) ── -->
-    <div class="cc-col cc-col--right cc-col--intel">
+      <!-- Legend (bottom-left card) -->
+      <div class="cc-entorno-legend" id="ccEntornoLegend" style="display:none;">
+        <div class="cc-entorno-legend-title">Leyenda</div>
+        <div class="cc-entorno-legend-list" id="ccEntornoLegendList"></div>
+      </div>
 
-      <!-- BLOQUE ARRIBA: audiencias conceptuales en carrusel horizontal -->
-      <section class="cc-published-slice cc-personas-slice" aria-label="Audiencias conceptuales">
-        <div class="cc-section-head cc-section-head--personas">
-          <div class="cc-section-head-main">
-            <h3 class="cc-intel-subtitle"><i class="fas fa-users"></i> Audiencias conceptuales</h3>
-          </div>
-          <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
-            <span class="cc-aud-head-count-num" id="ccAudCount" aria-label="Total de personas">0</span>
-          </div>
-        </div>
-        <div class="cc-carousel-wrap">
-          <div class="cc-carousel" id="ccAudCarousel">
-            <div class="cc-loading"><span></span><span></span><span></span></div>
-          </div>
-        </div>
-        <div class="cc-empty" id="ccAudEmpty" style="display:none;">
-          <i class="fas fa-users-slash"></i>
-          <p>No hay personas para esta sub-marca.</p>
-        </div>
-      </section>
+      <!-- Filter toggle button (bottom-right floating) -->
+      <button class="cc-entorno-filter-btn" id="ccMapFilter" title="Filtros" aria-label="Filtros">
+        <i class="fas fa-filter"></i>
+      </button>
 
-      <hr class="cc-published-divider" aria-hidden="true" />
-
-      <!-- BLOQUE ABAJO: mapa choropleth (lectura del mercado real) -->
-      <section class="cc-published-slice cc-map-slice" aria-label="Lectura del mercado real">
-        <h3 class="cc-intel-subtitle"><i class="fas fa-globe-americas"></i> Lectura del mercado</h3>
-        <p class="cc-map-lede">Segmentación real agregada de tus campañas activas: países, géneros, edades.</p>
-        <div class="cc-map-container" id="ccAudienceMap"></div>
-        <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
-      </section>
-
+      <!-- Choropleth canvas container -->
+      <div class="cc-entorno-map-canvas" id="ccAudienceMap"></div>
     </div>
+
+    <!-- DERECHA: Sidebar (breadcrumb + secciones scrollable) ────────── -->
+    <aside class="cc-entorno-sidebar">
+      <!-- Breadcrumb -->
+      <div class="cc-entorno-breadcrumb">
+        <span class="cc-entorno-bc-item">Panel</span>
+        <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
+        <span class="cc-entorno-bc-item cc-entorno-bc-current" id="ccEntornoBcCurrent">Lectura del mercado</span>
+        <button class="cc-entorno-bc-expand" id="ccEntornoExpand" title="Expandir" aria-label="Expandir">
+          <i class="fas fa-up-right-and-down-left-from-center"></i>
+        </button>
+      </div>
+
+      <!-- ENTORNO GLOBAL -->
+      <section class="cc-entorno-section">
+        <h3 class="cc-entorno-section-title">Entorno Global</h3>
+        <div class="cc-entorno-kpi-grid">
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiCountries">—</div>
+            <div class="cc-entorno-kpi-label">Países activos</div>
+          </div>
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiAudiences">—</div>
+            <div class="cc-entorno-kpi-label">Audiencias</div>
+          </div>
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiCampaigns">—</div>
+            <div class="cc-entorno-kpi-label">Campañas</div>
+          </div>
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiPersonas">—</div>
+            <div class="cc-entorno-kpi-label">Personas</div>
+          </div>
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiIntegrations">—</div>
+            <div class="cc-entorno-kpi-label">Integraciones</div>
+          </div>
+          <div class="cc-entorno-kpi">
+            <div class="cc-entorno-kpi-value" id="ccKpiPending">—</div>
+            <div class="cc-entorno-kpi-label">Pendientes Vera</div>
+          </div>
+        </div>
+        <div class="cc-entorno-kpi cc-entorno-kpi--wide">
+          <div class="cc-entorno-kpi-value" id="ccKpiActive">—</div>
+          <div class="cc-entorno-kpi-label">Audiencia activa (últimos 30 días)</div>
+        </div>
+      </section>
+
+      <!-- ENTORNO ESTRATÉGICO -->
+      <section class="cc-entorno-section">
+        <h3 class="cc-entorno-section-title">Entorno Estratégico</h3>
+
+        <!-- País destacado -->
+        <div class="cc-entorno-subsection">
+          <h4 class="cc-entorno-subsection-title">País destacado</h4>
+          <div class="cc-entorno-featured" id="ccFeaturedCountry">
+            <div class="cc-entorno-featured-header">
+              <div class="cc-entorno-featured-avatar" id="ccFeaturedFlag">🌐</div>
+              <div class="cc-entorno-featured-info">
+                <h5 id="ccFeaturedName">Sin datos</h5>
+                <p id="ccFeaturedSub">Conecta una integración para ver tu mercado real</p>
+              </div>
+            </div>
+            <div class="cc-entorno-featured-stats">
+              <div class="cc-entorno-featured-stat">
+                <div class="cc-entorno-featured-stat-value" id="ccFeaturedShare">—</div>
+                <div class="cc-entorno-featured-stat-label">% audiencia</div>
+              </div>
+              <div class="cc-entorno-featured-stat">
+                <div class="cc-entorno-featured-stat-value" id="ccFeaturedAge">—</div>
+                <div class="cc-entorno-featured-stat-label">Edad top</div>
+              </div>
+              <div class="cc-entorno-featured-stat">
+                <div class="cc-entorno-featured-stat-value" id="ccFeaturedGender">—</div>
+                <div class="cc-entorno-featured-stat-label">Género top</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audiencias conceptuales -->
+        <div class="cc-entorno-subsection">
+          <div class="cc-entorno-subsection-head">
+            <h4 class="cc-entorno-subsection-title">Audiencias conceptuales</h4>
+            <span class="cc-entorno-subsection-count" id="ccAudCount">0</span>
+          </div>
+          <div class="cc-carousel-wrap">
+            <div class="cc-carousel" id="ccAudCarousel">
+              <div class="cc-loading"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="cc-empty cc-empty--compact" id="ccAudEmpty" style="display:none;">
+            <i class="fas fa-users-slash"></i>
+            <span>Sin personas</span>
+          </div>
+        </div>
+
+        <!-- Top campañas -->
+        <div class="cc-entorno-subsection">
+          <div class="cc-entorno-subsection-head">
+            <h4 class="cc-entorno-subsection-title">Top campañas</h4>
+            <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
+          </div>
+          <div class="cc-list" id="ccCampList"></div>
+          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+            <i class="fas fa-bullhorn"></i>
+            <span>Sin campañas</span>
+          </div>
+        </div>
+
+        <!-- Comparación demográfica (género + edad) -->
+        <div class="cc-entorno-subsection">
+          <h4 class="cc-entorno-subsection-title">Comparación demográfica</h4>
+          <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
+        </div>
+      </section>
+    </aside>
   </div>
 </div>
 
@@ -351,6 +451,8 @@ class CommandCenterView extends BaseView {
     this._renderAudiencesCarousel();
     this._renderCampaigns();
     this._renderAudienceMap();
+    this._renderEntornoKpis();
+    this._renderFeaturedCountry();
     // Fuentes conectadas removido de esta vista: foco solo en la lectura más reciente.
     this.updateLinksForRouter();
   }
@@ -687,6 +789,163 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
+  /* ── ENTORNO GLOBAL · KPI grid ───────────────────────────────────── */
+  _renderEntornoKpis() {
+    const audiences    = Array.isArray(this._audiences) ? this._audiences : [];
+    const campaigns    = Array.isArray(this._campaigns) ? this._campaigns : [];
+    const integrations = Array.isArray(this._integrations) ? this._integrations.filter(i => i.is_active) : [];
+    const pending      = Array.isArray(this._pendingActions) ? this._pendingActions.filter(a => !a?.proposed_payload?.placeholder) : [];
+
+    // Países activos: contar países con data agregada (campañas + personas)
+    const countrySet = new Set();
+    for (const c of campaigns) {
+      const cc = c?.real_demographics?.country;
+      if (!cc) continue;
+      for (const [k, v] of Object.entries(cc)) {
+        const imp = Number(v?.impressions) || 0;
+        if (imp > 0 && /^[A-Z]{2}$/.test(k)) countrySet.add(k);
+      }
+    }
+    for (const p of audiences) {
+      const cc = p?.real_location_distribution?.countries;
+      if (!cc) continue;
+      for (const [k, v] of Object.entries(cc)) {
+        if (k.startsWith('_')) continue;
+        if (/^[A-Z]{2}$/.test(k) && Number(v) > 0) countrySet.add(k);
+      }
+    }
+
+    // Activos últimos 30d = campañas con last_synced_at < 30d O snapshots recientes
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const activeCount = campaigns.filter(c => {
+      const t = c.last_synced_at ? Date.parse(c.last_synced_at) : NaN;
+      return Number.isFinite(t) && t > cutoff;
+    }).length;
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const fmt = (n) => Number.isFinite(n) ? n.toLocaleString('es') : '—';
+
+    setText('ccKpiCountries',    fmt(countrySet.size));
+    setText('ccKpiAudiences',    fmt(Array.isArray(this._segments) ? this._segments.length : 0));
+    setText('ccKpiCampaigns',    fmt(campaigns.length));
+    setText('ccKpiPersonas',     fmt(audiences.length));
+    setText('ccKpiIntegrations', fmt(integrations.length));
+    setText('ccKpiPending',      fmt(pending.length));
+    setText('ccKpiActive',       activeCount > 0 ? `${fmt(activeCount)} campañas` : 'Sin actividad reciente');
+  }
+
+  /* ── ENTORNO ESTRATÉGICO · País destacado ─────────────────────────── */
+  _renderFeaturedCountry() {
+    const FLAG = (iso2) => {
+      if (!iso2 || iso2.length !== 2) return '🌐';
+      const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+      try { return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return '🌐'; }
+    };
+    const COUNTRY_NAMES = {
+      MX: 'México', CO: 'Colombia', US: 'Estados Unidos', AR: 'Argentina', PE: 'Perú',
+      CL: 'Chile', EC: 'Ecuador', VE: 'Venezuela', ES: 'España', BR: 'Brasil',
+      CA: 'Canadá', FR: 'Francia', DE: 'Alemania', IT: 'Italia', GB: 'Reino Unido',
+      PT: 'Portugal', JP: 'Japón', CN: 'China', IN: 'India', AU: 'Australia',
+    };
+
+    // Agregar país top desde personas (campañas paused tienen 0 data)
+    const countryAgg = {};
+    for (const p of (this._audiences || [])) {
+      const cc = p?.real_location_distribution?.countries;
+      if (!cc) continue;
+      for (const [k, v] of Object.entries(cc)) {
+        if (k.startsWith('_')) continue;
+        if (!/^[A-Z]{2}$/.test(k)) continue;
+        countryAgg[k] = (countryAgg[k] || 0) + (Number(v) || 0);
+      }
+    }
+    const total = Object.values(countryAgg).reduce((s, v) => s + v, 0);
+    const top = Object.entries(countryAgg).sort((a, b) => b[1] - a[1])[0];
+
+    if (!top || total === 0) return; // mantiene placeholder "Sin datos"
+
+    // Inferir top age + gender de personas con location de ese país
+    const ageAgg = {}, genderAgg = {};
+    for (const p of (this._audiences || [])) {
+      const cc = p?.real_location_distribution?.countries || {};
+      if (!Object.keys(cc).includes(top[0])) continue;
+      for (const [k, v] of Object.entries(p?.real_age_distribution || {})) {
+        if (k.startsWith('_')) continue;
+        ageAgg[k] = (ageAgg[k] || 0) + (Number(v) || 0);
+      }
+      for (const [k, v] of Object.entries(p?.real_gender_distribution || {})) {
+        if (k.startsWith('_') || k === 'unknown') continue;
+        genderAgg[k] = (genderAgg[k] || 0) + (Number(v) || 0);
+      }
+    }
+    const topAge    = Object.entries(ageAgg).sort((a, b) => b[1] - a[1])[0];
+    const topGender = Object.entries(genderAgg).sort((a, b) => b[1] - a[1])[0];
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('ccFeaturedFlag',   FLAG(top[0]));
+    setText('ccFeaturedName',   COUNTRY_NAMES[top[0]] || top[0]);
+    setText('ccFeaturedSub',    'País con mayor presencia en tu audiencia real');
+    setText('ccFeaturedShare',  `${Math.round((top[1] / total) * 100)}%`);
+    setText('ccFeaturedAge',    topAge ? topAge[0] : '—');
+    setText('ccFeaturedGender', topGender ? (topGender[0] === 'male' ? 'Hombres' : topGender[0] === 'female' ? 'Mujeres' : topGender[0]) : '—');
+  }
+
+  /* ── Leyenda overlay del mapa (bottom-left card) ──────────────────── */
+  _renderEntornoLegend(countryAgg) {
+    const root = document.getElementById('ccEntornoLegend');
+    const list = document.getElementById('ccEntornoLegendList');
+    if (!root || !list) return;
+
+    const entries = Object.entries(countryAgg || {})
+      .filter(([k, v]) => /^[A-Z]{2}$/.test(k) && Number(v) > 0)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 5);
+
+    if (entries.length === 0) {
+      root.style.display = 'none';
+      return;
+    }
+    root.style.display = '';
+
+    const FLAG = (iso2) => {
+      const cp = (c) => 0x1F1E6 + c.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+      try { return String.fromCodePoint(cp(iso2[0]), cp(iso2[1])); } catch { return '🌐'; }
+    };
+    const total = entries.reduce((s, [, v]) => s + Number(v), 0);
+
+    // Lee el degradado de marca para colorear el dot por intensidad rank
+    let gradientStops = ['#e09145'];
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const grad = (cs.getPropertyValue('--brand-gradient-dynamic') || cs.getPropertyValue('--brand-gradient') || '').trim();
+      const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
+      if (hexes && hexes.length > 0) gradientStops = hexes;
+    } catch (_) { /* noop */ }
+    const hex2rgb = (hex) => { let h = hex.replace('#','').slice(0,6); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; };
+    const interp = (t) => {
+      if (gradientStops.length === 1) return gradientStops[0];
+      const segs = gradientStops.length - 1;
+      const tt = Math.max(0, Math.min(1, t));
+      const idx = Math.min(Math.floor(tt * segs), segs - 1);
+      const lt = (tt * segs) - idx;
+      const [r1,g1,b1] = hex2rgb(gradientStops[idx]);
+      const [r2,g2,b2] = hex2rgb(gradientStops[idx+1]);
+      return `rgb(${Math.round(r1+(r2-r1)*lt)},${Math.round(g1+(g2-g1)*lt)},${Math.round(b1+(b2-b1)*lt)})`;
+    };
+    const maxVal = Math.max(...entries.map(([,v]) => Number(v)));
+
+    list.innerHTML = entries.map(([cc, v]) => {
+      const pct = Math.round((Number(v) / total) * 100);
+      const color = interp(Number(v) / maxVal);
+      return `<div class="cc-entorno-legend-item">
+        <span class="cc-entorno-legend-dot" style="background:${color}"></span>
+        <span class="cc-entorno-legend-flag">${FLAG(cc)}</span>
+        <span class="cc-entorno-legend-code">${cc}</span>
+        <span class="cc-entorno-legend-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+
   /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
   async _renderAudienceMap() {
     const mapEl    = document.getElementById('ccAudienceMap');
@@ -774,6 +1033,9 @@ class CommandCenterView extends BaseView {
     } else {
       mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
     }
+
+    // Poblar la leyenda overlay externa (bottom-left del mapa) con top-5 países
+    this._renderEntornoLegend(agg.country);
 
     // Breakdowns: género + edad como mini-barras CSS
     if (breakEl) {
