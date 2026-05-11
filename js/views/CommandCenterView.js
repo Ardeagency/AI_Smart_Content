@@ -133,10 +133,6 @@ class CommandCenterView extends BaseView {
       <!-- MODO 1: lectura (default) — lista compacta de campañas -->
       <div class="cc-panel-reading">
         <section class="cc-entorno-section">
-          <div class="cc-entorno-subsection-head">
-            <h3 class="cc-entorno-section-title">Campañas reales</h3>
-            <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
-          </div>
           <div class="cc-list" id="ccCampList"></div>
           <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
             <i class="fas fa-bullhorn"></i>
@@ -449,12 +445,10 @@ class CommandCenterView extends BaseView {
   _renderCampaigns() {
     const list  = document.getElementById('ccCampList');
     const empty = document.getElementById('ccCampEmpty');
-    const count = document.getElementById('ccCampCount');
     const all   = Array.isArray(this._campaigns) ? this._campaigns : [];
     // "Real" = importada de Meta/Google/TikTok/LinkedIn/etc. Indicador robusto:
     // last_synced_at no nulo (la fila vino de un sync, no fue creada a mano).
     const rows = all.filter((c) => c?.last_synced_at);
-    if (count) count.textContent = String(rows.length);
     if (!list) return;
 
     if (!rows.length) {
@@ -826,9 +820,7 @@ class CommandCenterView extends BaseView {
   _setError(msg) {
     const twoCol = document.getElementById('ccTwoCol');
     const empty  = document.getElementById('ccCampEmpty');
-    const count  = document.getElementById('ccCampCount');
     if (twoCol) twoCol.style.display = 'none';
-    if (count)  count.textContent    = '0';
     if (empty) {
       empty.style.display = 'flex';
       empty.innerHTML = `<i class="fas fa-exclamation-triangle"></i><p>${this.escapeHtml(msg)}</p>`;
