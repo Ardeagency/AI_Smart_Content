@@ -153,7 +153,7 @@ class CommandCenterView extends BaseView {
       </div>
 
       <!-- MODO 2: análisis (expandido) — galería de campañas + audiencias -->
-      <div class="cc-panel-analysis">
+      <div class="cc-panel-analysis" id="ccPanelAnalysis">
         <section class="cc-entorno-section">
           <div class="cc-entorno-subsection-head">
             <h3 class="cc-entorno-section-title">Campañas reales</h3>
@@ -191,6 +191,23 @@ class CommandCenterView extends BaseView {
         </section>
       </div>
     </aside>
+  </div>
+
+  <!-- Modal editor universal: audiencias y campañas conceptuales ────── -->
+  <div class="cc-editor-backdrop" id="ccEditorBackdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ccEditorTitle">
+    <form class="cc-editor" id="ccEditorForm">
+      <header class="cc-editor-head">
+        <h3 class="cc-editor-title" id="ccEditorTitle">Editar</h3>
+        <button type="button" class="cc-editor-close" id="ccEditorClose" aria-label="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+      <div class="cc-editor-body" id="ccEditorBody"></div>
+      <footer class="cc-editor-foot">
+        <button type="button" class="cc-editor-btn cc-editor-btn--ghost" id="ccEditorCancel">Cancelar</button>
+        <button type="submit" class="cc-editor-btn cc-editor-btn--primary" id="ccEditorSave">Guardar</button>
+      </footer>
+    </form>
   </div>
 </div>`;
   }
@@ -684,7 +701,10 @@ class CommandCenterView extends BaseView {
 
       return `
       <article class="cc-gallery-card cc-gallery-card--concept" data-entity-type="campaign-concept" data-entity-id="${this.escapeHtml(String(c.id))}">
-        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña conceptual" title="Eliminar campaña"><i class="fas fa-times"></i></button>
+        <div class="cc-gallery-card-actions">
+          <button type="button" class="cc-gallery-edit-btn" aria-label="Editar campaña" title="Editar"><i class="fas fa-pen"></i></button>
+          <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña conceptual" title="Eliminar"><i class="fas fa-times"></i></button>
+        </div>
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
@@ -735,7 +755,10 @@ class CommandCenterView extends BaseView {
 
       return `
       <article class="cc-gallery-card" data-entity-type="audience" data-entity-id="${this.escapeHtml(String(a.id))}">
-        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar audiencia" title="Eliminar audiencia"><i class="fas fa-times"></i></button>
+        <div class="cc-gallery-card-actions">
+          <button type="button" class="cc-gallery-edit-btn" aria-label="Editar audiencia" title="Editar"><i class="fas fa-pen"></i></button>
+          <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar audiencia" title="Eliminar"><i class="fas fa-times"></i></button>
+        </div>
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(a.name || 'Audiencia')}">${this.escapeHtml(a.name || 'Audiencia')}</h4>
           ${scoreBadge}
@@ -916,36 +939,327 @@ class CommandCenterView extends BaseView {
       });
     }
 
-    const dispatch = (eventName, label) => {
-      const brandContainerId = this._containerRow?.id || null;
-      const detail = { brandContainerId, source: 'command-center' };
-      const ev = new CustomEvent(eventName, { detail, bubbles: true, cancelable: true });
-      const dispatched = window.dispatchEvent(ev);
-      // Si ningún listener detuvo/manejó el evento, fallback con alert para
-      // que el UX no quede en silencio. Quita esto cuando wirees el flujo.
-      if (dispatched && !ev.defaultPrevented) {
-        window.alert(`${label}: aún no hay flujo conectado. (Event: ${eventName}, brand: ${brandContainerId || '—'})`);
-      }
-    };
+    document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => this._createAndEdit('campaign'));
+    document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => this._createAndEdit('audience'));
 
-    document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => dispatch('cc:create-campaign', 'Crear campaña'));
-    document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => dispatch('cc:create-audience', 'Crear audiencia'));
-
-    // Delegated: botones de eliminar en cualquier galería (campañas reales,
-    // conceptuales o audiencias). Confirmación con advertencia específica
-    // según el tipo de entidad.
+    // Delegated: editar y eliminar en cualquier card de la galería.
     const page = document.getElementById('commandCenterPage');
     page?.addEventListener('click', (ev) => {
-      const btn = ev.target.closest?.('.cc-gallery-delete-btn');
-      if (!btn) return;
+      const delBtn  = ev.target.closest?.('.cc-gallery-delete-btn');
+      const editBtn = ev.target.closest?.('.cc-gallery-edit-btn');
+      const card    = (delBtn || editBtn)?.closest('.cc-gallery-card');
+      if (!card) return;
       ev.preventDefault();
       ev.stopPropagation();
-      const card = btn.closest('.cc-gallery-card');
-      const entityType = card?.getAttribute('data-entity-type');
-      const entityId   = card?.getAttribute('data-entity-id');
+      const entityType = card.getAttribute('data-entity-type');
+      const entityId   = card.getAttribute('data-entity-id');
       if (!entityType || !entityId) return;
-      this._confirmAndDelete(entityType, entityId, card);
+      if (delBtn)  this._confirmAndDelete(entityType, entityId, card);
+      if (editBtn) this._openEditor(entityType, entityId);
     });
+
+    // Cerrar modal: backdrop click, botón X, botón Cancelar, Escape.
+    const backdrop = document.getElementById('ccEditorBackdrop');
+    backdrop?.addEventListener('click', (ev) => { if (ev.target === backdrop) this._closeEditor(); });
+    document.getElementById('ccEditorClose') ?.addEventListener('click', () => this._closeEditor());
+    document.getElementById('ccEditorCancel')?.addEventListener('click', () => this._closeEditor());
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && backdrop?.style.display !== 'none') this._closeEditor();
+    });
+    document.getElementById('ccEditorForm')?.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      this._saveEditor();
+    });
+  }
+
+  /* ── Crear audiencia / campaña con nombre auto-incrementado ─────────
+     Inserta una fila mínima en Supabase y abre el editor para que el
+     usuario complete los campos. El nombre default es "Nueva campaña (N)"
+     o "Nueva audiencia (N)" donde N es el siguiente disponible. */
+  async _createAndEdit(kind) {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    const isAudience = kind === 'audience';
+    const table  = isAudience ? 'audience_personas' : 'campaigns';
+    const nameField = isAudience ? 'name' : 'nombre_campana';
+    const prefix = isAudience ? 'Nueva audiencia' : 'Nueva campaña';
+
+    // Calcular siguiente N revisando los registros existentes que matchean
+    // el patrón "<prefix> (N)" en esta marca.
+    const rows = isAudience
+      ? (this._audiences || []).map(a => String(a.name || ''))
+      : (this._campaigns || []).map(c => String(c.nombre_campana || ''));
+    const re = new RegExp(`^${prefix}\\s*\\((\\d+)\\)$`);
+    let maxN = 0;
+    rows.forEach((n) => {
+      const m = re.exec(n.trim());
+      if (m) maxN = Math.max(maxN, parseInt(m[1], 10) || 0);
+    });
+    const nextN = maxN + 1;
+    const defaultName = `${prefix} (${nextN})`;
+
+    // Resolver created_by del usuario actual (best effort)
+    let createdBy = null;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      createdBy = user?.id || null;
+    } catch (_) { /* noop */ }
+
+    const payload = {
+      organization_id:    this._organizationId,
+      brand_container_id: this._containerRow.id,
+      [nameField]:        defaultName,
+      created_by:         createdBy,
+    };
+
+    try {
+      const { data, error } = await this._supabase
+        .from(table)
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+      // Push al state local y re-render
+      if (isAudience) {
+        this._audiences = [data, ...(this._audiences || [])];
+        this._renderGalleryAudiences();
+      } else {
+        this._campaigns = [data, ...(this._campaigns || [])];
+        this._renderGalleryConceptCampaigns();
+      }
+      // Abrir editor de la fila recién creada
+      this._openEditor(isAudience ? 'audience' : 'campaign-concept', data.id);
+    } catch (e) {
+      console.error('CommandCenterView create:', e);
+      window.alert(`No se pudo crear: ${e?.message || 'error desconocido'}`);
+    }
+  }
+
+  /* ── Editor modal: dibuja el form según el tipo y carga la fila ───── */
+  _openEditor(entityType, entityId) {
+    const backdrop = document.getElementById('ccEditorBackdrop');
+    const title    = document.getElementById('ccEditorTitle');
+    const body     = document.getElementById('ccEditorBody');
+    if (!backdrop || !body) return;
+
+    this._editing = { entityType, entityId };
+
+    if (entityType === 'audience') {
+      const row = (this._audiences || []).find(a => String(a.id) === String(entityId));
+      if (!row) return;
+      title.textContent = 'Editar audiencia';
+      body.innerHTML = this._renderAudienceForm(row);
+    } else if (entityType === 'campaign-concept') {
+      const row = (this._campaigns || []).find(c => String(c.id) === String(entityId));
+      if (!row) return;
+      title.textContent = 'Editar campaña conceptual';
+      body.innerHTML = this._renderCampaignForm(row);
+    } else {
+      return; // campaign-real no se edita
+    }
+
+    backdrop.style.display = 'flex';
+    // Foco en el primer input
+    setTimeout(() => body.querySelector('input, select, textarea')?.focus(), 30);
+  }
+
+  _closeEditor() {
+    const backdrop = document.getElementById('ccEditorBackdrop');
+    if (backdrop) backdrop.style.display = 'none';
+    this._editing = null;
+  }
+
+  _renderAudienceForm(a) {
+    const linesOf = (arr) => Array.isArray(arr) ? arr.join('\n') : '';
+    const v = (s) => this.escapeHtml(s || '');
+    const sel = (cur, val, label) => `<option value="${val}" ${cur === val ? 'selected' : ''}>${label}</option>`;
+    const aw = a.awareness_level || '';
+    return `
+      <label class="cc-editor-field cc-editor-field--full">
+        <span>Nombre</span>
+        <input data-field="name" type="text" required maxlength="120" value="${v(a.name)}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Nivel de awareness</span>
+        <select data-field="awareness_level">
+          ${sel(aw, '', 'Sin definir')}
+          ${sel(aw, 'unaware', 'Unaware')}
+          ${sel(aw, 'problem_aware', 'Problem aware')}
+          ${sel(aw, 'solution_aware', 'Solution aware')}
+          ${sel(aw, 'product_aware', 'Product aware')}
+          ${sel(aw, 'most_aware', 'Most aware')}
+        </select>
+      </label>
+      <label class="cc-editor-field cc-editor-field--full">
+        <span>Descripción</span>
+        <textarea data-field="description" rows="2" maxlength="1200">${v(a.description)}</textarea>
+      </label>
+      <label class="cc-editor-field">
+        <span>Dolores <small>(uno por línea)</small></span>
+        <textarea data-field="dolores" data-multi="lines" rows="4" placeholder="Dolor 1&#10;Dolor 2">${v(linesOf(a.dolores))}</textarea>
+      </label>
+      <label class="cc-editor-field">
+        <span>Deseos <small>(uno por línea)</small></span>
+        <textarea data-field="deseos" data-multi="lines" rows="4" placeholder="Deseo 1&#10;Deseo 2">${v(linesOf(a.deseos))}</textarea>
+      </label>
+      <label class="cc-editor-field">
+        <span>Objeciones <small>(uno por línea)</small></span>
+        <textarea data-field="objeciones" data-multi="lines" rows="4" placeholder="Objeción 1&#10;Objeción 2">${v(linesOf(a.objeciones))}</textarea>
+      </label>
+      <label class="cc-editor-field">
+        <span>Gatillos de compra <small>(uno por línea)</small></span>
+        <textarea data-field="gatillos_compra" data-multi="lines" rows="4" placeholder="Gatillo 1&#10;Gatillo 2">${v(linesOf(a.gatillos_compra))}</textarea>
+      </label>`;
+  }
+
+  _renderCampaignForm(c) {
+    const v = (s) => this.escapeHtml(s || '');
+    const sel = (cur, val, label) => `<option value="${val}" ${cur === val ? 'selected' : ''}>${label}</option>`;
+    const dt = (iso) => { if (!iso) return ''; try { return new Date(iso).toISOString().slice(0, 10); } catch { return ''; } };
+    const audiences = Array.isArray(this._audiences) ? this._audiences : [];
+    const audOpts = audiences.map((p) => `<option value="${p.id}" ${String(c.persona_id) === String(p.id) ? 'selected' : ''}>${this.escapeHtml(p.name || 'Audiencia')}</option>`).join('');
+    const st = c.status || 'draft';
+    const pl = c.platform || '';
+    return `
+      <label class="cc-editor-field cc-editor-field--full">
+        <span>Nombre de la campaña</span>
+        <input data-field="nombre_campana" type="text" required maxlength="200" value="${v(c.nombre_campana)}" />
+      </label>
+      <label class="cc-editor-field cc-editor-field--full">
+        <span>Descripción interna</span>
+        <textarea data-field="descripcion_interna" rows="2" maxlength="2000">${v(c.descripcion_interna)}</textarea>
+      </label>
+      <label class="cc-editor-field">
+        <span>Audiencia objetivo</span>
+        <select data-field="persona_id">
+          <option value="">— Sin vincular —</option>
+          ${audOpts}
+        </select>
+      </label>
+      <label class="cc-editor-field">
+        <span>Estado</span>
+        <select data-field="status">
+          ${sel(st, 'draft', 'Borrador')}
+          ${sel(st, 'conceptual', 'Conceptual')}
+          ${sel(st, 'active', 'Activa')}
+          ${sel(st, 'paused', 'Pausada')}
+          ${sel(st, 'ended', 'Finalizada')}
+          ${sel(st, 'archived', 'Archivada')}
+        </select>
+      </label>
+      <label class="cc-editor-field">
+        <span>Plataforma</span>
+        <select data-field="platform">
+          ${sel(pl, '', '— Sin definir —')}
+          ${sel(pl, 'meta_facebook', 'Facebook')}
+          ${sel(pl, 'meta_instagram', 'Instagram')}
+          ${sel(pl, 'google_ads', 'Google Ads')}
+          ${sel(pl, 'tiktok_ads', 'TikTok')}
+          ${sel(pl, 'linkedin_ads', 'LinkedIn')}
+          ${sel(pl, 'pinterest_ads', 'Pinterest')}
+          ${sel(pl, 'organic', 'Orgánico')}
+          ${sel(pl, 'internal', 'Interno')}
+        </select>
+      </label>
+      <label class="cc-editor-field">
+        <span>Objetivo</span>
+        <input data-field="platform_objective" type="text" maxlength="80" value="${v(c.platform_objective)}" placeholder="OUTCOME_LEADS, PURCHASE, …" />
+      </label>
+      <label class="cc-editor-field">
+        <span>CTA (texto)</span>
+        <input data-field="cta" type="text" maxlength="120" value="${v(c.cta)}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>CTA URL</span>
+        <input data-field="cta_url" type="url" maxlength="500" value="${v(c.cta_url)}" placeholder="https://…" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Presupuesto/día</span>
+        <input data-field="budget_daily" data-type="number" type="number" min="0" step="0.01" value="${c.budget_daily ?? ''}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Presupuesto total</span>
+        <input data-field="budget_total" data-type="number" type="number" min="0" step="0.01" value="${c.budget_total ?? ''}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Moneda</span>
+        <input data-field="budget_currency" type="text" maxlength="3" value="${v(c.budget_currency || 'USD')}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Inicio</span>
+        <input data-field="starts_at" data-type="date" type="date" value="${dt(c.starts_at)}" />
+      </label>
+      <label class="cc-editor-field">
+        <span>Fin</span>
+        <input data-field="ends_at" data-type="date" type="date" value="${dt(c.ends_at)}" />
+      </label>`;
+  }
+
+  async _saveEditor() {
+    if (!this._supabase || !this._editing) return;
+    const { entityType, entityId } = this._editing;
+    const body = document.getElementById('ccEditorBody');
+    const saveBtn = document.getElementById('ccEditorSave');
+    if (!body) return;
+
+    // Recolectar payload desde data-field
+    const payload = { updated_at: new Date().toISOString() };
+    body.querySelectorAll('[data-field]').forEach((el) => {
+      const field = el.getAttribute('data-field');
+      const type  = el.getAttribute('data-type');
+      const multi = el.getAttribute('data-multi');
+      let val = el.value;
+      if (multi === 'lines') {
+        val = String(val || '').split('\n').map((s) => s.trim()).filter(Boolean);
+      } else if (type === 'number') {
+        val = val === '' ? null : Number(val);
+        if (!Number.isFinite(val)) val = null;
+      } else if (type === 'date') {
+        val = val ? new Date(val + 'T00:00:00Z').toISOString() : null;
+      } else {
+        val = String(val ?? '').trim();
+        if (val === '') val = null;
+      }
+      payload[field] = val;
+    });
+
+    // Validación mínima del nombre
+    const nameField = entityType === 'audience' ? 'name' : 'nombre_campana';
+    if (!payload[nameField]) {
+      window.alert('El nombre es obligatorio.');
+      body.querySelector(`[data-field="${nameField}"]`)?.focus();
+      return;
+    }
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando…'; }
+    try {
+      const table = entityType === 'audience' ? 'audience_personas' : 'campaigns';
+      const { data, error } = await this._supabase
+        .from(table)
+        .update(payload)
+        .eq('id', entityId)
+        .select()
+        .single();
+      if (error) throw error;
+
+      // Actualizar state local + re-render galerías
+      if (entityType === 'audience') {
+        const idx = (this._audiences || []).findIndex(a => String(a.id) === String(entityId));
+        if (idx >= 0) this._audiences[idx] = { ...this._audiences[idx], ...data };
+        this._renderGalleryAudiences();
+        this._renderAudienceMap();
+      } else {
+        const idx = (this._campaigns || []).findIndex(c => String(c.id) === String(entityId));
+        if (idx >= 0) this._campaigns[idx] = { ...this._campaigns[idx], ...data };
+        this._renderGalleryConceptCampaigns();
+        this._renderCampaigns();
+      }
+      this._closeEditor();
+    } catch (e) {
+      console.error('CommandCenterView save:', e);
+      window.alert(`No se pudo guardar: ${e?.message || 'error desconocido'}`);
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+    }
   }
 
   /* ── Confirmación + delete (campañas conceptuales / audiencias) ──────
