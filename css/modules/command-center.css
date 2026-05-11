@@ -755,15 +755,18 @@
   white-space: nowrap;
 }
 .cc-panel-action-btn i { font-size: 0.72rem; opacity: 0.85; }
-/* Hover = degradado dinámico de la marca (patrón estándar de la plataforma:
-   .nav-badge, studio, content-management). NO usar --brand-primary solo:
-   en marcas con primario opaco queda sin contraste con el texto oscuro. */
+/* Hover: SOLO el borde toma el degradado dinámico, fondo se mantiene oscuro.
+   Técnica padding-box + border-box (misma que studio.css). */
 .cc-panel-action-btn:hover {
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
-  color: var(--bg-primary, #0b0b0b);
+  background:
+    linear-gradient(var(--bg-card, #141517), var(--bg-card, #141517)) padding-box,
+    var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   border-color: transparent;
+  color: var(--text-primary);
 }
-.cc-panel-action-btn:hover i { opacity: 1; }
+.cc-panel-action-btn:hover i { opacity: 1; color: var(--text-primary); }
 .cc-sidebar--expanded .cc-panel-action-btn,
 #ccSidebar.cc-sidebar--expanded .cc-panel-action-btn { display: inline-flex; }
 
@@ -783,9 +786,13 @@
   flex-shrink: 0;
 }
 .cc-panel-expand-btn:hover {
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
-  color: var(--bg-primary, #0b0b0b);
+  background:
+    linear-gradient(var(--bg-card, #141517), var(--bg-card, #141517)) padding-box,
+    var(--brand-gradient-dynamic, var(--brand-gradient)) border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   border-color: transparent;
+  color: var(--text-primary);
 }
 .cc-panel-expand-btn i { display: none; }
 .cc-sidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt,
