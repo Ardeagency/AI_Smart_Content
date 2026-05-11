@@ -109,43 +109,32 @@ class CommandCenterView extends BaseView {
     return `
 <div class="cc-page" id="commandCenterPage">
 
-  <!-- BANDEJA DE VERA (pending_actions) ─────────────────────────────── -->
-  <section class="cc-vera-inbox" id="ccVeraInbox" style="display:none;" aria-label="Sugerencias de Vera">
-    <div class="cc-vera-inbox-head">
-      <h2 class="cc-vera-inbox-title">
-        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-        Vera tiene <span id="ccVeraInboxCount">0</span> <span id="ccVeraInboxLabel">sugerencias</span> para ti
-      </h2>
-      <p class="cc-vera-inbox-lede">Decisiones estratégicas que Vera propone. Aprueba lo que tenga sentido para tu marca.</p>
+  <!-- OPTIMIZACIÓN: comentarios de Vera (sustituye Mercado objetivo + Bandeja Vera) -->
+  <section class="cc-section cc-section--optim" id="ccOptimSection" aria-label="Optimización propuesta por Vera">
+    <div class="cc-optim-bg" aria-hidden="true">
+      <div class="cc-optim-gradient"></div>
+      <div class="background-film-grain"></div>
     </div>
-    <div class="cc-vera-inbox-list" id="ccVeraInboxList"></div>
-  </section>
-
-  <!-- PERSONAS ────────────────────────────────────────────────────── -->
-  <section class="cc-section cc-section--audiences">
-    <div class="cc-aud-glow" aria-hidden="true"></div>
-    <div class="cc-section--audiences-body">
+    <div class="cc-optim-body">
       <div class="cc-section-head">
         <div class="cc-section-head-main">
-          <h2 class="cc-section-title">Mercado objetivo</h2>
+          <h2 class="cc-section-title">Optimización</h2>
+          <p class="cc-section-lede">Lecturas y recomendaciones de Vera sobre tus campañas y audiencia real. Aprueba para que se materialice en el próximo plan.</p>
         </div>
-        <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
-          <span class="cc-aud-head-count-num" id="ccAudCount" aria-label="Total de personas">0</span>
-        </div>
-      </div>
-      <div class="cc-carousel-wrap">
-        <div class="cc-carousel" id="ccAudCarousel">
-          <div class="cc-loading"><span></span><span></span><span></span></div>
+        <div class="cc-optim-count-wrap" aria-live="polite" aria-atomic="true">
+          <span class="cc-optim-count-num" id="ccVeraInboxCount" aria-label="Total de comentarios">0</span>
+          <span class="cc-optim-count-label" id="ccVeraInboxLabel">comentarios</span>
         </div>
       </div>
-      <div class="cc-empty" id="ccAudEmpty" style="display:none;">
-        <i class="fas fa-users-slash"></i>
-        <p>No hay personas para esta sub-marca.</p>
+      <div class="cc-optim-list" id="ccVeraInboxList"></div>
+      <div class="cc-optim-empty" id="ccOptimEmpty" style="display:none;">
+        <i class="fas fa-comments"></i>
+        <p>Vera no tiene comentarios pendientes. A medida que tus campañas generen tráfico, aquí aparecerán sus lecturas y propuestas.</p>
       </div>
     </div>
   </section>
 
-  <!-- DOS COLUMNAS ────────────────────────────────────────────────── -->
+  <!-- DOS COLUMNAS: campañas (left) · personas + mapa (right stack) ──── -->
   <div class="cc-two-col" id="ccTwoCol" style="display:none;">
 
     <!-- IZQUIERDA: Campañas ─────────────────────────────────────── -->
@@ -165,29 +154,40 @@ class CommandCenterView extends BaseView {
       </div>
     </aside>
 
-    <!-- DERECHA: Enfoque de mercado (resumen para org + IA) ───────────── -->
+    <!-- DERECHA: stack (audiencias conceptuales + mapa segmentación) ── -->
     <div class="cc-col cc-col--right cc-col--intel">
-      <h2 class="cc-published-title">Enfoque de mercado</h2>
-      <p class="cc-focus-lede">Resumen conceptual: a quién apuntas, qué dice la campaña y qué lectura mínima hay del mercado real. Sin historial — para alinear estrategia e IA.</p>
-      <div class="cc-published-stack">
 
-        <section class="cc-published-slice" aria-label="Conexión conceptual con canales">
-          <div class="cc-intel-subtitle">
-            <i class="fas fa-link"></i> Conexión con canales
+      <!-- BLOQUE ARRIBA: audiencias conceptuales en carrusel horizontal -->
+      <section class="cc-published-slice cc-personas-slice" aria-label="Audiencias conceptuales">
+        <div class="cc-section-head cc-section-head--personas">
+          <div class="cc-section-head-main">
+            <h3 class="cc-intel-subtitle"><i class="fas fa-users"></i> Audiencias conceptuales</h3>
           </div>
-          <div id="ccSegmentsWrap"></div>
-        </section>
-
-        <hr class="cc-published-divider" aria-hidden="true" />
-
-        <section class="cc-published-slice" aria-label="Lectura del mercado real">
-          <div class="cc-intel-subtitle">
-            <i class="fas fa-signal"></i> Lectura del mercado (último período)
+          <div class="cc-aud-head-count-wrap" aria-live="polite" aria-atomic="true">
+            <span class="cc-aud-head-count-num" id="ccAudCount" aria-label="Total de personas">0</span>
           </div>
-          <div id="ccSnapshotsWrap"></div>
-        </section>
+        </div>
+        <div class="cc-carousel-wrap">
+          <div class="cc-carousel" id="ccAudCarousel">
+            <div class="cc-loading"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="cc-empty" id="ccAudEmpty" style="display:none;">
+          <i class="fas fa-users-slash"></i>
+          <p>No hay personas para esta sub-marca.</p>
+        </div>
+      </section>
 
-      </div>
+      <hr class="cc-published-divider" aria-hidden="true" />
+
+      <!-- BLOQUE ABAJO: mapa choropleth (lectura del mercado real) -->
+      <section class="cc-published-slice cc-map-slice" aria-label="Lectura del mercado real">
+        <h3 class="cc-intel-subtitle"><i class="fas fa-globe-americas"></i> Lectura del mercado</h3>
+        <p class="cc-map-lede">Segmentación real agregada de tus campañas activas: países, géneros, edades.</p>
+        <div class="cc-map-container" id="ccAudienceMap"></div>
+        <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
+      </section>
+
     </div>
   </div>
 </div>
@@ -320,7 +320,7 @@ class CommandCenterView extends BaseView {
 
         supabase
           .from('campaigns')
-          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at')
+          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
           .eq('brand_container_id', bid)
           .order('updated_at', { ascending: false }),
 
@@ -355,8 +355,7 @@ class CommandCenterView extends BaseView {
     this._renderVeraInbox();
     this._renderAudiencesCarousel();
     this._renderCampaigns();
-    this._renderSegments();
-    this._renderSnapshots();
+    this._renderAudienceMap();
     // Fuentes conectadas removido de esta vista: foco solo en la lectura más reciente.
     this.updateLinksForRouter();
   }
@@ -382,22 +381,24 @@ class CommandCenterView extends BaseView {
     }
   }
 
-  /* ── BANDEJA DE VERA ──────────────────────────────────────────────── */
+  /* ── OPTIMIZACIÓN — comentarios de Vera ──────────────────────────── */
   _renderVeraInbox() {
-    const root  = document.getElementById('ccVeraInbox');
     const list  = document.getElementById('ccVeraInboxList');
     const count = document.getElementById('ccVeraInboxCount');
     const label = document.getElementById('ccVeraInboxLabel');
-    if (!root || !list) return;
+    const empty = document.getElementById('ccOptimEmpty');
+    if (!list) return;
 
     const actions = Array.isArray(this._pendingActions) ? this._pendingActions : [];
+    if (count) count.textContent = String(actions.length);
+    if (label) label.textContent = actions.length === 1 ? 'comentario' : 'comentarios';
+
     if (actions.length === 0) {
-      root.style.display = 'none';
+      list.innerHTML = '';
+      if (empty) empty.style.display = '';
       return;
     }
-    root.style.display = '';
-    if (count) count.textContent = String(actions.length);
-    if (label) label.textContent = actions.length === 1 ? 'sugerencia' : 'sugerencias';
+    if (empty) empty.style.display = 'none';
 
     const personaNameById = this._personaNameById();
     const fmtPct = (n) => Number.isFinite(Number(n)) ? `${Math.round(Number(n) * 100)}%` : '—';
@@ -655,6 +656,13 @@ class CommandCenterView extends BaseView {
           ${this._personaPickerHTML(c.persona_id || '', 'campaign', c.id)}
         </div>`;
 
+      // MatchBars: solo si hay persona linkada y match_scores tiene contenido evaluable
+      const ms = c.match_scores || {};
+      const hasMatch = pName && (ms.age != null || ms.gender != null || ms.geo != null);
+      const matchBars = hasMatch && window.MatchBars
+        ? `<div class="cc-camp-match">${window.MatchBars.render(ms)}</div>`
+        : '';
+
       return `
       <div class="cc-camp-row">
         <div class="cc-camp-row-head">
@@ -662,6 +670,7 @@ class CommandCenterView extends BaseView {
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
         </div>
         ${personaRow}
+        ${matchBars}
         ${ctaRow}
         ${metricsRow}
         ${budgetRow}
@@ -669,7 +678,90 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
-  /* ── Conexión con canales (segmentos ↔ persona) ───────────────────── */
+  /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
+  async _renderAudienceMap() {
+    const mapEl    = document.getElementById('ccAudienceMap');
+    const breakEl  = document.getElementById('ccAudienceBreakdowns');
+    if (!mapEl) return;
+
+    // Agregar real_demographics de TODAS las campañas con data
+    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
+    const agg = { age: {}, gender: {}, country: {} };
+    let hasAnyData = false;
+    for (const c of camps) {
+      const rd = c.real_demographics;
+      if (!rd || typeof rd !== 'object') continue;
+      for (const axis of ['age', 'gender', 'country']) {
+        const dist = rd[axis];
+        if (!dist || typeof dist !== 'object') continue;
+        for (const [k, v] of Object.entries(dist)) {
+          const imp = Number(v?.impressions) || 0;
+          if (imp === 0) continue;
+          hasAnyData = true;
+          agg[axis][k] = agg[axis][k] || { impressions: 0, reach: 0 };
+          agg[axis][k].impressions += imp;
+          agg[axis][k].reach       += Number(v?.reach) || 0;
+        }
+      }
+    }
+
+    if (!hasAnyData) {
+      mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Cuando tus campañas generen tráfico, verás aquí países, géneros y edades agregados.</p></div>`;
+      if (breakEl) breakEl.innerHTML = '';
+      return;
+    }
+
+    // Mapa choropleth (country)
+    const countryAgg = {};
+    for (const [cc, v] of Object.entries(agg.country)) countryAgg[cc] = v.impressions;
+    if (window.AudienceMap) {
+      try { await window.AudienceMap.render(mapEl, countryAgg); }
+      catch (e) { console.warn('AudienceMap render:', e?.message); }
+    } else {
+      mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
+    }
+
+    // Breakdowns: género + edad como mini-barras CSS
+    if (breakEl) {
+      const totalGender = Object.values(agg.gender).reduce((s, v) => s + v.impressions, 0);
+      const totalAge    = Object.values(agg.age).reduce((s, v) => s + v.impressions, 0);
+
+      const genderRows = totalGender > 0
+        ? Object.entries(agg.gender)
+            .sort((a, b) => b[1].impressions - a[1].impressions)
+            .slice(0, 4)
+            .map(([k, v]) => {
+              const pct = Math.round((v.impressions / totalGender) * 100);
+              const label = k === 'male' ? 'Hombres' : k === 'female' ? 'Mujeres' : k;
+              return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="${label}: ${pct}%">
+                <span class="cc-break-label">${label}</span>
+                <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
+                <span class="cc-break-pct">${pct}%</span>
+              </div>`;
+            }).join('')
+        : '';
+
+      const ageRows = totalAge > 0
+        ? Object.entries(agg.age)
+            .sort((a, b) => b[1].impressions - a[1].impressions)
+            .slice(0, 6)
+            .map(([k, v]) => {
+              const pct = Math.round((v.impressions / totalAge) * 100);
+              return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="Edad ${k}: ${pct}%">
+                <span class="cc-break-label">${k}</span>
+                <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
+                <span class="cc-break-pct">${pct}%</span>
+              </div>`;
+            }).join('')
+        : '';
+
+      breakEl.innerHTML = `
+        ${genderRows ? `<div class="cc-break-group"><h4 class="cc-break-title">Género</h4>${genderRows}</div>` : ''}
+        ${ageRows    ? `<div class="cc-break-group"><h4 class="cc-break-title">Edad</h4>${ageRows}</div>` : ''}`;
+    }
+  }
+
+  /* ── Conexión con canales (segmentos ↔ persona) — legacy, sin render ─ */
   _renderSegments() {
     const root = document.getElementById('ccSegmentsWrap');
     if (!root) return;

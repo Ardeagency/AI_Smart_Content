@@ -1303,3 +1303,387 @@
 .cc-camp-persona-label {
   font-size: 0.85rem;
 }
+
+/* ── Sección "Optimización" (sustituye Mercado objetivo + Bandeja Vera) ─── */
+.cc-section--optim {
+  position: relative;
+  margin: 0 0 1.5rem 0;
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--radius-md, 14px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cc-optim-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.cc-optim-gradient {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  opacity: 0.65;
+}
+
+/* La capa de granos vive sobre el degradado pero debajo del contenido */
+.cc-section--optim .background-film-grain {
+  z-index: 1;
+  opacity: 0.45;
+}
+
+/* Velo oscuro arriba del degradado para garantizar contraste del texto */
+.cc-optim-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11,11,11,0.42) 0%, rgba(11,11,11,0.62) 100%);
+  pointer-events: none;
+}
+
+.cc-optim-body {
+  position: relative;
+  z-index: 2;
+}
+
+.cc-section--optim .cc-section-title {
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+.cc-section--optim .cc-section-lede {
+  color: rgba(255,255,255,0.88);
+  font-size: 0.92rem;
+  margin: 0.3rem 0 0 0;
+  max-width: 60ch;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.cc-optim-count-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+}
+
+.cc-optim-count-num {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cc-optim-count-label {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.78);
+  text-transform: lowercase;
+}
+
+.cc-optim-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+/* Las cards de comentarios reusan el estilo de cc-vera-inbox-card pero
+   sobre el degradado tienen que ser más opacas para legibilidad */
+.cc-optim-list .cc-vera-inbox-card {
+  background: rgba(20, 21, 23, 0.92);
+  border-color: rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+}
+
+.cc-optim-empty {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(0,0,0,0.45);
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm, 8px);
+  text-align: center;
+  color: rgba(255,255,255,0.78);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  backdrop-filter: blur(4px);
+}
+
+.cc-optim-empty i {
+  font-size: 1.5rem;
+  color: rgba(255,255,255,0.55);
+}
+
+.cc-optim-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 50ch;
+}
+
+/* ── Personas carrusel en la columna derecha (más compacto) ──────────── */
+.cc-personas-slice .cc-section-head--personas {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.cc-personas-slice .cc-intel-subtitle {
+  margin: 0;
+}
+
+/* ── Mapa de segmentación (choropleth + breakdowns) ──────────────────── */
+.cc-map-slice .cc-map-lede {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0.75rem 0;
+}
+
+.cc-map-container {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  max-height: 320px;
+  border-radius: var(--radius-sm, 8px);
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-divider);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-map-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 200px;
+}
+
+.cc-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.cc-map-legend-item strong {
+  color: var(--accent-warm, #e09145);
+  font-weight: 600;
+}
+
+.cc-map-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1.5rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.cc-map-empty i {
+  font-size: 1.5rem;
+  opacity: 0.5;
+}
+
+/* Fallback mobile (lista de países) */
+.cc-map-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cc-map-fallback-row {
+  display: grid;
+  grid-template-columns: 24px 32px 1fr 40px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-map-fallback-flag {
+  font-size: 1.1rem;
+}
+
+.cc-map-fallback-code {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.cc-map-fallback-bar-wrap {
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cc-map-fallback-bar {
+  height: 100%;
+  background: var(--accent-warm, #e09145);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.cc-map-fallback-pct {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* Breakdowns (género + edad) bajo el mapa */
+.cc-map-breakdowns {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cc-break-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cc-break-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 0 0 0.25rem 0;
+}
+
+.cc-break-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 40px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-break-label {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.cc-break-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cc-break-bar {
+  height: 100%;
+  background: var(--accent-warm, #e09145);
+  opacity: 0.85;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.cc-break-pct {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .cc-map-breakdowns { grid-template-columns: 1fr; }
+  .cc-section--optim { padding: 1.2rem 1rem; }
+  .cc-optim-list { grid-template-columns: 1fr; }
+}
+
+/* ── MatchBars (en cada card de campaña) ─────────────────────────────── */
+.cc-camp-match {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.cc-match-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.cc-match-composite {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.cc-match-composite-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cc-match-composite-num small {
+  font-size: 0.7rem;
+  margin-left: 0.1rem;
+  opacity: 0.6;
+}
+
+.cc-match-composite-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.cc-match-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cc-match-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 40px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-match-row--missing .cc-match-bar-wrap {
+  opacity: 0.4;
+}
+
+.cc-match-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.cc-match-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cc-match-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.cc-match-bar--empty {
+  width: 100%;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 4px, transparent 4px 8px);
+}
+
+.cc-match-value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+}
