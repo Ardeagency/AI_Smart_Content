@@ -756,9 +756,13 @@
 }
 .cc-panel-action-btn i { font-size: 0.72rem; opacity: 0.85; }
 .cc-panel-action-btn:hover {
-  background: var(--brand-primary, var(--accent-warm, #e09145));
-  color: #0b0b0b;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
   border-color: var(--brand-primary, var(--accent-warm, #e09145));
+}
+.cc-panel-action-btn:hover i {
+  opacity: 1;
+  color: var(--brand-primary, var(--accent-warm, #e09145));
 }
 .cc-sidebar--expanded .cc-panel-action-btn,
 #ccSidebar.cc-sidebar--expanded .cc-panel-action-btn { display: inline-flex; }
@@ -841,6 +845,7 @@
 }
 
 .cc-gallery-card {
+  position: relative;
   background: var(--bg-secondary, #141517);
   border: 1px solid var(--border-divider, #212126);
   border-radius: 12px;
@@ -849,12 +854,52 @@
   flex-direction: column;
   gap: 0.55rem;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible; /* el botón delete sobresale en -4px */
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .cc-gallery-card:hover {
   border-color: rgba(255, 255, 255, 0.18);
   background: #181a1d;
+}
+
+/* Botón eliminar: círculo rojo con X, sobresale en la esquina derecha.
+   Mismo patrón que .color-delete-btn de brands.css. Solo visible al hover
+   de la card para no saturar el grid. */
+.cc-gallery-delete-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: var(--color-critical, #dc2626);
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+}
+.cc-gallery-card:hover .cc-gallery-delete-btn,
+.cc-gallery-delete-btn:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cc-gallery-delete-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+.cc-gallery-delete-btn:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .cc-gallery-card-head {

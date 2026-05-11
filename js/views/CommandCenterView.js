@@ -250,38 +250,46 @@ class CommandCenterView extends BaseView {
     this._containerRow = match;
     const bid = match.id;
 
-    /* Fetch paralelo (snapshots + heatmap vía API: RLS suele devolver [] al cliente) */
+    /* Fetch paralelo (snapshots + heatmap vía API: RLS suele devolver [] al cliente)
+       Cacheado vía apiClient 60s + SWR por brand_container_id. */
     try {
-      const [audRes, segRes, campRes, intRes] = await Promise.all([
-        supabase
-          .from('audience_personas')
-          .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
-          .eq('brand_container_id', bid)
-          .order('updated_at', { ascending: false }),
-
-        supabase
-          .from('audience_segments')
-          .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
-          .eq('brand_container_id', bid)
-          .order('platform', { ascending: true }),
-
-        supabase
-          .from('campaigns')
-          .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
-          .eq('brand_container_id', bid)
-          .order('updated_at', { ascending: false }),
-
-        supabase
-          .from('brand_integrations')
-          .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
-          .eq('brand_container_id', bid)
-          .order('platform', { ascending: true }),
-      ]);
-
-      this._audiences    = !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [];
-      this._segments     = !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [];
-      this._campaigns    = !campRes.error && Array.isArray(campRes.data) ? campRes.data : [];
-      this._integrations = !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [];
+      const fetchBundle = async () => {
+        const [audRes, segRes, campRes, intRes] = await Promise.all([
+          supabase
+            .from('audience_personas')
+            .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
+            .eq('brand_container_id', bid)
+            .order('updated_at', { ascending: false }),
+          supabase
+            .from('audience_segments')
+            .select('id, persona_id, platform, external_audience_name, external_audience_type, age_range, genders, interests, behaviors, estimated_size, size_lower_bound, size_upper_bound, status, source, last_synced_at')
+            .eq('brand_container_id', bid)
+            .order('platform', { ascending: true }),
+          supabase
+            .from('campaigns')
+            .select('id, nombre_campana, descripcion_interna, persona_id, cta, cta_url, platform, platform_objective, status, budget_daily, budget_total, budget_currency, starts_at, ends_at, cached_impressions, cached_clicks, cached_spend, cached_conversions, cached_roas, cached_ctr, last_synced_at, source, updated_at, created_at, match_scores, real_demographics')
+            .eq('brand_container_id', bid)
+            .order('updated_at', { ascending: false }),
+          supabase
+            .from('brand_integrations')
+            .select('id, platform, external_account_name, is_active, last_sync_at, updated_at')
+            .eq('brand_container_id', bid)
+            .order('platform', { ascending: true }),
+        ]);
+        return {
+          audiences:    !audRes.error  && Array.isArray(audRes.data)  ? audRes.data  : [],
+          segments:     !segRes.error  && Array.isArray(segRes.data)  ? segRes.data  : [],
+          campaigns:    !campRes.error && Array.isArray(campRes.data) ? campRes.data : [],
+          integrations: !intRes.error  && Array.isArray(intRes.data)  ? intRes.data  : [],
+        };
+      };
+      const bundle = window.apiClient
+        ? await window.apiClient.query(`cc:bundle:${bid}`, fetchBundle, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetchBundle();
+      this._audiences    = bundle.audiences;
+      this._segments     = bundle.segments;
+      this._campaigns    = bundle.campaigns;
+      this._integrations = bundle.integrations;
     } catch (e) {
       console.warn('CommandCenterView: fetch', e);
       this._audiences = [];
@@ -612,7 +620,8 @@ class CommandCenterView extends BaseView {
       const ctaShort  = ctaText.length > 120 ? ctaText.slice(0, 120) + '…' : ctaText;
 
       return `
-      <article class="cc-gallery-card">
+      <article class="cc-gallery-card" data-entity-type="campaign-real" data-entity-id="${this.escapeHtml(String(c.id))}">
+        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña" title="Eliminar campaña"><i class="fas fa-times"></i></button>
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
@@ -673,7 +682,8 @@ class CommandCenterView extends BaseView {
       const pName     = c.persona_id ? personaById[String(c.persona_id)] : '';
 
       return `
-      <article class="cc-gallery-card cc-gallery-card--concept">
+      <article class="cc-gallery-card cc-gallery-card--concept" data-entity-type="campaign-concept" data-entity-id="${this.escapeHtml(String(c.id))}">
+        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña conceptual" title="Eliminar campaña"><i class="fas fa-times"></i></button>
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
           <div class="cc-camp-badges">${stBadge}${platBadge}</div>
@@ -723,7 +733,8 @@ class CommandCenterView extends BaseView {
       const gatN      = Array.isArray(a.gatillos_compra) ? a.gatillos_compra.length : 0;
 
       return `
-      <article class="cc-gallery-card">
+      <article class="cc-gallery-card" data-entity-type="audience" data-entity-id="${this.escapeHtml(String(a.id))}">
+        <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar audiencia" title="Eliminar audiencia"><i class="fas fa-times"></i></button>
         <header class="cc-gallery-card-head">
           <h4 class="cc-gallery-card-title" title="${this.escapeHtml(a.name || 'Audiencia')}">${this.escapeHtml(a.name || 'Audiencia')}</h4>
           ${scoreBadge}
@@ -918,6 +929,73 @@ class CommandCenterView extends BaseView {
 
     document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => dispatch('cc:create-campaign', 'Crear campaña'));
     document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => dispatch('cc:create-audience', 'Crear audiencia'));
+
+    // Delegated: botones de eliminar en cualquier galería (campañas reales,
+    // conceptuales o audiencias). Confirmación con advertencia específica
+    // según el tipo de entidad.
+    const page = document.getElementById('commandCenterPage');
+    page?.addEventListener('click', (ev) => {
+      const btn = ev.target.closest?.('.cc-gallery-delete-btn');
+      if (!btn) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const card = btn.closest('.cc-gallery-card');
+      const entityType = card?.getAttribute('data-entity-type');
+      const entityId   = card?.getAttribute('data-entity-id');
+      if (!entityType || !entityId) return;
+      this._confirmAndDelete(entityType, entityId, card);
+    });
+  }
+
+  /* ── Confirmación + delete (campañas reales / conceptuales / audiencias) ── */
+  async _confirmAndDelete(entityType, entityId, cardEl) {
+    if (!this._supabase) return;
+
+    const isAudience = entityType === 'audience';
+    const isReal     = entityType === 'campaign-real';
+    const isConcept  = entityType === 'campaign-concept';
+
+    let warning;
+    if (isAudience) {
+      const linkedCount = (this._campaigns || []).filter(c => String(c.persona_id) === String(entityId)).length;
+      warning = `¿Eliminar esta audiencia?\n\nADVERTENCIA: ${linkedCount > 0
+        ? `${linkedCount} campaña${linkedCount === 1 ? '' : 's'} quedarán sin mercado objetivo y la IA no podrá cerrar el circuito con ellas.`
+        : 'No tiene campañas vinculadas, pero perderás el perfil completo (dolores, deseos, objeciones, gatillos).'}\n\nEsta acción no se puede deshacer.`;
+    } else if (isReal) {
+      warning = '¿Eliminar esta campaña?\n\nADVERTENCIA: NO afecta la campaña en Meta/Google — solo borra el registro local y sus métricas históricas del dashboard. Si vuelve a sincronizar la integración, podría reaparecer.\n\nEsta acción no se puede deshacer.';
+    } else if (isConcept) {
+      warning = '¿Eliminar esta campaña conceptual?\n\nADVERTENCIA: Se perderá el plan, sus vínculos con la audiencia y cualquier configuración de presupuesto y objetivos.\n\nEsta acción no se puede deshacer.';
+    } else {
+      return;
+    }
+
+    if (!window.confirm(warning)) return;
+
+    // Deshabilita el botón mientras se procesa
+    const btn = cardEl?.querySelector('.cc-gallery-delete-btn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+
+    try {
+      const table = isAudience ? 'audience_personas' : 'campaigns';
+      const { error } = await this._supabase.from(table).delete().eq('id', entityId);
+      if (error) throw error;
+
+      // Quitar localmente del state y re-render
+      if (isAudience) {
+        this._audiences = (this._audiences || []).filter(a => String(a.id) !== String(entityId));
+        this._renderGalleryAudiences();
+      } else {
+        this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
+        this._renderCampaigns();
+        this._renderGalleryCampaigns();
+        this._renderGalleryConceptCampaigns();
+        this._renderAudienceMap();
+      }
+    } catch (e) {
+      console.error('CommandCenterView delete:', e);
+      window.alert(`No se pudo eliminar: ${e?.message || 'error desconocido'}`);
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    }
   }
 
   /* ── Error state ──────────────────────────────────────────────────── */
