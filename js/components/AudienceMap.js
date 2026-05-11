@@ -123,39 +123,26 @@
       </div>`;
   }
 
-  // ── Helpers de color: lee --brand-gradient-dynamic y produce una función
-  //    de interpolación t∈[0,1] → color (rgb string). Si el degradado no
-  //    está disponible, fallback a un naranja cálido sólido.
-  function readBrandGradientColors() {
+  // ── Color de la marca (preferimos --brand-primary, el color sólido que
+  //    setea OrgBrandTheme por org). Si no existe, caemos al último stop del
+  //    gradient dinámico, y si tampoco, a un naranja cálido por defecto.
+  function readBrandHex() {
     try {
       const cs = getComputedStyle(document.documentElement);
+      const primary = (cs.getPropertyValue('--brand-primary') || '').trim();
+      if (/^#[0-9a-fA-F]{6,8}$/.test(primary)) return primary;
       const grad = (cs.getPropertyValue('--brand-gradient-dynamic') ||
                     cs.getPropertyValue('--brand-gradient') || '').trim();
       const hexes = grad.match(/#[0-9a-fA-F]{6,8}/g);
-      if (hexes && hexes.length > 0) return hexes;
+      if (hexes && hexes.length > 0) return hexes[hexes.length - 1];
     } catch (_) { /* noop */ }
-    return ['#e09145']; // fallback
+    return '#e09145';
   }
 
   function hexToRgb(hex) {
     let h = hex.replace('#', '');
     if (h.length === 8) h = h.slice(0, 6);
     return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-  }
-
-  function interpolateColors(stops, t) {
-    if (!stops || stops.length === 0) return 'rgb(255,255,255)';
-    if (stops.length === 1) return stops[0];
-    const tt = Math.max(0, Math.min(1, t));
-    const segs = stops.length - 1;
-    const idx = Math.min(Math.floor(tt * segs), segs - 1);
-    const segT = (tt * segs) - idx;
-    const [r1, g1, b1] = hexToRgb(stops[idx]);
-    const [r2, g2, b2] = hexToRgb(stops[idx + 1]);
-    const r = Math.round(r1 + (r2 - r1) * segT);
-    const g = Math.round(g1 + (g2 - g1) * segT);
-    const b = Math.round(b1 + (b2 - b1) * segT);
-    return `rgb(${r},${g},${b})`;
   }
 
   function rgbToHsl(r, g, b) {
@@ -201,26 +188,28 @@
     const maxVal = Math.max(0.0001, ...valuedEntries.map(d => d.value));
     const total  = valuedEntries.reduce((s, d) => s + d.value, 0);
 
-    // Lee el degradado de marca y extrae hue+saturation del último stop.
-    // La intensidad se controla con LIGHTNESS en HSL: más actividad = lightness
-    // baja (color más oscuro/profundo), menos actividad = lightness alta
-    // (color pálido). Mucho más legible que variar alpha sobre fondo oscuro.
-    const gradientStops = readBrandGradientColors();
-    const baseHex = gradientStops[gradientStops.length - 1] || '#e09145';
+    // Color brand sólido (--brand-primary) → hue+sat fijos. La jerarquía la
+    // controla LIGHTNESS HSL: más actividad = más oscuro, menos = más pálido.
+    const baseHex = readBrandHex();
     const [br, bg, bb] = hexToRgb(baseHex);
     const [brandHue, brandSat] = rgbToHsl(br, bg, bb);
 
-    container.innerHTML = `<canvas class="cc-map-canvas" aria-label="Mapa de distribución de audiencia por país"></canvas><div class="cc-map-legend"></div>`;
+    container.innerHTML = `<canvas class="cc-map-canvas" aria-label="Mapa de distribución de audiencia por país"></canvas>`;
     const canvas = container.querySelector('canvas');
     const ctx = canvas.getContext('2d');
 
+    // Curva sqrt para distribuciones long-tail (CO ~81%, resto <10%). La raíz
+    // expande los valores chicos para que se diferencien entre sí en vez de
+    // quedar todos colapsados en el extremo claro.
+    const curve = (x) => Math.sqrt(Math.max(0, Math.min(1, x)));
+    // Saturation reforzada para que el color brand se lea, no se acerque a gris
+    const sat = Math.min(90, Math.max(70, brandSat));
+
     const fillFor = (value) => {
-      if (value == null) return 'rgba(255,255,255,0.04)'; // missing → casi invisible
-      const t = Math.max(0, Math.min(1, value / maxVal));
-      // Lightness: 78% (t=0, casi blanco-pálido) → 28% (t=1, oscuro/profundo)
-      const lightness = 78 - (50 * t);
-      // Saturation alta y constante para que el color se lea como brand
-      const sat = Math.max(60, brandSat);
+      if (value == null) return 'rgba(255,255,255,0.04)';
+      const t  = curve(value / maxVal);
+      // 18% (top, casi negro brand) → 82% (cola, casi blanco brand): 64pt range
+      const lightness = 82 - (64 * t);
       return `hsl(${brandHue.toFixed(1)}, ${sat.toFixed(1)}%, ${lightness.toFixed(1)}%)`;
     };
 
@@ -268,24 +257,6 @@
         },
       },
     });
-
-    // Leyenda compacta: top-5 países, con un punto del color real del choropleth
-    const top5 = [...valuedEntries]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-    const legend = container.querySelector('.cc-map-legend');
-    if (legend && top5.length > 0 && total > 0) {
-      legend.innerHTML = top5.map(d => {
-        const iso2 = N3_TO_ISO2[parseInt(d.feature.id, 10)] || '';
-        const pct = Math.round((d.value / total) * 100);
-        const t = d.value / maxVal;
-        const color = interpolateColors(gradientStops, t);
-        return `<span class="cc-map-legend-item">
-          <span class="cc-map-legend-dot" style="background:${color}"></span>
-          ${FLAG(iso2)} ${d.feature.properties.name} <strong>${pct}%</strong>
-        </span>`;
-      }).join('');
-    }
 
     return chart;
   }
