@@ -118,25 +118,59 @@ class CommandCenterView extends BaseView {
       </div>
     </div>
 
-    <!-- DERECHA: Sidebar (solo campañas reales sincronizadas) ──────── -->
-    <aside class="cc-entorno-sidebar">
+    <!-- DERECHA: Sidebar — dos modos: reading (compacto) + analysis (expandido) -->
+    <aside class="cc-entorno-sidebar" id="ccSidebar">
       <div class="cc-entorno-breadcrumb">
         <span class="cc-entorno-bc-item">Panel</span>
         <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
         <span class="cc-entorno-bc-item cc-entorno-bc-current">Campañas</span>
+        <button class="cc-panel-expand-btn" id="ccPanelExpandBtn" title="Ver análisis del entorno" aria-label="Expandir panel">
+          <i class="fas fa-expand-alt"></i>
+          <i class="fas fa-compress-alt"></i>
+        </button>
       </div>
 
-      <section class="cc-entorno-section">
-        <div class="cc-entorno-subsection-head">
-          <h3 class="cc-entorno-section-title">Campañas reales</h3>
-          <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
-        </div>
-        <div class="cc-list" id="ccCampList"></div>
-        <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
-          <i class="fas fa-bullhorn"></i>
-          <span>Sin campañas sincronizadas. Conecta una integración (Meta, Google, etc.).</span>
-        </div>
-      </section>
+      <!-- MODO 1: lectura (default) — lista compacta de campañas -->
+      <div class="cc-panel-reading">
+        <section class="cc-entorno-section">
+          <div class="cc-entorno-subsection-head">
+            <h3 class="cc-entorno-section-title">Campañas reales</h3>
+            <span class="cc-entorno-subsection-count" id="ccCampCount">0</span>
+          </div>
+          <div class="cc-list" id="ccCampList"></div>
+          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+            <i class="fas fa-bullhorn"></i>
+            <span>Sin campañas sincronizadas. Conecta una integración (Meta, Google, etc.).</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- MODO 2: análisis (expandido) — galería de campañas + audiencias -->
+      <div class="cc-panel-analysis">
+        <section class="cc-entorno-section">
+          <div class="cc-entorno-subsection-head">
+            <h3 class="cc-entorno-section-title">Campañas</h3>
+            <span class="cc-entorno-subsection-count" id="ccGalleryCampCount">0</span>
+          </div>
+          <div class="cc-gallery" id="ccGalleryCamp"></div>
+          <div class="cc-empty cc-empty--compact" id="ccGalleryCampEmpty" style="display:none;">
+            <i class="fas fa-bullhorn"></i>
+            <span>Sin campañas sincronizadas.</span>
+          </div>
+        </section>
+
+        <section class="cc-entorno-section">
+          <div class="cc-entorno-subsection-head">
+            <h3 class="cc-entorno-section-title">Audiencias</h3>
+            <span class="cc-entorno-subsection-count" id="ccGalleryAudCount">0</span>
+          </div>
+          <div class="cc-gallery" id="ccGalleryAud"></div>
+          <div class="cc-empty cc-empty--compact" id="ccGalleryAudEmpty" style="display:none;">
+            <i class="fas fa-users-slash"></i>
+            <span>Sin audiencias definidas.</span>
+          </div>
+        </section>
+      </div>
     </aside>
   </div>
 </div>`;
@@ -245,6 +279,7 @@ class CommandCenterView extends BaseView {
 
     this._renderVeraInbox();
     this._renderCampaigns();
+    this._renderGallery();
     this._renderAudienceMap();
     this.updateLinksForRouter();
   }
@@ -492,6 +527,142 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
+  /* ── GALERÍA (analysis mode): grilla detallada de campañas + audiencias ── */
+  _renderGallery() {
+    this._renderGalleryCampaigns();
+    this._renderGalleryAudiences();
+  }
+
+  _renderGalleryCampaigns() {
+    const grid  = document.getElementById('ccGalleryCamp');
+    const empty = document.getElementById('ccGalleryCampEmpty');
+    const count = document.getElementById('ccGalleryCampCount');
+    if (!grid) return;
+
+    const rows = (Array.isArray(this._campaigns) ? this._campaigns : []).filter(c => c?.last_synced_at);
+    if (count) count.textContent = String(rows.length);
+
+    if (!rows.length) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
+    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
+    const resultLabel = (obj) => {
+      const s = String(obj || '').toLowerCase();
+      if (s.includes('lead'))                                     return 'leads';
+      if (s.includes('purchase') || s.includes('sales') || s.includes('conversion')) return 'compras';
+      if (s.includes('install') || s.includes('app'))             return 'instalaciones';
+      if (s.includes('message') || s.includes('chat'))            return 'mensajes';
+      if (s.includes('engagement') || s.includes('reach'))        return 'interacciones';
+      if (s.includes('traffic') || s.includes('link_click'))      return 'clics';
+      if (s.includes('view') || s.includes('thruplay'))           return 'vistas';
+      return 'resultados';
+    };
+    const fmtCompact = (v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return '0';
+      if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+      if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+      return n.toLocaleString('es-ES');
+    };
+    const fmtMoney = (v, currency) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return `0 ${currency || 'USD'}`;
+      const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+      return `${compact} ${currency || 'USD'}`;
+    };
+    const fmtDate = (d) => {
+      if (!d) return '—';
+      const t = new Date(d);
+      return Number.isFinite(t.getTime())
+        ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+    };
+
+    grid.innerHTML = rows.map((c) => {
+      const stBadge   = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
+      const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
+      const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
+      const resultsN  = Number(c.cached_conversions);
+      const resultsV  = Number.isFinite(resultsN) ? resultsN : 0;
+      const resultsL  = resultLabel(c.platform_objective || c.cta);
+      const ctaText   = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
+      const ctaShort  = ctaText.length > 120 ? ctaText.slice(0, 120) + '…' : ctaText;
+
+      return `
+      <article class="cc-gallery-card">
+        <header class="cc-gallery-card-head">
+          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
+          <div class="cc-camp-badges">${stBadge}${platBadge}</div>
+        </header>
+        ${ctaShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(ctaShort)}</p>` : ''}
+        <dl class="cc-gallery-stats">
+          <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
+          <div class="cc-camp-stat"><dt>Resultados</dt><dd>${fmtCompact(resultsV)} <small>${this.escapeHtml(resultsL)}</small></dd></div>
+          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency))}</dd></div>
+          <div class="cc-camp-stat"><dt>Impresiones</dt><dd>${fmtCompact(c.cached_impressions || 0)}</dd></div>
+          <div class="cc-camp-stat"><dt>Clics</dt><dd>${fmtCompact(c.cached_clicks || 0)}</dd></div>
+          <div class="cc-camp-stat"><dt>ROAS</dt><dd>${c.cached_roas != null ? `${Number(c.cached_roas).toFixed(2)}x` : '—'}</dd></div>
+        </dl>
+      </article>`;
+    }).join('');
+  }
+
+  _renderGalleryAudiences() {
+    const grid  = document.getElementById('ccGalleryAud');
+    const empty = document.getElementById('ccGalleryAudEmpty');
+    const count = document.getElementById('ccGalleryAudCount');
+    if (!grid) return;
+
+    const rows = Array.isArray(this._audiences) ? this._audiences : [];
+    if (count) count.textContent = String(rows.length);
+
+    if (!rows.length) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    const awarenessLabel = {
+      unaware: 'Unaware', problem_aware: 'Problem aware', solution_aware: 'Solution aware',
+      product_aware: 'Product aware', most_aware: 'Most aware',
+    };
+
+    grid.innerHTML = rows.map((a) => {
+      const scoreNum  = a.alignment_score != null ? Math.round(Number(a.alignment_score) * 100) : null;
+      const scoreCls  = scoreNum == null ? '' : (scoreNum >= 70 ? 'cc-aud-score--hi' : scoreNum >= 40 ? 'cc-aud-score--mid' : 'cc-aud-score--lo');
+      const scoreBadge = scoreNum != null ? `<span class="cc-aud-score ${scoreCls}" title="Alineación">${scoreNum}%</span>` : '';
+      const levelTxt  = awarenessLabel[a.awareness_level] || 'Sin awareness';
+      const desc      = String(a.description || '').trim();
+      const descShort = desc.length > 160 ? desc.slice(0, 160) + '…' : desc;
+      const dolorN    = Array.isArray(a.dolores)         ? a.dolores.length         : 0;
+      const deseoN    = Array.isArray(a.deseos)          ? a.deseos.length          : 0;
+      const objN      = Array.isArray(a.objeciones)      ? a.objeciones.length      : 0;
+      const gatN      = Array.isArray(a.gatillos_compra) ? a.gatillos_compra.length : 0;
+
+      return `
+      <article class="cc-gallery-card">
+        <header class="cc-gallery-card-head">
+          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(a.name || 'Audiencia')}">${this.escapeHtml(a.name || 'Audiencia')}</h4>
+          ${scoreBadge}
+        </header>
+        <span class="cc-aud-level cc-aud-level--${this.escapeHtml(a.awareness_level || 'unaware')}">${this.escapeHtml(levelTxt)}</span>
+        ${descShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(descShort)}</p>` : ''}
+        <dl class="cc-gallery-stats">
+          <div class="cc-camp-stat"><dt>Dolores</dt><dd>${dolorN}</dd></div>
+          <div class="cc-camp-stat"><dt>Deseos</dt><dd>${deseoN}</dd></div>
+          <div class="cc-camp-stat"><dt>Objeciones</dt><dd>${objN}</dd></div>
+          <div class="cc-camp-stat"><dt>Gatillos</dt><dd>${gatN}</dd></div>
+        </dl>
+      </article>`;
+    }).join('');
+  }
+
   /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
   async _renderAudienceMap() {
     const mapEl       = document.getElementById('ccAudienceMap');
@@ -637,8 +808,19 @@ class CommandCenterView extends BaseView {
     if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
 
-  /* ── Listeners: vacío por ahora (las cards no tienen interacción) ── */
-  _setupEventListeners() { /* noop */ }
+  /* ── Listeners: toggle expand/compress del panel ──────────────────── */
+  _setupEventListeners() {
+    const btn      = document.getElementById('ccPanelExpandBtn');
+    const sidebar  = document.getElementById('ccSidebar');
+    const layout   = document.getElementById('ccTwoCol');
+    if (!btn || !sidebar || !layout) return;
+    btn.addEventListener('click', () => {
+      const expanded = sidebar.classList.toggle('cc-sidebar--expanded');
+      layout.classList.toggle('cc-entorno-layout--expanded', expanded);
+      btn.setAttribute('title', expanded ? 'Cerrar análisis' : 'Ver análisis del entorno');
+      btn.setAttribute('aria-label', expanded ? 'Cerrar panel' : 'Expandir panel');
+    });
+  }
 
   /* ── Error state ──────────────────────────────────────────────────── */
   _setError(msg) {

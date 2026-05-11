@@ -708,9 +708,7 @@
   opacity: 0.6;
 }
 
-/* Lista de campañas: ocupa el alto sobrante de la section y scrollea ella
-   (no el aside). min-height:0 es indispensable para que flex permita
-   encoger por debajo del contenido natural y se active overflow. */
+/* Lista de campañas (reading mode): ocupa el alto sobrante y scrollea. */
 .cc-entorno-section .cc-list {
   display: flex;
   flex-direction: column;
@@ -721,10 +719,183 @@
   padding-right: 4px;
 }
 
-.cc-entorno-section .cc-list::-webkit-scrollbar { width: 4px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); border-radius: 2px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 2px; }
-.cc-entorno-section .cc-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+.cc-entorno-section .cc-list::-webkit-scrollbar,
+.cc-panel-analysis::-webkit-scrollbar { width: 6px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-track,
+.cc-panel-analysis::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); border-radius: 3px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-thumb,
+.cc-panel-analysis::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
+.cc-entorno-section .cc-list::-webkit-scrollbar-thumb:hover,
+.cc-panel-analysis::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* ── Botón expand/compress en el breadcrumb ────────────────────────── */
+.cc-panel-expand-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-divider);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.cc-panel-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--brand-primary, var(--accent-warm, #e09145));
+}
+.cc-panel-expand-btn i { display: none; }
+.cc-sidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt,
+#ccSidebar:not(.cc-sidebar--expanded) .cc-panel-expand-btn .fa-expand-alt { display: inline-block; }
+.cc-sidebar--expanded .cc-panel-expand-btn .fa-compress-alt,
+#ccSidebar.cc-sidebar--expanded .cc-panel-expand-btn .fa-compress-alt { display: inline-block; }
+
+/* ── Modos del panel: reading (default) vs analysis (expanded) ─────── */
+.cc-panel-reading {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.cc-panel-analysis {
+  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cc-sidebar--expanded .cc-panel-reading { display: none; }
+.cc-sidebar--expanded .cc-panel-analysis {
+  display: block;
+  animation: ccPanelFadeIn 0.25s ease;
+}
+
+@keyframes ccPanelFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* En analysis mode el layout se expande: sidebar al 100%, mapa oculto */
+.cc-entorno-layout--expanded .cc-entorno-map {
+  display: none !important;
+}
+.cc-entorno-layout--expanded .cc-entorno-sidebar {
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 1 100% !important;
+  max-width: 100% !important;
+}
+
+.cc-entorno-layout { transition: gap 0.3s ease; }
+.cc-entorno-sidebar { transition: width 0.3s cubic-bezier(.4,0,.2,1), max-width 0.3s cubic-bezier(.4,0,.2,1); }
+
+/* ── Galería (analysis mode): grilla responsive de cards ───────────── */
+.cc-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.cc-gallery-card {
+  background: var(--bg-secondary, #141517);
+  border: 1px solid var(--border-divider, #212126);
+  border-radius: 12px;
+  padding: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.cc-gallery-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: #181a1d;
+}
+
+.cc-gallery-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.cc-gallery-card-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+}
+
+.cc-gallery-card-cta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cc-gallery-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.5rem;
+  margin: 0.15rem 0 0;
+  min-width: 0;
+}
+
+/* Badges de awareness/score reutilizados en audiencias */
+.cc-aud-score {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.cc-aud-score--hi  { color: #3cd264; background: rgba(60,210,100,.13); border: 1px solid rgba(60,210,100,.25); }
+.cc-aud-score--mid { color: #f4b942; background: rgba(244,185,66,.13); border: 1px solid rgba(244,185,66,.25); }
+.cc-aud-score--lo  { color: #f06060; background: rgba(240,96,96,.13);  border: 1px solid rgba(240,96,96,.25); }
+
+.cc-aud-level {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-divider);
+}
+.cc-aud-level--problem_aware  { background: rgba(244,185,66,.12);  border-color: rgba(244,185,66,.22);  color: #f4b942; }
+.cc-aud-level--solution_aware { background: rgba(90,170,255,.12);  border-color: rgba(90,170,255,.22);  color: #5aaeff; }
+.cc-aud-level--product_aware  { background: rgba(140,100,255,.12); border-color: rgba(140,100,255,.22); color: #9b7aff; }
+.cc-aud-level--most_aware     { background: rgba(60,210,100,.12);  border-color: rgba(60,210,100,.22);  color: #3cd264; }
+
+/* En analysis mode los íconos del badge se quedan compactos */
+.cc-panel-analysis .cc-entorno-section { margin-bottom: 1.5rem; }
+.cc-panel-analysis .cc-entorno-section:last-child { margin-bottom: 0; }
 
 /* Responsive */
 @media (max-width: 1200px) {
