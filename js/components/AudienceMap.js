@@ -223,9 +223,17 @@
         },
         scales: {
           projection: { axis: 'x', projection: 'naturalEarth1' },
-          // Color scale neutralizada: el painting real lo hace dataset.backgroundColor.
-          // Mantenemos `display:false` para evitar la barra azul -1..1 a la derecha.
-          color: { display: false },
+          // Color scale completamente neutralizada: el painting real lo hace
+          // dataset.backgroundColor. Sin esto chartjs-chart-geo a veces dibuja
+          // una barra vertical (color scale axis) aunque display:false esté en
+          // la raíz del scale — los hijos `legend` y `ticks` deben ser explícitos.
+          color: {
+            display:      false,
+            legend:       { display: false },
+            ticks:        { display: false },
+            grid:         { display: false },
+            border:       { display: false },
+          },
         },
       },
     });

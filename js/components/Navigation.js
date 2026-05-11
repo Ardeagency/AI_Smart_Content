@@ -568,7 +568,7 @@ class Navigation {
     }
     body.innerHTML =
       '<div class="notif-list notifications-modal-list">' +
-      list.map((n) => this._renderRichNotificationCard(n)).join('') +
+      list.map((n) => this._renderRichNotificationCard(n, { mode: 'expanded' })).join('') +
       '</div>';
     this._attachNotificationListeners(body, () => this.closeNotificationsModal(), list);
   }
@@ -795,14 +795,24 @@ class Navigation {
    * trae metadata.{summary, subject, checklist, actions}, cae al render plano
    * para no romper notifs legacy.
    *
-   * @param {object} n - notif normalizada (resultado de _normalizeOrgNotification)
+   * Modos:
+   *   - 'compact' (default en dropdown/flyout): header + título + resumen + acciones.
+   *     Botón "Ver detalles" expande in-place.
+   *   - 'expanded' (default en modal): todo el contenido incl. body, subject,
+   *     outputs (miniaturas), checklist y estado.
+   *
+   * @param {object} n        - notif normalizada
+   * @param {object} [opts]
+   * @param {'compact'|'expanded'} [opts.mode='compact']
    * @returns {string} HTML string del card
    */
-  _renderRichNotificationCard(n) {
+  _renderRichNotificationCard(n, opts = {}) {
     if (!n) return '';
-    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length));
+    const hasRich = !!(n.summary || n.subject || (n.checklist?.length) || (n.actions?.length) || (n.outputs?.length));
     if (!hasRich) return this._renderLegacyNotificationCard(n);
 
+    const mode = opts.mode === 'expanded' ? 'expanded' : 'compact';
+    const isExpanded = mode === 'expanded';
     const unread = !n.is_read;
     const sev = (n.severity || 'info').toLowerCase();
     const labelText = n.label || (n.type || 'info').toUpperCase();
@@ -898,8 +908,17 @@ class Navigation {
     };
     const st = statusMap[n.status] || statusMap.pending;
 
+    // En modo compact: ocultamos body/subject/outputs/checklist/status.
+    // El toggle "Ver detalles" cambia data-mode y re-renderea la card in-place.
+    const toggleBtnHtml = `
+      <button type="button" class="notif-toggle" data-toggle-expand
+              aria-label="${isExpanded ? 'Ocultar detalles' : 'Ver detalles'}">
+        <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+        <span>${isExpanded ? 'Ocultar detalles' : 'Ver detalles'}</span>
+      </button>`;
+
     return `
-      <article class="notif-card ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}">
+      <article class="notif-card mode-${mode} ${unread ? 'unread' : ''} sev-${_escapeHtml(sev)}" data-id="${_escapeHtml(n.id)}" data-mode="${mode}">
         <header class="notif-card-header">
           <span class="notif-label">${_escapeHtml(labelText)}</span>
           <span class="notif-sev-pill sev-${_escapeHtml(sev)}">${_escapeHtml(sev)}</span>
@@ -907,15 +926,15 @@ class Navigation {
         </header>
         <h4 class="notif-title">${_escapeHtml(n.title || '')}</h4>
         ${n.summary ? `<p class="notif-summary">${_escapeHtml(n.summary)}</p>` : ''}
-        ${n.body ? `<details class="notif-details">
-          <summary>Detalles del plan de acción</summary>
-          <div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>
-        </details>` : ''}
-        ${subjectHtml}
-        ${outputsHtml}
-        ${checklistHtml}
-        <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
+        ${isExpanded ? `
+          ${n.body ? `<div class="notif-body">${_escapeHtml(n.body).replace(/\n/g, '<br>')}</div>` : ''}
+          ${subjectHtml}
+          ${outputsHtml}
+          ${checklistHtml}
+          <div class="notif-status"><span>${st.icon}</span> Estado: <strong>${st.label}</strong></div>
+        ` : ''}
         ${actionsHtml}
+        ${(n.body || n.subject || n.outputs?.length || n.checklist?.length) ? toggleBtnHtml : ''}
       </article>`;
   }
 
@@ -950,6 +969,22 @@ class Navigation {
     container.querySelectorAll('.notif-card').forEach((card) => {
       const id = card.dataset.id;
       const n = byId.get(id);
+
+      // Toggle compact ↔ expanded (re-render in-place de esta card)
+      const toggleBtn = card.querySelector('[data-toggle-expand]');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextMode = card.dataset.mode === 'expanded' ? 'compact' : 'expanded';
+          const fresh = this._renderRichNotificationCard(n, { mode: nextMode });
+          const wrap = document.createElement('div');
+          wrap.innerHTML = fresh.trim();
+          const newCard = wrap.firstElementChild;
+          card.replaceWith(newCard);
+          // Re-cablear listeners en la card reemplazada (subject, outputs, checklist, acciones, toggle)
+          this._attachNotificationListeners(newCard.parentElement, onClose, notifs);
+        });
+      }
 
       // Outputs click → navega al asset/run específico
       card.querySelectorAll('.notif-output[data-output-url]').forEach((out) => {
