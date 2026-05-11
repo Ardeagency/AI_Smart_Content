@@ -240,13 +240,12 @@
           }
         },
         scales: {
-          projection: { axis: 'x', projection: 'naturalEarth1' },
-          // chartjs-chart-geo REQUIERE scales.color para choropleth — setear
-          // `display:false` rompe el render. Solo hide del legend (barra a la
-          // derecha con 0/0.4/0.8). El painting real lo hace dataset.backgroundColor.
-          color: {
-            legend: { display: false },
-          },
+          // chartjs-chart-geo v4: si sobrescribes `scales.{projection,color}`
+          // pisas los defaults del controller. SIEMPRE declara `type` + `axis`
+          // explícitos o el scale builder de chart.js lanza
+          // "Cannot read properties of undefined (reading 'axis')".
+          projection: { axis: 'x', type: 'projection', projection: 'naturalEarth1' },
+          color: { axis: 'x', type: 'color', legend: { display: false } },
         },
       },
     });
