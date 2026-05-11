@@ -624,11 +624,12 @@
   display: flex;
   gap: 1.25rem;
   width: 100%;
-  /* Toma todo el alto disponible del padre (.cc-page es flex column). Antes
-     tenía `height: calc(100vh - 200px)` que dejaba ~150px de espacio muerto
-     debajo porque el padre tiene min-height: calc(100vh - 46px). */
+  /* Toma todo el alto disponible del padre (.cc-page es flex column con
+     height fijo = 100vh - header). Sin min-height para no forzar overflow
+     en viewports pequeños — el min-height vivía en el viejo modelo de altura
+     fija basada en viewport. */
   flex: 1 1 auto;
-  min-height: 600px;
+  min-height: 0;
 }
 
 /* ── MAPA (left, flex 1) ───────────────────────────────────────────── */
@@ -694,36 +695,42 @@
   color: var(--text-secondary);
 }
 
-/* Comparación demográfica como overlay del mapa (bottom-left, sin fondo) */
+/* Comparación demográfica como overlays del mapa (sin fondo, sin bordes).
+   EDAD bottom-left, GÉNERO bottom-right. pointer-events:none deja
+   interactuar con el mapa por debajo. */
 .cc-entorno-demog {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
+  bottom: 18px;
   z-index: 5;
-  min-width: 280px;
-  max-width: 360px;
-  pointer-events: none; /* deja interactuar con el mapa por debajo */
+  pointer-events: none;
+  width: 260px;
+  max-width: 32%;
 }
-
-.cc-entorno-demog .cc-map-breakdowns {
-  margin: 0;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
+.cc-entorno-demog--age    { left: 18px; }
+.cc-entorno-demog--gender { right: 18px; }
 
 .cc-entorno-demog .cc-break-group {
   background: transparent;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .cc-entorno-demog .cc-break-title {
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  margin-bottom: 0.35rem;
+  margin: 0 0 0.4rem 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .cc-entorno-demog .cc-break-row {
-  grid-template-columns: 70px 1fr 42px;
+  display: grid;
+  grid-template-columns: 60px 1fr 38px;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .cc-entorno-demog .cc-break-label,
@@ -731,16 +738,22 @@
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   font-weight: 600;
+  font-size: 0.78rem;
 }
 
 .cc-entorno-demog .cc-break-bar-wrap {
   background: rgba(0, 0, 0, 0.35);
-  height: 8px;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .cc-entorno-demog .cc-break-bar {
-  background: var(--accent-warm, #e09145);
+  background: var(--brand-primary, var(--accent-warm, #e09145));
   opacity: 1;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
 }
 
 /* Chip de error visible cuando el choropleth cae al fallback de lista */
@@ -882,20 +895,23 @@
 }
 
 @media (max-width: 768px) {
-  .cc-entorno-demog { bottom: 10px; left: 10px; min-width: 200px; }
+  .cc-entorno-demog          { bottom: 10px; width: 180px; }
+  .cc-entorno-demog--age     { left: 10px; }
+  .cc-entorno-demog--gender  { right: 10px; }
 }
 
 /* ── Full-width override cuando el layout Entorno está activo ──────── */
-/* .cc-page tiene max-width:1280px; cuando hay .cc-entorno-layout queremos
-   full screen útil (~1800px max, centrado). Además convertimos .cc-page en
-   flex column para que el layout #ccTwoCol pueda usar `flex:1` y llenar el
-   alto real del contenedor (antes tenía `height: 100vh - 200px` fijo y
-   quedaba ~150px de espacio muerto debajo). Usa :has() — soporte moderno. */
+/* La página entera (header + mapa + sidebar) debe entrar al 100% en el
+   viewport SIN scroll. height fijo en vez de min-height para que el alto
+   se cierre exactamente al espacio disponible bajo el header del shell. */
 .cc-page:has(#ccTwoCol) {
   max-width: 1800px;
   padding: 12px 20px;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - var(--app-header-height, 45.8px));
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* En viewports muy anchos (>1900px) seguimos centrado con 1800px */

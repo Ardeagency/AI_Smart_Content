@@ -109,9 +109,12 @@ class CommandCenterView extends BaseView {
       <!-- Choropleth canvas container -->
       <div class="cc-entorno-map-canvas" id="ccAudienceMap"></div>
 
-      <!-- Demographic overlay (bottom-left, sin fondo) — sustituye a la leyenda -->
-      <div class="cc-entorno-demog" id="ccEntornoDemog" style="display:none;">
-        <div class="cc-map-breakdowns" id="ccAudienceBreakdowns"></div>
+      <!-- Demografía: edades bottom-LEFT, géneros bottom-RIGHT (sin fondo) -->
+      <div class="cc-entorno-demog cc-entorno-demog--age" id="ccEntornoDemogAge" style="display:none;">
+        <div class="cc-break-group" id="ccBreakAge"></div>
+      </div>
+      <div class="cc-entorno-demog cc-entorno-demog--gender" id="ccEntornoDemogGender" style="display:none;">
+        <div class="cc-break-group" id="ccBreakGender"></div>
       </div>
     </div>
 
@@ -528,8 +531,11 @@ class CommandCenterView extends BaseView {
 
   /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
   async _renderAudienceMap() {
-    const mapEl    = document.getElementById('ccAudienceMap');
-    const breakEl  = document.getElementById('ccAudienceBreakdowns');
+    const mapEl       = document.getElementById('ccAudienceMap');
+    const ageOverlay  = document.getElementById('ccEntornoDemogAge');
+    const genOverlay  = document.getElementById('ccEntornoDemogGender');
+    const ageEl       = document.getElementById('ccBreakAge');
+    const genEl       = document.getElementById('ccBreakGender');
     if (!mapEl) return;
 
     // Filtra claves "_raw", "_totals", "_sources", "_updated_at" del jsonb de personas
@@ -600,12 +606,12 @@ class CommandCenterView extends BaseView {
       }
     }
 
-    const demogEl = document.getElementById('ccEntornoDemog');
-
     if (!source) {
       mapEl.innerHTML = `<div class="cc-map-empty"><i class="fas fa-satellite-dish"></i><p>Aún no hay lectura del mercado. Conecta una integración (Meta/Google) o espera a que los sensores corran (próxima corrida diaria).</p></div>`;
-      if (breakEl) breakEl.innerHTML = '';
-      if (demogEl) demogEl.style.display = 'none';
+      if (ageEl) ageEl.innerHTML = '';
+      if (genEl) genEl.innerHTML = '';
+      if (ageOverlay) ageOverlay.style.display = 'none';
+      if (genOverlay) genOverlay.style.display = 'none';
       return;
     }
 
@@ -631,45 +637,41 @@ class CommandCenterView extends BaseView {
       mapEl.innerHTML = `<div class="cc-map-empty">Cargando mapa…</div>`;
     }
 
-    // Breakdowns: género + edad como mini-barras CSS (overlay sobre el mapa)
-    if (breakEl) {
-      const totalGender = Object.values(agg.gender).reduce((s, v) => s + Number(v || 0), 0);
-      const totalAge    = Object.values(agg.age).reduce((s, v) => s + Number(v || 0), 0);
+    // Breakdowns: edad (bottom-left) + género (bottom-right) — overlays sin fondo
+    const totalGender = Object.values(agg.gender).reduce((s, v) => s + Number(v || 0), 0);
+    const totalAge    = Object.values(agg.age).reduce((s, v) => s + Number(v || 0), 0);
+    const buildRow = (label, pct, aria) => `
+      <div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="${aria}">
+        <span class="cc-break-label">${label}</span>
+        <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
+        <span class="cc-break-pct">${pct}%</span>
+      </div>`;
 
-      const genderRows = totalGender > 0
-        ? Object.entries(agg.gender)
-            .sort((a, b) => Number(b[1]) - Number(a[1]))
-            .slice(0, 4)
-            .map(([k, v]) => {
-              const pct = Math.round((Number(v) / totalGender) * 100);
-              const label = k === 'male' ? 'Hombres' : k === 'female' ? 'Mujeres' : k;
-              return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="${label}: ${pct}%">
-                <span class="cc-break-label">${label}</span>
-                <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
-                <span class="cc-break-pct">${pct}%</span>
-              </div>`;
-            }).join('')
-        : '';
+    const genderRows = totalGender > 0
+      ? Object.entries(agg.gender)
+          .sort((a, b) => Number(b[1]) - Number(a[1]))
+          .slice(0, 4)
+          .map(([k, v]) => {
+            const pct = Math.round((Number(v) / totalGender) * 100);
+            const label = k === 'male' ? 'Hombres' : k === 'female' ? 'Mujeres' : k;
+            return buildRow(label, pct, `${label}: ${pct}%`);
+          }).join('')
+      : '';
 
-      const ageRows = totalAge > 0
-        ? Object.entries(agg.age)
-            .sort((a, b) => Number(b[1]) - Number(a[1]))
-            .slice(0, 6)
-            .map(([k, v]) => {
-              const pct = Math.round((Number(v) / totalAge) * 100);
-              return `<div class="cc-break-row" role="progressbar" aria-valuenow="${pct}" aria-label="Edad ${k}: ${pct}%">
-                <span class="cc-break-label">${k}</span>
-                <div class="cc-break-bar-wrap"><div class="cc-break-bar" style="width:${pct}%"></div></div>
-                <span class="cc-break-pct">${pct}%</span>
-              </div>`;
-            }).join('')
-        : '';
+    const ageRows = totalAge > 0
+      ? Object.entries(agg.age)
+          .sort((a, b) => Number(b[1]) - Number(a[1]))
+          .slice(0, 6)
+          .map(([k, v]) => {
+            const pct = Math.round((Number(v) / totalAge) * 100);
+            return buildRow(k, pct, `Edad ${k}: ${pct}%`);
+          }).join('')
+      : '';
 
-      breakEl.innerHTML = `
-        ${genderRows ? `<div class="cc-break-group"><h4 class="cc-break-title">Género</h4>${genderRows}</div>` : ''}
-        ${ageRows    ? `<div class="cc-break-group"><h4 class="cc-break-title">Edad</h4>${ageRows}</div>` : ''}`;
-      if (demogEl) demogEl.style.display = (genderRows || ageRows) ? '' : 'none';
-    }
+    if (ageEl)  ageEl.innerHTML  = ageRows    ? `<h4 class="cc-break-title">Edad</h4>${ageRows}`     : '';
+    if (genEl)  genEl.innerHTML  = genderRows ? `<h4 class="cc-break-title">Género</h4>${genderRows}` : '';
+    if (ageOverlay) ageOverlay.style.display = ageRows    ? '' : 'none';
+    if (genOverlay) genOverlay.style.display = genderRows ? '' : 'none';
   }
 
   /* ── Listeners: solo el picker "vincular persona" en campañas ────── */
