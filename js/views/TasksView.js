@@ -54,7 +54,9 @@ class TasksView extends BaseView {
       </button>
     </nav>
 
-    <div class="tasks-cards-grid" id="tasksGrid"></div>
+    <div class="tasks-cards-grid" id="tasksGrid">
+      ${this.skeletonGrid(6, 'lg')}
+    </div>
     <div class="tasks-empty" id="tasksEmpty" style="display: none;">
       <div class="tasks-empty-icon"><i class="fas fa-calendar-alt"></i></div>
       <p>Aún no tienes tareas programadas.</p>

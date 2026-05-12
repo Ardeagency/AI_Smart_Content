@@ -62,6 +62,7 @@ class ProductionView extends BaseView {
                     </div>
                 </header>
                 <div class="living-history-content living-history-masonry" id="livingHistoryContent">
+                    ${this.skeletonGrid(8, 'lg')}
                 </div>
             </section>
         </div>
