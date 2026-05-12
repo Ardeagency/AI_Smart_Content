@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-12** (cerradas BUG-005, AUDIT-002 H2/H3, FEAT-014, OPS-008, OPS-009 — ver sección "Resueltas").
+Última actualización: **2026-05-12** (cerradas BUG-005, AUDIT-002 H2/H3, FEAT-014, OPS-008, OPS-009 — ver sección "Resueltas"; abiertas AUDIT-003 + FEAT-019/020/021/022 + OPS-010/011 tras auditoría enterprise readiness).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -15,6 +15,8 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
 | [SPRINT-FRONTEND-100](./SPRINT-FRONTEND-100-2026-05-06.md) | Sprint 14 días para exponer 100% del backend al usuario — entrega martes 26/05 (scope reducido: sin ActivityView ni HealthView) | feature | 👤 | long | — |
+| [FEAT-019](./FEAT-019-payment-gateway.md) | Pasarela de pago end-to-end — Stripe / Wompi / híbrido. Sin esto no hay SaaS. Bloqueante de venta. | feature | 👤 | long | — |
+| [FEAT-020](./FEAT-020-auth-mfa.md) | Auth empresarial mínimo — MFA TOTP Supabase nativo + magic link + session policies | feature | 👤 | medium | — |
 
 ## 🟠 High
 
@@ -26,6 +28,10 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | [FEAT-011](./FEAT-011-studio-programar-button.md) | Botón "Programar" en StudioView — desbloquea cadena schedule end-to-end | feature | 👤 | medium | — |
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning de usuarios end-to-end (función backend + email + onboarding) | feature | 👤 | long | — |
 | [FEAT-017](./FEAT-017-content-feed.md) | Content Feed unificado — reescribir ContentView como feed estilo IA_Partner sobre `brand_posts` + `competitor_ads` + `intelligence_signals` (en progreso) | feature | 👤 | long | — |
+| [AUDIT-003](./AUDIT-003-enterprise-readiness-2026-05-12.md) | Auditoría enterprise readiness — gap analysis front vs back vs SaaS B2B; matriz P0-P3 + 6 tasks hijas (FEAT-019/020/021/022, OPS-010/011) | audit | 👤 | short | — |
+| [FEAT-021](./FEAT-021-audit-log-ui.md) | Panel de auditoría para admin del tenant — exponer `user_audit_log` (datos ya se escriben) | feature | 👤 | medium | — |
+| [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC granular — roles formales (owner/admin/editor/viewer) + matriz permisos + UI + invitaciones email | feature | 👤 | long | — |
+| [OPS-010](./OPS-010-ci-gates-staging.md) | CI/CD — vitest gate en Netlify pre-deploy + staging branch separado de prod | ops | 👤 | medium | — |
 
 ## 🟡 Medium
 
@@ -36,6 +42,7 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | [FEAT-008](./FEAT-008-frontend-new-services.md) | Crear `TendenciasDataService` (Competencia ya existe) + render | feature | 👤 | long | — |
 | [FEAT-013](./FEAT-013-monitoring-crud.md) | CRUD de sensores y URL watchers en MonitoringView | feature | 👤 | medium | — |
 | [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | Meta Ad Library — decidir A (Meta App Review) / B (Apify actor) / C (pausar). Legacy fallback ya eliminado. | ops | 👤 | medium | — |
+| [OPS-011](./OPS-011-rls-hygiene-review.md) | RLS hygiene — clasificar/activar las 13 tablas con RLS off (catalogos globales vs leak potencial) | ops | 👤 | short | — |
 
 ## 🟢 Low
 
@@ -50,15 +57,15 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 ---
 
-**Total:** 18 tareas activas (0 auto-eligibles 🤖 + 18 requieren humano 👤).
+**Total:** 25 tareas activas (0 auto-eligibles 🤖 + 25 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
-| 🔴 critical | 1 | 0 | 1 |
-| 🟠 high | 6 | 0 | 6 |
-| 🟡 medium | 5 | 0 | 5 |
+| 🔴 critical | 3 | 0 | 3 |
+| 🟠 high | 10 | 0 | 10 |
+| 🟡 medium | 6 | 0 | 6 |
 | 🟢 low | 6 | 0 | 6 |
-| **Suma** | **18** | **0** | **18** |
+| **Suma** | **25** | **0** | **25** |
 
 ## Resueltas el 2026-05-12
 
