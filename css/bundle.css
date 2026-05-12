@@ -687,18 +687,31 @@ textarea:focus-visible,
 }
 
 /* Tinte de marca solo dentro de org (clase la setea OrgBrandTheme tras resolver
-   palette primary/secondary). El gradient vive en <body> con background-attachment: fixed
-   para evitar el clipping causado por view-transition-name en #app-container. La cascada
-   --view-bg-base hace que cualquier wrapper full-bleed que use var(--view-bg-base) (o el
-   alias --living-bg-deep) se vuelva transparente, dejando ver el bg del body.
-   Vistas /dev/* mantienen fondo opaco. */
+   palette primary/secondary). El gradient vive en un div fixed #brand-bg-overlay
+   (declarado en index.html) que se posiciona detrás de todo el contenido — evita
+   los quirks de background-attachment: fixed en body cuando hay view-transition-name
+   en #app-container u overflow restrictions. La cascada --view-bg-base hace que
+   cualquier wrapper full-bleed que use var(--view-bg-base) (o el alias
+   --living-bg-deep) se vuelva transparente, dejando ver el overlay. Vistas /dev/*
+   mantienen fondo opaco. */
+#brand-bg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--bg-primary);
+    background-image: var(--brand-gradient-app-container, none);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    pointer-events: none;
+    display: none;
+}
+
+body.org-brand-context:not(.route-dev) #brand-bg-overlay {
+    display: block;
+}
+
 body.org-brand-context {
     --view-bg-base: transparent;
-    background-image: var(--brand-gradient-app-container);
-    background-color: var(--bg-primary);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-size: 100% 100%;
 }
 
 body.org-brand-context #app-container {
@@ -707,7 +720,6 @@ body.org-brand-context #app-container {
 
 body.org-brand-context.route-dev {
     --view-bg-base: var(--bg-primary);
-    background-image: none;
 }
 
 body.org-brand-context.route-dev #app-container {
