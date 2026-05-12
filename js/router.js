@@ -155,6 +155,16 @@ class Router {
     }
     this._handlingRoute = true;
 
+    // Delayed spinner: si la navegación tarda >250ms, mostrar el spinner
+    // global (asset lazy lento, fetch de datos, etc.). En navegaciones
+    // rápidas (cache hit del SW, vista cacheada en bfCache) el spinner
+    // nunca aparece — evita parpadeo molesto. Se limpia en el finally.
+    const spinnerTimer = setTimeout(() => {
+      if (window.appLoader && typeof window.appLoader.showSpinner === 'function') {
+        try { window.appLoader.showSpinner(); } catch (_) {}
+      }
+    }, 250);
+
     try {
       let path = window.location.pathname || '/';
       if (!path.startsWith('/')) path = '/' + path;
@@ -422,6 +432,7 @@ class Router {
         this.showError('Error cargando la página. Por favor, recarga.');
       }
     } finally {
+      clearTimeout(spinnerTimer);
       if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
         window.appLoader.hideSpinner();
       }
