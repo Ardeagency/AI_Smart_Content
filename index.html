@@ -65,9 +65,35 @@
         #modals-portal > .modal {
             pointer-events: auto;
         }
+        /* Skip link: oculto fuera del viewport hasta recibir focus. */
+        .skip-to-content {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 3000;
+            padding: 8px 16px;
+            background: #141517;
+            color: #D4D1D8;
+            border: 1px solid #242424;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transform: translateY(-200%);
+            transition: transform 180ms cubic-bezier(0.33, 0, 0.2, 1);
+        }
+        .skip-to-content:focus {
+            transform: translateY(0);
+            outline: 2px solid rgba(255, 255, 255, 0.35);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
+    <!-- Skip link: keyboard/screen-reader users pueden saltarse el sidebar
+         y caer directo en el contenido de la vista. Visible solo cuando
+         recibe focus (Tab desde el inicio). -->
+    <a href="#app-container" class="skip-to-content">Saltar al contenido</a>
+
     <!-- Loader global: visible solo cuando algún proceso lo solicita explícitamente vía appLoader.showSpinner -->
     <div class="loader-overlay loader-overlay--hidden loader-overlay--gone" id="globalSpinner" aria-hidden="true">
         <div class="loader">
@@ -81,7 +107,9 @@
 
     <!-- App Container (Dinámico) -->
     <!-- Las vistas se cargarán aquí dinámicamente -->
-    <div id="app-container"></div>
+    <!-- tabindex="-1" permite que el skip-link mueva el foco aquí sin
+         que el contenedor sea tabbable en navegación normal. -->
+    <div id="app-container" tabindex="-1"></div>
 
     <!-- Public Shell (persistente entre rutas públicas: header + main + footer fuera de app-container para evitar parpadeo) -->
     <div id="public-shell" aria-hidden="true">
