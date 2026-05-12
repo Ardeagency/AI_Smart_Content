@@ -66,6 +66,10 @@ class DevTestView extends DevBaseView {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+      this._progressInterval = null;
+    }
   }
 
   renderHTML() {
@@ -1012,18 +1016,26 @@ class DevTestView extends DevBaseView {
   showProgress(show) {
     const progress = this.querySelector('#testProgress');
     const progressFill = this.querySelector('#progressFill');
-    
+
+    // Limpiar interval previo antes de crear uno nuevo o esconder. Sin esto,
+    // showProgress(false) deja el interval corriendo y showProgress(true)
+    // múltiples veces apila intervals sobre el mismo DOM node.
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+      this._progressInterval = null;
+    }
+
     if (progress) {
       progress.style.display = show ? 'block' : 'none';
     }
-    
+
     if (progressFill && show) {
       progressFill.style.width = '0%';
-      // Animate progress
       let width = 0;
-      const interval = setInterval(() => {
+      this._progressInterval = setInterval(() => {
         if (!this.isRunning || width >= 90) {
-          clearInterval(interval);
+          clearInterval(this._progressInterval);
+          this._progressInterval = null;
           return;
         }
         width += Math.random() * 10;

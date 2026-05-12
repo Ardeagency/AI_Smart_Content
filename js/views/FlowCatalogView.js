@@ -732,6 +732,17 @@ class FlowCatalogView extends BaseView {
     }
   }
 
+  // Red de seguridad: si alguien llama destroy() directo (sin pasar por
+  // router.onLeave), el timer del carrusel sigue activo. Limpiamos aquí
+  // también además del cleanup que hereda de BaseView.
+  destroy() {
+    if (this.heroAutoAdvanceTimer) {
+      clearInterval(this.heroAutoAdvanceTimer);
+      this.heroAutoAdvanceTimer = null;
+    }
+    if (typeof super.destroy === 'function') super.destroy();
+  }
+
   /**
    * Categorías visuales: grid por content_subcategories (schema 254-261).
    * Solo se muestran subcategorías que tienen al menos 1 flujo; si ninguna tiene flujos, la sección entera se oculta.

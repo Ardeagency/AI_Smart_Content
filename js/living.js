@@ -2404,33 +2404,36 @@ class LivingManager {
         });
         
         // Arrastrar cuando está con zoom
-        image.addEventListener('mousedown', (e) => {
+        // Arrastrar cuando está con zoom (Pointer Events: mouse + touch + pen).
+        // setPointerCapture mantiene el drag aunque el cursor salga del elemento.
+        image.addEventListener('pointerdown', (e) => {
             if (scale > 1) {
                 isDragging = true;
                 startX = e.clientX - translateX * scale;
                 startY = e.clientY - translateY * scale;
                 image.style.cursor = 'grabbing';
+                try { image.setPointerCapture(e.pointerId); } catch (_) {}
             }
         });
-        
-        image.addEventListener('mousemove', (e) => {
+
+        image.addEventListener('pointermove', (e) => {
             if (isDragging && scale > 1) {
+                e.preventDefault(); // evita scroll en touch
                 translateX = (e.clientX - startX) / scale;
                 translateY = (e.clientY - startY) / scale;
                 image.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
             }
         });
-        
-        image.addEventListener('mouseup', () => {
+
+        const endDrag = (e) => {
+            if (!isDragging) return;
             isDragging = false;
-            if (scale > 1) {
-                image.style.cursor = 'grab';
-            }
-        });
-        
-        image.addEventListener('mouseleave', () => {
-            isDragging = false;
-        });
+            if (scale > 1) image.style.cursor = 'grab';
+            try { if (e?.pointerId != null) image.releasePointerCapture(e.pointerId); } catch (_) {}
+        };
+        image.addEventListener('pointerup', endDrag);
+        image.addEventListener('pointercancel', endDrag);
+        image.addEventListener('lostpointercapture', () => { isDragging = false; });
         
         // Doble click para resetear zoom
         image.addEventListener('dblclick', () => {
