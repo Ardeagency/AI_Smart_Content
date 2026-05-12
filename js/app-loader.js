@@ -16,6 +16,20 @@
         console.error = _error;
     }
 
+    // ===== SERVICE WORKER (solo producción) =====
+    // Registramos /sw.js con scope raíz. Sólo en hosts no-localhost para
+    // no interferir con hot reload en dev. El SW cachea assets versionados
+    // (cache-first) y nunca toca HTML ni APIs (bypass).
+    if ('serviceWorker' in navigator
+        && location.hostname !== 'localhost'
+        && location.hostname !== '127.0.0.1') {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {
+                /* registro silencioso; offline-first es opt-in, no romper si falla */
+            });
+        });
+    }
+
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
         supabaseTimeout: 25000,      // Timeout para carga de Supabase (25s; red/functions lentas)
