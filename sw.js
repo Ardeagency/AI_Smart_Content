@@ -24,14 +24,25 @@ const BUILD_ID = '__BUILD_ID__';
 const CACHE_VERSIONED = `versioned-${BUILD_ID}`;
 const CACHE_LIBS = `libs-${BUILD_ID}`;
 const CACHE_IMAGES = `images-${BUILD_ID}`;
-const ALLOWED_CACHES = new Set([CACHE_VERSIONED, CACHE_LIBS, CACHE_IMAGES]);
+const CACHE_OFFLINE = `offline-${BUILD_ID}`;
+const OFFLINE_URL = '/offline.html';
+const ALLOWED_CACHES = new Set([CACHE_VERSIONED, CACHE_LIBS, CACHE_IMAGES, CACHE_OFFLINE]);
 
 self.addEventListener('install', (event) => {
   // Skip waiting → activar la nueva SW al instante. El cliente recibe
   // el control en `clients.claim()` abajo. Para deploys: cada navegación
   // tras el deploy bootstrapea con la SW nueva sin esperar a que el user
   // cierre todas las pestañas.
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    // Precargar el offline fallback. Si esta fetch falla en el install,
+    // la SW se instala igual (waitUntil no rejecta el install) pero el
+    // offline fallback no estará disponible hasta el próximo fetch.
+    try {
+      const cache = await caches.open(CACHE_OFFLINE);
+      await cache.add(OFFLINE_URL);
+    } catch (_) {}
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
@@ -115,6 +126,23 @@ async function networkFirst(request, cacheName) {
   }
 }
 
+async function navigationWithOfflineFallback(request) {
+  try {
+    return await fetch(request);
+  } catch (_) {
+    // Offline o servidor caído → servir offline.html como fallback.
+    const cache = await caches.open(CACHE_OFFLINE);
+    const offline = await cache.match(OFFLINE_URL);
+    if (offline) return offline;
+    // Si el offline tampoco está cacheado (install falló), devolver un
+    // 503 mínimo para que el browser muestre su propio error de red.
+    return new Response('Sin conexión', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   // Solo GET. POST/PUT/DELETE siempre van a red sin tocar cache.
@@ -122,8 +150,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Bypass total para APIs y HTML.
-  if (isApiCall(url) || isHtmlNavigation(request)) return;
+  // Bypass total para APIs.
+  if (isApiCall(url)) return;
+
+  // Navegaciones (HTML): intentar red, fallback a offline.html si falla.
+  if (isHtmlNavigation(request)) {
+    return event.respondWith(navigationWithOfflineFallback(request));
+  }
 
   if (isVersionedAsset(url))   return event.respondWith(cacheFirst(request, CACHE_VERSIONED));
   if (isUnversionedAsset(url)) return event.respondWith(staleWhileRevalidate(request, CACHE_VERSIONED));

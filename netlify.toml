@@ -218,6 +218,14 @@
   to = "/sitemap.xml"
   status = 200
 
+# Offline fallback (precacheado por el Service Worker en install).
+# El SW lo sirve cuando una navegación falla por red; este redirect
+# garantiza que un GET directo a /offline.html también funcione.
+[[redirects]]
+  from = "/offline.html"
+  to = "/offline.html"
+  status = 200
+
 # Archivos JS - servir directamente
 [[redirects]]
   from = "/js/*"

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sin conexión — AI Smart Content</title>
+  <link rel="icon" type="image/svg+xml" href="/recursos/favicons/favicon.svg">
+  <meta name="theme-color" content="#0b0b0b">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #0b0b0b;
+      color: #D4D1D8;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .offline-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .offline-card {
+      max-width: 480px;
+      width: 100%;
+      padding: 40px 32px;
+      background: #141517;
+      border: 1px solid #242424;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    .offline-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 28px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 12px;
+      letter-spacing: -0.01em;
+    }
+    p {
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: rgba(212, 209, 216, 0.7);
+      margin: 0 0 8px;
+    }
+    p.hint {
+      font-size: 0.8125rem;
+      color: rgba(212, 209, 216, 0.5);
+      margin-top: 16px;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      color: #D4D1D8;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 200ms cubic-bezier(0.33, 0, 0.2, 1),
+                  border-color 200ms cubic-bezier(0.33, 0, 0.2, 1);
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+    .btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.5); outline-offset: 2px; }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff0000;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .status-dot.online { background: #00d614; }
+    .status {
+      font-size: 0.8125rem;
+      color: rgba(212, 209, 216, 0.5);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-wrap">
+    <main class="offline-card" role="main">
+      <div class="offline-icon" aria-hidden="true">⚡</div>
+      <h1>Sin conexión</h1>
+      <p>No podemos contactar a aismartcontent.io en este momento.</p>
+      <p>Tus cambios locales están a salvo y se sincronizarán cuando vuelvas a estar en línea.</p>
+      <div class="actions">
+        <button class="btn" id="retryBtn" type="button">Reintentar</button>
+      </div>
+      <p class="status">
+        <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+        <span id="statusText">Verificando conexión…</span>
+      </p>
+      <p class="hint">Si la red no vuelve pronto, intenta cambiar de WiFi o usar datos móviles.</p>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var dot = document.getElementById('statusDot');
+      var text = document.getElementById('statusText');
+      var btn = document.getElementById('retryBtn');
+      function update() {
+        if (navigator.onLine) {
+          dot.classList.add('online');
+          text.textContent = 'Conexión restablecida — toca Reintentar';
+        } else {
+          dot.classList.remove('online');
+          text.textContent = 'Sin conexión a internet';
+        }
+      }
+      window.addEventListener('online', update);
+      window.addEventListener('offline', update);
+      btn.addEventListener('click', function() { location.reload(); });
+      // Auto-recargar al recuperar conexión
+      window.addEventListener('online', function() { setTimeout(function() { location.reload(); }, 600); });
+      update();
+    })();
+  </script>
+</body>
+</html>
