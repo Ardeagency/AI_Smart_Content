@@ -121,6 +121,40 @@ y como referencia si surge una regresión.
 - `sw.js`, `manifest.webmanifest`, `offline.html`, `robots.txt`,
   `sitemap.xml` — infra nueva.
 
+## Cambios añadidos en la segunda fase (post-SESSION-IMPACT inicial)
+
+### `js/router.js` (continuación)
+- **`_applyDocumentTitle`**: cambia document.title por vista. Si algún
+  E2E test hace assertion sobre el title exacto, falla — necesita
+  actualizarse para esperar `'{vistaTitle} · AI Smart Content'`.
+- **`_scrollToHash`**: navegaciones con `#hash` ahora hacen
+  scrollIntoView del elemento. Si una vista lazy-renderiza contenido
+  después del montaje, el hash puede no encontrar el elemento (el
+  rAF de _scrollToHash espera un frame, no más). Solución: la vista
+  debe handle su propio scroll a hash tras lazy-load.
+- **showError con `role="alert"` + `aria-live="assertive"`**: screen
+  readers ahora interrumpen para anunciar errores fatales. Si hay tests
+  que dependen del DOM exacto del error container, ahora trae 2 atributos
+  más.
+
+### `js/views/{TasksView,ProductionView,DashboardView,StudioView,BrandstorageView,BrandOrganizationView,FlowCatalogView,CommandCenterView,VideoView}.js`
+- **`static documentTitle`**: cada vista declara su título. Si una
+  vista ya manipulaba document.title manualmente (no encontramos
+  ninguna), el router lo pisa después del mount.
+
+### `index.html` (continuación)
+- **`#app-container` con `role="main"` + `aria-label="Contenido principal"`**:
+  las vistas que internamente tienen `<main>` ahora son sub-main —
+  válido HTML pero algunos linters de a11y avisan "más de un landmark
+  main". Si Lighthouse reporta esto, los `<main>` internos pueden
+  cambiarse a `<section>` o `<div role="region">`.
+
+### `js/components/Navigation.js`
+- **`aria-current="page"`**: el link activo del sidebar ahora tiene
+  el atributo. Si hay CSS con selector `[aria-current="page"]` que no
+  esperaba existir, podría disparar estilos no intencionales (no
+  encontramos tal CSS).
+
 ## Smoke test recomendado tras deploy
 
 1. **Navegación base**: /home → /studio → /tasks → /flows → /brand-organization.

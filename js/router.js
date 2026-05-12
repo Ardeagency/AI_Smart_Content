@@ -680,7 +680,7 @@ class Router {
     const container = document.getElementById('app-container');
     if (container) {
       container.innerHTML = `
-        <div class="error-container" style="
+        <div class="error-container" role="alert" aria-live="assertive" style="
           display: flex;
           flex-direction: column;
           align-items: center;
