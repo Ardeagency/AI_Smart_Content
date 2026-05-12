@@ -1,0 +1,138 @@
+/* ============================================================
+   UI Primitives — Button, Card, Input, Dialog, Dropdown, Tabs
+   Estilos que extienden el bundle existente; reutilizan tokens
+   (--bg-secondary, --text-primary, --glass-*, --radius-*).
+   ============================================================ */
+
+/* ─────── Button: estado loading + label spacing
+   (.btn .btn-primary .btn-secondary .btn-icon ya existen en bundle.css) */
+.btn.is-loading        { opacity: 0.7; cursor: progress; pointer-events: none; }
+.btn .btn-label        { white-space: nowrap; }
+.btn > i + .btn-label  { margin-left: 0.4rem; }
+
+/* ─────── Card: header/subtitle/actions (extensiones)
+   (.card .card-header .card-body .card-footer ya existen en bundle.css) */
+.card .card-header        { gap: 1rem; }
+.card .card-header-text   { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1 1 auto; }
+.card .card-title         { margin: 0; font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+.card .card-subtitle      { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.card .card-actions       { display: flex; align-items: center; gap: 0.5rem; flex: 0 0 auto; }
+
+/* ─────── Input: wrapper .form-field con label/helper/error */
+.form-field               { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+.form-field .form-label   { font-size: var(--font-size-sm); font-weight: 500; color: var(--text-secondary); margin: 0; }
+.form-field .form-required{ color: var(--color-error, #ef4444); }
+.form-field .form-helper  { font-size: var(--font-size-xs); color: var(--text-secondary); opacity: 0.8; }
+.form-field .form-error   { font-size: var(--font-size-xs); color: var(--color-error, #ef4444); }
+.form-field--error .form-input,
+.form-field--error .form-textarea {
+  border-color: var(--color-error, #ef4444);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+/* ─────── Dialog: footer dentro de .modal-content */
+.modal-footer             { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); }
+.dialog-message           { margin: 0 0 0.5rem; color: var(--text-primary); line-height: 1.5; }
+.dialog-footer            { border-top: none; padding-top: 0; margin-top: 1.25rem; }
+
+/* ─────── Dropdown */
+.ui-dropdown              { position: relative; display: inline-flex; }
+.ui-dropdown-trigger      { cursor: pointer; user-select: none; outline: none; border-radius: var(--radius-sm); }
+.ui-dropdown-trigger:focus-visible { box-shadow: 0 0 0 2px var(--accent-brand-soft, rgba(255,255,255,0.2)); }
+.ui-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  min-width: 180px;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-radius: var(--radius-md, 10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  pointer-events: none;
+  z-index: 100;
+}
+.ui-dropdown--start .ui-dropdown-menu { left: 0; }
+.ui-dropdown--end   .ui-dropdown-menu { right: 0; }
+.ui-dropdown.is-open .ui-dropdown-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.ui-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: var(--radius-xs, 6px);
+  transition: background 100ms ease;
+  white-space: nowrap;
+}
+.ui-dropdown-item:hover:not(.is-disabled) { background: rgba(255, 255, 255, 0.08); }
+.ui-dropdown-item.is-disabled { opacity: 0.45; cursor: not-allowed; }
+.ui-dropdown-item--danger { color: var(--color-error, #ef4444); }
+.ui-dropdown-item--danger:hover:not(.is-disabled) { background: rgba(239, 68, 68, 0.12); }
+.ui-dropdown-item > i { width: 16px; text-align: center; opacity: 0.8; }
+.ui-dropdown-separator {
+  height: 1px;
+  margin: 0.35rem 0;
+  background: var(--glass-border, rgba(255,255,255,0.08));
+  list-style: none;
+}
+
+/* ─────── Tabs */
+.ui-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ui-tabs::-webkit-scrollbar { display: none; }
+.ui-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.ui-tab:hover:not(.is-disabled) { color: var(--text-primary); }
+.ui-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--brand-primary, var(--accent-brand, #ecebda));
+}
+.ui-tab.is-disabled { opacity: 0.4; cursor: not-allowed; }
+.ui-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+}

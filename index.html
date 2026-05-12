@@ -86,11 +86,17 @@
 
     <!-- Core: app-loader (Supabase config + spinner global) — rutas relativas a <base href="/"> -->
     <script src="js/app-loader.js?v=__BUILD_ID__" defer></script>
+    <!-- ErrorLogger temprano para capturar crashes del bootstrap (window.error + unhandledrejection).
+         No depende de Supabase: si aún no está disponible, buffea en LS y flushea cuando llegue. -->
+    <script src="js/services/ErrorLogger.js?v=__BUILD_ID__" defer></script>
     <script src="js/views/BaseView.js?v=__BUILD_ID__" defer></script>
     <script src="js/router.js?v=__BUILD_ID__" defer></script>
 
     <!-- Modal primitiva compartida (window.Modal.show) -->
     <script src="js/utils/modal.js?v=__BUILD_ID__" defer></script>
+
+    <!-- UI primitives compartidas (window.UI.Button/Card/Input/Dialog/Dropdown/Tabs) -->
+    <script src="js/ui/primitives.js?v=__BUILD_ID__" defer></script>
 
     <!-- Utilidades de color — fuente única para hexToHSL/hslToHex/hexToRgba/etc.
          Debe cargar ANTES que OrgBrandTheme (que las consume en el theme inicial). -->
@@ -99,6 +105,7 @@
     <!-- Services (AuthService imprescindible: si falla 404/redirect, el router redirige a onboarding) -->
     <script src="js/services/MiBrandaDataService.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/SupabaseService.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/ApiClient.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/AuthService.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/OrgBrandTheme.js?v=__BUILD_ID__" defer></script>
     <script src="js/org-url.js?v=__BUILD_ID__" defer></script>

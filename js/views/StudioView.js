@@ -8,6 +8,8 @@ const DEFAULT_STUDIO_TIMEOUT_MS = 120000;
 const DEFAULT_STUDIO_MAX_RETRIES = 3;
 
 class StudioView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.supabase = null;
@@ -176,12 +178,22 @@ class StudioView extends BaseView {
   async loadCredits() {
     if (!this.supabase || !this.organizationId) return;
     try {
-      const { data, error } = await this.supabase
-        .from('organization_credits')
-        .select('credits_available, credits_total')
-        .eq('organization_id', this.organizationId)
-        .maybeSingle();
-      if (!error && data) {
+      // Misma key que Navigation.loadCreditsFromDb → 1 sola query compartida.
+      // El RPC deduct_credits_and_create_run invalida vía 'credits-updated'.
+      const orgId = this.organizationId;
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('organization_credits')
+          .select('credits_available, credits_total')
+          .eq('organization_id', orgId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query(`nav:credits:${orgId}`, fetcher, { ttl: 15 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      if (data) {
         this.credits.available = data.credits_available ?? 0;
         this.credits.total = data.credits_total ?? 0;
       }
@@ -202,25 +214,28 @@ class StudioView extends BaseView {
   async loadFlows() {
     if (!this.supabase) return;
     try {
-      const { data, error } = await this.supabase
-        .from('content_flows')
-        .select(`
-          id,
-          name,
-          description,
-          token_cost,
-          output_type,
-          execution_mode,
-          flow_category_type,
-          flow_image_url,
-          flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
-        `)
-        .eq('is_active', true);
-      if (!error && data) {
-        this.flows = data.map(f => this.buildFlowFromFirstModule(f));
-      } else {
-        this.flows = [];
-      }
+      // Flows + flow_modules: cambian solo cuando un dev publica/edita. Cache 2 min + SWR.
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('content_flows')
+          .select(`
+            id,
+            name,
+            description,
+            token_cost,
+            output_type,
+            execution_mode,
+            flow_category_type,
+            flow_image_url,
+            flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
+          `)
+          .eq('is_active', true);
+        return !error && data ? data : [];
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query('studio:flows', fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this.flows = data.map(f => this.buildFlowFromFirstModule(f));
     } catch (e) {
       console.error('Studio loadFlows:', e);
       this.flows = [];
@@ -797,31 +812,41 @@ class StudioView extends BaseView {
   async getBrandColorsForContainer(brandContainerId) {
     if (!this.supabase || !brandContainerId) return [];
     try {
-      const { data: brand, error: e1 } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', brandContainerId)
-        .maybeSingle();
-      if (e1 || !brand) return [];
-      const { data: colors, error: e2 } = await this.supabase
-        .from('brand_colors')
-        .select('hex_value')
-        .eq('brand_id', brand.id)
-        .order('created_at', { ascending: true });
-      if (e2 || !colors || colors.length === 0) return [];
-      const seen = new Set();
-      const hexes = [];
-      for (const row of colors) {
-        const raw = (row.hex_value || '').trim().replace(/^#/, '');
-        if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
-        const hex = '#' + raw;
-        if (!seen.has(hex)) {
-          seen.add(hex);
-          hexes.push(hex);
-          if (hexes.length >= 6) break;
+      // Cache 5 min — los colores cambian solo en el editor de marca. Esa vista
+      // invalida `brand:colors:${orgId}` y `theme:colors:${orgId}` pero esta
+      // key es por brandContainerId, otro plano.
+      const fetcher = async () => {
+        // brand_colors es org-scoped en el schema actual (no por container).
+        // Resolvemos organization_id desde el container y filtramos por org.
+        const { data: container, error: e1 } = await this.supabase
+          .from('brand_containers')
+          .select('organization_id')
+          .eq('id', brandContainerId)
+          .maybeSingle();
+        if (e1 || !container?.organization_id) return [];
+        const { data: colors, error: e2 } = await this.supabase
+          .from('brand_colors')
+          .select('hex_value')
+          .eq('organization_id', container.organization_id)
+          .order('created_at', { ascending: true });
+        if (e2 || !colors || colors.length === 0) return [];
+        const seen = new Set();
+        const hexes = [];
+        for (const row of colors) {
+          const raw = (row.hex_value || '').trim().replace(/^#/, '');
+          if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
+          const hex = '#' + raw;
+          if (!seen.has(hex)) {
+            seen.add(hex);
+            hexes.push(hex);
+            if (hexes.length >= 6) break;
+          }
         }
-      }
-      return hexes;
+        return hexes;
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:brand_colors:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio getBrandColorsForContainer:', e);
       return [];
@@ -873,29 +898,35 @@ class StudioView extends BaseView {
   async getBrandContainerId() {
     if (!this.supabase) return null;
     try {
-      // 1) Marca de la organización (cuando la org tiene brand_containers con organization_id)
-      if (this.organizationId) {
-        const { data: byOrg, error: errOrg } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (!errOrg && byOrg && byOrg.id) return byOrg.id;
-      }
-      // 2) Fallback: marca del usuario (user_id), como en products.js
-      if (this.userId) {
-        const { data: byUser, error: errUser } = await this.supabase
-          .from('brand_containers')
-          .select('id')
-          .eq('user_id', this.userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (!errUser && byUser && byUser.id) return byUser.id;
-      }
-      return null;
+      const cacheKey = `studio:bc_id:org=${this.organizationId || ''}:user=${this.userId || ''}`;
+      const fetcher = async () => {
+        // 1) Marca de la organización (cuando la org tiene brand_containers con organization_id)
+        if (this.organizationId) {
+          const { data: byOrg, error: errOrg } = await this.supabase
+            .from('brand_containers')
+            .select('id')
+            .eq('organization_id', this.organizationId)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          if (!errOrg && byOrg && byOrg.id) return byOrg.id;
+        }
+        // 2) Fallback: marca del usuario (user_id), como en products.js
+        if (this.userId) {
+          const { data: byUser, error: errUser } = await this.supabase
+            .from('brand_containers')
+            .select('id')
+            .eq('user_id', this.userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!errUser && byUser && byUser.id) return byUser.id;
+        }
+        return null;
+      };
+      return window.apiClient
+        ? await window.apiClient.query(cacheKey, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio getBrandContainerId:', e);
       return null;
@@ -911,42 +942,45 @@ class StudioView extends BaseView {
   async loadProductsWithImages(brandContainerId) {
     if (!this.supabase || !brandContainerId) return [];
     try {
-      const { data: products, error: productsError } = await this.supabase
-        .from('products')
-        .select('id, nombre_producto, tipo_producto, brand_container_id, created_at')
-        .eq('brand_container_id', brandContainerId)
-        .order('created_at', { ascending: false });
+      const fetcher = async () => {
+        const { data: products, error: productsError } = await this.supabase
+          .from('products')
+          .select('id, nombre_producto, tipo_producto, brand_container_id, created_at')
+          .eq('brand_container_id', brandContainerId)
+          .order('created_at', { ascending: false });
+        if (productsError || !products || products.length === 0) return [];
 
-      if (productsError || !products || products.length === 0) return [];
+        const productIds = products.map(p => p.id).filter(Boolean);
+        const imagesQuery = this.supabase
+          .from('product_images')
+          .select('id, product_id, image_url, image_type, image_order')
+          .order('image_order', { ascending: true });
+        const { data: allImages, error: imagesError } = productIds.length === 1
+          ? await imagesQuery.eq('product_id', productIds[0])
+          : await imagesQuery.in('product_id', productIds);
 
-      const productIds = products.map(p => p.id).filter(Boolean);
-      const imagesQuery = this.supabase
-        .from('product_images')
-        .select('id, product_id, image_url, image_type, image_order')
-        .order('image_order', { ascending: true });
-      const { data: allImages, error: imagesError } = productIds.length === 1
-        ? await imagesQuery.eq('product_id', productIds[0])
-        : await imagesQuery.in('product_id', productIds);
-
-      if (!imagesError && allImages && allImages.length > 0) {
-        const byProduct = {};
-        allImages.forEach(img => {
-          if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
-          byProduct[img.product_id].push(img);
-        });
-        products.forEach(p => {
-          const imgs = byProduct[p.id] || [];
-          // Ordenar: principal primero, luego por image_order
-          p.images = imgs.sort((a, b) => {
-            if (a.image_type === 'principal') return -1;
-            if (b.image_type === 'principal') return 1;
-            return (a.image_order ?? 0) - (b.image_order ?? 0);
+        if (!imagesError && allImages && allImages.length > 0) {
+          const byProduct = {};
+          allImages.forEach(img => {
+            if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
+            byProduct[img.product_id].push(img);
           });
-        });
-      } else {
-        products.forEach(p => { p.images = []; });
-      }
-      return products;
+          products.forEach(p => {
+            const imgs = byProduct[p.id] || [];
+            p.images = imgs.sort((a, b) => {
+              if (a.image_type === 'principal') return -1;
+              if (b.image_type === 'principal') return 1;
+              return (a.image_order ?? 0) - (b.image_order ?? 0);
+            });
+          });
+        } else {
+          products.forEach(p => { p.images = []; });
+        }
+        return products;
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:products_bc:${brandContainerId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio loadProductsWithImages:', e);
       return [];
@@ -1075,19 +1109,18 @@ class StudioView extends BaseView {
   async loadBrandData(brandContainerId) {
     if (!this.supabase || !brandContainerId) return null;
     try {
-      const { data: container, error: e1 } = await this.supabase
-        .from('brand_containers')
-        .select('*')
-        .eq('id', brandContainerId)
-        .single();
-      if (e1 || !container) return null;
-      const { data: brand, error: e2 } = await this.supabase
-        .from('brands')
-        .select('*')
-        .eq('project_id', brandContainerId)
-        .maybeSingle();
-      if (e2) return { ...container };
-      return { ...container, ...(brand || {}) };
+      const fetcher = async () => {
+        const { data: container, error: e1 } = await this.supabase
+          .from('brand_containers')
+          .select('*')
+          .eq('id', brandContainerId)
+          .single();
+        if (e1 || !container) return null;
+        return container;
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:brand_data:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio loadBrandData:', e);
       return null;
@@ -1097,12 +1130,17 @@ class StudioView extends BaseView {
   async loadCampaigns(brandContainerId) {
     if (!this.supabase || !brandContainerId) return [];
     try {
-      const { data, error } = await this.supabase
-        .from('campaigns')
-        .select('*')
-        .eq('brand_container_id', brandContainerId)
-        .order('created_at', { ascending: false });
-      return error ? [] : (data || []);
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('campaigns')
+          .select('*')
+          .eq('brand_container_id', brandContainerId)
+          .order('created_at', { ascending: false });
+        return error ? [] : (data || []);
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:campaigns:${brandContainerId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio loadCampaigns:', e);
       return [];
@@ -1112,17 +1150,16 @@ class StudioView extends BaseView {
   async loadAudiences(brandContainerId) {
     if (!this.supabase || !brandContainerId) return [];
     try {
-      const { data: brand, error: e1 } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', brandContainerId)
-        .maybeSingle();
-      if (e1 || !brand) return [];
-      const { data, error } = await this.supabase
-        .from('audiences')
-        .select('*')
-        .eq('brand_id', brand.id);
-      return error ? [] : (data || []);
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('audience_personas')
+          .select('*')
+          .eq('brand_container_id', brandContainerId);
+        return error ? [] : (data || []);
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:audiences:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio loadAudiences:', e);
       return [];
@@ -1132,12 +1169,17 @@ class StudioView extends BaseView {
   async loadEntities(brandContainerId) {
     if (!this.supabase || !brandContainerId) return [];
     try {
-      const { data, error } = await this.supabase
-        .from('brand_entities')
-        .select('*')
-        .eq('brand_container_id', brandContainerId)
-        .order('created_at', { ascending: false });
-      return error ? [] : (data || []);
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('brand_entities')
+          .select('*')
+          .eq('brand_container_id', brandContainerId)
+          .order('created_at', { ascending: false });
+        return error ? [] : (data || []);
+      };
+      return window.apiClient
+        ? await window.apiClient.query(`studio:entities:${brandContainerId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('Studio loadEntities:', e);
       return [];
@@ -1377,6 +1419,8 @@ class StudioView extends BaseView {
       creditsDeducted = true;
       this.credits.available = deductResult.new_available ?? this.credits.available - cost;
       this.updateCreditsDisplay();
+      // Invalida apiClient: la próxima lectura (sidebar/tienda) verá créditos frescos.
+      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
 
       // 2) Ejecutar webhook con reintentos y timeout
       const res = await Service.executeWebhook({
@@ -1447,6 +1491,7 @@ class StudioView extends BaseView {
         p_run_id: runId,
         p_amount: amount
       });
+      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
     } catch (refundErr) {
       console.error('Studio refund fallback:', refundErr);
     }

@@ -966,18 +966,20 @@ class VideoView extends BaseView {
     if (!this.supabase || !this.brandContainerId) return;
     try {
       const bcId = this.brandContainerId;
+      // Modelo nuevo: las columnas "brand-level" viven en brand_containers
+      // (nicho_core, arquetipo, verbal_dna, etc.) y brand_profiles se filtra
+      // por brand_container_id en vez de brand_id.
       const { data: brandRow } = await this.supabase
-        .from('brands')
+        .from('brand_containers')
         .select(
           'id, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos'
         )
-        .eq('project_id', bcId)
+        .eq('id', bcId)
         .maybeSingle();
-      const brandId = brandRow?.id || null;
       this.dbData.brand = brandRow || null;
       this.dbData.brandProfiles = [];
-      if (brandId) {
-        const { data: profiles } = await this.supabase.from('brand_profiles').select('section, content').eq('brand_id', brandId);
+      if (brandRow?.id) {
+        const { data: profiles } = await this.supabase.from('brand_profiles').select('section, content').eq('brand_container_id', brandRow.id);
         this.dbData.brandProfiles = profiles || [];
       }
       // audiences: tabla legacy reemplazada por audience_personas (BUG-005).

@@ -21,11 +21,21 @@ class BaseView {
   static _userProfileCacheTime = 0;
   static _USER_CACHE_TTL = 60000;
 
+  /**
+   * Back/forward cache: el router siempre restaura scrollY al volver a una ruta.
+   * Si una subclase declara `static cacheable = true`, además se guarda el HTML
+   * del contenedor y se re-pinta al volver, dando "instant back" — la vista
+   * recibe `this._restoredFromCache = true` y puede decidir si solo refresca
+   * datos en lugar de re-renderizar el árbol completo (evita salto visual).
+   */
+  static cacheable = false;
+
   constructor() {
     this.container = document.getElementById('app-container');
     this.templatePath = null;
     this.initialized = false;
     this.eventListeners = [];
+    this._restoredFromCache = false;
   }
 
   /**
@@ -64,6 +74,9 @@ class BaseView {
       this.updateHeader().catch(err => console.warn('updateHeader:', err));
     } catch (error) {
       console.error('Error renderizando vista:', error);
+      if (window.errorLogger) {
+        window.errorLogger.capture(error, { source: 'BaseView.render', view: this.constructor.name });
+      }
       if (window.errorHandler) {
         window.errorHandler.handle(error, { view: this.constructor.name });
       }
@@ -379,6 +392,48 @@ class BaseView {
   }
 
   /**
+   * Helpers de skeleton screens. Patrón premium (Linear/Vercel): mientras una
+   * sección espera datos, pintar un placeholder con la misma forma del contenido
+   * final. Mucho mejor que un spinner global porque el layout no salta.
+   *
+   * Uso típico en renderHTML():
+   *   <div id="kpis">${this.skeletonGrid(4, 'lg')}</div>
+   * Y después de fetchear, this.container.querySelector('#kpis').innerHTML = realHtml.
+   */
+  static skeletonText(width = '100%', size = '') {
+    const sizeCls = size === 'lg' ? ' skeleton-text--lg' : (size === 'sm' ? ' skeleton-text--sm' : '');
+    const widthAttr = (typeof width === 'string' && width !== '100%') ? ` style="width:${width};"` : '';
+    return `<span class="skeleton skeleton-text${sizeCls}"${widthAttr}></span>`;
+  }
+  static skeletonCard(modifier = '') {
+    const mod = modifier === 'lg' ? ' skeleton-card--lg' : '';
+    return `<div class="skeleton skeleton-card${mod}"></div>`;
+  }
+  static skeletonCircle(size = '') {
+    const mod = size === 'sm' ? ' skeleton-circle--sm' : (size === 'lg' ? ' skeleton-circle--lg' : '');
+    return `<span class="skeleton skeleton-circle${mod}"></span>`;
+  }
+  static skeletonGrid(count = 3, cardSize = '') {
+    const cols = count >= 4 ? 4 : 3;
+    const items = Array.from({ length: count }, () => BaseView.skeletonCard(cardSize)).join('');
+    return `<div class="skeleton-grid skeleton-grid--${cols}">${items}</div>`;
+  }
+  static skeletonRows(count = 3) {
+    const row = `<div class="skeleton-row">${BaseView.skeletonCircle('sm')}<div style="flex:1 1 auto;">
+      <span class="skeleton skeleton-text skeleton-text--w75"></span>
+      <span class="skeleton skeleton-text skeleton-text--sm skeleton-text--w35"></span>
+    </div></div>`;
+    return Array.from({ length: count }, () => row).join('');
+  }
+
+  // Aliases de instancia para uso fluido desde subclases.
+  skeletonText(w, s)    { return BaseView.skeletonText(w, s); }
+  skeletonCard(m)       { return BaseView.skeletonCard(m); }
+  skeletonCircle(s)     { return BaseView.skeletonCircle(s); }
+  skeletonGrid(c, s)    { return BaseView.skeletonGrid(c, s); }
+  skeletonRows(c)       { return BaseView.skeletonRows(c); }
+
+  /**
    * Actualizar header existente con nuevo contexto.
    * Si el header es el de Navigation (#appHeader), solo actualiza #headerTitle sin tocar el hamburger.
    */
@@ -436,30 +491,31 @@ class BaseView {
       }
     }
 
-    const now = Date.now();
+    // Cache vía apiClient (1 min TTL + SWR). Reemplaza el cache ad-hoc previo
+    // (_userProfileCache) — el apiClient hace dedupe entre vistas que rendericen
+    // al mismo tiempo (router transitions) y se invalida en logout.
     let profile = null;
-
-    if (BaseView._userProfileCache && (now - BaseView._userProfileCacheTime) < BaseView._USER_CACHE_TTL) {
-      profile = BaseView._userProfileCache;
-    } else {
+    try {
       const supabase = await this.getSupabaseClient();
       if (!supabase) return;
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) return;
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
 
+      const fetcher = async () => {
         const { data } = await supabase
           .from('profiles')
           .select('id, full_name, email, role')
           .eq('id', user.id)
           .maybeSingle();
-        profile = data;
-        BaseView._userProfileCache = profile;
-        BaseView._userProfileCacheTime = now;
-      } catch (error) {
-        console.error('Error actualizando header:', error);
-        return;
-      }
+        return data;
+      };
+      profile = window.apiClient
+        ? await window.apiClient.query(`profile:${user.id}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+    } catch (error) {
+      console.error('Error actualizando header:', error);
+      if (window.errorLogger) window.errorLogger.capture(error, { source: 'BaseView.updateHeader' });
+      return;
     }
 
     if (profile) {

@@ -516,35 +516,44 @@ class BrandOrganizationView extends BaseView {
   async _queryBrandColorsRows() {
     const orgId = this.brandContainerData?.organization_id;
     if (!this.supabase || !orgId) return [];
-    const { data, error } = await this.supabase
-      .from('brand_colors')
-      .select('*')
-      .eq('organization_id', orgId);
-    if (error) {
-      console.warn('⚠️ Error cargando colores:', error);
-      return [];
-    }
-    return data || [];
+    const fetcher = async () => {
+      const { data, error } = await this.supabase
+        .from('brand_colors')
+        .select('*')
+        .eq('organization_id', orgId);
+      if (error) { console.warn('⚠️ Error cargando colores:', error); return []; }
+      return data || [];
+    };
+    return window.apiClient
+      ? window.apiClient.query(`brand:colors:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+      : fetcher();
   }
 
   /** Filas de brand_fonts por organization_id. */
   async _queryBrandFontsRows() {
     const orgId = this.brandContainerData?.organization_id;
     if (!this.supabase || !orgId) return [];
-    const { data, error } = await this.supabase
-      .from('brand_fonts')
-      .select('*')
-      .eq('organization_id', orgId);
-    if (error) {
-      console.warn('⚠️ Error cargando fuentes:', error);
-      return [];
-    }
-    return data || [];
+    const fetcher = async () => {
+      const { data, error } = await this.supabase
+        .from('brand_fonts')
+        .select('*')
+        .eq('organization_id', orgId);
+      if (error) { console.warn('⚠️ Error cargando fuentes:', error); return []; }
+      return data || [];
+    };
+    return window.apiClient
+      ? window.apiClient.query(`brand:fonts:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+      : fetcher();
   }
 
-  /** Recarga solo brand_colors desde Supabase (evita recargar todo loadData en operaciones de color). */
+  /** Recarga solo brand_colors desde Supabase (invalida apiClient para forzar fetch). */
   async _reloadColors() {
-    if (!this.supabase || !this.brandContainerData?.organization_id) return;
+    const orgId = this.brandContainerData?.organization_id;
+    if (!this.supabase || !orgId) return;
+    if (window.apiClient) {
+      window.apiClient.invalidate(`brand:colors:${orgId}`);
+      window.apiClient.invalidate(`theme:colors:${orgId}`); // OrgBrandTheme también
+    }
     this.brandColors = await this._queryBrandColorsRows();
   }
 

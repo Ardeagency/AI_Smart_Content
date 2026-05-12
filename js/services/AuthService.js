@@ -254,6 +254,11 @@ class AuthService {
     this.isAuth = false;
     this.currentUser = null;
 
+    // Invalidar caché de orgs del resolver para que el próximo usuario no vea las orgs del anterior
+    if (typeof window.clearOrgResolverCache === 'function') {
+      window.clearOrgResolverCache();
+    }
+
     // Limpiar sesión local
     if (window.sessionManager) {
       window.sessionManager.clearSession();
@@ -458,7 +463,9 @@ class AuthService {
   }
 
   /**
-   * Notificar a los listeners
+   * Notificar a los listeners (internos + ventana global vía CustomEvent).
+   * El evento `auth:<event>` permite que módulos no-AuthService (apiClient,
+   * ErrorLogger, analytics) reaccionen sin acoplarse al constructor.
    */
   notifyListeners(event, data) {
     this.listeners.forEach(listener => {
@@ -468,6 +475,9 @@ class AuthService {
         console.error('Error en listener de auth:', error);
       }
     });
+    try {
+      window.dispatchEvent(new CustomEvent(`auth:${event}`, { detail: data }));
+    } catch (_) { /* CustomEvent puede fallar en navegadores muy viejos */ }
   }
 
   /**

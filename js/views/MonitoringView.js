@@ -11,6 +11,8 @@
  */
 class MonitoringView extends BaseView {
 
+  static cacheable = true;
+
   static SENSOR_TYPES = [
     { value: 'meta_posts',                    label: 'Meta · Posts (feed)' },
     { value: 'meta_page_insights',            label: 'Meta · Page Insights' },

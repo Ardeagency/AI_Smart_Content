@@ -66,13 +66,31 @@ class MiBrandaDataService {
 
   /* ══════════════════════════════════════════════════════════
      Carga total — Promise.allSettled para resiliencia
+     Cacheado vía apiClient: 60s TTL + stale-while-revalidate. Cambios en
+     brand_vulnerabilities / vera_pending_actions / etc invalidan vía router
+     (DashboardView._onRealtimeChange → cache key prefix `dash:mi-brand:`).
   ══════════════════════════════════════════════════════════ */
   async loadAll(opts = {}) {
     if (!this.sb || !this.orgId) return null;
     const { date_from, date_to } = this._resolveWindow(opts);
     const bcids = this._resolveBrands(opts);
-    const POST_SOURCE = 'own';
 
+    // Cache key estable: org + ventana + brands. Si window cambia (filtro UI),
+    // se fetchea de nuevo. Si nada cambia, devolvemos resultado fresco en RAM.
+    const cacheKey = `dash:mi-brand:${this.orgId}:${date_from}:${date_to}:${(bcids || []).join(',')}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(date_from, date_to, bcids),
+        { ttl: 60 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll(date_from, date_to, bcids);
+  }
+
+  /** Implementación real del fetch (separada para que apiClient pueda envolverla). */
+  async _fetchAll(date_from, date_to, bcids) {
+    const POST_SOURCE = 'own';
     const args = (extra = {}) => ({
       p_org_id: this.orgId,
       p_date_from: date_from,

@@ -13,7 +13,13 @@
 
   const CreditsMixin = {
   refreshCredits() {
+    // Reset del cache local de la org Y del apiClient para que la próxima
+    // lectura vaya a la BD. Lo dispara el evento 'credits-updated' que emiten
+    // Studio (consumo) y la tienda de créditos (compra).
     this._orgCacheTime = 0;
+    if (window.apiClient && this.currentOrgId) {
+      window.apiClient.invalidate(`nav:credits:${this.currentOrgId}`);
+    }
     if (this.currentMode === 'user' && this.currentOrgId) {
       this.loadOrganizationInfo();
     }
@@ -51,16 +57,23 @@
       if (verticalFill) verticalFill.style.height = '0%';
     }
     try {
-      const { data, error } = await supabase
-        .from('organization_credits')
-        .select('credits_available, credits_total')
-        .eq('organization_id', orgId)
-        .maybeSingle();
-      if (error) {
-        if (tokensEl) tokensEl.textContent = '—';
-        console.warn('Navigation: error leyendo créditos', error);
-        return;
-      }
+      // TTL corto (15 s) porque los créditos bajan con cada uso en Studio. SWR
+      // garantiza pintar el valor previo al instante; el polling de 25 s en
+      // _startCreditsRefreshInterval invalida y refresca de fondo. El evento
+      // 'credits-updated' (refreshCredits) invalida cuando se compran/usan.
+      const fetcher = async () => {
+        const { data, error } = await supabase
+          .from('organization_credits')
+          .select('credits_available, credits_total')
+          .eq('organization_id', orgId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query(`nav:credits:${orgId}`, fetcher, { ttl: 15 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+
       const available = data != null ? (data.credits_available ?? 0) : 0;
       const total = data != null ? (data.credits_total ?? 0) : 0;
       const used = total > 0 ? Math.max(0, total - available) : 0;
@@ -103,15 +116,22 @@
     const valueEl = document.getElementById('navStorageValue');
     if (!valueEl) return;
     try {
-      const { data, error } = await supabase
-        .from('storage_usage')
-        .select('used_mb, max_mb')
-        .eq('organization_id', orgId)
-        .maybeSingle();
-      if (error) {
-        valueEl.textContent = '—';
-        return;
-      }
+      // Storage cambia solo cuando suben/borran assets (trigger en DB). Cache
+      // 2 min. Para refresh inmediato tras upload, llamar
+      // apiClient.invalidate(`nav:storage:${orgId}`).
+      const fetcher = async () => {
+        const { data, error } = await supabase
+          .from('storage_usage')
+          .select('used_mb, max_mb')
+          .eq('organization_id', orgId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query(`nav:storage:${orgId}`, fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+
       const used = data ? Number(data.used_mb) || 0 : 0;
       const max = data ? Number(data.max_mb) || 0 : 0;
       const next = max > 0

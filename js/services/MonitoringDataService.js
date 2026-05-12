@@ -20,9 +20,27 @@ class MonitoringDataService {
     return this;
   }
 
-  /* ── Carga inicial: las 3 listas + brand_containers para selects ── */
+  /** Invalida el cache cuando se hace un CRUD (create/update/delete). */
+  _invalidateCache() {
+    if (window.apiClient) window.apiClient.invalidate(`monitoring:${this.orgId}`);
+  }
+
+  /* ── Carga inicial: las 3 listas + brand_containers para selects.
+        Cacheada 30s + SWR para que el back/forward sea instant. ── */
   async loadAll() {
     if (!this.sb || !this.orgId) return null;
+    const cacheKey = `monitoring:${this.orgId}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(),
+        { ttl: 30 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll();
+  }
+
+  async _fetchAll() {
     const [containers, entities, triggers, watchers] = await Promise.allSettled([
       this.sb.from('brand_containers')
         .select('id, nombre_marca')
@@ -77,6 +95,7 @@ class MonitoringDataService {
       .insert(row)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -106,6 +125,7 @@ class MonitoringDataService {
       .eq('id', id)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -115,6 +135,7 @@ class MonitoringDataService {
       .from('intelligence_entities')
       .delete()
       .eq('id', id);
+    if (!error) this._invalidateCache();
     return { error };
   }
 
@@ -139,6 +160,7 @@ class MonitoringDataService {
       .insert(row)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -156,6 +178,7 @@ class MonitoringDataService {
       .eq('id', id)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -165,6 +188,7 @@ class MonitoringDataService {
       .from('monitoring_triggers')
       .delete()
       .eq('id', id);
+    if (!error) this._invalidateCache();
     return { error };
   }
 
@@ -186,6 +210,7 @@ class MonitoringDataService {
       .insert(row)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -201,6 +226,7 @@ class MonitoringDataService {
       .eq('id', id)
       .select()
       .single();
+    if (!error) this._invalidateCache();
     return { data, error };
   }
 
@@ -210,6 +236,7 @@ class MonitoringDataService {
       .from('url_watchers')
       .delete()
       .eq('id', id);
+    if (!error) this._invalidateCache();
     return { error };
   }
 }

@@ -262,11 +262,24 @@ class OrganizationView extends BaseView {
     if (!this.supabase || !this.orgId) return;
 
     try {
-      const { data: orgData, error: orgError } = await this.supabase
-        .from('organizations')
-        .select('id, name, owner_user_id, created_at, deleted_at, level_of_autonomy, logo_url, brand_name_oficial, brand_slogan')
-        .eq('id', this.orgId)
-        .maybeSingle();
+      const orgId = this.orgId;
+      // org data cacheado 2 min — settings tienen baja frecuencia de edición.
+      const fetchOrg = async () => {
+        const { data, error } = await this.supabase
+          .from('organizations')
+          .select('id, name, owner_user_id, created_at, deleted_at, level_of_autonomy, logo_url, brand_name_oficial, brand_slogan')
+          .eq('id', orgId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      };
+      const { data: orgData, error: orgError } = window.apiClient
+        ? await window.apiClient.query(`org:settings:${orgId}`, fetchOrg, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true }).then(d => ({ data: d, error: null })).catch(e => ({ data: null, error: e }))
+        : await this.supabase
+            .from('organizations')
+            .select('id, name, owner_user_id, created_at, deleted_at, level_of_autonomy, logo_url, brand_name_oficial, brand_slogan')
+            .eq('id', orgId)
+            .maybeSingle();
 
       if (orgError) throw orgError;
       if (!orgData) {
@@ -277,47 +290,69 @@ class OrganizationView extends BaseView {
       this.org = orgData;
       this.isOwner = this.org.owner_user_id === this.userId;
 
-      const { data: creditsData } = await this.supabase
-        .from('organization_credits')
-        .select('credits_available, credits_total')
-        .eq('organization_id', this.orgId)
-        .maybeSingle();
+      // Credits — misma key que sidebar para compartir cache.
+      const creditsFetcher = async () => {
+        const { data } = await this.supabase
+          .from('organization_credits')
+          .select('credits_available, credits_total')
+          .eq('organization_id', this.orgId)
+          .maybeSingle();
+        return data;
+      };
+      const creditsData = window.apiClient
+        ? await window.apiClient.query(`nav:credits:${this.orgId}`, creditsFetcher, { ttl: 15 * 1000, staleWhileRevalidate: true })
+        : await creditsFetcher();
 
       if (creditsData) {
         this.credits = creditsData;
       }
 
-      const { data: membersData, error: membersError } = await this.supabase
-        .from('organization_members')
-        .select('id, user_id, role')
-        .eq('organization_id', this.orgId);
-
-      if (membersError) throw membersError;
-      this.members = membersData || [];
+      // Members — cache 2 min. CRUD de invitaciones invalida vía _invalidateMembersCache().
+      const membersFetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('organization_members')
+          .select('id, user_id, role')
+          .eq('organization_id', this.orgId);
+        if (error) throw error;
+        return data || [];
+      };
+      this.members = window.apiClient
+        ? await window.apiClient.query(`org:members:${this.orgId}`, membersFetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
+        : await membersFetcher();
 
       const myMember = this.members.find(m => m.user_id === this.userId);
       this.canManageMembers = this.isOwner || (myMember && ['owner', 'admin'].includes(myMember.role));
 
-      const { data: brandContainersData, error: brandContainersError } = await this.supabase
-        .from('brand_containers')
-        .select('id, nombre_marca')
-        .eq('organization_id', this.orgId)
-        .order('created_at', { ascending: true });
-
-      if (brandContainersError) throw brandContainersError;
-      this.brandContainers = brandContainersData || [];
+      // brand_containers — comparte key con Navigation para evitar duplicado.
+      const bcFetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('brand_containers')
+          .select('id, nombre_marca')
+          .eq('organization_id', this.orgId)
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        return data || [];
+      };
+      this.brandContainers = window.apiClient
+        ? await window.apiClient.query(`nav:brand_containers:${this.orgId}`, bcFetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await bcFetcher();
 
       if (this.brandContainers.length > 0) {
         const containerIds = this.brandContainers.map(b => b.id);
-        const { data: integrationsData, error: integrationsError } = await this.supabase
-          .from('brand_integrations')
-          .select('id, brand_container_id, platform, external_account_name, is_active, updated_at, last_sync_at')
-          .in('brand_container_id', containerIds)
-          .order('platform', { ascending: true })
-          .order('updated_at', { ascending: false });
-
-        if (integrationsError) throw integrationsError;
-        this.organizationIntegrations = integrationsData || [];
+        const intKey = `org:integrations:${this.orgId}`;
+        const intFetcher = async () => {
+          const { data, error } = await this.supabase
+            .from('brand_integrations')
+            .select('id, brand_container_id, platform, external_account_name, is_active, updated_at, last_sync_at')
+            .in('brand_container_id', containerIds)
+            .order('platform', { ascending: true })
+            .order('updated_at', { ascending: false });
+          if (error) throw error;
+          return data || [];
+        };
+        this.organizationIntegrations = window.apiClient
+          ? await window.apiClient.query(intKey, intFetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+          : await intFetcher();
       } else {
         this.organizationIntegrations = [];
       }

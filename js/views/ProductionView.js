@@ -7,6 +7,8 @@
  * - /production — sin org (usa organización guardada)
  */
 class ProductionView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.templatePath = null;

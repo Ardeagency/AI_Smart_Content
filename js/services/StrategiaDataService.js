@@ -41,9 +41,24 @@ class StrategiaDataService {
   _noOrg()   { return !this.sb || !this.orgId; }
 
   /* ══════════════════════════════════════════════════════════
-     CARGA TOTAL
+     CARGA TOTAL — cacheada vía apiClient (30s TTL, SWR)
+     TTL más corto que los otros services porque el tab Estrategia muestra
+     acciones pendientes y métricas en tiempo casi-real.
   ══════════════════════════════════════════════════════════ */
   async loadAll() {
+    if (this._noOrg()) return null;
+    const cacheKey = `dash:strategia:${this.orgId}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(),
+        { ttl: 30 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll();
+  }
+
+  async _fetchAll() {
     const [sb, pa, cal, hist] = await Promise.allSettled([
       this.loadStatusBar(),
       this.loadPendingActions(),

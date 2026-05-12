@@ -4,6 +4,8 @@
  * - Productos: masonry como Production (imagen a proporción natural, nombre solo en hover)
  */
 class IdentitiesView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.templatePath = null;
@@ -104,66 +106,83 @@ class IdentitiesView extends BaseView {
       return;
     }
 
+    const orgId = this.organizationId;
     try {
-      const [servicesRes, productsRes] = await Promise.all([
-        this.supabase
-          .from('services')
-          .select('id, entity_id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: false }),
-        this.supabase
-          .from('products')
-          .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: false })
-      ]);
+      const fetcher = () => this._fetchIdentitiesData(orgId);
+      const result = window.apiClient
+        ? await window.apiClient.query(`identities:${orgId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
 
-      if (servicesRes.error) throw servicesRes.error;
-      if (productsRes.error) throw productsRes.error;
-
-      this.services = servicesRes.data || [];
-      this.products = productsRes.data || [];
-
-      const productIds = this.products.map((p) => p.id);
-      this.productImageById = {};
-      if (productIds.length) {
-        const { data: imagesData, error: imagesError } = await this.supabase
-          .from('product_images')
-          .select('product_id, image_url, image_order')
-          .in('product_id', productIds)
-          .not('image_url', 'is', null)
-          .order('image_order', { ascending: true });
-        if (imagesError) throw imagesError;
-        (imagesData || []).forEach((img) => {
-          const url = (img.image_url || '').trim();
-          if (!url) return;
-          if (!this.productImageById[img.product_id]) {
-            this.productImageById[img.product_id] = url;
-          }
-        });
-      }
-
-      // Fallback de entity_id para productos huérfanos (entity_id NULL):
-      // permite que el click abra el detalle reusando la primera entity activa
-      // de la org. Solo se hace una vez por carga.
-      const orphan = this.products.some((p) => !p.entity_id);
-      if (orphan) {
-        const { data: ents } = await this.supabase
-          .from('brand_entities')
-          .select('id')
-          .eq('organization_id', this.organizationId)
-          .order('created_at', { ascending: true })
-          .limit(1);
-        this._fallbackEntityId = ents?.[0]?.id || null;
-      } else {
-        this._fallbackEntityId = null;
-      }
+      this.services = result.services;
+      this.products = result.products;
+      this.productImageById = result.productImageById;
+      this._fallbackEntityId = result.fallbackEntityId;
     } catch (e) {
       console.error('IdentitiesView _loadData:', e);
+      if (window.errorLogger) window.errorLogger.capture(e, { source: 'IdentitiesView._loadData' });
       this.services = [];
       this.products = [];
       this.productImageById = {};
       this._fallbackEntityId = null;
+    }
+  }
+
+  async _fetchIdentitiesData(orgId) {
+    const [servicesRes, productsRes] = await Promise.all([
+      this.supabase
+        .from('services')
+        .select('id, entity_id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false }),
+      this.supabase
+        .from('products')
+        .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false })
+    ]);
+
+    if (servicesRes.error) throw servicesRes.error;
+    if (productsRes.error) throw productsRes.error;
+
+    const services = servicesRes.data || [];
+    const products = productsRes.data || [];
+
+    const productIds = products.map((p) => p.id);
+    const productImageById = {};
+    if (productIds.length) {
+      const { data: imagesData, error: imagesError } = await this.supabase
+        .from('product_images')
+        .select('product_id, image_url, image_order')
+        .in('product_id', productIds)
+        .not('image_url', 'is', null)
+        .order('image_order', { ascending: true });
+      if (imagesError) throw imagesError;
+      (imagesData || []).forEach((img) => {
+        const url = (img.image_url || '').trim();
+        if (!url) return;
+        if (!productImageById[img.product_id]) productImageById[img.product_id] = url;
+      });
+    }
+
+    let fallbackEntityId = null;
+    const orphan = products.some((p) => !p.entity_id);
+    if (orphan) {
+      const { data: ents } = await this.supabase
+        .from('brand_entities')
+        .select('id')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      fallbackEntityId = ents?.[0]?.id || null;
+    }
+
+    return { services, products, productImageById, fallbackEntityId };
+  }
+
+  /** Invalida cache cuando se crea/borra un servicio/producto desde esta vista. */
+  _invalidateCache() {
+    if (window.apiClient && this.organizationId) {
+      window.apiClient.invalidate(`identities:${this.organizationId}`);
     }
   }
 
@@ -233,6 +252,7 @@ class IdentitiesView extends BaseView {
         descripcion_servicio: null,
       });
       if (error) throw error;
+      this._invalidateCache();
       await this._loadData();
       this._renderServices();
     } catch (e) {
@@ -267,6 +287,7 @@ class IdentitiesView extends BaseView {
         .single();
       if (error) throw error;
       if (!data?.id) return;
+      this._invalidateCache();
       this._navigateToProductDetail(entityId, data.id);
     } catch (e) {
       console.error('IdentitiesView _onAddProduct:', e);

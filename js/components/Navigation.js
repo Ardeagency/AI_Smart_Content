@@ -240,19 +240,26 @@ class Navigation {
    * @returns {Promise<Array<{id: string, name: string}>>}
    */
   async loadCatalogCategories() {
+    // Categorías cambian rarísimo (config de la plataforma). Cache 10 min + SWR
+    // → la sidebar deja de pegarle a content_categories en cada login/nav.
     try {
-      const supabase = window.supabaseService
-        ? await window.supabaseService.getClient()
-        : window.supabase;
-      if (!supabase) return [];
-      const { data, error } = await supabase
-        .from('content_categories')
-        .select('id, name, is_visible')
-        .order('order_index', { ascending: true, nullsFirst: false })
-        .order('name');
-      if (error) return [];
-      const list = Array.isArray(data) ? data : [];
-      this._catalogCategories = list.filter((c) => c.is_visible !== false);
+      const fetcher = async () => {
+        const supabase = window.supabaseService
+          ? await window.supabaseService.getClient()
+          : window.supabase;
+        if (!supabase) return [];
+        const { data, error } = await supabase
+          .from('content_categories')
+          .select('id, name, is_visible')
+          .order('order_index', { ascending: true, nullsFirst: false })
+          .order('name');
+        if (error) return [];
+        return Array.isArray(data) ? data : [];
+      };
+      const list = window.apiClient
+        ? await window.apiClient.query('nav:content_categories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this._catalogCategories = (list || []).filter((c) => c.is_visible !== false);
       return this._catalogCategories;
     } catch (e) {
       console.warn('Navigation: no se pudieron cargar content_categories', e);
@@ -2409,11 +2416,12 @@ class Navigation {
         return;
       }
 
-      const now = Date.now();
-      const cacheValid = this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL;
-
-      if (!cacheValid) {
-        const orgRes = await supabase.from('organizations').select('name, owner_user_id').eq('id', this.currentOrgId).single();
+      // Cache vía apiClient (5 min TTL + SWR). Antes había un cache ad-hoc por
+      // instancia (_orgCache); con apiClient sobrevive entre renders/vistas y
+      // dedupea entre callsites concurrentes. La key es por orgId.
+      const orgId = this.currentOrgId;
+      const fetcher = async () => {
+        const orgRes = await supabase.from('organizations').select('name, owner_user_id').eq('id', orgId).single();
         let planLabel = 'Personal';
         if (orgRes.data?.owner_user_id) {
           const { data: owner } = await supabase.from('profiles').select('plan_type').eq('id', orgRes.data.owner_user_id).maybeSingle();
@@ -2422,10 +2430,14 @@ class Navigation {
             planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
           }
         }
-        this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: 0, credits_total: 0 };
-        this._orgCacheId = this.currentOrgId;
-        this._orgCacheTime = Date.now();
-      }
+        return { name: orgRes.data?.name, plan: planLabel };
+      };
+      const cached = window.apiClient
+        ? await window.apiClient.query(`nav:org:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this._orgCache = { ...(cached || {}), credits: 0, credits_total: 0 };
+      this._orgCacheId = orgId;
+      this._orgCacheTime = Date.now();
       const typeEl = document.getElementById('navOrgType');
       if (this._orgCache) this._renderAdaptiveOrgName(this._orgCache.name || '');
       if (typeEl && this._orgCache) typeEl.textContent = this._orgCache.plan || '';
@@ -2457,16 +2469,22 @@ class Navigation {
       return;
     }
     try {
-      const supabase = window.supabaseService
-        ? await window.supabaseService.getClient()
-        : window.supabase;
-      if (!supabase) return;
-      const { data, error } = await supabase
-        .from('brand_containers')
-        .select('id, nombre_marca')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: false });
-      this._brandStorageSubbrands = !error && Array.isArray(data) ? data : [];
+      const fetcher = async () => {
+        const supabase = window.supabaseService
+          ? await window.supabaseService.getClient()
+          : window.supabase;
+        if (!supabase) return [];
+        const { data, error } = await supabase
+          .from('brand_containers')
+          .select('id, nombre_marca')
+          .eq('organization_id', orgId)
+          .order('created_at', { ascending: false });
+        return !error && Array.isArray(data) ? data : [];
+      };
+      const list = window.apiClient
+        ? await window.apiClient.query(`nav:brand_containers:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this._brandStorageSubbrands = list || [];
       this.updateBrandStorageLink(this._brandStorageSubbrands.length);
       this.renderBrandStorageSubmenu();
     } catch (e) {
@@ -2573,12 +2591,18 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      const [membershipsRes, ownedOrgsRes] = await Promise.all([
-        supabase.from('organization_members').select('organization_id, role, organizations (id, name)').eq('user_id', user.id),
-        supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
-      ]);
-      const memberships = membershipsRes.data;
-      const ownedOrgs = ownedOrgsRes.data;
+      // Misma cache que el resolver de orgs en js/org-url.js (5 min). Comparten
+      // dato, ahorra ~2 queries por nav en el dropdown del sidebar.
+      const fetchOrgs = async () => {
+        const [membershipsRes, ownedOrgsRes] = await Promise.all([
+          supabase.from('organization_members').select('organization_id, role, organizations (id, name)').eq('user_id', user.id),
+          supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
+        ]);
+        return { memberships: membershipsRes.data, ownedOrgs: ownedOrgsRes.data };
+      };
+      const { memberships, ownedOrgs } = window.apiClient
+        ? await window.apiClient.query(`nav:user_orgs:${user.id}`, fetchOrgs, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetchOrgs();
 
       const orgsMap = new Map();
       (memberships || []).forEach(m => {

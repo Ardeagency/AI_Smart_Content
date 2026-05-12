@@ -3,6 +3,8 @@
  * Dos experiencias: HOME (Feed principal) y VIEW POR CATEGORÍA (Contextual Feed).
  */
 class FlowCatalogView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.supabase = null;
@@ -243,14 +245,20 @@ class FlowCatalogView extends BaseView {
   async loadCategories() {
     if (!this.supabase) return;
     try {
-      const { data, error } = await this.supabase
-        .from('content_categories')
-        .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path, is_visible')
-        .eq('is_visible', true)
-        .order('order_index', { ascending: true, nullsFirst: false })
-        .order('name');
-      const list = !error && data ? data : [];
-      this.categories = list.filter((c) => c.is_visible !== false);
+      // Config global, cambia rarísimo. Cache 10 min + SWR.
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('content_categories')
+          .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path, is_visible')
+          .eq('is_visible', true)
+          .order('order_index', { ascending: true, nullsFirst: false })
+          .order('name');
+        return !error && data ? data : [];
+      };
+      const list = window.apiClient
+        ? await window.apiClient.query('flow:categories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this.categories = (list || []).filter((c) => c.is_visible !== false);
     } catch (e) {
       console.error('FlowCatalog loadCategories:', e);
       this.categories = [];
@@ -260,12 +268,17 @@ class FlowCatalogView extends BaseView {
   async loadSubcategories() {
     if (!this.supabase) return;
     try {
-      const { data, error } = await this.supabase
-        .from('content_subcategories')
-        .select('id, name, description, order_index')
-        .order('order_index', { ascending: true, nullsFirst: false })
-        .order('name');
-      this.subcategories = !error && data ? data : [];
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('content_subcategories')
+          .select('id, name, description, order_index')
+          .order('order_index', { ascending: true, nullsFirst: false })
+          .order('name');
+        return !error && data ? data : [];
+      };
+      this.subcategories = window.apiClient
+        ? await window.apiClient.query('flow:subcategories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('FlowCatalog loadSubcategories:', e);
       this.subcategories = [];
@@ -279,7 +292,9 @@ class FlowCatalogView extends BaseView {
   async loadFlows() {
     if (!this.supabase) return;
     try {
-      const baseFilter = () => {
+      // Cache key incluye los filtros activos para distinguir vistas (home vs categoría/sub).
+      const filterKey = this.selectedSubcategoryId ? `sub:${this.selectedSubcategoryId}` : (this.selectedCategoryId ? `cat:${this.selectedCategoryId}` : 'home');
+      const fetcher = async () => {
         let q = this.supabase
           .from('content_flows')
           .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status, version, execution_mode')
@@ -289,10 +304,13 @@ class FlowCatalogView extends BaseView {
           .neq('flow_category_type', 'system');
         if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
         else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
-        return q;
+        const { data, error } = await q.order('created_at', { ascending: false });
+        return !error && data ? data : [];
       };
-      const { data, error } = await baseFilter().order('created_at', { ascending: false });
-      this.flows = !error && data ? data : [];
+      const flows = window.apiClient
+        ? await window.apiClient.query(`flow:flows:${filterKey}`, fetcher, { ttl: 2 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this.flows = flows || [];
       this.flowsById = new Map(this.flows.map(f => [f.id, f]));
     } catch (e) {
       console.error('FlowCatalog loadFlows:', e);
@@ -305,12 +323,17 @@ class FlowCatalogView extends BaseView {
     this.favorites = [];
     if (!this.supabase || !this.userId) return;
     try {
-      const { data, error } = await this.supabase
-        .from('user_flow_favorites')
-        .select('flow_id, rating, is_favorite, last_used_at')
-        .eq('user_id', this.userId)
-        .eq('is_favorite', true);
-      if (!error && data) this.favorites = data;
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('user_flow_favorites')
+          .select('flow_id, rating, is_favorite, last_used_at')
+          .eq('user_id', this.userId)
+          .eq('is_favorite', true);
+        return !error && data ? data : [];
+      };
+      this.favorites = window.apiClient
+        ? await window.apiClient.query(`flow:favorites:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('FlowCatalog loadFavorites:', e);
     }
@@ -320,13 +343,19 @@ class FlowCatalogView extends BaseView {
     this.recentRunFlowIds = [];
     if (!this.supabase || !this.userId) return;
     try {
-      const { data, error } = await this.supabase
-        .from('flow_runs')
-        .select('flow_id')
-        .eq('user_id', this.userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (!error && data) {
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('flow_runs')
+          .select('flow_id')
+          .eq('user_id', this.userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        return !error && data ? data : [];
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query(`flow:recent_runs:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      if (data) {
         const seen = new Set();
         data.forEach(r => {
           if (r.flow_id && !seen.has(r.flow_id)) {
@@ -1005,6 +1034,7 @@ class FlowCatalogView extends BaseView {
       } else if (!isLiked) {
         await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true, rating: 5 });
       }
+      window.apiClient?.invalidate(`flow:favorites:${this.userId}`);
     } catch (e) {
       console.error('toggleLike:', e);
       return;
@@ -1031,6 +1061,7 @@ class FlowCatalogView extends BaseView {
       } else if (!isSaved) {
         await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true });
       }
+      window.apiClient?.invalidate(`flow:favorites:${this.userId}`);
     } catch (e) {
       console.error('toggleSave:', e);
       return;

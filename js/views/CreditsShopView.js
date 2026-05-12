@@ -4,6 +4,8 @@
  * Paquetes leídos desde la tabla `credit_packages` (Supabase).
  */
 class CreditsShopView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.supabase = null;
@@ -55,12 +57,19 @@ class CreditsShopView extends BaseView {
   async loadPackages() {
     if (!this.supabase) return;
     try {
-      const { data, error } = await this.supabase
-        .from('credit_packages')
-        .select('id, name, credits, price_usd, bonus_credits, is_popular, display_order, is_active')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (error) throw error;
+      // Paquetes son config global, cambian rarísimo (raras veces precios). Cache 10 min + SWR.
+      const fetcher = async () => {
+        const { data, error } = await this.supabase
+          .from('credit_packages')
+          .select('id, name, credits, price_usd, bonus_credits, is_popular, display_order, is_active')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        return data || [];
+      };
+      const data = window.apiClient
+        ? await window.apiClient.query('credits:packages', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
       this.packages = (data || []).map((p) => ({
         id: p.id,
         name: p.name,

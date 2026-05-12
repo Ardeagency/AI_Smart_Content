@@ -24,7 +24,60 @@ class Router {
     this.currentRoute = null;
     this._handlingRoute = false;
     this._pendingRoute = null;
+    // Back/forward cache: por path guardamos scrollY (siempre) y opcionalmente
+    // el HTML del contenedor si la vista lo declaró `cacheable = true`. LRU
+    // simple de 6 entradas para acotar memoria.
+    this._bfCache = new Map();
+    this._BF_CACHE_LIMIT = 6;
+    this._BF_HTML_TTL = 60 * 1000;
     this.init();
+  }
+
+  _bfNormalizePath(p) {
+    if (!p || typeof p !== 'string') return '/';
+    let path = p.startsWith('/') ? p : '/' + p;
+    if (path === '' || path === '/index.html') path = '/';
+    if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+    return path;
+  }
+
+  _bfSnapshot(view, fromPath) {
+    if (!fromPath) return;
+    const key = this._bfNormalizePath(fromPath);
+    const container = document.getElementById('app-container');
+    if (!container) return;
+    const cacheable = view && view.constructor && view.constructor.cacheable === true;
+    const entry = {
+      scrollY: window.scrollY || window.pageYOffset || 0,
+      html: cacheable ? container.innerHTML : null,
+      t: Date.now()
+    };
+    // LRU: borrar y reinsertar para mover al final.
+    if (this._bfCache.has(key)) this._bfCache.delete(key);
+    this._bfCache.set(key, entry);
+    while (this._bfCache.size > this._BF_CACHE_LIMIT) {
+      const oldest = this._bfCache.keys().next().value;
+      this._bfCache.delete(oldest);
+    }
+  }
+
+  _bfGet(path) {
+    const key = this._bfNormalizePath(path);
+    const entry = this._bfCache.get(key);
+    if (!entry) return null;
+    // Refresh LRU.
+    this._bfCache.delete(key);
+    this._bfCache.set(key, entry);
+    return entry;
+  }
+
+  /** Restaura el scroll de una entrada en el próximo frame (cuando ya pintó la vista). */
+  _bfRestoreScroll(entry) {
+    if (!entry || typeof entry.scrollY !== 'number') return;
+    requestAnimationFrame(() => {
+      try { window.scrollTo({ top: entry.scrollY, behavior: 'instant' in window ? 'instant' : 'auto' }); }
+      catch (_) { window.scrollTo(0, entry.scrollY); }
+    });
   }
 
   /**
@@ -272,6 +325,7 @@ class Router {
               window.appNavigation.render();
             }
 
+            this._playRouteFade(container);
             window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
             return;
           }
@@ -284,6 +338,9 @@ class Router {
       // la nueva vista reemplaza el DOM en BaseView.render() y así evitamos un
       // frame en blanco entre ambas vistas.
       if (prevView) {
+        // Guardar snapshot (scroll siempre; HTML solo si la vista opta in con
+        // `static cacheable = true`) antes de destruir.
+        this._bfSnapshot(prevView, this.currentRoute);
         this.currentView = null;
         if (typeof prevView.onLeave === 'function') {
           try { prevView.onLeave(); } catch (_) {}
@@ -295,11 +352,24 @@ class Router {
 
       document.body.classList.toggle('route-landing', path === '/');
 
+      // Si hay HTML en bfCache fresco para esta ruta, pintarlo de inmediato
+      // (instant restore). La vista hará su render normal encima — la vista
+      // que opte in al cache debería detectar `this._restoredFromCache` y
+      // refrescar incrementalmente en lugar de re-pintar el árbol.
+      const cached = this._bfGet(path);
+      const hasFreshHtml = cached && cached.html && (Date.now() - cached.t) < this._BF_HTML_TTL;
+      if (hasFreshHtml) {
+        container.innerHTML = cached.html;
+      }
+
       this.currentView = new ViewClass();
       this.currentRoute = path;
       if (Object.keys(routeParams).length > 0) {
         this.currentView.routeParams = routeParams;
       }
+      // Marcar la vista para que sepa si está siendo restaurada desde cache;
+      // útil para que decida si re-renderizar todo o solo refrescar datos.
+      this.currentView._restoredFromCache = !!hasFreshHtml;
 
       // Navigation render en paralelo con el render de la vista: no bloquea el
       // pintado de la vista nueva y evita que el sidebar se quede mostrando el
@@ -308,12 +378,39 @@ class Router {
         ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
         : Promise.resolve();
 
-      await this.currentView.render();
-      await navRenderPromise;
+      const doRender = async () => {
+        await this.currentView.render();
+        await navRenderPromise;
+      };
+
+      // View Transitions API (Chrome 111+, Safari 18+, Edge 111+):
+      // crossfade nativo a 60fps a nivel de pintura. Fallback al .route-fade-in
+      // de 140ms si no hay soporte (Firefox aún no lo implementa).
+      if (typeof document.startViewTransition === 'function' && !this._reduceMotion()) {
+        try {
+          const transition = document.startViewTransition(doRender);
+          await transition.updateCallbackDone;
+        } catch (e) {
+          console.warn('Router: View Transition falló, fallback a fade.', e);
+          await doRender();
+          this._playRouteFade(container);
+        }
+      } else {
+        await doRender();
+        this._playRouteFade(container);
+      }
+
+      // Restaurar scroll de back/forward al final (cuando el DOM ya está). Si
+      // no hay entrada cacheada, volver al top (comportamiento previo).
+      if (cached) this._bfRestoreScroll(cached);
+      else window.scrollTo(0, 0);
 
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
       console.error('Error manejando ruta:', error);
+      if (window.errorLogger) {
+        window.errorLogger.capture(error, { source: 'router.handleRoute', path: window.location.pathname });
+      }
       if (window.errorHandler) {
         window.errorHandler.showError(error, 'Error cargando la página. Por favor, recarga.');
       } else {
@@ -333,6 +430,70 @@ class Router {
         }
       }
     }
+  }
+
+  /**
+   * Reinicia la animación de fade del contenedor de la vista actual.
+   * Forzar un reflow (offsetHeight) garantiza que el navegador relance la
+   * animación incluso cuando la clase ya estaba aplicada en la navegación anterior.
+   */
+  _playRouteFade(container) {
+    if (!container || typeof container.classList === 'undefined') return;
+    container.classList.remove('route-fade-in');
+    void container.offsetHeight;
+    container.classList.add('route-fade-in');
+  }
+
+  /** Respeta prefers-reduced-motion: si el usuario lo pide, saltamos animaciones. */
+  _reduceMotion() {
+    return typeof window !== 'undefined'
+      && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /**
+   * Prefetch: ejecuta el viewLoader de una ruta (carga sus scripts en el DOM)
+   * sin instanciar la vista. Pensado para mouseenter en links del sidebar:
+   * cuando el usuario hace click, los scripts ya están en caché del navegador.
+   *
+   * Es idempotente: si la clase ya está en window (porque la ruta ya se visitó)
+   * resuelve inmediato. Si ya hay un prefetch en curso para esa ruta, no encola
+   * uno nuevo.
+   */
+  prefetch(path) {
+    if (!path || typeof path !== 'string') return Promise.resolve();
+    if (!this._prefetched) this._prefetched = new Map();
+
+    // Normalizar igual que handleRoute para que '/dashboard' y '/dashboard/' caigan en el mismo bucket.
+    let key = path.startsWith('/') ? path : '/' + path;
+    if (key.length > 1 && key.endsWith('/')) key = key.slice(0, -1);
+
+    if (this._prefetched.has(key)) return this._prefetched.get(key);
+
+    const route = this._findRouteForPath(key);
+    if (!route) return Promise.resolve();
+
+    const p = Promise.resolve()
+      .then(() => this._resolveViewClassFromRoute(route))
+      .catch((err) => {
+        // No envenenamos el cache: si falla el prefetch, permitir reintento al
+        // navegar de verdad. El click haría el load igual que sin prefetch.
+        this._prefetched.delete(key);
+        console.warn('Router.prefetch:', key, err && err.message);
+      });
+    this._prefetched.set(key, p);
+    return p;
+  }
+
+  /** Busca la config de ruta para un path (exacta o con :params), sin ejecutarla. */
+  _findRouteForPath(path) {
+    if (this.routes[path]) return this.routes[path];
+    for (const [pattern, config] of Object.entries(this.routes)) {
+      if (!pattern.includes(':')) continue;
+      const re = new RegExp('^' + pattern.replace(/:[^/]+/g, '([^/]+)') + '$');
+      if (re.test(path)) return config;
+    }
+    return null;
   }
 
   /**

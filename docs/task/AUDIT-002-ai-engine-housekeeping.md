@@ -148,6 +148,25 @@ Para desencriptar tokens cifrados (`enc_v1:...`) usar
   imagen en origen (no era bug). Frontend y populator OK.
 - Hallazgos secundarios (este ticket) documentados.
 
+### 2026-05-12 — H2 + H3 cerrados
+
+- **H2 ✅** Commit inicial `aef6701` en `~/ai-engine` con 202 archivos
+  (35.817 líneas). `.gitignore` ampliado: `.env.bak*`, `*.bak`,
+  `**/.venv/`, `**/__pycache__/`, `backups/`. Verificado: 0 secrets en
+  el repo (`.env.example` confirmado como template con placeholders).
+  Remote no configurado — decisión pospuesta.
+- **H3 ✅** 21 archivos `.bak` eliminados (más de los 5 documentados):
+  2 `.env.bak.before-shopify-*`, 18 `src/*.bak.*` de deploys previos
+  (entrega-a, entrega-b, bug001, feat014, feat015, ops006, markdown-fix,
+  before-shopify-phase2, before-multiplatform-populators, shopify-routes-removed,
+  before-shopify, entrega-a5), 1 `backups/cloudflare-tunnel-credentials.json.bak`
+  (duplicado — credencial viva confirmada en `/root/.cloudflared/909ec77e-*.json`
+  + `/etc/cloudflared/config.yml`, servicio cloudflared corriendo 3 semanas).
+  Servicio `ai-engine` sigue active post-cleanup.
+- **H1 ⏳ pendiente** — orphans en `external_resource_map` por bug
+  histórico `tipo_producto_enum: "fisico"` del 2026-05-08 17:17. Falta
+  query + decisión re-encolar/purgar + test de regresión del mapper.
+
 ---
 
-_Última actualización: 2026-05-08_
+_Última actualización: 2026-05-12 — H2 y H3 cerrados, solo queda H1._

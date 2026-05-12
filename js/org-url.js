@@ -38,29 +38,59 @@ function getOrgPathPrefix(orgId, orgName) {
 
 /**
  * Resolver shortId + nameSlug a UUID y nombre de organización (solo entre las orgs del usuario).
+ *
+ * Cachea la lista de orgs del usuario por 5 min: sin esto el router le pega 2 queries
+ * a Supabase en cada navegación dentro de una org (sensación de lag entre páginas).
+ * El cache se invalida en login/logout vía `clearOrgResolverCache()`.
+ *
  * @param {string} shortId - Últimos 12 caracteres del UUID
  * @param {string} nameSlug - Slug del nombre
  * @returns {Promise<{id: string, name: string}|null>} { id, name } o null
  */
-async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
-  if (!shortId) return null;
+const _ORG_RESOLVER_TTL = 5 * 60 * 1000;
+let _orgResolverCache = null;
+let _orgResolverInflight = null;
+
+async function _fetchUserOrgs() {
   const supabase = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
   const user = window.authService?.getCurrentUser();
   if (!supabase || !user?.id) return null;
+
+  const now = Date.now();
+  if (_orgResolverCache && _orgResolverCache.userId === user.id && (now - _orgResolverCache.ts) < _ORG_RESOLVER_TTL) {
+    return _orgResolverCache.list;
+  }
+  if (_orgResolverInflight) return _orgResolverInflight;
+
+  _orgResolverInflight = (async () => {
+    try {
+      const [membersRes, ownedRes] = await Promise.all([
+        supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', user.id),
+        supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
+      ]);
+      const list = [];
+      (membersRes.data || []).forEach((m) => {
+        const o = m.organizations;
+        const id = o?.id ?? m.organization_id;
+        if (id) list.push({ id, name: (o && o.name) || '' });
+      });
+      (ownedRes.data || []).forEach((o) => {
+        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
+      });
+      _orgResolverCache = { userId: user.id, list, ts: Date.now() };
+      return list;
+    } finally {
+      _orgResolverInflight = null;
+    }
+  })();
+  return _orgResolverInflight;
+}
+
+async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
+  if (!shortId) return null;
   try {
-    const [membersRes, ownedRes] = await Promise.all([
-      supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', user.id),
-      supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
-    ]);
-    const list = [];
-    (membersRes.data || []).forEach((m) => {
-      const o = m.organizations;
-      const id = o?.id ?? m.organization_id;
-      if (id) list.push({ id, name: (o && o.name) || '' });
-    });
-    (ownedRes.data || []).forEach((o) => {
-      if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
-    });
+    const list = await _fetchUserOrgs();
+    if (!list) return null;
     const byShortId = list.filter((o) => getOrgShortId(o.id) === shortId);
     if (byShortId.length === 0) return null;
     if (nameSlug && nameSlug !== 'org') {
@@ -74,7 +104,13 @@ async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
   }
 }
 
+function clearOrgResolverCache() {
+  _orgResolverCache = null;
+  _orgResolverInflight = null;
+}
+
 window.getOrgShortId = getOrgShortId;
 window.getOrgSlug = getOrgSlug;
 window.getOrgPathPrefix = getOrgPathPrefix;
 window.resolveOrgIdFromShortAndSlug = resolveOrgIdFromShortAndSlug;
+window.clearOrgResolverCache = clearOrgResolverCache;

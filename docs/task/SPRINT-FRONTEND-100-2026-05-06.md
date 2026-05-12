@@ -22,18 +22,20 @@ owner: -
 
 ## 1. Resumen ejecutivo
 
-| Métrica | Hoy (2026-05-06) | Objetivo (2026-05-28) |
+| Métrica | Hoy (2026-05-06) | Objetivo (2026-05-26) |
 |---|---|---|
 | Dashboards funcionales | 2/4 | **4/4 con 65+ gráficos** |
 | RPCs nuevas consumidas | 0/10 | **10/10** |
-| Sistemas backend con UI | 5/15 | **15/15** |
+| Sistemas backend con UI | 5/13 | **13/13** |
 | Vistas con placeholder | 4 | **0** |
 | Bugs `from('brands')`/`from('audiences')` | 14 ocurrencias | **0** |
-| Páginas nuevas | 0 | **7** (Planes, Activity, Health, Tutorial, Lexicon, Brand Intelligence, NotificationBell) |
-| Páginas mejoradas | 0 | **5** (Créditos, Monitoring, CommandCenter, Tasks, Vera) |
+| Páginas nuevas | 0 | **5** (Planes, Tutorial, Lexicon, Brand Intelligence, NotificationBell) |
+| Páginas mejoradas | 0 | **5** (Créditos+BudgetIndicator, Monitoring, CommandCenter, Tasks, Vera) |
 | Estado de venta | Preview | **Demo-ready end-to-end** |
 
-**Dev estimado:** 16 días hábiles. **Entrega: jueves 28 de mayo de 2026.**
+**Dev estimado:** 14 días hábiles. **Entrega: martes 26 de mayo de 2026.**
+
+> **Cambio 2026-05-12 (D5):** se eliminaron del scope **ActivityView** (D8) y **HealthView** (D9) — el usuario decidió no construirlas. **NotificationBell** se reduce a versión simple (badge + dropdown sin per-user state) y se absorbe en el bloque del navbar de D6. **BudgetIndicator** se integra dentro de **CreditsView** (D6) en vez de ser sidebar persistente en Vera. Sprint baja de 16 → 14 días útiles, entrega se mueve a martes 26 de mayo.
 
 ---
 
@@ -129,22 +131,20 @@ owner: -
 | `viral_predictions` | viral_score, velocity_per_hour | Lista con score + acción recomendada |
 | `crisis_signals` | severity, crisis_score, factors | **Timeline** crisis con severidad |
 
-### 2.7 Tablas operacionales (Activity / Health / Tasks)
+### 2.7 Tablas operacionales (Tasks / Monitoring)
 
 | Tabla | Filas | UI propuesta |
 |---|---|---|
-| `system_metrics` | 76.314 | **Health page** charts (server health) |
 | `sensor_runs` | 1.312 | **Timeline** dentro de Monitoring |
 | `apify_runs` | 82 | Tabla en Monitoring + **bar chart de gasto** |
 | `agent_queue_jobs` | 28 | **Kanban** queued/running/done en Tasks |
-| `mission_runs` | 28 | **Timeline + duration histogram** |
+| `mission_runs` | 28 | **Timeline + duration histogram** en Tasks |
 | `body_missions` | 70 | Lista en Tasks con detalles |
-| `provisioning_events` | live | **Timeline** en HealthView |
-| `delivery_events` | live | **Timeline** en Activity |
 | `credit_usage` | 217 | **Stacked bar** gasto por kind/día (Créditos page) |
-| `intelligence_signals` | 306 | Feed en Activity Timeline |
 | `dimension_lexicon` | 198 (37 pending) | Admin en /dev/lead/lexicon |
 | `vera_pending_actions` | live | Inbox en Vera + Tasks |
+
+> `system_metrics`, `provisioning_events`, `delivery_events` e `intelligence_signals` quedan **sin UI** en este sprint (Activity y Health fuera de scope).
 
 ### 2.8 Configuración (Planes y Créditos)
 
@@ -188,12 +188,12 @@ TOTAL:              ~110 visualizaciones
 | Página | Ruta | Datos consumidos |
 |---|---|---|
 | **Planes** | `/org/.../plans` | `plans` (5 tiers) + `subscriptions` activa + `credit_packages` |
-| **Activity Timeline** | `/org/.../activity` | `intelligence_signals` + `mission_runs` + `delivery_events` + `provisioning_events` + `vera_pending_actions` resueltas |
-| **HealthView** | `/org/.../health` | `mv_dashboard_health` + `storage_usage` + `organization_credits` + `v_org_claude_usage_today` + `monitoring_triggers` + `brand_integrations` + `openclaw_instances` |
 | **Tutorial system** | (overlay global) | localStorage + `profiles.tour_completed` |
 | **Lexicon Admin** | `/dev/lead/lexicon` | `dimension_lexicon` (37 pending) + `v_orphan_topics` |
 | **Brand Intelligence pages** | sub-vistas en `/brands/:id` | `brand_vulnerabilities` (41) + `brand_communication_patterns` (10) + `brand_health_snapshots` + `daily_briefs` + `weekly_memos` |
-| **NotificationBell** | (componente global navbar) | `org_notifications` + `org_notification_user_state` |
+| **NotificationBell** (simple) | (componente global navbar) | `org_notifications` — badge + dropdown sin per-user state |
+
+> **Eliminadas del sprint (2026-05-12):** ActivityView y HealthView.
 
 ### 3.2 Páginas a MEJORAR
 
@@ -210,8 +210,8 @@ TOTAL:              ~110 visualizaciones
 ### 3.3 Componentes globales nuevos
 
 ```
-NotificationBell.js              navbar persistente (badge + dropdown + per-user state)
-BudgetIndicator.js               sidebar Vera (cap diario/mensual)
+NotificationBell.js              navbar (badge + dropdown SIMPLE — sin per-user state)
+BudgetIndicator                  bloque dentro de CreditsView (no sidebar persistente)
 CostConfirmModal.js              reemplaza window.confirm()
 ActivityStream.js                timeline en VeraView
 PendingActionsInbox.js           inbox HITL en Vera
@@ -225,27 +225,25 @@ ChartLine.js / ChartBar.js / ChartDonut.js / ChartHeatmap.js / ChartRadar.js / C
 
 ---
 
-## 4. Cronograma · 16 días hábiles + entrega
+## 4. Cronograma · 14 días hábiles + entrega
 
 | Día | Fecha | Foco | Entregable |
 |---|---|---|---|
-| **D1** | mié 6-may (hoy) | Dashboards parte 1 | **Refactor estructural Dashboard ✅ (god-class → core+4 mixins)** · construir `MyBrands.mixin` desde shell con 15 charts (line, heatmap, radar, donut, sparklines) · service addition `getOptimizationInsights` · flip `TABS_ENABLED['my-brands'] = true` |
+| **D1** | mié 6-may | Dashboards parte 1 | **Refactor estructural Dashboard ✅ (god-class → core+4 mixins)** · construir `MyBrands.mixin` desde shell con 15 charts (line, heatmap, radar, donut, sparklines) · service addition `getOptimizationInsights` · flip `TABS_ENABLED['my-brands'] = true` |
 | **D2** | jue 7-may | Dashboards parte 2 | Construir `Competence.mixin` desde shell (12 charts + sección "Inteligencia Ofensiva" con `dashboard_competencia_intelligence`) · service addition `getIntelligence` · flip `TABS_ENABLED['competence'] = true` · arrancar `Tendencies.mixin` (4 sub-tabs · 11 charts: heatmap intent, scatter velocity, word cloud, bubble, stacked area, line, donut) |
 | **D3** | vie 8-may | Dashboards parte 3 | Cerrar `Tendencies.mixin` y construir `Strategy.mixin` desde shell (cards Vera con aprobar/rechazar/iterar · métricas learning · panel Brand Health) · flip los 2 últimos `TABS_ENABLED` · **DASHBOARDS 4/4 COMPLETOS con 65+ charts** |
-| **D4** | lun 11-may ⚡ | Vera Chat upgrade | `CostConfirmModal` custom + `BudgetIndicator` sidebar + `ActivityStream` inline + `PendingActionsInbox` — todo en 1 día. Validar primer batch vera-strategist 06:00 UTC |
-| **D5** | mar 12-may | Página Planes 🆕 | Comparativa 5 planes con todos los campos (`storage_mb`, `max_handles`, `scraping_cadence_hours`, `scraping_daily_cap`, `cache_ttl_hours`, `features` jsonb) + CTA upgrade + plan actual highlight |
-| **D6** | mié 13-may | Créditos optimizada | Tienda 4 packs · gauge créditos · ledger 217 filas con filtros · **chart "gasto 30d por kind"** (apify/claude/migration) · botón comprar |
+| **D4** | lun 11-may ⚡ | Vera Chat upgrade | `CostConfirmModal` custom + `ActivityStream` inline + `PendingActionsInbox` (3 componentes — BudgetIndicator se movió a D6). Validar primer batch vera-strategist 06:00 UTC |
+| **D5** | mar 12-may (hoy) | Página Planes 🆕 | Comparativa 5 planes con todos los campos (`storage_mb`, `max_handles`, `scraping_cadence_hours`, `scraping_daily_cap`, `cache_ttl_hours`, `features` jsonb) + CTA upgrade + plan actual highlight |
+| **D6** | mié 13-may | Créditos optimizada + BudgetIndicator + NotificationBell | Tienda 4 packs · gauge créditos · ledger 217 filas con filtros · **chart "gasto 30d por kind"** (apify/claude/migration) · botón comprar · **bloque BudgetIndicator** (usd_today/cap_diario · usd_month/cap_mensual · modelo activo) integrado en la misma vista · **NotificationBell simple** en navbar (badge polling 60s + dropdown últimas 10, sin per-user state) |
 | **D7** | jue 14-may | Tutorial system SaaS | Onboarding wizard primera entrada + tooltips contextuales (data-tour) + checklist progresivo "Conecta tu primera marca → Configura competidores → Genera primer contenido" + tour guiado en cada vista |
-| **D8** | vie 15-may | NotificationBell + Activity Timeline | Badge global polling 60s · dropdown · estado per-user · página `/activity` con feed unificado de 5 fuentes (signals/missions/delivery/provisioning/decisions) |
-| **D9** | lun 18-may | Vista Salud/Status | `/org/.../health` con 6 cards: Storage · Créditos · Vera (cap usage) · Sensores (13 tipos) · Integraciones (Meta/GA4/YouTube) · OpenClaw VM · auto-refresh 30s · bug fix storage_usage |
-| **D10** | mar 19-may | Monitoring CRUD completo | Tab Sensores (pause/cadencia/run-now/historial 20 últimos) · Tab URL Watchers (CRUD + diff visual) · Tab Multi-platform Provision (form `/intelligence/add-multi-platform`) · **chart Apify usage** |
-| **D11** | mié 20-may | CommandCenter mejorado | Vista ejecutiva por sub-marca: KPIs · alerts · top posts · health score · vulnerabilidades top 3 · próxima propuesta Vera · timeline reciente |
-| **D12** | jue 21-may | Tasks actualizado | 4 tabs reales (Pendientes/Misiones/Cola/Historial) consumiendo `vera_pending_actions` + `body_missions` + `mission_runs` + `agent_queue_jobs`. **Purgar 14 ocurrencias `from('brands')` y `from('audiences')`** |
-| **D13** | vie 22-may | Brand Intelligence + Lexicon | Sub-vistas en `/brands/:id`: Vulnerabilidades (41 filas) + Communication Patterns (10 patrones) + Health Trend chart 30/90/365d + Daily/Weekly Memo viewer · Lexicon admin `/dev/lead/lexicon` (37 pending) |
-| **D14** | lun 25-may | Studio Programar | Botón Programar + cron picker visual + form completo + lista schedules activos + integración con `flow_schedules` → trigger `tr_sync_flow_cron` → pg_cron → n8n **(complejo, todo el día)** |
-| **D15** | mar 26-may | Empty states + QA E2E | Empty states bonitos en TODAS las vistas + skeleton loaders · smoke test E2E completo · cleanup `.bak` files + backups `_bak_` BD |
-| **D16** | mié 27-may | Demo dry-run + ajustes | Dry-run 15 min cubriendo los 4 dashboards + Vera + Monitoring + Health · ajustes finales · performance check (<1.5s en 4G) · email a piloto |
-| 🎯 | **jue 28-may** | **Entrega** | **Plataforma 100% expuesta · 4 dashboards con 65+ charts · Vera UX profesional · Tutorial onboarding SaaS · 7 páginas nuevas · 5 mejoradas · datos fluyendo E2E** |
+| **D8** | vie 15-may | Monitoring CRUD completo | Tab Sensores (pause/cadencia/run-now/historial 20 últimos) · Tab URL Watchers (CRUD + diff visual) · Tab Multi-platform Provision (form `/intelligence/add-multi-platform`) · **chart Apify usage** |
+| **D9** | lun 18-may | CommandCenter mejorado | Vista ejecutiva por sub-marca: KPIs · alerts · top posts · health score · vulnerabilidades top 3 · próxima propuesta Vera · timeline reciente |
+| **D10** | mar 19-may | Tasks actualizado | 4 tabs reales (Pendientes/Misiones/Cola/Historial) consumiendo `vera_pending_actions` + `body_missions` + `mission_runs` + `agent_queue_jobs`. **Purgar 14 ocurrencias `from('brands')` y `from('audiences')`** |
+| **D11** | mié 20-may | Brand Intelligence + Lexicon | Sub-vistas en `/brands/:id`: Vulnerabilidades (41 filas) + Communication Patterns (10 patrones) + Health Trend chart 30/90/365d + Daily/Weekly Memo viewer · Lexicon admin `/dev/lead/lexicon` (37 pending) |
+| **D12** | jue 21-may | Studio Programar | Botón Programar + cron picker visual + form completo + lista schedules activos + integración con `flow_schedules` → trigger `tr_sync_flow_cron` → pg_cron → n8n **(complejo, todo el día)** |
+| **D13** | vie 22-may | Empty states + QA E2E | Empty states bonitos en TODAS las vistas + skeleton loaders · smoke test E2E completo · cleanup `.bak` files + backups `_bak_` BD |
+| **D14** | lun 25-may | Demo dry-run + ajustes | Dry-run 15 min cubriendo los 4 dashboards + Vera + Monitoring · ajustes finales · performance check (<1.5s en 4G) · email a piloto |
+| 🎯 | **mar 26-may** | **Entrega** | **Plataforma 100% expuesta · 4 dashboards con 65+ charts · Vera UX profesional · Tutorial onboarding SaaS · 5 páginas nuevas · 5 mejoradas · datos fluyendo E2E** |
 
 ---
 
@@ -356,23 +354,17 @@ Panel lateral Brand Health:
 
 ### 5.2 D4 · Vera Chat upgrade (1 día completo)
 
-**4 mejoras en paralelo:**
+**3 mejoras en paralelo** (BudgetIndicator se movió a D6):
 
 ```js
 // 1. CostConfirmModal.js (reemplaza window.confirm)
 // Diseño custom con: estimate, razones, promedio histórico, botones Replantear/Continuar
 
-// 2. BudgetIndicator.js (sidebar)
-// 💰 Hoy: $2.45 / $10.00 (24%)
-// 📊 Mes: $45.20 / $200.00 (22%)
-// Modelo: Sonnet 4.6
-// Refresh cada 30s desde claude_cap_check + v_org_claude_usage_today
-
-// 3. ActivityStream.js (inline en chat)
+// 2. ActivityStream.js (inline en chat)
 // Cuando Vera procesa: "🔍 Construyendo contexto...", "🔧 Buscando posts...", "✍️ Generando..."
 // Subscribe a Supabase Realtime sobre ai_messages para STATUS events
 
-// 4. PendingActionsInbox.js (sidebar/dropdown)
+// 3. PendingActionsInbox.js (sidebar/dropdown)
 // Cards con vera_pending_actions
 // Botones [Aprobar] [Rechazar]
 // POST /internal/vera-actions/:id/approve|reject
@@ -409,7 +401,7 @@ Layout:
 Datos: query plans WHERE is_active=true ORDER BY display_order
 ```
 
-### 5.4 D6 · Créditos optimizada
+### 5.4 D6 · Créditos optimizada + BudgetIndicator + NotificationBell
 
 ```
 /org/:orgIdShort/:orgNameSlug/credits
@@ -418,6 +410,14 @@ Datos: query plans WHERE is_active=true ORDER BY display_order
 │ 9.500 disponibles / 10.000 totales    │
 │ ████████████████░ 95%                 │
 │ Renovación en 38 días                 │
+└────────────────────────────────────────┘
+
+┌─ Vera (Anthropic) — gasto actual ─────┐  ← BudgetIndicator integrado
+│ 💰 Hoy:  $2.45 / $10.00   (24%)       │
+│ 📊 Mes:  $45.20 / $200.00 (22%)       │
+│ Modelo: Sonnet 4.6                    │
+│ Fuente: claude_cap_check +            │
+│         v_org_claude_usage_today      │
 └────────────────────────────────────────┘
 
 ┌─ Comprar más créditos (4 cards) ──────┐
@@ -439,6 +439,17 @@ Datos: query plans WHERE is_active=true ORDER BY display_order
 │ ...      claude_describe -0.08  $0.008 │
 │ Filtros: kind, fecha desde/hasta       │
 └────────────────────────────────────────┘
+```
+
+**NotificationBell simple** (mixin en `Navigation.js`):
+
+```js
+// js/components/navigation/Notifications.mixin.js
+// - Badge con conteo unread, polling cada 60s a /notifications/me/unread-count
+// - Dropdown con últimas 10 desde /notifications/me
+// - Click marca como read
+// - SIN per-user state (no se usa org_notification_user_state en esta versión)
+// - Tipos relevantes: vera_proposal, brand_vulnerability, mission_completed
 ```
 
 ### 5.5 D7 · Tutorial system SaaS
@@ -480,57 +491,11 @@ Storage:
   - localStorage.dismissed_tooltips (Set<string>)
 ```
 
-### 5.6 D8 · NotificationBell + Activity Timeline
-
-```js
-// NotificationBell mixin en Navigation.js
-// Badge con polling cada 60s a /notifications/me/unread-count
-// Dropdown con últimas 10 desde /notifications/me
-// Click marca como actioned/read según type
-// Estado per-user (org_notification_user_state)
-
-// /org/:short/:slug/activity
-// Feed unificado cronológico con 5 fuentes:
-//   - intelligence_signals (señales capturadas)
-//   - mission_runs (misiones completadas)
-//   - delivery_events (publicaciones)
-//   - provisioning_events (VM creada/dormida)
-//   - vera_pending_actions resueltas (decisiones)
-// Filtros checkbox por tipo
-// Pagination scroll infinito
-```
-
-### 5.7 D9 · HealthView (6 cards en grid 3×2)
-
-```
-1. Storage:
-   used_mb / max_mb con barra (bug fix incluido — incluir bucket production-outputs)
-
-2. Créditos:
-   credits_available / credits_total + top 3 consumidores desde credit_usage
-
-3. Vera (Anthropic):
-   usd_today / cap_diario + usd_month / cap_mensual + modelo activo
-   Datos: claude_cap_check + v_org_claude_usage_today
-
-4. Sensores (13 tipos):
-   Cada sensor: status + último run + next run
-   Click → /monitoring
-
-5. Integraciones API:
-   🟢 Meta (Facebook+Instagram) · 🟢 GA4 · 🟡 YouTube
-   Last sync timestamp por integración
-
-6. OpenClaw VM:
-   IP, sleeping=false, uptime, last_request, last_healthy_at
-   Datos: openclaw_instances
-```
-
-### 5.8 D10-D13 · Monitoring/CommandCenter/Tasks/Brand Intelligence
+### 5.6 D8-D11 · Monitoring/CommandCenter/Tasks/Brand Intelligence
 
 Cada uno detallado en sus secciones del cronograma. Patrón común: consumir tablas existentes, renderizar con componentes nuevos (charts, tables, cards).
 
-### 5.9 D14 · Studio Programar (el más complejo, último)
+### 5.7 D12 · Studio Programar (el más complejo, último)
 
 ```
 Reemplaza StudioView.js:82-92 placeholder:
@@ -557,7 +522,7 @@ Lista lateral: schedules activos del flow
   Verificar columns reales con information_schema antes de implementar
 ```
 
-### 5.10 D15-D16 · QA + Demo
+### 5.8 D13-D14 · QA + Demo
 
 Smoke test E2E completo, cleanup, dry-run de demo.
 
@@ -608,7 +573,7 @@ Smoke test diario (3 min):
 
 ```
 🟢 BUG-003 OpenAI quota → ai_brand_vectors vacío no rompe ninguna UI
-🟢 FEAT-014 anthropic-proxy → BudgetIndicator funciona con $0.00 si no hay metering
+🟢 FEAT-014 anthropic-proxy → BudgetIndicator (en CreditsView) muestra $0.00 si no hay metering
 🟢 OPS-001/002/003/005/006 → no afectan UX del sprint
 🟢 FEAT-012 user provisioning → cliente actual ya provisionado
 🟢 Refactor Dashboard ya hecho → partimos de mixins limpios, no hay deuda estructural
@@ -657,14 +622,14 @@ _(actualizar al cerrar el día)_
 
 1. ✅ Los 4 dashboards funcionan con 65+ charts profesionales
 2. ✅ Las 10 RPCs nuevas tienen consumer en frontend
-3. ✅ NotificationBell visible globalmente
-4. ✅ Vera Chat con UX profesional (modal + budget + stream + inbox)
+3. ✅ NotificationBell simple visible en navbar (badge + dropdown)
+4. ✅ Vera Chat con UX profesional (modal + stream + inbox)
 5. ✅ 0 placeholders "Próximamente"
 6. ✅ 0 referencias a `from('brands')` o `from('audiences')`
 7. ✅ Página Planes nueva con comparativa 5 tiers
-8. ✅ Créditos optimizada con tienda + chart + ledger
+8. ✅ Créditos optimizada con tienda + chart + ledger + BudgetIndicator integrado
 9. ✅ Tutorial system SaaS funcional (3 capas)
-10. ✅ Activity Timeline + HealthView + CommandCenter mejorado + Tasks reescrita
+10. ✅ CommandCenter mejorado + Tasks reescrita + Monitoring CRUD + Brand Intelligence
 11. ✅ Smoke test E2E pasa
 12. ✅ Performance: cada vista <1.5s en red 4G
 13. ✅ Demo dry-run aprobada
@@ -692,14 +657,11 @@ js/views/StudioView.js                       botón Programar (líneas 82-92)
 js/views/TasksView.js                        REESCRIBIR (4 tabs reales) + purgar bugs
 js/views/CommandCenterView.js                MEJORAR
 js/views/CreditsView.js / CreditsShopView.js MEJORAR
-js/views/HealthView.js                       CREAR (nuevo)
-js/views/ActivityView.js                     CREAR (nuevo)
 js/views/PlanesView.js                       CREAR (nuevo)
 js/views/DevLeadLexiconView.js               CREAR (nuevo)
 js/components/Navigation.js                  + Notifications.mixin.js
-js/components/navigation/Notifications.mixin.js   CREAR (nuevo)
+js/components/navigation/Notifications.mixin.js   CREAR (nuevo · versión simple sin per-user state)
 js/components/CostConfirmModal.js            CREAR (nuevo)
-js/components/BudgetIndicator.js             CREAR (nuevo)
 js/components/ActivityStream.js              CREAR (nuevo)
 js/components/PendingActionsInbox.js         CREAR (nuevo)
 js/components/EmptyState.js                  CREAR (nuevo)
@@ -716,14 +678,13 @@ js/components/charts/WordCloud.js            CREAR
 js/components/tutorial/TutorialOverlay.js    CREAR (nuevo)
 js/components/tutorial/ChecklistOnboarding.js CREAR (nuevo)
 js/components/tutorial/TooltipContextual.js  CREAR (nuevo)
-js/app.js                                    registrar 4 rutas nuevas (/plans, /activity, /health, /lexicon)
+js/app.js                                    registrar 2 rutas nuevas (/plans, /lexicon)
 css/modules/dashboard.css                    estilos charts
 css/modules/notifications.css                estilos NotificationBell
-css/modules/health.css                       estilos HealthView
 css/modules/planes.css                       estilos PlanesView
 css/modules/tutorial.css                     estilos tour
 ```
 
 ---
 
-_Última actualización: 2026-05-06 10:30 Bogota — refactor Dashboard reflejado en D1, D2, sección 8.1, sección 11._
+_Última actualización: 2026-05-12 — eliminadas ActivityView y HealthView del scope. NotificationBell pasa a versión simple (sin per-user state). BudgetIndicator se absorbe en CreditsView (D6). Sprint 16 → 14 días, entrega martes 26-may._

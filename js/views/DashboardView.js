@@ -21,6 +21,10 @@
  */
 class DashboardView extends BaseView {
 
+  // Habilita back/forward HTML cache: al volver desde Studio/Production al
+  // dashboard, restaura HTML+scroll instant; los tabs refrescan en background.
+  static cacheable = true;
+
   // Activación granular por tab. En 'false' renderiza el placeholder
   // "Próximamente" (definido en _renderComingSoon). Flipear a 'true' cuando
   // el mixin del tab esté listo.
@@ -170,13 +174,13 @@ class DashboardView extends BaseView {
   }
 
   _onRealtimeChange(scopes, _payload) {
-    // Cada mixin invalida su propia cache aquí cuando se reescriba.
-    // Por ahora, con todos los tabs en "Próximamente", solo importa re-renderizar
-    // si el tab activo está listado.
-    if (scopes.includes('my-brands'))  this._mbData    = null;
-    if (scopes.includes('competence')) this._compData  = null;
-    if (scopes.includes('tendencies')) this._tendData  = null;
-    if (scopes.includes('strategy'))   this._stratData = null;
+    // Invalida tanto el cache local del mixin como el del apiClient para que
+    // el próximo _fetchAll() vaya a Supabase (no devuelva data stale).
+    const orgId = this._orgId;
+    if (scopes.includes('my-brands'))  { this._mbData    = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:mi-brand:${orgId}`)); }
+    if (scopes.includes('competence')) { this._compData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:competencia:${orgId}`)); }
+    if (scopes.includes('tendencies')) { this._tendData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:tendencias:${orgId}`)); }
+    if (scopes.includes('strategy'))   { this._stratData = null; window.apiClient?.invalidate(`dash:strategia:${orgId}`); }
 
     if (!scopes.includes(this._activeTab)) return;
     if (!document.getElementById('insightTabBody')) return;
@@ -288,10 +292,26 @@ class DashboardView extends BaseView {
       this._renderComingSoon(tabId, body);
       return;
     }
+    // Skeleton inmediato: el usuario ve la silueta del layout mientras el
+    // mixin fetchea data y reemplaza el HTML. Evita "salto" de empty a fresh.
+    if (!this._restoredFromCache) this._renderTabSkeleton(body);
     if (tabId === 'my-brands')  return this._renderMyBrands(body);
     if (tabId === 'competence') return this._renderCompetence(body);
     if (tabId === 'tendencies') return this._renderTendencies(body);
     if (tabId === 'strategy')   return this._renderStrategy(body);
+  }
+
+  _renderTabSkeleton(body) {
+    // 4 KPIs + 2 cards grandes con shimmer; cubre el shape de los 4 tabs.
+    body.innerHTML = `
+      <div class="dash-skeleton" style="padding: 1rem 0; display: flex; flex-direction: column; gap: 1rem;">
+        ${BaseView.skeletonGrid(4)}
+        <div class="skeleton-grid skeleton-grid--3">
+          ${BaseView.skeletonCard('lg')}
+          ${BaseView.skeletonCard('lg')}
+          ${BaseView.skeletonCard('lg')}
+        </div>
+      </div>`;
   }
 
   _renderComingSoon(_tabId, body) {

@@ -478,103 +478,57 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         emptyState.style.display = 'none';
-        productsGrid.style.display = 'none';
 
-        if (window.appLoader && typeof window.appLoader.showSpinner === 'function') {
-            window.appLoader.showSpinner();
-        }
+        // Skeleton inline en lugar de spinner global. Mantiene el layout en
+        // su sitio y se siente premium (Linear/Vercel pattern).
+        productsGrid.style.display = 'grid';
+        productsGrid.innerHTML = this._productsSkeletonHtml(6);
 
         // Validar que tengamos organization_id o brandContainerId
         const checkOrgId = this.organizationId ||
             window.appState?.get('selectedOrganizationId') ||
             localStorage.getItem('selectedOrganizationId');
         if (!checkOrgId && !this.brandContainerId) {
-            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
+            productsGrid.innerHTML = '';
+            productsGrid.style.display = 'none';
             emptyState.style.display = 'block';
             this.products = [];
             return;
         }
 
         try {
-            // ============================================
-            // PASO 1: OBTENER PRODUCTS según schema.sql
-            // products.organization_id -> organizations.id
-            // ============================================
             const orgId = this.organizationId ||
                 window.appState?.get('selectedOrganizationId') ||
                 localStorage.getItem('selectedOrganizationId');
             if (!orgId) {
+                productsGrid.innerHTML = '';
+                productsGrid.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
-            const { data: products, error: productsError } = await this.supabase
-                .from('products')
-                .select('*')
-                .eq('organization_id', orgId)
-                .order('created_at', { ascending: false });
 
-            if (productsError) {
-                if (productsError.status === 400 || productsError.code === '400') {
-                    console.error('❌ Error cargando productos:', productsError.message);
-                }
-                throw productsError;
-            }
+            // apiClient: cache de 30 s + SWR + dedupe por orgId. Refrescos por
+            // mutaciones se hacen via apiClient.invalidate('products:<orgId>:*').
+            const products = await window.apiClient.query(
+                `products:${orgId}`,
+                () => this._fetchProductsWithImages(orgId),
+                { ttl: 30 * 1000, staleWhileRevalidate: true }
+            );
 
             if (!products || products.length === 0) {
-                if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
+                productsGrid.innerHTML = '';
+                productsGrid.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
-            }
-
-            // ============================================
-            // PASO 2: OBTENER PRODUCT_IMAGES según schema.sql (línea 297-306)
-            // ============================================
-            // product_images.product_id -> products.id
-            const productIds = products
-                .map(p => p.id)
-                .filter(id => id && this.isValidUUID(id));
-
-            if (productIds.length > 0) {
-                const { data: allImages, error: imagesError } = await this.supabase
-                        .from('product_images')
-                    .select('id, product_id, image_url, image_type, image_order, created_at')
-                    .in('product_id', productIds)
-                    .order('product_id, image_order', { ascending: true });
-
-                if (!imagesError && allImages) {
-                    // Agrupar imágenes por product_id
-                    const imagesByProduct = {};
-                    allImages.forEach(image => {
-                        if (!imagesByProduct[image.product_id]) {
-                            imagesByProduct[image.product_id] = [];
-                        }
-                        imagesByProduct[image.product_id].push(image);
-                    });
-
-                    // Asignar imágenes a cada producto
-                    products.forEach(product => {
-                        product.images = imagesByProduct[product.id] || [];
-                    });
-                    } else {
-                    // Si hay error, asignar array vacío
-                    products.forEach(product => {
-                        product.images = [];
-                    });
-                }
-            } else {
-                // Si no hay productIds válidos, asignar array vacío
-                products.forEach(product => {
-                    product.images = [];
-                });
             }
 
             // ============================================
             // ASIGNAR PRODUCTOS Y RENDERIZAR
             // ============================================
             this.products = products;
-            
+
             this.detectAvailableCategories();
             const categoryMap = this.getCategoryMap();
             if (!categoryMap[this.activeFilter] || !this.availableCategories.has(this.activeFilter)) {
@@ -586,13 +540,64 @@ if (typeof window.ProductsManager === 'undefined') {
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
-            if (emptyState) emptyState.style.display = 'block';
-            if (productsGrid) productsGrid.style.display = 'none';
-        } finally {
-            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
-                window.appLoader.hideSpinner();
+            if (window.errorLogger) {
+                window.errorLogger.capture(error, { source: 'products.loadProducts' });
             }
+            if (productsGrid) {
+                productsGrid.innerHTML = '';
+                productsGrid.style.display = 'none';
+            }
+            if (emptyState) emptyState.style.display = 'block';
         }
+    }
+
+    /** Fetch products + product_images en 2 roundtrips (1 query products, 1 batch images). */
+    async _fetchProductsWithImages(orgId) {
+        const { data: products, error: productsError } = await this.supabase
+            .from('products')
+            .select('*')
+            .eq('organization_id', orgId)
+            .order('created_at', { ascending: false });
+        if (productsError) throw productsError;
+        if (!products || products.length === 0) return [];
+
+        const productIds = products
+            .map(p => p.id)
+            .filter(id => id && this.isValidUUID(id));
+
+        if (productIds.length === 0) {
+            products.forEach((p) => { p.images = []; });
+            return products;
+        }
+
+        const { data: allImages, error: imagesError } = await this.supabase
+            .from('product_images')
+            .select('id, product_id, image_url, image_type, image_order, created_at')
+            .in('product_id', productIds)
+            .order('product_id, image_order', { ascending: true });
+
+        const imagesByProduct = {};
+        if (!imagesError && allImages) {
+            allImages.forEach((image) => {
+                if (!imagesByProduct[image.product_id]) imagesByProduct[image.product_id] = [];
+                imagesByProduct[image.product_id].push(image);
+            });
+        }
+        products.forEach((p) => { p.images = imagesByProduct[p.id] || []; });
+        return products;
+    }
+
+    /** Skeleton de N cards con la silueta de un producto (imagen + título + meta). */
+    _productsSkeletonHtml(count = 6) {
+        const card = `
+          <div class="product-card" style="padding: 0; overflow: hidden;">
+            <div class="skeleton skeleton-card" style="border-radius: 0; min-height: 180px;"></div>
+            <div style="padding: 0.75rem 1rem;">
+              <span class="skeleton skeleton-text skeleton-text--lg skeleton-text--w75"></span>
+              <span class="skeleton skeleton-text skeleton-text--sm skeleton-text--w50"></span>
+            </div>
+          </div>`;
+        return Array.from({ length: count }, () => card).join('');
     }
 
     async renderProducts() {

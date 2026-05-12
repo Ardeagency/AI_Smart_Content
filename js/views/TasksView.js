@@ -3,6 +3,8 @@
  * Lista las tareas del usuario y permite asignar entidad, campaña, audiencia y editar configuración.
  */
 class TasksView extends BaseView {
+  static cacheable = true;
+
   constructor() {
     super();
     this.templatePath = null;
@@ -270,21 +272,30 @@ class TasksView extends BaseView {
   /** Cargar flow_schedules del usuario. Sin embeds para evitar 400; relaciones se cargan aparte. */
   async loadSchedules() {
     if (!this.supabase || !this.userId) return [];
+    const userId = this.userId;
     try {
-      const { data, error } = await this.supabase
-        .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
-        .eq('user_id', this.userId)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('TasksView loadSchedules:', error);
-        return [];
-      }
-      const schedules = data || [];
-      if (schedules.length === 0) {
-        this.schedules = [];
-        return [];
-      }
+      const fetcher = () => this._fetchSchedules(userId);
+      this.schedules = window.apiClient
+        ? await window.apiClient.query(`tasks:schedules:${userId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      return this.schedules;
+    } catch (e) {
+      console.error('TasksView loadSchedules:', e);
+      return [];
+    }
+  }
+
+  /** Implementación real (separada para que apiClient pueda envolverla). Errores propagan al caller. */
+  async _fetchSchedules(userId) {
+    const { data, error } = await this.supabase
+      .from('flow_schedules')
+      .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const schedules = data || [];
+    if (schedules.length === 0) return [];
+    {
       const flowIds = [...new Set(schedules.map(s => s.flow_id).filter(Boolean))];
       const entityIds = [...new Set(schedules.flatMap(s => Array.isArray(s.entity_ids) ? s.entity_ids : (s.entity_ids ? [s.entity_ids] : [])).filter(Boolean))];
       const campaignIds = [...new Set(schedules.flatMap(s => Array.isArray(s.campaign_ids) ? s.campaign_ids : (s.campaign_ids ? [s.campaign_ids] : [])).filter(Boolean))];
@@ -295,8 +306,8 @@ class TasksView extends BaseView {
         flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : { data: [] },
         entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] },
         campaignIds.length ? this.supabase.from('campaigns').select('id, nombre_campana').in('id', campaignIds) : { data: [] },
-        audienceIds.length ? this.supabase.from('audiences').select('id, name').in('id', audienceIds) : { data: [] },
-        brandIds.length ? this.supabase.from('brands').select('id, project_id').in('id', brandIds) : { data: [] }
+        audienceIds.length ? this.supabase.from('audience_personas').select('id, name').in('id', audienceIds) : { data: [] },
+        brandIds.length ? this.supabase.from('brand_containers').select('id, nombre_marca').in('id', brandIds) : { data: [] }
       ]);
 
       const flowMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
@@ -304,14 +315,7 @@ class TasksView extends BaseView {
       const entityMap = (entitiesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
       const campaignMap = (campaignsRes.data || []).reduce((acc, r) => { acc[r.id] = r.nombre_campana; return acc; }, {});
       const audienceMap = (audiencesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
-      const brandProjectMap = (brandsRes.data || []).reduce((acc, r) => { acc[r.id] = r.project_id; return acc; }, {});
-
-      const projectIds = [...new Set(Object.values(brandProjectMap).filter(Boolean))];
-      let brandNames = {};
-      if (projectIds.length) {
-        const { data: containers } = await this.supabase.from('brand_containers').select('id, nombre_marca').in('id', projectIds);
-        (containers || []).forEach(c => { brandNames[c.id] = c.nombre_marca || '—'; });
-      }
+      const brandNames = (brandsRes.data || []).reduce((acc, r) => { acc[r.id] = r.nombre_marca || '—'; return acc; }, {});
 
       let entityIdToImageUrl = {};
       if (entityIds.length) {
@@ -345,7 +349,7 @@ class TasksView extends BaseView {
         }
       }
 
-      this.schedules = schedules.map(s => {
+      return schedules.map(s => {
         const flowName = (s.flow_id && flowMap[s.flow_id]) || '—';
         const flowImageUrl = (s.flow_id && flowImageMap[s.flow_id]) || null;
         const eids = Array.isArray(s.entity_ids) ? s.entity_ids : (s.entity_ids ? [s.entity_ids] : []);
@@ -356,8 +360,7 @@ class TasksView extends BaseView {
         const campaignName = (firstCampaignId && campaignMap[firstCampaignId]) || '—';
         const firstAudienceId = Array.isArray(s.audience_ids) ? s.audience_ids[0] : s.audience_ids;
         const audienceName = (firstAudienceId && audienceMap[firstAudienceId]) || '—';
-        const projectId = s.brand_id ? brandProjectMap[s.brand_id] : null;
-        const brandName = projectId ? (brandNames[projectId] || '—') : '—';
+        const brandName = (s.brand_id && brandNames[s.brand_id]) || '—';
         return {
           ...s,
           is_active: s.status === 'active',
@@ -370,10 +373,13 @@ class TasksView extends BaseView {
           brand_name: brandName
         };
       });
-      return this.schedules;
-    } catch (e) {
-      console.error('TasksView loadSchedules:', e);
-      return [];
+    }
+  }
+
+  /** Invalida cache de schedules tras CRUD desde esta vista. */
+  _invalidateSchedulesCache() {
+    if (window.apiClient && this.userId) {
+      window.apiClient.invalidate(`tasks:schedules:${this.userId}`);
     }
   }
 
@@ -409,15 +415,12 @@ class TasksView extends BaseView {
       }
       const firstAudienceId = Array.isArray(s.audience_ids) ? s.audience_ids[0] : s.audience_ids;
       if (firstAudienceId) {
-        const { data: a } = await this.supabase.from('audiences').select('name').eq('id', firstAudienceId).maybeSingle();
+        const { data: a } = await this.supabase.from('audience_personas').select('name').eq('id', firstAudienceId).maybeSingle();
         if (a?.name) audienceName = a.name;
       }
       if (s.brand_id) {
-        const { data: b } = await this.supabase.from('brands').select('project_id').eq('id', s.brand_id).maybeSingle();
-        if (b?.project_id) {
-          const { data: bc } = await this.supabase.from('brand_containers').select('nombre_marca').eq('id', b.project_id).maybeSingle();
-          if (bc?.nombre_marca) brandName = bc.nombre_marca;
-        }
+        const { data: bc } = await this.supabase.from('brand_containers').select('nombre_marca').eq('id', s.brand_id).maybeSingle();
+        if (bc?.nombre_marca) brandName = bc.nombre_marca;
       }
       return {
         ...s,
@@ -468,16 +471,10 @@ class TasksView extends BaseView {
   async loadAudiences() {
     if (!this.supabase || !this.brandContainerId) return [];
     try {
-      const { data: brand } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', this.brandContainerId)
-        .maybeSingle();
-      if (!brand?.id) return [];
       const { data, error } = await this.supabase
-        .from('audiences')
+        .from('audience_personas')
         .select('id, name')
-        .eq('brand_id', brand.id)
+        .eq('brand_container_id', this.brandContainerId)
         .order('name');
       this.audiences = error ? [] : (data || []);
       return this.audiences;
@@ -487,26 +484,21 @@ class TasksView extends BaseView {
     }
   }
 
-  /** Marcas (brands) del container actual para el dropdown. */
+  /** Marca del container actual para el dropdown.
+   *  Modelo nuevo: cada brand_container ES la marca, no hay tabla intermedia. */
   async loadBrands() {
     if (!this.supabase || !this.brandContainerId) return [];
     try {
       const { data: container } = await this.supabase
         .from('brand_containers')
-        .select('nombre_marca')
+        .select('id, nombre_marca')
         .eq('id', this.brandContainerId)
         .maybeSingle();
-      const containerName = container?.nombre_marca || '—';
-      const { data, error } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', this.brandContainerId)
-        .order('id');
-      if (error || !data?.length) {
+      if (!container?.id) {
         this.brands = [];
         return [];
       }
-      this.brands = data.map(b => ({ id: b.id, name: containerName }));
+      this.brands = [{ id: container.id, name: container.nombre_marca || '—' }];
       return this.brands;
     } catch (e) {
       console.error('TasksView loadBrands:', e);
@@ -877,7 +869,9 @@ class TasksView extends BaseView {
         brand_id: brandId || null,
         entity_ids: entityId ? [entityId] : null,
         campaign_ids: campaignId ? [campaignId] : null,
+        campaign_id:  campaignId || null,   // FK real
         audience_ids: audienceId ? [audienceId] : null,
+        persona_id:   audienceId || null,   // FK real (audience_personas.id)
         aspect_ratio: aspectRatio,
         production_count: productionCount,
         production_specifications: productionSpecifications
@@ -889,6 +883,7 @@ class TasksView extends BaseView {
       this.showNotification('No se pudieron guardar los cambios', 'error');
       return;
     }
+    this._invalidateSchedulesCache();
     this.showNotification('Cambios guardados', 'success');
     await this.renderTaskDetail();
   }
@@ -907,6 +902,7 @@ class TasksView extends BaseView {
       this.showNotification('No se pudo cambiar el estado', 'error');
       return;
     }
+    this._invalidateSchedulesCache();
     this.showNotification(newActive ? 'Tarea activada' : 'Tarea pausada', 'success');
     await this.renderTaskDetail();
   }
@@ -920,6 +916,8 @@ class TasksView extends BaseView {
     if (jobName.length > 255) jobName = baseName.slice(0, 255 - suffix.length) + suffix;
     const { data: existing } = await this.supabase.from('flow_schedules').select('id').eq('job_name', jobName).maybeSingle();
     if (existing) jobName = `${baseName} (copia ${Date.now()})`;
+    const firstCampaignId = Array.isArray(task.campaign_ids) ? task.campaign_ids[0] : task.campaign_ids;
+    const firstAudienceId = Array.isArray(task.audience_ids) ? task.audience_ids[0] : task.audience_ids;
     const insert = {
       user_id: task.user_id,
       flow_id: task.flow_id,
@@ -929,7 +927,9 @@ class TasksView extends BaseView {
       job_name: jobName,
       entity_ids: Array.isArray(task.entity_ids) ? (task.entity_ids.length ? task.entity_ids : null) : (task.entity_ids || null),
       campaign_ids: Array.isArray(task.campaign_ids) ? (task.campaign_ids.length ? task.campaign_ids : null) : (task.campaign_ids ? [task.campaign_ids] : null),
+      campaign_id:  task.campaign_id || firstCampaignId || null,
       audience_ids: Array.isArray(task.audience_ids) ? (task.audience_ids.length ? task.audience_ids : null) : (task.audience_ids ? [task.audience_ids] : null),
+      persona_id:   task.persona_id || firstAudienceId || null,
       metadata_config: task.metadata_config ?? {},
       production_count: task.production_count ?? 1,
       aspect_ratio: task.aspect_ratio || '1:1',
@@ -941,6 +941,7 @@ class TasksView extends BaseView {
       this.showNotification('No se pudo duplicar la tarea', 'error');
       return;
     }
+    this._invalidateSchedulesCache();
     this.showNotification('Tarea duplicada. La copia está pausada.', 'success');
     if (window.router && created?.id) window.router.navigate(`${this.getTasksBasePath()}/${created.id}`, true);
     await this.render();
@@ -966,6 +967,7 @@ class TasksView extends BaseView {
       this.showNotification('No se pudo eliminar la tarea', 'error');
       return;
     }
+    this._invalidateSchedulesCache();
     this.showNotification('Tarea eliminada', 'success');
     if (window.router) window.router.navigate(this.getTasksBasePath(), true);
     await this.render();
@@ -1036,7 +1038,9 @@ class TasksView extends BaseView {
           .update({
             entity_ids: entityId ? (Array.isArray(entityId) ? entityId : [entityId]) : null,
             campaign_ids: campaignId ? [campaignId] : null,
+            campaign_id:  campaignId || null,
             audience_ids: audienceId ? [audienceId] : null,
+            persona_id:   audienceId || null,
             aspect_ratio: aspectRatio,
             production_count: productionCount,
             status: isActive ? 'active' : 'paused'

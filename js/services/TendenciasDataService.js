@@ -51,6 +51,18 @@ class TendenciasDataService {
     if (!this.sb || !this.orgId) return null;
     const w = Number(opts.windowDays || 30);
 
+    const cacheKey = `dash:tendencias:${this.orgId}:${w}:${opts.limitDemand || 20}:${opts.limitTrends || 50}:${opts.limitNiche || 20}:${opts.limitLexicon || 30}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(w, opts),
+        { ttl: 60 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll(w, opts);
+  }
+
+  async _fetchAll(w, opts = {}) {
     const [
       kpis, audience, targeted, emerging, niche, lexicon, pulse,
     ] = await Promise.allSettled([

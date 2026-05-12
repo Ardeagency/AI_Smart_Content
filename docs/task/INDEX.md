@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-11** (auditoría post-cleanup leads/zombie routes).
+Última actualización: **2026-05-12** (reducción de scope SPRINT-FRONTEND-100: fuera ActivityView y HealthView, NotificationBell simple, BudgetIndicator absorbido en CreditsView).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -14,7 +14,7 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
-| [SPRINT-FRONTEND-100](./SPRINT-FRONTEND-100-2026-05-06.md) | Sprint 16 días para exponer 100% del backend al usuario — D1 hoy 6/05, entrega 22/05 | feature | 👤 | long | — |
+| [SPRINT-FRONTEND-100](./SPRINT-FRONTEND-100-2026-05-06.md) | Sprint 14 días para exponer 100% del backend al usuario — entrega martes 26/05 (scope reducido: sin ActivityView ni HealthView) | feature | 👤 | long | — |
 
 ## 🟠 High
 
@@ -23,7 +23,6 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | [DATA-001](./DATA-001-configure-competitor-entities.md) | Faltan `intelligence_entities` competidoras → 4 tablas vacías + Apify gastando créditos en vacío | data | 👤 | short | — |
 | [BUG-003](./BUG-003-openai-quota-brand-indexer.md) | `brand_indexer` no genera vectors — quota OpenAI agotada (BLOQUEADO por billing) | bug | 👤 | short | — |
 | [BUG-005](./BUG-005-legacy-audiences-brands-references.md) | Frontend consulta tablas legacy `audiences` y `brands` que ya no existen — TasksView muestra "—", StudioView/VideoView no cargan contexto, living.js degradado | bug | 🤖 | medium | — |
-| [FEAT-014](./FEAT-014-anthropic-proxy-metering-cap.md) | Anthropic proxy + cap + notifications (3 fases). Solo falta deploy SSH en VM piloto (~5 min). | ops | 👤 | short | — |
 | [FEAT-015](./FEAT-015-cost-confirmation-pre-flight.md) | Pre-flight cost confirmation — heurística + confirm() en VeraView. Falta validación visual humana. | feature | 👤 | short | — |
 | [FEAT-011](./FEAT-011-studio-programar-button.md) | Botón "Programar" en StudioView — desbloquea cadena schedule end-to-end | feature | 👤 | medium | — |
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning de usuarios end-to-end (función backend + email + onboarding) | feature | 👤 | long | — |
@@ -33,7 +32,7 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
-| [AUDIT-002](./AUDIT-002-ai-engine-housekeeping.md) | ai-engine housekeeping — bug histórico enum tipo_producto + repo sin commits + .bak files | ops | 👤 | medium | — |
+| [AUDIT-002](./AUDIT-002-ai-engine-housekeeping.md) | ai-engine housekeeping — solo queda H1 (orphans `external_resource_map` por bug histórico `tipo_producto_enum: "fisico"`). H2 git history ✅ y H3 cleanup .bak ✅ cerrados 2026-05-12. | ops | 👤 | short | — |
 | [FEAT-007](./FEAT-007-frontend-services-refactor.md) | Refactor services frontend para llamar 1 RPC por dashboard | feature | 👤 | medium | — |
 | [FEAT-008](./FEAT-008-frontend-new-services.md) | Crear `TendenciasDataService` (Competencia ya existe) + render | feature | 👤 | long | — |
 | [FEAT-013](./FEAT-013-monitoring-crud.md) | CRUD de sensores y URL watchers en MonitoringView | feature | 👤 | medium | — |
@@ -52,15 +51,21 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 ---
 
-**Total:** 20 tareas activas (1 auto-eligible 🤖 + 19 requieren humano 👤).
+**Total:** 19 tareas activas (1 auto-eligible 🤖 + 18 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
 | 🔴 critical | 1 | 0 | 1 |
-| 🟠 high | 8 | 1 | 7 |
+| 🟠 high | 7 | 1 | 6 |
 | 🟡 medium | 5 | 0 | 5 |
 | 🟢 low | 6 | 0 | 6 |
-| **Suma** | **20** | **1** | **19** |
+| **Suma** | **19** | **1** | **18** |
+
+## Resueltas el 2026-05-12
+
+- **FEAT-014** — proxy Anthropic con metering + cap. Código y schema ✅ desde 2026-05-05. **Hoy:** deploy via SSH manual era inviable (VMs piloto se provisionaban sin SSH key autorizada → `Permission denied (publickey)` desde cualquier máquina). Fix aplicado a `hetzner.provisioner.js` (commit `eb72a82` en ai-engine): inyecta `ssh_keys: [107329413]` en payloads `createOrgServer` y wake-from-snapshot. **VM piloto `vera-000000000001-org` (49.13.204.22) eliminada** via API Hetzner — era prototipo descartable. La próxima org-server provisionada nace ya con el proxy activo + SSH habilitado vía cloud-init.
+- **AUDIT-002 H2** — git history establecido en ai-engine. Commit inicial `aef6701` con 202 archivos. `.gitignore` ampliado: excluye `.env.bak*`, `*.bak`, `**/.venv/`, `**/__pycache__/`, `backups/`. Sin remote configurado (decisión pospuesta).
+- **AUDIT-002 H3** — 21 archivos `.bak` eliminados (2 `.env.bak.*` con secrets viejos, 18 `src/*.bak.*` de deploys previos, 1 `backups/cloudflare-tunnel-credentials.json.bak` duplicado de la credencial viva en `/root/.cloudflared/`). H1 (orphans `external_resource_map`) sigue abierto.
 
 ## Resueltas el 2026-05-05
 

@@ -177,10 +177,15 @@ class LivingManager {
     async loadUserData() {
         if (!this.supabase || !this.userId) { this.userData = null; return; }
         try {
-            const { data, error } = await this.supabase
-                .from('profiles').select('*').eq('id', this.userId).maybeSingle();
-            if (error) throw error;
-            this.userData = data;
+            const fetcher = async () => {
+                const { data, error } = await this.supabase
+                    .from('profiles').select('*').eq('id', this.userId).maybeSingle();
+                if (error) throw error;
+                return data;
+            };
+            this.userData = window.apiClient
+                ? await window.apiClient.query(`living:user:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+                : await fetcher();
         } catch (error) {
             console.error('❌ Error cargando datos de usuario:', error);
             this.userData = null;
@@ -190,13 +195,18 @@ class LivingManager {
     async loadProjectData() {
         if (!this.supabase || !this.userId) { this.projectData = null; return; }
         try {
-            const { data, error } = await this.supabase
-                .from('brand_containers').select('*')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1).maybeSingle();
-            if (error) throw error;
-            this.projectData = data;
+            const fetcher = async () => {
+                const { data, error } = await this.supabase
+                    .from('brand_containers').select('*')
+                    .eq('user_id', this.userId)
+                    .order('created_at', { ascending: false })
+                    .limit(1).maybeSingle();
+                if (error) throw error;
+                return data;
+            };
+            this.projectData = window.apiClient
+                ? await window.apiClient.query(`living:project:${this.userId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+                : await fetcher();
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
             this.projectData = null;
@@ -306,12 +316,17 @@ class LivingManager {
     async loadCreditUsage() {
         if (!this.supabase || !this.userId) { this.creditUsage = []; return; }
         try {
-            const { data, error } = await this.supabase
-                .from('credit_usage').select('*')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false }).limit(100);
-            if (error) throw error;
-            this.creditUsage = data || [];
+            const fetcher = async () => {
+                const { data, error } = await this.supabase
+                    .from('credit_usage').select('*')
+                    .eq('user_id', this.userId)
+                    .order('created_at', { ascending: false }).limit(100);
+                if (error) throw error;
+                return data || [];
+            };
+            this.creditUsage = window.apiClient
+                ? await window.apiClient.query(`living:credit_usage:${this.userId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
+                : await fetcher();
         } catch (error) {
             console.error('❌ Error cargando credit usage:', error);
             this.creditUsage = [];
@@ -338,20 +353,13 @@ class LivingManager {
                 return;
             }
 
-            const { data: brand, error: brandError } = await this.supabase
-                .from('brands')
-                .select('id')
-                .eq('project_id', this.brandContainerId)
-                .maybeSingle();
-
-            if (brandError) {
-                if (brandError.status === 400 || brandError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brands en loadBrandId:', brandError.message);
-                }
-                this.brandId = null;
-                return;
-            }
-            this.brandId = brand?.id || null;
+            // Modelo nuevo (post-BUG-005): la tabla intermedia `brands` se
+            // eliminó. brand_container ES la marca, así que brandId == brandContainerId.
+            // Las RPCs (get_studio_activity_status, etc.) y queries que aún usan
+            // `brand_id` como columna legacy reciben el container ID; si no hay
+            // datos remapeados, devuelven empty (comportamiento equivalente al
+            // anterior cuando brand quedaba null).
+            this.brandId = this.brandContainerId;
         } catch (error) {
             console.error('❌ Error cargando brand_id:', error);
             this.brandId = null;
@@ -2403,7 +2411,6 @@ class LivingManager {
             }
         });
         
-        // Arrastrar cuando está con zoom
         // Arrastrar cuando está con zoom (Pointer Events: mouse + touch + pen).
         // setPointerCapture mantiene el drag aunque el cursor salga del elemento.
         image.addEventListener('pointerdown', (e) => {

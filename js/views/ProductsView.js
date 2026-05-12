@@ -4,6 +4,10 @@
 const MAX_PRODUCT_IMAGES = 6;
 
 class ProductsView extends BaseView {
+  // Back/forward HTML cache: al volver de un detalle de producto al listado,
+  // restaura el grid y la posición de scroll de inmediato.
+  static cacheable = true;
+
   constructor() {
     super();
     this.templatePath = null;

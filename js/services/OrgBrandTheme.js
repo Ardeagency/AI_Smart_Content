@@ -26,32 +26,23 @@
    * Intenta por organization_id; si no hay filas, intenta por user_ids de los miembros.
    */
   async function getBrandContainerIds(organizationId) {
-    const supabase = getSupabase();
-    if (!supabase) return [];
-    try {
+    const fetcher = async () => {
+      const supabase = getSupabase();
+      if (!supabase) return [];
       // Intento 1: por organization_id directo
       const { data: byOrg, error: e1 } = await supabase
         .from('brand_containers')
         .select('id')
         .eq('organization_id', organizationId);
 
-      if (!e1 && byOrg && byOrg.length > 0) {
-        console.info('[OrgBrandTheme] containers por org_id:', byOrg.length);
-        return byOrg.map(b => b.id);
-      }
-
-      console.info('[OrgBrandTheme] sin containers por org_id, intentando por members...');
+      if (!e1 && byOrg && byOrg.length > 0) return byOrg.map(b => b.id);
 
       // Intento 2: brand_containers cuyo user_id está en organization_members
       const { data: members, error: e2 } = await supabase
         .from('organization_members')
         .select('user_id')
         .eq('organization_id', organizationId);
-
-      if (e2 || !members || members.length === 0) {
-        console.warn('[OrgBrandTheme] sin members para org', organizationId);
-        return [];
-      }
+      if (e2 || !members || members.length === 0) return [];
 
       const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
       if (userIds.length === 0) return [];
@@ -60,10 +51,13 @@
         .from('brand_containers')
         .select('id')
         .in('user_id', userIds);
-
       if (e3 || !byUser) return [];
-      console.info('[OrgBrandTheme] containers por user_id:', byUser.length);
       return byUser.map(b => b.id);
+    };
+    try {
+      return window.apiClient
+        ? await window.apiClient.query(`theme:containers:${organizationId}`, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('OrgBrandTheme: error getBrandContainerIds', e);
       return [];
@@ -93,10 +87,12 @@
    * Lee por `organization_id` (schema vigente).
    */
   async function getOrganizationBrandColors(organizationId) {
-    const supabase = getSupabase();
-    if (!supabase) return [];
-
-    try {
+    // Cache 10 min vía apiClient + SWR. Los colores de marca cambian rarísimo
+    // (editor de marca). Invalida desde BrandOrganizationView al guardar:
+    //   apiClient.invalidate(`theme:colors:${orgId}`)
+    const fetcher = async () => {
+      const supabase = getSupabase();
+      if (!supabase) return [];
       const { data: colors } = await supabase
         .from('brand_colors')
         .select('hex_value')
@@ -115,6 +111,11 @@
         if (legacyHexes.length > 0) return legacyHexes;
       }
       return [];
+    };
+    try {
+      return window.apiClient
+        ? await window.apiClient.query(`theme:colors:${organizationId}`, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
     } catch (e) {
       console.error('OrgBrandTheme: error getOrganizationBrandColors', e);
       return [];

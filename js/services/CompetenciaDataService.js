@@ -48,12 +48,24 @@ class CompetenciaDataService {
   }
   _err(error) { return { data: null, isEmpty: true, error }; }
 
-  /* ── Carga total en paralelo ─────────────────────────────── */
+  /* ── Carga total en paralelo (cacheada vía apiClient) ─────── */
   async loadAll(windowDays = 30, entityIds = null) {
     if (!this.sb || !this.orgId) return null;
     const { date_from, date_to } = this._windowToDates(windowDays);
     const eids = entityIds && entityIds.length ? entityIds : null;
 
+    const cacheKey = `dash:competencia:${this.orgId}:${date_from}:${date_to}:${(eids || []).join(',')}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(date_from, date_to, eids),
+        { ttl: 60 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll(date_from, date_to, eids);
+  }
+
+  async _fetchAll(date_from, date_to, eids) {
     const [
       kpis, top, featured, distributions, postingHours,
       topPosts, risk, activityHistory, brandVsComp,
