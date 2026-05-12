@@ -418,7 +418,9 @@ class Router {
 
       // Restaurar scroll de back/forward al final (cuando el DOM ya está). Si
       // no hay entrada cacheada, volver al top (comportamiento previo).
+      // Si la URL tiene #hash, deferimos el scroll al elemento (deep link).
       if (cached) this._bfRestoreScroll(cached);
+      else if (window.location.hash) this._scrollToHash(window.location.hash);
       else window.scrollTo(0, 0);
 
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
@@ -464,6 +466,24 @@ class Router {
     // aria explícito; no pisa los que ya lo tienen.
     this._enhanceA11yLabels(container);
     this._applyDocumentTitle();
+  }
+
+  /** Scroll a #hash con offset si lo hay; el siguiente frame para que el
+   *  layout ya esté pintado. Respeta scroll-behavior:smooth global salvo
+   *  prefers-reduced-motion (que ya lo anula via CSS). */
+  _scrollToHash(hash) {
+    try {
+      const id = decodeURIComponent(String(hash || '').replace(/^#/, ''));
+      if (!id) { window.scrollTo(0, 0); return; }
+      requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ block: 'start' });
+        } else {
+          window.scrollTo(0, 0);
+        }
+      });
+    } catch (_) { window.scrollTo(0, 0); }
   }
 
   /** Actualiza document.title con el de la vista actual. Screen readers
