@@ -1651,7 +1651,7 @@ body.sidebar-collapsed .main-header,
     margin-left: 0;
     min-height: 100vh;
     height: auto;
-    background: var(--bg-primary);
+    background: var(--view-bg-base);
     padding-top: 48px; /* Altura del header delgado */
     position: relative;
     z-index: 1;
