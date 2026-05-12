@@ -112,10 +112,11 @@ class App {
     const pub = { requiresAuth: false, redirectIfAuth: false };
     const auth = { requiresAuth: true, redirectIfAuth: false };
 
-    // input-registry usa window.BrandColors (color picker modal) — cargar primero.
-    const inputDeps = ['/js/utils/brand-colors.js', '/js/flags-data.js', '/js/input-registry.js'];
+    // input-registry y los mixins de marca usan window.ColorPickerModal
+    // (compartido desde 2026-05-12). Cargar antes que input-registry.
+    const inputDeps = ['/js/utils/brand-colors.js', '/js/components/ColorPickerModal.js', '/js/flags-data.js', '/js/input-registry.js'];
     const devBase = ['/js/views/DevBaseView.js'];
-    const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/input-registry.js'];
+    const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/components/ColorPickerModal.js', '/js/input-registry.js'];
 
     // ── Raíz: redirige a /home si hay sesión, a /login si no. Login es la landing. ──
     const rootRedirectView = class extends (window.BaseView || class {}) {
@@ -215,6 +216,7 @@ class App {
     // InfoPanel difiere (sub-marca vs organización) → cada vista tiene el suyo.
     const brandSharedDeps = [
       '/js/utils/brand-colors.js',
+      '/js/components/ColorPickerModal.js',
       '/js/config/brand-schema.js'
     ];
     const brandSharedMixins = [

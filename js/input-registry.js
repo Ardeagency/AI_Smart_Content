@@ -1189,167 +1189,20 @@
     initAspectRatioPicker(container);
   }
 
-  // Color utils compartidos: ver /js/utils/brand-colors.js (cargado como dependencia
-  // de las vistas que usan input-registry vía app.js _lazy).
-  function hexToHSL(hex) { return (window.BrandColors || {}).hexToHSL(hex); }
-  function hslToHex(h, s, l) { return (window.BrandColors || {}).hslToHex(h, s, l); }
   /**
-   * Abre el modal de selección de color (rueda + hex + Aplicar/Cerrar). Llama a onApply(hex) al pulsar Aplicar.
+   * Abre el modal de selección de color delegando a window.ColorPickerModal
+   * (js/components/ColorPickerModal.js). Antes había aquí ~150 líneas
+   * duplicadas del mixin de marca; ambos consumen ahora el mismo componente.
+   *
    * @param {string} initialHex - Hex inicial (ej. #6E3DE9)
-   * @param {function(string)} onApply - Callback con el hex elegido (ej. #001B72)
+   * @param {function(string)} onApply - Callback con el hex elegido
    */
   function openColorPickerModal(initialHex, onApply) {
-    var hex = (initialHex || '#6E3DE9').toString().trim().replace(/^#/, '');
-    if (hex.length < 6) hex = '6E3DE9';
-    var initial = '#' + hex.slice(0, 6);
-    var h = hexToHSL(initial).h;
-    var s = hexToHSL(initial).s;
-    var l = hexToHSL(initial).l;
-    var container = document.getElementById('app-container') || document.body;
-    var modal = document.createElement('div');
-    modal.className = 'color-editor-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-label', 'Editor de color');
-    var panel = document.createElement('div');
-    panel.className = 'color-editor-panel';
-    var wheelWrap = document.createElement('div');
-    wheelWrap.className = 'color-editor-wheel-wrap';
-    var hueRing = document.createElement('div');
-    hueRing.className = 'color-editor-hue-ring';
-    hueRing.setAttribute('aria-label', 'Seleccionar tono');
-    var slArea = document.createElement('div');
-    slArea.className = 'color-editor-sl-area';
-    var slHandle = document.createElement('div');
-    slHandle.className = 'color-editor-sl-handle';
-    var hueHandle = document.createElement('div');
-    hueHandle.className = 'color-editor-hue-handle';
-    var previewEl = document.createElement('div');
-    previewEl.className = 'color-editor-current';
-    var hexInput = document.createElement('input');
-    hexInput.type = 'text';
-    hexInput.className = 'color-editor-hex-input';
-    var formatSelect = document.createElement('select');
-    formatSelect.className = 'color-editor-format';
-    formatSelect.innerHTML = '<option value="hex">hex</option><option value="rgb">rgb</option><option value="hsl">hsl</option>';
-    var applyBtn = document.createElement('button');
-    applyBtn.type = 'button';
-    applyBtn.className = 'color-editor-btn color-editor-btn-apply';
-    applyBtn.textContent = 'Aplicar';
-    var cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.className = 'color-editor-btn color-editor-btn-cancel';
-    cancelBtn.textContent = 'Cerrar';
-    function setHexFromHSL() {
-      var newHex = hslToHex(h, s, l);
-      hexInput.value = newHex.toUpperCase().replace(/^#/, '');
-      previewEl.style.background = newHex;
-      slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
-      return newHex;
+    if (!window.ColorPickerModal || typeof window.ColorPickerModal.open !== 'function') {
+      console.error('[input-registry] window.ColorPickerModal no disponible. Verificar carga de js/components/ColorPickerModal.js.');
+      return;
     }
-    function setSLHandlePos() {
-      slHandle.style.left = s + '%';
-      slHandle.style.top = (100 - l) + '%';
-      slHandle.style.transform = 'translate(-50%, -50%)';
-    }
-    function closeEditor() {
-      if (modal.parentNode) modal.remove();
-      document.removeEventListener('keydown', onKeyDown);
-    }
-    function onKeyDown(e) { if (e.key === 'Escape') closeEditor(); }
-    document.addEventListener('keydown', onKeyDown);
-    slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
-    setSLHandlePos();
-    hueHandle.style.transform = 'rotate(' + h + 'deg)';
-    previewEl.style.background = hslToHex(h, s, l);
-    hexInput.value = hslToHex(h, s, l).toUpperCase().replace(/^#/, '');
-    hexInput.setAttribute('maxlength', 7);
-    hueRing.addEventListener('mousedown', function (e) {
-      e.preventDefault();
-      var rect = hueRing.getBoundingClientRect();
-      var cx = rect.left + rect.width / 2;
-      var cy = rect.top + rect.height / 2;
-      var angle = Math.atan2(e.clientY - cy, e.clientX - cx);
-      h = (angle * 180 / Math.PI + 90 + 360) % 360;
-      if (h < 0) h += 360;
-      hueHandle.style.transform = 'rotate(' + h + 'deg)';
-      setHexFromHSL();
-      function moveHue(ev) {
-        var r = hueRing.getBoundingClientRect();
-        var centerX = r.left + r.width / 2;
-        var centerY = r.top + r.height / 2;
-        var a = Math.atan2(ev.clientY - centerY, ev.clientX - centerX);
-        h = (a * 180 / Math.PI + 90 + 360) % 360;
-        if (h < 0) h += 360;
-        hueHandle.style.transform = 'rotate(' + h + 'deg)';
-        setHexFromHSL();
-      }
-      function upHue() {
-        document.removeEventListener('mousemove', moveHue);
-        document.removeEventListener('mouseup', upHue);
-      }
-      document.addEventListener('mousemove', moveHue);
-      document.addEventListener('mouseup', upHue);
-    });
-    slArea.addEventListener('mousedown', function (e) {
-      e.preventDefault();
-      var rect = slArea.getBoundingClientRect();
-      s = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-      l = Math.max(0, Math.min(100, 100 - ((e.clientY - rect.top) / rect.height) * 100));
-      setSLHandlePos();
-      setHexFromHSL();
-      function move(ev) {
-        var r = slArea.getBoundingClientRect();
-        var x = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
-        var y = Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
-        s = x * 100;
-        l = (1 - y) * 100;
-        setSLHandlePos();
-        setHexFromHSL();
-      }
-      function up() {
-        document.removeEventListener('mousemove', move);
-        document.removeEventListener('mouseup', up);
-      }
-      document.addEventListener('mousemove', move);
-      document.addEventListener('mouseup', up);
-    });
-    hexInput.addEventListener('input', function () {
-      var v = hexInput.value.replace(/^#/, '').trim();
-      if (/^[0-9A-Fa-f]{6}$/.test(v)) {
-        var nh = hexToHSL('#' + v);
-        h = nh.h; s = nh.s; l = nh.l;
-        hueHandle.style.transform = 'rotate(' + h + 'deg)';
-        setSLHandlePos();
-        slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
-        previewEl.style.background = '#' + v;
-      }
-    });
-    applyBtn.addEventListener('click', function () {
-      var out = hslToHex(h, s, l);
-      closeEditor();
-      if (typeof onApply === 'function') onApply(out);
-    });
-    cancelBtn.addEventListener('click', closeEditor);
-    modal.addEventListener('click', function (e) { if (e.target === modal) closeEditor(); });
-    var hexWrap = document.createElement('div');
-    hexWrap.className = 'color-editor-hex-wrap';
-    hexWrap.appendChild(hexInput);
-    hexWrap.appendChild(formatSelect);
-    var btnWrap = document.createElement('div');
-    btnWrap.className = 'color-editor-actions';
-    btnWrap.appendChild(applyBtn);
-    btnWrap.appendChild(cancelBtn);
-    wheelWrap.appendChild(hueRing);
-    hueRing.appendChild(slArea);
-    slArea.appendChild(slHandle);
-    hueRing.appendChild(hueHandle);
-    panel.appendChild(wheelWrap);
-    panel.appendChild(previewEl);
-    panel.appendChild(hexWrap);
-    panel.appendChild(btnWrap);
-    modal.appendChild(panel);
-    container.appendChild(modal);
-    hexInput.focus();
+    window.ColorPickerModal.open({ initialHex: initialHex, onApply: onApply });
   }
 
   /**
