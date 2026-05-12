@@ -122,6 +122,11 @@
     </style>
 </head>
 <body>
+    <!-- Brand bg overlay: capa fixed con --bg-primary + tinte de marca para evitar
+         los quirks de background-attachment: fixed en body cuando hay view-transition-name
+         u overflow restrictions. Se activa cuando body.org-brand-context está presente. -->
+    <div id="brand-bg-overlay" aria-hidden="true"></div>
+
     <!-- Skip link: keyboard/screen-reader users pueden saltarse el sidebar
          y caer directo en el contenido de la vista. Visible solo cuando
          recibe focus (Tab desde el inicio). -->
@@ -180,6 +185,10 @@
 
     <!-- Toast accesible (window.showToast) — aria-live polite/assertive -->
     <script src="js/utils/toast.js?v=__BUILD_ID__" defer></script>
+
+    <!-- Web Vitals telemetry: LCP/CLS/FCP/TTFB → window.__webVitals
+         + flush a errorLogger en producción al visibilitychange:hidden -->
+    <script src="js/utils/webvitals.js?v=__BUILD_ID__" defer></script>
 
     <!-- UI primitives compartidas (window.UI.Button/Card/Input/Dialog/Dropdown/Tabs) -->
     <script src="js/ui/primitives.js?v=__BUILD_ID__" defer></script>
