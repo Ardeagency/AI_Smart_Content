@@ -392,6 +392,9 @@ class Router {
         try {
           const transition = document.startViewTransition(doRender);
           await transition.updateCallbackDone;
+          // Path success de View Transitions: no se llama _playRouteFade, pero
+          // sí necesitamos enhance de a11y labels en el nuevo DOM.
+          this._enhanceA11yLabels(container);
         } catch (e) {
           console.warn('Router: View Transition falló, fallback a fade.', e);
           await doRender();
@@ -444,6 +447,25 @@ class Router {
     container.classList.remove('route-fade-in');
     void container.offsetHeight;
     container.classList.add('route-fade-in');
+    // Post-render a11y enhance: copia `title` a `aria-label` en interactivos
+    // sin aria. Baseline para screen readers cuando los autores olvidaron el
+    // aria explícito; no pisa los que ya lo tienen.
+    this._enhanceA11yLabels(container);
+  }
+
+  /** Copia title → aria-label en botones/links/[role] que no lo tienen. */
+  _enhanceA11yLabels(scope) {
+    if (!scope || !scope.querySelectorAll) return;
+    const selectors = 'button[title]:not([aria-label]):not([aria-labelledby]),' +
+                      'a[title]:not([aria-label]):not([aria-labelledby]),' +
+                      '[role="button"][title]:not([aria-label]):not([aria-labelledby]),' +
+                      '[role="tab"][title]:not([aria-label]):not([aria-labelledby])';
+    try {
+      scope.querySelectorAll(selectors).forEach((el) => {
+        const t = (el.getAttribute('title') || '').trim();
+        if (t) el.setAttribute('aria-label', t);
+      });
+    } catch (_) {}
   }
 
   /** Respeta prefers-reduced-motion: si el usuario lo pide, saltamos animaciones. */
