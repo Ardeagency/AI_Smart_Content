@@ -61,13 +61,40 @@
     modal.appendChild(overlay);
     modal.appendChild(content);
 
+    // A11y: guardar quién tenía el foco para devolvérselo al cerrar.
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]),' +
+                      'input:not([disabled]):not([type="hidden"]), select:not([disabled]),' +
+                      '[tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+    const focusables = () => Array.from(content.querySelectorAll(FOCUSABLE))
+      .filter((el) => !el.hasAttribute('inert') && el.offsetParent !== null);
+
     const close = () => {
       modal.remove();
       document.removeEventListener('keydown', onKey);
       if (typeof onClose === 'function') onClose();
+      // Devolver foco al disparador (botón que abrió el modal, link, etc.).
+      // Si el elemento ya no está en el DOM, dejar el foco donde caiga natural.
+      if (previousFocus && document.contains(previousFocus)) {
+        try { previousFocus.focus(); } catch (_) {}
+      }
     };
 
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { close(); return; }
+      if (e.key !== 'Tab') return;
+      // Focus trap: Tab cicla dentro del modal, Shift+Tab también.
+      const items = focusables();
+      if (!items.length) { e.preventDefault(); return; }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && active === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && active === last) { first.focus(); e.preventDefault(); }
+    };
     overlay.addEventListener('click', close);
     closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', onKey);
@@ -76,6 +103,15 @@
       ? (document.getElementById('modals-portal') || document.body)
       : (parentEl || document.body);
     target.appendChild(modal);
+
+    // Foco inicial: primer focusable del body, o el botón de cerrar como
+    // fallback. Espera un microtick para que el navegador termine el layout
+    // y el elemento ya esté visible (offsetParent != null).
+    setTimeout(() => {
+      const items = focusables();
+      const target = items.find((el) => el !== closeBtn) || items[0] || closeBtn;
+      try { target.focus(); } catch (_) {}
+    }, 0);
 
     return { modal, bodyEl, close };
   }
