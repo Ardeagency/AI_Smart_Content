@@ -686,28 +686,32 @@ textarea:focus-visible,
     padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
 
-/* Tinte de marca en bordes laterales del shell, solo dentro de org (clase la setea
-   OrgBrandTheme tras resolver palette primary/secondary). Para que aflore en todas
-   las vistas se hace cascada vía --view-bg-base: cualquier wrapper full-bleed que
-   use var(--view-bg-base) (o el alias --living-bg-deep) se vuelve transparente
-   automáticamente. Vistas /dev/* mantienen fondo opaco. */
-body.org-brand-context #app-container {
+/* Tinte de marca solo dentro de org (clase la setea OrgBrandTheme tras resolver
+   palette primary/secondary). El gradient vive en <body> con background-attachment: fixed
+   para evitar el clipping causado por view-transition-name en #app-container. La cascada
+   --view-bg-base hace que cualquier wrapper full-bleed que use var(--view-bg-base) (o el
+   alias --living-bg-deep) se vuelva transparente, dejando ver el bg del body.
+   Vistas /dev/* mantienen fondo opaco. */
+body.org-brand-context {
+    --view-bg-base: transparent;
     background-image: var(--brand-gradient-app-container);
     background-color: var(--bg-primary);
     background-repeat: no-repeat;
+    background-attachment: fixed;
     background-size: 100% 100%;
 }
 
-body.org-brand-context {
-    --view-bg-base: transparent;
+body.org-brand-context #app-container {
+    background: transparent;
 }
 
 body.org-brand-context.route-dev {
     --view-bg-base: var(--bg-primary);
+    background-image: none;
 }
 
 body.org-brand-context.route-dev #app-container {
-    background-image: none;
+    background: var(--bg-primary);
 }
 
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
