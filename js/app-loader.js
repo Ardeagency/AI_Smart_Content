@@ -24,7 +24,34 @@
         && location.hostname !== 'localhost'
         && location.hostname !== '127.0.0.1') {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(() => {
+            navigator.serviceWorker.register('/sw.js').then((registration) => {
+                // Detectar updates en background. Cuando Netlify deploya una
+                // nueva versión, el browser baja el sw.js nuevo y queda en
+                // "waiting"; en cuanto skipWaiting() (en sw.js) lo activa,
+                // se dispara controllerchange. Avisamos al user para recargar
+                // y ver la versión nueva — sin esto, el user queda en cache
+                // del build anterior hasta que cierre todas las pestañas.
+                //
+                // Truco: si controller==null al registrar, es la PRIMERA
+                // instalación (silenciar — no hay versión vieja que invalidar).
+                // Si ya había controller, controllerchange = update real.
+                const hadControllerAtStart = !!navigator.serviceWorker.controller;
+                let notified = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (notified || !hadControllerAtStart) return;
+                    notified = true;
+                    if (window.showToast) {
+                        window.showToast('Nueva versión disponible — recarga la página', {
+                            duration: 0,
+                            type: 'info',
+                        });
+                    }
+                });
+                // Buscar updates inmediatamente si la página estuvo abierta horas.
+                if (registration && typeof registration.update === 'function') {
+                    setTimeout(() => { try { registration.update(); } catch (_) {} }, 60 * 60 * 1000);
+                }
+            }).catch(() => {
                 /* registro silencioso; offline-first es opt-in, no romper si falla */
             });
         });
