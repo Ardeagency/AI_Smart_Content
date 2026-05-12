@@ -20,6 +20,7 @@
  * ARDE Agency S.A.S. — spec: dashboard_mi_marca_spec.docx
  */
 class DashboardView extends BaseView {
+  static documentTitle = 'Inicio';
 
   // Habilita back/forward HTML cache: al volver desde Studio/Production al
   // dashboard, restaura HTML+scroll instant; los tabs refrescan en background.

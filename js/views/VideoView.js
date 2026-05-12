@@ -5,6 +5,8 @@
  * Arquitectura asíncrona: las funciones solo crean/consultan; no esperan la generación (evita timeout 524).
  */
 class VideoView extends BaseView {
+  static documentTitle = 'Video';
+
   /** POST: crear tarea en KIE. Responde de inmediato con taskId (< 2 s). */
   static get KLING_VIDEO_CREATE_API() {
     return '/.netlify/functions/kling-video-create';

@@ -4,6 +4,7 @@
  */
 class TasksView extends BaseView {
   static cacheable = true;
+  static documentTitle = 'Tareas programadas';
 
   constructor() {
     super();

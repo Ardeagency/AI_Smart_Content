@@ -3,6 +3,8 @@
  * Sin `brand_containers`; sin card de entidades. Hereda la UX premium del antiguo BrandsView.
  */
 class BrandOrganizationView extends BaseView {
+  static documentTitle = 'Marca de la organización';
+
   constructor() {
     super();
     this.templatePath = null;

@@ -4,6 +4,7 @@
  */
 class BrandstorageView extends BaseView {
   static cacheable = true;
+  static documentTitle = 'Brand Storage';
 
   constructor() {
     super();

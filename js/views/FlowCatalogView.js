@@ -4,6 +4,7 @@
  */
 class FlowCatalogView extends BaseView {
   static cacheable = true;
+  static documentTitle = 'Flujos';
 
   constructor() {
     super();

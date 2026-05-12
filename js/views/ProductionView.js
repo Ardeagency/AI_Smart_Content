@@ -8,6 +8,7 @@
  */
 class ProductionView extends BaseView {
   static cacheable = true;
+  static documentTitle = 'Producción';
 
   constructor() {
     super();

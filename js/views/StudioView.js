@@ -9,6 +9,7 @@ const DEFAULT_STUDIO_MAX_RETRIES = 3;
 
 class StudioView extends BaseView {
   static cacheable = true;
+  static documentTitle = 'Studio';
 
   constructor() {
     super();

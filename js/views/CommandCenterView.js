@@ -6,6 +6,8 @@
  * - Conexiones existentes: integraciones + segmentos con vínculo a persona
  */
 class CommandCenterView extends BaseView {
+  static documentTitle = 'Command Center';
+
   constructor() {
     super();
     this._subBrandSlug    = '';

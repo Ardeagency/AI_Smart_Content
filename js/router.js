@@ -403,8 +403,9 @@ class Router {
           const transition = document.startViewTransition(doRender);
           await transition.updateCallbackDone;
           // Path success de View Transitions: no se llama _playRouteFade, pero
-          // sí necesitamos enhance de a11y labels en el nuevo DOM.
+          // sí necesitamos enhance de a11y labels y document.title en el nuevo DOM.
           this._enhanceA11yLabels(container);
+          this._applyDocumentTitle();
         } catch (e) {
           console.warn('Router: View Transition falló, fallback a fade.', e);
           await doRender();
@@ -462,6 +463,24 @@ class Router {
     // sin aria. Baseline para screen readers cuando los autores olvidaron el
     // aria explícito; no pisa los que ya lo tienen.
     this._enhanceA11yLabels(container);
+    this._applyDocumentTitle();
+  }
+
+  /** Actualiza document.title con el de la vista actual. Screen readers
+   *  anuncian el title al cambiar de página; también útil multi-tab. */
+  _applyDocumentTitle() {
+    try {
+      const view = this.currentView;
+      if (!view) return;
+      const t = view.documentTitle
+            || (view.constructor && view.constructor.documentTitle)
+            || null;
+      if (typeof t === 'string' && t.trim()) {
+        document.title = `${t.trim()} · AI Smart Content`;
+      } else {
+        document.title = 'AI Smart Content';
+      }
+    } catch (_) {}
   }
 
   /** Copia title → aria-label en botones/links/[role] que no lo tienen. */
