@@ -2136,7 +2136,11 @@ class Navigation {
     const links = document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]');
     const toggles = document.querySelectorAll('.nav-submenu-toggle');
 
-    links.forEach(link => link.classList.remove('active'));
+    links.forEach(link => {
+      link.classList.remove('active');
+      // Limpiar aria-current de runs anteriores; lo seteamos solo en el bestMatch abajo.
+      link.removeAttribute('aria-current');
+    });
     toggles.forEach(t => t.classList.remove('active'));
 
     let bestMatch = null;
@@ -2154,6 +2158,8 @@ class Navigation {
 
     if (bestMatch) {
       bestMatch.classList.add('active');
+      // aria-current="page" → screen readers anuncian "current page" en este link.
+      bestMatch.setAttribute('aria-current', 'page');
       const parent = bestMatch.closest('.has-submenu');
       if (parent) {
         parent.classList.add('submenu-open');
