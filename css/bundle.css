@@ -646,7 +646,31 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .hidden, .d-none { display: none !important; }
 .invisible { visibility: hidden; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+/* A11Y: focus baseline. El selector universal *:focus-visible queda como
+   fallback (specificity 0,0,1,0), pero pierde frente a reglas legacy con
+   `outline: none` en .btn / .form-* / etc. Los selectores específicos
+   abajo tienen specificity 0,0,2,1+ y garantizan el outline en teclado.
+   :focus-visible solo matchea cuando el browser detecta navegación por
+   teclado, así que clicks de mouse/touch no muestran el ring. */
 *:focus-visible { outline: 2px solid var(--accent-brand); outline-offset: 2px; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="link"]:focus-visible,
+[role="switch"]:focus-visible,
+[contenteditable]:focus-visible {
+  outline: 2px solid var(--accent-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
 /* ========== APP CONTAINER ========== */
 #app-container {
