@@ -34,6 +34,28 @@
           integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
     
     <style>
+        /* Critical CSS: evita FOUC (flash blanco) mientras carga bundle.css.
+           Solo lo absolutamente necesario para el primer paint coherente:
+           fondo oscuro, tipografía, layout de modales portal. */
+        :root {
+            color-scheme: dark;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #0b0b0b;
+            color: #D4D1D8;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #app-container, #navigation-container {
+            background: #0b0b0b;
+        }
         #modals-portal {
             position: fixed;
             inset: 0;
