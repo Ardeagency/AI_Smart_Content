@@ -1047,6 +1047,17 @@ h1.brand-name-large[contenteditable="true"]:hover,
     pointer-events: none;
 }
 
+/* Wrapper orbital: rotamos ESTE (no el handle) para que el handle viaje
+   alrededor del aro. inset:0 lo iguala al tamaño del aro, así su centro
+   coincide con el centro del aro y la rotación traslada el handle. */
+.color-editor-hue-handle-orbit {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: rotate(0deg);
+    will-change: transform;
+}
+
 .color-editor-hue-handle {
     position: absolute;
     top: -6px;
@@ -1058,6 +1069,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 2px solid var(--color-white);
     box-shadow: 0 0 0 1px var(--black-50);
     pointer-events: none;
+    outline: none;
+}
+
+.color-editor-hue-handle:focus-visible,
+.color-editor-sl-handle:focus-visible {
+    box-shadow: 0 0 0 1px var(--black-50), 0 0 0 3px rgba(120, 170, 255, 0.85);
 }
 
 .color-editor-current {

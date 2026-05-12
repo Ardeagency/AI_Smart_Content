@@ -1,14 +1,20 @@
 /**
  * Shared ColorEditor mixin — consumido por BrandstorageView y BrandOrganizationView.
  *
- * Modal de edición de color (rueda de tono + plano S/L + input hex) y su
- * persistencia en `brand_colors` (create/update/delete). Usa las utilidades
- * puras de /js/utils/brand-colors.js para hex↔HSL.
+ * Modal de edición de color (rueda de tono + plano S/L + input multi-formato)
+ * y su persistencia en `brand_colors` (create/update/delete). Usa las
+ * utilidades puras de /js/utils/brand-colors.js para hex↔HSL.
  *
  * Tras cada cambio de color llama `this._refreshVisualChrome()` — cada vista
  * define ese hook para actualizar su propio chrome (gradiente, glass, brillo).
  *
- * Aplica sobre el prototype de ambas vistas de marca al cargarse.
+ * Diseño técnico:
+ *  - Handle del aro orbita via WRAPPER rotado (no se rota el handle propio).
+ *  - Pointer Events + setPointerCapture → mouse/touch/pen unificados.
+ *  - Drag throttleado con requestAnimationFrame.
+ *  - Hex parser tolerante (#abc, abc, #aabbcc, RRGGBB) + parsers rgb()/hsl().
+ *  - Keyboard: ←→ ±1°/±1%, ↑↓ ±5°/±5%, Enter aplica, Esc cierra.
+ *  - ARIA: role="slider" + aria-valuemin/max/now en cada handle.
  */
 (function () {
   'use strict';
@@ -17,47 +23,68 @@
     return;
   }
 
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+  /** Acepta '#abc', 'abc', '#aabbcc', 'AABBCC' (con espacios). Devuelve '#RRGGBB' o null. */
+  function parseHex(raw) {
+    if (raw == null) return null;
+    const s = String(raw).trim().replace(/^#/, '').toUpperCase();
+    if (/^[0-9A-F]{3}$/.test(s)) return `#${s[0]}${s[0]}${s[1]}${s[1]}${s[2]}${s[2]}`;
+    if (/^[0-9A-F]{6}$/.test(s)) return `#${s}`;
+    return null;
+  }
+
+  /** Acepta 'rgb(r,g,b)' (con o sin espacios). Devuelve {r,g,b} o null. */
+  function parseRgb(raw) {
+    if (raw == null) return null;
+    const m = String(raw).trim().match(/^rgba?\s*\(\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*(?:[,/].*)?\)$/i);
+    if (!m) return null;
+    const r = +m[1], g = +m[2], b = +m[3];
+    if ([r, g, b].some((v) => v < 0 || v > 255)) return null;
+    return { r, g, b };
+  }
+
+  /** Acepta 'hsl(h, s%, l%)' (% opcional). Devuelve {h,s,l} o null. */
+  function parseHsl(raw) {
+    if (raw == null) return null;
+    const m = String(raw).trim().match(/^hsla?\s*\(\s*(\d{1,3}(?:\.\d+)?)\s*(?:deg)?\s*[, ]\s*(\d{1,3}(?:\.\d+)?)\s*%?\s*[, ]\s*(\d{1,3}(?:\.\d+)?)\s*%?\s*(?:[,/].*)?\)$/i);
+    if (!m) return null;
+    return { h: +m[1] % 360, s: clamp(+m[2], 0, 100), l: clamp(+m[3], 0, 100) };
+  }
+
+  function rgbToHex(r, g, b) {
+    const toHex = (n) => clamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+  }
+
+  function formatHexDisplay(hex) {
+    return hex.replace(/^#/, '').toUpperCase();
+  }
+  function formatRgbDisplay(hex) {
+    const h = hex.replace(/^#/, '');
+    return `rgb(${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)})`;
+  }
+  function formatHslDisplay(h, s, l) {
+    return `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
+  }
+
   const ColorEditorMixin = {
     openColorEditor(color) {
       const isNew = !color || !color.id;
-      const hex = color
-        ? (color.hex_value || color.hex_code || color.hex || '#000000').replace(/^#/, '')
-        : '6E3DE9';
-      const initialHex = `#${hex.padStart(6, '0').slice(0, 6)}`;
+      const incomingHex = color
+        ? (color.hex_value || color.hex_code || color.hex || '#888888')
+        : '#888888';
+      const initialHex = parseHex(incomingHex) || '#888888';
       let { h, s, l } = this.hexToHSL(initialHex);
       const colorId = isNew ? null : color.id;
       const container = this.container || document.getElementById('app-container');
       if (!container) return;
 
-      const closeEditor = () => {
-        if (this._colorEditorModal && this._colorEditorModal.parentNode) {
-          this._colorEditorModal.remove();
-          this._colorEditorModal = null;
-        }
-        document.removeEventListener('keydown', onKeyDown);
-      };
-
-      const onKeyDown = (e) => { if (e.key === 'Escape') closeEditor(); };
-      document.addEventListener('keydown', onKeyDown);
-
-      const setHexFromHSL = () => {
-        const newHex = this.hslToHex(h, s, l);
-        hexInput.value = newHex.toUpperCase();
-        previewEl.style.background = newHex;
-        slArea.style.background = `linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(${h}, 0%, 50%), hsl(${h}, 100%, 50%))`;
-        return newHex;
-      };
-
-      const applyColor = async () => {
-        const hexToSave = this.hslToHex(h, s, l);
-        if (isNew) await this.createColor(hexToSave);
-        else await this.updateColor(colorId, hexToSave);
-        closeEditor();
-      };
-
+      // ─── Modal & panel ────────────────────────────────────────────────
       const modal = document.createElement('div');
       modal.className = 'color-editor-modal';
       modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
       modal.setAttribute('aria-label', 'Editor de color');
       this._colorEditorModal = modal;
 
@@ -67,43 +94,51 @@
       const wheelWrap = document.createElement('div');
       wheelWrap.className = 'color-editor-wheel-wrap';
 
+      // ─── Hue ring + SL area (anidados visualmente) ────────────────────
       const hueRing = document.createElement('div');
       hueRing.className = 'color-editor-hue-ring';
-      hueRing.setAttribute('aria-label', 'Seleccionar tono');
+      hueRing.setAttribute('aria-label', 'Rueda de tono');
 
       const slArea = document.createElement('div');
       slArea.className = 'color-editor-sl-area';
-      slArea.style.background = `linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(${h}, 0%, 50%), hsl(${h}, 100%, 50%))`;
 
       const slHandle = document.createElement('div');
       slHandle.className = 'color-editor-sl-handle';
-      const setSLHandlePos = () => {
-        slHandle.style.left = `${s}%`;
-        slHandle.style.top = `${100 - l}%`;
-        slHandle.style.transform = 'translate(-50%, -50%)';
-      };
-      setSLHandlePos();
+      slHandle.setAttribute('role', 'slider');
+      slHandle.setAttribute('aria-label', 'Saturación y luminosidad');
+      slHandle.setAttribute('aria-valuemin', '0');
+      slHandle.setAttribute('aria-valuemax', '100');
+      slHandle.setAttribute('tabindex', '0');
+
+      // Wrapper orbital: este es el que rota. El hueHandle queda fijo en top.
+      const hueHandleOrbit = document.createElement('div');
+      hueHandleOrbit.className = 'color-editor-hue-handle-orbit';
 
       const hueHandle = document.createElement('div');
       hueHandle.className = 'color-editor-hue-handle';
-      hueHandle.style.transform = `rotate(${h}deg)`;
+      hueHandle.setAttribute('role', 'slider');
+      hueHandle.setAttribute('aria-label', 'Matiz (hue)');
+      hueHandle.setAttribute('aria-valuemin', '0');
+      hueHandle.setAttribute('aria-valuemax', '359');
+      hueHandle.setAttribute('tabindex', '0');
 
+      // ─── Preview, hex input, format select ────────────────────────────
       const previewEl = document.createElement('div');
       previewEl.className = 'color-editor-current';
-      previewEl.style.background = this.hslToHex(h, s, l);
 
       const hexWrap = document.createElement('div');
       hexWrap.className = 'color-editor-hex-wrap';
       const hexInput = document.createElement('input');
       hexInput.type = 'text';
       hexInput.className = 'color-editor-hex-input';
-      hexInput.value = this.hslToHex(h, s, l).toUpperCase().replace(/^#/, '');
-      hexInput.setAttribute('maxlength', 7);
+      hexInput.setAttribute('spellcheck', 'false');
+      hexInput.setAttribute('autocomplete', 'off');
 
       const formatSelect = document.createElement('select');
       formatSelect.className = 'color-editor-format';
       formatSelect.innerHTML = '<option value="hex">hex</option><option value="rgb">rgb</option><option value="hsl">hsl</option>';
 
+      // ─── Action buttons ───────────────────────────────────────────────
       const btnWrap = document.createElement('div');
       btnWrap.className = 'color-editor-actions';
       const applyBtn = document.createElement('button');
@@ -115,98 +150,189 @@
       cancelBtn.className = 'color-editor-btn color-editor-btn-cancel';
       cancelBtn.textContent = 'Cerrar';
 
-      const drag = (el, onMove) => {
-        const move = (e) => {
-          e.preventDefault();
-          const rect = el.getBoundingClientRect();
-          const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-          const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-          onMove(x, y);
-        };
-        const up = () => {
-          document.removeEventListener('mousemove', move);
-          document.removeEventListener('mouseup', up);
-        };
-        document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', up);
+      // ─── State sync ───────────────────────────────────────────────────
+      let rafPending = false;
+      const scheduleSync = () => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          syncFromState();
+        });
       };
 
-      hueRing.addEventListener('mousedown', (e) => {
-        e.preventDefault();
+      const syncFromState = () => {
+        const hex = this.hslToHex(h, s, l);
+        // Anillo: rotamos el ORBIT, no el handle.
+        hueHandleOrbit.style.transform = `rotate(${h}deg)`;
+        hueHandle.setAttribute('aria-valuenow', String(Math.round(h)));
+        // SL handle: posición relativa al área SL. translate(-50%, -50%)
+        // centra el handle (14px) sobre el punto S/L exacto.
+        slHandle.style.left = `${s}%`;
+        slHandle.style.top = `${100 - l}%`;
+        slHandle.style.transform = 'translate(-50%, -50%)';
+        slHandle.setAttribute('aria-valuenow', `${Math.round(s)},${Math.round(l)}`);
+        slHandle.setAttribute('aria-valuetext', `Saturación ${Math.round(s)}%, luminosidad ${Math.round(l)}%`);
+        // Gradiente del SL área (depende de h).
+        slArea.style.background = `linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(${h}, 0%, 50%), hsl(${h}, 100%, 50%))`;
+        previewEl.style.background = hex;
+        // Hex input: solo actualizar si el input no está enfocado, para no
+        // pisar al usuario mientras tipea.
+        if (document.activeElement !== hexInput) {
+          hexInput.value = renderInputForFormat(hex);
+        }
+      };
+
+      const renderInputForFormat = (hex) => {
+        if (formatSelect.value === 'rgb') return formatRgbDisplay(hex);
+        if (formatSelect.value === 'hsl') return formatHslDisplay(h, s, l);
+        return formatHexDisplay(hex);
+      };
+
+      // ─── Pointer drag helper ──────────────────────────────────────────
+      const attachPointerDrag = (el, onMove) => {
+        let active = false;
+        const handleDown = (e) => {
+          if (e.button != null && e.button !== 0) return; // solo botón izquierdo
+          e.preventDefault();
+          e.stopPropagation();
+          active = true;
+          try { el.setPointerCapture(e.pointerId); } catch (_) {}
+          onMove(e);
+        };
+        const handleMove = (e) => {
+          if (!active) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onMove(e);
+        };
+        const handleUp = (e) => {
+          if (!active) return;
+          active = false;
+          try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+        };
+        el.addEventListener('pointerdown', handleDown);
+        el.addEventListener('pointermove', handleMove);
+        el.addEventListener('pointerup', handleUp);
+        el.addEventListener('pointercancel', handleUp);
+        el.addEventListener('lostpointercapture', () => { active = false; });
+      };
+
+      // ─── Hue ring drag (mueve solo h) ─────────────────────────────────
+      // El SL área hace stopPropagation, así que un pointerdown dentro del
+      // SL nunca llega aquí. Una vez iniciado el drag en el aro, seguimos
+      // actualizando h por el ángulo aunque el cursor cruce al centro.
+      attachPointerDrag(hueRing, (e) => {
         const rect = hueRing.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const angle = Math.atan2(e.clientY - cy, e.clientX - cx);
-        h = (angle * 180 / Math.PI + 90 + 360) % 360;
-        if (h < 0) h += 360;
-        hueHandle.style.transform = `rotate(${h}deg)`;
-        setHexFromHSL();
-        const moveHue = (ev) => {
-          const r = hueRing.getBoundingClientRect();
-          const centerX = r.left + r.width / 2;
-          const centerY = r.top + r.height / 2;
-          const a = Math.atan2(ev.clientY - centerY, ev.clientX - centerX);
-          h = (a * 180 / Math.PI + 90 + 360) % 360;
-          if (h < 0) h += 360;
-          hueHandle.style.transform = `rotate(${h}deg)`;
-          setHexFromHSL();
-        };
-        const upHue = () => {
-          document.removeEventListener('mousemove', moveHue);
-          document.removeEventListener('mouseup', upHue);
-        };
-        document.addEventListener('mousemove', moveHue);
-        document.addEventListener('mouseup', upHue);
+        const dx = e.clientX - (rect.left + rect.width / 2);
+        const dy = e.clientY - (rect.top + rect.height / 2);
+        // atan2 da ángulo desde eje X (este); sumamos 90 para que 0=top.
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+        h = ((angle % 360) + 360) % 360;
+        scheduleSync();
       });
 
-      slArea.addEventListener('mousedown', (e) => {
-        e.preventDefault();
+      // ─── SL drag (mueve s y l, bloquea bubble al aro) ─────────────────
+      attachPointerDrag(slArea, (e) => {
         const rect = slArea.getBoundingClientRect();
-        s = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-        l = Math.max(0, Math.min(100, 100 - ((e.clientY - rect.top) / rect.height) * 100));
-        setSLHandlePos();
-        setHexFromHSL();
-        drag(slArea, (x, y) => {
-          s = Math.max(0, Math.min(100, x * 100));
-          l = Math.max(0, Math.min(100, (1 - y) * 100));
-          setSLHandlePos();
-          setHexFromHSL();
-        });
+        s = clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100);
+        l = clamp(100 - ((e.clientY - rect.top) / rect.height) * 100, 0, 100);
+        scheduleSync();
       });
+
+      // ─── Keyboard nav en handles ──────────────────────────────────────
+      hueHandle.addEventListener('keydown', (e) => {
+        const step = e.shiftKey ? 5 : 1;
+        let handled = true;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') h = ((h - step) + 360) % 360;
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') h = (h + step) % 360;
+        else if (e.key === 'Home') h = 0;
+        else if (e.key === 'End') h = 359;
+        else handled = false;
+        if (handled) { e.preventDefault(); scheduleSync(); }
+      });
+      slHandle.addEventListener('keydown', (e) => {
+        const step = e.shiftKey ? 5 : 1;
+        let handled = true;
+        if (e.key === 'ArrowLeft')      s = clamp(s - step, 0, 100);
+        else if (e.key === 'ArrowRight') s = clamp(s + step, 0, 100);
+        else if (e.key === 'ArrowUp')    l = clamp(l + step, 0, 100);
+        else if (e.key === 'ArrowDown')  l = clamp(l - step, 0, 100);
+        else handled = false;
+        if (handled) { e.preventDefault(); scheduleSync(); }
+      });
+
+      // ─── Hex/RGB/HSL input parser tolerante ───────────────────────────
+      const tryConsumeInput = (raw) => {
+        // Detectar formato y parsear.
+        const trimmed = String(raw || '').trim();
+        // hex con o sin #
+        let hex = parseHex(trimmed);
+        if (hex) {
+          const hsl = this.hexToHSL(hex);
+          h = hsl.h; s = hsl.s; l = hsl.l;
+          return true;
+        }
+        const rgb = parseRgb(trimmed);
+        if (rgb) {
+          const hexFromRgb = rgbToHex(rgb.r, rgb.g, rgb.b);
+          const hsl = this.hexToHSL(hexFromRgb);
+          h = hsl.h; s = hsl.s; l = hsl.l;
+          return true;
+        }
+        const hsl = parseHsl(trimmed);
+        if (hsl) {
+          h = hsl.h; s = hsl.s; l = hsl.l;
+          return true;
+        }
+        return false;
+      };
 
       hexInput.addEventListener('input', () => {
-        let v = hexInput.value.replace(/^#/, '').trim();
-        if (/^[0-9A-Fa-f]{6}$/.test(v)) {
-          const { h: nh, s: ns, l: nl } = this.hexToHSL(`#${v}`);
-          h = nh; s = ns; l = nl;
-          hueHandle.style.transform = `rotate(${h}deg)`;
-          setSLHandlePos();
-          slArea.style.background = `linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(${h}, 0%, 50%), hsl(${h}, 100%, 50%))`;
-          previewEl.style.background = `#${v}`;
-        }
+        // tryConsumeInput muta h/s/l; syncFromState ya skipea el input
+        // enfocado, así no pisa lo que el usuario está tipeando.
+        if (tryConsumeInput(hexInput.value)) scheduleSync();
+      });
+      hexInput.addEventListener('blur', () => {
+        // Al perder foco, normalizar el display según el formato activo.
+        hexInput.value = renderInputForFormat(this.hslToHex(h, s, l));
+      });
+      hexInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); applyColor(); }
       });
 
       formatSelect.addEventListener('change', () => {
-        const hex = hexInput.value.replace(/^#/, '');
-        if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
-        const hexFull = `#${hex}`;
-        const { h: hh, s: ss, l: ll } = this.hexToHSL(hexFull);
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        if (formatSelect.value === 'rgb') hexInput.value = `rgb(${r}, ${g}, ${b})`;
-        else if (formatSelect.value === 'hsl') hexInput.value = `hsl(${Math.round(hh)}, ${Math.round(ss)}%, ${Math.round(ll)}%)`;
-        else hexInput.value = hex.toUpperCase();
+        hexInput.value = renderInputForFormat(this.hslToHex(h, s, l));
       });
+
+      // ─── Apply / Cancel / Esc / backdrop ──────────────────────────────
+      const closeEditor = () => {
+        if (this._colorEditorModal && this._colorEditorModal.parentNode) {
+          this._colorEditorModal.remove();
+          this._colorEditorModal = null;
+        }
+        document.removeEventListener('keydown', onKeyDown);
+      };
+      const onKeyDown = (e) => { if (e.key === 'Escape') closeEditor(); };
+      document.addEventListener('keydown', onKeyDown);
+
+      const applyColor = async () => {
+        const hexToSave = this.hslToHex(h, s, l);
+        if (isNew) await this.createColor(hexToSave);
+        else await this.updateColor(colorId, hexToSave);
+        closeEditor();
+      };
 
       applyBtn.addEventListener('click', applyColor);
       cancelBtn.addEventListener('click', closeEditor);
       modal.addEventListener('click', (e) => { if (e.target === modal) closeEditor(); });
 
-      wheelWrap.appendChild(hueRing);
-      hueRing.appendChild(slArea);
+      // ─── DOM tree ─────────────────────────────────────────────────────
+      hueHandleOrbit.appendChild(hueHandle);
       slArea.appendChild(slHandle);
-      hueRing.appendChild(hueHandle);
+      hueRing.appendChild(slArea);
+      hueRing.appendChild(hueHandleOrbit);
+      wheelWrap.appendChild(hueRing);
       hexWrap.appendChild(hexInput);
       hexWrap.appendChild(formatSelect);
       btnWrap.appendChild(applyBtn);
@@ -217,7 +343,13 @@
       panel.appendChild(btnWrap);
       modal.appendChild(panel);
       container.appendChild(modal);
+
+      // Estado inicial sincronizado.
+      syncFromState();
+      hexInput.value = renderInputForFormat(this.hslToHex(h, s, l));
+      // Foco inicial al input para tipeo rápido.
       hexInput.focus();
+      hexInput.select();
     },
 
     async updateColor(colorId, hexValue) {
