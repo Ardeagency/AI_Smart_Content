@@ -76,10 +76,30 @@
     if (nav) record('TTFB', nav.responseStart);
   } catch (_) {}
 
+  // ── INP (Interaction to Next Paint) ──────────────────────────────
+  // Aproximación pragmática: trackear duration de eventos de interacción
+  // (click, keydown, pointerdown) sobre 40ms. El "INP" reportado al flush
+  // es el máximo observado (peor caso). El spec real usa p98 pero
+  // requiere mucho estado; este aproximado captura los outliers que
+  // importan (>200ms = mala UX, >500ms = crítico).
+  let maxInp = 0;
+  let inpCount = 0;
+  try {
+    const inpObs = new PerformanceObserver((entries) => {
+      for (const entry of entries.getEntries()) {
+        if (entry.duration > maxInp) maxInp = entry.duration;
+        inpCount++;
+      }
+    });
+    // durationThreshold 40 = ignorar interacciones rápidas (señal limpia).
+    inpObs.observe({ type: 'event', buffered: true, durationThreshold: 40 });
+  } catch (_) {}
+
   // ── Flush al cerrar/ocultar la pestaña ───────────────────────────
   function flush() {
     if (lcpValue > 0) record('LCP', lcpValue);
     record('CLS', clsValue);
+    if (maxInp > 0) record('INP', maxInp, { interactions: inpCount });
     if (!isLocal && window.errorLogger && typeof window.errorLogger.capture === 'function') {
       try {
         window.errorLogger.capture(new Error('webvitals'), {

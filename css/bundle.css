@@ -916,4 +916,45 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: var(--radius-xs); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: var(--radius-xs); }
-@media print { #navigation-container { display: none; } }
+/* ========== Print stylesheet ==========
+   Pensado para que los users puedan imprimir briefs / tareas / vistas con
+   contenido legible. Fondo blanco, texto negro, sin chrome de la app. */
+@media print {
+  :root { color-scheme: light; }
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  /* Chrome de la app fuera de la impresión */
+  #navigation-container,
+  #brand-bg-overlay,
+  #modals-portal,
+  #globalSpinner,
+  #toast-container,
+  #toast-container-assertive,
+  .skip-to-content,
+  .background-skeleton,
+  .background-gradient,
+  .brand-dashboard-background {
+    display: none !important;
+  }
+  /* Forzar el viewport en una columna y matar efectos de plataforma */
+  #app-container {
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+  /* Tipografía legible en papel */
+  h1, h2, h3, h4 { color: #000 !important; page-break-after: avoid; }
+  p, li { color: #000 !important; orphans: 3; widows: 3; }
+  /* Evitar cortes de página feos */
+  .card, .task-card, .info-card, .flow-card { page-break-inside: avoid; }
+  /* Mostrar el href después de los links (útil al imprimir) */
+  a[href]:not([href^="#"]):not([href^="javascript:"])::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #444;
+  }
+}
