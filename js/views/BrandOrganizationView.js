@@ -428,7 +428,7 @@ class BrandOrganizationView extends BaseView {
           const [campaignsRes, integrationsRes] = await Promise.allSettled([
             this.supabase
               .from('campaigns')
-              .select('id, brand_container_id, nombre_campana, descripcion_interna, contexto_temporal, objetivos_estrategicos, tono_modificador, audience_id, created_at')
+              .select('id, brand_container_id, nombre_campana, descripcion_interna, platform, status, starts_at, ends_at, platform_objective, persona_id, brief_id, created_at')
               .in('brand_container_id', containerIds)
               .order('created_at', { ascending: false }),
             this.supabase
