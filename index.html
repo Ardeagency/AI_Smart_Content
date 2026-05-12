@@ -130,6 +130,37 @@
     <script src="js/components/AudienceMap.js?v=__BUILD_ID__" defer></script>
     <script src="js/app.js?v=__BUILD_ID__" defer></script>
 
+    <!-- Prefetch de top-5 vistas en idle time. Si el browser tiene cycles
+         libres tras el LCP, descarga estos JS en background con baja
+         prioridad. La primera navegación a Dashboard/Studio/Production/
+         Brand Storage/Tasks se siente "instant" porque el script ya
+         está cacheado. Cero coste si idle nunca llega (low-end devices). -->
+    <script>
+      (function() {
+        var topViews = [
+          'js/views/DashboardView.js',
+          'js/views/StudioView.js',
+          'js/views/ProductionView.js',
+          'js/views/BrandstorageView.js',
+          'js/views/TasksView.js'
+        ];
+        function injectPrefetch() {
+          topViews.forEach(function(src) {
+            var link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.as = 'script';
+            link.href = src;
+            document.head.appendChild(link);
+          });
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(injectPrefetch, { timeout: 4000 });
+        } else {
+          setTimeout(injectPrefetch, 2000);
+        }
+      })();
+    </script>
+
 </body>
 </html>
 
