@@ -168,10 +168,12 @@
     <div id="navigation-container"></div>
 
     <!-- App Container (Dinámico) -->
-    <!-- Las vistas se cargarán aquí dinámicamente -->
-    <!-- tabindex="-1" permite que el skip-link mueva el foco aquí sin
+    <!-- Las vistas se cargarán aquí dinámicamente.
+         role="main" marca esto como el landmark principal para screen
+         readers (las vistas no necesitan agregar otro <main> dentro).
+         tabindex="-1" permite que el skip-link mueva el foco aquí sin
          que el contenedor sea tabbable en navegación normal. -->
-    <div id="app-container" tabindex="-1"></div>
+    <div id="app-container" role="main" aria-label="Contenido principal" tabindex="-1"></div>
 
     <!-- Public Shell (persistente entre rutas públicas: header + main + footer fuera de app-container para evitar parpadeo) -->
     <div id="public-shell" aria-hidden="true">
