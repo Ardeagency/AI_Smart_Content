@@ -659,12 +659,30 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 
 /* Tinte de marca en bordes laterales del shell, solo dentro de org (clase la setea
-   OrgBrandTheme tras resolver palette primary/secondary). 10% de alpha = casi inotorio. */
+   OrgBrandTheme tras resolver palette primary/secondary). El gradient se pinta sobre
+   --bg-primary en #app-container; los wrappers de cada view también pintan
+   var(--bg-primary) y tapaban el tinte — los hacemos transparentes en este contexto
+   para que el degradado aflore en todas las vistas. */
 body.org-brand-context #app-container {
     background-image: var(--brand-gradient-app-container);
     background-color: var(--bg-primary);
     background-repeat: no-repeat;
     background-attachment: fixed;
+}
+
+body.org-brand-context #app-container > main,
+body.org-brand-context #app-container > div,
+body.org-brand-context .campaigns-page,
+body.org-brand-context .campaign-detail-wrapper,
+body.org-brand-context .organization-container,
+body.org-brand-context .dashboard-container,
+body.org-brand-context .brand-dashboard-container,
+body.org-brand-context .products-container,
+body.org-brand-context .product-view,
+body.org-brand-context .living-container,
+body.org-brand-context .gpt-layout,
+body.org-brand-context .cc-page {
+    background: transparent;
 }
 
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
