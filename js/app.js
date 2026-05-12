@@ -20,7 +20,11 @@ class App {
   constructor() {
     this.initialized = false;
     this.router = null;
-    this._loadedScripts = new Set();
+    // url -> Promise. Cacheamos la promesa pendiente (no solo el resultado)
+    // para evitar race conditions: si _loadScript se invoca concurrentemente
+    // con el mismo url, el segundo call reusa la promise en vuelo en vez de
+    // insertar otro <script> (lo que duplicaría declaraciones de clase).
+    this._loadedScripts = new Map();
   }
 
   _loadScript(src) {
@@ -32,14 +36,20 @@ class App {
       const isSharedModule = /\/js\/(config|utils)\//.test(base);
       url = isSharedModule ? base : `${base}?v=${APP_LAZY_SCRIPT_VER}`;
     }
-    if (this._loadedScripts.has(url)) return Promise.resolve();
-    return new Promise((resolve, reject) => {
+    if (this._loadedScripts.has(url)) return this._loadedScripts.get(url);
+    const promise = new Promise((resolve, reject) => {
       const s = document.createElement('script');
       s.src = url;
-      s.onload = () => { this._loadedScripts.add(url); resolve(); };
-      s.onerror = () => reject(new Error(`Failed to load ${url}`));
+      s.onload = () => resolve();
+      s.onerror = () => {
+        // Permitir reintento al borrar la entrada cacheada del Map.
+        this._loadedScripts.delete(url);
+        reject(new Error(`Failed to load ${url}`));
+      };
       document.head.appendChild(s);
     });
+    this._loadedScripts.set(url, promise);
+    return promise;
   }
 
   async _loadScripts(srcs) {

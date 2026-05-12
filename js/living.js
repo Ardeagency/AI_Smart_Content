@@ -314,18 +314,18 @@ class LivingManager {
     }
 
     async loadCreditUsage() {
-        if (!this.supabase || !this.userId) { this.creditUsage = []; return; }
+        if (!this.supabase || !this.organizationId) { this.creditUsage = []; return; }
         try {
             const fetcher = async () => {
                 const { data, error } = await this.supabase
                     .from('credit_usage').select('*')
-                    .eq('user_id', this.userId)
+                    .eq('organization_id', this.organizationId)
                     .order('created_at', { ascending: false }).limit(100);
                 if (error) throw error;
                 return data || [];
             };
             this.creditUsage = window.apiClient
-                ? await window.apiClient.query(`living:credit_usage:${this.userId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
+                ? await window.apiClient.query(`living:credit_usage:${this.organizationId}`, fetcher, { ttl: 30 * 1000, staleWhileRevalidate: true })
                 : await fetcher();
         } catch (error) {
             console.error('❌ Error cargando credit usage:', error);
