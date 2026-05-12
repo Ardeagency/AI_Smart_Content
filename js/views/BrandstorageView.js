@@ -431,7 +431,9 @@ class BrandstorageView extends BaseView {
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
       this.brandRules = [];
-      this._syncRootGradientFromBrandColors();
+      // Las CSS vars --brand-gradient-dynamic* las gestiona OrgBrandTheme
+      // (window.OrgBrandTheme.applyOrgBrandTheme); onEnter ya las aplicó
+      // desde el cache SWR, así que aquí no escribimos en :root.
 
       try {
         const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
@@ -597,20 +599,6 @@ class BrandstorageView extends BaseView {
     return hexes;
   }
 
-  /** Publica en :root el degradado a partir de this.brandColors (para CSS var en la galería). */
-  _syncRootGradientFromBrandColors() {
-    const hexes = this.getBrandColorsHexArray();
-    const root = document.documentElement;
-    if (!hexes.length || !window.BrandColors || typeof this.buildBrandGradientCss !== 'function') return;
-    try {
-      const brandGradient = this.buildBrandGradientCss(hexes);
-      root.style.setProperty('--brand-gradient-dynamic', brandGradient);
-      root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
-    } catch (_) {
-      /* sin BrandColors en edge cases */
-    }
-  }
-
   /** Hexes para degradado: filas locales o último tema de org (OrgBrandTheme). */
   _getGradientHexesForBackground() {
     let hexes = this.getBrandColorsHexArray();
@@ -641,6 +629,17 @@ class BrandstorageView extends BaseView {
   /** Hook llamado por ColorEditor.mixin.js tras cada cambio de color. */
   _refreshVisualChrome() {
     this._refreshBrandStorageVisualChrome();
+    // Re-sincroniza el tema global (--brand-gradient-dynamic* + --brand-primary*)
+    // para que TODA la plataforma vea el cambio sin esperar al onLeave.
+    const orgId = (typeof window !== 'undefined') ? window.currentOrgId : null;
+    if (orgId && window.OrgBrandTheme) {
+      if (window.apiClient && typeof window.apiClient.invalidate === 'function') {
+        window.apiClient.invalidate(`theme:colors:${orgId}`);
+      }
+      if (typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
+        window.OrgBrandTheme.applyOrgBrandTheme(orgId);
+      }
+    }
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -664,8 +663,9 @@ class BrandstorageView extends BaseView {
         gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
         gradientEl.setAttribute('data-brand-gradient', 'true');
       }
-      root.style.setProperty('--brand-gradient-dynamic', brandGradient);
-      root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
+      // --brand-gradient-dynamic* las gestiona OrgBrandTheme (single source of
+      // truth para toda la plataforma). _refreshVisualChrome invalida su cache
+      // y re-aplica tras un cambio local de colores.
       this.applyBrandPrimaryBrillo();
     } else if (rootGradRaw && rootGradRaw !== 'none') {
       if (gradientEl) {

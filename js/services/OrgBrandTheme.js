@@ -1,14 +1,12 @@
 /**
  * OrgBrandTheme - Aplica el degradado/resaltados de marca a toda la org.
- * Carga brand_colors de las marcas de la organización y setea en :root
+ * Carga brand_colors de la organización y setea en :root
  * --brand-gradient-dynamic, --brand-gradient-dynamic-vertical, --brand-primary, etc.
  * para que production, products, flows, identity, settings usen el mismo resaltado.
  *
- * Cadena de resolución robusta (múltiples fallbacks):
- *   1. brand_containers WHERE organization_id = orgId
- *   2. Si vacío → brand_containers via organization_members (user_id IN members)
- *   3. brand_colors WHERE organization_id = orgId
- *   4. Si vacío → sin colores
+ * Schema vigente: brand_colors.organization_id → organizations.id. La columna
+ * legacy brand_colors.brand_id fue eliminada (verificado 2026-05-12); el
+ * fallback anterior que la consultaba se removió por código muerto.
  */
 (function () {
   'use strict';
@@ -19,49 +17,6 @@
 
   function getSupabase() {
     return window.supabase || null;
-  }
-
-  /**
-   * IDs de brand_containers de una organización.
-   * Intenta por organization_id; si no hay filas, intenta por user_ids de los miembros.
-   */
-  async function getBrandContainerIds(organizationId) {
-    const fetcher = async () => {
-      const supabase = getSupabase();
-      if (!supabase) return [];
-      // Intento 1: por organization_id directo
-      const { data: byOrg, error: e1 } = await supabase
-        .from('brand_containers')
-        .select('id')
-        .eq('organization_id', organizationId);
-
-      if (!e1 && byOrg && byOrg.length > 0) return byOrg.map(b => b.id);
-
-      // Intento 2: brand_containers cuyo user_id está en organization_members
-      const { data: members, error: e2 } = await supabase
-        .from('organization_members')
-        .select('user_id')
-        .eq('organization_id', organizationId);
-      if (e2 || !members || members.length === 0) return [];
-
-      const userIds = [...new Set(members.map(m => m.user_id).filter(Boolean))];
-      if (userIds.length === 0) return [];
-
-      const { data: byUser, error: e3 } = await supabase
-        .from('brand_containers')
-        .select('id')
-        .in('user_id', userIds);
-      if (e3 || !byUser) return [];
-      return byUser.map(b => b.id);
-    };
-    try {
-      return window.apiClient
-        ? await window.apiClient.query(`theme:containers:${organizationId}`, fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
-    } catch (e) {
-      console.error('OrgBrandTheme: error getBrandContainerIds', e);
-      return [];
-    }
   }
 
   /**
@@ -84,12 +39,11 @@
 
   /**
    * Hexes de brand_colors de la org (hasta 4, sin duplicados).
-   * Lee por `organization_id` (schema vigente).
+   * Lee por `organization_id` (schema vigente — única columna FK en brand_colors).
+   * Cache 10 min vía apiClient + SWR; invalidar desde el view al guardar:
+   *   apiClient.invalidate(`theme:colors:${orgId}`)
    */
   async function getOrganizationBrandColors(organizationId) {
-    // Cache 10 min vía apiClient + SWR. Los colores de marca cambian rarísimo
-    // (editor de marca). Invalida desde BrandOrganizationView al guardar:
-    //   apiClient.invalidate(`theme:colors:${orgId}`)
     const fetcher = async () => {
       const supabase = getSupabase();
       if (!supabase) return [];
@@ -97,20 +51,7 @@
         .from('brand_colors')
         .select('hex_value')
         .eq('organization_id', organizationId);
-      const hexes = normalizeHexRows(colors);
-      if (hexes.length > 0) return hexes;
-
-      // Fallback suave por containers para no romper orgs en transición de datos.
-      const brandContainerIds = await getBrandContainerIds(organizationId);
-      if (brandContainerIds.length > 0) {
-        const { data: legacyColors } = await supabase
-          .from('brand_colors')
-          .select('hex_value')
-          .in('brand_id', brandContainerIds);
-        const legacyHexes = normalizeHexRows(legacyColors);
-        if (legacyHexes.length > 0) return legacyHexes;
-      }
-      return [];
+      return normalizeHexRows(colors);
     };
     try {
       return window.apiClient

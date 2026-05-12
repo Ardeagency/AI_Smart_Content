@@ -618,6 +618,17 @@ class BrandOrganizationView extends BaseView {
   /** Hook llamado por ColorEditor.mixin.js tras cada cambio de color. */
   _refreshVisualChrome() {
     this.applyBrandBackgroundGradient(true);
+    // Re-sincroniza el tema global (--brand-gradient-dynamic* + --brand-primary*)
+    // para que TODA la plataforma vea el cambio sin esperar al onLeave.
+    const orgId = (typeof window !== 'undefined') ? window.currentOrgId : null;
+    if (orgId && window.OrgBrandTheme) {
+      if (window.apiClient && typeof window.apiClient.invalidate === 'function') {
+        window.apiClient.invalidate(`theme:colors:${orgId}`);
+      }
+      if (typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
+        window.OrgBrandTheme.applyOrgBrandTheme(orgId);
+      }
+    }
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -631,19 +642,17 @@ class BrandOrganizationView extends BaseView {
     this._cachedGradientKey = colorsKey;
 
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
-    const root = document.documentElement;
     if (hexes.length) {
       const brandGradient = this.buildBrandGradientCss(hexes);
       gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
       gradientEl.setAttribute('data-brand-gradient', 'true');
-      root.style.setProperty('--brand-gradient-dynamic', brandGradient);
-      root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
+      // --brand-gradient-dynamic* las gestiona OrgBrandTheme (single source of
+      // truth para toda la plataforma). _refreshVisualChrome invalida su cache
+      // y re-aplica tras un cambio local de colores.
       this.applyBrandPrimaryBrillo();
     } else {
       gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
-      // NO borrar --brand-gradient-dynamic* aquí: esas vars las gestiona OrgBrandTheme
-      // para toda la plataforma. Solo reseteamos el elemento visual y los vars de brillo.
       this.resetBrandPrimaryBrillo();
     }
     this.applyBrandCardsGlassVariant();
