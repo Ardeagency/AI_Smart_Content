@@ -689,7 +689,7 @@ class FlowCatalogView extends BaseView {
     const bg = coverUrl
       ? (isVideo
           ? `<video class="flow-hero-slide-bg-media flow-hero-slide-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline aria-hidden="true"></video>`
-          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-bg-media">`)
+          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-bg-media" loading="lazy" decoding="async">`)
       : `<div class="flow-hero-slide-placeholder"><i class="fas fa-layer-group"></i></div>`;
     return `
       <div class="flow-hero-slide" data-category-id="${this.escapeHtml(category.id)}">

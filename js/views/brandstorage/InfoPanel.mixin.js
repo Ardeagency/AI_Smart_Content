@@ -318,7 +318,7 @@
             <div class="info-identity-row info-identity-row--logo-only">
               <div class="info-logo-container">
                 ${logoUrl
-                  ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview">`
+                  ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" loading="lazy" decoding="async">`
                   : '<div class="info-logo-placeholder visible"><i class="fas fa-image"></i></div>'}
               </div>
             </div>

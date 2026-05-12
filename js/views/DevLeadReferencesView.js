@@ -113,7 +113,7 @@ class DevLeadReferencesView extends DevBaseView {
         ? new Date(r.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })
         : '-';
       const preview = imgSrc
-        ? `<img src="${this.escapeHtml(imgSrc)}" alt="" class="dev-lead-ref-thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        ? `<img src="${this.escapeHtml(imgSrc)}" alt="" class="dev-lead-ref-thumb" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
              <span class="dev-lead-ref-no-thumb" hidden><i class="fas fa-image"></i></span>`
         : '<span class="dev-lead-ref-no-thumb"><i class="fas fa-image"></i></span>';
       return `

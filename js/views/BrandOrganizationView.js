@@ -1248,7 +1248,7 @@ class BrandOrganizationView extends BaseView {
       <div class="info-identity-row info-identity-row--logo-only">
         <div class="info-logo-container">
           ${isValidLogoUrl
-            ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
+            ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" loading="lazy" decoding="async" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
             : ''
           }
           <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>

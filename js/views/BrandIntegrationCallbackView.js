@@ -167,7 +167,7 @@ class BrandIntegrationCallbackView extends (window.BaseView || class {}) {
                   <input type="radio" name="bic_page" value="${this._esc(pg.id)}" class="bic-page-radio">
                   <div class="bic-page-info">
                     ${pic
-                      ? `<img src="${this._esc(pic)}" class="bic-page-avatar" alt="">`
+                      ? `<img src="${this._esc(pic)}" class="bic-page-avatar" alt="" loading="lazy" decoding="async">`
                       : `<div class="bic-page-avatar bic-page-avatar--placeholder"><i class="fab fa-facebook"></i></div>`}
                     <div class="bic-page-text">
                       <strong>${this._esc(pg.name)}</strong>

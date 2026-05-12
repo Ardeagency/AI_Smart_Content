@@ -1149,7 +1149,7 @@ class VeraView extends (window.BaseView || class {}) {
     return `
       <div class="gpt-msg gpt-msg--assistant${isError ? ' gpt-msg--error' : ''}" data-message-id="${id}">
         <div class="gpt-msg-avatar">
-          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" />
+          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" loading="lazy" decoding="async" />
         </div>
         <div class="gpt-msg-content">${renderMarkdown(m.content, { messageId: m.id })}</div>
       </div>`;
@@ -1240,7 +1240,7 @@ class VeraView extends (window.BaseView || class {}) {
     list.insertAdjacentHTML('beforeend', `
       <div id="gptTyping" class="gpt-msg gpt-msg--assistant gpt-msg--typing">
         <div class="gpt-msg-avatar">
-          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" />
+          <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" loading="lazy" decoding="async" />
         </div>
         <div class="gpt-msg-content">
           <div class="gpt-typing-dots"><span></span><span></span><span></span></div>

@@ -326,7 +326,7 @@ class ProductsView extends BaseView {
             </div>
             <div class="product-view-main-wrap">
               ${mainImage
-                ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}">`
+                ? `<img id="productViewMainImage" src="${mainImage}" alt="${this.escapeHtml(product.nombre_producto || '')}" loading="lazy" decoding="async">`
                 : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
               }
             </div>
@@ -747,7 +747,7 @@ class ProductsView extends BaseView {
         <div class="product-view-variant-header">
           <div class="product-view-variant-thumb">
             ${img
-              ? `<img src="${this.escapeHtml(img)}" alt="${this.escapeHtml(name)}">`
+              ? `<img src="${this.escapeHtml(img)}" alt="${this.escapeHtml(name)}" loading="lazy" decoding="async">`
               : `<i class="fas fa-cube"></i>`}
           </div>
           <input type="text" class="product-view-variant-name" data-variant-id="${id}" data-variant-field="variant_name" value="${this.escapeHtml(name)}" placeholder="Nombre de la variante">
