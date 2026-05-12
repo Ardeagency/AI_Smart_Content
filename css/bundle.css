@@ -695,7 +695,7 @@ body.org-brand-context #app-container {
     background-image: var(--brand-gradient-app-container);
     background-color: var(--bg-primary);
     background-repeat: no-repeat;
-    background-attachment: fixed;
+    background-size: 100% 100%;
 }
 
 body.org-brand-context {
