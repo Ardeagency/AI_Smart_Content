@@ -847,6 +847,21 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   .skeleton { animation: none; }
 }
 
+/* ========== A11y: reduce-motion global override ==========
+   Patrón canónico (MDN/W3C): cuando el OS reporta prefers-reduced-motion:
+   reduce, aplastar TODAS las animaciones/transitions a duración ínfima.
+   Mantiene los end-states (1 iteration) para que el layout no quede roto,
+   pero el movimiento desaparece. Cubre cualquier transition/animation que
+   los archivos individuales hayan declarado sin respetar la preferencia. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .loader-overlay {
     position: fixed;
     inset: 0;
