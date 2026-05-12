@@ -486,6 +486,10 @@ body.production-filters-in-header .living-container > .living-history-section {
 .living-masonry-item {
     width: 100%;
     min-width: 0;
+    /* Skip render de items off-screen del masonry (galerías largas de
+       contenido generado). ~320px de alto estimado por item. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
 }
 
 .living-masonry-column .living-masonry-item {

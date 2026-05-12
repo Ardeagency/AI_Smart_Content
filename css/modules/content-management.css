@@ -505,6 +505,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   min-width: 0;
+  /* Skip render de cards off-screen. ~360px de alto estimado por card. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 360px;
 }
 
 .task-card:hover {
