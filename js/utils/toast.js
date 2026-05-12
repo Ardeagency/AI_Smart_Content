@@ -72,4 +72,32 @@
   }
 
   window.showToast = showToast;
+
+  // ── Detección global online/offline ─────────────────────────────
+  // Toast persistente cuando pierde red; toast corto al recuperarla.
+  // Da feedback inmediato si una request falla por offline en vez de
+  // que el user vea solo errores genéricos.
+  let offlineToast = null;
+  function onOffline() {
+    if (offlineToast) return;
+    offlineToast = showToast('Sin conexión a internet', {
+      duration: 0,
+      type: 'warning',
+    });
+  }
+  function onOnline() {
+    if (offlineToast) {
+      offlineToast.close();
+      offlineToast = null;
+      // Solo mostrar "restablecida" si veníamos de offline (no en first load).
+      showToast('Conexión restablecida', { duration: 2500, type: 'success' });
+    }
+  }
+  window.addEventListener('offline', onOffline);
+  window.addEventListener('online', onOnline);
+  // Disparar de entrada si ya estamos offline al boot.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    // Esperar al primer microtick para que el container ya esté en DOM.
+    setTimeout(onOffline, 0);
+  }
 })();
