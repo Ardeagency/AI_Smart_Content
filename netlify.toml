@@ -200,6 +200,13 @@
   to = "/sw.js"
   status = 200
 
+# PWA manifest - servir desde raíz para que el browser lo encuentre vía
+# <link rel="manifest" href="/manifest.webmanifest">
+[[redirects]]
+  from = "/manifest.webmanifest"
+  to = "/manifest.webmanifest"
+  status = 200
+
 # Archivos JS - servir directamente
 [[redirects]]
   from = "/js/*"
@@ -315,6 +322,13 @@
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
     Service-Worker-Allowed = "/"
+
+# PWA manifest — Content-Type explícito + revalidación corta.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
+    Cache-Control = "public, max-age=3600, must-revalidate"
 
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL

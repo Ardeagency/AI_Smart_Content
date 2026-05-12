@@ -10,6 +10,16 @@
     <!-- Favicons: predeterminado (tema claro) y versión para tema oscuro -->
     <link rel="icon" type="image/svg+xml" href="/recursos/favicons/favicon.svg">
     <link rel="icon" type="image/svg+xml" href="/recursos/favicons/favicon-dark.svg" media="(prefers-color-scheme: dark)">
+
+    <!-- PWA: manifest + theme color + iOS standalone hints. Con el Service
+         Worker y HTTPS, los browsers ofrecen "Instalar aplicación" y la
+         vuelven app nativa con icono propio. -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0b0b0b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Smart">
+    <link rel="apple-touch-icon" href="/recursos/favicons/favicon.svg">
     <meta property="og:url" content="https://aismartcontent.io/">
     <meta property="og:title" content="AI Smart Content - Arde Agency">
     <meta property="og:description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
