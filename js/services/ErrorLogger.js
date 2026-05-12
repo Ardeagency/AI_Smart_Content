@@ -160,6 +160,18 @@
 
   // ─────────────────────────────────────────────── handlers globales
 
+  // Rate limit del toast para no spamear si una vista cae en bucle de
+  // errores. Captura igual TODO en BD; el toast solo se muestra cada 10s.
+  let lastToastAt = 0;
+  function maybeShowToast(message) {
+    const now = Date.now();
+    if (now - lastToastAt < 10000) return;
+    lastToastAt = now;
+    if (window.showToast) {
+      window.showToast(message, { type: 'error', duration: 5000 });
+    }
+  }
+
   window.addEventListener('error', (e) => {
     capture(e.error || new Error(e.message || 'window.error'), {
       type: 'window.error',
@@ -167,6 +179,11 @@
       line: e.lineno || null,
       column: e.colno || null
     });
+    // Solo avisar al user si el error es del propio código de la app
+    // (no scripts de CDN externos que a veces fallan por adblockers, etc.).
+    const src = e.filename || '';
+    const isOwnCode = !src || src.includes(location.origin) || src.startsWith('/');
+    if (isOwnCode) maybeShowToast('Algo salió mal — el error quedó registrado');
   });
 
   window.addEventListener('unhandledrejection', (e) => {
@@ -174,6 +191,8 @@
     capture(reason instanceof Error ? reason : new Error(String(reason || 'unhandled rejection')), {
       type: 'unhandledrejection'
     });
+    // Promise rejections son muy comunes (fetch fail, async cancelled, etc.)
+    // — no mostrar toast a menos que sea claramente un crash.
   });
 
   // Flush antes de cerrar pestaña (best effort vía sendBeacon o keepalive).
