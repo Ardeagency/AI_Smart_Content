@@ -25,7 +25,10 @@
     <meta property="og:description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
     <meta property="og:type" content="website">
     
-    <!-- Preconnect — solo orígenes críticos para primera pintura -->
+    <!-- Preconnect — orígenes críticos para primera pintura y primera API call.
+         preconnect: abre handshake TCP+TLS ya (ahorra ~200-400ms en LTE).
+         dns-prefetch: solo resolución DNS (más barato; suficiente para libs). -->
+    <link rel="preconnect" href="https://tsdpbqcwjckbfsdqacam.supabase.co" crossorigin>
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
