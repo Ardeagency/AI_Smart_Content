@@ -19,7 +19,7 @@
     bottom: 0;
     overflow: hidden;
     /* Mismo tono base que el skeleton; --warm-* en :root es rojo puro y provocaba flash al recargar */
-    background: var(--bg-primary);
+    background: var(--view-bg-base);
     transition: left 0.3s ease;
     padding-top: 48px; /* Espacio para header transparente */
 }
@@ -117,7 +117,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: var(--bg-primary);
+    background: var(--view-bg-base);
     transition: opacity 1.15s cubic-bezier(0.33, 0, 0.2, 1);
 }
 .background-gradient {

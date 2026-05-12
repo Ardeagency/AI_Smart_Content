@@ -205,7 +205,11 @@
     --living-text-gold: var(--icon-button);
     --living-text-muted: var(--text-muted);
     --living-text-whisper: var(--text-disabled);
-    --living-bg-deep: var(--bg-primary);
+    /* Base de fondo de las views. Default = --bg-primary opaco. Dentro de
+       body.org-brand-context cascada a transparent para que el tinte de marca
+       en #app-container aflore. body.route-dev devuelve a opaco. */
+    --view-bg-base: var(--bg-primary);
+    --living-bg-deep: var(--view-bg-base);
     --living-bg-surface: var(--bg-secondary);
     --living-bg-card: var(--bg-card);
     --living-bg-card-hover: var(--bg-hover);
@@ -659,10 +663,10 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 
 /* Tinte de marca en bordes laterales del shell, solo dentro de org (clase la setea
-   OrgBrandTheme tras resolver palette primary/secondary). El gradient se pinta sobre
-   --bg-primary en #app-container; los wrappers de cada view también pintan
-   var(--bg-primary) y tapaban el tinte — los hacemos transparentes en este contexto
-   para que el degradado aflore en todas las vistas. */
+   OrgBrandTheme tras resolver palette primary/secondary). Para que aflore en todas
+   las vistas se hace cascada vía --view-bg-base: cualquier wrapper full-bleed que
+   use var(--view-bg-base) (o el alias --living-bg-deep) se vuelve transparente
+   automáticamente. Vistas /dev/* mantienen fondo opaco. */
 body.org-brand-context #app-container {
     background-image: var(--brand-gradient-app-container);
     background-color: var(--bg-primary);
@@ -670,19 +674,16 @@ body.org-brand-context #app-container {
     background-attachment: fixed;
 }
 
-body.org-brand-context #app-container > main,
-body.org-brand-context #app-container > div,
-body.org-brand-context .campaigns-page,
-body.org-brand-context .campaign-detail-wrapper,
-body.org-brand-context .organization-container,
-body.org-brand-context .dashboard-container,
-body.org-brand-context .brand-dashboard-container,
-body.org-brand-context .products-container,
-body.org-brand-context .product-view,
-body.org-brand-context .living-container,
-body.org-brand-context .gpt-layout,
-body.org-brand-context .cc-page {
-    background: transparent;
+body.org-brand-context {
+    --view-bg-base: transparent;
+}
+
+body.org-brand-context.route-dev {
+    --view-bg-base: var(--bg-primary);
+}
+
+body.org-brand-context.route-dev #app-container {
+    background-image: none;
 }
 
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */

@@ -463,13 +463,13 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: #000;
+    background: var(--view-bg-base);
 }
 .dashboard-background .dashboard-bg-skeleton {
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: #000;
+    background: var(--view-bg-base);
     transition: opacity 1s cubic-bezier(0.33, 0, 0.2, 1);
 }
 .dashboard-background .dashboard-bg-gradient {

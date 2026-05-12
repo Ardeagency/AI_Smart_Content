@@ -320,6 +320,7 @@ class Router {
             this.currentRoute = path;
             prevView.routeParams = routeParams;
             document.body.classList.toggle('route-landing', path === '/');
+            document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
 
             if (window.appNavigation && typeof window.appNavigation.render === 'function') {
               window.appNavigation.render();
@@ -351,6 +352,7 @@ class Router {
       }
 
       document.body.classList.toggle('route-landing', path === '/');
+      document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
 
       // Si hay HTML en bfCache fresco para esta ruta, pintarlo de inmediato
       // (instant restore). La vista hará su render normal encima — la vista

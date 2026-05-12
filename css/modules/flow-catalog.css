@@ -8,7 +8,7 @@
   min-height: 100vh;
   width: 100%;
   padding-bottom: 3rem;
-  background: var(--bg-primary);
+  background: var(--view-bg-base);
 }
 
 .flow-catalog-loading {
