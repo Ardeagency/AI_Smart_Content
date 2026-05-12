@@ -733,22 +733,16 @@ class DevTestView extends DevBaseView {
     try {
       const { data: container, error: e0 } = await this.supabase
         .from('brand_containers')
-        .select('id')
+        .select('id, organization_id')
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (e0 || !container) return [];
-      const { data: brand, error: e1 } = await this.supabase
-        .from('brands')
-        .select('id')
-        .eq('project_id', container.id)
-        .maybeSingle();
-      if (e1 || !brand) return [];
+      if (e0 || !container || !container.organization_id) return [];
       const { data: colors, error: e2 } = await this.supabase
         .from('brand_colors')
         .select('hex_value')
-        .eq('brand_id', brand.id)
+        .eq('organization_id', container.organization_id)
         .order('created_at', { ascending: true });
       if (e2 || !colors || colors.length === 0) return [];
       const seen = new Set();
