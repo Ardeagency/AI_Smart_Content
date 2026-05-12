@@ -980,18 +980,35 @@ class VideoView extends BaseView {
         const { data: profiles } = await this.supabase.from('brand_profiles').select('section, content').eq('brand_id', brandId);
         this.dbData.brandProfiles = profiles || [];
       }
+      // audiences: tabla legacy reemplazada por audience_personas (BUG-005).
+      // campaigns: contexto_temporal/objetivos_estrategicos/tono_modificador
+      // viven en campaign_briefs (BUG-006); resolvemos vía embed PostgREST
+      // usando la FK campaigns.brief_id → campaign_briefs.id.
       const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
         this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('services').select('id, nombre_servicio, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        brandId ? this.supabase.from('audiences').select('id, name, description, estilo_lenguaje').eq('brand_id', brandId).limit(50) : { data: [], error: null },
-        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna, audience_id, contexto_temporal, objetivos_estrategicos, tono_modificador').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
+        this.supabase.from('audience_personas').select('id, name, description, estilo_lenguaje').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna, persona_id, brief_id, campaign_briefs:brief_id(contexto_temporal, objetivos_estrategicos, tono_modificador)').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
       ]);
       this.dbData.products = productsRes.data || [];
       this.dbData.services = servicesRes.data || [];
       this.dbData.entities = entitiesRes.data || [];
       this.dbData.audiences = audiencesRes.data || [];
-      this.dbData.campaigns = campaignsRes.data || [];
+      // Aplanar campos del brief al row de campaña para que el resto del
+      // código siga accediendo como c.contexto_temporal, c.tono_modificador, etc.
+      this.dbData.campaigns = (campaignsRes.data || []).map((c) => {
+        const brief = c.campaign_briefs || {};
+        return {
+          id: c.id,
+          nombre_campana: c.nombre_campana,
+          descripcion_interna: c.descripcion_interna,
+          persona_id: c.persona_id,
+          contexto_temporal: brief.contexto_temporal || null,
+          objetivos_estrategicos: brief.objetivos_estrategicos || null,
+          tono_modificador: brief.tono_modificador || null,
+        };
+      });
       const productIds = this.dbData.products.map((p) => p.id).filter(Boolean);
       if (productIds.length > 0) {
         const { data: imgs } = await this.supabase.from('product_images').select('product_id, image_url, image_type, image_order').in('product_id', productIds).order('image_order', { ascending: true });
@@ -1397,7 +1414,7 @@ class VideoView extends BaseView {
       entities: (d.entities || []).map((e) => ({ name: e.name, entity_type: e.entity_type, description: e.description })),
       products: (d.products || []).map((p) => ({ name: p.nombre_producto })),
       audiences: (d.audiences || []).map((a) => ({ name: a.name, description: a.description, estilo_lenguaje: a.estilo_lenguaje })),
-      campaigns: (d.campaigns || []).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna, audience_id: c.audience_id, contexto_temporal: c.contexto_temporal, objetivos_estrategicos: c.objetivos_estrategicos, tono_modificador: c.tono_modificador })),
+      campaigns: (d.campaigns || []).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna, audience_id: c.persona_id, contexto_temporal: c.contexto_temporal, objetivos_estrategicos: c.objetivos_estrategicos, tono_modificador: c.tono_modificador })),
       selected_campaign: this.selectedCampaignId ? (d.campaigns || []).find((c) => String(c.id) === String(this.selectedCampaignId)) || null : null,
       selected_audience: this.selectedAudienceId ? (d.audiences || []).find((a) => String(a.id) === String(this.selectedAudienceId)) || null : null
     };

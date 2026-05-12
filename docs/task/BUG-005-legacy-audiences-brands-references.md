@@ -60,15 +60,9 @@ const { data } = await this.supabase
 
 **Impacto:** Vera no recibe contexto de audiencia cuando el usuario corre flujos desde Studio. Falla silenciosa.
 
-### 3. `js/views/VideoView.js` — 🟠 silencioso
+### 3. `js/views/VideoView.js` — ✅ RESUELTO 2026-05-12
 
-Línea 987:
-
-```js
-brandId ? this.supabase.from('audiences').select('id, name, description, estilo_lenguaje').eq('brand_id', brandId).limit(50) : { data: [], error: null }
-```
-
-**Impacto:** los flujos de video pierden contexto demográfico que se pasaría al modelo.
+Línea 987 ahora consulta `audience_personas` con `brand_container_id` directamente (sin pasar por el `brandId` legacy). Resuelto junto al cierre de BUG-006 (campaigns/campaign_briefs) en el mismo commit, ya que ambas queries vivían en el mismo `Promise.all` de `loadBrandData`.
 
 ### 4. `js/living.js` — 🟡 ProductionView degradado
 
