@@ -495,6 +495,15 @@ async function ensureMermaid() {
   return VERA_RICH_LIBS.mermaidLoading;
 }
 
+// Mermaid v10 inyecta un <div id="d{userId}"> temporal en <body> para medir
+// el SVG; si parse/render falla, ese div queda huérfano mostrando
+// "Syntax error in text — mermaid version X.Y.Z" flotando en la app.
+function _cleanupMermaidOrphans() {
+  try {
+    document.querySelectorAll('body > [id^="dvera-mmd-"]').forEach((n) => n.remove());
+  } catch (_) {}
+}
+
 async function ensurePrism() {
   if (window.Prism) return window.Prism;
   if (VERA_RICH_LIBS.prismLoading) return VERA_RICH_LIBS.prismLoading;
@@ -854,12 +863,21 @@ class VeraView extends (window.BaseView || class {}) {
     this.organizationName = (window.currentOrgName || '').trim();
     if (!this.organizationName && this.supabase && this.aiState.organization_id) {
       try {
-        const { data } = await this.supabase
-          .from('organizations')
-          .select('name')
-          .eq('id', this.aiState.organization_id)
-          .maybeSingle();
-        this.organizationName = data?.name ? String(data.name) : '';
+        // Reuse el cache de Navigation (`nav:org:${orgId}`): si ya se cargó el
+        // sidebar, esta lectura es instantánea sin pegar a Supabase.
+        const orgId = this.aiState.organization_id;
+        const fetcher = async () => {
+          const { data } = await this.supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', orgId)
+            .maybeSingle();
+          return data ? { name: data.name, plan: '' } : null;
+        };
+        const cached = window.apiClient
+          ? await window.apiClient.query(`nav:org:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+          : await fetcher();
+        this.organizationName = cached?.name ? String(cached.name) : '';
       } catch (err) {
         // Antes era silencio total y el nombre mostraba "Organización" sin pista de por qué.
         console.warn('[VeraView] no se pudo resolver organization.name:', err?.message || err);
@@ -1162,6 +1180,7 @@ class VeraView extends (window.BaseView || class {}) {
     // Mermaid: convertir <div class="gpt-md-mermaid" data-mermaid="..."> → SVG
     const mermaidNodes = scope.querySelectorAll('.gpt-md-mermaid:not([data-vera-processed])');
     if (mermaidNodes.length) {
+      _cleanupMermaidOrphans();
       ensureMermaid().then((mermaid) => {
         if (!mermaid?.render) return;
         mermaidNodes.forEach(async (node, i) => {
@@ -1169,13 +1188,28 @@ class VeraView extends (window.BaseView || class {}) {
           node.dataset.veraProcessed = '1';
           const src = node.dataset.mermaid || '';
           if (!src) return;
+          // Validar sintaxis antes de render: evita que mermaid v10 deje un
+          // div temporal huérfano en <body> con el texto "Syntax error in text".
+          try {
+            const ok = typeof mermaid.parse === 'function'
+              ? await mermaid.parse(src, { suppressErrors: true })
+              : true;
+            if (ok === false) {
+              console.warn('Mermaid parse failed; keeping <pre> fallback');
+              return;
+            }
+          } catch (e) {
+            console.warn('Mermaid parse error:', e?.message || e);
+            _cleanupMermaidOrphans();
+            return;
+          }
           try {
             const id = `vera-mmd-${Date.now()}-${i}`;
             const { svg } = await mermaid.render(id, src);
             node.innerHTML = svg;
           } catch (e) {
-            // Deja el fallback <pre> visible; solo marca el error en console.
             console.warn('Mermaid render error:', e?.message || e);
+            _cleanupMermaidOrphans();
           }
         });
       }).catch((e) => console.warn('Mermaid load error:', e?.message || e));
