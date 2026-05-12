@@ -140,6 +140,17 @@
          u overflow restrictions. Se activa cuando body.org-brand-context está presente. -->
     <div id="brand-bg-overlay" aria-hidden="true"></div>
 
+    <!-- Fallback para usuarios con JavaScript deshabilitado. La app es una
+         SPA y no funciona sin JS; este mensaje es la única forma de
+         comunicarlo si el bundle no se ejecuta. -->
+    <noscript>
+      <div style="padding: 32px; max-width: 480px; margin: 64px auto; text-align: center; background: #141517; border: 1px solid #242424; border-radius: 12px; color: #D4D1D8; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <h1 style="font-size: 1.25rem; margin: 0 0 12px;">AI Smart Content requiere JavaScript</h1>
+        <p style="margin: 0 0 8px;">Esta aplicación es una experiencia interactiva que necesita JavaScript habilitado para funcionar.</p>
+        <p style="margin: 0; font-size: 0.875rem; color: rgba(212, 209, 216, 0.6);">Activa JavaScript en tu navegador y recarga la página.</p>
+      </div>
+    </noscript>
+
     <!-- Skip link: keyboard/screen-reader users pueden saltarse el sidebar
          y caer directo en el contenido de la vista. Visible solo cuando
          recibe focus (Tab desde el inicio). -->

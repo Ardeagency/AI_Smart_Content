@@ -207,6 +207,17 @@
   to = "/manifest.webmanifest"
   status = 200
 
+# SEO: robots.txt y sitemap.xml en la raíz, sin caer al SPA fallback.
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
 # Archivos JS - servir directamente
 [[redirects]]
   from = "/js/*"
