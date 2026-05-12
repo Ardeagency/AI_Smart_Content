@@ -658,6 +658,15 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
 
+/* Tinte de marca en bordes laterales del shell, solo dentro de org (clase la setea
+   OrgBrandTheme tras resolver palette primary/secondary). 10% de alpha = casi inotorio. */
+body.org-brand-context #app-container {
+    background-image: var(--brand-gradient-app-container);
+    background-color: var(--bg-primary);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
 /* Cuando está el chat de Vera, el scroll vive en #chatcontainer para evitar doble scroll */
 #app-container:has(> #chatcontainer) {
     overflow-y: hidden;
