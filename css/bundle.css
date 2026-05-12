@@ -702,11 +702,22 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 /* viewFadeIn lo usa el panel INFO de Brands. */
 @keyframes viewFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Transición de navegación: fade rápido y sutil (140ms, solo opacidad — sin
-   desplazamiento para que no se sienta laggy y no compita con scroll/animaciones
-   internas de la vista). Aplica al contenedor de la vista al final del montaje. */
-@keyframes routeFadeIn { from { opacity: 0; } to { opacity: 1; } }
-.route-fade-in { animation: routeFadeIn 140ms ease-out both; }
+/* Transición de navegación: fade + leve translateY para que la vista entre
+   con sensación de "presencia" (similar al crossfade skeleton→gradient de
+   Brand, pero a escala global de contenedor). 280ms con easing suave; el
+   translateY de 6px es mínimo para evitar que se sienta laggy o compita
+   con scroll. Aplica al contenedor de la vista al final del montaje. */
+@keyframes routeFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.route-fade-in { animation: routeFadeIn 280ms cubic-bezier(0.33, 0, 0.2, 1) both; }
+
+/* prefers-reduced-motion: respetar — solo opacity, sin desplazamiento. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes routeFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .route-fade-in { animation-duration: 0ms; }
+}
 
 /* ========== View Transitions API ==========
    Si el navegador soporta startViewTransition (Chrome 111+, Safari 18+, Edge 111+),
@@ -716,8 +727,8 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(app-root),
   ::view-transition-new(app-root) {
-    animation-duration: 160ms;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
   }
   ::view-transition-old(app-root) {
     animation-name: routeVTOut;
@@ -726,7 +737,10 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     animation-name: routeVTIn;
   }
 }
-@keyframes routeVTIn  { from { opacity: 0; } to { opacity: 1; } }
+/* La nueva vista entra con leve translateY (mismo timing que .route-fade-in
+   fallback). La saliente solo desvanece — sin desplazamiento — para que el
+   crossfade se vea limpio. */
+@keyframes routeVTIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes routeVTOut { from { opacity: 1; } to { opacity: 0; } }
 
 /* Marca el contenedor que participa de la View Transition. */
