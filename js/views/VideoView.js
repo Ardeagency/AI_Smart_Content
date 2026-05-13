@@ -275,6 +275,7 @@ class VideoView extends BaseView {
                       <span class="video-sidebar-section-num">01</span>
                       <h3 class="video-section-label">Production Context</h3>
                     </div>
+                    <p class="video-sidebar-section-hint">A qué campaña pertenece este video, a quién le habla, y qué productos o piezas debe respetar la IA al producirlo.</p>
                     <div class="video-escenas-block">
                       <div class="video-escenas-header">
                         <h4 class="video-prompt-panel-title">Scenes</h4>
@@ -321,6 +322,7 @@ class VideoView extends BaseView {
                       <span class="video-sidebar-section-num">02</span>
                       <h3 class="video-section-label">Cinematography</h3>
                     </div>
+                    <p class="video-sidebar-section-hint">Define el lenguaje visual: cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset.</p>
                     <div class="video-cine-preset-wrap">
                       <label class="video-cine-label">Production Preset</label>
                       <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
@@ -338,6 +340,7 @@ class VideoView extends BaseView {
                       <div class="video-cine-block" data-block="camera">
                         <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
+                          <p class="video-cine-block-hint">Cómo se ve el plano: el tipo de toma, la lente y qué tan cerca está la cámara del sujeto.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>
@@ -346,6 +349,7 @@ class VideoView extends BaseView {
                       <div class="video-cine-block" data-block="movement">
                         <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
+                          <p class="video-cine-block-hint">Cómo se mueve la cámara y con cuánta energía. Determina el ritmo y la sensación del video.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Motion Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
@@ -354,6 +358,7 @@ class VideoView extends BaseView {
                       <div class="video-cine-block" data-block="lighting">
                         <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Lighting</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
+                          <p class="video-cine-block-hint">La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
@@ -362,6 +367,7 @@ class VideoView extends BaseView {
                       <div class="video-cine-block" data-block="mood">
                         <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood & Color</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
+                          <p class="video-cine-block-hint">La paleta y la energía emocional. Define si el video se siente premium, vibrante o dramático.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
                           <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
