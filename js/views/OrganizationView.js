@@ -49,6 +49,12 @@ class OrganizationView extends BaseView {
     // Monitoreo
     this.monitoringTriggers = [];
 
+    // AI Engine
+    this.serverStatus = null;
+    this.apifyRuns = [];
+    this.apifyStats30d = { runs: 0, items: 0, usd: 0, byPlatform: {} };
+    this.trendJobs30d = { runs: 0, signals: 0, briefs: 0, usd: 0 };
+
     // Salud
     this.veraPendingByStatus = {};
     this.recentMissionErrors = [];
@@ -77,6 +83,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">General</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">Miembros</button>
     <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">Plan & Límites</button>
+    <button type="button" class="tab-btn" data-tab="engine" role="tab" aria-selected="false">AI Engine</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">Actividad</button>
     <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">Monitoreo</button>
     <button type="button" class="tab-btn" data-tab="health" role="tab" aria-selected="false">Salud de Vera</button>
@@ -118,9 +125,11 @@ class OrganizationView extends BaseView {
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Sub-marcas</h2>
-            <p class="org-section-desc">Listado de sub-marcas (brand_containers) de esta organización. <strong>Solo lectura</strong> — para añadir o modificar sub-marcas, contacta a tu desarrollador asignado en la plataforma (servicio adicional).</p>
+            <h2>Marcas gestionadas</h2>
+            <p class="org-section-desc">Cada <strong>marca gestionada</strong> es un workspace de datos aislado dentro de tu organización: tiene sus propias audiencias, campañas, integraciones (Meta, Shopify, etc.), sensores de monitoreo y producción de contenido. Sirve para que una agencia o equipo opere varias marcas/regiones bajo una misma cuenta, sin que se mezclen datos entre ellas.</p>
+            <p class="org-section-desc"><strong>Provisión gestionada:</strong> cada marca requiere configuración inicial del equipo de plataforma (mapeo de fuentes, conexión de cuentas, calibrado de Vera). Por eso no se crean desde la app — son un servicio adicional con costo por marca activa.</p>
           </div>
+          <a href="mailto:info@ardeagency.com?subject=Solicitud%20de%20nueva%20marca%20gestionada&body=Hola%20equipo%2C%0A%0AQuiero%20a%C3%B1adir%20una%20nueva%20marca%20gestionada%20a%20mi%20organizaci%C3%B3n.%0A%0ANombre%20de%20la%20marca%3A%20%0AMercado%2Fregi%C3%B3n%3A%20%0APlataformas%20a%20conectar%3A%20%0AObjetivos%20iniciales%3A%20%0A%0AGracias." class="btn btn-primary" id="orgRequestBrandBtn"><i class="fas fa-paper-plane"></i> Solicitar nueva marca</a>
         </div>
         <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">Cargando…</p></div>
       </section>
@@ -198,6 +207,33 @@ class OrganizationView extends BaseView {
             <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> Guardar límites</button>
           </div>
         </form>
+      </section>
+    </div>
+
+    <!-- ── AI Engine ────────────────────────────────────── -->
+    <div class="tab-content" id="engineTab" role="tabpanel">
+      <section class="org-section">
+        <h2>Servidor AI Engine</h2>
+        <p class="org-section-desc">Servidor dedicado donde Vera procesa los scrapers, sensores y agentes para esta organización. Se aprovisiona en Hetzner Cloud y se suspende automáticamente tras inactividad para ahorrar costos.</p>
+        <div class="org-engine-server" id="orgEngineServer"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>Scrapers (Apify, últimos 30 días)</h2>
+            <p class="org-section-desc">Costo y volumen real de las extracciones que ejecutó Vera para esta organización. Cada run trae datos públicos de Meta/TikTok/IG/etc. para alimentar sensores y briefs.</p>
+          </div>
+        </div>
+        <div class="org-engine-stats" id="orgScrapersStats"></div>
+        <h3 class="org-usage-subtitle">Últimas ejecuciones</h3>
+        <div class="org-scrapers-list" id="orgScrapersList"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+
+      <section class="org-section">
+        <h2>Trend Engine (últimos 30 días)</h2>
+        <p class="org-section-desc">Pipeline de inteligencia: genera queries, recolecta señales del mercado, las puntúa y produce briefs estratégicos.</p>
+        <div class="org-engine-stats" id="orgTrendStats"></div>
       </section>
     </div>
 
@@ -309,6 +345,21 @@ class OrganizationView extends BaseView {
     </div>
 
   </div>
+
+  <footer class="organization-footer">
+    <div class="organization-footer-left">
+      <span>ARDE Agency S.A.S. — Medellín, Colombia</span>
+      <span class="organization-footer-sep">·</span>
+      <a href="mailto:info@ardeagency.com">info@ardeagency.com</a>
+    </div>
+    <nav class="organization-footer-links" aria-label="Legal">
+      <a href="/politica-de-privacidad" data-route="/politica-de-privacidad">Política de privacidad</a>
+      <span class="organization-footer-sep">·</span>
+      <a href="/terminos-de-servicio" data-route="/terminos-de-servicio">Términos de servicio</a>
+      <span class="organization-footer-sep">·</span>
+      <a href="/eliminacion-de-datos" data-route="/eliminacion-de-datos">Eliminación de datos</a>
+    </nav>
+  </footer>
 </div>
 
 <!-- ── Modal: Invitar miembro ─────────────────────────── -->
@@ -440,6 +491,9 @@ class OrganizationView extends BaseView {
         this._loadVeraHealth(),
         this._loadNotifications(),
         this._loadAuditLog(),
+        this._loadEngineServer(),
+        this._loadApifyRuns(),
+        this._loadTrendJobs(),
       ]);
 
       this._renderHeaderStatus();
@@ -448,6 +502,7 @@ class OrganizationView extends BaseView {
       this._renderMembers();
       this._renderInvitations();
       this._renderPlanAndLimits();
+      this._renderEngine();
       this._renderActivity();
       this._renderMonitoring();
       this._renderHealth();
@@ -629,6 +684,52 @@ class OrganizationView extends BaseView {
     this.auditLog = data || [];
   }
 
+  async _loadEngineServer() {
+    try {
+      const { data } = await this.supabase
+        .from('v_org_server_status').select('*').eq('organization_id', this.orgId).maybeSingle();
+      this.serverStatus = data || null;
+    } catch (_) { /* vista opcional */ }
+  }
+
+  async _loadApifyRuns() {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await this.supabase
+      .from('apify_runs')
+      .select('run_id, platform, handle, apify_actor_id, status, started_at, finished_at, usage_usd, items_count, charged_credits, error')
+      .eq('organization_id', this.orgId).gte('created_at', since)
+      .order('started_at', { ascending: false }).limit(50);
+    this.apifyRuns = data || [];
+    const totals = { runs: 0, items: 0, usd: 0, byPlatform: {} };
+    this.apifyRuns.forEach((r) => {
+      totals.runs += 1;
+      totals.items += Number(r.items_count) || 0;
+      totals.usd += Number(r.usage_usd) || 0;
+      const p = (r.platform || 'unknown').toLowerCase();
+      totals.byPlatform[p] = totals.byPlatform[p] || { runs: 0, items: 0, usd: 0 };
+      totals.byPlatform[p].runs += 1;
+      totals.byPlatform[p].items += Number(r.items_count) || 0;
+      totals.byPlatform[p].usd += Number(r.usage_usd) || 0;
+    });
+    this.apifyStats30d = totals;
+  }
+
+  async _loadTrendJobs() {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await this.supabase
+      .from('trend_query_jobs')
+      .select('total_signals_collected, total_signals_scored, total_briefs_generated, total_cost_usd, total_credits_consumed, status, started_at')
+      .eq('organization_id', this.orgId).gte('started_at', since);
+    const rows = data || [];
+    const stats = { runs: rows.length, signals: 0, briefs: 0, usd: 0 };
+    rows.forEach((r) => {
+      stats.signals += Number(r.total_signals_collected) || 0;
+      stats.briefs += Number(r.total_briefs_generated) || 0;
+      stats.usd += Number(r.total_cost_usd) || 0;
+    });
+    this.trendJobs30d = stats;
+  }
+
   // ── Render ─────────────────────────────────────────────
   _renderHeaderStatus() {
     const el = this.querySelector('#orgHeaderStatus');
@@ -656,7 +757,7 @@ class OrganizationView extends BaseView {
     const el = this.querySelector('#orgSubbrandsList');
     if (!el) return;
     if (!this.brandContainers.length) {
-      el.innerHTML = '<p class="org-members-empty">No hay sub-marcas configuradas. Contacta a tu desarrollador para añadir la primera.</p>';
+      el.innerHTML = '<p class="org-members-empty">Aún no tienes marcas gestionadas. Pulsa "Solicitar nueva marca" para iniciar el proceso de provisión.</p>';
       return;
     }
     el.innerHTML = this.brandContainers.map((b) => {
@@ -664,10 +765,10 @@ class OrganizationView extends BaseView {
       return `
         <div class="org-subbrand-row">
           <div class="org-subbrand-info">
-            <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || 'Sub-marca')}</span>
+            <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || 'Marca')}</span>
             <span class="org-subbrand-meta">Activa desde ${this.escapeHtml(since)}</span>
           </div>
-          <span class="org-subbrand-lock" title="Solo el equipo de plataforma puede modificar"><i class="fas fa-lock"></i> Gestionada por plataforma</span>
+          <span class="org-subbrand-lock" title="Provisión gestionada por el equipo de plataforma"><i class="fas fa-lock"></i> Gestionada por plataforma</span>
         </div>`;
     }).join('');
   }
@@ -830,6 +931,114 @@ class OrganizationView extends BaseView {
       const btn = this.querySelector('#orgCapsSubmit');
       if (btn) btn.disabled = !canEdit;
     }
+  }
+
+  _renderEngine() {
+    // Server status
+    const srv = this.querySelector('#orgEngineServer');
+    if (srv) {
+      if (!this.serverStatus) {
+        srv.innerHTML = `
+          <div class="org-server-card">
+            <div class="org-server-row">
+              <span class="org-server-label">Estado</span>
+              <span class="org-status-pill org-status-pill--archived">Sin servidor dedicado</span>
+            </div>
+            <p class="org-server-hint">Esta organización aún no tiene un AI Engine aprovisionado. Vera usa la infraestructura compartida hasta que se asigne uno dedicado.</p>
+          </div>`;
+      } else {
+        const s = this.serverStatus;
+        const sleeping = !!s.sleeping;
+        const stateClass = sleeping ? 'archived' : (s.status === 'ready' || s.status === 'active' ? 'active' : 'archived');
+        const stateLabel = sleeping ? 'Suspendido' : (s.status || '—');
+        const lastActivity = s.last_activity_at ? new Date(s.last_activity_at).toLocaleString('es') : '—';
+        const inactive = s.inactive_days != null ? `${Number(s.inactive_days).toFixed(0)} días sin actividad` : '';
+        srv.innerHTML = `
+          <div class="org-server-card">
+            <div class="org-server-grid">
+              <div class="org-server-row">
+                <span class="org-server-label">Estado</span>
+                <span class="org-status-pill org-status-pill--${stateClass}">${this.escapeHtml(stateLabel)}</span>
+              </div>
+              <div class="org-server-row">
+                <span class="org-server-label">Tipo de servidor</span>
+                <span class="org-server-value">${this.escapeHtml(s.server_type || '—')}</span>
+              </div>
+              <div class="org-server-row">
+                <span class="org-server-label">Hetzner ID</span>
+                <code class="org-server-mono">${this.escapeHtml(s.hetzner_server_id || '—')}</code>
+              </div>
+              <div class="org-server-row">
+                <span class="org-server-label">Última actividad</span>
+                <span class="org-server-value">${this.escapeHtml(lastActivity)}${inactive ? ' · ' + this.escapeHtml(inactive) : ''}</span>
+              </div>
+              <div class="org-server-row">
+                <span class="org-server-label">Snapshot disponible</span>
+                <span class="org-server-value">${s.has_snapshot ? 'Sí' : 'No'}</span>
+              </div>
+            </div>
+            <p class="org-server-hint"><i class="fas fa-info-circle"></i> El servidor se reactiva automáticamente cuando Vera necesita ejecutar una tarea; mientras tanto no genera costo de cómputo.</p>
+          </div>`;
+      }
+    }
+
+    // Apify stats
+    const apEl = this.querySelector('#orgScrapersStats');
+    if (apEl) {
+      const s = this.apifyStats30d;
+      apEl.innerHTML = `
+        ${this._engineStatHTML('Runs', s.runs.toLocaleString('es'), 'fa-bolt')}
+        ${this._engineStatHTML('Items extraídos', s.items.toLocaleString('es'), 'fa-database')}
+        ${this._engineStatHTML('Gastado en Apify', `$${s.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
+      `;
+    }
+
+    // Apify recent runs
+    const apList = this.querySelector('#orgScrapersList');
+    if (apList) {
+      if (!this.apifyRuns.length) {
+        apList.innerHTML = '<p class="org-members-empty">Sin scrapers ejecutados en los últimos 30 días.</p>';
+      } else {
+        apList.innerHTML = this.apifyRuns.slice(0, 20).map((r) => {
+          const when = r.started_at ? new Date(r.started_at).toLocaleString('es') : '—';
+          const status = r.status || 'unknown';
+          const usd = r.usage_usd != null ? `$${Number(r.usage_usd).toFixed(3)}` : '—';
+          const items = r.items_count != null ? Number(r.items_count).toLocaleString('es') : '—';
+          return `
+            <div class="org-scraper-row">
+              <span class="org-scraper-when">${this.escapeHtml(when)}</span>
+              <span class="org-scraper-platform">${this.escapeHtml((r.platform || '—').toLowerCase())}</span>
+              <span class="org-scraper-handle" title="${this.escapeHtml(r.handle || '')}">${this.escapeHtml(r.handle || '—')}</span>
+              <span class="org-scraper-items">${this.escapeHtml(items)} items</span>
+              <span class="org-scraper-cost">${this.escapeHtml(usd)}</span>
+              <span class="org-run-status org-run-status--${this.escapeHtml(status.toLowerCase())}">${this.escapeHtml(status)}</span>
+            </div>`;
+        }).join('');
+      }
+    }
+
+    // Trend stats
+    const trEl = this.querySelector('#orgTrendStats');
+    if (trEl) {
+      const t = this.trendJobs30d;
+      trEl.innerHTML = `
+        ${this._engineStatHTML('Ciclos', t.runs.toLocaleString('es'), 'fa-sync')}
+        ${this._engineStatHTML('Señales recolectadas', t.signals.toLocaleString('es'), 'fa-broadcast-tower')}
+        ${this._engineStatHTML('Briefs generados', t.briefs.toLocaleString('es'), 'fa-file-alt')}
+        ${this._engineStatHTML('Costo total', `$${t.usd.toFixed(2)}`, 'fa-dollar-sign', 'cost')}
+      `;
+    }
+  }
+
+  _engineStatHTML(label, value, icon, tone) {
+    return `
+      <div class="org-engine-stat${tone ? ' org-engine-stat--' + this.escapeHtml(tone) : ''}">
+        <i class="fas ${this.escapeHtml(icon)} org-engine-stat-icon"></i>
+        <div>
+          <div class="org-engine-stat-value">${this.escapeHtml(String(value))}</div>
+          <div class="org-engine-stat-label">${this.escapeHtml(label)}</div>
+        </div>
+      </div>`;
   }
 
   _renderActivity() {
