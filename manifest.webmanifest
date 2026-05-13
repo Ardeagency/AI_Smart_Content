@@ -1,7 +1,7 @@
 {
   "name": "AI Smart Content",
   "short_name": "AI Smart",
-  "description": "Plataforma de generación de contenido con IA — Arde Agency",
+  "description": "Plataforma todo-en-uno con IA para crear y escalar contenido de marca.",
   "start_url": "/home",
   "scope": "/",
   "display": "standalone",

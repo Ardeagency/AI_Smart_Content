@@ -1,10 +1,11 @@
 /**
  * PageMeta — actualiza <title>, og:title y twitter:title según la vista activa.
  *
- * Formato del title:
- *   - Con org:  "{OrgName} | {Section}"   ej: "Ignis | Dashboard"
- *   - Sin org:  "AI Smart Content - {Section}"
- *   - Fallback: "AI Smart Content"
+ * Formato del title (sin prefijo de producto — el favicon ya identifica la app):
+ *   - Con org + sección:  "{OrgName} | {Section}"   ej: "Ignis | Brand Storage"
+ *   - Con org sin sección: "{OrgName}"
+ *   - Sin org + sección:  "{Section}"                ej: "Login"
+ *   - Fallback:           "AI Smart Content"
  *
  * Hooks:
  *   - Escucha `routechange` (router.js lo dispara tras renderizar la vista).
@@ -106,9 +107,9 @@
     if (orgName && label) {
       title = `${orgName} | ${label}`;
     } else if (orgName) {
-      title = `${orgName} | ${PRODUCT_NAME}`;
+      title = orgName;
     } else if (label) {
-      title = `${PRODUCT_NAME} - ${label}`;
+      title = label;
     } else {
       title = PRODUCT_NAME;
     }
