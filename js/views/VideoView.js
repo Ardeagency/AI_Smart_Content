@@ -698,11 +698,15 @@ class VideoView extends BaseView {
       const picked = !!this.selectedModel;
       if (this.modelPickerEl) this.modelPickerEl.style.display = picked ? 'none' : 'flex';
       if (this.idleArea) this.idleArea.style.display = picked ? 'flex' : 'none';
-      // Toggle sidebars y director consoles según modelo
+      // Toggle sidebars y director consoles según modelo.
+      // Usamos style.display además de el.hidden porque las reglas CSS
+      // de .video-sidebar-console / .video-director-console-zone usan
+      // display:flex que sobreescribe el atributo hidden HTML.
       this.container.querySelectorAll('[data-for-model]').forEach((el) => {
         const target = el.getAttribute('data-for-model');
         const visible = picked && target === this.selectedModel;
         el.hidden = !visible;
+        el.style.display = visible ? '' : 'none';
       });
     };
     this._applyModelPickerState = applyModelPickerState;

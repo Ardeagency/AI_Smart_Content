@@ -4039,6 +4039,13 @@
    La unidad creativa es la SECUENCIA NARRATIVA, no la toma única.
    ============================================ */
 
+/* Reglas de visibility para sidebar/director-console según modelo activo.
+   Necesario porque el CSS de .video-sidebar-console usa display:flex y
+   override el atributo hidden HTML del navegador. */
+.video-view-container [data-for-model][hidden] {
+    display: none !important;
+}
+
 /* Frames Clave — first/last frame anchors */
 .video-view-container .seedance-frames-grid {
     display: grid;
