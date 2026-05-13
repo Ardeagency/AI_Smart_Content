@@ -861,56 +861,49 @@
 }
 
 .credits-shop-card {
+    --card-c1: #ff6500;
+    --card-c2: #ff0000;
     position: relative;
-    isolation: isolate;
     overflow: hidden;
-    background: rgba(13, 14, 16, 0.55);
-    backdrop-filter: blur(24px) saturate(120%);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background:
+        radial-gradient(ellipse 48% 32% at 50% 108%, rgba(255, 255, 255, 0.75) 0%, transparent 55%),
+        radial-gradient(ellipse 85% 55% at 50% 112%, var(--card-c1) 0%, transparent 65%),
+        radial-gradient(ellipse 115% 78% at 50% 118%, var(--card-c2) 0%, transparent 72%),
+        linear-gradient(180deg, #0a0a0c 0%, #0c0c0f 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
-    padding: 1.5rem 1.25rem;
+    padding: 1.75rem 1.25rem;
     display: flex;
     flex-direction: column;
     text-align: center;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 16px 40px rgba(0, 0, 0, 0.55);
     transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
-.credits-shop-card::before {
-    content: "";
-    position: absolute;
-    left: -25%;
-    right: -25%;
-    bottom: -45%;
-    height: 85%;
-    background:
-        radial-gradient(ellipse 55% 70% at 50% 100%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 55%),
-        radial-gradient(ellipse 75% 80% at 50% 100%, rgba(255, 101, 0, 0.55) 0%, rgba(255, 101, 0, 0) 60%),
-        radial-gradient(ellipse 100% 90% at 50% 100%, rgba(255, 0, 0, 0.45) 0%, rgba(255, 0, 0, 0) 70%);
-    filter: blur(28px);
-    opacity: 0.85;
-    pointer-events: none;
-    z-index: -1;
-    transition: opacity var(--transition, .25s);
-}
-
-.credits-shop-card > * {
-    position: relative;
-}
+/* Esquemas de color por posición — siguen el --brand-gradient platform */
+.credits-shop-grid .credits-shop-card:nth-child(4n+1) { --card-c1: #ff6500; --card-c2: #ff0000; }
+.credits-shop-grid .credits-shop-card:nth-child(4n+2) { --card-c1: #ffe500; --card-c2: #9acc00; }
+.credits-shop-grid .credits-shop-card:nth-child(4n+3) { --card-c1: #00d614; --card-c2: #00e7ff; }
+.credits-shop-grid .credits-shop-card:nth-child(4n+4) { --card-c1: #5b00ea; --card-c2: #900090; }
 
 .credits-shop-card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-    transform: translateY(-2px);
-}
-
-.credits-shop-card:hover::before {
-    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-3px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 20px 50px rgba(0, 0, 0, 0.6),
+        0 0 60px -10px var(--card-c1);
 }
 
 .credits-shop-card--popular {
-    border-color: rgba(255, 101, 0, 0.45);
-    box-shadow: 0 0 0 1px rgba(255, 101, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 0 0 1px color-mix(in srgb, var(--card-c1) 50%, transparent),
+        0 16px 40px rgba(0, 0, 0, 0.55),
+        0 0 50px -10px var(--card-c1);
 }
 
 .credits-shop-badge {
@@ -923,10 +916,11 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: #ffffff;
-    background: linear-gradient(135deg, #ff6500 0%, #ff0000 100%);
+    background: linear-gradient(135deg, var(--card-c1, #ff6500) 0%, var(--card-c2, #ff0000) 100%);
     padding: 0.25rem 0.7rem;
     border-radius: var(--radius-sm);
     z-index: 1;
+    box-shadow: 0 4px 16px -4px var(--card-c1, #ff6500);
 }
 
 .credits-shop-card-body {
@@ -959,8 +953,8 @@
 .credits-shop-bonus {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--warm-1, #ff6500);
-    background: rgba(255, 101, 0, 0.12);
+    color: var(--card-c1, #ff6500);
+    background: color-mix(in srgb, var(--card-c1, #ff6500) 12%, transparent);
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     text-transform: uppercase;
@@ -970,7 +964,8 @@
 .credits-shop-card-price {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--warm-1, #ff6500);
+    color: var(--card-c1, #ff6500);
+    text-shadow: 0 0 24px color-mix(in srgb, var(--card-c1, #ff6500) 35%, transparent);
 }
 
 .credits-shop-card-desc {
