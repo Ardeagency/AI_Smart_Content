@@ -204,22 +204,36 @@ class ProductionView extends BaseView {
   /**
    * Mueve la barra de filtros al header principal (solo Production).
    * El header aplica efecto glass cuando contiene los filtros.
+   *
+   * Race condition: router.handleRoute lanza Navigation.render() en paralelo con
+   * view.render(); si Navigation está re-renderizando cuando este método corre,
+   * #headerProductionSlot no existe aún y los filtros quedan en la vista. Hacemos
+   * retry breve hasta que el slot aparezca (Navigation.render es async pero rápido).
    */
-  moveFiltersToHeader() {
+  moveFiltersToHeader(attempts = 0) {
     const slot = document.getElementById('headerProductionSlot');
     const filters = document.querySelector('.living-history-filters');
-    if (slot && filters) {
-      slot.innerHTML = '';
-      slot.appendChild(filters);
-      slot.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('production-filters-in-header');
+    if (!filters) return;
+    if (!slot) {
+      if (attempts < 20) {
+        this._filterMoveTimer = setTimeout(() => this.moveFiltersToHeader(attempts + 1), 50);
+      }
+      return;
     }
+    slot.innerHTML = '';
+    slot.appendChild(filters);
+    slot.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('production-filters-in-header');
   }
 
   /**
    * Restaura el slot del header al salir de Production.
    */
   clearFiltersFromHeader() {
+    if (this._filterMoveTimer) {
+      clearTimeout(this._filterMoveTimer);
+      this._filterMoveTimer = null;
+    }
     const slot = document.getElementById('headerProductionSlot');
     if (slot) {
       slot.innerHTML = '';
