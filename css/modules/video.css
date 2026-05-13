@@ -3830,3 +3830,264 @@
 .video-view-container .video-sidebar-help-popover p:last-child {
     margin-bottom: 0;
 }
+
+/* ============================================
+   CINEMATOGRAPHY TABS — segmented horizontal en lugar de acordeones.
+   Patrón validado por Runway/Krea/Higgsfield/Flow.
+   ============================================ */
+.video-view-container .video-cine-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+}
+
+.video-view-container .video-cine-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.video-view-container .video-cine-tab i {
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+.video-view-container .video-cine-tab span {
+    line-height: 1;
+}
+
+.video-view-container .video-cine-tab:hover {
+    color: var(--text-primary);
+}
+
+.video-view-container .video-cine-tab.is-active {
+    background: var(--bg-card, #141517);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 1px var(--border-divider, #242424);
+}
+
+.video-view-container .video-cine-tab.is-active i {
+    opacity: 1;
+    color: var(--color-info);
+}
+
+/* Panels: contenido del tab activo */
+.video-view-container .video-cine-panels {
+    display: flex;
+    flex-direction: column;
+}
+
+.video-view-container .video-cine-panel {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.video-view-container .video-cine-panel.is-active {
+    display: flex;
+}
+
+/* ============================================
+   SVG ANIMATIONS — preview de movimientos en los tiles.
+   Cada animación corre solo on-hover o cuando is-selected, evitando
+   distracción en idle. Visualizan qué hace cada efecto sin necesidad
+   de leer la etiqueta o tooltip.
+   ============================================ */
+.video-cine-tile__svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 28px;
+    color: inherit;
+}
+.video-cine-tile__svg .cine-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.video-cine-tile.has-svg {
+    min-height: 78px;
+    padding: 12px 6px;
+}
+
+/* Animaciones — solo se activan en hover/selected del tile parent */
+.video-cine-tile:hover .cine-anim-pulse,
+.video-cine-tile.is-selected .cine-anim-pulse {
+    animation: cine-pulse 1.6s ease-in-out infinite;
+}
+@keyframes cine-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.55; }
+}
+
+.video-cine-tile:hover .cine-anim-push-in,
+.video-cine-tile.is-selected .cine-anim-push-in {
+    animation: cine-push-in 1.8s ease-in-out infinite;
+}
+@keyframes cine-push-in {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.45); }
+    100% { transform: scale(1); }
+}
+
+.video-cine-tile:hover .cine-anim-pull-out,
+.video-cine-tile.is-selected .cine-anim-pull-out {
+    animation: cine-pull-out 1.8s ease-in-out infinite;
+}
+@keyframes cine-pull-out {
+    0% { transform: scale(1.45); }
+    50% { transform: scale(1); }
+    100% { transform: scale(1.45); }
+}
+
+.video-cine-tile:hover .cine-anim-dolly-left,
+.video-cine-tile.is-selected .cine-anim-dolly-left {
+    animation: cine-dolly-left 1.8s ease-in-out infinite;
+}
+@keyframes cine-dolly-left {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-6px); }
+}
+
+.video-cine-tile:hover .cine-anim-dolly-right,
+.video-cine-tile.is-selected .cine-anim-dolly-right {
+    animation: cine-dolly-right 1.8s ease-in-out infinite;
+}
+@keyframes cine-dolly-right {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+}
+
+.video-cine-tile:hover .cine-anim-orbit,
+.video-cine-tile.is-selected .cine-anim-orbit {
+    animation: cine-orbit 2.4s linear infinite;
+}
+@keyframes cine-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.video-cine-tile:hover .cine-anim-rotate,
+.video-cine-tile.is-selected .cine-anim-rotate {
+    animation: cine-rotate 2.6s linear infinite;
+}
+@keyframes cine-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.video-cine-tile:hover .cine-anim-handheld,
+.video-cine-tile.is-selected .cine-anim-handheld {
+    animation: cine-handheld 0.55s ease-in-out infinite;
+}
+@keyframes cine-handheld {
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    20%  { transform: translate(-0.6px, 0.4px) rotate(-0.6deg); }
+    40%  { transform: translate(0.7px, -0.3px) rotate(0.5deg); }
+    60%  { transform: translate(-0.4px, -0.5px) rotate(-0.3deg); }
+    80%  { transform: translate(0.5px, 0.6px) rotate(0.4deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.video-cine-tile:hover .cine-anim-tracking-cam,
+.video-cine-tile.is-selected .cine-anim-tracking-cam,
+.video-cine-tile:hover .cine-anim-tracking-subject,
+.video-cine-tile.is-selected .cine-anim-tracking-subject {
+    animation: cine-tracking 2.4s ease-in-out infinite;
+}
+@keyframes cine-tracking {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
+}
+
+.video-cine-tile:hover .cine-anim-fpv,
+.video-cine-tile.is-selected .cine-anim-fpv {
+    animation: cine-fpv 1.6s ease-in-out infinite;
+    transform-origin: 4px 12px;
+}
+@keyframes cine-fpv {
+    0%, 100% { transform: scaleX(1); }
+    50% { transform: scaleX(1.15); }
+}
+
+/* ============================================
+   BRIEF → SUGGEST SETUP — entry point para usuarios novatos.
+   Una sola frase + botón AI pre-rellena los chips creativos.
+   Patrón validado por Higgsfield Co-Director, Hailuo Director Mode.
+   ============================================ */
+.video-view-container .video-sidebar-brief {
+    background: linear-gradient(180deg, rgba(91,165,255,0.04), transparent);
+}
+
+.video-view-container .video-brief-input {
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 12px;
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.15s ease;
+}
+
+.video-view-container .video-brief-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.video-view-container .video-brief-input:focus {
+    outline: none;
+    border-color: var(--color-info);
+}
+
+.video-view-container .video-brief-suggest-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--brand-gradient-dynamic, var(--brand-gradient, var(--color-info)));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.video-view-container .video-brief-suggest-btn:hover {
+    filter: brightness(1.08);
+}
+
+.video-view-container .video-brief-suggest-btn:active {
+    transform: scale(0.98);
+}
+
+.video-view-container .video-brief-suggest-btn i {
+    font-size: 0.85rem;
+}
