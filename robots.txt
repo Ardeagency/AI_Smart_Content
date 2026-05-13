@@ -1,41 +1,13 @@
-# AI Smart Content — robots.txt
-# La plataforma es una SPA autenticada. Solo las páginas públicas
-# (landing + legales) deben aparecer en buscadores.
+# console.aismartcontent.io — robots.txt
+#
+# Este subdominio es la APP autenticada (login + workspace). El SEO marketing
+# vive en aismartcontent.io (Framer), que tiene su propio robots/sitemap.
+# Aquí bloqueamos toda indexación para evitar que Google muestre pantallas
+# de login o páginas internas en resultados.
 
 User-agent: *
-Allow: /$
-Allow: /login
-Allow: /signin
-Allow: /politica-de-privacidad
-Allow: /privacidad
-Allow: /terminos-de-servicio
-Allow: /terminos
-Allow: /eliminacion-de-datos
+Disallow: /
 
-# Rutas internas (requieren auth) — no indexar
-Disallow: /home
-Disallow: /studio
-Disallow: /production
-Disallow: /tasks
-Disallow: /flows
-Disallow: /brand-organization
-Disallow: /brand-storage
-Disallow: /products
-Disallow: /identities
-Disallow: /monitoring
-Disallow: /vera
-Disallow: /video
-Disallow: /command-center
-Disallow: /planes
-Disallow: /credits
-Disallow: /dev
-
-# Archivos técnicos
-Disallow: /sw.js
-Disallow: /js/
-Disallow: /css/
-Disallow: /functions/
-Disallow: /.netlify/
-Disallow: /SQL/
-
-Sitemap: https://aismartcontent.io/sitemap.xml
+# Permitir scrapers de previews (WhatsApp/Slack/LinkedIn/Twitter) que leen og:tags
+# vía User-agent específico — el `Disallow: /` bloquea crawlers de búsqueda, no
+# evita que estos bots lean meta tags al compartir un link.
