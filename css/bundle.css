@@ -712,6 +712,7 @@ body.org-brand-context:not(.route-dev) #brand-bg-overlay {
 
 body.org-brand-context {
     --view-bg-base: transparent;
+    background: transparent;
 }
 
 body.org-brand-context #app-container {
