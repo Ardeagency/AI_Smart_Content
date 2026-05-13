@@ -2502,20 +2502,25 @@ class Navigation {
   }
 
   /**
-   * HTML de los ítems del submenú Brand Storage (sub-marcas) → Command Center por slug de nombre.
+   * HTML de los ítems del submenú Brand Storage (sub-marcas) → Command Center.
+   * URL: /command-center/{shortId12}/{slug} — shortId garantiza unicidad cuando
+   * dos sub-marcas comparten nombre (mismo slug).
    */
   _buildBrandStorageSubmenuChildrenHtml() {
     const rows = Array.isArray(this._brandStorageSubbrands) ? this._brandStorageSubbrands : [];
     if (!rows.length) {
       return `<span class="nav-submenu-link nav-submenu-link--placeholder nav-submenu-link--empty" tabindex="-1"><span class="nav-submenu-muted">…</span></span>`;
     }
+    const slugFn = typeof window.getOrgSlug === 'function' ? window.getOrgSlug : () => 'sub-marca';
+    const shortFn = typeof window.getBrandContainerShortId === 'function' ? window.getBrandContainerShortId : () => '';
     return rows
       .map((r) => {
         const rawName = String((r.nombre_marca || 'Sub-marca').trim() || 'Sub-marca');
         const name = _escapeHtml(rawName);
-        const slug =
-          typeof window.getOrgSlug === 'function' ? window.getOrgSlug(rawName) : 'sub-marca';
-        const href = _escapeHtml(this.getUserSidebarRoute(`command-center/${slug}`));
+        const slug = slugFn(rawName);
+        const shortId = shortFn(r.id);
+        const tail = shortId ? `command-center/${shortId}/${slug}` : `command-center/${slug}`;
+        const href = _escapeHtml(this.getUserSidebarRoute(tail));
         return `<a href="${href}" class="nav-submenu-link nav-submenu-link--command-center" data-route="${href}" data-tooltip="${name}"><span>${name}</span></a>`;
       })
       .join('');
@@ -2570,7 +2575,10 @@ class Navigation {
         const sub = (this._brandStorageSubbrands && this._brandStorageSubbrands[0]) || null;
         const rawName = String(((sub && sub.nombre_marca) || 'Sub-marca').trim() || 'Sub-marca');
         const slug = typeof window.getOrgSlug === 'function' ? window.getOrgSlug(rawName) : 'sub-marca';
-        const href = this.getUserSidebarRoute(`command-center/${slug}`);
+        const shortId = (sub && typeof window.getBrandContainerShortId === 'function')
+          ? window.getBrandContainerShortId(sub.id) : '';
+        const tail = shortId ? `command-center/${shortId}/${slug}` : `command-center/${slug}`;
+        const href = this.getUserSidebarRoute(tail);
         const link = single.querySelector('#navCommandCenterSingleLink');
         if (link) {
           link.setAttribute('href', href);

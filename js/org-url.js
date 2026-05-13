@@ -109,8 +109,35 @@ function clearOrgResolverCache() {
   _orgResolverInflight = null;
 }
 
+/**
+ * shortId12 para brand_container.id — mismo formato que orgs (últimos 12 chars
+ * sin guiones). Se usa en /command-center/{shortId}/{slug} para garantizar
+ * unicidad cuando dos sub-marcas comparten nombre (mismo slug).
+ */
+function getBrandContainerShortId(id) {
+  if (!id || typeof id !== 'string') return '';
+  return id.replace(/-/g, '').slice(-12);
+}
+
+/**
+ * Construye la ruta del Command Center para una sub-marca.
+ * @param {string} orgPathPrefix - prefijo /org/... o '' si sin org
+ * @param {{id:string, nombre_marca:string}} container
+ * @returns {string}
+ */
+function getCommandCenterPath(orgPathPrefix, container) {
+  if (!container || !container.id) return '';
+  const shortId = getBrandContainerShortId(container.id);
+  const slug = getOrgSlug(container.nombre_marca || 'sub-marca');
+  const tail = `command-center/${shortId}/${slug}`;
+  const prefix = (orgPathPrefix && typeof orgPathPrefix === 'string') ? orgPathPrefix : '';
+  return prefix ? `${prefix}/${tail}` : `/${tail}`;
+}
+
 window.getOrgShortId = getOrgShortId;
 window.getOrgSlug = getOrgSlug;
 window.getOrgPathPrefix = getOrgPathPrefix;
 window.resolveOrgIdFromShortAndSlug = resolveOrgIdFromShortAndSlug;
 window.clearOrgResolverCache = clearOrgResolverCache;
+window.getBrandContainerShortId = getBrandContainerShortId;
+window.getCommandCenterPath = getCommandCenterPath;

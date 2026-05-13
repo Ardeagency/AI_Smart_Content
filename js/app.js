@@ -261,6 +261,11 @@ class App {
     r.register('/brandstorage', brandStorageViewLoader, auth);
 
     const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js']);
+    // Canónico: shortId del brand_container + slug del nombre (mismo patrón que /org/...).
+    // El shortId garantiza unicidad incluso si dos sub-marcas comparten nombre.
+    r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);
+    r.register('/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);
+    // Legacy: slug-only. Resuelve por slug (primer match) para compatibilidad con bookmarks.
     r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandSlug', commandCenterLoader, auth);
     r.register('/command-center/:subBrandSlug', commandCenterLoader, auth);
 

@@ -42,12 +42,13 @@ class CommandCenterView extends BaseView {
     } catch (_) { /* noop */ }
     const prefix = window.getOrgPathPrefix(orgId, orgName);
     if (!prefix) return false;
-    const slug = (this.routeParams && this.routeParams.subBrandSlug) ||
-      path.replace(/^\/command-center\//, '').split('/')[0];
-    if (!slug) return false;
+    // Preserva los segmentos originales tras /command-center/ — soporta tanto
+    // /{shortId}/{slug} (canónico) como /{slug} (legacy) o /{uuid}.
+    const tail = path.replace(/^\/command-center\//, '');
+    if (!tail) return false;
     if (container) container.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo…</p></div>';
     window.router?.navigate(
-      `${prefix}/command-center/${encodeURIComponent(slug)}${window.location.search || ''}`, true);
+      `${prefix}/command-center/${tail}${window.location.search || ''}`, true);
     return true;
   }
 
@@ -225,8 +226,9 @@ class CommandCenterView extends BaseView {
 
   /* ── Data fetching ────────────────────────────────────────────────── */
   async _loadData() {
-    this._subBrandSlug   = String(this.routeParams?.subBrandSlug || '').trim().toLowerCase();
-    this._organizationId = this._resolveOrganizationId();
+    this._subBrandShortId = String(this.routeParams?.subBrandShortId || '').trim().toLowerCase();
+    this._subBrandSlug    = String(this.routeParams?.subBrandSlug || '').trim().toLowerCase();
+    this._organizationId  = this._resolveOrganizationId();
 
     if (!this._organizationId) {
       this.updateHeaderContext('Command Center', this._subBrandSlug || '—', window.currentOrgName || '');
@@ -243,8 +245,15 @@ class CommandCenterView extends BaseView {
     const slugFn = typeof window.getOrgSlug === 'function'
       ? window.getOrgSlug
       : (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const shortFn = typeof window.getBrandContainerShortId === 'function'
+      ? window.getBrandContainerShortId
+      : (id) => String(id || '').replace(/-/g, '').slice(-12);
 
-    /* Resolver brand_container por slug */
+    /* Resolver brand_container.
+       Canónico: por shortId (últimos 12 hex del UUID) — único por org.
+       Legacy: solo slug llegó en la URL — si la URL fue /command-center/{value} y
+         value parece UUID/shortId, lo tratamos como shortId; si parece slug, match
+         por nombre (devuelve el primero, comportamiento legacy). */
     let match = null;
     try {
       const { data } = await supabase
@@ -253,12 +262,20 @@ class CommandCenterView extends BaseView {
         .eq('organization_id', this._organizationId)
         .order('created_at', { ascending: false });
       const containers = Array.isArray(data) ? data : [];
-      match = containers.find((r) => slugFn(r.nombre_marca) === this._subBrandSlug) || null;
+
+      const looksLikeId = (v) => /^[a-f0-9]{12}$/.test(v) || /^[a-f0-9-]{36}$/.test(v);
+      const idKey = this._subBrandShortId || (looksLikeId(this._subBrandSlug) ? this._subBrandSlug : '');
+      if (idKey) {
+        match = containers.find((r) => shortFn(r.id) === shortFn(idKey)) || null;
+      }
+      if (!match && this._subBrandSlug && !looksLikeId(this._subBrandSlug)) {
+        match = containers.find((r) => slugFn(r.nombre_marca) === this._subBrandSlug) || null;
+      }
     } catch (e) { console.warn('CommandCenterView: brand_containers', e); }
 
     const displayName = match
       ? (String(match.nombre_marca || '').trim() || 'Sub-marca')
-      : this._subBrandSlug || '—';
+      : (this._subBrandSlug || this._subBrandShortId || '—');
     this.updateHeaderContext('Command Center', displayName, window.currentOrgName || '');
 
     if (!match) {
