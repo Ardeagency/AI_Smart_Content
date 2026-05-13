@@ -133,12 +133,12 @@ class VideoView extends BaseView {
                           <span class="video-model-card__badge is-active">Activo</span>
                         </div>
                       </button>
-                      <button type="button" class="video-model-card is-locked" data-model="seedance" role="radio" aria-checked="false" aria-disabled="true" disabled>
+                      <button type="button" class="video-model-card" data-model="seedance" role="radio" aria-checked="false">
                         <div class="video-model-card__top">
                           <div class="video-model-card__logo-wrap">
                             <img class="video-model-card__logo" src="/recursos/logos/plataformas/seedance-bytedance.svg" alt="Seedance" loading="lazy">
                           </div>
-                          <span class="video-model-card__lock" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                          <span class="video-model-card__check" aria-hidden="true"><i class="fas fa-check"></i></span>
                         </div>
                         <div class="video-model-card__body">
                           <h4 class="video-model-card__title">Seedance 2.0</h4>
@@ -146,7 +146,7 @@ class VideoView extends BaseView {
                         </div>
                         <div class="video-model-card__footer">
                           <span class="video-model-card__cost"><strong>60</strong> <span>créditos</span></span>
-                          <span class="video-model-card__badge is-soon">Próximamente</span>
+                          <span class="video-model-card__badge is-beta">Beta</span>
                         </div>
                       </button>
                     </div>
@@ -204,7 +204,7 @@ class VideoView extends BaseView {
 
               </section>
 
-              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
+              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="videoFooterControl" data-for-model="kling" aria-label="Director Console Kling — adjuntos y prompt">
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
@@ -264,9 +264,75 @@ class VideoView extends BaseView {
                   </div>
                 </div>
               </section>
+
+              <section class="video-director-console-zone video-prompt-wrap video-main-director" id="seedanceFooterControl" data-for-model="seedance" aria-label="Director Console Seedance — secuencia narrativa" hidden>
+                <div class="video-prompt-footer-card video-prompt-footer-card-center">
+                  <div class="video-prompt-footer-card-inner video-director-console">
+
+                    <input type="file" id="seedanceImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+
+                    <div class="video-console-header-row">
+                      <span class="video-console-dot" aria-hidden="true"></span>
+                      <span class="video-console-label-text">Director Console</span>
+                      <span class="video-console-sep" aria-hidden="true">·</span>
+                      <span class="video-console-model-text" id="seedanceConsoleModelText">Seedance 2.0</span>
+                      <button type="button" class="video-console-model-change" id="seedanceModelChangeBtn" aria-label="Cambiar modelo de video"><i class="fas fa-arrow-left" aria-hidden="true"></i> Cambiar</button>
+                    </div>
+
+                    <div class="video-director-top-row">
+                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="Añadir referencia visual"><i class="fas fa-plus"></i></button>
+                      <div class="video-kling-elements-list" id="seedanceElementsList" aria-live="polite"></div>
+                    </div>
+
+                    <div class="video-director-console-content">
+                      <textarea
+                        id="seedancePromptInput"
+                        class="video-director-brief-input video-director-brief-input-large"
+                        placeholder="Storyboard: describe la secuencia completa — apertura, desarrollo y cierre. Seedance produce el arco entero en una sola pasada."
+                        rows="3"
+                        autocomplete="off"
+                        aria-label="Storyboard narrativo (Seedance lo cocina con OpenAI)"
+                      ></textarea>
+                    </div>
+
+                    <div class="video-director-separator" aria-hidden="true"></div>
+
+                    <div class="video-director-controls">
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="Generar audio" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Audio</span></button>
+                      <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="Búsqueda online" aria-pressed="false"><i class="fas fa-globe"></i><span>Web</span></button>
+                      <div class="video-prompt-aspect-wrap">
+                        <select id="seedanceResolution" class="video-director-select" aria-label="Resolución">
+                          <option value="480p">480p</option>
+                          <option value="720p" selected>720p</option>
+                          <option value="1080p">1080p</option>
+                        </select>
+                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                      </div>
+                      <div class="video-prompt-aspect-wrap">
+                        <select id="seedanceAspectRatio" class="video-director-select" aria-label="Aspect ratio">
+                          <option value="16:9" selected>16:9</option>
+                          <option value="9:16">9:16</option>
+                          <option value="1:1">1:1</option>
+                          <option value="4:3">4:3</option>
+                          <option value="3:4">3:4</option>
+                          <option value="21:9">21:9 cinemascope</option>
+                          <option value="adaptive">Adaptive</option>
+                        </select>
+                        <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                      </div>
+                      <div class="video-prompt-duration-wrap seedance-duration-wrap">
+                        <input type="number" id="seedanceDuration" class="video-director-select seedance-duration-input" min="4" max="15" step="1" value="5" aria-label="Duración en segundos">
+                        <span class="seedance-duration-unit">s</span>
+                      </div>
+                      <button type="button" class="video-director-btn-generate" id="seedancePromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span>PROMPT</span></button>
+                    </div>
+
+                  </div>
+                </div>
+              </section>
             </main>
 
-            <aside class="video-sidebar-console" aria-label="Sidebar — configuraciones predefinidas">
+            <aside class="video-sidebar-console" data-for-model="kling" aria-label="Sidebar Kling — configuraciones predefinidas">
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
@@ -410,6 +476,191 @@ class VideoView extends BaseView {
                 <p>Cada control alimenta el prompt final. No tienes que llenarlos todos — entre más completes, más fiel será el resultado a tu intención.</p>
               </div>
             </aside>
+
+            <aside class="video-sidebar-console" data-for-model="seedance" aria-label="Sidebar Seedance — secuencias narrativas" hidden>
+              <div class="video-prompt-footer-card video-sidebar-card">
+                <div class="video-prompt-footer-card-inner video-sidebar-inner">
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Production Context</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Tipo de campaña conceptual, audiencia y productos que la secuencia debe respetar.</p>
+                    <div class="video-left-block">
+                      <h4 class="video-prompt-panel-title">¿De qué trata?</h4>
+                      <select id="seedanceCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Concepto de campaña" data-conceptual="1">
+                        <option value="">— Sin definir</option>
+                        <option value="Brand awareness">Brand awareness · presentar la marca</option>
+                        <option value="Product launch">Lanzamiento de producto</option>
+                        <option value="Lifestyle storytelling">Lifestyle · contar una historia</option>
+                        <option value="Educational">Educativo · enseñar o explicar</option>
+                        <option value="Sale / promo">Promoción · oferta o descuento</option>
+                        <option value="Testimonial">Testimonial · clientes reales</option>
+                        <option value="Reactivation">Reactivación · clientes dormidos</option>
+                        <option value="Seasonal moment">Momento estacional · fecha clave</option>
+                        <option value="Behind the scenes">Behind the scenes · cercanía marca</option>
+                      </select>
+                    </div>
+                    <div class="video-left-block">
+                      <h4 class="video-prompt-panel-title">¿A quién le habla?</h4>
+                      <select id="seedanceAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia conceptual" data-conceptual="1">
+                        <option value="">— Sin definir</option>
+                        <option value="Young professionals 25-35">Profesionales jóvenes (25–35)</option>
+                        <option value="Established professionals 35-50">Profesionales establecidos (35–50)</option>
+                        <option value="Aspirational youth 18-28">Aspiracionales jóvenes (18–28)</option>
+                        <option value="Mass market">Mercado masivo</option>
+                        <option value="Premium / luxury audience">Premium · audiencia de lujo</option>
+                        <option value="Niche enthusiasts">Nicho · entusiastas de la categoría</option>
+                        <option value="Decision makers B2B">Decision makers · B2B</option>
+                        <option value="Existing customers">Clientes existentes</option>
+                        <option value="Parents / families">Padres y familias</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Frames Clave</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Ancla el inicio y/o final de la secuencia con una imagen. La IA construirá el arco narrativo entre ambas.</p>
+                    <div class="seedance-frames-grid">
+                      <button type="button" class="seedance-frame-slot" data-frame="first" id="seedanceFirstFrameSlot">
+                        <i class="fas fa-image" aria-hidden="true"></i>
+                        <span class="seedance-frame-slot-label">First Frame</span>
+                        <span class="seedance-frame-slot-hint">Click para subir</span>
+                      </button>
+                      <button type="button" class="seedance-frame-slot" data-frame="last" id="seedanceLastFrameSlot">
+                        <i class="fas fa-image" aria-hidden="true"></i>
+                        <span class="seedance-frame-slot-label">Last Frame</span>
+                        <span class="seedance-frame-slot-hint">Click para subir</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Referencias Multimodales</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Imágenes, videos y audios que la IA usa como inspiración. Mutuamente excluyentes con Frames Clave.</p>
+
+                    <div class="seedance-ref-group">
+                      <div class="seedance-ref-group-header">
+                        <h4 class="video-prompt-panel-title">Imágenes <span class="seedance-ref-limit" id="seedanceRefImgCount">0 / 9</span></h4>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefImg"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                      </div>
+                      <div class="seedance-ref-list" id="seedanceRefImgList" aria-live="polite"></div>
+                    </div>
+
+                    <div class="seedance-ref-group">
+                      <div class="seedance-ref-group-header">
+                        <h4 class="video-prompt-panel-title">Videos <span class="seedance-ref-limit" id="seedanceRefVidCount">0 / 3 · ≤15s</span></h4>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefVid"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                      </div>
+                      <div class="seedance-ref-list" id="seedanceRefVidList" aria-live="polite"></div>
+                    </div>
+
+                    <div class="seedance-ref-group">
+                      <div class="seedance-ref-group-header">
+                        <h4 class="video-prompt-panel-title">Audios <span class="seedance-ref-limit" id="seedanceRefAudCount">0 / 3 · ≤15s</span></h4>
+                        <button type="button" class="seedance-ref-add-btn" id="seedanceAddRefAud"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                      </div>
+                      <div class="seedance-ref-list" id="seedanceRefAudList" aria-live="polite"></div>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Audio & Atmósfera</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Seedance puede generar el audio de la secuencia. Activar aumenta el costo de créditos.</p>
+                    <label class="seedance-toggle-row">
+                      <input type="checkbox" id="seedanceGenerateAudio">
+                      <span class="seedance-toggle-track" aria-hidden="true"><span class="seedance-toggle-thumb"></span></span>
+                      <span class="seedance-toggle-label">Generar audio</span>
+                    </label>
+                    <div class="video-left-block">
+                      <h4 class="video-prompt-panel-title">Tipo de sonido</h4>
+                      <div class="seedance-audio-tiles">
+                        <button type="button" class="seedance-audio-tile" data-audio-type="ambient"><i class="fas fa-wind" aria-hidden="true"></i><span>Diegético</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="music"><i class="fas fa-music" aria-hidden="true"></i><span>Música</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="voice"><i class="fas fa-microphone" aria-hidden="true"></i><span>Voz</span></button>
+                        <button type="button" class="seedance-audio-tile" data-audio-type="silence"><i class="fas fa-volume-xmark" aria-hidden="true"></i><span>Silencio</span></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Pacing & Narrativa</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Cómo fluye la historia: ritmo, evolución emocional y estilo de transición entre tomas.</p>
+                    <div class="video-cine-row"><label class="video-cine-label">Ritmo global</label>
+                      <select id="seedancePacing" class="video-cine-select">
+                        <option value="">— Auto</option>
+                        <option value="Slow contemplative">Lento contemplativo</option>
+                        <option value="Balanced">Equilibrado</option>
+                        <option value="Fast dynamic">Rápido dinámico</option>
+                      </select>
+                    </div>
+                    <div class="video-cine-row"><label class="video-cine-label">Arco emocional</label>
+                      <select id="seedanceArc" class="video-cine-select">
+                        <option value="">— Auto</option>
+                        <option value="Continuous">Continuo</option>
+                        <option value="Crescendo">Crescendo</option>
+                        <option value="Decrescendo">Decrescendo</option>
+                        <option value="Climax at end">Climax al final</option>
+                      </select>
+                    </div>
+                    <div class="video-cine-row"><label class="video-cine-label">Transiciones</label>
+                      <select id="seedanceTransitions" class="video-cine-select">
+                        <option value="">— Auto</option>
+                        <option value="Hard cuts">Cortes secos</option>
+                        <option value="Soft fades">Fundidos suaves</option>
+                        <option value="Match cuts">Match cuts</option>
+                        <option value="Whip pans">Whip pans</option>
+                        <option value="Morph">Morph / dissolve</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="video-sidebar-section">
+                    <div class="video-sidebar-section-header">
+                      <h3 class="video-section-label">Estilo Visual</h3>
+                    </div>
+                    <p class="video-sidebar-section-hint">Mood narrativo y nivel de realismo de la secuencia completa.</p>
+                    <div class="video-cine-row"><label class="video-cine-label">Mood narrativo</label>
+                      <select id="seedanceMood" class="video-cine-select">
+                        <option value="">— Auto</option>
+                        <option value="Cinematic">Cinematográfico</option>
+                        <option value="Documentary">Documental</option>
+                        <option value="Editorial">Editorial</option>
+                        <option value="Music video">Music video</option>
+                        <option value="Dreamlike">Sueño / Onírico</option>
+                        <option value="Commercial bright">Comercial luminoso</option>
+                      </select>
+                    </div>
+                    <div class="video-cine-row"><label class="video-cine-label">Realismo</label>
+                      <select id="seedanceRealism" class="video-cine-select">
+                        <option value="">— Auto</option>
+                        <option value="Realistic">Realista</option>
+                        <option value="Stylized">Estilizado</option>
+                        <option value="Hyperreal">Hiperreal</option>
+                        <option value="Surreal">Surreal</option>
+                        <option value="3D animated">3D animado</option>
+                      </select>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <button type="button" class="video-sidebar-help" id="seedanceSidebarHelpBtn" aria-label="Ayuda Seedance" title="Ayuda Seedance">?</button>
+              <div class="video-sidebar-help-popover" id="seedanceSidebarHelpPopover" role="dialog" aria-label="Ayuda Seedance">
+                <h4>Seedance 2.0 — secuencias narrativas</h4>
+                <p><strong>Frames Clave</strong>: una imagen de inicio + una de cierre. La IA construye el arco entre ambas.</p>
+                <p><strong>Referencias Multimodales</strong>: imágenes para estilo, videos para movimiento, audios para vibe. Hasta 9/3/3 respectivamente.</p>
+                <p><strong>Audio</strong>: a diferencia de Kling, Seedance genera el audio. Activarlo cuesta créditos extra pero da un video listo para publicar.</p>
+              </div>
+            </aside>
           </div>
 
         </div>
@@ -438,20 +689,21 @@ class VideoView extends BaseView {
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
     this.modelPickerEl = this.container.querySelector('#videoModelPicker');
-    this.footerControl = this.container.querySelector('#videoFooterControl');
-    this.sidebarConsole = this.container.querySelector('.video-sidebar-console');
     this.modelLabelEl = this.container.querySelector('#videoConsoleModelText');
     this.modelChangeBtn = this.container.querySelector('#videoModelChangeBtn');
+    this.modelChangeBtnSeedance = this.container.querySelector('#seedanceModelChangeBtn');
 
     this.selectedModel = this.selectedModel || null;
-    const MODEL_LABELS = { kling: 'Kling 3.0', seedance: 'Seedance 2.0' };
     const applyModelPickerState = () => {
       const picked = !!this.selectedModel;
       if (this.modelPickerEl) this.modelPickerEl.style.display = picked ? 'none' : 'flex';
       if (this.idleArea) this.idleArea.style.display = picked ? 'flex' : 'none';
-      if (this.footerControl) this.footerControl.style.display = picked ? '' : 'none';
-      if (this.sidebarConsole) this.sidebarConsole.style.display = picked ? '' : 'none';
-      if (this.modelLabelEl && picked) this.modelLabelEl.textContent = MODEL_LABELS[this.selectedModel] || this.selectedModel;
+      // Toggle sidebars y director consoles según modelo
+      this.container.querySelectorAll('[data-for-model]').forEach((el) => {
+        const target = el.getAttribute('data-for-model');
+        const visible = picked && target === this.selectedModel;
+        el.hidden = !visible;
+      });
     };
     this._applyModelPickerState = applyModelPickerState;
     applyModelPickerState();
@@ -482,6 +734,62 @@ class VideoView extends BaseView {
         applyModelPickerState();
       });
     }
+    if (this.modelChangeBtnSeedance && this.modelChangeBtnSeedance.dataset.boundModelChange !== '1') {
+      this.modelChangeBtnSeedance.dataset.boundModelChange = '1';
+      this.modelChangeBtnSeedance.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.selectedModel = null;
+        applyModelPickerState();
+      });
+    }
+
+    // Seedance: por ahora backend no existe — el botón PROMPT/Generate avisa.
+    const seedanceSend = this.container.querySelector('#seedancePromptSend');
+    if (seedanceSend && seedanceSend.dataset.boundSeedancePlaceholder !== '1') {
+      seedanceSend.dataset.boundSeedancePlaceholder = '1';
+      seedanceSend.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Backend de Seedance 2.0 en construcción. La UI está lista; cuando conectemos el endpoint kie-video-seedance este botón cocinará el storyboard con OpenAI y generará la secuencia.');
+      });
+    }
+    // Seedance: toggle Audio + Web search (solo UI state, sin wiring backend aún)
+    ['seedanceGenAudioToggle', 'seedanceWebSearchToggle'].forEach((id) => {
+      const btn = this.container.querySelector('#' + id);
+      if (!btn || btn.dataset.boundToggle === '1') return;
+      btn.dataset.boundToggle = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pressed = btn.getAttribute('aria-pressed') === 'true';
+        btn.setAttribute('aria-pressed', !pressed);
+        btn.classList.toggle('active', !pressed);
+      });
+    });
+    // Seedance: help button (mismo patrón que Kling)
+    const seedanceHelpBtn = this.container.querySelector('#seedanceSidebarHelpBtn');
+    const seedanceHelpPopover = this.container.querySelector('#seedanceSidebarHelpPopover');
+    if (seedanceHelpBtn && seedanceHelpPopover && seedanceHelpBtn.dataset.boundHelp !== '1') {
+      seedanceHelpBtn.dataset.boundHelp = '1';
+      seedanceHelpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        seedanceHelpPopover.classList.toggle('is-open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!seedanceHelpPopover.classList.contains('is-open')) return;
+        if (seedanceHelpPopover.contains(e.target) || seedanceHelpBtn.contains(e.target)) return;
+        seedanceHelpPopover.classList.remove('is-open');
+      });
+    }
+    // Seedance: audio type tiles (toggle exclusive)
+    this.container.querySelectorAll('.seedance-audio-tile[data-audio-type]').forEach((tile) => {
+      if (tile.dataset.boundAudio === '1') return;
+      tile.dataset.boundAudio = '1';
+      tile.addEventListener('click', (e) => {
+        e.preventDefault();
+        const wasActive = tile.classList.contains('is-active');
+        this.container.querySelectorAll('.seedance-audio-tile[data-audio-type]').forEach((t) => t.classList.remove('is-active'));
+        if (!wasActive) tile.classList.add('is-active');
+      });
+    });
 
     const helpBtn = this.container.querySelector('#videoSidebarHelpBtn');
     const helpPopover = this.container.querySelector('#videoSidebarHelpPopover');

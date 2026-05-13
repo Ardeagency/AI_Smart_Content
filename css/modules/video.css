@@ -3146,6 +3146,12 @@
     border: 1px solid rgba(255, 165, 0, 0.3);
 }
 
+.video-model-card__badge.is-beta {
+    background: rgba(91, 165, 255, 0.12);
+    color: var(--color-info);
+    border: 1px solid rgba(91, 165, 255, 0.32);
+}
+
 /* Botón "Cambiar modelo" en el header de Director Console */
 .video-console-model-change {
     margin-left: auto;
@@ -4026,5 +4032,251 @@
 @keyframes cine-fpv {
     0%, 100% { transform: scaleX(1); }
     50% { transform: scaleX(1.15); }
+}
+
+/* ============================================
+   SEEDANCE 2.0 — sidebar y director console específicos.
+   La unidad creativa es la SECUENCIA NARRATIVA, no la toma única.
+   ============================================ */
+
+/* Frames Clave — first/last frame anchors */
+.video-view-container .seedance-frames-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.video-view-container .seedance-frame-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 18px 8px;
+    background: #0f1012;
+    border: 1px dashed rgba(255,255,255,0.16);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.72rem;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    min-height: 96px;
+}
+
+.video-view-container .seedance-frame-slot:hover {
+    border-color: var(--color-info);
+    color: var(--text-primary);
+    background: rgba(91,165,255,0.04);
+}
+
+.video-view-container .seedance-frame-slot i {
+    font-size: 1.4rem;
+    opacity: 0.6;
+}
+
+.video-view-container .seedance-frame-slot-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.video-view-container .seedance-frame-slot-hint {
+    font-size: 0.66rem;
+    color: var(--text-muted);
+}
+
+.video-view-container .seedance-frame-slot.has-image {
+    border-style: solid;
+    border-color: var(--color-info);
+    background-size: cover;
+    background-position: center;
+}
+
+/* Referencias multimodales */
+.video-view-container .seedance-ref-group {
+    margin-bottom: 12px;
+}
+
+.video-view-container .seedance-ref-group:last-child {
+    margin-bottom: 0;
+}
+
+.video-view-container .seedance-ref-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.video-view-container .seedance-ref-limit {
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.video-view-container .seedance-ref-add-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px dashed rgba(255,255,255,0.2);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.video-view-container .seedance-ref-add-btn:hover {
+    border-color: var(--color-info);
+    border-style: solid;
+    color: var(--color-info);
+}
+
+.video-view-container .seedance-ref-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 12px;
+}
+
+.video-view-container .seedance-ref-list:empty::before {
+    content: 'Sin referencias';
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+/* Toggle row (Generar audio) */
+.video-view-container .seedance-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.video-view-container .seedance-toggle-row input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.video-view-container .seedance-toggle-track {
+    width: 32px;
+    height: 18px;
+    background: #2a2c30;
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.18s ease;
+    flex-shrink: 0;
+}
+
+.video-view-container .seedance-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--text-primary);
+    border-radius: 50%;
+    transition: transform 0.18s ease;
+}
+
+.video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track {
+    background: var(--color-info);
+}
+
+.video-view-container .seedance-toggle-row input[type="checkbox"]:checked + .seedance-toggle-track .seedance-toggle-thumb {
+    transform: translateX(14px);
+}
+
+.video-view-container .seedance-toggle-label {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+/* Audio type tiles */
+.video-view-container .seedance-audio-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.video-view-container .seedance-audio-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 4px;
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.66rem;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.video-view-container .seedance-audio-tile i {
+    font-size: 0.95rem;
+}
+
+.video-view-container .seedance-audio-tile:hover {
+    border-color: rgba(255,255,255,0.22);
+    color: var(--text-primary);
+}
+
+.video-view-container .seedance-audio-tile.is-active {
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+/* Director Console Seedance: textarea más grande para storyboard */
+.video-view-container .video-director-brief-input-large,
+.video-view-container .video-main-director .video-director-console-content .video-director-brief-input-large {
+    min-height: 88px;
+    max-height: min(280px, 36vh);
+    font-size: 1.02rem;
+    line-height: 1.55;
+}
+
+/* Duración Seedance: input numérico con unidad */
+.video-view-container .seedance-duration-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.video-view-container .seedance-duration-input {
+    width: 64px;
+    padding-right: 22px;
+    text-align: center;
+}
+
+.video-view-container .seedance-duration-input::-webkit-inner-spin-button,
+.video-view-container .seedance-duration-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.video-view-container .seedance-duration-unit {
+    position: absolute;
+    right: 10px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    pointer-events: none;
 }
 
