@@ -153,57 +153,42 @@ class VideoView extends BaseView {
                   </div>
                 </div>
 
-                <div class="video-canvas-viewer" id="videoCanvasViewer">
-                  <div class="video-canvas-viewer__frame">
-                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--tl" aria-hidden="true">REC · <span id="videoViewerStatus">STBY</span></div>
-                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--tr" aria-hidden="true"><span id="videoViewerSpec">16:9 · 5s</span></div>
-                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--bl" aria-hidden="true">KLING 3.0</div>
-                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--br" aria-hidden="true">TC 00:00:00:00</div>
-                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--tl" aria-hidden="true"></span>
-                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--tr" aria-hidden="true"></span>
-                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--bl" aria-hidden="true"></span>
-                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--br" aria-hidden="true"></span>
+                <div class="video-canvas-idle" id="videoCanvasIdle">
+                  <div class="video-canvas-idle-content">
+                    <p class="video-canvas-idle__eyebrow">Stand by</p>
+                    <h3 class="video-canvas-idle__title">Listo para producir</h3>
+                    <p class="video-canvas-idle__hint">Describe tu visión en el Director Console. La IA traducirá tu brief a un prompt con la voz de la marca.</p>
+                  </div>
+                </div>
 
-                    <div class="video-canvas-idle" id="videoCanvasIdle">
-                      <div class="video-canvas-idle-content">
-                        <div class="video-canvas-idle__pulse" aria-hidden="true"></div>
-                        <p class="video-canvas-idle__eyebrow">STAND BY · READY TO ROLL</p>
-                        <h3 class="video-canvas-idle__title">Listo para producir</h3>
-                        <p class="video-canvas-idle__hint">Describe tu visión en el Director Console. La IA traducirá tu brief a un prompt cinemático con la voz de la marca.</p>
-                      </div>
-                    </div>
+                <div class="video-status-area" id="videoStatusArea" style="display: none;">
+                  <div class="video-status-card" id="videoStatusCard">
+                    <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+                    <p class="video-status-text" id="videoStatusText">—</p>
+                  </div>
+                </div>
 
-                    <div class="video-status-area" id="videoStatusArea" style="display: none;">
-                      <div class="video-status-card" id="videoStatusCard">
-                        <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
-                        <p class="video-status-text" id="videoStatusText">—</p>
-                      </div>
-                      <div class="video-canvas-viewer__progress" aria-hidden="true"><div class="video-canvas-viewer__progress-bar"></div></div>
+                <div class="video-result-area" id="videoResultArea" style="display: none;">
+                  <div class="video-result-card">
+                    <div class="video-result-card-header">
+                      <span class="video-result-output-badge">OUTPUT</span>
+                      <h2 class="video-result-title">Video generado</h2>
                     </div>
+                    <div class="video-result-player-wrap">
+                      <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+                    </div>
+                    <div class="video-result-actions">
+                      <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                        <i class="fas fa-download"></i> Descargar
+                      </a>
+                    </div>
+                  </div>
+                </div>
 
-                    <div class="video-result-area" id="videoResultArea" style="display: none;">
-                      <div class="video-result-card">
-                        <div class="video-result-card-header">
-                          <span class="video-result-output-badge">OUTPUT</span>
-                          <h2 class="video-result-title">Video generado</h2>
-                        </div>
-                        <div class="video-result-player-wrap">
-                          <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
-                        </div>
-                        <div class="video-result-actions">
-                          <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                            <i class="fas fa-download"></i> Descargar
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="video-error-area" id="videoErrorArea" style="display: none;">
-                      <div class="video-error-card">
-                        <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
-                        <p class="video-error-text" id="videoErrorText">—</p>
-                      </div>
-                    </div>
+                <div class="video-error-area" id="videoErrorArea" style="display: none;">
+                  <div class="video-error-card">
+                    <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
+                    <p class="video-error-text" id="videoErrorText">—</p>
                   </div>
                 </div>
 
@@ -415,20 +400,18 @@ class VideoView extends BaseView {
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
-    this.canvasViewer = this.container.querySelector('#videoCanvasViewer');
     this.modelPickerEl = this.container.querySelector('#videoModelPicker');
     this.footerControl = this.container.querySelector('#videoFooterControl');
     this.sidebarConsole = this.container.querySelector('.video-sidebar-console');
     this.modelLabelEl = this.container.querySelector('#videoConsoleModelText');
     this.modelChangeBtn = this.container.querySelector('#videoModelChangeBtn');
-    this.viewerSpec = this.container.querySelector('#videoViewerSpec');
 
     this.selectedModel = this.selectedModel || null;
     const MODEL_LABELS = { kling: 'Kling 3.0', seedance: 'Seedance 2.0' };
     const applyModelPickerState = () => {
       const picked = !!this.selectedModel;
       if (this.modelPickerEl) this.modelPickerEl.style.display = picked ? 'none' : 'flex';
-      if (this.canvasViewer) this.canvasViewer.style.display = picked ? 'flex' : 'none';
+      if (this.idleArea) this.idleArea.style.display = picked ? 'flex' : 'none';
       if (this.footerControl) this.footerControl.style.display = picked ? '' : 'none';
       if (this.sidebarConsole) this.sidebarConsole.style.display = picked ? '' : 'none';
       if (this.modelLabelEl && picked) this.modelLabelEl.textContent = MODEL_LABELS[this.selectedModel] || this.selectedModel;

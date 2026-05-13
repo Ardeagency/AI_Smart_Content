@@ -75,15 +75,17 @@
 .video-director-wrap .video-prompt-footer-card {
     width: 100%;
 }
-/* Director Console y Sidebar Console: mismo efecto glass-black (fondo, borde, blur, radio) */
+/* Director Console y Sidebar Console: pattern Command Center
+   (bg sólido, borde sutil, sin backdrop-filter). Glass-morphism queda
+   reservado a botones/overlays, no a estos containers. */
 .video-director-console-zone .video-prompt-footer-card-inner.glass-black,
 .video-sidebar-console .video-prompt-footer-card-inner.glass-black {
-    background: var(--glass-black-bg);
-    border: 1px solid var(--glass-black-border);
-    color: var(--glass-black-text);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
+    color: var(--text-primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: var(--radius-md);
     box-shadow: none;
 }
 .video-sidebar-console .video-prompt-footer-card-inner.glass-black {
@@ -387,21 +389,18 @@
 }
 .video-director-console .video-director-select {
     padding: var(--spacing-xs) 1.75rem var(--spacing-xs) var(--spacing-sm);
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
     font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--glass-black-text);
-    background: var(--white-8);
-    border: 1px solid var(--glass-white-border);
+    font-weight: 500;
+    color: var(--text-primary);
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
 }
 .video-director-console .video-director-select:hover {
-    border-color: rgba(255,255,255,0.25);
-    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.22);
 }
 .video-director-console .video-prompt-aspect-wrap,
 .video-director-console .video-prompt-duration-wrap,
@@ -993,10 +992,10 @@
     max-height: 45vh;
     margin: 0 auto 6rem;
     padding: var(--spacing-md);
-    border-radius: var(--glass-radius);
-    background: var(--glass-black-bg);
-    border: 1px solid var(--white-15);
-    box-shadow: var(--shadow-floating);
+    border-radius: var(--radius-md);
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     z-index: 1;
@@ -1788,298 +1787,45 @@
 }
 
 /* ============================================
-   Cinematic viewer frame — hero del canvas
-   16:9 letterboxed, corner brackets, HUD timecode style.
-   Inspirado en la cabina de un monitor de director.
+   Canvas plano (pattern Command Center): bg solid, sin frame, sin HUDs.
+   Idle / status / result / error apilados, cada uno centrado y limpio.
    ============================================ */
-.video-canvas-viewer {
+.video-canvas-idle {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 0;
-    padding: var(--spacing-md);
-}
-
-.video-canvas-viewer__frame {
-    position: relative;
-    width: 100%;
-    max-width: min(960px, 100%);
-    aspect-ratio: 16 / 9;
-    background: radial-gradient(ellipse at center, rgba(15, 18, 28, 0.6) 0%, #000 85%);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.4), inset 0 0 60px rgba(0,0,0,0.45), 0 24px 60px rgba(0,0,0,0.5);
-    isolation: isolate;
-}
-
-.video-canvas-viewer__frame::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
-    z-index: 1;
-}
-
-.video-canvas-viewer__corner {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.45);
-    z-index: 3;
-    pointer-events: none;
-}
-.video-canvas-viewer__corner--tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-.video-canvas-viewer__corner--tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
-.video-canvas-viewer__corner--bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
-.video-canvas-viewer__corner--br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
-
-.video-canvas-viewer__hud {
-    position: absolute;
-    z-index: 3;
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    pointer-events: none;
-}
-.video-canvas-viewer__hud--tl { top: 14px; left: 32px; }
-.video-canvas-viewer__hud--tr { top: 14px; right: 32px; }
-.video-canvas-viewer__hud--bl { bottom: 14px; left: 32px; }
-.video-canvas-viewer__hud--br { bottom: 14px; right: 32px; }
-
-.video-canvas-viewer__hud--tl::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #ff4757;
-    margin-right: 0.5em;
-    box-shadow: 0 0 8px #ff4757;
-    animation: video-rec-pulse 1.6s ease-in-out infinite;
-    vertical-align: middle;
-    transform: translateY(-1px);
-}
-
-@keyframes video-rec-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-}
-
-/* Children layouts — todos absolute inset 0 dentro del frame */
-.video-canvas-viewer__frame > .video-canvas-idle,
-.video-canvas-viewer__frame > .video-status-area,
-.video-canvas-viewer__frame > .video-result-area,
-.video-canvas-viewer__frame > .video-error-area {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: var(--spacing-xl);
 }
-
-/* Idle cinematográfico */
 .video-canvas-idle-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 0.6rem;
     text-align: center;
     max-width: 460px;
-    position: relative;
 }
-
-.video-canvas-idle__pulse {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--color-info) 0%, transparent 70%);
-    opacity: 0.35;
-    animation: video-idle-pulse 3s ease-in-out infinite;
-    margin-bottom: var(--spacing-sm);
-}
-
-@keyframes video-idle-pulse {
-    0%, 100% { transform: scale(1); opacity: 0.35; }
-    50% { transform: scale(1.4); opacity: 0.15; }
-}
-
 .video-canvas-idle__eyebrow {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-info);
+    color: var(--text-muted);
     margin: 0;
-    opacity: 0.9;
 }
-
 .video-canvas-idle__title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
     margin: 0;
 }
-
 .video-canvas-idle__hint {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
     margin: 0;
     line-height: 1.6;
-    max-width: 400px;
-}
-
-/* Result area en full bleed dentro del frame */
-.video-canvas-viewer__frame > .video-result-area {
-    padding: 0;
-}
-.video-canvas-viewer__frame .video-result-card {
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    display: flex;
-    flex-direction: column;
-}
-.video-canvas-viewer__frame .video-result-card-header {
-    position: absolute;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 4;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(8px);
-    padding: 4px 10px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid rgba(255,255,255,0.15);
-}
-.video-canvas-viewer__frame .video-result-player-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-}
-.video-canvas-viewer__frame .video-result-player {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-.video-canvas-viewer__frame .video-result-actions {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 4;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-.video-canvas-viewer__frame:hover .video-result-actions,
-.video-canvas-viewer__frame:focus-within .video-result-actions {
-    opacity: 1;
-}
-
-/* Progress bar accent en el borde inferior durante status */
-.video-canvas-viewer__progress {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 3px;
-    background: rgba(255,255,255,0.05);
-    overflow: hidden;
-    z-index: 3;
-}
-.video-canvas-viewer__progress-bar {
-    height: 100%;
-    width: 30%;
-    background: linear-gradient(90deg, transparent, var(--color-info), transparent);
-    animation: video-progress-slide 1.8s ease-in-out infinite;
-}
-@keyframes video-progress-slide {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(400%); }
-}
-
-/* Status card refinado dentro del frame */
-.video-canvas-viewer__frame > .video-status-area {
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-.video-canvas-viewer__frame .video-status-card {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
-    max-width: 480px;
-    text-align: center;
-}
-.video-canvas-viewer__frame .video-status-spinner {
-    /* Spinner es redundante con la progress bar accent — ocultamos. */
-    display: none !important;
-}
-.video-canvas-viewer__frame .video-status-text {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin: 0;
-}
-.video-canvas-viewer__frame .video-status-text::before {
-    content: '◐';
-    display: inline-block;
-    margin-right: 0.5em;
-    color: var(--color-info);
-    animation: video-status-rotate 1.5s linear infinite;
-}
-@keyframes video-status-rotate {
-    to { transform: rotate(360deg); }
-}
-
-/* Error refinado */
-.video-canvas-viewer__frame .video-error-card {
-    background: rgba(220, 38, 38, 0.06);
-    border: 1px solid rgba(220, 38, 38, 0.3);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md) var(--spacing-lg);
-    max-width: 480px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-.video-canvas-viewer__frame .video-error-icon-wrap {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(220, 38, 38, 0.12);
-    color: #ef4444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
 }
 
 /* Status card — override for new layout */
@@ -2204,12 +1950,10 @@
     opacity: 0.5;
 }
 .video-console-model-text {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--color-info);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
 }
 
 /* Video: acentos → --brand-gradient-dynamic (sin barrido de posición) */
@@ -3196,27 +2940,25 @@
 }
 
 .video-model-picker__eyebrow {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-info);
-    opacity: 0.85;
+    color: var(--text-muted);
     margin: 0;
 }
 
 .video-model-picker__title {
-    font-size: var(--font-size-base);
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
     margin: 0;
     text-align: center;
 }
 
 .video-model-picker__hint {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
     margin: 0 0 var(--spacing-md);
     text-align: center;
@@ -3243,37 +2985,24 @@
     grid-template-rows: auto 1fr auto;
     gap: var(--spacing-sm);
     padding: clamp(1rem, 2.8vw, 1.4rem);
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
     border-radius: var(--radius-md);
     color: inherit;
     text-align: left;
     cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: border-color 0.18s ease, background 0.18s ease;
     font: inherit;
-    overflow: hidden;
-}
-
-.video-model-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
-    pointer-events: none;
 }
 
 .video-model-card:hover:not(.is-locked) {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: #16181a;
 }
 
 .video-model-card.is-selected {
     border-color: var(--color-info);
-    box-shadow: 0 0 0 1px var(--color-info) inset, 0 12px 28px rgba(91, 165, 255, 0.18);
-    background: linear-gradient(135deg, rgba(91, 165, 255, 0.08), var(--glass-bg) 60%);
+    background: #141517;
 }
 
 .video-model-card.is-locked {
@@ -3293,8 +3022,8 @@
     width: 56px;
     height: 56px;
     border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-divider, #242424);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3369,9 +3098,7 @@
     justify-content: space-between;
     gap: var(--spacing-sm);
     padding-top: var(--spacing-sm);
-    border-top: 1px dashed var(--glass-border);
-    position: relative;
-    z-index: 1;
+    border-top: 1px solid var(--border-divider, #242424);
 }
 
 .video-model-card__cost {
@@ -3423,25 +3150,23 @@
 .video-console-model-change {
     margin-left: auto;
     background: transparent;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-divider, #242424);
     color: var(--text-muted);
     font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     font-weight: 600;
     padding: 3px 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.35em;
-    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .video-console-model-change:hover {
     color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.22);
 }
 
 .video-console-model-change i {
@@ -3450,14 +3175,14 @@
 }
 
 /* ============================================
-   Director Console — refinamiento editorial.
-   Hacer del textarea el protagonista; controls más sutiles.
+   Director Console — pattern Command Center.
+   Solid bg, borde sutil, textarea editorial, sin glass.
    ============================================ */
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
-    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md);
     gap: var(--spacing-sm);
-    border: 1px solid var(--glass-border);
-    background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.015));
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
 }
 
 .video-view-container .video-main-director .video-console-header-row {
@@ -3465,25 +3190,23 @@
     align-items: center;
     gap: 0.5rem;
     padding-bottom: var(--spacing-xs);
-    border-bottom: 1px dashed var(--glass-border);
+    border-bottom: 1px solid var(--border-divider, #242424);
     margin-bottom: var(--spacing-xs);
 }
 
-/* Add-element button — más prominente, feel de slot */
+/* Add-element button — drop-zone discreto, sin glass */
 .video-view-container .video-director-top-row .video-director-btn-add {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
-    border: 1px dashed rgba(255,255,255,0.28);
-    background: rgba(255,255,255,0.02);
-    color: var(--text-secondary);
-    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed rgba(255,255,255,0.18);
+    background: transparent;
+    color: var(--text-muted);
+    transition: border-color 0.18s ease, color 0.18s ease;
 }
 .video-view-container .video-director-top-row .video-director-btn-add:hover {
     border-color: var(--color-info);
-    background: rgba(91, 165, 255, 0.08);
     color: var(--color-info);
-    transform: scale(1.04);
     border-style: solid;
 }
 
@@ -3505,7 +3228,7 @@
 /* Separador entre prompt y controls */
 .video-view-container .video-main-director .video-director-separator {
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    background: var(--border-divider, #242424);
     border: none;
     margin: var(--spacing-xs) 0;
 }
@@ -3519,54 +3242,46 @@
 }
 
 .video-view-container .video-main-director .video-director-toggle {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-divider, #242424);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    transition: color 0.18s ease, border-color 0.18s ease;
 }
 .video-view-container .video-main-director .video-director-toggle:hover {
     color: var(--text-primary);
-    border-color: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.22);
 }
 .video-view-container .video-main-director .video-director-toggle.active,
 .video-view-container .video-main-director .video-director-toggle[aria-pressed="true"] {
     color: var(--color-info);
     border-color: var(--color-info);
-    background: rgba(91, 165, 255, 0.08);
 }
 
-/* Botón Generate — protagonista */
+/* Botón Generate — primary, brand gradient sin glow excesivo */
 .video-view-container .video-main-director .video-director-btn-generate {
     margin-left: auto;
-    padding: 10px 20px;
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+    padding: 9px 18px;
     font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     background: var(--brand-gradient-dynamic, var(--brand-gradient, var(--color-info)));
     border: none;
     color: #fff;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    box-shadow: 0 4px 16px rgba(91, 165, 255, 0.22);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    transition: filter 0.15s ease;
 }
 .video-view-container .video-main-director .video-director-btn-generate:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.1);
-    box-shadow: 0 6px 20px rgba(91, 165, 255, 0.32);
+    filter: brightness(1.08);
 }
 .video-view-container .video-main-director .video-director-btn-generate i {
     font-size: 0.85rem;
@@ -3596,11 +3311,8 @@
 
 .video-cinematography-panel .video-cine-row .video-cine-label,
 .video-cine-row .video-cine-label {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 500;
     color: var(--text-muted);
     margin: 0;
 }
@@ -3619,29 +3331,25 @@
     justify-content: center;
     gap: 6px;
     padding: 10px 6px;
-    background: var(--white-5);
-    border: 1px solid var(--glass-border);
+    background: #0f1012;
+    border: 1px solid var(--border-divider, #242424);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
-    min-height: 70px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+    min-height: 64px;
     font: inherit;
 }
 
 .video-cine-tile:hover {
-    border-color: rgba(255, 255, 255, 0.25);
-    background: var(--white-8);
+    border-color: rgba(255, 255, 255, 0.22);
     color: var(--text-primary);
-    transform: translateY(-1px);
 }
 
 .video-cine-tile.is-selected {
     border-color: var(--color-info);
-    background: rgba(91, 165, 255, 0.1);
     color: var(--color-info);
-    box-shadow: 0 0 0 1px var(--color-info) inset;
 }
 
 .video-cine-tile__icon {
@@ -3663,10 +3371,8 @@
     hyphens: auto;
 }
 
-/* Production Preset select sigue siendo <select> nativo pero estilo mono */
+/* Production Preset select — discreto, pattern CC */
 .video-cine-preset-wrap .video-cine-select {
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
