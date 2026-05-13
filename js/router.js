@@ -310,6 +310,13 @@ class Router {
         return;
       }
 
+      // Lazy-load del bundle de Navigation: solo en rutas autenticadas (las
+      // públicas no muestran sidebar). Idempotente; segunda navegación es
+      // instantánea (script ya en cache del browser).
+      if (route.requiresAuth && isAuth && typeof window.__ensureNavigationLoaded === 'function') {
+        await window.__ensureNavigationLoaded();
+      }
+
       const container = document.getElementById('app-container');
       if (!container) return;
 

@@ -257,15 +257,11 @@
     <!-- Vista crítica: login (es ahora la página principal) -->
     <script src="js/views/SignInView.js?v=__BUILD_ID__" defer></script>
 
-    <!-- Navigation (clase base) + mixins extraídos del god-class + App init.
-         Los mixins aplican Object.assign sobre Navigation.prototype al cargarse,
-         así que deben ir DESPUÉS de Navigation.js. Orden garantizado por `defer`. -->
-    <script src="js/components/Navigation.js?v=__BUILD_ID__" defer></script>
-    <script src="js/components/navigation/Flyouts.mixin.js?v=__BUILD_ID__" defer></script>
-    <script src="js/components/navigation/Credits.mixin.js?v=__BUILD_ID__" defer></script>
-    <script src="js/components/navigation/Settings.mixin.js?v=__BUILD_ID__" defer></script>
-    <script src="js/components/MatchBars.js?v=__BUILD_ID__" defer></script>
-    <script src="js/components/AudienceMap.js?v=__BUILD_ID__" defer></script>
+    <!-- Lazy-loader del bundle de Navigation (~35 KB gz). Las rutas públicas
+         (/, /login, /signin, legales) no renderizan sidebar, así que cargar
+         Navigation y sus mixins ahí desperdicia bytes. El router invoca
+         window.__ensureNavigationLoaded() tras pasar el auth check. -->
+    <script src="js/utils/lazy-nav.js?v=__BUILD_ID__" defer></script>
     <script src="js/app.js?v=__BUILD_ID__" defer></script>
 
     <!-- Prefetch de top-5 vistas en idle time. Si el browser tiene cycles
