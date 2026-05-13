@@ -153,36 +153,57 @@ class VideoView extends BaseView {
                   </div>
                 </div>
 
-                <div class="video-canvas-idle" id="videoCanvasIdle"></div>
+                <div class="video-canvas-viewer" id="videoCanvasViewer">
+                  <div class="video-canvas-viewer__frame">
+                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--tl" aria-hidden="true">REC · <span id="videoViewerStatus">STBY</span></div>
+                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--tr" aria-hidden="true"><span id="videoViewerSpec">16:9 · 5s</span></div>
+                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--bl" aria-hidden="true">KLING 3.0</div>
+                    <div class="video-canvas-viewer__hud video-canvas-viewer__hud--br" aria-hidden="true">TC 00:00:00:00</div>
+                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--tl" aria-hidden="true"></span>
+                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--tr" aria-hidden="true"></span>
+                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--bl" aria-hidden="true"></span>
+                    <span class="video-canvas-viewer__corner video-canvas-viewer__corner--br" aria-hidden="true"></span>
 
-                <div class="video-status-area" id="videoStatusArea" style="display: none;">
-                  <div class="video-status-card" id="videoStatusCard">
-                    <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
-                    <p class="video-status-text" id="videoStatusText">—</p>
-                  </div>
-                </div>
+                    <div class="video-canvas-idle" id="videoCanvasIdle">
+                      <div class="video-canvas-idle-content">
+                        <div class="video-canvas-idle__pulse" aria-hidden="true"></div>
+                        <p class="video-canvas-idle__eyebrow">STAND BY · READY TO ROLL</p>
+                        <h3 class="video-canvas-idle__title">Listo para producir</h3>
+                        <p class="video-canvas-idle__hint">Describe tu visión en el Director Console. La IA traducirá tu brief a un prompt cinemático con la voz de la marca.</p>
+                      </div>
+                    </div>
 
-                <div class="video-result-area" id="videoResultArea" style="display: none;">
-                  <div class="video-result-card">
-                    <div class="video-result-card-header">
-                      <span class="video-result-output-badge">OUTPUT</span>
-                      <h2 class="video-result-title">Video generado</h2>
+                    <div class="video-status-area" id="videoStatusArea" style="display: none;">
+                      <div class="video-status-card" id="videoStatusCard">
+                        <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+                        <p class="video-status-text" id="videoStatusText">—</p>
+                      </div>
+                      <div class="video-canvas-viewer__progress" aria-hidden="true"><div class="video-canvas-viewer__progress-bar"></div></div>
                     </div>
-                    <div class="video-result-player-wrap">
-                      <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
-                    </div>
-                    <div class="video-result-actions">
-                      <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                        <i class="fas fa-download"></i> Descargar
-                      </a>
-                    </div>
-                  </div>
-                </div>
 
-                <div class="video-error-area" id="videoErrorArea" style="display: none;">
-                  <div class="video-error-card">
-                    <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
-                    <p class="video-error-text" id="videoErrorText">—</p>
+                    <div class="video-result-area" id="videoResultArea" style="display: none;">
+                      <div class="video-result-card">
+                        <div class="video-result-card-header">
+                          <span class="video-result-output-badge">OUTPUT</span>
+                          <h2 class="video-result-title">Video generado</h2>
+                        </div>
+                        <div class="video-result-player-wrap">
+                          <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+                        </div>
+                        <div class="video-result-actions">
+                          <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                            <i class="fas fa-download"></i> Descargar
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="video-error-area" id="videoErrorArea" style="display: none;">
+                      <div class="video-error-card">
+                        <div class="video-error-icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
+                        <p class="video-error-text" id="videoErrorText">—</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -394,18 +415,20 @@ class VideoView extends BaseView {
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
+    this.canvasViewer = this.container.querySelector('#videoCanvasViewer');
     this.modelPickerEl = this.container.querySelector('#videoModelPicker');
     this.footerControl = this.container.querySelector('#videoFooterControl');
     this.sidebarConsole = this.container.querySelector('.video-sidebar-console');
     this.modelLabelEl = this.container.querySelector('#videoConsoleModelText');
     this.modelChangeBtn = this.container.querySelector('#videoModelChangeBtn');
+    this.viewerSpec = this.container.querySelector('#videoViewerSpec');
 
     this.selectedModel = this.selectedModel || null;
     const MODEL_LABELS = { kling: 'Kling 3.0', seedance: 'Seedance 2.0' };
     const applyModelPickerState = () => {
       const picked = !!this.selectedModel;
       if (this.modelPickerEl) this.modelPickerEl.style.display = picked ? 'none' : 'flex';
-      if (this.idleArea) this.idleArea.style.display = picked ? 'flex' : 'none';
+      if (this.canvasViewer) this.canvasViewer.style.display = picked ? 'flex' : 'none';
       if (this.footerControl) this.footerControl.style.display = picked ? '' : 'none';
       if (this.sidebarConsole) this.sidebarConsole.style.display = picked ? '' : 'none';
       if (this.modelLabelEl && picked) this.modelLabelEl.textContent = MODEL_LABELS[this.selectedModel] || this.selectedModel;
@@ -961,6 +984,69 @@ class VideoView extends BaseView {
 
     this.renderCinematographySelectedTags();
     this.renderDirectorVariables();
+    this.enhanceCinematographyWithTiles();
+  }
+
+  enhanceCinematographyWithTiles() {
+    const ICONS = {
+      shotType: 'fa-video',
+      lens: 'fa-camera-retro',
+      framing: 'fa-crop',
+      cameraMovement: 'fa-arrows-up-down-left-right',
+      motionSpeed: 'fa-gauge-high',
+      motionIntensity: 'fa-bolt',
+      lightType: 'fa-lightbulb',
+      contrastLevel: 'fa-circle-half-stroke',
+      temperature: 'fa-temperature-three-quarters',
+      tone: 'fa-palette',
+      colorGrade: 'fa-paintbrush',
+      colorTemp: 'fa-droplet',
+      energyLevel: 'fa-fire-flame-curved'
+    };
+    const config = [
+      ['videoCineShotType', 'shotType'], ['videoCineLens', 'lens'], ['videoCineFraming', 'framing'],
+      ['videoCineMovement', 'cameraMovement'], ['videoCineMotionSpeed', 'motionSpeed'], ['videoCineMotionIntensity', 'motionIntensity'],
+      ['videoCineLightType', 'lightType'], ['videoCineContrast', 'contrastLevel'], ['videoCineTemperature', 'temperature'],
+      ['videoCineTone', 'tone'], ['videoCineColorGrade', 'colorGrade'], ['videoCineEnergyLevel', 'energyLevel'], ['videoCineColorTemp', 'colorTemp']
+    ];
+    config.forEach(([id, key]) => {
+      const sel = this.container.querySelector('#' + id);
+      if (!sel) return;
+      const row = sel.closest('.video-cine-row');
+      if (!row) return;
+      let grid = row.querySelector('.video-cine-tile-grid');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'video-cine-tile-grid';
+        grid.setAttribute('data-target-select', id);
+        row.appendChild(grid);
+        sel.classList.add('video-cine-select-hidden');
+      }
+      const iconClass = ICONS[key] || 'fa-circle';
+      const renderTiles = () => {
+        const options = Array.from(sel.options).filter((o) => o.value);
+        const current = sel.value;
+        grid.innerHTML = options.map((opt) => `
+          <button type="button" class="video-cine-tile${current === opt.value ? ' is-selected' : ''}" data-value="${this.escapeHtml(opt.value)}" aria-pressed="${current === opt.value ? 'true' : 'false'}">
+            <i class="fas ${iconClass} video-cine-tile__icon" aria-hidden="true"></i>
+            <span class="video-cine-tile__label">${this.escapeHtml(opt.text)}</span>
+          </button>`).join('');
+      };
+      renderTiles();
+      if (grid.dataset.boundTileClick !== '1') {
+        grid.dataset.boundTileClick = '1';
+        grid.addEventListener('click', (e) => {
+          const tile = e.target.closest('.video-cine-tile');
+          if (!tile || !grid.contains(tile)) return;
+          e.preventDefault();
+          const value = tile.getAttribute('data-value');
+          sel.value = sel.value === value ? '' : value;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          renderTiles();
+        });
+      }
+      sel.addEventListener('change', renderTiles);
+    });
   }
 
   syncCinematographyToSelects() {
