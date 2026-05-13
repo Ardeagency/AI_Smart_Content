@@ -274,6 +274,9 @@ class VideoView extends BaseView {
                     <div class="video-sidebar-section-header">
                       <span class="video-sidebar-section-num">01</span>
                       <h3 class="video-section-label">Production Context</h3>
+                      <div class="video-sidebar-section-actions">
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCtxAiBtn" aria-label="Auto-detectar contexto" title="Auto-detectar contexto desde campaña activa"><i class="fas fa-wand-magic-sparkles"></i></button>
+                      </div>
                     </div>
                     <p class="video-sidebar-section-hint">A qué campaña pertenece este video, a quién le habla, y qué productos o piezas debe respetar la IA al producirlo.</p>
                     <div class="video-escenas-block">
@@ -321,6 +324,10 @@ class VideoView extends BaseView {
                     <div class="video-sidebar-section-header">
                       <span class="video-sidebar-section-num">02</span>
                       <h3 class="video-section-label">Cinematography</h3>
+                      <div class="video-sidebar-section-actions">
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineCollapseAllBtn" aria-label="Colapsar todo" title="Colapsar todos los acordeones"><i class="fas fa-minus"></i></button>
+                        <button type="button" class="video-sidebar-section-icon-btn" id="videoCineResetBtn" aria-label="Restablecer cinematografía" title="Restablecer todos los valores"><i class="fas fa-rotate-left"></i></button>
+                      </div>
                     </div>
                     <p class="video-sidebar-section-hint">Define el lenguaje visual: cámara, movimiento, luz y mood. Si no sabes por dónde empezar, elige un Production Preset.</p>
                     <div class="video-cine-preset-wrap">
@@ -351,8 +358,10 @@ class VideoView extends BaseView {
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <p class="video-cine-block-hint">Cómo se mueve la cámara y con cuánta energía. Determina el ritmo y la sensación del video.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Motion Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                          <div class="video-cine-row-pair">
+                            <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                          </div>
                         </div>
                       </div>
                       <div class="video-cine-block" data-block="lighting">
@@ -360,8 +369,10 @@ class VideoView extends BaseView {
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <p class="video-cine-block-hint">La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                          <div class="video-cine-row-pair">
+                            <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                          </div>
                         </div>
                       </div>
                       <div class="video-cine-block" data-block="mood">
@@ -369,14 +380,23 @@ class VideoView extends BaseView {
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <p class="video-cine-block-hint">La paleta y la energía emocional. Define si el video se siente premium, vibrante o dramático.</p>
                           <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                          <div class="video-cine-row-pair">
+                            <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Energy</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
                 </div>
+              </div>
+              <button type="button" class="video-sidebar-help" id="videoSidebarHelpBtn" aria-label="Ayuda creativa" title="Ayuda creativa">?</button>
+              <div class="video-sidebar-help-popover" id="videoSidebarHelpPopover" role="dialog" aria-label="Ayuda creativa">
+                <h4>¿Cómo usar este panel?</h4>
+                <p><strong>Production Context</strong> conecta el video a la campaña, audiencia y productos que la IA debe respetar al producirlo.</p>
+                <p><strong>Cinematography</strong> define el lenguaje visual. Si no sabes por dónde empezar, elige un <em>Production Preset</em> y la IA llenará el resto.</p>
+                <p>Cada control alimenta el prompt final. No tienes que llenarlos todos — entre más completes, más fiel será el resultado a tu intención.</p>
               </div>
             </aside>
           </div>
@@ -449,6 +469,64 @@ class VideoView extends BaseView {
         e.preventDefault();
         this.selectedModel = null;
         applyModelPickerState();
+      });
+    }
+
+    const helpBtn = this.container.querySelector('#videoSidebarHelpBtn');
+    const helpPopover = this.container.querySelector('#videoSidebarHelpPopover');
+    if (helpBtn && helpPopover && helpBtn.dataset.boundHelp !== '1') {
+      helpBtn.dataset.boundHelp = '1';
+      helpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        helpPopover.classList.toggle('is-open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!helpPopover.classList.contains('is-open')) return;
+        if (helpPopover.contains(e.target) || helpBtn.contains(e.target)) return;
+        helpPopover.classList.remove('is-open');
+      });
+    }
+
+    const collapseAllBtn = this.container.querySelector('#videoCineCollapseAllBtn');
+    if (collapseAllBtn && collapseAllBtn.dataset.boundCollapse !== '1') {
+      collapseAllBtn.dataset.boundCollapse = '1';
+      collapseAllBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.container.querySelectorAll('.video-cinematography-panel .video-cine-block-content').forEach((c) => {
+          c.classList.add('video-cine-block-collapsed');
+        });
+        this.container.querySelectorAll('.video-cinematography-panel .video-cine-block-header').forEach((h) => {
+          h.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    const resetCineBtn = this.container.querySelector('#videoCineResetBtn');
+    if (resetCineBtn && resetCineBtn.dataset.boundReset !== '1') {
+      resetCineBtn.dataset.boundReset = '1';
+      resetCineBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm('¿Restablecer todos los valores de Cinematography?')) return;
+        const keys = ['shotType','lens','framing','cameraMovement','motionSpeed','motionIntensity','lightType','contrastLevel','temperature','tone','colorGrade','colorTemp','energyLevel'];
+        keys.forEach((k) => { if (this.cinematography) this.cinematography[k] = ''; });
+        if (this.cinematography) this.cinematography.preset = '';
+        if (typeof this.syncCinematographyToSelects === 'function') this.syncCinematographyToSelects();
+        if (typeof this.renderCinematographySelectedTags === 'function') this.renderCinematographySelectedTags();
+        if (typeof this.renderDirectorVariables === 'function') this.renderDirectorVariables();
+        const presetEl = this.container.querySelector('#videoCinePreset');
+        if (presetEl) presetEl.value = '';
+        this.container.querySelectorAll('.video-cinematography-panel .video-cine-select').forEach((sel) => {
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    }
+
+    const ctxAiBtn = this.container.querySelector('#videoCtxAiBtn');
+    if (ctxAiBtn && ctxAiBtn.dataset.boundCtxAi !== '1') {
+      ctxAiBtn.dataset.boundCtxAi = '1';
+      ctxAiBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Auto-detección de contexto: próximamente. Por ahora completa Campaign / Audience / Asset Stack manualmente.');
       });
     }
     this.statusArea = this.container.querySelector('#videoStatusArea');

@@ -3404,10 +3404,11 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding: var(--spacing-lg);
-    gap: var(--spacing-xl);
+    padding: 0;
+    gap: 0;
     background: var(--bg-card, #141517);
     border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-md);
     box-shadow: none;
 }
 
@@ -3423,100 +3424,146 @@
     background: rgba(255, 255, 255, 0.16);
 }
 
-/* 2) Secciones del sidebar con más respiro */
+/* 2) Secciones flat tipo Figma: separadas por hairline horizontal,
+      no por card visible. Padding generoso vertical, compacto horizontal. */
 .video-view-container .video-sidebar-section {
-    gap: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 16px;
+    border-bottom: 1px solid var(--border-divider, #242424);
+}
+
+.video-view-container .video-sidebar-section:last-child {
+    border-bottom: none;
 }
 
 .video-view-container .video-sidebar-section-header {
-    margin-bottom: var(--spacing-xs);
-    gap: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2px;
 }
 
 .video-view-container .video-sidebar-section-num {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: none;
 }
 
 .video-view-container .video-sidebar-section-header .video-section-label {
-    font-size: 0.78rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+    letter-spacing: -0.005em;
+    text-transform: none;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.video-view-container .video-sidebar-section-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.video-view-container .video-sidebar-section-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.video-view-container .video-sidebar-section-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
 }
 
 .video-view-container .video-sidebar-section .video-left-block {
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .video-view-container .video-sidebar-section .video-prompt-panel-title {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--text-muted);
-    margin: 0 0 0.5rem 0;
+    margin: 0;
 }
 
-/* 3) Cinematography blocks (acordeones) con respiración */
+/* 3) Cinematography blocks tipo Figma: flat, separados por hairline,
+      sin card visible. */
 .video-view-container .video-cine-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border-divider, #242424);
+    border-radius: 0;
+    overflow: visible;
+    transition: none;
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block:first-child {
+    border-top: none;
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block:hover {
+    border-color: var(--border-divider, #242424);
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block-header,
+.video-view-container .video-sidebar-cine .video-cine-block-header {
+    padding: 12px 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    text-transform: none;
+    color: var(--text-primary);
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block-header > span:first-child,
+.video-view-container .video-sidebar-cine .video-cine-block-header > span:first-child {
+    flex: 1;
+    text-align: left;
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block-header i,
+.video-view-container .video-sidebar-cine .video-cine-block-header i {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    transition: transform 0.18s ease;
+    margin-left: 0;
+}
+
+.video-view-container .video-cinematography-panel .video-cine-block-content {
+    padding: 4px 0 14px;
+    border-top: none;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.video-view-container .video-cinematography-panel .video-cine-block {
-    background: #101113;
-    border: 1px solid var(--border-divider, #242424);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    transition: border-color 0.15s ease;
-}
-
-.video-view-container .video-cinematography-panel .video-cine-block:hover {
-    border-color: rgba(255, 255, 255, 0.16);
-}
-
-.video-view-container .video-cinematography-panel .video-cine-block-header,
-.video-view-container .video-sidebar-cine .video-cine-block-header {
-    padding: 14px 16px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-}
-
-.video-view-container .video-cinematography-panel .video-cine-block-header i,
-.video-view-container .video-sidebar-cine .video-cine-block-header i {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    transition: transform 0.18s ease;
-}
-
-.video-view-container .video-cinematography-panel .video-cine-block-content {
-    padding: 6px 16px 16px;
-    border-top: 1px solid var(--border-divider, #242424);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
 .video-view-container .video-cinematography-panel .video-cine-block-hint {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     color: var(--text-muted);
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
     line-height: 1.5;
-    font-style: italic;
-    opacity: 0.85;
+    font-style: normal;
+    opacity: 1;
 }
 
 .video-view-container .video-cinematography-panel .video-cine-row {
@@ -3613,4 +3660,109 @@
     color: var(--text-muted);
     margin: 0 0 4px 0;
     line-height: 1.55;
+}
+
+/* Pares lógicos en grid 2-col (W/H side-by-side tipo Figma) */
+.video-view-container .video-cine-row-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.video-view-container .video-cine-row-pair .video-cine-row {
+    min-width: 0;
+}
+
+/* Sidebar header de tabs (top del aside) */
+.video-view-container .video-sidebar-tabs {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border-divider, #242424);
+}
+.video-view-container .video-sidebar-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 4px 0;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s ease;
+}
+.video-view-container .video-sidebar-tab:hover {
+    color: var(--text-primary);
+}
+.video-view-container .video-sidebar-tab.is-active {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.video-view-container .video-sidebar-tab.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -13px;
+    height: 2px;
+    background: var(--text-primary);
+}
+
+/* Floating help button "?" */
+.video-view-container .video-sidebar-help {
+    position: absolute;
+    right: 28px;
+    bottom: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-divider, #242424);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    z-index: 5;
+}
+.video-view-container .video-sidebar-help:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Tooltip/popover de ayuda */
+.video-view-container .video-sidebar-help-popover {
+    position: absolute;
+    right: 24px;
+    bottom: 70px;
+    width: 280px;
+    background: var(--bg-card, #141517);
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    z-index: 6;
+    display: none;
+}
+.video-view-container .video-sidebar-help-popover.is-open {
+    display: block;
+}
+.video-view-container .video-sidebar-help-popover h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+.video-view-container .video-sidebar-help-popover p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 6px 0;
+}
+.video-view-container .video-sidebar-help-popover p:last-child {
+    margin-bottom: 0;
 }
