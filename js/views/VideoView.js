@@ -270,18 +270,6 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card video-sidebar-card">
                 <div class="video-prompt-footer-card-inner video-sidebar-inner">
 
-                  <div class="video-sidebar-section video-sidebar-brief">
-                    <div class="video-sidebar-section-header">
-                      <h3 class="video-section-label">Brief rápido</h3>
-                    </div>
-                    <p class="video-sidebar-section-hint">Describe el video en 1–2 frases y la IA sugerirá el setup (movimiento, luz, mood). Podrás ajustarlo después.</p>
-                    <textarea id="videoBriefInput" class="video-brief-input" rows="2" placeholder="Ej: producto premium giratorio con luz dramática"></textarea>
-                    <button type="button" class="video-brief-suggest-btn" id="videoBriefSuggestBtn">
-                      <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                      <span>Sugerir setup con IA</span>
-                    </button>
-                  </div>
-
                   <div class="video-sidebar-section">
                     <div class="video-sidebar-section-header">
                       <span class="video-sidebar-section-num">01</span>
@@ -521,20 +509,6 @@ class VideoView extends BaseView {
       });
     }
 
-    const briefSuggestBtn = this.container.querySelector('#videoBriefSuggestBtn');
-    const briefInput = this.container.querySelector('#videoBriefInput');
-    if (briefSuggestBtn && briefInput && briefSuggestBtn.dataset.boundBriefSuggest !== '1') {
-      briefSuggestBtn.dataset.boundBriefSuggest = '1';
-      briefSuggestBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const text = String(briefInput.value || '').trim();
-        if (text.length < 5) {
-          briefInput.focus();
-          return;
-        }
-        await this.requestBriefSuggestion(text);
-      });
-    }
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
     this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
@@ -1867,67 +1841,6 @@ class VideoView extends BaseView {
       await this.supabase.from('system_ai_outputs').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
     } catch (e) {
       console.warn('VideoView updateSystemAIOutput:', e);
-    }
-  }
-
-  async requestBriefSuggestion(brief) {
-    const btn = this.container.querySelector('#videoBriefSuggestBtn');
-    const input = this.container.querySelector('#videoBriefInput');
-    const originalBtnHtml = btn ? btn.innerHTML : '';
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Sugiriendo…</span>';
-    }
-    try {
-      const accessToken = this.supabase
-        ? (await this.supabase.auth.getSession())?.data?.session?.access_token
-        : null;
-      const headers = { 'Content-Type': 'application/json' };
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-      const brandContext = (typeof this.buildBrandContextForAPI === 'function')
-        ? this.buildBrandContextForAPI()
-        : null;
-      const res = await fetch('/.netlify/functions/openai-suggest-setup', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ brief, brand_context: brandContext })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'No se pudo sugerir un setup ahora mismo.');
-        return;
-      }
-      const setup = data.setup || {};
-      const applied = [];
-      Object.keys(setup).forEach((k) => {
-        if (setup[k] && this.cinematography) {
-          this.cinematography[k] = setup[k];
-          applied.push(k);
-        }
-      });
-      if (typeof this.syncCinematographyToSelects === 'function') this.syncCinematographyToSelects();
-      if (typeof this.renderCinematographySelectedTags === 'function') this.renderCinematographySelectedTags();
-      if (typeof this.renderDirectorVariables === 'function') this.renderDirectorVariables();
-      this.container.querySelectorAll('.video-cinematography-panel .video-cine-select').forEach((sel) => {
-        sel.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-      if (this.promptInput) {
-        const current = String(this.promptInput.value || '').trim();
-        this.promptInput.value = current ? `${current}\n\n${brief}` : brief;
-        this.promptInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      if (input) input.value = '';
-      if (applied.length === 0) {
-        alert('La IA respondió, pero no se aplicó ningún valor. Ajusta el brief y vuelve a intentar.');
-      }
-    } catch (err) {
-      console.error('requestBriefSuggestion:', err);
-      alert('Error de red al sugerir setup.');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = originalBtnHtml;
-      }
     }
   }
 
