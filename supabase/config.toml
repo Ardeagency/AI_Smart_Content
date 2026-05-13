@@ -7,5 +7,14 @@ major_version = 15
 [db.migrations]
 schema_paths = []
 
-[functions]
+[functions.provision-user-start]
+verify_jwt = true
+
+[functions.provision-user-check]
+verify_jwt = true
+
+[functions.provision-user-finalize]
+verify_jwt = true
+
+[functions.provision-user-cancel]
 verify_jwt = true

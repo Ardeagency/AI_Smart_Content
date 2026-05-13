@@ -1,163 +1,41 @@
 /**
  * DevLeadUserProvisioningView
- * Registro manual de usuarios (solo Lead), sistema independiente de Team.
+ * Registro manual de usuarios (solo Lead). Flujo de 3 etapas:
+ *   1. Identidad + permisos + organización (formulario)
+ *   2. Espera de confirmación de email (polling cada 3s)
+ *   3. Finalización automática (perfiles + org + membresía)
+ *
+ * Backend: Edge Functions provision-user-{start,check,finalize,cancel}.
+ * Reanudable: provisioning_jobs guarda el estado entre sesiones.
  */
 class DevLeadUserProvisioningView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
-    this.step = 1;
-    this.maxStep = 4;
+    this.stage = 'form'; // 'form' | 'waiting' | 'done'
     this.organizations = [];
+    this.pendingJobs = [];
+    this.activeJob = null;
+    this.pollTimer = null;
+    this.POLL_INTERVAL_MS = 3000;
   }
 
   async onEnter() {
     await super.onEnter({ requireLead: true });
   }
 
+  async destroy() {
+    this.stopPolling();
+    super.destroy();
+  }
+
+  // ─── Render ────────────────────────────────────────────────────────────
+
   renderHTML() {
     return `
       <div class="builder-main">
-        <div class="builder-settings-form provision-wizard">
-
-          <!-- Progreso -->
-          <div class="provision-progress" id="provisionProgress">
-            ${[1,2,3,4].map((n) => `
-              <div class="provision-progress-step${n === 1 ? ' is-active' : ''}" data-step="${n}">
-                <div class="provision-progress-dot">${n}</div>
-                <span class="provision-progress-label">${['Cuenta','Permisos','Organización','Confirmar'][n-1]}</span>
-              </div>
-            `).join('')}
-          </div>
-
-          <form id="manualProvisioningForm">
-
-            <!-- PASO 1: Cuenta base -->
-            <div data-step="1" class="provision-step">
-              <div class="settings-section">
-                <h4><i class="fas fa-user"></i> Cuenta base</h4>
-                <p class="section-description">Credenciales y rol del nuevo usuario en la plataforma.</p>
-
-                <div class="settings-field">
-                  <label>Nombre completo</label>
-                  <input type="text" name="full_name" placeholder="Ej. María García" required>
-                </div>
-                <div class="settings-field">
-                  <label>Correo electrónico</label>
-                  <input type="email" name="email" placeholder="usuario@empresa.com" required>
-                </div>
-                <div class="settings-field">
-                  <label>Contraseña temporal</label>
-                  <input type="password" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h4><i class="fas fa-id-badge"></i> Rol y acceso</h4>
-                <div class="settings-field">
-                  <label>Rol en la plataforma</label>
-                  <select name="platform_role">
-                    <option value="user">User — consumidor estándar</option>
-                    <option value="admin">Admin — administrador</option>
-                    <option value="dev">Dev — desarrollador</option>
-                  </select>
-                </div>
-                <div class="settings-field">
-                  <label>Vista por defecto</label>
-                  <select name="default_view_mode">
-                    <option value="user">User — vista consumidor</option>
-                    <option value="developer">Developer — portal dev</option>
-                  </select>
-                </div>
-                <div class="settings-field">
-                  <label>Dev role (portal developer)</label>
-                  <select name="dev_role">
-                    <option value="">Ninguno</option>
-                    <option value="contributor">Contributor</option>
-                    <option value="lead">Lead</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- PASO 2: Permisos -->
-            <div data-step="2" class="provision-step" hidden>
-              <div class="settings-section">
-                <h4><i class="fas fa-lock-open"></i> Permisos de acceso</h4>
-                <p class="section-description">Módulos habilitados para este usuario.</p>
-                <div class="provision-perms-grid">
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_studio" checked> Studio</label>
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_video" checked> Video</label>
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_brands" checked> Brand</label>
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_production" checked> Production</label>
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_developer"> Dev Portal</label>
-                  <label class="provision-perm-item"><input type="checkbox" name="perm_dev_lead"> Dev Lead</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- PASO 3: Organización -->
-            <div data-step="3" class="provision-step" hidden>
-              <div class="settings-section">
-                <h4><i class="fas fa-building"></i> Organización</h4>
-                <p class="section-description">Define la afiliación organizacional del usuario.</p>
-
-                <div class="settings-field">
-                  <label>Modo de organización</label>
-                  <select id="orgModeSelect" name="org_mode">
-                    <option value="none">Sin organización inicial</option>
-                    <option value="existing">Afiliar a organización existente</option>
-                    <option value="create">Crear nueva organización y afiliar</option>
-                  </select>
-                </div>
-                <div class="settings-field" id="existingOrgField" hidden>
-                  <label>Organización existente</label>
-                  <select id="existingOrgSelect" name="organization_id">
-                    <option value="">Cargando...</option>
-                  </select>
-                </div>
-                <div class="settings-field" id="newOrgField" hidden>
-                  <label>Nombre de la nueva organización</label>
-                  <input type="text" id="newOrgNameInput" name="new_organization_name" placeholder="Ej. ACME Corp">
-                </div>
-                <div class="settings-field" id="orgRoleField" hidden>
-                  <label>Rol dentro de la organización</label>
-                  <select id="orgRoleSelect" name="organization_role">
-                    <option value="member">Member</option>
-                    <option value="admin">Admin</option>
-                    <option value="viewer">Viewer</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- PASO 4: Confirmación -->
-            <div data-step="4" class="provision-step" hidden>
-              <div class="settings-section">
-                <h4><i class="fas fa-check-circle"></i> Confirmar registro</h4>
-                <p class="section-description">Revisa los datos antes de crear la cuenta.</p>
-                <div id="provisionSummary" class="provision-summary"></div>
-              </div>
-            </div>
-
-            <!-- Navegación -->
-            <div class="provision-nav">
-              <button type="button" class="btn btn-secondary" id="provisionPrevBtn" disabled>
-                <i class="fas fa-arrow-left"></i> Anterior
-              </button>
-              <span id="provisioningStepLabel" class="provision-step-counter">Paso 1 de 4</span>
-              <div class="provision-actions-right">
-                <button type="button" class="btn btn-primary" id="provisionNextBtn">
-                  Siguiente <i class="fas fa-arrow-right"></i>
-                </button>
-                <button type="submit" class="btn btn-primary" id="provisionSubmitBtn" hidden>
-                  <i class="fas fa-user-plus"></i> Registrar usuario
-                </button>
-              </div>
-            </div>
-
-            <p id="provisioningStatus" class="pp-form__status" role="status" aria-live="polite"></p>
-          </form>
+        <div class="builder-settings-form provision-wizard" id="provisionRoot">
+          <div class="provision-stage-container" id="provisionStage"></div>
         </div>
       </div>
     `;
@@ -169,236 +47,500 @@ class DevLeadUserProvisioningView extends DevBaseView {
       this.showError('Supabase no disponible.');
       return;
     }
-
-    await this.loadOrganizations();
-
-    const form = this.container.querySelector('#manualProvisioningForm');
-    const prevBtn = this.container.querySelector('#provisionPrevBtn');
-    const nextBtn = this.container.querySelector('#provisionNextBtn');
-    const orgMode = this.container.querySelector('#orgModeSelect');
-
-    this.addEventListener(prevBtn, 'click', () => this.goToStep(this.step - 1));
-    this.addEventListener(nextBtn, 'click', () => this.handleNext());
-    this.addEventListener(orgMode, 'change', () => this.updateOrgModeUI());
-    this.addEventListener(form, 'submit', (e) => this.handleSubmit(e));
-    this.updateOrgModeUI();
-    this.refreshStepUI();
+    await Promise.all([this.loadOrganizations(), this.loadPendingJobs()]);
+    this.renderStage();
   }
 
-  async loadOrganizations() {
-    const { data } = await this.supabase
-      .from('organizations')
-      .select('id, name')
-      .order('name', { ascending: true });
+  renderStage() {
+    const host = this.container.querySelector('#provisionStage');
+    if (!host) return;
 
-    this.organizations = Array.isArray(data) ? data : [];
-    const select = this.container.querySelector('#existingOrgSelect');
-    if (!select) return;
-    select.innerHTML = '<option value="">Seleccionar organización...</option>' +
-      this.organizations.map((org) => `<option value="${org.id}">${this.escapeHtml(org.name || org.id)}</option>`).join('');
+    if (this.stage === 'form') {
+      host.innerHTML = this.renderFormStage();
+      this.wireFormStage();
+    } else if (this.stage === 'waiting') {
+      host.innerHTML = this.renderWaitingStage();
+      this.wireWaitingStage();
+      this.startPolling();
+    } else if (this.stage === 'done') {
+      host.innerHTML = this.renderDoneStage();
+      this.wireDoneStage();
+    }
+  }
+
+  // ─── Stage 1: form ─────────────────────────────────────────────────────
+
+  renderFormStage() {
+    const pending = this.pendingJobs.filter((j) =>
+      ['pending_email_confirmation', 'email_confirmed', 'finalizing'].includes(j.status)
+    );
+
+    const pendingHtml = pending.length === 0 ? '' : `
+      <div class="settings-section provision-pending-block">
+        <h4><i class="fas fa-hourglass-half"></i> Jobs en curso (${pending.length})</h4>
+        <p class="section-description">Provisionamientos pendientes que puedes reanudar.</p>
+        <div class="provision-pending-list">
+          ${pending.map((j) => `
+            <div class="provision-pending-row">
+              <div class="provision-pending-info">
+                <strong>${this.escapeHtml(j.email)}</strong>
+                <span class="provision-pending-status status-${j.status}">${this.statusLabel(j.status)}</span>
+                <span class="provision-pending-date">${this.formatDate(j.created_at)}</span>
+              </div>
+              <div class="provision-pending-actions">
+                <button type="button" class="btn btn-secondary btn-sm" data-resume-job="${j.id}">
+                  <i class="fas fa-play"></i> Reanudar
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" data-cancel-job="${j.id}">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    return `
+      ${pendingHtml}
+
+      <form id="provisionForm">
+        <div class="settings-section">
+          <h4><i class="fas fa-user"></i> Identidad</h4>
+          <div class="settings-field">
+            <label>Nombre completo</label>
+            <input type="text" name="full_name" placeholder="Ej. María García" required>
+          </div>
+          <div class="settings-field">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="usuario@gmail.com" required>
+          </div>
+          <div class="settings-field">
+            <label>Contraseña temporal</label>
+            <input type="password" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
+            <small class="field-hint">El Lead la define ahora; el usuario solo confirmará el email.</small>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4><i class="fas fa-id-badge"></i> Rol y acceso</h4>
+          <div class="settings-field">
+            <label>Rol plataforma</label>
+            <select name="platform_role">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="dev">Dev</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label>Vista por defecto</label>
+            <select name="default_view_mode">
+              <option value="user">User</option>
+              <option value="developer">Developer</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label>Dev role</label>
+            <select name="dev_role">
+              <option value="">Ninguno</option>
+              <option value="contributor">Contributor</option>
+              <option value="lead">Lead</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4><i class="fas fa-lock-open"></i> Permisos</h4>
+          <div class="provision-perms-grid">
+            <label class="provision-perm-item"><input type="checkbox" name="perm_studio" checked> Studio</label>
+            <label class="provision-perm-item"><input type="checkbox" name="perm_video" checked> Video</label>
+            <label class="provision-perm-item"><input type="checkbox" name="perm_brands" checked> Brand</label>
+            <label class="provision-perm-item"><input type="checkbox" name="perm_production" checked> Production</label>
+            <label class="provision-perm-item"><input type="checkbox" name="perm_developer"> Dev Portal</label>
+            <label class="provision-perm-item"><input type="checkbox" name="perm_dev_lead"> Dev Lead</label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4><i class="fas fa-building"></i> Organización</h4>
+          <div class="settings-field">
+            <label>Modo</label>
+            <select id="orgModeSelect" name="org_mode">
+              <option value="none">Sin organización</option>
+              <option value="existing">Afiliar a existente</option>
+              <option value="create">Crear nueva</option>
+            </select>
+          </div>
+          <div class="settings-field" id="existingOrgField" hidden>
+            <label>Organización existente</label>
+            <select id="existingOrgSelect" name="organization_id">
+              <option value="">Seleccionar...</option>
+              ${this.organizations.map((o) => `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="settings-field" id="newOrgField" hidden>
+            <label>Nombre nueva organización</label>
+            <input type="text" name="new_organization_name" placeholder="Ej. ACME Corp">
+          </div>
+          <div class="settings-field" id="orgRoleField" hidden>
+            <label>Rol en organización</label>
+            <select name="organization_role">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="provision-nav">
+          <button type="submit" class="btn btn-primary" id="provisionStartBtn">
+            <i class="fas fa-paper-plane"></i> Crear y enviar verificación
+          </button>
+        </div>
+        <p id="provisionStatus" class="pp-form__status" role="status" aria-live="polite"></p>
+      </form>
+    `;
+  }
+
+  wireFormStage() {
+    const form = this.container.querySelector('#provisionForm');
+    const orgMode = this.container.querySelector('#orgModeSelect');
+    this.addEventListener(form, 'submit', (e) => this.handleStart(e));
+    this.addEventListener(orgMode, 'change', () => this.updateOrgModeUI());
+    this.updateOrgModeUI();
+
+    this.container.querySelectorAll('[data-resume-job]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => {
+        const id = btn.getAttribute('data-resume-job');
+        const job = this.pendingJobs.find((j) => j.id === id);
+        if (job) this.resumeJob(job);
+      });
+    });
+    this.container.querySelectorAll('[data-cancel-job]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => {
+        const id = btn.getAttribute('data-cancel-job');
+        if (confirm('¿Cancelar este job? Si delete_auth está activo se borra también el auth.user.')) {
+          this.cancelJob(id, true);
+        }
+      });
+    });
   }
 
   updateOrgModeUI() {
     const mode = this.container.querySelector('#orgModeSelect')?.value || 'none';
     const existingField = this.container.querySelector('#existingOrgField');
-    const newOrgField = this.container.querySelector('#newOrgField');
-    const orgRoleField = this.container.querySelector('#orgRoleField');
+    const newOrgField   = this.container.querySelector('#newOrgField');
+    const orgRoleField  = this.container.querySelector('#orgRoleField');
     if (!existingField || !newOrgField || !orgRoleField) return;
-
-    existingField.style.display = mode === 'existing' ? '' : 'none';
-    newOrgField.style.display = mode === 'create' ? '' : 'none';
-    orgRoleField.style.display = (mode === 'existing' || mode === 'create') ? '' : 'none';
+    existingField.hidden = mode !== 'existing';
+    newOrgField.hidden   = mode !== 'create';
+    orgRoleField.hidden  = !(mode === 'existing' || mode === 'create');
   }
 
-  handleNext() {
-    if (!this.validateCurrentStep()) return;
-    this.goToStep(this.step + 1);
-  }
+  async handleStart(event) {
+    event.preventDefault();
+    const payload = this.collectPayload();
+    if (!this.validatePayload(payload)) return;
 
-  goToStep(next) {
-    if (next < 1 || next > this.maxStep) return;
-    this.step = next;
-    this.refreshStepUI();
-  }
+    const submitBtn = this.container.querySelector('#provisionStartBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    this.setStatus('Creando usuario y enviando email…', '');
 
-  refreshStepUI() {
-    this.container.querySelectorAll('.provision-step').forEach((el) => {
-      el.style.display = Number(el.getAttribute('data-step')) === this.step ? '' : 'none';
-    });
+    try {
+      const { data, error } = await this.supabase.functions.invoke('provision-user-start', { body: payload });
+      if (error || !data) throw new Error(error?.message || 'Error al iniciar provisioning');
 
-    this.container.querySelectorAll('.provision-progress-step').forEach((el) => {
-      const n = Number(el.getAttribute('data-step'));
-      el.classList.toggle('is-active', n === this.step);
-      el.classList.toggle('is-done', n < this.step);
-    });
-
-    const prevBtn = this.container.querySelector('#provisionPrevBtn');
-    const nextBtn = this.container.querySelector('#provisionNextBtn');
-    const submitBtn = this.container.querySelector('#provisionSubmitBtn');
-    const label = this.container.querySelector('#provisioningStepLabel');
-
-    if (label) label.textContent = `Paso ${this.step} de ${this.maxStep}`;
-    if (prevBtn) prevBtn.disabled = this.step === 1;
-    if (nextBtn) nextBtn.style.display = this.step === this.maxStep ? 'none' : '';
-    if (submitBtn) submitBtn.style.display = this.step === this.maxStep ? '' : 'none';
-
-    if (this.step === 4) this.renderSummary();
-  }
-
-  validateCurrentStep() {
-    const form = this.container.querySelector('#manualProvisioningForm');
-    if (!form) return false;
-    const get = (name) => form.elements[name];
-
-    if (this.step === 1) {
-      const required = ['full_name', 'email', 'password'];
-      for (const key of required) {
-        const value = (get(key)?.value || '').trim();
-        if (!value) {
-          this.setStatus(`Completa ${key}.`, 'is-error');
-          return false;
-        }
-      }
-      if ((get('password')?.value || '').length < 8) {
-        this.setStatus('La contraseña debe tener mínimo 8 caracteres.', 'is-error');
-        return false;
-      }
+      this.activeJob = {
+        id: data.job_id,
+        auth_user_id: data.auth_user_id,
+        email: data.email,
+        status: data.status,
+      };
+      this.stage = 'waiting';
+      this.renderStage();
+    } catch (err) {
+      this.setStatus(`Error: ${err.message}`, 'is-error');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Crear y enviar verificación';
     }
-
-    if (this.step === 3) {
-      const mode = get('org_mode')?.value || 'none';
-      if (mode === 'existing' && !(get('organization_id')?.value || '').trim()) {
-        this.setStatus('Selecciona una organización existente.', 'is-error');
-        return false;
-      }
-      if (mode === 'create' && !(get('new_organization_name')?.value || '').trim()) {
-        this.setStatus('Ingresa el nombre de la nueva organización.', 'is-error');
-        return false;
-      }
-    }
-
-    this.setStatus('', '');
-    return true;
-  }
-
-  renderSummary() {
-    const form = this.container.querySelector('#manualProvisioningForm');
-    const summary = this.container.querySelector('#provisionSummary');
-    if (!form || !summary) return;
-
-    const getVal = (name) => (form.elements[name]?.value || '').trim();
-    const orgMode = getVal('org_mode') || 'none';
-    const orgName = orgMode === 'existing'
-      ? (this.organizations.find((o) => o.id === getVal('organization_id'))?.name || 'N/A')
-      : orgMode === 'create'
-        ? getVal('new_organization_name')
-        : 'Sin organización';
-
-    const perms = [
-      ['perm_studio', 'Studio'],
-      ['perm_video', 'Video'],
-      ['perm_brands', 'Brand'],
-      ['perm_production', 'Production'],
-      ['perm_developer', 'Dev'],
-      ['perm_dev_lead', 'Dev Lead']
-    ].filter(([key]) => form.elements[key]?.checked).map(([, label]) => label);
-
-    const field = (label, value) =>
-      `<div><strong>${label}</strong>${this.escapeHtml(value)}</div>`;
-
-    summary.innerHTML =
-      field('Nombre', getVal('full_name')) +
-      field('Email', getVal('email')) +
-      field('Rol plataforma', getVal('platform_role') || 'user') +
-      field('Vista default', getVal('default_view_mode') || 'user') +
-      field('Dev role', getVal('dev_role') || 'none') +
-      field('Permisos', perms.join(', ') || 'Sin permisos') +
-      field('Organización', orgName) +
-      field('Rol organización', getVal('organization_role') || 'N/A');
   }
 
   collectPayload() {
-    const form = this.container.querySelector('#manualProvisioningForm');
+    const form = this.container.querySelector('#provisionForm');
     const value = (name) => (form.elements[name]?.value || '').trim();
     const checked = (name) => !!form.elements[name]?.checked;
-
-    const permissions = {
-      studio: checked('perm_studio'),
-      video: checked('perm_video'),
-      brands: checked('perm_brands'),
-      production: checked('perm_production'),
-      developer: checked('perm_developer'),
-      dev_lead: checked('perm_dev_lead')
-    };
 
     return {
       account: {
         full_name: value('full_name'),
         email: value('email').toLowerCase(),
-        password: value('password'),
+        password: form.elements['password']?.value || '',
         role: value('platform_role') || 'user',
         default_view_mode: value('default_view_mode') || 'user',
-        is_developer: !!value('dev_role'),
-        dev_role: value('dev_role') || null
+        is_developer: checked('perm_developer'),
+        dev_role: value('dev_role') || null,
       },
-      permissions,
+      permissions: {
+        studio: checked('perm_studio'),
+        video: checked('perm_video'),
+        brands: checked('perm_brands'),
+        production: checked('perm_production'),
+        developer: checked('perm_developer'),
+        dev_lead: checked('perm_dev_lead'),
+      },
       organization: {
         mode: value('org_mode') || 'none',
         organization_id: value('organization_id') || null,
         new_organization_name: value('new_organization_name') || null,
-        organization_role: value('organization_role') || null
+        organization_role: value('organization_role') || null,
       },
-      created_by_lead_id: window.authService?.getCurrentUser?.()?.id || null
     };
   }
 
-  async handleSubmit(event) {
-    event.preventDefault();
-    if (!this.validateCurrentStep()) return;
-
-    const payload = this.collectPayload();
-    const submitBtn = this.container.querySelector('#provisionSubmitBtn');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+  validatePayload(p) {
+    if (!p.account.full_name || !p.account.email || !p.account.password) {
+      this.setStatus('Completa nombre, email y contraseña.', 'is-error');
+      return false;
     }
+    if (p.account.password.length < 8) {
+      this.setStatus('Contraseña mínima de 8 caracteres.', 'is-error');
+      return false;
+    }
+    if (p.organization.mode === 'existing' && !p.organization.organization_id) {
+      this.setStatus('Selecciona la organización existente.', 'is-error');
+      return false;
+    }
+    if (p.organization.mode === 'create' && !p.organization.new_organization_name) {
+      this.setStatus('Indica el nombre de la nueva organización.', 'is-error');
+      return false;
+    }
+    return true;
+  }
+
+  // ─── Stage 2: waiting ──────────────────────────────────────────────────
+
+  renderWaitingStage() {
+    const job = this.activeJob || {};
+    return `
+      <div class="settings-section provision-waiting">
+        <h4><i class="fas fa-envelope-open-text"></i> Esperando confirmación</h4>
+        <p class="section-description">
+          Enviamos un email de verificación a <strong>${this.escapeHtml(job.email || '')}</strong>.
+          La página seguirá escuchando hasta que el usuario haga click en el link.
+          Puedes cerrar esta vista y reanudar más tarde.
+        </p>
+
+        <div class="provision-waiting-indicator">
+          <div class="provision-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+          <div class="provision-waiting-status" id="provisionWaitingStatus">
+            Esperando que el usuario confirme su email…
+          </div>
+          <div class="provision-waiting-meta" id="provisionWaitingMeta">
+            Job ID: <code>${this.escapeHtml(job.id || '')}</code>
+          </div>
+        </div>
+
+        <div class="provision-nav">
+          <button type="button" class="btn btn-secondary" id="provisionBackBtn">
+            <i class="fas fa-arrow-left"></i> Volver al formulario
+          </button>
+          <button type="button" class="btn btn-danger" id="provisionCancelBtn">
+            <i class="fas fa-times"></i> Cancelar provisioning
+          </button>
+        </div>
+
+        <p id="provisionStatus" class="pp-form__status" role="status" aria-live="polite"></p>
+      </div>
+    `;
+  }
+
+  wireWaitingStage() {
+    const backBtn   = this.container.querySelector('#provisionBackBtn');
+    const cancelBtn = this.container.querySelector('#provisionCancelBtn');
+    this.addEventListener(backBtn, 'click', () => {
+      this.stopPolling();
+      this.stage = 'form';
+      this.loadPendingJobs().then(() => this.renderStage());
+    });
+    this.addEventListener(cancelBtn, 'click', () => {
+      if (!this.activeJob) return;
+      if (confirm('¿Cancelar el provisioning de ' + this.activeJob.email + '?')) {
+        this.cancelJob(this.activeJob.id, true).then(() => {
+          this.stopPolling();
+          this.activeJob = null;
+          this.stage = 'form';
+          this.loadPendingJobs().then(() => this.renderStage());
+        });
+      }
+    });
+  }
+
+  startPolling() {
+    this.stopPolling();
+    this.pollOnce();
+    this.pollTimer = setInterval(() => this.pollOnce(), this.POLL_INTERVAL_MS);
+  }
+
+  stopPolling() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
+  async pollOnce() {
+    if (!this.activeJob) return;
+    try {
+      const { data, error } = await this.supabase.functions.invoke('provision-user-check', {
+        body: { job_id: this.activeJob.id },
+      });
+      if (error || !data?.job) return;
+
+      const job = data.job;
+      this.activeJob = { ...this.activeJob, status: job.status };
+
+      if (job.status === 'email_confirmed') {
+        this.stopPolling();
+        await this.finalize();
+      } else if (job.status === 'failed' || job.status === 'cancelled') {
+        this.stopPolling();
+        this.setStatus(`Job en estado ${job.status}: ${job.error || ''}`, 'is-error');
+      } else {
+        const status = this.container.querySelector('#provisionWaitingStatus');
+        if (status) status.textContent = `Estado: ${this.statusLabel(job.status)}`;
+      }
+    } catch (_e) { /* swallow; el polling reintenta */ }
+  }
+
+  async finalize() {
+    const statusEl = this.container.querySelector('#provisionWaitingStatus');
+    if (statusEl) statusEl.textContent = 'Email confirmado. Finalizando provisioning…';
 
     try {
-      // Flujo recomendado: función admin con service-role en backend.
-      // Se intenta por aliases para compatibilidad mientras se estabiliza naming.
-      const candidates = ['admin-create-user', 'lead-provision-user', 'dev-create-user'];
-      let result = null;
-      let lastError = null;
-      for (const fnName of candidates) {
-        const { data, error } = await this.supabase.functions.invoke(fnName, { body: payload });
-        if (!error && data) {
-          result = data;
-          break;
-        }
-        lastError = error;
-      }
+      const { data, error } = await this.supabase.functions.invoke('provision-user-finalize', {
+        body: { job_id: this.activeJob.id },
+      });
+      if (error || !data) throw new Error(error?.message || 'finalize falló');
 
-      if (!result) {
-        throw new Error(lastError?.message || 'No existe una función backend de aprovisionamiento (admin-create-user / lead-provision-user).');
-      }
+      this.activeJob = { ...this.activeJob, ...data };
+      this.stage = 'done';
+      this.renderStage();
+    } catch (err) {
+      this.setStatus(`Finalize error: ${err.message}`, 'is-error');
+    }
+  }
 
-      this.setStatus('Usuario creado correctamente.', 'is-success');
-      event.target.reset();
-      this.step = 1;
-      this.updateOrgModeUI();
-      this.refreshStepUI();
-    } catch (error) {
-      this.setStatus(`Error: ${error.message}`, 'is-error');
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Crear usuario';
-      }
+  // ─── Stage 3: done ─────────────────────────────────────────────────────
+
+  renderDoneStage() {
+    const j = this.activeJob || {};
+    return `
+      <div class="settings-section provision-done">
+        <h4><i class="fas fa-check-circle"></i> Usuario aprovisionado</h4>
+        <div class="provision-done-summary">
+          <div><strong>Email:</strong> ${this.escapeHtml(j.email || '')}</div>
+          <div><strong>Auth user:</strong> <code>${this.escapeHtml(j.auth_user_id || '')}</code></div>
+          ${j.organization_id ? `<div><strong>Organización:</strong> <code>${this.escapeHtml(j.organization_id)}</code></div>` : ''}
+        </div>
+        <div class="provision-nav">
+          <button type="button" class="btn btn-primary" id="provisionResetBtn">
+            <i class="fas fa-user-plus"></i> Provisionar otro
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  wireDoneStage() {
+    const btn = this.container.querySelector('#provisionResetBtn');
+    this.addEventListener(btn, 'click', () => {
+      this.activeJob = null;
+      this.stage = 'form';
+      this.loadPendingJobs().then(() => this.renderStage());
+    });
+  }
+
+  // ─── Resume / cancel ──────────────────────────────────────────────────
+
+  async resumeJob(job) {
+    this.activeJob = {
+      id: job.id,
+      auth_user_id: job.auth_user_id,
+      email: job.email,
+      status: job.status,
+    };
+    if (job.status === 'email_confirmed') {
+      this.stage = 'waiting';
+      this.renderStage();
+      await this.finalize();
+    } else if (job.status === 'finalizing') {
+      this.stage = 'waiting';
+      this.renderStage();
+      await this.finalize();
+    } else {
+      this.stage = 'waiting';
+      this.renderStage();
+    }
+  }
+
+  async cancelJob(jobId, deleteAuth = false) {
+    try {
+      await this.supabase.functions.invoke('provision-user-cancel', {
+        body: { job_id: jobId, delete_auth: deleteAuth },
+      });
+      await this.loadPendingJobs();
+      if (this.stage === 'form') this.renderStage();
+    } catch (err) {
+      this.showNotification(`Error cancelando job: ${err.message}`, 'error');
+    }
+  }
+
+  // ─── Data fetch ────────────────────────────────────────────────────────
+
+  async loadOrganizations() {
+    const { data } = await this.supabase
+      .from('organizations')
+      .select('id, name')
+      .is('deleted_at', null)
+      .order('name', { ascending: true });
+    this.organizations = Array.isArray(data) ? data : [];
+  }
+
+  async loadPendingJobs() {
+    const { data } = await this.supabase
+      .from('provisioning_jobs')
+      .select('id, email, status, created_at, auth_user_id')
+      .in('status', ['pending_email_confirmation', 'email_confirmed', 'finalizing'])
+      .order('created_at', { ascending: false })
+      .limit(20);
+    this.pendingJobs = Array.isArray(data) ? data : [];
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────────────────
+
+  statusLabel(status) {
+    return {
+      pending_email_confirmation: 'Esperando email',
+      email_confirmed: 'Email confirmado',
+      finalizing: 'Finalizando',
+      completed: 'Completado',
+      failed: 'Falló',
+      cancelled: 'Cancelado',
+    }[status] || status;
+  }
+
+  formatDate(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
     }
   }
 
   setStatus(text, klass) {
-    const el = this.container.querySelector('#provisioningStatus');
+    const el = this.container.querySelector('#provisionStatus');
     if (!el) return;
     el.textContent = text;
     el.classList.remove('is-success', 'is-error');

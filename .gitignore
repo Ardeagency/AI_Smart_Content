@@ -150,3 +150,6 @@ docs/SEGURIDAD_RLS_MAPA_PAGINAS.md
 
 # Claude / Cursor worktrees locales (no versionar; rompen checkout en CI sin .gitmodules)
 .claude/
+
+# Supabase CLI runtime metadata (linked-project, cli cache)
+supabase/.temp/
