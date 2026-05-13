@@ -13,7 +13,7 @@
   "categories": ["productivity", "business", "graphics"],
   "icons": [
     {
-      "src": "/recursos/favicons/favicon.svg",
+      "src": "/recursos/logos/Logo-app.svg",
       "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any"
@@ -31,14 +31,14 @@
       "short_name": "Studio",
       "description": "Producir contenido nuevo",
       "url": "/studio",
-      "icons": [{ "src": "/recursos/favicons/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/recursos/logos/Logo-app.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
       "name": "Tareas programadas",
       "short_name": "Tareas",
       "description": "Gestionar tareas programadas",
       "url": "/tasks",
-      "icons": [{ "src": "/recursos/favicons/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/recursos/logos/Logo-app.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ],
   "prefer_related_applications": false
