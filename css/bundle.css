@@ -712,6 +712,10 @@ body.org-brand-context:not(.route-dev) #brand-bg-overlay {
 
 body.org-brand-context {
     --view-bg-base: transparent;
+    /* Re-declarar el alias: la cadena var() de :root { --living-bg-deep: var(--view-bg-base) }
+       se resuelve en :root y queda congelada en opaco; redeclarar acá hace que descendants
+       (products, organization, content-management, developer wrappers) hereden transparente. */
+    --living-bg-deep: transparent;
     background: transparent;
 }
 
@@ -721,6 +725,8 @@ body.org-brand-context #app-container {
 
 body.org-brand-context.route-dev {
     --view-bg-base: var(--bg-primary);
+    --living-bg-deep: var(--bg-primary);
+    background: var(--bg-primary);
 }
 
 body.org-brand-context.route-dev #app-container {
