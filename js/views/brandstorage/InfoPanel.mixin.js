@@ -85,32 +85,22 @@
 
     return [
       {
-        key: 'youtube',
-        label: 'YouTube',
-        iconClass: 'fab fa-youtube',
+        key: 'google',
+        label: 'Google',
+        iconClass: 'fab fa-google',
         connected: gOk,
         oauthProvider: 'google',
-        actionHref: gOk ? 'https://www.youtube.com/' : dashboardHref,
+        actionHref: gOk ? 'https://myaccount.google.com/' : dashboardHref,
         actionExternal: gOk,
         hint: ''
       },
       {
-        key: 'facebook',
-        label: 'Facebook',
-        iconClass: 'fab fa-facebook-f',
+        key: 'meta',
+        label: 'Meta',
+        iconClass: 'fab fa-meta',
         connected: fOk,
         oauthProvider: 'facebook',
-        actionHref: fOk ? 'https://www.facebook.com/' : dashboardHref,
-        actionExternal: fOk,
-        hint: ''
-      },
-      {
-        key: 'instagram',
-        label: 'Instagram',
-        iconClass: 'fab fa-instagram',
-        connected: fOk,
-        oauthProvider: 'facebook',
-        actionHref: fOk ? 'https://www.instagram.com/' : dashboardHref,
+        actionHref: fOk ? 'https://business.facebook.com/' : dashboardHref,
         actionExternal: fOk,
         hint: ''
       },

@@ -471,23 +471,26 @@ class OrganizationView extends BaseView {
     if (el) el.textContent = text;
   }
 
-  formatPlatformLabel(platformRaw) {
+  getPlatformFamily(platformRaw) {
     const normalized = (platformRaw || '').toLowerCase().trim();
+    if (!normalized) return 'unknown';
+    if (['google', 'google_analytics', 'ga4', 'youtube', 'google_youtube', 'google_ads'].includes(normalized)) return 'google';
+    if (['meta', 'facebook', 'instagram'].includes(normalized)) return 'meta';
+    return normalized;
+  }
+
+  formatPlatformLabel(platformRaw) {
+    const family = this.getPlatformFamily(platformRaw);
     const map = {
-      google_analytics: 'Google Analytics',
-      ga4: 'Google Analytics',
-      youtube: 'YouTube',
-      google_youtube: 'YouTube',
-      google_ads: 'Google Ads',
+      google: 'Google',
       meta: 'Meta',
-      facebook: 'Meta',
-      instagram: 'Instagram',
+      shopify: 'Shopify',
       tiktok: 'TikTok',
-      linkedin: 'LinkedIn'
+      linkedin: 'LinkedIn',
+      unknown: 'Sin plataforma'
     };
-    if (map[normalized]) return map[normalized];
-    if (!normalized) return 'Sin plataforma';
-    return normalized
+    if (map[family]) return map[family];
+    return family
       .split('_')
       .map(p => p.charAt(0).toUpperCase() + p.slice(1))
       .join(' ');
@@ -518,7 +521,7 @@ class OrganizationView extends BaseView {
     const brandMap = Object.fromEntries((this.brandContainers || []).map(b => [b.id, b]));
     const grouped = {};
     integrations.forEach(item => {
-      const key = (item.platform || 'unknown').toLowerCase();
+      const key = this.getPlatformFamily(item.platform);
       if (!grouped[key]) {
         grouped[key] = {
           label: this.formatPlatformLabel(item.platform),
