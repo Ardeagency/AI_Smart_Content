@@ -240,6 +240,10 @@
          Debe cargar ANTES que OrgBrandTheme (que las consume en el theme inicial). -->
     <script src="js/utils/brand-colors.js?v=__BUILD_ID__" defer></script>
 
+    <!-- Modelo de roles + capabilities de organización. Debe cargar ANTES que
+         AuthService (que expone hasPermission) y que Navigation (que filtra items). -->
+    <script src="js/utils/capabilities.js?v=__BUILD_ID__" defer></script>
+
     <!-- Services (AuthService imprescindible: si falla 404/redirect, el router redirige a onboarding) -->
     <script src="js/services/MiBrandaDataService.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/SupabaseService.js?v=__BUILD_ID__" defer></script>

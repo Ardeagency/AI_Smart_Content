@@ -19,13 +19,33 @@ interface JobPayload {
     is_developer?: boolean;
     dev_role?: string | null;
   };
-  permissions?: Record<string, boolean>;
   organization?: {
     mode: "none" | "existing" | "create";
     organization_id?: string | null;
     new_organization_name?: string | null;
     organization_role?: string | null;
+    capabilities?: Record<string, boolean>;
   };
+}
+
+// Whitelist de capabilities válidas. Mantener en sync con js/utils/capabilities.js.
+const VALID_CAPABILITIES = new Set([
+  "studio.create", "video.create", "production.create", "references.manage",
+  "vera.chat", "vera.actions.approve",
+  "brand.identity.edit", "brand.storage.manage", "monitoring.view",
+  "insights.view",
+  "org.team.manage", "org.integrations.manage", "org.billing.manage", "org.settings.edit",
+]);
+
+const VALID_ROLES = new Set(["owner", "admin", "editor", "creator", "vera_user", "viewer"]);
+
+function sanitizeCapabilities(input: Record<string, boolean> | undefined): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  if (!input) return out;
+  for (const key of VALID_CAPABILITIES) {
+    out[key] = input[key] === true;
+  }
+  return out;
 }
 
 Deno.serve(async (req) => {
@@ -61,7 +81,6 @@ Deno.serve(async (req) => {
 
     const payload = job.payload as JobPayload;
     const account = payload?.account ?? ({} as JobPayload["account"]);
-    const perms = payload?.permissions ?? {};
     const org = payload?.organization ?? { mode: "none" };
 
     try {
@@ -72,8 +91,8 @@ Deno.serve(async (req) => {
         full_name: account.full_name ?? null,
         role: account.role || "user",
         default_view_mode: account.default_view_mode || "user",
-        is_developer: !!perms.developer || !!account.is_developer,
-        dev_role: perms.dev_lead ? "lead" : (account.dev_role || null),
+        is_developer: !!account.is_developer || account.dev_role === "lead" || account.dev_role === "contributor",
+        dev_role: account.dev_role || null,
       };
 
       const { error: profileErr } = await service
@@ -103,13 +122,15 @@ Deno.serve(async (req) => {
 
       // 3) Membership (si aplica).
       if (organizationId) {
-        const moduleScopes = {
-          studio: !!perms.studio,
-          video: !!perms.video,
-          brands: !!perms.brands,
-          production: !!perms.production,
-        };
-        const role = org.organization_role || "member";
+        const rawRole = (org.organization_role || "viewer").toLowerCase();
+        // Si crea la org, el usuario se vuelve owner por organizations.owner_user_id;
+        // organization_members.role se setea a 'admin' como fallback (owner es implícito por la FK).
+        const memberRole =
+          org.mode === "create"
+            ? "admin"
+            : (VALID_ROLES.has(rawRole) ? rawRole : "viewer");
+
+        const capabilities = sanitizeCapabilities(org.capabilities);
 
         const { error: memberErr } = await service
           .from("organization_members")
@@ -117,8 +138,8 @@ Deno.serve(async (req) => {
             {
               organization_id: organizationId,
               user_id: job.auth_user_id,
-              role,
-              permissions: moduleScopes,
+              role: memberRole,
+              permissions: capabilities,
             },
             { onConflict: "organization_id,user_id" },
           );

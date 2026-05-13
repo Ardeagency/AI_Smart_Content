@@ -253,6 +253,7 @@ class AuthService {
 
     this.isAuth = false;
     this.currentUser = null;
+    this.clearMembershipCache();
 
     // Invalidar caché de orgs del resolver para que el próximo usuario no vea las orgs del anterior
     if (typeof window.clearOrgResolverCache === 'function') {
@@ -397,6 +398,103 @@ class AuthService {
    */
   isLead() {
     return this.currentUser?.dev_role === 'lead';
+  }
+
+  /**
+   * Capabilities por organización.
+   *
+   * - Lead bypass: dev_role='lead' siempre retorna true (super-admin del portal).
+   * - Owner bypass: el dueño (organizations.owner_user_id) siempre tiene todas las caps.
+   * - Caso general: lee organization_members.{role,permissions} del usuario en la org activa.
+   *
+   * El cache vive en this._membershipCache (key=orgId, value={role,permissions,ts}).
+   * Si no hay membership cargada para la org activa, hasPermission() retorna false
+   * en lugar de bloquear; el caller decide si necesita pedir loadMembership() antes.
+   */
+  async loadMembership(orgId) {
+    if (!orgId || !this.currentUser?.id) return null;
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) return null;
+
+    this._membershipCache = this._membershipCache || new Map();
+    const now = Date.now();
+    const cached = this._membershipCache.get(orgId);
+    if (cached && (now - cached.ts) < 60_000) return cached;
+
+    const [memberRes, orgRes] = await Promise.all([
+      this.supabase
+        .from('organization_members')
+        .select('role, permissions')
+        .eq('organization_id', orgId)
+        .eq('user_id', this.currentUser.id)
+        .maybeSingle(),
+      this.supabase
+        .from('organizations')
+        .select('owner_user_id')
+        .eq('id', orgId)
+        .maybeSingle(),
+    ]);
+
+    const isOwner = orgRes.data?.owner_user_id === this.currentUser.id;
+    const role = isOwner ? 'owner' : (memberRes.data?.role || null);
+    const permissions = memberRes.data?.permissions || {};
+
+    const entry = { role, permissions, isOwner, ts: now };
+    this._membershipCache.set(orgId, entry);
+    return entry;
+  }
+
+  /** Limpia el cache de memberships (login/logout/cambio de org). */
+  clearMembershipCache(orgId) {
+    if (!this._membershipCache) return;
+    if (orgId) this._membershipCache.delete(orgId);
+    else this._membershipCache.clear();
+  }
+
+  /**
+   * Sync check de capability. Devuelve false si la membership aún no se cargó:
+   * el caller debe haber llamado a loadMembership(orgId) antes.
+   * @param {string} cap - clave de capability (ej 'studio.create')
+   * @param {string} [orgId] - orgId; default = window.currentOrgId
+   * @returns {boolean}
+   */
+  hasPermission(cap, orgId) {
+    if (this.isLead()) return true; // dev lead super-admin
+    const targetOrg = orgId || window.currentOrgId;
+    if (!targetOrg || !this._membershipCache) return false;
+    const entry = this._membershipCache.get(targetOrg);
+    if (!entry) return false;
+    if (entry.isOwner) return true;
+    if (!entry.role) return false;
+    // Resolver: preset del rol + override explícito en permissions.
+    if (window.OrgCapabilities) {
+      const resolved = window.OrgCapabilities.resolveCapabilities(entry.role, entry.permissions);
+      return resolved[cap] === true;
+    }
+    return entry.permissions?.[cap] === true;
+  }
+
+  /** Rol del usuario en la org activa (o la indicada). */
+  getOrgRole(orgId) {
+    const targetOrg = orgId || window.currentOrgId;
+    if (!targetOrg || !this._membershipCache) return null;
+    return this._membershipCache.get(targetOrg)?.role || null;
+  }
+
+  /** Map de capabilities efectivas del usuario en la org activa. */
+  getCapabilities(orgId) {
+    const targetOrg = orgId || window.currentOrgId;
+    if (this.isLead() && window.OrgCapabilities) {
+      return window.OrgCapabilities.fillAll(true);
+    }
+    if (!targetOrg || !this._membershipCache) return null;
+    const entry = this._membershipCache.get(targetOrg);
+    if (!entry) return null;
+    if (entry.isOwner && window.OrgCapabilities) return window.OrgCapabilities.fillAll(true);
+    if (!entry.role) return null;
+    return window.OrgCapabilities
+      ? window.OrgCapabilities.resolveCapabilities(entry.role, entry.permissions)
+      : entry.permissions;
   }
 
   /**

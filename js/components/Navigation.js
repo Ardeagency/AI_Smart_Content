@@ -16,17 +16,19 @@ const SIDEBAR_USER_CONFIG = {
       route: 'vera',
       primary: true,
       hideLabel: true,
-      navIconClass: 'nav-icon-img--vera-logo'
+      navIconClass: 'nav-icon-img--vera-logo',
+      requireCap: 'vera.chat'
     },
     { type: 'section', label: 'Workspace' },
-    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
+    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard', requireCap: 'insights.view' },
     {
       type: 'page',
       id: 'brand-organization',
       label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Brands.svg',
-      route: 'brand'
+      route: 'brand',
+      requireCap: 'brand.identity.edit'
     },
     {
       type: 'container',
@@ -34,7 +36,8 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Storage',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/file-storage.svg',
-      children: []
+      children: [],
+      requireCap: 'brand.storage.manage'
     },
     {
       type: 'page',
@@ -42,7 +45,8 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Identities',
       icon: 'fa-id-card',
       iconSrc: '/recursos/icons/Identities.svg',
-      route: 'identities'
+      route: 'identities',
+      requireCap: 'brand.identity.edit'
     },
     {
       type: 'page',
@@ -50,33 +54,37 @@ const SIDEBAR_USER_CONFIG = {
       label: 'References',
       icon: 'fa-images',
       iconSrc: '/recursos/icons/file-storage.svg',
-      route: 'references'
+      route: 'references',
+      requireCap: 'references.manage'
     },
     {
       type: 'page',
       id: 'monitoring',
       label: 'Monitoreo',
       icon: 'fa-satellite-dish',
-      route: 'monitoring'
+      route: 'monitoring',
+      requireCap: 'monitoring.view'
     },
     { type: 'section', label: 'Create' },
-    { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
     {
       type: 'page',
       id: 'tasks',
       label: 'Tasks',
       icon: 'fa-list-check',
       iconSrc: '/recursos/icons/task.svg',
-      route: 'tasks'
+      route: 'tasks',
+      requireCap: 'production.create'
     },
-    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
+    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
     {
       type: 'container',
       id: 'catalog',
       label: 'Flows',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
-      children: [] // Se rellenan con content_categories (schema 218-224) en render
+      children: [], // Se rellenan con content_categories (schema 218-224) en render
+      requireCap: 'studio.create'
     }
   ],
   footer: [
@@ -1367,7 +1375,31 @@ class Navigation {
       return `<i class="fas ${item.icon} nav-icon"></i>`;
     };
 
-    const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
+    const visibleItems = (() => {
+      const items = SIDEBAR_USER_CONFIG.main.filter((item) => {
+        if (!item.requireCap) return true;
+        if (!window.authService?.hasPermission) return true; // fail-open mientras carga
+        return window.authService.hasPermission(item.requireCap);
+      });
+      // Limpia secciones huérfanas (sin items visibles abajo antes del próximo section).
+      const out = [];
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (it.type === 'section') {
+          let hasFollowing = false;
+          for (let j = i + 1; j < items.length; j++) {
+            if (items[j].type === 'section') break;
+            hasFollowing = true;
+            break;
+          }
+          if (!hasFollowing) continue;
+        }
+        out.push(it);
+      }
+      return out;
+    })();
+
+    const mainHTML = visibleItems.map((item) => {
       if (item.type === 'section') {
         return `<div class="nav-section-label" aria-hidden="true">${_escapeHtml(item.label)}</div>`;
       }

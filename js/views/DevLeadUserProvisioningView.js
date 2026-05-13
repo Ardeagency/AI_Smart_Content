@@ -123,7 +123,7 @@ class DevLeadUserProvisioningView extends DevBaseView {
         </div>
 
         <div class="settings-section">
-          <h4><i class="fas fa-id-badge"></i> Rol y acceso</h4>
+          <h4><i class="fas fa-id-badge"></i> Cuenta plataforma</h4>
           <div class="settings-field">
             <label>Rol plataforma</label>
             <select name="platform_role">
@@ -140,24 +140,12 @@ class DevLeadUserProvisioningView extends DevBaseView {
             </select>
           </div>
           <div class="settings-field">
-            <label>Dev role</label>
+            <label>Dev role (portal developer)</label>
             <select name="dev_role">
               <option value="">Ninguno</option>
               <option value="contributor">Contributor</option>
               <option value="lead">Lead</option>
             </select>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h4><i class="fas fa-lock-open"></i> Permisos</h4>
-          <div class="provision-perms-grid">
-            <label class="provision-perm-item"><input type="checkbox" name="perm_studio" checked> Studio</label>
-            <label class="provision-perm-item"><input type="checkbox" name="perm_video" checked> Video</label>
-            <label class="provision-perm-item"><input type="checkbox" name="perm_brands" checked> Brand</label>
-            <label class="provision-perm-item"><input type="checkbox" name="perm_production" checked> Production</label>
-            <label class="provision-perm-item"><input type="checkbox" name="perm_developer"> Dev Portal</label>
-            <label class="provision-perm-item"><input type="checkbox" name="perm_dev_lead"> Dev Lead</label>
           </div>
         </div>
 
@@ -182,14 +170,24 @@ class DevLeadUserProvisioningView extends DevBaseView {
             <label>Nombre nueva organización</label>
             <input type="text" name="new_organization_name" placeholder="Ej. ACME Corp">
           </div>
-          <div class="settings-field" id="orgRoleField" hidden>
-            <label>Rol en organización</label>
-            <select name="organization_role">
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-              <option value="viewer">Viewer</option>
+        </div>
+
+        <div class="settings-section" id="orgPermissionsSection" hidden>
+          <h4><i class="fas fa-user-shield"></i> Rol y permisos en la organización</h4>
+          <p class="section-description">
+            Elige un rol base; rellena los permisos por defecto. Puedes ajustar los checkboxes
+            individualmente después.
+          </p>
+          <div class="settings-field">
+            <label>Rol base</label>
+            <select id="orgRoleSelect" name="organization_role">
+              ${(window.OrgCapabilities?.ROLES || []).map((r) => `
+                <option value="${r.key}">${this.escapeHtml(r.label)} — ${this.escapeHtml(r.desc)}</option>
+              `).join('')}
             </select>
           </div>
+
+          ${this.renderCapabilitiesMatrix()}
         </div>
 
         <div class="provision-nav">
@@ -202,11 +200,57 @@ class DevLeadUserProvisioningView extends DevBaseView {
     `;
   }
 
+  renderCapabilitiesMatrix() {
+    const caps = window.OrgCapabilities;
+    if (!caps) return '';
+    const byArea = caps.CAPABILITIES.reduce((acc, c) => {
+      (acc[c.area] = acc[c.area] || []).push(c);
+      return acc;
+    }, {});
+    return `
+      <div class="provision-caps-grid">
+        ${Object.entries(byArea).map(([areaKey, list]) => {
+          const area = caps.AREAS[areaKey] || { label: areaKey, icon: 'fa-circle' };
+          return `
+            <div class="provision-caps-area">
+              <h5 class="provision-caps-area-title"><i class="fas ${area.icon}"></i> ${this.escapeHtml(area.label)}</h5>
+              <div class="provision-caps-list">
+                ${list.map((c) => `
+                  <label class="provision-cap-item">
+                    <input type="checkbox" name="cap_${c.key}" data-cap="${c.key}">
+                    <span>${this.escapeHtml(c.label)}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  applyRolePreset(roleKey) {
+    const caps = window.OrgCapabilities;
+    if (!caps) return;
+    const preset = caps.PRESETS[roleKey];
+    if (!preset) return;
+    caps.CAPABILITIES.forEach((c) => {
+      const input = this.container.querySelector(`input[name="cap_${c.key}"]`);
+      if (input) input.checked = preset[c.key] === true;
+    });
+  }
+
   wireFormStage() {
     const form = this.container.querySelector('#provisionForm');
     const orgMode = this.container.querySelector('#orgModeSelect');
     this.addEventListener(form, 'submit', (e) => this.handleStart(e));
     this.addEventListener(orgMode, 'change', () => this.updateOrgModeUI());
+
+    const orgRoleSelect = this.container.querySelector('#orgRoleSelect');
+    if (orgRoleSelect) {
+      this.addEventListener(orgRoleSelect, 'change', () => this.applyRolePreset(orgRoleSelect.value));
+      this.applyRolePreset(orgRoleSelect.value); // initial preset
+    }
     this.updateOrgModeUI();
 
     this.container.querySelectorAll('[data-resume-job]').forEach((btn) => {
@@ -230,11 +274,11 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const mode = this.container.querySelector('#orgModeSelect')?.value || 'none';
     const existingField = this.container.querySelector('#existingOrgField');
     const newOrgField   = this.container.querySelector('#newOrgField');
-    const orgRoleField  = this.container.querySelector('#orgRoleField');
-    if (!existingField || !newOrgField || !orgRoleField) return;
+    const permsSection  = this.container.querySelector('#orgPermissionsSection');
+    if (!existingField || !newOrgField || !permsSection) return;
     existingField.hidden = mode !== 'existing';
     newOrgField.hidden   = mode !== 'create';
-    orgRoleField.hidden  = !(mode === 'existing' || mode === 'create');
+    permsSection.hidden  = !(mode === 'existing' || mode === 'create');
   }
 
   async handleStart(event) {
@@ -271,6 +315,16 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const value = (name) => (form.elements[name]?.value || '').trim();
     const checked = (name) => !!form.elements[name]?.checked;
 
+    const caps = window.OrgCapabilities;
+    const capabilities = {};
+    if (caps) {
+      caps.CAPABILITIES.forEach((c) => {
+        capabilities[c.key] = checked(`cap_${c.key}`);
+      });
+    }
+
+    const devRole = value('dev_role') || null;
+
     return {
       account: {
         full_name: value('full_name'),
@@ -278,22 +332,15 @@ class DevLeadUserProvisioningView extends DevBaseView {
         password: form.elements['password']?.value || '',
         role: value('platform_role') || 'user',
         default_view_mode: value('default_view_mode') || 'user',
-        is_developer: checked('perm_developer'),
-        dev_role: value('dev_role') || null,
-      },
-      permissions: {
-        studio: checked('perm_studio'),
-        video: checked('perm_video'),
-        brands: checked('perm_brands'),
-        production: checked('perm_production'),
-        developer: checked('perm_developer'),
-        dev_lead: checked('perm_dev_lead'),
+        is_developer: devRole !== null && devRole !== '',
+        dev_role: devRole,
       },
       organization: {
         mode: value('org_mode') || 'none',
         organization_id: value('organization_id') || null,
         new_organization_name: value('new_organization_name') || null,
         organization_role: value('organization_role') || null,
+        capabilities,
       },
     };
   }

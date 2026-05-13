@@ -264,6 +264,34 @@ class Router {
         window.currentOrgName = null;
       }
 
+      // Cargar membership (role + permissions) del usuario en la org activa antes
+      // de renderizar la vista para que hasPermission() funcione síncrono en
+      // Navigation y en los guards de cada view.
+      if (window.currentOrgId && window.authService?.loadMembership) {
+        try {
+          await window.authService.loadMembership(window.currentOrgId);
+        } catch (e) {
+          console.warn('loadMembership failed:', e);
+        }
+      }
+
+      // Guard de capabilities: si la ruta requiere una capability que el usuario
+      // no tiene, redirigir a /vera (única página garantizada para todos los miembros).
+      // Lead bypass: window.authService.hasPermission ya retorna true para Leads.
+      if (window.OrgCapabilities && window.authService?.hasPermission && window.currentOrgId) {
+        const requiredCap = window.OrgCapabilities.getCapabilityForPath(path);
+        if (requiredCap && !window.authService.hasPermission(requiredCap, window.currentOrgId)) {
+          this._handlingRoute = false;
+          const veraRoute = window.appNavigation?.getUserSidebarRoute?.('vera')
+            || (window.getOrgPathPrefix
+                ? `${window.getOrgPathPrefix(window.currentOrgId, window.currentOrgName)}/vera`
+                : '/vera');
+          console.warn(`[router] capability ${requiredCap} requerida; redirigiendo a ${veraRoute}`);
+          this.navigate(veraRoute, true);
+          return;
+        }
+      }
+
       // Tema de marca: solo 1 vez al entrar a la org (evita flasheo al navegar entre production, products, etc.)
       if (window.OrgBrandTheme) {
         const appliedId = window._orgBrandThemeAppliedId;
