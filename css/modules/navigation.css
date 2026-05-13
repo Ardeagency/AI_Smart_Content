@@ -1297,7 +1297,7 @@ body.sidebar-collapsed .main-header,
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 0 12px;
     height: var(--nav-item-height);
     min-height: var(--nav-item-height);
@@ -1306,7 +1306,7 @@ body.sidebar-collapsed .main-header,
     transition: var(--transition-fast);
     position: relative;
     font-weight: 400; /* Texto normal, no medium */
-    font-size: 14px;
+    font-size: 13px;
     font-family: var(--font-family);
     line-height: 1.4;
     margin-bottom: 0;
@@ -3412,7 +3412,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.28);
-    padding: 10px 12px 4px;
+    padding: 14px 12px 4px;
     margin: 0;
     line-height: 1;
     pointer-events: none;
