@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <base href="/">
-    <title>AI Smart Content - Arde Agency</title>
-    <meta name="description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
+    <title>AI Smart Content</title>
+    <meta name="description" content="Plataforma todo-en-uno con IA para crear y escalar contenido de marca: marcas, productos, audiencias y campañas multi-plataforma en un solo lugar.">
     <link rel="canonical" href="https://aismartcontent.io/">
     <!-- Favicons: predeterminado (tema claro) y versión para tema oscuro -->
     <link rel="icon" type="image/svg+xml" href="/recursos/favicons/favicon.svg">
@@ -20,11 +20,24 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AI Smart">
     <link rel="apple-touch-icon" href="/recursos/logos/Logo-app.svg">
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="AI Smart Content">
+    <meta property="og:locale" content="es_CO">
     <meta property="og:url" content="https://aismartcontent.io/">
-    <meta property="og:title" content="AI Smart Content - Arde Agency">
-    <meta property="og:description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
+    <meta property="og:title" content="AI Smart Content">
+    <meta property="og:description" content="Plataforma todo-en-uno con IA para crear y escalar contenido de marca: marcas, productos, audiencias y campañas multi-plataforma.">
     <meta property="og:type" content="website">
-    
+    <meta property="og:image" content="https://aismartcontent.io/recursos/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="AI Smart Content — Plataforma de generación de contenido con IA">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Smart Content">
+    <meta name="twitter:description" content="Plataforma todo-en-uno con IA para crear y escalar contenido de marca.">
+    <meta name="twitter:image" content="https://aismartcontent.io/recursos/og-image.png">
+
     <!-- Preconnect — orígenes críticos para primera pintura y primera API call.
          preconnect: abre handshake TCP+TLS ya (ahorra ~200-400ms en LTE).
          dns-prefetch: solo resolución DNS (más barato; suficiente para libs). -->
@@ -203,6 +216,9 @@
     <!-- ErrorLogger temprano para capturar crashes del bootstrap (window.error + unhandledrejection).
          No depende de Supabase: si aún no está disponible, buffea en LS y flushea cuando llegue. -->
     <script src="js/services/ErrorLogger.js?v=__BUILD_ID__" defer></script>
+    <!-- PageMeta: título dinámico "{Org} | {Section}". Debe ir ANTES de router.js
+         para registrar el listener `routechange` antes del primer dispatch. -->
+    <script src="js/utils/PageMeta.js?v=__BUILD_ID__" defer></script>
     <script src="js/views/BaseView.js?v=__BUILD_ID__" defer></script>
     <script src="js/router.js?v=__BUILD_ID__" defer></script>
 
