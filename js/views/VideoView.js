@@ -111,7 +111,45 @@ class VideoView extends BaseView {
             <main class="video-main">
               <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
 
-                <div class="video-canvas-idle" id="videoCanvasIdle"></div>
+                <div class="video-canvas-idle" id="videoCanvasIdle">
+                  <div class="video-model-picker" role="radiogroup" aria-label="Elige tu modelo de video">
+                    <h3 class="video-model-picker__title">Elige tu modelo de video</h3>
+                    <div class="video-model-picker__grid">
+                      <button type="button" class="video-model-card is-selected" data-model="kling" role="radio" aria-checked="true">
+                        <div class="video-model-card__top">
+                          <div class="video-model-card__logo-wrap">
+                            <img class="video-model-card__logo" src="/recursos/logos/plataformas/kling.svg" alt="Kling" loading="lazy">
+                          </div>
+                          <span class="video-model-card__check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        </div>
+                        <div class="video-model-card__body">
+                          <h4 class="video-model-card__title">Kling 3.0</h4>
+                          <p class="video-model-card__desc">Generar un clip de video corto</p>
+                        </div>
+                        <div class="video-model-card__footer">
+                          <span class="video-model-card__cost"><strong>25</strong> <span>créditos</span></span>
+                          <span class="video-model-card__badge is-active">Activo</span>
+                        </div>
+                      </button>
+                      <button type="button" class="video-model-card is-locked" data-model="seedance" role="radio" aria-checked="false" aria-disabled="true" disabled>
+                        <div class="video-model-card__top">
+                          <div class="video-model-card__logo-wrap">
+                            <img class="video-model-card__logo" src="/recursos/logos/plataformas/seedance-bytedance.svg" alt="Seedance" loading="lazy">
+                          </div>
+                          <span class="video-model-card__lock" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                        </div>
+                        <div class="video-model-card__body">
+                          <h4 class="video-model-card__title">Seedance 2.0</h4>
+                          <p class="video-model-card__desc">Crear secuencias de video</p>
+                        </div>
+                        <div class="video-model-card__footer">
+                          <span class="video-model-card__cost"><strong>60</strong> <span>créditos</span></span>
+                          <span class="video-model-card__badge is-soon">Próximamente</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 <div class="video-status-area" id="videoStatusArea" style="display: none;">
                   <div class="video-status-card" id="videoStatusCard">
@@ -351,6 +389,23 @@ class VideoView extends BaseView {
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
+    this.selectedModel = this.selectedModel || 'kling';
+    this.container.querySelectorAll('.video-model-card[data-model]').forEach((card) => {
+      if (card.dataset.boundModelPick === '1') return;
+      card.dataset.boundModelPick = '1';
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (card.disabled || card.classList.contains('is-locked')) return;
+        const model = card.getAttribute('data-model');
+        if (!model || model === this.selectedModel) return;
+        this.selectedModel = model;
+        this.container.querySelectorAll('.video-model-card[data-model]').forEach((c) => {
+          const isSel = c.getAttribute('data-model') === model;
+          c.classList.toggle('is-selected', isSel);
+          c.setAttribute('aria-checked', isSel ? 'true' : 'false');
+        });
+      });
+    });
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
     this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
