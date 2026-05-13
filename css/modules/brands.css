@@ -3571,4 +3571,202 @@ h1.brand-name-large[contenteditable="true"]:hover,
     }
 }
 
+/* ============================================
+   Tags editor (arrays planos y arrays dentro de JSON)
+   ============================================ */
+#infoPanelContent .info-brand-tags-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-tags-editor {
+    border-color: rgba(15, 23, 42, 0.12);
+    background: rgba(15, 23, 42, 0.025);
+}
+
+#infoPanelContent .info-brand-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-height: 1.6rem;
+}
+
+#infoPanelContent .info-brand-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.09);
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-tag {
+    border-color: rgba(15, 23, 42, 0.18);
+    background: rgba(15, 23, 42, 0.08);
+}
+
+#infoPanelContent .info-brand-tag__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#infoPanelContent .info-brand-tag__remove {
+    border: none;
+    background: transparent;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    font-size: 1rem;
+    border-radius: 999px;
+    width: 1.1rem;
+    height: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#infoPanelContent .info-brand-tag__remove:hover {
+    opacity: 1;
+    background: rgba(255, 80, 80, 0.18);
+    color: #ff8a8a;
+}
+
+#infoPanelContent .info-brand-tag-input {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 0.85rem;
+    padding: 0.15rem 0.2rem;
+    outline: none;
+    min-width: 120px;
+}
+
+#infoPanelContent .info-brand-tag-input::placeholder {
+    opacity: 0.5;
+}
+
+/* ============================================
+   JSON editor (verbal_dna, visual_dna) — sin textarea, todo descompuesto
+   ============================================ */
+#infoPanelContent .info-brand-json-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-editor {
+    border-color: rgba(15, 23, 42, 0.1);
+    background: rgba(15, 23, 42, 0.02);
+}
+
+#infoPanelContent .info-brand-json-node {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#infoPanelContent .info-brand-json-node__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+}
+
+#infoPanelContent .info-brand-json-subgroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    border-left: 2px solid rgba(255, 255, 255, 0.12);
+    margin-left: 0.2rem;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-subgroup {
+    border-left-color: rgba(15, 23, 42, 0.12);
+}
+
+#infoPanelContent .info-brand-json-string {
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.35rem;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.03);
+    min-height: 1.6rem;
+    cursor: text;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#infoPanelContent .info-brand-json-string:hover,
+#infoPanelContent .info-brand-json-string:focus {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    outline: none;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-string {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-string:hover,
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-string:focus {
+    border-color: rgba(15, 23, 42, 0.16);
+    background: rgba(15, 23, 42, 0.06);
+}
+
+#infoPanelContent .info-brand-json-number {
+    width: 8rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: inherit;
+    font: inherit;
+}
+
+#brandsListContainer.brand-cards-glass-white #infoPanelContent .info-brand-json-number {
+    border-color: rgba(15, 23, 42, 0.14);
+    background: rgba(15, 23, 42, 0.04);
+}
+
+#infoPanelContent .info-brand-json-bool {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+#infoPanelContent .info-brand-json-bool input[type="checkbox"] {
+    accent-color: currentColor;
+}
+
+#infoPanelContent .info-brand-json-bool__txt {
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
+#infoPanelContent .info-brand-json-empty {
+    opacity: 0.55;
+    font-style: italic;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
 

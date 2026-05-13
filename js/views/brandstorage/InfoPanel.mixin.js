@@ -158,12 +158,10 @@
         if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo' || block.field === 'sub_nichos') {
           valueHtml = this.renderBrandArrayMultiSelect(block.field, raw);
         } else {
-          const textValue = Array.isArray(raw) ? raw.join(', ') : '';
-          valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="array" rows="2" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
+          valueHtml = this.renderBrandTagsEditor(block.field, raw);
         }
       } else if (block.type === 'json') {
-        const jsonValue = raw && typeof raw === 'object' ? JSON.stringify(raw, null, 2) : '{}';
-        valueHtml = `<textarea class="info-brand-json-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="json" rows="5" spellcheck="false">${this.escapeHtml(jsonValue)}</textarea>`;
+        valueHtml = this.renderBrandJsonEditor(block.field, raw);
       } else if (block.type === 'textarea') {
         const textValue = raw == null ? '' : String(raw);
         valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="textarea" rows="3" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
@@ -178,6 +176,60 @@
         </div>`;
     }).join('');
     return `<div class="info-brand-fields">${fieldHtml}</div>`;
+    },
+
+  renderBrandTagsEditor(field, values, opts = {}) {
+    const path = opts.path || field;
+    const arr = Array.isArray(values)
+      ? values.map((v) => (v == null ? '' : String(v))).filter((v) => v !== '')
+      : [];
+    const chips = arr.map((v) => `
+      <span class="info-brand-tag">
+        <span class="info-brand-tag__label">${this.escapeHtml(v)}</span>
+        <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="Quitar ${this.escapeHtml(v)}">×</button>
+      </span>
+    `).join('');
+    return `
+      <div class="info-brand-tags-editor" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="array-tags" data-json-path="${this.escapeHtml(path)}">
+        <div class="info-brand-tags-list">${chips}</div>
+        <input type="text" class="info-brand-tag-input" placeholder="+ Añadir etiqueta" aria-label="Añadir etiqueta">
+      </div>`;
+    },
+
+  renderBrandJsonEditor(field, value) {
+    const root = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    const body = this._renderJsonObjectBody(field, [field], root);
+    return `<div class="info-brand-json-editor" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-tags">${body}</div>`;
+    },
+
+  _renderJsonObjectBody(field, pathArr, obj) {
+    const keys = Object.keys(obj || {});
+    if (!keys.length) {
+      return `<p class="info-brand-json-empty">Sin datos definidos.</p>`;
+    }
+    return keys.map((key) => {
+      const childPath = [...pathArr, key];
+      const childPathStr = childPath.join('.');
+      const v = obj[key];
+      let inner = '';
+      if (Array.isArray(v)) {
+        inner = this.renderBrandTagsEditor(field, v, { path: childPathStr });
+      } else if (v !== null && typeof v === 'object') {
+        inner = `<div class="info-brand-json-subgroup">${this._renderJsonObjectBody(field, childPath, v)}</div>`;
+      } else if (typeof v === 'boolean') {
+        inner = `<label class="info-brand-json-bool"><input type="checkbox" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-bool" data-json-path="${this.escapeHtml(childPathStr)}" ${v ? 'checked' : ''}><span class="info-brand-json-bool__txt">${v ? 'Sí' : 'No'}</span></label>`;
+      } else if (typeof v === 'number') {
+        inner = `<input type="number" class="info-brand-json-number" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-number" data-json-path="${this.escapeHtml(childPathStr)}" value="${this.escapeHtml(String(v))}">`;
+      } else {
+        const sv = v == null ? '' : String(v);
+        inner = `<div class="info-brand-json-string editable-field" contenteditable="true" data-brand-field="${this.escapeHtml(field)}" data-brand-input-type="json-string" data-json-path="${this.escapeHtml(childPathStr)}">${this.escapeHtml(sv)}</div>`;
+      }
+      return `
+        <div class="info-brand-json-node">
+          <div class="info-brand-json-node__label">${this.escapeHtml(key)}</div>
+          ${inner}
+        </div>`;
+    }).join('');
     },
 
   renderEntitiesSection(brandContainerId) {
@@ -802,37 +854,137 @@
       syncUi();
     });
 
-    panelRoot.querySelectorAll('[data-brand-field]').forEach((el) => {
+    panelRoot.querySelectorAll('textarea[data-brand-field], div.info-brand-text-editor[data-brand-field]').forEach((el) => {
       if (el.dataset.boundEditable === '1') return;
       el.dataset.boundEditable = '1';
       const field = el.getAttribute('data-brand-field');
       const type = el.getAttribute('data-brand-input-type') || 'text';
-      if (type === 'array-multiselect') return;
       const onSave = async () => {
-        let nextValue = '';
-        if (type === 'json') {
-          const raw = String(el.value || '').trim();
-          try {
-            nextValue = raw ? JSON.parse(raw) : {};
-          } catch (_) {
-            alert(`JSON no válido en ${field}.`);
-            return;
-          }
-        } else if (type === 'array') {
-          nextValue = String(el.value || '')
-            .split(/,|\n/)
-            .map((v) => v.trim())
-            .filter(Boolean);
-        } else if (type === 'text') {
-          nextValue = String(el.textContent || '').trim();
-        } else {
-          nextValue = String(el.value || '').trim();
-        }
+        const nextValue = type === 'text'
+          ? String(el.textContent || '').trim()
+          : String(el.value || '').trim();
         await this.saveBrandContainerFieldById(brandContainerId, field, nextValue);
       };
+      el.addEventListener('blur', onSave);
+    });
 
-      if (type === 'select') el.addEventListener('change', onSave);
-      else el.addEventListener('blur', onSave);
+    const findContainerRow = () => (this.brandContainers || []).find((it) => String(it.id) === String(brandContainerId));
+    const setJsonPath = (obj, parts, value) => {
+      let curr = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const k = parts[i];
+        if (curr[k] == null || typeof curr[k] !== 'object' || Array.isArray(curr[k])) curr[k] = {};
+        curr = curr[k];
+      }
+      curr[parts[parts.length - 1]] = value;
+    };
+    const persistArrayChange = async (topField, pathStr, newArr) => {
+      if (pathStr === topField) {
+        await this.saveBrandContainerFieldById(brandContainerId, topField, newArr);
+        return;
+      }
+      const row = findContainerRow();
+      const currentTop = row && row[topField] && typeof row[topField] === 'object' ? row[topField] : {};
+      const clone = JSON.parse(JSON.stringify(currentTop));
+      setJsonPath(clone, pathStr.split('.').slice(1), newArr);
+      await this.saveBrandContainerFieldById(brandContainerId, topField, clone);
+    };
+    const persistJsonScalarChange = async (topField, pathStr, newValue) => {
+      const row = findContainerRow();
+      const currentTop = row && row[topField] && typeof row[topField] === 'object' ? row[topField] : {};
+      const clone = JSON.parse(JSON.stringify(currentTop));
+      setJsonPath(clone, pathStr.split('.').slice(1), newValue);
+      await this.saveBrandContainerFieldById(brandContainerId, topField, clone);
+    };
+
+    panelRoot.querySelectorAll('.info-brand-tags-editor').forEach((wrap) => {
+      if (wrap.dataset.boundTags === '1') return;
+      wrap.dataset.boundTags = '1';
+      const field = wrap.getAttribute('data-brand-field');
+      const pathStr = wrap.getAttribute('data-json-path') || field;
+      const list = wrap.querySelector('.info-brand-tags-list');
+      const input = wrap.querySelector('.info-brand-tag-input');
+      if (!field || !list || !input) return;
+
+      const readCurrent = () => Array.from(list.querySelectorAll('.info-brand-tag__label')).map((el) => (el.textContent || '').trim()).filter(Boolean);
+      const renderChips = (arr) => {
+        list.innerHTML = arr.map((v) => `
+          <span class="info-brand-tag">
+            <span class="info-brand-tag__label">${this.escapeHtml(v)}</span>
+            <button type="button" class="info-brand-tag__remove" data-value="${this.escapeHtml(v)}" aria-label="Quitar ${this.escapeHtml(v)}">×</button>
+          </span>
+        `).join('');
+      };
+
+      list.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.info-brand-tag__remove');
+        if (!btn || !list.contains(btn)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const value = btn.getAttribute('data-value');
+        const next = readCurrent().filter((v) => v !== value);
+        renderChips(next);
+        await persistArrayChange(field, pathStr, next);
+      });
+
+      const addFromInput = async () => {
+        const value = String(input.value || '').trim();
+        if (!value) return;
+        const current = readCurrent();
+        input.value = '';
+        if (current.some((v) => v.toLowerCase() === value.toLowerCase())) return;
+        const next = [...current, value];
+        renderChips(next);
+        await persistArrayChange(field, pathStr, next);
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addFromInput(); }
+        else if (e.key === ',') { e.preventDefault(); addFromInput(); }
+      });
+      input.addEventListener('blur', () => {
+        if (String(input.value || '').trim()) addFromInput();
+      });
+    });
+
+    panelRoot.querySelectorAll('.info-brand-json-string[data-json-path]').forEach((el) => {
+      if (el.dataset.boundJsonString === '1') return;
+      el.dataset.boundJsonString = '1';
+      const field = el.getAttribute('data-brand-field');
+      const path = el.getAttribute('data-json-path');
+      el.addEventListener('blur', async () => {
+        const value = String(el.textContent || '').trim();
+        await persistJsonScalarChange(field, path, value);
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); el.blur(); }
+      });
+    });
+
+    panelRoot.querySelectorAll('input[type="checkbox"][data-brand-input-type="json-bool"]').forEach((el) => {
+      if (el.dataset.boundJsonBool === '1') return;
+      el.dataset.boundJsonBool = '1';
+      const field = el.getAttribute('data-brand-field');
+      const path = el.getAttribute('data-json-path');
+      el.addEventListener('change', async () => {
+        const txt = el.parentElement?.querySelector('.info-brand-json-bool__txt');
+        if (txt) txt.textContent = el.checked ? 'Sí' : 'No';
+        await persistJsonScalarChange(field, path, !!el.checked);
+      });
+    });
+
+    panelRoot.querySelectorAll('input[type="number"][data-brand-input-type="json-number"]').forEach((el) => {
+      if (el.dataset.boundJsonNumber === '1') return;
+      el.dataset.boundJsonNumber = '1';
+      const field = el.getAttribute('data-brand-field');
+      const path = el.getAttribute('data-json-path');
+      el.addEventListener('blur', async () => {
+        const raw = String(el.value || '').trim();
+        if (raw === '') { await persistJsonScalarChange(field, path, null); return; }
+        const num = Number(raw);
+        if (Number.isNaN(num)) return;
+        await persistJsonScalarChange(field, path, num);
+      });
     });
 
     panelRoot.querySelectorAll('[data-integration-id][data-integration-field]').forEach((el) => {
