@@ -827,16 +827,14 @@
 }
 
 /* ========== Credits Shop (comprar créditos en org) ========== */
-.credits-shop-container {
-    padding-top: calc(48px + 2rem);
-}
-
 .credits-shop-current {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    border: 1px solid var(--border-divider);
-    border-radius: var(--radius-md);
+    margin-top: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(13, 14, 16, 0.55);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -848,53 +846,87 @@
 }
 
 .credits-shop-current-value {
-    color: var(--accent-warm);
+    color: var(--warm-1, #ff6500);
     font-size: 1.1rem;
 }
 
 .credits-shop-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 260px));
+    justify-content: center;
     gap: 1.25rem;
-    margin-top: 2rem;
-    list-style: none;
-    padding: 0;
-    margin-left: 0;
+    width: 100%;
+    max-width: 1120px;
+    margin: 2rem auto 0;
 }
 
 .credits-shop-card {
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    border: 1px solid var(--border-divider);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
     position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: rgba(13, 14, 16, 0.55);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 1.25rem;
     display: flex;
     flex-direction: column;
-    transition: border-color var(--transition), box-shadow var(--transition);
+    text-align: center;
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.credits-shop-card::before {
+    content: "";
+    position: absolute;
+    left: -25%;
+    right: -25%;
+    bottom: -45%;
+    height: 85%;
+    background:
+        radial-gradient(ellipse 55% 70% at 50% 100%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 55%),
+        radial-gradient(ellipse 75% 80% at 50% 100%, rgba(255, 101, 0, 0.55) 0%, rgba(255, 101, 0, 0) 60%),
+        radial-gradient(ellipse 100% 90% at 50% 100%, rgba(255, 0, 0, 0.45) 0%, rgba(255, 0, 0, 0) 70%);
+    filter: blur(28px);
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity var(--transition, .25s);
+}
+
+.credits-shop-card > * {
+    position: relative;
 }
 
 .credits-shop-card:hover {
-    border-color: var(--glass-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.credits-shop-card:hover::before {
+    opacity: 1;
 }
 
 .credits-shop-card--popular {
-    border-color: var(--accent-warm);
-    box-shadow: 0 0 0 1px var(--accent-warm);
+    border-color: rgba(255, 101, 0, 0.45);
+    box-shadow: 0 0 0 1px rgba(255, 101, 0, 0.3);
 }
 
 .credits-shop-badge {
     position: absolute;
     top: -0.5rem;
-    right: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--accent-warm);
-    background: rgba(224, 145, 69, 0.15);
-    padding: 0.25rem 0.5rem;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff6500 0%, #ff0000 100%);
+    padding: 0.25rem 0.7rem;
     border-radius: var(--radius-sm);
+    z-index: 1;
 }
 
 .credits-shop-card-body {
@@ -902,6 +934,7 @@
     flex-direction: column;
     gap: 0.75rem;
     flex: 1;
+    align-items: center;
 }
 
 .credits-shop-card-name {
@@ -918,6 +951,7 @@
     color: var(--text-primary);
     display: flex;
     align-items: baseline;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
@@ -925,8 +959,8 @@
 .credits-shop-bonus {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--accent-warm, #e09145);
-    background: rgba(224, 145, 69, 0.12);
+    color: var(--warm-1, #ff6500);
+    background: rgba(255, 101, 0, 0.12);
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     text-transform: uppercase;
@@ -936,7 +970,7 @@
 .credits-shop-card-price {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--accent-warm);
+    color: var(--warm-1, #ff6500);
 }
 
 .credits-shop-card-desc {
@@ -957,6 +991,9 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
 @media (max-width: 768px) {

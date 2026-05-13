@@ -125,19 +125,23 @@ class CreditsShopView extends BaseView {
 
   renderHTML() {
     return `
-      <div class="organization-container credits-shop-container">
-        <div class="organization-header">
-          <h1 class="organization-title">Comprar créditos</h1>
-          <p class="organization-subtitle">Añade créditos a tu organización para usar en Production y flujos. Elige el paquete que necesites.</p>
-          <div class="credits-shop-current" aria-live="polite">
-            <span class="credits-shop-current-label">Créditos disponibles:</span>
-            <strong class="credits-shop-current-value" id="creditsShopAvailable">${this.creditsAvailable}</strong>
+      <div class="planes-main credits-shop-container">
+        <div class="planes-layout planes-layout-single">
+          <div class="planes-hero">
+            <div class="planes-hero-content">
+              <h1 class="planes-hero-title">Comprar créditos</h1>
+              <p class="planes-hero-subtitle">Añade créditos a tu organización para usar en Production y flujos.</p>
+              <div class="credits-shop-current" aria-live="polite">
+                <span class="credits-shop-current-label">Créditos disponibles:</span>
+                <strong class="credits-shop-current-value" id="creditsShopAvailable">${this.creditsAvailable}</strong>
+              </div>
+              <div class="credits-shop-grid" id="creditsShopGrid" role="list">
+                <div class="credits-shop-loading" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando paquetes…</div>
+              </div>
+              <p class="credits-shop-footer-note">Los créditos se asignan a la organización actual. Para facturación empresarial o cantidades personalizadas, contacta con soporte.</p>
+            </div>
           </div>
         </div>
-        <div class="credits-shop-grid" id="creditsShopGrid" role="list">
-          <div class="credits-shop-loading" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando paquetes…</div>
-        </div>
-        <p class="credits-shop-footer-note">Los créditos se asignan a la organización actual. Para facturación empresarial o cantidades personalizadas, contacta con soporte.</p>
       </div>
     `;
   }

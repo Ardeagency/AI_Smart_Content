@@ -146,9 +146,6 @@ class PlanesView extends BaseView {
                   </div>
                   <p class="planes-hero-subtitle">Elige tu plan.</p>
                   <div class="planes-plans" id="planesList">${this._planSkeletonHtml(4)}</div>
-                  <p class="planes-cta-login">
-                      <a href="/login" class="planes-link-login">Iniciar sesión o registrarse</a>
-                  </p>
               </div>
           </div>
       </div>
