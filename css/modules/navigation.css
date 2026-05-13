@@ -3310,7 +3310,6 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: 20px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    filter: drop-shadow(0 4px 4px rgba(174, 183, 79, 0.25));
     opacity: 1;
     overflow: visible;
 }
@@ -3329,20 +3328,21 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Trazo arcoiris bajo el pill — SVG inline con stroke gradient.
-   Stops con stop-opacity=0 en 0% y 100% → extremos en punta natural.
-   El interior del pill queda #141517 porque el SVG solo dibuja el path. */
+/* Trazo bajo el pill — la forma del arco la define un SVG mask;
+   el color sale de --brand-gradient-dynamic (palette de la org). */
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 204 30' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23ff0000' stop-opacity='0'/><stop offset='0.08' stop-color='%23ff0000' stop-opacity='1'/><stop offset='0.2' stop-color='%23ff6500'/><stop offset='0.32' stop-color='%23ffe500'/><stop offset='0.44' stop-color='%239acc00'/><stop offset='0.56' stop-color='%2300d614'/><stop offset='0.68' stop-color='%2300e7ff'/><stop offset='0.8' stop-color='%230018ee'/><stop offset='0.92' stop-color='%235b00ea' stop-opacity='1'/><stop offset='1' stop-color='%23900090' stop-opacity='0'/></linearGradient></defs><path d='M 0.75 15 A 14.25 14.25 0 0 0 15 29.25 L 189 29.25 A 14.25 14.25 0 0 0 203.25 15' stroke='url(%23g)' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 100%;
+    background: var(--brand-gradient-dynamic, transparent);
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 204 30' preserveAspectRatio='none'><path d='M 0.75 15 A 14.25 14.25 0 0 0 15 29.25 L 189 29.25 A 14.25 14.25 0 0 0 203.25 15' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 204 30' preserveAspectRatio='none'><path d='M 0.75 15 A 14.25 14.25 0 0 0 15 29.25 L 189 29.25 A 14.25 14.25 0 0 0 203.25 15' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
     pointer-events: none;
-    filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
 
 /* Vera colapsado: misma firma pero en chip circular 36x36 */
@@ -3366,7 +3366,6 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: 50%;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    filter: drop-shadow(0 4px 4px rgba(174, 183, 79, 0.25));
     opacity: 1;
     overflow: visible;
     justify-content: center;
@@ -3387,18 +3386,20 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 1;
 }
 
-/* Arco arcoiris bajo el chip circular colapsado — SVG inline. */
+/* Arco bajo el chip circular colapsado — mask con la forma + color dinámico. */
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-link::after,
 .side-navigation.collapsed.nav-mode-user .nav-item--primary .nav-main-link::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' preserveAspectRatio='none'><defs><linearGradient id='g2' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23ff0000' stop-opacity='0'/><stop offset='0.1' stop-color='%23ff0000' stop-opacity='1'/><stop offset='0.25' stop-color='%23ff6500'/><stop offset='0.4' stop-color='%23ffe500'/><stop offset='0.55' stop-color='%2300d614'/><stop offset='0.7' stop-color='%2300e7ff'/><stop offset='0.85' stop-color='%235b00ea'/><stop offset='1' stop-color='%23900090' stop-opacity='0'/></linearGradient></defs><path d='M 1.5 18 A 16.5 16.5 0 0 0 34.5 18' stroke='url(%23g2)' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 100%;
+    background: var(--brand-gradient-dynamic, transparent);
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' preserveAspectRatio='none'><path d='M 1.5 18 A 16.5 16.5 0 0 0 34.5 18' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' preserveAspectRatio='none'><path d='M 1.5 18 A 16.5 16.5 0 0 0 34.5 18' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
     pointer-events: none;
-    filter: drop-shadow(0 0 3px rgba(255, 110, 110, 0.28));
 }
 
 /* =========================================
