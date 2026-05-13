@@ -289,15 +289,33 @@ class VideoView extends BaseView {
                       </div>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Campaña</h4>
-                      <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Campaña">
-                        <option value="">— Ninguna</option>
+                      <h4 class="video-prompt-panel-title">¿De qué trata?</h4>
+                      <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Concepto de campaña" data-conceptual="1">
+                        <option value="">— Sin definir</option>
+                        <option value="Brand awareness">Brand awareness · presentar la marca</option>
+                        <option value="Product launch">Lanzamiento de producto</option>
+                        <option value="Lifestyle storytelling">Lifestyle · contar una historia</option>
+                        <option value="Educational">Educativo · enseñar o explicar</option>
+                        <option value="Sale / promo">Promoción · oferta o descuento</option>
+                        <option value="Testimonial">Testimonial · clientes reales</option>
+                        <option value="Reactivation">Reactivación · clientes dormidos</option>
+                        <option value="Seasonal moment">Momento estacional · fecha clave</option>
+                        <option value="Behind the scenes">Behind the scenes · cercanía marca</option>
                       </select>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Audiencia</h4>
-                      <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia">
-                        <option value="">— Ninguna</option>
+                      <h4 class="video-prompt-panel-title">¿A quién le habla?</h4>
+                      <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia conceptual" data-conceptual="1">
+                        <option value="">— Sin definir</option>
+                        <option value="Young professionals 25-35">Profesionales jóvenes (25–35)</option>
+                        <option value="Established professionals 35-50">Profesionales establecidos (35–50)</option>
+                        <option value="Aspirational youth 18-28">Aspiracionales jóvenes (18–28)</option>
+                        <option value="Mass market">Mercado masivo</option>
+                        <option value="Premium / luxury audience">Premium · audiencia de lujo</option>
+                        <option value="Niche enthusiasts">Nicho · entusiastas de la categoría</option>
+                        <option value="Decision makers B2B">Decision makers · B2B</option>
+                        <option value="Existing customers">Clientes existentes</option>
+                        <option value="Parents / families">Padres y familias</option>
                       </select>
                     </div>
                     <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
@@ -596,20 +614,6 @@ class VideoView extends BaseView {
     if (campaignSelect) {
       campaignSelect.addEventListener('change', () => {
         this.selectedCampaignId = campaignSelect.value || '';
-        // Auto-link: si la campaña tiene una audiencia conectada por default,
-        // autoseleccionarla. El usuario puede cambiarla después manualmente.
-        if (this.selectedCampaignId) {
-          const campaign = (this.dbData.campaigns || []).find((c) => String(c.id) === String(this.selectedCampaignId));
-          const personaId = campaign?.persona_id;
-          if (personaId && audienceSelect) {
-            const hasOption = Array.from(audienceSelect.options).some((o) => String(o.value) === String(personaId));
-            if (hasOption && audienceSelect.value !== String(personaId)) {
-              audienceSelect.value = String(personaId);
-              this.selectedAudienceId = String(personaId);
-              audienceSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          }
-        }
       });
     }
     if (audienceSelect) {
@@ -1419,21 +1423,24 @@ class VideoView extends BaseView {
   }
 
   renderCampaignDropdown() {
+    // Conceptual: opciones hardcoded en el HTML, NO se popula desde BD.
+    // Las campañas en /video son conceptos narrativos (Brand awareness, Product
+    // launch, etc.) no campañas reales del CRM. El backend recibe el string
+    // conceptual y OpenAI lo usa como contexto del prompt.
     const select = this.container.querySelector('#videoCampaignSelect');
     if (!select) return;
-    const campaigns = this.dbData.campaigns || [];
-    const current = this.selectedCampaignId;
-    select.innerHTML = '<option value="">— Ninguna</option>' + campaigns.map((c) => `<option value="${c.id}">${this.escapeHtml((c.nombre_campana || '').slice(0, 50))}</option>`).join('');
-    if (current && campaigns.some((c) => String(c.id) === current)) select.value = current;
+    if (this.selectedCampaignId && Array.from(select.options).some((o) => o.value === this.selectedCampaignId)) {
+      select.value = this.selectedCampaignId;
+    }
   }
 
   renderAudienceDropdown() {
+    // Conceptual: opciones hardcoded en HTML, NO BD. Misma lógica que campañas.
     const select = this.container.querySelector('#videoAudienceSelect');
     if (!select) return;
-    const audiences = this.dbData.audiences || [];
-    const current = this.selectedAudienceId;
-    select.innerHTML = '<option value="">— Ninguna</option>' + audiences.map((a) => `<option value="${a.id}">${this.escapeHtml((a.name || '').slice(0, 50))}</option>`).join('');
-    if (current && audiences.some((a) => String(a.id) === current)) select.value = current;
+    if (this.selectedAudienceId && Array.from(select.options).some((o) => o.value === this.selectedAudienceId)) {
+      select.value = this.selectedAudienceId;
+    }
   }
 
   renderDirectorVariables() {
