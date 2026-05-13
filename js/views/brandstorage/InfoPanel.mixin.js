@@ -30,16 +30,6 @@
     return (this.brandIntegrations || []).filter((row) => String(row.brand_container_id || '') === id);
     },
 
-  getCampaignsForContainer(brandContainerId) {
-    const id = String(brandContainerId || '');
-    return (this.brandCampaigns || []).filter((row) => String(row.brand_container_id || '') === id);
-    },
-
-  getAudiencesForContainer(brandContainerId) {
-    const id = String(brandContainerId || '');
-    return (this.brandAudiences || []).filter((row) => String(row.brand_container_id || '') === id);
-    },
-
   getEntitiesForContainer(brandContainerId) {
     const id = String(brandContainerId || '');
     return (this.brandEntities || []).filter((row) => String(row.brand_container_id || '') === id);
@@ -190,77 +180,6 @@
     return `<div class="info-brand-fields">${fieldHtml}</div>`;
     },
 
-  renderCampaignsSection(brandContainerId) {
-    const rows = this.getCampaignsForContainer(brandContainerId);
-    if (!rows.length) {
-      return `
-      <section class="info-section" aria-labelledby="infoBrandCampaignsHeading">
-        <h3 class="info-section-title" id="infoBrandCampaignsHeading">Campañas</h3>
-        <p class="info-assets-empty">No hay campañas vinculadas a esta sub-marca.</p>
-      </section>`;
-    }
-
-    const items = rows.slice(0, 8).map((row) => {
-      const platform = String(row.platform || '').trim();
-      const status   = String(row.status || '').trim();
-      const meta = row.descripcion_interna || row.platform_objective || 'Sin descripción';
-      const platformLabel = platform
-        ? platform.charAt(0).toUpperCase() + platform.slice(1)
-        : '';
-      const statusBadge = status ? `<span class="info-asset-meta">Estado: ${this.escapeHtml(status)}</span>` : '';
-      const platformBadge = platformLabel ? `<span class="info-asset-meta">Plataforma: ${this.escapeHtml(platformLabel)}</span>` : '';
-      return `
-        <li class="info-asset-row">
-          <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-bullhorn"></i></span></div>
-          <div class="info-asset-main">
-            <span class="info-asset-name">${this.escapeHtml(row.nombre_campana || 'Campaña')}</span>
-            <span class="info-asset-meta">${this.escapeHtml(meta)}</span>
-            ${platformBadge}
-            ${statusBadge}
-          </div>
-          <span class="info-connect-external" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
-        </li>`;
-    }).join('');
-
-    return `
-      <section class="info-section" aria-labelledby="infoBrandCampaignsHeading">
-        <h3 class="info-section-title" id="infoBrandCampaignsHeading">Campañas</h3>
-        <ul class="info-asset-list" role="list">${items}</ul>
-      </section>`;
-    },
-
-  renderAudiencesSection(brandContainerId) {
-    const rows = this.getAudiencesForContainer(brandContainerId);
-    if (!rows.length) {
-      return `
-      <section class="info-section" aria-labelledby="infoBrandAudiencesHeading">
-        <h3 class="info-section-title" id="infoBrandAudiencesHeading">Audiencias</h3>
-        <p class="info-assets-empty">No hay audiencias registradas para esta sub-marca.</p>
-      </section>`;
-    }
-
-    const items = rows.slice(0, 8).map((row) => {
-      const dolor = Array.isArray(row.dolores) && row.dolores.length ? `Dolor: ${row.dolores[0]}` : '';
-      const lenguaje = Array.isArray(row.estilo_lenguaje) && row.estilo_lenguaje.length ? `Lenguaje: ${row.estilo_lenguaje[0]}` : '';
-      const resumen = [row.description, dolor, lenguaje].filter(Boolean).join(' · ');
-      return `
-        <li class="info-asset-row">
-          <div class="info-asset-preview"><span class="info-asset-icon" aria-hidden="true"><i class="fas fa-users"></i></span></div>
-          <div class="info-asset-main">
-            <span class="info-asset-name">${this.escapeHtml(row.name || 'Audiencia')}</span>
-            <span class="info-asset-meta">${this.escapeHtml(resumen || 'Sin descripción')}</span>
-          </div>
-          <span class="info-connect-external" aria-hidden="true"><i class="fas fa-user-check"></i></span>
-        </li>`;
-    }).join('');
-
-    return `
-      <section class="info-section" aria-labelledby="infoBrandAudiencesHeading">
-        <h3 class="info-section-title" id="infoBrandAudiencesHeading">Audiencias</h3>
-        <ul class="info-asset-list" role="list">${items}</ul>
-      </section>`;
-    },
-
   renderEntitiesSection(brandContainerId) {
     const rows = this.getEntitiesForContainer(brandContainerId);
     if (!rows.length) {
@@ -324,8 +243,6 @@
           <div class="info-brand-aside-inner">
             <h3 class="info-section-title" id="infoBrandMetaHeading">Ficha completa de la sub-marca</h3>
             ${this.renderBrandReadonlySchema(item)}
-            ${this.renderCampaignsSection(item?.id)}
-            ${this.renderAudiencesSection(item?.id)}
           </div>
         </aside>
       </div>
@@ -388,13 +305,43 @@
   async saveBrandContainerFieldById(brandContainerId, fieldName, value) {
     if (!this.supabase || !brandContainerId || !fieldName) return false;
     const normalizedValue = this._normalizeBrandFieldForDb(fieldName, value);
+
+    if (fieldName === 'nombre_marca') {
+      const trimmed = String(normalizedValue || '').trim();
+      if (!trimmed) {
+        alert('El nombre de la sub-marca no puede estar vacío.');
+        return false;
+      }
+      const orgId = this.organizationRow?.id
+        || (this.brandContainers || []).find((it) => String(it.id) === String(brandContainerId))?.organization_id;
+      if (orgId) {
+        const { data: conflicts, error: checkErr } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('organization_id', orgId)
+          .ilike('nombre_marca', trimmed)
+          .neq('id', brandContainerId)
+          .limit(1);
+        if (checkErr) {
+          console.error('saveBrandContainerFieldById uniqueness check:', checkErr);
+        } else if ((conflicts || []).length > 0) {
+          alert(`Ya existe una sub-marca con el nombre "${trimmed}" en esta organización. Elige otro nombre.`);
+          return false;
+        }
+      }
+    }
+
     const { error } = await this.supabase
       .from('brand_containers')
       .update({ [fieldName]: normalizedValue })
       .eq('id', brandContainerId);
     if (error) {
-      console.error('BrandstorageView saveBrandContainerFieldById:', error);
-      alert(`No se pudo guardar ${fieldName}.`);
+      if (error.code === '23505') {
+        alert(`Ya existe una sub-marca con ese nombre en esta organización.`);
+      } else {
+        console.error('BrandstorageView saveBrandContainerFieldById:', error);
+        alert(`No se pudo guardar ${fieldName}.`);
+      }
       return false;
     }
     const row = (this.brandContainers || []).find((item) => String(item.id) === String(brandContainerId));

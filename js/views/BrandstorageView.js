@@ -20,8 +20,6 @@ class BrandstorageView extends BaseView {
     this.brandAssets = [];
     this.brandEntities = [];
     this.brandPlaces = [];
-    this.brandAudiences = [];
-    this.brandCampaigns = [];
     this.brandIntegrations = [];
     this.brandSocialLinks = [];
     this.organizationMembers = [];
@@ -284,8 +282,6 @@ class BrandstorageView extends BaseView {
         this.brandAssets = [];
         this.brandEntities = [];
         this.brandPlaces = [];
-        this.brandAudiences = [];
-        this.brandCampaigns = [];
         this.brandIntegrations = [];
         this.organizationMembers = [];
         this.organizationCredits = { credits_available: 100 };
@@ -316,8 +312,6 @@ class BrandstorageView extends BaseView {
         this.brandAssets = [];
         this.brandEntities = [];
         this.brandPlaces = [];
-        this.brandAudiences = [];
-        this.brandCampaigns = [];
         this.brandIntegrations = [];
         this.organizationMembers = [];
         this.organizationCredits = { credits_available: 100 };
@@ -372,21 +366,12 @@ class BrandstorageView extends BaseView {
       const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
 
       // brand_entities: IdentitiesView usa organization_id; filtrar por sub-marca en cliente si existe brand_container_id.
-      // campaigns: orden por created_at (updated_at puede no existir en algunos esquemas → 400).
-      // audiences: muchos proyectos no exponen la tabla en PostgREST (404); no prefetch aquí para evitar ruido en consola.
-      const [entitiesResult, campaignsResult, integrationsResult] = await Promise.allSettled([
+      const [entitiesResult, integrationsResult] = await Promise.allSettled([
         this.supabase
           .from('brand_entities')
           .select('id, organization_id, name, entity_type, description, created_at')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false }),
-        containerIds.length
-          ? this.supabase
-            .from('campaigns')
-            .select('id, brand_container_id, nombre_campana, descripcion_interna, platform, status, starts_at, ends_at, platform_objective, created_at')
-            .in('brand_container_id', containerIds)
-            .order('created_at', { ascending: false })
-          : Promise.resolve({ data: [], error: null }),
         containerIds.length
           ? this.supabase
             .from('brand_integrations')
@@ -403,10 +388,6 @@ class BrandstorageView extends BaseView {
         ? entitiesRaw.filter((e) => !e.brand_container_id || containerIds.includes(String(e.brand_container_id)))
         : entitiesRaw;
       this.brandPlaces = [];
-      this.brandAudiences = [];
-      this.brandCampaigns = campaignsResult.status === 'fulfilled' && !campaignsResult.value.error
-        ? (campaignsResult.value.data || [])
-        : [];
       this.brandIntegrations = integrationsResult.status === 'fulfilled' && !integrationsResult.value.error
         ? (integrationsResult.value.data || [])
         : [];
@@ -1462,15 +1443,13 @@ class BrandstorageView extends BaseView {
   //
   // Métodos movidos (se aplican sobre el prototype al cargar el mixin):
   //   · Accesores por container: getIntegrationsForContainer,
-  //     getCampaignsForContainer, getAudiencesForContainer,
   //     getEntitiesForContainer, getOrgDashboardHref.
   //   · Integraciones OAuth: _pickBrandIntegrationForContainer,
   //     _integrationTokenExpired, _integrationUsable,
   //     buildInfoIntegrationRows, renderIntegrationsSection,
   //     startBrandIntegrationOAuth, disconnectBrandIntegration,
   //     saveBrandIntegrationField.
-  //   · Panel SUB-MARCA: renderBrandReadonlySchema, renderCampaignsSection,
-  //     renderAudiencesSection, renderEntitiesSection,
+  //   · Panel SUB-MARCA: renderBrandReadonlySchema, renderEntitiesSection,
   //     renderBrandContainerInfoContent, openBrandContainerInfoPanel,
   //     closeBrandContainerInfoPanel, saveBrandContainerFieldById,
   //     saveBrandEntityField, setupBrandContainerInfoPanelEditables.
