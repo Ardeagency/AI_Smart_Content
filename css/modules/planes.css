@@ -234,3 +234,198 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── 2026 enhancements: CTAs, current-plan, comparison, FAQ, trust ── */
+
+.planes-page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+
+.planes-toggle-discount {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Default = annual (research 2026): hide monthly, show annual */
+.planes-page .price-monthly { display: inline-flex; flex-direction: column; }
+.planes-page .price-annual  { display: none; flex-direction: column; }
+.planes-page.billing-annual .price-monthly { display: none; }
+.planes-page.billing-annual .price-annual  { display: inline-flex; }
+
+.plan-card-small .price-annual small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 2px;
+    letter-spacing: 0;
+}
+
+.plan-card-small .price-free {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.plan-card-small .plan-card-contact-price {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.plan-card-small .plan-card-contact-price span {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.plan-card-small--enterprise {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.04), transparent);
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+.plan-card-small--current {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+}
+
+.plan-card-badge--current {
+    background: #22c55e !important;
+    color: #052e16 !important;
+}
+
+.plan-card-desc {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+    min-height: 32px;
+}
+
+.plan-card-cta {
+    margin-top: 16px;
+    width: 100%;
+    justify-content: center;
+}
+
+.plan-card-cta[disabled] { opacity: 0.6; cursor: default; }
+
+/* Trust strip */
+.planes-trust-strip { padding: 32px 0; text-align: center; border-top: 1px solid var(--border-divider); border-bottom: 1px solid var(--border-divider); margin: 32px 0; }
+.planes-trust-eyebrow { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+.planes-trust-logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; }
+.planes-trust-logo-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    height: 40px;
+    padding: 8px 16px;
+    border: 1px dashed var(--border-divider);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Testimonial */
+.planes-testimonial { max-width: 720px; margin: 48px auto; text-align: center; padding: 0 16px; }
+.planes-testimonial-quote { font-size: 22px; font-style: italic; color: var(--text-primary); margin: 0 0 24px; line-height: 1.5; }
+.planes-testimonial-attribution { display: inline-flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+.planes-testimonial-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px dashed var(--border-divider);
+}
+.planes-testimonial-name { font-weight: 600; color: var(--text-primary); }
+.planes-testimonial-role { font-size: 13px; color: var(--text-muted); }
+
+/* Comparison table */
+.planes-comparison { padding: 48px 0; }
+.planes-comparison-title { text-align: center; font-size: 24px; margin: 0 0 32px; color: var(--text-primary); }
+.planes-comparison-table-wrap { overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 12px; }
+.planes-comparison-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+.planes-comparison-table th, .planes-comparison-table td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--border-divider); font-size: 13px; }
+.planes-comparison-table thead th { background: var(--bg-tertiary); font-weight: 600; color: var(--text-primary); position: sticky; top: 0; }
+.planes-comparison-table tbody th[scope="row"] { text-align: left; font-weight: 400; color: var(--text-secondary); }
+.planes-comparison-table td { color: var(--text-secondary); }
+.planes-comparison-section th {
+    background: var(--bg-tertiary);
+    text-align: left;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 8px 16px;
+}
+
+/* FAQ */
+.planes-faq { padding: 48px 0; max-width: 800px; margin: 0 auto; }
+.planes-faq-title { text-align: center; font-size: 24px; margin: 0 0 32px; color: var(--text-primary); }
+.planes-faq-list { display: flex; flex-direction: column; gap: 8px; }
+.planes-faq-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
+    border-radius: 8px;
+    padding: 0;
+}
+.planes-faq-q {
+    cursor: pointer;
+    padding: 16px 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.planes-faq-q::after { content: '+'; color: var(--text-muted); font-size: 18px; }
+.planes-faq-item[open] .planes-faq-q::after { content: '–'; }
+.planes-faq-a {
+    padding: 0 20px 16px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Final CTA */
+.planes-final-cta {
+    text-align: center;
+    padding: 64px 24px;
+    margin: 32px 0 0;
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.06), transparent);
+    border-radius: 16px;
+}
+.planes-final-cta h2 { font-size: 28px; margin: 0 0 8px; color: var(--text-primary); }
+.planes-final-cta p { color: var(--text-muted); margin: 0 0 24px; }
+.planes-final-cta-actions { display: inline-flex; gap: 12px; }
+
+/* ─── Cancel page ─────────────────────────────────────────────────── */
+.cancel-page { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
+.cancel-card { background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 12px; padding: 32px; }
+.cancel-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 13px; margin-bottom: 16px; }
+.cancel-back:hover { color: var(--text-primary); }
+.cancel-card h1 { font-size: 24px; color: var(--text-primary); margin: 0 0 8px; }
+.cancel-lead { color: var(--text-secondary); margin: 0 0 24px; }
+.cancel-facts { background: var(--bg-tertiary); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
+.cancel-facts h3 { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; }
+.cancel-facts ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.cancel-facts li { font-size: 13px; color: var(--text-secondary); display: flex; gap: 10px; align-items: flex-start; }
+.cancel-facts li i { color: var(--text-muted); margin-top: 3px; }
+.cancel-survey { background: var(--bg-tertiary); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; }
+.cancel-survey summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+.cancel-survey-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.cancel-survey-option { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; cursor: pointer; }
+.cancel-survey textarea { width: 100%; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 6px; padding: 8px; color: var(--text-primary); font-family: inherit; font-size: 13px; resize: vertical; margin-top: 8px; }
+.cancel-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.cancel-fineprint { font-size: 12px; color: var(--text-muted); text-align: center; margin: 16px 0 0; }
+.cancel-status { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+.cancel-status.is-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
+.cancel-status.is-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
+.cancel-status:empty { display: none; }

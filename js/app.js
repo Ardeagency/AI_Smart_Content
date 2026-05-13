@@ -334,6 +334,11 @@ class App {
     r.register('/plans', planesLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/plans', planesLoader, auth);
 
+    // ── Cancel flow (1-click compliant: FTC click-to-cancel + CA law) ──
+    const cancelLoader = this._lazy('CancelSubscriptionView', ['/js/views/CancelSubscriptionView.js']);
+    r.register('/plans/cancel', cancelLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/plans/cancel', cancelLoader, auth);
+
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
