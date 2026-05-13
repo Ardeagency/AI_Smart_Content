@@ -23,7 +23,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'brand-organization',
-      label: 'Brand Identity',
+      label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Brands.svg',
       route: 'brand'
@@ -31,7 +31,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'brand-storage',
-      label: 'Brand Storage',
+      label: 'Storage',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/file-storage.svg',
       children: []
