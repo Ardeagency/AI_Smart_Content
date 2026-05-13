@@ -106,7 +106,7 @@ class DevTestView extends DevBaseView {
           <aside class="test-config-panel">
             <!-- Selector de Flujo -->
             <section class="config-section">
-              <h3><i class="ph ph-diagram-project"></i> Flujo</h3>
+              <h3><i class="ph ph-tree-structure"></i> Flujo</h3>
               <div class="flow-selector">
                 <select id="flowSelector" class="flow-select">
                   <option value="">Seleccionar flujo...</option>

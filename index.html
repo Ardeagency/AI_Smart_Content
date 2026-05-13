@@ -21,7 +21,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AI Smart">
-    <link rel="apple-touch-icon" href="/recursos/logos/Logo-app.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/recursos/logos/pwa/logo-app-180.png">
     <!-- Open Graph -->
     <meta property="og:site_name" content="AI Smart Content">
     <meta property="og:locale" content="es_CO">
@@ -55,10 +55,10 @@
          por ~7 KB CSS + ~14 KB woff2 self-hosted. Ahorro ~95% del peso de íconos. -->
     <link rel="preload" href="/recursos/fonts/fa/solid.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/fa-subset.css?v=__BUILD_ID__">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'"
-          integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
-          integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
+    <!-- Phosphor Icons — SUBSET local: 61 íconos efectivamente usados.
+         Reemplaza CDN @phosphor-icons/web (~78 KB CSS + ~147 KB woff2)
+         por ~3 KB CSS + ~7 KB woff2. Ahorro ~95%. -->
+    <link rel="stylesheet" href="/css/phosphor-subset.css?v=__BUILD_ID__">
     
     <style>
         /* Critical CSS: evita FOUC (flash blanco) mientras carga bundle.css.

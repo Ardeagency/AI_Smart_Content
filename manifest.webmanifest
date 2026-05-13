@@ -13,6 +13,18 @@
   "categories": ["productivity", "business", "graphics"],
   "icons": [
     {
+      "src": "/recursos/logos/pwa/logo-app-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/recursos/logos/pwa/logo-app-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
       "src": "/recursos/logos/Logo-app.svg",
       "type": "image/svg+xml",
       "sizes": "any",
