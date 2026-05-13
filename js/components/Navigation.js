@@ -899,7 +899,7 @@ class Navigation {
       }).join('');
       outputsHtml = `
         <div class="notif-outputs">
-          <div class="notif-outputs-head"><i class="fas fa-sparkles"></i> Producciones generadas</div>
+          <div class="notif-outputs-head"><i class="fas fa-wand-magic-sparkles"></i> Producciones generadas</div>
           <div class="notif-outputs-grid">${items}</div>
         </div>`;
     }
@@ -925,7 +925,7 @@ class Navigation {
       checklistHtml = `
         <div class="notif-checklist">
           <div class="notif-checklist-head">
-            <span><i class="far fa-clipboard"></i> Tareas a completar</span>
+            <span><i class="fas fa-clipboard"></i> Tareas a completar</span>
             <span class="notif-checklist-progress" data-progress>${doneCount} de ${total}</span>
           </div>
           ${items}

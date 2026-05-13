@@ -50,12 +50,11 @@
     <!-- Application CSS: un solo stylesheet; los módulos entran vía @import en bundle.css. -->
     <link rel="stylesheet" href="css/bundle.css?v=__BUILD_ID__">
 
-    <!-- Icon fonts — carga no bloqueante + SRI (si jsdelivr entregara bytes distintos a los
-         firmados aquí, el navegador rechaza el CSS: defensa contra compromiso del CDN). -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'"
-          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
-          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
+    <!-- Font Awesome — SUBSET local: solo los 155 íconos usados en la app.
+         Reemplaza el CDN @fortawesome/fontawesome-free (102 KB CSS + 252 KB woff2)
+         por ~7 KB CSS + ~14 KB woff2 self-hosted. Ahorro ~95% del peso de íconos. -->
+    <link rel="preload" href="/recursos/fonts/fa/solid.subset.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/fa-subset.css?v=__BUILD_ID__">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'"
           integrity="sha384-6p9AefaqUhEVheRlj1mpAkbngHXy9mbYMrIdcIt4Jlc9lOLIablJq3bBsLOjGwZ7" crossorigin="anonymous" referrerpolicy="no-referrer">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"
