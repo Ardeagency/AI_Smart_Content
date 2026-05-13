@@ -288,6 +288,11 @@ class App {
     r.register('/identities', identitiesLoader, auth);
     r.register('/identities/:entityId', identitiesLoader, auth);
 
+    // ── Org: References (biblioteca visual + carpetas custom) ──
+    const referencesLoader = this._lazy('ReferencesView', ['/js/views/ReferencesView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/references', referencesLoader, auth);
+    r.register('/references', referencesLoader, auth);
+
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);

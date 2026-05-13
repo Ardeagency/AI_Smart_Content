@@ -46,6 +46,14 @@ const SIDEBAR_USER_CONFIG = {
     },
     {
       type: 'page',
+      id: 'references',
+      label: 'References',
+      icon: 'fa-images',
+      iconSrc: '/recursos/icons/file-storage.svg',
+      route: 'references'
+    },
+    {
+      type: 'page',
       id: 'monitoring',
       label: 'Monitoreo',
       icon: 'fa-satellite-dish',
@@ -300,7 +308,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/references', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -2205,6 +2213,7 @@ class Navigation {
       '/brands': 'IDENTITY',
       '/product-detail': 'IDENTITY',
       '/identities': 'IDENTITY',
+      '/references': 'REFERENCES',
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
