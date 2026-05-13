@@ -93,12 +93,12 @@
 .studio-hero {
   width: 100%;
   max-height: 280px;
-  border-radius: var(--glass-radius);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   margin-bottom: var(--spacing-xl);
 }
 
@@ -152,10 +152,10 @@
 
 .studio-schedule-card {
   border-radius: 12px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   padding: 24px;
 }
 
@@ -191,8 +191,8 @@
   margin-top: 16px;
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed var(--glass-border);
-  background: var(--glass-bg);
+  border: 1px dashed var(--border-divider, #242424);
+  background: var(--bg-card, #141517);
 }
 
 .studio-schedule-form .studio-field {
@@ -201,8 +201,8 @@
 
 /* Steppers en cards de programación: sin color dinámico, botones visibles (glass) */
 .studio-schedule-card .input-stepper-wrap {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
@@ -219,7 +219,7 @@
 .studio-schedule-card .input-stepper-btns {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--glass-border);
+  border-left: 1px solid var(--border-divider, #242424);
   gap: 0;
 }
 
@@ -227,7 +227,7 @@
   width: 28px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
@@ -297,9 +297,9 @@
 .studio-programacion-select {
   width: 100%;
   max-width: 240px;
-  background: var(--glass-bg);
+  background: var(--bg-card, #141517);
   border-radius: 8px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-divider, #242424);
   color: #e2e8f0;
   padding-right: 32px;
 }
@@ -312,8 +312,8 @@
   margin-top: var(--spacing-md);
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed var(--glass-border);
-  background: var(--glass-bg);
+  border: 1px dashed var(--border-divider, #242424);
+  background: var(--bg-card, #141517);
 }
 .studio-programacion-row {
   display: flex;
@@ -323,10 +323,10 @@
 }
 
 .studio-programacion-row .input-stepper-wrap {
-  background: var(--glass-bg);
+  background: var(--bg-card, #141517);
   border-radius: 8px;
   padding: 4px 8px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-divider, #242424);
   display: inline-flex;
   align-items: center;
   gap: 0;
@@ -357,7 +357,7 @@
 .studio-programacion-row .input-stepper-btns {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--glass-border);
+  border-left: 1px solid var(--border-divider, #242424);
   margin-left: 4px;
   padding-left: 4px;
   gap: 0;
@@ -367,7 +367,7 @@
   width: 26px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
@@ -428,11 +428,11 @@
   position: relative;
   width: 233px;
   max-width: 100%;
-  border-radius: var(--glass-radius);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-md);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   padding: 24px;
 }
 
@@ -617,8 +617,8 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .studio-weekday-check input {
   margin: 0;
@@ -723,9 +723,9 @@
   width: 320px;
   min-width: 320px;
   background: rgba(15, 23, 42, 0.7);
-  border-left: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--border-divider, #242424);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -796,17 +796,17 @@
 }
 
 .studio-card-flow {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   cursor: pointer;
   transition: var(--transition);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .studio-card-flow:hover {
@@ -907,9 +907,9 @@
 .studio-field textarea,
 .studio-field select {
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 8px;
-  background: var(--glass-bg);
+  background: var(--bg-card, #141517);
   color: #e2e8f0;
   font-size: var(--font-size-base);
   font-family: inherit;
@@ -930,12 +930,12 @@
    ============================================ */
 .focus-selector-accordion {
   width: 100%;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .focus-selector-toggle-wrap {
