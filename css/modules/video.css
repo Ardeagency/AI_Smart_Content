@@ -3325,6 +3325,7 @@
 }
 
 .video-cine-tile {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3350,6 +3351,69 @@
 .video-cine-tile.is-selected {
     border-color: var(--color-info);
     color: var(--color-info);
+}
+
+/* Tooltip rico: aparece sobre el tile al hover */
+.video-cine-tile__tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 10;
+    width: max-content;
+    max-width: 240px;
+    padding: 8px 10px;
+    background: #1a1c20;
+    border: 1px solid var(--border-divider, #242424);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.45;
+    text-align: left;
+    text-transform: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    white-space: normal;
+}
+
+.video-cine-tile__tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1a1c20;
+}
+
+.video-cine-tile:hover .video-cine-tile__tooltip,
+.video-cine-tile:focus-visible .video-cine-tile__tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Tile en columna del borde no debe cortar el tooltip */
+.video-cine-tile-grid {
+    overflow: visible;
+}
+
+/* Label de "Avanzado" en el header del bloque Camera */
+.video-cine-advanced-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    vertical-align: middle;
 }
 
 .video-cine-tile__icon {

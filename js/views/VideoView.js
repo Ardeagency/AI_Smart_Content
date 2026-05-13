@@ -289,15 +289,15 @@ class VideoView extends BaseView {
                       </div>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Campaign</h4>
+                      <h4 class="video-prompt-panel-title">Campaña</h4>
                       <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Campaña">
-                        <option value="">— None</option>
+                        <option value="">— Ninguna</option>
                       </select>
                     </div>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Audience</h4>
+                      <h4 class="video-prompt-panel-title">Audiencia</h4>
                       <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia">
-                        <option value="">— None</option>
+                        <option value="">— Ninguna</option>
                       </select>
                     </div>
                     <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
@@ -344,34 +344,25 @@ class VideoView extends BaseView {
                     </div>
                     <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
                     <div class="video-cine-blocks">
-                      <div class="video-cine-block" data-block="camera">
-                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
-                        <div class="video-cine-block-content video-cine-block-collapsed">
-                          <p class="video-cine-block-hint">Cómo se ve el plano: el tipo de toma, la lente y qué tan cerca está la cámara del sujeto.</p>
-                          <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
-                          <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>
-                        </div>
-                      </div>
                       <div class="video-cine-block" data-block="movement">
-                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
-                        <div class="video-cine-block-content video-cine-block-collapsed">
-                          <p class="video-cine-block-hint">Cómo se mueve la cámara y con cuánta energía. Determina el ritmo y la sensación del video.</p>
-                          <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                        <button type="button" class="video-cine-block-header" aria-expanded="true"><span>Movimiento</span><i class="fas fa-chevron-down"></i></button>
+                        <div class="video-cine-block-content">
+                          <p class="video-cine-block-hint">Cómo se mueve la cámara. Determina el ritmo y la sensación del video.</p>
+                          <div class="video-cine-row"><label class="video-cine-label">Tipo de movimiento</label><select id="videoCineMovement" class="video-cine-select"></select></div>
                           <div class="video-cine-row-pair">
-                            <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
-                            <div class="video-cine-row"><label class="video-cine-label">Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Velocidad</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Intensidad</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
                           </div>
                         </div>
                       </div>
                       <div class="video-cine-block" data-block="lighting">
-                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Lighting</span><i class="fas fa-chevron-down"></i></button>
+                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Luz</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <p class="video-cine-block-hint">La iluminación dicta la emoción: suave para algo cálido, contrastada para drama.</p>
-                          <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">Tipo de luz</label><select id="videoCineLightType" class="video-cine-select"></select></div>
                           <div class="video-cine-row-pair">
-                            <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
-                            <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Contraste</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Temperatura</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
                           </div>
                         </div>
                       </div>
@@ -379,11 +370,20 @@ class VideoView extends BaseView {
                         <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood & Color</span><i class="fas fa-chevron-down"></i></button>
                         <div class="video-cine-block-content video-cine-block-collapsed">
                           <p class="video-cine-block-hint">La paleta y la energía emocional. Define si el video se siente premium, vibrante o dramático.</p>
-                          <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">Tono</label><select id="videoCineTone" class="video-cine-select"></select></div>
                           <div class="video-cine-row-pair">
                             <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
-                            <div class="video-cine-row"><label class="video-cine-label">Energy</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                            <div class="video-cine-row"><label class="video-cine-label">Energía</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
                           </div>
+                        </div>
+                      </div>
+                      <div class="video-cine-block video-cine-block-advanced" data-block="camera">
+                        <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Cámara <span class="video-cine-advanced-tag">Avanzado</span></span><i class="fas fa-chevron-down"></i></button>
+                        <div class="video-cine-block-content video-cine-block-collapsed">
+                          <p class="video-cine-block-hint">Para usuarios con experiencia: tipo de toma, lente y encuadre exactos. Si lo dejas vacío, la IA elige por ti.</p>
+                          <div class="video-cine-row"><label class="video-cine-label">Tipo de toma</label><select id="videoCineShotType" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">Lente</label><select id="videoCineLens" class="video-cine-select"></select></div>
+                          <div class="video-cine-row"><label class="video-cine-label">Encuadre</label><select id="videoCineFraming" class="video-cine-select"></select></div>
                         </div>
                       </div>
                     </div>
@@ -616,6 +616,20 @@ class VideoView extends BaseView {
     if (campaignSelect) {
       campaignSelect.addEventListener('change', () => {
         this.selectedCampaignId = campaignSelect.value || '';
+        // Auto-link: si la campaña tiene una audiencia conectada por default,
+        // autoseleccionarla. El usuario puede cambiarla después manualmente.
+        if (this.selectedCampaignId) {
+          const campaign = (this.dbData.campaigns || []).find((c) => String(c.id) === String(this.selectedCampaignId));
+          const personaId = campaign?.persona_id;
+          if (personaId && audienceSelect) {
+            const hasOption = Array.from(audienceSelect.options).some((o) => String(o.value) === String(personaId));
+            if (hasOption && audienceSelect.value !== String(personaId)) {
+              audienceSelect.value = String(personaId);
+              this.selectedAudienceId = String(personaId);
+              audienceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
+        }
       });
     }
     if (audienceSelect) {
@@ -1055,7 +1069,8 @@ class VideoView extends BaseView {
   }
 
   enhanceCinematographyWithTiles() {
-    const ICONS = {
+    // Fallback por categoría — solo aplica si no hay icono específico por valor
+    const FALLBACK_ICONS = {
       shotType: 'fa-video',
       lens: 'fa-camera-retro',
       framing: 'fa-crop',
@@ -1070,6 +1085,123 @@ class VideoView extends BaseView {
       colorTemp: 'fa-droplet',
       energyLevel: 'fa-fire-flame-curved'
     };
+
+    // Descripciones por VALOR — al hover sobre cada tile, tooltip explica
+    // qué hace el efecto en lenguaje claro para usuarios sin experiencia.
+    const VALUE_DESCRIPTIONS = {
+      // Camera movement
+      'Static': 'La cámara permanece fija. Ideal para tomas limpias y producto en primer plano.',
+      'Slow Push In': 'La cámara se acerca lentamente al sujeto. Crea tensión y resalta un punto focal.',
+      'Slow Pull Out': 'La cámara se aleja lentamente. Revela el entorno y da contexto al sujeto.',
+      'Dolly Left': 'La cámara se desplaza hacia la izquierda manteniendo al sujeto centrado.',
+      'Dolly Right': 'La cámara se desplaza hacia la derecha. Sensación de exploración lateral.',
+      'Orbit': 'La cámara gira alrededor del sujeto en arco. Cinematográfico y dramático.',
+      '360° Rotation': 'Rotación completa alrededor del sujeto. Muestra el producto desde todos los ángulos.',
+      'Handheld': 'Movimiento de mano natural con pulso humano. Documental, auténtico, cercano.',
+      'Tracking': 'La cámara sigue al sujeto en movimiento. Mantiene foco mientras hay acción.',
+      'FPV': 'Punto de vista en primera persona. Inmersivo y dinámico (estilo dron o GoPro).',
+
+      // Motion speed / intensity
+      'Subtle': 'Movimiento muy leve, casi imperceptible. Premium y elegante.',
+      'Moderate': 'Movimiento controlado y constante. Balance entre energía y calma.',
+      'Dynamic': 'Movimiento marcado y enérgico. Llama la atención.',
+      'Aggressive': 'Movimiento intenso y rápido. Máxima energía visual.',
+
+      // Lighting type
+      'Soft diffused': 'Luz suave y envolvente, sin sombras duras. Sensación cálida y limpia.',
+      'Hard contrast': 'Luces fuertes y sombras marcadas. Dramatismo visual.',
+      'Rim light': 'Luz que recorta el contorno del sujeto. Premium, lo separa del fondo.',
+      'Backlit silhouette': 'Sujeto a contraluz, silueta negra contra luz. Misterio, drama.',
+      'Studio commercial': 'Iluminación de estudio profesional. Limpia, pareja, comercial clásico.',
+      'Natural daylight': 'Luz natural de día. Auténtico, lifestyle, accesible.',
+      'Dramatic spotlight': 'Foco concentrado sobre el sujeto. Aislamiento y protagonismo total.',
+
+      // Contrast
+      'Low': 'Contraste bajo. Tonos planos y suaves, look documental o vintage.',
+      'Medium': 'Contraste balanceado. Look natural y versátil.',
+      'High': 'Contraste alto. Imagen punchy y vibrante.',
+      'Ultra contrast': 'Contraste extremo. Look gráfico, casi de moda editorial.',
+
+      // Temperature
+      'Neutral': 'Temperatura neutra. Colores reales sin tinte cálido ni frío.',
+      'Warm': 'Tonos cálidos (amarillos, naranjas). Acogedor, dorado, premium.',
+      'Cold': 'Tonos fríos (azules). Tecnológico, sereno, sofisticado.',
+
+      // Tone / Mood
+      'Clean commercial': 'Look comercial clásico. Limpio, claro, vende sin distracciones.',
+      'Cinematic dramatic': 'Look de cine con paleta rica y tensión. Storytelling potente.',
+      'Hyperreal product': 'Producto hiperdetallado, casi macro. Saca lo mejor del objeto.',
+      'Minimal luxury': 'Estética minimal premium. Pocos elementos, mucho aire, lujo callado.',
+      'Dark premium': 'Paleta oscura y elegante. Producto de gama alta nocturno.',
+      'Bright energetic': 'Colores vivos y luminosos. Joven, social, juvenil.',
+      'Editorial fashion': 'Estética de revista de moda. Sofisticado y aspiracional.',
+      'Documentary': 'Look auténtico y crudo. Sin filtros, real, humano.',
+
+      // Color grade / temp / energy
+      'High saturation': 'Colores muy saturados. Vibrante y llamativo.',
+      'Muted tones': 'Tonos apagados y elegantes. Premium discreto.',
+      'Peak': 'Energía visual máxima. Cortes rápidos, vivos, alta intensidad.'
+    };
+
+    // Mapping de iconos por VALOR — para que el usuario sin experiencia vea el
+    // pictograma y entienda qué hace cada opción sin tener que leer.
+    const VALUE_ICONS = {
+      // Camera movement
+      'Static': 'fa-square',
+      'Slow Push In': 'fa-down-left-and-up-right-to-center',
+      'Slow Pull Out': 'fa-up-right-and-down-left-from-center',
+      'Dolly Left': 'fa-arrow-left',
+      'Dolly Right': 'fa-arrow-right',
+      'Orbit': 'fa-rotate',
+      '360° Rotation': 'fa-arrows-spin',
+      'Handheld': 'fa-hand',
+      'Tracking': 'fa-route',
+      'FPV': 'fa-helicopter',
+
+      // Motion speed / intensity (escala visual)
+      'Subtle': 'fa-circle',
+      'Moderate': 'fa-circle-dot',
+      'Dynamic': 'fa-bolt',
+      'Aggressive': 'fa-fire',
+
+      // Lighting type
+      'Soft diffused': 'fa-cloud',
+      'Hard contrast': 'fa-mountain-sun',
+      'Rim light': 'fa-circle-half-stroke',
+      'Backlit silhouette': 'fa-user-secret',
+      'Studio commercial': 'fa-store',
+      'Natural daylight': 'fa-sun',
+      'Dramatic spotlight': 'fa-bullseye',
+
+      // Contrast
+      'Low': 'fa-circle-notch',
+      'Medium': 'fa-circle-half-stroke',
+      'High': 'fa-circle',
+      'Ultra contrast': 'fa-circle-radiation',
+
+      // Temperature
+      'Neutral': 'fa-circle',
+      'Warm': 'fa-fire',
+      'Cold': 'fa-snowflake',
+
+      // Tone / Mood
+      'Clean commercial': 'fa-broom',
+      'Cinematic dramatic': 'fa-masks-theater',
+      'Hyperreal product': 'fa-cube',
+      'Minimal luxury': 'fa-gem',
+      'Dark premium': 'fa-moon',
+      'Bright energetic': 'fa-bolt',
+      'Editorial fashion': 'fa-book-open',
+      'Documentary': 'fa-camera',
+
+      // Color grade / temp
+      'High saturation': 'fa-droplet',
+      'Muted tones': 'fa-circle',
+
+      // Energy level
+      'Peak': 'fa-fire'
+    };
+
     const config = [
       ['videoCineShotType', 'shotType'], ['videoCineLens', 'lens'], ['videoCineFraming', 'framing'],
       ['videoCineMovement', 'cameraMovement'], ['videoCineMotionSpeed', 'motionSpeed'], ['videoCineMotionIntensity', 'motionIntensity'],
@@ -1089,15 +1221,21 @@ class VideoView extends BaseView {
         row.appendChild(grid);
         sel.classList.add('video-cine-select-hidden');
       }
-      const iconClass = ICONS[key] || 'fa-circle';
+      const fallbackIcon = FALLBACK_ICONS[key] || 'fa-circle';
       const renderTiles = () => {
         const options = Array.from(sel.options).filter((o) => o.value);
         const current = sel.value;
-        grid.innerHTML = options.map((opt) => `
-          <button type="button" class="video-cine-tile${current === opt.value ? ' is-selected' : ''}" data-value="${this.escapeHtml(opt.value)}" aria-pressed="${current === opt.value ? 'true' : 'false'}">
-            <i class="fas ${iconClass} video-cine-tile__icon" aria-hidden="true"></i>
-            <span class="video-cine-tile__label">${this.escapeHtml(opt.text)}</span>
-          </button>`).join('');
+        grid.innerHTML = options.map((opt) => {
+          const icon = VALUE_ICONS[opt.value] || fallbackIcon;
+          const desc = VALUE_DESCRIPTIONS[opt.value] || '';
+          const descAttr = desc ? ` data-desc="${this.escapeHtml(desc)}"` : '';
+          return `
+            <button type="button" class="video-cine-tile${current === opt.value ? ' is-selected' : ''}" data-value="${this.escapeHtml(opt.value)}" aria-pressed="${current === opt.value ? 'true' : 'false'}"${descAttr} aria-label="${this.escapeHtml(opt.text)}${desc ? ' — ' + this.escapeHtml(desc) : ''}">
+              <i class="fas ${icon} video-cine-tile__icon" aria-hidden="true"></i>
+              <span class="video-cine-tile__label">${this.escapeHtml(opt.text)}</span>
+              ${desc ? `<span class="video-cine-tile__tooltip" role="tooltip">${this.escapeHtml(desc)}</span>` : ''}
+            </button>`;
+        }).join('');
       };
       renderTiles();
       if (grid.dataset.boundTileClick !== '1') {
