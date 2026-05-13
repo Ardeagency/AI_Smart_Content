@@ -1542,13 +1542,19 @@ class Navigation {
 
         ${footerHTML ? `<div class="nav-footer" role="navigation" aria-label="Administración organizacional">${footerHTML}</div>` : ''}
 
-        <div class="nav-system-stats">
-          <div class="nav-system-stats-row">
-            <span class="nav-system-stats-label">Storage</span>
-            <span class="nav-system-stats-value" id="navStorageValue">—</span>
+        <div class="nav-system-stats nav-upgrade-card" id="navUpgradeCard">
+          <div class="nav-upgrade-meta">
+            <span class="nav-upgrade-plan-badge" id="navUpgradePlanBadge">Free</span>
+            <span class="nav-system-stats-value" id="navStorageValue">— / —</span>
           </div>
-          <a href="${this.getUserSidebarRoute('plans')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('plans')}">
-            <span>Upgrade to Starter</span>
+          <div class="nav-upgrade-progress" role="progressbar" aria-label="Almacenamiento usado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="nav-upgrade-progress-fill" id="navUpgradeProgressFill"></div>
+          </div>
+          <p class="nav-upgrade-benefit" id="navUpgradeBenefit">Unlock 50GB + unlimited brands</p>
+          <a href="${this.getUserSidebarRoute('plans')}" class="nav-upgrade-btn" id="navUpgradeBtn" data-route="${this.getUserSidebarRoute('plans')}" aria-label="Upgrade plan">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span class="nav-upgrade-btn-text">Upgrade plan</span>
+            <span class="nav-upgrade-dot" id="navUpgradeDot" hidden aria-hidden="true"></span>
           </a>
         </div>
 

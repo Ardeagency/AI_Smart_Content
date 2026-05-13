@@ -138,10 +138,43 @@
         ? `${this._formatStorageDisplay(used)} / ${this._formatStorageDisplay(max)}`
         : this._formatStorageDisplay(used);
       if (valueEl.textContent !== next) valueEl.textContent = next;
+
+      // Progress bar + threshold colors + dot indicator (>80% warning, >95% danger)
+      const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0;
+      const fillEl = document.getElementById('navUpgradeProgressFill');
+      const dotEl = document.getElementById('navUpgradeDot');
+      const card = document.getElementById('navUpgradeCard');
+      if (fillEl) {
+        fillEl.style.width = `${pct}%`;
+        fillEl.classList.toggle('is-warning', pct >= 80 && pct < 95);
+        fillEl.classList.toggle('is-danger', pct >= 95);
+      }
+      if (dotEl) dotEl.hidden = pct < 80;
+      if (card) card.setAttribute('aria-valuenow', String(Math.round(pct)));
     } catch (e) {
       console.warn('Navigation: loadStorageFromDb', e);
       valueEl.textContent = '—';
     }
+  },
+
+  /**
+   * Devuelve el "outcome-focused benefit" del próximo tier según el plan actual.
+   * Si el usuario ya está en tier top (Business/Enterprise), devuelve null y la
+   * UI oculta el CTA via .is-pro class.
+   */
+  _getUpgradeBenefitForPlan(planRaw) {
+    const slug = String(planRaw || '').trim().toLowerCase();
+    if (!slug || slug === 'free' || slug === 'gratis') return 'Unlock 50GB + unlimited brands';
+    if (slug.includes('starter')) return 'Add team seats + advanced AI';
+    if (slug === 'pro' || slug.includes('profesional')) return 'Get dedicated support + custom limits';
+    if (slug.includes('business') || slug.includes('enterprise')) return null;
+    return 'Unlock more storage and brands';
+  },
+
+  /** True si el plan actual es top-tier (no debería ver CTA). */
+  _isTopTierPlan(planRaw) {
+    const slug = String(planRaw || '').trim().toLowerCase();
+    return slug.includes('business') || slug.includes('enterprise');
   },
 
   /**
@@ -193,6 +226,20 @@
     const barFill = document.querySelector('.nav-org-credits-bar-fill');
     this._renderAdaptiveOrgName(this._orgCache.name || '');
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
+
+    // Upgrade card: badge de plan + benefit dinámico + is-pro toggle
+    const planRaw = this._orgCache.plan || 'Free';
+    const planBadgeEl = document.getElementById('navUpgradePlanBadge');
+    const benefitEl = document.getElementById('navUpgradeBenefit');
+    const upgradeCardEl = document.getElementById('navUpgradeCard');
+    if (planBadgeEl) {
+      // Capitaliza primera letra: "free" → "Free", "starter" → "Starter"
+      const display = String(planRaw).replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      planBadgeEl.textContent = display || 'Free';
+    }
+    const benefit = this._getUpgradeBenefitForPlan(planRaw);
+    if (benefitEl) benefitEl.textContent = benefit || '';
+    if (upgradeCardEl) upgradeCardEl.classList.toggle('is-pro', this._isTopTierPlan(planRaw));
     const available = this._orgCache.credits != null ? this._orgCache.credits : 0;
     const totalRaw = this._orgCache.credits_total != null ? this._orgCache.credits_total : 0;
     const total = totalRaw > 0 ? totalRaw : 0;
