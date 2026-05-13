@@ -111,11 +111,13 @@ class VideoView extends BaseView {
             <main class="video-main">
               <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
 
-                <div class="video-canvas-idle" id="videoCanvasIdle">
-                  <div class="video-model-picker" role="radiogroup" aria-label="Elige tu modelo de video">
+                <div class="video-model-picker-wrap" id="videoModelPicker" role="radiogroup" aria-label="Elige tu modelo de video">
+                  <div class="video-model-picker">
+                    <p class="video-model-picker__eyebrow">Paso 1 · Decisión</p>
                     <h3 class="video-model-picker__title">Elige tu modelo de video</h3>
+                    <p class="video-model-picker__hint">Define primero qué quieres producir. Cada modelo tiene su propio set de controles.</p>
                     <div class="video-model-picker__grid">
-                      <button type="button" class="video-model-card is-selected" data-model="kling" role="radio" aria-checked="true">
+                      <button type="button" class="video-model-card" data-model="kling" role="radio" aria-checked="false">
                         <div class="video-model-card__top">
                           <div class="video-model-card__logo-wrap">
                             <img class="video-model-card__logo" src="/recursos/logos/plataformas/kling.svg" alt="Kling" loading="lazy">
@@ -150,6 +152,8 @@ class VideoView extends BaseView {
                     </div>
                   </div>
                 </div>
+
+                <div class="video-canvas-idle" id="videoCanvasIdle"></div>
 
                 <div class="video-status-area" id="videoStatusArea" style="display: none;">
                   <div class="video-status-card" id="videoStatusCard">
@@ -200,11 +204,12 @@ class VideoView extends BaseView {
 
                     <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
 
-                    <div class="video-console-header-row" aria-hidden="true">
-                      <span class="video-console-dot"></span>
+                    <div class="video-console-header-row">
+                      <span class="video-console-dot" aria-hidden="true"></span>
                       <span class="video-console-label-text">Director Console</span>
-                      <span class="video-console-sep">·</span>
-                      <span class="video-console-model-text">Kling 3.0</span>
+                      <span class="video-console-sep" aria-hidden="true">·</span>
+                      <span class="video-console-model-text" id="videoConsoleModelText">Kling 3.0</span>
+                      <button type="button" class="video-console-model-change" id="videoModelChangeBtn" aria-label="Cambiar modelo de video"><i class="fas fa-arrow-left" aria-hidden="true"></i> Cambiar</button>
                     </div>
 
                     <div class="video-director-top-row">
@@ -389,7 +394,25 @@ class VideoView extends BaseView {
     }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.idleArea = this.container.querySelector('#videoCanvasIdle');
-    this.selectedModel = this.selectedModel || 'kling';
+    this.modelPickerEl = this.container.querySelector('#videoModelPicker');
+    this.footerControl = this.container.querySelector('#videoFooterControl');
+    this.sidebarConsole = this.container.querySelector('.video-sidebar-console');
+    this.modelLabelEl = this.container.querySelector('#videoConsoleModelText');
+    this.modelChangeBtn = this.container.querySelector('#videoModelChangeBtn');
+
+    this.selectedModel = this.selectedModel || null;
+    const MODEL_LABELS = { kling: 'Kling 3.0', seedance: 'Seedance 2.0' };
+    const applyModelPickerState = () => {
+      const picked = !!this.selectedModel;
+      if (this.modelPickerEl) this.modelPickerEl.style.display = picked ? 'none' : 'flex';
+      if (this.idleArea) this.idleArea.style.display = picked ? 'flex' : 'none';
+      if (this.footerControl) this.footerControl.style.display = picked ? '' : 'none';
+      if (this.sidebarConsole) this.sidebarConsole.style.display = picked ? '' : 'none';
+      if (this.modelLabelEl && picked) this.modelLabelEl.textContent = MODEL_LABELS[this.selectedModel] || this.selectedModel;
+    };
+    this._applyModelPickerState = applyModelPickerState;
+    applyModelPickerState();
+
     this.container.querySelectorAll('.video-model-card[data-model]').forEach((card) => {
       if (card.dataset.boundModelPick === '1') return;
       card.dataset.boundModelPick = '1';
@@ -397,15 +420,25 @@ class VideoView extends BaseView {
         e.preventDefault();
         if (card.disabled || card.classList.contains('is-locked')) return;
         const model = card.getAttribute('data-model');
-        if (!model || model === this.selectedModel) return;
+        if (!model) return;
         this.selectedModel = model;
         this.container.querySelectorAll('.video-model-card[data-model]').forEach((c) => {
           const isSel = c.getAttribute('data-model') === model;
           c.classList.toggle('is-selected', isSel);
           c.setAttribute('aria-checked', isSel ? 'true' : 'false');
         });
+        applyModelPickerState();
       });
     });
+
+    if (this.modelChangeBtn && this.modelChangeBtn.dataset.boundModelChange !== '1') {
+      this.modelChangeBtn.dataset.boundModelChange = '1';
+      this.modelChangeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.selectedModel = null;
+        applyModelPickerState();
+      });
+    }
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
     this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
