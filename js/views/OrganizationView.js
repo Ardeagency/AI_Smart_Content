@@ -1,10 +1,14 @@
 /**
- * OrganizationView — Configuración profesional de la organización.
+ * OrganizationView — Panel administrativo técnico de la organización.
  *
- * Tabs: General · Miembros · Plan · Uso · Integraciones · Unidades · Audit · Danger
+ * No es branding (eso vive en BrandOrganizationView). Aquí: límites de uso,
+ * actividad operativa, salud del sistema, monitoreo, notificaciones,
+ * seguridad, miembros. Solo timezone/locale son editables a nivel de datos
+ * generales — el resto del config (nombre, logo, slogan, autonomy, sub-marcas)
+ * NO se edita acá.
  *
- * No incluye metadata cruda (ID, owner_user_id raw, etc.) — ese tipo de info técnica
- * vive en /dev/lead. Aquí solo lo que un admin de empresa necesita ver/editar.
+ * Tabs: General · Miembros · Plan & Límites · Actividad · Monitoreo ·
+ *       Salud de Vera · Notificaciones · Seguridad · Danger zone
  */
 class OrganizationView extends BaseView {
   static documentTitle = 'Configuración';
@@ -27,21 +31,33 @@ class OrganizationView extends BaseView {
     this.membersWithProfile = [];
     this.invitations = [];
 
-    // Billing / Usage
+    // Plan / Caps
     this.subscription = null;
     this.plan = null;
     this.credits = { credits_available: 0, credits_total: 0, updated_at: null };
     this.storage = { used_mb: 0, max_mb: 0, updated_at: null };
-    this.creditTimeline = [];          // credit_usage agregado por día
-    this.aiUsageToday = null;          // v_org_claude_usage_today
-    this.aiCaps = null;                // org_claude_caps
+    this.aiCaps = null;
+    this.aiUsageToday = null;
 
-    // Integrations
+    // Sub-marcas (read-only)
     this.brandContainers = [];
-    this.organizationIntegrations = [];
-    this.integrationsSummary = { active: 0, total: 0 };
 
-    // Audit
+    // Actividad
+    this.creditTimeline = [];
+    this.recentFlowRuns = [];
+
+    // Monitoreo
+    this.monitoringTriggers = [];
+
+    // Salud
+    this.veraPendingByStatus = {};
+    this.recentMissionErrors = [];
+    this.queueByStatus = {};
+
+    // Notificaciones
+    this.notifications = [];
+
+    // Seguridad (audit)
     this.auditLog = [];
     this.auditFilter = { action: '', user: '' };
   }
@@ -52,7 +68,7 @@ class OrganizationView extends BaseView {
   <div class="organization-header">
     <div>
       <h1 class="organization-title">Configuración</h1>
-      <p class="organization-subtitle">Administra los datos, miembros, plan y seguridad de tu organización.</p>
+      <p class="organization-subtitle">Panel técnico-administrativo de la organización. La identidad de marca se gestiona en <a href="#" data-route="brand">Identity</a>.</p>
     </div>
     <div class="organization-header-status" id="orgHeaderStatus"></div>
   </div>
@@ -60,11 +76,12 @@ class OrganizationView extends BaseView {
   <div class="organization-tabs" role="tablist">
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">General</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">Miembros</button>
-    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">Plan & Facturación</button>
-    <button type="button" class="tab-btn" data-tab="usage" role="tab" aria-selected="false">Uso</button>
-    <button type="button" class="tab-btn" data-tab="integrations" role="tab" aria-selected="false">Integraciones</button>
-    <button type="button" class="tab-btn" data-tab="business-units" role="tab" aria-selected="false">Unidades</button>
-    <button type="button" class="tab-btn" data-tab="audit" role="tab" aria-selected="false">Audit log</button>
+    <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">Plan & Límites</button>
+    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">Actividad</button>
+    <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">Monitoreo</button>
+    <button type="button" class="tab-btn" data-tab="health" role="tab" aria-selected="false">Salud de Vera</button>
+    <button type="button" class="tab-btn" data-tab="notifications" role="tab" aria-selected="false">Notificaciones</button>
+    <button type="button" class="tab-btn" data-tab="security" role="tab" aria-selected="false">Seguridad</button>
     <button type="button" class="tab-btn tab-btn--danger" data-tab="danger" role="tab" aria-selected="false">Danger zone</button>
   </div>
 
@@ -73,22 +90,10 @@ class OrganizationView extends BaseView {
     <!-- ── General ──────────────────────────────────────── -->
     <div class="tab-content active" id="generalTab" role="tabpanel">
       <section class="org-section org-section-form">
-        <h2>Datos de la organización</h2>
-        <p class="org-section-desc">Identidad y configuración regional del workspace.</p>
+        <h2>Datos regionales</h2>
+        <p class="org-section-desc">Estos valores afectan reportes, scheduling y formato de fechas/idioma del workspace.</p>
         <form id="orgGeneralForm" class="org-form">
           <div class="org-form-grid">
-            <div class="form-group">
-              <label for="orgName">Nombre de la organización</label>
-              <input type="text" id="orgName" name="name" class="form-input" required placeholder="Mi Empresa">
-            </div>
-            <div class="form-group">
-              <label for="orgBrandNameOficial">Nombre oficial de marca</label>
-              <input type="text" id="orgBrandNameOficial" name="brand_name_oficial" class="form-input" placeholder="Nombre comercial">
-            </div>
-            <div class="form-group form-group--full">
-              <label for="orgBrandSlogan">Slogan</label>
-              <input type="text" id="orgBrandSlogan" name="brand_slogan" class="form-input" placeholder="Eslogan de la organización">
-            </div>
             <div class="form-group">
               <label for="orgTimezone">Zona horaria</label>
               <select id="orgTimezone" class="form-input"></select>
@@ -101,34 +106,23 @@ class OrganizationView extends BaseView {
                 <option value="pt">Português</option>
               </select>
             </div>
-            <div class="form-group form-group--full">
-              <label for="orgLevelAutonomy">Nivel de autonomía del agente</label>
-              <select id="orgLevelAutonomy" name="level_of_autonomy" class="form-input">
-                <option value="manual">Manual — todas las acciones requieren aprobación</option>
-                <option value="parcial">Parcial — sugerencias automáticas, acciones manuales</option>
-                <option value="total">Total — el agente actúa de forma autónoma</option>
-              </select>
-            </div>
           </div>
           <div class="org-form-actions">
             <button type="submit" class="btn btn-primary" id="orgGeneralSubmit">
-              <i class="fas fa-save"></i> Guardar cambios
+              <i class="fas fa-save"></i> Guardar
             </button>
           </div>
         </form>
       </section>
 
       <section class="org-section">
-        <h2>Logo</h2>
-        <p class="org-section-desc">PNG/JPG/SVG, máx. 5 MB. Visible en la cabecera y en producciones.</p>
-        <div class="org-logo-row">
-          <div class="org-logo-preview" id="orgLogoPreview"><i class="fas fa-image"></i></div>
-          <div class="org-logo-actions">
-            <button type="button" class="btn btn-secondary" id="orgLogoUploadBtn"><i class="fas fa-upload"></i> Subir logo</button>
-            <button type="button" class="btn btn-ghost" id="orgLogoRemoveBtn" hidden><i class="fas fa-trash"></i> Quitar</button>
-            <input type="file" id="orgLogoInput" accept="image/png,image/jpeg,image/jpg,image/svg+xml" hidden>
+        <div class="org-section-head">
+          <div>
+            <h2>Sub-marcas</h2>
+            <p class="org-section-desc">Listado de sub-marcas (brand_containers) de esta organización. <strong>Solo lectura</strong> — para añadir o modificar sub-marcas, contacta a tu desarrollador asignado en la plataforma (servicio adicional).</p>
           </div>
         </div>
+        <div class="org-subbrands-list" id="orgSubbrandsList"><p class="org-placeholder">Cargando…</p></div>
       </section>
     </div>
 
@@ -138,10 +132,10 @@ class OrganizationView extends BaseView {
         <div class="org-section-head">
           <div>
             <h2>Miembros</h2>
-            <p class="org-section-desc">Roles y acceso al workspace. Solo propietario y administradores pueden gestionar.</p>
+            <p class="org-section-desc">Roles y acceso al workspace.</p>
           </div>
           <button type="button" class="btn btn-primary" id="orgInviteBtn">
-            <i class="fas fa-user-plus"></i> Invitar miembro
+            <i class="fas fa-user-plus"></i> Invitar
           </button>
         </div>
         <div class="org-members-list" id="orgMembersList"></div>
@@ -153,84 +147,125 @@ class OrganizationView extends BaseView {
       </section>
     </div>
 
-    <!-- ── Plan & Facturación ───────────────────────────── -->
-    <div class="tab-content" id="billingTab" role="tabpanel">
+    <!-- ── Plan & Límites ───────────────────────────────── -->
+    <div class="tab-content" id="planTab" role="tabpanel">
       <section class="org-section">
         <h2>Plan actual</h2>
         <div class="org-plan-card" id="orgPlanCard"><p class="org-placeholder">Cargando…</p></div>
       </section>
-      <section class="org-section">
-        <h2>Próximos pagos</h2>
-        <p class="org-section-desc">Histórico de facturas y método de pago (gestionado vía Stripe).</p>
-        <div class="org-billing-history" id="orgBillingHistory">
-          <p class="org-placeholder">Aún no hay facturas registradas. Se completará al integrar Stripe Billing.</p>
-        </div>
-      </section>
-    </div>
-
-    <!-- ── Uso ──────────────────────────────────────────── -->
-    <div class="tab-content" id="usageTab" role="tabpanel">
-      <section class="org-section">
-        <h2>Créditos</h2>
-        <div class="org-usage-card" id="orgCreditsCard"></div>
-        <h3 class="org-usage-subtitle">Últimos 30 días</h3>
-        <div class="org-usage-timeline" id="orgCreditsTimeline"></div>
-      </section>
 
       <section class="org-section">
         <h2>Almacenamiento</h2>
+        <p class="org-section-desc">Cuota incluida en tu plan. Para ampliar contacta a soporte.</p>
         <div class="org-usage-card" id="orgStorageCard"></div>
       </section>
 
-      <section class="org-section" id="orgAiUsageSection" hidden>
-        <h2>IA (Claude / Vera)</h2>
-        <div class="org-usage-card" id="orgAiCard"></div>
-      </section>
-    </div>
-
-    <!-- ── Integraciones ────────────────────────────────── -->
-    <div class="tab-content" id="integrationsTab" role="tabpanel">
       <section class="org-section">
-        <h2>Resumen</h2>
-        <div class="org-integration-summary" id="orgIntegrationSummary">
-          <div class="org-summary-item">
-            <span class="org-summary-label">Marcas vinculadas</span>
-            <span class="org-summary-value" id="orgSummaryBrands">—</span>
-          </div>
-          <div class="org-summary-item">
-            <span class="org-summary-label">Integraciones activas</span>
-            <span class="org-summary-value" id="orgSummaryIntegrationsActive">—</span>
-          </div>
-          <div class="org-summary-item">
-            <span class="org-summary-label">Total integraciones</span>
-            <span class="org-summary-value" id="orgSummaryIntegrationsTotal">—</span>
-          </div>
-        </div>
+        <h2>Créditos del ciclo</h2>
+        <div class="org-usage-card" id="orgCreditsCard"></div>
       </section>
+
       <section class="org-section">
-        <h3>Plataformas</h3>
-        <div class="org-integrations-list" id="orgIntegrationsList"><p class="org-placeholder">Cargando…</p></div>
+        <h2>Límites de uso de IA</h2>
+        <p class="org-section-desc">Define topes diarios y mensuales de consumo del agente Vera. Si alcanzas el umbral de aviso, recibirás una notificación; al llegar al cap se bloquean nuevas operaciones automáticas.</p>
+        <form id="orgCapsForm" class="org-form">
+          <div class="org-form-grid">
+            <div class="form-group">
+              <label for="capsDaily">Cap diario (USD)</label>
+              <input type="number" min="0" step="0.01" id="capsDaily" class="form-input" placeholder="ej. 10">
+            </div>
+            <div class="form-group">
+              <label for="capsMonthly">Cap mensual (USD)</label>
+              <input type="number" min="0" step="0.01" id="capsMonthly" class="form-input" placeholder="ej. 200">
+            </div>
+            <div class="form-group">
+              <label for="capsWarn">Umbral de aviso (%)</label>
+              <input type="number" min="0" max="100" step="1" id="capsWarn" class="form-input" placeholder="ej. 80">
+            </div>
+            <div class="form-group">
+              <label for="capsConfirm">Umbral de confirmación (USD por op.)</label>
+              <input type="number" min="0" step="0.01" id="capsConfirm" class="form-input" placeholder="ej. 1.50">
+            </div>
+            <div class="form-group form-group--full">
+              <label class="org-checkbox">
+                <input type="checkbox" id="capsConfirmEnabled">
+                <span>Pedir confirmación al usuario antes de operaciones que excedan el umbral por operación</span>
+              </label>
+            </div>
+          </div>
+          <div class="org-usage-card" id="orgAiCard" style="margin-top: 1rem;"></div>
+          <div class="org-form-actions">
+            <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> Guardar límites</button>
+          </div>
+        </form>
       </section>
     </div>
 
-    <!-- ── Unidades de negocio ──────────────────────────── -->
-    <div class="tab-content" id="business-unitsTab" role="tabpanel">
-      <div class="org-section-head">
-        <h2>Unidades de negocio</h2>
-        <button type="button" class="btn btn-primary btn-sm" id="createBusinessUnitBtn"><i class="fas fa-plus"></i> Nueva unidad</button>
-      </div>
-      <p class="org-section-desc">Organiza tu estructura interna y asigna miembros a cada unidad.</p>
-      <div id="businessUnitsList" class="business-units-list">
-        <p class="org-placeholder">Cargando…</p>
-      </div>
-    </div>
-
-    <!-- ── Audit log ────────────────────────────────────── -->
-    <div class="tab-content" id="auditTab" role="tabpanel">
+    <!-- ── Actividad ────────────────────────────────────── -->
+    <div class="tab-content" id="activityTab" role="tabpanel">
       <section class="org-section">
         <div class="org-section-head">
           <div>
-            <h2>Registro de actividad</h2>
+            <h2>Ejecuciones recientes</h2>
+            <p class="org-section-desc">Últimos flujos ejecutados en la organización.</p>
+          </div>
+          <a href="#" class="btn btn-secondary btn-sm" id="orgActivityTasksLink">Historial completo</a>
+        </div>
+        <div class="org-runs-list" id="orgRunsList"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+
+      <section class="org-section">
+        <h2>Consumo de créditos (últimos 30 días)</h2>
+        <div class="org-usage-timeline" id="orgCreditsTimeline"></div>
+      </section>
+    </div>
+
+    <!-- ── Monitoreo ────────────────────────────────────── -->
+    <div class="tab-content" id="monitoringTab" role="tabpanel">
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>Triggers activos</h2>
+            <p class="org-section-desc">Sensores configurados para esta organización. Para crear/editar usa la página de Monitoreo.</p>
+          </div>
+          <a href="#" class="btn btn-secondary btn-sm" id="orgMonitoringLink">Abrir Monitoreo</a>
+        </div>
+        <div class="org-monitoring-list" id="orgMonitoringList"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+    </div>
+
+    <!-- ── Salud de Vera ────────────────────────────────── -->
+    <div class="tab-content" id="healthTab" role="tabpanel">
+      <section class="org-section">
+        <h2>Estado del agente</h2>
+        <p class="org-section-desc">Acciones propuestas por Vera, ejecución de misiones y cola de trabajos.</p>
+        <div class="org-health-grid" id="orgHealthGrid"></div>
+      </section>
+
+      <section class="org-section">
+        <h2>Errores recientes de misiones</h2>
+        <div class="org-mission-errors" id="orgMissionErrors"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+    </div>
+
+    <!-- ── Notificaciones ───────────────────────────────── -->
+    <div class="tab-content" id="notificationsTab" role="tabpanel">
+      <section class="org-section">
+        <h2>Notificaciones recientes</h2>
+        <div class="org-notifications-list" id="orgNotificationsList"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+      <section class="org-section">
+        <h2>Preferencias</h2>
+        <p class="org-section-desc org-placeholder">Configuración de canales (email, in-app, Slack) por tipo de evento — próximamente.</p>
+      </section>
+    </div>
+
+    <!-- ── Seguridad ────────────────────────────────────── -->
+    <div class="tab-content" id="securityTab" role="tabpanel">
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>Registro de actividad (audit log)</h2>
             <p class="org-section-desc">Acciones realizadas en la organización. Se conserva para compliance.</p>
           </div>
           <div class="org-audit-filters">
@@ -244,23 +279,31 @@ class OrganizationView extends BaseView {
         </div>
         <div class="org-audit-list" id="orgAuditList"><p class="org-placeholder">Cargando…</p></div>
       </section>
+      <section class="org-section">
+        <h2>Autenticación de dos factores (2FA)</h2>
+        <p class="org-section-desc org-placeholder">Obligar 2FA a todos los miembros de la org — próximamente.</p>
+      </section>
+      <section class="org-section">
+        <h2>Sesiones activas</h2>
+        <p class="org-section-desc org-placeholder">Listado y cierre remoto de sesiones — próximamente.</p>
+      </section>
     </div>
 
     <!-- ── Danger zone ──────────────────────────────────── -->
     <div class="tab-content" id="dangerTab" role="tabpanel">
       <section class="org-section org-section--danger">
         <h2>Transferir propiedad</h2>
-        <p class="org-section-desc">Mueve la organización a otro administrador. Tras la transferencia perderás los privilegios de propietario.</p>
+        <p class="org-section-desc">Mueve la organización a otro administrador. Perderás los privilegios de propietario.</p>
         <button type="button" class="btn btn-danger-ghost" id="orgTransferBtn">Transferir propiedad</button>
       </section>
       <section class="org-section org-section--danger">
         <h2>Exportar datos</h2>
-        <p class="org-section-desc">Solicita una copia de los datos de la organización (productos, audiencias, campañas).</p>
+        <p class="org-section-desc">Solicita una copia de los datos operativos (runs, audiencias, campañas).</p>
         <button type="button" class="btn btn-danger-ghost" id="orgExportBtn"><i class="fas fa-download"></i> Solicitar export</button>
       </section>
       <section class="org-section org-section--danger">
         <h2>Archivar organización</h2>
-        <p class="org-section-desc">La organización queda inaccesible para todos los miembros y deja de consumir créditos. Puedes restaurarla contactando soporte dentro de 30 días.</p>
+        <p class="org-section-desc">La organización queda inaccesible y deja de consumir créditos. Puedes restaurarla contactando soporte dentro de 30 días.</p>
         <button type="button" class="btn btn-danger" id="orgArchiveBtn"><i class="fas fa-archive"></i> Archivar organización</button>
       </section>
     </div>
@@ -327,19 +370,14 @@ class OrganizationView extends BaseView {
   async onEnter() {
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
+      if (!isAuth) { window.router?.navigate('/login', true); return; }
     }
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-
     this.orgId = this.routeParams?.orgId ||
-      window.appState?.get('selectedOrganizationId') ||
+      window.appState?.get?.('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId');
-
     if (!this.orgId) {
       const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
         ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
@@ -387,30 +425,35 @@ class OrganizationView extends BaseView {
   async _loadAll() {
     if (!this.supabase || !this.orgId) return;
     try {
-      await Promise.all([
-        this._loadOrg(),
-        this._loadCredits(),
-        this._loadStorage(),
-      ]);
+      await this._loadOrg();
       await Promise.all([
         this._loadMembers(),
         this._loadInvitations(),
-        this._loadSubscription(),
         this._loadBrandContainers(),
+        this._loadCredits(),
+        this._loadStorage(),
+        this._loadSubscription(),
+        this._loadAiCaps(),
         this._loadCreditTimeline(),
-        this._loadAiUsage(),
+        this._loadFlowRuns(),
+        this._loadMonitoringTriggers(),
+        this._loadVeraHealth(),
+        this._loadNotifications(),
         this._loadAuditLog(),
       ]);
-      await this._loadIntegrations();
 
       this._renderHeaderStatus();
       this._renderGeneral();
+      this._renderSubbrands();
       this._renderMembers();
       this._renderInvitations();
-      this._renderBilling();
-      this._renderUsage();
-      this._renderIntegrations();
+      this._renderPlanAndLimits();
+      this._renderActivity();
+      this._renderMonitoring();
+      this._renderHealth();
+      this._renderNotifications();
       this._renderAuditLog();
+      this._configureExternalLinks();
     } catch (e) {
       console.error('OrganizationView _loadAll:', e);
       this._showError(e.message || 'Error al cargar la configuración.');
@@ -420,31 +463,12 @@ class OrganizationView extends BaseView {
   async _loadOrg() {
     const { data, error } = await this.supabase
       .from('organizations')
-      .select('id, name, owner_user_id, created_at, deleted_at, level_of_autonomy, logo_url, brand_name_oficial, brand_slogan, timezone, locale')
-      .eq('id', this.orgId)
-      .maybeSingle();
+      .select('id, name, owner_user_id, created_at, deleted_at, timezone, locale')
+      .eq('id', this.orgId).maybeSingle();
     if (error) throw error;
     if (!data) throw new Error('Organización no encontrada.');
     this.org = data;
     this.isOwner = this.org.owner_user_id === this.userId;
-  }
-
-  async _loadCredits() {
-    const { data } = await this.supabase
-      .from('organization_credits')
-      .select('credits_available, credits_total, updated_at')
-      .eq('organization_id', this.orgId)
-      .maybeSingle();
-    if (data) this.credits = data;
-  }
-
-  async _loadStorage() {
-    const { data } = await this.supabase
-      .from('storage_usage')
-      .select('used_mb, max_mb, updated_at')
-      .eq('organization_id', this.orgId)
-      .maybeSingle();
-    if (data) this.storage = data;
   }
 
   async _loadMembers() {
@@ -454,7 +478,6 @@ class OrganizationView extends BaseView {
       .eq('organization_id', this.orgId);
     if (error) throw error;
     this.members = data || [];
-
     const myMember = this.members.find((m) => m.user_id === this.userId);
     this.canManageMembers = this.isOwner || (myMember && ['owner', 'admin'].includes(myMember.role));
 
@@ -462,9 +485,7 @@ class OrganizationView extends BaseView {
     let profilesMap = {};
     if (userIds.length > 0) {
       const { data: profiles } = await this.supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', userIds);
+        .from('profiles').select('id, full_name, email').in('id', userIds);
       if (profiles) profiles.forEach((p) => { profilesMap[p.id] = p; });
     }
     this.membersWithProfile = this.members.map((m) => ({
@@ -478,68 +499,66 @@ class OrganizationView extends BaseView {
     const { data } = await this.supabase
       .from('organization_invitations')
       .select('id, email, role, status, expires_at, created_at, invited_by')
-      .eq('organization_id', this.orgId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .eq('organization_id', this.orgId).eq('status', 'pending').order('created_at', { ascending: false });
     this.invitations = data || [];
+  }
+
+  async _loadBrandContainers() {
+    const { data } = await this.supabase
+      .from('brand_containers')
+      .select('id, nombre_marca, created_at')
+      .eq('organization_id', this.orgId).order('created_at', { ascending: true });
+    this.brandContainers = data || [];
+  }
+
+  async _loadCredits() {
+    const { data } = await this.supabase
+      .from('organization_credits')
+      .select('credits_available, credits_total, updated_at')
+      .eq('organization_id', this.orgId).maybeSingle();
+    if (data) this.credits = data;
+  }
+
+  async _loadStorage() {
+    const { data } = await this.supabase
+      .from('storage_usage').select('used_mb, max_mb, updated_at')
+      .eq('organization_id', this.orgId).maybeSingle();
+    if (data) this.storage = data;
   }
 
   async _loadSubscription() {
     const { data: sub } = await this.supabase
       .from('subscriptions')
       .select('id, plan_id, status, current_period_start, current_period_end, stripe_subscription_id, metadata, created_at')
-      .eq('organization_id', this.orgId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(1).maybeSingle();
     this.subscription = sub || null;
     if (sub?.plan_id) {
       const { data: plan } = await this.supabase
         .from('plans')
-        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, storage_mb, max_handles, features, is_popular')
-        .eq('id', sub.plan_id)
-        .maybeSingle();
+        .select('id, name, description, price_usd_month, credits_monthly, storage_mb, features, is_popular')
+        .eq('id', sub.plan_id).maybeSingle();
       this.plan = plan || null;
     }
   }
 
-  async _loadBrandContainers() {
-    const { data } = await this.supabase
-      .from('brand_containers')
-      .select('id, nombre_marca')
-      .eq('organization_id', this.orgId)
-      .order('created_at', { ascending: true });
-    this.brandContainers = data || [];
-  }
-
-  async _loadIntegrations() {
-    if (!this.brandContainers.length) {
-      this.organizationIntegrations = [];
-      this.integrationsSummary = { active: 0, total: 0 };
-      return;
-    }
-    const containerIds = this.brandContainers.map((b) => b.id);
-    const { data } = await this.supabase
-      .from('brand_integrations')
-      .select('id, brand_container_id, platform, external_account_name, is_active, updated_at, last_sync_at')
-      .in('brand_container_id', containerIds)
-      .order('platform', { ascending: true })
-      .order('updated_at', { ascending: false });
-    this.organizationIntegrations = data || [];
-    this.integrationsSummary = {
-      active: this.organizationIntegrations.filter((i) => i.is_active).length,
-      total: this.organizationIntegrations.length,
-    };
+  async _loadAiCaps() {
+    try {
+      const { data: caps } = await this.supabase
+        .from('org_claude_caps').select('*').eq('organization_id', this.orgId).maybeSingle();
+      this.aiCaps = caps || null;
+    } catch (_) {}
+    try {
+      const { data: today } = await this.supabase
+        .from('v_org_claude_usage_today').select('*').eq('organization_id', this.orgId).maybeSingle();
+      this.aiUsageToday = today || null;
+    } catch (_) {}
   }
 
   async _loadCreditTimeline() {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data } = await this.supabase
-      .from('credit_usage')
-      .select('credits_used, operation_type, created_at')
-      .eq('organization_id', this.orgId)
-      .gte('created_at', since)
-      .order('created_at', { ascending: true });
+      .from('credit_usage').select('credits_used, created_at')
+      .eq('organization_id', this.orgId).gte('created_at', since).order('created_at', { ascending: true });
     const rows = data || [];
     const byDay = {};
     rows.forEach((r) => {
@@ -547,37 +566,66 @@ class OrganizationView extends BaseView {
       if (!day) return;
       byDay[day] = (byDay[day] || 0) + (Number(r.credits_used) || 0);
     });
-    this.creditTimeline = Object.entries(byDay)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([day, total]) => ({ day, total }));
+    this.creditTimeline = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).map(([day, total]) => ({ day, total }));
   }
 
-  async _loadAiUsage() {
+  async _loadFlowRuns() {
+    const { data } = await this.supabase
+      .from('flow_runs')
+      .select('id, flow_id, status, created_at, tokens_consumed, current_module_order, total_modules_count, user_id')
+      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(20);
+    this.recentFlowRuns = data || [];
+  }
+
+  async _loadMonitoringTriggers() {
+    const { data } = await this.supabase
+      .from('monitoring_triggers')
+      .select('id, sensor_type, cadence, cadence_value, priority, status, next_run_at, last_run_at, last_run_status, paused_reason')
+      .eq('organization_id', this.orgId).order('priority', { ascending: false }).limit(50);
+    this.monitoringTriggers = data || [];
+  }
+
+  async _loadVeraHealth() {
     try {
-      const { data: caps } = await this.supabase
-        .from('org_claude_caps')
-        .select('*')
-        .eq('organization_id', this.orgId)
-        .maybeSingle();
-      this.aiCaps = caps || null;
-    } catch (_) { /* tabla opcional */ }
+      const { data: actions } = await this.supabase
+        .from('vera_pending_actions').select('status').eq('organization_id', this.orgId);
+      const counts = {};
+      (actions || []).forEach((a) => { counts[a.status] = (counts[a.status] || 0) + 1; });
+      this.veraPendingByStatus = counts;
+    } catch (_) {}
+
     try {
-      const { data: today } = await this.supabase
-        .from('v_org_claude_usage_today')
-        .select('*')
-        .eq('organization_id', this.orgId)
-        .maybeSingle();
-      this.aiUsageToday = today || null;
-    } catch (_) { /* vista opcional */ }
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: missions } = await this.supabase
+        .from('mission_runs')
+        .select('id, status, error_message, completed_at, started_at, duration_ms')
+        .eq('organization_id', this.orgId).eq('status', 'failed').gte('created_at', since)
+        .order('created_at', { ascending: false }).limit(10);
+      this.recentMissionErrors = missions || [];
+    } catch (_) {}
+
+    try {
+      const { data: jobs } = await this.supabase
+        .from('agent_queue_jobs').select('status').eq('organization_id', this.orgId);
+      const counts = {};
+      (jobs || []).forEach((j) => { counts[j.status] = (counts[j.status] || 0) + 1; });
+      this.queueByStatus = counts;
+    } catch (_) {}
+  }
+
+  async _loadNotifications() {
+    const { data } = await this.supabase
+      .from('org_notifications')
+      .select('id, type, severity, title, body, action_url, action_label, status, read_at, created_at')
+      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(20);
+    this.notifications = data || [];
   }
 
   async _loadAuditLog() {
     const { data } = await this.supabase
       .from('user_audit_log')
       .select('id, action, resource_type, resource_id, user_id, user_email, metadata, created_at')
-      .eq('organization_id', this.orgId)
-      .order('created_at', { ascending: false })
-      .limit(200);
+      .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(200);
     this.auditLog = data || [];
   }
 
@@ -593,37 +641,41 @@ class OrganizationView extends BaseView {
 
   _renderGeneral() {
     if (!this.org) return;
-    const set = (sel, v) => { const el = this.querySelector(sel); if (el) el.value = v ?? ''; };
-    set('#orgName', this.org.name);
-    set('#orgBrandNameOficial', this.org.brand_name_oficial);
-    set('#orgBrandSlogan', this.org.brand_slogan);
-    set('#orgTimezone', this.org.timezone || 'UTC');
-    set('#orgLocale', this.org.locale || 'es');
-    set('#orgLevelAutonomy', this.org.level_of_autonomy || 'parcial');
-
-    const preview = this.querySelector('#orgLogoPreview');
-    const removeBtn = this.querySelector('#orgLogoRemoveBtn');
-    if (preview) {
-      if (this.org.logo_url) {
-        preview.innerHTML = `<img src="${this.escapeHtml(this.org.logo_url)}" alt="Logo de ${this.escapeHtml(this.org.name || '')}">`;
-        if (removeBtn) removeBtn.hidden = false;
-      } else {
-        preview.innerHTML = `<i class="fas fa-image"></i>`;
-        if (removeBtn) removeBtn.hidden = true;
-      }
-    }
-
+    const tz = this.querySelector('#orgTimezone');
+    const lc = this.querySelector('#orgLocale');
+    if (tz) tz.value = this.org.timezone || 'UTC';
+    if (lc) lc.value = this.org.locale || 'es';
     const canEdit = this.isOwner || this.canManageMembers;
-    this.querySelectorAll('.org-form .form-input').forEach((el) => { el.disabled = !canEdit; });
+    if (tz) tz.disabled = !canEdit;
+    if (lc) lc.disabled = !canEdit;
     const submitBtn = this.querySelector('#orgGeneralSubmit');
     if (submitBtn) submitBtn.disabled = !canEdit;
+  }
+
+  _renderSubbrands() {
+    const el = this.querySelector('#orgSubbrandsList');
+    if (!el) return;
+    if (!this.brandContainers.length) {
+      el.innerHTML = '<p class="org-members-empty">No hay sub-marcas configuradas. Contacta a tu desarrollador para añadir la primera.</p>';
+      return;
+    }
+    el.innerHTML = this.brandContainers.map((b) => {
+      const since = b.created_at ? new Date(b.created_at).toLocaleDateString('es') : '—';
+      return `
+        <div class="org-subbrand-row">
+          <div class="org-subbrand-info">
+            <span class="org-subbrand-name">${this.escapeHtml(b.nombre_marca || 'Sub-marca')}</span>
+            <span class="org-subbrand-meta">Activa desde ${this.escapeHtml(since)}</span>
+          </div>
+          <span class="org-subbrand-lock" title="Solo el equipo de plataforma puede modificar"><i class="fas fa-lock"></i> Gestionada por plataforma</span>
+        </div>`;
+    }).join('');
   }
 
   _renderMembers() {
     const listEl = this.querySelector('#orgMembersList');
     if (!listEl) return;
     const canManage = this.canManageMembers;
-
     if (!this.membersWithProfile.length) {
       listEl.innerHTML = '<p class="org-members-empty">Sin miembros cargados.</p>';
       return;
@@ -636,14 +688,14 @@ class OrganizationView extends BaseView {
       const canChangeRole = canManage && !isOrgOwner && !isCurrent;
       const canRemove = canManage && !isOrgOwner && !isCurrent;
       const rolePicker = canChangeRole
-        ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}" data-user-id="${this.escapeHtml(m.user_id || '')}">
+        ? `<select class="org-role-select" data-member-id="${this.escapeHtml(m.id)}">
              <option value="admin"${m.role === 'admin' ? ' selected' : ''}>Administrador</option>
              <option value="member"${m.role === 'member' ? ' selected' : ''}>Miembro</option>
              <option value="viewer"${m.role === 'viewer' ? ' selected' : ''}>Viewer</option>
            </select>`
         : `<span class="org-member-role org-role-${(roleLabel || 'member').toLowerCase()}">${this.escapeHtml(roleLabel)}</span>`;
       const removeBtn = canRemove
-        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="Quitar de la organización"><i class="fas fa-times"></i></button>`
+        ? `<button type="button" class="btn btn-ghost btn-sm org-member-remove" data-member-id="${this.escapeHtml(m.id)}" title="Quitar"><i class="fas fa-times"></i></button>`
         : '';
       return `
         <div class="org-member-row" data-member-id="${this.escapeHtml(m.id)}">
@@ -655,7 +707,6 @@ class OrganizationView extends BaseView {
           ${removeBtn}
         </div>`;
     }).join('');
-
     const inviteBtn = this.querySelector('#orgInviteBtn');
     if (inviteBtn) inviteBtn.style.display = canManage ? '' : 'none';
   }
@@ -669,7 +720,7 @@ class OrganizationView extends BaseView {
     list.innerHTML = this.invitations.map((inv) => {
       const expires = inv.expires_at ? new Date(inv.expires_at).toLocaleDateString('es') : '—';
       return `
-        <div class="org-invitation-row" data-invitation-id="${this.escapeHtml(inv.id)}">
+        <div class="org-invitation-row">
           <div class="org-invitation-info">
             <span class="org-invitation-email">${this.escapeHtml(inv.email)}</span>
             <span class="org-invitation-meta">${this.escapeHtml(inv.role)} · expira ${expires}</span>
@@ -681,53 +732,66 @@ class OrganizationView extends BaseView {
     }).join('');
   }
 
-  _renderBilling() {
+  _renderPlanAndLimits() {
+    // Plan card
     const card = this.querySelector('#orgPlanCard');
-    if (!card) return;
-    if (!this.subscription) {
-      card.innerHTML = `
-        <div class="org-plan-empty">
-          <p>No tienes un plan activo.</p>
-          <button type="button" class="btn btn-primary" id="orgChoosePlanBtn">Ver planes</button>
-        </div>`;
-      this.querySelector('#orgChoosePlanBtn')?.addEventListener('click', () => this._goToPlans());
-      return;
+    if (card) {
+      if (!this.subscription) {
+        card.innerHTML = `
+          <div class="org-plan-empty">
+            <p>No tienes un plan activo.</p>
+            <button type="button" class="btn btn-primary" id="orgChoosePlanBtn">Ver planes</button>
+          </div>`;
+        this.querySelector('#orgChoosePlanBtn')?.addEventListener('click', () => this._goToPlans());
+      } else {
+        const planName = this.plan?.name || this.subscription.plan_id || 'Plan';
+        const price = this.plan?.price_usd_month != null ? `$${this.plan.price_usd_month}/mes` : '';
+        const status = this.subscription.status || '—';
+        const renewal = this.subscription.current_period_end
+          ? new Date(this.subscription.current_period_end).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })
+          : '—';
+        card.innerHTML = `
+          <div class="org-plan-head">
+            <div>
+              <h3 class="org-plan-name">${this.escapeHtml(planName)}</h3>
+              <span class="org-plan-status org-plan-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
+            </div>
+            <div class="org-plan-price">${this.escapeHtml(price)}</div>
+          </div>
+          <div class="org-plan-stats">
+            <div><span class="org-plan-stat-label">Renovación</span><span class="org-plan-stat-value">${this.escapeHtml(renewal)}</span></div>
+            <div><span class="org-plan-stat-label">Créditos / mes</span><span class="org-plan-stat-value">${this.plan?.credits_monthly ?? '—'}</span></div>
+            <div><span class="org-plan-stat-label">Almacenamiento</span><span class="org-plan-stat-value">${this._formatStorage(this.plan?.storage_mb)}</span></div>
+          </div>
+          <div class="org-plan-actions">
+            <button type="button" class="btn btn-primary" id="orgUpgradeBtn">Cambiar de plan</button>
+          </div>`;
+        this.querySelector('#orgUpgradeBtn')?.addEventListener('click', () => this._goToPlans());
+      }
     }
-    const planName = this.plan?.name || this.subscription.plan_id || 'Plan';
-    const price = this.plan?.price_usd_month != null ? `$${this.plan.price_usd_month}/mes` : '';
-    const status = this.subscription.status || '—';
-    const renewal = this.subscription.current_period_end
-      ? new Date(this.subscription.current_period_end).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })
-      : '—';
-    const features = Array.isArray(this.plan?.features?.list) ? this.plan.features.list : [];
-    card.innerHTML = `
-      <div class="org-plan-head">
-        <div>
-          <h3 class="org-plan-name">${this.escapeHtml(planName)}</h3>
-          <span class="org-plan-status org-plan-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
-        </div>
-        <div class="org-plan-price">${this.escapeHtml(price)}</div>
-      </div>
-      <div class="org-plan-stats">
-        <div><span class="org-plan-stat-label">Renovación</span><span class="org-plan-stat-value">${this.escapeHtml(renewal)}</span></div>
-        <div><span class="org-plan-stat-label">Créditos / mes</span><span class="org-plan-stat-value">${this.plan?.credits_monthly ?? '—'}</span></div>
-        <div><span class="org-plan-stat-label">Almacenamiento</span><span class="org-plan-stat-value">${this.plan?.storage_mb != null ? (this.plan.storage_mb >= 1024 ? (this.plan.storage_mb / 1024).toFixed(0) + ' GB' : this.plan.storage_mb + ' MB') : '—'}</span></div>
-      </div>
-      ${features.length ? `<ul class="org-plan-features">${features.map((f) => `<li><i class="fas fa-check"></i>${this.escapeHtml(f)}</li>`).join('')}</ul>` : ''}
-      <div class="org-plan-actions">
-        <button type="button" class="btn btn-primary" id="orgUpgradeBtn">Cambiar de plan</button>
-      </div>`;
-    this.querySelector('#orgUpgradeBtn')?.addEventListener('click', () => this._goToPlans());
-  }
 
-  _renderUsage() {
-    // Créditos
-    const creditsEl = this.querySelector('#orgCreditsCard');
-    if (creditsEl) {
+    // Storage
+    const stEl = this.querySelector('#orgStorageCard');
+    if (stEl) {
+      const used = Number(this.storage.used_mb) || 0;
+      const max = Number(this.storage.max_mb) || 0;
+      const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+      stEl.innerHTML = this._usageCardHTML({
+        label: 'Almacenamiento usado',
+        primary: this._formatStorage(used),
+        secondary: max > 0 ? `de ${this._formatStorage(max)}` : '',
+        pct,
+        sub: '',
+      });
+    }
+
+    // Credits
+    const cEl = this.querySelector('#orgCreditsCard');
+    if (cEl) {
       const used = Math.max(0, (this.credits.credits_total || 0) - (this.credits.credits_available || 0));
       const pct = this.credits.credits_total > 0 ? Math.min(100, Math.round((used / this.credits.credits_total) * 100)) : 0;
-      creditsEl.innerHTML = this._usageCardHTML({
-        label: 'Créditos usados este ciclo',
+      cEl.innerHTML = this._usageCardHTML({
+        label: 'Créditos usados',
         primary: used.toLocaleString('es'),
         secondary: this.credits.credits_total > 0 ? `de ${this.credits.credits_total.toLocaleString('es')}` : '',
         pct,
@@ -735,11 +799,67 @@ class OrganizationView extends BaseView {
       });
     }
 
-    // Timeline (30 días)
+    // AI caps form
+    const setVal = (sel, v) => { const el = this.querySelector(sel); if (el) el.value = v == null ? '' : v; };
+    setVal('#capsDaily', this.aiCaps?.daily_usd_cap);
+    setVal('#capsMonthly', this.aiCaps?.monthly_usd_cap);
+    setVal('#capsWarn', this.aiCaps?.warn_threshold != null ? Math.round(this.aiCaps.warn_threshold * 100) : '');
+    setVal('#capsConfirm', this.aiCaps?.confirm_threshold_usd);
+    const cb = this.querySelector('#capsConfirmEnabled');
+    if (cb) cb.checked = !!this.aiCaps?.confirm_enabled;
+
+    // AI usage today card
+    const aiEl = this.querySelector('#orgAiCard');
+    if (aiEl) {
+      const cap = this.aiCaps?.daily_usd_cap ?? null;
+      const usedToday = this.aiUsageToday?.cost_usd_today ?? this.aiUsageToday?.usd ?? null;
+      const pct = cap && usedToday != null ? Math.min(100, Math.round((usedToday / cap) * 100)) : 0;
+      aiEl.innerHTML = this._usageCardHTML({
+        label: 'Consumo de IA hoy',
+        primary: usedToday != null ? `$${Number(usedToday).toFixed(2)}` : '—',
+        secondary: cap ? `de $${Number(cap).toFixed(2)}` : 'sin cap configurado',
+        pct,
+        sub: '',
+      });
+    }
+
+    const capsForm = this.querySelector('#orgCapsForm');
+    if (capsForm) {
+      const canEdit = this.isOwner || this.canManageMembers;
+      capsForm.querySelectorAll('input').forEach((i) => { i.disabled = !canEdit; });
+      const btn = this.querySelector('#orgCapsSubmit');
+      if (btn) btn.disabled = !canEdit;
+    }
+  }
+
+  _renderActivity() {
+    const list = this.querySelector('#orgRunsList');
+    if (list) {
+      if (!this.recentFlowRuns.length) {
+        list.innerHTML = '<p class="org-members-empty">Sin ejecuciones recientes.</p>';
+      } else {
+        list.innerHTML = this.recentFlowRuns.map((r) => {
+          const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
+          const status = r.status || 'unknown';
+          const progress = r.total_modules_count > 0
+            ? `${r.current_module_order || 0}/${r.total_modules_count}`
+            : '—';
+          return `
+            <div class="org-run-row">
+              <span class="org-run-when">${this.escapeHtml(when)}</span>
+              <span class="org-run-flow">${this.escapeHtml(r.flow_id ? r.flow_id.slice(0, 8) + '…' : '—')}</span>
+              <span class="org-run-progress">${this.escapeHtml(progress)}</span>
+              <span class="org-run-tokens">${r.tokens_consumed || 0} tk</span>
+              <span class="org-run-status org-run-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
+            </div>`;
+        }).join('');
+      }
+    }
+
     const tlEl = this.querySelector('#orgCreditsTimeline');
     if (tlEl) {
       if (!this.creditTimeline.length) {
-        tlEl.innerHTML = `<p class="org-placeholder">Sin consumo registrado en los últimos 30 días.</p>`;
+        tlEl.innerHTML = '<p class="org-placeholder">Sin consumo registrado en los últimos 30 días.</p>';
       } else {
         const max = Math.max(...this.creditTimeline.map((d) => d.total)) || 1;
         tlEl.innerHTML = `
@@ -755,99 +875,99 @@ class OrganizationView extends BaseView {
           </div>`;
       }
     }
-
-    // Storage
-    const stEl = this.querySelector('#orgStorageCard');
-    if (stEl) {
-      const used = Number(this.storage.used_mb) || 0;
-      const max = Number(this.storage.max_mb) || 0;
-      const pct = max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
-      const fmt = (mb) => mb >= 1024 ? (mb / 1024).toFixed(2) + ' GB' : Math.round(mb) + ' MB';
-      stEl.innerHTML = this._usageCardHTML({
-        label: 'Almacenamiento usado',
-        primary: fmt(used),
-        secondary: max > 0 ? `de ${fmt(max)}` : '',
-        pct,
-        sub: '',
-      });
-    }
-
-    // AI
-    const aiSec = this.querySelector('#orgAiUsageSection');
-    const aiEl = this.querySelector('#orgAiCard');
-    if (aiSec && aiEl && (this.aiCaps || this.aiUsageToday)) {
-      aiSec.hidden = false;
-      const cap = this.aiCaps?.daily_cap_usd ?? this.aiCaps?.monthly_cap_usd ?? null;
-      const usedToday = this.aiUsageToday?.cost_usd_today ?? this.aiUsageToday?.usd ?? null;
-      const pct = cap && usedToday != null ? Math.min(100, Math.round((usedToday / cap) * 100)) : 0;
-      aiEl.innerHTML = this._usageCardHTML({
-        label: 'Consumo de IA hoy',
-        primary: usedToday != null ? `$${Number(usedToday).toFixed(2)}` : '—',
-        secondary: cap ? `de $${Number(cap).toFixed(2)}` : '',
-        pct,
-        sub: '',
-      });
-    }
   }
 
-  _usageCardHTML({ label, primary, secondary, pct, sub }) {
-    return `
-      <div class="org-usage-label">${this.escapeHtml(label)}</div>
-      <div class="org-usage-main">
-        <span class="org-usage-primary">${this.escapeHtml(primary)}</span>
-        ${secondary ? `<span class="org-usage-secondary">${this.escapeHtml(secondary)}</span>` : ''}
-      </div>
-      <div class="org-usage-bar"><div class="org-usage-bar-fill" style="width:${pct}%"></div></div>
-      ${sub ? `<div class="org-usage-sub">${this.escapeHtml(sub)}</div>` : ''}`;
-  }
-
-  _renderIntegrations() {
-    const listEl = this.querySelector('#orgIntegrationsList');
-    if (!listEl) return;
-    this._setText('#orgSummaryBrands', String(this.brandContainers.length));
-    this._setText('#orgSummaryIntegrationsActive', String(this.integrationsSummary.active));
-    this._setText('#orgSummaryIntegrationsTotal', String(this.integrationsSummary.total));
-
-    if (!this.brandContainers.length) {
-      listEl.innerHTML = '<p class="org-members-empty">Esta organización aún no tiene marcas vinculadas.</p>';
+  _renderMonitoring() {
+    const list = this.querySelector('#orgMonitoringList');
+    if (!list) return;
+    if (!this.monitoringTriggers.length) {
+      list.innerHTML = '<p class="org-members-empty">No hay sensores configurados.</p>';
       return;
     }
-    if (!this.organizationIntegrations.length) {
-      listEl.innerHTML = '<p class="org-members-empty">Sin integraciones conectadas.</p>';
-      return;
-    }
-
-    const brandMap = Object.fromEntries(this.brandContainers.map((b) => [b.id, b]));
-    const grouped = {};
-    this.organizationIntegrations.forEach((item) => {
-      const key = this._platformFamily(item.platform);
-      if (!grouped[key]) grouped[key] = { label: this._platformLabel(item.platform), total: 0, active: 0, byBrand: {} };
-      grouped[key].total += 1;
-      if (item.is_active) grouped[key].active += 1;
-      const brandName = brandMap[item.brand_container_id]?.nombre_marca || 'Marca sin nombre';
-      grouped[key].byBrand[brandName] = (grouped[key].byBrand[brandName] || 0) + 1;
-    });
-
-    listEl.innerHTML = Object.values(grouped).sort((a, b) => a.label.localeCompare(b.label, 'es')).map((g) => {
-      const statusClass = g.active > 0 ? 'is-connected' : 'is-disconnected';
-      const statusText = g.active > 0 ? 'Conectada' : 'Sin conexión';
-      const summary = Object.entries(g.byBrand).sort((a, b) => a[0].localeCompare(b[0], 'es')).map(([b, c]) => `${this.escapeHtml(b)} (${c})`).join(' • ');
+    list.innerHTML = this.monitoringTriggers.map((t) => {
+      const next = t.next_run_at ? new Date(t.next_run_at).toLocaleString('es') : '—';
+      const last = t.last_run_at ? new Date(t.last_run_at).toLocaleString('es') : '—';
+      const status = t.status || 'unknown';
+      const lastStatus = t.last_run_status || '—';
       return `
-        <article class="org-integration-card">
-          <div class="org-integration-head">
-            <h4 class="org-integration-name">${this.escapeHtml(g.label)}</h4>
-            <span class="org-integration-badge ${statusClass}">${statusText}</span>
+        <div class="org-monitor-row">
+          <div class="org-monitor-info">
+            <span class="org-monitor-name">${this.escapeHtml(t.sensor_type || 'sensor')}</span>
+            <span class="org-monitor-meta">cadencia: ${this.escapeHtml(t.cadence || '—')}${t.cadence_value ? ' (' + this.escapeHtml(t.cadence_value) + ')' : ''} · prioridad ${t.priority ?? '—'}</span>
           </div>
-          <p class="org-integration-meta">${g.active} activas de ${g.total} configuradas</p>
-          <p class="org-integration-brands">${summary}</p>
-        </article>`;
+          <div class="org-monitor-runs">
+            <span class="org-monitor-last">Último: ${this.escapeHtml(last)} <em class="org-run-status org-run-status--${this.escapeHtml(lastStatus)}">${this.escapeHtml(lastStatus)}</em></span>
+            <span class="org-monitor-next">Próximo: ${this.escapeHtml(next)}</span>
+          </div>
+          <span class="org-monitor-status org-monitor-status--${this.escapeHtml(status)}">${this.escapeHtml(status)}</span>
+        </div>`;
+    }).join('');
+  }
+
+  _renderHealth() {
+    const grid = this.querySelector('#orgHealthGrid');
+    if (grid) {
+      const pending = this.veraPendingByStatus.pending || 0;
+      const executed = this.veraPendingByStatus.executed || 0;
+      const failed = this.veraPendingByStatus.failed || 0;
+      const queueRunning = this.queueByStatus.running || this.queueByStatus.processing || 0;
+      const queueFailed = this.queueByStatus.failed || 0;
+      const queuePending = this.queueByStatus.pending || this.queueByStatus.queued || 0;
+      grid.innerHTML = `
+        ${this._healthStatHTML('Acciones pendientes de Vera', pending, 'fa-hourglass-half', pending > 0 ? 'warning' : 'ok')}
+        ${this._healthStatHTML('Ejecutadas (vida total)', executed, 'fa-check-circle', 'ok')}
+        ${this._healthStatHTML('Fallidas (vida total)', failed, 'fa-exclamation-triangle', failed > 0 ? 'error' : 'ok')}
+        ${this._healthStatHTML('En cola', queuePending, 'fa-list', 'neutral')}
+        ${this._healthStatHTML('En ejecución', queueRunning, 'fa-spinner', 'neutral')}
+        ${this._healthStatHTML('Jobs fallidos', queueFailed, 'fa-times-circle', queueFailed > 0 ? 'error' : 'ok')}
+      `;
+    }
+
+    const errEl = this.querySelector('#orgMissionErrors');
+    if (errEl) {
+      if (!this.recentMissionErrors.length) {
+        errEl.innerHTML = '<p class="org-members-empty">Sin errores en los últimos 7 días.</p>';
+      } else {
+        errEl.innerHTML = this.recentMissionErrors.map((m) => {
+          const when = m.completed_at || m.started_at;
+          const t = when ? new Date(when).toLocaleString('es') : '—';
+          return `
+            <div class="org-error-row">
+              <span class="org-error-when">${this.escapeHtml(t)}</span>
+              <span class="org-error-message">${this.escapeHtml((m.error_message || 'Sin detalle').slice(0, 220))}</span>
+            </div>`;
+        }).join('');
+      }
+    }
+  }
+
+  _renderNotifications() {
+    const list = this.querySelector('#orgNotificationsList');
+    if (!list) return;
+    if (!this.notifications.length) {
+      list.innerHTML = '<p class="org-members-empty">No hay notificaciones recientes.</p>';
+      return;
+    }
+    list.innerHTML = this.notifications.map((n) => {
+      const when = n.created_at ? new Date(n.created_at).toLocaleString('es') : '';
+      const sev = (n.severity || 'info').toLowerCase();
+      const unread = !n.read_at ? '<span class="org-notif-dot"></span>' : '';
+      return `
+        <div class="org-notif-row org-notif-row--${this.escapeHtml(sev)}">
+          ${unread}
+          <div class="org-notif-info">
+            <span class="org-notif-title">${this.escapeHtml(n.title || n.type || 'Notificación')}</span>
+            ${n.body ? `<span class="org-notif-body">${this.escapeHtml(n.body)}</span>` : ''}
+            <span class="org-notif-meta">${this.escapeHtml(when)} · ${this.escapeHtml(n.type || '')}</span>
+          </div>
+          ${n.action_url ? `<a href="${this.escapeHtml(n.action_url)}" class="btn btn-secondary btn-sm">${this.escapeHtml(n.action_label || 'Abrir')}</a>` : ''}
+        </div>`;
     }).join('');
   }
 
   _renderAuditLog() {
     const listEl = this.querySelector('#orgAuditList');
     if (!listEl) return;
-    // Populate filter dropdowns once
     const actionSel = this.querySelector('#auditFilterAction');
     const userSel = this.querySelector('#auditFilterUser');
     if (actionSel && actionSel.options.length <= 1) {
@@ -863,15 +983,10 @@ class OrganizationView extends BaseView {
         userSel.insertAdjacentHTML('beforeend', `<option value="${this.escapeHtml(m.user_id)}">${this.escapeHtml(label)}</option>`);
       });
     }
-
     let rows = this.auditLog;
     if (this.auditFilter.action) rows = rows.filter((r) => r.action === this.auditFilter.action);
     if (this.auditFilter.user) rows = rows.filter((r) => r.user_id === this.auditFilter.user);
-
-    if (!rows.length) {
-      listEl.innerHTML = '<p class="org-members-empty">Sin actividad registrada.</p>';
-      return;
-    }
+    if (!rows.length) { listEl.innerHTML = '<p class="org-members-empty">Sin actividad registrada.</p>'; return; }
     listEl.innerHTML = rows.map((r) => {
       const when = r.created_at ? new Date(r.created_at).toLocaleString('es') : '—';
       const who = r.user_email || r.user_id?.slice(0, 8) + '…' || '—';
@@ -886,21 +1001,41 @@ class OrganizationView extends BaseView {
     }).join('');
   }
 
-  // ── Helpers ────────────────────────────────────────────
-  _setText(sel, t) { const el = this.querySelector(sel); if (el) el.textContent = t; }
-
-  _platformFamily(p) {
-    const n = (p || '').toLowerCase().trim();
-    if (!n) return 'unknown';
-    if (['google', 'google_analytics', 'ga4', 'youtube', 'google_youtube', 'google_ads'].includes(n)) return 'google';
-    if (['meta', 'facebook', 'instagram'].includes(n)) return 'meta';
-    return n;
+  _configureExternalLinks() {
+    const prefix = (this.orgId && typeof window.getOrgPathPrefix === 'function')
+      ? window.getOrgPathPrefix(this.orgId, this.org?.name || '') : '';
+    const tasksLink = this.querySelector('#orgActivityTasksLink');
+    if (tasksLink) tasksLink.setAttribute('href', (prefix || '') + '/tasks');
+    const monLink = this.querySelector('#orgMonitoringLink');
+    if (monLink) monLink.setAttribute('href', (prefix || '') + '/monitoring');
   }
-  _platformLabel(p) {
-    const f = this._platformFamily(p);
-    const map = { google: 'Google', meta: 'Meta', shopify: 'Shopify', tiktok: 'TikTok', linkedin: 'LinkedIn', unknown: 'Sin plataforma' };
-    if (map[f]) return map[f];
-    return f.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+  // ── Helpers ────────────────────────────────────────────
+  _usageCardHTML({ label, primary, secondary, pct, sub }) {
+    return `
+      <div class="org-usage-label">${this.escapeHtml(label)}</div>
+      <div class="org-usage-main">
+        <span class="org-usage-primary">${this.escapeHtml(primary)}</span>
+        ${secondary ? `<span class="org-usage-secondary">${this.escapeHtml(secondary)}</span>` : ''}
+      </div>
+      <div class="org-usage-bar"><div class="org-usage-bar-fill" style="width:${pct}%"></div></div>
+      ${sub ? `<div class="org-usage-sub">${this.escapeHtml(sub)}</div>` : ''}`;
+  }
+
+  _healthStatHTML(label, value, icon, tone) {
+    return `
+      <div class="org-health-stat org-health-stat--${this.escapeHtml(tone)}">
+        <i class="fas ${this.escapeHtml(icon)} org-health-stat-icon"></i>
+        <div>
+          <div class="org-health-stat-value">${this.escapeHtml(String(value))}</div>
+          <div class="org-health-stat-label">${this.escapeHtml(label)}</div>
+        </div>
+      </div>`;
+  }
+
+  _formatStorage(mb) {
+    if (mb == null) return '—';
+    return mb >= 1024 ? (mb / 1024).toFixed(2) + ' GB' : Math.round(mb) + ' MB';
   }
 
   _goToPlans() {
@@ -917,7 +1052,6 @@ class OrganizationView extends BaseView {
 
   // ── Eventos ────────────────────────────────────────────
   _bindEvents() {
-    // Tabs
     const tabs = this.querySelectorAll('.organization-tabs .tab-btn');
     const panels = this.querySelectorAll('.organization-content .tab-content');
     tabs.forEach((btn) => {
@@ -927,22 +1061,13 @@ class OrganizationView extends BaseView {
         panels.forEach((p) => { p.classList.remove('active'); });
         btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
         this.querySelector('#' + tab + 'Tab')?.classList.add('active');
-        if (tab === 'business-units') this._loadAndRenderBusinessUnits();
       });
     });
 
-    // General form
-    this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => {
-      e.preventDefault(); this._saveGeneral();
-    });
-
-    // Logo
-    this.querySelector('#orgLogoUploadBtn')?.addEventListener('click', () => this.querySelector('#orgLogoInput')?.click());
-    this.querySelector('#orgLogoInput')?.addEventListener('change', (e) => this._uploadLogo(e));
-    this.querySelector('#orgLogoRemoveBtn')?.addEventListener('click', () => this._removeLogo());
-
-    // Members
+    this.querySelector('#orgGeneralForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveGeneral(); });
+    this.querySelector('#orgCapsForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._saveCaps(); });
     this.querySelector('#orgInviteBtn')?.addEventListener('click', () => this._openInviteModal());
+
     this.container.addEventListener('change', (e) => {
       const sel = e.target.closest('.org-role-select');
       if (sel) this._changeRole(sel.getAttribute('data-member-id'), sel.value);
@@ -954,24 +1079,16 @@ class OrganizationView extends BaseView {
       if (revokeBtn) { this._revokeInvitation(revokeBtn.getAttribute('data-invitation-id')); return; }
     });
 
-    // Invite modal
     document.getElementById('orgInviteModalClose')?.addEventListener('click', () => this._closeInviteModal());
     document.getElementById('orgInviteCancel')?.addEventListener('click', () => this._closeInviteModal());
     document.getElementById('orgInviteForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._submitInvite(); });
 
-    // Audit filters
     this.querySelector('#auditFilterAction')?.addEventListener('change', (e) => { this.auditFilter.action = e.target.value; this._renderAuditLog(); });
     this.querySelector('#auditFilterUser')?.addEventListener('change', (e) => { this.auditFilter.user = e.target.value; this._renderAuditLog(); });
 
-    // Business units
-    this.querySelector('#createBusinessUnitBtn')?.addEventListener('click', () => this._openCreateBusinessUnitModal());
-
-    // Danger zone
     this.querySelector('#orgTransferBtn')?.addEventListener('click', () => this._openTransferModal());
     this.querySelector('#orgArchiveBtn')?.addEventListener('click', () => this._archiveOrg());
     this.querySelector('#orgExportBtn')?.addEventListener('click', () => this._requestExport());
-
-    // Transfer modal
     document.getElementById('orgTransferModalClose')?.addEventListener('click', () => this._closeTransferModal());
     document.getElementById('orgTransferCancel')?.addEventListener('click', () => this._closeTransferModal());
     document.getElementById('orgTransferForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._submitTransfer(); });
@@ -979,61 +1096,51 @@ class OrganizationView extends BaseView {
 
   // ── Acciones ───────────────────────────────────────────
   async _saveGeneral() {
-    if (!this.supabase || !this.orgId) return;
-    const submitBtn = this.querySelector('#orgGeneralSubmit');
+    const btn = this.querySelector('#orgGeneralSubmit');
     const payload = {
-      name: this.querySelector('#orgName')?.value?.trim() || '',
-      brand_name_oficial: this.querySelector('#orgBrandNameOficial')?.value?.trim() || null,
-      brand_slogan: this.querySelector('#orgBrandSlogan')?.value?.trim() || null,
       timezone: this.querySelector('#orgTimezone')?.value || 'UTC',
       locale: this.querySelector('#orgLocale')?.value || 'es',
-      level_of_autonomy: this.querySelector('#orgLevelAutonomy')?.value || 'parcial',
     };
-    if (!payload.name) { alert('El nombre no puede estar vacío.'); return; }
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…'; }
     try {
       const { error } = await this.supabase.from('organizations').update(payload).eq('id', this.orgId);
       if (error) throw error;
       this.org = { ...this.org, ...payload };
-      this.updateHeaderContext('Configuración', null, payload.name);
-      this._toast('Cambios guardados');
+      this._toast('Configuración regional guardada');
     } catch (e) {
       alert(e.message || 'No se pudo guardar.');
     } finally {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar'; }
     }
   }
 
-  async _uploadLogo(e) {
-    const file = e.target?.files?.[0];
-    if (!file || !this.supabase || !this.orgId) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Tamaño máximo: 5 MB.'); e.target.value = ''; return; }
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
-    const path = `${this.orgId}/logo-${Date.now()}.${ext}`;
+  async _saveCaps() {
+    const btn = this.querySelector('#orgCapsSubmit');
+    const num = (sel) => {
+      const v = this.querySelector(sel)?.value;
+      if (v === '' || v == null) return null;
+      const n = Number(v); return isNaN(n) ? null : n;
+    };
+    const payload = {
+      organization_id: this.orgId,
+      daily_usd_cap: num('#capsDaily'),
+      monthly_usd_cap: num('#capsMonthly'),
+      warn_threshold: (() => { const v = num('#capsWarn'); return v == null ? null : v / 100; })(),
+      confirm_threshold_usd: num('#capsConfirm'),
+      confirm_enabled: !!this.querySelector('#capsConfirmEnabled')?.checked,
+    };
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…'; }
     try {
-      const { error: upErr } = await this.supabase.storage.from('brand-logos').upload(path, file, { contentType: file.type, upsert: true });
-      if (upErr) throw upErr;
-      const { data: pub } = this.supabase.storage.from('brand-logos').getPublicUrl(path);
-      const logoUrl = pub?.publicUrl || '';
-      const { error: upRowErr } = await this.supabase.from('organizations').update({ logo_url: logoUrl }).eq('id', this.orgId);
-      if (upRowErr) throw upRowErr;
-      this.org.logo_url = logoUrl;
-      this._renderGeneral();
-      this._toast('Logo actualizado');
-    } catch (err) {
-      alert(err.message || 'No se pudo subir el logo.');
+      const { error } = await this.supabase.from('org_claude_caps').upsert(payload, { onConflict: 'organization_id' });
+      if (error) throw error;
+      await this._loadAiCaps();
+      this._renderPlanAndLimits();
+      this._toast('Límites de IA actualizados');
+    } catch (e) {
+      alert(e.message || 'No se pudo guardar los límites.');
     } finally {
-      e.target.value = '';
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar límites'; }
     }
-  }
-
-  async _removeLogo() {
-    if (!confirm('¿Quitar el logo?')) return;
-    const { error } = await this.supabase.from('organizations').update({ logo_url: null }).eq('id', this.orgId);
-    if (error) { alert(error.message || 'Error.'); return; }
-    this.org.logo_url = null;
-    this._renderGeneral();
-    this._toast('Logo eliminado');
   }
 
   _openInviteModal() {
@@ -1045,9 +1152,8 @@ class OrganizationView extends BaseView {
     const modal = document.getElementById('orgInviteModal');
     if (modal) { modal.classList.remove('modal-open'); modal.setAttribute('aria-hidden', 'true'); }
   }
-
   async _submitInvite() {
-    if (!this.supabase || !this.orgId || !this.canManageMembers) return;
+    if (!this.canManageMembers) return;
     const email = document.getElementById('inviteEmail')?.value?.trim();
     const role = (document.getElementById('inviteRole')?.value || 'member').toLowerCase();
     if (!email) return;
@@ -1055,19 +1161,11 @@ class OrganizationView extends BaseView {
     if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
     try {
       const { data: existing } = await this.supabase
-        .from('organization_invitations')
-        .select('id').eq('organization_id', this.orgId).eq('email', email).eq('status', 'pending').maybeSingle();
+        .from('organization_invitations').select('id').eq('organization_id', this.orgId).eq('email', email).eq('status', 'pending').maybeSingle();
       if (existing) { alert('Ya existe una invitación pendiente para ese email.'); return; }
-
-      const { data: profile } = await this.supabase
-        .from('profiles').select('id').eq('email', email).maybeSingle();
-      if (profile && this.members.some((m) => m.user_id === profile.id)) {
-        alert('Ese usuario ya es miembro.'); return;
-      }
-
-      const { error } = await this.supabase
-        .from('organization_invitations')
-        .insert({ organization_id: this.orgId, email, role, invited_by: this.userId });
+      const { data: profile } = await this.supabase.from('profiles').select('id').eq('email', email).maybeSingle();
+      if (profile && this.members.some((m) => m.user_id === profile.id)) { alert('Ese usuario ya es miembro.'); return; }
+      const { error } = await this.supabase.from('organization_invitations').insert({ organization_id: this.orgId, email, role, invited_by: this.userId });
       if (error) throw error;
       this._closeInviteModal();
       await this._loadInvitations();
@@ -1081,10 +1179,8 @@ class OrganizationView extends BaseView {
   }
 
   async _revokeInvitation(invitationId) {
-    if (!invitationId) return;
-    if (!confirm('¿Revocar esta invitación?')) return;
-    const { error } = await this.supabase
-      .from('organization_invitations').update({ status: 'revoked' }).eq('id', invitationId);
+    if (!invitationId || !confirm('¿Revocar esta invitación?')) return;
+    const { error } = await this.supabase.from('organization_invitations').update({ status: 'revoked' }).eq('id', invitationId);
     if (error) { alert(error.message || 'Error.'); return; }
     await this._loadInvitations(); this._renderInvitations();
     this._toast('Invitación revocada');
@@ -1092,8 +1188,7 @@ class OrganizationView extends BaseView {
 
   async _changeRole(memberId, role) {
     if (!memberId || !role || !this.canManageMembers) return;
-    const { error } = await this.supabase
-      .from('organization_members').update({ role }).eq('id', memberId).eq('organization_id', this.orgId);
+    const { error } = await this.supabase.from('organization_members').update({ role }).eq('id', memberId).eq('organization_id', this.orgId);
     if (error) { alert(error.message || 'No se pudo cambiar el rol.'); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast('Rol actualizado');
@@ -1104,8 +1199,7 @@ class OrganizationView extends BaseView {
     const m = this.members.find((x) => x.id === memberId);
     if (!m || m.user_id === this.org?.owner_user_id) return;
     if (!confirm('¿Quitar a este miembro de la organización?')) return;
-    const { error } = await this.supabase
-      .from('organization_members').delete().eq('id', memberId).eq('organization_id', this.orgId);
+    const { error } = await this.supabase.from('organization_members').delete().eq('id', memberId).eq('organization_id', this.orgId);
     if (error) { alert(error.message || 'Error.'); return; }
     await this._loadMembers(); this._renderMembers();
     this._toast('Miembro eliminado');
@@ -1117,8 +1211,7 @@ class OrganizationView extends BaseView {
     if (sel) {
       const opts = this.membersWithProfile
         .filter((m) => m.user_id && m.user_id !== this.userId)
-        .map((m) => `<option value="${this.escapeHtml(m.user_id)}">${this.escapeHtml(m.full_name || m.email || m.user_id.slice(0, 8) + '…')}</option>`)
-        .join('');
+        .map((m) => `<option value="${this.escapeHtml(m.user_id)}">${this.escapeHtml(m.full_name || m.email || m.user_id.slice(0, 8) + '…')}</option>`).join('');
       sel.innerHTML = '<option value="">Selecciona un miembro…</option>' + opts;
     }
     const label = document.getElementById('transferOrgNameLabel');
@@ -1130,15 +1223,13 @@ class OrganizationView extends BaseView {
     const modal = document.getElementById('orgTransferModal');
     if (modal) { modal.classList.remove('modal-open'); modal.setAttribute('aria-hidden', 'true'); }
   }
-
   async _submitTransfer() {
     if (!this.isOwner) return;
     const newOwner = document.getElementById('transferTo')?.value;
-    const confirm = document.getElementById('transferConfirm')?.value?.trim();
+    const confirmTxt = document.getElementById('transferConfirm')?.value?.trim();
     if (!newOwner) { alert('Selecciona un miembro.'); return; }
-    if (confirm !== (this.org?.name || '')) { alert('El nombre de confirmación no coincide.'); return; }
-    const { error } = await this.supabase
-      .from('organizations').update({ owner_user_id: newOwner }).eq('id', this.orgId).eq('owner_user_id', this.userId);
+    if (confirmTxt !== (this.org?.name || '')) { alert('El nombre no coincide.'); return; }
+    const { error } = await this.supabase.from('organizations').update({ owner_user_id: newOwner }).eq('id', this.orgId).eq('owner_user_id', this.userId);
     if (error) { alert(error.message || 'No se pudo transferir.'); return; }
     this._closeTransferModal();
     this._toast('Propiedad transferida');
@@ -1148,10 +1239,9 @@ class OrganizationView extends BaseView {
 
   async _archiveOrg() {
     if (!this.isOwner) { alert('Solo el propietario puede archivar.'); return; }
-    const confirmTxt = prompt(`Escribe "${this.org?.name || ''}" para archivar la organización:`);
+    const confirmTxt = prompt(`Escribe "${this.org?.name || ''}" para archivar:`);
     if (confirmTxt !== this.org?.name) { if (confirmTxt != null) alert('El nombre no coincide.'); return; }
-    const { error } = await this.supabase
-      .from('organizations').update({ deleted_at: new Date().toISOString() }).eq('id', this.orgId).eq('owner_user_id', this.userId);
+    const { error } = await this.supabase.from('organizations').update({ deleted_at: new Date().toISOString() }).eq('id', this.orgId).eq('owner_user_id', this.userId);
     if (error) { alert(error.message || 'No se pudo archivar.'); return; }
     this._toast('Organización archivada');
     setTimeout(() => window.router?.navigate('/home', true), 600);
@@ -1159,128 +1249,10 @@ class OrganizationView extends BaseView {
 
   async _requestExport() {
     alert('Solicitud de export registrada. Recibirás un email con el enlace de descarga cuando esté lista.');
-    // Hook: inserta una fila en una tabla `data_export_jobs` cuando exista. Hoy es placeholder
-    // porque la pipeline de export todavía no está implementada (queda en docs/task).
   }
 
   _toast(msg) {
     if (typeof window.showToast === 'function') window.showToast(msg, 'success');
-  }
-
-  // ── Business units (mantenidas del view anterior) ──────
-  async _loadAndRenderBusinessUnits() {
-    const listEl = this.querySelector('#businessUnitsList');
-    if (!listEl) return;
-    if (!this.supabase || !this.orgId) { listEl.innerHTML = '<p class="org-placeholder">No se pudo cargar.</p>'; return; }
-    listEl.innerHTML = '<p class="org-placeholder">Cargando…</p>';
-    try {
-      const { data: units, error } = await this.supabase
-        .from('business_units').select('id, name, description, created_at')
-        .eq('organization_id', this.orgId).order('created_at', { ascending: true });
-      if (error) throw error;
-      if (!units?.length) { listEl.innerHTML = '<p class="org-placeholder">Sin unidades. Crea una para estructurar.</p>'; return; }
-
-      const unitIds = units.map((u) => u.id);
-      const { data: assignments } = await this.supabase
-        .from('user_business_units').select('business_unit_id, user_id, profiles(full_name, email)').in('business_unit_id', unitIds);
-      const byUnit = {};
-      (assignments || []).forEach((a) => { (byUnit[a.business_unit_id] ||= []).push(a); });
-
-      listEl.innerHTML = units.map((u) => {
-        const ms = byUnit[u.id] || [];
-        const membersHtml = ms.length
-          ? ms.map((m) => {
-              const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
-              const n = p?.full_name || p?.email || m.user_id;
-              return `<span class="bu-member-tag">${this.escapeHtml(n)}</span>`;
-            }).join('')
-          : '<span class="bu-member-tag bu-member-empty">Sin miembros</span>';
-        return `
-          <div class="business-unit-card" data-bu-id="${this.escapeHtml(u.id)}">
-            <div class="bu-card-header">
-              <h3 class="bu-name">${this.escapeHtml(u.name)}</h3>
-              <div class="bu-card-actions">
-                <button type="button" class="btn btn-ghost btn-sm bu-assign-btn" data-bu-id="${this.escapeHtml(u.id)}" title="Asignar miembro"><i class="fas fa-user-plus"></i></button>
-                <button type="button" class="btn btn-ghost btn-sm bu-delete-btn" data-bu-id="${this.escapeHtml(u.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-              </div>
-            </div>
-            ${u.description ? `<p class="bu-desc">${this.escapeHtml(u.description)}</p>` : ''}
-            <div class="bu-members">${membersHtml}</div>
-          </div>`;
-      }).join('');
-
-      listEl.querySelectorAll('.bu-delete-btn').forEach((b) => b.addEventListener('click', () => this._deleteBusinessUnit(b.getAttribute('data-bu-id'))));
-      listEl.querySelectorAll('.bu-assign-btn').forEach((b) => b.addEventListener('click', () => this._openAssignMemberModal(b.getAttribute('data-bu-id'))));
-    } catch (e) {
-      console.error('OrganizationView _loadBusinessUnits:', e);
-      listEl.innerHTML = '<p class="org-placeholder">Error cargando unidades.</p>';
-    }
-  }
-
-  _openCreateBusinessUnitModal() {
-    document.getElementById('orgBuModal')?.remove();
-    const html = `
-      <div class="modal-overlay" id="orgBuModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Nueva Unidad de Negocio</h3><button type="button" class="modal-close" id="buModalClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="bu_name">Nombre <span class="form-required">*</span></label><input type="text" id="bu_name" class="form-input" placeholder="E-commerce" required></div>
-            <div class="form-group"><label for="bu_desc">Descripción</label><textarea id="bu_desc" class="form-input" rows="2"></textarea></div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="buModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="buModalSubmit">Crear</button></div>
-        </div>
-      </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
-    const remove = () => document.getElementById('orgBuModal')?.remove();
-    document.getElementById('buModalClose')?.addEventListener('click', remove);
-    document.getElementById('buModalCancel')?.addEventListener('click', remove);
-    document.getElementById('buModalSubmit')?.addEventListener('click', async () => {
-      const name = document.getElementById('bu_name')?.value?.trim();
-      if (!name) { alert('El nombre es obligatorio.'); return; }
-      const { error } = await this.supabase.from('business_units').insert({
-        organization_id: this.orgId, name,
-        description: document.getElementById('bu_desc')?.value?.trim() || null,
-      });
-      if (error) { alert('Error al crear.'); return; }
-      remove(); await this._loadAndRenderBusinessUnits();
-    });
-  }
-
-  async _deleteBusinessUnit(buId) {
-    if (!confirm('¿Eliminar esta unidad?')) return;
-    const { error } = await this.supabase.from('business_units').delete().eq('id', buId);
-    if (error) { alert('Error al eliminar.'); return; }
-    await this._loadAndRenderBusinessUnits();
-  }
-
-  _openAssignMemberModal(buId) {
-    document.getElementById('orgBuAssignModal')?.remove();
-    const opts = this.membersWithProfile.map((m) => {
-      const label = m.full_name || m.email || m.user_id;
-      return `<option value="${this.escapeHtml(m.user_id || '')}">${this.escapeHtml(label)}</option>`;
-    }).join('');
-    if (!opts) { alert('No hay miembros disponibles.'); return; }
-    const html = `
-      <div class="modal-overlay" id="orgBuAssignModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Asignar miembro</h3><button type="button" class="modal-close" id="buAssignClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="bu_assign_user">Miembro</label><select id="bu_assign_user" class="form-input"><option value="">Seleccionar…</option>${opts}</select></div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="buAssignCancel">Cancelar</button><button type="button" class="btn btn-primary" id="buAssignSubmit">Asignar</button></div>
-        </div>
-      </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
-    const remove = () => document.getElementById('orgBuAssignModal')?.remove();
-    document.getElementById('buAssignClose')?.addEventListener('click', remove);
-    document.getElementById('buAssignCancel')?.addEventListener('click', remove);
-    document.getElementById('buAssignSubmit')?.addEventListener('click', async () => {
-      const userId = document.getElementById('bu_assign_user')?.value;
-      if (!userId) { alert('Selecciona un miembro.'); return; }
-      const { error } = await this.supabase.from('user_business_units').insert({ business_unit_id: buId, user_id: userId });
-      if (error) { alert('Error al asignar.'); return; }
-      remove(); await this._loadAndRenderBusinessUnits();
-    });
   }
 }
 
