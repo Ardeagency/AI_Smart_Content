@@ -1,9 +1,8 @@
 /**
- * IdentitiesView — Secciones de servicios y productos.
- * - Servicios: carrusel horizontal
- * - Productos: masonry como Production (imagen a proporción natural, nombre solo en hover)
+ * ProductsListView — Listado de productos de la organización (masonry).
+ * Hereda el patrón del Identities original, pero solo productos.
  */
-class IdentitiesView extends BaseView {
+class ProductsListView extends BaseView {
   static cacheable = true;
 
   constructor() {
@@ -12,7 +11,6 @@ class IdentitiesView extends BaseView {
     this.supabase = null;
     this.userId = null;
     this.organizationId = null;
-    this.services = [];
     this.products = [];
     this.productImageById = {};
     this._fallbackEntityId = null;
@@ -21,40 +19,30 @@ class IdentitiesView extends BaseView {
 
   renderHTML() {
     return `
-<div class="identities-page" id="identitiesPage">
-  <div class="identities-header">
-    <h1 class="identities-title">Identities</h1>
-    <div class="identities-header-actions">
-      <button type="button" class="identities-add-btn" id="identitiesAddProductBtn" aria-label="Agregar producto">
+<div class="products-list-page" id="productsListPage">
+  <div class="products-list-header">
+    <h1 class="products-list-title">Productos</h1>
+    <div class="products-list-header-actions">
+      <button type="button" class="products-list-add-btn" id="productsListAddBtn" aria-label="Agregar producto">
         <span>+ Producto</span>
-      </button>
-      <button type="button" class="identities-add-btn" id="identitiesAddServiceBtn" aria-label="Agregar servicio">
-        <span>+ Servicio</span>
       </button>
     </div>
   </div>
 
-  <section class="identities-section" id="identitiesServicesSection" style="display:none;">
-    <div class="identities-section-head">
-      <div class="identities-section-head-main">
-        <h2 class="identities-section-title">Servicios</h2>
-        <span class="identities-section-count" id="servicesCount">0</span>
+  <section class="products-list-section" id="productsListSection" style="display:none;">
+    <div class="products-list-section-head">
+      <div class="products-list-section-head-main">
+        <h2 class="products-list-section-title">Catálogo</h2>
+        <span class="products-list-section-count" id="productsListCount">0</span>
       </div>
     </div>
-    <div class="identities-services-carousel-wrap">
-      <div class="identities-services-carousel" id="identitiesServicesCarousel"></div>
-    </div>
+    <div class="products-list-masonry" id="productsListMasonry"></div>
   </section>
 
-  <section class="identities-section" id="identitiesProductsSection" style="display:none;">
-    <div class="identities-section-head">
-      <div class="identities-section-head-main">
-        <h2 class="identities-section-title">Productos</h2>
-        <span class="identities-section-count" id="productsCount">0</span>
-      </div>
-    </div>
-    <div class="identities-products-masonry" id="identitiesProductsMasonry"></div>
-  </section>
+  <div class="products-list-empty" id="productsListEmpty" style="display:none;">
+    <i class="fas fa-box-open" aria-hidden="true"></i>
+    <p>Aún no hay productos. Crea el primero con + Producto.</p>
+  </div>
 </div>`;
   }
 
@@ -79,7 +67,6 @@ class IdentitiesView extends BaseView {
     await super.render();
     await this._initSupabase();
     await this._loadData();
-    this._renderServices();
     this._renderProductsMasonry();
     this._setupEventListeners();
   }
@@ -94,13 +81,12 @@ class IdentitiesView extends BaseView {
         if (user) this.userId = user.id;
       }
     } catch (e) {
-      console.error('IdentitiesView _initSupabase:', e);
+      console.error('ProductsListView _initSupabase:', e);
     }
   }
 
   async _loadData() {
     if (!this.supabase || !this.organizationId) {
-      this.services = [];
       this.products = [];
       this.productImageById = {};
       return;
@@ -108,44 +94,32 @@ class IdentitiesView extends BaseView {
 
     const orgId = this.organizationId;
     try {
-      const fetcher = () => this._fetchIdentitiesData(orgId);
+      const fetcher = () => this._fetchProductsData(orgId);
       const result = window.apiClient
-        ? await window.apiClient.query(`identities:${orgId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query(`products-list:${orgId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
 
-      this.services = result.services;
       this.products = result.products;
       this.productImageById = result.productImageById;
       this._fallbackEntityId = result.fallbackEntityId;
     } catch (e) {
-      console.error('IdentitiesView _loadData:', e);
-      if (window.errorLogger) window.errorLogger.capture(e, { source: 'IdentitiesView._loadData' });
-      this.services = [];
+      console.error('ProductsListView _loadData:', e);
+      if (window.errorLogger) window.errorLogger.capture(e, { source: 'ProductsListView._loadData' });
       this.products = [];
       this.productImageById = {};
       this._fallbackEntityId = null;
     }
   }
 
-  async _fetchIdentitiesData(orgId) {
-    const [servicesRes, productsRes] = await Promise.all([
-      this.supabase
-        .from('services')
-        .select('id, entity_id, nombre_servicio, descripcion_servicio, duracion_estimada, precio_base, moneda, beneficios_principales')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: false }),
-      this.supabase
-        .from('products')
-        .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
-        .eq('organization_id', orgId)
-        .order('created_at', { ascending: false })
-    ]);
+  async _fetchProductsData(orgId) {
+    const { data: productsData, error: productsError } = await this.supabase
+      .from('products')
+      .select('id, entity_id, nombre_producto, descripcion_producto, tipo_producto, precio_producto, moneda')
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: false });
+    if (productsError) throw productsError;
 
-    if (servicesRes.error) throw servicesRes.error;
-    if (productsRes.error) throw productsRes.error;
-
-    const services = servicesRes.data || [];
-    const products = productsRes.data || [];
+    const products = productsData || [];
 
     const productIds = products.map((p) => p.id);
     const productImageById = {};
@@ -176,19 +150,15 @@ class IdentitiesView extends BaseView {
       fallbackEntityId = ents?.[0]?.id || null;
     }
 
-    return { services, products, productImageById, fallbackEntityId };
+    return { products, productImageById, fallbackEntityId };
   }
 
-  /** Invalida cache cuando se crea/borra un servicio/producto desde esta vista. */
   _invalidateCache() {
     if (window.apiClient && this.organizationId) {
-      window.apiClient.invalidate(`identities:${this.organizationId}`);
+      window.apiClient.invalidate(`products-list:${this.organizationId}`);
     }
   }
 
-  /**
-   * Primera brand_entity de la organizacion, o una por defecto si no existe (FK servicios/productos).
-   */
   async _ensureEntityId() {
     if (!this.supabase || !this.organizationId) return null;
     const { data: rows, error } = await this.supabase
@@ -198,7 +168,7 @@ class IdentitiesView extends BaseView {
       .order('created_at', { ascending: true })
       .limit(1);
     if (error) {
-      console.error('IdentitiesView _ensureEntityId:', error);
+      console.error('ProductsListView _ensureEntityId:', error);
       return null;
     }
     if (rows?.length) return rows[0].id;
@@ -214,7 +184,7 @@ class IdentitiesView extends BaseView {
       .select('id')
       .single();
     if (insErr) {
-      console.error('IdentitiesView _ensureEntityId insert:', insErr);
+      console.error('ProductsListView _ensureEntityId insert:', insErr);
       return null;
     }
     return created?.id || null;
@@ -235,37 +205,9 @@ class IdentitiesView extends BaseView {
     window.router.navigate(url, true);
   }
 
-  async _onAddService() {
-    if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('identitiesAddServiceBtn');
-    if (btn) btn.disabled = true;
-    try {
-      const entityId = await this._ensureEntityId();
-      if (!entityId) {
-        alert('No se pudo obtener una identidad para vincular el servicio.');
-        return;
-      }
-      const { error } = await this.supabase.from('services').insert({
-        organization_id: this.organizationId,
-        entity_id: entityId,
-        nombre_servicio: 'Nuevo servicio',
-        descripcion_servicio: null,
-      });
-      if (error) throw error;
-      this._invalidateCache();
-      await this._loadData();
-      this._renderServices();
-    } catch (e) {
-      console.error('IdentitiesView _onAddService:', e);
-      alert(e?.message || 'Error al crear el servicio');
-    } finally {
-      if (btn) btn.disabled = false;
-    }
-  }
-
   async _onAddProduct() {
     if (!this.supabase || !this.organizationId) return;
-    const btn = document.getElementById('identitiesAddProductBtn');
+    const btn = document.getElementById('productsListAddBtn');
     if (btn) btn.disabled = true;
     try {
       const entityId = await this._ensureEntityId();
@@ -290,46 +232,13 @@ class IdentitiesView extends BaseView {
       this._invalidateCache();
       this._navigateToProductDetail(entityId, data.id);
     } catch (e) {
-      console.error('IdentitiesView _onAddProduct:', e);
+      console.error('ProductsListView _onAddProduct:', e);
       alert(e?.message || 'Error al crear el producto');
     } finally {
       if (btn) btn.disabled = false;
     }
   }
 
-  _renderServices() {
-    const section = document.getElementById('identitiesServicesSection');
-    const carousel = document.getElementById('identitiesServicesCarousel');
-    const count = document.getElementById('servicesCount');
-    if (!carousel) return;
-
-    if (count) count.textContent = String(this.services.length || 0);
-
-    if (!this.services.length) {
-      carousel.innerHTML = '';
-      if (section) section.style.display = 'none';
-      return;
-    }
-    if (section) section.style.display = '';
-
-    carousel.innerHTML = this.services.map((s) => {
-      const price = s.precio_base != null ? `${s.precio_base} ${s.moneda || 'USD'}` : '';
-      const tags = (s.beneficios_principales || []).slice(0, 3);
-      return `
-        <article class="identities-service-card">
-          <h3 class="identities-service-title">${this.escapeHtml(s.nombre_servicio || 'Servicio')}</h3>
-          ${s.descripcion_servicio ? `<p class="identities-service-desc">${this.escapeHtml(s.descripcion_servicio)}</p>` : ''}
-          <div class="identities-service-meta">
-            ${price ? `<span class="identities-service-price">${this.escapeHtml(price)}</span>` : ''}
-            ${s.duracion_estimada ? `<span class="identities-service-duration"><i class="fas fa-clock"></i> ${this.escapeHtml(s.duracion_estimada)}</span>` : ''}
-          </div>
-          ${tags.length ? `<div class="identities-service-tags">${tags.map((t) => `<span class="service-tag">${this.escapeHtml(t)}</span>`).join('')}</div>` : ''}
-        </article>
-      `;
-    }).join('');
-  }
-
-  /** Debe coincidir con columnas en identities.css (máx. 3 para tarjetas más grandes). */
   _getMasonryColumns() {
     const w = window.innerWidth || 1200;
     if (w >= 992) return 3;
@@ -338,9 +247,10 @@ class IdentitiesView extends BaseView {
   }
 
   _renderProductsMasonry() {
-    const section = document.getElementById('identitiesProductsSection');
-    const container = document.getElementById('identitiesProductsMasonry');
-    const count = document.getElementById('productsCount');
+    const section = document.getElementById('productsListSection');
+    const empty = document.getElementById('productsListEmpty');
+    const container = document.getElementById('productsListMasonry');
+    const count = document.getElementById('productsListCount');
     if (!container) return;
 
     if (count) count.textContent = String(this.products.length || 0);
@@ -348,9 +258,11 @@ class IdentitiesView extends BaseView {
     if (!this.products.length) {
       container.innerHTML = '';
       if (section) section.style.display = 'none';
+      if (empty) empty.style.display = '';
       return;
     }
     if (section) section.style.display = '';
+    if (empty) empty.style.display = 'none';
 
     const colsCount = this._getMasonryColumns();
     const cols = Array.from({ length: colsCount }, () => []);
@@ -359,12 +271,12 @@ class IdentitiesView extends BaseView {
     });
 
     container.innerHTML = `
-      <div class="identities-masonry-grid">
-        ${cols.map((col) => `<div class="identities-masonry-column">${col.join('')}</div>`).join('')}
+      <div class="products-list-masonry-grid">
+        ${cols.map((col) => `<div class="products-list-masonry-column">${col.join('')}</div>`).join('')}
       </div>
     `;
 
-    container.querySelectorAll('.identity-product-card').forEach((card) => {
+    container.querySelectorAll('.product-list-card').forEach((card) => {
       const open = () => {
         const productId = card.getAttribute('data-product-id');
         const entityId = card.getAttribute('data-entity-id');
@@ -388,10 +300,10 @@ class IdentitiesView extends BaseView {
     const safeName = this.escapeHtml(name);
     return `
       <div class="living-masonry-item">
-        <article class="history-image-card identity-product-card" data-product-id="${p.id}" data-entity-id="${entityId}" role="button" tabindex="0" aria-label="${safeName}">
+        <article class="history-image-card product-list-card" data-product-id="${p.id}" data-entity-id="${entityId}" role="button" tabindex="0" aria-label="${safeName}">
           ${imageUrl
-            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('identity-product-card-broken'); this.outerHTML='<div class=&quot;identity-product-card-placeholder&quot;><i class=&quot;fas fa-image&quot; aria-hidden=&quot;true&quot;></i></div>';">`
-            : `<div class="identity-product-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
+            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('product-list-card-broken'); this.outerHTML='<div class=&quot;product-list-card-placeholder&quot;><i class=&quot;fas fa-image&quot; aria-hidden=&quot;true&quot;></i></div>';">`
+            : `<div class="product-list-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
           }
           <div class="history-card-flow-name">${safeName}</div>
         </article>
@@ -404,10 +316,8 @@ class IdentitiesView extends BaseView {
       this._onResizeBound = () => this._renderProductsMasonry();
       window.addEventListener('resize', this._onResizeBound);
     }
-    const addServiceBtn = document.getElementById('identitiesAddServiceBtn');
-    const addProductBtn = document.getElementById('identitiesAddProductBtn');
-    if (addServiceBtn) addServiceBtn.onclick = () => this._onAddService();
-    if (addProductBtn) addProductBtn.onclick = () => this._onAddProduct();
+    const addBtn = document.getElementById('productsListAddBtn');
+    if (addBtn) addBtn.onclick = () => this._onAddProduct();
   }
 
   async onLeave() {
@@ -425,4 +335,4 @@ class IdentitiesView extends BaseView {
   }
 }
 
-window.IdentitiesView = IdentitiesView;
+window.ProductsListView = ProductsListView;

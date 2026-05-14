@@ -281,12 +281,35 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:entityId/:productId', productsLoader, auth);
     r.register('/product-detail/:entityId/:productId', productsLoader, auth);
 
-    // ── Org: Identities (unifica brand_entities, productos y servicios) ──
-    const identitiesLoader = this._lazy('IdentitiesView', ['/js/views/IdentitiesView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/identities', identitiesLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/identities/:entityId', identitiesLoader, auth);
-    r.register('/identities', identitiesLoader, auth);
-    r.register('/identities/:entityId', identitiesLoader, auth);
+    // ── Org: Productos (listado masonry) ──
+    const productsListLoader = this._lazy('ProductsListView', ['/js/views/ProductsListView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/products', productsListLoader, auth);
+    r.register('/products', productsListLoader, auth);
+
+    // ── Org: Servicios (grid de cards) ──
+    const servicesLoader = this._lazy('ServicesView', ['/js/views/ServicesView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/services', servicesLoader, auth);
+    r.register('/services', servicesLoader, auth);
+
+    // ── Legacy: /identities → /products (bookmarks viejos) ──
+    const redirectIdentitiesToProducts = class extends (window.BaseView || class {}) {
+      async onEnter() {
+        if (!window.router) return;
+        const p = this.routeParams || {};
+        const target = (p.orgIdShort && p.orgNameSlug)
+          ? `/org/${p.orgIdShort}/${p.orgNameSlug}/products`
+          : '/products';
+        window.router.navigate(target, true);
+      }
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+      }
+    };
+    r.register('/org/:orgIdShort/:orgNameSlug/identities', redirectIdentitiesToProducts, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/identities/:entityId', redirectIdentitiesToProducts, auth);
+    r.register('/identities', redirectIdentitiesToProducts, auth);
+    r.register('/identities/:entityId', redirectIdentitiesToProducts, auth);
 
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);

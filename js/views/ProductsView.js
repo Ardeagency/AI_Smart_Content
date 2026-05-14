@@ -166,8 +166,8 @@ class ProductsView extends BaseView {
           <div class="product-view-error">
             <h2>Producto no encontrado</h2>
             <p>El producto solicitado no existe o no tienes acceso.</p>
-            <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/identities') : (orgId ? `/org/${orgId}/identities` : '/identities')}" class="product-view-back" data-router-link>
-              <i class="fas fa-arrow-left"></i> Volver a Identities
+            <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products') : (orgId ? `/org/${orgId}/products` : '/products')}" class="product-view-back" data-router-link>
+              <i class="fas fa-arrow-left"></i> Volver a Productos
             </a>
           </div>
         `;
@@ -184,8 +184,8 @@ class ProductsView extends BaseView {
       this.productVariants = variants;
 
       const backUrl = orgId && typeof window.getOrgPathPrefix === 'function'
-        ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/identities')
-        : (orgId ? `/org/${orgId}/identities` : '/identities');
+        ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products')
+        : (orgId ? `/org/${orgId}/products` : '/products');
       const html = this.getProductDetailHTML(product, images, brandName || 'Marca', backUrl, variants);
       this.container.innerHTML = html;
       this.updateLinksForRouter();

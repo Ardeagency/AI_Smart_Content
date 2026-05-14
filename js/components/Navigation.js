@@ -41,11 +41,19 @@ const SIDEBAR_USER_CONFIG = {
     },
     {
       type: 'page',
-      id: 'identities',
-      label: 'Identities',
-      icon: 'fa-id-card',
+      id: 'products',
+      label: 'Productos',
+      icon: 'fa-box',
       iconSrc: '/recursos/icons/Identities.svg',
-      route: 'identities',
+      route: 'products',
+      requireCap: 'brand.identity.edit'
+    },
+    {
+      type: 'page',
+      id: 'services',
+      label: 'Servicios',
+      icon: 'fa-briefcase',
+      route: 'services',
       requireCap: 'brand.identity.edit'
     },
     {
@@ -306,7 +314,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/products', '/services', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -681,14 +689,13 @@ class Navigation {
     switch (s.type) {
       // ── Productos (entity_id + product_id) ──
       case 'product':
-        if (entity && id) path = `/identities/product-detail/${entity}/${id}`;
-        else if (id)      path = `/identities`; // sin entity no hay detalle, llevamos a la lista
-        else              path = '/identities';
+        if (entity && id) path = `/product-detail/${entity}/${id}`;
+        else              path = '/products';
         break;
 
-      // ── Identities ──
-      case 'identity':
-        path = id ? `/identities/${id}` : '/identities';
+      // ── Servicios ──
+      case 'service':
+        path = '/services';
         break;
 
       // ── Producciones (runs y outputs) ──
@@ -2233,8 +2240,9 @@ class Navigation {
       '/brandstorage': 'BRAND STORAGE',
       '/command-center': 'COMMAND CENTER',
       '/brands': 'IDENTITY',
-      '/product-detail': 'IDENTITY',
-      '/identities': 'IDENTITY',
+      '/product-detail': 'PRODUCTO',
+      '/products': 'PRODUCTOS',
+      '/services': 'SERVICIOS',
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',

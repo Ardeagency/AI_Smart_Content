@@ -365,7 +365,7 @@ class BrandstorageView extends BaseView {
 
       const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
 
-      // brand_entities: IdentitiesView usa organization_id; filtrar por sub-marca en cliente si existe brand_container_id.
+      // brand_entities: la lista de Productos usa organization_id; filtrar por sub-marca en cliente si existe brand_container_id.
       const [entitiesResult, integrationsResult] = await Promise.allSettled([
         this.supabase
           .from('brand_entities')

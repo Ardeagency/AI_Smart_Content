@@ -1398,7 +1398,7 @@ class LivingManager {
                         console.log('📋 Redirigiendo a producción:', { productionId, runId });
                         // Navegación a vista de producción
                         if (window.router) {
-                            window.router.navigate('/identities');
+                            window.router.navigate('/products');
                         }
                     }
                 }
