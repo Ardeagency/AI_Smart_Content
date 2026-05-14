@@ -88,14 +88,14 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — heredan background/border/radius de la clase oficial .glass-black
-   (bundle.css). Override LOCAL de --glass-blur porque el default 7px se "aplana"
-   sobre el PLANS gigante (mismo motivo del override de #userDropdown:18px).
-   Aquí 40px porque las letras detrás miden ~400px y necesitan blur proporcional. */
+/* Cards — heredan border/radius de la clase oficial .glass-black (bundle.css).
+   Override local: bg al 80% + blur 70px (override de --glass-black-bg y
+   --glass-blur para que la clase .glass-black resuelva con estos valores). */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
-    --glass-blur: blur(40px) saturate(180%);
+    --glass-black-bg: rgba(0, 0, 0, 0.8);
+    --glass-blur: blur(70px) saturate(180%);
     position: relative;
     overflow: hidden;
     padding: 1.75rem 1.25rem;
