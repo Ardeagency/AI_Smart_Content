@@ -172,13 +172,18 @@ class MonitoringView extends BaseView {
   /* ══════════════════════════════════════════════════════════
      TAB: PERFILES (intelligence_entities) — Kanban
      Columnas: Nuevos / Activos / Sin actividad / Pausados
+     - owned_media (analytics propios) se excluye del kanban
+     - "Nuevos" = sugeridos por auto-provisioner y NO activados aún
      Cross-cut: chip "Destacado" cuando metadata.highlighted = true
   ══════════════════════════════════════════════════════════ */
   _classifyEntity(e) {
-    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-    const createdAt = e.created_at ? new Date(e.created_at).getTime() : 0;
-    const isRecent = createdAt && (Date.now() - createdAt) <= SEVEN_DAYS_MS;
-    if (e.metadata?.auto_provisioned === true && isRecent) return 'new';
+    // Excluir analytics propios — el usuario ya sabe que monitorea su contenido
+    if (e.metadata?.tipo === 'owned_media') return null;
+
+    const isAutoSuggested = e.metadata?.auto_provisioned === true;
+    // Sugerencia pendiente: auto-detectada y aún sin activar por el user
+    if (isAutoSuggested && e.is_active === false) return 'new';
+
     if (e.is_active === false) return 'paused';
     if ((e.metadata?.consecutive_empty_runs || 0) >= 3) return 'stale';
     return 'active';
@@ -212,7 +217,9 @@ class MonitoringView extends BaseView {
   }
 
   _renderProfiles(body) {
-    const entities   = this._data.entities.data || [];
+    // Excluir owned_media también del conteo total — no es contenido a monitorear
+    const entities   = (this._data.entities.data || [])
+      .filter(e => e.metadata?.tipo !== 'owned_media');
     const containers = this._data.containers.data || [];
     const tipoLabel = (t) =>
       MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || (t || '—');
@@ -220,15 +227,16 @@ class MonitoringView extends BaseView {
       containers.find(c => c.id === id)?.nombre_marca || null;
 
     const columns = [
-      { id: 'new',    label: 'Nuevos encontrados', hint: 'Detectados los últimos 7 días',         tone: 'new'    },
-      { id: 'active', label: 'Activos',            hint: 'En marcha y con actividad',             tone: 'active' },
-      { id: 'stale',  label: 'Sin actividad',      hint: 'Activos pero sin señales recientes',    tone: 'stale'  },
-      { id: 'paused', label: 'Pausados',           hint: 'Desactivados manualmente o por el sistema', tone: 'paused' },
+      { id: 'new',    label: 'Nuevos encontrados', hint: 'Sugeridos por el sistema · pendientes de activar', tone: 'new'    },
+      { id: 'active', label: 'Activos',            hint: 'En marcha y con actividad',                         tone: 'active' },
+      { id: 'stale',  label: 'Sin actividad',      hint: 'Activos pero sin señales recientes',                tone: 'stale'  },
+      { id: 'paused', label: 'Pausados',           hint: 'Desactivados manualmente o por el sistema',         tone: 'paused' },
     ];
 
     const buckets = { new: [], active: [], stale: [], paused: [] };
     entities.forEach(e => {
       const col = this._classifyEntity(e);
+      if (!col) return; // owned_media: excluido del kanban
       buckets[col].push(e);
     });
 
