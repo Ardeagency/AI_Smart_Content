@@ -2204,6 +2204,7 @@
 
 /* ── Brand Health Gauge (hero) ───────────────────────────── */
 .mb-health-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: 12px;
@@ -2216,11 +2217,52 @@
   padding: 3rem 1rem;
 }
 
+/* Toggle TR: muestra/oculta el panel de diagnóstico */
+.mb-health-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-divider);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  z-index: 2;
+  font-family: inherit;
+}
+.mb-health-toggle:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+}
+.mb-health-toggle-icon {
+  width: 14px; height: 14px;
+  transition: transform 0.2s ease;
+}
+.mb-health-card.is-expanded .mb-health-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Grid: 1 col centrado cuando colapsado, 2 cols cuando expandido */
 .mb-health-grid {
   display: grid;
   grid-template-columns: minmax(260px, 320px) 1fr;
   gap: 2rem;
   align-items: start;
+}
+.mb-health-card.is-collapsed .mb-health-grid {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+.mb-health-card.is-collapsed .mb-health-diagnosis {
+  display: none;
 }
 
 .mb-health-gauge {

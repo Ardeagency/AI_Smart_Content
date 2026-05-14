@@ -108,6 +108,8 @@
 
     /* ════════════════════════════════════════════════════════════════
        HERO: Brand Health Gauge
+       Estado: gauge siempre visible, diagnóstico colapsable con toggle TR.
+       Preferencia guardada en localStorage por org.
        ════════════════════════════════════════════════════════════════ */
     _buildHealthGauge(h) {
       if (!h || h.score == null) return this._buildHealthEmpty();
@@ -125,9 +127,24 @@
       }[verdict] || { color: '#7c7c7c', label: verdict, icon: '—' };
 
       const gaugeSvg = this._buildGaugeSvg(score, verdictMeta.color, band);
+      const expanded = this._isHealthExpanded();
+      const gapsCount = gaps.length;
 
       return `
-        <section class="mb-health-card">
+        <section class="mb-health-card ${expanded ? 'is-expanded' : 'is-collapsed'}" data-health-card>
+          <button type="button"
+                  class="mb-health-toggle"
+                  data-health-toggle
+                  aria-label="${expanded ? 'Ocultar diagnóstico' : 'Ver diagnóstico'}"
+                  title="${expanded ? 'Ocultar diagnóstico' : 'Ver diagnóstico'}">
+            <span class="mb-health-toggle-label">
+              ${expanded ? 'Ocultar análisis' : `Ver análisis${gapsCount ? ' · ' + gapsCount + ' gap' + (gapsCount === 1 ? '' : 's') : ''}`}
+            </span>
+            <svg class="mb-health-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
           <div class="mb-health-grid">
             <!-- Gauge column -->
             <div class="mb-health-gauge">
@@ -142,8 +159,8 @@
               <div class="mb-health-band-method">${this._esc(band.method || '')}</div>
             </div>
 
-            <!-- Diagnóstico column -->
-            <div class="mb-health-diagnosis">
+            <!-- Diagnóstico column (colapsable) -->
+            <div class="mb-health-diagnosis" data-health-diagnosis aria-hidden="${!expanded}">
               <p class="mb-health-narrative">${this._esc(h.description || '')}</p>
 
               ${gaps.length > 0 ? `
@@ -159,6 +176,23 @@
             </div>
           </div>
         </section>`;
+    },
+
+    _healthExpandedKey() {
+      return `mb:health-expanded:${this._orgId || 'global'}`;
+    },
+
+    _isHealthExpanded() {
+      try {
+        return localStorage.getItem(this._healthExpandedKey()) === '1';
+      } catch (_) { return false; }
+    },
+
+    _setHealthExpanded(value) {
+      try {
+        if (value) localStorage.setItem(this._healthExpandedKey(), '1');
+        else       localStorage.removeItem(this._healthExpandedKey());
+      } catch (_) { /* ignore */ }
     },
 
     /** SVG gauge semicircular con dot al final del arco. */
@@ -438,8 +472,36 @@
       return m[p] || p || '—';
     },
 
-    _bindMyBrandsHandlers(/* body */) {
-      // placeholder — drill-down handlers
+    _bindMyBrandsHandlers(body) {
+      if (!body) return;
+
+      // Toggle del diagnóstico del Brand Health gauge
+      body.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-health-toggle]');
+        if (!btn) return;
+
+        const card = btn.closest('[data-health-card]');
+        if (!card) return;
+
+        const expanded = card.classList.contains('is-expanded');
+        card.classList.toggle('is-expanded', !expanded);
+        card.classList.toggle('is-collapsed', expanded);
+
+        // Actualizar texto + aria + icono rotación los maneja CSS
+        const labelEl = btn.querySelector('.mb-health-toggle-label');
+        if (labelEl) {
+          const gapsBadge = labelEl.textContent.match(/\d+ gap/);
+          labelEl.textContent = expanded
+            ? `Ver análisis${gapsBadge ? ' · ' + gapsBadge[0] + 's' : ''}`
+            : 'Ocultar análisis';
+        }
+        const diag = card.querySelector('[data-health-diagnosis]');
+        if (diag) diag.setAttribute('aria-hidden', expanded ? 'true' : 'false');
+        btn.setAttribute('aria-label', expanded ? 'Ver diagnóstico' : 'Ocultar diagnóstico');
+        btn.setAttribute('title', expanded ? 'Ver diagnóstico' : 'Ocultar diagnóstico');
+
+        this._setHealthExpanded(!expanded);
+      });
     },
   });
 })();
