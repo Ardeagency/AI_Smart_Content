@@ -1,33 +1,20 @@
 /**
  * MonitoringView — Centro de Monitoreo de la organización.
  *
- * Tres tabs CRUD:
+ * Dos tabs CRUD:
  *   - Perfiles      → intelligence_entities (competidores / referencias / owned)
- *   - Sensores      → monitoring_triggers   (cadencia, prioridad, estado)
  *   - URL Watchers  → url_watchers          (URLs vigiladas por hash)
  *
+ * (Sensores quedó fuera del front por ahora: la tabla monitoring_triggers
+ *  sigue activa en Supabase, pero su UI se reescribirá cuando tengamos un
+ *  flujo entendible para el usuario final.)
+ *
  * Permisos: cualquier miembro de la organización puede crear / editar / borrar
- * (RLS = is_developer() OR is_org_member(organization_id) en las 3 tablas).
+ * (RLS = is_developer() OR is_org_member(organization_id) en las tablas).
  */
 class MonitoringView extends BaseView {
 
   static cacheable = true;
-
-  static SENSOR_TYPES = [
-    { value: 'meta_posts',                    label: 'Meta · Posts (feed)' },
-    { value: 'meta_page_insights',            label: 'Meta · Page Insights' },
-    { value: 'meta_ad_library_sync',          label: 'Meta · Ad Library' },
-    { value: 'meta_ads_audiences_sync',       label: 'Meta · Audiences' },
-    { value: 'meta_audience_demographics',    label: 'Meta · Demographics' },
-    { value: 'ga4_analytics',                 label: 'GA4 · Analytics' },
-    { value: 'ga4_audience_demographics',     label: 'GA4 · Demographics' },
-    { value: 'social',                        label: 'Social · Genérico' },
-    { value: 'brand_indexer',                 label: 'Brand · Indexer' },
-    { value: 'brand_audience_heatmap_compute', label: 'Brand · Heatmap compute' },
-    { value: 'audience_alignment_analysis',   label: 'Audience · Alignment' },
-    { value: 'threat_detection',              label: 'Threat · Detection' },
-    { value: 'mission_generation',            label: 'OpenClaw · Missions' },
-  ];
 
   static ENTITY_TIPOS = [
     { value: 'competidor_directo',   label: 'Competidor directo' },
@@ -128,7 +115,6 @@ class MonitoringView extends BaseView {
   _buildShell() {
     const tabs = [
       { id: 'profiles', label: 'Perfiles' },
-      { id: 'sensors',  label: 'Sensores' },
       { id: 'watchers', label: 'URL Watchers' },
     ];
     const pill = (t) => `
@@ -170,7 +156,6 @@ class MonitoringView extends BaseView {
       return;
     }
     if (tabId === 'profiles') return this._renderProfiles(body);
-    if (tabId === 'sensors')  return this._renderSensors(body);
     if (tabId === 'watchers') return this._renderWatchers(body);
   }
 
@@ -359,62 +344,7 @@ class MonitoringView extends BaseView {
   }
 
   /* ══════════════════════════════════════════════════════════
-     TAB: SENSORES (placeholder — CRUD viene en próximo commit)
-  ══════════════════════════════════════════════════════════ */
-  _renderSensors(body) {
-    const triggers   = this._data.triggers.data || [];
-    const entities   = this._data.entities.data || [];
-    const containers = this._data.containers.data || [];
-    const sensorLabel = (s) =>
-      MonitoringView.SENSOR_TYPES.find(x => x.value === s)?.label || s;
-    const entityName    = (id) => entities.find(e => e.id === id)?.name || '—';
-    const containerName = (id) => containers.find(c => c.id === id)?.nombre_marca || '—';
-    const fmtDate = (iso) => iso ? new Date(iso).toLocaleString('es-CO',
-      { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-
-    const rows = triggers.map(t => {
-      const stTone = t.status === 'active'
-        ? (t.last_run_status === 'failed' ? 'warn' : 'ok')
-        : 'muted';
-      return `
-        <tr>
-          <td>
-            <div class="mn-cell-strong">${this._esc(sensorLabel(t.sensor_type))}</div>
-            <div class="mn-cell-sub">${this._esc(t.sensor_type)}</div>
-          </td>
-          <td>${this._esc(entityName(t.entity_id))}</td>
-          <td>${this._esc(containerName(t.brand_container_id))}</td>
-          <td>${this._esc(t.cadence)}${t.cadence_value ? ` · ${this._esc(t.cadence_value)}` : ''}</td>
-          <td>${t.priority ?? '—'}</td>
-          <td>
-            <span class="mn-pill mn-pill--${stTone}">${this._esc(t.status)}</span>
-            ${t.last_run_status ? `<span class="mn-cell-sub">last: ${this._esc(t.last_run_status)}</span>` : ''}
-          </td>
-          <td>${this._esc(fmtDate(t.next_run_at))}</td>
-        </tr>`;
-    }).join('');
-
-    body.innerHTML = `
-      <div class="mn-page">
-        <div class="mn-toolbar">
-          <h2 class="mn-section-title">Sensores activos <span class="mn-count">${triggers.length}</span></h2>
-          <span class="mn-toolbar-note">CRUD entrará en próxima iteración</span>
-        </div>
-        ${triggers.length ? `
-          <table class="mn-table">
-            <thead>
-              <tr>
-                <th>Sensor</th><th>Entidad</th><th>Marca</th><th>Cadencia</th><th>Prio</th><th>Estado</th><th>Próx. ejecución</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>` : `
-          <div class="mn-empty"><p>No hay sensores configurados.</p></div>`}
-      </div>`;
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     TAB: URL WATCHERS (placeholder — CRUD viene en próximo commit)
+     TAB: URL WATCHERS (CRUD)
   ══════════════════════════════════════════════════════════ */
   _renderWatchers(body) {
     const watchers = this._data.watchers.data || [];
@@ -422,28 +352,126 @@ class MonitoringView extends BaseView {
       { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
     const rows = watchers.map(w => `
-      <tr>
+      <tr data-row-id="${this._esc(w.id)}">
         <td>
           <div class="mn-cell-strong">${this._esc(w.label || w.url)}</div>
           <div class="mn-cell-sub"><a href="${this._esc(w.url)}" target="_blank" rel="noopener">${this._esc(w.url)}</a></div>
         </td>
-        <td>${w.is_active ? 'sí' : 'no'}</td>
         <td>${this._esc(fmtDate(w.last_checked_at))}</td>
+        <td>
+          <label class="mn-toggle">
+            <input type="checkbox" ${w.is_active ? 'checked' : ''} data-action="toggle-watcher" data-id="${this._esc(w.id)}">
+            <span class="mn-toggle-track"></span>
+          </label>
+        </td>
+        <td class="mn-actions">
+          <button class="mn-btn-icon" data-action="edit-watcher" data-id="${this._esc(w.id)}" title="Editar"><i class="fas fa-pen"></i></button>
+          <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-watcher" data-id="${this._esc(w.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
+        </td>
       </tr>`).join('');
 
     body.innerHTML = `
       <div class="mn-page">
         <div class="mn-toolbar">
           <h2 class="mn-section-title">URLs vigiladas <span class="mn-count">${watchers.length}</span></h2>
-          <span class="mn-toolbar-note">CRUD entrará en próxima iteración</span>
+          <button class="mn-btn-primary" data-action="new-watcher">
+            <i class="fas fa-plus"></i> Nueva URL
+          </button>
         </div>
         ${watchers.length ? `
           <table class="mn-table">
-            <thead><tr><th>URL</th><th>Activa</th><th>Última revisión</th></tr></thead>
+            <thead><tr><th>URL</th><th>Última revisión</th><th>Activa</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>` : `
-          <div class="mn-empty"><p>No hay URLs vigiladas. Agrega una para detectar cambios automáticamente.</p></div>`}
+          <div class="mn-empty">
+            <p>Aún no hay URLs vigiladas. Agrega la primera para detectar cambios automáticamente.</p>
+          </div>`}
       </div>`;
+
+    body.addEventListener('click',  this._onWatchersClick.bind(this));
+    body.addEventListener('change', this._onWatchersChange.bind(this));
+  }
+
+  async _onWatchersClick(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id     = btn.dataset.id;
+    if (action === 'new-watcher')    return this._openWatcherModal(null);
+    if (action === 'edit-watcher')   return this._openWatcherModal(id);
+    if (action === 'delete-watcher') return this._confirmDeleteWatcher(id);
+  }
+
+  async _onWatchersChange(e) {
+    const input = e.target.closest('[data-action="toggle-watcher"]');
+    if (!input) return;
+    const id = input.dataset.id;
+    const { error } = await this._service.updateWatcher(id, { is_active: input.checked });
+    if (error) { alert('Error: ' + error.message); input.checked = !input.checked; }
+    else await this._refresh();
+  }
+
+  _openWatcherModal(id) {
+    const isEdit = !!id;
+    const w = isEdit ? (this._data.watchers.data || []).find(x => x.id === id) : {};
+
+    const html = `
+      <div class="mn-modal-overlay" id="mnModal">
+        <div class="mn-modal">
+          <header class="mn-modal-head">
+            <h3>${isEdit ? 'Editar URL vigilada' : 'Nueva URL vigilada'}</h3>
+            <button class="mn-modal-close" data-action="close-modal"><i class="fas fa-times"></i></button>
+          </header>
+          <form class="mn-form" id="mnWatcherForm">
+            <label>URL
+              <input name="url" type="url" required value="${this._esc(w.url || '')}" placeholder="https://ejemplo.com/pagina-a-vigilar">
+              <small>Detectamos cambios comparando el hash del contenido en cada revisión.</small>
+            </label>
+            <label>Etiqueta (opcional)
+              <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Página de pricing de Competidor X">
+            </label>
+            <label class="mn-checkbox">
+              <input type="checkbox" name="is_active" ${w.is_active === false ? '' : 'checked'}>
+              Activa
+            </label>
+            <footer class="mn-modal-foot">
+              <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
+              <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear watcher'}</button>
+            </footer>
+          </form>
+        </div>
+      </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    const modal = document.getElementById('mnModal');
+    modal.addEventListener('click', ev => {
+      if (ev.target === modal || ev.target.closest('[data-action="close-modal"]')) modal.remove();
+    });
+    modal.querySelector('#mnWatcherForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target);
+      const payload = {
+        url:       fd.get('url')?.trim(),
+        label:     fd.get('label')?.trim() || null,
+        is_active: fd.get('is_active') === 'on',
+      };
+      if (!payload.url) { alert('La URL es obligatoria.'); return; }
+      const { error } = isEdit
+        ? await this._service.updateWatcher(id, payload)
+        : await this._service.createWatcher(payload);
+      if (error) { alert('Error: ' + error.message); return; }
+      modal.remove();
+      await this._refresh();
+    });
+  }
+
+  async _confirmDeleteWatcher(id) {
+    const w = (this._data.watchers.data || []).find(x => x.id === id);
+    if (!w) return;
+    if (!confirm(`¿Eliminar "${w.label || w.url}"?\nEsta acción no se puede deshacer.`)) return;
+    const { error } = await this._service.deleteWatcher(id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await this._refresh();
   }
 
   /* ── helpers ───────────────────────────────────────────── */
