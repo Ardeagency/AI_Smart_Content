@@ -2378,3 +2378,9 @@
 @media (max-width: 900px) {
   .mb-health-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Mi Marca filtros bar (estilo Production en línea, no movido al header) ── */
+.mb-filters-bar {
+  margin: 0 0 1.25rem;
+  gap: 0.6rem;
+}

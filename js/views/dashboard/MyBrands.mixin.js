@@ -37,15 +37,58 @@
       if (!this._orgId) { this._renderEmptyOrgState(body); return; }
 
       await this._ensureCampanasService();
+      this._restoreMbFilters();
       this._renderMyBrandsSkeleton(body);
 
       try {
-        const data = await this._campanasService.loadAll({ windowDays: 365 });
+        const data = await this._loadMyBrandsData();
         this._mbCampanasData = data;
         body.innerHTML = this._buildMyBrandsHtml(data);
         this._bindMyBrandsHandlers(body);
       } catch (e) {
         console.error('[MyBrands] loadAll failed:', e);
+        body.innerHTML = this._buildMyBrandsErrorHtml(e);
+      }
+    },
+
+    async _loadMyBrandsData() {
+      const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
+      return this._campanasService.loadAll({
+        windowDays: f.windowDays,
+        brandIds:   f.brandContainerId ? [f.brandContainerId] : null,
+      });
+    },
+
+    /* ── Filtros: estado persistido en localStorage ──────────── */
+    _mbFiltersKey() { return `mb:filters:${this._orgId || 'global'}`; },
+
+    _restoreMbFilters() {
+      if (this._mbFilters) return this._mbFilters;
+      let stored = null;
+      try { stored = JSON.parse(localStorage.getItem(this._mbFiltersKey()) || 'null'); } catch (_) {}
+      this._mbFilters = {
+        windowDays:        Number(stored?.windowDays) > 0 ? Number(stored.windowDays) : 30,
+        brandContainerId:  stored?.brandContainerId || null,
+      };
+      return this._mbFilters;
+    },
+
+    _saveMbFilters() {
+      try { localStorage.setItem(this._mbFiltersKey(), JSON.stringify(this._mbFilters || {})); } catch (_) {}
+    },
+
+    async _onMbFilterChange(patch) {
+      this._mbFilters = { ...(this._mbFilters || {}), ...patch };
+      this._saveMbFilters();
+      const body = document.getElementById('insightTabBody');
+      if (!body) return;
+      this._renderMyBrandsSkeleton(body);
+      try {
+        const data = await this._loadMyBrandsData();
+        this._mbCampanasData = data;
+        body.innerHTML = this._buildMyBrandsHtml(data);
+        this._bindMyBrandsHandlers(body);
+      } catch (e) {
         body.innerHTML = this._buildMyBrandsErrorHtml(e);
       }
     },
@@ -94,15 +137,51 @@
     _buildMyBrandsHtml(data) {
       return `
         <div class="insight-page" id="mbPage">
-          <header class="insight-header">
-            <div class="insight-header-left">
-              <h1 class="insight-title">Mi Marca</h1>
-              <p class="insight-subtitle">Vera analiza tu marca en tiempo real y te dice qué está fallando, por qué, y cómo subir tu salud.</p>
-            </div>
-          </header>
+          ${this._buildMbFiltersBar(data)}
 
           ${this._buildHealthGauge(data?.health?.data)}
         </div>`;
+    },
+
+    /* ── Barra de filtros (estilo Production .living-filter) ─── */
+    _buildMbFiltersBar(data) {
+      const f = this._mbFilters || { windowDays: 30, brandContainerId: null };
+      const containers = data?.containers || this._campanasService?.containers || [];
+
+      const windowOpts = [
+        { v: 7,   label: 'Últimos 7 días' },
+        { v: 30,  label: 'Últimos 30 días' },
+        { v: 90,  label: 'Últimos 90 días' },
+        { v: 365, label: 'Últimos 12 meses' },
+      ];
+      const winOptsHtml = windowOpts.map(o =>
+        `<option value="${o.v}"${Number(f.windowDays) === o.v ? ' selected' : ''}>${o.label}</option>`
+      ).join('');
+
+      const brandOptsHtml = [
+        `<option value=""${!f.brandContainerId ? ' selected' : ''}>Todas las sub-marcas</option>`,
+        ...containers.map(c =>
+          `<option value="${this._esc(c.id)}"${f.brandContainerId === c.id ? ' selected' : ''}>${this._esc(c.nombre_marca || '—')}</option>`
+        ),
+      ].join('');
+
+      return `
+        <header class="living-history-filters mb-filters-bar" id="mbFilters">
+          <div class="living-filter living-filter-window">
+            <label class="living-filter-label" for="mbFilterWindow">Ventana</label>
+            <select class="living-filter-select" id="mbFilterWindow" data-mb-filter="windowDays">
+              ${winOptsHtml}
+            </select>
+          </div>
+          ${containers.length > 1 ? `
+            <div class="living-filter living-filter-brand">
+              <label class="living-filter-label" for="mbFilterBrand">Sub-marca</label>
+              <select class="living-filter-select" id="mbFilterBrand" data-mb-filter="brandContainerId">
+                ${brandOptsHtml}
+              </select>
+            </div>
+          ` : ''}
+        </header>`;
     },
 
     /* ════════════════════════════════════════════════════════════════
@@ -272,6 +351,17 @@
 
     _bindMyBrandsHandlers(body) {
       if (!body) return;
+
+      // Filtros: cambio de ventana / sub-marca
+      body.addEventListener('change', (e) => {
+        const el = e.target.closest('[data-mb-filter]');
+        if (!el) return;
+        const key = el.dataset.mbFilter;
+        let value = el.value;
+        if (key === 'windowDays') value = Number(value) || 30;
+        if (key === 'brandContainerId') value = value || null;
+        this._onMbFilterChange({ [key]: value });
+      });
 
       // Toggle del diagnóstico del Brand Health gauge
       body.addEventListener('click', (e) => {

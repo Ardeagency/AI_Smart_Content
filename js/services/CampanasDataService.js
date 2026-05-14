@@ -89,8 +89,13 @@ class CampanasDataService {
       p_brand_container_ids: bcids,
     };
 
+    // Ventana de días para health_score: derivada del rango date_from/date_to.
+    const healthWindowDays = Math.max(1, Math.round(
+      (new Date(date_to).getTime() - new Date(date_from).getTime()) / 86400_000
+    ));
+
     const [health, kpis, list, dailySeries, winnersVsBurners, briefVsOutcome] = await Promise.allSettled([
-      this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: 30 }),
+      this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
       this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
       this.sb.rpc('dashboard_campaign_list',               { ...baseArgs, p_status: null }),
       this.sb.rpc('dashboard_campaign_daily_series',       { ...baseArgs, p_campaign_ids: null }),
