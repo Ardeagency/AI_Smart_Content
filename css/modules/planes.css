@@ -89,14 +89,18 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — glass-black oficial de la plataforma (mismas variables que el header).
-   El accent color por card (--card-c1/c2) se usa solo en precio, popular border y badge. */
+/* Cards — glass-black al 80% + aurora gradient inferior (--card-c1/c2 por posición).
+   Top de card: glass con PLANS borroso detrás. Bottom: aurora color (warm/green/cyan/violet). */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
     position: relative;
     overflow: hidden;
-    background: var(--glass-black-bg);
+    background:
+        radial-gradient(ellipse 48% 32% at 50% 108%, rgba(255, 255, 255, 0.75) 0%, transparent 55%),
+        radial-gradient(ellipse 85% 55% at 50% 112%, var(--card-c1) 0%, transparent 65%),
+        radial-gradient(ellipse 115% 78% at 50% 118%, var(--card-c2) 0%, transparent 72%),
+        rgba(0, 0, 0, 0.8);
     border: 1px solid var(--glass-black-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
