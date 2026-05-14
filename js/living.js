@@ -1296,11 +1296,8 @@ class LivingManager {
         const TOTAL = 20;
         const items = [];
         for (let i = 0; i < TOTAL; i++) {
-            const isWide = i % 3 === 0;
             items.push(
-                `<div class="living-masonry-item">
-                    <div class="living-history-skeleton ${isWide ? 'living-history-skeleton--wide' : 'living-history-skeleton--tall'}"></div>
-                </div>`
+                `<div class="living-masonry-item"><div class="living-history-skeleton"></div></div>`
             );
         }
         return `<div class="living-masonry-grid living-history-masonry">${items.join('')}</div>`;
