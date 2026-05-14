@@ -2202,74 +2202,35 @@
 
 .mb-page { padding: 0; }
 
-/* ── Brand Health Gauge (hero) ───────────────────────────── */
+/* ── Brand Health Gauge (card cuadrada) ──────────────────── */
 .mb-health-card {
   position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: 12px;
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.75rem;
+  padding: 1.5rem;
+  margin: 0 0 1.75rem;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .mb-health-card--empty {
   text-align: center;
   color: var(--text-tertiary);
   padding: 3rem 1rem;
-}
-
-/* Toggle TR: muestra/oculta el panel de diagnóstico */
-.mb-health-toggle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border-divider);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  z-index: 2;
-  font-family: inherit;
-}
-.mb-health-toggle:hover {
-  background: rgba(255,255,255,0.08);
-  color: var(--text-primary);
-  border-color: rgba(255,255,255,0.2);
-}
-.mb-health-toggle-icon {
-  width: 14px; height: 14px;
-  transition: transform 0.2s ease;
-}
-.mb-health-card.is-expanded .mb-health-toggle-icon {
-  transform: rotate(180deg);
-}
-
-/* Grid: 1 col centrado cuando colapsado, 2 cols cuando expandido */
-.mb-health-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: 2rem;
-  align-items: start;
-}
-.mb-health-card.is-collapsed .mb-health-grid {
-  grid-template-columns: 1fr;
-  justify-items: center;
-}
-.mb-health-card.is-collapsed .mb-health-diagnosis {
-  display: none;
+  aspect-ratio: auto;
 }
 
 .mb-health-gauge {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  width: 100%;
 }
 .mb-gauge-svg {
   width: 100%;
@@ -2284,99 +2245,20 @@
 }
 
 .mb-health-verdict {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
   font-weight: 700;
   font-size: 1rem;
-  margin-top: -0.5rem;
+  margin-top: -0.25rem;
 }
-.mb-health-verdict-icon { font-size: 1.15rem; }
 .mb-health-band {
   font-size: 0.8125rem;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-}
-.mb-health-band-method {
-  font-size: 0.7rem;
-  color: var(--text-tertiary);
   text-align: center;
-  max-width: 280px;
-  line-height: 1.35;
 }
-
-.mb-health-diagnosis { display: flex; flex-direction: column; gap: 1rem; }
-.mb-health-narrative {
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--text-primary);
-  margin: 0;
-  padding: 0.75rem 1rem;
-  background: rgba(255,255,255,0.03);
-  border-left: 3px solid var(--accent-brand, var(--text-secondary));
-  border-radius: 6px;
-}
-.mb-health-perfect {
-  font-size: 0.9375rem;
-  color: #6bcf7f;
-  padding: 0.75rem 1rem;
-  background: rgba(107,207,127,0.08);
-  border-radius: 6px;
-}
-
-.mb-health-gaps { display: flex; flex-direction: column; gap: 0.65rem; }
-.mb-health-gaps-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.mb-gap-item {
-  display: flex;
-  gap: 0.85rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid var(--border-divider);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.02);
-}
-.mb-gap-index {
-  width: 22px; height: 22px; flex-shrink: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.08);
-  color: var(--text-primary);
-  font-weight: 700; font-size: 0.75rem;
-  display: flex; align-items: center; justify-content: center;
-}
-.mb-gap-body { flex: 1; min-width: 0; }
-.mb-gap-head {
-  display: flex; justify-content: space-between; gap: 0.5rem; align-items: center;
-  margin-bottom: 0.25rem;
-}
-.mb-gap-label {
-  font-weight: 600; font-size: 0.875rem; color: var(--text-primary);
-}
-.mb-gap-lift {
-  font-size: 0.75rem; font-weight: 700;
-  color: #6bcf7f;
-  background: rgba(107,207,127,0.12);
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-.mb-gap-desc {
-  margin: 0 0 0.35rem; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.4;
-}
-.mb-gap-action {
-  margin: 0; font-size: 0.8125rem; color: var(--text-primary); line-height: 1.4;
-  font-weight: 500;
-}
-
 
 /* Responsive */
-@media (max-width: 900px) {
-  .mb-health-grid { grid-template-columns: 1fr; }
+@media (max-width: 480px) {
+  .mb-health-card { max-width: 100%; }
 }
 
 /* ── Mi Marca filtros bar (estilo Production en línea, no movido al header) ── */
