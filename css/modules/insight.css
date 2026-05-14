@@ -2256,13 +2256,14 @@
   line-height: 1.3;
 }
 
-/* ── Grid de cards cuadradas (salud + 4 featured), compactas ─ */
+/* ── Grid de cards cuadradas — todas iguales y centradas ─── */
 .mb-cards-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.85rem;
   margin-bottom: 1.5rem;
-  align-items: flex-start;
+  align-items: stretch;
+  justify-content: center;          /* centra la fila completa */
 }
 
 /* ── Featured cards (Tema / Tono / Horario / Hashtag) ────── */
@@ -2271,28 +2272,35 @@
   background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: 12px;
-  padding: 0.85rem 0.9rem;
-  width: 175px;
+  padding: 1rem 1.1rem;
+  width: 220px;                     /* mismo ancho que .mb-health-card */
   aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;          /* centra contenido verticalmente */
+  align-items: center;              /* centra horizontalmente */
+  text-align: center;
   min-width: 0;
 }
 .mb-feat-label {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.9rem;
+  right: 0.9rem;
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   line-height: 1.2;
+  text-align: center;
 }
 .mb-feat-headline {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.1;
-  margin: 0.35rem 0;
+  line-height: 1.15;
+  margin: 0 0 0.4rem;
   word-break: break-word;
   overflow: hidden;
   display: -webkit-box;
@@ -2306,23 +2314,26 @@
 .mb-feat-metrics {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  align-items: center;
+  gap: 0.15rem;
   font-variant-numeric: tabular-nums;
 }
 .mb-feat-metric-primary {
   font-size: 0.75rem;
   color: var(--text-secondary);
   font-weight: 600;
+  line-height: 1.3;
 }
 .mb-feat-metric-secondary {
   font-size: 0.6875rem;
   color: var(--text-tertiary);
+  line-height: 1.3;
 }
 .mb-feat-empty {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
   line-height: 1.4;
-  margin-top: auto;
+  padding: 0 0.5rem;
 }
 
 /* Responsive */
