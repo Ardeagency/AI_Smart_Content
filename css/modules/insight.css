@@ -2301,7 +2301,14 @@
   text-transform: capitalize;
 }
 .mb-feat-card--hashtag .mb-feat-headline,
-.mb-feat-card--hour .mb-feat-headline { text-transform: none; }
+.mb-feat-card--hour .mb-feat-headline,
+.mb-feat-card--campaign-ad .mb-feat-headline { text-transform: none; }
+
+/* Campaña+ad: headline más comprimido porque nombres largos */
+.mb-feat-card--campaign-ad .mb-feat-headline {
+  font-size: 1.05rem;
+  -webkit-line-clamp: 3;
+}
 
 .mb-feat-metrics {
   display: flex;
