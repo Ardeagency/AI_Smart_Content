@@ -156,7 +156,6 @@
               <div class="mb-health-band">
                 Saludable para tu segmento: <strong>${band.p50}-${band.p75}</strong>
               </div>
-              <div class="mb-health-band-method">${this._esc(band.method || '')}</div>
             </div>
 
             <!-- Diagnóstico column (colapsable) -->
