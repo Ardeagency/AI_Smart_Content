@@ -538,25 +538,6 @@
 .planes-testimonial-name { font-weight: 600; color: var(--text-primary); }
 .planes-testimonial-role { font-size: 13px; color: var(--text-muted); }
 
-/* Comparison table */
-.planes-comparison { padding: 48px 0; }
-.planes-comparison-title { text-align: center; font-size: 24px; margin: 0 0 32px; color: var(--text-primary); }
-.planes-comparison-table-wrap { overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-divider); border-radius: 12px; }
-.planes-comparison-table { width: 100%; border-collapse: collapse; min-width: 720px; }
-.planes-comparison-table th, .planes-comparison-table td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--border-divider); font-size: 13px; }
-.planes-comparison-table thead th { background: var(--bg-tertiary); font-weight: 600; color: var(--text-primary); position: sticky; top: 0; }
-.planes-comparison-table tbody th[scope="row"] { text-align: left; font-weight: 400; color: var(--text-secondary); }
-.planes-comparison-table td { color: var(--text-secondary); }
-.planes-comparison-section th {
-    background: var(--bg-tertiary);
-    text-align: left;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 11px;
-    padding: 8px 16px;
-}
-
 /* FAQ */
 .planes-faq { padding: 48px 0; max-width: 800px; margin: 0 auto; }
 .planes-faq-title { text-align: center; font-size: 24px; margin: 0 0 32px; color: var(--text-primary); }

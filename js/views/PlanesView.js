@@ -47,7 +47,6 @@ class PlanesView extends BaseView {
       await this._resolveCurrentPlan();
       this._renderOrgContext();
       this._renderPlansList();
-      this._renderComparisonTable();
       this._applyBillingPeriod();
       if (!background) this._bindEvents();
     } catch (e) {
@@ -218,12 +217,6 @@ class PlanesView extends BaseView {
             <div class="planes-plans" id="planesList">${this._planSkeletonHtml(3)}</div>
           </div>
         </header>
-
-        <!-- Comparison table -->
-        <section class="planes-comparison">
-          <h2 class="planes-comparison-title">Compare plans in detail</h2>
-          <div id="planesComparison"></div>
-        </section>
       </div>
     `;
   }
@@ -366,64 +359,6 @@ class PlanesView extends BaseView {
           ${features.map(f => `<li>${f}</li>`).join('')}
         </ul>
         ${ctaBlock}
-      </div>
-    `;
-  }
-
-  _renderComparisonTable() {
-    const host = this.container?.querySelector('#planesComparison');
-    if (!host) return;
-    if (!this.plans.length) { host.innerHTML = ''; return; }
-
-    const rows = [
-      { section: 'Volume' },
-      { label: 'Credits / month',         get: (p) => p.credits_monthly > 0 ? p.credits_monthly.toLocaleString('en-US') : '—' },
-      { label: 'Brands / handles',        get: (p) => p.max_handles > 0 ? p.max_handles : '—' },
-      { label: 'Storage',                 get: (p) => this.formatStorage(p.storage_mb) || '—' },
-      { label: 'Members',                 get: (p) => p.features?.team_seats || '1' },
-
-      { section: 'Vera (AI assistant)' },
-      { label: 'Chat with Vera',          get: (p) => p.features?.vera_full || p.features?.vera_basic ? '✓' : '—' },
-      { label: 'Autonomous actions',      get: (p) => p.features?.vera_full ? '✓' : '—' },
-
-      { section: 'Content' },
-      { label: 'Studio (images)',         get: () => '✓' },
-      { label: 'Video',                   get: () => '✓' },
-      { label: 'Production flows',        get: () => '✓' },
-
-      { section: 'Brand & Analytics' },
-      { label: 'Brand kits',              get: (p) => p.features?.brand_kits || '—' },
-      { label: 'Sub-brands (agency)',     get: (p) => p.features?.sub_brands ? '✓' : '—' },
-      { label: 'Insights & analytics',    get: (p) => p.features?.insights ? '✓' : '—' },
-
-      { section: 'Support' },
-      { label: 'Priority support',        get: (p) => p.features?.priority_support ? '✓' : '—' },
-      { label: 'Custom domain',           get: (p) => p.features?.custom_domain ? '✓' : '—' },
-    ];
-
-    host.innerHTML = `
-      <div class="planes-comparison-table-wrap">
-        <table class="planes-comparison-table">
-          <thead>
-            <tr>
-              <th scope="col"></th>
-              ${this.plans.map((p) => `<th scope="col">${this.escapeHtml(p.name)}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((r) => {
-              if (r.section) {
-                return `<tr class="planes-comparison-section"><th colspan="${this.plans.length + 1}">${this.escapeHtml(r.section)}</th></tr>`;
-              }
-              return `
-                <tr>
-                  <th scope="row">${this.escapeHtml(r.label)}</th>
-                  ${this.plans.map((p) => `<td>${r.get(p)}</td>`).join('')}
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
       </div>
     `;
   }
