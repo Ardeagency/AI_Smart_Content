@@ -15,6 +15,8 @@
     padding-top: 2rem;
 }
 
+/* El word NO debe crear stacking context, ni el content. Ambos viven en el
+   mismo contexto (root) → el backdrop-filter de las cards ve el word debajo. */
 .planes-hero-bg-word {
     position: absolute;
     top: 50%;
@@ -29,14 +31,11 @@
     pointer-events: none;
     user-select: none;
     white-space: nowrap;
-    z-index: 0;
     line-height: 0.9;
     text-shadow: 0 8px 60px rgba(0, 0, 0, 0.45);
 }
 
 .planes-hero-content {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
