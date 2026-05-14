@@ -20,6 +20,22 @@
   'use strict';
   if (typeof DashboardView === 'undefined') return;
 
+  /**
+   * Feature flag: ocultar cards que no tienen datos.
+   *
+   * Default FALSE en estado de creación del dashboard — todas las cards deben
+   * verse aunque estén vacías para que el equipo entienda el shape final.
+   *
+   * Para activar en producción: cambiar HIDE_EMPTY_DEFAULT a true.
+   * Para probar puntualmente sin redeploy: en la consola del navegador
+   *   window.MB_HIDE_EMPTY_CARDS = true; (luego re-renderizar tab)
+   */
+  const HIDE_EMPTY_DEFAULT = false;
+  const shouldHideEmpty = () =>
+    (typeof window !== 'undefined' && typeof window.MB_HIDE_EMPTY_CARDS === 'boolean')
+      ? window.MB_HIDE_EMPTY_CARDS
+      : HIDE_EMPTY_DEFAULT;
+
   const fmt = {
     int:   (n) => (n == null ? '—' : Number(n).toLocaleString('es-CO')),
     money: (n) => (n == null ? '—' : '$' + Math.round(Number(n)).toLocaleString('es-CO')),
@@ -194,6 +210,7 @@
 
     _buildFeaturedCard(opts) {
       const has = !!opts.headline;
+      if (!has && shouldHideEmpty()) return '';
       return `
         <section class="mb-feat-card mb-feat-card--${opts.kind}">
           <div class="mb-feat-label">${this._esc(opts.label)}</div>
@@ -265,7 +282,10 @@
        Diagnóstico/análisis se reintroducirá después en otro formato.
        ════════════════════════════════════════════════════════════════ */
     _buildHealthGauge(h) {
-      if (!h || h.score == null) return this._buildHealthEmpty();
+      if (!h || h.score == null) {
+        if (shouldHideEmpty()) return '';
+        return this._buildHealthEmpty();
+      }
 
       const score    = Number(h.score) || 0;
       const verdict  = h.verdict || 'atencion';
