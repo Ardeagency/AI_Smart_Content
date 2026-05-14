@@ -320,11 +320,43 @@
   min-height: 0;
 }
 
-/* Solo en desktop (4 cols): el kanban se ancla a la altura del viewport
-   y son los cuerpos de columna los que scrollean — la página queda fija. */
+/* Solo en desktop (4 cols): toda la página de Monitoring queda anclada al
+   viewport (100vh menos el padding-top de 45px que añade #app-container
+   para el header fijo). El kanban se reparte el espacio sobrante vía flex
+   chain, así el page-level scroll desaparece y sólo scrollean las
+   columnas internamente. */
 @media (min-width: 1101px) {
+  .monitoring-page {
+    height: calc(100vh - 45px);
+    max-height: calc(100vh - 45px);
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .monitoring-page > .mb-firebar { flex-shrink: 0; }
+  .monitoring-page > .insight-tab-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .monitoring-page .mn-page {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    /* Para el tab Watchers (tabla larga) — sólo este tab puede scrollear
+       dentro de mn-page. En el tab Perfiles la altura del kanban está
+       acotada por flex, así que mn-page no overflowea. */
+    overflow-y: auto;
+  }
+  .monitoring-page .mn-toolbar { flex-shrink: 0; }
+
   .mn-kanban {
-    height: calc(100vh - 240px);
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
   .mn-kanban-col {
