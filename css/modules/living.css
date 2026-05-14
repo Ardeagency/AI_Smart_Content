@@ -469,29 +469,34 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
 }
 
-.living-masonry-item {
+.living-masonry-grid .living-masonry-item {
     /* Slot cuadrado. La card hija y el media adentro llenan el slot 100%
        con object-fit:cover para recortar al centro y mantener la uniformidad
-       visual del grid. */
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    overflow: hidden;
+       visual del grid. !important porque hay reglas legacy de .history-image-card img
+       con height:auto que ganan por orden si no se fuerza. */
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
 }
 
-.living-masonry-item > .history-image-card,
-.living-masonry-item > .history-video-card,
-.living-masonry-item > .history-text-card {
-    width: 100%;
-    height: 100%;
+.living-masonry-grid .living-masonry-item > .history-image-card,
+.living-masonry-grid .living-masonry-item > .history-video-card,
+.living-masonry-grid .living-masonry-item > .history-text-card {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
 }
 
-.living-masonry-item .history-image-card img,
-.living-masonry-item .history-video-card-thumbnail,
-.living-masonry-item .history-video-card video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+.living-masonry-grid .living-masonry-item img,
+.living-masonry-grid .living-masonry-item video,
+.living-masonry-grid .living-masonry-item .history-video-card-thumbnail {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    display: block !important;
 }
 
 /* Wrapper para thumbnail de video (soporta <video> o <img>) — mismo radio que imágenes */
