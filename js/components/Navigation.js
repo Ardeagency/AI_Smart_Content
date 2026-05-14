@@ -1271,11 +1271,11 @@ class Navigation {
           <span>Settings</span>
         </a>
         <a href="${orgHref}" class="user-dropdown-item" data-route="${orgHref}" id="userDropdownOrgLink">
-          <i class="fas fa-building"></i>
+          <img src="/recursos/icons/confg organization.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Organization</span>
         </a>
         <a href="${plansHref}" class="user-dropdown-item" data-route="${plansHref}" id="userDropdownPlansLink">
-          <i class="fas fa-layer-group"></i>
+          <img src="/recursos/icons/Planes.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Planes</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
