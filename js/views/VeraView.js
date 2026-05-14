@@ -943,6 +943,25 @@ class VeraView extends (window.BaseView || class {}) {
     } else {
       this.renderWelcome();
     }
+
+    // Prefill desde ?q=<prompt> (usado por Monitoring → cards de perfiles).
+    // Precarga el textarea sin enviar, deja la URL limpia y enfoca.
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const q = params.get('q');
+      if (q) {
+        const input = document.getElementById('veraInput');
+        if (input) {
+          input.value = q;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          requestAnimationFrame(() => input.focus());
+        }
+        params.delete('q');
+        const search = params.toString();
+        const cleanUrl = window.location.pathname + (search ? '?' + search : '') + window.location.hash;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+    } catch (_) { /* no-op */ }
   }
 
   _bindMediaHover() {

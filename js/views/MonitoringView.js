@@ -170,65 +170,163 @@ class MonitoringView extends BaseView {
   }
 
   /* ══════════════════════════════════════════════════════════
-     TAB: PERFILES (intelligence_entities)
+     TAB: PERFILES (intelligence_entities) — Kanban
+     Columnas: Nuevos / Activos / Sin actividad / Pausados
+     Cross-cut: chip "Destacado" cuando metadata.highlighted = true
   ══════════════════════════════════════════════════════════ */
+  _classifyEntity(e) {
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const createdAt = e.created_at ? new Date(e.created_at).getTime() : 0;
+    const isRecent = createdAt && (Date.now() - createdAt) <= SEVEN_DAYS_MS;
+    if (e.metadata?.auto_provisioned === true && isRecent) return 'new';
+    if (e.is_active === false) return 'paused';
+    if ((e.metadata?.consecutive_empty_runs || 0) >= 3) return 'stale';
+    return 'active';
+  }
+
+  _veraUrl(prompt) {
+    const orgId = this._orgId || window.currentOrgId;
+    const orgName = window.currentOrgName || '';
+    const base = (orgId && typeof window.getOrgPathPrefix === 'function')
+      ? window.getOrgPathPrefix(orgId, orgName) + '/vera'
+      : '/vera';
+    return base + '?q=' + encodeURIComponent(prompt);
+  }
+
+  _promptAnalizar(e) {
+    const platform = e.metadata?.platform || 'su plataforma';
+    const handle = e.target_identifier ? ' (' + e.target_identifier + ')' : '';
+    const tipo = (e.metadata?.tipo || 'perfil monitoreado').replace(/_/g, ' ');
+    return `Analiza el perfil "${e.name}"${handle} en ${platform}. Es un ${tipo} que estamos monitoreando. Quiero un análisis estructurado: posicionamiento, audiencia objetivo, patrones de contenido recientes, tono de voz y oportunidades concretas que ves desde mi marca.`;
+  }
+
+  _promptComparar(e) {
+    const orgName = window.currentOrgName || 'mi marca';
+    const platform = e.metadata?.platform ? ' en ' + e.metadata.platform : '';
+    return `Compara "${e.name}"${platform} con ${orgName}. Devuélveme cuatro bloques: 1) qué hace mejor que yo, 2) qué hago mejor yo, 3) en qué somos similares, 4) oportunidades concretas para diferenciarme en los próximos 90 días.`;
+  }
+
+  _promptInspirarme(e) {
+    const orgName = window.currentOrgName || 'mi marca';
+    return `Mostrame 5 ideas de contenido accionables que puedo aprender del perfil "${e.name}", adaptadas a la voz y audiencia de ${orgName}. Para cada idea: formato sugerido, gancho de copy (1 línea) y la métrica esperada que debería mover.`;
+  }
+
   _renderProfiles(body) {
     const entities   = this._data.entities.data || [];
     const containers = this._data.containers.data || [];
     const tipoLabel = (t) =>
       MonitoringView.ENTITY_TIPOS.find(x => x.value === t)?.label || (t || '—');
     const containerName = (id) =>
-      containers.find(c => c.id === id)?.nombre_marca || '—';
+      containers.find(c => c.id === id)?.nombre_marca || null;
 
-    const rows = entities.map(e => {
+    const columns = [
+      { id: 'new',    label: 'Nuevos encontrados', hint: 'Detectados los últimos 7 días',         tone: 'new'    },
+      { id: 'active', label: 'Activos',            hint: 'En marcha y con actividad',             tone: 'active' },
+      { id: 'stale',  label: 'Sin actividad',      hint: 'Activos pero sin señales recientes',    tone: 'stale'  },
+      { id: 'paused', label: 'Pausados',           hint: 'Desactivados manualmente o por el sistema', tone: 'paused' },
+    ];
+
+    const buckets = { new: [], active: [], stale: [], paused: [] };
+    entities.forEach(e => {
+      const col = this._classifyEntity(e);
+      buckets[col].push(e);
+    });
+
+    const renderCard = (e) => {
       const tipo     = e.metadata?.tipo || '';
       const platform = e.metadata?.platform || '';
+      const highlighted = e.metadata?.highlighted === true;
+      const containerLabel = containerName(e.brand_container_id);
+      const handle = e.target_identifier ? this._esc(e.target_identifier) : '';
+      const tipoBadge = tipo ? `<span class="mn-card-chip mn-card-chip--${tipo.split('_')[0]}">${this._esc(tipoLabel(tipo))}</span>` : '';
+      const platBadge = platform ? `<span class="mn-card-chip">${this._esc(platform)}</span>` : '';
+      const brandBadge = containerLabel ? `<span class="mn-card-chip mn-card-chip--muted">${this._esc(containerLabel)}</span>` : '';
+      const starTitle = highlighted ? 'Quitar destacado' : 'Destacar como alto impacto';
+
       return `
-        <tr data-row-id="${this._esc(e.id)}">
-          <td>
-            <div class="mn-cell-strong">${this._esc(e.name || '—')}</div>
-            <div class="mn-cell-sub">${this._esc(e.target_identifier || '—')}</div>
-          </td>
-          <td><span class="mn-pill mn-pill--${tipo.split('_')[0]}">${this._esc(tipoLabel(tipo))}</span></td>
-          <td>${this._esc(platform || '—')}</td>
-          <td>${this._esc(e.domain || '—')}</td>
-          <td>${this._esc(containerName(e.brand_container_id))}</td>
-          <td>
-            <label class="mn-toggle">
+        <article class="mn-card${highlighted ? ' mn-card--highlighted' : ''}" data-row-id="${this._esc(e.id)}">
+          <div class="mn-card-head">
+            <div class="mn-card-head-main">
+              <div class="mn-card-title">${this._esc(e.name || '—')}</div>
+              ${handle ? `<div class="mn-card-handle">${handle}</div>` : ''}
+            </div>
+            <button class="mn-card-star${highlighted ? ' is-on' : ''}" data-action="toggle-highlight" data-id="${this._esc(e.id)}" title="${starTitle}" aria-pressed="${highlighted}">
+              <i class="fas fa-star"></i>
+            </button>
+          </div>
+          <div class="mn-card-chips">
+            ${tipoBadge}${platBadge}${brandBadge}
+            ${highlighted ? `<span class="mn-card-chip mn-card-chip--highlight"><i class="fas fa-star"></i> Destacado</span>` : ''}
+          </div>
+          <div class="mn-card-vera">
+            <button class="mn-vera-btn" data-action="vera-analizar" data-id="${this._esc(e.id)}" title="Analiza este perfil con Vera">
+              <i class="fas fa-wand-magic-sparkles"></i> Analizar
+            </button>
+            <button class="mn-vera-btn" data-action="vera-comparar" data-id="${this._esc(e.id)}" title="Compara este perfil con mi marca">
+              <i class="fas fa-code-compare"></i> Comparar
+            </button>
+            <button class="mn-vera-btn" data-action="vera-inspirar" data-id="${this._esc(e.id)}" title="Pide ideas inspiradas en este perfil">
+              <i class="fas fa-lightbulb"></i> Inspirarme
+            </button>
+          </div>
+          <div class="mn-card-foot">
+            <label class="mn-toggle" title="${e.is_active ? 'Pausar' : 'Activar'}">
               <input type="checkbox" ${e.is_active ? 'checked' : ''} data-action="toggle-entity" data-id="${this._esc(e.id)}">
               <span class="mn-toggle-track"></span>
             </label>
-          </td>
-          <td class="mn-actions">
-            <button class="mn-btn-icon" data-action="edit-entity" data-id="${this._esc(e.id)}" title="Editar"><i class="fas fa-pen"></i></button>
-            <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-entity" data-id="${this._esc(e.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>`;
-    }).join('');
+            <div class="mn-card-foot-actions">
+              <button class="mn-btn-icon" data-action="edit-entity" data-id="${this._esc(e.id)}" title="Editar"><i class="fas fa-pen"></i></button>
+              <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-entity" data-id="${this._esc(e.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </article>`;
+    };
+
+    const renderColumn = (col) => {
+      const items = buckets[col.id];
+      const emptyMsg = ({
+        new:    'No hay perfiles recién encontrados.',
+        active: 'Todavía no hay perfiles activos.',
+        stale:  'Ningún perfil sin actividad. ✨',
+        paused: 'No hay perfiles pausados.',
+      })[col.id];
+      return `
+        <section class="mn-kanban-col mn-kanban-col--${col.tone}">
+          <header class="mn-kanban-col-head">
+            <div class="mn-kanban-col-title">
+              <span class="mn-kanban-col-dot"></span>
+              <h3>${col.label}</h3>
+              <span class="mn-kanban-col-count">${items.length}</span>
+            </div>
+            <p class="mn-kanban-col-hint">${col.hint}</p>
+          </header>
+          <div class="mn-kanban-col-body">
+            ${items.length ? items.map(renderCard).join('') : `<div class="mn-kanban-empty">${emptyMsg}</div>`}
+          </div>
+        </section>`;
+    };
 
     body.innerHTML = `
       <div class="mn-page">
         <div class="mn-toolbar">
-          <h2 class="mn-section-title">Perfiles monitoreados <span class="mn-count">${entities.length}</span></h2>
+          <div class="mn-toolbar-main">
+            <h2 class="mn-section-title">Perfiles monitoreados <span class="mn-count">${entities.length}</span></h2>
+            <p class="mn-toolbar-sub">Organizados por estado. Cada card te conecta con Vera para analizar, comparar o inspirarte.</p>
+          </div>
           <button class="mn-btn-primary" data-action="new-entity">
             <i class="fas fa-plus"></i> Nuevo perfil
           </button>
         </div>
         ${entities.length ? `
-          <table class="mn-table">
-            <thead>
-              <tr>
-                <th>Perfil</th><th>Tipo</th><th>Plataforma</th><th>Dominio</th><th>Marca</th><th>Activo</th><th></th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>` : `
+          <div class="mn-kanban">
+            ${columns.map(renderColumn).join('')}
+          </div>` : `
           <div class="mn-empty">
             <p>Aún no hay perfiles monitoreados. Crea el primero para empezar a vigilar.</p>
           </div>`}
       </div>`;
 
-    body.addEventListener('click', this._onProfilesClick.bind(this));
+    body.addEventListener('click',  this._onProfilesClick.bind(this));
     body.addEventListener('change', this._onProfilesChange.bind(this));
   }
 
@@ -237,9 +335,13 @@ class MonitoringView extends BaseView {
     if (!btn) return;
     const action = btn.dataset.action;
     const id     = btn.dataset.id;
-    if (action === 'new-entity')    return this._openEntityModal(null);
-    if (action === 'edit-entity')   return this._openEntityModal(id);
-    if (action === 'delete-entity') return this._confirmDeleteEntity(id);
+    if (action === 'new-entity')      return this._openEntityModal(null);
+    if (action === 'edit-entity')     return this._openEntityModal(id);
+    if (action === 'delete-entity')   return this._confirmDeleteEntity(id);
+    if (action === 'toggle-highlight')return this._toggleHighlight(id);
+    if (action === 'vera-analizar' || action === 'vera-comparar' || action === 'vera-inspirar') {
+      return this._goToVera(action, id);
+    }
   }
 
   async _onProfilesChange(e) {
@@ -249,6 +351,25 @@ class MonitoringView extends BaseView {
     const { error } = await this._service.updateEntity(id, { is_active: input.checked });
     if (error) { alert('Error: ' + error.message); input.checked = !input.checked; }
     else await this._refresh();
+  }
+
+  async _toggleHighlight(id) {
+    const entity = (this._data.entities.data || []).find(x => x.id === id);
+    if (!entity) return;
+    const next = !(entity.metadata?.highlighted === true);
+    const { error } = await this._service.updateEntity(id, { metadata: { highlighted: next } });
+    if (error) { alert('Error: ' + error.message); return; }
+    await this._refresh();
+  }
+
+  _goToVera(action, id) {
+    const entity = (this._data.entities.data || []).find(x => x.id === id);
+    if (!entity || !window.router) return;
+    let prompt = '';
+    if (action === 'vera-analizar')  prompt = this._promptAnalizar(entity);
+    if (action === 'vera-comparar')  prompt = this._promptComparar(entity);
+    if (action === 'vera-inspirar')  prompt = this._promptInspirarme(entity);
+    window.router.navigate(this._veraUrl(prompt));
   }
 
   _openEntityModal(id) {

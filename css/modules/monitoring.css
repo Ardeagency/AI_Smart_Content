@@ -281,3 +281,233 @@
     border-radius: 8px;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   KANBAN — Perfiles monitoreados (4 columnas)
+   ════════════════════════════════════════════════════════════ */
+
+.mn-toolbar-main {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.mn-toolbar-sub {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 640px;
+  line-height: 1.4;
+}
+
+.mn-kanban {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .mn-kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .mn-kanban { grid-template-columns: 1fr; }
+}
+
+.mn-kanban-col {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 220px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.mn-kanban-col-head {
+  display: flex; flex-direction: column; gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.mn-kanban-col-title {
+  display: flex; align-items: center; gap: 8px;
+}
+.mn-kanban-col-title h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.01em;
+  flex: 1;
+}
+.mn-kanban-col-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+}
+.mn-kanban-col-hint {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.4;
+}
+
+.mn-kanban-col-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+.mn-kanban-col--new    .mn-kanban-col-dot { background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+.mn-kanban-col--active .mn-kanban-col-dot { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); }
+.mn-kanban-col--stale  .mn-kanban-col-dot { background: #fbbf24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
+.mn-kanban-col--paused .mn-kanban-col-dot { background: #6b7280; }
+
+.mn-kanban-col-body {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.mn-kanban-empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  padding: 20px 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+/* ── Card ── */
+.mn-card {
+  background: #141517;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.mn-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.mn-card--highlighted {
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.18), 0 6px 14px rgba(251, 146, 60, 0.07);
+}
+
+.mn-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.mn-card-head-main {
+  min-width: 0; flex: 1;
+}
+.mn-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.mn-card-handle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.mn-card-star {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+.mn-card-star:hover { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); }
+.mn-card-star.is-on {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* ── Chips ── */
+.mn-card-chips {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.mn-card-chip {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  letter-spacing: 0.01em;
+}
+.mn-card-chip--muted { color: rgba(255, 255, 255, 0.45); }
+.mn-card-chip--competidor {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.mn-card-chip--referencia {
+  background: rgba(168, 85, 247, 0.12);
+  color: #d8b4fe;
+  border-color: rgba(168, 85, 247, 0.2);
+}
+.mn-card-chip--owned {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+.mn-card-chip--highlight {
+  background: rgba(251, 146, 60, 0.14);
+  color: #fdba74;
+  border-color: rgba(251, 146, 60, 0.3);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.mn-card-chip--highlight i { font-size: 8px; }
+
+/* ── Acciones Vera ── */
+.mn-card-vera {
+  display: flex; gap: 5px;
+}
+.mn-vera-btn {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  color: rgba(199, 210, 254, 0.85);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  min-width: 0;
+}
+.mn-vera-btn:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #e0e7ff;
+}
+.mn-vera-btn i {
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+/* ── Footer (toggle + acciones) ── */
+.mn-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.mn-card-foot-actions {
+  display: inline-flex; gap: 4px;
+}
+.mn-card-foot .mn-btn-icon {
+  width: 26px; height: 26px;
+  font-size: 10px;
+}
