@@ -44,7 +44,7 @@ class PlanesView extends BaseView {
         this._loadOrgUsage(),
       ]);
       this.plans = Array.isArray(plans) ? plans : [];
-      this._resolveCurrentPlan();
+      await this._resolveCurrentPlan();
       this._renderOrgContext();
       this._renderPlansList();
       this._renderComparisonTable();
@@ -107,9 +107,24 @@ class PlanesView extends BaseView {
     this.orgStorage = storage || null;
   }
 
-  _resolveCurrentPlan() {
+  /**
+   * Resuelve el plan actual del org. Maneja el caso de planes legacy
+   * (sub activa en un plan con is_active=false): los cargamos por id directo
+   * para poder comparar display_order y mostrar Upgrade/Downgrade correctos.
+   */
+  async _resolveCurrentPlan() {
     if (!this.currentSubscription?.plan_id) { this.currentPlan = null; return; }
-    this.currentPlan = this.plans.find(p => p.id === this.currentSubscription.plan_id) || null;
+    const inList = this.plans.find(p => p.id === this.currentSubscription.plan_id);
+    if (inList) { this.currentPlan = inList; return; }
+    // Plan legacy (no is_active): fetch puntual por id.
+    const supabase = await window.apiClient.getSupabase();
+    if (!supabase) { this.currentPlan = null; return; }
+    const { data } = await supabase
+      .from('plans')
+      .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, display_order')
+      .eq('id', this.currentSubscription.plan_id)
+      .maybeSingle();
+    this.currentPlan = data || null;
   }
 
   /** True si la subscription está en estado que cuenta como "activa" (no cancelled/expired). */
@@ -330,6 +345,17 @@ class PlanesView extends BaseView {
     if (current) badges.push('<span class="plan-card-badge plan-card-badge--current">Current plan</span>');
     else if (plan.is_popular) badges.push('<span class="plan-card-badge">Recommended</span>');
 
+    // En la card del plan actual no renderizamos botón: queda un status footer
+    // discreto en su lugar (el badge "Current plan" arriba ya identifica la card).
+    const ctaBlock = current
+      ? `<div class="plan-card-current-status"><i class="fas fa-check-circle"></i> You're on this plan</div>`
+      : `<button type="button"
+          class="btn btn-primary plan-card-cta plan-card-cta--${cta.kind}"
+          data-plan="${plan.id}"
+          data-cta="${cta.kind}">
+          <i class="fas ${cta.icon}"></i> ${cta.label}
+        </button>`;
+
     return `
       <div class="${classes}" data-plan="${plan.id}">
         ${badges.join('')}
@@ -339,13 +365,7 @@ class PlanesView extends BaseView {
         <ul class="plan-card-details">
           ${features.map(f => `<li>${f}</li>`).join('')}
         </ul>
-        <button type="button"
-          class="btn ${current ? 'btn-secondary' : 'btn-primary'} plan-card-cta"
-          data-plan="${plan.id}"
-          data-cta="${cta.kind}"
-          ${current ? 'disabled' : ''}>
-          <i class="fas ${cta.icon}"></i> ${cta.label}
-        </button>
+        ${ctaBlock}
       </div>
     `;
   }

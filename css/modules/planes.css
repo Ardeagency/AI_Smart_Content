@@ -427,9 +427,86 @@
     margin-top: 16px;
     width: 100%;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform .15s ease, box-shadow .25s ease;
 }
 
 .plan-card-cta[disabled] { opacity: 0.6; cursor: default; }
+
+/* ── Upgrade button: rainbow gradient hover usando los colores arcoiris
+   de las cards (mismos hex que .planes-plans .plan-card-small:nth-child).
+   En reposo el botón es sólido; al hover el gradient se anima horizontalmente. */
+.plan-card-cta--upgrade {
+    background: var(--accent-primary, #ffffff);
+    color: #0a0a0a;
+    border: none;
+    font-weight: 600;
+}
+
+.plan-card-cta--upgrade::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        #ff6500, #ff0000, #ffe500, #9acc00,
+        #00d614, #00e7ff, #5b00ea, #900090,
+        #ff6500
+    );
+    background-size: 300% 100%;
+    opacity: 0;
+    transition: opacity .25s ease;
+    z-index: -1;
+}
+
+.plan-card-cta--upgrade:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px -10px rgba(0, 231, 255, 0.5);
+}
+
+.plan-card-cta--upgrade:hover::before {
+    opacity: 1;
+    animation: planes-cta-rainbow 3.5s linear infinite;
+}
+
+@keyframes planes-cta-rainbow {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+/* Downgrade / switch / trial: hover sutil, sin rainbow */
+.plan-card-cta--downgrade,
+.plan-card-cta--switch {
+    background: transparent;
+    border: 1px solid var(--border-divider);
+    color: var(--text-secondary);
+}
+.plan-card-cta--downgrade:hover,
+.plan-card-cta--switch:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+}
+
+/* Footer cuando es el plan actual (reemplaza al botón disabled) */
+.plan-card-current-status {
+    margin-top: 16px;
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-top: 1px dashed var(--border-divider);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.plan-card-current-status i { color: #00d614; }
 
 /* Trust strip */
 .planes-trust-strip { padding: 32px 0; text-align: center; border-top: 1px solid var(--border-divider); border-bottom: 1px solid var(--border-divider); margin: 32px 0; }
