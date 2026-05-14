@@ -89,7 +89,8 @@ class CampanasDataService {
       p_brand_container_ids: bcids,
     };
 
-    const [kpis, list, dailySeries, winnersVsBurners, briefVsOutcome] = await Promise.allSettled([
+    const [health, kpis, list, dailySeries, winnersVsBurners, briefVsOutcome] = await Promise.allSettled([
+      this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: 30 }),
       this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
       this.sb.rpc('dashboard_campaign_list',               { ...baseArgs, p_status: null }),
       this.sb.rpc('dashboard_campaign_daily_series',       { ...baseArgs, p_campaign_ids: null }),
@@ -103,6 +104,7 @@ class CampanasDataService {
       brandIds:         bcids,
       containers:       this.containers,
 
+      health:           u(health),
       kpis:             u(kpis),
       list:             u(list),
       dailySeries:      u(dailySeries),
