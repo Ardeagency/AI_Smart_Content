@@ -473,45 +473,128 @@ class MonitoringView extends BaseView {
   }
 
   /* ══════════════════════════════════════════════════════════
-     TAB: URL WATCHERS (CRUD)
+     TAB: URL WATCHERS — cards con feed in-line de cambios detectados
   ══════════════════════════════════════════════════════════ */
-  _renderWatchers(body) {
-    const watchers = this._data.watchers.data || [];
-    const fmtDate = (iso) => iso ? new Date(iso).toLocaleString('es-CO',
-      { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+  _relativeTime(iso) {
+    if (!iso) return '—';
+    const diff = Date.now() - new Date(iso).getTime();
+    if (diff < 60 * 1000) return 'hace segundos';
+    const min = Math.floor(diff / 60000);
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `hace ${d} d`;
+    return new Date(iso).toLocaleDateString('es-CO',
+      { day: '2-digit', month: 'short' });
+  }
 
-    const rows = watchers.map(w => `
-      <tr data-row-id="${this._esc(w.id)}">
-        <td>
-          <div class="mn-cell-strong">${this._esc(w.label || w.url)}</div>
-          <div class="mn-cell-sub"><a href="${this._esc(w.url)}" target="_blank" rel="noopener">${this._esc(w.url)}</a></div>
-        </td>
-        <td>${this._esc(fmtDate(w.last_checked_at))}</td>
-        <td>
-          <label class="mn-toggle">
-            <input type="checkbox" ${w.is_active ? 'checked' : ''} data-action="toggle-watcher" data-id="${this._esc(w.id)}">
-            <span class="mn-toggle-track"></span>
-          </label>
-        </td>
-        <td class="mn-actions">
-          <button class="mn-btn-icon" data-action="edit-watcher" data-id="${this._esc(w.id)}" title="Editar"><i class="fas fa-pen"></i></button>
-          <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-watcher" data-id="${this._esc(w.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`).join('');
+  _parseSignalContent(text) {
+    if (!text) return {};
+    try { return JSON.parse(text); } catch (_) { return {}; }
+  }
+
+  _renderWatchers(body) {
+    const watchers   = this._data.watchers.data || [];
+    const signals    = this._data.urlChanges?.data || [];
+
+    // Indexar signals por url (de su content_text JSON) y por entity_id como
+    // fallback, para asociar cada signal al watcher correcto aun cuando una
+    // entity tenga múltiples watchers.
+    const signalsByUrl = new Map();
+    signals.forEach(s => {
+      const c = this._parseSignalContent(s.content_text);
+      const key = c.url || `entity:${s.entity_id}`;
+      if (!signalsByUrl.has(key)) signalsByUrl.set(key, []);
+      signalsByUrl.get(key).push({ ...s, _parsed: c });
+    });
+
+    const cards = watchers.map(w => {
+      const wsigs = (signalsByUrl.get(w.url) || []).slice(0, 3);
+      const lastChange = wsigs[0]?.captured_at || null;
+      const hostname = (() => {
+        try { return new URL(w.url).hostname.replace(/^www\./, ''); } catch (_) { return w.url; }
+      })();
+
+      // Estado del watcher: paused | error | changed | quiet | new
+      let statusTone, statusLabel;
+      if (!w.is_active) {
+        statusTone = 'paused';  statusLabel = 'Pausada';
+      } else if (lastChange && (Date.now() - new Date(lastChange).getTime()) < 24 * 60 * 60 * 1000) {
+        statusTone = 'changed'; statusLabel = 'Cambio reciente';
+      } else if (w.last_checked_at) {
+        statusTone = 'quiet';   statusLabel = 'Sin cambios';
+      } else {
+        statusTone = 'new';     statusLabel = 'Pendiente primer scan';
+      }
+
+      const feedHtml = wsigs.length
+        ? wsigs.map(s => {
+            const excerpt = (s._parsed.excerpt || '').slice(0, 180);
+            return `
+              <div class="mn-watcher-signal">
+                <div class="mn-watcher-signal-head">
+                  <i class="fas fa-circle-dot mn-watcher-signal-dot"></i>
+                  <span class="mn-watcher-signal-when">${this._esc(this._relativeTime(s.captured_at))}</span>
+                </div>
+                ${excerpt ? `<div class="mn-watcher-signal-excerpt">${this._esc(excerpt)}${excerpt.length === 180 ? '…' : ''}</div>` : ''}
+              </div>`;
+          }).join('')
+        : `<div class="mn-watcher-feed-empty">
+             ${w.last_checked_at
+               ? `Revisado ${this._esc(this._relativeTime(w.last_checked_at))}. Sin cambios desde entonces.`
+               : `Primer scan en marcha — el scheduler corre cada ~10 min.`}
+           </div>`;
+
+      return `
+        <article class="mn-watcher-card" data-row-id="${this._esc(w.id)}">
+          <header class="mn-watcher-head">
+            <div class="mn-watcher-head-main">
+              <div class="mn-watcher-title">${this._esc(w.label || hostname)}</div>
+              <a class="mn-watcher-url" href="${this._esc(w.url)}" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i> ${this._esc(hostname)}
+              </a>
+            </div>
+            <span class="mn-watcher-status mn-watcher-status--${statusTone}">
+              <span class="mn-watcher-status-dot"></span>${statusLabel}
+            </span>
+          </header>
+          <div class="mn-watcher-feed">
+            <div class="mn-watcher-feed-title">
+              <span>Cambios detectados</span>
+              <span class="mn-watcher-feed-count">${wsigs.length}</span>
+            </div>
+            ${feedHtml}
+          </div>
+          <footer class="mn-watcher-foot">
+            <span class="mn-watcher-meta">
+              <i class="fas fa-rotate"></i> ${this._esc(this._relativeTime(w.last_checked_at))}
+            </span>
+            <div class="mn-watcher-foot-actions">
+              <label class="mn-toggle" title="${w.is_active ? 'Pausar' : 'Activar'}">
+                <input type="checkbox" ${w.is_active ? 'checked' : ''} data-action="toggle-watcher" data-id="${this._esc(w.id)}">
+                <span class="mn-toggle-track"></span>
+              </label>
+              <button class="mn-btn-icon" data-action="edit-watcher" data-id="${this._esc(w.id)}" title="Editar"><i class="fas fa-pen"></i></button>
+              <button class="mn-btn-icon mn-btn-icon--danger" data-action="delete-watcher" data-id="${this._esc(w.id)}" title="Eliminar"><i class="fas fa-trash"></i></button>
+            </div>
+          </footer>
+        </article>`;
+    }).join('');
 
     body.innerHTML = `
       <div class="mn-page">
         <div class="mn-toolbar">
-          <h2 class="mn-section-title">URLs vigiladas <span class="mn-count">${watchers.length}</span></h2>
+          <div class="mn-toolbar-main">
+            <h2 class="mn-section-title">URLs vigiladas <span class="mn-count">${watchers.length}</span></h2>
+            <p class="mn-toolbar-sub">Detectamos cambios cada ~10 min comparando el hash del contenido. Vincula la URL a un perfil para que los cambios alimenten señales y trends.</p>
+          </div>
           <button class="mn-btn-primary" data-action="new-watcher">
             <i class="fas fa-plus"></i> Nueva URL
           </button>
         </div>
         ${watchers.length ? `
-          <table class="mn-table">
-            <thead><tr><th>URL</th><th>Última revisión</th><th>Activa</th><th></th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>` : `
+          <div class="mn-watcher-grid">${cards}</div>` : `
           <div class="mn-empty">
             <p>Aún no hay URLs vigiladas. Agrega la primera para detectar cambios automáticamente.</p>
           </div>`}

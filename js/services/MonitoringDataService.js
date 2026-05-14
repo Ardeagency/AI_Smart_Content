@@ -63,11 +63,33 @@ class MonitoringDataService {
     const u = (s) => s.status === 'fulfilled'
       ? { data: s.value.data || [], error: s.value.error || null }
       : { data: [], error: s.reason };
+
+    // url_change signals: traer cambios detectados por el scraper para
+    // pintarlos in-line en las cards del tab Watchers. Filtramos por las
+    // entities ya cargadas (signals no tienen organization_id propio).
+    let urlChanges = { data: [], error: null };
+    const entityIds = (u(entities).data || []).map(e => e.id);
+    if (entityIds.length) {
+      try {
+        const { data, error } = await this.sb
+          .from('intelligence_signals')
+          .select('id, entity_id, signal_type, content_text, captured_at')
+          .in('entity_id', entityIds)
+          .eq('signal_type', 'url_change')
+          .order('captured_at', { ascending: false })
+          .limit(200);
+        urlChanges = { data: data || [], error: error || null };
+      } catch (e) {
+        urlChanges = { data: [], error: e };
+      }
+    }
+
     return {
-      containers: u(containers),
-      entities:   u(entities),
-      triggers:   u(triggers),
-      watchers:   u(watchers),
+      containers:  u(containers),
+      entities:    u(entities),
+      triggers:    u(triggers),
+      watchers:    u(watchers),
+      urlChanges,
     };
   }
 
