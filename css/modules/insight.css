@@ -2343,6 +2343,138 @@
   .mb-feat-card { width: calc(50% - 0.3rem); }
 }
 
+/* ── Diagnóstico Estratégico (SWOT dinámico) ──────────────────── */
+.mb-swot-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin: 0 auto 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+}
+.mb-swot-header { margin-bottom: 1rem; }
+.mb-swot-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+}
+.mb-swot-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.mb-swot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.mb-swot-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-divider);
+  background: rgba(255,255,255,0.015);
+}
+.mb-swot-col--virtudes        { border-left: 3px solid #6bcf7f; }
+.mb-swot-col--vulnerabilidades { border-left: 3px solid #e09145; }
+
+.mb-swot-col-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.mb-swot-col-dot {
+  width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0;
+}
+.mb-swot-col-dot--pos { background: #6bcf7f; box-shadow: 0 0 8px rgba(107,207,127,0.5); }
+.mb-swot-col-dot--neg { background: #e09145; box-shadow: 0 0 8px rgba(224,145,69,0.5); }
+
+.mb-swot-col-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mb-swot-col-count {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+}
+
+.mb-swot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mb-swot-item {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border-divider);
+}
+.mb-swot-item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.mb-swot-item-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+.mb-swot-item-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.mb-swot-item--pos .mb-swot-item-tag { background: rgba(107,207,127,0.15); color: #9be5ad; }
+.mb-swot-item--neg .mb-swot-item-tag { background: rgba(224,145,69,0.15); color: #f3b988; }
+.mb-swot-item--critical .mb-swot-item-tag { background: rgba(224,100,100,0.18); color: #f0a0a0; }
+.mb-swot-item--high     .mb-swot-item-tag { background: rgba(224,145,69,0.18); color: #f3b988; }
+.mb-swot-item--medium   .mb-swot-item-tag { background: rgba(220,200,80,0.15);  color: #e8d77a; }
+.mb-swot-item--low      .mb-swot-item-tag { background: rgba(150,150,150,0.15); color: #b0b0b0; }
+
+.mb-swot-item-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.mb-swot-empty {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  padding: 0.75rem;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .mb-swot-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Mi Marca filtros bar (estilo Production en línea, no movido al header) ── */
 .mb-filters-bar {
   margin: 0 0 1.25rem;

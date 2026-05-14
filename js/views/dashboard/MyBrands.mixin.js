@@ -159,7 +159,171 @@
             ${this._buildHealthGauge(data?.health?.data)}
             ${this._buildFeaturedCards(data?.featured)}
           </div>
+
+          ${this._buildSwotCard(data)}
         </div>`;
+    },
+
+    /* ════════════════════════════════════════════════════════════════
+       Diagnóstico Estratégico (SWOT dinámico)
+       Virtudes (qué hace bien la marca) | Vulnerabilidades (golpes)
+       ════════════════════════════════════════════════════════════════ */
+    _buildSwotCard(data) {
+      const virtudes = this._deriveVirtudes(data);
+      const vulnerabilidades = this._deriveVulnerabilidades(data);
+
+      const hasAny = virtudes.length > 0 || vulnerabilidades.length > 0;
+      if (!hasAny && shouldHideEmpty()) return '';
+
+      return `
+        <section class="mb-swot-card">
+          <header class="mb-swot-header">
+            <div class="mb-swot-title">Diagnóstico Estratégico</div>
+            <div class="mb-swot-subtitle">Vera detecta qué estás haciendo bien y dónde te están golpeando.</div>
+          </header>
+
+          <div class="mb-swot-grid">
+            <div class="mb-swot-col mb-swot-col--virtudes">
+              <div class="mb-swot-col-header">
+                <span class="mb-swot-col-dot mb-swot-col-dot--pos"></span>
+                <span class="mb-swot-col-name">Virtudes</span>
+                <span class="mb-swot-col-count">${virtudes.length}</span>
+              </div>
+              ${virtudes.length === 0
+                ? `<div class="mb-swot-empty">Vera aún no detecta fortalezas claras en la ventana.</div>`
+                : `<ul class="mb-swot-list">${virtudes.map(v => this._buildSwotItem(v, 'pos')).join('')}</ul>`
+              }
+            </div>
+
+            <div class="mb-swot-col mb-swot-col--vulnerabilidades">
+              <div class="mb-swot-col-header">
+                <span class="mb-swot-col-dot mb-swot-col-dot--neg"></span>
+                <span class="mb-swot-col-name">Vulnerabilidades</span>
+                <span class="mb-swot-col-count">${vulnerabilidades.length}</span>
+              </div>
+              ${vulnerabilidades.length === 0
+                ? `<div class="mb-swot-empty">Sin vulnerabilidades activas. ✓</div>`
+                : `<ul class="mb-swot-list">${vulnerabilidades.map(v => this._buildSwotItem(v, 'neg')).join('')}</ul>`
+              }
+            </div>
+          </div>
+        </section>`;
+    },
+
+    _buildSwotItem(item, polarity) {
+      const sev = item.severity ? ` mb-swot-item--${item.severity}` : '';
+      return `
+        <li class="mb-swot-item mb-swot-item--${polarity}${sev}">
+          <div class="mb-swot-item-head">
+            <span class="mb-swot-item-label">${this._esc(item.label)}</span>
+            ${item.tag ? `<span class="mb-swot-item-tag">${this._esc(item.tag)}</span>` : ''}
+          </div>
+          ${item.detail ? `<p class="mb-swot-item-detail">${this._esc(item.detail)}</p>` : ''}
+        </li>`;
+    },
+
+    /** Virtudes: combina componentes de salud "bueno", featured top y winners. */
+    _deriveVirtudes(data) {
+      const out = [];
+      const health = data?.health?.data;
+      const featured = data?.featured || {};
+      const wb = data?.winnersVsBurners?.data || {};
+
+      // 1. Componentes de salud con verdict 'bueno'
+      if (Array.isArray(health?.breakdown)) {
+        for (const b of health.breakdown) {
+          if (b.verdict === 'bueno' && b.gap_description) {
+            out.push({
+              label:  b.label,
+              tag:    `${b.raw_score}/100`,
+              detail: b.gap_description,
+            });
+          }
+        }
+      }
+
+      // 2. Featured top — qué te está funcionando
+      const topic = (featured.topic?.data || [])[0];
+      if (topic?.topic) {
+        out.push({
+          label:  `Tema "${topic.topic}"`,
+          tag:    `${this._compactNum(topic.total_engagement)} eng`,
+          detail: `Tu tema más exitoso en la ventana — ${topic.usage_count} posts.`,
+        });
+      }
+      const tone = (featured.tones?.data || [])[0];
+      if (tone?.tone_name) {
+        out.push({
+          label:  `Tono "${tone.tone_name}"`,
+          tag:    `${this._compactNum(tone.total_engagement)} eng`,
+          detail: `Tu tono más efectivo — ${tone.posts_count} posts conectan con tu audiencia.`,
+        });
+      }
+      const hour = (featured.hour?.data || [])[0];
+      if (hour?.hour != null) {
+        out.push({
+          label:  `Horario ${String(hour.hour).padStart(2, '0')}:00`,
+          tag:    `${this._compactNum(hour.avg_engagement_per_post)} eng/post`,
+          detail: `Tu micro-momento ganador del día — ${hour.posts_count} publicaciones lo confirman.`,
+        });
+      }
+
+      // 3. Winners de campañas
+      const winners = Array.isArray(wb.winners) ? wb.winners : [];
+      for (const w of winners.slice(0, 2)) {
+        out.push({
+          label:  w.nombre_campana,
+          tag:    `${this._compactNum(w.conversions)} conv`,
+          detail: w.description || `Campaña convirtiendo a $${Math.round(w.cost_per_conv || 0).toLocaleString('es-CO')}/conv.`,
+        });
+      }
+
+      return out.slice(0, 6);
+    },
+
+    /** Vulnerabilidades: brand_vulnerabilities + top_gaps + burners. */
+    _deriveVulnerabilidades(data) {
+      const out = [];
+      const health = data?.health?.data;
+      const wb = data?.winnersVsBurners?.data || {};
+      const vulns = Array.isArray(data?.vulnerabilities?.data) ? data.vulnerabilities.data : [];
+
+      // 1. Vulnerabilidades registradas (de brand_vulnerabilities)
+      const sevRank = { critical: 0, high: 1, medium: 2, low: 3 };
+      const sortedVulns = [...vulns].sort((a, b) =>
+        (sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9)
+      );
+      for (const v of sortedVulns.slice(0, 4)) {
+        out.push({
+          label:    v.title || 'Vulnerabilidad detectada',
+          tag:      v.severity || 'medium',
+          severity: v.severity,
+          detail:   v.description || '',
+        });
+      }
+
+      // 2. Top gaps del health (con verdict bajo)
+      if (Array.isArray(health?.top_gaps)) {
+        for (const g of health.top_gaps.slice(0, 3)) {
+          out.push({
+            label:  g.label,
+            tag:    `−${Number(g.max_lift || 0).toFixed(0)} pts`,
+            detail: g.gap_description || '',
+          });
+        }
+      }
+
+      // 3. Burner campaigns (gasto sin retorno)
+      const burners = Array.isArray(wb.burners) ? wb.burners : [];
+      for (const b of burners.slice(0, 2)) {
+        out.push({
+          label:  b.nombre_campana,
+          tag:    `${fmt.money(b.spend)} gasto`,
+          detail: b.description || `Inversión sin conversiones medibles en la ventana.`,
+        });
+      }
+
+      return out.slice(0, 8);
     },
 
     /* ── 4 cards featured (Tema / Tono / Horario / Hashtag) ─── */

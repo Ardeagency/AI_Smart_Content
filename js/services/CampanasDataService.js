@@ -103,10 +103,22 @@ class CampanasDataService {
       p_post_source:         'own',
     };
 
+    // brand_vulnerabilities abiertas: query directa al table (no hay RPC pública).
+    const vulnsPromise = this.sb
+      .from('brand_vulnerabilities')
+      .select('id, title, description, severity, status, created_at, brand_container_id, metadata')
+      .eq('organization_id', this.orgId)
+      .in('status', ['open', 'in_progress'])
+      .order('severity', { ascending: true })  // critical primero (alfabético works: critical<high<low<medium → ordenamos JS después si hace falta)
+      .order('created_at', { ascending: false })
+      .limit(8)
+      .then(r => ({ data: r.data, error: r.error }));
+
     const [
       health,
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
       featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
+      vulnerabilities,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
 
@@ -121,6 +133,8 @@ class CampanasDataService {
       this.sb.rpc('dashboard_brand_featured_hashtag',      featuredArgs),
       this.sb.rpc('dashboard_brand_featured_hour',         featuredArgs),
       this.sb.rpc('dashboard_estrategia_tones',            { ...featuredArgs, p_limit: 5 }),
+
+      vulnsPromise,
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -142,6 +156,8 @@ class CampanasDataService {
         hour:    u(featuredHour),
         tones:   u(estrategiaTones),
       },
+
+      vulnerabilities: u(vulnerabilities),
     };
   }
 
