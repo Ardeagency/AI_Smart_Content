@@ -301,7 +301,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 1100px) {
@@ -318,6 +318,19 @@
   border-radius: 0;
   padding: 0 16px;
   min-height: 0;
+}
+
+/* Solo en desktop (4 cols): el kanban se ancla a la altura del viewport
+   y son los cuerpos de columna los que scrollean — la página queda fija. */
+@media (min-width: 1101px) {
+  .mn-kanban {
+    height: calc(100vh - 240px);
+    overflow: hidden;
+  }
+  .mn-kanban-col {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 
 /* Única decoración permitida: línea sutil que separa columnas entre sí. */
@@ -385,6 +398,26 @@
 
 .mn-kanban-col-body {
   display: flex; flex-direction: column; gap: 10px;
+  min-height: 0;
+}
+
+/* Scroll interno solo cuando el contenedor tiene altura fija (desktop). */
+@media (min-width: 1101px) {
+  .mn-kanban-col-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-right: -6px;
+  }
+  .mn-kanban-col-body::-webkit-scrollbar { width: 6px; }
+  .mn-kanban-col-body::-webkit-scrollbar-track { background: transparent; }
+  .mn-kanban-col-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+  }
+  .mn-kanban-col-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
 }
 
 .mn-kanban-empty {
