@@ -185,6 +185,7 @@ class PlanesView extends BaseView {
 
     const classes = [
       'plan-card-small',
+      'glass-black',
       plan.is_popular ? 'plan-card-small--popular' : '',
       current ? 'plan-card-small--current' : '',
     ].filter(Boolean).join(' ');
