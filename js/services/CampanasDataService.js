@@ -94,13 +94,33 @@ class CampanasDataService {
       (new Date(date_to).getTime() - new Date(date_from).getTime()) / 86400_000
     ));
 
-    const [health, kpis, list, dailySeries, winnersVsBurners, briefVsOutcome] = await Promise.allSettled([
+    // Args para las RPCs featured de Mi Marca (post_source='own').
+    const featuredArgs = {
+      p_org_id:              this.orgId,
+      p_date_from:           date_from,
+      p_date_to:             date_to,
+      p_brand_container_ids: bcids,
+      p_post_source:         'own',
+    };
+
+    const [
+      health,
+      kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
+      featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
+    ] = await Promise.allSettled([
       this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
+
       this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
       this.sb.rpc('dashboard_campaign_list',               { ...baseArgs, p_status: null }),
       this.sb.rpc('dashboard_campaign_daily_series',       { ...baseArgs, p_campaign_ids: null }),
       this.sb.rpc('dashboard_campaign_winners_vs_burners', { ...baseArgs, p_limit: 3 }),
       this.sb.rpc('dashboard_campaign_brief_vs_outcome',   { p_org_id: this.orgId, p_brief_id: null, p_date_from: date_from, p_date_to: date_to }),
+
+      // Featured: 4 cards después de Salud
+      this.sb.rpc('dashboard_brand_featured_topic',        featuredArgs),
+      this.sb.rpc('dashboard_brand_featured_hashtag',      featuredArgs),
+      this.sb.rpc('dashboard_brand_featured_hour',         featuredArgs),
+      this.sb.rpc('dashboard_estrategia_tones',            { ...featuredArgs, p_limit: 5 }),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -115,6 +135,13 @@ class CampanasDataService {
       dailySeries:      u(dailySeries),
       winnersVsBurners: u(winnersVsBurners),
       briefVsOutcome:   u(briefVsOutcome),
+
+      featured: {
+        topic:   u(featuredTopic),
+        hashtag: u(featuredHashtag),
+        hour:    u(featuredHour),
+        tones:   u(estrategiaTones),
+      },
     };
   }
 

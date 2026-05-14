@@ -139,8 +139,84 @@
         <div class="insight-page" id="mbPage">
           ${this._buildMbFiltersBar(data)}
 
-          ${this._buildHealthGauge(data?.health?.data)}
+          <div class="mb-cards-row">
+            ${this._buildHealthGauge(data?.health?.data)}
+            ${this._buildFeaturedCards(data?.featured)}
+          </div>
         </div>`;
+    },
+
+    /* ── 4 cards featured (Tema / Tono / Horario / Hashtag) ─── */
+    _buildFeaturedCards(featured) {
+      const topic   = (featured?.topic?.data   || [])[0] || null;
+      const tone    = (featured?.tones?.data   || [])[0] || null;
+      const hour    = (featured?.hour?.data    || [])[0] || null;
+      const hashtag = (featured?.hashtag?.data || [])[0] || null;
+
+      return `
+        ${this._buildFeaturedCard({
+          kind: 'topic',
+          label: 'Tema ganador',
+          headline: topic?.topic,
+          metricPrimary: topic ? `${fmt.int(topic.usage_count)} posts` : null,
+          metricSecondary: topic ? `${this._compactNum(topic.total_engagement)} engagement` : null,
+          emptyHint: 'Sin temas detectados en la ventana.',
+        })}
+
+        ${this._buildFeaturedCard({
+          kind: 'tone',
+          label: 'Tono efectivo',
+          headline: tone?.tone_name,
+          metricPrimary: tone ? `${fmt.int(tone.posts_count)} posts` : null,
+          metricSecondary: tone ? `${this._compactNum(tone.total_engagement)} engagement` : null,
+          emptyHint: 'Sin tonos detectados aún.',
+        })}
+
+        ${this._buildFeaturedCard({
+          kind: 'hour',
+          label: 'Horario estrella',
+          headline: (hour && hour.hour != null) ? `${String(hour.hour).padStart(2, '0')}:00` : null,
+          metricPrimary: hour ? `${fmt.int(hour.posts_count)} posts publicados` : null,
+          metricSecondary: hour ? `${this._compactNum(hour.avg_engagement_per_post)} eng/post` : null,
+          emptyHint: 'Sin publicaciones medidas por hora.',
+        })}
+
+        ${this._buildFeaturedCard({
+          kind: 'hashtag',
+          label: 'Hashtag dominante',
+          headline: hashtag?.hashtag ? `#${hashtag.hashtag}` : null,
+          metricPrimary: hashtag ? `${fmt.int(hashtag.usage_count)} usos` : null,
+          metricSecondary: hashtag ? `${this._compactNum(hashtag.total_engagement)} engagement` : null,
+          emptyHint: 'Aún no se detectan hashtags propios.',
+        })}
+      `;
+    },
+
+    _buildFeaturedCard(opts) {
+      const has = !!opts.headline;
+      return `
+        <section class="mb-feat-card mb-feat-card--${opts.kind}">
+          <div class="mb-feat-label">${this._esc(opts.label)}</div>
+          ${has ? `
+            <div class="mb-feat-headline" title="${this._esc(opts.headline)}">${this._esc(opts.headline)}</div>
+            <div class="mb-feat-metrics">
+              <div class="mb-feat-metric-primary">${this._esc(opts.metricPrimary || '')}</div>
+              <div class="mb-feat-metric-secondary">${this._esc(opts.metricSecondary || '')}</div>
+            </div>
+          ` : `
+            <div class="mb-feat-empty">${this._esc(opts.emptyHint)}</div>
+          `}
+        </section>`;
+    },
+
+    /** Formatea números grandes como 84.7K, 1.9M. */
+    _compactNum(n) {
+      if (n == null) return '—';
+      const num = Number(n);
+      if (!isFinite(num)) return '—';
+      if (Math.abs(num) >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (Math.abs(num) >= 1_000)     return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return Math.round(num).toLocaleString('es-CO');
     },
 
     /* ── Barra de filtros (estilo Production .living-filter) ─── */
