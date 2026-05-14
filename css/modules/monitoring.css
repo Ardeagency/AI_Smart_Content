@@ -300,7 +300,7 @@
 .mn-kanban {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
   align-items: start;
 }
 
@@ -312,18 +312,44 @@
 }
 
 .mn-kanban-col {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 12px;
-  min-height: 220px;
   display: flex; flex-direction: column; gap: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0 16px;
+  min-height: 0;
 }
+
+/* Única decoración permitida: línea sutil que separa columnas entre sí. */
+@media (min-width: 1101px) {
+  .mn-kanban-col + .mn-kanban-col {
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+  }
+}
+@media (min-width: 641px) and (max-width: 1100px) {
+  .mn-kanban-col:nth-child(even) {
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .mn-kanban-col:nth-child(n+3) {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+}
+@media (max-width: 640px) {
+  .mn-kanban-col + .mn-kanban-col {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+}
+.mn-kanban-col:first-child { padding-left: 0; }
+.mn-kanban-col:last-child  { padding-right: 0; }
 
 .mn-kanban-col-head {
   display: flex; flex-direction: column; gap: 4px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0;
+  border-bottom: none;
 }
 .mn-kanban-col-title {
   display: flex; align-items: center; gap: 8px;
@@ -352,14 +378,10 @@
 }
 
 .mn-kanban-col-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
   flex-shrink: 0;
 }
-.mn-kanban-col--new    .mn-kanban-col-dot { background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
-.mn-kanban-col--active .mn-kanban-col-dot { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); }
-.mn-kanban-col--stale  .mn-kanban-col-dot { background: #fbbf24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
-.mn-kanban-col--paused .mn-kanban-col-dot { background: #6b7280; }
 
 .mn-kanban-col-body {
   display: flex; flex-direction: column; gap: 10px;
