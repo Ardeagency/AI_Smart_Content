@@ -42,6 +42,113 @@
     gap: 1.5rem;
 }
 
+/* ── Org context strip (Fase A) ───────────────────────────────────────────
+   Shows which org these plans apply to + current plan + usage + renewal. */
+.planes-org-context {
+    width: 100%;
+    max-width: 760px;
+    border-radius: 16px;
+    border: 1px solid var(--border-divider);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.planes-org-context[hidden] { display: none; }
+
+.planes-org-context-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.planes-org-context-org {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+}
+
+.planes-org-context-eyebrow {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.planes-org-context-plan {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.planes-org-context-renew {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.planes-org-context-renew i { font-size: 0.75rem; }
+
+.planes-org-context-usage {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem 1.25rem;
+}
+
+.planes-usage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.planes-usage-meter-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.82rem;
+}
+
+.planes-usage-meter-label {
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.planes-usage-meter-label i { font-size: 0.72rem; opacity: 0.8; }
+
+.planes-usage-meter-value { color: var(--text-primary); font-weight: 500; }
+.planes-usage-meter-value span { color: var(--text-secondary); font-weight: 400; }
+
+.planes-usage-meter-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.planes-usage-meter-bar > span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #00d614, #00e7ff);
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+
+.planes-usage-meter.is-warning .planes-usage-meter-bar > span {
+    background: linear-gradient(90deg, #ffe500, #ff6500);
+}
+
+.planes-usage-meter.is-danger .planes-usage-meter-bar > span {
+    background: linear-gradient(90deg, #ff6500, #ff0000);
+}
+
 .planes-billing-toggle {
     display: inline-flex;
     background: var(--living-bg-card, rgba(21, 23, 28, 0.6));

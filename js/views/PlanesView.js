@@ -3,7 +3,10 @@
  *
  * 3 tiers (Creator/Team/Agency) — sin Free ni Enterprise (eliminados 2026-05-14).
  *
- * Stripe NO conectado: CTAs marcan "Próximamente" hasta integrar.
+ * Stripe NO conectado: CTAs muestran "Billing is not connected yet" hasta integrar (Fase C).
+ *
+ * Fase A (2026-05-14): contexto del org en header (plan actual, créditos, storage,
+ * próxima renovación), CTAs diferenciados Upgrade/Downgrade/Current/Trial, copy en inglés.
  */
 class PlanesView extends BaseView {
   static cacheable = true;
@@ -15,6 +18,9 @@ class PlanesView extends BaseView {
     this.billingPeriod = 'annual'; // default = annual (research 2026)
     this.plans = [];
     this.currentSubscription = null;
+    this.currentPlan = null;          // plan row asociado a la subscription activa
+    this.orgCredits = null;           // { credits_available, credits_total }
+    this.orgStorage = null;           // { used_mb, max_mb }
   }
 
   async onEnter() {}
@@ -35,8 +41,11 @@ class PlanesView extends BaseView {
       const [plans] = await Promise.all([
         window.apiClient.query('plans:active', () => this._fetchPlans(), { ttl: 5 * 60 * 1000, staleWhileRevalidate: true }),
         this._loadCurrentSubscription(),
+        this._loadOrgUsage(),
       ]);
       this.plans = Array.isArray(plans) ? plans : [];
+      this._resolveCurrentPlan();
+      this._renderOrgContext();
       this._renderPlansList();
       this._renderComparisonTable();
       this._applyBillingPeriod();
@@ -61,10 +70,15 @@ class PlanesView extends BaseView {
     return data || [];
   }
 
-  async _loadCurrentSubscription() {
-    const orgId = window.currentOrgId
+  _resolveOrgId() {
+    return window.currentOrgId
       || window.appState?.get('selectedOrganizationId')
-      || localStorage.getItem('selectedOrganizationId');
+      || localStorage.getItem('selectedOrganizationId')
+      || null;
+  }
+
+  async _loadCurrentSubscription() {
+    const orgId = this._resolveOrgId();
     if (!orgId) return;
     const supabase = await window.apiClient.getSupabase();
     if (!supabase) return;
@@ -76,6 +90,32 @@ class PlanesView extends BaseView {
       .limit(1)
       .maybeSingle();
     this.currentSubscription = data || null;
+  }
+
+  async _loadOrgUsage() {
+    const orgId = this._resolveOrgId();
+    if (!orgId) return;
+    const supabase = await window.apiClient.getSupabase();
+    if (!supabase) return;
+    const [{ data: credits }, { data: storage }] = await Promise.all([
+      supabase.from('organization_credits')
+        .select('credits_available, credits_total').eq('organization_id', orgId).maybeSingle(),
+      supabase.from('storage_usage')
+        .select('used_mb, max_mb').eq('organization_id', orgId).maybeSingle(),
+    ]);
+    this.orgCredits = credits || null;
+    this.orgStorage = storage || null;
+  }
+
+  _resolveCurrentPlan() {
+    if (!this.currentSubscription?.plan_id) { this.currentPlan = null; return; }
+    this.currentPlan = this.plans.find(p => p.id === this.currentSubscription.plan_id) || null;
+  }
+
+  /** True si la subscription está en estado que cuenta como "activa" (no cancelled/expired). */
+  _hasActiveSubscription() {
+    const s = this.currentSubscription?.status;
+    return s === 'active' || s === 'trialing' || s === 'past_due';
   }
 
   // ─── formatters ──────────────────────────────────────────────────────
@@ -98,33 +138,48 @@ class PlanesView extends BaseView {
   }
 
   isCurrentPlan(plan) {
-    return this.currentSubscription?.plan_id === plan.id
-      && this.currentSubscription?.status === 'active';
+    return this.currentSubscription?.plan_id === plan.id && this._hasActiveSubscription();
   }
 
+  /**
+   * Clasifica el CTA según relación con plan actual:
+   * - current: este es el plan activo → botón disabled "Current plan"
+   * - upgrade: tier superior (display_order > current) → "Upgrade to X"
+   * - downgrade: tier inferior (display_order < current) → "Downgrade to X"
+   * - trial: sin subscription activa → "Start 14-day trial"
+   */
   ctaForPlan(plan) {
-    if (this.isCurrentPlan(plan)) return { label: 'Plan actual', icon: 'fa-check', kind: 'current' };
-    return { label: 'Empezar prueba 14 días', icon: 'fa-arrow-right', kind: 'trial' };
+    if (this.isCurrentPlan(plan)) {
+      return { label: 'Current plan', icon: 'fa-check', kind: 'current' };
+    }
+    if (!this._hasActiveSubscription() || !this.currentPlan) {
+      return { label: 'Start 14-day trial', icon: 'fa-arrow-right', kind: 'trial' };
+    }
+    const cur = Number(this.currentPlan.display_order) || 0;
+    const tgt = Number(plan.display_order) || 0;
+    if (tgt > cur) return { label: `Upgrade to ${plan.name}`, icon: 'fa-arrow-up', kind: 'upgrade' };
+    if (tgt < cur) return { label: `Downgrade to ${plan.name}`, icon: 'fa-arrow-down', kind: 'downgrade' };
+    return { label: `Switch to ${plan.name}`, icon: 'fa-exchange-alt', kind: 'switch' };
   }
 
   buildFeatureBullets(plan) {
     const items = [];
     if (plan.credits_monthly > 0) {
-      items.push(`<strong>${plan.credits_monthly.toLocaleString('es')}</strong> créditos / mes`);
+      items.push(`<strong>${plan.credits_monthly.toLocaleString('en-US')}</strong> credits / month`);
     }
     if (plan.max_handles > 0) {
-      items.push(`Hasta <strong>${plan.max_handles}</strong> marcas / handles`);
+      items.push(`Up to <strong>${plan.max_handles}</strong> brands / handles`);
     }
     const storage = this.formatStorage(plan.storage_mb);
-    if (storage) items.push(`<strong>${storage}</strong> de Storage`);
-    if (plan.features?.vera_full) items.push(`Vera completo (chat + acciones)`);
+    if (storage) items.push(`<strong>${storage}</strong> of Storage`);
+    if (plan.features?.vera_full) items.push(`Vera full (chat + actions)`);
     else if (plan.features?.vera_basic) items.push(`Vera chat`);
-    if (plan.features?.team_seats) items.push(`<strong>${plan.features.team_seats}</strong> miembros`);
+    if (plan.features?.team_seats) items.push(`<strong>${plan.features.team_seats}</strong> members`);
     if (plan.features?.insights) items.push(`Insights & analytics`);
     if (plan.features?.brand_kits) items.push(`<strong>${plan.features.brand_kits}</strong> brand kits`);
-    if (plan.features?.sub_brands) items.push(`Sub-marcas (multi-cliente)`);
+    if (plan.features?.sub_brands) items.push(`Sub-brands (multi-client)`);
     if (plan.features?.custom_domain) items.push(`Custom domain`);
-    if (plan.features?.priority_support) items.push(`Soporte prioritario`);
+    if (plan.features?.priority_support) items.push(`Priority support`);
     return items;
   }
 
@@ -136,10 +191,12 @@ class PlanesView extends BaseView {
         <header class="planes-hero">
           <h1 class="planes-hero-bg-word" aria-hidden="true">PLANS</h1>
           <div class="planes-hero-content">
-            <div class="planes-billing-toggle" role="group" aria-label="Tipo de facturación">
-              <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">Mensual</button>
+            <div class="planes-org-context glass-black" id="planesOrgContext" hidden></div>
+
+            <div class="planes-billing-toggle" role="group" aria-label="Billing period">
+              <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">Monthly</button>
               <button type="button" class="planes-toggle-btn active" data-billing="annual" id="toggleAnnual">
-                Anual <span class="planes-toggle-discount">Ahorra 20%</span>
+                Annual <span class="planes-toggle-discount">Save 20%</span>
               </button>
             </div>
 
@@ -149,7 +206,7 @@ class PlanesView extends BaseView {
 
         <!-- Comparison table -->
         <section class="planes-comparison">
-          <h2 class="planes-comparison-title">Compara los planes en detalle</h2>
+          <h2 class="planes-comparison-title">Compare plans in detail</h2>
           <div id="planesComparison"></div>
         </section>
       </div>
@@ -166,11 +223,81 @@ class PlanesView extends BaseView {
     return Array.from({ length: count }, () => card).join('');
   }
 
+  /** Renders the org context strip: org name, current plan, usage bars, renewal date. */
+  _renderOrgContext() {
+    const host = this.container?.querySelector('#planesOrgContext');
+    if (!host) return;
+
+    const orgId = this._resolveOrgId();
+    if (!orgId) { host.hidden = true; return; }
+
+    const orgName = (window.currentOrgName || '').trim();
+    const planName = this.currentPlan?.name || (this._hasActiveSubscription() ? '—' : 'No active plan');
+    const hasActive = this._hasActiveSubscription();
+
+    const renewISO = this.currentSubscription?.current_period_end;
+    const renewDate = renewISO ? new Date(renewISO) : null;
+    const renewLabel = renewDate && !isNaN(renewDate.getTime())
+      ? renewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : null;
+
+    const credits = this.orgCredits;
+    const creditsBlock = credits && Number(credits.credits_total) > 0
+      ? this._usageMeter({
+          icon: 'fa-bolt',
+          label: 'Credits',
+          used: Number(credits.credits_total) - Number(credits.credits_available || 0),
+          total: Number(credits.credits_total),
+          formatter: (n) => Number(n).toLocaleString('en-US'),
+        })
+      : '';
+
+    const storage = this.orgStorage;
+    const storageBlock = storage && Number(storage.max_mb) > 0
+      ? this._usageMeter({
+          icon: 'fa-database',
+          label: 'Storage',
+          used: Number(storage.used_mb) || 0,
+          total: Number(storage.max_mb) || 0,
+          formatter: (n) => this.formatStorage(n) || `${n} MB`,
+        })
+      : '';
+
+    host.hidden = false;
+    host.innerHTML = `
+      <div class="planes-org-context-main">
+        <div class="planes-org-context-org">
+          <span class="planes-org-context-eyebrow">${hasActive ? 'Currently on' : 'No active plan for'}</span>
+          <span class="planes-org-context-plan">${this.escapeHtml(orgName ? `${orgName} · ${planName}` : planName)}</span>
+        </div>
+        ${renewLabel ? `<div class="planes-org-context-renew"><i class="fas fa-sync-alt"></i> Renews on ${this.escapeHtml(renewLabel)}</div>` : ''}
+      </div>
+      ${(creditsBlock || storageBlock) ? `<div class="planes-org-context-usage">${creditsBlock}${storageBlock}</div>` : ''}
+    `;
+  }
+
+  _usageMeter({ icon, label, used, total, formatter }) {
+    const safeTotal = Math.max(0, total);
+    const safeUsed  = Math.min(Math.max(0, used), safeTotal);
+    const pct = safeTotal > 0 ? Math.round((safeUsed / safeTotal) * 100) : 0;
+    const fmt = formatter || ((n) => String(n));
+    const danger = pct >= 90 ? ' is-danger' : pct >= 75 ? ' is-warning' : '';
+    return `
+      <div class="planes-usage-meter${danger}">
+        <div class="planes-usage-meter-head">
+          <span class="planes-usage-meter-label"><i class="fas ${icon}"></i> ${this.escapeHtml(label)}</span>
+          <span class="planes-usage-meter-value">${this.escapeHtml(fmt(safeUsed))} <span>/ ${this.escapeHtml(fmt(safeTotal))}</span></span>
+        </div>
+        <div class="planes-usage-meter-bar"><span style="width:${pct}%"></span></div>
+      </div>
+    `;
+  }
+
   _renderPlansList() {
     const container = this.container?.querySelector('#planesList');
     if (!container) return;
     if (!this.plans.length) {
-      container.innerHTML = `<div class="planes-empty">No hay planes disponibles.</div>`;
+      container.innerHTML = `<div class="planes-empty">No plans available.</div>`;
       return;
     }
     container.innerHTML = this.plans.map((plan) => this._planCardHtml(plan)).join('');
@@ -192,16 +319,16 @@ class PlanesView extends BaseView {
 
     const priceBlock = `
       <div class="plan-card-price">
-        <span class="price-monthly">$${monthly}<span>/mes</span></span>
+        <span class="price-monthly">$${monthly}<span>/mo</span></span>
         <span class="price-annual">
-          $${monthlyEquivalent}<span>/mes</span>
-          <small>facturado anual · $${annual.toLocaleString('es')}/año</small>
+          $${monthlyEquivalent}<span>/mo</span>
+          <small>billed annually · $${annual.toLocaleString('en-US')}/yr</small>
         </span>
       </div>`;
 
     const badges = [];
-    if (current) badges.push('<span class="plan-card-badge plan-card-badge--current">Plan actual</span>');
-    else if (plan.is_popular) badges.push('<span class="plan-card-badge">Recomendado</span>');
+    if (current) badges.push('<span class="plan-card-badge plan-card-badge--current">Current plan</span>');
+    else if (plan.is_popular) badges.push('<span class="plan-card-badge">Recommended</span>');
 
     return `
       <div class="${classes}" data-plan="${plan.id}">
@@ -229,28 +356,28 @@ class PlanesView extends BaseView {
     if (!this.plans.length) { host.innerHTML = ''; return; }
 
     const rows = [
-      { section: 'Volumen' },
-      { label: 'Créditos / mes',          get: (p) => p.credits_monthly > 0 ? p.credits_monthly.toLocaleString('es') : '—' },
-      { label: 'Marcas / handles',        get: (p) => p.max_handles > 0 ? p.max_handles : '—' },
+      { section: 'Volume' },
+      { label: 'Credits / month',         get: (p) => p.credits_monthly > 0 ? p.credits_monthly.toLocaleString('en-US') : '—' },
+      { label: 'Brands / handles',        get: (p) => p.max_handles > 0 ? p.max_handles : '—' },
       { label: 'Storage',                 get: (p) => this.formatStorage(p.storage_mb) || '—' },
-      { label: 'Miembros',                get: (p) => p.features?.team_seats || '1' },
+      { label: 'Members',                 get: (p) => p.features?.team_seats || '1' },
 
-      { section: 'Vera (asistente IA)' },
-      { label: 'Chat con Vera',           get: (p) => p.features?.vera_full || p.features?.vera_basic ? '✓' : '—' },
-      { label: 'Acciones autónomas',      get: (p) => p.features?.vera_full ? '✓' : '—' },
+      { section: 'Vera (AI assistant)' },
+      { label: 'Chat with Vera',          get: (p) => p.features?.vera_full || p.features?.vera_basic ? '✓' : '—' },
+      { label: 'Autonomous actions',      get: (p) => p.features?.vera_full ? '✓' : '—' },
 
-      { section: 'Contenido' },
-      { label: 'Studio (imágenes)',       get: () => '✓' },
+      { section: 'Content' },
+      { label: 'Studio (images)',         get: () => '✓' },
       { label: 'Video',                   get: () => '✓' },
       { label: 'Production flows',        get: () => '✓' },
 
       { section: 'Brand & Analytics' },
       { label: 'Brand kits',              get: (p) => p.features?.brand_kits || '—' },
-      { label: 'Sub-marcas (agencia)',    get: (p) => p.features?.sub_brands ? '✓' : '—' },
+      { label: 'Sub-brands (agency)',     get: (p) => p.features?.sub_brands ? '✓' : '—' },
       { label: 'Insights & analytics',    get: (p) => p.features?.insights ? '✓' : '—' },
 
-      { section: 'Soporte' },
-      { label: 'Soporte prioritario',     get: (p) => p.features?.priority_support ? '✓' : '—' },
+      { section: 'Support' },
+      { label: 'Priority support',        get: (p) => p.features?.priority_support ? '✓' : '—' },
       { label: 'Custom domain',           get: (p) => p.features?.custom_domain ? '✓' : '—' },
     ];
 
@@ -324,7 +451,15 @@ class PlanesView extends BaseView {
 
   _handleCtaKind(kind, planId) {
     if (kind === 'current') return;
-    const msg = 'Stripe no está conectado todavía. Próximamente podrás iniciar la prueba de 14 días aquí.';
+    // Stripe wiring lands in Fase C. Until then, route every kind to the same
+    // "billing not ready" message but worded to match the user intent.
+    const messages = {
+      upgrade:   'Billing is not connected yet. Soon you will be able to upgrade your plan here.',
+      downgrade: 'Billing is not connected yet. Soon you will be able to downgrade your plan here.',
+      switch:    'Billing is not connected yet. Soon you will be able to change your plan here.',
+      trial:     'Billing is not connected yet. Soon you will be able to start your 14-day trial here.',
+    };
+    const msg = messages[kind] || messages.trial;
     if (window.showToast) window.showToast(msg, 'info');
     else alert(msg);
   }
