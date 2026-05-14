@@ -2194,3 +2194,162 @@
   .mb-hm-grid { grid-template-rows: repeat(7, 10px); }
   .mb-stories-kpis { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ================================================================
+   FEAT-023 — Mi Marca / Mis Campañas
+   ================================================================ */
+
+.mb-page { padding: 0; }
+
+.mb-campanas { display: block; margin-bottom: 1.5rem; }
+
+.mb-section-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin: 0.5rem 0 1rem;
+}
+.mb-section-title {
+  font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;
+}
+.mb-section-sub {
+  font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0;
+}
+
+/* ── Winners vs Burners grid ─────────────────────────────────── */
+.mb-wb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.mb-wb-block { margin-bottom: 0; }
+.mb-wb-list { padding: 0.75rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.mb-wb-empty { color: var(--text-tertiary); font-size: 0.875rem; margin: 0.5rem 0; }
+
+.mb-wb-card {
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-divider);
+  background: rgba(255,255,255,0.02);
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.mb-wb-card--winner { border-left: 3px solid #6bcf7f; }
+.mb-wb-card--burner { border-left: 3px solid #e09145; }
+
+.mb-wb-name {
+  font-weight: 600; font-size: 0.9375rem; color: var(--text-primary);
+}
+.mb-wb-metrics {
+  font-size: 0.75rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums;
+}
+.mb-wb-vera {
+  font-size: 0.875rem; line-height: 1.4; color: var(--text-secondary);
+  margin: 0; font-style: italic;
+}
+.mb-wb-card--winner .mb-wb-vera { color: #d4ecda; }
+.mb-wb-card--burner .mb-wb-vera { color: #f3d3b3; }
+
+/* ── Tabla de campañas ───────────────────────────────────────── */
+.mb-camp-table-wrap { overflow-x: auto; }
+.mb-camp-table {
+  width: 100%; border-collapse: collapse; font-size: 0.875rem;
+}
+.mb-camp-table thead th {
+  text-align: left; padding: 0.65rem 1rem; font-weight: 600; font-size: 0.75rem;
+  color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-divider); background: rgba(255,255,255,0.02);
+}
+.mb-camp-table thead th.num,
+.mb-camp-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mb-camp-table tbody td {
+  padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-divider);
+  color: var(--text-secondary); vertical-align: top;
+}
+.mb-camp-table tbody tr:last-child td { border-bottom: none; }
+.mb-camp-table tbody tr { cursor: pointer; transition: background 0.12s; }
+.mb-camp-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+
+.mb-camp-name { color: var(--text-primary); font-weight: 600; }
+.mb-camp-vera {
+  font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.2rem;
+  max-width: 360px; line-height: 1.35;
+}
+.mb-camp-platform { font-size: 0.8125rem; color: var(--text-secondary); }
+.mb-camp-status {
+  display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px;
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.mb-camp-status--active     { background: rgba(107,207,127,0.15); color: #6bcf7f; }
+.mb-camp-status--paused     { background: rgba(160,160,160,0.15); color: #c0c0c0; }
+.mb-camp-status--conceptual { background: rgba(91,135,234,0.15); color: #5b87ea; }
+.mb-camp-status--ended      { background: rgba(160,80,80,0.15); color: #e09190; }
+.mb-camp-status--archived   { background: rgba(120,120,120,0.10); color: #808080; }
+.mb-camp-status--draft      { background: rgba(180,180,180,0.10); color: #aaaaaa; }
+
+/* ── Brief vs Realidad ───────────────────────────────────────── */
+.mb-briefs-grid {
+  display: grid; gap: 1rem; padding: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+.mb-brief-card {
+  padding: 1rem 1.125rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-divider);
+  background: rgba(255,255,255,0.02);
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.mb-brief-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.mb-brief-name {
+  font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0;
+}
+.mb-brief-status {
+  display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px;
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+}
+.mb-brief-status--active   { background: rgba(107,207,127,0.15); color: #6bcf7f; }
+.mb-brief-status--draft    { background: rgba(180,180,180,0.10); color: #aaaaaa; }
+.mb-brief-status--paused   { background: rgba(160,160,160,0.15); color: #c0c0c0; }
+.mb-brief-status--archived { background: rgba(120,120,120,0.10); color: #808080; }
+
+.mb-brief-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+.mb-brief-col { display: flex; flex-direction: column; }
+.mb-brief-label {
+  font-size: 0.6875rem; font-weight: 600; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem;
+}
+.mb-brief-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.mb-chip {
+  font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px;
+  background: rgba(255,255,255,0.06); color: var(--text-secondary);
+  border: 1px solid var(--border-divider);
+}
+.mb-chip--muted { color: var(--text-tertiary); }
+.mb-brief-cta {
+  font-size: 0.875rem; color: var(--text-primary); font-weight: 600;
+  padding: 0.4rem 0.6rem; background: rgba(255,255,255,0.04); border-radius: 6px;
+}
+.mb-brief-realidad {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  font-size: 0.875rem; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.mb-brief-realidad strong { color: var(--text-primary); font-weight: 700; }
+.mb-brief-realidad .muted { color: var(--text-tertiary); font-size: 0.75rem; }
+
+.mb-brief-vera {
+  font-size: 0.875rem; line-height: 1.45; color: var(--text-secondary);
+  margin: 0; padding: 0.65rem 0.8rem; border-radius: 6px;
+  background: rgba(255,255,255,0.03); border-left: 2px solid var(--accent-brand, var(--text-secondary));
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .mb-wb-grid { grid-template-columns: 1fr; }
+  .mb-brief-grid { grid-template-columns: 1fr; }
+  .mb-camp-vera { display: none; }
+}

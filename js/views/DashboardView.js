@@ -30,7 +30,7 @@ class DashboardView extends BaseView {
   // "Próximamente" (definido en _renderComingSoon). Flipear a 'true' cuando
   // el mixin del tab esté listo.
   static TABS_ENABLED = {
-    'my-brands':  false,
+    'my-brands':  true,   // FEAT-023 Ola 1: sección "Mis Campañas" activa
     'competence': false,
     'tendencies': false,
     'strategy':   false,
@@ -153,6 +153,11 @@ class DashboardView extends BaseView {
     sub('rp',    'retail_prices',         orgFilter, ['competence']);
     sub('tt',    'trend_topics',          orgFilter, ['tendencies']);
 
+    // FEAT-023: invalida sección Mis Campañas si cambian ad_insights_daily o campaigns.
+    sub('aid',   'ad_insights_daily',     orgFilter, ['my-brands']);
+    sub('camp',  'campaigns',             orgFilter, ['my-brands']);
+    sub('cb',    'campaign_briefs',       orgFilter, ['my-brands']);
+
     // intelligence_signals: filtro lo hace el handler (la tabla no tiene
     // organization_id; verificamos entity_id contra los services al recibir).
     const ch = this._supabase
@@ -178,7 +183,11 @@ class DashboardView extends BaseView {
     // Invalida tanto el cache local del mixin como el del apiClient para que
     // el próximo _fetchAll() vaya a Supabase (no devuelva data stale).
     const orgId = this._orgId;
-    if (scopes.includes('my-brands'))  { this._mbData    = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:mi-brand:${orgId}`)); }
+    if (scopes.includes('my-brands'))  {
+      this._mbData = null;
+      this._mbCampanasData = null;
+      window.apiClient?.invalidate((k) => k.startsWith(`dash:mi-brand:${orgId}`) || k.startsWith(`dash:campanas:${orgId}`));
+    }
     if (scopes.includes('competence')) { this._compData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:competencia:${orgId}`)); }
     if (scopes.includes('tendencies')) { this._tendData  = null; window.apiClient?.invalidate((k) => k.startsWith(`dash:tendencias:${orgId}`)); }
     if (scopes.includes('strategy'))   { this._stratData = null; window.apiClient?.invalidate(`dash:strategia:${orgId}`); }

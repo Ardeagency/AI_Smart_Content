@@ -1,0 +1,142 @@
+/**
+ * CampanasDataService — capa de datos del Dashboard "Mis Campañas" (FEAT-023).
+ *
+ * Llama a las 5 RPCs `dashboard_campaign_*` desplegadas en Supabase, en paralelo,
+ * con auth + RLS. Cada método devuelve { data, isEmpty, error } para manejo
+ * graceful en el mixin. Sigue el mismo patrón que MiBrandaDataService.
+ *
+ * Cache vía apiClient: 60s TTL + stale-while-revalidate. La invalidación
+ * realtime la hace DashboardView._onRealtimeChange cuando llegan cambios
+ * a campaigns / ad_insights_daily / campaign_briefs.
+ */
+class CampanasDataService {
+  constructor() {
+    this.sb        = null;
+    this.orgId     = null;
+    this.containers   = [];
+    this.containerIds = [];
+    this._cache    = {};
+  }
+
+  async init(supabase, orgId) {
+    this.sb = supabase;
+    this.orgId = orgId;
+    this._cache = {};
+
+    const { data, error } = await this.sb
+      .from('brand_containers')
+      .select('id, nombre_marca, organization_id')
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      this.containers   = data;
+      this.containerIds = data.map(c => c.id);
+    }
+    return this;
+  }
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  _resolveWindow(opts = {}) {
+    // RPCs aceptan `date` (no timestamptz como Mi Marca). Convertimos a YYYY-MM-DD.
+    const toDate = (iso) => (iso instanceof Date ? iso : new Date(iso)).toISOString().slice(0, 10);
+    if (opts.dateFromIso && opts.dateToIso) {
+      return { date_from: toDate(opts.dateFromIso), date_to: toDate(opts.dateToIso) };
+    }
+    const windowDays = Math.max(1, Number(opts.windowDays || 30));
+    const now  = new Date();
+    const from = new Date(now.getTime() - windowDays * 86400_000);
+    return { date_from: toDate(from), date_to: toDate(now) };
+  }
+
+  _resolveBrands(opts = {}) {
+    const ids = Array.isArray(opts.brandIds) && opts.brandIds.length ? opts.brandIds : null;
+    return ids;
+  }
+
+  _ok(data)  { return { data, isEmpty: !data || (Array.isArray(data) && data.length === 0), error: null }; }
+  _err(error){ return { data: null, isEmpty: true, error }; }
+  _unwrap(settled) {
+    if (settled.status === 'rejected') return this._err(settled.reason);
+    if (settled.value?.error) return this._err(settled.value.error);
+    return this._ok(settled.value?.data);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     Carga total — 5 RPCs en paralelo con allSettled
+  ══════════════════════════════════════════════════════════ */
+  async loadAll(opts = {}) {
+    if (!this.sb || !this.orgId) return null;
+    const { date_from, date_to } = this._resolveWindow(opts);
+    const bcids = this._resolveBrands(opts);
+
+    const cacheKey = `dash:campanas:${this.orgId}:${date_from}:${date_to}:${(bcids || []).join(',')}`;
+    if (window.apiClient) {
+      return window.apiClient.query(
+        cacheKey,
+        () => this._fetchAll(date_from, date_to, bcids),
+        { ttl: 60 * 1000, staleWhileRevalidate: true }
+      );
+    }
+    return this._fetchAll(date_from, date_to, bcids);
+  }
+
+  async _fetchAll(date_from, date_to, bcids) {
+    const baseArgs = {
+      p_org_id:              this.orgId,
+      p_date_from:           date_from,
+      p_date_to:             date_to,
+      p_brand_container_ids: bcids,
+    };
+
+    const [kpis, list, dailySeries, winnersVsBurners, briefVsOutcome] = await Promise.allSettled([
+      this.sb.rpc('dashboard_campaign_kpis_strip',         baseArgs),
+      this.sb.rpc('dashboard_campaign_list',               { ...baseArgs, p_status: null }),
+      this.sb.rpc('dashboard_campaign_daily_series',       { ...baseArgs, p_campaign_ids: null }),
+      this.sb.rpc('dashboard_campaign_winners_vs_burners', { ...baseArgs, p_limit: 3 }),
+      this.sb.rpc('dashboard_campaign_brief_vs_outcome',   { p_org_id: this.orgId, p_brief_id: null, p_date_from: date_from, p_date_to: date_to }),
+    ]);
+
+    const u = (s) => this._unwrap(s);
+    return {
+      window:           { date_from, date_to },
+      brandIds:         bcids,
+      containers:       this.containers,
+
+      kpis:             u(kpis),
+      list:             u(list),
+      dailySeries:      u(dailySeries),
+      winnersVsBurners: u(winnersVsBurners),
+      briefVsOutcome:   u(briefVsOutcome),
+    };
+  }
+
+  /** Drill-down: time-series de UNA campaña específica. */
+  async getCampaignDailySeries(campaignId, opts = {}) {
+    if (!this.sb || !this.orgId || !campaignId) return null;
+    const { date_from, date_to } = this._resolveWindow(opts);
+    const { data, error } = await this.sb.rpc('dashboard_campaign_daily_series', {
+      p_org_id:              this.orgId,
+      p_date_from:           date_from,
+      p_date_to:             date_to,
+      p_brand_container_ids: null,
+      p_campaign_ids:        [campaignId],
+    });
+    return error ? null : data;
+  }
+
+  /** Drill-down: brief vs outcome de UN brief específico. */
+  async getBriefVsOutcome(briefId, opts = {}) {
+    if (!this.sb || !this.orgId || !briefId) return null;
+    const { date_from, date_to } = this._resolveWindow(opts);
+    const { data, error } = await this.sb.rpc('dashboard_campaign_brief_vs_outcome', {
+      p_org_id:    this.orgId,
+      p_brief_id:  briefId,
+      p_date_from: date_from,
+      p_date_to:   date_to,
+    });
+    return error ? null : data;
+  }
+}
+
+window.CampanasDataService = CampanasDataService;

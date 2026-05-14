@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-12** (cerradas BUG-005, AUDIT-002 H2/H3, FEAT-014, OPS-008, OPS-009 — ver sección "Resueltas"; abiertas AUDIT-003 + FEAT-019/020/021/022 + OPS-010/011 tras auditoría enterprise readiness).
+Última actualización: **2026-05-13** (abierta AUDIT-004 — premium SaaS readiness para marcas Tier-1, análisis estratégico Fase A/B/C con horizontes, costos y matriz de decisión).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -29,9 +29,11 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning de usuarios end-to-end (función backend + email + onboarding) | feature | 👤 | long | — |
 | [FEAT-017](./FEAT-017-content-feed.md) | Content Feed unificado — reescribir ContentView como feed estilo IA_Partner sobre `brand_posts` + `competitor_ads` + `intelligence_signals` (en progreso) | feature | 👤 | long | — |
 | [AUDIT-003](./AUDIT-003-enterprise-readiness-2026-05-12.md) | Auditoría enterprise readiness — gap analysis front vs back vs SaaS B2B; matriz P0-P3 + 6 tasks hijas (FEAT-019/020/021/022, OPS-010/011) | audit | 👤 | short | — |
+| [AUDIT-004](./AUDIT-004-premium-saas-tier1-brands-2026-05-13.md) | Premium SaaS readiness Tier-1 (Coca-Cola/Oster/Postobón) — Fase A (8-12 sem), Fase B (3-6m), Fase C (12m+) + bloqueos críticos (ai-engine SPOF, SSO, billing, CI gates, API pública) + costos $0-5K → $80-150K | audit | 👤 | short | — |
 | [FEAT-021](./FEAT-021-audit-log-ui.md) | Panel de auditoría para admin del tenant — exponer `user_audit_log` (datos ya se escriben) | feature | 👤 | medium | — |
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC granular — roles formales (owner/admin/editor/viewer) + matriz permisos + UI + invitaciones email | feature | 👤 | long | — |
 | [OPS-010](./OPS-010-ci-gates-staging.md) | CI/CD — vitest gate en Netlify pre-deploy + staging branch separado de prod | ops | 👤 | medium | — |
+| [FEAT-023](./FEAT-023-mis-campanas-dashboard.md) | Dashboard "Mis Campañas" (FEAT-023) — Ola 1 (backend+frontend) live: ad_insights_daily, sync Meta cron, 4 RPCs causales, mixin MyBrands con KPI strip + winners/burners + tabla + briefs. Ola 2 pendiente: pulse orgánico (15 dimensiones del director creativo) | feature | 👤 | long | — |
 
 ## 🟡 Medium
 
