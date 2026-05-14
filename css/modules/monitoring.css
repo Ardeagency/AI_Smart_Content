@@ -3,12 +3,11 @@
    Reusa firebar (.mb-firebar*) y skeleton blocks (.mb-skel-block) del dashboard.
    ════════════════════════════════════════════════════════════ */
 
-.monitoring-page { padding: 0; }
+/* .monitoring-page hereda padding/max-width/margin de .insight-page
+   (15px all-sides, 1280px, centrado) para igualar Dashboard. */
 
 .mn-page {
-  padding: 16px 20px 32px;
-  max-width: 1280px;
-  margin: 0 auto;
+  padding: 16px 0 32px;
 }
 
 /* ── Toolbar ── */
