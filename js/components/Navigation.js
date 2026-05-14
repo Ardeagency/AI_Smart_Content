@@ -42,7 +42,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'products',
-      label: 'Productos',
+      label: 'Products',
       icon: 'fa-box',
       iconSrc: '/recursos/icons/Identities.svg',
       route: 'products',
@@ -51,7 +51,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'services',
-      label: 'Servicios',
+      label: 'Services',
       icon: 'fa-briefcase',
       iconSrc: '/recursos/icons/Service.svg',
       route: 'services',
@@ -60,7 +60,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'monitoring',
-      label: 'Monitoreo',
+      label: 'Monitoring',
       icon: 'fa-satellite-dish',
       iconSrc: '/recursos/icons/monitoring.svg',
       route: 'monitoring',
@@ -142,7 +142,7 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'section', label: 'Principal' },
+  { type: 'section', label: 'Main' },
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
@@ -153,7 +153,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     icon: 'fa-cogs',
     iconSrc: '/recursos/icons/video.svg',
     children: [
-      { label: 'Test De Flujos', route: '/dev/test' },
+      { label: 'Flow Tests', route: '/dev/test' },
       { label: 'Logs', route: '/dev/logs' },
       { label: 'Webhooks', route: '/dev/webhooks' }
     ]
@@ -172,7 +172,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'page',
     id: 'admin-team',
-    label: 'Equipo',
+    label: 'Team',
     icon: 'fa-users',
     iconSrc: '/recursos/icons/organization.svg',
     role_required: 'lead',
@@ -190,7 +190,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'page',
     id: 'admin-categorias',
-    label: 'Categorias',
+    label: 'Categories',
     icon: 'fa-tags',
     iconSrc: '/recursos/icons/file-storage.svg',
     role_required: 'lead',
@@ -199,7 +199,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'page',
     id: 'admin-flows',
-    label: 'Todos los flujos',
+    label: 'All flows',
     icon: 'fa-stream',
     iconSrc: '/recursos/icons/flows.svg',
     role_required: 'lead',
@@ -208,7 +208,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   {
     type: 'page',
     id: 'admin-lexicon',
-    label: 'Léxico',
+    label: 'Lexicon',
     icon: 'fa-book',
     role_required: 'lead',
     route: '/dev/lead/lexicon'
@@ -1276,15 +1276,15 @@ class Navigation {
         </a>
         <a href="${plansHref}" class="user-dropdown-item" data-route="${plansHref}" id="userDropdownPlansLink">
           <img src="/recursos/icons/Planes.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Planes</span>
+          <span>Plans</span>
         </a>
         <a href="${creditsHref}" class="user-dropdown-item" data-route="${creditsHref}" id="userDropdownCreditsLink">
           <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
-          <span>Créditos</span>
+          <span>Credits</span>
         </a>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
-          <span>Cerrar sesión</span>
+          <span>Sign out</span>
         </button>
       </div>`;
   }
