@@ -3658,6 +3658,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-system-upgrade-btn {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -3672,13 +3675,46 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     line-height: 16px;
     text-decoration: none;
     cursor: pointer;
-    transition: background 0.12s ease, border-color 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.18s ease, transform 0.15s ease;
+}
+
+.nav-system-upgrade-btn[hidden] { display: none !important; }
+
+.nav-system-upgrade-btn > * { position: relative; z-index: 1; }
+
+/* Hover rainbow — mismo gradient arcoiris usado en las plan cards
+   (#ff6500, #ff0000, #ffe500, #9acc00, #00d614, #00e7ff, #5b00ea, #900090). */
+.nav-system-upgrade-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        #ff6500, #ff0000, #ffe500, #9acc00,
+        #00d614, #00e7ff, #5b00ea, #900090,
+        #ff6500
+    );
+    background-size: 300% 100%;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 0;
+    border-radius: inherit;
 }
 
 .nav-system-upgrade-btn:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-light);
-    color: var(--sidebar-text-primary);
+    color: #ffffff;
+    border-color: transparent;
+    transform: translateY(-1px);
+}
+
+.nav-system-upgrade-btn:hover::before {
+    opacity: 1;
+    animation: nav-upgrade-rainbow 3.5s linear infinite;
+}
+
+@keyframes nav-upgrade-rainbow {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
 }
 
 .side-navigation.collapsed .nav-system-stats {

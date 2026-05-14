@@ -1546,8 +1546,12 @@ class Navigation {
             <span class="nav-system-stats-label">Storage</span>
             <span class="nav-system-stats-value" id="navStorageValue">—</span>
           </div>
-          <a href="${this.getUserSidebarRoute('plans')}" class="nav-system-upgrade-btn" data-route="${this.getUserSidebarRoute('plans')}">
-            <span>Upgrade to Starter</span>
+          <a href="${this.getUserSidebarRoute('plans')}"
+             class="nav-system-upgrade-btn"
+             id="navUpgradeBtn"
+             data-route="${this.getUserSidebarRoute('plans')}"
+             hidden>
+            <span id="navUpgradeBtnLabel">Upgrade</span>
           </a>
         </div>
 
@@ -2496,8 +2500,84 @@ class Navigation {
       await this.loadOrganizationsList();
       // Cargar conteo de sub-marcas para mostrar/ocultar link Brand Storage
       this.loadBrandContainersCount();
+      // Calcular y renderear el botón "Upgrade to X" del footer del sidebar
+      this.loadUpgradeTarget();
     } catch (err) {
       console.error('Error loading organization info:', err);
+    }
+  }
+
+  /**
+   * Calcula el siguiente plan de upgrade del org actual y renderea el botón del
+   * footer del sidebar. Si el org está en top tier (o no hay plan siguiente),
+   * el botón queda oculto.
+   *
+   * Lógica:
+   * - Lee subscriptions.plan_id de la org → plan actual (puede ser legacy con
+   *   is_active=false; se carga aparte si no está en la lista de activos).
+   * - Lista plans activos ordenados por display_order; el "next" es el primer
+   *   plan con display_order > current.display_order.
+   * - Sin subscription activa → muestra el plan de entrada (el primero activo).
+   */
+  async loadUpgradeTarget() {
+    const btn = document.getElementById('navUpgradeBtn');
+    const label = document.getElementById('navUpgradeBtnLabel');
+    if (!btn || !label) return;
+    const hide = () => { btn.hidden = true; };
+
+    const orgId = this.currentOrgId;
+    if (!orgId) { hide(); return; }
+
+    try {
+      const supabase = await this.getSupabase();
+      if (!supabase) { hide(); return; }
+
+      const fetcher = async () => {
+        const [{ data: sub }, { data: activePlans }] = await Promise.all([
+          supabase.from('subscriptions')
+            .select('plan_id, status')
+            .eq('organization_id', orgId)
+            .order('created_at', { ascending: false })
+            .limit(1).maybeSingle(),
+          supabase.from('plans')
+            .select('id, name, display_order')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true }),
+        ]);
+
+        const plansList = Array.isArray(activePlans) ? activePlans : [];
+        const activeStatuses = ['active', 'trialing', 'past_due'];
+        const hasActive = sub && activeStatuses.includes(sub.status);
+
+        let currentPlan = null;
+        if (hasActive && sub?.plan_id) {
+          currentPlan = plansList.find(p => p.id === sub.plan_id) || null;
+          // Plan legacy (no activo): fetch directo por id para tener display_order.
+          if (!currentPlan) {
+            const { data: legacy } = await supabase
+              .from('plans')
+              .select('id, name, display_order')
+              .eq('id', sub.plan_id)
+              .maybeSingle();
+            currentPlan = legacy || null;
+          }
+        }
+
+        const curOrder = currentPlan ? (Number(currentPlan.display_order) || 0) : -Infinity;
+        const next = plansList.find(p => (Number(p.display_order) || 0) > curOrder) || null;
+        return { next };
+      };
+
+      const { next } = window.apiClient
+        ? await window.apiClient.query(`nav:upgrade-target:${orgId}`, fetcher, { ttl: 5 * 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+
+      if (!next) { hide(); return; }
+      label.textContent = `Upgrade to ${next.name}`;
+      btn.hidden = false;
+    } catch (e) {
+      console.warn('Navigation: loadUpgradeTarget', e);
+      hide();
     }
   }
 
