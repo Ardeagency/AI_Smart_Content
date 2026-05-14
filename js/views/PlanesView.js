@@ -1,14 +1,7 @@
 /**
  * PlanesView — Página /plans profesional (2026 SaaS standard).
  *
- * Sobre el v0:
- *   - 5 tiers (Free/Creator/Team/Agency/Enterprise) en lugar de 4 silenciosos
- *   - CTA visible en cada card (no más click sin destino)
- *   - Indicador "Plan actual" cuando hay subscription activa
- *   - Toggle Anual default + always-visible mensual equivalente
- *   - Tabla comparativa detallada debajo de las cards
- *   - FAQ 10 preguntas
- *   - Trust placeholders (logos + testimonio) — TODO:editar copy
+ * 3 tiers (Creator/Team/Agency) — sin Free ni Enterprise (eliminados 2026-05-14).
  *
  * Stripe NO conectado: CTAs marcan "Próximamente" hasta integrar.
  */
@@ -104,15 +97,6 @@ class PlanesView extends BaseView {
     return { monthly, annual };
   }
 
-  isContactOnly(plan) {
-    return plan.features?.contact_only === true;
-  }
-
-  contactAnchor(plan) {
-    const v = plan.features?.price_anchor_usd_month;
-    return v ? Number(v) : null;
-  }
-
   isCurrentPlan(plan) {
     return this.currentSubscription?.plan_id === plan.id
       && this.currentSubscription?.status === 'active';
@@ -120,9 +104,6 @@ class PlanesView extends BaseView {
 
   ctaForPlan(plan) {
     if (this.isCurrentPlan(plan)) return { label: 'Plan actual', icon: 'fa-check', kind: 'current' };
-    if (this.isContactOnly(plan))  return { label: 'Contactar ventas', icon: 'fa-envelope', kind: 'contact' };
-    const monthly = Number(plan.price_usd_month) || 0;
-    if (monthly === 0) return { label: 'Empezar gratis', icon: 'fa-rocket', kind: 'free' };
     return { label: 'Empezar prueba 14 días', icon: 'fa-arrow-right', kind: 'trial' };
   }
 
@@ -130,8 +111,6 @@ class PlanesView extends BaseView {
     const items = [];
     if (plan.credits_monthly > 0) {
       items.push(`<strong>${plan.credits_monthly.toLocaleString('es')}</strong> créditos / mes`);
-    } else if (this.isContactOnly(plan)) {
-      items.push(`Créditos a medida`);
     }
     if (plan.max_handles > 0) {
       items.push(`Hasta <strong>${plan.max_handles}</strong> marcas / handles`);
@@ -146,12 +125,6 @@ class PlanesView extends BaseView {
     if (plan.features?.sub_brands) items.push(`Sub-marcas (multi-cliente)`);
     if (plan.features?.custom_domain) items.push(`Custom domain`);
     if (plan.features?.priority_support) items.push(`Soporte prioritario`);
-    if (plan.features?.sso) items.push(`SSO (SAML/OIDC)`);
-    if (plan.features?.sla) items.push(`SLA 99.9%`);
-    if (plan.features?.dpa) items.push(`DPA · cumplimiento custom`);
-    if (plan.features?.on_brand_training) items.push(`Entrenamiento on-brand`);
-    if (plan.features?.watermark) items.push(`Outputs con marca de agua`);
-    if (plan.features?.commercial_license === false) items.push(`Sin licencia comercial`);
     return items;
   }
 
@@ -164,7 +137,7 @@ class PlanesView extends BaseView {
           <div class="planes-hero-background"><div class="planes-background-gradient"></div></div>
           <div class="planes-hero-content">
             <h1 class="planes-hero-title">Precios simples para equipos serios</h1>
-            <p class="planes-hero-subtitle">Empieza gratis. Sin tarjeta para la prueba. Cancela cuando quieras.</p>
+            <p class="planes-hero-subtitle">Prueba 14 días sin tarjeta. Cancela cuando quieras.</p>
 
             <div class="planes-billing-toggle" role="group" aria-label="Tipo de facturación">
               <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">Mensual</button>
@@ -218,10 +191,9 @@ class PlanesView extends BaseView {
         <!-- Final CTA -->
         <section class="planes-final-cta">
           <h2>¿Listo para empezar?</h2>
-          <p>Empieza gratis sin tarjeta. Si necesitas algo a medida, hablamos.</p>
+          <p>Prueba 14 días sin tarjeta. Cancela cuando quieras.</p>
           <div class="planes-final-cta-actions">
-            <button type="button" class="btn btn-primary" id="finalCtaFree">Empezar gratis</button>
-            <button type="button" class="btn btn-secondary" id="finalCtaContact">Contactar ventas</button>
+            <button type="button" class="btn btn-primary" id="finalCtaTrial">Empezar prueba 14 días</button>
           </div>
         </section>
       </div>
@@ -252,8 +224,6 @@ class PlanesView extends BaseView {
     const { monthly, annual } = this.formatPrice(plan);
     const monthlyEquivalent = annual > 0 ? Math.round(annual / 12) : monthly;
     const features = this.buildFeatureBullets(plan);
-    const isContact = this.isContactOnly(plan);
-    const anchor = this.contactAnchor(plan);
     const cta = this.ctaForPlan(plan);
     const current = this.isCurrentPlan(plan);
 
@@ -261,29 +231,16 @@ class PlanesView extends BaseView {
       'plan-card-small',
       plan.is_popular ? 'plan-card-small--popular' : '',
       current ? 'plan-card-small--current' : '',
-      isContact ? 'plan-card-small--enterprise' : '',
     ].filter(Boolean).join(' ');
 
-    const priceBlock = isContact
-      ? `
-        <div class="plan-card-price">
-          <span class="plan-card-contact-price">
-            ${anchor ? `Desde $${anchor.toLocaleString('es')}<span>/mes</span>` : 'A medida'}
-          </span>
-        </div>`
-      : monthly === 0
-        ? `
-          <div class="plan-card-price">
-            <span class="price-free">Gratis</span>
-          </div>`
-        : `
-          <div class="plan-card-price">
-            <span class="price-monthly">$${monthly}<span>/mes</span></span>
-            <span class="price-annual">
-              $${monthlyEquivalent}<span>/mes</span>
-              <small>facturado anual · $${annual.toLocaleString('es')}/año</small>
-            </span>
-          </div>`;
+    const priceBlock = `
+      <div class="plan-card-price">
+        <span class="price-monthly">$${monthly}<span>/mes</span></span>
+        <span class="price-annual">
+          $${monthlyEquivalent}<span>/mes</span>
+          <small>facturado anual · $${annual.toLocaleString('es')}/año</small>
+        </span>
+      </div>`;
 
     const badges = [];
     if (current) badges.push('<span class="plan-card-badge plan-card-badge--current">Plan actual</span>');
@@ -316,33 +273,28 @@ class PlanesView extends BaseView {
 
     const rows = [
       { section: 'Volumen' },
-      { label: 'Créditos / mes',          get: (p) => p.credits_monthly > 0 ? p.credits_monthly.toLocaleString('es') : (this.isContactOnly(p) ? 'A medida' : '—') },
-      { label: 'Marcas / handles',        get: (p) => p.max_handles > 0 ? p.max_handles : (this.isContactOnly(p) ? 'Ilimitadas' : '—') },
-      { label: 'Storage',                 get: (p) => this.formatStorage(p.storage_mb) || (this.isContactOnly(p) ? 'A medida' : '—') },
-      { label: 'Miembros',                get: (p) => p.features?.team_seats || (this.isContactOnly(p) ? 'A medida' : '1') },
+      { label: 'Créditos / mes',          get: (p) => p.credits_monthly > 0 ? p.credits_monthly.toLocaleString('es') : '—' },
+      { label: 'Marcas / handles',        get: (p) => p.max_handles > 0 ? p.max_handles : '—' },
+      { label: 'Storage',                 get: (p) => this.formatStorage(p.storage_mb) || '—' },
+      { label: 'Miembros',                get: (p) => p.features?.team_seats || '1' },
 
       { section: 'Vera (asistente IA)' },
       { label: 'Chat con Vera',           get: (p) => p.features?.vera_full || p.features?.vera_basic ? '✓' : '—' },
       { label: 'Acciones autónomas',      get: (p) => p.features?.vera_full ? '✓' : '—' },
 
       { section: 'Contenido' },
-      { label: 'Studio (imágenes)',       get: (p) => p.features?.watermark ? 'Con marca de agua' : '✓' },
-      { label: 'Video',                   get: (p) => Number(p.price_usd_month) > 0 || this.isContactOnly(p) ? '✓' : '—' },
-      { label: 'Production flows',        get: (p) => Number(p.price_usd_month) > 0 || this.isContactOnly(p) ? '✓' : '—' },
-      { label: 'Licencia comercial',      get: (p) => p.features?.commercial_license === false ? '—' : '✓' },
+      { label: 'Studio (imágenes)',       get: () => '✓' },
+      { label: 'Video',                   get: () => '✓' },
+      { label: 'Production flows',        get: () => '✓' },
 
       { section: 'Brand & Analytics' },
-      { label: 'Brand kits',              get: (p) => p.features?.brand_kits || (this.isContactOnly(p) ? 'Ilimitados' : '—') },
-      { label: 'Sub-marcas (agencia)',    get: (p) => p.features?.sub_brands || this.isContactOnly(p) ? '✓' : '—' },
-      { label: 'Insights & analytics',    get: (p) => p.features?.insights || this.isContactOnly(p) ? '✓' : '—' },
+      { label: 'Brand kits',              get: (p) => p.features?.brand_kits || '—' },
+      { label: 'Sub-marcas (agencia)',    get: (p) => p.features?.sub_brands ? '✓' : '—' },
+      { label: 'Insights & analytics',    get: (p) => p.features?.insights ? '✓' : '—' },
 
-      { section: 'Seguridad y soporte' },
-      { label: 'Soporte prioritario',     get: (p) => p.features?.priority_support || this.isContactOnly(p) ? '✓' : '—' },
-      { label: 'SSO (SAML/OIDC)',         get: (p) => p.features?.sso ? '✓' : '—' },
-      { label: 'SLA 99.9%',               get: (p) => p.features?.sla ? '✓' : '—' },
-      { label: 'DPA · GDPR · custom',     get: (p) => p.features?.dpa ? '✓' : '—' },
-      { label: 'Custom domain',           get: (p) => p.features?.custom_domain || this.isContactOnly(p) ? '✓' : '—' },
-      { label: 'Entrenamiento on-brand',  get: (p) => p.features?.on_brand_training ? '✓' : '—' },
+      { section: 'Soporte' },
+      { label: 'Soporte prioritario',     get: (p) => p.features?.priority_support ? '✓' : '—' },
+      { label: 'Custom domain',           get: (p) => p.features?.custom_domain ? '✓' : '—' },
     ];
 
     host.innerHTML = `
@@ -400,15 +352,11 @@ class PlanesView extends BaseView {
       },
       {
         q: '¿Usan mi data de marca para entrenar modelos?',
-        a: 'No. Los modelos provienen de proveedores (OpenAI, Anthropic, etc.) y tu data nunca alimenta entrenamientos globales. En Enterprise firmamos DPA personalizado.'
+        a: 'No. Los modelos provienen de proveedores (OpenAI, Anthropic, etc.) y tu data nunca alimenta entrenamientos globales. Para acuerdos custom (DPA, compliance) contáctanos.'
       },
       {
         q: '¿Quién es dueño del contenido que genero?',
-        a: 'Tú. Total propiedad comercial en todos los planes pagos. En Free se entrega con marca de agua y sin licencia comercial — para evaluar el producto, no para producción.'
-      },
-      {
-        q: '¿Tienen facturación empresarial, SSO, SLA?',
-        a: 'Sí, en Enterprise. Facturación contra orden de compra, SSO via SAML/OIDC, SLA 99.9%, DPA personalizado. Habla con ventas.'
+        a: 'Tú. Total propiedad comercial en todos los planes.'
       },
       {
         q: '¿Vera habla mi idioma?',
@@ -440,10 +388,8 @@ class PlanesView extends BaseView {
       this.addEventListener(btn, 'click', (e) => this._onCtaClick(e));
     });
 
-    const finalFree = container.querySelector('#finalCtaFree');
-    const finalContact = container.querySelector('#finalCtaContact');
-    if (finalFree) this.addEventListener(finalFree, 'click', () => this._handleCtaKind('free', null));
-    if (finalContact) this.addEventListener(finalContact, 'click', () => this._handleCtaKind('contact', null));
+    const finalTrial = container.querySelector('#finalCtaTrial');
+    if (finalTrial) this.addEventListener(finalTrial, 'click', () => this._handleCtaKind('trial', null));
   }
 
   init() { this._bindEvents(); }
@@ -471,14 +417,7 @@ class PlanesView extends BaseView {
 
   _handleCtaKind(kind, planId) {
     if (kind === 'current') return;
-    if (kind === 'contact') {
-      window.location.href = 'mailto:sales@ardeagency.com?subject=Enterprise%20-%20AI%20Smart%20Content';
-      return;
-    }
-    // Free + Trial → Stripe checkout (pendiente). Por ahora notificación clara.
-    const msg = kind === 'free'
-      ? 'Stripe no está conectado todavía. Tu cuenta Free se activará automáticamente al hacer signup. Próximamente checkout aquí.'
-      : 'Stripe no está conectado todavía. Próximamente podrás iniciar la prueba de 14 días aquí.';
+    const msg = 'Stripe no está conectado todavía. Próximamente podrás iniciar la prueba de 14 días aquí.';
     if (window.showToast) window.showToast(msg, 'info');
     else alert(msg);
   }
