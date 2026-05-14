@@ -68,8 +68,8 @@
 }
 
 .planes-toggle-btn.active {
-    background: linear-gradient(135deg, var(--warm-1, #ff6500) 0%, var(--warm-2, #ff0000) 100%);
-    color: #ffffff;
+    background: #ffffff;
+    color: #0a0a0a;
 }
 
 .planes-hero-subtitle {
