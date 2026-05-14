@@ -146,55 +146,14 @@ class PlanesView extends BaseView {
               </button>
             </div>
 
-            <div class="planes-plans" id="planesList">${this._planSkeletonHtml(5)}</div>
+            <div class="planes-plans" id="planesList">${this._planSkeletonHtml(3)}</div>
           </div>
         </header>
-
-        <!-- Trust strip — TODO: reemplazar placeholders con logos reales -->
-        <section class="planes-trust-strip">
-          <p class="planes-trust-eyebrow">Equipos que confían en AI Smart Content</p>
-          <div class="planes-trust-logos">
-            <span class="planes-trust-logo-slot" data-todo="logo-1">{{LOGO_1}}</span>
-            <span class="planes-trust-logo-slot" data-todo="logo-2">{{LOGO_2}}</span>
-            <span class="planes-trust-logo-slot" data-todo="logo-3">{{LOGO_3}}</span>
-            <span class="planes-trust-logo-slot" data-todo="logo-4">{{LOGO_4}}</span>
-            <span class="planes-trust-logo-slot" data-todo="logo-5">{{LOGO_5}}</span>
-          </div>
-        </section>
-
-        <!-- Testimonial — TODO: reemplazar con quote real + foto -->
-        <section class="planes-testimonial">
-          <blockquote class="planes-testimonial-quote">
-            "{{TESTIMONIO — quote de 2-3 líneas de un cliente real, idealmente CMO o Head of Content de una marca conocida}}"
-          </blockquote>
-          <div class="planes-testimonial-attribution">
-            <span class="planes-testimonial-avatar" data-todo="testimonial-avatar"></span>
-            <div>
-              <div class="planes-testimonial-name">{{NOMBRE}}</div>
-              <div class="planes-testimonial-role">{{ROL · EMPRESA}}</div>
-            </div>
-          </div>
-        </section>
 
         <!-- Comparison table -->
         <section class="planes-comparison">
           <h2 class="planes-comparison-title">Compara los planes en detalle</h2>
           <div id="planesComparison"></div>
-        </section>
-
-        <!-- FAQ -->
-        <section class="planes-faq">
-          <h2 class="planes-faq-title">Preguntas frecuentes</h2>
-          <div class="planes-faq-list">${this._faqHtml()}</div>
-        </section>
-
-        <!-- Final CTA -->
-        <section class="planes-final-cta">
-          <h2>¿Listo para empezar?</h2>
-          <p>Prueba 14 días sin tarjeta. Cancela cuando quieras.</p>
-          <div class="planes-final-cta-actions">
-            <button type="button" class="btn btn-primary" id="finalCtaTrial">Empezar prueba 14 días</button>
-          </div>
         </section>
       </div>
     `;
@@ -324,53 +283,6 @@ class PlanesView extends BaseView {
     `;
   }
 
-  _faqHtml() {
-    const items = [
-      {
-        q: '¿Qué es un crédito y cuánto cuesta cada acción?',
-        a: 'Un crédito es la unidad universal de consumo. Imagen Studio ≈ 10 cr, Video corto ≈ 100 cr, Vera chat ≈ 1 cr. Antes de cada generación verás el costo estimado. Lista completa en la página de Créditos dentro del producto.'
-      },
-      {
-        q: '¿Los créditos hacen rollover?',
-        a: 'Sí. En planes mensuales rollover de 1 mes (no se pierden al renovar inmediatamente). Los packs comprados aparte expiran a los 12 meses — más que la industria.'
-      },
-      {
-        q: '¿Qué pasa si me quedo sin créditos a mitad de mes?',
-        a: 'Puedes comprar un pack extra (single payment, no cambia tu plan) o activar auto-recarga que compra créditos cuando bajas de un umbral que tú defines.'
-      },
-      {
-        q: '¿Puedo cambiar de plan, pausar o cancelar cuando quiera?',
-        a: 'Sí. Upgrade aplica inmediato con prorrateo. Downgrade aplica al siguiente ciclo. Cancelación 1 click sin guilt-tripping ni llamadas obligatorias.'
-      },
-      {
-        q: '¿Cuánto ahorro con plan anual?',
-        a: '20% vs mensual. Equivale a 2.4 meses gratis al año.'
-      },
-      {
-        q: '¿Hay reembolsos?',
-        a: 'La prueba de 14 días no requiere tarjeta. Tras facturar te damos 7 días para reembolso si no funcionó. Sin letra pequeña.'
-      },
-      {
-        q: '¿Usan mi data de marca para entrenar modelos?',
-        a: 'No. Los modelos provienen de proveedores (OpenAI, Anthropic, etc.) y tu data nunca alimenta entrenamientos globales. Para acuerdos custom (DPA, compliance) contáctanos.'
-      },
-      {
-        q: '¿Quién es dueño del contenido que genero?',
-        a: 'Tú. Total propiedad comercial en todos los planes.'
-      },
-      {
-        q: '¿Vera habla mi idioma?',
-        a: 'Vera entiende y responde en español, inglés y portugués hoy. Pídenos roadmap para otros idiomas.'
-      },
-    ];
-    return items.map((it, idx) => `
-      <details class="planes-faq-item" data-idx="${idx}">
-        <summary class="planes-faq-q">${this.escapeHtml(it.q)}</summary>
-        <p class="planes-faq-a">${this.escapeHtml(it.a)}</p>
-      </details>
-    `).join('');
-  }
-
   // ─── events ──────────────────────────────────────────────────────────
 
   _bindEvents() {
@@ -387,9 +299,6 @@ class PlanesView extends BaseView {
     container.querySelectorAll('.plan-card-cta').forEach((btn) => {
       this.addEventListener(btn, 'click', (e) => this._onCtaClick(e));
     });
-
-    const finalTrial = container.querySelector('#finalCtaTrial');
-    if (finalTrial) this.addEventListener(finalTrial, 'click', () => this._handleCtaKind('trial', null));
   }
 
   init() { this._bindEvents(); }
