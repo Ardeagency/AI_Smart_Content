@@ -391,12 +391,15 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
 }
 
-/* Grid masonry: columnas con espacio entre items (space-y-3) */
+/* Masonry plano: cada .living-masonry-item declara su span via custom props
+   --span-col y --span-row (los setea applyMasonrySpans según aspect ratio).
+   grid-auto-flow: dense rellena huecos cuando una horizontal salta a 2 cols. */
 .living-masonry-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 0;
-    row-gap: 0;
+    grid-auto-rows: 8px;
+    grid-auto-flow: dense;
+    gap: 8px;
     overflow-x: hidden;
 }
 
@@ -416,13 +419,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     .living-masonry-grid {
         grid-template-columns: repeat(5, 1fr);
     }
-}
-
-.living-masonry-column {
-    padding-right: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
 }
 
 /* Skeletons de carga para History/Community */
@@ -486,14 +482,16 @@ body.production-filters-in-header .living-container > .living-history-section {
 .living-masonry-item {
     width: 100%;
     min-width: 0;
+    /* Span de columna por aspect ratio (horizontal → 2). Span de fila es
+       calculado en JS (applyMasonrySpans) tomando el ancho real de la card,
+       para que la altura del slot encaje exacta con la altura natural de la
+       imagen. Default 1/24 mientras la imagen carga. */
+    grid-column: span var(--span-col, 1);
+    grid-row: span var(--span-row, 24);
     /* Skip render de items off-screen del masonry (galerías largas de
        contenido generado). ~320px de alto estimado por item. */
     content-visibility: auto;
     contain-intrinsic-size: auto 320px;
-}
-
-.living-masonry-column .living-masonry-item {
-    margin-bottom: 0;
 }
 
 /* Wrapper para thumbnail de video (soporta <video> o <img>) — mismo radio que imágenes */
