@@ -89,28 +89,25 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — glass-black: bg negro semi-transparente + backdrop-filter blur
-   para que el PLANS gigante de fondo se vea desenfocado a través.
+/* Cards — glass-black oficial de la plataforma (mismas variables que el header).
    El accent color por card (--card-c1/c2) se usa solo en precio, popular border y badge. */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
     position: relative;
     overflow: hidden;
-    background: rgba(10, 11, 13, 0.55);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-md, 12px);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 1.75rem 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     text-align: center;
     cursor: pointer;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 16px 40px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
     transition: border-color var(--transition, .2s), box-shadow var(--transition, .2s), transform var(--transition, .2s);
 }
 
@@ -121,10 +118,9 @@
 .planes-plans .plan-card-small:nth-child(4n+4) { --card-c1: #5b00ea; --card-c2: #900090; }
 
 .plan-card-small:hover {
-    border-color: color-mix(in srgb, var(--card-c1) 45%, rgba(255, 255, 255, 0.08));
+    border-color: color-mix(in srgb, var(--card-c1) 45%, var(--glass-black-border));
     transform: translateY(-3px);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
         0 20px 50px rgba(0, 0, 0, 0.6),
         0 0 40px -16px var(--card-c1);
 }
@@ -132,15 +128,13 @@
 .plan-card-small.selected {
     border-color: var(--card-c1);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
         0 0 0 1px var(--card-c1),
         0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .plan-card-small--popular {
-    border-color: color-mix(in srgb, var(--card-c1) 60%, rgba(255, 255, 255, 0.08));
+    border-color: color-mix(in srgb, var(--card-c1) 60%, var(--glass-black-border));
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.08),
         0 0 0 1px color-mix(in srgb, var(--card-c1) 40%, transparent),
         0 16px 40px rgba(0, 0, 0, 0.55);
 }
