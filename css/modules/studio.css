@@ -699,18 +699,19 @@
 .studio-btn-producir {
   padding: 0.6rem 1.25rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
-  color: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background-color: #ffffff;
+  background-image: none;
+  color: #0f0f0f;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.7);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .studio-btn-producir:hover:not(:disabled) {
-  filter: brightness(1.05);
+  background-color: #f4f4f5;
+  border-color: rgba(15, 23, 42, 0.2);
 }
 
 .studio-btn-producir:disabled {
