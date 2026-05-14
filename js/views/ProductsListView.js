@@ -239,13 +239,6 @@ class ProductsListView extends BaseView {
     }
   }
 
-  _getMasonryColumns() {
-    const w = window.innerWidth || 1200;
-    if (w >= 992) return 3;
-    if (w >= 640) return 2;
-    return 1;
-  }
-
   _renderProductsMasonry() {
     const section = document.getElementById('productsListSection');
     const empty = document.getElementById('productsListEmpty');
@@ -264,17 +257,15 @@ class ProductsListView extends BaseView {
     if (section) section.style.display = '';
     if (empty) empty.style.display = 'none';
 
-    const colsCount = this._getMasonryColumns();
-    const cols = Array.from({ length: colsCount }, () => []);
-    this.products.forEach((p, i) => {
-      cols[i % colsCount].push(this._renderProductCard(p, i));
-    });
+    const itemHtmls = this.products.map((p, i) => this._renderProductCard(p, i));
 
-    container.innerHTML = `
-      <div class="products-list-masonry-grid">
-        ${cols.map((col) => `<div class="products-list-masonry-column">${col.join('')}</div>`).join('')}
-      </div>
-    `;
+    // Justified rows layout (mismo patrón que Production via window.applyJustifiedLayout).
+    container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
+
+    const grid = container.querySelector('.living-masonry-grid');
+    if (grid && window.applyJustifiedLayout) {
+      window.applyJustifiedLayout(grid, { targetHeight: 260 });
+    }
 
     container.querySelectorAll('.product-list-card').forEach((card) => {
       const open = () => {
