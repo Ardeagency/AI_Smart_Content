@@ -53,6 +53,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'services',
       label: 'Servicios',
       icon: 'fa-briefcase',
+      iconSrc: '/recursos/icons/Service.svg',
       route: 'services',
       requireCap: 'brand.identity.edit'
     },
@@ -61,6 +62,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'monitoring',
       label: 'Monitoreo',
       icon: 'fa-satellite-dish',
+      iconSrc: '/recursos/icons/monitoring.svg',
       route: 'monitoring',
       requireCap: 'monitoring.view'
     },
@@ -94,7 +96,7 @@ const SIDEBAR_USER_CONFIG = {
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
 /** Versión en query de iconos del sidebar (SVG/PNG); subir si el navegador/CDN sirve assets viejos sin tocar el JS. */
-const NAV_SIDEBAR_ASSET_VER = '20260427b';
+const NAV_SIDEBAR_ASSET_VER = '20260514a';
 function _navSidebarIconUrl(src) {
   if (!src) return src;
   const sep = src.indexOf('?') === -1 ? '?' : '&';
