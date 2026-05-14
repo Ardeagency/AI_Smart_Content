@@ -162,13 +162,12 @@
         </div>`;
     },
 
-    /* ── 5 cards featured (Tema / Tono / Horario / Hashtag / Campaña+Ad) ── */
+    /* ── 4 cards featured (Tema / Tono / Horario / Hashtag) ─── */
     _buildFeaturedCards(featured) {
-      const topic      = (featured?.topic?.data      || [])[0] || null;
-      const tone       = (featured?.tones?.data      || [])[0] || null;
-      const hour       = (featured?.hour?.data       || [])[0] || null;
-      const hashtag    = (featured?.hashtag?.data    || [])[0] || null;
-      const campaignAd = (featured?.campaignAd?.data || [])[0] || null;
+      const topic   = (featured?.topic?.data   || [])[0] || null;
+      const tone    = (featured?.tones?.data   || [])[0] || null;
+      const hour    = (featured?.hour?.data    || [])[0] || null;
+      const hashtag = (featured?.hashtag?.data || [])[0] || null;
 
       return `
         ${this._buildFeaturedCard({
@@ -205,23 +204,6 @@
           metricPrimary: hashtag ? `${fmt.int(hashtag.usage_count)} usos` : null,
           metricSecondary: hashtag ? `${this._compactNum(hashtag.total_engagement)} engagement` : null,
           emptyHint: 'Aún no se detectan hashtags propios.',
-        })}
-
-        ${this._buildFeaturedCard({
-          kind: 'campaign-ad',
-          label: 'Campaña + ad ganador',
-          headline: campaignAd?.nombre_campana,
-          metricPrimary: campaignAd
-            ? (campaignAd.cost_per_conv != null
-                ? `${fmt.int(campaignAd.conversions)} conv · $${fmt.int(Math.round(campaignAd.cost_per_conv))}/c`
-                : `${fmt.int(campaignAd.clicks)} clicks`)
-            : null,
-          metricSecondary: campaignAd
-            ? (campaignAd.ctr_pct != null
-                ? `CTR ${Number(campaignAd.ctr_pct).toFixed(2)}% · ${fmt.money(campaignAd.spend)}`
-                : `${fmt.money(campaignAd.spend)} invertido`)
-            : null,
-          emptyHint: 'Aún sin ads activos con resultados.',
         })}
       `;
     },

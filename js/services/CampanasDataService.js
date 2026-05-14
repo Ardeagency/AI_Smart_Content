@@ -106,7 +106,7 @@ class CampanasDataService {
     const [
       health,
       kpis, list, dailySeries, winnersVsBurners, briefVsOutcome,
-      featuredTopic, featuredHashtag, featuredHour, estrategiaTones, featuredCampaignAd,
+      featuredTopic, featuredHashtag, featuredHour, estrategiaTones,
     ] = await Promise.allSettled([
       this.sb.rpc('dashboard_brand_health',                { p_org_id: this.orgId, p_date_window: healthWindowDays }),
 
@@ -116,12 +116,11 @@ class CampanasDataService {
       this.sb.rpc('dashboard_campaign_winners_vs_burners', { ...baseArgs, p_limit: 3 }),
       this.sb.rpc('dashboard_campaign_brief_vs_outcome',   { p_org_id: this.orgId, p_brief_id: null, p_date_from: date_from, p_date_to: date_to }),
 
-      // Featured: 5 cards después de Salud
+      // Featured: 4 cards después de Salud
       this.sb.rpc('dashboard_brand_featured_topic',        featuredArgs),
       this.sb.rpc('dashboard_brand_featured_hashtag',      featuredArgs),
       this.sb.rpc('dashboard_brand_featured_hour',         featuredArgs),
       this.sb.rpc('dashboard_estrategia_tones',            { ...featuredArgs, p_limit: 5 }),
-      this.sb.rpc('dashboard_brand_featured_campaign_ad',  baseArgs),
     ]);
 
     const u = (s) => this._unwrap(s);
@@ -138,11 +137,10 @@ class CampanasDataService {
       briefVsOutcome:   u(briefVsOutcome),
 
       featured: {
-        topic:       u(featuredTopic),
-        hashtag:     u(featuredHashtag),
-        hour:        u(featuredHour),
-        tones:       u(estrategiaTones),
-        campaignAd:  u(featuredCampaignAd),
+        topic:   u(featuredTopic),
+        hashtag: u(featuredHashtag),
+        hour:    u(featuredHour),
+        tones:   u(estrategiaTones),
       },
     };
   }
