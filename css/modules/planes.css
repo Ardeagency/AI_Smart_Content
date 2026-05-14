@@ -88,18 +88,19 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — glass-black IDÉNTICO al header (--glass-black-bg/border/blur) +
-   aurora gradient inferior como overlay en ::before (--card-c1/c2 por posición).
-   El ::before vive sobre el glass y no rompe el backdrop-filter. */
+/* Cards — mismo glass-black que el dropdown del header (#userDropdown.glass-black
+   en navigation.css:2175): bg 0.34 + border 0.14 + blur 18px saturate 160%.
+   --glass-blur por defecto (7px) se "aplana" sobre contenido grande; este es
+   el patrón corregido oficial del header para evitarlo. */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
     position: relative;
     overflow: hidden;
-    background: var(--glass-black-bg);
-    border: 1px solid var(--glass-black-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
     border-radius: var(--glass-radius);
     padding: 1.75rem 1.25rem;
     display: flex;
