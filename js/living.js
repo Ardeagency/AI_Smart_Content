@@ -963,88 +963,15 @@ class LivingManager {
             return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
         });
 
-        // Grid plano con grid-auto-flow:dense — cada item declara su span según
-        // aspect ratio cuando la imagen carga (this.applyMasonrySpans).
+        // CSS multi-column layout (Pinterest/Behance/Higgsfield-style). El navegador
+        // distribuye los items en N columnas y balancea las alturas automáticamente.
+        // Cada item mantiene su aspect ratio natural (width:100%; height:auto).
         const gridHtml = `<div class="living-masonry-grid living-history-masonry">${itemHtmls.join('')}</div>`;
         container.innerHTML = gridHtml;
 
-        this.applyMasonrySpans(container);
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
         this.setupHistoryInfiniteScroll();
-    }
-
-    /**
-     * Calcula y aplica spans (--span-col, --span-row) en cada .living-masonry-item
-     * del grid. Las horizontales (ratio > 1.2) toman 2 columnas; las demás 1.
-     * El span de fila se calcula con el ancho real del slot y el ratio del media
-     * para que la altura del slot encaje EXACTA con la altura natural de la imagen
-     * (sin recorte ni hueco). grid-auto-rows = 8px, gap = 8px.
-     *
-     * Si ya hay un handler de resize bound, lo reusa; si no, lo bindea una vez.
-     */
-    applyMasonrySpans(container) {
-        const ROW = 8;
-        const GAP = 8;
-
-        const recalc = (item) => {
-            const media = item.querySelector('img, video');
-            if (!media) return;
-            const w = media.tagName === 'IMG' ? media.naturalWidth  : media.videoWidth;
-            const h = media.tagName === 'IMG' ? media.naturalHeight : media.videoHeight;
-            if (!w || !h) return;
-            const ratio = w / h;
-            const col = ratio > 1.2 ? 2 : 1;
-            item.style.setProperty('--span-col', String(col));
-            // Medir ancho real del slot DESPUÉS de aplicar --span-col.
-            // requestAnimationFrame asegura que el layout esté actualizado.
-            requestAnimationFrame(() => {
-                const slotW = item.getBoundingClientRect().width;
-                if (!slotW) return;
-                const slotH = slotW / ratio;
-                const rowSpan = Math.max(4, Math.ceil((slotH + GAP) / (ROW + GAP)));
-                item.style.setProperty('--span-row', String(rowSpan));
-            });
-        };
-
-        const items = container.querySelectorAll('.living-masonry-item');
-        items.forEach((item) => {
-            // Default mientras carga: 1 col, 24 row (~192px) — evita saltos grandes.
-            if (!item.style.getPropertyValue('--span-row')) {
-                item.style.setProperty('--span-col', '1');
-                item.style.setProperty('--span-row', '24');
-            }
-            const media = item.querySelector('img, video');
-            if (!media) return;
-
-            if (media.tagName === 'IMG') {
-                if (media.complete && media.naturalWidth > 0) {
-                    recalc(item);
-                } else {
-                    media.addEventListener('load', () => recalc(item), { once: true });
-                }
-            } else if (media.tagName === 'VIDEO') {
-                if (media.videoWidth > 0) {
-                    recalc(item);
-                } else {
-                    media.addEventListener('loadedmetadata', () => recalc(item), { once: true });
-                }
-            }
-        });
-
-        // Re-cálculo en resize (cambia el ancho de las columnas, por ende la altura).
-        if (!this._masonryResizeBound) {
-            this._masonryResizeBound = true;
-            let resizeTimer = null;
-            window.addEventListener('resize', () => {
-                if (resizeTimer) clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    const c = document.getElementById('livingHistoryContent');
-                    if (!c) return;
-                    c.querySelectorAll('.living-masonry-item').forEach(recalc);
-                }, 150);
-            }, { passive: true });
-        }
     }
 
     setupHistoryInfiniteScroll() {
@@ -1370,10 +1297,8 @@ class LivingManager {
         const items = [];
         for (let i = 0; i < TOTAL; i++) {
             const isWide = i % 3 === 0;
-            // Spans coinciden con applyMasonrySpans: wide=2col/22row, tall=1col/30row
-            const span = isWide ? 'style="--span-col:2;--span-row:22"' : 'style="--span-col:1;--span-row:30"';
             items.push(
-                `<div class="living-masonry-item" ${span}>
+                `<div class="living-masonry-item">
                     <div class="living-history-skeleton ${isWide ? 'living-history-skeleton--wide' : 'living-history-skeleton--tall'}"></div>
                 </div>`
             );
