@@ -89,18 +89,15 @@
     margin: 2rem auto 0;
 }
 
-/* Cards — glass-black al 80% + aurora gradient inferior (--card-c1/c2 por posición).
-   Top de card: glass con PLANS borroso detrás. Bottom: aurora color (warm/green/cyan/violet). */
+/* Cards — glass-black IDÉNTICO al header (--glass-black-bg/border/blur) +
+   aurora gradient inferior como overlay en ::before (--card-c1/c2 por posición).
+   El ::before vive sobre el glass y no rompe el backdrop-filter. */
 .plan-card-small {
     --card-c1: #ff6500;
     --card-c2: #ff0000;
     position: relative;
     overflow: hidden;
-    background:
-        radial-gradient(ellipse 48% 32% at 50% 108%, rgba(255, 255, 255, 0.75) 0%, transparent 55%),
-        radial-gradient(ellipse 85% 55% at 50% 112%, var(--card-c1) 0%, transparent 65%),
-        radial-gradient(ellipse 115% 78% at 50% 118%, var(--card-c2) 0%, transparent 72%),
-        rgba(0, 0, 0, 0.8);
+    background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -114,6 +111,21 @@
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
     transition: border-color var(--transition, .2s), box-shadow var(--transition, .2s), transform var(--transition, .2s);
 }
+
+.plan-card-small::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 48% 32% at 50% 108%, rgba(255, 255, 255, 0.55) 0%, transparent 55%),
+        radial-gradient(ellipse 85% 55% at 50% 112%, var(--card-c1) 0%, transparent 65%),
+        radial-gradient(ellipse 115% 78% at 50% 118%, var(--card-c2) 0%, transparent 72%);
+    opacity: 0.85;
+}
+
+.plan-card-small > * { position: relative; z-index: 1; }
 
 /* Acentos por posición — siguen el --brand-gradient platform (solo precio/badge/popular) */
 .planes-plans .plan-card-small:nth-child(4n+1) { --card-c1: #ff6500; --card-c2: #ff0000; }
