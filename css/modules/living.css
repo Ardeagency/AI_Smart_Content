@@ -391,33 +391,16 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
 }
 
-/* Grid uniforme estilo Higgsfield: todas las cards son cuadrados del mismo
-   tamaño con object-fit:cover. La uniformidad es lo que da el look profesional
-   (no es masonry variable). Las imágenes se recortan al centro para llenar el
-   slot — funciona bien con contenido IA-generado que tiene composición central. */
+/* Justified rows (Flickr / Google Photos / Higgsfield).
+   Cada fila tiene altura uniforme; cada imagen mantiene su aspect ratio natural
+   y su ancho se ajusta proporcional al ratio para llenar exactamente la fila.
+   El layout lo calcula applyJustifiedLayout() en JS (necesita conocer el ratio
+   de cada media). */
 .living-masonry-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     overflow-x: hidden;
-}
-
-@media (min-width: 768px) {
-    .living-masonry-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 1280px) {
-    .living-masonry-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (min-width: 1800px) {
-    .living-masonry-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
 }
 
 /* Skeletons de carga para History/Community — llenan el slot cuadrado del grid */
@@ -470,15 +453,11 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .living-masonry-grid .living-masonry-item {
-    /* Slot cuadrado. La card hija y el media adentro llenan el slot 100%
-       con object-fit:cover para recortar al centro y mantener la uniformidad
-       visual del grid. !important porque hay reglas legacy de .history-image-card img
-       con height:auto que ganan por orden si no se fuerza. */
-    aspect-ratio: 1 / 1 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: hidden !important;
-    min-height: 0 !important;
+    /* Dimensiones (width + height) las calcula applyJustifiedLayout en JS
+       según el aspect ratio del media. flex:0 0 auto evita que flex las altere. */
+    flex: 0 0 auto;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .living-masonry-grid .living-masonry-item > .history-image-card,
