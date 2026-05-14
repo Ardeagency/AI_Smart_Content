@@ -50,15 +50,6 @@ const SIDEBAR_USER_CONFIG = {
     },
     {
       type: 'page',
-      id: 'references',
-      label: 'References',
-      icon: 'fa-images',
-      iconSrc: '/recursos/icons/file-storage.svg',
-      route: 'references',
-      requireCap: 'references.manage'
-    },
-    {
-      type: 'page',
       id: 'monitoring',
       label: 'Monitoreo',
       icon: 'fa-satellite-dish',
@@ -164,7 +155,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     icon: 'fa-book',
     iconSrc: '/recursos/icons/memory.svg',
     children: [
-      { label: 'Referencias Visuales', route: '/dev/lead/references' },
       { label: 'Vector Memory', route: '/dev/lead/ai-vectors' }
     ]
   },
@@ -316,7 +306,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/references', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
+    if (['/dashboard', '/production', '/vera', '/brands', '/product-detail', '/identities', '/studio', '/video', '/tasks', '/organization', '/credits', '/plans', '/brand-organization', '/brand-storage', '/brandstorage', '/command-center', '/monitoring'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -2245,7 +2235,6 @@ class Navigation {
       '/brands': 'IDENTITY',
       '/product-detail': 'IDENTITY',
       '/identities': 'IDENTITY',
-      '/references': 'REFERENCES',
       '/studio/flows': 'FLOWS',
       '/studio/catalog': 'FLOWS',
       '/studio': 'STUDIO',
@@ -2266,8 +2255,7 @@ class Navigation {
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/categories': 'CATEGORÍAS',
       '/dev/lead/input-schemas': 'INPUT SCHEMAS',
-      '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA',
-      '/dev/lead/references': 'REFERENCIAS VISUALES'
+      '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA'
     };
 
     for (const [route, title] of Object.entries(titles)) {

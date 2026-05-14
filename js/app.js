@@ -288,11 +288,6 @@ class App {
     r.register('/identities', identitiesLoader, auth);
     r.register('/identities/:entityId', identitiesLoader, auth);
 
-    // ── Org: References (biblioteca visual + carpetas custom) ──
-    const referencesLoader = this._lazy('ReferencesView', ['/js/views/ReferencesView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/references', referencesLoader, auth);
-    r.register('/references', referencesLoader, auth);
-
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
@@ -366,7 +361,6 @@ class App {
     r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js']), auth);
     r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js']), auth);
     r.register('/dev/lead/ai-vectors', this._lazy('DevLeadVectorsView', [...devBase, '/js/views/DevLeadVectorsView.js']), auth);
-    r.register('/dev/lead/references', this._lazy('DevLeadReferencesView', [...devBase, '/js/views/DevLeadReferencesView.js']), auth);
     r.register('/dev/lead/flows', this._lazy('DevLeadAllFlowsView', [...devBase, '/js/views/DevLeadAllFlowsView.js']), auth);
     r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
 

@@ -109,7 +109,6 @@ window.OrgCapabilities = (() => {
     '/studio':            'studio.create',
     '/video':             'video.create',
     '/production':        'production.create',
-    '/references':        'references.manage',
     '/vera':              'vera.chat',
     '/brand':             'brand.identity.edit',
     '/brand/storage':     'brand.storage.manage',
