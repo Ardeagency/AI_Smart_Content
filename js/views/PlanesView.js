@@ -134,11 +134,8 @@ class PlanesView extends BaseView {
     return `
       <div class="planes-page">
         <header class="planes-hero">
-          <div class="planes-hero-background"><div class="planes-background-gradient"></div></div>
+          <h1 class="planes-hero-bg-word" aria-hidden="true">PLANS</h1>
           <div class="planes-hero-content">
-            <h1 class="planes-hero-title">Precios simples para equipos serios</h1>
-            <p class="planes-hero-subtitle">Prueba 14 días sin tarjeta. Cancela cuando quieras.</p>
-
             <div class="planes-billing-toggle" role="group" aria-label="Tipo de facturación">
               <button type="button" class="planes-toggle-btn" data-billing="monthly" id="toggleMonthly">Mensual</button>
               <button type="button" class="planes-toggle-btn active" data-billing="annual" id="toggleAnnual">
