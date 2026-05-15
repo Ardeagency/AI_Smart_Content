@@ -1341,29 +1341,29 @@ class LivingManager {
         const selected = !!(outputId && this.selectedOutputs && this.selectedOutputs.has(outputId));
         return `
             <button type="button" class="card-select ${selected ? 'is-selected' : ''}" data-action="select" data-output-id="${safeId}" title="Seleccionar" aria-label="Seleccionar producción" aria-pressed="${selected ? 'true' : 'false'}">
-                <i class="${selected ? 'fas fa-check-circle' : 'far fa-circle'}" aria-hidden="true"></i>
+                <i class="${selected ? 'fas fa-check-circle' : 'fas fa-circle'}" aria-hidden="true"></i>
             </button>
             <div class="card-overlay-actions">
                 <button type="button" class="card-action card-action--like ${liked ? 'is-liked' : ''}" data-action="like" data-output-id="${safeId}" title="Me gusta" aria-label="Me gusta" aria-pressed="${liked ? 'true' : 'false'}">
-                    <i class="${liked ? 'fas' : 'far'} fa-heart" aria-hidden="true"></i>
+                    <i class="fas fa-heart" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="card-action" data-action="copy-prompt" data-prompt="${promptSafe}" title="Copiar prompt" aria-label="Copiar prompt">
-                    <i class="far fa-copy" aria-hidden="true"></i>
+                    <i class="fas fa-copy" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="card-action" data-action="download" data-url="${safeUrl}" title="Descargar" aria-label="Descargar">
                     <i class="fas fa-download" aria-hidden="true"></i>
                 </button>
                 <div class="card-kebab-wrap">
                     <button type="button" class="card-action card-action--kebab" data-action="kebab" title="Más acciones" aria-label="Más acciones" aria-expanded="false">
-                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                        <i class="fas fa-bars" aria-hidden="true"></i>
                     </button>
                     <div class="card-kebab-menu" role="menu" hidden>
                         <button type="button" role="menuitem" data-action="share" data-url="${safeUrl}">
-                            <i class="fas fa-share-nodes" aria-hidden="true"></i>
+                            <i class="fas fa-link" aria-hidden="true"></i>
                             <span>Compartir enlace</span>
                         </button>
                         <button type="button" role="menuitem" data-action="publish-meta" disabled aria-disabled="true" title="Próximamente">
-                            <i class="fab fa-meta" aria-hidden="true"></i>
+                            <i class="fas fa-upload" aria-hidden="true"></i>
                             <span>Publicar a Meta</span>
                             <em class="card-kebab-menu-soon">Próximamente</em>
                         </button>
@@ -1529,11 +1529,8 @@ class LivingManager {
                     const nowLiked = await this.toggleLike(outputId);
                     actionEl.classList.toggle('is-liked', nowLiked);
                     actionEl.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
-                    const icon = actionEl.querySelector('i');
-                    if (icon) {
-                        icon.classList.toggle('fas', nowLiked);
-                        icon.classList.toggle('far', !nowLiked);
-                    }
+                    // Subset solo trae fas; el estado liked se diferencia por color
+                    // vía la clase .is-liked (no por cambiar fas↔far).
                     break;
                 }
                 case 'select': {
@@ -1544,7 +1541,7 @@ class LivingManager {
                     actionEl.setAttribute('aria-pressed', selected ? 'false' : 'true');
                     const icon = actionEl.querySelector('i');
                     if (icon) {
-                        icon.className = (!selected ? 'fas fa-check-circle' : 'far fa-circle');
+                        icon.className = (!selected ? 'fas fa-check-circle' : 'fas fa-circle');
                     }
                     if (card) card.classList.toggle('is-selected', !selected);
                     this._updateSelectionBar();
@@ -1651,7 +1648,7 @@ class LivingManager {
                 <span class="production-selection-bar-count"></span>
                 <div class="production-selection-bar-actions">
                     <button type="button" class="btn btn-secondary production-selection-bar-clear" data-action="clear-selection">
-                        <i class="fas fa-xmark"></i> Limpiar
+                        <i class="fas fa-times"></i> Limpiar
                     </button>
                     <button type="button" class="btn btn-danger production-selection-bar-delete" data-action="bulk-delete">
                         <i class="fas fa-trash"></i> Eliminar
@@ -1693,7 +1690,7 @@ class LivingManager {
             btn.classList.remove('is-selected');
             btn.setAttribute('aria-pressed', 'false');
             const icon = btn.querySelector('i');
-            if (icon) icon.className = 'far fa-circle';
+            if (icon) icon.className = 'fas fa-circle';
         });
         document.querySelectorAll('.history-image-card.is-selected, .history-video-card.is-selected').forEach(c => c.classList.remove('is-selected'));
         this._updateSelectionBar();
@@ -1744,8 +1741,10 @@ class LivingManager {
             imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Production');
         }
 
-        // Prompt + see all.
-        this._renderModalPrompt(data?.prompt || output?.prompt_used || output?.text_content || '');
+        // Prompt → bloques labeled. La fuente primaria es output.generated_copy
+        // (estructurado) o el prompt que pasó la card. El disclosure técnico
+        // se llena con metadata.prompt_used si existe.
+        this._renderModalPrompt(data?.prompt || output?.generated_copy || output?.prompt_used || '', output, run);
 
         // Information rows.
         this._renderModalInfo(output, run);
@@ -1762,7 +1761,7 @@ class LivingManager {
             const liked = this.likedOutputs.has(outputId);
             likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
             const ic = likeBtn.querySelector('i');
-            if (ic) ic.className = (liked ? 'fas' : 'far') + ' fa-heart';
+            if (ic) ic.className = 'fas fa-heart';
             likeBtn.classList.toggle('is-liked', liked);
         }
 
@@ -1791,25 +1790,133 @@ class LivingManager {
         this._modalState = null;
     }
 
-    _renderModalPrompt(rawPrompt) {
-        const txt = document.getElementById('pmodalPromptText');
-        const toggle = document.getElementById('pmodalPromptToggle');
-        if (!txt) return;
-        const safe = String(rawPrompt || '').trim();
-        txt.textContent = safe || 'Sin prompt registrado.';
-        txt.classList.remove('is-expanded');
-        if (toggle) {
-            toggle.hidden = true;
-            toggle.querySelector('span').textContent = 'See all';
-            toggle.querySelector('i').className = 'fas fa-chevron-down';
+    /**
+     * Renderiza el "prompt" del output como bloques labeled Notion-style.
+     * Acepta:
+     *   - String plano → 1 bloque "Prompt"
+     *   - JSON string (incluso doblemente escapado) con campos
+     *     {headline, subline, body, copy, typography_notes, ...} → 1 bloque
+     *     por campo, label humanizado, value preservando saltos de línea.
+     * Adicionalmente puebla el disclosure "Show generation details" con el
+     * prompt técnico crudo (metadata.prompt_used) si existe.
+     */
+    _renderModalPrompt(rawCopyOrPrompt, output, run) {
+        const container = document.getElementById('pmodalPromptBlocks');
+        if (!container) return;
+
+        // 1) Determinar la fuente. El "copy" estructurado vive en generated_copy
+        //    o como string en prompt_used. Si rawCopyOrPrompt viene null, fallback.
+        const source = rawCopyOrPrompt
+            || output?.generated_copy
+            || output?.prompt_used
+            || output?.text_content
+            || '';
+
+        const blocks = this._parsePromptBlocks(source);
+
+        if (!blocks.length) {
+            container.innerHTML = `<p class="pmodal-prompt-empty">Sin prompt registrado.</p>`;
+        } else {
+            container.innerHTML = blocks.map(b => `
+                <div class="pmodal-prompt-block">
+                    <div class="pmodal-prompt-block-head">
+                        <span class="pmodal-prompt-block-label">${this.escapeHtml(b.label)}</span>
+                        <button type="button" class="pmodal-prompt-block-copy" data-action="copy-block" title="Copiar">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="pmodal-prompt-block-value">${this.escapeHtml(b.value)}</div>
+                </div>
+            `).join('');
         }
-        // Mostrar See all si el texto excede el clamp (4 líneas → ~24em).
-        // Lo decidimos tras un frame para que el browser layoutee.
-        requestAnimationFrame(() => {
-            if (!toggle) return;
-            const overflow = txt.scrollHeight > txt.clientHeight + 2;
-            toggle.hidden = !overflow;
+
+        // 2) Disclosure con el prompt técnico crudo (engineer-side).
+        const raw = document.getElementById('pmodalPromptRaw');
+        const rawText = document.getElementById('pmodalPromptRawText');
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const technicalPrompt = (typeof meta.prompt_used === 'string' && meta.prompt_used)
+            || (typeof output?.prompt_used === 'string' && output.prompt_used.length > 200 ? output.prompt_used : '')
+            || '';
+        if (raw && rawText) {
+            if (technicalPrompt) {
+                raw.hidden = false;
+                rawText.textContent = technicalPrompt;
+                raw.open = false;
+            } else {
+                raw.hidden = true;
+                rawText.textContent = '';
+            }
+        }
+    }
+
+    /**
+     * Parser de prompt → [{label, value}].
+     * Acepta string plano, JSON object, o JSON string (doble-escapado).
+     * Filtra campos vacíos. Humaniza claves snake_case/camelCase.
+     */
+    _parsePromptBlocks(input) {
+        if (input == null) return [];
+        // Si ya es objeto, usarlo directo. Si es string, intentar parse 1-2 niveles.
+        let value = input;
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            // Doble escape: la string empieza con `"` (es un string JSON que envuelve otro JSON).
+            if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || trimmed.startsWith('"{')) {
+                try { value = JSON.parse(trimmed); } catch (_) {}
+            }
+            if (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('['))) {
+                try { value = JSON.parse(value); } catch (_) {}
+            }
+        }
+
+        // Si después de los parses sigue siendo string → un solo bloque "Prompt".
+        if (typeof value === 'string') {
+            const s = value.trim();
+            return s ? [{ label: 'Prompt', value: s }] : [];
+        }
+        if (Array.isArray(value)) {
+            return value
+                .map((v, i) => ({
+                    label: `Item ${i + 1}`,
+                    value: typeof v === 'string' ? v : JSON.stringify(v, null, 2)
+                }))
+                .filter(b => b.value && b.value.trim());
+        }
+        if (typeof value !== 'object') return [];
+
+        // Objeto: una entrada por campo. Filtramos vacíos y campos técnicos ruidosos.
+        const SKIP = new Set(['id', 'created_at', 'updated_at', 'image_meta', 'prompt_used']);
+        const PREFERRED_ORDER = ['headline', 'subline', 'body', 'copy', 'cta', 'tagline', 'description', 'typography_notes', 'rationale', 'notes'];
+        const entries = Object.entries(value).filter(([k, v]) => {
+            if (SKIP.has(k)) return false;
+            if (v == null) return false;
+            if (typeof v === 'string' && !v.trim()) return false;
+            if (Array.isArray(v) && !v.length) return false;
+            return true;
         });
+        // Ordenar: preferidos primero, en orden, el resto alfabético.
+        entries.sort(([a], [b]) => {
+            const ia = PREFERRED_ORDER.indexOf(a);
+            const ib = PREFERRED_ORDER.indexOf(b);
+            if (ia !== -1 && ib !== -1) return ia - ib;
+            if (ia !== -1) return -1;
+            if (ib !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        return entries.map(([k, v]) => ({
+            label: this._humanizePromptKey(k),
+            value: typeof v === 'string' ? v.trim() : JSON.stringify(v, null, 2)
+        }));
+    }
+
+    /** Convierte typography_notes / typographyNotes → "Typography Notes". */
+    _humanizePromptKey(key) {
+        return String(key || '')
+            .replace(/[_-]+/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .toLowerCase()
+            .replace(/\b\w/g, c => c.toUpperCase());
     }
 
     _renderModalInfo(output, run) {
@@ -1958,14 +2065,14 @@ class LivingManager {
                         btn.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
                         btn.classList.toggle('is-liked', nowLiked);
                         const ic = btn.querySelector('i');
-                        if (ic) ic.className = (nowLiked ? 'fas' : 'far') + ' fa-heart';
+                        if (ic) ic.className = 'fas fa-heart';
                         // Sincronizar también el corazón del overlay de la card en la grilla.
                         const cardLike = document.querySelector(`.history-image-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like, .history-video-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like`);
                         if (cardLike) {
                             cardLike.classList.toggle('is-liked', nowLiked);
                             cardLike.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
                             const cardIcon = cardLike.querySelector('i');
-                            if (cardIcon) cardIcon.className = (nowLiked ? 'fas' : 'far') + ' fa-heart';
+                            if (cardIcon) cardIcon.className = 'fas fa-heart';
                         }
                         break;
                     }
@@ -1983,6 +2090,19 @@ class LivingManager {
                             } catch (_) {}
                         }
                         this._closeModalKebabs(modal);
+                        break;
+                    }
+                    case 'copy-block': {
+                        // Copia el valor del bloque labeled (Headline / Subline / etc.)
+                        const block = btn.closest('.pmodal-prompt-block');
+                        const valueEl = block?.querySelector('.pmodal-prompt-block-value');
+                        const text = valueEl?.textContent?.trim() || '';
+                        if (text && navigator.clipboard?.writeText) {
+                            try {
+                                await navigator.clipboard.writeText(text);
+                                if (typeof window.showToast === 'function') window.showToast('Copiado');
+                            } catch (_) {}
+                        }
                         break;
                     }
                     case 'kebab': {

@@ -73,19 +73,19 @@ class ProductionView extends BaseView {
     <div class="production-modal" id="productionModal" aria-hidden="true" role="dialog" aria-modal="true">
         <div class="production-modal-backdrop" data-action="modal-close"></div>
         <div class="production-modal-content">
-            <!-- Columna izquierda: asset full-bleed + toolbar inferior -->
+            <!-- Columna izquierda: asset full-bleed + toolbar inferior overlay -->
             <div class="production-modal-visual">
                 <div class="production-modal-visual-inner">
                     <img id="pmodalImage" src="" alt="" hidden>
                     <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
                 </div>
                 <div class="production-modal-toolbar" role="toolbar" aria-label="Editar producción">
-                    <button type="button" class="pmodal-toolpill is-active" data-tool="overview"><i class="fas fa-bars"></i> Overview</button>
-                    <button type="button" class="pmodal-toolpill" data-tool="upscale" disabled><i class="fas fa-up-right-and-down-left-from-center"></i> Upscale</button>
-                    <button type="button" class="pmodal-toolpill" data-tool="enhancer" disabled><i class="fas fa-wand-magic-sparkles"></i> Enhancer</button>
-                    <button type="button" class="pmodal-toolpill" data-tool="relight" disabled><i class="fas fa-lightbulb"></i> Relight</button>
-                    <button type="button" class="pmodal-toolpill" data-tool="inpaint" disabled><i class="fas fa-paintbrush"></i> Inpaint</button>
-                    <button type="button" class="pmodal-toolpill" data-tool="angles" disabled><i class="fas fa-arrows-rotate"></i> Angles</button>
+                    <button type="button" class="pmodal-toolpill is-active" data-tool="overview"><i class="fas fa-bars"></i><span>Overview</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="upscale" disabled><i class="fas fa-expand-alt"></i><span>Upscale</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="enhancer" disabled><i class="fas fa-wand-magic-sparkles"></i><span>Enhancer</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="relight" disabled><i class="fas fa-lightbulb"></i><span>Relight</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="inpaint" disabled><i class="fas fa-paintbrush"></i><span>Inpaint</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="angles" disabled><i class="fas fa-rotate-right"></i><span>Angles</span></button>
                 </div>
             </div>
 
@@ -100,7 +100,7 @@ class ProductionView extends BaseView {
                         </div>
                     </div>
                     <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar">
-                        <i class="fas fa-xmark"></i>
+                        <i class="fas fa-times"></i>
                     </button>
                 </header>
 
@@ -109,7 +109,7 @@ class ProductionView extends BaseView {
                         <i class="fas fa-circle-info"></i> Details
                     </button>
                     <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="comments" disabled title="Próximamente">
-                        <i class="far fa-comment"></i> Comments
+                        <span>Comments</span>
                     </button>
                 </nav>
 
@@ -117,13 +117,16 @@ class ProductionView extends BaseView {
                     <!-- Strip de siblings (otros outputs del mismo run) -->
                     <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
 
-                    <!-- Prompt con See all collapsible -->
-                    <section class="pmodal-section pmodal-prompt-section" id="pmodalPromptSection">
-                        <p class="pmodal-prompt-text" id="pmodalPromptText"></p>
-                        <button type="button" class="pmodal-prompt-toggle" id="pmodalPromptToggle" hidden>
-                            <span>See all</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+                    <!-- Prompt: bloques labeled Notion-style + disclosure de generation details -->
+                    <section class="pmodal-section pmodal-prompt-section">
+                        <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
+                        <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
+                            <summary>
+                                <i class="fas fa-chevron-right pmodal-prompt-raw-caret"></i>
+                                <span>Show generation details</span>
+                            </summary>
+                            <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
+                        </details>
                     </section>
 
                     <!-- Information rows -->
@@ -136,11 +139,11 @@ class ProductionView extends BaseView {
                 <!-- CTAs primarios -->
                 <div class="pmodal-cta-grid">
                     <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate">
-                        <i class="fas fa-clapperboard"></i>
+                        <i class="fas fa-film"></i>
                         <span>Animate</span>
                     </button>
                     <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="Próximamente">
-                        <i class="fas fa-arrow-up-from-bracket"></i>
+                        <i class="fas fa-upload"></i>
                         <span>Publish</span>
                     </button>
                 </div>
@@ -148,7 +151,7 @@ class ProductionView extends BaseView {
                 <!-- Secundarios -->
                 <div class="pmodal-secondary-grid">
                     <button type="button" class="pmodal-secondary" data-action="open-in">
-                        <i class="fas fa-arrow-up-right-from-square"></i>
+                        <i class="fas fa-external-link-alt"></i>
                         <span>Open in</span>
                     </button>
                     <button type="button" class="pmodal-secondary" data-action="reference" disabled title="Próximamente">
@@ -157,32 +160,31 @@ class ProductionView extends BaseView {
                     </button>
                 </div>
 
-                <!-- Footer: download + like + share + kebab -->
+                <!-- Footer asimétrico: Download wide + cluster icon-buttons -->
                 <footer class="pmodal-footer">
                     <button type="button" class="pmodal-footer-download" data-action="download">
                         <i class="fas fa-download"></i>
                         <span>Download</span>
                     </button>
-                    <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="Me gusta">
-                        <i class="far fa-heart"></i>
-                    </button>
-                    <button type="button" class="pmodal-icon-btn" data-action="share" aria-label="Compartir">
-                        <i class="fas fa-share-nodes"></i>
-                    </button>
-                    <div class="pmodal-kebab-wrap">
-                        <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="Más">
-                            <i class="fas fa-ellipsis"></i>
+                    <div class="pmodal-footer-icons">
+                        <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="Me gusta">
+                            <i class="fas fa-heart"></i>
                         </button>
-                        <div class="pmodal-kebab-menu" role="menu" hidden>
-                            <button type="button" role="menuitem" data-action="copy-prompt">
-                                <i class="far fa-copy"></i> Copiar prompt
+                        <div class="pmodal-kebab-wrap">
+                            <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="Más">
+                                <i class="fas fa-bars"></i>
                             </button>
-                            <button type="button" role="menuitem" data-action="copy-url">
-                                <i class="fas fa-link"></i> Copiar enlace
-                            </button>
-                            <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete">
-                                <i class="fas fa-trash"></i> Eliminar producción
-                            </button>
+                            <div class="pmodal-kebab-menu" role="menu" hidden>
+                                <button type="button" role="menuitem" data-action="copy-prompt">
+                                    <i class="fas fa-copy"></i> Copiar prompt
+                                </button>
+                                <button type="button" role="menuitem" data-action="copy-url">
+                                    <i class="fas fa-link"></i> Copiar enlace
+                                </button>
+                                <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete">
+                                    <i class="fas fa-trash"></i> Eliminar producción
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </footer>
