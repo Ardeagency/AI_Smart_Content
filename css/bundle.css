@@ -474,7 +474,6 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .new-product-modal,
 .org-modal,
 .dev-lead-modal,
-.living-viewer-modal,
 .color-editor-modal {
     display: none;
     position: fixed;
@@ -486,26 +485,10 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 .new-product-modal.active,
 .org-modal.modal-open,
-.dev-lead-modal.is-open,
-.living-viewer-modal.active {
+.dev-lead-modal.is-open {
     display: flex;
 }
 .color-editor-modal { display: flex; background: var(--black-50); }
-.living-viewer-modal { pointer-events: none; opacity: 0; visibility: hidden; transition: var(--transition); }
-.living-viewer-modal.active { pointer-events: all; opacity: 1; visibility: visible; }
-.living-viewer-backdrop { position: absolute; inset: 0; background: var(--bg-overlay); cursor: pointer; }
-.living-viewer-container {
-    position: relative;
-    z-index: 1;
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    max-width: 1200px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: var(--shadow-floating);
-    animation: modalIn 0.25s ease-out;
-}
 
 /* ========== FORMULARIOS — Una sola definición ========== */
 .form-group {
