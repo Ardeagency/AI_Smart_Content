@@ -15,7 +15,8 @@ class FlowCatalogView extends BaseView {
     this.flowsById = new Map();
     this.categories = [];
     this.subcategories = [];
-    this.favorites = [];       // { flow_id, rating?, ... }
+    this.likedFlowIds = new Set();   // ids con like del user actual (user_flow_likes)
+    this.savedFlowIds = new Set();   // ids guardados por la org activa (org_flow_saves)
     this.recentRunFlowIds = [];
     this.selectedCategoryId = null; // null = home, uuid = category view
     this.selectedSubcategoryId = null; // vista por content_subcategories (schema 254-261)
@@ -194,7 +195,7 @@ class FlowCatalogView extends BaseView {
     this.enrichFlowsWithCategories();
     if (this.userId) {
       await Promise.all([
-        this.loadFavorites(),
+        this.loadLikesAndSaves(),
         this.loadRecentRuns()
       ]);
     }
@@ -320,23 +321,39 @@ class FlowCatalogView extends BaseView {
     }
   }
 
-  async loadFavorites() {
-    this.favorites = [];
-    if (!this.supabase || !this.userId) return;
+  async loadLikesAndSaves() {
+    this.likedFlowIds = new Set();
+    this.savedFlowIds = new Set();
+    if (!this.supabase) return;
     try {
-      const fetcher = async () => {
+      const likesFetcher = async () => {
+        if (!this.userId) return [];
         const { data, error } = await this.supabase
-          .from('user_flow_favorites')
-          .select('flow_id, rating, is_favorite, last_used_at')
-          .eq('user_id', this.userId)
-          .eq('is_favorite', true);
+          .from('user_flow_likes')
+          .select('flow_id')
+          .eq('user_id', this.userId);
         return !error && data ? data : [];
       };
-      this.favorites = window.apiClient
-        ? await window.apiClient.query(`flow:favorites:${this.userId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
-        : await fetcher();
+      const savesFetcher = async () => {
+        if (!this.organizationId) return [];
+        const { data, error } = await this.supabase
+          .from('org_flow_saves')
+          .select('flow_id')
+          .eq('organization_id', this.organizationId);
+        return !error && data ? data : [];
+      };
+      const [likes, saves] = await Promise.all([
+        window.apiClient
+          ? window.apiClient.query(`flow:likes:${this.userId}`, likesFetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+          : likesFetcher(),
+        window.apiClient
+          ? window.apiClient.query(`flow:saves:${this.organizationId}`, savesFetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+          : savesFetcher()
+      ]);
+      (likes || []).forEach(r => r.flow_id && this.likedFlowIds.add(r.flow_id));
+      (saves || []).forEach(r => r.flow_id && this.savedFlowIds.add(r.flow_id));
     } catch (e) {
-      console.error('FlowCatalog loadFavorites:', e);
+      console.error('FlowCatalog loadLikesAndSaves:', e);
     }
   }
 
@@ -407,15 +424,14 @@ class FlowCatalogView extends BaseView {
   }
 
   getSavedFlows() {
-    return this.favorites
-      .map(fav => this.flowsById.get(fav.flow_id))
+    return Array.from(this.savedFlowIds)
+      .map(id => this.flowsById.get(id))
       .filter(Boolean);
   }
 
   getLikedFlows() {
-    const withRating = this.favorites.filter(f => f.rating != null && f.rating >= 4);
-    return withRating
-      .map(fav => this.flowsById.get(fav.flow_id))
+    return Array.from(this.likedFlowIds)
+      .map(id => this.flowsById.get(id))
       .filter(Boolean);
   }
 
@@ -427,7 +443,7 @@ class FlowCatalogView extends BaseView {
 
   getRecommendedFlows() {
     const published = this.getPublishedFlows();
-    const usedIds = new Set([...this.recentRunFlowIds, ...this.favorites.map(f => f.flow_id)]);
+    const usedIds = new Set([...this.recentRunFlowIds, ...this.likedFlowIds, ...this.savedFlowIds]);
     const usedCategories = new Set();
     this.recentRunFlowIds.forEach(id => {
       const f = this.flowsById.get(id);
@@ -621,9 +637,8 @@ class FlowCatalogView extends BaseView {
     const likes = flow.likes_count || 0;
     const saves = flow.saves_count || 0;
     const runs = flow.run_count || 0;
-    const fav = this.favorites.find(f => f.flow_id === flow.id);
-    const isLiked = fav && fav.rating != null && fav.rating >= 4;
-    const isSaved = fav && fav.is_favorite;
+    const isLiked = this.likedFlowIds.has(flow.id);
+    const isSaved = this.savedFlowIds.has(flow.id);
 
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
@@ -1026,53 +1041,38 @@ class FlowCatalogView extends BaseView {
   async toggleLike(flowId, cardEl) {
     if (!this.supabase || !this.userId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
-    const fav = this.favorites.find(f => f.flow_id === flowId);
-    const isLiked = fav && fav.rating != null && fav.rating >= 4;
     try {
-      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-      if (existing) {
-        await this.supabase.from('user_flow_favorites').update(isLiked ? { rating: null } : { is_favorite: true, rating: 5 }).eq('id', existing.id);
-      } else if (!isLiked) {
-        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true, rating: 5 });
-      }
-      window.apiClient?.invalidate(`flow:favorites:${this.userId}`);
+      const { data, error } = await this.supabase.rpc('toggle_user_flow_like', { p_flow_id: flowId });
+      if (error) throw error;
+      const nowLiked = data === true;
+      if (nowLiked) this.likedFlowIds.add(flowId);
+      else this.likedFlowIds.delete(flowId);
+      if (flow) flow.likes_count = Math.max(0, (flow.likes_count || 0) + (nowLiked ? 1 : -1));
+      window.apiClient?.invalidate(`flow:likes:${this.userId}`);
     } catch (e) {
       console.error('toggleLike:', e);
       return;
-    }
-    if (flow) flow.likes_count = Math.max(0, (flow.likes_count || 0) + (isLiked ? -1 : 1));
-    const idx = this.favorites.findIndex(f => f.flow_id === flowId);
-    if (isLiked && idx >= 0) this.favorites[idx].rating = null;
-    else if (!isLiked) {
-      if (idx >= 0) this.favorites[idx].rating = 5;
-      else this.favorites.push({ flow_id: flowId, is_favorite: true, rating: 5 });
     }
     this.updateCardLikeSaveUI(cardEl, flow);
   }
 
   async toggleSave(flowId, cardEl) {
-    if (!this.supabase || !this.userId) return;
+    if (!this.supabase || !this.organizationId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
-    const fav = this.favorites.find(f => f.flow_id === flowId);
-    const isSaved = fav && fav.is_favorite;
     try {
-      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-      if (existing) {
-        await this.supabase.from('user_flow_favorites').update({ is_favorite: !isSaved }).eq('id', existing.id);
-      } else if (!isSaved) {
-        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true });
-      }
-      window.apiClient?.invalidate(`flow:favorites:${this.userId}`);
+      const { data, error } = await this.supabase.rpc('toggle_org_flow_save', {
+        p_org_id: this.organizationId,
+        p_flow_id: flowId
+      });
+      if (error) throw error;
+      const nowSaved = data === true;
+      if (nowSaved) this.savedFlowIds.add(flowId);
+      else this.savedFlowIds.delete(flowId);
+      if (flow) flow.saves_count = Math.max(0, (flow.saves_count || 0) + (nowSaved ? 1 : -1));
+      window.apiClient?.invalidate(`flow:saves:${this.organizationId}`);
     } catch (e) {
       console.error('toggleSave:', e);
       return;
-    }
-    if (flow) flow.saves_count = Math.max(0, (flow.saves_count || 0) + (isSaved ? -1 : 1));
-    if (isSaved && fav) fav.is_favorite = false;
-    else if (!isSaved) {
-      const idx = this.favorites.findIndex(f => f.flow_id === flowId);
-      if (idx >= 0) this.favorites[idx].is_favorite = true;
-      else this.favorites.push({ flow_id: flowId, is_favorite: true });
     }
     this.updateCardLikeSaveUI(cardEl, flow);
   }
@@ -1082,12 +1082,12 @@ class FlowCatalogView extends BaseView {
     const likeBtn = cardEl.querySelector('.flow-card-icon-like');
     const saveBtn = cardEl.querySelector('.flow-card-icon-save');
     if (likeBtn) {
-      likeBtn.classList.toggle('is-active', this.favorites.some(f => f.flow_id === flow.id && f.rating != null && f.rating >= 4));
+      likeBtn.classList.toggle('is-active', this.likedFlowIds.has(flow.id));
       const countEl = likeBtn.querySelector('.flow-card-icon-count');
       if (countEl) countEl.textContent = flow.likes_count ?? 0;
     }
     if (saveBtn) {
-      saveBtn.classList.toggle('is-active', this.favorites.some(f => f.flow_id === flow.id && f.is_favorite));
+      saveBtn.classList.toggle('is-active', this.savedFlowIds.has(flow.id));
       const countEl = saveBtn.querySelector('.flow-card-icon-count');
       if (countEl) countEl.textContent = flow.saves_count ?? 0;
     }
