@@ -150,11 +150,9 @@ class App {
 
     // ── Públicas (lazy) ──
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);
-    r.register('/politica-de-privacidad', this._lazy('PrivacyPolicyView', ['/js/views/PrivacyPolicyView.js']), pub);
-    r.register('/privacidad', this._lazy('PrivacyPolicyView', ['/js/views/PrivacyPolicyView.js']), pub);
-    r.register('/terminos-de-servicio', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
-    r.register('/terminos', this._lazy('TermsOfServiceView', ['/js/views/TermsOfServiceView.js']), pub);
-    r.register('/eliminacion-de-datos', this._lazy('DataDeletionView', ['/js/views/DataDeletionView.js']), pub);
+    // Privacidad/Términos/Eliminación de datos migradas a la landing aismartcontent.io.
+    // Los redirects 301 viven en netlify.toml; no se registran rutas SPA para evitar
+    // que el router las intercepte y ejecute el redirect en el servidor.
 
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {

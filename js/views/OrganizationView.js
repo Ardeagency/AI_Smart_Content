@@ -353,11 +353,13 @@ class OrganizationView extends BaseView {
       <a href="mailto:info@ardeagency.com">info@ardeagency.com</a>
     </div>
     <nav class="organization-footer-links" aria-label="Legal">
-      <a href="/politica-de-privacidad" data-route="/politica-de-privacidad">Política de privacidad</a>
+      <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">Política de privacidad</a>
       <span class="organization-footer-sep">·</span>
-      <a href="/terminos-de-servicio" data-route="/terminos-de-servicio">Términos de servicio</a>
+      <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">Términos de servicio</a>
       <span class="organization-footer-sep">·</span>
-      <a href="/eliminacion-de-datos" data-route="/eliminacion-de-datos">Eliminación de datos</a>
+      <a href="https://aismartcontent.io/data-deletion" target="_blank" rel="noopener">Eliminación de datos</a>
+      <span class="organization-footer-sep">·</span>
+      <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">Contacto</a>
     </nav>
   </footer>
 </div>

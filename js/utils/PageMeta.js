@@ -45,10 +45,6 @@
     [/^\/login$/,                                              'Login'],
     [/^\/signin$/,                                             'Sign in'],
     [/^\/cambiar-contrasena$/,                                 'Cambiar contraseña'],
-    [/^\/politica-de-privacidad$/,                             'Política de privacidad'],
-    [/^\/privacidad$/,                                         'Política de privacidad'],
-    [/^\/terminos(-de-servicio)?$/,                            'Términos de servicio'],
-    [/^\/eliminacion-de-datos$/,                               'Eliminación de datos'],
 
     [/^\/dashboard$/,                                          'Dashboard'],
     [/^\/production$/,                                         'Production'],

@@ -257,6 +257,39 @@
   status = 404
   force = true
 
+# Páginas legales y contacto: migradas a la landing aismartcontent.io.
+# Redirects 301 absolutos para URLs viejas indexadas, bookmarks y links externos
+# (Meta/Facebook usa /eliminacion-de-datos como data deletion callback registrado).
+[[redirects]]
+  from = "/politica-de-privacidad"
+  to = "https://aismartcontent.io/privacy-policy"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/privacidad"
+  to = "https://aismartcontent.io/privacy-policy"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/terminos-de-servicio"
+  to = "https://aismartcontent.io/terms-and-conditions"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/terminos"
+  to = "https://aismartcontent.io/terms-and-conditions"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/eliminacion-de-datos"
+  to = "https://aismartcontent.io/data-deletion"
+  status = 301
+  force = true
+
 # SPA Fallback - todas las demás rutas van a index.html (/.netlify/* ya cubierto arriba)
 [[redirects]]
   from = "/*"

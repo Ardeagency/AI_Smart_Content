@@ -67,9 +67,11 @@ class SignInView extends BaseView {
         <footer class="signin-footer">
           <span class="signin-footer-copy">${year} AI SMART CONTENT by ARDE AGENCY S.A.S. Todos los derechos reservados.</span>
           <span class="signin-footer-links">
-            <a href="/privacidad" data-href="/privacidad">Privacidad</a>
+            <a href="https://aismartcontent.io/privacy-policy" target="_blank" rel="noopener">Privacidad</a>
             <span aria-hidden="true">·</span>
-            <a href="/terminos" data-href="/terminos">Términos</a>
+            <a href="https://aismartcontent.io/terms-and-conditions" target="_blank" rel="noopener">Términos</a>
+            <span aria-hidden="true">·</span>
+            <a href="https://aismartcontent.io/contact" target="_blank" rel="noopener">Contacto</a>
           </span>
         </footer>
       </div>

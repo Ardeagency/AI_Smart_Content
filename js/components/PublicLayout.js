@@ -13,20 +13,26 @@
 (function () {
   const NAV_LINKS = [];
 
+  // Legal y contacto viven en la landing aismartcontent.io (Framer).
+  // Los links salen del SPA, así que abren en una pestaña nueva.
   const FOOTER_COLS = [
     {
       title: 'Legal',
       links: [
-        { href: '/privacidad', label: 'Privacidad' },
-        { href: '/terminos', label: 'Términos' }
+        { href: 'https://aismartcontent.io/privacy-policy', label: 'Privacidad', external: true },
+        { href: 'https://aismartcontent.io/terms-and-conditions', label: 'Términos', external: true },
+        { href: 'https://aismartcontent.io/data-deletion', label: 'Eliminación de datos', external: true }
+      ]
+    },
+    {
+      title: 'Contacto',
+      links: [
+        { href: 'https://aismartcontent.io/contact', label: 'Contactar con ventas', external: true }
       ]
     }
   ];
 
-  const PUBLIC_ROUTES = new Set([
-    '/privacidad', '/terminos',
-    '/politica-de-privacidad', '/terminos-de-servicio', '/eliminacion-de-datos'
-  ]);
+  const PUBLIC_ROUTES = new Set();
 
   // Estado interno
   let shellMounted = false;
@@ -75,7 +81,9 @@
       <div class="landing-footer-col public-footer-col">
         <h3 class="landing-footer-col-title">${col.title}</h3>
         <ul class="landing-footer-links">
-          ${col.links.map(l => `<li><a href="${l.href}" class="landing-footer-link" data-href="${l.href}">${l.label}</a></li>`).join('')}
+          ${col.links.map(l => l.external
+            ? `<li><a href="${l.href}" class="landing-footer-link" target="_blank" rel="noopener">${l.label}</a></li>`
+            : `<li><a href="${l.href}" class="landing-footer-link" data-href="${l.href}">${l.label}</a></li>`).join('')}
         </ul>
       </div>
     `).join('');
@@ -95,9 +103,11 @@
           <div class="landing-footer-bottom-inner">
             <span class="landing-footer-copy">© 2026 AI S-MART CONTENT by Arde Agency S.A.S. Todos los derechos reservados.</span>
             <p class="landing-footer-credit">
-              <a href="/privacidad" class="landing-footer-credit-link" data-href="/privacidad">Privacidad</a>
+              <a href="https://aismartcontent.io/privacy-policy" class="landing-footer-credit-link" target="_blank" rel="noopener">Privacidad</a>
               &nbsp;·&nbsp;
-              <a href="/terminos" class="landing-footer-credit-link" data-href="/terminos">Términos</a>
+              <a href="https://aismartcontent.io/terms-and-conditions" class="landing-footer-credit-link" target="_blank" rel="noopener">Términos</a>
+              &nbsp;·&nbsp;
+              <a href="https://aismartcontent.io/contact" class="landing-footer-credit-link" target="_blank" rel="noopener">Contacto</a>
             </p>
           </div>
         </div>
