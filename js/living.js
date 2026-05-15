@@ -1927,6 +1927,31 @@ class LivingManager {
             this.setupImageZoom(image, signal);
         }
 
+        // ── Derivados del output: model, metadata, dimensions, dates, quality ──
+        // (Estos se computan ARRIBA porque tanto el header/quickfacts como el
+        // bloque de Information consumen estos valores; declararlos abajo
+        // generaba ReferenceError por temporal dead zone.)
+        const technicalParams = (() => {
+            if (!output || output.technical_params == null) return {};
+            if (typeof output.technical_params === 'object') return output.technical_params;
+            if (typeof output.technical_params === 'string') {
+                try { return JSON.parse(output.technical_params); } catch (_) { return {}; }
+            }
+            return {};
+        })();
+        const modelName = (technicalParams && technicalParams.model)
+            ? String(technicalParams.model)
+            : ((output.metadata && typeof output.metadata === 'object' && output.metadata.model)
+                ? output.metadata.model
+                : this.getFlowName(run));
+        const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
+        const quality = technicalParams.quality || meta.quality || '';
+        let creationDate = null;
+        const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('en-US', dateOpts);
+        else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('en-US', dateOpts);
+        const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
+
         // ── Header: título + subtitle (flow link · relative date) ──
         const titleEl = document.getElementById('livingViewerTitle');
         const subtitleEl = document.getElementById('livingViewerSubtitle');
@@ -2040,28 +2065,10 @@ class LivingManager {
             promptEl.textContent = promptText;
         }
         
-        // runs_outputs: model, output_type, metadata, technical_params, created_at; opcionales: generated_copy, creative_rationale, generated_hashtags, text_content
-        const technicalParams = (() => {
-            if (!output || output.technical_params == null) return {};
-            if (typeof output.technical_params === 'object') return output.technical_params;
-            if (typeof output.technical_params === 'string') {
-                try { return JSON.parse(output.technical_params); } catch (_) { return {}; }
-            }
-            return {};
-        })();
-        const modelName = (technicalParams && technicalParams.model)
-            ? String(technicalParams.model)
-            : ((output.metadata && typeof output.metadata === 'object' && output.metadata.model)
-                ? output.metadata.model
-                : this.getFlowName(run));
-        const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
-        const quality = technicalParams.quality || meta.quality || '';
-        let creationDate = null;
-        const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('en-US', dateOpts);
-        else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('en-US', dateOpts);
-
-        const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
+        // runs_outputs: model, output_type, metadata, technical_params, created_at;
+        // opcionales: generated_copy, creative_rationale, generated_hashtags, text_content.
+        // (technicalParams, meta, modelName, quality, creationDate, productionImageUrl
+        //  ya están declarados arriba — los usamos aquí para construir Information.)
         // Helpers para construir filas (key-value compactas) o bloques (campos largos).
         const row = (label, valueHtml) => `
             <div class="info-row">
