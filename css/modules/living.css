@@ -1349,11 +1349,77 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .living-viewer-right-header {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-xs);
+    padding: var(--spacing-md);
     flex-shrink: 0;
+    border-bottom: 1px solid var(--border-divider);
+}
+
+/* Header info: título + subtitle (relative date · created_at) */
+.living-viewer-header-info {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.living-viewer-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.living-viewer-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+}
+
+.living-viewer-subtitle-item { color: var(--text-secondary); }
+.living-viewer-subtitle-muted { color: var(--text-muted); }
+.living-viewer-subtitle-dot { color: var(--text-muted); margin: 0 6px; }
+
+/* Toolbar: download / copy URL / open in new tab / close */
+.living-viewer-toolbar {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.living-viewer-toolbtn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: var(--transition-fast);
+}
+
+.living-viewer-toolbtn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    border-color: var(--border-divider);
+}
+
+.living-viewer-toolbtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .living-viewer-delete {
@@ -1377,25 +1443,11 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-color: var(--color-error, #ef4444);
 }
 
-.living-viewer-close {
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background: var(--bg-interactive);
-    color: var(--icon-button);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: var(--font-size-md);
-    transition: var(--transition-fast);
-}
-
-.living-viewer-close:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border-color: var(--border-light);
+/* .living-viewer-close ahora hereda de .living-viewer-toolbtn; agregamos margen
+   izquierdo y borde dashed para diferenciarlo del resto de la toolbar. */
+.living-viewer-toolbar .living-viewer-close {
+    margin-left: 6px;
+    border-color: var(--border-divider);
 }
 
 /* Cuerpo: área scroll */
@@ -1417,8 +1469,135 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 0 var(--spacing-md) var(--spacing-md);
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+/* Quick facts: chips compactos con modelo, dimensiones, créditos */
+.living-viewer-quickfacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.living-viewer-quickfacts[hidden] { display: none; }
+
+.living-viewer-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.living-viewer-fact i {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Botones flotantes prev/next sobre el visual */
+.living-viewer-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, background 0.2s ease;
+    z-index: 2;
+}
+
+.living-viewer-visual:hover .living-viewer-nav-btn {
+    opacity: 1;
+}
+
+.living-viewer-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.living-viewer-nav-btn[hidden] { display: none; }
+.living-viewer-nav-prev { left: 12px; }
+.living-viewer-nav-next { right: 12px; }
+
+/* Strip horizontal de siblings (otros outputs del mismo run) */
+.living-viewer-siblings {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border-top: 1px solid var(--border-divider);
+    flex-shrink: 0;
+    scrollbar-width: thin;
+}
+
+.living-viewer-siblings[hidden] { display: none; }
+
+.living-viewer-sibling {
+    position: relative;
+    flex: 0 0 60px;
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.living-viewer-sibling:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.04);
+}
+
+.living-viewer-sibling img,
+.living-viewer-sibling video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.living-viewer-sibling-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Footer en modo video: input deshabilitado con styling tenue */
+.living-viewer-correction-section--video .living-viewer-correction-input,
+.living-viewer-correction-section--video .living-viewer-correction-btn {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.living-viewer-correction-section--video .living-viewer-correction-input {
+    font-style: italic;
 }
 
 /* Secciones (Prompt, Information) */

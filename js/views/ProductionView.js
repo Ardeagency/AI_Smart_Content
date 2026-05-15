@@ -75,42 +75,72 @@ class ProductionView extends BaseView {
         <div class="living-viewer-backdrop" id="livingViewerBackdrop"></div>
         <div class="living-viewer-container">
             <div class="living-viewer-content">
-                <!-- Columna izquierda: solo imagen de la producción -->
+                <!-- Columna izquierda: visual + strip de siblings -->
                 <div class="living-viewer-left">
                     <div class="living-viewer-visual">
                         <img id="livingViewerImage" src="" alt="" />
-                        <video id="livingViewerVideo" class="living-viewer-video" controls playsinline preload="metadata" style="display: none;" aria-label="Vídeo de la producción"></video>
+                        <video id="livingViewerVideo" class="living-viewer-video" controls playsinline preload="metadata" style="display: none;" aria-label="Production video"></video>
+                        <!-- Hint flotante de navegación entre siblings -->
+                        <button type="button" class="living-viewer-nav-btn living-viewer-nav-prev" id="livingViewerNavPrev" aria-label="Previous output" hidden>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button type="button" class="living-viewer-nav-btn living-viewer-nav-next" id="livingViewerNavNext" aria-label="Next output" hidden>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
+                    <!-- Strip horizontal con otros outputs del mismo run -->
+                    <div class="living-viewer-siblings" id="livingViewerSiblings" hidden></div>
                 </div>
-                <!-- Columna derecha: scroll + cerrar -->
+                <!-- Columna derecha: header con título/toolbar + body scrolleable + footer -->
                 <div class="living-viewer-right">
                     <header class="living-viewer-right-header">
-                        <button type="button" class="living-viewer-close" id="livingViewerClose" aria-label="Cerrar">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="living-viewer-header-info">
+                            <h2 class="living-viewer-title" id="livingViewerTitle">Production</h2>
+                            <div class="living-viewer-subtitle" id="livingViewerSubtitle"></div>
+                        </div>
+                        <div class="living-viewer-toolbar">
+                            <button type="button" class="living-viewer-toolbtn" id="livingViewerDownload" title="Download" aria-label="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button type="button" class="living-viewer-toolbtn" id="livingViewerCopyUrl" title="Copy URL" aria-label="Copy URL">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button type="button" class="living-viewer-toolbtn" id="livingViewerOpenTab" title="Open in new tab" aria-label="Open in new tab">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                            <button type="button" class="living-viewer-toolbtn living-viewer-close" id="livingViewerClose" title="Close" aria-label="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </header>
                     <div class="living-viewer-right-body">
                         <div class="living-viewer-right-scroll">
                             <div class="living-viewer-right-inner">
-                                <section class="living-viewer-section">
+                                <!-- Quick facts: model, dimensions, credits -->
+                                <div class="living-viewer-quickfacts" id="livingViewerQuickfacts"></div>
+
+                                <!-- Prompt -->
+                                <section class="living-viewer-section" id="livingViewerPromptSection">
                                     <div class="living-viewer-section-header">
                                         <div class="living-viewer-section-header-left">
                                             <i class="fas fa-sliders living-viewer-section-icon"></i>
                                             <p class="living-viewer-block-title">Prompt</p>
                                         </div>
                                         <div class="living-viewer-section-header-right">
-                                            <button type="button" class="living-viewer-copy-prompt" id="livingViewerCopyPrompt" title="Copiar prompt">Copiar</button>
+                                            <button type="button" class="living-viewer-copy-prompt" id="livingViewerCopyPrompt" title="Copy prompt">Copy</button>
                                         </div>
                                     </div>
                                     <div class="living-viewer-section-body">
                                         <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
                                     </div>
                                 </section>
-                                <section class="living-viewer-section">
+
+                                <!-- Information (Copy, hashtags, rationale, etc.) -->
+                                <section class="living-viewer-section" id="livingViewerInfoSection">
                                     <div class="living-viewer-section-header">
                                         <div class="living-viewer-section-header-left">
                                             <i class="fas fa-info-circle living-viewer-section-icon"></i>
-                                            <p class="living-viewer-block-title">Information</p>
+                                            <p class="living-viewer-block-title">Details</p>
                                         </div>
                                     </div>
                                     <div class="living-viewer-section-body living-viewer-info-rows" id="livingViewerMetadata"></div>
@@ -118,15 +148,15 @@ class ProductionView extends BaseView {
                             </div>
                         </div>
                     </div>
-                    <footer class="living-viewer-right-footer living-viewer-correction-section" id="livingViewerCorrectionSection" style="display: none;">
+                    <footer class="living-viewer-right-footer living-viewer-correction-section" id="livingViewerCorrectionSection">
                         <input
                             type="text"
                             id="livingViewerCorrectionInput"
                             class="living-viewer-correction-input"
-                            placeholder="Corregir producción... Ej: mejorar iluminación del producto, mantener encuadre y fondo"
+                            placeholder="Describe what to fix… e.g. better lighting, keep framing and background"
                             maxlength="500"
                         />
-                        <button type="button" id="livingViewerCorrectionBtn" class="living-viewer-correction-btn">Regenerar imagen</button>
+                        <button type="button" id="livingViewerCorrectionBtn" class="living-viewer-correction-btn">Regenerate</button>
                         <p class="living-viewer-correction-status" id="livingViewerCorrectionStatus" aria-live="polite"></p>
                     </footer>
                 </div>

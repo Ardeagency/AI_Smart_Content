@@ -1725,6 +1725,59 @@ class LivingManager {
         }
     }
     
+    /** Fecha relativa estilo Twitter ("3h ago", "2d ago", "May 14"). */
+    _relativeDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        const diffMs = Date.now() - d.getTime();
+        const sec = Math.floor(diffMs / 1000);
+        if (sec < 60) return 'Just now';
+        const min = Math.floor(sec / 60);
+        if (min < 60) return `${min}m ago`;
+        const hr = Math.floor(min / 60);
+        if (hr < 24) return `${hr}h ago`;
+        const days = Math.floor(hr / 24);
+        if (days < 7) return `${days}d ago`;
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    /** Obtiene otros outputs del mismo run (excluyendo el actual). */
+    _getSiblingOutputs(runId, currentOutputId) {
+        if (!runId) return [];
+        return (this.flowOutputs || []).filter(o =>
+            o && o.run_id === runId && o.id !== currentOutputId
+        );
+    }
+
+    /** Dispara una descarga del media (image o video) a archivo local. */
+    async _downloadMedia(url, filename) {
+        if (!url) return;
+        try {
+            const response = await fetch(url, { mode: 'cors' });
+            if (!response.ok) throw new Error(response.statusText);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename || `production-${Date.now()}.${(url.split('.').pop() || 'png').split('?')[0]}`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(blobUrl);
+        } catch (_) {
+            // Fallback: link directo (puede abrir en tab si el server no manda Content-Disposition).
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename || '';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+    }
+
     /**
      * Intenta parsear un string como JSON. Maneja escapes dobles: cuando el
      * valor llega como `"{\"key\":...}"` (un string que contiene JSON), parsea
@@ -1874,6 +1927,106 @@ class LivingManager {
             this.setupImageZoom(image, signal);
         }
 
+        // ── Header: título + subtitle (flow link · relative date) ──
+        const titleEl = document.getElementById('livingViewerTitle');
+        const subtitleEl = document.getElementById('livingViewerSubtitle');
+        if (titleEl) {
+            titleEl.textContent = this.getFlowName(run) || 'Production';
+        }
+        if (subtitleEl) {
+            const parts = [];
+            const rel = this._relativeDate(output?.created_at || item?.item?.created_at);
+            if (rel) parts.push(`<span class="living-viewer-subtitle-item">${this.escapeHtml(rel)}</span>`);
+            if (creationDate) parts.push(`<span class="living-viewer-subtitle-item living-viewer-subtitle-muted" title="${this.escapeHtml(creationDate)}">${this.escapeHtml(creationDate)}</span>`);
+            subtitleEl.innerHTML = parts.join('<span class="living-viewer-subtitle-dot">·</span>');
+        }
+
+        // ── Quick facts: model · dimensions · credits (si están en metadata) ──
+        const quickfactsEl = document.getElementById('livingViewerQuickfacts');
+        if (quickfactsEl) {
+            const facts = [];
+            if (modelName) facts.push({ icon: 'fa-robot', label: modelName });
+            const dims = technicalParams.dimensions || technicalParams.size
+                || (meta.width && meta.height ? `${meta.width}×${meta.height}` : null)
+                || (technicalParams.width && technicalParams.height ? `${technicalParams.width}×${technicalParams.height}` : null);
+            if (dims) facts.push({ icon: 'fa-image', label: dims });
+            const credits = technicalParams.cost_credits || technicalParams.credits || meta.cost_credits || meta.credits;
+            if (credits != null) facts.push({ icon: 'fa-bolt', label: `${credits} credits` });
+            quickfactsEl.innerHTML = facts.length
+                ? facts.map(f => `<div class="living-viewer-fact"><i class="fas ${f.icon}"></i>${this.escapeHtml(String(f.label))}</div>`).join('')
+                : '';
+            quickfactsEl.hidden = !facts.length;
+        }
+
+        // ── Siblings: strip horizontal con otros outputs del mismo run ──
+        const siblingsEl = document.getElementById('livingViewerSiblings');
+        if (siblingsEl) {
+            const siblings = this._getSiblingOutputs(run?.id || output?.run_id, output?.id);
+            if (siblings.length) {
+                siblingsEl.innerHTML = siblings.map(s => {
+                    const url = this.resolveOutputMediaUrl(s) || s.file_url || '';
+                    if (!url) return '';
+                    const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+                    return `<button type="button" class="living-viewer-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Open">${
+                        isVid
+                            ? `<video src="${this.escapeHtml(url)}" muted playsinline preload="metadata"></video><span class="living-viewer-sibling-badge"><i class="fas fa-video"></i></span>`
+                            : `<img src="${this.escapeHtml(url)}" alt="" loading="lazy">`
+                    }</button>`;
+                }).filter(Boolean).join('');
+                siblingsEl.hidden = false;
+                // Click para cambiar al sibling sin cerrar la modal.
+                siblingsEl.querySelectorAll('.living-viewer-sibling').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const sid = btn.getAttribute('data-output-id');
+                        const sib = (this.flowOutputs || []).find(o => o.id === sid);
+                        if (!sib) return;
+                        const sUrl = this.resolveOutputMediaUrl(sib) || sib.file_url || '';
+                        this.openViewerModal({
+                            imageUrl: sUrl,
+                            prompt: sib.prompt_used || sib.generated_copy || data.prompt || '',
+                            item: { item: null, output: sib, run: run }
+                        });
+                    }, { signal });
+                });
+            } else {
+                siblingsEl.innerHTML = '';
+                siblingsEl.hidden = true;
+            }
+        }
+
+        // ── Toolbar: download, copy URL, open in new tab ──
+        const dlBtn = document.getElementById('livingViewerDownload');
+        if (dlBtn) {
+            dlBtn.disabled = !mediaUrl;
+            dlBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!mediaUrl) return;
+                const ext = (isVideo ? 'mp4' : 'png');
+                const safeName = (this.getFlowName(run) || 'production').replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+                this._downloadMedia(mediaUrl, `${safeName}.${ext}`);
+            }, { signal });
+        }
+        const copyUrlBtn = document.getElementById('livingViewerCopyUrl');
+        if (copyUrlBtn) {
+            copyUrlBtn.disabled = !mediaUrl;
+            copyUrlBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!mediaUrl || !navigator.clipboard?.writeText) return;
+                navigator.clipboard.writeText(mediaUrl).then(() => {
+                    if (typeof window.showToast === 'function') window.showToast('URL copied');
+                }).catch(() => {});
+            }, { signal });
+        }
+        const openTabBtn = document.getElementById('livingViewerOpenTab');
+        if (openTabBtn) {
+            openTabBtn.disabled = !mediaUrl;
+            openTabBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!mediaUrl) return;
+                window.open(mediaUrl, '_blank', 'noopener,noreferrer');
+            }, { signal });
+        }
+
         // Prompt: si viene como JSON, parsearlo y renderearlo estructurado.
         const promptRaw = data.prompt || '';
         const parsedPrompt = this._tryParseJSON(promptRaw);
@@ -1953,6 +2106,55 @@ class LivingManager {
             rows.push(block('Text', `<div class="living-viewer-text">${this.escapeHtml(String(output.text_content).trim())}</div>`));
         }
         metadataEl.innerHTML = rows.join('');
+
+        // ── Empty states: oculta secciones que quedaron vacías ──
+        const infoSection = document.getElementById('livingViewerInfoSection');
+        if (infoSection) infoSection.hidden = !rows.length;
+        const promptSection = document.getElementById('livingViewerPromptSection');
+        if (promptSection) {
+            const hasPrompt = !!(promptRaw && String(promptRaw).trim());
+            promptSection.hidden = !hasPrompt;
+        }
+
+        // ── Keyboard navigation entre siblings (← →) y botones flotantes ──
+        const siblingsList = this._getSiblingOutputs(run?.id || output?.run_id, output?.id);
+        // Construye lista completa incluyendo el actual para navegar.
+        const fullRunList = (run?.id || output?.run_id)
+            ? (this.flowOutputs || []).filter(o => o && o.run_id === (run?.id || output?.run_id))
+            : [];
+        const currentIdx = fullRunList.findIndex(o => o.id === output?.id);
+        const hasSiblings = fullRunList.length > 1 && currentIdx >= 0;
+        const goToSibling = (delta) => {
+            if (!hasSiblings) return;
+            const nextIdx = (currentIdx + delta + fullRunList.length) % fullRunList.length;
+            const next = fullRunList[nextIdx];
+            const sUrl = this.resolveOutputMediaUrl(next) || next.file_url || '';
+            this.openViewerModal({
+                imageUrl: sUrl,
+                prompt: next.prompt_used || next.generated_copy || '',
+                item: { item: null, output: next, run: run }
+            });
+        };
+        const prevBtn = document.getElementById('livingViewerNavPrev');
+        const nextBtn = document.getElementById('livingViewerNavNext');
+        if (prevBtn) {
+            prevBtn.hidden = !hasSiblings;
+            prevBtn.addEventListener('click', (e) => { e.stopPropagation(); goToSibling(-1); }, { signal });
+        }
+        if (nextBtn) {
+            nextBtn.hidden = !hasSiblings;
+            nextBtn.addEventListener('click', (e) => { e.stopPropagation(); goToSibling(1); }, { signal });
+        }
+        // Flecha izq/der navega entre siblings; ignorar si el foco está en input/textarea.
+        if (hasSiblings) {
+            document.addEventListener('keydown', (e) => {
+                const tag = (document.activeElement?.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea') return;
+                if (e.key === 'ArrowLeft') { e.preventDefault(); goToSibling(-1); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); goToSibling(1); }
+            }, { signal });
+        }
+        void siblingsList; // referenciado por _getSiblingOutputs arriba
         
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -2006,14 +2208,19 @@ class LivingManager {
         // Limpieza defensiva: eliminar cualquier botón legacy "Ver todo" si quedó en caché del DOM
         modal.querySelectorAll('.living-viewer-see-all').forEach((el) => el.remove());
 
-        // Sección de corrección/regeneración (solo imágenes — los videos no aplican).
+        // Sección de corrección/regeneración. Para videos mostramos un mensaje
+        // explícito en lugar de ocultar el footer silencioso.
         if (correctionSection && correctionInput && correctionBtn && correctionStatus) {
             correctionInput.value = '';
             correctionStatus.textContent = '';
-            const showCorrection = !isVideo;
-            correctionSection.style.display = showCorrection ? '' : 'none';
+            correctionSection.classList.toggle('living-viewer-correction-section--video', isVideo);
+            correctionInput.disabled = isVideo;
+            correctionBtn.disabled = isVideo;
+            correctionInput.placeholder = isVideo
+                ? 'Video regeneration is not supported yet — only images can be regenerated.'
+                : 'Describe what to fix… e.g. better lighting, keep framing and background';
 
-            if (showCorrection) {
+            if (!isVideo) {
                 correctionBtn.addEventListener('click', async () => {
                     const correctionText = (correctionInput.value || '').trim();
                     if (!correctionText) {
