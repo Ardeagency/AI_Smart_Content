@@ -75,6 +75,19 @@ class App {
       this.initRouter();
       this.registerRoutes();
 
+      // Rutas públicas no cargan el bundle de Navigation (lazy-nav lo difiere
+      // hasta que el usuario pase el auth check). Sin Navigation, nadie llama
+      // updateBodyLayout, así que body se queda sin clase y #app-container
+      // mantiene su padding-top:45px por defecto — banda negra fantasma arriba
+      // del hero en /login. Aplicamos no-nav antes del primer paint para
+      // evitarlo. En rutas auth, Navigation.render() reemplaza esta clase
+      // por has-sidebar/has-header-only con su propio reset.
+      const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/cambiar-contrasena']);
+      const initialPath = window.location.pathname || '/';
+      if (PUBLIC_FIRST_PAINT.has(initialPath)) {
+        document.body.classList.add('no-nav');
+      }
+
       const [supabaseResult] = await Promise.allSettled([this.initSupabase()]);
 
       if (window.router && Object.keys(window.router.routes).length > 0) {
