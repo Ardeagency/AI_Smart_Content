@@ -43,6 +43,11 @@ class LivingManager {
         this._latestGeneratedHasMore = true;
         this._systemAiOffset = 0;
         this._systemAiHasMore = true;
+
+        // Estado UI de la grilla: Set de output_ids con like del usuario actual
+        // y Set de output_ids seleccionados para bulk-actions.
+        this.likedOutputs = new Set();
+        this.selectedOutputs = new Set();
         
         // Datos de la Sección 3: Tráfico y Control de Producción
         this.section3Data = {
@@ -312,6 +317,135 @@ class LivingManager {
         }
     }
 
+    /**
+     * Hidrata el Set de outputs likeados por el usuario actual para esta org.
+     * Se llama después de loadFlowOutputs para que las cards renderícen con
+     * el estado correcto del corazón.
+     */
+    async loadLikedOutputs() {
+        if (!this.supabase || !this.userId || !this.organizationId) {
+            this.likedOutputs = new Set();
+            return;
+        }
+        try {
+            const { data, error } = await this.supabase
+                .from('production_output_likes')
+                .select('output_id')
+                .eq('user_id', this.userId)
+                .eq('organization_id', this.organizationId);
+            if (error) throw error;
+            this.likedOutputs = new Set((data || []).map(r => r.output_id));
+        } catch (error) {
+            console.error('❌ Error cargando likes:', error);
+            this.likedOutputs = new Set();
+        }
+    }
+
+    /**
+     * Toggle like sobre un output. Optimistic update + reconciliación contra
+     * la BD. Devuelve true si quedó likeado, false si quedó sin like.
+     */
+    async toggleLike(outputId) {
+        if (!this.supabase || !this.userId || !this.organizationId || !outputId) return false;
+        const wasLiked = this.likedOutputs.has(outputId);
+        // Optimistic
+        if (wasLiked) this.likedOutputs.delete(outputId);
+        else this.likedOutputs.add(outputId);
+
+        try {
+            if (wasLiked) {
+                const { error } = await this.supabase
+                    .from('production_output_likes')
+                    .delete()
+                    .eq('output_id', outputId)
+                    .eq('user_id', this.userId);
+                if (error) throw error;
+            } else {
+                const { error } = await this.supabase
+                    .from('production_output_likes')
+                    .insert({
+                        output_id: outputId,
+                        user_id: this.userId,
+                        organization_id: this.organizationId
+                    });
+                if (error) throw error;
+            }
+            return !wasLiked;
+        } catch (error) {
+            // Rollback
+            if (wasLiked) this.likedOutputs.add(outputId);
+            else this.likedOutputs.delete(outputId);
+            console.error('❌ Error toggle like:', error);
+            if (typeof window.showToast === 'function') window.showToast('No se pudo guardar el like');
+            return wasLiked;
+        }
+    }
+
+    /**
+     * Borra un output. CASCADE en BD limpia los likes asociados. Actualiza
+     * la grilla local sin volver a fetch (optimistic).
+     */
+    async deleteOutput(outputId) {
+        if (!this.supabase || !outputId) return false;
+        try {
+            const { error } = await this.supabase
+                .from('runs_outputs')
+                .delete()
+                .eq('id', outputId);
+            if (error) throw error;
+            this.flowOutputs = (this.flowOutputs || []).filter(o => o?.id !== outputId);
+            this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => o?.id !== outputId);
+            this.systemAiOutputs = (this.systemAiOutputs || []).filter(o => o?.id !== outputId);
+            this.likedOutputs.delete(outputId);
+            this.selectedOutputs.delete(outputId);
+            return true;
+        } catch (error) {
+            console.error('❌ Error eliminando output:', error);
+            if (typeof window.showToast === 'function') window.showToast('No se pudo eliminar: ' + (error?.message || 'error desconocido'));
+            return false;
+        }
+    }
+
+    /**
+     * Borra múltiples outputs en una sola operación de BD.
+     */
+    async bulkDeleteOutputs(outputIds) {
+        if (!this.supabase || !Array.isArray(outputIds) || !outputIds.length) return 0;
+        try {
+            const { error } = await this.supabase
+                .from('runs_outputs')
+                .delete()
+                .in('id', outputIds);
+            if (error) throw error;
+            const idSet = new Set(outputIds);
+            this.flowOutputs = (this.flowOutputs || []).filter(o => !idSet.has(o?.id));
+            this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => !idSet.has(o?.id));
+            this.systemAiOutputs = (this.systemAiOutputs || []).filter(o => !idSet.has(o?.id));
+            outputIds.forEach(id => { this.likedOutputs.delete(id); this.selectedOutputs.delete(id); });
+            return outputIds.length;
+        } catch (error) {
+            console.error('❌ Error bulk delete:', error);
+            if (typeof window.showToast === 'function') window.showToast('No se pudieron eliminar: ' + (error?.message || 'error desconocido'));
+            return 0;
+        }
+    }
+
+    /**
+     * Copia la URL pública de un asset al portapapeles. Para "compartir".
+     */
+    async copyShareUrl(url) {
+        if (!url) return false;
+        try {
+            await navigator.clipboard.writeText(url);
+            if (typeof window.showToast === 'function') window.showToast('Enlace copiado');
+            return true;
+        } catch (error) {
+            console.error('❌ Error copiando URL:', error);
+            if (typeof window.showToast === 'function') window.showToast('No se pudo copiar el enlace');
+            return false;
+        }
+    }
+
     async loadCreditUsage() {
         if (!this.supabase || !this.organizationId) { this.creditUsage = []; return; }
         try {
@@ -471,7 +605,8 @@ class LivingManager {
             await this.loadFlowOutputs({ reset, runIds: newRunIds });
             await Promise.allSettled([
                 this.loadLatestGeneratedContent({ reset }),
-                this.loadSystemAiOutputs({ reset })
+                this.loadSystemAiOutputs({ reset }),
+                this.loadLikedOutputs()
             ]);
         } finally {
             this._historySourcesLoading = false;
@@ -1191,6 +1326,57 @@ class LivingManager {
         return 'Producción';
     }
     
+    /**
+     * Overlay común de cards (image + video):
+     *  - top-left: checkbox de selección
+     *  - top-right: columna vertical con like / copy-prompt / download / kebab
+     *  - kebab abre menú con Compartir, Publicar a Meta (soon), Eliminar
+     * El estado del like se lee de this.likedOutputs y el de seleccionado de
+     * this.selectedOutputs.
+     */
+    _renderCardOverlay(outputId, finalUrl, promptSafe) {
+        const safeId = this.escapeHtml(outputId || '');
+        const safeUrl = this.escapeHtml(finalUrl || '');
+        const liked = !!(outputId && this.likedOutputs && this.likedOutputs.has(outputId));
+        const selected = !!(outputId && this.selectedOutputs && this.selectedOutputs.has(outputId));
+        return `
+            <button type="button" class="card-select ${selected ? 'is-selected' : ''}" data-action="select" data-output-id="${safeId}" title="Seleccionar" aria-label="Seleccionar producción" aria-pressed="${selected ? 'true' : 'false'}">
+                <i class="${selected ? 'fas fa-check-circle' : 'far fa-circle'}" aria-hidden="true"></i>
+            </button>
+            <div class="card-overlay-actions">
+                <button type="button" class="card-action card-action--like ${liked ? 'is-liked' : ''}" data-action="like" data-output-id="${safeId}" title="Me gusta" aria-label="Me gusta" aria-pressed="${liked ? 'true' : 'false'}">
+                    <i class="${liked ? 'fas' : 'far'} fa-heart" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="card-action" data-action="copy-prompt" data-prompt="${promptSafe}" title="Copiar prompt" aria-label="Copiar prompt">
+                    <i class="far fa-copy" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="card-action" data-action="download" data-url="${safeUrl}" title="Descargar" aria-label="Descargar">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                </button>
+                <div class="card-kebab-wrap">
+                    <button type="button" class="card-action card-action--kebab" data-action="kebab" title="Más acciones" aria-label="Más acciones" aria-expanded="false">
+                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                    </button>
+                    <div class="card-kebab-menu" role="menu" hidden>
+                        <button type="button" role="menuitem" data-action="share" data-url="${safeUrl}">
+                            <i class="fas fa-share-nodes" aria-hidden="true"></i>
+                            <span>Compartir enlace</span>
+                        </button>
+                        <button type="button" role="menuitem" data-action="publish-meta" disabled aria-disabled="true" title="Próximamente">
+                            <i class="fab fa-meta" aria-hidden="true"></i>
+                            <span>Publicar a Meta</span>
+                            <em class="card-kebab-menu-soon">Próximamente</em>
+                        </button>
+                        <button type="button" role="menuitem" class="card-kebab-menu-danger" data-action="delete" data-output-id="${safeId}">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                            <span>Eliminar producción</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     renderVideoCard(thumbnailUrl, run, output, prompt, index) {
         const finalUrl = thumbnailUrl && (thumbnailUrl.startsWith('http') || thumbnailUrl.startsWith('//')) ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
@@ -1211,16 +1397,9 @@ class LivingManager {
                 <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
             </div>`;
         return `
-            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
+            <div class="history-video-card" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
                 <div class="history-video-card-thumbnail-wrap">${thumbnailHtml}</div>
-                <div class="history-card-actions">
-                    <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                    <i class="fas fa-download"></i>
-                </button>
-                    <button class="history-card-copy-prompt" title="Copiar prompt" data-prompt="${this.escapeHtml(promptSafe)}">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
+                ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
                 <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
             </div>
         `;
@@ -1239,21 +1418,14 @@ class LivingManager {
         
         return `
             <div class="living-masonry-item">
-                <div class="history-image-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
+                <div class="history-image-card" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
                     ${finalUrl
                         ? `<img src="${this.escapeHtml(finalUrl)}" alt="Producción" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--living-text-muted);\\'><i class=\\'fas fa-image\\'></i></div>';" />`
                         : `<div style="padding: 2rem; text-align: center; color: var(--living-text-muted);">
                             <i class="fas fa-image" style="font-size: 2rem;"></i>
                         </div>`
                     }
-                    <div class="history-card-actions">
-                        <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <button class="history-card-copy-prompt" title="Copiar prompt" data-prompt="${this.escapeHtml(promptSafe)}">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
+                    ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
                     <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
                 </div>
             </div>
@@ -1315,80 +1487,217 @@ class LivingManager {
         const selector = type
             ? `.history-${type}-card, .history-text-card`
             : '.history-video-card, .history-image-card, .history-text-card';
-        const cards = container.querySelectorAll(selector);
-        cards.forEach(card => {
-            const downloadBtns = card.querySelectorAll('.history-card-download');
-            downloadBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (btn.dataset.imageUrl) this.downloadImage(btn.dataset.imageUrl);
-                });
+
+        // Hover de video (preview en mute) — sigue siendo por-card.
+        container.querySelectorAll(selector).forEach(card => {
+            if (!card.classList.contains('history-video-card')) return;
+            const wrap = card.querySelector('.history-video-card-thumbnail-wrap');
+            card.addEventListener('mouseenter', () => {
+                const video = wrap && wrap.querySelector('video');
+                if (video) { video.muted = true; video.play().catch(() => {}); }
             });
-            const copyBtns = card.querySelectorAll('.history-card-copy-prompt');
-            copyBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const raw = (btn.dataset.prompt || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                    if (raw && navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(raw).then(() => {
+            card.addEventListener('mouseleave', () => {
+                const video = wrap && wrap.querySelector('video');
+                if (video) { video.pause(); video.currentTime = 0; }
+            });
+        });
+
+        // Event delegation: una sola handler sobre el container que despacha
+        // por data-action. Idempotente — solo se monta una vez por container.
+        if (!container._cardDelegationBound) {
+            container._cardDelegationBound = true;
+            container.addEventListener('click', (e) => this._handleCardClick(e, container, selector));
+        }
+    }
+
+    /**
+     * Despacha clicks dentro del container de history. Si el target es un
+     * elemento con data-action, ejecuta esa acción. Si no, abre la preview
+     * (stub mientras construimos la nueva ventana).
+     */
+    async _handleCardClick(e, container, selector) {
+        const actionEl = e.target.closest('[data-action]');
+        if (actionEl && container.contains(actionEl)) {
+            e.stopPropagation();
+            e.preventDefault();
+            const action = actionEl.dataset.action;
+            const card = actionEl.closest(selector);
+            const outputId = actionEl.dataset.outputId || card?.dataset.outputId || '';
+
+            switch (action) {
+                case 'like': {
+                    const nowLiked = await this.toggleLike(outputId);
+                    actionEl.classList.toggle('is-liked', nowLiked);
+                    actionEl.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
+                    const icon = actionEl.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fas', nowLiked);
+                        icon.classList.toggle('far', !nowLiked);
+                    }
+                    break;
+                }
+                case 'select': {
+                    const selected = this.selectedOutputs.has(outputId);
+                    if (selected) this.selectedOutputs.delete(outputId);
+                    else if (outputId) this.selectedOutputs.add(outputId);
+                    actionEl.classList.toggle('is-selected', !selected);
+                    actionEl.setAttribute('aria-pressed', selected ? 'false' : 'true');
+                    const icon = actionEl.querySelector('i');
+                    if (icon) {
+                        icon.className = (!selected ? 'fas fa-check-circle' : 'far fa-circle');
+                    }
+                    if (card) card.classList.toggle('is-selected', !selected);
+                    this._updateSelectionBar();
+                    break;
+                }
+                case 'copy-prompt': {
+                    const raw = (actionEl.dataset.prompt || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                    if (raw && navigator.clipboard?.writeText) {
+                        try {
+                            await navigator.clipboard.writeText(raw);
                             if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
-                            else btn.classList.add('history-copy-ok');
-                        }).catch(() => {});
+                        } catch (_) {}
                     }
-                });
-            });
-            
-            // Reproducción al pasar el cursor sobre la tarjeta de vídeo
-            if (card.classList.contains('history-video-card')) {
-                const wrap = card.querySelector('.history-video-card-thumbnail-wrap');
-                card.addEventListener('mouseenter', () => {
-                    const video = wrap && wrap.querySelector('video');
-                    if (video) {
-                        video.muted = true;
-                        video.play().catch(() => {});
-                    }
-                });
-                card.addEventListener('mouseleave', () => {
-                    const video = wrap && wrap.querySelector('video');
-                    if (video) {
-                        video.pause();
-                        video.currentTime = 0;
-                    }
-                });
-            }
-            
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.history-card-download, .history-card-copy-prompt')) return;
-                
-                const cardData = card.dataset.cardInfo;
-                if (cardData) {
-                    try {
-                        let unescapedData = cardData.replace(/&quot;/g, '"');
-                        unescapedData = unescapedData
-                            .replace(/&#39;/g, "'")
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>');
-                        const data = JSON.parse(unescapedData);
-                        // TODO: nueva ventana de previsualización (en construcción)
-                        console.debug('[production] click card', data);
-                    } catch (error) {
-                        console.error('❌ Error parsing card data:', error);
-                    }
-                } else {
-                    // Para cards de texto, redirigir a producción
-                    const productionId = card.dataset.productionId;
-                    const runId = card.dataset.runId;
-                    if (productionId || runId) {
-                        console.log('📋 Redirigiendo a producción:', { productionId, runId });
-                        // Navegación a vista de producción
-                        if (window.router) {
-                            window.router.navigate('/products');
+                    break;
+                }
+                case 'download': {
+                    if (actionEl.dataset.url) this.downloadImage(actionEl.dataset.url);
+                    break;
+                }
+                case 'kebab': {
+                    const wrap = actionEl.closest('.card-kebab-wrap');
+                    const menu = wrap?.querySelector('.card-kebab-menu');
+                    if (!menu) break;
+                    // Cierra otros menús abiertos.
+                    container.querySelectorAll('.card-kebab-menu:not([hidden])').forEach(m => {
+                        if (m !== menu) {
+                            m.hidden = true;
+                            m.previousElementSibling?.setAttribute('aria-expanded', 'false');
                         }
+                    });
+                    const willOpen = menu.hidden;
+                    menu.hidden = !willOpen;
+                    actionEl.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    break;
+                }
+                case 'share': {
+                    await this.copyShareUrl(actionEl.dataset.url);
+                    this._closeAllKebabs(container);
+                    break;
+                }
+                case 'publish-meta': {
+                    if (typeof window.showToast === 'function') window.showToast('Publicar a Meta llega pronto');
+                    this._closeAllKebabs(container);
+                    break;
+                }
+                case 'delete': {
+                    if (!confirm('¿Eliminar esta producción? No se puede deshacer.')) break;
+                    const ok = await this.deleteOutput(outputId);
+                    if (ok) {
+                        const item = card?.closest('.living-masonry-item') || card;
+                        item?.remove();
+                        this._updateSelectionBar();
+                        if (typeof window.showToast === 'function') window.showToast('Producción eliminada');
+                    }
+                    this._closeAllKebabs(container);
+                    break;
+                }
+            }
+            return;
+        }
+
+        // Click sobre la card (fuera de los botones) → abrir preview.
+        const card = e.target.closest(selector);
+        if (!card || !container.contains(card)) return;
+        const cardData = card.dataset.cardInfo;
+        if (cardData) {
+            try {
+                const unescaped = cardData
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>');
+                const data = JSON.parse(unescaped);
+                // TODO: nueva ventana de previsualización (en construcción)
+                console.debug('[production] click card', data);
+            } catch (error) {
+                console.error('❌ Error parsing card data:', error);
+            }
+        } else if (card.dataset.productionId || card.dataset.runId) {
+            if (window.router) window.router.navigate('/products');
+        }
+    }
+
+    _closeAllKebabs(container) {
+        container.querySelectorAll('.card-kebab-menu:not([hidden])').forEach(m => {
+            m.hidden = true;
+            m.previousElementSibling?.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    /**
+     * Renderiza (o actualiza) la barra fija inferior con contador + bulk-delete.
+     * Inyectada bajo demanda en <body>; oculta cuando no hay selección.
+     */
+    _updateSelectionBar() {
+        let bar = document.getElementById('productionSelectionBar');
+        const count = this.selectedOutputs.size;
+        if (!bar) {
+            if (count === 0) return;
+            bar = document.createElement('div');
+            bar.id = 'productionSelectionBar';
+            bar.className = 'production-selection-bar';
+            bar.innerHTML = `
+                <span class="production-selection-bar-count"></span>
+                <div class="production-selection-bar-actions">
+                    <button type="button" class="btn btn-secondary production-selection-bar-clear" data-action="clear-selection">
+                        <i class="fas fa-xmark"></i> Limpiar
+                    </button>
+                    <button type="button" class="btn btn-danger production-selection-bar-delete" data-action="bulk-delete">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(bar);
+            bar.addEventListener('click', async (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                if (btn.dataset.action === 'clear-selection') {
+                    this._clearSelection();
+                } else if (btn.dataset.action === 'bulk-delete') {
+                    const ids = Array.from(this.selectedOutputs);
+                    if (!ids.length) return;
+                    if (!confirm(`¿Eliminar ${ids.length} producción${ids.length === 1 ? '' : 'es'}? No se puede deshacer.`)) return;
+                    const n = await this.bulkDeleteOutputs(ids);
+                    if (n > 0) {
+                        ids.forEach(id => {
+                            document.querySelectorAll(`[data-output-id="${CSS.escape(id)}"]`).forEach(el => {
+                                const item = el.closest('.living-masonry-item') || el.closest('.history-image-card, .history-video-card');
+                                item?.remove();
+                            });
+                        });
+                        this._updateSelectionBar();
+                        if (typeof window.showToast === 'function') window.showToast(`${n} producción${n === 1 ? '' : 'es'} eliminada${n === 1 ? '' : 's'}`);
                     }
                 }
             });
+        }
+        const countEl = bar.querySelector('.production-selection-bar-count');
+        if (countEl) countEl.textContent = `${count} producción${count === 1 ? '' : 'es'} seleccionada${count === 1 ? '' : 's'}`;
+        bar.classList.toggle('is-visible', count > 0);
+    }
+
+    _clearSelection() {
+        this.selectedOutputs.clear();
+        document.querySelectorAll('.card-select.is-selected').forEach(btn => {
+            btn.classList.remove('is-selected');
+            btn.setAttribute('aria-pressed', 'false');
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'far fa-circle';
         });
+        document.querySelectorAll('.history-image-card.is-selected, .history-video-card.is-selected').forEach(c => c.classList.remove('is-selected'));
+        this._updateSelectionBar();
     }
     
     groupProductionsByNarrative(items) {
@@ -1936,6 +2245,11 @@ class LivingManager {
             window.removeEventListener('scroll', this._onHistoryScroll);
             this._onHistoryScroll = null;
         }
+        // La selection bar vive en <body>, no en la vista; al salir de
+        // Production hay que removerla manualmente.
+        document.getElementById('productionSelectionBar')?.remove();
+        this.selectedOutputs?.clear();
+        this.likedOutputs?.clear();
         this.supabase = null;
         this.userId = null;
         this.userData = null;
