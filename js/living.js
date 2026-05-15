@@ -1619,8 +1619,7 @@ class LivingManager {
                     .replace(/&lt;/g, '<')
                     .replace(/&gt;/g, '>');
                 const data = JSON.parse(unescaped);
-                // TODO: nueva ventana de previsualización (en construcción)
-                console.debug('[production] click card', data);
+                this.openProductionModal(data);
             } catch (error) {
                 console.error('❌ Error parsing card data:', error);
             }
@@ -1699,7 +1698,389 @@ class LivingManager {
         document.querySelectorAll('.history-image-card.is-selected, .history-video-card.is-selected').forEach(c => c.classList.remove('is-selected'));
         this._updateSelectionBar();
     }
-    
+
+    // ============================================
+    // MODAL DE PREVISUALIZACIÓN
+    // ============================================
+
+    /**
+     * Abre el modal de previsualización para un output. data viene de las
+     * cards: { imageUrl, prompt, item: { output, run } }. El modal renderiza
+     * imagen/video, siblings, prompt, info técnica, autor, y conecta acciones.
+     */
+    async openProductionModal(data) {
+        const modal = document.getElementById('productionModal');
+        if (!modal) return;
+        const item = data?.item || {};
+        const output = item.output || {};
+        const run = item.run || {};
+        const outputId = output?.id || '';
+
+        // Resolver media URL (imagen/video).
+        let mediaUrl = data?.imageUrl && /^(https?:|\/\/)/i.test(data.imageUrl) ? data.imageUrl : '';
+        if (!mediaUrl) mediaUrl = this.resolveOutputMediaUrl(output) || '';
+        if (!mediaUrl && output?.storage_path) {
+            mediaUrl = this.getPublicUrlFromStorage('production-outputs', output.storage_path)
+                || this.getPublicUrlFromStorage('outputs', output.storage_path) || '';
+        }
+        const outputType = String(output?.output_type || '').toLowerCase();
+        const isVideo = (mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl))
+            || /video|reel|clip/.test(outputType);
+
+        // Pintar visual.
+        const imgEl = document.getElementById('pmodalImage');
+        const videoEl = document.getElementById('pmodalVideo');
+        if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
+        if (isVideo && mediaUrl) {
+            imgEl.hidden = true; imgEl.src = '';
+            videoEl.hidden = false;
+            videoEl.src = mediaUrl;
+            videoEl.load();
+            videoEl.play().catch(() => {});
+        } else {
+            videoEl.hidden = true;
+            imgEl.hidden = !mediaUrl;
+            imgEl.src = mediaUrl || '';
+            imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Production');
+        }
+
+        // Prompt + see all.
+        this._renderModalPrompt(data?.prompt || output?.prompt_used || output?.text_content || '');
+
+        // Information rows.
+        this._renderModalInfo(output, run);
+
+        // Siblings.
+        this._renderModalSiblings(run?.id, outputId);
+
+        // Author (avatar + name) — lazy fetch.
+        this._renderModalAuthor(run?.user_id);
+
+        // Estado del like sincronizado con likedOutputs.
+        const likeBtn = modal.querySelector('[data-action="like"]');
+        if (likeBtn) {
+            const liked = this.likedOutputs.has(outputId);
+            likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+            const ic = likeBtn.querySelector('i');
+            if (ic) ic.className = (liked ? 'fas' : 'far') + ' fa-heart';
+            likeBtn.classList.toggle('is-liked', liked);
+        }
+
+        // Estado interno + abrir.
+        this._modalState = { outputId, mediaUrl, prompt: (data?.prompt || ''), runId: run?.id };
+        this._bindModalListenersOnce(modal);
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('production-modal-open');
+        document.getElementById('pmodalScroll')?.scrollTo(0, 0);
+    }
+
+    closeProductionModal() {
+        const modal = document.getElementById('productionModal');
+        if (!modal) return;
+        const videoEl = document.getElementById('pmodalVideo');
+        if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('production-modal-open');
+        // Cerrar kebabs internos.
+        modal.querySelectorAll('.pmodal-kebab-menu:not([hidden])').forEach(m => {
+            m.hidden = true;
+            m.previousElementSibling?.setAttribute('aria-expanded', 'false');
+        });
+        this._modalState = null;
+    }
+
+    _renderModalPrompt(rawPrompt) {
+        const txt = document.getElementById('pmodalPromptText');
+        const toggle = document.getElementById('pmodalPromptToggle');
+        if (!txt) return;
+        const safe = String(rawPrompt || '').trim();
+        txt.textContent = safe || 'Sin prompt registrado.';
+        txt.classList.remove('is-expanded');
+        if (toggle) {
+            toggle.hidden = true;
+            toggle.querySelector('span').textContent = 'See all';
+            toggle.querySelector('i').className = 'fas fa-chevron-down';
+        }
+        // Mostrar See all si el texto excede el clamp (4 líneas → ~24em).
+        // Lo decidimos tras un frame para que el browser layoutee.
+        requestAnimationFrame(() => {
+            if (!toggle) return;
+            const overflow = txt.scrollHeight > txt.clientHeight + 2;
+            toggle.hidden = !overflow;
+        });
+    }
+
+    _renderModalInfo(output, run) {
+        const container = document.getElementById('pmodalInfoRows');
+        if (!container) return;
+        const tp = this._safeParseJSON(output?.technical_params) || {};
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const model = tp.model || meta.model || meta.engine || meta.model_name || '—';
+        const quality = tp.quality || meta.quality || meta.resolution_tier || (meta.is_4k ? '4k' : '');
+        const size = (() => {
+            const w = tp.width || meta.width || meta.size_x;
+            const h = tp.height || meta.height || meta.size_y;
+            if (w && h) return `${w}x${h}`;
+            if (meta.size) return String(meta.size);
+            return '';
+        })();
+        const created = output?.created_at || run?.created_at;
+        const createdStr = created
+            ? new Date(created).toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '';
+        const outputTypeLabel = this._humanizeOutputType(output?.output_type);
+        const flowName = this.getFlowName(run);
+
+        const rows = [
+            ['Flow', flowName || '—'],
+            ['Tipo', outputTypeLabel || '—'],
+            ['Model', model || '—'],
+            quality ? ['Quality', String(quality)] : null,
+            size ? ['Size', size] : null,
+            createdStr ? ['Created', createdStr] : null
+        ].filter(Boolean);
+
+        container.innerHTML = rows.map(([label, value]) => `
+            <div class="pmodal-info-row">
+                <span class="pmodal-info-label">${this.escapeHtml(label)}</span>
+                <span class="pmodal-info-value">${this.escapeHtml(value)}</span>
+            </div>
+        `).join('');
+    }
+
+    _humanizeOutputType(t) {
+        if (!t) return '';
+        const s = String(t).toLowerCase();
+        if (s.includes('video') || s.includes('reel') || s.includes('clip')) return 'Video';
+        if (s.includes('image') || s.includes('img')) return 'Imagen';
+        if (s.includes('text') || s.includes('copy')) return 'Texto';
+        return t;
+    }
+
+    _safeParseJSON(v) {
+        if (v == null) return null;
+        if (typeof v === 'object') return v;
+        if (typeof v !== 'string') return null;
+        try { return JSON.parse(v); } catch (_) { return null; }
+    }
+
+    _renderModalSiblings(runId, currentOutputId) {
+        const strip = document.getElementById('pmodalSiblings');
+        if (!strip) return;
+        if (!runId) { strip.hidden = true; strip.innerHTML = ''; return; }
+        const siblings = (this.flowOutputs || []).filter(o => o && o.run_id === runId && o.id !== currentOutputId);
+        if (!siblings.length) { strip.hidden = true; strip.innerHTML = ''; return; }
+        strip.hidden = false;
+        strip.innerHTML = siblings.slice(0, 8).map(s => {
+            const url = this.resolveOutputMediaUrl(s)
+                || (s.storage_path ? (this.getPublicUrlFromStorage('production-outputs', s.storage_path) || this.getPublicUrlFromStorage('outputs', s.storage_path)) : '')
+                || '';
+            return `
+                <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante">
+                    ${url ? `<img src="${this.escapeHtml(url)}" alt="" loading="lazy">` : `<i class="fas fa-image"></i>`}
+                </button>
+            `;
+        }).join('');
+    }
+
+    async _renderModalAuthor(userId) {
+        const nameEl = document.getElementById('pmodalAuthorName');
+        const avatarEl = document.getElementById('pmodalAuthorAvatar');
+        if (!nameEl || !avatarEl) return;
+        // Default mientras carga.
+        nameEl.textContent = '—';
+        avatarEl.style.background = '';
+        avatarEl.textContent = '';
+        if (!userId || !this.supabase) return;
+        try {
+            const { data, error } = await this.supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .eq('id', userId)
+                .maybeSingle();
+            if (error) throw error;
+            const name = (data?.full_name && data.full_name.trim()) || (data?.email ? data.email.split('@')[0] : 'Usuario');
+            nameEl.textContent = name;
+            avatarEl.textContent = name.slice(0, 1).toUpperCase();
+            avatarEl.style.background = this._colorFromId(userId);
+        } catch (_) {
+            nameEl.textContent = 'Usuario';
+        }
+    }
+
+    /** Color determinista a partir de un id (avatar fallback). */
+    _colorFromId(id) {
+        let h = 0;
+        const s = String(id || '');
+        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+        const hue = Math.abs(h) % 360;
+        return `hsl(${hue}, 55%, 45%)`;
+    }
+
+    _bindModalListenersOnce(modal) {
+        if (modal._listenersBound) return;
+        modal._listenersBound = true;
+
+        modal.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (btn) {
+                e.stopPropagation();
+                const action = btn.dataset.action;
+                const state = this._modalState || {};
+                switch (action) {
+                    case 'modal-close': this.closeProductionModal(); break;
+                    case 'animate': {
+                        // Navega a /video — el flujo Animate hoy es generar a partir de la imagen.
+                        if (window.router) window.router.navigate('/video');
+                        this.closeProductionModal();
+                        break;
+                    }
+                    case 'publish': {
+                        if (typeof window.showToast === 'function') window.showToast('Publicar a Meta llega pronto');
+                        break;
+                    }
+                    case 'open-in': {
+                        if (state.mediaUrl) window.open(state.mediaUrl, '_blank', 'noopener');
+                        break;
+                    }
+                    case 'reference': {
+                        if (typeof window.showToast === 'function') window.showToast('Guardar como referencia llega pronto');
+                        break;
+                    }
+                    case 'download': {
+                        if (state.mediaUrl) this.downloadImage(state.mediaUrl);
+                        break;
+                    }
+                    case 'like': {
+                        const nowLiked = await this.toggleLike(state.outputId);
+                        btn.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
+                        btn.classList.toggle('is-liked', nowLiked);
+                        const ic = btn.querySelector('i');
+                        if (ic) ic.className = (nowLiked ? 'fas' : 'far') + ' fa-heart';
+                        // Sincronizar también el corazón del overlay de la card en la grilla.
+                        const cardLike = document.querySelector(`.history-image-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like, .history-video-card[data-output-id="${CSS.escape(state.outputId || '')}"] .card-action--like`);
+                        if (cardLike) {
+                            cardLike.classList.toggle('is-liked', nowLiked);
+                            cardLike.setAttribute('aria-pressed', nowLiked ? 'true' : 'false');
+                            const cardIcon = cardLike.querySelector('i');
+                            if (cardIcon) cardIcon.className = (nowLiked ? 'fas' : 'far') + ' fa-heart';
+                        }
+                        break;
+                    }
+                    case 'share':
+                    case 'copy-url': {
+                        await this.copyShareUrl(state.mediaUrl);
+                        this._closeModalKebabs(modal);
+                        break;
+                    }
+                    case 'copy-prompt': {
+                        if (state.prompt && navigator.clipboard?.writeText) {
+                            try {
+                                await navigator.clipboard.writeText(state.prompt);
+                                if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
+                            } catch (_) {}
+                        }
+                        this._closeModalKebabs(modal);
+                        break;
+                    }
+                    case 'kebab': {
+                        const wrap = btn.closest('.pmodal-kebab-wrap');
+                        const menu = wrap?.querySelector('.pmodal-kebab-menu');
+                        if (!menu) break;
+                        const willOpen = menu.hidden;
+                        modal.querySelectorAll('.pmodal-kebab-menu:not([hidden])').forEach(m => {
+                            if (m !== menu) { m.hidden = true; m.previousElementSibling?.setAttribute('aria-expanded', 'false'); }
+                        });
+                        menu.hidden = !willOpen;
+                        btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                        break;
+                    }
+                    case 'delete': {
+                        if (!confirm('¿Eliminar esta producción? No se puede deshacer.')) break;
+                        const ok = await this.deleteOutput(state.outputId);
+                        if (ok) {
+                            document.querySelectorAll(`[data-output-id="${CSS.escape(state.outputId || '')}"]`).forEach(el => {
+                                const c = el.closest('.living-masonry-item') || el.closest('.history-image-card, .history-video-card');
+                                c?.remove();
+                            });
+                            this._updateSelectionBar();
+                            if (typeof window.showToast === 'function') window.showToast('Producción eliminada');
+                            this.closeProductionModal();
+                        }
+                        break;
+                    }
+                }
+                return;
+            }
+            // Click en sibling thumbnail: abrir esa variante.
+            const sibling = e.target.closest('.pmodal-sibling');
+            if (sibling) {
+                const sid = sibling.dataset.outputId;
+                const sout = (this.flowOutputs || []).find(o => o?.id === sid);
+                if (!sout) return;
+                const surl = this.resolveOutputMediaUrl(sout)
+                    || (sout.storage_path ? this.getPublicUrlFromStorage('production-outputs', sout.storage_path) : '')
+                    || '';
+                this.openProductionModal({
+                    imageUrl: surl,
+                    prompt: sout.prompt_used || '',
+                    item: { item: null, output: sout, run: (this.flowRuns || []).find(r => r?.id === sout.run_id) || { id: sout.run_id } }
+                });
+            }
+        });
+
+        // Tabs (sólo Details activo; Comments es disabled visualmente).
+        modal.querySelectorAll('.pmodal-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (tab.disabled) return;
+                modal.querySelectorAll('.pmodal-tab').forEach(t => {
+                    t.classList.toggle('is-active', t === tab);
+                    t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+                });
+            });
+        });
+
+        // Toolbar inferior: solo Overview activo, los demás son no-op por ahora.
+        modal.querySelectorAll('.pmodal-toolpill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                if (pill.disabled) {
+                    if (typeof window.showToast === 'function') window.showToast(`${pill.textContent.trim()} llega pronto`);
+                    return;
+                }
+            });
+        });
+
+        // Prompt See all.
+        const promptToggle = document.getElementById('pmodalPromptToggle');
+        if (promptToggle) {
+            promptToggle.addEventListener('click', () => {
+                const txt = document.getElementById('pmodalPromptText');
+                if (!txt) return;
+                const expanded = txt.classList.toggle('is-expanded');
+                promptToggle.querySelector('span').textContent = expanded ? 'Show less' : 'See all';
+                promptToggle.querySelector('i').className = expanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            });
+        }
+
+        // Esc cierra.
+        if (!this._modalEscBound) {
+            this._modalEscBound = true;
+            this._modalEscHandler = (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('is-open')) this.closeProductionModal();
+            };
+            document.addEventListener('keydown', this._modalEscHandler);
+        }
+    }
+
+    _closeModalKebabs(modal) {
+        modal.querySelectorAll('.pmodal-kebab-menu:not([hidden])').forEach(m => {
+            m.hidden = true;
+            m.previousElementSibling?.setAttribute('aria-expanded', 'false');
+        });
+    }
+
     groupProductionsByNarrative(items) {
         // Agrupar por narrativa: "Hoy", "Ayer", "Esta semana", "Este mes"
         const now = new Date();
@@ -1958,14 +2339,13 @@ class LivingManager {
                         .replace(/&lt;/g, '<')
                         .replace(/&gt;/g, '>');
                     const data = JSON.parse(unescapedData);
-                    // TODO: nueva ventana de previsualización (en construcción)
-                    console.debug('[production] click card', data);
+                    this.openProductionModal(data);
                 } catch (error) {
                     console.error('❌ Error parsing card data:', error);
                 }
             });
         });
-        
+
         // Agregar estilos para transición suave de imágenes
         const images = container.querySelectorAll('.featured-card-visual img');
         images.forEach(img => {
@@ -2250,6 +2630,13 @@ class LivingManager {
         document.getElementById('productionSelectionBar')?.remove();
         this.selectedOutputs?.clear();
         this.likedOutputs?.clear();
+        // Modal listener global de Esc.
+        if (this._modalEscHandler) {
+            document.removeEventListener('keydown', this._modalEscHandler);
+            this._modalEscHandler = null;
+            this._modalEscBound = false;
+        }
+        this._modalState = null;
         this.supabase = null;
         this.userId = null;
         this.userData = null;
