@@ -634,9 +634,6 @@ class FlowCatalogView extends BaseView {
   renderFlowCard(flow, options = {}) {
     const name = this.escapeHtml(flow.name);
     const cost = flow.token_cost ?? 1;
-    const likes = flow.likes_count || 0;
-    const saves = flow.saves_count || 0;
-    const runs = flow.run_count || 0;
     const isLiked = this.likedFlowIds.has(flow.id);
     const isSaved = this.savedFlowIds.has(flow.id);
 
@@ -650,14 +647,8 @@ class FlowCatalogView extends BaseView {
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
 
-    const tags = [];
-    if (flow._categoryName) tags.push(this.escapeHtml(flow._categoryName));
-    if (flow._subcategoryName) tags.push(this.escapeHtml(flow._subcategoryName));
-    if (isAutopilotLike) tags.push('Autopilot');
-    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
-
-    const categoryName = flow._categoryName ? this.escapeHtml(flow._categoryName) : '—';
-    const subcategoryName = flow._subcategoryName ? this.escapeHtml(flow._subcategoryName) : '—';
+    const primaryTag = flow._subcategoryName || flow._categoryName || null;
+    const primaryTagHtml = primaryTag ? `<span class="flow-card-info-tag">${this.escapeHtml(primaryTag)}</span>` : '';
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
     const executionLabel = this.getExecutionModeLabel(flow.execution_mode);
     const version = (flow.version || '1.0.0').toString();
@@ -666,27 +657,22 @@ class FlowCatalogView extends BaseView {
       <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
         <div class="flow-card-media">
           ${img}
-          <div class="flow-card-media-veil" aria-hidden="true"></div>
+          <div class="flow-card-gradient" aria-hidden="true"></div>
           <div class="flow-card-badges">${badges.join('')}</div>
-          <div class="flow-card-icons flow-card-icons--default">
-            <button type="button" class="flow-card-icon-btn flow-card-icon-like ${isLiked ? 'is-active' : ''}" data-action="like" title="Like" aria-label="Like"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></button>
-            <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
-            <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="Guardar" aria-label="Guardar"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></button>
+          <div class="flow-card-actions">
+            <button type="button" class="flow-card-icon-btn flow-card-icon-like ${isLiked ? 'is-active' : ''}" data-action="like" title="Like" aria-label="Like"><i class="fas fa-heart"></i></button>
+            <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="Guardar" aria-label="Guardar"><i class="fas fa-bookmark"></i></button>
           </div>
-          <div class="flow-card-overlay flow-card-overlay--default">
+          <div class="flow-card-info">
             <h3 class="flow-card-title">${name}</h3>
-            ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
-          </div>
-          <div class="flow-card-overlay flow-card-overlay--hover">
-            <div class="flow-card-hover-content">
-              <div class="flow-card-credits">${cost}</div>
-              <div class="flow-card-meta-list">
-                <span class="flow-card-meta-item">${categoryName}</span>
-                <span class="flow-card-meta-item">${subcategoryName}</span>
-                <span class="flow-card-meta-item">${outputTypeLabel}</span>
-                <span class="flow-card-meta-item">${executionLabel}</span>
-                <span class="flow-card-meta-item">v${version}</span>
-              </div>
+            <div class="flow-card-info-meta">
+              ${primaryTagHtml}
+              <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="fas fa-bolt"></i>${cost}</span>
+            </div>
+            <div class="flow-card-info-extra">
+              <span class="flow-card-info-pill">${outputTypeLabel}</span>
+              <span class="flow-card-info-pill">${executionLabel}</span>
+              <span class="flow-card-info-pill">v${version}</span>
             </div>
           </div>
         </div>

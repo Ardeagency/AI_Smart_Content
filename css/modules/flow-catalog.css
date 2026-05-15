@@ -227,225 +227,271 @@
   color: #000000;
 }
 
-/* ---------- FLOW CARD (minimalista: imagen + nombre + badge; hover: opacar/difuminar + métricas) ---------- */
+/* ---------- FLOW CARD (catálogo: 4:5 vertical, glass actions, info anclado abajo) ---------- */
 .flow-card {
-  flex: 0 0 200px;
-  width: 200px;
+  flex: 0 0 240px;
+  width: 240px;
   scroll-snap-align: start;
-  background: var(--bg-hover);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-    transition: var(--transition);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
   display: block;
   text-align: left;
-  /* Skip render de cards off-screen en las galerías horizontales. */
   content-visibility: auto;
-  contain-intrinsic-size: 200px 260px;
+  contain-intrinsic-size: 240px 300px;
+  isolation: isolate;
 }
-.flow-card:hover {
-  box-shadow: var(--shadow-hover);
-  border-color: var(--white-20);
+.flow-card:hover,
+.flow-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.55),
+              0 2px 6px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.14);
 }
-.flow-card:focus {
+.flow-card:focus-visible {
   outline: 2px solid var(--accent-warm);
   outline-offset: 2px;
 }
-.flow-card-placeholder {
+
+/* Media container: aspect-ratio 4:5 → 240×300 */
+.flow-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1a1b1f 0%, #0e0f12 100%);
+}
+.flow-card-img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.3s ease;
+}
+.flow-card:hover .flow-card-img,
+.flow-card:focus-visible .flow-card-img {
+  transform: scale(1.04);
+}
+.flow-card-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  font-size: var(--font-size-4xl);
-  background: linear-gradient(145deg, var(--bg-hover) 0%, var(--black-40) 100%);
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 2.4rem;
 }
-.flow-card:hover .flow-card-placeholder,
-.flow-card:focus-visible .flow-card-placeholder {
-  filter: blur(4px) brightness(0.6);
+
+/* Gradient sutil bottom para legibilidad del título */
+.flow-card-gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.55) 25%,
+    rgba(0, 0, 0, 0.05) 55%,
+    transparent 75%
+  );
+  z-index: 1;
 }
+
+/* Badges arriba-izquierda (Nuevo / Trending / Autopilot) */
 .flow-card-badges {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
+  top: 0.625rem;
+  left: 0.625rem;
+  right: 3.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   pointer-events: none;
-  z-index: 2;
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 3;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .flow-card:hover .flow-card-badges,
 .flow-card:focus-visible .flow-card-badges {
   opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  transform: translateY(-4px);
 }
 .flow-card-badge {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.6rem;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.62rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  border-radius: var(--radius-sm);
-  background: var(--black-50);
-  color: var(--text-primary);
+  border-radius: 999px;
+  background: rgba(20, 21, 23, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .flow-card-badge--new {
-  background: rgba(0, 214, 20, 0.9);
-  color: var(--color-white);
+  background: rgba(0, 214, 20, 0.92);
+  color: #052b08;
+  border-color: transparent;
 }
 .flow-card-badge--trending {
   background: #ffffff;
   color: #000000;
+  border-color: transparent;
 }
 .flow-card-badge--auto {
-  background: var(--icon-button);
+  background: rgba(135, 134, 139, 0.92);
+  color: #ffffff;
+  border-color: transparent;
 }
 
-/* Iconos esquina superior derecha: like, run, save (vertical) */
-.flow-card-icons {
+/* Acciones arriba-derecha: pill horizontal hover-only */
+.flow-card-actions {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  left: auto;
+  top: 0.625rem;
+  right: 0.625rem;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  z-index: 3;
-  pointer-events: none;
+  gap: 0.3rem;
+  z-index: 4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.flow-card-icons .flow-card-icon-btn {
-  pointer-events: auto;
+.flow-card:hover .flow-card-actions,
+.flow-card:focus-visible .flow-card-actions,
+.flow-card-actions:focus-within {
+  opacity: 1;
+  transform: translateY(0);
 }
-.flow-card-icon-btn,
-.flow-card-icon-stat {
+.flow-card-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.4rem;
-  background: var(--black-50);
-  border-radius: var(--radius-sm);
-  color: var(--color-white);
-  font-size: var(--font-size-xs);
-  border: none;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: rgba(20, 21, 23, 0.72);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.78rem;
   cursor: pointer;
-  transition: var(--transition);
-}
-.flow-card-icon-stat {
-  cursor: default;
-  pointer-events: none;
+  transition: background 0.18s ease, color 0.18s ease,
+              border-color 0.18s ease, transform 0.18s ease;
 }
 .flow-card-icon-btn:hover {
-  background: var(--white-20);
-  color: var(--color-white);
+  background: rgba(20, 21, 23, 0.9);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: scale(1.06);
+}
+.flow-card-icon-btn:active {
+  transform: scale(0.94);
 }
 .flow-card-icon-btn.is-active {
-  color: var(--color-error);
+  background: rgba(255, 255, 255, 0.96);
+  color: #000000;
+  border-color: rgba(255, 255, 255, 0.95);
 }
-.flow-card-icon-btn.flow-card-icon-save.is-active {
-  color: var(--color-info);
+.flow-card-icon-like.is-active {
+  background: rgba(255, 70, 90, 0.96);
+  color: #ffffff;
+  border-color: rgba(255, 70, 90, 0.95);
 }
-.flow-card-icon-count {
-  font-weight: 600;
-  min-width: 1ch;
+.flow-card-icon-save.is-active {
+  background: rgba(135, 134, 139, 0.96);
+  color: #ffffff;
+  border-color: rgba(135, 134, 139, 0.95);
 }
 
-/* Overlay por defecto: nombre + etiquetas (tipo flujo, nuevo, etc.) */
-.flow-card-overlay--default {
+/* Info block: anclado al fondo, siempre visible */
+.flow-card-info {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 1rem 0.75rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
-  color: var(--color-white);
-  z-index: 1;
-  transition: opacity 0.25s ease;
-}
-.flow-card:hover .flow-card-overlay--default,
-.flow-card:focus-visible .flow-card-overlay--default {
-  opacity: 0;
+  padding: 0.85rem 0.9rem 0.9rem;
+  color: #ffffff;
+  z-index: 2;
   pointer-events: none;
 }
 .flow-card--catalog .flow-card-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-white);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
-.flow-card-tags--default {
+.flow-card-info-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
-}
-.flow-card-tags--default .flow-card-tag {
-  padding: 0.2rem 0.45rem;
-  font-size: 0.6rem;
-}
-
-/* Overlay hover: créditos + categoría, subcategoría, tipo output, modo ejecución, versión — organizado abajo a la izquierda */
-.flow-card-overlay--hover {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 1rem 0.75rem;
-  background: var(--black-50);
-  color: var(--color-white);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
-  z-index: 2;
-}
-.flow-card:hover .flow-card-overlay--hover,
-.flow-card:focus-visible .flow-card-overlay--hover {
-  opacity: 1;
-  visibility: visible;
-}
-.flow-card-hover-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
+  align-items: center;
   gap: 0.5rem;
-  text-align: left;
-  width: 100%;
-  max-width: 100%;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
 }
-.flow-card-credits {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-white);
-}
-.flow-card-meta-list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  font-size: var(--font-size-sm);
-  color: var(--white-95);
-}
-.flow-card-meta-item {
+.flow-card-info-tag {
+  max-width: 60%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  font-weight: 500;
+}
+.flow-card-info-credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--accent-warm, #87868B);
+}
+.flow-card-info-credits i {
+  font-size: 0.65rem;
+}
+
+/* Extra info (output/exec/version): solo en hover, slide-up debajo del título */
+.flow-card-info-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s ease,
+              margin-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.flow-card:hover .flow-card-info-extra,
+.flow-card:focus-visible .flow-card-info-extra {
+  max-height: 60px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+.flow-card-info-pill {
+  padding: 0.18rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 /* Footer de card (Mis Flujos dev: editar, run, log, eliminar) integrado en la misma card */
@@ -650,6 +696,113 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 0.35rem;
+}
+
+/* ---------- LEGACY card overlays (DevFlowsView / DevBuilderView preview) ---------- */
+/* El catálogo público usa .flow-card-info / .flow-card-actions. Las vistas Dev
+   conservan el HTML viejo (overlay--default/--hover, icon-stat, etc). */
+.flow-card--with-footer .flow-card-icons,
+.flow-card--ficha-preview .flow-card-icons {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 3;
+  pointer-events: none;
+}
+.flow-card--with-footer .flow-card-icon-stat,
+.flow-card--ficha-preview .flow-card-icon-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.45rem;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.65rem;
+}
+.flow-card--with-footer .flow-card-icon-count,
+.flow-card--ficha-preview .flow-card-icon-count {
+  font-weight: 600;
+  min-width: 1ch;
+}
+.flow-card--with-footer .flow-card-overlay--default,
+.flow-card--ficha-preview .flow-card-overlay--default {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem 0.75rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
+  color: #ffffff;
+  z-index: 1;
+  transition: opacity 0.25s ease;
+}
+.flow-card--with-footer:hover .flow-card-overlay--default,
+.flow-card--with-footer:focus-visible .flow-card-overlay--default,
+.flow-card--ficha-preview:hover .flow-card-overlay--default,
+.flow-card--ficha-preview:focus-visible .flow-card-overlay--default {
+  opacity: 0;
+  pointer-events: none;
+}
+.flow-card--with-footer .flow-card-tags--default,
+.flow-card--ficha-preview .flow-card-tags--default {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.flow-card--with-footer .flow-card-overlay--hover,
+.flow-card--ficha-preview .flow-card-overlay--hover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem 0.75rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 2;
+}
+.flow-card--with-footer:hover .flow-card-overlay--hover,
+.flow-card--with-footer:focus-visible .flow-card-overlay--hover,
+.flow-card--ficha-preview:hover .flow-card-overlay--hover,
+.flow-card--ficha-preview:focus-visible .flow-card-overlay--hover {
+  opacity: 1;
+  visibility: visible;
+}
+.flow-card--with-footer .flow-card-hover-content,
+.flow-card--ficha-preview .flow-card-hover-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+.flow-card--with-footer .flow-card-credits,
+.flow-card--ficha-preview .flow-card-credits {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+}
+.flow-card--with-footer .flow-card-meta-list,
+.flow-card--ficha-preview .flow-card-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+.flow-card--with-footer .flow-card-meta-item,
+.flow-card--ficha-preview .flow-card-meta-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 
