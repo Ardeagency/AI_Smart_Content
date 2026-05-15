@@ -386,19 +386,13 @@ class App {
     r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
 
     // ── 404 ──
+    // El 404 de la plataforma vive en la landing (aismartcontent.io/404).
+    // Usamos location.replace para reemplazar el entry en history y que
+    // el botón "atrás" no devuelva al usuario a la URL rota.
     const BV = window.BaseView || class {};
     r.register('/404', class extends BV {
       async render() {
-        const c = document.getElementById('app-container');
-        if (c) c.innerHTML = `
-          <div class="error-page"><div class="error-content">
-            <h1>404 En Construcción</h1>
-            <p>Esta página está en construcción. En una próxima actualización será agregada.</p>
-            <div class="error-actions">
-              <button onclick="window.router.navigate('/home')" class="btn-primary"><i class="fas fa-home"></i> Ir a Inicio</button>
-              <button onclick="window.history.back()" class="btn-secondary"><i class="fas fa-arrow-left"></i> Volver</button>
-            </div>
-          </div></div>`;
+        window.location.replace('https://aismartcontent.io/404');
       }
     });
   }
