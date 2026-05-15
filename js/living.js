@@ -1725,8 +1725,57 @@ class LivingManager {
         }
     }
     
+    /** Intenta parsear un string como JSON; si no es JSON válido, retorna null. */
+    _tryParseJSON(str) {
+        if (!str || typeof str !== 'string') return null;
+        const trimmed = str.trim();
+        if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return null;
+        try { return JSON.parse(trimmed); } catch (_) { return null; }
+    }
+
+    /** Convierte snake_case / camelCase / UPPER_CASE a "Title Case" legible. */
+    _humanizeKey(key) {
+        if (!key) return '';
+        const s = String(key)
+            .replace(/[_-]+/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .toLowerCase();
+        return s.replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    /**
+     * Renderea un valor (string, objeto, array) como HTML estructurado para
+     * el viewer. Si es JSON con campos {headline, subline, body, cta...} se
+     * muestra como bloques etiquetados; si es string plano se escapa y muestra.
+     */
+    _renderCopyContent(value) {
+        if (value == null || value === '') return '<span class="living-viewer-empty">—</span>';
+        const parsed = (typeof value === 'object') ? value : this._tryParseJSON(value);
+        if (!parsed) {
+            // Texto plano: respetar saltos de línea.
+            return `<div class="living-viewer-text">${this.escapeHtml(String(value))}</div>`;
+        }
+        if (Array.isArray(parsed)) {
+            return `<ul class="living-viewer-copy-list">${parsed.map(v =>
+                `<li>${this._renderCopyContent(v)}</li>`
+            ).join('')}</ul>`;
+        }
+        // Objeto: render como bloques {label}{value}
+        return Object.entries(parsed).map(([k, v]) => {
+            const valueHtml = (v && typeof v === 'object')
+                ? this._renderCopyContent(v)
+                : `<div class="living-viewer-copy-block-value">${this.escapeHtml(String(v ?? ''))}</div>`;
+            return `
+                <div class="living-viewer-copy-block">
+                    <div class="living-viewer-copy-block-label">${this.escapeHtml(this._humanizeKey(k))}</div>
+                    ${valueHtml}
+                </div>`;
+        }).join('');
+    }
+
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
+        const backdropImage = document.getElementById('livingViewerBackdropImage');
         const image = document.getElementById('livingViewerImage');
         const videoEl = document.getElementById('livingViewerVideo');
         const promptEl = document.getElementById('livingViewerPrompt');
@@ -1737,11 +1786,20 @@ class LivingManager {
         const correctionStatus = document.getElementById('livingViewerCorrectionStatus');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
-        
+
         if (!modal || !image || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
             return;
         }
+
+        // Cancela listeners del modal anterior (si quedó algo abierto) y crea
+        // un controller nuevo para esta apertura. AbortController reemplaza el
+        // patrón legacy de cloneNode + replaceChild para rebindear listeners.
+        if (this._viewerModalController) {
+            try { this._viewerModalController.abort(); } catch (_) {}
+        }
+        this._viewerModalController = new AbortController();
+        const signal = this._viewerModalController.signal;
 
         const item = data.item || {};
         const output = item.output || {};
@@ -1778,6 +1836,12 @@ class LivingManager {
         const visualWrap = modal.querySelector('.living-viewer-visual');
         if (visualWrap) visualWrap.classList.remove('living-viewer-visual--video');
 
+        // Pinta la imagen del item como backdrop blureado (cuando es imagen).
+        // Para videos, dejamos el backdrop sin imagen — queda solo glass-black.
+        if (backdropImage) {
+            backdropImage.style.backgroundImage = (!isVideo && mediaUrl) ? `url("${mediaUrl}")` : '';
+        }
+
         if (isVideo && videoEl && mediaUrl) {
             image.src = '';
             image.alt = '';
@@ -1789,22 +1853,29 @@ class LivingManager {
             videoEl.muted = false;
             videoEl.load();
             videoEl.play().catch(() => {});
-            this.setupImageZoom(null);
         } else {
             if (mediaUrl) {
                 image.src = mediaUrl;
-                image.alt = data.prompt || 'Producción';
-                image.style.transform = 'scale(1)';
-                image.style.transformOrigin = 'center center';
+                image.alt = (typeof data.prompt === 'string' ? data.prompt : 'Production');
             } else {
                 image.src = '';
-                image.alt = 'Sin imagen disponible';
+                image.alt = 'No image available';
             }
-            this.setupImageZoom(image);
+            this.setupImageZoom(image, signal);
         }
-        
-        const promptText = data.prompt || 'Sin prompt disponible';
-        promptEl.textContent = promptText;
+
+        // Prompt: si viene como JSON, parsearlo y renderearlo estructurado.
+        const promptRaw = data.prompt || '';
+        const parsedPrompt = this._tryParseJSON(promptRaw);
+        const promptText = parsedPrompt
+            ? (parsedPrompt.prompt || parsedPrompt.text || promptRaw)
+            : (promptRaw || 'No prompt available');
+        if (parsedPrompt && typeof parsedPrompt === 'object' && !parsedPrompt.prompt && !parsedPrompt.text) {
+            // JSON con campos custom: renderear como bloques.
+            promptEl.innerHTML = this._renderCopyContent(parsedPrompt);
+        } else {
+            promptEl.textContent = promptText;
+        }
         
         // runs_outputs: model, output_type, metadata, technical_params, created_at; opcionales: generated_copy, creative_rationale, generated_hashtags, text_content
         const technicalParams = (() => {
@@ -1823,22 +1894,54 @@ class LivingManager {
         const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
         const quality = technicalParams.quality || meta.quality || '';
         let creationDate = null;
-        if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('es-ES');
-        else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('es-ES');
-        
+        const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('en-US', dateOpts);
+        else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('en-US', dateOpts);
+
         const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
+        // Helpers para construir filas (key-value compactas) o bloques (campos largos).
+        const row = (label, valueHtml) => `
+            <div class="info-row">
+                <span class="info-label">${this.escapeHtml(label)}</span>
+                <span class="info-value">${valueHtml}</span>
+            </div>`;
+        const block = (label, contentHtml) => `
+            <div class="info-block">
+                <div class="info-block-label">${this.escapeHtml(label)}</div>
+                <div class="info-block-content">${contentHtml}</div>
+            </div>`;
+
         const rows = [];
-        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Fecha de producción</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
-        rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
-        if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
-        if (output.generated_hashtags && (Array.isArray(output.generated_hashtags) ? output.generated_hashtags.length : typeof output.generated_hashtags === 'object')) {
-            const tags = Array.isArray(output.generated_hashtags) ? output.generated_hashtags : (output.generated_hashtags.tags || output.generated_hashtags.values || []);
-            if (tags.length) rows.push(`<div class="info-row"><span class="info-label">Hashtags</span><span class="info-value">${this.escapeHtml(tags.join(' '))}</span></div>`);
+        if (creationDate) rows.push(row('Created', this.escapeHtml(creationDate)));
+        if (modelName) rows.push(row('Model', this.escapeHtml(modelName)));
+        if (quality) rows.push(row('Quality', this.escapeHtml(String(quality))));
+
+        // Copy (parsea JSON si aplica → bloques estructurados).
+        const generatedCopy = (output.generated_copy && String(output.generated_copy).trim()) || '';
+        if (generatedCopy) rows.push(block('Copy', this._renderCopyContent(generatedCopy)));
+
+        // Hashtags: lista o array. Renderea como chips.
+        let hashtagsArr = [];
+        if (Array.isArray(output.generated_hashtags)) hashtagsArr = output.generated_hashtags;
+        else if (output.generated_hashtags && typeof output.generated_hashtags === 'object') {
+            hashtagsArr = output.generated_hashtags.tags || output.generated_hashtags.values || [];
+        } else if (typeof output.generated_hashtags === 'string') {
+            const parsed = this._tryParseJSON(output.generated_hashtags);
+            hashtagsArr = Array.isArray(parsed) ? parsed : output.generated_hashtags.split(/[\s,]+/).filter(Boolean);
         }
-        if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">creative_rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
-        if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">text_content</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
-        rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Imagen'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
-        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
+        if (hashtagsArr.length) {
+            const chips = hashtagsArr.map(t => `<span class="info-chip">${this.escapeHtml(String(t).replace(/^#/, '#'))}</span>`).join('');
+            rows.push(block('Hashtags', `<div class="info-chips">${chips}</div>`));
+        }
+
+        // Creative rationale: texto largo → bloque.
+        if (output.creative_rationale && String(output.creative_rationale).trim()) {
+            rows.push(block('Creative rationale', `<div class="living-viewer-text">${this.escapeHtml(String(output.creative_rationale).trim())}</div>`));
+        }
+        // Text content (caption, body, etc): texto largo → bloque.
+        if (output.text_content && String(output.text_content).trim()) {
+            rows.push(block('Text', `<div class="living-viewer-text">${this.escapeHtml(String(output.text_content).trim())}</div>`));
+        }
         metadataEl.innerHTML = rows.join('');
         
         modal.classList.add('active');
@@ -1862,53 +1965,55 @@ class LivingManager {
             if (img) img.style.display = '';
             const wrap = document.querySelector('.living-viewer-visual');
             if (wrap) wrap.classList.remove('living-viewer-visual--video');
+            if (backdropImage) backdropImage.style.backgroundImage = '';
             modal.classList.remove('active');
             document.body.style.overflow = '';
             if (portal) portal.setAttribute('aria-hidden', 'true');
+            // Cancela TODOS los listeners de esta apertura (close, backdrop, ESC,
+            // copy, correction, zoom/pan).
+            if (this._viewerModalController) {
+                try { this._viewerModalController.abort(); } catch (_) {}
+                this._viewerModalController = null;
+            }
         };
-        
-        const newCloseBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-        const newBackdrop = backdrop.cloneNode(true);
-        backdrop.parentNode.replaceChild(newBackdrop, backdrop);
-        
-        document.getElementById('livingViewerClose').addEventListener('click', closeModal);
-        document.getElementById('livingViewerBackdrop').addEventListener('click', closeModal);
-        
-        const finalCopyBtn = document.getElementById('livingViewerCopyPrompt');
-        if (finalCopyBtn && promptText) {
-            finalCopyBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(promptText).then(() => {
-                        if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
+
+        closeBtn.addEventListener('click', closeModal, { signal });
+        backdrop.addEventListener('click', closeModal, { signal });
+
+        // Copy prompt → clipboard.
+        const copyBtn = document.getElementById('livingViewerCopyPrompt');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const toCopy = typeof promptText === 'string' ? promptText : String(promptText || '');
+                if (toCopy && navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(toCopy).then(() => {
+                        if (typeof window.showToast === 'function') window.showToast('Prompt copied');
                     }).catch(() => {});
                 }
-            });
+            }, { signal });
         }
 
         // Limpieza defensiva: eliminar cualquier botón legacy "Ver todo" si quedó en caché del DOM
         modal.querySelectorAll('.living-viewer-see-all').forEach((el) => el.remove());
 
+        // Sección de corrección/regeneración (solo imágenes — los videos no aplican).
         if (correctionSection && correctionInput && correctionBtn && correctionStatus) {
             correctionInput.value = '';
             correctionStatus.textContent = '';
             const showCorrection = !isVideo;
             correctionSection.style.display = showCorrection ? '' : 'none';
 
-            const newCorrectionBtn = correctionBtn.cloneNode(true);
-            correctionBtn.parentNode.replaceChild(newCorrectionBtn, correctionBtn);
-            const activeCorrectionBtn = document.getElementById('livingViewerCorrectionBtn');
-            if (activeCorrectionBtn && showCorrection) {
-                activeCorrectionBtn.addEventListener('click', async () => {
+            if (showCorrection) {
+                correctionBtn.addEventListener('click', async () => {
                     const correctionText = (correctionInput.value || '').trim();
                     if (!correctionText) {
-                        correctionStatus.textContent = 'Escribe qué quieres corregir.';
+                        correctionStatus.textContent = 'Write what you want to fix.';
                         return;
                     }
-                    activeCorrectionBtn.disabled = true;
+                    correctionBtn.disabled = true;
                     correctionInput.disabled = true;
-                    correctionStatus.textContent = 'Regenerando imagen…';
+                    correctionStatus.textContent = 'Regenerating…';
                     try {
                         const result = await this.regenerateProductionImage({
                             sourceImageUrl: mediaUrl,
@@ -1920,32 +2025,27 @@ class LivingManager {
                         });
                         if (result?.image_url) {
                             image.src = result.image_url;
-                            image.alt = result.prompt || promptText || 'Producción regenerada';
-                            if (result.prompt) {
-                                promptEl.textContent = result.prompt;
-                            }
-                            correctionStatus.textContent = 'Imagen regenerada correctamente.';
-                            if (typeof window.showToast === 'function') window.showToast('Producción regenerada');
+                            image.alt = result.prompt || promptText || 'Regenerated production';
+                            if (backdropImage) backdropImage.style.backgroundImage = `url("${result.image_url}")`;
+                            if (result.prompt) promptEl.textContent = result.prompt;
+                            correctionStatus.textContent = 'Image regenerated.';
+                            if (typeof window.showToast === 'function') window.showToast('Production regenerated');
                         } else {
-                            correctionStatus.textContent = 'No se pudo regenerar la imagen.';
+                            correctionStatus.textContent = 'Could not regenerate the image.';
                         }
                     } catch (err) {
-                        correctionStatus.textContent = `Error: ${err?.message || 'No se pudo regenerar'}`;
+                        correctionStatus.textContent = `Error: ${err?.message || 'Could not regenerate'}`;
                     } finally {
-                        activeCorrectionBtn.disabled = false;
+                        correctionBtn.disabled = false;
                         correctionInput.disabled = false;
                     }
-                });
+                }, { signal });
             }
         }
-        
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                document.removeEventListener('keydown', handleEsc);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        }, { signal });
     }
 
     async saveSystemAIOutput(record) {
@@ -2371,83 +2471,126 @@ class LivingManager {
         return div.innerHTML;
     }
 
-    setupImageZoom(image) {
-        if (!image) return;
-        
-        let scale = 1;
-        const minScale = 1;
-        const maxScale = 3;
-        let isDragging = false;
-        let startX = 0;
-        let startY = 0;
-        let translateX = 0;
-        let translateY = 0;
-        
-        // Zoom con rueda del mouse
-        image.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            const oldScale = scale;
-            scale = Math.max(minScale, Math.min(maxScale, scale + delta));
-            
-            if (scale !== oldScale) {
-                // Calcular el punto relativo en la imagen antes del zoom
-                const rect = image.getBoundingClientRect();
-                const x = (e.clientX - rect.left - rect.width / 2) / oldScale;
-                const y = (e.clientY - rect.top - rect.height / 2) / oldScale;
-                
-                // Ajustar translate para mantener el punto bajo el cursor
-                translateX = -x * (scale - oldScale);
-                translateY = -y * (scale - oldScale);
-                
-                image.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-                image.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
-            }
-        });
-        
-        // Arrastrar cuando está con zoom (Pointer Events: mouse + touch + pen).
-        // setPointerCapture mantiene el drag aunque el cursor salga del elemento.
-        image.addEventListener('pointerdown', (e) => {
-            if (scale > 1) {
-                isDragging = true;
-                startX = e.clientX - translateX * scale;
-                startY = e.clientY - translateY * scale;
-                image.style.cursor = 'grabbing';
-                try { image.setPointerCapture(e.pointerId); } catch (_) {}
-            }
-        });
+    /**
+     * Zoom + pan profesional sobre la imagen del viewer.
+     *
+     * Fórmula: transform = `translate(tx, ty) scale(s)` con transform-origin 0 0.
+     * Para zoom hacia el cursor: dado el punto del cursor (cx, cy) relativo al
+     * container, mantener el mismo punto bajo el cursor después del zoom:
+     *   tx_new = cx - (cx - tx_old) * (s_new / s_old)
+     *
+     * Listeners se cancelan con AbortController.signal cuando se cierra el modal.
+     * Devuelve la función de cleanup.
+     */
+    setupImageZoom(image, signal) {
+        if (!image) return () => {};
 
-        image.addEventListener('pointermove', (e) => {
-            if (isDragging && scale > 1) {
-                e.preventDefault(); // evita scroll en touch
-                translateX = (e.clientX - startX) / scale;
-                translateY = (e.clientY - startY) / scale;
-                image.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-            }
-        });
+        const ZOOM_MIN = 1;
+        const ZOOM_MAX = 5;
+        const ZOOM_STEP = 0.18;
+        const container = image.parentElement; // .living-viewer-visual
 
-        const endDrag = (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            if (scale > 1) image.style.cursor = 'grab';
-            try { if (e?.pointerId != null) image.releasePointerCapture(e.pointerId); } catch (_) {}
+        const state = { scale: 1, tx: 0, ty: 0 };
+        let isPanning = false;
+        let panStartX = 0, panStartY = 0;
+        let txStart = 0, tyStart = 0;
+
+        const apply = () => {
+            image.style.transform = `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`;
+            image.style.cursor = state.scale > 1
+                ? (isPanning ? 'grabbing' : 'grab')
+                : 'zoom-in';
         };
-        image.addEventListener('pointerup', endDrag);
-        image.addEventListener('pointercancel', endDrag);
-        image.addEventListener('lostpointercapture', () => { isDragging = false; });
-        
-        // Doble click para resetear zoom
-        image.addEventListener('dblclick', () => {
-            scale = 1;
-            translateX = 0;
-            translateY = 0;
-            image.style.transform = 'scale(1)';
-            image.style.cursor = 'zoom-in';
-        });
-        
-        // Cursor inicial
-        image.style.cursor = 'zoom-in';
-        image.style.transition = 'transform 0.1s ease-out';
+
+        const reset = () => {
+            state.scale = 1; state.tx = 0; state.ty = 0;
+            apply();
+        };
+
+        /** Limita tx/ty para que la imagen no se salga del container al hacer pan. */
+        const clamp = () => {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const scaledW = w * state.scale;
+            const scaledH = h * state.scale;
+            // tx puede ir de -(scaledW - w) (lado derecho visible) a 0 (lado izquierdo).
+            const minTx = Math.min(0, w - scaledW);
+            const minTy = Math.min(0, h - scaledH);
+            state.tx = Math.max(minTx, Math.min(0, state.tx));
+            state.ty = Math.max(minTy, Math.min(0, state.ty));
+        };
+
+        const zoomAt = (clientX, clientY, newScale) => {
+            const rect = container.getBoundingClientRect();
+            const cx = clientX - rect.left;
+            const cy = clientY - rect.top;
+            const factor = newScale / state.scale;
+            state.tx = cx - (cx - state.tx) * factor;
+            state.ty = cy - (cy - state.ty) * factor;
+            state.scale = newScale;
+            clamp();
+            apply();
+        };
+
+        const onWheel = (e) => {
+            e.preventDefault();
+            const delta = -Math.sign(e.deltaY) * ZOOM_STEP;
+            const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, state.scale + delta));
+            if (newScale === state.scale) return;
+            zoomAt(e.clientX, e.clientY, newScale);
+        };
+
+        const onPointerDown = (e) => {
+            if (state.scale <= 1) return; // no pan sin zoom
+            isPanning = true;
+            panStartX = e.clientX;
+            panStartY = e.clientY;
+            txStart = state.tx;
+            tyStart = state.ty;
+            image.style.cursor = 'grabbing';
+            try { image.setPointerCapture(e.pointerId); } catch (_) {}
+        };
+
+        const onPointerMove = (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+            state.tx = txStart + (e.clientX - panStartX);
+            state.ty = tyStart + (e.clientY - panStartY);
+            clamp();
+            apply();
+        };
+
+        const endPan = (e) => {
+            if (!isPanning) return;
+            isPanning = false;
+            try { if (e?.pointerId != null) image.releasePointerCapture(e.pointerId); } catch (_) {}
+            apply();
+        };
+
+        const onDblClick = (e) => {
+            if (state.scale > 1) {
+                reset();
+            } else {
+                // Doble click hace zoom 2.5x hacia el punto clickeado.
+                zoomAt(e.clientX, e.clientY, 2.5);
+            }
+        };
+
+        const opts = signal ? { signal } : undefined;
+        const passive = signal ? { signal, passive: false } : { passive: false };
+
+        image.addEventListener('wheel', onWheel, passive);
+        image.addEventListener('pointerdown', onPointerDown, opts);
+        image.addEventListener('pointermove', onPointerMove, opts);
+        image.addEventListener('pointerup', endPan, opts);
+        image.addEventListener('pointercancel', endPan, opts);
+        image.addEventListener('lostpointercapture', () => { isPanning = false; apply(); }, opts);
+        image.addEventListener('dblclick', onDblClick, opts);
+
+        image.style.transition = 'transform 0.12s ease-out';
+        reset();
+
+        return reset;
     }
 
     destroy() {

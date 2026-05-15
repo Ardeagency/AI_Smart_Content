@@ -1237,12 +1237,30 @@ body.production-filters-in-header .living-container > .living-history-section {
     pointer-events: all;
 }
 
+/* Backdrop layer 1: imagen seleccionada blureada + scale 1.1 para ocultar
+   bordes del blur. El src se setea en JS via inline background-image al abrir. */
+.living-viewer-backdrop-image {
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: blur(40px) saturate(1.1);
+    transform: scale(1.15);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.living-viewer-modal.active .living-viewer-backdrop-image {
+    opacity: 1;
+}
+
+/* Backdrop layer 2: capa glass-black al 67% encima del blur de imagen. */
 .living-viewer-backdrop {
     position: absolute;
     inset: 0;
-    background: var(--bg-overlay);
-    backdrop-filter: var(--overlay-blur);
-    -webkit-backdrop-filter: var(--overlay-blur);
+    background: rgba(0, 0, 0, 0.67);
     cursor: pointer;
 }
 
@@ -1275,49 +1293,52 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-width: 0;
 }
 
-/* Columna izquierda: imagen */
+/* Columna izquierda: imagen full-bleed, sin padding ni gaps */
 .living-viewer-left {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--bg-primary);
-    padding: var(--spacing-lg);
-    gap: var(--spacing-md);
+    background: #000;
     overflow: hidden;
 }
 
 .living-viewer-visual {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
+    position: relative;
     overflow: hidden;
+    min-height: 0;
+    /* La imagen se mueve/escala via transform desde setupImageZoom — necesitamos
+       que el contenedor no clip-eee con bordes redondeados (la imagen es la que recibe). */
 }
 
+/* Imagen: llena 100% el viewport del visual con object-fit:cover.
+   El zoom/pan se aplica via transform sobre la imagen. */
 .living-viewer-visual img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: var(--border-radius);
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
     cursor: zoom-in;
     user-select: none;
+    -webkit-user-drag: none;
+    transform-origin: 0 0; /* anchor en (0,0) para que el cálculo de zoom-at-cursor sea simple */
+    will-change: transform;
 }
 
 .living-viewer-visual.living-viewer-visual--video {
-    min-height: 200px;
+    background: #000;
 }
 
 .living-viewer-visual .living-viewer-video {
-    max-width: 100%;
-    max-height: 100%;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    min-height: 200px;
+    height: 100%;
     object-fit: contain;
-    border-radius: var(--border-radius);
     display: block;
-    background: var(--bg-secondary);
+    background: #000;
 }
 
 /* Columna derecha: header + body */
@@ -1611,6 +1632,101 @@ body.production-filters-in-header .living-container > .living-history-section {
     object-fit: cover;
     object-position: center;
     background: var(--bg-tertiary);
+}
+
+/* ── Bloques estructurados para campos largos (Copy, Hashtags, Rationale, Text) ── */
+.living-viewer-info-rows .info-block {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-divider);
+    display: grid;
+    gap: 8px;
+}
+
+.living-viewer-info-rows .info-block:last-child {
+    border-bottom: none;
+}
+
+.living-viewer-info-rows .info-block-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.living-viewer-info-rows .info-block-content {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.living-viewer-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.living-viewer-empty {
+    color: var(--text-muted);
+}
+
+/* Copy parseado de JSON: bloques con label tipo "Headline / Subline / Body" */
+.living-viewer-copy-block {
+    display: grid;
+    gap: 3px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.living-viewer-copy-block + .living-viewer-copy-block {
+    margin-top: 6px;
+}
+
+.living-viewer-copy-block-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+.living-viewer-copy-block-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.living-viewer-copy-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+/* Hashtag chips */
+.living-viewer-info-rows .info-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.living-viewer-info-rows .info-chip {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Prompt area: si viene como JSON parseado, .living-viewer-prompt-text contiene
+   los .living-viewer-copy-block — quitar el monospace para que se lea natural. */
+.living-viewer-prompt-text:has(.living-viewer-copy-block) {
+    font-family: inherit;
+    white-space: normal;
+    max-height: 220px;
 }
 
 
