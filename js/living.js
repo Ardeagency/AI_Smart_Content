@@ -1725,12 +1725,29 @@ class LivingManager {
         }
     }
     
-    /** Intenta parsear un string como JSON; si no es JSON válido, retorna null. */
+    /**
+     * Intenta parsear un string como JSON. Maneja escapes dobles: cuando el
+     * valor llega como `"{\"key\":...}"` (un string que contiene JSON), parsea
+     * dos veces. Retorna null si no es JSON válido.
+     */
     _tryParseJSON(str) {
         if (!str || typeof str !== 'string') return null;
-        const trimmed = str.trim();
-        if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return null;
-        try { return JSON.parse(trimmed); } catch (_) { return null; }
+        let trimmed = str.trim();
+        // Aceptamos los 4 prefijos: objeto, array, o el mismo wrapped en string.
+        const looksLikeJson = (s) => s.startsWith('{') || s.startsWith('[');
+        const looksLikeWrapped = (s) => s.startsWith('"{') || s.startsWith('"[');
+        if (!looksLikeJson(trimmed) && !looksLikeWrapped(trimmed)) return null;
+        let parsed;
+        try { parsed = JSON.parse(trimmed); } catch (_) { return null; }
+        // Si después del primer parse seguimos viendo un string que parece JSON,
+        // hacer una segunda pasada (doblemente escapado en BD).
+        if (typeof parsed === 'string') {
+            const inner = parsed.trim();
+            if (looksLikeJson(inner)) {
+                try { return JSON.parse(inner); } catch (_) { return parsed; }
+            }
+        }
+        return parsed;
     }
 
     /** Convierte snake_case / camelCase / UPPER_CASE a "Title Case" legible. */
@@ -1775,7 +1792,6 @@ class LivingManager {
 
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
-        const backdropImage = document.getElementById('livingViewerBackdropImage');
         const image = document.getElementById('livingViewerImage');
         const videoEl = document.getElementById('livingViewerVideo');
         const promptEl = document.getElementById('livingViewerPrompt');
@@ -1835,12 +1851,6 @@ class LivingManager {
         image.style.display = '';
         const visualWrap = modal.querySelector('.living-viewer-visual');
         if (visualWrap) visualWrap.classList.remove('living-viewer-visual--video');
-
-        // Pinta la imagen del item como backdrop blureado (cuando es imagen).
-        // Para videos, dejamos el backdrop sin imagen — queda solo glass-black.
-        if (backdropImage) {
-            backdropImage.style.backgroundImage = (!isVideo && mediaUrl) ? `url("${mediaUrl}")` : '';
-        }
 
         if (isVideo && videoEl && mediaUrl) {
             image.src = '';
@@ -1965,7 +1975,6 @@ class LivingManager {
             if (img) img.style.display = '';
             const wrap = document.querySelector('.living-viewer-visual');
             if (wrap) wrap.classList.remove('living-viewer-visual--video');
-            if (backdropImage) backdropImage.style.backgroundImage = '';
             modal.classList.remove('active');
             document.body.style.overflow = '';
             if (portal) portal.setAttribute('aria-hidden', 'true');
@@ -2026,7 +2035,6 @@ class LivingManager {
                         if (result?.image_url) {
                             image.src = result.image_url;
                             image.alt = result.prompt || promptText || 'Regenerated production';
-                            if (backdropImage) backdropImage.style.backgroundImage = `url("${result.image_url}")`;
                             if (result.prompt) promptEl.textContent = result.prompt;
                             correctionStatus.textContent = 'Image regenerated.';
                             if (typeof window.showToast === 'function') window.showToast('Production regenerated');

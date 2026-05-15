@@ -71,9 +71,7 @@ class ProductionView extends BaseView {
 
     <!-- Modal de previsualización (estilo referencia: dos columnas, herramientas, autor, prompt, información, acciones) -->
     <div class="living-viewer-modal modal" id="livingViewerModal">
-        <!-- Backdrop: la imagen seleccionada blureada + capa glass-black 67%. La imagen
-             se setea en JS via background-image inline al abrir el modal. -->
-        <div class="living-viewer-backdrop-image" id="livingViewerBackdropImage" aria-hidden="true"></div>
+        <!-- Backdrop: negro al 45% + blur glass sobre toda la plataforma. -->
         <div class="living-viewer-backdrop" id="livingViewerBackdrop"></div>
         <div class="living-viewer-container">
             <div class="living-viewer-content">

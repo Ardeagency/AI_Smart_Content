@@ -1237,30 +1237,13 @@ body.production-filters-in-header .living-container > .living-history-section {
     pointer-events: all;
 }
 
-/* Backdrop layer 1: imagen seleccionada blureada + scale 1.1 para ocultar
-   bordes del blur. El src se setea en JS via inline background-image al abrir. */
-.living-viewer-backdrop-image {
-    position: absolute;
-    inset: 0;
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    filter: blur(40px) saturate(1.1);
-    transform: scale(1.15);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.living-viewer-modal.active .living-viewer-backdrop-image {
-    opacity: 1;
-}
-
-/* Backdrop layer 2: capa glass-black al 67% encima del blur de imagen. */
+/* Backdrop: negro al 45% con blur glass sobre toda la plataforma. */
 .living-viewer-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.67);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
     cursor: pointer;
 }
 
