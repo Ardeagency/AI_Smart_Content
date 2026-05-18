@@ -138,11 +138,6 @@ class FlowCatalogView extends BaseView {
           <p>Cargando flows...</p>
         </div>
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
-          <!-- Mensaje cuando no hay flujos en esta sección -->
-          <div class="flow-catalog-empty" id="flowCatalogEmpty" style="display: none;" aria-live="polite">
-            <p class="flow-catalog-empty-text">PROXIMAMENTE</p>
-          </div>
-
           <!-- HERO: carrusel full-bleed por categoría, auto-avance, sin flechas -->
           <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
             <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
@@ -222,20 +217,10 @@ class FlowCatalogView extends BaseView {
       this.renderSectionAllFlows();
     }
 
-    // Empty state: si NO hay flujos visibles en la vista actual, mostrar
-    // mensaje. En vista categoría, "no hay flujos" significa que esa
-    // categoría aún no tiene contenido publicado.
-    const emptyEl = document.getElementById('flowCatalogEmpty');
-    if (emptyEl) {
-      const hasFlows = (this.flows || []).length > 0;
-      const textEl = emptyEl.querySelector('.flow-catalog-empty-text');
-      if (textEl) {
-        textEl.textContent = (this.selectedCategoryId || this.selectedSubcategoryId)
-          ? 'Aún no hay flujos en esta categoría'
-          : 'Próximamente';
-      }
-      emptyEl.style.display = hasFlows ? 'none' : '';
-    }
+    // Empty states: cada vista los maneja inline en el área donde irían los
+    // flujos. renderSectionAllFlows en home y renderGalleryBySubcategory en
+    // categoría — ambos inyectan .flow-catalog-empty--in-section cuando no
+    // hay rows que mostrar.
   }
 
   showContentError() {
@@ -962,12 +947,16 @@ class FlowCatalogView extends BaseView {
     const gallery = document.getElementById('galleryBySub');
     if (!gallery) return;
     const rows = this.getFlowsBySubcategory().filter(({ flows }) => flows.length > 0);
+    gallery.closest('.flow-catalog-gallery-by-sub')?.style.removeProperty('display');
     if (rows.length === 0) {
-      gallery.innerHTML = '';
-      gallery.closest('.flow-catalog-gallery-by-sub')?.style.setProperty('display', 'none');
+      // Empty state inline (DESPUÉS del category header). Antes se usaba el
+      // flow-catalog-empty global que quedaba ARRIBA del header — feo.
+      gallery.innerHTML = `
+        <div class="flow-catalog-empty flow-catalog-empty--in-section" aria-live="polite">
+          <p class="flow-catalog-empty-text">Aún no hay flujos en esta categoría</p>
+        </div>`;
       return;
     }
-    gallery.closest('.flow-catalog-gallery-by-sub')?.style.removeProperty('display');
     gallery.innerHTML = rows.map(({ sub, flows }) => `
       <section class="flow-catalog-sub-row flow-catalog-row-section" data-subcategory-id="${this.escapeHtml(sub?.id || '')}">
         <h2 class="flow-catalog-row-title">${this.escapeHtml(sub?.name || '')}</h2>
