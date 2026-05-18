@@ -149,9 +149,10 @@ class FlowCatalogView extends BaseView {
           </section>
 
           ${!isCategoryView ? `
-          <!-- All Flows: catálogo por categoría y subcategoría -->
-          <section class="flow-catalog-row-section" id="sectionAllFlows" style="display: none;">
-            <h2 class="flow-catalog-row-title">All Flows</h2>
+          <!-- Catálogo completo: cada categoría se renderiza como su propio
+               bloque con header (no hace falta un título paraguas tipo
+               "All Flows" — las categorías ya hacen ese trabajo). -->
+          <section class="flow-catalog-row-section flow-catalog-row-section--unframed" id="sectionAllFlows" style="display: none;">
             <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
           </section>
           ` : `

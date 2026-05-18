@@ -142,13 +142,28 @@
   gap: 0.75rem;
 }
 .flow-hero-slide-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--accent-warm, #d4b896);
-  opacity: 0.85;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.85),
+    0 2px 10px rgba(0, 0, 0, 0.6),
+    0 0 18px rgba(0, 0, 0, 0.4);
+}
+.flow-hero-slide-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(to right, var(--accent-warm, #d4b896), rgba(212, 184, 150, 0.2));
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(212, 184, 150, 0.55);
+  flex-shrink: 0;
 }
 .flow-hero-slide-title {
   font-size: clamp(2.25rem, 5.5vw, 4rem);
@@ -790,15 +805,41 @@
   padding: 0 0 2rem;
 }
 .flow-catalog-category-block {
-  margin-bottom: 2.5rem;
+  margin-bottom: clamp(2.5rem, 4vw, 3.5rem);
+  padding: 0 clamp(2rem, 5vw, 4rem);
 }
 .flow-catalog-category-block-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: clamp(1.4rem, 2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
-  margin: 0 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border-bottom: none;
+}
+.flow-catalog-category-block-title::after {
+  content: '';
+  display: inline-block;
+  width: 2rem;
+  height: 1px;
+  background: linear-gradient(to right, var(--accent-warm, #d4b896), transparent);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+/* Cuando un row está dentro de un category-block ya tiene padding desde el
+   block; quitamos el padding lateral propio para que las cards alinieen con
+   el título de la categoría. */
+.flow-catalog-category-block .flow-catalog-sub-row.flow-catalog-row-section {
+  padding-left: 0;
+  padding-right: 0;
+}
+/* La sección "All Flows" ya no tiene su propio título — quitamos padding
+   bottom porque ese spacing lo maneja cada category-block. */
+.flow-catalog-row-section--unframed {
+  padding: 0;
 }
 
 /* Categorías visuales: grid de cards (content_categories / subcategory_id) */
