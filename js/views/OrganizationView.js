@@ -66,6 +66,11 @@ class OrganizationView extends BaseView {
     // Seguridad (audit)
     this.auditLog = [];
     this.auditFilter = { action: '', user: '' };
+
+    // Seguridad (MFA — FEAT-020)
+    this.mfaFactors = [];          // auth.mfa.listFactors().totp[]
+    this.mfaOrgRequired = false;   // organizations.mfa_required
+    this.mfaEnroll = null;         // { factorId, qr, secret } durante el flujo de enroll
   }
 
   renderHTML() {
@@ -316,12 +321,40 @@ class OrganizationView extends BaseView {
         <div class="org-audit-list" id="orgAuditList"><p class="org-placeholder">Cargando…</p></div>
       </section>
       <section class="org-section">
-        <h2>Autenticación de dos factores (2FA)</h2>
-        <p class="org-section-desc org-placeholder">Obligar 2FA a todos los miembros de la org — próximamente.</p>
+        <div class="org-section-head">
+          <div>
+            <h2>Autenticación de dos factores (2FA)</h2>
+            <p class="org-section-desc">Añade un código de 6 dígitos generado por una app autenticadora (Google Authenticator, Authy, 1Password) además de tu contraseña. No requiere SMS — funciona offline desde tu celular.</p>
+          </div>
+        </div>
+
+        <div class="org-mfa-personal" id="orgMfaPersonal">
+          <p class="org-placeholder">Cargando…</p>
+        </div>
+
+        <div class="org-mfa-policy" id="orgMfaPolicy" hidden>
+          <h3 style="margin-top: 1.5rem; font-size: 0.95rem;">Política de organización</h3>
+          <p class="org-section-desc">Como propietario, puedes exigir 2FA a todos los miembros antes de que puedan acceder.</p>
+          <label class="org-toggle">
+            <input type="checkbox" id="orgMfaRequireToggle">
+            <span class="org-toggle-label">Exigir 2FA a todos los miembros de esta organización</span>
+          </label>
+          <p class="org-mfa-policy-hint" id="orgMfaPolicyHint"></p>
+        </div>
       </section>
       <section class="org-section">
-        <h2>Sesiones activas</h2>
-        <p class="org-section-desc org-placeholder">Listado y cierre remoto de sesiones — próximamente.</p>
+        <div class="org-section-head">
+          <div>
+            <h2>Sesiones activas</h2>
+            <p class="org-section-desc">Dispositivos donde tu cuenta tiene sesión abierta. Cierra cualquier sesión que no reconozcas.</p>
+          </div>
+          <button type="button" class="btn btn-secondary" id="orgSessionsRevokeAllBtn">
+            <i class="fas fa-sign-out-alt"></i> Cerrar todas las otras sesiones
+          </button>
+        </div>
+        <div class="org-sessions-list" id="orgSessionsList">
+          <p class="org-placeholder">Cargando…</p>
+        </div>
       </section>
     </div>
 
@@ -417,6 +450,41 @@ class OrganizationView extends BaseView {
     </form>
   </div>
 </div>
+
+<!-- ── Modal: Activar 2FA (TOTP enroll) ────────────────── -->
+<div class="modal org-modal" id="orgMfaEnrollModal" aria-hidden="true">
+  <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-header">
+      <h3>Activar autenticación de 2 pasos</h3>
+      <button type="button" class="modal-close" id="orgMfaEnrollClose" aria-label="Cerrar">&times;</button>
+    </div>
+    <div id="orgMfaEnrollBody">
+      <ol class="org-mfa-steps">
+        <li>Abre tu app autenticadora (Google Authenticator, Authy, 1Password).</li>
+        <li>Escanea este código QR. Si no puedes, copia el código manualmente.</li>
+        <li>Ingresa el código de 6 dígitos que muestra tu app.</li>
+      </ol>
+      <div class="org-mfa-qr-wrap" id="orgMfaQrWrap">
+        <p class="org-placeholder">Generando código…</p>
+      </div>
+      <div class="form-group" id="orgMfaSecretWrap" hidden>
+        <label>Código manual (si el QR no funciona)</label>
+        <input type="text" id="orgMfaSecret" class="form-input" readonly style="font-family: monospace; letter-spacing: 1px;">
+      </div>
+      <form id="orgMfaEnrollForm">
+        <div class="form-group">
+          <label for="orgMfaCode">Código de 6 dígitos</label>
+          <input type="text" id="orgMfaCode" class="form-input" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" style="font-size: 1.5rem; letter-spacing: 0.3rem; text-align: center; font-family: monospace;">
+        </div>
+        <p class="org-mfa-error" id="orgMfaEnrollError" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="orgMfaEnrollCancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="orgMfaEnrollSubmit">Verificar y activar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 `;
   }
 
@@ -496,6 +564,7 @@ class OrganizationView extends BaseView {
         this._loadEngineServer(),
         this._loadApifyRuns(),
         this._loadTrendJobs(),
+        this._loadMfa(),
       ]);
 
       this._renderHeaderStatus();
@@ -510,6 +579,8 @@ class OrganizationView extends BaseView {
       this._renderHealth();
       this._renderNotifications();
       this._renderAuditLog();
+      this._renderMfa();
+      this._renderSessions();
       this._configureExternalLinks();
     } catch (e) {
       console.error('OrganizationView _loadAll:', e);
@@ -520,12 +591,314 @@ class OrganizationView extends BaseView {
   async _loadOrg() {
     const { data, error } = await this.supabase
       .from('organizations')
-      .select('id, name, owner_user_id, created_at, deleted_at, timezone, locale')
+      .select('id, name, owner_user_id, created_at, deleted_at, timezone, locale, mfa_required')
       .eq('id', this.orgId).maybeSingle();
     if (error) throw error;
     if (!data) throw new Error('Organización no encontrada.');
     this.org = data;
     this.isOwner = this.org.owner_user_id === this.userId;
+    this.mfaOrgRequired = Boolean(data.mfa_required);
+  }
+
+  // ── MFA (FEAT-020) ───────────────────────────────────────
+  async _loadMfa() {
+    try {
+      const { data, error } = await this.supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      this.mfaFactors = (data?.totp || []).filter((f) => f.status === 'verified' || f.status === 'unverified');
+    } catch (e) {
+      console.warn('OrganizationView _loadMfa:', e.message);
+      this.mfaFactors = [];
+    }
+  }
+
+  _renderMfa() {
+    const personal = this.querySelector('#orgMfaPersonal');
+    if (personal) {
+      const verified = this.mfaFactors.filter((f) => f.status === 'verified');
+      if (verified.length === 0) {
+        personal.innerHTML = `
+          <div class="org-mfa-status org-mfa-status--off">
+            <i class="fas fa-shield-alt"></i>
+            <div>
+              <strong>2FA no activa</strong>
+              <p>Tu cuenta usa solo email + contraseña. Activa la autenticación de 2 pasos para una capa extra de seguridad.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="orgMfaEnrollBtn">
+              <i class="fas fa-lock"></i> Activar 2FA
+            </button>
+          </div>
+        `;
+      } else {
+        const f = verified[0];
+        const created = f.created_at ? new Date(f.created_at).toLocaleDateString() : '—';
+        personal.innerHTML = `
+          <div class="org-mfa-status org-mfa-status--on">
+            <i class="fas fa-shield-check"></i>
+            <div>
+              <strong>2FA activa</strong>
+              <p>Factor TOTP enrolado el ${this.escapeHtml(created)}. En tu próximo login se te pedirá el código de 6 dígitos.</p>
+            </div>
+            <button type="button" class="btn btn-secondary" data-factor-id="${this.escapeHtml(f.id)}" id="orgMfaUnenrollBtn">
+              <i class="fas fa-trash"></i> Desactivar
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    const policy = this.querySelector('#orgMfaPolicy');
+    if (policy) {
+      if (this.isOwner) {
+        policy.hidden = false;
+        const toggle = this.querySelector('#orgMfaRequireToggle');
+        const hint   = this.querySelector('#orgMfaPolicyHint');
+        if (toggle) toggle.checked = this.mfaOrgRequired;
+        if (hint) {
+          hint.textContent = this.mfaOrgRequired
+            ? 'Todos los miembros deben activar 2FA antes de poder acceder. Quienes aún no la tengan serán redirigidos al flujo de activación en su próximo login.'
+            : 'Cada miembro decide si activa 2FA por su cuenta. Actívalo arriba para tu propia cuenta.';
+        }
+      } else {
+        policy.hidden = true;
+      }
+    }
+  }
+
+  _bindMfaEvents() {
+    const enrollBtn = this.querySelector('#orgMfaEnrollBtn');
+    if (enrollBtn) enrollBtn.addEventListener('click', () => this._openMfaEnrollModal());
+
+    const unenrollBtn = this.querySelector('#orgMfaUnenrollBtn');
+    if (unenrollBtn) unenrollBtn.addEventListener('click', (e) => {
+      const factorId = e.currentTarget.dataset.factorId;
+      this._unenrollMfa(factorId);
+    });
+
+    const toggle = this.querySelector('#orgMfaRequireToggle');
+    if (toggle) toggle.addEventListener('change', (e) => this._toggleOrgMfaRequired(e.target.checked));
+
+    const modal = this.querySelector('#orgMfaEnrollModal');
+    if (modal) {
+      const close = modal.querySelector('#orgMfaEnrollClose');
+      const cancel = modal.querySelector('#orgMfaEnrollCancel');
+      if (close) close.addEventListener('click', () => this._closeMfaEnrollModal());
+      if (cancel) cancel.addEventListener('click', () => this._closeMfaEnrollModal());
+      const form = modal.querySelector('#orgMfaEnrollForm');
+      if (form) form.addEventListener('submit', (e) => { e.preventDefault(); this._submitMfaEnroll(); });
+    }
+  }
+
+  async _openMfaEnrollModal() {
+    const modal = this.querySelector('#orgMfaEnrollModal');
+    const qrWrap = this.querySelector('#orgMfaQrWrap');
+    const secretWrap = this.querySelector('#orgMfaSecretWrap');
+    const secretInput = this.querySelector('#orgMfaSecret');
+    const errorEl = this.querySelector('#orgMfaEnrollError');
+    const codeInput = this.querySelector('#orgMfaCode');
+    if (!modal) return;
+
+    if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
+    if (codeInput) codeInput.value = '';
+    if (qrWrap) qrWrap.innerHTML = '<p class="org-placeholder">Generando código…</p>';
+    if (secretWrap) secretWrap.hidden = true;
+
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('modal-open');
+
+    // Limpiar factors unverified previos (Supabase exige un solo factor unverified a la vez)
+    try {
+      const stale = this.mfaFactors.filter((f) => f.status === 'unverified');
+      for (const f of stale) {
+        await this.supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+    } catch (e) {
+      console.warn('OrganizationView _openMfaEnrollModal cleanup:', e.message);
+    }
+
+    try {
+      const { data, error } = await this.supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: `${this.org?.name || 'AI Smart Content'} (${new Date().toISOString().slice(0, 10)})`,
+      });
+      if (error) throw error;
+
+      this.mfaEnroll = {
+        factorId: data.id,
+        qr:       data.totp?.qr_code,    // SVG data URL
+        secret:   data.totp?.secret,
+      };
+
+      if (qrWrap && this.mfaEnroll.qr) {
+        // Supabase devuelve el QR como SVG inline (string) o data URL — manejar ambos
+        const qr = this.mfaEnroll.qr;
+        if (qr.startsWith('data:image')) {
+          qrWrap.innerHTML = `<img src="${qr}" alt="QR 2FA" style="width: 200px; height: 200px; background: white; padding: 8px; border-radius: 8px;">`;
+        } else if (qr.includes('<svg')) {
+          qrWrap.innerHTML = `<div style="display: inline-block; background: white; padding: 8px; border-radius: 8px; width: 216px; height: 216px;">${qr}</div>`;
+        } else {
+          qrWrap.innerHTML = `<p class="org-placeholder">QR no disponible. Usa el código manual.</p>`;
+        }
+      }
+      if (secretInput && this.mfaEnroll.secret) {
+        secretInput.value = this.mfaEnroll.secret;
+        secretWrap.hidden = false;
+      }
+      if (codeInput) codeInput.focus();
+    } catch (e) {
+      console.error('OrganizationView _openMfaEnrollModal enroll:', e);
+      if (errorEl) {
+        errorEl.textContent = `No se pudo iniciar el enroll: ${e.message || 'error desconocido'}`;
+        errorEl.hidden = false;
+      }
+    }
+  }
+
+  _closeMfaEnrollModal() {
+    const modal = this.querySelector('#orgMfaEnrollModal');
+    if (modal) {
+      modal.classList.remove('modal-open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    // Si quedó un factor unverified al cerrar sin verificar, lo limpiamos
+    if (this.mfaEnroll?.factorId) {
+      const factorId = this.mfaEnroll.factorId;
+      this.supabase.auth.mfa.unenroll({ factorId }).catch(() => {});
+      this.mfaEnroll = null;
+    }
+  }
+
+  async _submitMfaEnroll() {
+    const codeInput = this.querySelector('#orgMfaCode');
+    const errorEl   = this.querySelector('#orgMfaEnrollError');
+    const submitBtn = this.querySelector('#orgMfaEnrollSubmit');
+    if (!codeInput || !this.mfaEnroll) return;
+    const code = String(codeInput.value || '').trim();
+    if (!/^[0-9]{6}$/.test(code)) {
+      if (errorEl) { errorEl.textContent = 'El código debe ser de 6 dígitos numéricos.'; errorEl.hidden = false; }
+      return;
+    }
+    if (errorEl) errorEl.hidden = true;
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const { data: chal, error: chalErr } = await this.supabase.auth.mfa.challenge({ factorId: this.mfaEnroll.factorId });
+      if (chalErr) throw chalErr;
+
+      const { data: verify, error: verErr } = await this.supabase.auth.mfa.verify({
+        factorId:    this.mfaEnroll.factorId,
+        challengeId: chal.id,
+        code,
+      });
+      if (verErr) throw verErr;
+
+      // ✓ Verificado — limpiamos el enroll state y refrescamos
+      this.mfaEnroll = null;
+      const modal = this.querySelector('#orgMfaEnrollModal');
+      if (modal) {
+        modal.classList.remove('modal-open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      this._toast('2FA activada. En tu próximo login se pedirá el código.');
+      await this._loadMfa();
+      this._renderMfa();
+      this._bindMfaEvents();
+    } catch (e) {
+      console.error('OrganizationView _submitMfaEnroll:', e);
+      if (errorEl) {
+        errorEl.textContent = `Código inválido o expirado: ${e.message || 'intenta de nuevo'}`;
+        errorEl.hidden = false;
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
+  async _unenrollMfa(factorId) {
+    if (!factorId) return;
+    if (!confirm('¿Desactivar 2FA? Tu cuenta volverá a quedar solo con email + contraseña.')) return;
+    try {
+      const { error } = await this.supabase.auth.mfa.unenroll({ factorId });
+      if (error) throw error;
+      this._toast('2FA desactivada.');
+      await this._loadMfa();
+      this._renderMfa();
+      this._bindMfaEvents();
+    } catch (e) {
+      console.error('OrganizationView _unenrollMfa:', e);
+      this._toast(`No se pudo desactivar: ${e.message || 'error'}`);
+    }
+  }
+
+  async _toggleOrgMfaRequired(required) {
+    try {
+      const { data, error } = await this.supabase.rpc('set_org_mfa_required', {
+        p_org_id:   this.orgId,
+        p_required: required,
+      });
+      if (error) throw error;
+      this.mfaOrgRequired = Boolean(data);
+      this._toast(required ? 'Política activada: 2FA exigida para todos los miembros.' : 'Política desactivada.');
+      this._renderMfa();
+      this._bindMfaEvents();
+    } catch (e) {
+      console.error('OrganizationView _toggleOrgMfaRequired:', e);
+      this._toast(`No se pudo guardar: ${e.message || 'error'}`);
+      // revertir UI
+      const toggle = this.querySelector('#orgMfaRequireToggle');
+      if (toggle) toggle.checked = this.mfaOrgRequired;
+    }
+  }
+
+  // ── Sesiones activas (FEAT-020) ────────────────────────
+  _renderSessions() {
+    const wrap = this.querySelector('#orgSessionsList');
+    if (!wrap) return;
+
+    // Supabase no expone auth.sessions al cliente — solo podemos mostrar la sesión
+    // actual y permitir cerrar globalmente vía signOut({ scope: 'others' }).
+    const ua = navigator.userAgent || 'Navegador desconocido';
+    const platform = navigator.platform || '';
+    const sessionStartIso = (() => {
+      try {
+        const raw = localStorage.getItem('sb-' + (this.supabase?.supabaseUrl || '').split('//')[1]?.split('.')[0] + '-auth-token');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed?.expires_at ? new Date((parsed.expires_at - 3600) * 1000).toISOString() : null;
+      } catch { return null; }
+    })();
+    const sessionStartHuman = sessionStartIso ? new Date(sessionStartIso).toLocaleString() : 'desconocido';
+
+    wrap.innerHTML = `
+      <div class="org-session-card">
+        <i class="fas fa-laptop"></i>
+        <div class="org-session-info">
+          <strong>Esta sesión <span class="org-session-badge">actual</span></strong>
+          <p>${this.escapeHtml(ua.slice(0, 120))}</p>
+          <p class="org-session-meta">Plataforma: ${this.escapeHtml(platform || '—')} · Iniciada: ${this.escapeHtml(sessionStartHuman)}</p>
+        </div>
+      </div>
+      <p class="org-section-desc" style="margin-top: 0.75rem; font-size: 0.85rem;">
+        Si tienes acceso desde otros dispositivos o navegadores y quieres revocarlos, usa el botón "Cerrar todas las otras sesiones" arriba. Esta sesión actual no se cerrará.
+      </p>
+    `;
+  }
+
+  _bindSessionsEvents() {
+    const revokeAllBtn = this.querySelector('#orgSessionsRevokeAllBtn');
+    if (revokeAllBtn) revokeAllBtn.addEventListener('click', () => this._revokeOtherSessions());
+  }
+
+  async _revokeOtherSessions() {
+    if (!confirm('¿Cerrar todas las otras sesiones? Tendrás que volver a iniciar sesión en cualquier otro dispositivo o navegador.')) return;
+    try {
+      const { error } = await this.supabase.auth.signOut({ scope: 'others' });
+      if (error) throw error;
+      this._toast('Todas las otras sesiones fueron cerradas.');
+    } catch (e) {
+      console.error('OrganizationView _revokeOtherSessions:', e);
+      this._toast(`No se pudo cerrar: ${e.message || 'error'}`);
+    }
   }
 
   async _loadMembers() {
@@ -1292,6 +1665,9 @@ class OrganizationView extends BaseView {
 
     document.getElementById('orgInviteModalClose')?.addEventListener('click', () => this._closeInviteModal());
     document.getElementById('orgInviteCancel')?.addEventListener('click', () => this._closeInviteModal());
+
+    this._bindMfaEvents();
+    this._bindSessionsEvents();
     document.getElementById('orgInviteForm')?.addEventListener('submit', (e) => { e.preventDefault(); this._submitInvite(); });
 
     this.querySelector('#auditFilterAction')?.addEventListener('change', (e) => { this.auditFilter.action = e.target.value; this._renderAuditLog(); });

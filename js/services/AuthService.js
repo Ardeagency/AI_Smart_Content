@@ -218,11 +218,55 @@ class AuthService {
       const emailNotVerified = !this.currentUser.email_verified && !data.user.email_confirmed_at;
       if (emailNotVerified) {
         await this.logout();
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: 'EMAIL_NOT_VERIFIED',
           message: 'Por favor verifica tu email antes de iniciar sesión'
         };
+      }
+
+      // ── FEAT-020 · MFA check ────────────────────────────────────
+      // Si el user tiene un factor TOTP verificado, exige challenge antes de
+      // redirigir. SignInView muestra el step de código y llama verifyMfa().
+      try {
+        const { data: aal } = await this.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal && aal.nextLevel === 'aal2' && aal.currentLevel === 'aal1') {
+          const { data: factors } = await this.supabase.auth.mfa.listFactors();
+          const verifiedTotp = (factors?.totp || []).filter((f) => f.status === 'verified');
+          if (verifiedTotp.length > 0) {
+            return {
+              success:     false,
+              requiresMfa: true,
+              factorId:    verifiedTotp[0].id,
+              factorName:  verifiedTotp[0].friendly_name || 'Authenticator',
+              userId:      data.user.id,
+            };
+          }
+        }
+      } catch (mfaErr) {
+        console.warn('AuthService.login MFA check skipped:', mfaErr.message);
+      }
+
+      // ── FEAT-020 · enforce-per-org check ─────────────────────────
+      // Si alguna de las orgs del user tiene mfa_required=true y el user no
+      // tiene factor verificado, no completamos el login: redirigimos al tab
+      // Seguridad de OrganizationView para enroll forzado.
+      try {
+        const { data: status } = await this.supabase
+          .from('v_user_mfa_status')
+          .select('organization_id, mfa_enroll_required')
+          .eq('mfa_enroll_required', true)
+          .limit(1);
+        if (status && status.length > 0) {
+          return {
+            success:           false,
+            requiresMfaEnroll: true,
+            enforceOrgId:      status[0].organization_id,
+            message:           'Tu organización requiere activar 2FA. Te llevamos al flujo de activación.',
+          };
+        }
+      } catch (enfErr) {
+        console.warn('AuthService.login enforce check skipped:', enfErr.message);
       }
 
       // Determinar ruta de redirección
@@ -236,6 +280,60 @@ class AuthService {
     } catch (error) {
       console.error('Error en login:', error);
       return { success: false, error: 'Error al iniciar sesión' };
+    }
+  }
+
+  /**
+   * FEAT-020 · Verifica un código TOTP de 6 dígitos para upgrade aal1 → aal2.
+   * Llamar después de que login() devolviera { requiresMfa: true }.
+   * @returns { success, redirectRoute } | { success: false, error }
+   */
+  async verifyMfa(factorId, code) {
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) return { success: false, error: 'Supabase no está disponible' };
+
+    if (!factorId || !/^[0-9]{6}$/.test(String(code || '').trim())) {
+      return { success: false, error: 'Código inválido (deben ser 6 dígitos).' };
+    }
+
+    try {
+      const { data: chal, error: chalErr } = await this.supabase.auth.mfa.challenge({ factorId });
+      if (chalErr) return { success: false, error: chalErr.message };
+
+      const { error: verErr } = await this.supabase.auth.mfa.verify({
+        factorId,
+        challengeId: chal.id,
+        code: String(code).trim(),
+      });
+      if (verErr) return { success: false, error: verErr.message };
+
+      // Sesión upgradeada a aal2 — refrescamos datos de user y resolvemos redirect
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (user) await this.loadUserData(user.id);
+      const redirectRoute = user ? await this.determineRedirectRoute(user.id) : '/';
+      return { success: true, user: this.currentUser, redirectRoute };
+    } catch (e) {
+      console.error('AuthService.verifyMfa:', e);
+      return { success: false, error: e.message || 'Error verificando código.' };
+    }
+  }
+
+  /**
+   * FEAT-020 · Magic link — envía email con link de acceso (sin password).
+   */
+  async sendMagicLink(email) {
+    if (!this.supabase) this.supabase = await this.getSupabaseClient();
+    if (!this.supabase) return { success: false, error: 'Supabase no está disponible' };
+    try {
+      const { error } = await this.supabase.auth.signInWithOtp({
+        email: email.toLowerCase().trim(),
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch (e) {
+      console.error('AuthService.sendMagicLink:', e);
+      return { success: false, error: e.message || 'Error enviando link.' };
     }
   }
 

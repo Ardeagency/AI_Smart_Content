@@ -601,4 +601,39 @@
     }
 }
 
+/* ── FEAT-020 · MFA + magic link ─────────────────────────── */
+.signin-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    color: var(--text-muted, #6b6b6b);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.signin-divider::before,
+.signin-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-divider, #242424);
+}
+
+.signin-mfa-code {
+    font-size: 1.75rem !important;
+    letter-spacing: 0.5rem !important;
+    text-align: center !important;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace !important;
+    margin: 0.75rem 0 !important;
+}
+.signin-mfa-error {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin: 0 0 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    background: rgba(248, 113, 113, 0.08);
+    border-radius: 6px;
+    text-align: center;
+}
 
