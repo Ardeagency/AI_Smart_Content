@@ -156,15 +156,17 @@ class FlowCatalogView extends BaseView {
             <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
           </section>
           ` : `
-          <!-- VIEW CATEGORÍA: subcategorías strip -->
-          <section class="flow-catalog-row-section" id="sectionSubcategories">
-            <h2 class="flow-catalog-row-title">Tema profesional</h2>
+          <!-- VIEW CATEGORÍA: header (sustituye al hero del home) -->
+          <header class="flow-catalog-category-header" id="flowCatalogCategoryHeader"></header>
+
+          <!-- Subcategorías strip (chips de navegación dentro de la categoría) -->
+          <section class="flow-catalog-row-section flow-catalog-row-section--strip" id="sectionSubcategories">
             <div class="flow-catalog-categories-strip flow-catalog-subcategories-strip" id="subcategoriesStrip"></div>
           </section>
 
           <!-- Últimos en esta categoría -->
           <section class="flow-catalog-row-section" id="sectionRecentCategory">
-            <h2 class="flow-catalog-row-title">Últimos usados en esta categoría</h2>
+            <h2 class="flow-catalog-row-title">Continuar</h2>
             <div class="flow-catalog-row-scroll" id="rowRecentCategory"></div>
           </section>
 
@@ -212,6 +214,7 @@ class FlowCatalogView extends BaseView {
 
     this.renderHero();
     if (this.selectedCategoryId || this.selectedSubcategoryId) {
+      this.renderCategoryHeader();
       this.renderSubcategoriesStrip();
       this.renderRecentInCategory();
       this.renderGalleryBySubcategory();
@@ -220,9 +223,20 @@ class FlowCatalogView extends BaseView {
     }
     this.bindCategoryClicks();
 
-    // Sin flujos: solo heroes + "Próximamente" (el mensaje va dentro de la sección All Flows); ocultamos el empty global
+    // Empty state: si NO hay flujos visibles en la vista actual, mostrar
+    // mensaje. En vista categoría, "no hay flujos" significa que esa
+    // categoría aún no tiene contenido publicado.
     const emptyEl = document.getElementById('flowCatalogEmpty');
-    if (emptyEl) emptyEl.style.display = 'none';
+    if (emptyEl) {
+      const hasFlows = (this.flows || []).length > 0;
+      const textEl = emptyEl.querySelector('.flow-catalog-empty-text');
+      if (textEl) {
+        textEl.textContent = (this.selectedCategoryId || this.selectedSubcategoryId)
+          ? 'Aún no hay flujos en esta categoría'
+          : 'Próximamente';
+      }
+      emptyEl.style.display = hasFlows ? 'none' : '';
+    }
   }
 
   showContentError() {
@@ -834,6 +848,52 @@ class FlowCatalogView extends BaseView {
         if (activeFill) activeFill.style.animationPlayState = 'running';
       });
     }
+  }
+
+  /**
+   * Header de la vista categoría/subcategoría: nombre + descripción + cover
+   * sutil. Sustituye al hero del home cuando estamos navegando dentro de una
+   * categoría — antes la página quedaba en blanco si la categoría no tenía
+   * flujos.
+   */
+  renderCategoryHeader() {
+    const header = document.getElementById('flowCatalogCategoryHeader');
+    if (!header) return;
+    let entity = null;
+    if (this.selectedSubcategoryId) {
+      entity = this.subcategories.find(s => s.id === this.selectedSubcategoryId);
+    } else if (this.selectedCategoryId) {
+      entity = this.categories.find(c => c.id === this.selectedCategoryId);
+    }
+    if (!entity) {
+      header.style.display = 'none';
+      return;
+    }
+    const name = this.escapeHtml(entity.name || '');
+    const desc = entity.description
+      ? this.escapeHtml(entity.description.slice(0, 200)) + (entity.description.length > 200 ? '…' : '')
+      : '';
+    const coverUrl = entity.cover_url || '';
+    const isVideo = (entity.cover_type || '').toLowerCase() === 'video';
+    const cover = coverUrl
+      ? (isVideo
+          ? `<video class="flow-catalog-category-header-media" src="${this.escapeHtml(coverUrl)}" muted loop playsinline preload="metadata" autoplay aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-catalog-category-header-media" loading="eager" decoding="async">`)
+      : '';
+    const totalFlows = (this.flows || []).length;
+    const countLabel = totalFlows > 0
+      ? `${totalFlows} flujo${totalFlows !== 1 ? 's' : ''}`
+      : '';
+    header.style.display = '';
+    header.innerHTML = `
+      <div class="flow-catalog-category-header-bg">${cover}</div>
+      <div class="flow-catalog-category-header-content">
+        <span class="flow-catalog-category-header-eyebrow">${this.selectedSubcategoryId ? 'Subcategoría' : 'Categoría'}</span>
+        <h1 class="flow-catalog-category-header-title">${name}</h1>
+        ${desc ? `<p class="flow-catalog-category-header-desc">${desc}</p>` : ''}
+        ${countLabel ? `<span class="flow-catalog-category-header-count">${countLabel}</span>` : ''}
+      </div>
+    `;
   }
 
   clearHeroTimers() {
