@@ -505,8 +505,12 @@ class FlowCatalogView extends BaseView {
 
   getFlowsBySubcategory() {
     const bySub = new Map();
+    const withoutSub = [];
     this.flows.forEach(f => {
-      if (!f.subcategory_id) return;
+      if (!f.subcategory_id) {
+        withoutSub.push(f);
+        return;
+      }
       if (!bySub.has(f.subcategory_id)) {
         const sub = this.subcategories.find(s => s.id === f.subcategory_id);
         if (sub) bySub.set(f.subcategory_id, { sub, flows: [] });
@@ -517,10 +521,23 @@ class FlowCatalogView extends BaseView {
     this.subcategoriesInCategory.forEach(s => {
       if (!bySub.has(s.id)) bySub.set(s.id, { sub: s, flows: [] });
     });
-    return Array.from(bySub.values()).map(({ sub, flows }) => ({
+    const sortFlows = (arr) => arr.sort((a, b) =>
+      (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0)
+    );
+    const result = Array.from(bySub.values()).map(({ sub, flows }) => ({
       sub,
-      flows: flows.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
+      flows: sortFlows(flows)
     }));
+    // Bucket especial: flows con category_id pero sin subcategory_id (común
+    // cuando una categoría aún no tiene subcategorías clasificadas).
+    // Se renderiza como row sin título — el category header ya etiqueta.
+    if (withoutSub.length > 0) {
+      result.push({
+        sub: { id: null, name: '' },
+        flows: sortFlows(withoutSub)
+      });
+    }
+    return result;
   }
 
   /** En home: agrupa flujos por subcategory_id (content_flows.subcategory_id → content_subcategories). */
