@@ -221,7 +221,6 @@ class FlowCatalogView extends BaseView {
     } else {
       this.renderSectionAllFlows();
     }
-    this.bindCategoryClicks();
 
     // Empty state: si NO hay flujos visibles en la vista actual, mostrar
     // mensaje. En vista categoría, "no hay flujos" significa que esa
@@ -438,61 +437,6 @@ class FlowCatalogView extends BaseView {
       .sort((a, b) => a._order - b._order || a.name.localeCompare(b.name));
   }
 
-  getSavedFlows() {
-    return Array.from(this.savedFlowIds)
-      .map(id => this.flowsById.get(id))
-      .filter(Boolean);
-  }
-
-  getLikedFlows() {
-    return Array.from(this.likedFlowIds)
-      .map(id => this.flowsById.get(id))
-      .filter(Boolean);
-  }
-
-  getRecentFlows() {
-    return this.recentRunFlowIds
-      .map(id => this.flowsById.get(id))
-      .filter(Boolean);
-  }
-
-  getRecommendedFlows() {
-    const published = this.getPublishedFlows();
-    const usedIds = new Set([...this.recentRunFlowIds, ...this.likedFlowIds, ...this.savedFlowIds]);
-    const usedCategories = new Set();
-    this.recentRunFlowIds.forEach(id => {
-      const f = this.flowsById.get(id);
-      if (f && f.category_id) usedCategories.add(f.category_id);
-    });
-    const candidates = published.filter(f => !usedIds.has(f.id));
-    return [...candidates].sort((a, b) => {
-      const aMatch = usedCategories.has(a.category_id) ? 1 : 0;
-      const bMatch = usedCategories.has(b.category_id) ? 1 : 0;
-      if (bMatch !== aMatch) return bMatch - aMatch;
-      const scoreA = (a.run_count || 0) + (a.likes_count || 0);
-      const scoreB = (b.run_count || 0) + (b.likes_count || 0);
-      return scoreB - scoreA;
-    }).slice(0, 12);
-  }
-
-  getTrendingFlows() {
-    const published = this.getPublishedFlows();
-    return [...published].sort((a, b) => {
-      const scoreA = (a.run_count || 0) + (a.likes_count || 0) + (a.saves_count || 0);
-      const scoreB = (b.run_count || 0) + (b.likes_count || 0) + (b.saves_count || 0);
-      return scoreB - scoreA;
-    }).slice(0, 12);
-  }
-
-  getLovedFlows() {
-    const published = this.getPublishedFlows();
-    return [...published].sort((a, b) => {
-      const scoreA = (a.likes_count || 0) + (a.saves_count || 0);
-      const scoreB = (b.likes_count || 0) + (b.saves_count || 0);
-      return scoreB - scoreA;
-    }).slice(0, 12);
-  }
-
   getRecentInCategoryFlows() {
     return this.recentRunFlowIds
       .map(id => this.flowsById.get(id))
@@ -538,25 +482,6 @@ class FlowCatalogView extends BaseView {
       });
     }
     return result;
-  }
-
-  /** En home: agrupa flujos por subcategory_id (content_flows.subcategory_id → content_subcategories). */
-  getFlowsBySubcategoryHome() {
-    const bySub = new Map();
-    this.flows.forEach(f => {
-      if (!f.subcategory_id) return;
-      if (!bySub.has(f.subcategory_id)) {
-        const sub = this.subcategories.find(s => s.id === f.subcategory_id);
-        if (sub) bySub.set(f.subcategory_id, { sub, flows: [] });
-      }
-      bySub.get(f.subcategory_id).flows.push(f);
-    });
-    return Array.from(bySub.values())
-      .map(({ sub, flows }) => ({
-        sub,
-        flows: flows.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
-      }))
-      .filter(({ flows }) => flows.length > 0);
   }
 
   /**
@@ -939,72 +864,6 @@ class FlowCatalogView extends BaseView {
     if (typeof super.destroy === 'function') super.destroy();
   }
 
-  /**
-   * Categorías visuales: grid por content_subcategories (schema 254-261).
-   * Solo se muestran subcategorías que tienen al menos 1 flujo; si ninguna tiene flujos, la sección entera se oculta.
-   */
-  renderCategoriesVisualGrid() {
-    const section = document.getElementById('sectionCategories');
-    const grid = document.getElementById('categoriesVisualGrid');
-    if (!section || !grid) return;
-    const subcategoriesWithCount = this.subcategories
-      .map(sub => ({
-        ...sub,
-        count: this.flows.filter(f => f.subcategory_id === sub.id).length
-      }))
-      .filter(sub => sub.count > 0);
-    const hasAnyFlows = this.flows.length > 0;
-    if (!hasAnyFlows && subcategoriesWithCount.length === 0) {
-      section.style.display = 'none';
-      return;
-    }
-    section.style.display = '';
-    const basePath = this.getCatalogPath();
-    const onHome = !this.selectedSubcategoryId && !this.selectedCategoryId;
-    const cards = [
-      { id: '', name: 'Todos', count: onHome ? this.flows.length : 0, isSub: false },
-      ...subcategoriesWithCount.map(sub => ({ ...sub, isSub: true }))
-    ];
-    grid.innerHTML = cards.map(item => {
-      const href = item.isSub && item.id ? this.getCatalogPathForSubcategory(item.id) : basePath;
-      const isActive = !this.selectedSubcategoryId && !this.selectedCategoryId && !item.id
-        ? true
-        : this.selectedSubcategoryId === item.id;
-      const dataAttr = `data-subcategory-id="${this.escapeHtml(item.id || '')}"`;
-      const countText = item.count > 0 ? `${item.count} flujo${item.count !== 1 ? 's' : ''}` : '';
-      return `
-        <a href="${this.escapeHtml(href)}" class="flow-catalog-category-card ${isActive ? 'active' : ''}" ${dataAttr}>
-          <span class="flow-catalog-category-card-name">${this.escapeHtml(item.name)}</span>
-          ${countText ? `<span class="flow-catalog-category-card-count">${countText}</span>` : ''}
-        </a>
-      `;
-    }).join('');
-    grid.querySelectorAll('a[data-subcategory-id]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        const id = link.getAttribute('data-subcategory-id');
-        const path = id ? this.getCatalogPathForSubcategory(id) : this.getCatalogPath();
-        if (window.router) {
-          e.preventDefault();
-          window.router.navigate(path);
-        }
-      });
-    });
-  }
-
-  renderCategoriesStrip() {
-    const strip = document.getElementById('categoriesStrip');
-    if (!strip) return;
-    const basePath = this.getCatalogPath();
-    strip.innerHTML = [
-      { id: '', name: 'Todos' },
-      ...this.categories
-    ].map(cat => `
-      <a href="${this.escapeHtml(cat.id ? this.getCatalogPath(cat.id) : basePath)}" class="flow-catalog-category-chip ${!cat.id && !this.selectedCategoryId ? 'active' : ''} ${this.selectedCategoryId === cat.id ? 'active' : ''}" data-category-id="${this.escapeHtml(cat.id || '')}">
-        ${this.escapeHtml(cat.name)}
-      </a>
-    `).join('');
-  }
-
   renderSubcategoriesStrip() {
     const section = document.getElementById('sectionSubcategories');
     const strip = document.getElementById('subcategoriesStrip');
@@ -1064,37 +923,6 @@ class FlowCatalogView extends BaseView {
     this.bindFlowCardListeners(el);
   }
 
-  /** Continuar donde lo dejaste: solo runs recientes del usuario; sección oculta si no hay runs. */
-  renderSectionSaved() {
-    const recent = this.getRecentFlows();
-    this.renderRow('rowSaved', recent, '');
-  }
-
-  renderSectionLiked() {
-    const liked = this.getLikedFlows();
-    this.renderRow('rowLiked', liked, 'Valora flujos con 4+ estrellas para verlos aquí.');
-  }
-
-  renderSectionRecent() {
-    const recent = this.getRecentFlows();
-    this.renderRow('rowRecent', recent, 'Usa flujos para ver aquí los recientes.');
-  }
-
-  renderSectionRecommended() {
-    const rec = this.getRecommendedFlows();
-    this.renderRow('rowRecommended', rec, 'No hay recomendaciones aún.');
-  }
-
-  renderSectionTrending() {
-    const trend = this.getTrendingFlows();
-    this.renderRow('rowTrending', trend, '');
-  }
-
-  renderSectionLoved() {
-    const loved = this.getLovedFlows();
-    this.renderRow('rowLoved', loved, '');
-  }
-
   /**
    * Sección Todos los flujos: mismo catálogo por categoría y subcategoría, o "Próximamente" si no hay flujos.
    */
@@ -1121,25 +949,6 @@ class FlowCatalogView extends BaseView {
           </section>
         `).join('')}
       </div>
-    `).join('');
-    this.bindFlowCardListeners(gallery);
-  }
-
-  renderGalleryBySubcategoryHome() {
-    const gallery = document.getElementById('galleryBySubHome');
-    if (!gallery) return;
-    const rows = this.getFlowsBySubcategoryHome();
-    if (rows.length === 0) {
-      gallery.closest('.flow-catalog-row-section').style.display = 'none';
-      gallery.innerHTML = '';
-      return;
-    }
-    gallery.closest('.flow-catalog-row-section').style.display = '';
-    gallery.innerHTML = rows.map(({ sub, flows }) => `
-      <section class="flow-catalog-sub-row flow-catalog-row-section">
-        <h3 class="flow-catalog-row-title">${this.escapeHtml(sub?.name || '')}</h3>
-        <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
-      </section>
     `).join('');
     this.bindFlowCardListeners(gallery);
   }
@@ -1180,20 +989,6 @@ class FlowCatalogView extends BaseView {
     }
   }
 
-  bindCategoryClicks() {
-    const strip = document.getElementById('categoriesStrip');
-    if (!strip) return;
-    strip.querySelectorAll('a[data-category-id]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        const id = link.getAttribute('data-category-id');
-        const path = id ? this.getCatalogPath(id) : this.getCatalogPath();
-        if (window.router) {
-          e.preventDefault();
-          window.router.navigate(path);
-        }
-      });
-    });
-  }
 
   /**
    * Arrows de navegación tipo Netflix para una row scrollable. Aparecen en hover.
