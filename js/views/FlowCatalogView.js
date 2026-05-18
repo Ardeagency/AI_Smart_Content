@@ -683,23 +683,28 @@ class FlowCatalogView extends BaseView {
   /**
    * Slide de hero: portada de categoría a pantalla completa, degradado abajo, minimalista.
    */
-  renderHeroSlide(category) {
+  renderHeroSlide(category, index = 0) {
     const name = this.escapeHtml(category.name);
-    const desc = category.description ? this.escapeHtml(category.description.slice(0, 140)) + (category.description.length > 140 ? '…' : '') : '';
+    const desc = category.description ? this.escapeHtml(category.description.slice(0, 160)) + (category.description.length > 160 ? '…' : '') : '';
     const coverUrl = category.cover_url || '';
     const isVideo = (category.cover_type || '').toLowerCase() === 'video';
     const bg = coverUrl
       ? (isVideo
-          ? `<video class="flow-hero-slide-bg-media flow-hero-slide-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline aria-hidden="true"></video>`
-          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-bg-media" loading="lazy" decoding="async">`)
+          ? `<video class="flow-hero-slide-bg-media flow-hero-slide-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-bg-media" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async">`)
       : `<div class="flow-hero-slide-placeholder"><i class="fas fa-layer-group"></i></div>`;
     return `
-      <div class="flow-hero-slide" data-category-id="${this.escapeHtml(category.id)}">
+      <div class="flow-hero-slide" data-category-id="${this.escapeHtml(category.id)}" data-slide-index="${index}">
         <div class="flow-hero-slide-bg">${bg}</div>
         <div class="flow-hero-slide-overlay">
           <div class="flow-hero-slide-content">
+            <span class="flow-hero-slide-eyebrow">Categoría destacada</span>
             <h2 class="flow-hero-slide-title">${name}</h2>
             ${desc ? `<p class="flow-hero-slide-desc">${desc}</p>` : ''}
+            <span class="flow-hero-slide-cta">
+              <i class="fas fa-play"></i>
+              <span>Explorar flujos</span>
+            </span>
           </div>
         </div>
       </div>
@@ -712,65 +717,147 @@ class FlowCatalogView extends BaseView {
     const section = document.getElementById('flowCatalogHeroSection');
     const track = document.getElementById('flowCatalogHeroTrack');
     if (!section || !track) return;
-    if (this.heroAutoAdvanceTimer) {
-      clearInterval(this.heroAutoAdvanceTimer);
-      this.heroAutoAdvanceTimer = null;
-    }
+    this.clearHeroTimers();
     if (list.length === 0) {
       section.style.display = 'none';
       return;
     }
     section.style.display = '';
-    track.innerHTML = list.map(c => this.renderHeroSlide(c)).join('');
-    track.querySelectorAll('.flow-hero-slide-cta, .flow-hero-slide').forEach(el => {
-      const categoryId = el.dataset.categoryId || el.closest('[data-category-id]')?.dataset?.categoryId;
-      if (categoryId) {
-        el.addEventListener('click', (e) => {
-          if (el.classList.contains('flow-hero-slide-cta')) e.preventDefault();
-          const path = this.getCatalogPath(categoryId);
-          if (window.router) {
-            e.preventDefault();
-            window.router.navigate(path);
-          } else {
-            window.location.href = path;
-          }
-        });
-      }
-    });
-    track.querySelectorAll('.flow-hero-slide-video').forEach(video => {
-      const slide = video.closest('.flow-hero-slide');
-      if (!slide) return;
-      slide.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
-      slide.addEventListener('mouseleave', () => { video.pause(); });
-    });
+    track.innerHTML = list.map((c, i) => this.renderHeroSlide(c, i)).join('');
+
+    // Dots de paginación con progress bar del slide activo (Netflix style)
+    let dotsContainer = section.querySelector('.flow-catalog-hero-dots');
+    if (!dotsContainer) {
+      dotsContainer = document.createElement('div');
+      dotsContainer.className = 'flow-catalog-hero-dots';
+      section.appendChild(dotsContainer);
+    }
     if (list.length > 1) {
-      this.heroAutoAdvanceTimer = setInterval(() => {
+      dotsContainer.style.display = '';
+      dotsContainer.innerHTML = list.map((_, i) => `
+        <button type="button" class="flow-catalog-hero-dot" data-slide-index="${i}" aria-label="Ir al slide ${i + 1}">
+          <span class="flow-catalog-hero-dot-fill"></span>
+        </button>
+      `).join('');
+    } else {
+      dotsContainer.style.display = 'none';
+    }
+
+    // Navegación slide → categoría
+    track.querySelectorAll('.flow-hero-slide').forEach(el => {
+      const categoryId = el.dataset.categoryId;
+      if (!categoryId) return;
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const path = this.getCatalogPath(categoryId);
+        if (window.router) window.router.navigate(path);
+        else window.location.href = path;
+      });
+    });
+
+    // Click en dot → scroll al slide correspondiente
+    dotsContainer.querySelectorAll('.flow-catalog-hero-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(dot.dataset.slideIndex, 10);
+        track.scrollTo({ left: idx * track.offsetWidth, behavior: 'smooth' });
+      });
+    });
+
+    const HERO_DURATION_MS = 8000;
+    const setActiveDot = (idx) => {
+      dotsContainer.querySelectorAll('.flow-catalog-hero-dot').forEach((d, i) => {
+        d.classList.toggle('is-active', i === idx);
+        const fill = d.querySelector('.flow-catalog-hero-dot-fill');
+        if (!fill) return;
+        if (i === idx) {
+          fill.style.animation = 'none';
+          // force reflow para reiniciar la animación
+          void fill.offsetWidth;
+          fill.style.animation = `flowHeroDotFill ${HERO_DURATION_MS}ms linear forwards`;
+        } else {
+          fill.style.animation = 'none';
+        }
+      });
+    };
+
+    // Slide activo (visible) → play video del activo, pausa los demás, sync dots
+    this.heroActiveIndex = 0;
+    const slides = Array.from(track.querySelectorAll('.flow-hero-slide'));
+    const syncActiveFromScroll = () => {
+      const idx = Math.round(track.scrollLeft / track.offsetWidth);
+      if (idx === this.heroActiveIndex) return;
+      this.heroActiveIndex = idx;
+      slides.forEach((s, i) => {
+        s.classList.toggle('is-active', i === idx);
+        const video = s.querySelector('.flow-hero-slide-video');
+        if (!video) return;
+        if (i === idx) video.play().catch(() => {});
+        else { video.pause(); try { video.currentTime = 0; } catch {} }
+      });
+      setActiveDot(idx);
+    };
+    track.addEventListener('scroll', () => {
+      if (this.heroScrollDebounce) clearTimeout(this.heroScrollDebounce);
+      this.heroScrollDebounce = setTimeout(syncActiveFromScroll, 80);
+    });
+
+    // Activar el primero al cargar
+    slides[0]?.classList.add('is-active');
+    const firstVideo = slides[0]?.querySelector('.flow-hero-slide-video');
+    if (firstVideo) firstVideo.play().catch(() => {});
+    setActiveDot(0);
+
+    // Auto-advance Netflix style: 8s. Pausa en hover.
+    if (list.length > 1) {
+      const advance = () => {
         const maxScroll = track.scrollWidth - track.offsetWidth;
         if (maxScroll <= 0) return;
         const next = track.scrollLeft + track.offsetWidth;
         track.scrollTo({ left: next > maxScroll ? 0 : next, behavior: 'smooth' });
-      }, 40000);
+      };
+      this.heroAutoAdvanceTimer = setInterval(advance, HERO_DURATION_MS);
+      section.addEventListener('mouseenter', () => {
+        if (this.heroAutoAdvanceTimer) {
+          clearInterval(this.heroAutoAdvanceTimer);
+          this.heroAutoAdvanceTimer = null;
+        }
+        const activeFill = dotsContainer.querySelector('.flow-catalog-hero-dot.is-active .flow-catalog-hero-dot-fill');
+        if (activeFill) activeFill.style.animationPlayState = 'paused';
+      });
+      section.addEventListener('mouseleave', () => {
+        if (!this.heroAutoAdvanceTimer) {
+          this.heroAutoAdvanceTimer = setInterval(advance, HERO_DURATION_MS);
+        }
+        const activeFill = dotsContainer.querySelector('.flow-catalog-hero-dot.is-active .flow-catalog-hero-dot-fill');
+        if (activeFill) activeFill.style.animationPlayState = 'running';
+      });
     }
   }
 
-  async onLeave() {
+  clearHeroTimers() {
     if (this.heroAutoAdvanceTimer) {
       clearInterval(this.heroAutoAdvanceTimer);
       this.heroAutoAdvanceTimer = null;
     }
+    if (this.heroScrollDebounce) {
+      clearTimeout(this.heroScrollDebounce);
+      this.heroScrollDebounce = null;
+    }
+  }
+
+  async onLeave() {
+    this.clearHeroTimers();
     if (document && document.body) {
       document.body.classList.remove('route-flows');
     }
   }
 
   // Red de seguridad: si alguien llama destroy() directo (sin pasar por
-  // router.onLeave), el timer del carrusel sigue activo. Limpiamos aquí
-  // también además del cleanup que hereda de BaseView.
+  // router.onLeave), los timers siguen activos. Limpiamos aquí también
+  // además del cleanup que hereda de BaseView.
   destroy() {
-    if (this.heroAutoAdvanceTimer) {
-      clearInterval(this.heroAutoAdvanceTimer);
-      this.heroAutoAdvanceTimer = null;
-    }
+    this.clearHeroTimers();
     if (typeof super.destroy === 'function') super.destroy();
   }
 
@@ -1002,10 +1089,55 @@ class FlowCatalogView extends BaseView {
   }
 
   /**
+   * Arrows de navegación tipo Netflix para una row scrollable. Aparecen en hover.
+   * Idempotente: si ya hay arrows, no las duplica.
+   */
+  attachRowArrows(rowScrollEl) {
+    if (!rowScrollEl) return;
+    const section = rowScrollEl.closest('.flow-catalog-row-section');
+    if (!section || section.querySelector('.flow-catalog-row-nav')) return;
+    const nav = (dir) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `flow-catalog-row-nav flow-catalog-row-nav--${dir}`;
+      btn.setAttribute('aria-label', dir === 'left' ? 'Anterior' : 'Siguiente');
+      btn.innerHTML = `<i class="fas fa-chevron-${dir}"></i>`;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const delta = rowScrollEl.clientWidth * 0.85 * (dir === 'left' ? -1 : 1);
+        rowScrollEl.scrollBy({ left: delta, behavior: 'smooth' });
+      });
+      return btn;
+    };
+    section.appendChild(nav('left'));
+    section.appendChild(nav('right'));
+
+    const updateVisibility = () => {
+      const max = rowScrollEl.scrollWidth - rowScrollEl.clientWidth;
+      const showLeft = rowScrollEl.scrollLeft > 8;
+      const showRight = rowScrollEl.scrollLeft < max - 8;
+      section.classList.toggle('has-scroll-left', showLeft);
+      section.classList.toggle('has-scroll-right', showRight && max > 0);
+    };
+    updateVisibility();
+    rowScrollEl.addEventListener('scroll', () => {
+      if (this._rowNavDebounce) cancelAnimationFrame(this._rowNavDebounce);
+      this._rowNavDebounce = requestAnimationFrame(updateVisibility);
+    });
+    window.addEventListener('resize', updateVisibility, { passive: true });
+  }
+
+  /**
    * Enlaza click en card y botones like/save para todas las .flow-card dentro del contenedor.
+   * Además, si el container es un .flow-catalog-row-scroll, agrega arrows de navegación.
    */
   bindFlowCardListeners(container) {
     if (!container) return;
+    if (container.classList && container.classList.contains('flow-catalog-row-scroll')) {
+      this.attachRowArrows(container);
+    } else {
+      container.querySelectorAll('.flow-catalog-row-scroll').forEach(scroll => this.attachRowArrows(scroll));
+    }
     container.querySelectorAll('.flow-card').forEach(card => {
       const flowId = card.getAttribute('data-flow-id');
       card.addEventListener('click', (e) => {

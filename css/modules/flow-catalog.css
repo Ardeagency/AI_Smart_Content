@@ -84,6 +84,14 @@
   position: relative;
   cursor: pointer;
 }
+/* Ken Burns sutil sobre el slide activo: zoom lento + drift mínimo */
+@keyframes flowHeroKenBurns {
+  0%   { transform: scale(1.02) translate3d(0, 0, 0); }
+  100% { transform: scale(1.08) translate3d(-1.5%, 0.8%, 0); }
+}
+.flow-hero-slide.is-active .flow-hero-slide-bg-media {
+  animation: flowHeroKenBurns 18s ease-out forwards;
+}
 .flow-hero-slide-bg {
   position: absolute;
   inset: 0;
@@ -126,46 +134,111 @@
   padding: 0;
 }
 .flow-hero-slide-content {
-  padding: 2.5rem 2rem 2.5rem;
+  padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 5vw, 4rem) clamp(3rem, 6vw, 4.5rem);
+  max-width: min(640px, 55%);
   color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.flow-hero-slide-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-warm, #d4b896);
+  opacity: 0.85;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 .flow-hero-slide-title {
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: clamp(2.25rem, 5.5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-white);
-  margin: 0 0 0.5rem 0;
-  line-height: 1.2;
-  /* Halo oscuro para legibilidad sobre imágenes claras u oscuras, sin
-     necesidad de veil que manche el hero. */
+  margin: 0;
+  line-height: 1.05;
+  /* Halo oscuro multi-capa para legibilidad sobre cualquier imagen */
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.6),
-    0 2px 12px rgba(0, 0, 0, 0.55),
-    0 0 24px rgba(0, 0, 0, 0.35);
+    0 4px 16px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(0, 0, 0, 0.4);
 }
 .flow-hero-slide-desc {
-  max-width: 520px;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(0.9rem, 1.1vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.92);
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.5;
+  max-width: 90%;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.55),
     0 2px 10px rgba(0, 0, 0, 0.45);
 }
 .flow-hero-slide-cta {
-  display: inline-block;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.95);
+  color: #000000;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: color 0.2s ease, opacity 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
 }
+.flow-hero-slide-cta i {
+  font-size: 0.72rem;
+}
+.flow-hero-slide:hover .flow-hero-slide-cta,
 .flow-hero-slide-cta:hover {
-  color: var(--color-white);
-  opacity: 1;
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Dots de paginación con progress bar del slide activo (Netflix-style) */
+.flow-catalog-hero-dots {
+  position: absolute;
+  bottom: clamp(1rem, 2.5vw, 1.75rem);
+  right: clamp(2rem, 5vw, 4rem);
+  display: flex;
+  gap: 0.4rem;
+  z-index: 4;
+}
+.flow-catalog-hero-dot {
+  position: relative;
+  width: 36px;
+  height: 3px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.2s ease, width 0.3s ease;
+}
+.flow-catalog-hero-dot:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.flow-catalog-hero-dot.is-active {
+  background: rgba(255, 255, 255, 0.3);
+  width: 56px;
+}
+.flow-catalog-hero-dot-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: inherit;
+  width: 0;
+  transform-origin: left;
+}
+@keyframes flowHeroDotFill {
+  from { width: 0; }
+  to   { width: 100%; }
 }
 .flow-hero-empty {
   display: flex;
@@ -175,26 +248,87 @@
   color: var(--text-muted);
 }
 
-/* ---------- ROW SECTIONS ---------- */
+/* ---------- ROW SECTIONS (cinematográfico) ---------- */
 .flow-catalog-row-section {
-  padding: 0 2rem 2rem;
+  position: relative;
+  padding: 0 clamp(2rem, 5vw, 4rem) clamp(2rem, 4vw, 3rem);
 }
 .flow-catalog-row-title {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0 0 1rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.flow-catalog-row-title::after {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 1px;
+  background: linear-gradient(to right, var(--accent-warm, #d4b896), transparent);
+  opacity: 0.55;
+  margin-left: 0.2rem;
 }
 .flow-catalog-row-scroll {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem 0 0.75rem;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 .flow-catalog-row-scroll::-webkit-scrollbar { height: 6px; }
+
+/* Arrows de navegación: aparecen en hover sobre la row, solo si hay scroll */
+.flow-catalog-row-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 44px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.flow-catalog-row-section:hover .flow-catalog-row-nav,
+.flow-catalog-row-section:focus-within .flow-catalog-row-nav {
+  pointer-events: auto;
+}
+.flow-catalog-row-section:hover.has-scroll-left .flow-catalog-row-nav--left,
+.flow-catalog-row-section:focus-within.has-scroll-left .flow-catalog-row-nav--left {
+  opacity: 1;
+}
+.flow-catalog-row-section:hover.has-scroll-right .flow-catalog-row-nav--right,
+.flow-catalog-row-section:focus-within.has-scroll-right .flow-catalog-row-nav--right {
+  opacity: 1;
+}
+.flow-catalog-row-nav:hover {
+  background: rgba(0, 0, 0, 0.78);
+  transform: translateY(-50%) scale(1.05);
+}
+.flow-catalog-row-nav--left {
+  left: clamp(0.5rem, 2vw, 1rem);
+}
+.flow-catalog-row-nav--right {
+  right: clamp(0.5rem, 2vw, 1rem);
+}
 .flow-catalog-row-scroll::-webkit-scrollbar-thumb { background: var(--icon-button); border-radius: 3px; }
 
 /* ---------- CATEGORIES STRIP ---------- */
