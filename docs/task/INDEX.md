@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-13** (abierta AUDIT-004 — premium SaaS readiness para marcas Tier-1, análisis estratégico Fase A/B/C con horizontes, costos y matriz de decisión).
+Última actualización: **2026-05-18** (cerradas BUG-003 — `ai_brand_vectors`=61 filas, `ai_global_vectors`=90 filas, últimos 5 runs `success` — y AUDIT-002 H1 — column `resource_type` removida del schema, count orphans=0).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -23,7 +23,6 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
 | [DATA-001](./DATA-001-configure-competitor-entities.md) | Faltan `intelligence_entities` competidoras → 4 tablas vacías + Apify gastando créditos en vacío | data | 👤 | short | — |
-| [BUG-003](./BUG-003-openai-quota-brand-indexer.md) | `brand_indexer` no genera vectors — quota OpenAI agotada (BLOQUEADO por billing) | bug | 👤 | short | — |
 | [FEAT-015](./FEAT-015-cost-confirmation-pre-flight.md) | Pre-flight cost confirmation — heurística + confirm() en VeraView. Falta validación visual humana. | feature | 👤 | short | — |
 | [FEAT-011](./FEAT-011-studio-programar-button.md) | Botón "Programar" en StudioView — desbloquea cadena schedule end-to-end | feature | 👤 | medium | — |
 | [FEAT-012](./FEAT-012-user-provisioning-end-to-end.md) | Provisioning de usuarios end-to-end (función backend + email + onboarding) | feature | 👤 | long | — |
@@ -39,7 +38,6 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
-| [AUDIT-002](./AUDIT-002-ai-engine-housekeeping.md) | ai-engine housekeeping — solo queda H1 (orphans `external_resource_map` por bug histórico `tipo_producto_enum: "fisico"`). H2 git history ✅ y H3 cleanup .bak ✅ cerrados 2026-05-12. | ops | 👤 | short | — |
 | [FEAT-007](./FEAT-007-frontend-services-refactor.md) | Refactor services frontend para llamar 1 RPC por dashboard | feature | 👤 | medium | — |
 | [FEAT-008](./FEAT-008-frontend-new-services.md) | Crear `TendenciasDataService` (Competencia ya existe) + render | feature | 👤 | long | — |
 | [FEAT-013](./FEAT-013-monitoring-crud.md) | CRUD de sensores y URL watchers en MonitoringView | feature | 👤 | medium | — |
@@ -59,15 +57,21 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 ---
 
-**Total:** 25 tareas activas (0 auto-eligibles 🤖 + 25 requieren humano 👤).
+**Total:** 23 tareas activas (0 auto-eligibles 🤖 + 23 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
 | 🔴 critical | 3 | 0 | 3 |
-| 🟠 high | 10 | 0 | 10 |
-| 🟡 medium | 6 | 0 | 6 |
+| 🟠 high | 9 | 0 | 9 |
+| 🟡 medium | 5 | 0 | 5 |
 | 🟢 low | 6 | 0 | 6 |
-| **Suma** | **25** | **0** | **25** |
+| **Suma** | **23** | **0** | **23** |
+
+## Resueltas el 2026-05-18
+
+- **BUG-003** — quota OpenAI ya no es problema. Verificado: `ai_brand_vectors` = 61 filas, `ai_global_vectors` = 90 filas, últimos 5 runs de `brand_indexer` en `sensor_runs` con `status=success` y `error_message=null`. El archivo del task estaba obsoleto desde la rotación de la key OpenAI del 2026-05-13.
+- **AUDIT-002 H1** — bug histórico `tipo_producto_enum: "fisico"` ya no aplica. La columna `resource_type` fue removida del schema de `external_resource_map`; query `internal_id IS NULL` retorna 0 orphans. AUDIT-002 queda 100% cerrada (H2 y H3 ya estaban cerradas 2026-05-12).
+- **Hetzner provisioner fixes (no estaba como task, pero relevante)** — 3 bugs cerrados en `/root/ai-engine/src/services/hetzner.provisioner.js`: (a) `ReferenceError: AI_ENGINE_URL is not defined` por template literal JS mal escapado, (b) `Hetzner API 422: invalid input in field 'user_data'` por exceder los 32 KB — refactor opción A: `anthropic-proxy/server.js` y `mcp/ai-engine-tools.js` movidos a endpoints `/internal/*.js` con auth `x-webhook-secret`, descargados via curl en setup.sh, y (c) race condition en `org-sync.service.js` que generaba 409 "server name is already used" — lock `_isRunning` per-proceso. Validación end-to-end: server #131677836 "vera-000000000001-ignis" (178.105.170.51, cx23, nbg1) completó cloud-init y respondió `/internal/server-ready` → DB `status=healthy`. Memoria persistida en `project_hetzner_provisioner_fixes_2026_05_18.md`.
 
 ## Resueltas el 2026-05-12
 
