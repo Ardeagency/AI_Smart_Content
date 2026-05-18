@@ -346,45 +346,49 @@
 }
 .flow-catalog-row-scroll::-webkit-scrollbar-thumb { background: var(--icon-button); border-radius: 3px; }
 
-/* ---------- CATEGORIES STRIP ---------- */
+/* ---------- CATEGORIES STRIP (cinematográfico) ---------- */
 .flow-catalog-categories-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 .flow-catalog-category-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.6rem 1.25rem;
-  font-size: 0.9rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   text-decoration: none;
-    transition: var(--transition);
+  cursor: pointer;
   white-space: nowrap;
+  font-family: inherit;
+  transition: color 0.18s ease, background 0.18s ease,
+              border-color 0.18s ease, transform 0.18s ease;
 }
 .flow-catalog-category-chip:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-  border-color: var(--border-light);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
 }
-.flow-catalog-category-chip.active {
+.flow-catalog-category-chip.active,
+.flow-catalog-subcategories-strip .flow-catalog-category-chip.active {
   color: #000000;
   background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: #ffffff;
+  font-weight: 600;
+}
+.flow-catalog-category-chip.active:hover {
+  background: rgba(255, 255, 255, 0.92);
 }
 .flow-catalog-sub-chip {
   cursor: pointer;
   font-family: inherit;
-}
-.flow-catalog-subcategories-strip .flow-catalog-category-chip.active {
-  background: #f3f4f6;
-  border-color: rgba(0, 0, 0, 0.2);
-  color: #000000;
 }
 
 /* ---------- FLOW CARD (catálogo: 4:5 vertical, glass actions, info anclado abajo) ---------- */
@@ -835,6 +839,20 @@
 .flow-catalog-category-block .flow-catalog-sub-row.flow-catalog-row-section {
   padding-left: 0;
   padding-right: 0;
+  padding-bottom: 1.5rem;
+}
+/* Subcategoría (h4) DENTRO de un category-block: más sutil que el h2 padre.
+   Categoría = title bold + accent line; subcategoría = label más pequeño,
+   color secundario, sin accent line — para que la jerarquía sea visible. */
+.flow-catalog-category-block h4.flow-catalog-row-title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.62));
+  margin: 0 0 0.6rem 0;
+}
+.flow-catalog-category-block h4.flow-catalog-row-title::after {
+  display: none;
 }
 /* La sección "All Flows" ya no tiene su propio título — quitamos padding
    bottom porque ese spacing lo maneja cada category-block. */

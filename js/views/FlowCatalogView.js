@@ -937,21 +937,42 @@ class FlowCatalogView extends BaseView {
       return;
     }
     section.style.display = '';
-    strip.innerHTML = this.subcategoriesInCategory.map(sub => `
-      <button type="button" class="flow-catalog-category-chip flow-catalog-sub-chip" data-subcategory-id="${this.escapeHtml(sub.id)}">
-        ${this.escapeHtml(sub.name)}
+    const activeSubFromUrl = new URLSearchParams(window.location.search).get('sub');
+    const chips = [
+      { id: '', name: 'Todos', isAll: true },
+      ...this.subcategoriesInCategory.map(s => ({ id: s.id, name: s.name }))
+    ];
+    strip.innerHTML = chips.map(chip => `
+      <button type="button"
+        class="flow-catalog-category-chip flow-catalog-sub-chip${(activeSubFromUrl ? chip.id === activeSubFromUrl : chip.isAll) ? ' active' : ''}"
+        data-subcategory-id="${this.escapeHtml(chip.id)}">
+        ${this.escapeHtml(chip.name)}
       </button>
     `).join('');
+    const applyFilter = (subId) => {
+      const rows = document.querySelectorAll('#galleryBySub .flow-catalog-sub-row');
+      rows.forEach(row => {
+        const rowSubId = row.dataset.subcategoryId;
+        row.style.display = (!subId || rowSubId === subId) ? '' : 'none';
+      });
+    };
+    const updateUrl = (subId) => {
+      const url = new URL(window.location.href);
+      if (subId) url.searchParams.set('sub', subId);
+      else url.searchParams.delete('sub');
+      window.history.replaceState({}, '', url);
+    };
     strip.querySelectorAll('[data-subcategory-id]').forEach(btn => {
       btn.addEventListener('click', () => {
         const subId = btn.getAttribute('data-subcategory-id');
-        document.querySelectorAll('#galleryBySub .flow-catalog-sub-row').forEach(row => {
-          row.style.display = row.dataset.subcategoryId === subId ? '' : 'none';
-        });
+        applyFilter(subId);
+        updateUrl(subId);
         strip.querySelectorAll('.flow-catalog-sub-chip').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });
+    // El filtro inicial vía URL se aplica en renderGalleryBySubcategory()
+    // porque ese método es el que crea las rows que vamos a filtrar.
   }
 
   renderRow(containerId, flows, emptyMessage) {
@@ -1072,6 +1093,14 @@ class FlowCatalogView extends BaseView {
       const subId = row.querySelector('.flow-card')?.closest('.flow-catalog-sub-row')?.dataset?.subcategoryId;
       if (subId) row.dataset.subcategoryId = subId;
     });
+    // Filtro inicial vía URL: si ?sub=<id> está presente, ocultar las demás
+    // rows y marcar el chip correspondiente como activo.
+    const activeSubFromUrl = new URLSearchParams(window.location.search).get('sub');
+    if (activeSubFromUrl) {
+      gallery.querySelectorAll('.flow-catalog-sub-row').forEach(row => {
+        row.style.display = row.dataset.subcategoryId === activeSubFromUrl ? '' : 'none';
+      });
+    }
   }
 
   bindCategoryClicks() {
