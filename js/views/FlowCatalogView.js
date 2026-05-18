@@ -270,12 +270,20 @@ class FlowCatalogView extends BaseView {
     if (!this.supabase) return;
     try {
       const fetcher = async () => {
+        // Embed many-to-many: content_subcategory_categories es el junction
+        // que define qué subcategorías aplican a cada categoría. Cargamos
+        // los category_ids junto a cada subcategoría para que el strip de
+        // chips no dependa de que haya flows asignados.
         const { data, error } = await this.supabase
           .from('content_subcategories')
-          .select('id, name, description, order_index')
+          .select('id, name, description, order_index, content_subcategory_categories(category_id)')
           .order('order_index', { ascending: true, nullsFirst: false })
           .order('name');
-        return !error && data ? data : [];
+        if (error || !data) return [];
+        return data.map(s => ({
+          ...s,
+          category_ids: (s.content_subcategory_categories || []).map(j => j.category_id)
+        }));
       };
       this.subcategories = window.apiClient
         ? await window.apiClient.query('flow:subcategories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
@@ -396,11 +404,17 @@ class FlowCatalogView extends BaseView {
   }
 
   computeSubcategoriesInCategory() {
-    const subIds = new Set();
-    this.flows.forEach(f => {
-      if (f.subcategory_id) subIds.add(f.subcategory_id);
-    });
-    this.subcategoriesInCategory = this.subcategories.filter(s => subIds.has(s.id));
+    // Las subcategorías aplicables a esta categoría vienen del junction
+    // content_subcategory_categories (embebido en loadSubcategories como
+    // sub.category_ids). NO derivamos de los flows existentes — eso fallaba
+    // cuando una categoría aún no tenía flows publicados con subcategoría.
+    if (!this.selectedCategoryId) {
+      this.subcategoriesInCategory = [];
+      return;
+    }
+    this.subcategoriesInCategory = this.subcategories.filter(s =>
+      (s.category_ids || []).includes(this.selectedCategoryId)
+    );
   }
 
   getPublishedFlows() {
@@ -871,11 +885,32 @@ class FlowCatalogView extends BaseView {
       </button>
     `).join('');
     const applyFilter = (subId) => {
-      const rows = document.querySelectorAll('#galleryBySub .flow-catalog-sub-row');
+      const gallery = document.getElementById('galleryBySub');
+      if (!gallery) return;
+      const rows = gallery.querySelectorAll('.flow-catalog-sub-row');
+      let visibleCount = 0;
       rows.forEach(row => {
         const rowSubId = row.dataset.subcategoryId;
-        row.style.display = (!subId || rowSubId === subId) ? '' : 'none';
+        const show = !subId || rowSubId === subId;
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
       });
+      // Empty inline cuando el filtro deja 0 rows visibles (típico cuando
+      // la subcategoría está en el junction pero ningún flow la tiene
+      // asignada todavía).
+      let emptyEl = gallery.querySelector('.flow-catalog-empty--filtered');
+      if (subId && visibleCount === 0) {
+        if (!emptyEl) {
+          emptyEl = document.createElement('div');
+          emptyEl.className = 'flow-catalog-empty flow-catalog-empty--in-section flow-catalog-empty--filtered';
+          emptyEl.setAttribute('aria-live', 'polite');
+          emptyEl.innerHTML = '<p class="flow-catalog-empty-text">Aún no hay flujos de esta técnica</p>';
+          gallery.appendChild(emptyEl);
+        }
+        emptyEl.style.display = '';
+      } else if (emptyEl) {
+        emptyEl.style.display = 'none';
+      }
     };
     const updateUrl = (subId) => {
       const url = new URL(window.location.href);
