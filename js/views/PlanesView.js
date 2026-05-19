@@ -394,7 +394,10 @@ class PlanesView extends BaseView {
     const isAnnual = this.billingPeriod === 'annual';
     root.querySelector('#toggleMonthly')?.classList.toggle('active', !isAnnual);
     root.querySelector('#toggleAnnual')?.classList.toggle('active', isAnnual);
-    root.classList.toggle('billing-annual', isAnnual);
+    // CSS rules target .planes-page.billing-annual y .planes-hero.billing-annual
+    // — no el container padre. Toggle en los elementos correctos.
+    root.querySelector('.planes-page')?.classList.toggle('billing-annual', isAnnual);
+    root.querySelector('.planes-hero')?.classList.toggle('billing-annual', isAnnual);
   }
 
   _onCtaClick(e) {
