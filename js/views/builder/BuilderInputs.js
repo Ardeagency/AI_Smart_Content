@@ -274,23 +274,79 @@
     return this.inputSchema;
   };
 
+  /** Renderiza el canvas con el MISMO formato que studio (InputRegistry.renderFormFromSchema
+   *  + initFormPickers), y le añade un overlay de edición que aparece en hover sobre cada
+   *  field. Si el flow es autopilot/scraping, envuelve todo en un wrap con el bg del flow
+   *  (mismo patrón que studioAutomatedWrap). */
   P.renderCanvas = function () {
     const canvas = this.querySelector('#canvasFields');
+    const builderCanvas = this.querySelector('#builderCanvas');
     const emptyState = this.querySelector('#canvasEmptyState');
     const fields = this.getCanvasFields();
-
     if (!canvas) return;
 
-    if (!this.isAutomatedFlow && fields.length === 0) {
+    const type = (this.flowData && this.flowData.flow_category_type) || 'manual';
+    const isAutomated = (type === 'autopilot' || type === 'scraping');
+
+    // Aplicar/quitar wrap automated en el #builderCanvas
+    if (builderCanvas) {
+      builderCanvas.classList.toggle('builder-canvas--automated', isAutomated);
+      if (isAutomated && this.flowData && this.flowData.flow_image_url) {
+        const safeUrl = String(this.flowData.flow_image_url).replace(/"/g, '\\"');
+        builderCanvas.style.setProperty('--canvas-flow-bg', `url("${safeUrl}")`);
+      } else {
+        builderCanvas.style.removeProperty('--canvas-flow-bg');
+      }
+    }
+
+    if (fields.length === 0) {
       canvas.style.display = 'none';
       if (emptyState) emptyState.style.display = 'flex';
       return;
     }
-
-    canvas.style.display = 'block';
+    canvas.style.display = '';
     if (emptyState) emptyState.style.display = 'none';
 
-    canvas.innerHTML = fields.map((field, index) => this.renderCanvasField(field, index)).join('');
+    const Registry = window.InputRegistry;
+    if (Registry && Registry.renderFormFromSchema) {
+      canvas.innerHTML = Registry.renderFormFromSchema(fields, {
+        idPrefix: 'canvas-preview-',
+        wrapperClass: 'studio-field canvas-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true
+      });
+      // Por field generado: meter data-index, draggable y overlay con botones de edición
+      const generated = canvas.querySelectorAll('.canvas-field');
+      generated.forEach((el, i) => {
+        const field = fields[i] || {};
+        el.setAttribute('data-index', String(i));
+        el.setAttribute('draggable', 'true');
+        if (this.selectedFieldIndex === i) el.classList.add('selected');
+        const typeLbl = (field.input_type || field.type) === 'colores'
+          ? `colores (máx. ${field.max_selections != null ? field.max_selections : 6})`
+          : (field.input_type || field.type || 'text');
+        const overlay = document.createElement('div');
+        overlay.className = 'canvas-field-overlay';
+        overlay.innerHTML = `
+          <span class="canvas-field-grip" title="Arrastra para reordenar"><i class="ph ph-dots-six-vertical"></i></span>
+          <span class="canvas-field-meta">
+            <span class="canvas-field-meta-label">${this.escapeHtml(field.label || field.key || '')}</span>
+            <span class="canvas-field-meta-type">${this.escapeHtml(typeLbl)}</span>
+          </span>
+          <span class="canvas-field-actions">
+            <button type="button" class="field-action-btn duplicate-field" title="Duplicar" aria-label="Duplicar"><i class="ph ph-copy"></i></button>
+            <button type="button" class="field-action-btn delete-field" title="Eliminar" aria-label="Eliminar"><i class="ph ph-trash"></i></button>
+          </span>
+        `;
+        el.prepend(overlay);
+      });
+      if (Registry.initFormPickers) Registry.initFormPickers(canvas);
+    } else {
+      // Fallback: render legacy si Registry no cargó
+      canvas.innerHTML = fields.map((field, index) => this.renderCanvasFieldLegacy(field, index)).join('');
+    }
+
     this.enableCanvasPreviewInputs(canvas);
     this.setupCanvasFieldListeners();
   };
@@ -298,47 +354,39 @@
   /** Habilita interacción en los controles del canvas (escribir en string, elegir en dropdown, etc.) */
   P.enableCanvasPreviewInputs = function (container) {
     if (!container) return;
-    container.querySelectorAll('.canvas-field-preview input, .canvas-field-preview select, .canvas-field-preview textarea').forEach(el => {
+    container.querySelectorAll('.canvas-field input, .canvas-field select, .canvas-field textarea').forEach(el => {
       el.removeAttribute('disabled');
       el.style.cursor = el.tagName === 'SELECT' ? 'pointer' : 'text';
     });
   };
 
-  P.renderCanvasField = function (field, index) {
+  /** Fallback legacy (solo si InputRegistry no está disponible). */
+  P.renderCanvasFieldLegacy = function (field, index) {
     const isSelected = this.selectedFieldIndex === index;
     const inputPreview = this.renderInputPreview(field);
-    
+    const typeLbl = (field.input_type || field.type) === 'colores'
+      ? `colores (máx. ${field.max_selections != null ? field.max_selections : 6})`
+      : (field.input_type || field.type || 'text');
     return `
-      <div class="canvas-field ${isSelected ? 'selected' : ''}" 
-           data-index="${index}"
-           draggable="true">
-        <button type="button" class="canvas-field-remove" title="Eliminar (Delete)" aria-label="Eliminar">
-          <i class="ph ph-x"></i>
-        </button>
-        <div class="canvas-field-header">
-          <div class="canvas-field-drag">
-            <i class="ph ph-dots-six-vertical"></i>
-          </div>
-          <div class="canvas-field-info">
-            <span class="field-label">${field.label || field.key}</span>
-            <span class="field-type">${(field.input_type || field.type) === 'colores' ? `colores (máx. ${field.max_selections != null ? field.max_selections : 6})` : (field.input_type || field.type || 'text')}</span>
-            ${field.required ? '<span class="field-required">*</span>' : ''}
-          </div>
-          <div class="canvas-field-actions">
-            <button type="button" class="field-action-btn duplicate-field" title="Duplicar">
-              <i class="ph ph-copy"></i>
-            </button>
-            <button type="button" class="field-action-btn delete-field" title="Eliminar">
-              <i class="ph ph-trash"></i>
-            </button>
-          </div>
+      <div class="canvas-field ${isSelected ? 'selected' : ''}" data-index="${index}" draggable="true">
+        <div class="canvas-field-overlay">
+          <span class="canvas-field-grip"><i class="ph ph-dots-six-vertical"></i></span>
+          <span class="canvas-field-meta">
+            <span class="canvas-field-meta-label">${this.escapeHtml(field.label || field.key || '')}</span>
+            <span class="canvas-field-meta-type">${this.escapeHtml(typeLbl)}</span>
+          </span>
+          <span class="canvas-field-actions">
+            <button type="button" class="field-action-btn duplicate-field" title="Duplicar"><i class="ph ph-copy"></i></button>
+            <button type="button" class="field-action-btn delete-field" title="Eliminar"><i class="ph ph-trash"></i></button>
+          </span>
         </div>
-        <div class="canvas-field-preview">
-          ${inputPreview}
-        </div>
+        <div class="canvas-field-preview">${inputPreview}</div>
       </div>
     `;
   };
+
+  /** Compatibilidad: alias que algunos call-sites antiguos podrían usar */
+  P.renderCanvasField = function (field, index) { return this.renderCanvasFieldLegacy(field, index); };
 
   P.renderInputPreview = function (field) {
     if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderPreview) {
@@ -360,18 +408,18 @@
 
   P.setupCanvasFieldListeners = function () {
     const fields = this.querySelectorAll('.canvas-field');
-    
+
     fields.forEach((field, index) => {
-      // Evitar que el clic en el preview (inputs/select) propague y quite foco; solo seleccionar si se clic en header
-      const preview = field.querySelector('.canvas-field-preview');
-      if (preview) {
-        preview.addEventListener('click', (e) => e.stopPropagation());
-      }
-      // Click en el campo (header, bordes) para seleccionar
+      // El área del input real (todo lo que NO sea el overlay) no debe propagar
+      // el click — así escribir/elegir no cambia la selección.
+      const interactive = field.querySelectorAll('input, select, textarea, .color-swatch, .ratio-option, .image-thumb, .focus-tab');
+      interactive.forEach(el => el.addEventListener('click', (e) => e.stopPropagation()));
+
+      // Click en el field (overlay, bordes, label) para seleccionar — exceptuando los action buttons
       field.addEventListener('click', (e) => {
-        if (!e.target.closest('.field-action-btn') && !e.target.closest('.canvas-field-remove') && !e.target.closest('.canvas-field-preview')) {
-          this.selectField(index);
-        }
+        if (e.target.closest('.field-action-btn')) return;
+        if (e.target.closest('input, select, textarea, button')) return;
+        this.selectField(index);
       });
       
       // Drag para reordenar
@@ -410,11 +458,10 @@
         }
       });
       
-      // Botones de acción (header y X esquina)
+      // Botones de acción del overlay
       const duplicateBtn = field.querySelector('.duplicate-field');
       const deleteBtn = field.querySelector('.delete-field');
-      const removeXBtn = field.querySelector('.canvas-field-remove');
-      
+
       if (duplicateBtn) {
         duplicateBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -422,27 +469,26 @@
           this.duplicateField(index);
         });
       }
-      
-      const doDelete = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.deleteField(index);
-      };
-      if (deleteBtn) deleteBtn.addEventListener('click', doDelete);
-      if (removeXBtn) removeXBtn.addEventListener('click', doDelete);
-      
-      // Sincronizar cambios en el preview (slider, texto, dropdown, etc.) con el campo para que el valor "quede"
-      const fields = this.getCanvasFields();
-      const schemaField = fields[index];
-      if (schemaField && preview) {
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.deleteField(index);
+        });
+      }
+
+      // Sincronizar cambios en los inputs del field con el schema (defaultValue)
+      const schemaFields = this.getCanvasFields();
+      const schemaField = schemaFields[index];
+      if (schemaField) {
         const sync = () => { this.onFieldChange(); if (this.selectedFieldIndex === index) this.renderPropertiesPanel(); };
-        preview.querySelectorAll('input, select, textarea').forEach((el) => {
+        field.querySelectorAll('input, select, textarea').forEach((el) => {
           const tag = el.tagName.toLowerCase();
           const type = (el.type || '').toLowerCase();
           if (type === 'range') {
             el.addEventListener('input', () => {
               schemaField.defaultValue = parseFloat(el.value);
-              const span = el.nextElementSibling || preview.querySelector('.range-value');
+              const span = el.nextElementSibling || field.querySelector('.range-value');
               if (span) span.textContent = el.value;
               sync();
             });

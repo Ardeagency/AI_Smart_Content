@@ -2518,34 +2518,43 @@
 
 /* Canvas */
 .builder-canvas {
+  position: relative;
   min-height: 400px;
-  background: var(--bg-secondary);
-  border: 2px dashed var(--border-color);
+  background: transparent;
+  border: 1px dashed #242424;
   border-radius: var(--radius-md);
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
 }
 
-/* Builder: canvas con superficie visible (contraste con fondo negro) */
+/* Builder: canvas plano (sin marco glass) — el preview vive sobre el bg del builder */
 .builder-main .builder-canvas {
-  background: var(--bg-card);
-  border-color: var(--builder-input-border, var(--border-color));
+  background: transparent;
+  border-color: #242424;
 }
 
-/* Canvas en modo automatizado: señal visual (programación, no inputs de usuario) */
+/* Canvas en modo automatizado: igual que studioAutomatedWrap (bg del flow + overlay dark) */
 .builder-canvas.builder-canvas--automated {
-  border-style: solid;
-  border-color: rgba(0, 231, 255, 0.25);
+  border: 0;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(11, 11, 11, 0.55) 0%, rgba(11, 11, 11, 0.85) 60%, rgba(11, 11, 11, 0.95) 100%),
+    var(--canvas-flow-bg, linear-gradient(135deg, #1a1c20 0%, #0e0f12 100%));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
-
 
 .builder-canvas.drag-active {
-  border-color: var(--dev-primary);
-  background: rgba(0, 231, 255, 0.12);
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .builder-canvas.drag-over {
   border-style: solid;
-  background: rgba(0, 231, 255, 0.18);
+  border-color: var(--accent-warm, #e09145);
+  background: rgba(224, 145, 69, 0.05);
 }
 
 .canvas-empty-state {
@@ -2573,158 +2582,138 @@
   margin: 0;
 }
 
-/* Canvas Fields */
+/* Canvas Fields: el preview se renderiza con el mismo wrapper .studio-field
+   que usa Studio (InputRegistry.renderFormFromSchema), y nosotros le añadimos
+   un overlay flotante .canvas-field-overlay con los controles de edición que
+   aparece sólo en hover/selected — el formulario se ve igual que en producción. */
 .canvas-fields {
-  padding: var(--spacing-md);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.builder-canvas--automated .canvas-fields {
+  position: relative;
+  z-index: 1;
 }
 
 .canvas-field {
   position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  cursor: default;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
   border-radius: var(--radius-sm);
-  margin-bottom: var(--spacing-md);
-  cursor: pointer;
-  transition: var(--transition);
 }
 
-/* X eliminar: esquina derecha, solo visible al hover del contenedor */
-.canvas-field-remove {
+.canvas-field:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.canvas-field.selected {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 0 1px var(--accent-warm, #e09145);
+}
+
+.canvas-field.dragging {
+  opacity: 0.4;
+}
+
+.canvas-field.drag-target {
+  box-shadow: 0 0 0 1px var(--accent-warm, #e09145);
+  background: rgba(224, 145, 69, 0.04);
+}
+
+/* Overlay de edición: aparece en hover o cuando el field está selected.
+   Se posiciona arriba a la derecha sin desplazar el preview. */
+.canvas-field-overlay {
   position: absolute;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
-  z-index: 2;
+  top: -8px;
+  right: 0;
   display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #141517;
+  border: 1px solid #242424;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+  z-index: 3;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.canvas-field:hover .canvas-field-overlay,
+.canvas-field.selected .canvas-field-overlay {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.canvas-field-grip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  cursor: grab;
+  padding: 2px;
+}
+.canvas-field-grip:active { cursor: grabbing; }
+
+.canvas-field-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.canvas-field-meta-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.canvas-field-meta-type {
+  font-size: 10px;
+  text-transform: lowercase;
+  padding: 1px 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  color: var(--text-secondary);
+}
+
+.canvas-field-actions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.field-action-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: var(--transition);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-.canvas-field:hover .canvas-field-remove {
-  opacity: 1;
-  pointer-events: auto;
-}
-.canvas-field-remove:hover {
-  background: var(--color-error-light);
-  color: var(--dev-error);
-}
-.canvas-field-remove:focus {
-  outline: 2px solid var(--dev-primary);
-  outline-offset: 2px;
-}
-.canvas-field-remove .ph {
-  font-size: var(--font-size-md);
-}
-
-.canvas-field:hover {
-  border-color: var(--dev-primary-light);
-}
-
-.canvas-field.selected {
-  border-color: var(--dev-primary);
-  box-shadow: 0 0 0 2px var(--border-color);
-}
-
-.canvas-field.dragging {
-  opacity: 0.5;
-}
-
-.canvas-field.drag-target {
-  border-color: var(--dev-primary);
-  border-style: dashed;
-}
-
-.canvas-field-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.canvas-field-drag {
-  color: var(--text-muted);
-  cursor: grab;
-}
-
-.canvas-field-drag:active {
-  cursor: grabbing;
-}
-
-.canvas-field-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.field-label {
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.field-type {
-  font-size: var(--font-size-xs);
-  padding: 2px 6px;
-  background: rgba(0, 231, 255, 0.15);
-  color: var(--dev-primary-light);
-  border-radius: var(--radius-xs);
-}
-
-.field-required {
-  color: var(--dev-error);
-  font-weight: 600;
-}
-
-.canvas-field-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 1;
-  transition: var(--transition);
-}
-
-.canvas-field:hover .canvas-field-actions {
-  opacity: 1;
-}
-
-.field-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
   background: transparent;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: var(--transition);
+  transition: background 0.15s ease, color 0.15s ease;
 }
-
 .field-action-btn:hover {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
 }
-
 .field-action-btn.delete-field:hover {
-  background: var(--color-error-bg);
-  color: var(--dev-error);
-}
-
-.canvas-field-preview {
-  padding: 12px;
-  min-height: 44px;
+  background: rgba(227, 84, 84, 0.12);
+  color: var(--dev-error, #e35454);
 }
 
 /* Cascarones: text, number, textarea con borde y esquinas redondeadas (design system) */
