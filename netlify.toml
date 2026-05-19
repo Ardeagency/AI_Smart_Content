@@ -70,6 +70,25 @@
   status = 200
   force = true
 
+# ── Stripe billing endpoints (FEAT-019) ──────────────────
+[[redirects]]
+  from = "/api/billing/checkout"
+  to = "/.netlify/functions/api-billing-checkout"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/billing/portal"
+  to = "/.netlify/functions/api-billing-portal"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/billing/webhook"
+  to = "/.netlify/functions/api-billing-webhook"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/ai/action"
   to = "/.netlify/functions/api-ai-action"
