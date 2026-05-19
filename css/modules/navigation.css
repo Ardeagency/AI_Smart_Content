@@ -3808,7 +3808,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * Sidebar developer — paridad estructural con sidebar user     *
  * ============================================================ */
 
-/* Header sidebar dev: contenido compacto (sin espacio vacío bajo "DEVELOPER") */
+/* Header sidebar dev: contenido compacto + espacio inferior para que el halo
+   rainbow del rank no quede detrás de "RANK LEGEND" */
 .nav-mode-developer .nav-workspace-header,
 .nav-mode-developer .nav-dev-workspace-header {
   display: flex;
@@ -3816,7 +3817,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   justify-content: center;
   height: auto;
   min-height: 0;
-  padding: 12px 8px 10px;
+  padding: 14px 12px 18px;
   box-sizing: border-box;
   border-bottom: 0;
   gap: 4px;
@@ -3900,9 +3901,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
   grid-template-columns: none !important;
-  margin: 16px 0 8px;
+  margin: 28px 0 12px;
   padding: 0 8px;
 }
 
@@ -4015,18 +4016,33 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   flex-direction: column;
   gap: 4px;
 }
+/* Línea nítida del gradient en la base del header (eje del halo) */
+.nav-mode-developer .nav-dev-workspace-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1.5px;
+  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
+  pointer-events: none;
+  z-index: 3;
+  border-radius: 1px;
+}
+/* Halo difuso del gradient — vive DEBAJO del header, no atrás del rank */
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
   position: absolute;
-  left: 13px;
-  right: 13px;
-  bottom: -9px;
-  height: 17px;
+  left: 0;
+  right: 0;
+  bottom: -22px;
+  height: 30px;
   background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  filter: blur(12.5px);
-  opacity: 1;
-  border-radius: 20px;
+  filter: blur(12px);
+  opacity: 0.85;
+  border-radius: 12px;
   pointer-events: none;
+  z-index: 2;
 }
 
 /* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si hay rank context */
