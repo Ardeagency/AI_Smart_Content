@@ -3808,9 +3808,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * Sidebar developer — paridad estructural con sidebar user     *
  * ============================================================ */
 
-/* Header sidebar dev — medidas exactas del Frame 86 del mockup Figma:
-   height fija 63px, border-bottom 1px gris, padding lateral 8px,
-   el blur rainbow vive en ::after con top:55px y sale 9px abajo. */
+/* Header sidebar dev — medidas exactas del Frame 86 del mockup Figma.
+   overflow: hidden recorta la parte del blur rainbow que se sale por
+   debajo, dejándolo "encerrado" en el header (cortado por el border). */
 .nav-mode-developer .nav-workspace-header,
 .nav-mode-developer .nav-dev-workspace-header {
   position: relative;
@@ -3821,7 +3821,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   margin: 0 8px;
   box-sizing: border-box;
   border-bottom: 1px solid #242424;
-  overflow: visible;
+  overflow: hidden;
 }
 .nav-mode-developer .nav-dev-title {
   position: absolute;
