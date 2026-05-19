@@ -3938,17 +3938,17 @@
 }
 
 /* Editar nodo: panel lateral derecho dentro del canvas (no modal centrado).
-   JS sigue haciendo style.display = 'flex' / 'none' — el overlay queda anclado
-   a la derecha sin oscurecer el canvas, así el usuario ve el flow mientras edita. */
+   Con padding top/right/bottom para que flote sobre el dot grid en lugar
+   de quedar pegado a los bordes. */
 #moduleNodeModal.modal-overlay {
   display: none;
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
   left: auto;
   width: 380px;
-  max-width: 100%;
+  max-width: calc(100% - 32px);
   background: transparent;
   align-items: stretch;
   justify-content: flex-end;
@@ -3973,12 +3973,13 @@
   height: 100%;
   max-height: 100%;
   margin: 0;
-  border-radius: 0;
+  border-radius: 12px;
   background: #0f1012;
-  border-left: 1px solid #242424;
+  border: 1px solid #242424;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .modal-module-node .modal-header {
