@@ -241,40 +241,27 @@ class DevFlowsView extends DevBaseView {
   }
 
   /**
-   * Renderizar card de flujo
+   * Renderizar card de flujo — MISMA estructura que FlowCatalogView.renderFlowCard
+   * (la card es una previsualización 1:1 del catálogo público), con un footer
+   * dev añadido al final con las acciones edit/test/logs/delete.
    */
   renderFlowCard(flow) {
     const name = this.escapeHtml(flow.name);
     const cost = flow.token_cost ?? 1;
-    const likes = flow.likes_count || 0;
-    const saves = flow.saves_count || 0;
-    const runs = flow.run_count || 0;
 
     const badges = [];
-    if (this.isNew(flow)) {
-      badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
-    }
-    if (this.isTrending(flow)) {
-      badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    }
+    if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
     const t = flow.flow_category_type || 'manual';
     const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
-    if (isAutopilotLike) {
-      badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
-    }
+    if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
 
-    const tags = [];
-    if (flow.content_categories?.name) tags.push(this.escapeHtml(flow.content_categories.name));
-    if (flow.content_subcategories?.name) tags.push(this.escapeHtml(flow.content_subcategories.name));
-    if (isAutopilotLike) tags.push('Autopilot');
-    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
-
-    const categoryName = flow.content_categories?.name ? this.escapeHtml(flow.content_categories.name) : '—';
-    const subcategoryName = flow.content_subcategories?.name ? this.escapeHtml(flow.content_subcategories.name) : '—';
+    const primaryTag = flow.content_subcategories?.name || flow.content_categories?.name || null;
+    const primaryTagHtml = primaryTag ? `<span class="flow-card-info-tag">${this.escapeHtml(primaryTag)}</span>` : '';
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
     const executionLabel = this.getExecutionModeLabel(flow.execution_mode);
     const version = (flow.version || '1.0.0').toString();
@@ -284,27 +271,18 @@ class DevFlowsView extends DevBaseView {
         <article class="flow-card flow-card--catalog flow-card--with-footer" data-flow-id="${flow.id}" role="button" tabindex="0">
           <div class="flow-card-media">
             ${img}
-            <div class="flow-card-media-veil" aria-hidden="true"></div>
+            <div class="flow-card-gradient" aria-hidden="true"></div>
             <div class="flow-card-badges">${badges.join('')}</div>
-            <div class="flow-card-icons flow-card-icons--default">
-              <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
-              <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
-              <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
-            </div>
-            <div class="flow-card-overlay flow-card-overlay--default">
+            <div class="flow-card-info">
               <h3 class="flow-card-title">${name}</h3>
-              ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
-            </div>
-            <div class="flow-card-overlay flow-card-overlay--hover">
-              <div class="flow-card-hover-content">
-                <div class="flow-card-credits">${cost}</div>
-                <div class="flow-card-meta-list">
-                  <span class="flow-card-meta-item">${categoryName}</span>
-                  <span class="flow-card-meta-item">${subcategoryName}</span>
-                  <span class="flow-card-meta-item">${outputTypeLabel}</span>
-                  <span class="flow-card-meta-item">${executionLabel}</span>
-                  <span class="flow-card-meta-item">v${version}</span>
-                </div>
+              <div class="flow-card-info-meta">
+                ${primaryTagHtml}
+                <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="fas fa-bolt"></i>${cost}</span>
+              </div>
+              <div class="flow-card-info-extra">
+                <span class="flow-card-info-pill">${outputTypeLabel}</span>
+                <span class="flow-card-info-pill">${executionLabel}</span>
+                <span class="flow-card-info-pill">v${version}</span>
               </div>
             </div>
           </div>
