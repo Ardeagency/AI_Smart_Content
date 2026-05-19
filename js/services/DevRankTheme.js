@@ -26,12 +26,12 @@
 
   /** Rank → gradiente prefab (variable CSS sin var() wrapper). */
   const RANK_GRADIENTS = {
-    rookie:  { h: '--dev-gradient-rookie',  v: '--dev-gradient-rookie-vertical'  },
-    junior:  { h: '--dev-gradient-junior',  v: '--dev-gradient-junior-vertical'  },
-    builder: { h: '--dev-gradient-builder', v: '--dev-gradient-builder-vertical' },
-    expert:  { h: '--dev-gradient-expert',  v: '--dev-gradient-expert-vertical'  },
-    master:  { h: '--dev-gradient-master',  v: '--dev-gradient-master-vertical'  },
-    legend:  { h: '--dev-gradient-legend',  v: '--dev-gradient-legend-vertical'  }
+    rookie:  { h: '--dev-gradient-rookie',  v: '--dev-gradient-rookie-vertical',  hz: '--dev-gradient-rookie-horizontal'  },
+    junior:  { h: '--dev-gradient-junior',  v: '--dev-gradient-junior-vertical',  hz: '--dev-gradient-junior-horizontal'  },
+    builder: { h: '--dev-gradient-builder', v: '--dev-gradient-builder-vertical', hz: '--dev-gradient-builder-horizontal' },
+    expert:  { h: '--dev-gradient-expert',  v: '--dev-gradient-expert-vertical',  hz: '--dev-gradient-expert-horizontal'  },
+    master:  { h: '--dev-gradient-master',  v: '--dev-gradient-master-vertical',  hz: '--dev-gradient-master-horizontal'  },
+    legend:  { h: '--dev-gradient-legend',  v: '--dev-gradient-legend-vertical',  hz: '--dev-gradient-legend-horizontal'  }
   };
 
   /** Rank → label visible. */
@@ -97,6 +97,7 @@
     lastAppliedUserId = null;
     root.style.removeProperty('--dev-gradient-dynamic');
     root.style.removeProperty('--dev-gradient-dynamic-vertical');
+    root.style.removeProperty('--dev-gradient-dynamic-horizontal');
     root.style.removeProperty('--dev-rank-label');
     root.style.removeProperty('--dev-gradient-app-container');
     document.body.classList.remove('dev-rank-context');
@@ -118,6 +119,7 @@
     if (!map) return canonical;
     root.style.setProperty('--dev-gradient-dynamic', `var(${map.h})`);
     root.style.setProperty('--dev-gradient-dynamic-vertical', `var(${map.v})`);
+    if (map.hz) root.style.setProperty('--dev-gradient-dynamic-horizontal', `var(${map.hz})`);
     root.style.setProperty('--dev-rank-label', `"${RANK_LABEL[canonical] || canonical}"`);
     // App-container edge gradient (mismo patrón que OrgBrandTheme; visible en /dev/* via #brand-bg-overlay)
     const palette = RANK_PALETTE[canonical];
