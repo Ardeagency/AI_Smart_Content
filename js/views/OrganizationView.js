@@ -754,14 +754,28 @@ class OrganizationView extends BaseView {
       };
 
       if (qrWrap && this.mfaEnroll.qr) {
-        // Supabase devuelve el QR como SVG inline (string) o data URL — manejar ambos
+        // Supabase devuelve el QR como SVG inline (string) o data URL.
+        // Para data URLs de SVG no podemos usar innerHTML con un <img src="..."> en
+        // template string porque el SVG contiene comillas y >, que rompen el atributo.
+        // → property assignment via createElement evita cualquier escape de HTML.
         const qr = this.mfaEnroll.qr;
+        qrWrap.replaceChildren();
         if (qr.startsWith('data:image')) {
-          qrWrap.innerHTML = `<img src="${qr}" alt="QR 2FA" style="width: 200px; height: 200px; background: white; padding: 8px; border-radius: 8px;">`;
+          const img = document.createElement('img');
+          img.src = qr;
+          img.alt = 'QR 2FA';
+          img.style.cssText = 'width:200px;height:200px;background:white;padding:8px;border-radius:8px;';
+          qrWrap.appendChild(img);
         } else if (qr.includes('<svg')) {
-          qrWrap.innerHTML = `<div style="display: inline-block; background: white; padding: 8px; border-radius: 8px; width: 216px; height: 216px;">${qr}</div>`;
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'display:inline-block;background:white;padding:8px;border-radius:8px;width:216px;height:216px;';
+          wrap.innerHTML = qr;
+          qrWrap.appendChild(wrap);
         } else {
-          qrWrap.innerHTML = `<p class="org-placeholder">QR no disponible. Usa el código manual.</p>`;
+          const p = document.createElement('p');
+          p.className = 'org-placeholder';
+          p.textContent = 'QR no disponible. Usa el código manual.';
+          qrWrap.appendChild(p);
         }
       }
       if (secretInput && this.mfaEnroll.secret) {
