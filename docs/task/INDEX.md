@@ -3,20 +3,27 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-18** (cerradas BUG-003 — `ai_brand_vectors`=61 filas, `ai_global_vectors`=90 filas, últimos 5 runs `success` — y AUDIT-002 H1 — column `resource_type` removida del schema, count orphans=0).
+Última actualización: **2026-05-19** (FEAT-019 + FEAT-020 deployed; ambos pendientes solo de activación externa / prueba humana E2E. Pasarela dual Stripe + Wompi validada end-to-end en sandbox 2026-05-19 09:52).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
 - 👤 = `auto_eligible: no` — requiere humano (input, decisión, acceso externo, UX visible)
 - ⏱ short (<30min) · medium (30-90min) · long (90min-3h)
 
+## 🟣 Deployed pending external activation
+
+Código en producción, falta acción humana o credenciales externas para cerrar.
+
+| ID | Título | Bloqueante para cerrar | Commit |
+|---|---|---|---|
+| [FEAT-019](./FEAT-019-payment-gateway.md) | Pasarela de pago dual Stripe (USD) + Wompi (COP). Schema, 6 functions Netlify, BillingService, tab Facturación, seeds COP. Wompi sandbox validado E2E (pago $240k aprobado, webhook procesado, créditos sumados). | Cuenta Stripe + 2 env vars · Wompi producción cuando llegue | b7364115, d6a0004a, a9fd7af8, 6e73e713, 6579456d |
+| [FEAT-020](./FEAT-020-auth-mfa.md) | MFA TOTP + magic link + revoke sessions. Migration `mfa_required` + RPC + VIEW aplicadas. UI tab Seguridad live. | 5 escenarios E2E en browser real con Authenticator | b9511e19 |
+
 ## 🔴 Critical
 
 | ID | Título | Tipo | 🤖/👤 | ⏱ | Owner |
 |---|---|---|---|---|---|
 | [SPRINT-FRONTEND-100](./SPRINT-FRONTEND-100-2026-05-06.md) | Sprint 14 días para exponer 100% del backend al usuario — entrega martes 26/05 (scope reducido: sin ActivityView ni HealthView) | feature | 👤 | long | — |
-| [FEAT-019](./FEAT-019-payment-gateway.md) | Pasarela de pago end-to-end — Stripe / Wompi / híbrido. Sin esto no hay SaaS. Bloqueante de venta. | feature | 👤 | long | — |
-| [FEAT-020](./FEAT-020-auth-mfa.md) | Auth empresarial mínimo — MFA TOTP Supabase nativo + magic link + session policies | feature | 👤 | medium | — |
 
 ## 🟠 High
 
@@ -57,15 +64,21 @@ Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
 ---
 
-**Total:** 23 tareas activas (0 auto-eligibles 🤖 + 23 requieren humano 👤).
+**Total:** 21 tareas activas + 2 deployed pendientes activación (0 auto-eligibles 🤖 + 23 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
-| 🔴 critical | 3 | 0 | 3 |
+| 🟣 deployed pending | 2 | 0 | 2 |
+| 🔴 critical | 1 | 0 | 1 |
 | 🟠 high | 9 | 0 | 9 |
 | 🟡 medium | 5 | 0 | 5 |
 | 🟢 low | 6 | 0 | 6 |
 | **Suma** | **23** | **0** | **23** |
+
+## Movidas a "Deployed pending" el 2026-05-19
+
+- **FEAT-019** — pasarela de pago dual Stripe + Wompi end-to-end. Schema en Supabase (`stripe_customers`, `stripe_invoices`, `stripe_webhook_events`, `wompi_customers`, `wompi_transactions`, `wompi_webhook_events`, columnas en `plans`/`credit_packages`/`subscriptions`). 6 Netlify functions: `api-billing-{checkout, portal, webhook, gateways}` + `api-billing-wompi-{checkout, webhook}`. `js/services/BillingService.js` con orquestación auto/Stripe/Wompi y modal selector. `PlanesView` y `CreditsShopView` con buttons cableados. Tab "Facturación" en `OrganizationView` con plan activo, próximo cobro, listado unificado Stripe+Wompi y botón Customer Portal Stripe. Seeds COP aplicados (Creator/Team/Agency + 4 packs). **Validado E2E en sandbox**: pago $240k aprobado, webhook procesado en 434ms, 500 créditos sumados a `organization_credits` (commits `b7364115`, `d6a0004a`, `a9fd7af8`, `6e73e713`, `6579456d`).
+- **FEAT-020** — MFA TOTP + magic link + revoke sessions deployed 2026-05-18 (commit `b9511e19`). Falta solo prueba humana E2E con Authenticator real.
 
 ## Resueltas el 2026-05-18
 
