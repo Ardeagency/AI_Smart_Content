@@ -682,13 +682,13 @@ class TasksView extends BaseView {
     }
   }
 
-  /** Carga últimos flow_runs del usuario con flow info, entity y status. */
+  /** Carga últimos flow_runs del usuario con flow info, entity, productos, campaña y audiencia. */
   async loadFlowRuns(limit = 50) {
     if (!this.supabase || !this.userId) return [];
     try {
       const { data: runs, error } = await this.supabase
         .from('flow_runs')
-        .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, webhook_response_code, current_module_order, total_modules_count, n8n_execution_id, campaign_id, persona_id')
+        .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, campaign_id, persona_id')
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -698,21 +698,65 @@ class TasksView extends BaseView {
 
       const flowIds = [...new Set(list.map(r => r.flow_id).filter(Boolean))];
       const entityIds = [...new Set(list.map(r => r.entity_id).filter(Boolean))];
+      const campaignIds = [...new Set(list.map(r => r.campaign_id).filter(Boolean))];
+      const personaIds = [...new Set(list.map(r => r.persona_id).filter(Boolean))];
 
-      const [flowsRes, entitiesRes] = await Promise.all([
+      const [flowsRes, entitiesRes, campaignsRes, personasRes] = await Promise.all([
         flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : { data: [] },
-        entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] }
+        entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] },
+        campaignIds.length ? this.supabase.from('campaigns').select('id, nombre_campana').in('id', campaignIds) : { data: [] },
+        personaIds.length ? this.supabase.from('audience_personas').select('id, name').in('id', personaIds) : { data: [] }
       ]);
 
       const flowNameMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
       const flowImgMap  = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.flow_image_url || null; return acc; }, {});
       const entityNameMap = (entitiesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const campaignNameMap = (campaignsRes.data || []).reduce((acc, r) => { acc[r.id] = r.nombre_campana; return acc; }, {});
+      const personaNameMap = (personasRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+
+      // Resolver imágenes de productos por entity_id (mismo patrón que loadSchedules)
+      const entityImagesMap = {};
+      if (entityIds.length) {
+        const { data: products } = await this.supabase
+          .from('products')
+          .select('id, entity_id')
+          .in('entity_id', entityIds)
+          .order('created_at', { ascending: true });
+        const entityToProducts = {};
+        (products || []).forEach(p => {
+          if (!p.entity_id) return;
+          (entityToProducts[p.entity_id] = entityToProducts[p.entity_id] || []).push(p.id);
+        });
+        const productIds = [...new Set((products || []).map(p => p.id))];
+        if (productIds.length) {
+          const { data: imgs } = await this.supabase
+            .from('product_images')
+            .select('product_id, image_url, image_type, image_order')
+            .in('product_id', productIds)
+            .order('image_order', { ascending: true });
+          const byProduct = {};
+          (imgs || []).forEach(img => {
+            if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
+            byProduct[img.product_id].push(img);
+          });
+          Object.entries(entityToProducts).forEach(([entityId, prodIds]) => {
+            entityImagesMap[entityId] = prodIds.map(pid => {
+              const list = byProduct[pid] || [];
+              const main = list.find(i => (i.image_type || '').toLowerCase() === 'principal') || list[0];
+              return main ? main.image_url : null;
+            }).filter(Boolean);
+          });
+        }
+      }
 
       return list.map(r => ({
         ...r,
         flow_name: (r.flow_id && flowNameMap[r.flow_id]) || '—',
         flow_image_url: (r.flow_id && flowImgMap[r.flow_id]) || null,
-        entity_name: (r.entity_id && entityNameMap[r.entity_id]) || null
+        entity_name: (r.entity_id && entityNameMap[r.entity_id]) || null,
+        product_images: (r.entity_id && entityImagesMap[r.entity_id]) || [],
+        campaign_name: (r.campaign_id && campaignNameMap[r.campaign_id]) || null,
+        audience_name: (r.persona_id && personaNameMap[r.persona_id]) || null
       }));
     } catch (e) {
       console.error('TasksView loadFlowRuns:', e);
@@ -738,11 +782,12 @@ class TasksView extends BaseView {
     grid.innerHTML = `
       <div class="tasks-history-table" role="table">
         <div class="tasks-history-thead" role="row">
-          <div class="tasks-history-th" role="columnheader">Ejecutado</div>
-          <div class="tasks-history-th" role="columnheader">Flow</div>
+          <div class="tasks-history-th" role="columnheader">Fecha</div>
+          <div class="tasks-history-th" role="columnheader">Tarea</div>
+          <div class="tasks-history-th" role="columnheader">Productos</div>
+          <div class="tasks-history-th" role="columnheader">Contexto</div>
           <div class="tasks-history-th" role="columnheader">Status</div>
-          <div class="tasks-history-th tasks-history-th--num" role="columnheader">Tokens</div>
-          <div class="tasks-history-th tasks-history-th--num" role="columnheader">HTTP</div>
+          <div class="tasks-history-th tasks-history-th--num" role="columnheader">Costo</div>
         </div>
         <div class="tasks-history-tbody" role="rowgroup">
           ${runs.map(r => this.renderHistoryRow(r)).join('')}
@@ -765,8 +810,28 @@ class TasksView extends BaseView {
       ? `<img class="tasks-history-thumb" src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy">`
       : `<span class="tasks-history-thumb tasks-history-thumb--placeholder"><i class="fas fa-project-diagram"></i></span>`;
     const { rel, abs } = this._formatRunDateParts(r.created_at);
-    const tokens = r.tokens_consumed != null ? Number(r.tokens_consumed).toLocaleString('es') : '—';
-    const http = r.webhook_response_code ?? '—';
+    const cost = r.tokens_consumed != null ? `${Number(r.tokens_consumed).toLocaleString('es')}` : '—';
+
+    // Productos: hasta 4 avatares + contador "+N"
+    const productImgs = Array.isArray(r.product_images) ? r.product_images : [];
+    const maxAvatars = 4;
+    const visibleProducts = productImgs.slice(0, maxAvatars);
+    const extra = productImgs.length > maxAvatars ? productImgs.length - maxAvatars : 0;
+    const productsHtml = productImgs.length
+      ? `<div class="tasks-history-products">
+          ${visibleProducts.map(url => `<span class="tasks-history-product"><img src="${this.escapeHtml(url)}" alt="" loading="lazy"></span>`).join('')}
+          ${extra ? `<span class="tasks-history-product tasks-history-product-extra">+${extra}</span>` : ''}
+        </div>`
+      : `<span class="tasks-history-empty">—</span>`;
+
+    // Contexto: campaña / audiencia
+    const contextParts = [];
+    if (r.campaign_name) contextParts.push(`<span class="tasks-history-tag">${this.escapeHtml(r.campaign_name)}</span>`);
+    if (r.audience_name) contextParts.push(`<span class="tasks-history-tag tasks-history-tag--muted">${this.escapeHtml(r.audience_name)}</span>`);
+    const contextHtml = contextParts.length
+      ? `<div class="tasks-history-tags">${contextParts.join('')}</div>`
+      : `<span class="tasks-history-empty">—</span>`;
+
     return `
       <div class="tasks-history-row" role="row">
         <div class="tasks-history-cell tasks-history-cell--when" role="cell">
@@ -780,13 +845,17 @@ class TasksView extends BaseView {
             ${r.entity_name ? `<span class="tasks-history-flow-entity">${this.escapeHtml(r.entity_name)}</span>` : ''}
           </div>
         </div>
+        <div class="tasks-history-cell" role="cell">${productsHtml}</div>
+        <div class="tasks-history-cell" role="cell">${contextHtml}</div>
         <div class="tasks-history-cell" role="cell">
           <span class="task-card-badge ${statusClass}">
             <span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}
           </span>
         </div>
-        <div class="tasks-history-cell tasks-history-cell--num" role="cell">${this.escapeHtml(tokens)}</div>
-        <div class="tasks-history-cell tasks-history-cell--num" role="cell">${this.escapeHtml(String(http))}</div>
+        <div class="tasks-history-cell tasks-history-cell--num tasks-history-cell--cost" role="cell">
+          <span class="tasks-history-cost-value">${this.escapeHtml(cost)}</span>
+          <span class="tasks-history-cost-unit">créditos</span>
+        </div>
       </div>
     `;
   }

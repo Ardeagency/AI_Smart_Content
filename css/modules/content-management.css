@@ -1637,7 +1637,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .tasks-history-thead,
 .tasks-history-row {
   display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(140px, 160px) minmax(80px, 100px) minmax(60px, 80px);
+  grid-template-columns: minmax(120px, 150px) minmax(180px, 1.4fr) minmax(120px, 0.8fr) minmax(140px, 1fr) minmax(120px, 140px) minmax(90px, 110px);
   align-items: center;
   gap: 16px;
   padding: 14px 16px;
@@ -1708,12 +1708,13 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .tasks-history-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   background: var(--bg-tertiary, #0d0d0f);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .tasks-history-thumb--placeholder {
@@ -1748,6 +1749,104 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   text-overflow: ellipsis;
 }
 
+/* Productos: avatares circulares overlapping */
+.tasks-history-products {
+  display: flex;
+  align-items: center;
+}
+
+.tasks-history-product {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-left: -8px;
+  background: var(--bg-tertiary, #0d0d0f);
+  border: 2px solid var(--bg-primary, #0b0b0b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tasks-history-product:first-child {
+  margin-left: 0;
+}
+
+.tasks-history-product img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tasks-history-product-extra {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Tags de contexto (campaña / audiencia) */
+.tasks-history-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tasks-history-tag {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasks-history-tag--muted {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tasks-history-empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Costo: número + unidad debajo */
+.tasks-history-cell--cost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.tasks-history-cost-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks-history-cost-unit {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 1024px) {
+  .tasks-history-thead,
+  .tasks-history-row {
+    grid-template-columns: 110px 1fr 110px 1fr auto;
+  }
+  .tasks-history-thead > div:nth-child(3),
+  .tasks-history-row > div:nth-child(3) {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .tasks-history-thead {
     display: none;
@@ -1756,7 +1855,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
     grid-template-columns: 1fr auto;
     gap: 8px;
   }
-  .tasks-history-cell--num {
+  .tasks-history-row > div:nth-child(3),
+  .tasks-history-row > div:nth-child(4) {
     display: none;
   }
 }
