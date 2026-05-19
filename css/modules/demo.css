@@ -69,72 +69,108 @@
   to { transform: rotate(360deg); }
 }
 
-/* ---------------- Sticky banner (top of every demo page) ---------------- */
+/* ---------------- Top banner (above sidebar + header + content) ----------------
+   Banner es position:fixed top:0 con z-index muy alto. Empuja al resto del
+   shell hacia abajo vía body.has-demo-banner que define --demo-banner-height
+   y sobrescribe los `top:` del sidebar / header y el padding-top del
+   #app-container. El gradiente arcoíris reusa --brand-gradient (paleta oficial
+   de la app) sobre fondo negro para legibilidad del texto. */
+body.has-demo-banner {
+  --demo-banner-height: 38px;
+}
+
 .demo-banner {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 120;
+  left: 0;
+  right: 0;
+  height: var(--demo-banner-height, 38px);
+  z-index: 9000;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  padding: 10px 18px;
-  background: linear-gradient(90deg, #1c1d20 0%, #141517 100%);
-  border-bottom: 1px solid var(--divider, #242424);
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  line-height: 1.4;
-  flex-wrap: wrap;
-}
-
-.demo-banner__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(212, 209, 216, 0.08);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  flex-shrink: 0;
+  padding: 0 18px;
+  background: var(--brand-gradient);
+  color: #0b0b0b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .demo-banner__text {
-  color: var(--text-secondary);
+  color: inherit;
 }
 
 .demo-banner__text strong {
-  color: var(--text-primary);
-  font-weight: 600;
+  color: inherit;
+  font-weight: 800;
 }
 
 .demo-banner__cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 4px 14px;
   border-radius: 999px;
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  font-size: 0.82rem;
+  background: #0b0b0b;
+  color: #fff;
+  font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
-  transition: background 120ms ease;
+  white-space: nowrap;
+  text-shadow: none;
+  transition: background 120ms ease, transform 120ms ease;
 }
 
 .demo-banner__cta:hover {
-  background: var(--accent-yellow-hover, #fff);
+  background: #1c1d20;
+  transform: translateX(2px);
+}
+
+/* Empujar sidebar, headers y app-container debajo del banner.
+   Las reglas originales en navigation.css fijan padding-top específicos
+   (45px para has-sidebar, 0 para no-nav). Replicamos exactamente esos
+   valores y sumamos --demo-banner-height para evitar dobles offsets. */
+body.has-demo-banner .side-navigation,
+body.has-demo-banner .main-header,
+body.has-demo-banner .app-header,
+body.has-demo-banner .nav-tooltip,
+body.has-demo-banner .nav-flyout {
+  top: var(--demo-banner-height, 38px);
+}
+body.has-demo-banner .side-navigation {
+  height: calc(100vh - var(--demo-banner-height, 38px));
+}
+body.has-demo-banner.has-sidebar #app-container {
+  padding-top: calc(45px + var(--demo-banner-height, 38px));
+}
+body.has-demo-banner.has-sidebar:has(.nav-mode-developer) #app-container {
+  padding-top: var(--demo-banner-height, 38px);
+}
+body.has-demo-banner.has-header-only #app-container,
+body.has-demo-banner.no-nav #app-container {
+  padding-top: var(--demo-banner-height, 38px);
 }
 
 @media (max-width: 640px) {
+  body.has-demo-banner {
+    --demo-banner-height: 44px;
+  }
   .demo-banner {
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    font-size: 0.74rem;
+    padding: 0 10px;
+    gap: 10px;
   }
   .demo-banner__cta {
-    padding: 5px 10px;
-    font-size: 0.78rem;
+    padding: 4px 10px;
+    font-size: 0.72rem;
   }
 }
 

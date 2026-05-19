@@ -425,10 +425,11 @@ class Navigation {
   }
 
   /**
-   * Inyecta (o remueve) el banner "estás en modo demo" arriba del shell.
+   * Inyecta (o remueve) el banner "estás en modo demo" como primer hijo del
+   * <body> — queda fixed arriba de TODO (sidebar, header, app-container) y
+   * empuja esos elementos hacia abajo vía la clase body.has-demo-banner que
+   * habilita los offsets `top: var(--demo-banner-height)` en demo.css.
    * Solo presente cuando la sesión Supabase es anónima (DemoGuard.isDemo()).
-   * Se renderiza dentro de #navigation-container para que el sticky no pelee
-   * con otros wrappers (z-index controlado vía .demo-banner en demo.css).
    */
   renderDemoBanner() {
     const guard = window.DemoGuard;
@@ -437,23 +438,23 @@ class Navigation {
 
     if (!isDemo) {
       if (existing) existing.remove();
+      document.body.classList.remove('has-demo-banner');
       return;
     }
-    if (existing) return; // ya está pintado
+    if (existing) {
+      document.body.classList.add('has-demo-banner');
+      return;
+    }
 
     const banner = document.createElement('div');
     banner.id = 'demoBanner';
     banner.className = 'demo-banner';
     banner.innerHTML = `
-      <span class="demo-banner__icon" aria-hidden="true">i</span>
-      <span class="demo-banner__text">Estás viendo <strong>IGNIS</strong>, una marca de demostración. Esto es solo el preview de la plataforma.</span>
+      <span class="demo-banner__text">Estás viendo <strong>IGNIS</strong>, una marca de demostración — modo solo lectura</span>
       <a class="demo-banner__cta" href="/signin?from=demo">Crear mi cuenta →</a>
     `;
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.insertBefore(banner, this.container);
-    } else {
-      document.body.insertBefore(banner, document.body.firstChild);
-    }
+    document.body.insertBefore(banner, document.body.firstChild);
+    document.body.classList.add('has-demo-banner');
   }
 
   /**
