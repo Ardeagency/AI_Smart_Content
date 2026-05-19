@@ -3681,7 +3681,7 @@
   color: var(--dev-primary);
 }
 
-/* --- Tab Módulos: estructura estable (base.css) — panel dentro del tab, debajo del header y respetando footer --- */
+/* --- Tab Módulos: canvas full-bleed estilo n8n/ComfyUI, sin marcos --- */
 .builder-tab-content.builder-tab-technical.active {
   display: flex;
   flex-direction: column;
@@ -3696,52 +3696,68 @@
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .technical-tab-main {
   flex: 1 1 0;
   min-height: 0;
-  overflow-y: auto;
-  padding: var(--spacing-xl);
+  overflow: hidden;
+  padding: 0;
+  position: relative;
 }
 
-.technical-section-title {
-  margin: 0 0 var(--spacing-md, 1rem) 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-primary);
+/* Section wrapper: transparente, full-size; sin doble caja */
+.builder-tab-technical .builder-config-fullwidth,
+.builder-tab-technical .builder-settings-form {
+  height: 100%;
+  max-width: none;
+}
+
+.builder-tab-technical .settings-section.technical-section-modules {
+  height: 100%;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm, 0.5rem);
+  flex-direction: column;
 }
 
-.technical-section-title i {
-  color: var(--text-secondary);
+/* El h4 "Módulos del flujo" es redundante con la tab activa — ocultar */
+.builder-tab-technical .technical-section-title {
+  display: none;
 }
 
-.technical-section-mode,
-.technical-section-modules {
-  margin-bottom: var(--spacing-xl, 2rem);
+/* Mapa de módulos = canvas full bleed con dot grid (estilo n8n) */
+.modules-flow-canvas,
+#technicalModulesList.modules-node-map-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  position: relative;
 }
 
-/* Mapa de módulos estilo flow (referencia Typeform/React Flow): canvas, nodos con handles, aristas */
-.modules-flow-canvas {
-  margin-bottom: var(--spacing-md, 1rem);
-}
-
-.modules-flow-canvas .modules-node-map {
+.modules-flow-canvas .modules-node-map,
+.modules-node-map-wrap .modules-node-map {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0;
-  min-height: 180px;
-  padding: var(--spacing-xl);
-  background-color: var(--bg-primary);
-  background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
-  background-size: 12px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  min-height: 0;
+  padding: 40px;
+  background-color: transparent;
+  background-image: radial-gradient(circle, #2a2a2a 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+  background-position: center;
+  border: 0;
+  border-radius: 0;
   position: relative;
+  overflow: auto;
 }
 
 .module-node {
@@ -3895,20 +3911,48 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* Toolbar flotante en la esquina inf-izq del canvas */
 .modules-node-map-actions {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 5;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
+  gap: 8px;
+  margin: 0;
+  padding: 6px;
+  background: rgba(20, 21, 23, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #242424;
+  border-radius: 10px;
 }
 
-/* Modal editar nodo (doble clic) */
+/* Editar nodo: panel lateral derecho dentro del canvas (no modal centrado).
+   JS sigue haciendo style.display = 'flex' / 'none' — el overlay queda anclado
+   a la derecha sin oscurecer el canvas, así el usuario ve el flow mientras edita. */
 #moduleNodeModal.modal-overlay {
   display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal, 1000);
-  padding: var(--spacing-lg);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: 380px;
+  max-width: 100%;
+  background: transparent;
+  align-items: stretch;
+  justify-content: flex-end;
+  z-index: 20;
+  padding: 0;
+  pointer-events: auto;
+  animation: moduleNodePanelIn 0.18s ease-out;
+}
+
+@keyframes moduleNodePanelIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 #moduleNodeModal.modal-overlay[style*="flex"] {
@@ -3916,7 +3960,38 @@
 }
 
 .modal-module-node {
-  max-width: min(420px, calc(100vw - 2rem));
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: #0f1012;
+  border-left: 1px solid #242424;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.modal-module-node .modal-header {
+  flex: 0 0 auto;
+  padding: 16px;
+  border-bottom: 1px solid #242424;
+}
+
+.modal-module-node .modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.modal-module-node .modal-footer {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-top: 1px solid #242424;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-module-node .modal-body .settings-field {
