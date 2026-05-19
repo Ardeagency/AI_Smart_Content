@@ -3707,11 +3707,19 @@
   position: relative;
 }
 
-/* Section wrapper: transparente, full-size; sin doble caja */
+/* Section wrapper: transparente, full-size; sin doble caja.
+   Override de .builder-main .builder-settings-form.builder-config-fullwidth
+   que pintaba bg-card + border + radius + padding-xl (la "caja glass" exterior) */
 .builder-tab-technical .builder-config-fullwidth,
-.builder-tab-technical .builder-settings-form {
+.builder-tab-technical .builder-settings-form,
+.builder-main .builder-tab-technical .builder-settings-form.builder-config-fullwidth {
   height: 100%;
   max-width: none;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .builder-tab-technical .settings-section.technical-section-modules {
