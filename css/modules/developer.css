@@ -1629,7 +1629,8 @@
   padding: var(--spacing-xl);
 }
 
-/* Configuración Builder: grid 2 columnas; derecha en 2 filas (3 secciones) */
+/* Configuración Builder: grid 2 columnas; derecha en 2 filas (3 secciones).
+   Sin fondo ni borde — el wrapper exterior ya provee el shell. */
 .builder-config-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -1638,10 +1639,9 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  background: var(--bg-card);
-  border: 1px solid var(--builder-input-border, var(--border-color));
-  border-radius: var(--radius-md);
-  padding: var(--spacing-xl);
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .builder-config-section--cover {
@@ -1805,36 +1805,36 @@
   flex-direction: row;
   gap: 4px;
   padding: 4px;
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
+  background: #141517;
+  border: 1px solid #242424;
   border-radius: var(--radius-md);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .flow-type-tab {
   flex: 1;
   min-width: 0;
   padding: 8px 12px;
+  font-family: var(--font-family);
   font-size: var(--font-size-base);
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, font-weight 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .flow-type-tab:hover {
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
 }
 
 .flow-type-tab.is-selected {
-  background: var(--dev-primary);
-  color: var(--bg-primary);
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
+  background: #1a1c20;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 
@@ -4203,8 +4203,8 @@
   height: 24px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
+  background: #242424;
+  border: 1px solid #2e2e2e;
   transition: background 0.2s ease, border-color 0.2s ease;
   box-sizing: border-box;
 }
@@ -4214,23 +4214,23 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--color-white, #fff);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  background: #d9d9d9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .toggle-switch-row .toggle-switch-input:checked + .toggle-switch {
-  background: var(--dev-primary);
-  border-color: var(--dev-primary);
+  background: var(--accent-warm, #e09145);
+  border-color: var(--accent-warm, #e09145);
 }
 
 .toggle-switch-row .toggle-switch-input:checked + .toggle-switch::after {
   transform: translateX(20px);
-  background: var(--bg-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .toggle-switch-label {
