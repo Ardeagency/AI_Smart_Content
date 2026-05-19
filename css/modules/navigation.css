@@ -3189,9 +3189,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     padding: 0 8px;
     min-height: 30px;
     height: 30px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: #141517 !important;
-    border: 1px solid #242424 !important;
+    border: 0 !important;
     box-shadow: none !important;
     color: #7B7B7B !important;
     font-family: var(--font-family) !important;
@@ -3200,20 +3200,20 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     letter-spacing: 0.05em;
     text-transform: uppercase;
     opacity: 1 !important;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease;
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-link:hover,
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link:hover {
     background: #1a1c20 !important;
-    border-color: #2e2e2e !important;
+    border: 0 !important;
     box-shadow: none !important;
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-link.active,
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link.active {
     background: #1a1c20 !important;
-    border-color: #3a3a3a !important;
+    border: 0 !important;
     box-shadow: none !important;
 }
 
@@ -3933,8 +3933,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   min-height: 30px;
   padding: 0 8px;
   background: #141517 !important;
-  border: 1px solid #242424 !important;
-  border-radius: 8px !important;
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #7B7B7B !important;
   font-size: 10px !important;
   font-weight: 400 !important;
@@ -3946,19 +3948,27 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   align-items: center;
   justify-content: center;
   gap: 0;
-  overflow: hidden;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  overflow: visible;
+  transition: background 0.15s ease;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
   background: #1a1c20 !important;
-  border-color: #2e2e2e !important;
 }
-/* Sin trazo arcoiris bajo cada pill (el blur del header ya da la firma rainbow) */
+/* Arco gradient bajo el pill — mismo patrón que el botón Vera (SVG mask + gradient dinámico) */
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
-  display: none !important;
-  content: none !important;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'><path d='M 0.75 15 L 0.75 21.25 A 8 8 0 0 0 8.75 29.25 L 91.25 29.25 A 8 8 0 0 0 99.25 21.25 L 99.25 15' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'><path d='M 0.75 15 L 0.75 21.25 A 8 8 0 0 0 8.75 29.25 L 91.25 29.25 A 8 8 0 0 0 99.25 21.25 L 99.25 15' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  pointer-events: none;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
