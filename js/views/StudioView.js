@@ -319,7 +319,7 @@ class StudioView extends BaseView {
       if (canvasEl) canvasEl.style.display = 'none';
       if (sidebar) sidebar.style.display = 'none';
       if (automatedWrap) {
-        automatedWrap.style.display = 'block';
+        automatedWrap.style.display = 'flex';
         this.applyStudioFlowBackground(flow);
         this.renderScheduleForm(flow);
       }
