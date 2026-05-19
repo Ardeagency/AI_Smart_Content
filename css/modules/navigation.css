@@ -3194,6 +3194,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border: 1px solid #242424 !important;
     box-shadow: none !important;
     color: #7B7B7B !important;
+    font-family: var(--font-family) !important;
     font-size: 10px !important;
     font-weight: 400 !important;
     letter-spacing: 0.05em;
@@ -3961,6 +3962,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
+  font-family: var(--font-family);
   font-size: 10px;
   font-weight: 400;
   color: #7B7B7B;
