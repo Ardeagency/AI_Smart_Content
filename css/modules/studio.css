@@ -98,12 +98,15 @@
   padding-right: var(--spacing-sm);
 }
 
-/* Derecha: resumen sticky sin scroll */
+/* Derecha: resumen sin scroll, ancho del grid track (320-360px) */
 .studio-automation-summary {
-  position: sticky;
-  top: 0;
   align-self: start;
+  width: 100%;
   max-height: 100%;
+  border-radius: var(--radius-md);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  padding: 24px;
   overflow: hidden;
 }
 
@@ -423,18 +426,6 @@
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 6px solid currentColor;
-}
-
-.studio-automation-summary {
-  position: relative;
-  width: 233px;
-  max-width: 100%;
-  border-radius: var(--radius-md);
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  padding: 24px;
 }
 
 .studio-automation-summary-inner {
