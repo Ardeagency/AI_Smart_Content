@@ -80,16 +80,32 @@ class StudioView extends BaseView {
                   <form class="studio-schedule-form" id="studioScheduleForm"></form>
                 </div>
               </div>
-              <aside class="studio-automation-summary studio-automation-summary--proximo" id="studioAutomationSummary" aria-label="Resumen de programación">
-                <div class="studio-automation-summary-proximo">
-                  <header class="studio-automation-summary-proximo-header">
-                    <h2 class="studio-automation-summary-proximo-title">Resumen</h2>
-                    <span class="studio-automation-summary-proximo-badge">Próximamente</span>
+              <aside class="studio-automation-summary" id="studioAutomationSummary" aria-label="Resumen de programación">
+                <div class="studio-summary-body">
+                  <header class="studio-summary-header">
+                    <h2 class="studio-summary-title">Resumen</h2>
                   </header>
-                  <p class="studio-automation-summary-proximo-desc">
-                    Aquí verás la vista previa de tu programación (ejecución, volumen, formato, campaña y audiencia) y podrás programar o guardar borrador.
-                  </p>
+                  <div class="studio-summary-section">
+                    <span class="studio-summary-label">Ejecución</span>
+                    <p class="studio-summary-value" id="studioSummaryFreq">—</p>
+                  </div>
+                  <div class="studio-summary-section">
+                    <span class="studio-summary-label">Producciones por ejecución</span>
+                    <p class="studio-summary-value" id="studioSummaryCount">—</p>
+                  </div>
+                  <div class="studio-summary-section">
+                    <span class="studio-summary-label">Formato</span>
+                    <p class="studio-summary-value" id="studioSummaryFormat">—</p>
+                  </div>
+                  <div class="studio-summary-section">
+                    <span class="studio-summary-label">Cron</span>
+                    <code class="studio-summary-cron" id="studioSummaryCron">—</code>
+                  </div>
                 </div>
+                <footer class="studio-summary-footer">
+                  <button type="button" class="studio-automation-btn-primary" id="studioScheduleActivate">Activar</button>
+                  <button type="button" class="studio-automation-btn-secondary" id="studioScheduleDraft">Borrador</button>
+                </footer>
               </aside>
             </div>
           </div>
@@ -554,6 +570,7 @@ class StudioView extends BaseView {
     const updateCron = () => {
       hiddenCron.value = buildCron();
       this.updateCreditsDisplay();
+      this._updateScheduleSummary();
     };
 
     typeSelect.addEventListener('change', () => {
@@ -668,7 +685,6 @@ class StudioView extends BaseView {
       section.className = 'studio-schedule-card' + (modifier ? ' ' + modifier : '');
       section.innerHTML =
         '<header class="studio-schedule-card-header">' +
-        '<div class="studio-schedule-card-icon"><i class="ph ph-list-checks" aria-hidden="true"></i></div>' +
         '<h3 class="studio-schedule-card-title">' + this.escapeHtml(title) + '</h3>' +
         '</header>' +
         '<div class="studio-schedule-card-body"></div>';
@@ -714,6 +730,136 @@ class StudioView extends BaseView {
     // Mover cualquier campo que haya quedado suelto al contexto, para no perder nada.
     const remaining = Array.from(formEl.querySelectorAll('.studio-field')).filter(el => !grid.contains(el));
     remaining.forEach(el => ctxBody.appendChild(el));
+
+    // Listeners para refrescar el Resumen en vivo cuando cambien production_count o aspect_ratio.
+    grid.addEventListener('input', () => this._updateScheduleSummary());
+    grid.addEventListener('change', () => this._updateScheduleSummary());
+
+    this._bindScheduleSummaryActions();
+    this._updateScheduleSummary();
+  }
+
+  /**
+   * Traduce un cron expression generado por el widget a texto humano.
+   * Soporta los patrones que produce buildCron: por_horas, por_dia, por_semana, personalizado.
+   */
+  _cronToHuman(cron) {
+    if (!cron || typeof cron !== 'string') return '—';
+    const parts = cron.trim().split(/\s+/);
+    if (parts.length < 5) return cron;
+    const [min, hour, dom, , dow] = parts;
+    const dowNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const pad = (s) => String(parseInt(s, 10) || 0).padStart(2, '0');
+
+    if (dow !== '*' && dow.length > 0) {
+      const days = dow.split(',').map(d => dowNames[parseInt(d, 10)] || d).join(', ');
+      return `${days} a las ${pad(hour)}:${pad(min)}`;
+    }
+    if (dom.startsWith('*/')) {
+      const n = dom.slice(2);
+      return `Cada ${n} ${n === '1' ? 'día' : 'días'} a las ${pad(hour)}:${pad(min)}`;
+    }
+    if (hour.startsWith('*/')) {
+      const n = hour.slice(2);
+      return `Cada ${n} ${n === '1' ? 'hora' : 'horas'} (min ${pad(min)})`;
+    }
+    if (hour !== '*' && dom === '*') {
+      return `Diariamente a las ${pad(hour)}:${pad(min)}`;
+    }
+    return cron;
+  }
+
+  /** Refresca el panel Resumen con cron actual, cantidad y formato. */
+  _updateScheduleSummary() {
+    const cron = document.getElementById('studio-schedule-cron_expression')?.value || '';
+    const countEl = document.querySelector('#studioScheduleForm [name="production_count"]');
+    const ratioEl = document.querySelector('#studioScheduleForm [name="aspect_ratio"]');
+
+    const freqEl = document.getElementById('studioSummaryFreq');
+    const countSummary = document.getElementById('studioSummaryCount');
+    const formatSummary = document.getElementById('studioSummaryFormat');
+    const cronSummary = document.getElementById('studioSummaryCron');
+
+    if (freqEl) freqEl.textContent = this._cronToHuman(cron);
+    if (countSummary) countSummary.textContent = (countEl?.value || '1');
+    if (formatSummary) formatSummary.textContent = (ratioEl?.value || '—');
+    if (cronSummary) cronSummary.textContent = cron || '—';
+  }
+
+  _bindScheduleSummaryActions() {
+    const activateBtn = document.getElementById('studioScheduleActivate');
+    const draftBtn = document.getElementById('studioScheduleDraft');
+    if (activateBtn && !activateBtn.dataset.bound) {
+      activateBtn.dataset.bound = '1';
+      activateBtn.addEventListener('click', () => this._saveSchedule('active'));
+    }
+    if (draftBtn && !draftBtn.dataset.bound) {
+      draftBtn.dataset.bound = '1';
+      draftBtn.addEventListener('click', () => this._saveSchedule('draft'));
+    }
+  }
+
+  /** Inserta un flow_schedules con el estado pedido (active | draft). */
+  async _saveSchedule(status) {
+    if (!this.supabase || !this.selectedFlow) {
+      this._notify('No hay flujo seleccionado.');
+      return;
+    }
+    const formEl = document.getElementById('studioScheduleForm');
+    if (!formEl) return;
+
+    const data = {};
+    formEl.querySelectorAll('input, textarea, select').forEach(el => {
+      const name = el.getAttribute('name');
+      if (!name || el.type === 'checkbox') return;
+      data[name] = (el.value || '').trim();
+    });
+
+    const cron = data.cron_expression || document.getElementById('studio-schedule-cron_expression')?.value || '';
+    if (!cron) { this._notify('Programación inválida.'); return; }
+
+    const entityVal = document.getElementById('studio-schedule-entity_id_value')?.value || data.entity_id || '';
+    const entityIds = entityVal ? entityVal.split(',').filter(Boolean) : null;
+    const campaignId = data.campaign_id || null;
+    const audienceId = data.audience_id || null;
+    const productionCount = parseInt(data.production_count || '1', 10) || 1;
+    const aspectRatio = data.aspect_ratio || '1:1';
+    const specs = data.production_specifications || '';
+
+    const jobName = `${this.selectedFlow.name} — ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
+    const brandId = await this.getBrandContainerId();
+
+    const insert = {
+      user_id: this.userId,
+      flow_id: this.selectedFlow.id,
+      brand_id: brandId || null,
+      cron_expression: cron,
+      status,
+      job_name: jobName,
+      entity_ids: entityIds,
+      campaign_ids: campaignId ? [campaignId] : null,
+      campaign_id: campaignId,
+      audience_ids: audienceId ? [audienceId] : null,
+      persona_id: audienceId,
+      production_count: productionCount,
+      aspect_ratio: aspectRatio,
+      production_specifications: specs || null
+    };
+
+    const btnId = status === 'active' ? 'studioScheduleActivate' : 'studioScheduleDraft';
+    const btn = document.getElementById(btnId);
+    if (btn) btn.disabled = true;
+    try {
+      const { error } = await this.supabase.from('flow_schedules').insert(insert).select('id').single();
+      if (error) {
+        console.error('[Studio] _saveSchedule:', error);
+        this._notify(`Error al ${status === 'active' ? 'activar' : 'guardar borrador'}: ${error.message}`);
+        return;
+      }
+      this._notify(status === 'active' ? 'Programación activada' : 'Borrador guardado');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   renderFlowForm(flow) {
