@@ -92,6 +92,27 @@ window.OrgCapabilities = (() => {
       'monitoring.view': true,
       'insights.view': true,
     },
+
+    // demo: rol del preview público (signInAnonymously + IGNIS). Tiene
+    // visibilidad de TODA la plataforma; las mutaciones quedan bloqueadas
+    // por RLS (en BD) y por DemoGuard (en cliente), no por capabilities.
+    // Estas caps habilitan la lectura/ruteo, no el write — el visitante
+    // verá Studio/Video/Production y al darle "generar" se abrirá el modal
+    // de signup en lugar de ejecutar. Caps admin (team/billing/integrations)
+    // quedan en false para que no entre a settings sensibles.
+    demo: {
+      ...fillAll(false),
+      'vera.chat': true,
+      'vera.actions.approve': true,
+      'studio.create': true,
+      'video.create': true,
+      'production.create': true,
+      'references.manage': true,
+      'brand.identity.edit': true,
+      'brand.storage.manage': true,
+      'monitoring.view': true,
+      'insights.view': true,
+    },
   };
 
   const ROLES = [
