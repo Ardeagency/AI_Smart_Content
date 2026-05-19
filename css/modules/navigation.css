@@ -3186,32 +3186,34 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link {
     justify-content: center;
     text-align: center;
-    padding: 0 10px;
-    min-height: 40px;
-    border-radius: var(--radius-md);
-    background: #0b0b0b !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    padding: 0 8px;
+    min-height: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: #141517 !important;
+    border: 1px solid #242424 !important;
     box-shadow: none !important;
-    color: var(--sidebar-text-primary) !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.01em;
+    color: #7B7B7B !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     opacity: 1 !important;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-link:hover,
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link:hover {
-    background: #121212 !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+    background: #1a1c20 !important;
+    border-color: #2e2e2e !important;
+    box-shadow: none !important;
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-link.active,
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link.active {
-    background: #101010 !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28) !important;
+    background: #1a1c20 !important;
+    border-color: #3a3a3a !important;
+    box-shadow: none !important;
 }
 
 .nav-mode-developer .nav-dev-primary-actions .nav-link.active::before,
@@ -3814,10 +3816,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   justify-content: center;
   height: auto;
   min-height: 0;
-  padding: 14px 16px 12px;
+  padding: 12px 8px 10px;
   box-sizing: border-box;
   border-bottom: 0;
   gap: 4px;
+  overflow: visible;
 }
 .nav-mode-developer .nav-dev-title {
   width: 100%;
@@ -3849,18 +3852,20 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   line-height: 1;
 }
 .nav-mode-developer .nav-dev-rank-label {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: #7B7B7B;
+  line-height: 11px;
 }
 .nav-mode-developer .nav-dev-rank-value {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #ffffff;
+  line-height: 11px;
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
@@ -3888,16 +3893,16 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   color: var(--sidebar-text-primary, var(--text-primary));
 }
 
-/* Primary actions dev (+Flow / +User): pills tipo Vera, lado a lado */
+/* Primary actions dev (+Flow / +User): pills lado a lado tipo mockup Figma */
 .nav-mode-developer .nav-dev-primary-actions {
   display: flex !important;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   grid-template-columns: none !important;
-  margin: 0 0 8px;
+  margin: 16px 0 8px;
   padding: 0 8px;
 }
 
@@ -3922,57 +3927,41 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   min-height: 30px;
   padding: 0 8px;
   background: #141517 !important;
-  border: 0 !important;
-  border-radius: var(--radius-sm) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--sidebar-text-primary) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.01em;
+  border: 1px solid #242424 !important;
+  border-radius: 8px !important;
+  color: #7B7B7B !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   opacity: 1 !important;
   box-shadow: none !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  overflow: visible;
-  transition: background 0.15s ease, transform 0.15s ease;
+  gap: 0;
+  overflow: hidden;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
   background: #1a1c20 !important;
-  transform: translateY(-1px);
+  border-color: #2e2e2e !important;
 }
-/* Trazo arcoiris bajo cada pill (siempre visible, no solo en active — igual al patrón Vera) */
+/* Sin trazo arcoiris bajo cada pill (el blur del header ya da la firma rainbow) */
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: -4px;
-  height: 2px;
-  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  border-radius: 2px;
-  opacity: 1;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover::after,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover::after {
-  opacity: 1;
-}
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-icon,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-icon {
-  font-size: 11px;
-  opacity: 0.85;
-  margin: 0;
+  display: none !important;
+  content: none !important;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 400;
+  color: #7B7B7B;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::before,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::before {
@@ -4029,13 +4018,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 0;
-  height: 2px;
+  left: 13px;
+  right: 13px;
+  bottom: -9px;
+  height: 17px;
   background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
+  filter: blur(12.5px);
   opacity: 1;
-  border-radius: 2px;
+  border-radius: 20px;
   pointer-events: none;
 }
 
@@ -4067,20 +4057,8 @@ body.dev-rank-context .nav-dev-rank-badge {
   display: none;
 }
 
-/* 3. Trazo arcoiris bajo el primary pill activo (estilo Vera underline) */
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::after,
-.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::after {
-  content: '';
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -6px;
-  height: 2px;
-  background: var(--dev-gradient-dynamic, transparent);
-  border-radius: 2px;
-  opacity: 0.9;
-  pointer-events: none;
-}
+/* (Antes: trazo arcoiris bajo el primary pill activo; ahora la firma rainbow vive
+   solo en el blur del header, los pills son chips planos según el mockup Figma) */
 
 /* 4. Glow sutil del logo Arde en el footer cuando hay rank (premiar la identidad) */
 .nav-mode-developer .nav-brand-footer .nav-brand-footer-logo-link {
