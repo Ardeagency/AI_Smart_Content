@@ -218,14 +218,20 @@
     async _authHeaders() {
       const headers = { 'Content-Type': 'application/json' };
       try {
-        const supabase = window.supabaseService?.getClient?.() || window.supabase;
-        if (supabase) {
+        const supabase = window.supabaseService?.getClient
+          ? await window.supabaseService.getClient()
+          : window.supabase;
+        if (supabase?.auth?.getSession) {
           const { data } = await supabase.auth.getSession();
-          if (data?.session?.access_token) {
-            headers['Authorization'] = `Bearer ${data.session.access_token}`;
-          }
+          const token = data?.session?.access_token;
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          else console.warn('[BillingService] sin access_token en session — usuario no logueado?');
+        } else {
+          console.warn('[BillingService] supabase client no disponible al construir headers');
         }
-      } catch (_) { /* no-op */ }
+      } catch (e) {
+        console.warn('[BillingService] error obteniendo token:', e?.message || e);
+      }
       return headers;
     }
 
