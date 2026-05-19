@@ -50,7 +50,13 @@
         version: flow.version || '1.0.0',
         owner_id: flow.owner_id,
         execution_mode: flow.execution_mode || 'single_step',
-        show_in_catalog: showInCatalog
+        show_in_catalog: showInCatalog,
+        is_active: flow.is_active !== false,
+        slug: flow.slug || null,
+        // Estadísticas read-only que la card de Ficha usa
+        likes_count: flow.likes_count || 0,
+        saves_count: flow.saves_count || 0,
+        run_count: flow.run_count || 0
       };
       
       this.inputSchema = [];
@@ -117,12 +123,8 @@
       } else {
         this.flowModules = [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
       }
-      if (this.inputSchema.length === 0 && flow.input_schema?.fields) {
-        this.inputSchema = flow.input_schema.fields;
-      } else if (this.inputSchema.length === 0 && Array.isArray(flow.input_schema)) {
-        this.inputSchema = flow.input_schema;
-      }
       // Normalizar input_type en cada campo para que el canvas muestre el cascarón correcto (number, select, checkbox, etc.)
+      // Nota: content_flows.input_schema legacy ya no existe en el schema; fuente de verdad = flow_modules[0].input_schema
       this.inputSchema = this.inputSchema.map(f => ({ ...f, input_type: f.input_type || f.type || 'text' }));
       // Modo de ejecución: 1 módulo = lineal (single_step), 2+ = secuencial
       if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
@@ -217,6 +219,8 @@
     
     try {
       if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
+      const isSystem = this.flowData.flow_category_type === 'system';
+      const isPublished = this.flowData.status === 'published';
       const flowPayload = {
         name: this.flowData.name.trim(),
         description: this.flowData.description,
@@ -229,24 +233,35 @@
         status: this.flowData.status,
         version: this.flowData.version,
         execution_mode: this.flowData.execution_mode || 'single_step',
-        show_in_catalog: !!this.flowData.show_in_catalog,
+        // System flows nunca en catálogo, sin importar el toggle (defensa en profundidad)
+        show_in_catalog: isSystem ? false : !!this.flowData.show_in_catalog,
+        // is_active sigue al ciclo de publicación
+        is_active: isPublished,
         ui_layout_config: this.uiLayoutConfig
       };
-      
+
       let flowId = this.flowId;
-      
+
       if (this.isEditMode && flowId) {
         // Update existing flow
         const { error } = await this.supabase
           .from('content_flows')
           .update(flowPayload)
           .eq('id', flowId);
-        
+
         if (error) throw error;
       } else {
         // Create new flow
         flowPayload.owner_id = this.userId;
-        
+        // Slug autogenerado en el primer save (BD lo tiene UNIQUE)
+        const baseSlug = (this.flowData.name || 'flow')
+          .toLowerCase()
+          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 60) || 'flow';
+        flowPayload.slug = baseSlug + '-' + Math.random().toString(36).slice(2, 8);
+
         const { data, error } = await this.supabase
           .from('content_flows')
           .insert(flowPayload)
@@ -300,14 +315,16 @@
     if (keepIds.length > 0) {
       const { data: existing } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
       const toDelete = (existing || []).filter(r => !keepIds.includes(r.id)).map(r => r.id);
-      for (const id of toDelete) {
-        await this.supabase.from('flow_technical_details').delete().eq('flow_module_id', id);
-        await this.supabase.from('flow_modules').delete().eq('id', id);
+      if (toDelete.length > 0) {
+        // FK ON DELETE no es cascade en flow_technical_details; borrar primero (en bulk)
+        await this.supabase.from('flow_technical_details').delete().in('flow_module_id', toDelete);
+        await this.supabase.from('flow_modules').delete().in('id', toDelete);
       }
     } else {
       const { data: existingMods } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
-      for (const row of existingMods || []) {
-        await this.supabase.from('flow_technical_details').delete().eq('flow_module_id', row.id);
+      const ids = (existingMods || []).map(r => r.id);
+      if (ids.length > 0) {
+        await this.supabase.from('flow_technical_details').delete().in('flow_module_id', ids);
       }
       await this.supabase.from('flow_modules').delete().eq('content_flow_id', flowId);
     }
@@ -346,8 +363,12 @@
       }
       
       // 2) Actualizar todos los módulos (name, step_order, execution_type, webhooks, input_schema primer módulo, next_module_id, output_schema, routing_rules)
+      // Derivar next_module_id desde el orden de mods (grafo lineal por step_order). Cada módulo apunta al siguiente, el último a null.
       for (let i = 0; i < mods.length; i++) {
         if (!mods[i].id) continue;
+        const nextId = (i < mods.length - 1) ? (mods[i + 1].id || null) : null;
+        // Persistir también en memoria para que loadFlow/render no muestre estado obsoleto
+        mods[i].next_module_id = nextId;
         const payload = {
           name: mods[i].name || 'Módulo ' + (i + 1),
           step_order: i + 1,
@@ -355,7 +376,7 @@
           webhook_url_test: mods[i].webhook_url_test || null,
           webhook_url_prod: mods[i].webhook_url_prod || null,
           is_human_approval_required: !!mods[i].is_human_approval_required,
-          next_module_id: mods[i].next_module_id || null,
+          next_module_id: nextId,
           output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
           routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
         };
@@ -410,27 +431,32 @@
       this.showNotification('Agrega al menos un campo de entrada', 'warning');
       return;
     }
-    const firstModule = this.flowModules[0];
-    const prodUrl = firstModule?.webhook_url_prod || '';
-    const testUrl = firstModule?.webhook_url_test || '';
-    if (prodUrl && !/^https?:\/\/.+/.test(prodUrl)) {
-      this.showNotification('La URL de producción no es válida', 'warning');
-      this.switchTab('technical');
-      return;
-    }
-    if (testUrl && !/^https?:\/\/.+/.test(testUrl)) {
-      this.showNotification('La URL de test no es válida', 'warning');
-      this.switchTab('technical');
-      return;
-    }
-    if (!this.technicalDetails.webhook_url_prod && !this.technicalDetails.webhook_url_test) {
-      this.showNotification('Configura al menos un webhook', 'warning');
-      this.switchTab('technical');
-      return;
+    // Validar webhooks de TODOS los módulos, no solo el primero
+    const isUrl = (u) => /^https?:\/\/.+/.test(u);
+    for (let i = 0; i < this.flowModules.length; i++) {
+      const m = this.flowModules[i] || {};
+      const prodUrl = m.webhook_url_prod || '';
+      const testUrl = m.webhook_url_test || '';
+      if (prodUrl && !isUrl(prodUrl)) {
+        this.showNotification(`Módulo ${i + 1}: URL de producción no es válida`, 'warning');
+        this.switchTab('technical');
+        return;
+      }
+      if (testUrl && !isUrl(testUrl)) {
+        this.showNotification(`Módulo ${i + 1}: URL de test no es válida`, 'warning');
+        this.switchTab('technical');
+        return;
+      }
+      // Cada módulo necesita al menos un webhook configurado (los tipos non-webhook se validarán cuando se introduzcan adapters)
+      if ((m.execution_type || 'webhook') === 'webhook' && !prodUrl && !testUrl) {
+        this.showNotification(`Módulo ${i + 1}: configura al menos un webhook (test o prod)`, 'warning');
+        this.switchTab('technical');
+        return;
+      }
     }
     try {
       this.flowData.status = 'published';
-      await this.saveFlow();
+      await this.saveFlow(); // saveFlow ya pone is_active=true porque status === 'published'
       this.updateStatusBadge();
       this.renderFooter();
       this.showNotification('¡Flujo publicado exitosamente!', 'success');
@@ -457,6 +483,27 @@
       this.updateStatusBadge();
       this.renderFooter();
       this.showNotification('Revisión solicitada. Un Lead aprobará el flujo.', 'success');
+
+      // Notificar a los Leads (best-effort; no rompe si falla)
+      try {
+        const { data: leads } = await this.supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_lead', true);
+        if (leads && leads.length > 0) {
+          const flowName = this.flowData.name || 'Flujo sin nombre';
+          const rows = leads.map(l => ({
+            recipient_user_id: l.id,
+            flow_id: this.flowId,
+            severity: 'info',
+            title: 'Revisión solicitada',
+            message: `«${flowName}» está esperando aprobación.`
+          }));
+          await this.supabase.from('developer_notifications').insert(rows);
+        }
+      } catch (notifyErr) {
+        console.warn('No se pudo notificar a los Lead:', notifyErr);
+      }
     } catch (err) {
       console.error('Error requesting review:', err);
       this.showNotification('Error al solicitar revisión', 'error');
@@ -472,7 +519,7 @@
       }
       const { error } = await this.supabase
         .from('content_flows')
-        .update({ status: 'published' })
+        .update({ status: 'published', is_active: true })
         .eq('id', this.flowId);
       if (error) throw error;
       this.flowData.status = 'published';
@@ -520,7 +567,7 @@
     try {
       const { error } = await this.supabase
         .from('content_flows')
-        .update({ status: 'draft' })
+        .update({ status: 'draft', is_active: false })
         .eq('id', this.flowId);
       if (error) throw error;
       this.flowData.status = 'draft';

@@ -635,16 +635,19 @@ class DevBuilderView extends DevBaseView {
       this.renderComponentsList();
       return;
     }
-    
+
     try {
+      const flowType = this.flowData.flow_category_type || 'manual';
+      // Filtrar por for_flow_type del template: null = aplica a todos; otro valor = solo a ese tipo de flujo
       const { data, error } = await this.supabase
         .from('ui_component_templates')
-        .select('id, name, description, category, icon_name, base_schema, default_ui_config, is_active, order_index')
+        .select('id, name, description, category, icon_name, base_schema, default_ui_config, is_active, order_index, for_flow_type, template_level')
         .eq('is_active', true)
+        .or(`for_flow_type.is.null,for_flow_type.eq.${flowType}`)
         .order('order_index', { ascending: true });
-      
+
       if (error) throw error;
-      
+
       const fromDb = data && data.length > 0 ? data.map(row => this.normalizeComponentTemplate(row)) : [];
       this.componentTemplates = fromDb.length > 0 ? fromDb : this.getDefaultTemplates().map(t => this.normalizeComponentTemplate(t));
       this.renderComponentsList();
@@ -696,7 +699,7 @@ class DevBuilderView extends DevBaseView {
   getFlowPublicUrl() {
     if (!this.flowId) return null;
     const origin = window.location.origin || '';
-    const pathname = (window.location.pathname || '').replace(/\/$/, '') || '';
+    const pathname = (window.location.pathname || '').replace(/\/+$/, '') || '';
     return `${origin}${pathname}/#/studio?flow=${this.flowId}`;
   }
 
@@ -712,6 +715,11 @@ class DevBuilderView extends DevBaseView {
     main.classList.toggle('builder-tab-inputs-active', isInputs);
     if (componentsSidebar) componentsSidebar.style.display = isInputs ? '' : 'none';
     if (propertiesSidebar) propertiesSidebar.style.display = isInputs ? '' : 'none';
+    if (isInputs) {
+      // Re-renderiza canvas para reaplicar selección y listeners
+      this.renderCanvas();
+      this.renderPropertiesPanel();
+    }
     if (tabId === 'ficha') this.renderFicha();
   }
 
@@ -773,16 +781,17 @@ class DevBuilderView extends DevBaseView {
     const badges = [];
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
-    const categoryOpt = this.querySelector('#flowCategory option:checked');
-    const subcategoryOpt = this.querySelector('#flowSubcategory option:checked');
-    const categoryName = categoryOpt ? this.escapeHtml(categoryOpt.textContent.trim()) : '—';
-    const subcategoryName = subcategoryOpt ? this.escapeHtml(subcategoryOpt.textContent.trim()) : '—';
+    // Leer del state (no del DOM) para evitar races con loadCategories/loadSubcategories
+    const categoryRow = this.categories.find(c => c.id === this.flowData.category_id);
+    const subcategoryRow = this.subcategories.find(s => s.id === this.flowData.subcategory_id);
+    const categoryName = categoryRow ? this.escapeHtml(categoryRow.name) : '—';
+    const subcategoryName = subcategoryRow ? this.escapeHtml(subcategoryRow.name) : '—';
     const outputTypeLabel = this.getOutputTypeLabel(this.flowData.output_type);
     const executionLabel = this.getExecutionModeLabel(this.flowData.execution_mode);
 
     const tags = [];
-    if (categoryOpt?.textContent?.trim()) tags.push(this.escapeHtml(categoryOpt.textContent.trim()));
-    if (subcategoryOpt?.textContent?.trim()) tags.push(this.escapeHtml(subcategoryOpt.textContent.trim()));
+    if (categoryRow?.name) tags.push(this.escapeHtml(categoryRow.name));
+    if (subcategoryRow?.name) tags.push(this.escapeHtml(subcategoryRow.name));
     if (isAutopilotLike) tags.push('Autopilot');
     const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
 
@@ -886,10 +895,15 @@ class DevBuilderView extends DevBaseView {
       canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
     }
     if (tokenCostInput) {
-      tokenCostInput.min = 0;
+      const minCost = isSystem ? 0 : 1;
+      tokenCostInput.min = minCost;
       tokenCostInput.max = 100;
       tokenCostInput.disabled = false;
-      tokenCostInput.value = this.flowData.token_cost ?? 1;
+      // Si el actual viola el mínimo (p.ej. era manual con 0), normaliza
+      const cur = this.flowData.token_cost ?? 1;
+      const norm = Math.max(minCost, cur);
+      if (norm !== cur) this.flowData.token_cost = norm;
+      tokenCostInput.value = norm;
     }
     if (uiShowInCatalog) {
       // Flujos de sistema se comportan como manuales pero nunca deben aparecer en catálogo
@@ -1019,10 +1033,7 @@ class DevBuilderView extends DevBaseView {
 
     // Settings form listeners
     this.setupSettingsListeners();
-    
-    // Technical form listeners
-    this.setupTechnicalListeners();
-    
+
     // Modal listeners
     this.setupModalListeners();
     
@@ -1033,6 +1044,22 @@ class DevBuilderView extends DevBaseView {
     var keydownHandler = (e) => this.handleBuilderKeydown(e);
     document.addEventListener('keydown', keydownHandler);
     this._documentListeners.push({ element: document, event: 'keydown', handler: keydownHandler });
+
+    // Escape global: cierra el último modal visible
+    var escapeHandler = (e) => this.handleBuilderEscape(e);
+    document.addEventListener('keydown', escapeHandler);
+    this._documentListeners.push({ element: document, event: 'keydown', handler: escapeHandler });
+
+    // beforeunload: avisar si hay cambios sin guardar
+    var beforeUnloadHandler = (e) => {
+      if (this.hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    this._documentListeners.push({ element: window, event: 'beforeunload', handler: beforeUnloadHandler });
   }
 
   destroy() {
@@ -1055,8 +1082,37 @@ class DevBuilderView extends DevBaseView {
     const target = document.activeElement;
     const isTextInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
     if (isTextInput) return;
+    // No borrar si hay un modal visible
+    if (this.hasVisibleModal()) return;
     e.preventDefault();
     this.deleteField(this.selectedFieldIndex);
+  }
+
+  hasVisibleModal() {
+    const modals = this.querySelectorAll('.modal, .modal-overlay');
+    for (const m of modals) {
+      if (m.hasAttribute('hidden')) continue;
+      const cs = window.getComputedStyle(m);
+      if (cs.display !== 'none' && cs.visibility !== 'hidden') return true;
+    }
+    return false;
+  }
+
+  handleBuilderEscape(e) {
+    if (e.key !== 'Escape') return;
+    // Cerrar el último modal visible (top-most)
+    const modals = Array.from(this.querySelectorAll('.modal, .modal-overlay')).filter(m => {
+      if (m.hasAttribute('hidden')) return false;
+      const cs = window.getComputedStyle(m);
+      return cs.display !== 'none' && cs.visibility !== 'hidden';
+    });
+    if (modals.length === 0) return;
+    const last = modals[modals.length - 1];
+    if (last.id === 'moduleNodeModal' && typeof this.closeModuleNodeModal === 'function') {
+      this.closeModuleNodeModal();
+    } else {
+      last.style.display = 'none';
+    }
   }
 
   setupFooterListeners() {
@@ -1099,7 +1155,11 @@ class DevBuilderView extends DevBaseView {
       flowDescription: (v) => this.flowData.description = v,
       flowCategory: (v) => this.flowData.category_id = v || null,
       flowSubcategory: (v) => this.flowData.subcategory_id = v || null,
-      flowTokenCost: (v) => this.flowData.token_cost = parseInt(v, 10) >= 0 ? parseInt(v, 10) : 1,
+      flowTokenCost: (v) => {
+        const n = parseInt(v, 10);
+        const min = (this.flowData.flow_category_type === 'system') ? 0 : 1;
+        this.flowData.token_cost = isNaN(n) ? min : Math.max(min, n);
+      },
       flowVersion: (v) => this.flowData.version = v
     };
     
@@ -1148,6 +1208,8 @@ class DevBuilderView extends DevBaseView {
         this.updateFlowTypePicker(v);
         this.applyFlowTypeUI();
         this.renderFooter();
+        // Refrescar paleta de componentes según el nuevo tipo (algunos templates son específicos)
+        this.loadComponentTemplates();
       });
     }
     this.updateFlowTypePicker(this.flowData.flow_category_type || 'manual');
@@ -1167,21 +1229,6 @@ class DevBuilderView extends DevBaseView {
         this.hasUnsavedChanges = true;
       });
     }
-  }
-
-  setupTechnicalListeners() {
-    const fields = {
-      webhookMethod: (v) => { this.technicalDetails.webhook_method = v; this.onFieldChange(); },
-      platformName: (v) => { this.technicalDetails.platform_name = v; this.onFieldChange(); },
-      editorUrl: (v) => { this.technicalDetails.editor_url = v; this.onFieldChange(); }
-    };
-    Object.entries(fields).forEach(([id, setter]) => {
-      const el = this.querySelector(`#${id}`);
-      if (el) {
-        el.addEventListener('input', (e) => setter(e.target.value));
-        el.addEventListener('change', (e) => setter(e.target.value));
-      }
-    });
   }
 
   setupModalListeners() {
@@ -1277,6 +1324,10 @@ class DevBuilderView extends DevBaseView {
       this.showNotification('No se puede subir la portada', 'error');
       return;
     }
+    if (!this.userId) {
+      this.showNotification('Inicia sesión para subir la portada', 'error');
+      return;
+    }
 
     const MAX_SIZE_MB = 50;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
@@ -1320,6 +1371,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   showTestModal() {
+    if (!this.flowId) {
+      this.showNotification('Guarda el flujo antes de probarlo', 'warning');
+      return;
+    }
     if (!this.technicalDetails.webhook_url_test && !this.technicalDetails.webhook_url_prod) {
       this.showNotification('Configura un webhook primero', 'warning');
       this.switchTab('technical');
@@ -1396,12 +1451,13 @@ class DevBuilderView extends DevBaseView {
     `;
     
     document.body.appendChild(notification);
-    
+
+    const duration = (type === 'error' || type === 'warning') ? 6000 : 3000;
     setTimeout(() => notification.classList.add('show'), 10);
     setTimeout(() => {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, duration);
   }
 }
 

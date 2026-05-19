@@ -22,6 +22,7 @@
     constructor() {
       this._gatewaysCache = null;
       this._widgetLoading = null;
+      this._checkoutInFlight = false;   // guard anti-doble-click
     }
 
     // ── public API ─────────────────────────────────────────────────
@@ -44,9 +45,19 @@
      * Wompi si está activo (mercado primario CO), Stripe en otro caso.
      */
     async startCheckout({ target, planId, packageId, billing, gateway = 'auto' }) {
+      if (this._checkoutInFlight) {
+        console.warn('[BillingService] checkout ya en curso — ignorando re-trigger');
+        return;
+      }
+      this._checkoutInFlight = true;
+      // safety net: si algo se cuelga, libera el guard a los 60s para no quedar bloqueado.
+      const releaseTimer = setTimeout(() => { this._checkoutInFlight = false; }, 60_000);
+      const release = () => { clearTimeout(releaseTimer); this._checkoutInFlight = false; };
+
       const orgId = this._activeOrgId();
       if (!orgId) {
         this._toast('No hay organización activa. Selecciona una organización antes de continuar.', 'error');
+        release();
         return;
       }
 
@@ -54,15 +65,22 @@
       const chosen   = this._resolveGateway(gateway, gateways);
       if (!chosen) {
         this._toast('Ninguna pasarela de pago está configurada. Contacta a soporte.', 'error');
+        release();
         return;
       }
 
-      if (chosen === 'auto-prompt') {
-        return this._openGatewayPicker({ target, planId, packageId, billing });
+      try {
+        if (chosen === 'auto-prompt') {
+          await this._openGatewayPicker({ orgId, target, planId, packageId, billing });
+        } else if (chosen === 'stripe') {
+          await this._checkoutStripe({ orgId, target, planId, packageId, billing });
+        } else if (chosen === 'wompi') {
+          await this._checkoutWompi({ orgId, target, planId, packageId, billing, onClose: release });
+          return;   // Wompi libera el guard en el callback del widget, no aquí.
+        }
+      } finally {
+        if (chosen !== 'wompi') release();
       }
-
-      if (chosen === 'stripe') return this._checkoutStripe({ orgId, target, planId, packageId, billing });
-      if (chosen === 'wompi')  return this._checkoutWompi ({ orgId, target, planId, packageId, billing });
     }
 
     async openCustomerPortal() {
@@ -91,7 +109,7 @@
       return null;
     }
 
-    _openGatewayPicker(ctx) {
+    _openGatewayPicker({ orgId, target, planId, packageId, billing }) {
       // Modal simple con 2 opciones. Si la app tiene un sistema de modales
       // propio se puede integrar allí; por simplicidad uso un overlay inline.
       const existing = document.getElementById('billingGatewayPicker');
@@ -121,8 +139,14 @@
         if (!btn) return;
         const gw = btn.getAttribute('data-gw');
         overlay.remove();
-        if (gw === 'wompi')  return this._checkoutWompi ({ orgId: this._activeOrgId(), ...ctx });
-        if (gw === 'stripe') return this._checkoutStripe({ orgId: this._activeOrgId(), ...ctx });
+        if (gw === 'cancel') { this._checkoutInFlight = false; return; }
+        if (gw === 'wompi') {
+          return this._checkoutWompi({ orgId, target, planId, packageId, billing, onClose: () => { this._checkoutInFlight = false; } });
+        }
+        if (gw === 'stripe') {
+          await this._checkoutStripe({ orgId, target, planId, packageId, billing });
+          this._checkoutInFlight = false;
+        }
       });
     }
 
@@ -148,7 +172,8 @@
 
     // ── Wompi ──────────────────────────────────────────────────────
 
-    async _checkoutWompi({ orgId, target, planId, packageId, billing }) {
+    async _checkoutWompi({ orgId, target, planId, packageId, billing, onClose }) {
+      const finish = () => { try { onClose && onClose(); } catch (_) {} };
       try {
         const body = JSON.stringify({
           organization_id: orgId,
@@ -175,6 +200,7 @@
           customerData:    data.customer_email ? { email: data.customer_email } : undefined,
         });
         checkout.open((result) => {
+          finish();
           // result.transaction tiene id + status; el webhook es la fuente de verdad.
           // Aquí solo damos feedback visual inmediato.
           const tx     = result?.transaction;
@@ -189,6 +215,7 @@
         });
       } catch (e) {
         this._toast(`Wompi: ${e.message}`, 'error');
+        finish();
       }
     }
 

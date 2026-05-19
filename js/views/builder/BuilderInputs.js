@@ -181,11 +181,15 @@
 
   P.addField = function (templateId, templateDataFromDrag) {
     const template = this.componentTemplates.find(t => String(t.id) === String(templateId));
-    // Usar siempre el template actual (BD o fallback): base_schema y default_ui_config son la fuente de verdad
+    // Deep clone para que options/flags_category/etc. no se compartan por referencia entre plantilla y campo
+    const cloneDeep = (o) => {
+      if (o == null) return {};
+      try { return JSON.parse(JSON.stringify(o)); } catch (_) { return { ...o }; }
+    };
     const baseSchema = template?.base_schema && typeof template.base_schema === 'object'
-      ? { ...template.base_schema }
-      : (templateDataFromDrag && typeof templateDataFromDrag === 'object' ? { ...templateDataFromDrag } : {});
-    const defaultUi = template?.default_ui_config && typeof template.default_ui_config === 'object' ? { ...template.default_ui_config } : {};
+      ? cloneDeep(template.base_schema)
+      : (templateDataFromDrag && typeof templateDataFromDrag === 'object' ? cloneDeep(templateDataFromDrag) : {});
+    const defaultUi = template?.default_ui_config && typeof template.default_ui_config === 'object' ? cloneDeep(template.default_ui_config) : {};
     const fieldName = this.generateFieldKey(template?.name || templateId);
     
     const newField = {
@@ -499,14 +503,17 @@
   P.deleteField = function (index) {
     this.getCanvasFields().splice(index, 1);
     this.hasUnsavedChanges = true;
-    
-    if (this.selectedFieldIndex === index) {
+
+    // Reajustar selección: el chequeo explícito evita comparaciones con null que producen falsos negativos
+    if (this.selectedFieldIndex == null) {
+      // nada que hacer
+    } else if (this.selectedFieldIndex === index) {
       this.selectedFieldIndex = null;
       this.renderPropertiesPanel();
     } else if (this.selectedFieldIndex > index) {
       this.selectedFieldIndex--;
     }
-    
+
     this.renderCanvas();
     this.updateJsonPreview();
   };
@@ -1369,13 +1376,37 @@
     const hiddenCheckbox = this.querySelector('#propHidden');
     
     if (keyInput) {
-      keyInput.addEventListener('change', (e) => {
-        const newKey = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-        if (newKey && !this.getCanvasFields().some((f, i) => i !== this.selectedFieldIndex && f.key === newKey)) {
-          field.key = newKey;
+      const validateKey = (raw) => {
+        const cleaned = (raw || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+        if (!cleaned) return { ok: false, reason: 'vacío' };
+        if (!/^[a-z_]/.test(cleaned)) return { ok: false, reason: 'debe iniciar con letra o guion bajo' };
+        if (this.getCanvasFields().some((f, i) => i !== this.selectedFieldIndex && f.key === cleaned)) {
+          return { ok: false, reason: 'duplicado con otro campo' };
+        }
+        return { ok: true, value: cleaned };
+      };
+      const apply = (e, commit) => {
+        const v = validateKey(e.target.value);
+        if (v.ok) {
+          field.key = v.value;
+          if (commit) e.target.value = v.value;
+          e.target.removeAttribute('aria-invalid');
+          e.target.removeAttribute('title');
           this.onFieldChange();
         } else {
+          e.target.setAttribute('aria-invalid', 'true');
+          e.target.title = 'Key inválida: ' + v.reason;
+        }
+      };
+      keyInput.addEventListener('input', (e) => apply(e, false));
+      keyInput.addEventListener('blur', (e) => {
+        const v = validateKey(e.target.value);
+        if (!v.ok) {
           e.target.value = field.key;
+          e.target.removeAttribute('aria-invalid');
+          e.target.removeAttribute('title');
+        } else {
+          apply(e, true);
         }
       });
     }
@@ -1518,27 +1549,61 @@
     
     const defaultValueJson = this.querySelector('#propDefaultValueJson');
     if (defaultValueJson) {
+      const markInvalid = (el, reason) => {
+        el.setAttribute('aria-invalid', 'true');
+        el.classList.add('property-json-editor--invalid');
+        el.title = 'JSON inválido: ' + reason;
+      };
+      const clearInvalid = (el) => {
+        el.removeAttribute('aria-invalid');
+        el.classList.remove('property-json-editor--invalid');
+        el.removeAttribute('title');
+      };
+      // Marcar al vuelo mientras escribe; commit en blur
+      defaultValueJson.addEventListener('input', (e) => {
+        const raw = (e.target.value || '').trim();
+        if (!raw) { clearInvalid(e.target); return; }
+        try {
+          const parsed = JSON.parse(raw);
+          if (field.data_type === 'array' && !Array.isArray(parsed)) {
+            markInvalid(e.target, 'se esperaba array');
+            return;
+          }
+          if (field.data_type === 'object' && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+            markInvalid(e.target, 'se esperaba objeto');
+            return;
+          }
+          clearInvalid(e.target);
+        } catch (_) {
+          markInvalid(e.target, 'sintaxis');
+        }
+      });
       defaultValueJson.addEventListener('blur', (e) => {
         const raw = (e.target.value || '').trim();
         if (!raw) {
           field.defaultValue = (field.data_type === 'array') ? [] : {};
+          clearInvalid(e.target);
           this.onFieldChange();
           return;
         }
         try {
           const parsed = JSON.parse(raw);
           if (field.data_type === 'array' && !Array.isArray(parsed)) {
-            e.target.value = JSON.stringify(field.defaultValue, null, 2);
-            return;
+            markInvalid(e.target, 'se esperaba array');
+            this.showNotification('Valor por defecto: se esperaba un array', 'error');
+            return; // mantiene el raw del usuario, no resetea
           }
           if (field.data_type === 'object' && (typeof parsed !== 'object' || Array.isArray(parsed))) {
-            e.target.value = JSON.stringify(field.defaultValue || {}, null, 2);
-            return;
+            markInvalid(e.target, 'se esperaba objeto');
+            this.showNotification('Valor por defecto: se esperaba un objeto', 'error');
+            return; // mantiene el raw del usuario, no resetea
           }
           field.defaultValue = parsed;
           e.target.value = JSON.stringify(parsed, null, 2);
+          clearInvalid(e.target);
           this.onFieldChange();
         } catch (err) {
+          markInvalid(e.target, 'sintaxis');
           this.showNotification('JSON inválido en valor por defecto', 'error');
         }
       });

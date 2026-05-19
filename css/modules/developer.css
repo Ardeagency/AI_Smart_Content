@@ -4346,6 +4346,19 @@
   min-height: 60px;
 }
 
+/* Estados de validación (P0-7 key duplicada, P1-11 JSON inválido) */
+.property-field input[aria-invalid="true"],
+.property-field textarea[aria-invalid="true"],
+.property-json-editor--invalid {
+  border-color: var(--color-critical, #ef4444) !important;
+  box-shadow: 0 0 0 1px var(--color-critical, #ef4444) inset;
+}
+.property-field input[aria-invalid="true"]:focus,
+.property-field textarea[aria-invalid="true"]:focus,
+.property-json-editor--invalid:focus {
+  outline-color: var(--color-critical, #ef4444);
+}
+
 .property-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
