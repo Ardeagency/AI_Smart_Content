@@ -29,26 +29,45 @@
       return 'module-node--default';
     };
 
+    // Mapa id→index para detectar saltos no-lineales
+    const idToIndex = new Map();
+    mods.forEach((m, i) => { if (m.id) idToIndex.set(m.id, i); });
+
     const parts = [];
     mods.forEach((m, i) => {
       const name = (m.name || 'Módulo ' + (i + 1)).trim() || 'Módulo ' + (i + 1);
       const removeBtn = mods.length > 1
         ? `<button type="button" class="module-node-remove" data-module-index="${i}" title="Quitar módulo" aria-label="Quitar módulo"><i class="ph ph-x"></i></button>`
         : '';
+      // Indicadores de routing no-lineal
+      const badges = [];
+      if (m.next_module_id && idToIndex.has(m.next_module_id) && idToIndex.get(m.next_module_id) !== i + 1) {
+        const target = mods[idToIndex.get(m.next_module_id)];
+        badges.push(`<span class="module-node-badge module-node-badge--jump" title="Salta a: ${this.escapeHtml(target.name || '')}"><i class="ph ph-arrow-bend-up-right"></i> →${idToIndex.get(m.next_module_id) + 1}</span>`);
+      }
+      if (m.routing_rules) {
+        badges.push(`<span class="module-node-badge module-node-badge--routing" title="Tiene routing condicional"><i class="ph ph-git-branch"></i></span>`);
+      }
+      if (m.is_human_approval_required) {
+        badges.push(`<span class="module-node-badge module-node-badge--approval" title="Requiere aprobación humana"><i class="ph ph-hand"></i></span>`);
+      }
       parts.push(`
         <div class="module-node ${nodeTypeClass(i)}" data-module-index="${i}" title="Doble clic para editar">
           <span class="module-node-handle module-node-handle--left" aria-hidden="true"></span>
           <div class="module-node-inner">
             <span class="module-node-order">${i + 1}</span>
             <span class="module-node-name">${this.escapeHtml(name)}</span>
+            ${badges.length ? `<span class="module-node-badges">${badges.join('')}</span>` : ''}
             ${removeBtn}
           </div>
           <span class="module-node-handle module-node-handle--right" aria-hidden="true"></span>
         </div>
       `);
       if (i < mods.length - 1) {
+        // Si el next_module_id apunta explícitamente al siguiente Y_NO_NEXT, marcar la línea como "saltada"
+        const skipsNext = m.next_module_id && idToIndex.has(m.next_module_id) && idToIndex.get(m.next_module_id) !== i + 1;
         parts.push(`
-          <div class="module-edge" aria-hidden="true">
+          <div class="module-edge ${skipsNext ? 'module-edge--skipped' : ''}" aria-hidden="true">
             <svg class="module-edge-svg" viewBox="0 0 48 24" preserveAspectRatio="none">
               <path class="module-edge-path" d="M 0 12 L 48 12" fill="none" stroke-width="1"/>
             </svg>
@@ -74,13 +93,60 @@
     const urlTestEl = this.querySelector('#moduleNodeModalUrlTest');
     const urlProdEl = this.querySelector('#moduleNodeModalUrlProd');
     const indexEl = this.querySelector('#moduleNodeModalIndex');
+    const nextEl = this.querySelector('#moduleNodeModalNext');
+    const routingEl = this.querySelector('#moduleNodeModalRoutingRules');
+    const outputEl = this.querySelector('#moduleNodeModalOutputSchema');
+    const approvalEl = this.querySelector('#moduleNodeModalHumanApproval');
     if (nameEl) nameEl.value = mod.name || '';
     if (typeEl) typeEl.value = mod.execution_type || 'webhook';
     if (urlTestEl) urlTestEl.value = mod.webhook_url_test || '';
     if (urlProdEl) urlProdEl.value = mod.webhook_url_prod || '';
     if (indexEl) indexEl.value = String(index);
+
+    // Poblar selector "Siguiente módulo" con los otros módulos del flujo
+    if (nextEl) {
+      const opts = ['<option value="">— Auto (siguiente por orden) —</option>'];
+      this.flowModules.forEach((m, i) => {
+        if (i === index) return; // no permitir auto-referencia
+        const id = m.id || `idx_${i}`;
+        const label = m.name || `Módulo ${i + 1}`;
+        opts.push(`<option value="${this.escapeHtml(id)}">${this.escapeHtml(label)}</option>`);
+      });
+      nextEl.innerHTML = opts.join('');
+      nextEl.value = mod.next_module_id || '';
+    }
+    if (routingEl) {
+      routingEl.value = mod.routing_rules ? JSON.stringify(mod.routing_rules, null, 2) : '';
+      routingEl.removeAttribute('aria-invalid');
+    }
+    if (outputEl) {
+      outputEl.value = mod.output_schema ? JSON.stringify(mod.output_schema, null, 2) : '';
+      outputEl.removeAttribute('aria-invalid');
+    }
+    if (approvalEl) approvalEl.checked = !!mod.is_human_approval_required;
+
     const modal = this.querySelector('#moduleNodeModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+      modal.removeAttribute('hidden');
+      modal.style.display = 'flex';
+    }
+    // Wire sandbox button (idempotente)
+    const sandboxBtn = this.querySelector('#moduleNodeModalSandbox');
+    if (sandboxBtn && typeof this.openModuleSandbox === 'function') {
+      sandboxBtn.onclick = () => {
+        this.openModuleSandbox(index);
+      };
+    }
+    // Wire "Insertar variable" botones del modal (urls)
+    this.querySelectorAll('#moduleNodeModal .btn-insert-variable').forEach(btn => {
+      btn.onclick = () => {
+        if (typeof this.openVariablesPicker !== 'function') return;
+        this.openVariablesPicker({
+          targetId: btn.getAttribute('data-target'),
+          beforeIndex: index
+        });
+      };
+    });
   };
 
   P.closeModuleNodeModal = function () {
@@ -92,14 +158,53 @@
   P.saveModuleNodeModal = function () {
     const index = this._moduleNodeModalIndex;
     if (index == null || !this.flowModules[index]) return;
+    const mod = this.flowModules[index];
     const nameEl = this.querySelector('#moduleNodeModalName');
     const typeEl = this.querySelector('#moduleNodeModalExecutionType');
     const urlTestEl = this.querySelector('#moduleNodeModalUrlTest');
     const urlProdEl = this.querySelector('#moduleNodeModalUrlProd');
-    this.flowModules[index].name = (nameEl && nameEl.value.trim()) || 'Módulo ' + (index + 1);
-    this.flowModules[index].execution_type = (typeEl && typeEl.value) || 'webhook';
-    this.flowModules[index].webhook_url_test = (urlTestEl && urlTestEl.value.trim()) || '';
-    this.flowModules[index].webhook_url_prod = (urlProdEl && urlProdEl.value.trim()) || '';
+    const nextEl = this.querySelector('#moduleNodeModalNext');
+    const routingEl = this.querySelector('#moduleNodeModalRoutingRules');
+    const outputEl = this.querySelector('#moduleNodeModalOutputSchema');
+    const approvalEl = this.querySelector('#moduleNodeModalHumanApproval');
+
+    // Parsear JSON con validación (sin perder lo que escribió el usuario en caso de error)
+    const parseJson = (el, currentValue) => {
+      if (!el) return { ok: true, value: currentValue };
+      const raw = (el.value || '').trim();
+      if (!raw) return { ok: true, value: null };
+      try {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+          return { ok: false, reason: 'se esperaba un objeto' };
+        }
+        return { ok: true, value: parsed };
+      } catch (err) {
+        return { ok: false, reason: 'sintaxis inválida' };
+      }
+    };
+    const routingResult = parseJson(routingEl, mod.routing_rules);
+    const outputResult = parseJson(outputEl, mod.output_schema);
+    if (!routingResult.ok) {
+      if (routingEl) routingEl.setAttribute('aria-invalid', 'true');
+      this.showNotification(`Routing rules: ${routingResult.reason}`, 'error');
+      return;
+    }
+    if (!outputResult.ok) {
+      if (outputEl) outputEl.setAttribute('aria-invalid', 'true');
+      this.showNotification(`Output schema: ${outputResult.reason}`, 'error');
+      return;
+    }
+
+    mod.name = (nameEl && nameEl.value.trim()) || 'Módulo ' + (index + 1);
+    mod.execution_type = (typeEl && typeEl.value) || 'webhook';
+    mod.webhook_url_test = (urlTestEl && urlTestEl.value.trim()) || '';
+    mod.webhook_url_prod = (urlProdEl && urlProdEl.value.trim()) || '';
+    mod.next_module_id = (nextEl && nextEl.value) ? nextEl.value : null;
+    mod.routing_rules = routingResult.value;
+    mod.output_schema = outputResult.value;
+    mod.is_human_approval_required = !!(approvalEl && approvalEl.checked);
+
     if (index === 0) {
       this.technicalDetails.webhook_url_test = this.flowModules[0].webhook_url_test;
       this.technicalDetails.webhook_url_prod = this.flowModules[0].webhook_url_prod;

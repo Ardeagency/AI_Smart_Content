@@ -251,16 +251,42 @@ class DevBuilderView extends DevBaseView {
                               <option value="aggregator">Aggregator</option>
                             </select>
                           </div>
-                          <div class="settings-field">
+                          <div class="settings-field settings-field--with-action">
                             <label for="moduleNodeModalUrlTest">URL Test</label>
                             <input type="url" id="moduleNodeModalUrlTest" placeholder="https://...">
+                            <button type="button" class="btn-icon btn-ghost btn-insert-variable" data-target="moduleNodeModalUrlTest" title="Insertar variable {{ $modulo.output.x }}"><i class="ph ph-curly-braces"></i></button>
                           </div>
-                          <div class="settings-field">
+                          <div class="settings-field settings-field--with-action">
                             <label for="moduleNodeModalUrlProd">URL Producción</label>
                             <input type="url" id="moduleNodeModalUrlProd" placeholder="https://...">
+                            <button type="button" class="btn-icon btn-ghost btn-insert-variable" data-target="moduleNodeModalUrlProd" title="Insertar variable {{ $modulo.output.x }}"><i class="ph ph-curly-braces"></i></button>
                           </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalNext">Siguiente módulo</label>
+                            <select id="moduleNodeModalNext">
+                              <option value="">— Auto (siguiente por orden) —</option>
+                            </select>
+                            <span class="field-help">Por defecto el flujo sigue al módulo siguiente por step_order. Selecciona uno específico para crear un salto.</span>
+                          </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalRoutingRules">Routing rules (JSON)</label>
+                            <textarea id="moduleNodeModalRoutingRules" class="property-json-editor" rows="4" placeholder='{"condition": "input.tipo == \"video\"", "next_module_id": "uuid-del-modulo-video"}'></textarea>
+                            <span class="field-help">Opcional. Condicionales para enrutar a distintos módulos según el output. Si está vacío se usa next_module_id.</span>
+                          </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalOutputSchema">Output schema esperado (JSON)</label>
+                            <textarea id="moduleNodeModalOutputSchema" class="property-json-editor" rows="3" placeholder='{"type":"object","properties":{"titulo":{"type":"string"},"imagen_url":{"type":"string"}}}'></textarea>
+                            <span class="field-help">Describe el shape del output. Habilita autocompletar de variables {{ $modulo.output.x }} en módulos siguientes.</span>
+                          </div>
+                          <label class="toggle-switch-row" style="margin-top: 8px;">
+                            <input type="checkbox" id="moduleNodeModalHumanApproval" class="toggle-switch-input">
+                            <span class="toggle-switch" aria-hidden="true"></span>
+                            <span class="toggle-switch-label">Requiere aprobación humana</span>
+                          </label>
                         </div>
                         <div class="modal-footer">
+                          <button type="button" class="btn-small btn-ghost" id="moduleNodeModalSandbox"><i class="ph ph-play"></i> Probar módulo</button>
+                          <div style="flex: 1;"></div>
                           <button type="button" class="btn-small btn-ghost" id="moduleNodeModalCancel">Cancelar</button>
                           <button type="button" class="btn-small btn-primary-modules" id="moduleNodeModalSave"><i class="ph ph-check"></i> Guardar</button>
                         </div>
@@ -439,6 +465,65 @@ class DevBuilderView extends DevBaseView {
             <button class="btn-builder-primary" id="runTestBtn">
               <i class="ph ph-play"></i> Ejecutar
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Sandbox de módulo aislado (Fase 2B) -->
+      <div class="modal builder-modal builder-sandbox-modal" id="moduleSandboxModal" hidden role="dialog" aria-labelledby="moduleSandboxTitle" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg modal-sandbox">
+          <div class="modal-header">
+            <h3 id="moduleSandboxTitle"><i class="ph ph-play"></i> Probar módulo aislado</h3>
+            <button type="button" class="modal-close" id="moduleSandboxClose" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="sandbox-target">
+              <strong id="sandboxTargetName">Módulo</strong>
+              <span class="sandbox-target-meta" id="sandboxTargetMeta"></span>
+            </div>
+            <div class="sandbox-section">
+              <label for="sandboxEnvSelect" class="sandbox-section-label">Entorno</label>
+              <select id="sandboxEnvSelect">
+                <option value="test">Test (URL test)</option>
+                <option value="prod">Producción (URL prod)</option>
+              </select>
+            </div>
+            <div class="sandbox-section">
+              <label for="sandboxInput" class="sandbox-section-label">Payload de entrada (JSON)</label>
+              <textarea id="sandboxInput" class="property-json-editor sandbox-input" rows="8" placeholder='{"inputs": {"campo": "valor"}}'></textarea>
+              <div class="sandbox-input-actions">
+                <button type="button" class="btn-small btn-ghost" id="sandboxFillFromInputs"><i class="ph ph-magic-wand"></i> Rellenar con defaults del schema</button>
+                <button type="button" class="btn-small btn-ghost" id="sandboxFillEmpty">Vaciar</button>
+              </div>
+            </div>
+            <div class="sandbox-section" id="sandboxResultSection" hidden>
+              <div class="sandbox-section-label">
+                Resultado
+                <span class="sandbox-status" id="sandboxStatus"></span>
+                <span class="sandbox-duration" id="sandboxDuration"></span>
+              </div>
+              <pre class="sandbox-output" id="sandboxOutput"></pre>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-small btn-ghost" id="sandboxCancelBtn">Cerrar</button>
+            <button type="button" class="btn-small btn-primary-modules" id="sandboxRunBtn"><i class="ph ph-play"></i> Ejecutar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Variables picker (insertar {{ $modulo.output.x }}) -->
+      <div class="modal builder-modal builder-variables-modal" id="variablesModal" hidden role="dialog" aria-labelledby="variablesTitle" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-variables">
+          <div class="modal-header">
+            <h3 id="variablesTitle"><i class="ph ph-curly-braces"></i> Insertar variable</h3>
+            <button type="button" class="modal-close" id="variablesClose" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <input type="text" class="variables-search" id="variablesSearch" placeholder="Buscar variable…" aria-label="Buscar variable">
+            <div class="variables-list" id="variablesList"></div>
           </div>
         </div>
       </div>
