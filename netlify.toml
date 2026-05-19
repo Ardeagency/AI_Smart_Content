@@ -103,6 +103,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/billing/gateways"
+  to = "/.netlify/functions/api-billing-gateways"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/ai/action"
   to = "/.netlify/functions/api-ai-action"
   status = 200
