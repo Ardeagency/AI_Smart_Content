@@ -97,7 +97,7 @@ class DevBuilderView extends DevBaseView {
 
   renderHTML() {
     return `
-      <!-- Header del Builder = pestañas (Configuración, Módulos, Inputs, Ficha) -->
+      <!-- Header del Builder: pestañas (izq) + meta del flow (der: status, issues, versions, cost, undo/redo) -->
       <header class="builder-tabs-header" id="builderTabsHeader">
         <div class="builder-tabs">
           <button class="builder-tab active" data-tab="settings">
@@ -111,7 +111,25 @@ class DevBuilderView extends DevBaseView {
           </button>
           <button class="builder-tab" data-tab="ficha">
             <i class="ph ph-cardholder"></i> Ficha del Flujo
-              </button>
+          </button>
+        </div>
+        <div class="builder-header-meta">
+          <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
+          <span class="builder-autosave-indicator" id="builderAutosaveIndicator" hidden></span>
+          <button type="button" class="builder-issues-btn" id="builderIssuesBtn" title="Problemas detectados" aria-haspopup="dialog">
+            <i class="ph ph-warning"></i> <span class="builder-issues-label">Issues</span>
+            <span class="builder-issues-count" id="builderIssuesCount" hidden>0</span>
+          </button>
+          <button type="button" class="builder-versions-btn" id="builderVersionsBtn" title="Historial de versiones" aria-haspopup="dialog">
+            <i class="ph ph-clock-counter-clockwise"></i> <span class="builder-versions-label">Versiones</span>
+          </button>
+          <span class="builder-cost-badge" id="builderCostBadge" title="Coste estimado por ejecución"></span>
+          <button type="button" class="builder-undo-btn" id="builderUndoBtn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
+            <i class="ph ph-arrow-counter-clockwise"></i>
+          </button>
+          <button type="button" class="builder-redo-btn" id="builderRedoBtn" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled>
+            <i class="ph ph-arrow-clockwise"></i>
+          </button>
         </div>
       </header>
 
@@ -424,24 +442,8 @@ class DevBuilderView extends DevBaseView {
         </aside>
       </main>
 
-      <!-- Footer: etiqueta de estado a la izquierda, botones a la derecha (sin iconos, misma altura que header) -->
+      <!-- Footer: solo acciones primarias (la meta del flow vive en el header) -->
       <footer class="builder-footer" id="builderFooter">
-        <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
-        <span class="builder-autosave-indicator" id="builderAutosaveIndicator" hidden></span>
-        <button type="button" class="builder-issues-btn" id="builderIssuesBtn" title="Problemas detectados" aria-haspopup="dialog">
-          <i class="ph ph-warning"></i> <span class="builder-issues-label">Issues</span>
-          <span class="builder-issues-count" id="builderIssuesCount" hidden>0</span>
-        </button>
-        <button type="button" class="builder-versions-btn" id="builderVersionsBtn" title="Historial de versiones" aria-haspopup="dialog">
-          <i class="ph ph-clock-counter-clockwise"></i> <span class="builder-versions-label">Versiones</span>
-        </button>
-        <span class="builder-cost-badge" id="builderCostBadge" title="Coste estimado por ejecución"></span>
-        <button type="button" class="builder-undo-btn" id="builderUndoBtn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
-          <i class="ph ph-arrow-counter-clockwise"></i>
-        </button>
-        <button type="button" class="builder-redo-btn" id="builderRedoBtn" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled>
-          <i class="ph ph-arrow-clockwise"></i>
-        </button>
         <div class="builder-footer-actions" id="builderFooterActions">
           <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" hidden>Guardar flujo</button>
           <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" hidden>Actualizar flujo</button>
