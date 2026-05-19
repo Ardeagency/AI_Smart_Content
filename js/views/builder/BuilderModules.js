@@ -137,16 +137,6 @@
         this.openModuleSandbox(index);
       };
     }
-    // Wire "Insertar variable" botones del modal (urls)
-    this.querySelectorAll('#moduleNodeModal .btn-insert-variable').forEach(btn => {
-      btn.onclick = () => {
-        if (typeof this.openVariablesPicker !== 'function') return;
-        this.openVariablesPicker({
-          targetId: btn.getAttribute('data-target'),
-          beforeIndex: index
-        });
-      };
-    });
     // Panel "Outputs disponibles" — chips draggables a los inputs del módulo (estilo n8n)
     if (typeof this.renderModuleNodeDragVars === 'function') {
       this.renderModuleNodeDragVars(index);

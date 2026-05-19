@@ -269,15 +269,13 @@ class DevBuilderView extends DevBaseView {
                               <option value="aggregator">Aggregator</option>
                             </select>
                           </div>
-                          <div class="settings-field settings-field--with-action">
+                          <div class="settings-field">
                             <label for="moduleNodeModalUrlTest">URL Test</label>
                             <input type="url" id="moduleNodeModalUrlTest" placeholder="https://...">
-                            <button type="button" class="btn-icon btn-ghost btn-insert-variable" data-target="moduleNodeModalUrlTest" title="Insertar variable {{ $modulo.output.x }}"><i class="ph ph-curly-braces"></i></button>
                           </div>
-                          <div class="settings-field settings-field--with-action">
+                          <div class="settings-field">
                             <label for="moduleNodeModalUrlProd">URL Producción</label>
                             <input type="url" id="moduleNodeModalUrlProd" placeholder="https://...">
-                            <button type="button" class="btn-icon btn-ghost btn-insert-variable" data-target="moduleNodeModalUrlProd" title="Insertar variable {{ $modulo.output.x }}"><i class="ph ph-curly-braces"></i></button>
                           </div>
                           <div class="settings-field">
                             <label for="moduleNodeModalNext">Siguiente módulo</label>
