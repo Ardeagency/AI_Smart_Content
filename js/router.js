@@ -308,6 +308,23 @@ class Router {
         }
       }
 
+      // Tema de rank developer: solo en /dev/*. Carga --dev-gradient-dynamic según profiles.dev_rank.
+      if (window.DevRankTheme) {
+        const path = window.location.pathname || '';
+        const isDev = path.startsWith('/dev');
+        const currentUserId = window.authService?.getCurrentUser?.()?.id || null;
+        const appliedUserId = window._devRankThemeAppliedUserId;
+        if (isDev && currentUserId) {
+          if (appliedUserId !== currentUserId) {
+            window._devRankThemeAppliedUserId = currentUserId;
+            window.DevRankTheme.applyDevRankTheme(currentUserId);
+          }
+        } else if (appliedUserId != null) {
+          window._devRankThemeAppliedUserId = null;
+          window.DevRankTheme.clearDevRankTheme();
+        }
+      }
+
       if (!route) {
         const route404 = this.routes['/404'];
         if (route404) {

@@ -3938,3 +3938,92 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   /* legacy: ya no se renderiza este wrapper */
   display: none;
 }
+
+/* ============================================================ *
+ * Dev rank gradient — visual signature por rango de developer  *
+ * (paralelo al --brand-gradient-dynamic de org)                *
+ * ============================================================ */
+
+/* 1. Trazo arcoiris/rank debajo del título "DEVELOPER" (igual que pill Vera bajo) */
+.nav-mode-developer .nav-dev-workspace-header {
+  position: relative;
+}
+.nav-mode-developer .nav-dev-workspace-header::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 2px;
+  background: var(--dev-gradient-dynamic, transparent);
+  opacity: 0.85;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* 2. Badge de rank debajo del título (capitaliza la palabra del var) */
+.nav-mode-developer .nav-dev-title::after {
+  content: var(--dev-rank-label, "");
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  background: var(--dev-gradient-dynamic, transparent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Si --dev-rank-label vacío o sin gradient: fallback color para no quedar invisible */
+  -webkit-text-fill-color: transparent;
+}
+body:not(.dev-rank-context) .nav-mode-developer .nav-dev-title::after {
+  /* Sin rank aplicado: ocultamos el subtítulo */
+  display: none;
+}
+
+/* Colapsado: ocultar trazo y badge */
+.side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header::after,
+.side-navigation.collapsed.nav-mode-developer .nav-dev-title::after {
+  display: none;
+}
+
+/* 3. Trazo arcoiris bajo el primary pill activo (estilo Vera underline) */
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::after,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -6px;
+  height: 2px;
+  background: var(--dev-gradient-dynamic, transparent);
+  border-radius: 2px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* 4. Glow sutil del logo Arde en el footer cuando hay rank (premiar la identidad) */
+.nav-mode-developer .nav-brand-footer .nav-brand-footer-logo-link {
+  position: relative;
+}
+.nav-mode-developer .nav-brand-footer .nav-brand-footer-logo-link::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--dev-gradient-dynamic, transparent);
+  opacity: 0.18;
+  z-index: -1;
+  filter: blur(6px);
+  pointer-events: none;
+}
+body:not(.dev-rank-context) .nav-mode-developer .nav-brand-footer-logo-link::after {
+  display: none;
+}
+
+/* 5. Marca activa de menu item con un borde izquierdo del rank (sutil) */
+.nav-mode-developer .nav-link.active::before,
+.nav-mode-developer .nav-main-link.active::before {
+  background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, transparent));
+}

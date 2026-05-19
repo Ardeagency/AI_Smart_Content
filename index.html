@@ -259,6 +259,7 @@
     <script src="js/services/ApiClient.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/AuthService.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/OrgBrandTheme.js?v=__BUILD_ID__" defer></script>
+    <script src="js/services/DevRankTheme.js?v=__BUILD_ID__" defer></script>
     <script src="js/org-url.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/AppState.js?v=__BUILD_ID__" defer></script>
     <script src="js/services/BillingService.js?v=__BUILD_ID__" defer></script>
@@ -270,6 +271,10 @@
 
     <!-- Vista crítica: login (es ahora la página principal) -->
     <script src="js/views/SignInView.js?v=__BUILD_ID__" defer></script>
+
+    <!-- Demo mode (anonymous preview de IGNIS): guard + vista pública /demo -->
+    <script src="js/services/DemoGuard.js?v=__BUILD_ID__" defer></script>
+    <script src="js/views/DemoEntryView.js?v=__BUILD_ID__" defer></script>
 
     <!-- Lazy-loader del bundle de Navigation (~35 KB gz). Las rutas públicas
          (/, /login, /signin, legales) no renderizan sidebar, así que cargar
