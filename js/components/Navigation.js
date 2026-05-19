@@ -1710,11 +1710,7 @@ class Navigation {
           <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
           <div class="nav-dev-rank-block" id="navDevRankBlock" aria-label="Rango del desarrollador">
             <div class="nav-dev-rank-row">
-              <span class="nav-dev-rank-label">rank</span>
               <span class="nav-dev-rank-value" id="navDevRankBadge"></span>
-            </div>
-            <div class="nav-dev-rank-bar" aria-hidden="true">
-              <div class="nav-dev-rank-bar-fill"></div>
             </div>
           </div>
         </div>

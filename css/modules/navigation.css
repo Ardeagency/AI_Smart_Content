@@ -3827,31 +3827,32 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   position: absolute;
   left: 0;
   right: 0;
-  top: 12px;
-  height: 35px;
+  top: 10px;
+  height: 24px;
   margin: 0;
   text-align: center;
   text-transform: uppercase;
-  font-family: 'Archivo', system-ui, sans-serif;
+  font-family: var(--font-family);
   font-weight: 700;
-  font-size: 24px;
-  line-height: 26px;
-  letter-spacing: 4px;
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: 3px;
   color: #FFFDFD;
   white-space: nowrap;
   overflow: hidden;
   z-index: 2;
 }
 
-/* Rank block: row con label + valor en BLANCO (sin gradiente) */
+/* Rank value: solo el rango, grande y centrado bajo DEVELOPER */
 .nav-mode-developer .nav-dev-rank-block {
   position: absolute;
   left: 0;
   right: 0;
-  top: 40px;
-  height: 15px;
+  top: 36px;
+  height: 18px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   z-index: 2;
 }
@@ -3859,29 +3860,22 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  line-height: 11px;
-}
-.nav-mode-developer .nav-dev-rank-label {
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #7B7B7B;
-  line-height: 11px;
+  line-height: 18px;
 }
 .nav-mode-developer .nav-dev-rank-value {
-  font-size: 10px;
+  font-family: var(--font-family);
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 4px;
   text-transform: uppercase;
   color: #ffffff;
-  line-height: 11px;
+  line-height: 18px;
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
   -webkit-text-fill-color: #ffffff;
 }
+.nav-mode-developer .nav-dev-rank-label,
 .nav-mode-developer .nav-dev-rank-bar {
   display: none;
 }
