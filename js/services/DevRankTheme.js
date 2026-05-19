@@ -44,7 +44,7 @@
     legend: 'Legend'
   };
 
-  /** Rank → {primary, secondary} hex para el app-container edge gradient (análogo a OrgBrandTheme). */
+  /** Rank → {primary, secondary} hex para retrocompat con BrandColors fallback. */
   const RANK_PALETTE = {
     rookie:  { primary: '#00d614', secondary: '#9acc00' },
     junior:  { primary: '#00e7ff', secondary: '#0018ee' },
@@ -52,6 +52,17 @@
     expert:  { primary: '#9acc00', secondary: '#00e7ff' },
     master:  { primary: '#5b00ea', secondary: '#900090' },
     legend:  { primary: '#ff0000', secondary: '#900090' }
+  };
+
+  /** Rank → 4 colores (TL, TR, BR, BL) para el edge gradient del app-container.
+   *  LEGEND usa el espectro rainbow distribuido en las 4 esquinas. */
+  const RANK_CORNERS = {
+    rookie:  { tl: '#00d614', tr: '#9acc00', br: '#9acc00', bl: '#00d614' },
+    junior:  { tl: '#00e7ff', tr: '#0018ee', br: '#0018ee', bl: '#00e7ff' },
+    builder: { tl: '#ff0000', tr: '#ff6500', br: '#ffe500', bl: '#ff6500' },
+    expert:  { tl: '#9acc00', tr: '#00d614', br: '#00e7ff', bl: '#9acc00' },
+    master:  { tl: '#0018ee', tr: '#5b00ea', br: '#900090', bl: '#5b00ea' },
+    legend:  { tl: '#ff0000', tr: '#ffe500', br: '#0018ee', bl: '#900090' }
   };
 
   function _hexToRgba(hex, alpha) {
@@ -63,17 +74,20 @@
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  /** Construye el edge-gradient del app-container (mismo patrón que OrgBrandTheme). */
-  function _buildEdgeGradient(palette) {
-    if (!palette) return '';
-    // Reusar BrandColors si está disponible (misma firma visual que org)
-    if (window.BrandColors && typeof window.BrandColors.buildAppContainerEdgeGradient === 'function') {
-      return window.BrandColors.buildAppContainerEdgeGradient(palette.primary, palette.secondary);
-    }
-    // Fallback inline si BrandColors no cargó
-    const p = _hexToRgba(palette.primary, 0.20);
-    const s = _hexToRgba(palette.secondary, 0.20);
-    return `linear-gradient(90.7deg, ${p} 0.19%, ${p} 3.51%, transparent 47.82%, ${s} 90.44%, ${s} 98.99%)`;
+  /** Construye el edge-gradient del app-container con 4 colores rainbow (uno por esquina).
+   *  4 radial-gradients superpuestos, cada uno desde una esquina, se desvanecen hacia el centro. */
+  function _buildEdgeGradient(corners) {
+    if (!corners) return '';
+    const tl = _hexToRgba(corners.tl, 0.22);
+    const tr = _hexToRgba(corners.tr, 0.22);
+    const br = _hexToRgba(corners.br, 0.22);
+    const bl = _hexToRgba(corners.bl, 0.22);
+    return [
+      `radial-gradient(ellipse 70% 60% at top left, ${tl} 0%, transparent 55%)`,
+      `radial-gradient(ellipse 70% 60% at top right, ${tr} 0%, transparent 55%)`,
+      `radial-gradient(ellipse 70% 60% at bottom right, ${br} 0%, transparent 55%)`,
+      `radial-gradient(ellipse 70% 60% at bottom left, ${bl} 0%, transparent 55%)`
+    ].join(', ');
   }
 
   /** Normaliza un rank arbitrario al canónico más cercano (case-insensitive); fallback rookie. */
@@ -121,9 +135,9 @@
     root.style.setProperty('--dev-gradient-dynamic-vertical', `var(${map.v})`);
     if (map.hz) root.style.setProperty('--dev-gradient-dynamic-horizontal', `var(${map.hz})`);
     root.style.setProperty('--dev-rank-label', `"${RANK_LABEL[canonical] || canonical}"`);
-    // App-container edge gradient (mismo patrón que OrgBrandTheme; visible en /dev/* via #brand-bg-overlay)
-    const palette = RANK_PALETTE[canonical];
-    const edge = _buildEdgeGradient(palette);
+    // App-container edge gradient: 4 esquinas rainbow para el modo developer (visible vía #brand-bg-overlay)
+    const corners = RANK_CORNERS[canonical];
+    const edge = _buildEdgeGradient(corners);
     if (edge) {
       root.style.setProperty('--dev-gradient-app-container', edge);
     }
