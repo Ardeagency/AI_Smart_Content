@@ -3796,3 +3796,145 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: none;
 }
 
+
+/* ============================================================ *
+ * Sidebar developer — paridad estructural con sidebar user     *
+ * ============================================================ */
+
+/* Header sidebar dev: misma altura que user (100px), "DEVELOPER" full-width uppercase */
+.nav-mode-developer .nav-workspace-header,
+.nav-mode-developer .nav-dev-workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  padding: 16px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--nav-border);
+}
+.nav-mode-developer .nav-dev-title {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: var(--sidebar-text-primary, var(--text-primary));
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Colapsado: header dev encoge y oculta el texto (la inicial podría mostrarse pero por minimalismo ocultamos) */
+.side-navigation.collapsed.nav-mode-developer .nav-workspace-header,
+.side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header {
+  height: 60px;
+  padding: 12px;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-dev-title {
+  font-size: 0;
+  letter-spacing: 0;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-dev-title::after {
+  content: 'D';
+  display: inline-block;
+  font-size: 16px;
+  letter-spacing: 0;
+  color: var(--sidebar-text-primary, var(--text-primary));
+}
+
+/* Primary actions dev (+Flow / +User): pasar de grid 2-col cuadrado al estilo pill Vera apilados */
+.nav-mode-developer .nav-dev-primary-actions {
+  display: flex !important;
+  flex-direction: column;
+  gap: 6px;
+  grid-template-columns: none !important;
+  margin: 0 0 8px;
+}
+
+/* Pill — mismo styling que el item Vera primary del user (pill 30px, fondo #141517) */
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 4px;
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link {
+  position: relative;
+  width: 100%;
+  max-width: 204px;
+  min-height: 32px;
+  padding: 0 12px;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-divider) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--sidebar-text-primary) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
+  background: #1a1c20 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-1px);
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-icon,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-icon {
+  font-size: 11px;
+  opacity: 0.85;
+  margin: 0;
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::before,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::before {
+  display: none;
+}
+
+/* Colapsado: actions dev como botones 40x40 igual que items del menu (rail uniforme) */
+.side-navigation.collapsed.nav-mode-developer .nav-dev-primary-actions {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-link,
+.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-main-link {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  max-width: 40px;
+}
+.side-navigation.collapsed.nav-mode-developer .nav-item--primary .nav-text {
+  display: none;
+}
+
+/* Brand footer dev (logo + toggle): mismo patrón que user */
+.nav-mode-developer .nav-brand-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Si quedaron reglas obsoletas del header con toggle adentro, deshabilitar */
+.nav-mode-developer .nav-dev-toggle-header {
+  /* legacy: ya no se renderiza este wrapper */
+  display: none;
+}

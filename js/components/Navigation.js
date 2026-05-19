@@ -1626,14 +1626,16 @@ class Navigation {
 
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
-        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="User">
-            <span class="nav-text"><i class="fas fa-plus" aria-hidden="true"></i> User</span>
+        <div class="nav-item nav-item--primary">
+          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Nuevo Flow">
+            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
+            <span class="nav-text">Flow</span>
           </a>
         </div>
-        <div class="nav-item nav-item--primary">
-          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Flow">
-            <span class="nav-text"><i class="fas fa-plus" aria-hidden="true"></i> Flow</span>
+        <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
+          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="Nuevo User">
+            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
+            <span class="nav-text">User</span>
           </a>
         </div>
       </div>
@@ -1661,18 +1663,24 @@ class Navigation {
       </header>
 
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
-        <div class="nav-identity-section nav-workspace-header nav-dev-toggle-header">
-          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
-          </button>
-          <div class="nav-dev-header-copy">
-            <h2 class="nav-org-title" id="navDevHeaderName">Developer</h2>
-          </div>
+        <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
+          <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
           ${devPrimaryActionsHTML}
           ${mainHTML}
+        </div>
+
+        <div class="nav-spacer" aria-hidden="true"></div>
+
+        <div class="nav-brand-footer" role="contentinfo">
+          <span class="nav-brand-footer-logo-link" aria-hidden="true">
+            <img src="${_navSidebarIconUrl('/recursos/logos/logo-03.svg')}" class="nav-brand-footer-logo" alt="">
+          </span>
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
+          </button>
         </div>
       </nav>
       <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>
