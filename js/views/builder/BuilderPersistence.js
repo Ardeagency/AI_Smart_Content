@@ -302,119 +302,81 @@
   };
 
   /**
-   * Guarda el grafo de ejecución: flow_modules (módulos) y flow_technical_details por flow_module_id.
-   * content_flows.execution_mode ya se guarda en saveFlow().
+   * Guarda el grafo de ejecución: flow_modules + flow_technical_details en una sola transacción
+   * vía la RPC `replace_flow_modules(p_flow_id, p_modules, p_tech)`.
+   * La RPC valida permisos (can_access_flow), reasigna step_order, deriva next_module_id, borra
+   * módulos obsoletos y upsertea tech_details. Todo dentro de una TX implícita de la función plpgsql.
    */
   P.saveTechnicalDetails = async function (flowId) {
     if (!this.supabase || !flowId) return;
-    
+
     const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
     if (mods.length !== this.flowModules.length) this.flowModules = mods;
-    
-    const keepIds = mods.map(m => m.id).filter(Boolean);
-    if (keepIds.length > 0) {
-      const { data: existing } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
-      const toDelete = (existing || []).filter(r => !keepIds.includes(r.id)).map(r => r.id);
-      if (toDelete.length > 0) {
-        // FK ON DELETE no es cascade en flow_technical_details; borrar primero (en bulk)
-        await this.supabase.from('flow_technical_details').delete().in('flow_module_id', toDelete);
-        await this.supabase.from('flow_modules').delete().in('id', toDelete);
-      }
-    } else {
-      const { data: existingMods } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
-      const ids = (existingMods || []).map(r => r.id);
-      if (ids.length > 0) {
-        await this.supabase.from('flow_technical_details').delete().in('flow_module_id', ids);
-      }
-      await this.supabase.from('flow_modules').delete().eq('content_flow_id', flowId);
-    }
-    
+
+    // Construir payload de módulos para la RPC (primer módulo lleva input_schema = { fields: this.inputSchema })
+    const modulesPayload = mods.map((m, i) => ({
+      id: m.id || null,
+      name: m.name || 'Módulo ' + (i + 1),
+      execution_type: m.execution_type || 'webhook',
+      webhook_url_test: m.webhook_url_test || '',
+      webhook_url_prod: m.webhook_url_prod || '',
+      input_schema: i === 0
+        ? { fields: this.inputSchema }
+        : (m.input_schema != null && typeof m.input_schema === 'object' ? m.input_schema : {}),
+      output_schema: m.output_schema != null && typeof m.output_schema === 'object' ? m.output_schema : null,
+      is_human_approval_required: !!m.is_human_approval_required,
+      routing_rules: m.routing_rules != null && typeof m.routing_rules === 'object' ? m.routing_rules : null
+    }));
+
+    // Construir payload de tech_details: la RPC acepta tanto claves uuid (módulo ya persistido) como 'idx_N' (módulo nuevo)
+    const techPayload = {};
+    mods.forEach((m, i) => {
+      const key = m.id || `idx_${i}`;
+      const td = this.flowTechnicalDetailsByModule[key];
+      if (!td) return;
+      techPayload[key] = {
+        webhook_method: (td.webhook_method || 'POST').toUpperCase(),
+        platform_name: td.platform_name || 'n8n',
+        platform_flow_id: td.platform_flow_id || '',
+        platform_flow_name: td.platform_flow_name || '',
+        editor_url: td.editor_url || '',
+        credential_id: td.credential_id || '',
+        is_healthy: td.is_healthy !== false,
+        avg_execution_time_ms: td.avg_execution_time_ms === '' || td.avg_execution_time_ms == null ? '' : String(td.avg_execution_time_ms)
+      };
+    });
+
     try {
-      // 1) Insertar módulos nuevos para obtener ids
-      for (let i = 0; i < mods.length; i++) {
-        if (mods[i].id) continue;
-        const { data: inserted, error: insertErr } = await this.supabase
-          .from('flow_modules')
-          .insert({
-            content_flow_id: flowId,
-            name: mods[i].name || 'Módulo ' + (i + 1),
-            step_order: i + 1,
-            execution_type: mods[i].execution_type || 'webhook',
-            webhook_url_test: mods[i].webhook_url_test || null,
-            webhook_url_prod: mods[i].webhook_url_prod || null,
-            input_schema: i === 0 ? { fields: this.inputSchema } : ((mods[i].input_schema != null && typeof mods[i].input_schema === 'object') ? mods[i].input_schema : {}),
-            is_human_approval_required: !!mods[i].is_human_approval_required,
-            next_module_id: null,
-            output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
-            routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
-          })
-          .select('id')
-          .single();
-        if (insertErr) {
-          console.error('Error creating flow_module:', insertErr);
-          continue;
-        }
-        mods[i].id = inserted.id;
-        const idxKey = `idx_${i}`;
-        if (this.flowTechnicalDetailsByModule[idxKey]) {
-          this.flowTechnicalDetailsByModule[inserted.id] = this.flowTechnicalDetailsByModule[idxKey];
-          delete this.flowTechnicalDetailsByModule[idxKey];
-        }
+      const { data, error } = await this.supabase.rpc('replace_flow_modules', {
+        p_flow_id: flowId,
+        p_modules: modulesPayload,
+        p_tech: techPayload
+      });
+      if (error) {
+        console.error('Error in replace_flow_modules RPC:', error);
+        this.showNotification('Error al guardar módulos: ' + (error.message || 'desconocido'), 'error');
+        return;
       }
-      
-      // 2) Actualizar todos los módulos (name, step_order, execution_type, webhooks, input_schema primer módulo, next_module_id, output_schema, routing_rules)
-      // Derivar next_module_id desde el orden de mods (grafo lineal por step_order). Cada módulo apunta al siguiente, el último a null.
-      for (let i = 0; i < mods.length; i++) {
-        if (!mods[i].id) continue;
-        const nextId = (i < mods.length - 1) ? (mods[i + 1].id || null) : null;
-        // Persistir también en memoria para que loadFlow/render no muestre estado obsoleto
-        mods[i].next_module_id = nextId;
-        const payload = {
-          name: mods[i].name || 'Módulo ' + (i + 1),
-          step_order: i + 1,
-          execution_type: mods[i].execution_type || 'webhook',
-          webhook_url_test: mods[i].webhook_url_test || null,
-          webhook_url_prod: mods[i].webhook_url_prod || null,
-          is_human_approval_required: !!mods[i].is_human_approval_required,
-          next_module_id: nextId,
-          output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
-          routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
-        };
-        if (i === 0) payload.input_schema = { fields: this.inputSchema };
-        else if (mods[i].input_schema != null && typeof mods[i].input_schema === 'object') payload.input_schema = mods[i].input_schema;
-        const { error } = await this.supabase
-          .from('flow_modules')
-          .update(payload)
-          .eq('id', mods[i].id);
-        if (error) console.error('Error updating flow_module:', error);
+      // La RPC retorna [{step_order, id}, ...] en orden — aplicar IDs nuevos a mods y migrar tech keys idx_N → uuid
+      if (Array.isArray(data)) {
+        data.forEach((row) => {
+          const i = (row.step_order || 0) - 1;
+          if (i < 0 || i >= mods.length) return;
+          const newId = row.id;
+          const oldKey = mods[i].id || `idx_${i}`;
+          mods[i].id = newId;
+          // Reasignar next_module_id en memoria al neighbour de la derecha (la RPC ya lo persistió en BD)
+          mods[i].next_module_id = (i < mods.length - 1) ? (data[i + 1]?.id || null) : null;
+          if (oldKey !== newId && this.flowTechnicalDetailsByModule[oldKey]) {
+            this.flowTechnicalDetailsByModule[newId] = this.flowTechnicalDetailsByModule[oldKey];
+            delete this.flowTechnicalDetailsByModule[oldKey];
+          }
+        });
       }
-      
       this.currentFlowModuleId = mods[0]?.id || null;
-      
-      // 3) flow_technical_details: uno por módulo
-      for (let i = 0; i < mods.length; i++) {
-        const mod = mods[i];
-        if (!mod.id) continue;
-        const key = mod.id || `idx_${i}`;
-        const td = this.flowTechnicalDetailsByModule[key] || {};
-        const techPayload = {
-          flow_module_id: mod.id,
-          webhook_method: (td.webhook_method || 'POST').toUpperCase(),
-          platform_name: td.platform_name || 'n8n',
-          platform_flow_id: td.platform_flow_id || null,
-          platform_flow_name: td.platform_flow_name || null,
-          editor_url: td.editor_url || null,
-          credential_id: td.credential_id || null,
-          is_healthy: td.is_healthy !== false,
-          avg_execution_time_ms: td.avg_execution_time_ms !== '' && td.avg_execution_time_ms != null ? parseInt(td.avg_execution_time_ms, 10) : null
-        };
-        const { error: techErr } = await this.supabase
-          .from('flow_technical_details')
-          .upsert(techPayload, { onConflict: 'flow_module_id' });
-        if (techErr) console.error('Error upserting flow_technical_details:', techErr);
-      }
     } catch (err) {
       console.error('Error in saveTechnicalDetails:', err);
+      this.showNotification('Error al guardar módulos', 'error');
     }
   };
 
