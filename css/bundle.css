@@ -717,15 +717,26 @@ textarea:focus-visible,
     inset: 0;
     z-index: -1;
     background-color: var(--bg-primary);
-    background-image: var(--brand-gradient-app-container, none);
+    background-image: var(--dev-gradient-app-container, var(--brand-gradient-app-container, none));
     background-repeat: no-repeat;
     background-size: 100% 100%;
     pointer-events: none;
     display: none;
 }
 
-body.org-brand-context:not(.route-dev) #brand-bg-overlay {
+body.org-brand-context:not(.route-dev) #brand-bg-overlay,
+body.dev-rank-context #brand-bg-overlay {
     display: block;
+}
+
+/* En modo dev (con rank), #app-container debe ser transparente para dejar ver el overlay */
+body.dev-rank-context {
+    --view-bg-base: transparent;
+    --living-bg-deep: transparent;
+    background: transparent;
+}
+body.dev-rank-context #app-container {
+    background: transparent;
 }
 
 body.org-brand-context {

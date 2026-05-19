@@ -3864,11 +3864,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   position: relative;
   width: 100%;
   max-width: 204px;
-  min-height: 32px;
+  height: 30px;
+  min-height: 30px;
   padding: 0 12px;
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border-divider) !important;
+  background: #141517 !important;
+  border: 0 !important;
   border-radius: var(--radius-sm) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--sidebar-text-primary) !important;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -3879,13 +3882,32 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  overflow: visible;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
   background: #1a1c20 !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
   transform: translateY(-1px);
+}
+/* Trazo arcoiris bajo cada pill (siempre visible, no solo en active — igual al patrón Vera) */
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -4px;
+  height: 2px;
+  background: var(--dev-gradient-dynamic, transparent);
+  border-radius: 2px;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover::after,
+.side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover::after {
+  opacity: 1;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-icon,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-icon {
@@ -3963,9 +3985,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   pointer-events: none;
 }
 
-/* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si se renderiza */
+/* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si hay rank context */
 .nav-dev-rank-badge {
-  display: inline-block;
+  display: none;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 3px;
@@ -3979,7 +4001,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   -webkit-text-fill-color: transparent;
   line-height: 1.2;
 }
-.nav-dev-rank-badge[hidden] { display: none; }
+/* Mostrar solo cuando el body tiene rank context (DevRankTheme aplicó). Esto evita
+   parpadeos antes de cargar el rank y no depende del attribute hidden HTML. */
+body.dev-rank-context .nav-dev-rank-badge {
+  display: block;
+}
 
 /* Colapsado: ocultar trazo y badge */
 .side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header::after,

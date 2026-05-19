@@ -44,6 +44,38 @@
     legend: 'Legend'
   };
 
+  /** Rank → {primary, secondary} hex para el app-container edge gradient (análogo a OrgBrandTheme). */
+  const RANK_PALETTE = {
+    rookie:  { primary: '#00d614', secondary: '#9acc00' },
+    junior:  { primary: '#00e7ff', secondary: '#0018ee' },
+    builder: { primary: '#ff0000', secondary: '#ffe500' },
+    expert:  { primary: '#9acc00', secondary: '#00e7ff' },
+    master:  { primary: '#5b00ea', secondary: '#900090' },
+    legend:  { primary: '#ff0000', secondary: '#900090' }
+  };
+
+  function _hexToRgba(hex, alpha) {
+    const h = String(hex || '').replace(/^#/, '');
+    if (h.length !== 6) return `rgba(0,0,0,${alpha})`;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  /** Construye el edge-gradient del app-container (mismo patrón que OrgBrandTheme). */
+  function _buildEdgeGradient(palette) {
+    if (!palette) return '';
+    // Reusar BrandColors si está disponible (misma firma visual que org)
+    if (window.BrandColors && typeof window.BrandColors.buildAppContainerEdgeGradient === 'function') {
+      return window.BrandColors.buildAppContainerEdgeGradient(palette.primary, palette.secondary);
+    }
+    // Fallback inline si BrandColors no cargó
+    const p = _hexToRgba(palette.primary, 0.20);
+    const s = _hexToRgba(palette.secondary, 0.20);
+    return `linear-gradient(90.7deg, ${p} 0.19%, ${p} 3.51%, transparent 47.82%, ${s} 90.44%, ${s} 98.99%)`;
+  }
+
   /** Normaliza un rank arbitrario al canónico más cercano (case-insensitive); fallback rookie. */
   function normalizeRank(raw) {
     if (!raw) return 'rookie';
@@ -66,6 +98,7 @@
     root.style.removeProperty('--dev-gradient-dynamic');
     root.style.removeProperty('--dev-gradient-dynamic-vertical');
     root.style.removeProperty('--dev-rank-label');
+    root.style.removeProperty('--dev-gradient-app-container');
     document.body.classList.remove('dev-rank-context');
     // Limpiar clases granulares
     ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'].forEach(r =>
@@ -86,6 +119,12 @@
     root.style.setProperty('--dev-gradient-dynamic', `var(${map.h})`);
     root.style.setProperty('--dev-gradient-dynamic-vertical', `var(${map.v})`);
     root.style.setProperty('--dev-rank-label', `"${RANK_LABEL[canonical] || canonical}"`);
+    // App-container edge gradient (mismo patrón que OrgBrandTheme; visible en /dev/* via #brand-bg-overlay)
+    const palette = RANK_PALETTE[canonical];
+    const edge = _buildEdgeGradient(palette);
+    if (edge) {
+      root.style.setProperty('--dev-gradient-app-container', edge);
+    }
     document.body.classList.add('dev-rank-context');
     // Limpiar clases granulares previas y aplicar la nueva
     ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'].forEach(r =>
@@ -188,6 +227,10 @@
       return null;
     }
     if (userId === lastAppliedUserId && lastAppliedRank) {
+      // Cache hit: el rank ya fue aplicado, pero el sidebar puede haberse re-renderizado
+      // sin el badge poblado (caso: router corre primero, Navigation render después).
+      // Re-sincronizamos el badge contra el DOM actual antes de salir.
+      syncSidebarRankBadge(lastAppliedRank);
       return lastAppliedRank;
     }
     lastAppliedUserId = userId;
