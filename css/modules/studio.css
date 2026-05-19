@@ -159,6 +159,35 @@
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   padding: 24px;
+  transition: border-color 0.2s ease;
+}
+
+.studio-schedule-card:focus-within {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Format selector (aspect_ratio): override del cyan dev-primary por brand dinámico */
+.studio-schedule-card .aspect-ratio-card.selected .aspect-ratio-icon {
+  border-color: var(--brand-primary, #ffffff);
+}
+.studio-schedule-card .aspect-ratio-card.selected .aspect-ratio-label {
+  color: var(--brand-primary, #ffffff);
+}
+
+/* Inputs/selects: border más suave, focus brand */
+.studio-schedule-card input,
+.studio-schedule-card select,
+.studio-schedule-card textarea,
+.studio-programacion-select {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  transition: border-color 0.15s ease;
+}
+.studio-schedule-card input:focus,
+.studio-schedule-card select:focus,
+.studio-schedule-card textarea:focus,
+.studio-programacion-select:focus {
+  outline: none;
+  border-color: var(--brand-primary, rgba(255, 255, 255, 0.3)) !important;
 }
 
 .studio-schedule-card-header {
@@ -174,12 +203,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #e2e8f0;
   font-size: 1rem;
+  color: transparent;
 }
 
-.studio-schedule-card-icon i {
+.studio-schedule-card-icon i,
+.studio-schedule-card-icon .ph {
   font-size: inherit;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .studio-schedule-card-title {
@@ -193,18 +228,18 @@
   margin-top: 16px;
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed var(--border-divider, #242424);
-  background: var(--bg-card, #141517);
+  border: none;
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .studio-schedule-form .studio-field {
   margin-bottom: 0;
 }
 
-/* Steppers en cards de programación: sin color dinámico, botones visibles (glass) */
+/* Steppers en cards de programación: sin border, bg sutil */
 .studio-schedule-card .input-stepper-wrap {
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
@@ -221,7 +256,7 @@
 .studio-schedule-card .input-stepper-btns {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--border-divider, #242424);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
   gap: 0;
 }
 
@@ -229,33 +264,28 @@
   width: 28px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.studio-schedule-card .input-stepper-btn + .input-stepper-btn {
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .studio-schedule-card .input-stepper-btn:first-child {
-  border-radius: 4px 4px 0 0;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .studio-schedule-card .input-stepper-btn:last-child {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .studio-schedule-card .input-stepper-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .studio-schedule-card .input-stepper-btn:hover:first-child,
@@ -314,8 +344,8 @@
   margin-top: var(--spacing-md);
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed var(--border-divider, #242424);
-  background: var(--bg-card, #141517);
+  border: none;
+  background: rgba(255, 255, 255, 0.025);
 }
 .studio-programacion-row {
   display: flex;
@@ -325,10 +355,10 @@
 }
 
 .studio-programacion-row .input-stepper-wrap {
-  background: var(--bg-card, #141517);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 4px 8px;
-  border: 1px solid var(--border-divider, #242424);
+  border: none;
   display: inline-flex;
   align-items: center;
   gap: 0;
@@ -359,7 +389,7 @@
 .studio-programacion-row .input-stepper-btns {
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--border-divider, #242424);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
   margin-left: 4px;
   padding-left: 4px;
   gap: 0;
@@ -369,34 +399,21 @@
   width: 26px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--border-divider, #242424);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-}
-
-.studio-programacion-row .input-stepper-btn + .input-stepper-btn {
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-}
-
-.studio-programacion-row .input-stepper-btn:first-child {
-  border-radius: 4px 4px 0 0;
-  color: #ffffff;
-}
-
-.studio-programacion-row .input-stepper-btn:last-child {
-  color: #ffffff;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .studio-programacion-row .input-stepper-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .studio-programacion-row .input-stepper-btn:hover:first-child,
