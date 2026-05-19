@@ -3944,9 +3944,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * (paralelo al --brand-gradient-dynamic de org)                *
  * ============================================================ */
 
-/* 1. Trazo arcoiris/rank debajo del título "DEVELOPER" (igual que pill Vera bajo) */
+/* 1. Header dev: stack columna (título + badge) y trazo arcoiris debajo */
 .nav-mode-developer .nav-dev-workspace-header {
   position: relative;
+  flex-direction: column;
+  gap: 6px;
 }
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
@@ -3956,35 +3958,32 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   bottom: 0;
   height: 2px;
   background: var(--dev-gradient-dynamic, transparent);
-  opacity: 0.85;
+  opacity: 0.9;
   border-radius: 2px;
   pointer-events: none;
 }
 
-/* 2. Badge de rank debajo del título (capitaliza la palabra del var) */
-.nav-mode-developer .nav-dev-title::after {
-  content: var(--dev-rank-label, "");
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
+/* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si se renderiza */
+.nav-dev-rank-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  margin-top: 4px;
-  background: var(--dev-gradient-dynamic, transparent);
-  -webkit-background-clip: text;
+  text-align: center;
+  width: 100%;
+  background: var(--dev-gradient-dynamic, linear-gradient(135deg, var(--text-secondary), var(--text-primary)));
   background-clip: text;
+  -webkit-background-clip: text;
   color: transparent;
-  /* Si --dev-rank-label vacío o sin gradient: fallback color para no quedar invisible */
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
-body:not(.dev-rank-context) .nav-mode-developer .nav-dev-title::after {
-  /* Sin rank aplicado: ocultamos el subtítulo */
-  display: none;
-}
+.nav-dev-rank-badge[hidden] { display: none; }
 
 /* Colapsado: ocultar trazo y badge */
 .side-navigation.collapsed.nav-mode-developer .nav-dev-workspace-header::after,
-.side-navigation.collapsed.nav-mode-developer .nav-dev-title::after {
+.side-navigation.collapsed.nav-mode-developer .nav-dev-rank-badge {
   display: none;
 }
 

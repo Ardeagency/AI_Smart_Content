@@ -71,12 +71,16 @@
     ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'].forEach(r =>
       document.body.classList.remove(`dev-rank-${r}`)
     );
+    const badge = document.getElementById('navDevRankBadge');
+    if (badge) {
+      badge.textContent = '';
+      badge.hidden = true;
+    }
   }
 
   /** Aplica el gradiente al :root. `rank` debe ser uno de RANK_GRADIENTS o normalizable. */
   function applyRank(rank) {
     const canonical = normalizeRank(rank);
-    if (canonical === lastAppliedRank) return canonical;
     const map = RANK_GRADIENTS[canonical];
     if (!map) return canonical;
     root.style.setProperty('--dev-gradient-dynamic', `var(${map.h})`);
@@ -89,7 +93,58 @@
     );
     document.body.classList.add(`dev-rank-${canonical}`);
     lastAppliedRank = canonical;
+    // Refrescar el badge del sidebar (más confiable que CSS pseudo content)
+    syncSidebarRankBadge(canonical);
     return canonical;
+  }
+
+  /** Escribe el texto del rank en el badge del sidebar (HTML directo, no CSS content). */
+  function syncSidebarRankBadge(canonical) {
+    const badge = document.getElementById('navDevRankBadge');
+    if (badge) {
+      const label = RANK_LABEL[canonical] || canonical;
+      badge.textContent = label;
+      badge.setAttribute('data-rank', canonical);
+      badge.hidden = false;
+    }
+    // Re-escribir hrefs del sidebar dev a la forma canónica /dev/<rank>/<userId>/<page>
+    refreshSidebarDevLinks();
+  }
+
+  /** Recorre <a data-route="/dev/..."> del sidebar dev y los reescribe en forma canónica. */
+  function refreshSidebarDevLinks() {
+    const nav = document.querySelector('.nav-mode-developer');
+    if (!nav) return;
+    const userId = (window.authService?.getCurrentUser?.()?.id) || lastAppliedUserId;
+    const rank = lastAppliedRank;
+    if (!rank || !userId) return;
+    const RANKS = ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'];
+    nav.querySelectorAll('a[data-route^="/dev/"]').forEach((a) => {
+      const cur = a.getAttribute('data-route') || '';
+      // Si ya está en forma canónica con el mismo rank+user, saltar
+      const match = cur.match(/^\/dev\/([a-z]+)\/([^/]+)\/(.+)$/);
+      if (match && RANKS.indexOf(match[1]) >= 0) {
+        // Reemplazar rank y user actuales (por si cambiaron)
+        const rest = match[3];
+        const newHref = `/dev/${rank}/${userId}/${rest}`;
+        if (a.getAttribute('href') !== newHref) {
+          a.setAttribute('href', newHref);
+          a.setAttribute('data-route', newHref);
+        }
+        return;
+      }
+      // Forma vieja /dev/<rest>
+      const rest = cur.slice(5);
+      if (!rest) return;
+      const newHref = `/dev/${rank}/${userId}/${rest}`;
+      a.setAttribute('href', newHref);
+      a.setAttribute('data-route', newHref);
+    });
+  }
+
+  /** Devuelve el rank actual aplicado (sin tocar BD). */
+  function getCurrentRank() {
+    return lastAppliedRank;
   }
 
   /** Lee profiles.dev_rank del usuario; cache 10 min vía apiClient si está disponible. */
@@ -143,7 +198,38 @@
     }
     // dev_rank tiene prioridad; si no hay, dev_role como fallback (lead→legend); si no, rookie.
     const rankRaw = profile.dev_rank || profile.dev_role || 'rookie';
-    return applyRank(rankRaw);
+    const canonical = applyRank(rankRaw);
+    // Canonicalizar URL: /dev/<page> → /dev/<rank>/<userId>/<page>
+    canonicalizeDevUrl(canonical, userId);
+    return canonical;
+  }
+
+  /**
+   * Reescribe la URL del browser de /dev/<page> a /dev/<rank>/<userId>/<page>
+   * sin re-disparar el router (replaceState). Si ya está en forma canónica con OTRO rank
+   * (porque cambió el rank del user), también la actualiza al rank actual.
+   */
+  function canonicalizeDevUrl(rank, userId) {
+    if (!rank || !userId) return;
+    const path = window.location.pathname || '';
+    if (!path.startsWith('/dev/')) return;
+    const search = window.location.search || '';
+    const RANKS = ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'];
+    const canonicalMatch = path.match(/^\/dev\/([a-z]+)\/([^/]+)\/(.+)$/);
+    if (canonicalMatch && RANKS.indexOf(canonicalMatch[1]) >= 0) {
+      const prevRank = canonicalMatch[1];
+      const prevUser = canonicalMatch[2];
+      const rest = canonicalMatch[3];
+      if (prevRank === rank && prevUser === userId) return; // ya canónico y al día
+      const newPath = `/dev/${rank}/${userId}/${rest}`;
+      window.history.replaceState({}, '', newPath + search);
+      return;
+    }
+    // Forma vieja /dev/<page> → /dev/<rank>/<userId>/<page>
+    const rest = path.slice(5); // strip "/dev/"
+    if (!rest) return; // /dev sin sufijo
+    const newPath = `/dev/${rank}/${userId}/${rest}`;
+    window.history.replaceState({}, '', newPath + search);
   }
 
   /** Invalida cache (llamar tras un cambio de rank desde admin). */
@@ -161,6 +247,8 @@
     applyRank,           // útil para preview manual
     normalizeRank,
     invalidate,
+    getCurrentRank,
+    syncSidebarRankBadge,
     RANK_GRADIENTS,
     RANK_LABEL
   };

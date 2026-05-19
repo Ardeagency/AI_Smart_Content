@@ -389,8 +389,18 @@ class Navigation {
     const dataTasks = [this.loadUserInfo().catch((e) => console.warn('Nav.loadUserInfo', e))];
     if (config.mode === 'developer') {
       dataTasks.push(this.loadDeveloperInfo().catch((e) => console.warn('Nav.loadDeveloperInfo', e)));
+      // Aplicar el gradient del rank al :root + sincronizar badge. No bloquea el render.
+      if (window.DevRankTheme && typeof window.DevRankTheme.applyDevRankTheme === 'function') {
+        const userId = window.authService?.getCurrentUser?.()?.id || null;
+        // Disparo inmediato (en background); el service mismo actualiza #navDevRankBadge cuando llegue la BD.
+        window.DevRankTheme.applyDevRankTheme(userId).catch((e) => console.warn('Nav.devRankTheme', e));
+      }
     } else if (config.mode === 'user') {
       dataTasks.push(this.loadOrganizationInfo().catch((e) => console.warn('Nav.loadOrganizationInfo', e)));
+      // Al volver al modo user, limpiar tema dev por si quedó pegado
+      if (window.DevRankTheme && typeof window.DevRankTheme.clearDevRankTheme === 'function') {
+        window.DevRankTheme.clearDevRankTheme();
+      }
     }
     if (config.showHeader) {
       this.refreshNotificationsBadge();
@@ -1602,6 +1612,22 @@ class Navigation {
   }
 
   /**
+   * Construye la URL canónica del developer: /dev/<rank>/<userId>/<rest>.
+   * Si rank o userId aún no están disponibles, devuelve el route original.
+   * El router acepta ambos formatos (re-mapea canónico → registrado internamente).
+   */
+  getDevUrl(route) {
+    if (!route || !route.startsWith('/dev/')) return route;
+    const rest = route.slice(5);
+    if (!rest) return route;
+    const rank = (window.DevRankTheme && typeof window.DevRankTheme.getCurrentRank === 'function')
+      ? window.DevRankTheme.getCurrentRank() : null;
+    const userId = window.authService?.getCurrentUser?.()?.id || null;
+    if (!rank || !userId) return route; // fallback a forma vieja hasta que llegue el rank
+    return `/dev/${rank}/${userId}/${rest}`;
+  }
+
+  /**
    * HTML para navegación de desarrollador PaaS (config-driven: Dashboard, Build, Operations, Observability, Resources, Lead).
    */
   getDeveloperNavigationHTML() {
@@ -1626,9 +1652,10 @@ class Navigation {
       if (item.type === 'page') {
         const pageClass = isLead ? 'nav-item nav-lead-only' : 'nav-item';
         const pageAttrs = isLead ? ' style="display: none;"' : '';
+        const href = this.getDevUrl(item.route);
         return `
           <div class="${pageClass}"${pageAttrs}>
-            <a href="${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link" data-route="${href}" data-tooltip="${item.label}">
               ${iconHTML(item)}
               <span class="nav-text">${item.label}</span>
             </a>
@@ -1636,12 +1663,13 @@ class Navigation {
       }
 
       const children = (item.children || [])
-        .map(
-          (c) => `
-            <a href="${c.route}" class="nav-submenu-link" data-route="${c.route}" data-tooltip="${c.label}">
+        .map((c) => {
+          const childHref = this.getDevUrl(c.route);
+          return `
+            <a href="${childHref}" class="nav-submenu-link" data-route="${childHref}" data-tooltip="${c.label}">
               <span>${c.label}</span>
-            </a>`
-        )
+            </a>`;
+        })
         .join('');
 
       return `
@@ -1657,16 +1685,18 @@ class Navigation {
         </div>`;
     }).join('');
 
+    const builderHref = this.getDevUrl('/dev/builder');
+    const provisioningHref = this.getDevUrl('/dev/provisioning/users');
     const devPrimaryActionsHTML = `
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary">
-          <a href="/dev/builder" class="nav-link nav-main-link nav-link--primary" data-route="/dev/builder" data-tooltip="Nuevo Flow">
+          <a href="${builderHref}" class="nav-link nav-main-link nav-link--primary" data-route="${builderHref}" data-tooltip="Nuevo Flow">
             <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
             <span class="nav-text">Flow</span>
           </a>
         </div>
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
-          <a href="/dev/provisioning/users" class="nav-link nav-main-link nav-link--primary" data-route="/dev/provisioning/users" data-tooltip="Nuevo User">
+          <a href="${provisioningHref}" class="nav-link nav-main-link nav-link--primary" data-route="${provisioningHref}" data-tooltip="Nuevo User">
             <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
             <span class="nav-text">User</span>
           </a>
@@ -1698,6 +1728,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
           <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
+          <span class="nav-dev-rank-badge" id="navDevRankBadge" hidden></span>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">

@@ -185,6 +185,19 @@ class Router {
         return;
       }
 
+      // ── /dev/:rank/:userId/<rest>: forma canónica del portal developer ─────────
+      // Las rutas registradas siguen siendo /dev/<page>; reescribimos internamente
+      // para el matching. La URL del browser conserva la forma canónica.
+      const DEV_RANKS = ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'];
+      const devCanonicalMatch = path.match(/^\/dev\/([a-z]+)\/([^/]+)\/(.+)$/);
+      if (devCanonicalMatch && DEV_RANKS.indexOf(devCanonicalMatch[1]) >= 0) {
+        // Solo aceptamos UUIDs (o "me"). Si el segundo segmento no luce como UUID, no remappeamos.
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(devCanonicalMatch[2]) || devCanonicalMatch[2] === 'me';
+        if (isUuid) {
+          path = '/dev/' + devCanonicalMatch[3];
+        }
+      }
+
       let route = this.routes[path];
       let routeParams = {};
 
