@@ -20,7 +20,7 @@ class TasksView extends BaseView {
     this.audiences = [];
     this.brands = [];
     this.ASPECT_RATIOS = ['1:1', '9:16', '16:9', '4:5'];
-    this.currentFilter = 'active';
+    this.currentFilter = 'history';
     this.taskCardLimit = 9;
     this.taskCardDisplayCount = 9;
   }
@@ -41,7 +41,13 @@ class TasksView extends BaseView {
     </div>
 
     <nav class="tasks-tabs" id="tasksTabs" aria-label="Filtrar tareas">
-      <button type="button" class="tasks-tab active" data-filter="active" id="tasksTabActive">
+      <button type="button" class="tasks-tab active" data-filter="history" id="tasksTabHistory">
+        Historial
+      </button>
+      <button type="button" class="tasks-tab" data-filter="all" id="tasksTabAll">
+        Todas (<span id="tasksCountAll">0</span>)
+      </button>
+      <button type="button" class="tasks-tab" data-filter="active" id="tasksTabActive">
         Activas (<span id="tasksCountActive">0</span>)
       </button>
       <button type="button" class="tasks-tab" data-filter="paused" id="tasksTabPaused">
@@ -49,9 +55,6 @@ class TasksView extends BaseView {
       </button>
       <button type="button" class="tasks-tab" data-filter="draft" id="tasksTabDraft">
         Borradores (<span id="tasksCountDraft">0</span>)
-      </button>
-      <button type="button" class="tasks-tab" data-filter="history" id="tasksTabHistory">
-        Historial
       </button>
     </nav>
 
@@ -613,9 +616,11 @@ class TasksView extends BaseView {
     const activeCount = list.filter(t => t.status === 'active').length;
     const pausedCount = list.filter(t => t.status === 'paused').length;
     const draftCount = list.filter(t => t.status === 'draft').length;
+    const elAll = document.getElementById('tasksCountAll');
     const elActive = document.getElementById('tasksCountActive');
     const elPaused = document.getElementById('tasksCountPaused');
     const elDraft = document.getElementById('tasksCountDraft');
+    if (elAll) elAll.textContent = String(list.length);
     if (elActive) elActive.textContent = String(activeCount);
     if (elPaused) elPaused.textContent = String(pausedCount);
     if (elDraft) elDraft.textContent = String(draftCount);
@@ -719,75 +724,78 @@ class TasksView extends BaseView {
     grid.innerHTML = this.skeletonGrid(6, 'lg');
     const runs = await this.loadFlowRuns(50);
     if (!runs.length) {
+      // Fallback: si no hay historial, llevar al usuario a "Todas las tareas".
+      if (this.currentFilter === 'history' && !this._historyFallbackApplied) {
+        this._historyFallbackApplied = true;
+        this.currentFilter = 'all';
+        return this.renderTasksList();
+      }
       grid.innerHTML = '';
       if (empty) empty.style.display = 'block';
       return;
     }
     if (empty) empty.style.display = 'none';
-    grid.innerHTML = runs.map(r => this.renderHistoryCard(r)).join('');
+    grid.innerHTML = `
+      <div class="tasks-history-table" role="table">
+        <div class="tasks-history-thead" role="row">
+          <div class="tasks-history-th" role="columnheader">Ejecutado</div>
+          <div class="tasks-history-th" role="columnheader">Flow</div>
+          <div class="tasks-history-th" role="columnheader">Status</div>
+          <div class="tasks-history-th tasks-history-th--num" role="columnheader">Tokens</div>
+          <div class="tasks-history-th tasks-history-th--num" role="columnheader">HTTP</div>
+        </div>
+        <div class="tasks-history-tbody" role="rowgroup">
+          ${runs.map(r => this.renderHistoryRow(r)).join('')}
+        </div>
+      </div>
+    `;
   }
 
-  renderHistoryCard(r) {
+  renderHistoryRow(r) {
     const status = (r.status || '').toLowerCase();
     const statusClass = status === 'completed' ? 'task-card-badge-active'
                       : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
                       : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
                       : 'task-card-badge-paused';
-    const statusLabel = status === 'completed' ? 'COMPLETADO'
-                      : status === 'failed' ? 'ERROR'
-                      : status === 'error' ? 'ERROR'
-                      : status === 'running' ? 'EN CURSO'
-                      : status === 'in_progress' ? 'EN CURSO'
-                      : status.toUpperCase() || '—';
-    const coverHtml = r.flow_image_url
-      ? `<div class="task-card-cover"><img src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy"></div>`
-      : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
-    const tokens = r.tokens_consumed != null ? `${Number(r.tokens_consumed).toLocaleString('es')} créditos` : '—';
-    const progress = (r.current_module_order != null && r.total_modules_count)
-      ? `${r.current_module_order}/${r.total_modules_count}`
-      : '—';
+    const statusLabel = status === 'completed' ? 'Completado'
+                      : status === 'failed' || status === 'error' ? 'Error'
+                      : status === 'running' || status === 'in_progress' ? 'En curso'
+                      : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
+    const thumb = r.flow_image_url
+      ? `<img class="tasks-history-thumb" src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy">`
+      : `<span class="tasks-history-thumb tasks-history-thumb--placeholder"><i class="fas fa-project-diagram"></i></span>`;
+    const { rel, abs } = this._formatRunDateParts(r.created_at);
+    const tokens = r.tokens_consumed != null ? Number(r.tokens_consumed).toLocaleString('es') : '—';
+    const http = r.webhook_response_code ?? '—';
     return `
-      <article class="task-card task-card--history">
-        <div class="task-card-inner">
-          <div class="task-card-cover-wrap">
-            ${coverHtml}
-            <span class="task-card-badge task-card-badge-cover ${statusClass}">
-              <span class="task-card-badge-dot"></span>${statusLabel}
-            </span>
-          </div>
-          <div class="task-card-body">
-            <div class="task-card-header">
-              <h3 class="task-card-title">${this.escapeHtml(r.flow_name || '—')}</h3>
-            </div>
-            <p class="task-card-subtitle">${this._formatRunDate(r.created_at)}</p>
-            ${r.entity_name ? `<div class="task-card-tags"><span class="task-card-tag">${this.escapeHtml(r.entity_name)}</span></div>` : ''}
-            <div class="task-card-metrics">
-              <div class="task-card-metric">
-                <span class="task-card-metric-value">${this.escapeHtml(tokens)}</span>
-                <span class="task-card-metric-label">CONSUMO</span>
-              </div>
-              <div class="task-card-metric-divider"></div>
-              <div class="task-card-metric">
-                <span class="task-card-metric-value">${progress}</span>
-                <span class="task-card-metric-label">PROGRESO</span>
-              </div>
-              <div class="task-card-metric-divider"></div>
-              <div class="task-card-metric">
-                <span class="task-card-metric-value">${r.webhook_response_code ?? '—'}</span>
-                <span class="task-card-metric-label">HTTP</span>
-              </div>
-            </div>
+      <div class="tasks-history-row" role="row">
+        <div class="tasks-history-cell tasks-history-cell--when" role="cell">
+          <span class="tasks-history-when-rel">${this.escapeHtml(rel)}</span>
+          <span class="tasks-history-when-abs">${this.escapeHtml(abs)}</span>
+        </div>
+        <div class="tasks-history-cell tasks-history-cell--flow" role="cell">
+          ${thumb}
+          <div class="tasks-history-flow-info">
+            <span class="tasks-history-flow-name">${this.escapeHtml(r.flow_name || '—')}</span>
+            ${r.entity_name ? `<span class="tasks-history-flow-entity">${this.escapeHtml(r.entity_name)}</span>` : ''}
           </div>
         </div>
-      </article>
+        <div class="tasks-history-cell" role="cell">
+          <span class="task-card-badge ${statusClass}">
+            <span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}
+          </span>
+        </div>
+        <div class="tasks-history-cell tasks-history-cell--num" role="cell">${this.escapeHtml(tokens)}</div>
+        <div class="tasks-history-cell tasks-history-cell--num" role="cell">${this.escapeHtml(String(http))}</div>
+      </div>
     `;
   }
 
-  /** "hace 3h · 19 may 14:30" en hora local. */
-  _formatRunDate(iso) {
-    if (!iso) return '—';
+  /** Separa fecha relativa y absoluta para renderizar en celdas distintas. */
+  _formatRunDateParts(iso) {
+    if (!iso) return { rel: '—', abs: '' };
     const d = new Date(iso);
-    if (isNaN(d.getTime())) return '—';
+    if (isNaN(d.getTime())) return { rel: '—', abs: '' };
     const now = Date.now();
     const diff = Math.max(0, now - d.getTime());
     const m = Math.floor(diff / 60000);
@@ -797,7 +805,7 @@ class TasksView extends BaseView {
     else if (m < 1440) rel = `hace ${Math.floor(m / 60)} h`;
     else rel = `hace ${Math.floor(m / 1440)} d`;
     const abs = d.toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-    return `${rel} · ${abs}`;
+    return { rel, abs };
   }
 
   renderTaskCard(t) {
@@ -870,8 +878,10 @@ class TasksView extends BaseView {
     tabs.forEach(tab => {
       tab.classList.toggle('active', (tab.getAttribute('data-filter') || '') === this.currentFilter);
       tab.onclick = () => {
-        this.currentFilter = tab.getAttribute('data-filter') || 'active';
+        this.currentFilter = tab.getAttribute('data-filter') || 'history';
         this.taskCardDisplayCount = this.taskCardLimit;
+        // Reset del fallback: el click manual a Historial puede mostrar el empty state.
+        this._historyFallbackApplied = false;
         this.renderTasksList();
       };
     });
