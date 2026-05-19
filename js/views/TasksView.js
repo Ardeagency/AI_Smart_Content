@@ -72,30 +72,44 @@ class TasksView extends BaseView {
     </div>
   </div>
 
-  <!-- Vista detalle/edición de una tarea (estado de edición como en referencia) -->
+  <!-- Vista detalle/edición de una tarea -->
   <div class="task-detail-wrapper" id="taskDetailContainer" style="display: none;">
     <div class="task-detail">
-      <header class="task-detail-header task-detail-header--edit">
-        <div class="task-detail-header-top">
-          <div class="task-detail-header-left">
-            <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
-              <i class="fas fa-arrow-left"></i>
-              Volver
-            </a>
-            <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="Activar o pausar"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">Pausar</span></button>
-            <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> Duplicar</button>
-            <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> Eliminar</button>
+      <header class="task-detail-header">
+        <div class="task-detail-header-left">
+          <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
+            <i class="fas fa-arrow-left"></i> Volver
+          </a>
+          <div class="task-detail-title-block">
+            <h1 class="task-detail-title" id="taskDetailTitle">—</h1>
+            <p class="task-detail-subtitle" id="taskDetailSubtitle">—</p>
           </div>
-          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> Guardar cambios</button>
+        </div>
+        <div class="task-detail-header-right">
+          <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="Activar o pausar"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">Pausar</span></button>
+          <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> Duplicar</button>
+          <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> Eliminar</button>
+          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> Guardar</button>
         </div>
       </header>
 
-      <div class="task-detail-cards">
-        <section class="task-detail-card">
-          <h2 class="task-detail-card-title">Programación</h2>
-          <div class="task-detail-card-body">
+      <div class="task-detail-grid">
+        <!-- Dashboard (arriba izq, span 2 col) -->
+        <section class="task-detail-section task-detail-dashboard">
+          <header class="task-detail-section-header">
+            <h2 class="task-detail-section-title">Dashboard</h2>
+          </header>
+          <div class="task-detail-metrics" id="taskDetailMetrics"></div>
+        </section>
+
+        <!-- Editor (derecha, span 2 row) -->
+        <aside class="task-detail-section task-detail-editor">
+          <header class="task-detail-section-header">
+            <h2 class="task-detail-section-title">Editar</h2>
+          </header>
+          <div class="task-detail-editor-body">
             <div class="task-detail-field">
-              <label class="task-detail-label">FRECUENCIA</label>
+              <label class="task-detail-label">Frecuencia</label>
               <select id="taskDetailFreq" class="task-detail-select" aria-label="Frecuencia" disabled>
                 <option value="daily">Diario</option>
                 <option value="weekly">Semanal</option>
@@ -103,67 +117,55 @@ class TasksView extends BaseView {
               </select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">REGLA ACTIVA</label>
+              <label class="task-detail-label">Regla activa</label>
               <p class="task-detail-readonly" id="taskDetailRuleActive">—</p>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">CREACIÓN</label>
+              <label class="task-detail-label">Creación</label>
               <p class="task-detail-readonly" id="taskDetailCreated">—</p>
             </div>
-          </div>
-        </section>
-
-        <section class="task-detail-card">
-          <h2 class="task-detail-card-title">Asignaciones</h2>
-          <div class="task-detail-card-body">
             <div class="task-detail-field">
-              <label class="task-detail-label">MARCA</label>
-              <select id="taskDetailBrandSelect" class="task-detail-select" aria-label="Marca">
-                <option value="">—</option>
-              </select>
+              <label class="task-detail-label">Marca</label>
+              <select id="taskDetailBrandSelect" class="task-detail-select" aria-label="Marca"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">CAMPAÑA</label>
-              <select id="taskDetailCampaignSelect" class="task-detail-select" aria-label="Campaña">
-                <option value="">—</option>
-              </select>
+              <label class="task-detail-label">Campaña</label>
+              <select id="taskDetailCampaignSelect" class="task-detail-select" aria-label="Campaña"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">ENTIDAD</label>
-              <select id="taskDetailEntitySelect" class="task-detail-select" aria-label="Entidad">
-                <option value="">—</option>
-              </select>
+              <label class="task-detail-label">Entidad</label>
+              <select id="taskDetailEntitySelect" class="task-detail-select" aria-label="Entidad"><option value="">—</option></select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">AUDIENCIA</label>
-              <select id="taskDetailAudienceSelect" class="task-detail-select" aria-label="Audiencia">
-                <option value="">—</option>
-              </select>
+              <label class="task-detail-label">Audiencia</label>
+              <select id="taskDetailAudienceSelect" class="task-detail-select" aria-label="Audiencia"><option value="">—</option></select>
             </div>
-          </div>
-        </section>
-
-        <section class="task-detail-card">
-          <h2 class="task-detail-card-title">Producción</h2>
-          <div class="task-detail-card-body">
             <div class="task-detail-field">
-              <label class="task-detail-label">ASPECT RATIO</label>
+              <label class="task-detail-label">Formato</label>
               <select id="taskDetailAspectSelect" class="task-detail-select" aria-label="Aspect ratio">
                 <option value="1:1">1:1</option>
-                <option value="9:16">9:16 (Vertical Reels)</option>
+                <option value="9:16">9:16</option>
                 <option value="16:9">16:9</option>
                 <option value="4:5">4:5</option>
               </select>
             </div>
             <div class="task-detail-field">
-              <label class="task-detail-label">PRODUCCIONES POR EJECUCIÓN</label>
-              <p class="task-detail-production-count"><input type="number" id="taskDetailProductionCountInput" class="task-detail-production-input" min="1" value="1" aria-label="Número de producciones" /> variaciones automáticas</p>
+              <label class="task-detail-label">Producciones por ejecución</label>
+              <input type="number" id="taskDetailProductionCountInput" class="task-detail-input" min="1" value="1" aria-label="Número de producciones" />
             </div>
-            <div class="task-detail-field task-detail-field--specs">
-              <label class="task-detail-label">ESPECIFICACIONES ADICIONALES</label>
+            <div class="task-detail-field">
+              <label class="task-detail-label">Especificaciones</label>
               <textarea id="taskDetailSpecsText" class="task-detail-textarea" rows="4" placeholder="Instrucciones de producción..."></textarea>
             </div>
           </div>
+        </aside>
+
+        <!-- Runs (abajo izq, span 2 col) -->
+        <section class="task-detail-section task-detail-runs">
+          <header class="task-detail-section-header">
+            <h2 class="task-detail-section-title">Últimas ejecuciones</h2>
+          </header>
+          <div class="task-detail-runs-body" id="taskDetailRunsBody"></div>
         </section>
       </div>
     </div>
@@ -993,6 +995,22 @@ class TasksView extends BaseView {
 
     await Promise.all([this.loadEntities(), this.loadCampaigns(), this.loadAudiences(), this.loadBrands()]);
 
+    // Fondo: imagen del flow (mismo patrón que product-view + studio schedule).
+    if (task.flow_image_url) {
+      container.style.setProperty('--task-bg-image', `url("${String(task.flow_image_url).replace(/"/g, '\\"')}")`);
+    } else {
+      container.style.removeProperty('--task-bg-image');
+    }
+
+    // Header: título (job_name) + subtítulo (flow_name)
+    const titleEl = document.getElementById('taskDetailTitle');
+    const subtitleEl = document.getElementById('taskDetailSubtitle');
+    if (titleEl) titleEl.textContent = task.job_name || 'Tarea sin nombre';
+    if (subtitleEl) subtitleEl.textContent = task.flow_name || '—';
+
+    // Dashboard + Runs en paralelo (no bloquean form)
+    this._renderTaskDashboardAndRuns(task);
+
     const ruleEl = document.getElementById('taskDetailRuleActive');
     const createdEl = document.getElementById('taskDetailCreated');
     const freqSelect = document.getElementById('taskDetailFreq');
@@ -1058,6 +1076,120 @@ class TasksView extends BaseView {
 
     const saveBtn = document.getElementById('taskDetailSaveBtn');
     if (saveBtn) saveBtn.onclick = () => this.saveTaskDetail(task);
+  }
+
+  /** Carga runs de este task (flow + brand + user) y pinta Dashboard + Runs en paralelo. */
+  async _renderTaskDashboardAndRuns(task) {
+    const metricsEl = document.getElementById('taskDetailMetrics');
+    const runsEl = document.getElementById('taskDetailRunsBody');
+    if (metricsEl) metricsEl.innerHTML = this._renderTaskMetricsSkeleton();
+    if (runsEl) runsEl.innerHTML = '<p class="task-detail-empty">Cargando ejecuciones…</p>';
+
+    const runs = await this._loadTaskRuns(task);
+    this._renderTaskMetrics(task, runs);
+    this._renderTaskRuns(runs);
+  }
+
+  /** Runs del task: filtrados por flow_id + brand_id + user_id (no hay schedule_id en flow_runs). */
+  async _loadTaskRuns(task) {
+    if (!this.supabase || !task?.flow_id) return [];
+    try {
+      const q = this.supabase
+        .from('flow_runs')
+        .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, campaign_id, persona_id')
+        .eq('user_id', this.userId)
+        .eq('flow_id', task.flow_id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (task.brand_id) q.eq('brand_id', task.brand_id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error('TasksView _loadTaskRuns:', e);
+      return [];
+    }
+  }
+
+  _renderTaskMetricsSkeleton() {
+    return Array.from({ length: 4 }).map(() =>
+      '<div class="task-detail-metric task-detail-metric--skeleton"></div>'
+    ).join('');
+  }
+
+  _renderTaskMetrics(task, runs) {
+    const metricsEl = document.getElementById('taskDetailMetrics');
+    if (!metricsEl) return;
+    const total = runs.length;
+    const completed = runs.filter(r => (r.status || '').toLowerCase() === 'completed').length;
+    const tokens = runs.reduce((acc, r) => acc + (Number(r.tokens_consumed) || 0), 0);
+    const last = runs[0];
+    const lastWhen = last ? this._formatRunDateParts(last.created_at) : null;
+    const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    const metrics = [
+      { label: 'Ejecuciones', value: String(total), hint: total ? `${successRate}% completadas` : 'Sin ejecuciones' },
+      { label: 'Completadas', value: String(completed), hint: total ? `${total - completed} con error` : '—' },
+      { label: 'Créditos consumidos', value: tokens.toLocaleString('es'), hint: 'Total acumulado' },
+      { label: 'Última ejecución', value: lastWhen ? lastWhen.rel : '—', hint: lastWhen ? lastWhen.abs : 'Sin ejecuciones aún' }
+    ];
+
+    metricsEl.innerHTML = metrics.map(m => `
+      <div class="task-detail-metric">
+        <span class="task-detail-metric-label">${this.escapeHtml(m.label)}</span>
+        <span class="task-detail-metric-value">${this.escapeHtml(m.value)}</span>
+        <span class="task-detail-metric-hint">${this.escapeHtml(m.hint)}</span>
+      </div>
+    `).join('');
+  }
+
+  _renderTaskRuns(runs) {
+    const el = document.getElementById('taskDetailRunsBody');
+    if (!el) return;
+    if (!runs.length) {
+      el.innerHTML = '<p class="task-detail-empty">Esta tarea aún no se ha ejecutado.</p>';
+      return;
+    }
+    el.innerHTML = `
+      <div class="task-detail-runs-table" role="table">
+        <div class="task-detail-runs-thead" role="row">
+          <div role="columnheader">Fecha</div>
+          <div role="columnheader">Status</div>
+          <div role="columnheader" class="task-detail-runs-th--num">Costo</div>
+        </div>
+        <div class="task-detail-runs-tbody" role="rowgroup">
+          ${runs.map(r => this._renderTaskRunRow(r)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  _renderTaskRunRow(r) {
+    const status = (r.status || '').toLowerCase();
+    const statusClass = status === 'completed' ? 'task-card-badge-active'
+                      : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
+                      : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
+                      : 'task-card-badge-paused';
+    const statusLabel = status === 'completed' ? 'Completado'
+                      : status === 'failed' || status === 'error' ? 'Error'
+                      : status === 'running' || status === 'in_progress' ? 'En curso'
+                      : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
+    const { rel, abs } = this._formatRunDateParts(r.created_at);
+    const cost = r.tokens_consumed != null ? Number(r.tokens_consumed).toLocaleString('es') : '—';
+    return `
+      <div class="task-detail-runs-row" role="row">
+        <div role="cell" class="task-detail-runs-cell--when">
+          <span class="task-detail-runs-rel">${this.escapeHtml(rel)}</span>
+          <span class="task-detail-runs-abs">${this.escapeHtml(abs)}</span>
+        </div>
+        <div role="cell">
+          <span class="task-card-badge ${statusClass}">
+            <span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}
+          </span>
+        </div>
+        <div role="cell" class="task-detail-runs-cell--num">${this.escapeHtml(cost)}</div>
+      </div>
+    `;
   }
 
   /** Guardar cambios desde la vista de edición del schedule. */

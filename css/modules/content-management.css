@@ -1864,3 +1864,318 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
     display: none;
   }
 }
+
+/* ============================================================
+   Task detail v2 · Hero bg + 3-zone grid
+   (Dashboard top-left, Runs bottom-left, Editor right span)
+   ============================================================ */
+.task-detail-wrapper {
+  position: relative;
+  isolation: isolate;
+  max-width: 1280px;
+  background: transparent !important;
+}
+
+.task-detail-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--task-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px);
+  transform: scale(1.15);
+  z-index: -2;
+  pointer-events: none;
+}
+
+.task-detail-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.task-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.task-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.task-detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.task-detail-header-right {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-detail-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.task-detail-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.task-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  grid-template-rows: auto auto;
+  gap: 20px;
+}
+
+.task-detail-dashboard {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.task-detail-runs {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.task-detail-editor {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+@media (max-width: 1024px) {
+  .task-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .task-detail-dashboard,
+  .task-detail-runs,
+  .task-detail-editor {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.task-detail-section {
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.task-detail-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Métricas del Dashboard */
+.task-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.task-detail-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.task-detail-metric--skeleton {
+  height: 78px;
+  background: rgba(255, 255, 255, 0.04);
+  animation: task-pulse 1.6s ease-in-out infinite;
+}
+
+.task-detail-metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.task-detail-metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-detail-metric-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Editor: form en column derecha, sticky-ish */
+.task-detail-editor {
+  align-self: start;
+  position: sticky;
+  top: 64px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+}
+
+.task-detail-editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.task-detail-editor .task-detail-label {
+  margin: 0 0 6px 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.task-detail-editor .task-detail-select,
+.task-detail-editor .task-detail-input,
+.task-detail-editor .task-detail-textarea {
+  width: 100%;
+  max-width: none;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.task-detail-editor .task-detail-select:focus,
+.task-detail-editor .task-detail-input:focus,
+.task-detail-editor .task-detail-textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary, rgba(255, 255, 255, 0.3));
+}
+
+.task-detail-editor .task-detail-readonly {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.task-detail-editor .task-detail-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Runs: mini tabla */
+.task-detail-runs-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-detail-runs-table {
+  width: 100%;
+}
+
+.task-detail-runs-thead,
+.task-detail-runs-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, auto) minmax(80px, 100px);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 8px;
+}
+
+.task-detail-runs-thead {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.task-detail-runs-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.task-detail-runs-row:last-child {
+  border-bottom: none;
+}
+
+.task-detail-runs-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.task-detail-runs-cell--when {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-detail-runs-rel {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.task-detail-runs-abs {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+}
+
+.task-detail-runs-th--num,
+.task-detail-runs-cell--num {
+  text-align: right;
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-detail-empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Override de header viejo cuando convive con el nuevo */
+.task-detail-header--edit { display: none; }
