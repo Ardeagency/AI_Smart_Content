@@ -757,6 +757,36 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   background: var(--text-tertiary);
 }
 
+.task-card-badge-draft {
+  color: #f5b942;
+}
+
+.task-card-badge-draft .task-card-badge-dot {
+  background: #f5b942;
+}
+
+.task-card-badge-danger {
+  color: #ef4444;
+}
+
+.task-card-badge-danger .task-card-badge-dot {
+  background: #ef4444;
+}
+
+.task-card-badge-running {
+  color: #3b82f6;
+}
+
+.task-card-badge-running .task-card-badge-dot {
+  background: #3b82f6;
+  animation: task-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes task-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .task-card-subtitle {
   font-size: 0.8125rem;
   color: var(--text-secondary);

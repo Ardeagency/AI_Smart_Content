@@ -42,16 +42,16 @@ class TasksView extends BaseView {
 
     <nav class="tasks-tabs" id="tasksTabs" aria-label="Filtrar tareas">
       <button type="button" class="tasks-tab active" data-filter="active" id="tasksTabActive">
-        Active Tasks (<span id="tasksCountActive">0</span>)
+        Activas (<span id="tasksCountActive">0</span>)
       </button>
       <button type="button" class="tasks-tab" data-filter="paused" id="tasksTabPaused">
-        Paused (<span id="tasksCountPaused">0</span>)
+        Pausadas (<span id="tasksCountPaused">0</span>)
       </button>
-      <button type="button" class="tasks-tab" data-filter="completed" id="tasksTabCompleted">
-        Completed (<span id="tasksCountCompleted">0</span>)
+      <button type="button" class="tasks-tab" data-filter="draft" id="tasksTabDraft">
+        Borradores (<span id="tasksCountDraft">0</span>)
       </button>
-      <button type="button" class="tasks-tab" data-filter="archived" id="tasksTabArchived">
-        Archived
+      <button type="button" class="tasks-tab" data-filter="history" id="tasksTabHistory">
+        Historial
       </button>
     </nav>
 
@@ -602,22 +602,23 @@ class TasksView extends BaseView {
 
   getFilteredSchedules() {
     const list = this.schedules || [];
-    if (this.currentFilter === 'active') return list.filter(t => t.is_active);
-    if (this.currentFilter === 'paused') return list.filter(t => !t.is_active);
-    if (this.currentFilter === 'completed' || this.currentFilter === 'archived') return [];
+    if (this.currentFilter === 'active') return list.filter(t => t.status === 'active');
+    if (this.currentFilter === 'paused') return list.filter(t => t.status === 'paused');
+    if (this.currentFilter === 'draft') return list.filter(t => t.status === 'draft');
     return list;
   }
 
   updateTasksTabCounts() {
     const list = this.schedules || [];
-    const activeCount = list.filter(t => t.is_active).length;
-    const pausedCount = list.filter(t => !t.is_active).length;
+    const activeCount = list.filter(t => t.status === 'active').length;
+    const pausedCount = list.filter(t => t.status === 'paused').length;
+    const draftCount = list.filter(t => t.status === 'draft').length;
     const elActive = document.getElementById('tasksCountActive');
     const elPaused = document.getElementById('tasksCountPaused');
-    const elCompleted = document.getElementById('tasksCountCompleted');
+    const elDraft = document.getElementById('tasksCountDraft');
     if (elActive) elActive.textContent = String(activeCount);
     if (elPaused) elPaused.textContent = String(pausedCount);
-    if (document.getElementById('tasksCountCompleted')) document.getElementById('tasksCountCompleted').textContent = '0';
+    if (elDraft) elDraft.textContent = String(draftCount);
   }
 
   async renderTasksList() {
@@ -630,6 +631,12 @@ class TasksView extends BaseView {
     this.updateTasksTabCounts();
     this.setupTasksTabs();
     this.setupCreateNewTaskButton();
+
+    if (this.currentFilter === 'history') {
+      if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+      await this.renderHistory(grid, empty);
+      return;
+    }
 
     const filtered = this.getFilteredSchedules();
     const visible = filtered.slice(0, this.taskCardDisplayCount);
@@ -670,12 +677,139 @@ class TasksView extends BaseView {
     }
   }
 
+  /** Carga últimos flow_runs del usuario con flow info, entity y status. */
+  async loadFlowRuns(limit = 50) {
+    if (!this.supabase || !this.userId) return [];
+    try {
+      const { data: runs, error } = await this.supabase
+        .from('flow_runs')
+        .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, webhook_response_code, current_module_order, total_modules_count, n8n_execution_id, campaign_id, persona_id')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      const list = runs || [];
+      if (!list.length) return [];
+
+      const flowIds = [...new Set(list.map(r => r.flow_id).filter(Boolean))];
+      const entityIds = [...new Set(list.map(r => r.entity_id).filter(Boolean))];
+
+      const [flowsRes, entitiesRes] = await Promise.all([
+        flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : { data: [] },
+        entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] }
+      ]);
+
+      const flowNameMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const flowImgMap  = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.flow_image_url || null; return acc; }, {});
+      const entityNameMap = (entitiesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+
+      return list.map(r => ({
+        ...r,
+        flow_name: (r.flow_id && flowNameMap[r.flow_id]) || '—',
+        flow_image_url: (r.flow_id && flowImgMap[r.flow_id]) || null,
+        entity_name: (r.entity_id && entityNameMap[r.entity_id]) || null
+      }));
+    } catch (e) {
+      console.error('TasksView loadFlowRuns:', e);
+      return [];
+    }
+  }
+
+  async renderHistory(grid, empty) {
+    grid.innerHTML = this.skeletonGrid(6, 'lg');
+    const runs = await this.loadFlowRuns(50);
+    if (!runs.length) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    grid.innerHTML = runs.map(r => this.renderHistoryCard(r)).join('');
+  }
+
+  renderHistoryCard(r) {
+    const status = (r.status || '').toLowerCase();
+    const statusClass = status === 'completed' ? 'task-card-badge-active'
+                      : status === 'failed' || status === 'error' ? 'task-card-badge-danger'
+                      : status === 'running' || status === 'in_progress' ? 'task-card-badge-running'
+                      : 'task-card-badge-paused';
+    const statusLabel = status === 'completed' ? 'COMPLETADO'
+                      : status === 'failed' ? 'ERROR'
+                      : status === 'error' ? 'ERROR'
+                      : status === 'running' ? 'EN CURSO'
+                      : status === 'in_progress' ? 'EN CURSO'
+                      : status.toUpperCase() || '—';
+    const coverHtml = r.flow_image_url
+      ? `<div class="task-card-cover"><img src="${this.escapeHtml(r.flow_image_url)}" alt="" loading="lazy"></div>`
+      : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
+    const tokens = r.tokens_consumed != null ? `${Number(r.tokens_consumed).toLocaleString('es')} créditos` : '—';
+    const progress = (r.current_module_order != null && r.total_modules_count)
+      ? `${r.current_module_order}/${r.total_modules_count}`
+      : '—';
+    return `
+      <article class="task-card task-card--history">
+        <div class="task-card-inner">
+          <div class="task-card-cover-wrap">
+            ${coverHtml}
+            <span class="task-card-badge task-card-badge-cover ${statusClass}">
+              <span class="task-card-badge-dot"></span>${statusLabel}
+            </span>
+          </div>
+          <div class="task-card-body">
+            <div class="task-card-header">
+              <h3 class="task-card-title">${this.escapeHtml(r.flow_name || '—')}</h3>
+            </div>
+            <p class="task-card-subtitle">${this._formatRunDate(r.created_at)}</p>
+            ${r.entity_name ? `<div class="task-card-tags"><span class="task-card-tag">${this.escapeHtml(r.entity_name)}</span></div>` : ''}
+            <div class="task-card-metrics">
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${this.escapeHtml(tokens)}</span>
+                <span class="task-card-metric-label">CONSUMO</span>
+              </div>
+              <div class="task-card-metric-divider"></div>
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${progress}</span>
+                <span class="task-card-metric-label">PROGRESO</span>
+              </div>
+              <div class="task-card-metric-divider"></div>
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${r.webhook_response_code ?? '—'}</span>
+                <span class="task-card-metric-label">HTTP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  /** "hace 3h · 19 may 14:30" en hora local. */
+  _formatRunDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    const now = Date.now();
+    const diff = Math.max(0, now - d.getTime());
+    const m = Math.floor(diff / 60000);
+    let rel = '';
+    if (m < 1) rel = 'ahora';
+    else if (m < 60) rel = `hace ${m} min`;
+    else if (m < 1440) rel = `hace ${Math.floor(m / 60)} h`;
+    else rel = `hace ${Math.floor(m / 1440)} d`;
+    const abs = d.toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return `${rel} · ${abs}`;
+  }
+
   renderTaskCard(t) {
     const scheduleLabel = this.cronToScheduleLabel(t.cron_expression);
     const freqLabel = this.cronToFreqLabel(t.cron_expression);
     const campaignAudience = [t.campaign_name, t.audience_name].filter(Boolean).join(' / ') || '—';
-    const statusClass = t.is_active ? 'task-card-badge-active' : 'task-card-badge-paused';
-    const statusLabel = t.is_active ? 'ACTIVA' : 'Pausada';
+    const statusClass = t.status === 'active' ? 'task-card-badge-active'
+                      : t.status === 'draft'  ? 'task-card-badge-draft'
+                      : 'task-card-badge-paused';
+    const statusLabel = t.status === 'active' ? 'ACTIVA'
+                      : t.status === 'draft'  ? 'BORRADOR'
+                      : 'PAUSADA';
     const coverHtml = t.flow_image_url
       ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
       : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
