@@ -682,8 +682,16 @@ class CreditsShopView extends BaseView {
   _onBuyClick(e) {
     const packId = e.currentTarget.getAttribute('data-pack-id');
     if (!packId) return;
-    this.showNotification?.('Stripe no está conectado todavía. Próximamente podrás completar la compra aquí.', 'info')
-      || alert('Stripe no está conectado todavía.');
+    if (!window.billingService) {
+      const msg = 'Billing service no disponible. Recarga la página.';
+      this.showNotification?.(msg, 'error') || alert(msg);
+      return;
+    }
+    window.billingService.startCheckout({
+      target:    'package',
+      packageId: packId,
+      gateway:   'auto',
+    });
   }
 
   _exportCsv() {

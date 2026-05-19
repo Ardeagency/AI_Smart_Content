@@ -89,6 +89,19 @@
   status = 200
   force = true
 
+# ── Wompi billing endpoints (FEAT-019, Colombia) ─────────
+[[redirects]]
+  from = "/api/billing/wompi/checkout"
+  to = "/.netlify/functions/api-billing-wompi-checkout"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/billing/wompi/webhook"
+  to = "/.netlify/functions/api-billing-wompi-webhook"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/ai/action"
   to = "/.netlify/functions/api-ai-action"

@@ -406,17 +406,18 @@ class PlanesView extends BaseView {
 
   _handleCtaKind(kind, planId) {
     if (kind === 'current') return;
-    // Stripe wiring lands in Fase C. Until then, route every kind to the same
-    // "billing not ready" message but worded to match the user intent.
-    const messages = {
-      upgrade:   'Billing is not connected yet. Soon you will be able to upgrade your plan here.',
-      downgrade: 'Billing is not connected yet. Soon you will be able to downgrade your plan here.',
-      switch:    'Billing is not connected yet. Soon you will be able to change your plan here.',
-      trial:     'Billing is not connected yet. Soon you will be able to start your 14-day trial here.',
-    };
-    const msg = messages[kind] || messages.trial;
-    if (window.showToast) window.showToast(msg, 'info');
-    else alert(msg);
+    if (!window.billingService) {
+      const msg = 'Billing service no disponible. Recarga la página.';
+      if (window.showToast) window.showToast(msg, 'error'); else alert(msg);
+      return;
+    }
+    const billing = this.billingPeriod === 'annual' ? 'year' : 'month';
+    window.billingService.startCheckout({
+      target:  'subscription',
+      planId,
+      billing,
+      gateway: 'auto',
+    });
   }
 }
 

@@ -88,6 +88,7 @@ class OrganizationView extends BaseView {
     <button type="button" class="tab-btn active" data-tab="general" role="tab" aria-selected="true">General</button>
     <button type="button" class="tab-btn" data-tab="members" role="tab" aria-selected="false">Miembros</button>
     <button type="button" class="tab-btn" data-tab="plan" role="tab" aria-selected="false">Plan & Límites</button>
+    <button type="button" class="tab-btn" data-tab="billing" role="tab" aria-selected="false">Facturación</button>
     <button type="button" class="tab-btn" data-tab="engine" role="tab" aria-selected="false">AI Engine</button>
     <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">Actividad</button>
     <button type="button" class="tab-btn" data-tab="monitoring" role="tab" aria-selected="false">Monitoreo</button>
@@ -212,6 +213,29 @@ class OrganizationView extends BaseView {
             <button type="submit" class="btn btn-primary" id="orgCapsSubmit"><i class="fas fa-save"></i> Guardar límites</button>
           </div>
         </form>
+      </section>
+    </div>
+
+    <!-- ── Facturación ──────────────────────────────────── -->
+    <div class="tab-content" id="billingTab" role="tabpanel">
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>Suscripción activa</h2>
+            <p class="org-section-desc">Estado de tu plan y próximo cobro.</p>
+          </div>
+        </div>
+        <div class="org-billing-summary" id="orgBillingSummary"><p class="org-placeholder">Cargando…</p></div>
+      </section>
+
+      <section class="org-section">
+        <div class="org-section-head">
+          <div>
+            <h2>Historial de facturas</h2>
+            <p class="org-section-desc">Facturas pagadas y pagos únicos de paquetes de créditos.</p>
+          </div>
+        </div>
+        <div class="org-billing-invoices" id="orgBillingInvoices"><p class="org-placeholder">Cargando…</p></div>
       </section>
     </div>
 
@@ -1051,6 +1075,154 @@ class OrganizationView extends BaseView {
     this.notifications = data || [];
   }
 
+  async _loadBilling() {
+    if (!this.supabase || !this.orgId) return;
+    try {
+      const [{ data: subRows }, { data: stripeInvs }, { data: wompiTxs }, { data: planRow }] = await Promise.all([
+        this.supabase.from('subscriptions')
+          .select('id,plan_id,status,current_period_start,current_period_end,cancel_at_period_end,canceled_at,provider,next_charge_at,stripe_subscription_id,wompi_last_transaction_id')
+          .eq('organization_id', this.orgId).order('updated_at', { ascending: false }).limit(1),
+        this.supabase.from('stripe_invoices')
+          .select('invoice_id,amount_paid_cents,currency,status,hosted_invoice_url,invoice_pdf,paid_at,created_at,period_start,period_end')
+          .eq('organization_id', this.orgId).order('created_at', { ascending: false }).limit(50),
+        this.supabase.from('wompi_transactions')
+          .select('transaction_id,reference,target,amount_in_cents,currency,status,payment_method_type,finalized_at,created_at')
+          .eq('organization_id', this.orgId).eq('status', 'APPROVED').order('created_at', { ascending: false }).limit(50),
+        // plan en uso (puede ser distinto del de la sub si está en trial / sin sub)
+        this._billingPlan(),
+      ]);
+      this.billingSub      = (subRows && subRows[0]) || null;
+      this.billingInvoices = stripeInvs || [];
+      this.billingWompiTxs = wompiTxs   || [];
+      this.billingPlanRow  = planRow    || null;
+    } catch (e) {
+      console.warn('[organization] _loadBilling error:', e?.message || e);
+    }
+    this._renderBilling();
+  }
+
+  async _billingPlan() {
+    if (!this.billingSub?.plan_id) return null;
+    const { data } = await this.supabase
+      .from('plans').select('id,name,display_order').eq('id', this.billingSub.plan_id).maybeSingle();
+    return data || null;
+  }
+
+  _renderBilling() {
+    const summary = this.querySelector('#orgBillingSummary');
+    const list    = this.querySelector('#orgBillingInvoices');
+    if (!summary || !list) return;
+
+    const sub      = this.billingSub;
+    const plan     = this.billingPlanRow;
+    const past_due = sub?.status === 'past_due';
+    const canceled = sub?.status === 'canceled' || sub?.cancel_at_period_end;
+
+    const providerLabel = sub?.provider === 'wompi' ? 'Wompi (COP)' : sub?.provider === 'stripe' ? 'Stripe (USD)' : '—';
+    const planName      = plan?.name || sub?.plan_id || 'Sin plan';
+    const nextRenew     = sub?.provider === 'wompi' ? sub?.next_charge_at : sub?.current_period_end;
+    const nextRenewStr  = nextRenew ? new Date(nextRenew).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    const statusLabel   = ({ active: 'Activa', trial: 'En prueba', past_due: 'Pago pendiente', canceled: 'Cancelada' }[sub?.status]) || (sub?.status || 'Sin suscripción');
+
+    const banner = past_due
+      ? `<div class="org-error-banner" style="margin-bottom:1rem;">Tu último pago no se procesó correctamente. Actualiza tu método de pago para evitar la suspensión del servicio.</div>`
+      : canceled
+      ? `<div class="org-warning-banner" style="margin-bottom:1rem;background:#3a2410;border:1px solid #6b3a17;color:#fbbf24;padding:.75rem 1rem;border-radius:8px;">Tu suscripción terminará el ${this.escapeHtml(nextRenewStr)}.</div>`
+      : '';
+
+    const stripePortalBtn = sub?.provider === 'stripe'
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="fas fa-external-link-alt"></i> Gestionar suscripción</button>`
+      : '';
+    const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> Ver planes</a>`;
+
+    summary.innerHTML = `
+      ${banner}
+      <div class="org-billing-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+        <div><span class="org-section-desc">Plan</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(planName)}</strong></div>
+        <div><span class="org-section-desc">Estado</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(statusLabel)}</strong></div>
+        <div><span class="org-section-desc">Próximo cobro</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(nextRenewStr)}</strong></div>
+        <div><span class="org-section-desc">Pasarela</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(providerLabel)}</strong></div>
+      </div>
+      <div class="org-form-actions" style="margin-top:1.25rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+        ${upgradeBtn} ${stripePortalBtn}
+      </div>
+    `;
+
+    // Listado unificado de invoices (Stripe + Wompi)
+    const stripeRows = (this.billingInvoices || []).map((inv) => ({
+      key:      inv.invoice_id,
+      provider: 'stripe',
+      date:     inv.paid_at || inv.created_at,
+      amount:   (inv.amount_paid_cents || 0) / 100,
+      currency: (inv.currency || 'usd').toUpperCase(),
+      status:   inv.status,
+      desc:     `Período ${this._fmtPeriod(inv.period_start, inv.period_end)}`,
+      url:      inv.hosted_invoice_url || inv.invoice_pdf || null,
+    }));
+    const wompiRows = (this.billingWompiTxs || []).map((tx) => ({
+      key:      tx.transaction_id,
+      provider: 'wompi',
+      date:     tx.finalized_at || tx.created_at,
+      amount:   (tx.amount_in_cents || 0) / 100,
+      currency: tx.currency || 'COP',
+      status:   tx.status,
+      desc:     tx.target === 'subscription' ? 'Suscripción' : 'Paquete de créditos',
+      url:      null,
+    }));
+    const all = [...stripeRows, ...wompiRows].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (all.length === 0) {
+      list.innerHTML = `<p class="org-placeholder">Sin facturas todavía. Las verás aquí después de tu primer pago.</p>`;
+      return;
+    }
+
+    list.innerHTML = `
+      <table class="org-billing-table" style="width:100%;border-collapse:collapse;font-size:.9rem;">
+        <thead><tr style="text-align:left;color:#9ca3af;border-bottom:1px solid #242424;">
+          <th style="padding:.5rem .25rem;">Fecha</th>
+          <th style="padding:.5rem .25rem;">Concepto</th>
+          <th style="padding:.5rem .25rem;">Pasarela</th>
+          <th style="padding:.5rem .25rem;text-align:right;">Monto</th>
+          <th style="padding:.5rem .25rem;text-align:right;">Acción</th>
+        </tr></thead>
+        <tbody>${all.map((r) => `
+          <tr style="border-bottom:1px solid #1f1f1f;">
+            <td style="padding:.5rem .25rem;">${this.escapeHtml(this._fmtDate(r.date))}</td>
+            <td style="padding:.5rem .25rem;">${this.escapeHtml(r.desc || '—')}</td>
+            <td style="padding:.5rem .25rem;">${r.provider === 'wompi' ? 'Wompi' : 'Stripe'}</td>
+            <td style="padding:.5rem .25rem;text-align:right;font-variant-numeric:tabular-nums;">${this._fmtMoney(r.amount, r.currency)}</td>
+            <td style="padding:.5rem .25rem;text-align:right;">${r.url ? `<a href="${this.escapeHtml(r.url)}" target="_blank" rel="noopener" class="btn btn-link">Ver</a>` : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+
+    this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => {
+      window.billingService?.openCustomerPortal();
+    });
+  }
+
+  _fmtPeriod(start, end) {
+    if (!start || !end) return '—';
+    const opts = { day: 'numeric', month: 'short' };
+    return `${new Date(start).toLocaleDateString('es', opts)} – ${new Date(end).toLocaleDateString('es', opts)}`;
+  }
+  _fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  _fmtMoney(amount, currency) {
+    try { return new Intl.NumberFormat('es-CO', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount); }
+    catch (_) { return `${amount.toFixed(2)} ${currency}`; }
+  }
+  _plansHref() {
+    if (typeof window.getOrgPathPrefix === 'function' && this.org?.name) {
+      const prefix = window.getOrgPathPrefix(this.orgId, this.org.name);
+      if (prefix) return `${prefix}/plans`;
+    }
+    return '/plans';
+  }
+
   async _loadAuditLog() {
     const { data } = await this.supabase
       .from('user_audit_log')
@@ -1645,6 +1817,10 @@ class OrganizationView extends BaseView {
         panels.forEach((p) => { p.classList.remove('active'); });
         btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
         this.querySelector('#' + tab + 'Tab')?.classList.add('active');
+        if (tab === 'billing' && !this._billingLoaded) {
+          this._billingLoaded = true;
+          this._loadBilling();
+        }
       });
     });
 
