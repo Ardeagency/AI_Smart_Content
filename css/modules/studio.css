@@ -155,14 +155,27 @@
   line-height: 1.4;
 }
 
-.studio-summary-cron {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
-  padding: 4px 8px;
-  align-self: flex-start;
+.studio-summary-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+}
+
+.studio-summary-section--cost {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.studio-summary-cost {
+  font-size: 20px;
+  font-weight: 700;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .studio-summary-footer {

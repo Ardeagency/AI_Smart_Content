@@ -88,6 +88,7 @@ class StudioView extends BaseView {
                   <div class="studio-summary-section">
                     <span class="studio-summary-label">Ejecución</span>
                     <p class="studio-summary-value" id="studioSummaryFreq">—</p>
+                    <span class="studio-summary-hint" id="studioSummaryTz"></span>
                   </div>
                   <div class="studio-summary-section">
                     <span class="studio-summary-label">Producciones por ejecución</span>
@@ -97,9 +98,10 @@ class StudioView extends BaseView {
                     <span class="studio-summary-label">Formato</span>
                     <p class="studio-summary-value" id="studioSummaryFormat">—</p>
                   </div>
-                  <div class="studio-summary-section">
-                    <span class="studio-summary-label">Cron</span>
-                    <code class="studio-summary-cron" id="studioSummaryCron">—</code>
+                  <div class="studio-summary-section studio-summary-section--cost">
+                    <span class="studio-summary-label">Costo por ejecución</span>
+                    <p class="studio-summary-value studio-summary-cost" id="studioSummaryCost">—</p>
+                    <span class="studio-summary-hint" id="studioSummaryCostHint"></span>
                   </div>
                 </div>
                 <footer class="studio-summary-footer">
@@ -769,21 +771,39 @@ class StudioView extends BaseView {
     return cron;
   }
 
-  /** Refresca el panel Resumen con cron actual, cantidad y formato. */
+  /** Refresca el panel Resumen con cron en lenguaje humano, cantidad, formato y costo. */
   _updateScheduleSummary() {
     const cron = document.getElementById('studio-schedule-cron_expression')?.value || '';
     const countEl = document.querySelector('#studioScheduleForm [name="production_count"]');
     const ratioEl = document.querySelector('#studioScheduleForm [name="aspect_ratio"]');
+    const count = parseInt(countEl?.value || '1', 10) || 1;
+    const tokenCost = parseInt(this.selectedFlow?.token_cost || 0, 10) || 0;
+    const totalCost = count * tokenCost;
 
     const freqEl = document.getElementById('studioSummaryFreq');
+    const tzEl = document.getElementById('studioSummaryTz');
     const countSummary = document.getElementById('studioSummaryCount');
     const formatSummary = document.getElementById('studioSummaryFormat');
-    const cronSummary = document.getElementById('studioSummaryCron');
+    const costEl = document.getElementById('studioSummaryCost');
+    const costHintEl = document.getElementById('studioSummaryCostHint');
 
     if (freqEl) freqEl.textContent = this._cronToHuman(cron);
-    if (countSummary) countSummary.textContent = (countEl?.value || '1');
+    if (tzEl) {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+        tzEl.textContent = `Zona horaria: ${tz}`;
+      } catch (_) { tzEl.textContent = ''; }
+    }
+    if (countSummary) countSummary.textContent = String(count);
     if (formatSummary) formatSummary.textContent = (ratioEl?.value || '—');
-    if (cronSummary) cronSummary.textContent = cron || '—';
+    if (costEl) {
+      costEl.textContent = totalCost > 0 ? `${totalCost.toLocaleString('es')} créditos` : '—';
+    }
+    if (costHintEl) {
+      costHintEl.textContent = tokenCost > 0
+        ? `${count} × ${tokenCost} créditos / imagen`
+        : '';
+    }
   }
 
   _bindScheduleSummaryActions() {
