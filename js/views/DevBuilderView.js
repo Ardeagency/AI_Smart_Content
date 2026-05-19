@@ -392,6 +392,17 @@ class DevBuilderView extends DevBaseView {
       <!-- Footer: etiqueta de estado a la izquierda, botones a la derecha (sin iconos, misma altura que header) -->
       <footer class="builder-footer" id="builderFooter">
         <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
+        <span class="builder-autosave-indicator" id="builderAutosaveIndicator" hidden></span>
+        <button type="button" class="builder-issues-btn" id="builderIssuesBtn" title="Problemas detectados" aria-haspopup="dialog">
+          <i class="ph ph-warning"></i> <span class="builder-issues-label">Issues</span>
+          <span class="builder-issues-count" id="builderIssuesCount" hidden>0</span>
+        </button>
+        <button type="button" class="builder-undo-btn" id="builderUndoBtn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
+          <i class="ph ph-arrow-counter-clockwise"></i>
+        </button>
+        <button type="button" class="builder-redo-btn" id="builderRedoBtn" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled>
+          <i class="ph ph-arrow-clockwise"></i>
+        </button>
         <div class="builder-footer-actions" id="builderFooterActions">
           <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" hidden>Guardar flujo</button>
           <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" hidden>Actualizar flujo</button>
@@ -428,6 +439,36 @@ class DevBuilderView extends DevBaseView {
             <button class="btn-builder-primary" id="runTestBtn">
               <i class="ph ph-play"></i> Ejecutar
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Command palette (Cmd/Ctrl+K) -->
+      <div class="modal builder-modal builder-command-palette" id="commandPaletteModal" hidden role="dialog" aria-labelledby="commandPaletteTitle" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-command-palette">
+          <div class="command-palette-input-wrap">
+            <i class="ph ph-magnifying-glass command-palette-icon"></i>
+            <input type="text" class="command-palette-input" id="commandPaletteInput" placeholder="Buscar campo por label, key o tipo…" aria-label="Buscar campo">
+            <span class="command-palette-hint">↑↓ navegar · Enter abrir · Esc cerrar</span>
+          </div>
+          <div class="command-palette-results" id="commandPaletteResults" role="listbox" aria-labelledby="commandPaletteTitle"></div>
+          <h3 id="commandPaletteTitle" class="visually-hidden">Buscador de campos</h3>
+        </div>
+      </div>
+
+      <!-- Panel: Issues -->
+      <div class="modal builder-modal builder-issues-modal" id="issuesModal" hidden role="dialog" aria-labelledby="issuesModalTitle" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-issues">
+          <div class="modal-header">
+            <h3 id="issuesModalTitle"><i class="ph ph-warning"></i> Problemas detectados</h3>
+            <button type="button" class="modal-close" id="issuesModalClose" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="issues-list" id="issuesList">
+              <p class="issues-empty">Sin problemas detectados.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -490,6 +531,8 @@ class DevBuilderView extends DevBaseView {
     this.applyFlowTypeUI();
     // Aplicar layout de la pestaña activa al cargar (oculta Componentes/Propiedades si está en Configuración)
     this.applyTabLayout('settings');
+    // Fase 2A: productividad (auto-save, undo/redo, Cmd+K, Issues)
+    if (typeof this.initProductivity === 'function') this.initProductivity();
   }
 
   /**

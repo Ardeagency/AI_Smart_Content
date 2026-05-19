@@ -7954,3 +7954,179 @@
 @media (max-width: 480px) {
   .dev-health-strip { grid-template-columns: 1fr; }
 }
+
+/* ============================================================ *
+ * FASE 2A — Productividad: autosave, undo/redo, palette, issues *
+ * ============================================================ */
+
+/* Indicador autosave */
+.builder-autosave-indicator {
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.builder-autosave-indicator::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+.builder-autosave--saving { color: var(--accent-warm, #e09145); }
+.builder-autosave--saving::before { animation: builder-autosave-pulse 0.9s ease-in-out infinite; }
+.builder-autosave--saved   { color: var(--text-secondary, #94a3b8); }
+.builder-autosave--error   { color: var(--color-critical, #ef4444); }
+.builder-autosave--paused  { color: var(--color-warning, #f59e0b); }
+@keyframes builder-autosave-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Botones undo/redo/issues en el footer */
+.builder-undo-btn, .builder-redo-btn, .builder-issues-btn {
+  background: transparent;
+  border: 1px solid var(--border-divider, #242424);
+  color: var(--text-secondary, #94a3b8);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.builder-undo-btn:hover:not(:disabled),
+.builder-redo-btn:hover:not(:disabled),
+.builder-issues-btn:hover {
+  background: var(--bg-card, #141517);
+  color: var(--text-primary, #fff);
+  border-color: var(--text-secondary, #94a3b8);
+}
+.builder-undo-btn:disabled, .builder-redo-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.builder-undo-btn:focus-visible,
+.builder-redo-btn:focus-visible,
+.builder-issues-btn:focus-visible {
+  outline: 2px solid var(--accent-warm, #e09145);
+  outline-offset: 2px;
+}
+.builder-issues-btn--has-warnings { color: var(--color-warning, #f59e0b); border-color: var(--color-warning, #f59e0b); }
+.builder-issues-btn--has-errors   { color: var(--color-critical, #ef4444); border-color: var(--color-critical, #ef4444); }
+.builder-issues-count {
+  background: var(--color-critical, #ef4444);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+.builder-issues-btn--has-warnings .builder-issues-count {
+  background: var(--color-warning, #f59e0b);
+  color: #000;
+}
+
+/* Command palette */
+.modal-command-palette {
+  max-width: 560px;
+  width: 92%;
+  margin: 0 auto;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.command-palette-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-divider, #242424);
+}
+.command-palette-icon { color: var(--text-secondary, #94a3b8); font-size: 16px; }
+.command-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+}
+.command-palette-hint {
+  font-size: 11px;
+  color: var(--text-secondary, #94a3b8);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.command-palette-results { max-height: 360px; overflow-y: auto; padding: 6px 0; }
+.palette-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  align-items: center;
+}
+.palette-item:hover, .palette-item--active {
+  background: rgba(255, 255, 255, 0.04);
+}
+.palette-item-label { color: var(--text-primary, #fff); }
+.palette-item-meta { display: inline-flex; gap: 8px; align-items: center; color: var(--text-secondary, #94a3b8); font-size: 11px; }
+.palette-item-meta code { background: rgba(255, 255, 255, 0.06); padding: 1px 6px; border-radius: 4px; font-family: var(--font-mono, monospace); }
+.palette-item-type { font-style: italic; opacity: 0.8; }
+.palette-item-required { color: var(--color-critical, #ef4444); }
+.palette-empty { padding: 16px; text-align: center; color: var(--text-secondary, #94a3b8); font-size: 13px; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Panel Issues */
+.modal-issues {
+  max-width: 520px;
+  width: 92%;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px;
+}
+.issues-list { max-height: 60vh; overflow-y: auto; }
+.issue-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-divider, #242424);
+  align-items: flex-start;
+}
+.issue-item:last-child { border-bottom: none; }
+.issue-item .ph { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.issue-item--error .ph { color: var(--color-critical, #ef4444); }
+.issue-item--warning .ph { color: var(--color-warning, #f59e0b); }
+.issue-item-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.issue-area {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #94a3b8);
+}
+.issue-message { color: var(--text-primary, #fff); font-size: 13px; }
+.issue-goto {
+  background: transparent;
+  border: 1px solid var(--border-divider, #242424);
+  color: var(--text-secondary, #94a3b8);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.issue-goto:hover { color: var(--text-primary, #fff); border-color: var(--text-secondary, #94a3b8); }
+.issues-empty { padding: 24px; text-align: center; color: var(--text-secondary, #94a3b8); font-size: 14px; }
+.issues-empty .ph { color: var(--color-success, #22c55e); margin-right: 6px; }

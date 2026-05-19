@@ -2060,6 +2060,8 @@
   P.onFieldChange = function () {
     this.hasUnsavedChanges = true;
     this.debouncedRefreshUI();
+    // Fase 2A: productividad (snapshot debounced + recompute issues + schedule autosave)
+    if (typeof this.onStateMutated === 'function') this.onStateMutated();
   };
 
   P.updateJsonPreview = function () {
