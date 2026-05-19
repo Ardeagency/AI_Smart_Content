@@ -3959,13 +3959,19 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   display: none !important;
   content: none !important;
 }
-/* Icono + dentro del pill — pequeño y mismo color que el texto */
+/* Icono + dentro del pill — alineado vertical al texto */
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-icon,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-icon {
-  font-size: 10px;
+  width: 11px;
+  height: 11px;
+  font-size: 11px;
+  line-height: 1;
   color: #D9D9D9;
   opacity: 1;
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link .nav-text,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link .nav-text {
@@ -3976,7 +3982,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+  line-height: 1;
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link.active::before,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link.active::before {
