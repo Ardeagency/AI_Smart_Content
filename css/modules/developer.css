@@ -794,33 +794,31 @@
   color: var(--text-secondary);
 }
 
-/* Grid de My Flows: columnas responsive que se ajustan al wrapper.
-   El HTML usa <article class="flow-card flow-card--catalog flow-card--with-footer">
-   envuelta en <div class="dev-flow-card-wrapper">, así que el wrapper es el
-   grid item y debe pasar el ancho completo a la card de catálogo. */
+/* Grid de My Flows: cada celda tiene el mismo ancho de la card de catálogo
+   (240px), para que la previsualización sea idéntica a /flows. auto-fill +
+   justify-content:start = wrap natural sin estirar las cards. */
 .dev-flows-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, 240px);
+  justify-content: start;
   gap: 16px;
 }
 
 .dev-flow-card-wrapper {
   display: block;
-  min-width: 0;
+  width: 240px;
 }
 
-/* Override del .flow-card del catálogo cuando vive en /dev/flows: width fluido
-   (no 240px fijo) y se adapta al ancho del wrapper del grid */
+/* El catálogo usa flex con scroll-snap; aquí estamos en grid, así que solo
+   neutralizamos esas dos propiedades — el resto del look (4:5, overlays,
+   badges, tags) queda EXACTAMENTE igual que en /flows. */
 .dev-flow-card-wrapper > .flow-card {
-  width: 100%;
-  flex: 1 1 auto;
-  max-width: none;
+  flex: 0 0 240px;
   scroll-snap-align: unset;
-  contain-intrinsic-size: auto;
 }
 
-/* Footer dev (4 botones edit/test/logs/delete) — refuerza el patrón
-   color de la plataforma (#141517 + border #242424) sobre la base catálogo */
+/* Footer dev (4 botones edit/test/logs/delete) — patrón color de la
+   plataforma (#141517 + border #242424) sobre la base catálogo */
 .flow-card-footer.flow-card-footer--dev {
   background: #141517;
   border-top: 1px solid #242424;
