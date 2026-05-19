@@ -1147,6 +1147,13 @@ class OrganizationView extends BaseView {
     const stripePortalBtn = sub?.provider === 'stripe'
       ? `<button type="button" class="btn btn-secondary" id="orgBillingPortalBtn"><i class="fas fa-external-link-alt"></i> Gestionar suscripción</button>`
       : '';
+    const hasActiveSub = sub && ['active','trial','past_due'].includes(sub.status);
+    const cancelBtn = hasActiveSub && !sub.cancel_at_period_end
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingCancelBtn"><i class="fas fa-times"></i> Cancelar suscripción</button>`
+      : '';
+    const reactivateBtn = hasActiveSub && sub.cancel_at_period_end
+      ? `<button type="button" class="btn btn-secondary" id="orgBillingReactivateBtn"><i class="fas fa-undo"></i> Reactivar suscripción</button>`
+      : '';
     const upgradeBtn = `<a href="${this.escapeHtml(this._plansHref())}" class="btn btn-primary"><i class="fas fa-arrow-up"></i> Ver planes</a>`;
 
     summary.innerHTML = `
@@ -1158,7 +1165,7 @@ class OrganizationView extends BaseView {
         <div><span class="org-section-desc">Pasarela</span><strong style="display:block;font-size:1.1rem;margin-top:.25rem;">${this.escapeHtml(providerLabel)}</strong></div>
       </div>
       <div class="org-form-actions" style="margin-top:1.25rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-        ${upgradeBtn} ${stripePortalBtn}
+        ${upgradeBtn} ${stripePortalBtn} ${cancelBtn} ${reactivateBtn}
       </div>
     `;
 
@@ -1214,6 +1221,37 @@ class OrganizationView extends BaseView {
     this.querySelector('#orgBillingPortalBtn')?.addEventListener('click', () => {
       window.billingService?.openCustomerPortal();
     });
+
+    this.querySelector('#orgBillingCancelBtn')?.addEventListener('click', () => this._cancelSubscription(false));
+    this.querySelector('#orgBillingReactivateBtn')?.addEventListener('click', () => this._cancelSubscription(true));
+  }
+
+  async _cancelSubscription(undo) {
+    const action = undo ? 'reactivar' : 'cancelar';
+    if (!undo && !window.confirm('¿Cancelar la suscripción al final del período actual? Mantendrás acceso hasta entonces y no se hará otro cobro automático.')) return;
+
+    try {
+      const supabase = window.supabaseService?.getClient ? await window.supabaseService.getClient() : window.supabase;
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
+      const res = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ organization_id: this.orgId, undo: !!undo }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `No se pudo ${action}`);
+      const msg = undo ? 'Suscripción reactivada. El próximo cobro procederá como antes.'
+                       : `Suscripción cancelada. Mantienes acceso hasta el ${this._fmtDate(data.cancel_at)}.`;
+      (window.showToast || window.alert)(msg, 'success');
+      this._billingLoaded = false;
+      await this._loadBilling();
+    } catch (e) {
+      (window.showToast || window.alert)(`Error: ${e.message}`, 'error');
+    }
   }
 
   _fmtPeriod(start, end) {

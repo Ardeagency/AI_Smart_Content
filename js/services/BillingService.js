@@ -173,6 +173,19 @@
     // ── Wompi ──────────────────────────────────────────────────────
 
     async _checkoutWompi({ orgId, target, planId, packageId, billing, onClose }) {
+      // Wompi tiene dos flujos:
+      //  - target='package'      → Widget Checkout (cobro único, no tokeniza)
+      //  - target='subscription' → flujo tokenizado (form propio → /tokens/cards
+      //                            → /payment_sources → /transactions con
+      //                            payment_source_id reusable para el cron mensual)
+      if (target === 'subscription') {
+        return this._checkoutWompiSubscription({ orgId, planId, billing, onClose });
+      }
+      return this._checkoutWompiWidget({ orgId, target, planId, packageId, billing, onClose });
+    }
+
+    // ── Flujo Widget (pagos únicos: paquetes de créditos) ──────────
+    async _checkoutWompiWidget({ orgId, target, planId, packageId, billing, onClose }) {
       const finish = () => { try { onClose && onClose(); } catch (_) {} };
       try {
         const body = JSON.stringify({
@@ -201,22 +214,228 @@
         });
         checkout.open((result) => {
           finish();
-          // result.transaction tiene id + status; el webhook es la fuente de verdad.
-          // Aquí solo damos feedback visual inmediato.
           const tx     = result?.transaction;
           const status = tx?.status || 'UNKNOWN';
-          if (status === 'APPROVED') {
-            this._toast('Pago aprobado. Estamos activando tu compra…', 'success');
-          } else if (status === 'PENDING') {
-            this._toast('Pago en proceso. Te notificaremos cuando se confirme.', 'info');
-          } else if (status === 'DECLINED' || status === 'ERROR' || status === 'VOIDED') {
-            this._toast(`Pago no completado (${status}). Intenta de nuevo.`, 'error');
-          }
+          if (status === 'APPROVED')      this._toast('Pago aprobado. Estamos activando tu compra…', 'success');
+          else if (status === 'PENDING')  this._toast('Pago en proceso. Te notificaremos cuando se confirme.', 'info');
+          else if (['DECLINED','ERROR','VOIDED'].includes(status)) this._toast(`Pago no completado (${status}). Intenta de nuevo.`, 'error');
         });
       } catch (e) {
         this._toast(`Wompi: ${e.message}`, 'error');
         finish();
       }
+    }
+
+    // ── Flujo tokenizado (suscripciones recurrentes) ───────────────
+    async _checkoutWompiSubscription({ orgId, planId, billing, onClose }) {
+      const finish = () => { try { onClose && onClose(); } catch (_) {} };
+      try {
+        const gateways = await this.getGateways();
+        if (!gateways.wompi_public_key) throw new Error('Wompi public key no disponible');
+        const wompiApi = gateways.environment === 'production'
+          ? 'https://production.wompi.co/v1'
+          : 'https://sandbox.wompi.co/v1';
+
+        const card = await this._openCardModal({ planLabel: planId, billing });
+        if (!card) { finish(); return; }  // user canceló
+
+        // 1. Tokenizar tarjeta directo a Wompi (frontend, public_key)
+        this._setStatus('Tokenizando tarjeta…');
+        const tokRes  = await fetch(`${wompiApi}/tokens/cards`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${gateways.wompi_public_key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            number:      card.number,
+            cvc:         card.cvc,
+            exp_month:   card.exp_month,
+            exp_year:    card.exp_year,
+            card_holder: card.card_holder,
+          }),
+        });
+        const tokJson = await tokRes.json().catch(() => ({}));
+        if (!tokRes.ok || !tokJson?.data?.id) {
+          throw new Error(tokJson?.error?.messages?.number?.[0] || tokJson?.error?.reason || 'No se pudo tokenizar la tarjeta');
+        }
+        const cardToken = tokJson.data.id;
+
+        // 2. Crear payment_source server-side
+        this._setStatus('Registrando método de pago…');
+        const setupRes = await fetch('/api/billing/wompi/setup-source', {
+          method: 'POST',
+          headers: await this._authHeaders(),
+          body: JSON.stringify({ organization_id: orgId, card_token: cardToken }),
+        });
+        const setupJson = await setupRes.json();
+        if (!setupRes.ok) throw new Error(setupJson.error || 'Error registrando método de pago');
+        if (setupJson.status === 'DECLINED' || setupJson.status === 'ERROR') {
+          throw new Error(setupJson.status_reason || `Tarjeta rechazada (${setupJson.status})`);
+        }
+
+        // 3. Cobrar transacción inicial con payment_source_id
+        this._setStatus('Procesando primer cobro…');
+        const chargeRes = await fetch('/api/billing/wompi/charge-source', {
+          method: 'POST',
+          headers: await this._authHeaders(),
+          body: JSON.stringify({
+            organization_id:   orgId,
+            payment_source_id: setupJson.payment_source_id,
+            target:            'subscription',
+            plan_id:           planId,
+            billing,
+          }),
+        });
+        const chargeJson = await chargeRes.json();
+        if (!chargeRes.ok) throw new Error(chargeJson.error || 'Error procesando primer cobro');
+
+        this._closeCardModal();
+        this._toast(`Suscripción iniciada. Tarjeta ${setupJson.brand || ''} ****${setupJson.last_four || ''}. El estado final del cobro llega por webhook.`, 'success');
+      } catch (e) {
+        this._setStatus(`Error: ${e.message}`, true);
+        this._toast(`Wompi: ${e.message}`, 'error');
+      } finally {
+        finish();
+      }
+    }
+
+    // ── Modal captura de tarjeta ───────────────────────────────────
+    _openCardModal({ planLabel, billing }) {
+      return new Promise((resolve) => {
+        const existing = document.getElementById('billingCardModal');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'billingCardModal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:1rem;';
+        overlay.innerHTML = `
+          <div style="background:#141517;border:1px solid #242424;border-radius:16px;padding:24px;max-width:440px;width:100%;color:#fff;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px;">
+              <div>
+                <h3 style="margin:0;font-size:18px;">Datos de tu tarjeta</h3>
+                <p style="margin:6px 0 0;color:#9ca3af;font-size:13px;">${planLabel ? `Plan <strong>${planLabel}</strong> · facturación ${billing === 'year' ? 'anual' : 'mensual'}` : 'Suscripción'}</p>
+              </div>
+              <button type="button" data-act="cancel" style="background:transparent;border:none;color:#9ca3af;font-size:22px;line-height:1;cursor:pointer;padding:0 4px;" aria-label="Cerrar">×</button>
+            </div>
+
+            <form id="billingCardForm" autocomplete="on" novalidate>
+              <label style="display:block;margin-bottom:14px;">
+                <span style="display:block;font-size:13px;color:#9ca3af;margin-bottom:6px;">Nombre en la tarjeta</span>
+                <input type="text" name="card_holder" autocomplete="cc-name" required maxlength="60"
+                  style="width:100%;padding:10px 12px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">
+              </label>
+
+              <label style="display:block;margin-bottom:14px;">
+                <span style="display:block;font-size:13px;color:#9ca3af;margin-bottom:6px;">Número de tarjeta</span>
+                <input type="text" name="number" inputmode="numeric" autocomplete="cc-number" required maxlength="23"
+                  placeholder="4242 4242 4242 4242"
+                  style="width:100%;padding:10px 12px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;letter-spacing:1px;box-sizing:border-box;">
+              </label>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+                <label>
+                  <span style="display:block;font-size:13px;color:#9ca3af;margin-bottom:6px;">Mes</span>
+                  <input type="text" name="exp_month" inputmode="numeric" autocomplete="cc-exp-month" required maxlength="2" placeholder="12"
+                    style="width:100%;padding:10px 12px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">
+                </label>
+                <label>
+                  <span style="display:block;font-size:13px;color:#9ca3af;margin-bottom:6px;">Año</span>
+                  <input type="text" name="exp_year" inputmode="numeric" autocomplete="cc-exp-year" required maxlength="2" placeholder="29"
+                    style="width:100%;padding:10px 12px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">
+                </label>
+                <label>
+                  <span style="display:block;font-size:13px;color:#9ca3af;margin-bottom:6px;">CVC</span>
+                  <input type="password" name="cvc" inputmode="numeric" autocomplete="cc-csc" required maxlength="4" placeholder="123"
+                    style="width:100%;padding:10px 12px;background:#0b0b0b;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;">
+                </label>
+              </div>
+
+              <div id="billingCardStatus" style="min-height:18px;font-size:13px;margin-bottom:10px;color:#9ca3af;"></div>
+
+              <div style="display:flex;gap:8px;">
+                <button type="button" data-act="cancel" style="flex:0 0 auto;padding:12px 16px;background:transparent;color:#9ca3af;border:1px solid #2a2a2a;border-radius:10px;cursor:pointer;font-size:14px;">Cancelar</button>
+                <button type="submit" id="billingCardSubmit" style="flex:1;padding:12px 16px;background:#0F4FE0;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;">Confirmar suscripción</button>
+              </div>
+
+              <p style="margin:14px 0 0;font-size:11px;color:#6b7280;text-align:center;">
+                Los datos viajan directo a Wompi y nunca tocan nuestros servidores.<br>
+                Renovación automática hasta que canceles.
+              </p>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        this._cardModalEl = overlay;
+
+        const cleanup = (result) => {
+          if (this._cardModalEl) { this._cardModalEl.remove(); this._cardModalEl = null; }
+          resolve(result);
+        };
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) cleanup(null);
+          const cancelBtn = e.target.closest('button[data-act="cancel"]');
+          if (cancelBtn) cleanup(null);
+        });
+
+        overlay.querySelector('#billingCardForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const f = e.currentTarget;
+          const card = {
+            number:      String(f.number.value || '').replace(/\s+/g, ''),
+            cvc:         String(f.cvc.value || '').trim(),
+            exp_month:   String(f.exp_month.value || '').trim().padStart(2, '0'),
+            exp_year:    String(f.exp_year.value || '').trim().slice(-2).padStart(2, '0'),
+            card_holder: String(f.card_holder.value || '').trim(),
+          };
+          const err = this._validateCard(card);
+          if (err) { this._setStatus(err, true); return; }
+          // El modal NO se cierra aquí — lo cierra _closeCardModal tras el cobro exitoso,
+          // o lo dejamos abierto si falla para que el user corrija.
+          const submit = overlay.querySelector('#billingCardSubmit');
+          if (submit) { submit.disabled = true; submit.textContent = 'Procesando…'; }
+          resolve(card);
+        });
+      });
+    }
+
+    _closeCardModal() {
+      if (this._cardModalEl) { this._cardModalEl.remove(); this._cardModalEl = null; }
+    }
+
+    _setStatus(msg, isError = false) {
+      const el = this._cardModalEl?.querySelector('#billingCardStatus');
+      if (!el) return;
+      el.textContent  = msg;
+      el.style.color  = isError ? '#ff8a8a' : '#9ca3af';
+      if (isError) {
+        const submit = this._cardModalEl.querySelector('#billingCardSubmit');
+        if (submit) { submit.disabled = false; submit.textContent = 'Reintentar'; }
+      }
+    }
+
+    _validateCard({ number, cvc, exp_month, exp_year, card_holder }) {
+      if (!card_holder || card_holder.length < 2) return 'Ingresa el nombre del titular';
+      if (!/^\d{12,19}$/.test(number)) return 'Número de tarjeta inválido';
+      if (!this._luhnOk(number))       return 'Número de tarjeta inválido (verifica dígitos)';
+      if (!/^\d{3,4}$/.test(cvc))      return 'CVC inválido';
+      const m = parseInt(exp_month, 10);
+      const y = parseInt(exp_year, 10);
+      if (!(m >= 1 && m <= 12))        return 'Mes de vencimiento inválido (1-12)';
+      const now      = new Date();
+      const fullYear = 2000 + y;
+      // Tarjeta vence al fin del mes — válida hasta último día de ese mes.
+      const expEndOfMonth = new Date(fullYear, m, 0, 23, 59, 59);
+      if (expEndOfMonth < now)         return 'La tarjeta está vencida';
+      return null;
+    }
+
+    _luhnOk(num) {
+      let sum = 0, alt = false;
+      for (let i = num.length - 1; i >= 0; i--) {
+        let d = parseInt(num[i], 10);
+        if (alt) { d *= 2; if (d > 9) d -= 9; }
+        sum += d;
+        alt = !alt;
+      }
+      return sum % 10 === 0;
     }
 
     _ensureWompiWidget() {

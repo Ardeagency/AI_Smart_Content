@@ -9,6 +9,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@netlify/functions": "^2.8.0",
     "stripe": "^17.5.0"
   },
   "devDependencies": {

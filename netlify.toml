@@ -115,6 +115,25 @@
   status = 200
   force = true
 
+# ── Wompi Fase 2 (recurring tokenizado) ──────────────────
+[[redirects]]
+  from = "/api/billing/wompi/setup-source"
+  to = "/.netlify/functions/api-billing-wompi-setup-source"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/billing/wompi/charge-source"
+  to = "/.netlify/functions/api-billing-wompi-charge-source"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/billing/cancel"
+  to = "/.netlify/functions/api-billing-cancel"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/ai/action"
   to = "/.netlify/functions/api-ai-action"
