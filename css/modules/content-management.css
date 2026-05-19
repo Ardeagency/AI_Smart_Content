@@ -1901,6 +1901,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-detail {
+  max-width: none !important;
+  margin: 0 !important;
   display: flex;
   flex-direction: column;
   gap: 24px;
