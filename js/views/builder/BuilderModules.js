@@ -147,6 +147,11 @@
         });
       };
     });
+    // Panel "Outputs disponibles" — chips draggables a los inputs del módulo (estilo n8n)
+    if (typeof this.renderModuleNodeDragVars === 'function') {
+      this.renderModuleNodeDragVars(index);
+      this.setupModuleNodeDragVarsListeners();
+    }
   };
 
   P.closeModuleNodeModal = function () {

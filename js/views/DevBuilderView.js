@@ -301,6 +301,15 @@ class DevBuilderView extends DevBaseView {
                             <span class="toggle-switch" aria-hidden="true"></span>
                             <span class="toggle-switch-label">Requiere aprobación humana</span>
                           </label>
+                          <!-- Outputs de módulos anteriores: drag a cualquier input/textarea para insertar la expression -->
+                          <div class="module-drag-vars-panel" id="moduleNodeDragVarsPanel" hidden>
+                            <div class="module-drag-vars-header">
+                              <i class="ph ph-tree-structure"></i>
+                              <span>Outputs disponibles</span>
+                              <span class="module-drag-vars-hint">Arrastra a un campo</span>
+                            </div>
+                            <div class="module-drag-vars-list" id="moduleNodeDragVarsList"></div>
+                          </div>
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn-small btn-ghost" id="moduleNodeModalSandbox"><i class="ph ph-play"></i> Probar módulo</button>

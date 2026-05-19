@@ -405,4 +405,113 @@
     // Dispatch input event para que cualquier listener consuma el cambio
     el.dispatchEvent(new Event('input', { bubbles: true }));
   };
+
+  // ==================================================================
+  // 3. Drag & drop tipo n8n: panel de outputs disponibles + drop en inputs
+  // ==================================================================
+  /**
+   * Renderiza el panel "Outputs disponibles" dentro del sidebar del módulo:
+   * chips draggables (uno por property de cada output_schema de módulos
+   * anteriores). El usuario arrastra un chip a cualquier input/textarea
+   * del panel para insertar la expression {{ $modulo.output.x }}.
+   */
+  P.renderModuleNodeDragVars = function (index) {
+    const panel = this.querySelector('#moduleNodeDragVarsPanel');
+    const list = this.querySelector('#moduleNodeDragVarsList');
+    if (!panel || !list) return;
+
+    const vars = this.buildAvailableVariables(index);
+    // Solo los outputs de módulos anteriores (el input del formulario no aplica aquí)
+    const moduleVars = vars.filter(v => v.source === 'module');
+
+    if (moduleVars.length === 0) {
+      panel.setAttribute('hidden', '');
+      list.innerHTML = '';
+      return;
+    }
+    panel.removeAttribute('hidden');
+
+    // Agrupar por moduleIndex (cada bloque = un módulo anterior con sus props)
+    const byModule = new Map();
+    moduleVars.forEach(v => {
+      const key = v.moduleIndex;
+      if (!byModule.has(key)) byModule.set(key, []);
+      byModule.get(key).push(v);
+    });
+
+    const parts = [];
+    byModule.forEach((items, modIdx) => {
+      const m = (this.flowModules || [])[modIdx];
+      const name = (m && m.name) ? m.name : `Módulo ${modIdx + 1}`;
+      const chips = items.map(v => {
+        const propName = (v.label.includes('→') ? v.label.split('→').pop() : v.label).trim();
+        return `
+          <div class="drag-var-chip" draggable="true" data-token="${this.escapeHtml(v.token)}" title="${this.escapeHtml(v.token)}">
+            <span class="drag-var-chip-label">${this.escapeHtml(propName)}</span>
+            <span class="drag-var-chip-type">${this.escapeHtml(v.type)}</span>
+          </div>
+        `;
+      }).join('');
+      parts.push(`
+        <div class="drag-vars-group">
+          <div class="drag-vars-group-title">${this.escapeHtml(name)}</div>
+          <div class="drag-vars-chips">${chips}</div>
+        </div>
+      `);
+    });
+    list.innerHTML = parts.join('');
+  };
+
+  P.setupModuleNodeDragVarsListeners = function () {
+    const list = this.querySelector('#moduleNodeDragVarsList');
+    if (!list) return;
+
+    list.querySelectorAll('.drag-var-chip').forEach(chip => {
+      chip.ondragstart = (e) => {
+        const token = chip.getAttribute('data-token') || '';
+        if (e.dataTransfer) {
+          e.dataTransfer.setData('text/plain', token);
+          e.dataTransfer.effectAllowed = 'copy';
+        }
+        chip.classList.add('is-dragging');
+        // Resalta los drop targets en el panel mientras dura el drag
+        this.querySelectorAll('#moduleNodeModal input[type="url"], #moduleNodeModal input[type="text"], #moduleNodeModal textarea').forEach(t => {
+          t.classList.add('drop-target-hint');
+        });
+      };
+      chip.ondragend = () => {
+        chip.classList.remove('is-dragging');
+        this.querySelectorAll('#moduleNodeModal .drop-target-hint, #moduleNodeModal .drop-target-active').forEach(t => {
+          t.classList.remove('drop-target-hint');
+          t.classList.remove('drop-target-active');
+        });
+      };
+    });
+
+    // Drop targets: cualquier input de texto/url y textarea dentro del modal del módulo
+    const targets = this.querySelectorAll('#moduleNodeModal input[type="url"], #moduleNodeModal input[type="text"], #moduleNodeModal textarea');
+    targets.forEach(target => {
+      target.ondragover = (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        target.classList.add('drop-target-active');
+      };
+      target.ondragleave = () => target.classList.remove('drop-target-active');
+      target.ondrop = (e) => {
+        e.preventDefault();
+        target.classList.remove('drop-target-active');
+        const token = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || '';
+        if (!token) return;
+        const start = target.selectionStart || 0;
+        const end = target.selectionEnd || start;
+        const before = (target.value || '').slice(0, start);
+        const after = (target.value || '').slice(end);
+        target.value = before + token + after;
+        const pos = before.length + token.length;
+        if (typeof target.setSelectionRange === 'function') target.setSelectionRange(pos, pos);
+        target.focus();
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+    });
+  };
 })();

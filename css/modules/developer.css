@@ -4011,6 +4011,113 @@
   margin-bottom: 0;
 }
 
+/* ========== Panel "Outputs disponibles" (drag-and-drop tipo n8n) ========== */
+.module-drag-vars-panel {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed #242424;
+}
+
+.module-drag-vars-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.module-drag-vars-header i {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.module-drag-vars-hint {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+.drag-vars-group {
+  margin-bottom: 12px;
+}
+.drag-vars-group:last-child {
+  margin-bottom: 0;
+}
+
+.drag-vars-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+
+.drag-vars-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.drag-var-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  background: #141517;
+  border: 1px solid #242424;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-primary);
+  cursor: grab;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.drag-var-chip:hover {
+  background: #1a1c20;
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+.drag-var-chip:active,
+.drag-var-chip.is-dragging {
+  cursor: grabbing;
+  opacity: 0.6;
+  transform: scale(0.96);
+}
+
+.drag-var-chip-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.drag-var-chip-type {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 1px 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  text-transform: lowercase;
+}
+
+/* Drop targets: cualquier input de texto/url y textarea dentro del modal del módulo */
+#moduleNodeModal input.drop-target-hint,
+#moduleNodeModal textarea.drop-target-hint {
+  border-style: dashed !important;
+  border-color: rgba(224, 145, 69, 0.4) !important;
+}
+#moduleNodeModal input.drop-target-active,
+#moduleNodeModal textarea.drop-target-active {
+  border-style: solid !important;
+  border-color: var(--accent-warm, #e09145) !important;
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.2);
+}
+
 .technical-modules-list {
   display: flex;
   flex-direction: column;
