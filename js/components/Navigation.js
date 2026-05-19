@@ -1707,28 +1707,18 @@ class Navigation {
     return `
       <div class="nav-overlay" id="navOverlay"></div>
 
-      <header class="app-header with-sidebar" id="appHeader">
-        <div class="header-content">
-          <div class="header-left">
-            <h1 class="header-title" id="headerTitle">DEVELOPER PORTAL</h1>
-          </div>
-          <div class="header-center header-builder-slot" id="headerBuilderSlot" aria-hidden="true"></div>
-          <div class="header-right">
-            <div class="header-user-menu-wrap">
-              ${this.getHeaderNotificationsButtonGroupHTML()}
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              ${this.getUserDropdownHTML('/home')}
-            </div>
-          </div>
-        </div>
-      </header>
-
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
           <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
-          <span class="nav-dev-rank-badge" id="navDevRankBadge" hidden></span>
+          <div class="nav-dev-rank-block" id="navDevRankBlock" aria-label="Rango del desarrollador">
+            <div class="nav-dev-rank-row">
+              <span class="nav-dev-rank-label">rank</span>
+              <span class="nav-dev-rank-value" id="navDevRankBadge"></span>
+            </div>
+            <div class="nav-dev-rank-bar" aria-hidden="true">
+              <div class="nav-dev-rank-bar-fill"></div>
+            </div>
+          </div>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">

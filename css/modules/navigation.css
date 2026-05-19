@@ -1850,6 +1850,11 @@ body.has-sidebar #app-container {
     box-sizing: border-box;
 }
 
+/* Dev mode: sin header bar superior, el #app-container arranca desde arriba */
+body.has-sidebar:has(.nav-mode-developer) #app-container {
+    padding-top: 0;
+}
+
 /* Brands: sin padding en app-container (el contenedor de brands ocupa todo) */
 body.has-sidebar #app-container:has(> .brand-dashboard-container) {
     padding: 0;
@@ -3801,16 +3806,18 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * Sidebar developer — paridad estructural con sidebar user     *
  * ============================================================ */
 
-/* Header sidebar dev: misma altura que user (100px), "DEVELOPER" full-width uppercase */
+/* Header sidebar dev: contenido compacto (sin espacio vacío bajo "DEVELOPER") */
 .nav-mode-developer .nav-workspace-header,
 .nav-mode-developer .nav-dev-workspace-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100px;
-  padding: 16px;
+  height: auto;
+  min-height: 0;
+  padding: 14px 16px 10px;
   box-sizing: border-box;
   border-bottom: 1px solid var(--nav-border);
+  gap: 4px;
 }
 .nav-mode-developer .nav-dev-title {
   width: 100%;
@@ -3821,8 +3828,46 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   font-size: 22px;
   letter-spacing: 4px;
   color: var(--sidebar-text-primary, var(--text-primary));
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
+}
+
+/* Rank block: row con label + valor en BLANCO (sin gradiente) */
+.nav-mode-developer .nav-dev-rank-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+.nav-mode-developer .nav-dev-rank-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+.nav-mode-developer .nav-dev-rank-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.nav-mode-developer .nav-dev-rank-value {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: #ffffff;
+}
+.nav-mode-developer .nav-dev-rank-bar {
+  display: none;
 }
 
 /* Colapsado: header dev encoge y oculta el texto (la inicial podría mostrarse pero por minimalismo ocultamos) */
@@ -3843,13 +3888,22 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   color: var(--sidebar-text-primary, var(--text-primary));
 }
 
-/* Primary actions dev (+Flow / +User): pasar de grid 2-col cuadrado al estilo pill Vera apilados */
+/* Primary actions dev (+Flow / +User): pills tipo Vera, lado a lado */
 .nav-mode-developer .nav-dev-primary-actions {
   display: flex !important;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   grid-template-columns: none !important;
   margin: 0 0 8px;
+  padding: 0 8px;
+}
+
+.nav-mode-developer .nav-dev-primary-actions .nav-item--primary {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Pill — mismo styling que el item Vera primary del user (pill 30px, fondo #141517) */
@@ -3857,16 +3911,16 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   width: 100%;
   display: flex;
   justify-content: center;
-  margin: 0 auto 4px;
+  margin: 0;
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link {
   position: relative;
   width: 100%;
-  max-width: 204px;
+  max-width: 100%;
   height: 30px;
   min-height: 30px;
-  padding: 0 12px;
+  padding: 0 8px;
   background: #141517 !important;
   border: 0 !important;
   border-radius: var(--radius-sm) !important;
@@ -3970,7 +4024,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-developer .nav-dev-workspace-header {
   position: relative;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
