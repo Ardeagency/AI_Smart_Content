@@ -67,13 +67,13 @@
           <div class="demo-cta-modal__card">
             <button type="button" class="demo-cta-modal__close" data-demo-close="1" aria-label="Cerrar">&times;</button>
             <h2 class="demo-cta-modal__title">Esto es solo el preview</h2>
-            <p class="demo-cta-modal__action">Para <strong data-demo-action>esta acción</strong> necesitas tu propia cuenta.</p>
+            <p class="demo-cta-modal__action">Para <strong data-demo-action>esta acción</strong> necesitas acceso a la plataforma.</p>
             <p class="demo-cta-modal__body">
               Estás viendo <strong>IGNIS</strong>, una marca de demostración.
-              Crea tu cuenta y conecta tu propia marca en 2 minutos.
+              Solicita acceso y te conectamos para configurar tu propia marca.
             </p>
             <div class="demo-cta-modal__actions">
-              <a class="btn btn-primary" href="/signin?from=demo" data-demo-cta="primary">Crear cuenta</a>
+              <a class="btn btn-primary" href="mailto:info@ardeagency.com?subject=Solicitud%20de%20acceso%20-%20AI%20Smart%20Content&body=Hola%2C%20me%20gustar%C3%ADa%20solicitar%20acceso%20a%20AI%20Smart%20Content.%0A%0ANombre%3A%0AEmpresa%3A%0AC%C3%B3mo%20podemos%20ayudarte%3A" data-demo-cta="primary">Solicitar acceso</a>
               <button type="button" class="btn btn-secondary" data-demo-close="1">Seguir explorando</button>
             </div>
           </div>

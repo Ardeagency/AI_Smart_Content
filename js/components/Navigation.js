@@ -451,7 +451,7 @@ class Navigation {
     banner.className = 'demo-banner';
     banner.innerHTML = `
       <span class="demo-banner__text">Estás viendo <strong>IGNIS</strong>, una marca de demostración — modo solo lectura</span>
-      <a class="demo-banner__cta" href="/signin?from=demo">Crear mi cuenta →</a>
+      <a class="demo-banner__cta" href="mailto:info@ardeagency.com?subject=Solicitud%20de%20acceso%20-%20AI%20Smart%20Content&body=Hola%2C%20me%20gustar%C3%ADa%20solicitar%20acceso%20a%20AI%20Smart%20Content.%0A%0ANombre%3A%0AEmpresa%3A%0AC%C3%B3mo%20podemos%20ayudarte%3A">Solicitar acceso →</a>
     `;
     document.body.insertBefore(banner, document.body.firstChild);
     document.body.classList.add('has-demo-banner');

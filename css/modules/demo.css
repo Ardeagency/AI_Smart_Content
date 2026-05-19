@@ -76,7 +76,7 @@
    #app-container. El gradiente arcoíris reusa --brand-gradient (paleta oficial
    de la app) sobre fondo negro para legibilidad del texto. */
 body.has-demo-banner {
-  --demo-banner-height: 38px;
+  --demo-banner-height: 26px;
 }
 
 .demo-banner {
@@ -84,54 +84,67 @@ body.has-demo-banner {
   top: 0;
   left: 0;
   right: 0;
-  height: var(--demo-banner-height, 38px);
+  height: var(--demo-banner-height, 26px);
   z-index: 9000;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 0 18px;
+  gap: 10px;
+  padding: 0 14px;
+  /* Arcoíris atenuado: la franja sigue siendo identificable pero NO compite
+     con el contenido de la app (jerarquía reducida vs versión hero). */
   background: var(--brand-gradient);
-  color: #0b0b0b;
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.78);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
   flex-wrap: nowrap;
   overflow: hidden;
   white-space: nowrap;
 }
 
+.demo-banner::before {
+  /* Velo oscuro semitransparente: baja el contraste del gradient sin perderlo. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.demo-banner > * {
+  position: relative;
+  z-index: 1;
+}
+
 .demo-banner__text {
-  color: inherit;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .demo-banner__text strong {
-  color: inherit;
-  font-weight: 800;
+  color: #fff;
+  font-weight: 700;
 }
 
 .demo-banner__cta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 14px;
+  gap: 4px;
+  padding: 2px 10px;
   border-radius: 999px;
-  background: #0b0b0b;
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  text-shadow: none;
-  transition: background 120ms ease, transform 120ms ease;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: background 120ms ease;
 }
 
 .demo-banner__cta:hover {
-  background: #1c1d20;
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.32);
 }
 
 /* Empujar sidebar, headers y app-container debajo del banner.
@@ -161,16 +174,16 @@ body.has-demo-banner.no-nav #app-container {
 
 @media (max-width: 640px) {
   body.has-demo-banner {
-    --demo-banner-height: 44px;
+    --demo-banner-height: 32px;
   }
   .demo-banner {
-    font-size: 0.74rem;
-    padding: 0 10px;
-    gap: 10px;
+    font-size: 0.66rem;
+    padding: 0 8px;
+    gap: 6px;
   }
   .demo-banner__cta {
-    padding: 4px 10px;
-    font-size: 0.72rem;
+    padding: 2px 8px;
+    font-size: 0.66rem;
   }
 }
 

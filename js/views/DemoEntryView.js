@@ -137,9 +137,11 @@ class DemoEntryView extends (window.BaseView || class {}) {
 
     this._setStatus('Listo. Abriendo la plataforma…');
 
-    // Vera is the wow-factor landing. Use the canonical org path so the router
-    // resolver caches the slug correctly.
-    const target = '/org/000000000001/ignis/vera';
+    // Command Center es la landing más completa: mapa, demografía, lista de
+    // campañas reales de IGNIS, mosaico cross-platform. Da un panorama mayor
+    // de la plataforma que entrar directo al chat con Vera.
+    // Ruta: /org/:orgIdShort/:orgNameSlug/command-center/:subBrandShortId/:subBrandSlug
+    const target = '/org/000000000001/ignis/command-center/000000000001/ignis';
     if (window.router) {
       window.router.navigate(target, true);
     } else {
