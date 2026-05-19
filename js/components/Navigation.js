@@ -381,6 +381,7 @@ class Navigation {
     this.updateActiveLink();
     this.updateHeaderTitle();
     this.updateBodyLayout(config);
+    this.renderDemoBanner();
 
     // Carga de datos en paralelo: usuario + (org|dev). Cada uno actualiza el DOM
     // cuando llega; no hace falta serializarlos ni bloquear a quien llama (el
@@ -410,6 +411,38 @@ class Navigation {
       document.body.classList.add('has-header-only');
     } else {
       document.body.classList.add('no-nav');
+    }
+  }
+
+  /**
+   * Inyecta (o remueve) el banner "estás en modo demo" arriba del shell.
+   * Solo presente cuando la sesión Supabase es anónima (DemoGuard.isDemo()).
+   * Se renderiza dentro de #navigation-container para que el sticky no pelee
+   * con otros wrappers (z-index controlado vía .demo-banner en demo.css).
+   */
+  renderDemoBanner() {
+    const guard = window.DemoGuard;
+    const isDemo = guard && typeof guard.isDemo === 'function' && guard.isDemo();
+    const existing = document.getElementById('demoBanner');
+
+    if (!isDemo) {
+      if (existing) existing.remove();
+      return;
+    }
+    if (existing) return; // ya está pintado
+
+    const banner = document.createElement('div');
+    banner.id = 'demoBanner';
+    banner.className = 'demo-banner';
+    banner.innerHTML = `
+      <span class="demo-banner__icon" aria-hidden="true">i</span>
+      <span class="demo-banner__text">Estás viendo <strong>IGNIS</strong>, una marca de demostración. Esto es solo el preview de la plataforma.</span>
+      <a class="demo-banner__cta" href="/signin?from=demo">Crear mi cuenta →</a>
+    `;
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.insertBefore(banner, this.container);
+    } else {
+      document.body.insertBefore(banner, document.body.firstChild);
     }
   }
 

@@ -1,0 +1,130 @@
+/**
+ * DemoEntryView - Public entry point for the IGNIS read-only preview.
+ *
+ * Lifecycle:
+ *   1. Render a splash with the brand logo and a status line.
+ *   2. Call supabase.auth.signInAnonymously() — the database trigger
+ *      demo_attach_anonymous_user_trg auto-joins the new user to IGNIS
+ *      with role='demo'.
+ *   3. Persist selectedOrganizationId so the rest of the SPA picks IGNIS.
+ *   4. Redirect to /org/000000000001/ignis/vera (Vera is the wow-factor landing).
+ *
+ * If the visitor already has a non-anonymous session, route them home — we
+ * never downgrade a real account into demo mode.
+ */
+class DemoEntryView extends (window.BaseView || class {}) {
+  constructor() {
+    super();
+    this.templatePath = null;
+  }
+
+  async updateHeader() { /* no header on public splash */ }
+
+  renderHTML() {
+    return `
+      <div class="demo-entry">
+        <div class="demo-entry__card">
+          <img src="/recursos/logos/logo-02.svg" alt="AI Smart Content" class="demo-entry__logo" width="180" height="72" decoding="async">
+          <h1 class="demo-entry__title">Preparando tu preview</h1>
+          <p class="demo-entry__status" id="demoEntryStatus">Conectando con la plataforma…</p>
+          <div class="demo-entry__spinner" aria-hidden="true"></div>
+          <p class="demo-entry__hint">Vas a explorar <strong>IGNIS</strong>, una marca de demostración. Podrás navegar y conversar con Vera — los cambios están deshabilitados.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  _setStatus(msg) {
+    const el = document.getElementById('demoEntryStatus');
+    if (el) el.textContent = msg;
+  }
+
+  async init() {
+    const supabase = window.supabaseService
+      ? await window.supabaseService.getClient()
+      : window.supabase;
+
+    if (!supabase) {
+      this._setStatus('No se pudo cargar Supabase. Recarga la página.');
+      return;
+    }
+
+    // If already signed in as a real user, send them home.
+    try {
+      const { data: { user: existing } } = await supabase.auth.getUser();
+      if (existing && existing.is_anonymous !== true) {
+        this._setStatus('Ya tienes sesión iniciada. Redirigiendo…');
+        if (window.router) window.router.navigate('/home', true);
+        return;
+      }
+    } catch (_) { /* continue with anon flow */ }
+
+    this._setStatus('Creando sesión anónima…');
+
+    let session = null;
+    if (typeof supabase.auth.signInAnonymously === 'function') {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) {
+        console.error('[DemoEntry] signInAnonymously failed', error);
+        this._setStatus('No pudimos abrir el preview. Intenta de nuevo.');
+        return;
+      }
+      session = data.session;
+    } else {
+      // Fallback for older supabase-js: hit /auth/v1/signup with empty body.
+      try {
+        const url = window.SUPABASE_URL || (supabase && supabase.supabaseUrl) || '';
+        const key = window.SUPABASE_ANON_KEY || (supabase && supabase.supabaseKey) || '';
+        const resp = await fetch(`${url}/auth/v1/signup`, {
+          method: 'POST',
+          headers: { 'apikey': key, 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.access_token) {
+          this._setStatus('Anon auth no disponible en este entorno.');
+          return;
+        }
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+        session = (await supabase.auth.getSession()).data.session;
+      } catch (e) {
+        console.error('[DemoEntry] fallback signup failed', e);
+        this._setStatus('No pudimos abrir el preview.');
+        return;
+      }
+    }
+
+    if (!session) {
+      this._setStatus('Sesión no se inicializó. Recarga la página.');
+      return;
+    }
+
+    // Pin IGNIS as the active org so the rest of the SPA renders against it.
+    try {
+      localStorage.setItem('selectedOrganizationId', window.IGNIS_ORG_ID || 'a1000000-0000-0000-0000-000000000001');
+    } catch (_) { /* private mode */ }
+
+    // Best-effort tracking — never block the redirect.
+    try {
+      if (window.DemoGuard && window.DemoGuard._trackEvent) {
+        window.DemoGuard._trackEvent('demo_session_started', { ua: navigator.userAgent });
+      }
+    } catch (_) {}
+
+    this._setStatus('Listo. Abriendo la plataforma…');
+
+    // Vera is the wow-factor landing. Use the canonical org path so the router
+    // resolver caches the slug correctly.
+    const target = '/org/000000000001/ignis/vera';
+    if (window.router) {
+      window.router.navigate(target, true);
+    } else {
+      window.location.replace(target);
+    }
+  }
+}
+
+window.DemoEntryView = DemoEntryView;

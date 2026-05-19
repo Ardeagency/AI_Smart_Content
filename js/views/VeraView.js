@@ -1596,7 +1596,23 @@ class VeraView extends (window.BaseView || class {}) {
         })
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        // Demo rate-limit response → open signup modal instead of generic error.
+        if (res.status === 429) {
+          try {
+            const errJson = await res.clone().json();
+            if ((errJson.error === 'demo_rate_limited' || errJson.error === 'demo_global_capacity')
+                && window.DemoGuard) {
+              this.hideTypingIndicator();
+              this.aiState.isLoading = false;
+              if (userMsg) this._removeMessage(userMsg.id);
+              window.DemoGuard.showSignupModal('seguir conversando con Vera');
+              return;
+            }
+          } catch (_) { /* fall through to generic error */ }
+        }
+        throw new Error(await res.text());
+      }
       const json = await res.json();
 
       // Guardar conversation_id si es nuevo

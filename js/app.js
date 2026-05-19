@@ -82,7 +82,7 @@ class App {
       // del hero en /login. Aplicamos no-nav antes del primer paint para
       // evitarlo. En rutas auth, Navigation.render() reemplaza esta clase
       // por has-sidebar/has-header-only con su propio reset.
-      const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/cambiar-contrasena']);
+      const PUBLIC_FIRST_PAINT = new Set(['/', '/login', '/signin', '/cambiar-contrasena', '/demo']);
       const initialPath = window.location.pathname || '/';
       if (PUBLIC_FIRST_PAINT.has(initialPath)) {
         document.body.classList.add('no-nav');
@@ -160,6 +160,10 @@ class App {
     // ── Públicas (cargadas sincrónicamente) ──
     r.register('/login', window.SignInView, pub);
     r.register('/signin', window.SignInView, pub);
+
+    // ── /demo: signup anónimo + redirect a IGNIS en modo read-only ──
+    // Los RLS bloquean writes y data sensible para JWT.is_anonymous=true.
+    r.register('/demo', window.DemoEntryView, pub);
 
     // ── Públicas (lazy) ──
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);

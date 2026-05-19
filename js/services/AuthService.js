@@ -143,12 +143,21 @@ class AuthService {
         .eq('id', userId)
         .single();
 
+      // Anonymous flag viene del JWT, no de profiles. Capturarlo aquí para que
+      // DemoGuard pueda detectar sesiones del preview público sin queries extra.
+      let isAnonymous = false;
+      try {
+        const { data: { user: authUser } } = await this.supabase.auth.getUser();
+        isAnonymous = !!(authUser && authUser.is_anonymous);
+      } catch (_) { /* keep false */ }
+
       if (profile && !error) {
         this.currentUser = {
           id: profile.id,
           email: profile.email,
           full_name: profile.full_name,
           role: profile.role || 'user',
+          is_anonymous: isAnonymous,
           // Campos para arquitectura MPA + SPA
           default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
           is_developer: !!profile.is_developer,
@@ -171,8 +180,9 @@ class AuthService {
           this.currentUser = {
             id: user.id,
             email: user.email,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Demo visitor',
             email_verified: user.email_confirmed_at ? true : false,
+            is_anonymous: !!user.is_anonymous,
             role: 'user',
             default_view_mode: 'user'
           };

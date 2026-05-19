@@ -70,6 +70,13 @@
   status = 200
   force = true
 
+# ── Demo preview (anonymous IGNIS preview) ───────────────
+[[redirects]]
+  from = "/api/demo-event"
+  to = "/.netlify/functions/api-demo-event"
+  status = 200
+  force = true
+
 # ── Stripe billing endpoints (FEAT-019) ──────────────────
 [[redirects]]
   from = "/api/billing/checkout"

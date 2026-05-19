@@ -1,0 +1,224 @@
+/* ============================================================
+   Demo mode — entry splash, sticky banner, CTA modal.
+   Loaded only when an anonymous Supabase session is present.
+   Patrón: bg-card #141517 + border-divider para contenedores;
+   .glass solo en botones. (Mantiene el sistema de tokens oficial.)
+   ============================================================ */
+
+/* ---------------- Entry splash (/demo) ---------------- */
+.demo-entry {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: var(--bg-primary);
+}
+
+.demo-entry__card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-card);
+  border: 1px solid var(--divider, #242424);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.demo-entry__logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 4px;
+}
+
+.demo-entry__title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.demo-entry__status {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.demo-entry__hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.demo-entry__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 209, 216, 0.15);
+  border-top-color: var(--text-primary);
+  animation: demo-spin 0.8s linear infinite;
+}
+
+@keyframes demo-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------------- Sticky banner (top of every demo page) ---------------- */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 18px;
+  background: linear-gradient(90deg, #1c1d20 0%, #141517 100%);
+  border-bottom: 1px solid var(--divider, #242424);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  flex-wrap: wrap;
+}
+
+.demo-banner__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(212, 209, 216, 0.08);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.demo-banner__text {
+  color: var(--text-secondary);
+}
+
+.demo-banner__text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.demo-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 120ms ease;
+}
+
+.demo-banner__cta:hover {
+  background: var(--accent-yellow-hover, #fff);
+}
+
+@media (max-width: 640px) {
+  .demo-banner {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .demo-banner__cta {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+}
+
+/* ---------------- CTA modal (mutation intercepted) ---------------- */
+.demo-cta-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.demo-cta-modal--open {
+  display: flex;
+}
+
+.demo-cta-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.demo-cta-modal__card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-card);
+  border: 1px solid var(--divider, #242424);
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.demo-cta-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.demo-cta-modal__close:hover {
+  color: var(--text-primary);
+}
+
+.demo-cta-modal__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.demo-cta-modal__action {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.demo-cta-modal__body {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.demo-cta-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+body.demo-cta-modal-open {
+  overflow: hidden;
+}
