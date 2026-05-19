@@ -3817,7 +3817,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   justify-content: center;
   height: auto;
   min-height: 0;
-  padding: 14px 12px 18px;
+  padding: 14px 12px 12px;
   box-sizing: border-box;
   border-bottom: 0;
   gap: 4px;
@@ -3903,7 +3903,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   justify-content: center;
   gap: 8px;
   grid-template-columns: none !important;
-  margin: 28px 0 12px;
+  margin: 14px 0 12px;
   padding: 0 8px;
 }
 
@@ -4016,33 +4016,33 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   flex-direction: column;
   gap: 4px;
 }
-/* Línea nítida del gradient en la base del header (eje del halo) */
-.nav-mode-developer .nav-dev-workspace-header::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1.5px;
-  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  pointer-events: none;
-  z-index: 3;
-  border-radius: 1px;
-}
-/* Halo difuso del gradient — vive DEBAJO del header, no atrás del rank */
+/* Halo blur del gradient — strip moderado para silueta limpia (no nube difusa) */
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -22px;
-  height: 30px;
+  left: 8px;
+  right: 8px;
+  bottom: -3px;
+  height: 6px;
   background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  filter: blur(12px);
-  opacity: 0.85;
-  border-radius: 12px;
+  filter: blur(5px);
+  border-radius: 4px;
+  opacity: 1;
   pointer-events: none;
   z-index: 2;
+}
+/* Línea nítida sobre el halo — el filete fino que el mockup pide */
+.nav-mode-developer .nav-dev-workspace-header::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 1.5px;
+  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
+  border-radius: 1.5px;
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si hay rank context */
