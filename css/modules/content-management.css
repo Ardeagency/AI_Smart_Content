@@ -1872,7 +1872,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .task-detail-wrapper {
   position: relative;
   isolation: isolate;
-  max-width: 1280px;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: calc(48px + 20px) 28px 28px !important;
   background: transparent !important;
 }
 
@@ -1909,27 +1911,33 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
   margin-bottom: 0;
+  min-width: 0;
 }
 
 .task-detail-header-left {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .task-detail-header-right {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.task-detail-header-right .btn {
+  white-space: nowrap;
 }
 
 .task-detail-title-block {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .task-detail-title {
@@ -1938,6 +1946,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   color: #ffffff;
   margin: 0;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-detail-subtitle {

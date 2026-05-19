@@ -404,13 +404,15 @@ class TasksView extends BaseView {
       const s = { ...data, is_active: data.status === 'active' };
       const firstEntityId = Array.isArray(s.entity_ids) ? s.entity_ids[0] : s.entity_ids;
       let flowName = '—';
+      let flowImageUrl = null;
       let entityName = '—';
       let campaignName = '—';
       let audienceName = '—';
       let brandName = '—';
       if (s.flow_id) {
-        const { data: f } = await this.supabase.from('content_flows').select('name').eq('id', s.flow_id).maybeSingle();
+        const { data: f } = await this.supabase.from('content_flows').select('name, flow_image_url').eq('id', s.flow_id).maybeSingle();
         if (f?.name) flowName = f.name;
+        if (f?.flow_image_url) flowImageUrl = f.flow_image_url;
       }
       if (firstEntityId) {
         const { data: e } = await this.supabase.from('brand_entities').select('name').eq('id', firstEntityId).maybeSingle();
@@ -433,6 +435,7 @@ class TasksView extends BaseView {
       return {
         ...s,
         flow_name: flowName,
+        flow_image_url: flowImageUrl,
         entity_name: entityName,
         campaign_name: campaignName,
         audience_name: audienceName,
