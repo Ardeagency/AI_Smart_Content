@@ -73,7 +73,7 @@
               Solicita acceso y te conectamos para configurar tu propia marca.
             </p>
             <div class="demo-cta-modal__actions">
-              <a class="btn btn-primary" href="mailto:info@ardeagency.com?subject=Solicitud%20de%20acceso%20-%20AI%20Smart%20Content&body=Hola%2C%20me%20gustar%C3%ADa%20solicitar%20acceso%20a%20AI%20Smart%20Content.%0A%0ANombre%3A%0AEmpresa%3A%0AC%C3%B3mo%20podemos%20ayudarte%3A" data-demo-cta="primary">Solicitar acceso</a>
+              <a class="btn btn-primary" href="https://aismartcontent.io/contact" target="_blank" rel="noopener" data-demo-cta="primary">Solicitar acceso</a>
               <button type="button" class="btn btn-secondary" data-demo-close="1">Seguir explorando</button>
             </div>
           </div>
