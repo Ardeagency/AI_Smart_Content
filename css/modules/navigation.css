@@ -3808,49 +3808,59 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * Sidebar developer — paridad estructural con sidebar user     *
  * ============================================================ */
 
-/* Header sidebar dev: contenido compacto + espacio inferior para que el halo
-   rainbow del rank no quede detrás de "RANK LEGEND" */
+/* Header sidebar dev — medidas exactas del Frame 86 del mockup Figma:
+   height fija 63px, border-bottom 1px gris, padding lateral 8px,
+   el blur rainbow vive en ::after con top:55px y sale 9px abajo. */
 .nav-mode-developer .nav-workspace-header,
 .nav-mode-developer .nav-dev-workspace-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: auto;
-  min-height: 0;
-  padding: 14px 12px 12px;
+  position: relative;
+  display: block;
+  height: 63px;
+  min-height: 63px;
+  padding: 0;
+  margin: 0 8px;
   box-sizing: border-box;
-  border-bottom: 0;
-  gap: 4px;
+  border-bottom: 1px solid #242424;
   overflow: visible;
 }
 .nav-mode-developer .nav-dev-title {
-  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 35px;
   margin: 0;
   text-align: center;
   text-transform: uppercase;
+  font-family: 'Archivo', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 24px;
+  line-height: 26px;
   letter-spacing: 4px;
-  color: var(--sidebar-text-primary, var(--text-primary));
-  line-height: 1.1;
+  color: #FFFDFD;
   white-space: nowrap;
   overflow: hidden;
+  z-index: 2;
 }
 
 /* Rank block: row con label + valor en BLANCO (sin gradiente) */
 .nav-mode-developer .nav-dev-rank-block {
-  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  height: 15px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
   margin: 0;
+  z-index: 2;
 }
 .nav-mode-developer .nav-dev-rank-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  line-height: 1;
+  line-height: 11px;
 }
 .nav-mode-developer .nav-dev-rank-label {
   font-size: 10px;
@@ -4010,39 +4020,25 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
  * (paralelo al --brand-gradient-dynamic de org)                *
  * ============================================================ */
 
-/* 1. Header dev: stack columna (título + badge) y trazo arcoiris debajo */
+/* 1. Header dev: layout absoluto según Frame 86 del mockup (children posicionados con top exactos) */
 .nav-mode-developer .nav-dev-workspace-header {
   position: relative;
-  flex-direction: column;
-  gap: 4px;
+  display: block;
 }
-/* Halo blur del gradient — strip moderado para silueta limpia (no nube difusa) */
+/* Rectangle 96 del Figma — blur rainbow exacto: top:55, bottom:-9, blur 12.5, radius 20 */
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -3px;
-  height: 6px;
+  left: 13px;
+  right: 13px;
+  top: 55px;
+  bottom: -9px;
   background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  filter: blur(5px);
-  border-radius: 4px;
+  filter: blur(12.5px);
+  border-radius: 20px;
   opacity: 1;
   pointer-events: none;
-  z-index: 2;
-}
-/* Línea nítida sobre el halo — el filete fino que el mockup pide */
-.nav-mode-developer .nav-dev-workspace-header::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 0;
-  height: 1.5px;
-  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  border-radius: 1.5px;
-  pointer-events: none;
-  z-index: 3;
+  z-index: 1;
 }
 
 /* 2. Badge de rank (HTML <span>, no CSS pseudo) — siempre visible si hay rank context */
