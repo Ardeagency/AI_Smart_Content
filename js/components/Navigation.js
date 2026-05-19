@@ -1692,12 +1692,14 @@ class Navigation {
       <div class="nav-dev-primary-actions" role="group" aria-label="Acciones rápidas desarrollador">
         <div class="nav-item nav-item--primary nav-lead-only" style="display:none">
           <a href="${provisioningHref}" class="nav-link nav-main-link nav-link--primary" data-route="${provisioningHref}" data-tooltip="Nuevo User">
-            <span class="nav-text">+ USER</span>
+            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
+            <span class="nav-text">USER</span>
           </a>
         </div>
         <div class="nav-item nav-item--primary">
           <a href="${builderHref}" class="nav-link nav-main-link nav-link--primary" data-route="${builderHref}" data-tooltip="Nuevo Flow">
-            <span class="nav-text">+ FLOW</span>
+            <i class="fas fa-plus nav-icon" aria-hidden="true"></i>
+            <span class="nav-text">FLOW</span>
           </a>
         </div>
       </div>
