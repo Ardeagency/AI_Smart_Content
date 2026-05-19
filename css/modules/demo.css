@@ -164,9 +164,6 @@ body.has-demo-banner .side-navigation {
 body.has-demo-banner.has-sidebar #app-container {
   padding-top: calc(45px + var(--demo-banner-height, 38px));
 }
-body.has-demo-banner.has-sidebar:has(.nav-mode-developer) #app-container {
-  padding-top: var(--demo-banner-height, 38px);
-}
 body.has-demo-banner.has-header-only #app-container,
 body.has-demo-banner.no-nav #app-container {
   padding-top: var(--demo-banner-height, 38px);

@@ -1850,10 +1850,9 @@ body.has-sidebar #app-container {
     box-sizing: border-box;
 }
 
-/* Dev mode: sin header bar superior, el #app-container arranca desde arriba */
-body.has-sidebar:has(.nav-mode-developer) #app-container {
-    padding-top: 0;
-}
+/* Dev mode usa el mismo header que user mode (logo + notificaciones + user
+   dropdown con switch a /home — único medio de navegación entre /dev y /org).
+   Hereda padding-top: 45px de body.has-sidebar #app-container, no override. */
 
 /* Brands: sin padding en app-container (el contenedor de brands ocupa todo) */
 body.has-sidebar #app-container:has(> .brand-dashboard-container) {

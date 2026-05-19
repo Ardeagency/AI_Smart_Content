@@ -1708,6 +1708,23 @@ class Navigation {
     return `
       <div class="nav-overlay" id="navOverlay"></div>
 
+      <header class="app-header with-sidebar" id="appHeader">
+        <div class="header-content">
+          <div class="header-left">
+            <h1 class="header-title" id="headerTitle">DEVELOPER</h1>
+          </div>
+          <div class="header-right">
+            <div class="header-user-menu-wrap">
+              ${this.getHeaderNotificationsButtonGroupHTML()}
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              ${this.getUserDropdownHTML('/home')}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-workspace-header nav-identity-section nav-dev-workspace-header">
           <h2 class="nav-org-title nav-dev-title" id="navDevHeaderName">DEVELOPER</h2>
