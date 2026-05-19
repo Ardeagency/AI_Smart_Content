@@ -110,8 +110,7 @@ class StudioView extends BaseView {
 
         <aside class="studio-sidebar-creative" id="studioSidebar">
           <div class="studio-sidebar-content">
-            <div class="studio-flows-list" id="studioFlowsList"></div>
-            <div class="studio-flow-form-wrap" id="studioFlowFormWrap" style="display: none;">
+            <div class="studio-flow-form-wrap" id="studioFlowFormWrap">
               <button type="button" class="studio-back-flows" id="studioBackFlows"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
               <h3 class="studio-form-title" id="studioFormTitle"></h3>
               <form class="studio-flow-form" id="studioFlowForm"></form>
@@ -292,37 +291,6 @@ class StudioView extends BaseView {
     }
   }
 
-  renderFlowsList() {
-    const listEl = document.getElementById('studioFlowsList');
-    const formWrap = document.getElementById('studioFlowFormWrap');
-    if (!listEl) return;
-
-    if (this.flows.length === 0) {
-      listEl.innerHTML = '<p class="studio-empty-flows">No hay flujos disponibles.</p>';
-      if (formWrap) formWrap.style.display = 'none';
-      return;
-    }
-
-    listEl.innerHTML = this.flows.map(f => `
-      <article class="studio-card studio-card-flow" data-flow-id="${f.id}">
-        <div class="studio-card-icon"><i class="fas fa-magic"></i></div>
-        <p class="studio-card-text">${this.escapeHtml(f.name)}</p>
-        ${f.description ? `<p class="studio-card-desc">${this.escapeHtml(f.description)}</p>` : ''}
-        <span class="studio-card-tag">${(f.token_cost ?? 1)} crédito(s)</span>
-      </article>
-    `).join('');
-
-    listEl.querySelectorAll('.studio-card-flow').forEach(card => {
-      card.addEventListener('click', () => {
-        const id = card.getAttribute('data-flow-id');
-        const flow = this.flows.find(f => f.id === id);
-        if (flow) this.selectFlow(flow);
-      });
-    });
-
-    if (formWrap) formWrap.style.display = 'none';
-  }
-
   selectFlow(flow) {
     this.selectedFlow = flow;
     this.updateCreditsDisplay();
@@ -345,8 +313,6 @@ class StudioView extends BaseView {
     const canvasEl = document.getElementById('studioCanvas');
     const automatedWrap = document.getElementById('studioAutomatedWrap');
     const sidebar = document.getElementById('studioSidebar');
-    const listEl = document.getElementById('studioFlowsList');
-    const formWrap = document.getElementById('studioFlowFormWrap');
     const btn = document.getElementById('studioProducirBtn');
 
     if (container) container.classList.toggle('studio-layout--automated', isAutomated);
@@ -364,8 +330,6 @@ class StudioView extends BaseView {
       if (canvasEl) canvasEl.style.display = '';
       if (sidebar) sidebar.style.display = '';
       if (automatedWrap) automatedWrap.style.display = 'none';
-      if (listEl) listEl.style.display = 'none';
-      if (formWrap) formWrap.style.display = 'block';
       this.renderFlowForm(flow);
       if (btn) {
         btn.style.display = '';
@@ -1348,23 +1312,16 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.addEventListener('click', () => this.producir());
 
-    const showFlowsList = () => {
+    const goToCatalog = () => {
       this.selectedFlow = null;
-      const listEl = document.getElementById('studioFlowsList');
-      const formWrap = document.getElementById('studioFlowFormWrap');
-      if (listEl) listEl.style.display = '';
-      if (formWrap) formWrap.style.display = 'none';
-      this.updateCreditsDisplay();
-      const b = document.getElementById('studioProducirBtn');
-      if (b) b.disabled = true;
       if (window.router) window.router.navigate(this.getStudioBasePath() + '/flows', true);
     };
 
     const backFlows = document.getElementById('studioBackFlows');
-    if (backFlows) backFlows.addEventListener('click', showFlowsList);
+    if (backFlows) backFlows.addEventListener('click', goToCatalog);
 
     const backFlowsAutomated = document.getElementById('studioBackFlowsAutomated');
-    if (backFlowsAutomated) backFlowsAutomated.addEventListener('click', showFlowsList);
+    if (backFlowsAutomated) backFlowsAutomated.addEventListener('click', goToCatalog);
   }
 
   async producir() {
