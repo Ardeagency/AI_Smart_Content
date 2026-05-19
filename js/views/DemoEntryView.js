@@ -102,10 +102,31 @@ class DemoEntryView extends (window.BaseView || class {}) {
       return;
     }
 
+    const ignisId = window.IGNIS_ORG_ID || 'a1000000-0000-0000-0000-000000000001';
+
     // Pin IGNIS as the active org so the rest of the SPA renders against it.
     try {
-      localStorage.setItem('selectedOrganizationId', window.IGNIS_ORG_ID || 'a1000000-0000-0000-0000-000000000001');
+      localStorage.setItem('selectedOrganizationId', ignisId);
     } catch (_) { /* private mode */ }
+
+    // Race condition fix: signInAnonymously resolves the promise, but
+    // authService.loadUserData runs asynchronously via onAuthStateChange.
+    // If we navigate before it finishes, the router's loadMembership() bails
+    // (no currentUser.id yet), the capabilities check fails, and the router
+    // redirects /vera → /vera in a loop until Chrome's navigation-throttle
+    // kicks in. Force a sequential load here.
+    this._setStatus('Cargando tu perfil…');
+    try {
+      if (window.authService && typeof window.authService.loadUserData === 'function') {
+        await window.authService.loadUserData(session.user.id);
+      }
+      // Pre-warm membership cache so the router can cap-check synchronously.
+      if (window.authService && typeof window.authService.loadMembership === 'function') {
+        await window.authService.loadMembership(ignisId);
+      }
+    } catch (e) {
+      console.warn('[DemoEntry] preload user/membership failed', e);
+    }
 
     // Best-effort tracking — never block the redirect.
     try {
