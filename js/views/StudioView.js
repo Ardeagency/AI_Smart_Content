@@ -74,26 +74,23 @@ class StudioView extends BaseView {
           <div class="studio-canvas-empty" id="studioCanvas"></div>
           <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
             <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
-            <div class="studio-automated-content">
-              <div class="studio-hero" id="studioHero"></div>
-              <div class="studio-automation-shell">
-                <div class="studio-automation-main">
-                  <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
-                    <form class="studio-schedule-form" id="studioScheduleForm"></form>
-                  </div>
+            <div class="studio-automation-shell">
+              <div class="studio-automation-main">
+                <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
+                  <form class="studio-schedule-form" id="studioScheduleForm"></form>
                 </div>
-                <aside class="studio-automation-summary studio-automation-summary--proximo" id="studioAutomationSummary" aria-label="Resumen de programación">
-                  <div class="studio-automation-summary-proximo">
-                    <header class="studio-automation-summary-proximo-header">
-                      <h2 class="studio-automation-summary-proximo-title">Resumen</h2>
-                      <span class="studio-automation-summary-proximo-badge">Próximamente</span>
-                    </header>
-                    <p class="studio-automation-summary-proximo-desc">
-                      Aquí verás la vista previa de tu programación (ejecución, volumen, formato, campaña y audiencia) y podrás programar o guardar borrador.
-                    </p>
-                  </div>
-                </aside>
               </div>
+              <aside class="studio-automation-summary studio-automation-summary--proximo" id="studioAutomationSummary" aria-label="Resumen de programación">
+                <div class="studio-automation-summary-proximo">
+                  <header class="studio-automation-summary-proximo-header">
+                    <h2 class="studio-automation-summary-proximo-title">Resumen</h2>
+                    <span class="studio-automation-summary-proximo-badge">Próximamente</span>
+                  </header>
+                  <p class="studio-automation-summary-proximo-desc">
+                    Aquí verás la vista previa de tu programación (ejecución, volumen, formato, campaña y audiencia) y podrás programar o guardar borrador.
+                  </p>
+                </div>
+              </aside>
             </div>
           </div>
           <footer class="studio-footer">
@@ -313,6 +310,7 @@ class StudioView extends BaseView {
     const canvasEl = document.getElementById('studioCanvas');
     const automatedWrap = document.getElementById('studioAutomatedWrap');
     const sidebar = document.getElementById('studioSidebar');
+    const formWrap = document.getElementById('studioFlowFormWrap');
     const btn = document.getElementById('studioProducirBtn');
 
     if (container) container.classList.toggle('studio-layout--automated', isAutomated);
@@ -322,7 +320,7 @@ class StudioView extends BaseView {
       if (sidebar) sidebar.style.display = 'none';
       if (automatedWrap) {
         automatedWrap.style.display = 'block';
-        this.renderStudioHero(flow);
+        this.applyStudioFlowBackground(flow);
         this.renderScheduleForm(flow);
       }
       if (btn) btn.style.display = 'none';
@@ -330,6 +328,7 @@ class StudioView extends BaseView {
       if (canvasEl) canvasEl.style.display = '';
       if (sidebar) sidebar.style.display = '';
       if (automatedWrap) automatedWrap.style.display = 'none';
+      if (formWrap) formWrap.style.display = 'block';
       this.renderFlowForm(flow);
       if (btn) {
         btn.style.display = '';
@@ -339,20 +338,13 @@ class StudioView extends BaseView {
     }
   }
 
-  /** Rellena el hero (portada) del flujo en estado automático. */
-  renderStudioHero(flow) {
-    const heroEl = document.getElementById('studioHero');
-    if (!heroEl) return;
-    const url = flow.flow_image_url;
-    const name = flow.name || 'Flujo';
-    if (url) {
-      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
-      heroEl.innerHTML = isVideo
-        ? `<video src="${this.escapeHtml(url)}" alt="" muted playsinline></video>`
-        : `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(name)}" loading="eager">`;
-    } else {
-      heroEl.innerHTML = '<div class="studio-hero-placeholder"><i class="ph ph-image"></i><span>Sin portada</span></div>';
-    }
+  /** Aplica la imagen del flujo como fondo del wrap automático (mismo patrón que product-view::before+::after). */
+  applyStudioFlowBackground(flow) {
+    const wrap = document.getElementById('studioAutomatedWrap');
+    if (!wrap) return;
+    const url = flow && flow.flow_image_url;
+    if (url) wrap.style.setProperty('--studio-flow-bg', `url("${String(url).replace(/"/g, '\\"')}")`);
+    else wrap.style.removeProperty('--studio-flow-bg');
   }
 
   /** Rellena el formulario de programación con input_schema del primer módulo (flujos automáticos). */
