@@ -1630,6 +1630,10 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
    ============================================================ */
 .tasks-history-table {
   width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  justify-self: center;
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
 }
