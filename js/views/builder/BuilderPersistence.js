@@ -96,7 +96,7 @@
         const moduleIds = modulesList.map(m => m.id);
         const { data: techDetailsList } = await this.supabase
           .from('flow_technical_details')
-          .select('id, flow_module_id, webhook_method, platform_name, platform_flow_id, platform_flow_name, editor_url, credential_id, is_healthy, last_health_check, avg_execution_time_ms')
+          .select('id, flow_module_id, webhook_method, platform_name, platform_flow_id, platform_flow_name, editor_url, credential_id, webhook_signature_secret, is_healthy, last_health_check, avg_execution_time_ms')
           .in('flow_module_id', moduleIds);
         this.flowTechnicalDetailsByModule = {};
         (techDetailsList || []).forEach(t => {
@@ -108,6 +108,7 @@
             platform_flow_name: t.platform_flow_name || '',
             editor_url: t.editor_url || '',
             credential_id: t.credential_id || '',
+            webhook_signature_secret: t.webhook_signature_secret || '',
             is_healthy: t.is_healthy !== false,
             last_health_check: t.last_health_check,
             avg_execution_time_ms: t.avg_execution_time_ms != null ? t.avg_execution_time_ms : ''
@@ -341,6 +342,7 @@
         platform_flow_name: td.platform_flow_name || '',
         editor_url: td.editor_url || '',
         credential_id: td.credential_id || '',
+        webhook_signature_secret: td.webhook_signature_secret || '',
         is_healthy: td.is_healthy !== false,
         avg_execution_time_ms: td.avg_execution_time_ms === '' || td.avg_execution_time_ms == null ? '' : String(td.avg_execution_time_ms)
       };

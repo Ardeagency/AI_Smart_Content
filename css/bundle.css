@@ -104,6 +104,23 @@
     --color-info-light: rgba(0, 231, 255, 0.15);
     --color-info-bg: rgba(0, 231, 255, 0.1);
     --color-critical: #ff0000;
+    /* Builder accent (naranja warm específico del builder; el resto de la app usa --accent-warm gris) */
+    --builder-accent: #e09145;
+    --builder-accent-soft: rgba(224, 145, 69, 0.2);
+    --builder-accent-tint: rgba(224, 145, 69, 0.1);
+    --builder-accent-bg: rgba(224, 145, 69, 0.08);
+    /* Tokens auxiliares para reemplazar hardcoded */
+    --text-on-primary: #000000;
+    --text-on-critical: #ffffff;
+    --overlay-dark: rgba(0, 0, 0, 0.35);
+    --edge-stroke: #b1b1b7;
+    --border-light-soft: rgba(255, 255, 255, 0.25);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+    /* Z-index escala (anteriormente 1000+1000 colisión modal/toast) */
+    --z-panel: 100;
+    --z-dropdown: 200;
+    --z-modal: 1000;
+    --z-toast: 1100;
     --white-5: rgba(255, 255, 255, 0.05);
     --white-8: rgba(255, 255, 255, 0.08);
     --white-10: rgba(255, 255, 255, 0.1);

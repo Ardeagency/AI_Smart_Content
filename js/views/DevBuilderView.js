@@ -343,6 +343,15 @@ class DevBuilderView extends DevBaseView {
                     <label for="techDetailsCredentialId">Credential ID</label>
                     <input type="text" id="techDetailsCredentialId" placeholder="Opcional">
                 </div>
+                <div class="settings-field">
+                    <label for="techDetailsSignatureSecret">Signature secret (HMAC-SHA256)</label>
+                    <div class="signature-secret-row">
+                      <input type="text" id="techDetailsSignatureSecret" placeholder="Click «Generar» para crear un secret" readonly>
+                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureGenerate" title="Generar nuevo secret"><i class="ph ph-arrows-clockwise"></i></button>
+                      <button type="button" class="btn-small btn-ghost" id="techDetailsSignatureCopy" title="Copiar secret"><i class="ph ph-copy"></i></button>
+                    </div>
+                    <span class="field-help">Cada request al webhook incluirá el header <code>X-Flow-Signature: sha256=&lt;HMAC(secret, body)&gt;</code>. Verifica en tu endpoint para garantizar autenticidad.</span>
+                </div>
                   <div class="settings-field">
                     <label class="checkbox-label">
                       <input type="checkbox" id="techDetailsIsHealthy" checked>
@@ -423,6 +432,10 @@ class DevBuilderView extends DevBaseView {
           <i class="ph ph-warning"></i> <span class="builder-issues-label">Issues</span>
           <span class="builder-issues-count" id="builderIssuesCount" hidden>0</span>
         </button>
+        <button type="button" class="builder-versions-btn" id="builderVersionsBtn" title="Historial de versiones" aria-haspopup="dialog">
+          <i class="ph ph-clock-counter-clockwise"></i> <span class="builder-versions-label">Versiones</span>
+        </button>
+        <span class="builder-cost-badge" id="builderCostBadge" title="Coste estimado por ejecución"></span>
         <button type="button" class="builder-undo-btn" id="builderUndoBtn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
           <i class="ph ph-arrow-counter-clockwise"></i>
         </button>
@@ -465,6 +478,22 @@ class DevBuilderView extends DevBaseView {
             <button class="btn-builder-primary" id="runTestBtn">
               <i class="ph ph-play"></i> Ejecutar
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Historial de versiones (Fase 4) -->
+      <div class="modal builder-modal builder-versions-modal" id="versionsModal" hidden role="dialog" aria-labelledby="versionsTitle" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-versions">
+          <div class="modal-header">
+            <h3 id="versionsTitle"><i class="ph ph-clock-counter-clockwise"></i> Historial de versiones</h3>
+            <button type="button" class="modal-close" id="versionsClose" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="versions-list" id="versionsList">
+              <p class="versions-empty">Cargando…</p>
+            </div>
           </div>
         </div>
       </div>
@@ -633,6 +662,9 @@ class DevBuilderView extends DevBaseView {
       slot.setAttribute('aria-hidden', 'false');
       appHeader.classList.add('app-header--builder');
     }
+    // Fase 3: marcar el modo Builder con clase concreta (reemplaza :has(.builder-footer) frágil)
+    const appContainer = document.getElementById('app-container') || document.querySelector('#app-container');
+    if (appContainer) appContainer.classList.add('app-builder-mode');
   }
 
   async initSupabase() {
@@ -1199,6 +1231,11 @@ class DevBuilderView extends DevBaseView {
       });
       this._documentListeners = [];
     }
+    // Fase 3: limpiar marca del modo Builder cuando se sale de la vista
+    const appContainer = document.getElementById('app-container') || document.querySelector('#app-container');
+    if (appContainer) appContainer.classList.remove('app-builder-mode');
+    const appHeader = document.getElementById('appHeader');
+    if (appHeader) appHeader.classList.remove('app-header--builder');
     if (typeof super.destroy === 'function') super.destroy();
   }
 
