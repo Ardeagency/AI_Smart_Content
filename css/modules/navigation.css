@@ -3864,12 +3864,12 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 .nav-mode-developer .nav-dev-rank-value {
   font-family: var(--font-family);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 3px;
   text-transform: uppercase;
   color: #ffffff;
-  line-height: 18px;
+  line-height: 16px;
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
