@@ -189,7 +189,7 @@ class DevBuilderView extends DevBaseView {
                 </div>
                 <div class="settings-field">
                   <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="4"></textarea>
+                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
                 </div>
               </div>
               <!-- Sección 3: tipo de flujo, categoría, subcategoría, tipo de output -->
