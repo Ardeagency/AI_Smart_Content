@@ -4361,14 +4361,15 @@
     display: none;
 }
 
-/* "+" botón → círculo 30x30 inline en la fila de controls (al inicio).
-   Mismo tamaño que la altura de los pills para alineación perfecta. */
+/* "+" botón → square-rounded 32x32 inline en la fila de controls.
+   Misma altura que los pills (32 px) y mismo border-radius
+   (var(--radius-sm) = 8 px, igual que el botón Vera del sidebar). */
 .video-view-container .video-director-console-zone .video-director-controls .video-director-btn-add {
     flex-shrink: 0;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     padding: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--white-10);
     background: var(--white-8);
     color: var(--text-secondary);
@@ -4476,7 +4477,9 @@
     padding-top: 4px;
 }
 
-/* Toggles + selects unificados visualmente como pills sutiles */
+/* Toggles + selects unificados visualmente como pills neutrales.
+   Border-radius = var(--radius-sm) (8 px) para empatar con el botón
+   Vera del sidebar (mismo lenguaje de esquinas en toda la app). */
 .video-view-container .video-director-console-zone .video-director-toggle,
 .video-view-container .video-director-console-zone .video-director-select {
     height: 32px;
@@ -4484,7 +4487,7 @@
     font-size: 0.78rem;
     background: var(--white-8);
     border: 1px solid var(--white-10);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -4494,10 +4497,15 @@
     border-color: var(--white-20);
     color: var(--text-primary);
 }
+/* Estado activo: blanco/neutral. No usamos cyan ni colores de marca
+   para indicar estado — son señalización funcional, no acento brand. */
 .video-view-container .video-director-console-zone .video-director-toggle.active {
-    color: var(--color-info);
-    background: var(--color-info-light);
-    border-color: rgba(0, 231, 255, 0.35);
+    color: var(--text-primary);
+    background: var(--white-15);
+    border-color: var(--white-20);
+}
+.video-view-container .video-director-console-zone .video-director-toggle.active i {
+    color: var(--text-primary);
 }
 
 /* Selects nativos: ocultar el chevron del browser para que solo se vea
@@ -4536,7 +4544,9 @@
     pointer-events: none;
 }
 
-/* CTA principal "PROMPT" alineado a la derecha, prominente */
+/* CTA principal "PROMPT" alineado a la derecha, prominente.
+   Border-radius var(--radius-sm) = 8px para empatar con el botón
+   Vera del sidebar (mismo lenguaje de esquinas en toda la app). */
 .video-view-container .video-director-console-zone .video-director-btn-generate {
     margin-left: auto;
     display: inline-flex;
@@ -4544,7 +4554,7 @@
     gap: 8px;
     height: 36px;
     padding: 0 18px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     /* Gradiente sutil tipo "send" — usa el dynamic brand de la org si existe */
     background: var(--brand-gradient-dynamic, linear-gradient(135deg, #1f3a8a 0%, #0ea5e9 100%));
     border: none;
