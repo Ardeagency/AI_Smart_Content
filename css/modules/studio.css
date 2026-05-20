@@ -28,6 +28,14 @@
 .studio-canvas-empty {
   flex: 1;
   min-height: 120px;
+  /* Grid de puntos tipo n8n: dos capas para escalar visualmente.
+     Los puntos no compiten con el contenido — quedan sobre cualquier
+     fondo (canvas vacío, imagen del flow, gradient). */
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
 }
 
 /* ========== Estado automático: solo hero + formulario de programación ========== */
@@ -739,8 +747,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0;
+  padding: 12px 20px;
+  background: var(--bg-card);
   border-top: 1px solid var(--border-divider);
+  flex-shrink: 0;
 }
 
 .studio-layout--automated .studio-footer {
@@ -807,10 +817,8 @@
 .studio-sidebar-creative {
   width: 320px;
   min-width: 320px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--bg-card);
   border-left: 1px solid var(--border-divider, #242424);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
