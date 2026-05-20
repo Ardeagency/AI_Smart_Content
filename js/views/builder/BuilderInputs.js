@@ -1498,6 +1498,22 @@
           </div>
           ` : ''}
 
+          ${((field.input_type || field.type) === 'range') ? `
+          <div class="property-field">
+            <label for="propRangeDisplayStyle">Estilo del slider</label>
+            <select id="propRangeDisplayStyle">
+              <option value="simple" ${(field.display_style || 'simple') === 'simple' ? 'selected' : ''}>Simple (valor a la derecha)</option>
+              <option value="tooltip" ${field.display_style === 'tooltip' ? 'selected' : ''}>Tooltip (valor flotando sobre el thumb)</option>
+              <option value="range_dual" ${(field.display_style === 'range_dual' || field.display_style === 'dual' || field.display_style === 'range') ? 'selected' : ''}>Dual (min/max con 2 thumbs)</option>
+            </select>
+          </div>
+          <div class="property-field">
+            <label for="propRangeSuffix">Sufijo del valor (opcional)</label>
+            <input type="text" id="propRangeSuffix" value="${(field.suffix || '').replace(/"/g, '&quot;')}" placeholder="%, °, px, ...">
+            <span class="field-help">Se concatena al valor en tooltip/label (ej. 42%).</span>
+          </div>
+          ` : ''}
+
           ${((field.input_type || field.type) === 'scope_picker') ? `
           <div class="property-field">
             <label for="propVeraPrompt"><i class="ph ph-sparkle"></i> Prompt para Vera</label>
@@ -2245,6 +2261,33 @@
     if (veraPromptEl) {
       veraPromptEl.addEventListener('input', (e) => {
         field.vera_prompt = e.target.value;
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+
+    // Range display_style + suffix (solo range)
+    const rangeStyleEl = this.querySelector('#propRangeDisplayStyle');
+    if (rangeStyleEl) {
+      rangeStyleEl.addEventListener('change', (e) => {
+        field.display_style = e.target.value;
+        // Si cambia a range_dual, defaultValue debe ser array [min, max]
+        if (e.target.value === 'range_dual' && !Array.isArray(field.defaultValue) && (!field.defaultValue || typeof field.defaultValue !== 'object')) {
+          const lo = Math.floor(((field.min ?? 0) + (field.max ?? 100)) * 0.25);
+          const hi = Math.floor(((field.min ?? 0) + (field.max ?? 100)) * 0.75);
+          field.defaultValue = [lo, hi];
+        } else if (e.target.value !== 'range_dual' && Array.isArray(field.defaultValue)) {
+          field.defaultValue = field.defaultValue[0] ?? 50;
+        }
+        this.renderCanvas();
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    const rangeSuffixEl = this.querySelector('#propRangeSuffix');
+    if (rangeSuffixEl) {
+      rangeSuffixEl.addEventListener('input', (e) => {
+        field.suffix = e.target.value;
         this.renderCanvas();
         this.onFieldChange();
       });

@@ -466,13 +466,46 @@
     Object.keys(f).forEach(function (k) { if (f2[k] === undefined) f2[k] = f[k]; });
     return renderToggleInput(f2, o, isPreviewOpts(o));
   }
+  /** Range con 3 display_style: 'simple' (default, sin tooltip), 'tooltip'
+   *  (valor flotante sobre el thumb), 'range_dual' (2 thumbs min/max con
+   *  2 tooltips). El sufijo (%, °, px) se configura en f.suffix. */
   function formRange(f, opts) {
     var a = formAttrs(f, opts || {});
-    var min = f.min != null ? f.min : 0;
-    var max = f.max != null ? f.max : 100;
-    var step = f.step != null ? f.step : 1;
-    var val = f.defaultValue != null ? f.defaultValue : 50;
-    return '<div class="range-input"><input type="range" class="modern-input" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '><span class="range-value">' + val + '</span></div>';
+    var min = f.min != null ? Number(f.min) : 0;
+    var max = f.max != null ? Number(f.max) : 100;
+    var step = f.step != null ? Number(f.step) : 1;
+    var suffix = escapeHtml(f.suffix != null ? String(f.suffix) : '');
+    var display = (f.display_style || 'simple').toLowerCase();
+
+    // Range dual: 2 thumbs min/max, defaultValue como array [min, max] u objeto {min,max}
+    if (display === 'range_dual' || display === 'dual' || display === 'range') {
+      var dv = f.defaultValue;
+      var dvMin = (dv && typeof dv === 'object')
+        ? Number(dv.min != null ? dv.min : (Array.isArray(dv) ? dv[0] : min))
+        : (Array.isArray(dv) ? Number(dv[0]) : Math.floor((min + max) * 0.25));
+      var dvMax = (dv && typeof dv === 'object')
+        ? Number(dv.max != null ? dv.max : (Array.isArray(dv) ? dv[1] : max))
+        : (Array.isArray(dv) ? Number(dv[1]) : Math.floor((min + max) * 0.75));
+      return '<div class="range-input range-input--dual" data-min="' + min + '" data-max="' + max + '">' +
+        '<div class="range-tooltip range-tooltip--min" data-suffix="' + suffix + '">' + dvMin + suffix + '</div>' +
+        '<div class="range-tooltip range-tooltip--max" data-suffix="' + suffix + '">' + dvMax + suffix + '</div>' +
+        '<div class="range-track">' +
+          '<div class="range-track-fill" aria-hidden="true"></div>' +
+          '<input type="range" class="range-thumb range-thumb--min" min="' + min + '" max="' + max + '" step="' + step + '" value="' + dvMin + '"' + a.disabled + '>' +
+          '<input type="range" class="range-thumb range-thumb--max" min="' + min + '" max="' + max + '" step="' + step + '" value="' + dvMax + '"' + a.disabled + '>' +
+        '</div>' +
+        '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + dvMin + ',' + dvMax + '"' + (a.required || '') + '>' +
+        '</div>';
+    }
+
+    // Simple / tooltip: 1 thumb
+    var val = f.defaultValue != null ? Number(f.defaultValue) : 50;
+    var hasTooltip = display === 'tooltip';
+    return '<div class="range-input range-input--single' + (hasTooltip ? ' range-input--tooltip' : '') + '" data-min="' + min + '" data-max="' + max + '">' +
+      (hasTooltip ? '<div class="range-tooltip" data-suffix="' + suffix + '">' + val + suffix + '</div>' : '') +
+      '<input type="range" class="modern-input range-thumb" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '>' +
+      (!hasTooltip ? '<span class="range-value">' + val + suffix + '</span>' : '') +
+      '</div>';
   }
   /** Preview en canvas del Builder: bloque tipo acordeón para selectores de enfoque (solo scope_picker). */
   function previewFocusSelectorAccordion(f) {
@@ -1658,6 +1691,68 @@
     initAspectRatioPicker(container);
     initContainerTabs(container);
     initScopeVeraSwitches(container);
+    initRangeSliders(container);
+  }
+
+  /** Range sliders: actualizar la posición del fill (CSS var --range-fill) y
+   *  los tooltips en input event. Soporta single, tooltip y range_dual. */
+  function initRangeSliders(container) {
+    if (!container || !container.querySelectorAll) return;
+
+    container.querySelectorAll('.range-input--single').forEach(function (wrap) {
+      if (wrap.__rangeWired) return;
+      wrap.__rangeWired = true;
+      var input = wrap.querySelector('.range-thumb');
+      var tooltip = wrap.querySelector('.range-tooltip');
+      var valueEl = wrap.querySelector('.range-value');
+      if (!input) return;
+      var update = function () {
+        var min = Number(input.min) || 0;
+        var max = Number(input.max) || 100;
+        var val = Number(input.value);
+        var pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+        wrap.style.setProperty('--range-fill', pct + '%');
+        var suffix = (tooltip && tooltip.getAttribute('data-suffix')) || (valueEl ? '' : '');
+        if (tooltip) {
+          tooltip.textContent = val + suffix;
+          tooltip.style.left = pct + '%';
+        }
+        if (valueEl) valueEl.textContent = val + suffix;
+      };
+      update();
+      input.addEventListener('input', update);
+    });
+
+    container.querySelectorAll('.range-input--dual').forEach(function (wrap) {
+      if (wrap.__rangeWired) return;
+      wrap.__rangeWired = true;
+      var minInput = wrap.querySelector('.range-thumb--min');
+      var maxInput = wrap.querySelector('.range-thumb--max');
+      var minTip = wrap.querySelector('.range-tooltip--min');
+      var maxTip = wrap.querySelector('.range-tooltip--max');
+      var hidden = wrap.querySelector('input[type="hidden"]');
+      if (!minInput || !maxInput) return;
+      var update = function (justChanged) {
+        var min = Number(minInput.min) || 0;
+        var max = Number(minInput.max) || 100;
+        var lo = Number(minInput.value);
+        var hi = Number(maxInput.value);
+        // Evitar crossover
+        if (justChanged === 'min' && lo > hi) { lo = hi; minInput.value = lo; }
+        if (justChanged === 'max' && hi < lo) { hi = lo; maxInput.value = hi; }
+        var pctLo = max > min ? ((lo - min) / (max - min)) * 100 : 0;
+        var pctHi = max > min ? ((hi - min) / (max - min)) * 100 : 0;
+        wrap.style.setProperty('--range-fill-min', pctLo + '%');
+        wrap.style.setProperty('--range-fill-max', pctHi + '%');
+        var sfx = (minTip && minTip.getAttribute('data-suffix')) || '';
+        if (minTip) { minTip.textContent = lo + sfx; minTip.style.left = pctLo + '%'; }
+        if (maxTip) { maxTip.textContent = hi + sfx; maxTip.style.left = pctHi + '%'; }
+        if (hidden) hidden.value = lo + ',' + hi;
+      };
+      update();
+      minInput.addEventListener('input', function () { update('min'); });
+      maxInput.addEventListener('input', function () { update('max'); });
+    });
   }
 
   /** Toggle "Vera" del scope_picker: cuando se marca, el container añade

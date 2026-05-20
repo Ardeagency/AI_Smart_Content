@@ -4304,60 +4304,178 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Range / Value Slider — track sutil y thumb circular blanco con sombra
-   (estilo Apple/Linear). Reemplaza el slider nativo gris del browser. */
+/* ============================================================
+ * Range slider — 3 display_style: simple, tooltip, range_dual
+ * Accent teal #14b8a6 (más suave que warm para sliders); track con
+ * fill dinámico (CSS var --range-fill seteada por JS en input event)
+ * ============================================================ */
 .range-input {
+  --range-track-bg: #1f2a2a;
+  --range-track-fill: #14b8a6;
+  --range-thumb-bg: #ffffff;
+  --range-fill: 50%;
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
 }
-.range-input input[type="range"] {
+
+/* ---- Single (con o sin tooltip) ---- */
+.range-input--single {
+  position: relative;
+  padding-top: 4px;
+}
+.range-input--tooltip {
+  padding-top: 36px; /* espacio para tooltip arriba */
+}
+.range-input--single .range-thumb {
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
-  height: 4px;
-  background: linear-gradient(to right, var(--accent-warm, #e09145) 0%, var(--accent-warm, #e09145) var(--range-fill, 50%), #242424 var(--range-fill, 50%), #242424 100%);
-  border-radius: 2px;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    var(--range-track-fill) 0%,
+    var(--range-track-fill) var(--range-fill, 50%),
+    var(--range-track-bg) var(--range-fill, 50%),
+    var(--range-track-bg) 100%
+  );
+  border-radius: 3px;
   outline: none;
   cursor: pointer;
 }
-.range-input input[type="range"]::-webkit-slider-thumb {
+.range-input--single .range-thumb::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--range-thumb-bg);
   border: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.15);
   cursor: grab;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
-.range-input input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-.range-input input[type="range"]::-webkit-slider-thumb:active {
+.range-input--single .range-thumb::-webkit-slider-thumb:hover { transform: scale(1.1); }
+.range-input--single .range-thumb::-webkit-slider-thumb:active {
   cursor: grabbing;
   transform: scale(1.15);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 2px var(--accent-warm, #e09145);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 0 2px var(--range-track-fill);
 }
-.range-input input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+.range-input--single .range-thumb::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--range-thumb-bg);
   border: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   cursor: grab;
 }
-.range-input .range-value {
-  min-width: 36px;
+.range-input--single .range-value {
+  min-width: 40px;
   text-align: right;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+/* Tooltip flotante (se posiciona via JS con left:%) */
+.range-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: #141517;
+  border: 1px solid var(--range-track-fill);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.range-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: #141517;
+  border-right: 1px solid var(--range-track-fill);
+  border-bottom: 1px solid var(--range-track-fill);
+}
+
+/* ---- Range dual (min/max con 2 thumbs) ---- */
+.range-input--dual {
+  position: relative;
+  padding-top: 36px;
+  padding-bottom: 4px;
+  width: 100%;
+  display: block;
+}
+.range-input--dual .range-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: var(--range-track-bg);
+  border-radius: 3px;
+}
+.range-input--dual .range-track-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: var(--range-fill-min, 0%);
+  right: calc(100% - var(--range-fill-max, 100%));
+  background: var(--range-track-fill);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.range-input--dual .range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  transform: translateY(-50%);
+  background: transparent;
+  pointer-events: none; /* Solo el thumb captura eventos */
+  outline: none;
+}
+.range-input--dual .range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--range-thumb-bg);
+  border: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+.range-input--dual .range-thumb::-webkit-slider-thumb:hover { transform: scale(1.1); }
+.range-input--dual .range-thumb::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.15); }
+.range-input--dual .range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--range-thumb-bg);
+  border: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  cursor: grab;
 }
 
 /* Chips (choice + multi): pill buttons modernos con sombra al seleccionar */
