@@ -2623,19 +2623,26 @@
   justify-content: center;
 }
 
-.builder-tab-content.active {
-  display: block;
-}
-
-/* Canvas */
+/* Canvas: ocupa toda la altura disponible del tab content (flex column padre) */
 .builder-canvas {
   position: relative;
+  flex: 1 1 auto;
   min-height: 400px;
   background: transparent;
   border: 1px dashed #242424;
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Empty state y canvas-fields llenan el canvas vertical */
+.builder-canvas .canvas-empty-state {
+  flex: 1 1 auto;
+}
+.builder-canvas .canvas-fields {
+  flex: 1 1 auto;
 }
 
 /* Builder: canvas plano (sin marco glass) — el preview vive sobre el bg del builder */
