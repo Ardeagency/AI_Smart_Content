@@ -840,8 +840,8 @@
 
 /* ========== Sidebar ==========
    Patrón "floating card" alineado con Video: el aside es un wrapper
-   transparente con padding, y la card interna .studio-sidebar-content
-   flota con border + radius + sombra. */
+   transparente con padding (FIJO, sin scroll), y la card interna
+   .studio-sidebar-content es la que scrollea su propio contenido. */
 .studio-sidebar-creative {
   width: 360px;
   min-width: 360px;
@@ -851,8 +851,7 @@
   padding: var(--spacing-md, 16px);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   min-height: 0;
 }
 
@@ -905,12 +904,16 @@
 .studio-sidebar-content {
   flex: 1;
   width: 100%;
+  min-height: 0;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light, #212126);
   border-radius: 16px;
   padding: 14px 16px 18px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Formulario dinámico (input_schema) */

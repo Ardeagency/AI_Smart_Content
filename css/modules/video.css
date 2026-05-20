@@ -130,16 +130,18 @@
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
 }
-/* Sidebar Console: scroll propio; el contenido vive dentro de la card con efecto glass */
+/* Sidebar Console: wrapper FIJO (sin scroll); el scroll vive en la card
+   interna .video-sidebar-inner para que el padding del wrapper siempre
+   se vea y la card se sienta "flotando". */
 .video-sidebar,
 .video-sidebar-console {
     width: 360px;
     flex-shrink: 0;
     min-height: 0;
     padding: var(--spacing-md);
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     border-left: 1px solid var(--glass-black-border);
 }
 /* Video page: sin borde en el aside de Production Context */
@@ -149,6 +151,11 @@
 .video-sidebar-console .video-sidebar-card {
     width: 100%;
     border-radius: var(--glass-radius);
+    /* Propagar el flex del aside para que la card-inner pueda scrollear */
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 /* Production Context: mismo shell visual que Vera #veraInputWrap (.gpt-composer), sin max-width del chat */
 .video-view-container .video-sidebar-console .video-prompt-footer-card.video-sidebar-card {
@@ -164,6 +171,12 @@
     /* Sombra alineada con Studio sidebar para que ambas cards "floten" igual */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     transition: border-color 0.15s;
+    /* Scroll dentro de la card flotante (no en el aside wrapper) */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 .video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner:focus-within {
     border-color: rgba(255, 255, 255, 0.18);
@@ -175,15 +188,20 @@
     border-radius: 16px;
 }
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light, #212126);
+    /* Mismo sistema glass-black que el footer de Studio (tokens oficiales,
+       sin hardcodear rgba/blur propios). */
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
     border-radius: 16px;
     padding: 12px 12px 14px 14px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    color: var(--glass-black-text);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     transition: border-color 0.15s;
 }
 .video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console:focus-within {
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
 }
 /* Textarea: fondo negro era del .video-director-brief-input (p. ej. rgba(0,0,0,0.8) vía .video-prompt-wrap), no del contenedor. Alineado a Brain .gpt-composer-textarea. */
 .video-view-container .video-main-director .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input,
