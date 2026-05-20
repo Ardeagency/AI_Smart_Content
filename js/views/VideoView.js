@@ -208,7 +208,7 @@ class VideoView extends BaseView {
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
-                    <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="videoImageUpload" accept="image/jpeg,image/png,image/jpg,video/mp4,video/quicktime,video/x-msvideo" multiple style="display: none;" aria-hidden="true">
 
                     <div class="video-director-console-content">
                       <textarea
@@ -260,7 +260,7 @@ class VideoView extends BaseView {
                 <div class="video-prompt-footer-card video-prompt-footer-card-center">
                   <div class="video-prompt-footer-card-inner video-director-console">
 
-                    <input type="file" id="seedanceImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                    <input type="file" id="seedanceImageUpload" accept="image/jpeg,image/png,image/jpg,video/mp4,video/quicktime,video/x-msvideo" multiple style="display: none;" aria-hidden="true">
 
                     <div class="video-director-console-content">
                       <textarea
@@ -1833,8 +1833,13 @@ class VideoView extends BaseView {
       const description = window.prompt('Descripción (opcional):', '') || '';
       await this.uploadAndAddKlingElement({ name, description, imageFiles: images });
     } else {
-      if (window.alert) {
-        window.alert('Añade 2–4 imágenes (JPG/PNG) o 1 video (MP4/MOV) por elemento.');
+      // Validación de Kling API: necesita 2-4 imágenes O 1 video por
+      // elemento. Mostramos toast en lugar del alert nativo modal.
+      const msg = 'Necesitas 2 a 4 imágenes (JPG/PNG) o 1 video (MP4/MOV) por elemento de referencia.';
+      if (typeof window.showToast === 'function') {
+        window.showToast(msg, { type: 'warning', duration: 6000 });
+      } else if (window.alert) {
+        window.alert(msg);
       }
     }
   }
