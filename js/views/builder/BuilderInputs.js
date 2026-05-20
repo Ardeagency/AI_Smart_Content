@@ -106,6 +106,8 @@
     'color_slider':      { section: 'visual',     sub: 'Hue slider' },
     'white_balance':     { section: 'visual',     sub: 'Temperatura' },
     'rotation_dial':     { section: 'visual',     sub: 'Rotación' },
+    'position_picker':   { section: 'visual',     sub: 'Punto en cuadrícula' },
+    'visual_grid_picker':{ section: 'visual',     sub: 'Cards visuales' },
     // Audio
     'audio_mood':        { section: 'audio',      sub: 'Mood' },
     'lang_selector':     { section: 'audio',      sub: 'Idioma / Voz' },
@@ -192,6 +194,8 @@
         { name: 'Hue slider' },
         { name: 'Temperatura' },
         { name: 'Rotación' },
+        { name: 'Punto en cuadrícula' },
+        { name: 'Cards visuales' },
         { name: 'Aspect ratio' },
         { name: 'Imagen' },
         { name: 'Archivo' },
@@ -950,6 +954,8 @@
         ['color_slider',    'Hue slider (rainbow)'],
         ['white_balance',   'Temperatura (frío↔cálido)'],
         ['rotation_dial',   'Rotación (dial ticks)'],
+        ['position_picker', 'Punto en cuadrícula (3×3)'],
+        ['visual_grid_picker','Cards visuales (SVG por opción)'],
         ['aspect_ratio',    'Aspect ratio'],
         ['image_selector',  'Selector de imagen'],
         ['scope_picker',    'Enfoque producción'],
@@ -1061,7 +1067,7 @@
   const TYPES_WITH_OPTIONS = new Set([
     'dropdown','select','radio','checkboxes','selection_checkboxes',
     'choice_chips','multi_select_chips','flags','colores','aspect_ratio',
-    'segmented_control'
+    'segmented_control','visual_grid_picker','position_picker'
   ]);
   const TYPES_WITH_STEPS = new Set(['steps_slider']);
   const TYPES_WITH_RANGE = new Set(['range','num_stepper','number','color_slider','white_balance','rotation_dial']);
@@ -1239,7 +1245,24 @@
       if (!Array.isArray(field.children)) field.children = [];
       if (!field.display_style) field.display_style = 'flat';
     }
+    // Position picker: 9 puntos discretos, defaultValue centro
+    if (newType === 'position_picker') {
+      if (field.defaultValue == null) field.defaultValue = 'center';
+    }
+    // Visual grid picker: options de cards con icon
+    if (newType === 'visual_grid_picker') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [
+          { value: 'option_a', label: 'Opción A', icon: 'placeholder' },
+          { value: 'option_b', label: 'Opción B', icon: 'placeholder' }
+        ];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.options[0].value;
+    }
   };
+
+  // Visual_grid_picker también usa options
+  // (TYPES_WITH_OPTIONS ya incluye los choice; añadimos el nuevo)
 
   // Containers permitidos: estos input_types pueden tener children y display_style
   const TYPES_CONTAINER = new Set(['section', 'scope_picker']);

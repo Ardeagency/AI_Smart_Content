@@ -166,7 +166,10 @@
     // Tier 3 — sliders especializados
     color_slider: 'COLOR_SLIDER_CONTAINER',
     white_balance: 'WHITE_BALANCE_CONTAINER',
-    rotation_dial: 'ROTATION_DIAL_CONTAINER'
+    rotation_dial: 'ROTATION_DIAL_CONTAINER',
+    // Tier 4 — visual pickers (video / fotografía)
+    position_picker: 'POSITION_PICKER_CONTAINER',
+    visual_grid_picker: 'VISUAL_GRID_PICKER_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
@@ -897,6 +900,96 @@
     return renderSegmentedControl(f, {}, true);
   }
 
+  /** position_picker: cuadrado 2D con 9 puntos seleccionables (3×3 grid).
+   *  Variable = string key del punto (top-left, center, bottom-right, etc.).
+   *  Ideal para vanishing_point_bias, transition_anchor, focus_point, etc. */
+  var POSITION_PICKER_DEFAULTS = [
+    { value: 'top-left',    label: 'Sup. Izq.' },
+    { value: 'top-center',  label: 'Sup. Centro' },
+    { value: 'top-right',   label: 'Sup. Der.' },
+    { value: 'mid-left',    label: 'Med. Izq.' },
+    { value: 'center',      label: 'Centro' },
+    { value: 'mid-right',   label: 'Med. Der.' },
+    { value: 'bot-left',    label: 'Inf. Izq.' },
+    { value: 'bot-center',  label: 'Inf. Centro' },
+    { value: 'bot-right',   label: 'Inf. Der.' }
+  ];
+  function renderPositionPicker(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var positions = (Array.isArray(f.options) && f.options.length === 9) ? f.options : POSITION_PICKER_DEFAULTS;
+    var selected = f.defaultValue != null ? String(f.defaultValue) : 'center';
+    var dots = positions.map(function (p, i) {
+      var v = optVal(p);
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(optLabel(p));
+      var isSel = (selected === v || selected === String(v));
+      return '<button type="button" class="position-picker-dot' + (isSel ? ' selected' : '') + '"' +
+        ' data-value="' + vs + '" data-index="' + i + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' title="' + lbl + '" aria-label="' + lbl + '"' +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '"></button>';
+    }).join('');
+    var currentLabel = escapeHtml((positions.find(function (p) { return String(optVal(p)) === selected; }) || { label: 'Centro' }).label || selected);
+    return '<div class="position-picker" data-picker-key="' + escapeHtml(f.key || '') + '">' +
+      '<div class="position-picker-grid">' + dots + '</div>' +
+      '<div class="position-picker-label">' + currentLabel + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formPositionPicker(f, opts) { return renderPositionPicker(f, opts || {}, isPreviewOpts(opts)); }
+  function previewPositionPicker(f) { return renderPositionPicker(f, {}, true); }
+
+  /** visual_grid_picker: grid 2-col de cards con SVG visual + label. Útil
+   *  para movimientos de cámara (Static, Push In, Dolly Left, etc.), tipos
+   *  de transición, ángulos visuales, etc. Cada option tiene { value,
+   *  label, icon } donde icon es una key del VISUAL_ICON_LIBRARY. */
+  var VISUAL_ICON_LIBRARY = {
+    static:        '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/><circle cx="24" cy="18" r="1.5" fill="currentColor"/></svg>',
+    push_in:       '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/><path d="M19 18 h10 M25 14 l4 4 -4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pull_out:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/><path d="M29 18 h-10 M23 14 l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dolly_left:    '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="15" y="6" width="24" height="24" rx="2"/><path d="M11 18 h-6 M8 14 l-3 4 3 4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dolly_right:   '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="24" height="24" rx="2"/><path d="M37 18 h6 M40 14 l3 4 -3 4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dolly_up:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="12" width="30" height="20" rx="2"/><path d="M24 8 v-6 M20 5 l4 -3 4 3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dolly_down:    '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="4" width="30" height="20" rx="2"/><path d="M24 28 v6 M20 31 l4 3 4 -3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pan_left:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/><path d="M18 18 h-7 M14 14 l-3 4 3 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 11 v14" stroke-dasharray="2 2"/></svg>',
+    pan_right:     '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/><path d="M30 18 h7 M34 14 l3 4 -3 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 11 v14" stroke-dasharray="2 2"/></svg>',
+    orbit:         '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="24" cy="18" rx="16" ry="6"/><circle cx="20" cy="18" r="2" fill="currentColor"/><circle cx="34" cy="20" r="1.5"/></svg>',
+    rotation_360:  '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="14" y="9" width="20" height="18" rx="2" stroke-dasharray="2 2"/><path d="M14 9 a3 3 0 0 0 -2 3 M34 9 a3 3 0 0 1 2 3 M14 27 a3 3 0 0 1 -2 -3 M34 27 a3 3 0 0 0 2 -3" stroke-linecap="round"/></svg>',
+    handheld:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="11" y="8" width="26" height="20" rx="2" transform="rotate(-3 24 18)"/><rect x="11" y="8" width="26" height="20" rx="2" opacity="0.4" transform="rotate(3 24 18)"/></svg>',
+    tracking:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="18" r="2" fill="currentColor"/><path d="M14 18 h8" stroke-dasharray="2 2"/><rect x="24" y="8" width="20" height="20" rx="2"/></svg>',
+    fpv:           '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8 L36 18 L14 28 Z" stroke-linejoin="round"/></svg>',
+    zoom_in:       '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="22" cy="16" r="8"/><path d="M28 22 l8 8 M18 16 h8 M22 12 v8" stroke-linecap="round"/></svg>',
+    zoom_out:      '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="22" cy="16" r="8"/><path d="M28 22 l8 8 M18 16 h8" stroke-linecap="round"/></svg>',
+    placeholder:   '<svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="6" width="30" height="24" rx="2"/></svg>'
+  };
+  function renderVisualGridPicker(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
+    if (optionsList.length === 0) {
+      return '<div class="visual-grid-picker visual-grid-picker--empty"><i class="ph ph-squares-four"></i><span>Sin opciones configuradas. Edita las opciones del campo en el panel de propiedades.</span></div>';
+    }
+    var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
+    var cards = optionsList.map(function (o) {
+      var v = optVal(o);
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(optLabel(o));
+      var iconKey = (o.icon || o.svg_id || String(v).toLowerCase().replace(/[^a-z0-9]+/g, '_')).toLowerCase();
+      var svg = VISUAL_ICON_LIBRARY[iconKey] || VISUAL_ICON_LIBRARY.placeholder;
+      var isSel = (selected === v || selected === String(v));
+      return '<button type="button" class="visual-grid-card' + (isSel ? ' selected' : '') + '"' +
+        ' data-value="' + vs + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' +
+        '<span class="visual-grid-svg">' + svg + '</span>' +
+        '<span class="visual-grid-label">' + lbl + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="visual-grid-picker" data-picker-key="' + escapeHtml(f.key || '') + '">' +
+      '<div class="visual-grid-cards">' + cards + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formVisualGridPicker(f, opts) { return renderVisualGridPicker(f, opts || {}, isPreviewOpts(opts)); }
+  function previewVisualGridPicker(f) { return renderVisualGridPicker(f, {}, true); }
+
   /** Color slider: range con gradient HSL arcoíris (variable = grados hue 0-360).
    *  Útil para selección rápida de hue. Acompañado de un swatch visual del color
    *  actual a la derecha. */
@@ -1422,6 +1515,14 @@
     ROTATION_DIAL_CONTAINER: {
       preview: previewRotationDial,
       form: formRotationDial
+    },
+    POSITION_PICKER_CONTAINER: {
+      preview: previewPositionPicker,
+      form: formPositionPicker
+    },
+    VISUAL_GRID_PICKER_CONTAINER: {
+      preview: previewVisualGridPicker,
+      form: formVisualGridPicker
     }
   };
 
@@ -1474,6 +1575,8 @@
     register('color_slider', { preview: previewColorSlider, form: formColorSlider });
     register('white_balance', { preview: previewWhiteBalance, form: formWhiteBalance });
     register('rotation_dial', { preview: previewRotationDial, form: formRotationDial });
+    register('position_picker', { preview: previewPositionPicker, form: formPositionPicker });
+    register('visual_grid_picker', { preview: previewVisualGridPicker, form: formVisualGridPicker });
 
     register('section', {
       preview: function (f) {
@@ -1692,6 +1795,54 @@
     initContainerTabs(container);
     initScopeVeraSwitches(container);
     initRangeSliders(container);
+    initPositionPickers(container);
+    initVisualGridPickers(container);
+  }
+
+  /** Position picker: clic en un punto cambia el seleccionado, actualiza
+   *  el label visible y el hidden input. */
+  function initPositionPickers(container) {
+    if (!container || !container.querySelectorAll) return;
+    container.querySelectorAll('.position-picker').forEach(function (picker) {
+      if (picker.__pickerWired) return;
+      picker.__pickerWired = true;
+      var hidden = picker.querySelector('input[type="hidden"]');
+      var label = picker.querySelector('.position-picker-label');
+      picker.querySelectorAll('.position-picker-dot').forEach(function (dot) {
+        dot.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          picker.querySelectorAll('.position-picker-dot').forEach(function (d) {
+            d.classList.toggle('selected', d === dot);
+            d.setAttribute('aria-pressed', d === dot ? 'true' : 'false');
+          });
+          var v = dot.getAttribute('data-value');
+          if (hidden) hidden.value = v;
+          if (label) label.textContent = dot.getAttribute('title') || v;
+        });
+      });
+    });
+  }
+
+  /** Visual grid picker: clic en una card la marca como seleccionada. */
+  function initVisualGridPickers(container) {
+    if (!container || !container.querySelectorAll) return;
+    container.querySelectorAll('.visual-grid-picker').forEach(function (picker) {
+      if (picker.__pickerWired) return;
+      picker.__pickerWired = true;
+      var hidden = picker.querySelector('input[type="hidden"]');
+      picker.querySelectorAll('.visual-grid-card').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          picker.querySelectorAll('.visual-grid-card').forEach(function (c) {
+            c.classList.toggle('selected', c === card);
+            c.setAttribute('aria-pressed', c === card ? 'true' : 'false');
+          });
+          if (hidden) hidden.value = card.getAttribute('data-value');
+        });
+      });
+    });
   }
 
   /** Range sliders: actualizar la posición del fill (CSS var --range-fill) y
