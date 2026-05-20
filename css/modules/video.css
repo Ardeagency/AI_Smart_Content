@@ -4353,53 +4353,52 @@
    - controles en una sola fila inferior con CTA prominente a la derecha
    ============================================================ */
 
-/* Header row: ocultar el "•  DIRECTOR CONSOLE · Kling 3.0" — ruido. */
-.video-view-container .video-director-console-zone .video-console-header-row .video-console-dot,
-.video-view-container .video-director-console-zone .video-console-header-row .video-console-label-text,
-.video-view-container .video-director-console-zone .video-console-header-row .video-console-sep,
-.video-view-container .video-director-console-zone .video-console-header-row .video-console-model-text {
+/* Header row completo y "Cambiar" eliminados del HTML.
+   Si quedaran nodos legacy renderizados por otra vista, los ocultamos
+   defensivamente. */
+.video-view-container .video-director-console-zone .video-console-header-row,
+.video-view-container .video-director-console-zone .video-console-model-change {
     display: none;
 }
 
-/* Header row queda solo con "Cambiar" alineado a la derecha, discreto */
-.video-view-container .video-director-console-zone .video-console-header-row {
-    display: flex;
-    justify-content: flex-end;
-    padding: 0;
-    margin: 0;
-    border: none;
-    min-height: 0;
-}
-.video-view-container .video-director-console-zone .video-console-model-change {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease;
-}
-.video-view-container .video-director-console-zone .video-console-model-change:hover {
-    color: var(--text-primary);
-    background: var(--white-8);
-}
-
-/* "+" botón → círculo pequeño tipo ChatGPT (sin border dashed) */
-.video-view-container .video-director-console-zone .video-director-btn-add {
+/* "+" botón → círculo 30x30 inline en la fila de controls (al inicio).
+   Mismo tamaño que la altura de los pills para alineación perfecta. */
+.video-view-container .video-director-console-zone .video-director-controls .video-director-btn-add {
+    flex-shrink: 0;
     width: 30px;
     height: 30px;
+    padding: 0;
     border-radius: 50%;
     border: 1px solid var(--white-10);
     background: var(--white-8);
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.video-view-container .video-director-console-zone .video-director-btn-add:hover {
+.video-view-container .video-director-console-zone .video-director-controls .video-director-btn-add:hover {
     background: var(--white-15);
     color: var(--text-primary);
     border-color: var(--white-20);
+}
+
+/* Attachments row (lista de imágenes + variables): ABAJO del textarea,
+   default OCULTO. Se muestra solo si algún descendiente tiene contenido
+   (imágenes adjuntas o variables de cinematografía aplicadas). */
+.video-view-container .video-director-console-zone .video-director-attachments-row {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+.video-view-container .video-director-console-zone .video-director-attachments-row:has(*:not(:empty)) {
+    display: flex;
+    margin-top: 4px;
+    margin-bottom: 6px;
 }
 
 /* Textarea: sin background, sin border. Solo texto sobre la card.
@@ -4466,18 +4465,6 @@
     padding: 2px 0 4px;
     border: none;
     background: transparent;
-}
-
-/* Top row (botón + + chips de imágenes): muy tight, casi inline con prompt */
-.video-view-container .video-director-console-zone .video-director-top-row {
-    gap: 6px;
-    margin-bottom: 4px;
-    min-height: 30px;
-}
-
-/* Variables row (Cinematografía) — cuando vacía, sin altura extra */
-.video-view-container .video-director-console-zone .video-director-variables-row:empty {
-    display: none;
 }
 
 /* Controles inferiores: una sola fila tipo toolbar minimalista */

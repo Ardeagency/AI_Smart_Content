@@ -210,19 +210,6 @@ class VideoView extends BaseView {
 
                     <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
 
-                    <div class="video-console-header-row">
-                      <span class="video-console-dot" aria-hidden="true"></span>
-                      <span class="video-console-label-text">Director Console</span>
-                      <span class="video-console-sep" aria-hidden="true">·</span>
-                      <span class="video-console-model-text" id="videoConsoleModelText">Kling 3.0</span>
-                      <button type="button" class="video-console-model-change" id="videoModelChangeBtn" aria-label="Cambiar modelo de video"><i class="fas fa-arrow-left" aria-hidden="true"></i> Cambiar</button>
-                    </div>
-
-                    <div class="video-director-top-row">
-                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                      <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                    </div>
-                    <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
                     <div class="video-director-console-content">
                       <textarea
                         id="videoPromptInput"
@@ -234,8 +221,12 @@ class VideoView extends BaseView {
                       ></textarea>
                       <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.</p>
                     </div>
-                    <div class="video-director-separator" aria-hidden="true"></div>
+                    <div class="video-director-attachments-row">
+                      <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                      <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
+                    </div>
                     <div class="video-director-controls">
+                      <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
                       <div class="video-prompt-mode-wrap">
@@ -271,19 +262,6 @@ class VideoView extends BaseView {
 
                     <input type="file" id="seedanceImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
 
-                    <div class="video-console-header-row">
-                      <span class="video-console-dot" aria-hidden="true"></span>
-                      <span class="video-console-label-text">Director Console</span>
-                      <span class="video-console-sep" aria-hidden="true">·</span>
-                      <span class="video-console-model-text" id="seedanceConsoleModelText">Seedance 2.0</span>
-                      <button type="button" class="video-console-model-change" id="seedanceModelChangeBtn" aria-label="Cambiar modelo de video"><i class="fas fa-arrow-left" aria-hidden="true"></i> Cambiar</button>
-                    </div>
-
-                    <div class="video-director-top-row">
-                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="Añadir referencia visual"><i class="fas fa-plus"></i></button>
-                      <div class="video-kling-elements-list" id="seedanceElementsList" aria-live="polite"></div>
-                    </div>
-
                     <div class="video-director-console-content">
                       <textarea
                         id="seedancePromptInput"
@@ -294,10 +272,12 @@ class VideoView extends BaseView {
                         aria-label="Storyboard narrativo (Seedance lo cocina con OpenAI)"
                       ></textarea>
                     </div>
-
-                    <div class="video-director-separator" aria-hidden="true"></div>
+                    <div class="video-director-attachments-row">
+                      <div class="video-kling-elements-list" id="seedanceElementsList" aria-live="polite"></div>
+                    </div>
 
                     <div class="video-director-controls">
+                      <button type="button" class="video-director-btn-add" id="seedancePromptAdd" aria-label="Añadir referencia visual"><i class="fas fa-plus"></i></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceGenAudioToggle" title="Generar audio" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Audio</span></button>
                       <button type="button" class="video-director-toggle video-prompt-toggle" id="seedanceWebSearchToggle" title="Búsqueda online" aria-pressed="false"><i class="fas fa-globe"></i><span>Web</span></button>
                       <div class="video-prompt-aspect-wrap">
