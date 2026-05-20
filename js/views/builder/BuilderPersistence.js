@@ -6,6 +6,54 @@
   'use strict';
   const P = DevBuilderView.prototype;
 
+  /** Normaliza cualquier shape que venga de la DB en `input_schema` a un array
+   *  válido de fields. Acepta:
+   *    [ {...}, {...} ]            → directo
+   *    { fields: [...] }           → extrae fields
+   *    { inputs: [...] }           → variant legacy
+   *    null / undefined / object   → []
+   *  Cada field se sanitiza: requiere `key`, normaliza `default → defaultValue`,
+   *  `name → key`, `type → input_type`, descarta fields con shape inválido.
+   */
+  P.normalizeInputSchema = function (raw) {
+    let arr = [];
+    if (Array.isArray(raw)) {
+      arr = raw;
+    } else if (raw && typeof raw === 'object') {
+      if (Array.isArray(raw.fields)) arr = raw.fields;
+      else if (Array.isArray(raw.inputs)) arr = raw.inputs;
+      else if (Array.isArray(raw.schema)) arr = raw.schema;
+    }
+    if (!Array.isArray(arr)) return [];
+    const seenKeys = new Set();
+    const out = [];
+    for (const raw of arr) {
+      if (!raw || typeof raw !== 'object') continue;
+      const f = { ...raw };
+      // key: usar key, sino name, sino id, sino skip
+      const key = f.key || f.name || f.id;
+      if (!key) continue;
+      f.key = String(key).toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      if (!f.key) continue;
+      // Evitar keys duplicadas (último gana suffix)
+      let finalKey = f.key, n = 1;
+      while (seenKeys.has(finalKey)) { finalKey = `${f.key}_${n++}`; }
+      f.key = finalKey;
+      seenKeys.add(finalKey);
+      // input_type: normalizar nombres
+      f.input_type = (f.input_type || f.type || 'text').toString();
+      f.type = f.input_type;
+      // defaultValue: aceptar defaultValue || default
+      if (f.defaultValue === undefined && f.default !== undefined) {
+        f.defaultValue = f.default;
+      }
+      // label fallback
+      if (!f.label) f.label = f.key;
+      out.push(f);
+    }
+    return out;
+  };
+
   P.loadFlow = async function () {
     if (!this.supabase || !this.flowId) return;
     
@@ -88,11 +136,7 @@
         }));
         this.currentFlowModuleId = this.flowModules[0].id;
         const first = modulesList[0];
-        if (first.input_schema?.fields) {
-          this.inputSchema = first.input_schema.fields;
-        } else if (Array.isArray(first.input_schema)) {
-          this.inputSchema = first.input_schema;
-        }
+        this.inputSchema = this.normalizeInputSchema(first.input_schema);
         const moduleIds = modulesList.map(m => m.id);
         const { data: techDetailsList } = await this.supabase
           .from('flow_technical_details')
@@ -124,9 +168,7 @@
       } else {
         this.flowModules = [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
       }
-      // Normalizar input_type en cada campo para que el canvas muestre el cascarón correcto (number, select, checkbox, etc.)
-      // Nota: content_flows.input_schema legacy ya no existe en el schema; fuente de verdad = flow_modules[0].input_schema
-      this.inputSchema = this.inputSchema.map(f => ({ ...f, input_type: f.input_type || f.type || 'text' }));
+      // (normalizeInputSchema ya garantizó input_type y forma de cada field)
       // Modo de ejecución: 1 módulo = lineal (single_step), 2+ = secuencial
       if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
 
@@ -322,7 +364,7 @@
       webhook_url_test: m.webhook_url_test || '',
       webhook_url_prod: m.webhook_url_prod || '',
       input_schema: i === 0
-        ? { fields: this.inputSchema }
+        ? { fields: this.normalizeInputSchema(this.inputSchema) }
         : (m.input_schema != null && typeof m.input_schema === 'object' ? m.input_schema : {}),
       output_schema: m.output_schema != null && typeof m.output_schema === 'object' ? m.output_schema : null,
       is_human_approval_required: !!m.is_human_approval_required,
@@ -592,7 +634,7 @@
       flow_category_type: this.flowData.flow_category_type,
       token_cost: this.flowData.token_cost,
       version: this.flowData.version,
-      input_schema: { fields: this.inputSchema },
+      input_schema: { fields: this.normalizeInputSchema(this.inputSchema) },
       ui_layout_config: this.uiLayoutConfig,
       technical: {
         webhook_method: this.technicalDetails.webhook_method,
