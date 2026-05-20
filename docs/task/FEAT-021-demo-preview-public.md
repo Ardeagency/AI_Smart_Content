@@ -13,7 +13,7 @@ All mutations are blocked at three layers (DB RLS, JS interceptor, UI banner).
 
 | Layer | File | Notes |
 |---|---|---|
-| **SQL bootstrap** | `SQL/migrations/2026_05_19_demo_mode_bootstrap.sql` | RESTRICTIVE policies on 86 org-scoped tables + sensitive-SELECT blocks + auto-join trigger + cron cleanup (TTL 2h, runs every 30 min) + FK CASCADE on org_members.user_id + v_profiles_humans view |
+| **SQL bootstrap** | `SQL/migrations/2026_05_19_demo_mode_bootstrap.sql` | RESTRICTIVE policies on 86 org-scoped tables + sensitive-SELECT blocks + `organizations.is_demo` flag (UNIQUE partial — only 1 demo org allowed) + anon auto-join trigger (resolves demo org dynamically) + developer auto-admin trigger + cron cleanup (TTL 2h, runs every 30 min) + FK CASCADE on org_members.user_id + v_profiles_humans view |
 | **Anon auth** | Supabase Dashboard | `external_anonymous_users_enabled=true` applied via Management API |
 | **Entry view** | `js/views/DemoEntryView.js` | Splash that calls `supabase.auth.signInAnonymously()` and redirects to `/org/000000000001/ignis/vera` |
 | **DemoGuard** | `js/services/DemoGuard.js` | Detects anon session, monkey-patches Supabase client to intercept mutations, owns CTA modal |
