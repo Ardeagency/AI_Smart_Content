@@ -2303,15 +2303,21 @@
 
 .builder-components-search-icon {
   position: absolute;
-  left: var(--spacing-md);
-  font-size: var(--font-size-md);
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
   color: var(--text-muted);
   pointer-events: none;
+  line-height: 1;
 }
 
+/* ID selector para ganar especificidad sobre la regla global de inputs del builder
+   (que aplicaba padding: 8px 12px y borraba el espacio reservado para la lupa) */
+#componentsSearchInput,
 .builder-components-search {
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 2.25rem;
+  padding: 8px 12px 8px 34px;
   font-size: 0.8125rem;
   color: var(--text-primary);
   background: #141517;
