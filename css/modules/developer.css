@@ -3828,13 +3828,39 @@
   font-style: italic;
 }
 
-/* Cuando Vera está ON: ocultar children del scope_picker */
-[data-container-type="scope_picker"].is-vera-mode > .input-container-body,
-[data-container-type="scope_picker"].is-vera-mode > .input-accordion-body,
-[data-container-type="scope_picker"].is-vera-mode > .input-tabs-header,
-[data-container-type="scope_picker"].is-vera-mode > .input-tabs-body,
-[data-container-type="scope_picker"].is-vera-mode > details > .input-accordion-body {
-  display: none;
+/* Cuando Vera está ON: los children NO se ocultan — siguen visibles porque
+   el LLM necesita conocer qué variables debe llenar (las keys se envían junto
+   con el vera_prompt como instrucción). UX: dimmed + disabled + badge "Vera". */
+[data-container-type="scope_picker"].is-vera-mode .input-container-body,
+[data-container-type="scope_picker"].is-vera-mode .input-accordion-body,
+[data-container-type="scope_picker"].is-vera-mode .input-tabs-body {
+  opacity: 0.55;
+  pointer-events: none;
+  filter: saturate(0.7);
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  position: relative;
+}
+/* Badge "Vera" sobre cada child para que el usuario vea qué variables el LLM
+   va a completar usando el prompt + el contexto del producto/marca. */
+[data-container-type="scope_picker"].is-vera-mode .input-container-child {
+  position: relative;
+}
+[data-container-type="scope_picker"].is-vera-mode .input-container-child::after {
+  content: '✨ Vera llenará';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 2px 4px rgba(236, 72, 153, 0.25);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* Drop zones: cuando hay drag activo desde la biblioteca, los bodies de

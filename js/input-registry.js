@@ -524,12 +524,16 @@
           '<span class="scope-vera-label"><i class="ph ph-sparkle"></i> Vera</span>' +
         '</label>';
     }
-    // Panel del prompt de Vera (visible cuando switch ON; el dev lo configura en builder)
+    // Panel del prompt de Vera (visible cuando switch ON; el dev lo configura en builder).
+    // Al ejecutar el flow, las KEYS de los children se envían junto con este prompt
+    // para que el LLM entienda QUÉ variables debe llenar y CÓMO (según el prompt y
+    // el contexto del producto/marca). Los children quedan visibles pero disabled
+    // como referencia de qué va a llenar el LLM.
     var veraPanel = '';
     if (isScopePicker) {
       veraPanel =
         '<div class="scope-vera-panel" aria-hidden="true">' +
-          '<div class="scope-vera-panel-label"><i class="ph ph-sparkle"></i> Vera generará los valores usando este prompt:</div>' +
+          '<div class="scope-vera-panel-label"><i class="ph ph-sparkle"></i> Vera llenará estas variables siguiendo el prompt:</div>' +
           '<div class="scope-vera-prompt">' + (veraPrompt || '<span class="scope-vera-prompt-empty">Sin prompt configurado. El dev debe definirlo en el builder.</span>') + '</div>' +
         '</div>';
     }

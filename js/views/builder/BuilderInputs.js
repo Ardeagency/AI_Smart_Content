@@ -1495,8 +1495,8 @@
           ${((field.input_type || field.type) === 'scope_picker') ? `
           <div class="property-field">
             <label for="propVeraPrompt"><i class="ph ph-sparkle"></i> Prompt para Vera</label>
-            <textarea id="propVeraPrompt" rows="4" placeholder="Cuando el usuario active el switch &quot;Vera&quot;, este texto se enviará al LLM para que genere los valores de los inputs anidados...">${(field.vera_prompt || '').replace(/</g, '&lt;')}</textarea>
-            <span class="field-help">Si el usuario activa el switch Vera, los children se ocultan y este prompt se usa para que el LLM genere los valores.</span>
+            <textarea id="propVeraPrompt" rows="4" placeholder="Ej: Adáptate al producto y a la marca para crear un personaje protagonista coherente. Decide cabello, ojos y etnia que mejor encajen con el target.">${(field.vera_prompt || '').replace(/</g, '&lt;')}</textarea>
+            <span class="field-help">Cuando el usuario active el switch <b>Vera</b>, este prompt se envía al LLM junto con las <i>keys</i> de los inputs anidados (cabello, ojos, etc.). Vera genera el valor de cada variable siguiendo este prompt y el contexto del producto/marca.</span>
           </div>
           ` : ''}
 
