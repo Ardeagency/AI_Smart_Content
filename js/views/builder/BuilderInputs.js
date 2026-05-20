@@ -405,16 +405,20 @@
   };
 
   P.setupDragAndDrop = function () {
-    // Componentes arrastrables
+    // Componentes arrastrables (el panel se re-renderiza al cambiar de sección
+    // del rail, así que estos listeners SÍ se attachan cada vez sobre nodos
+    // nuevos del DOM — no se duplican).
     const components = this.querySelectorAll('.component-item');
     components.forEach(comp => {
       comp.addEventListener('dragstart', (e) => this.handleComponentDragStart(e));
       comp.addEventListener('dragend', (e) => this.handleDragEnd(e));
     });
-    
-    // Canvas como drop zone
+
+    // Canvas como drop zone: flag para no duplicar listeners (el #builderCanvas
+    // es DOM estable, sobrevive a los re-renders).
     const canvas = this.querySelector('#builderCanvas');
-    if (canvas) {
+    if (canvas && !canvas.__dropWired) {
+      canvas.__dropWired = true;
       canvas.addEventListener('dragover', (e) => this.handleDragOver(e));
       canvas.addEventListener('dragleave', (e) => this.handleDragLeave(e));
       canvas.addEventListener('drop', (e) => this.handleDrop(e));
@@ -783,15 +787,24 @@
     });
 
     root.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const field = e.target.closest && e.target.closest('.canvas-field');
-      if (!field) return;
-      field.classList.remove('drag-target');
-      const i = getIndex(field);
-      if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== i && i >= 0) {
-        this.reorderField(this.draggedFieldIndex, i);
+      // Distinguir entre reorder (drag desde otro canvas-field) y new_component
+      // (drag desde la biblioteca de la izquierda). Solo consumimos el evento
+      // si es REORDER — los new_component deben burbujear al #builderCanvas
+      // para que handleDrop los procese.
+      let payload = null;
+      try { payload = JSON.parse(e.dataTransfer.getData('text/plain') || 'null'); } catch (_) {}
+      if (payload && payload.type === 'reorder') {
+        e.preventDefault();
+        e.stopPropagation();
+        const field = e.target.closest && e.target.closest('.canvas-field');
+        if (!field) return;
+        field.classList.remove('drag-target');
+        const i = getIndex(field);
+        if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== i && i >= 0) {
+          this.reorderField(this.draggedFieldIndex, i);
+        }
       }
+      // Si es new_component → no stopPropagation, dejar que #builderCanvas lo maneje
     });
 
     // 3. Sync de inputs internos → defaultValue del schema (delegado a input/change que burbujean)
