@@ -796,8 +796,11 @@
 }
 
 .studio-btn-producir {
-  padding: 0.6rem 1.25rem;
-  border-radius: 999px;
+  /* Mismo radio que el botón Vera del sidebar (var(--radius-sm) = 8px).
+     Forma rectangular más ancha y baja que el pill original. */
+  padding: 6px 28px;
+  min-width: 140px;
+  border-radius: var(--radius-sm);
   border: 1px solid rgba(15, 23, 42, 0.14);
   background-color: #ffffff;
   background-image: none;
