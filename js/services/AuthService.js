@@ -379,12 +379,10 @@ class AuthService {
     // Notificar listeners
     this.notifyListeners('signed_out', null);
 
-    // Redirigir al login usando router
-    if (window.router) {
-      window.router.navigate('/login', true);
-    } else {
-      window.location.href = '/login.html';
-    }
+    // Tras cerrar sesión devolvemos al usuario a la landing oficial
+    // (https://aismartcontent.io). El acceso al login vive en la landing como
+    // "Acceder" → console.aismartcontent.io/login.
+    window.location.href = 'https://aismartcontent.io';
   }
 
   /**
@@ -741,9 +739,14 @@ class AuthService {
       return { success: false, error: 'Supabase no está disponible' };
     }
 
+    // /cambiar-contrasena es ruta de la app (console), no de la landing.
+    // Usamos el origin actual para que el flujo funcione tanto en producción
+    // (console.aismartcontent.io) como en deploy previews de Netlify.
+    const redirectTo = `${window.location.origin}/cambiar-contrasena`;
+
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://aismartcontent.io/cambiar-contrasena'
+        redirectTo
       });
 
       if (error) {
@@ -752,7 +755,7 @@ class AuthService {
         if (isServerError) {
           return {
             success: false,
-            error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): https://aismartcontent.io/cambiar-contrasena'
+            error: `Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ${redirectTo}`
           };
         }
         return { success: false, error: msg };
@@ -765,7 +768,7 @@ class AuthService {
       if (is500) {
         return {
           success: false,
-          error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): https://aismartcontent.io/cambiar-contrasena'
+          error: `Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ${redirectTo}`
         };
       }
       return { success: false, error: err?.message || 'Error al enviar el correo. Intenta de nuevo.' };
