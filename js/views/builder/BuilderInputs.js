@@ -460,26 +460,54 @@
   P.handleDragOver = function (e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    this.querySelector('#builderCanvas')?.classList.add('drag-over');
+    const canvas = this.querySelector('#builderCanvas');
+    canvas?.classList.add('drag-over');
+    // Highlight del container body bajo el cursor (si lo hay)
+    const containerBody = e.target.closest(
+      '.input-container-body, .input-accordion-body, .input-tab-panel, .input-container--empty, .input-container-empty-msg'
+    );
+    canvas?.querySelectorAll('.drop-target-container').forEach(el => {
+      if (el !== containerBody) el.classList.remove('drop-target-container');
+    });
+    if (containerBody) containerBody.classList.add('drop-target-container');
   };
 
   P.handleDragLeave = function (e) {
     if (!e.currentTarget.contains(e.relatedTarget)) {
-      this.querySelector('#builderCanvas')?.classList.remove('drag-over');
+      const canvas = this.querySelector('#builderCanvas');
+      canvas?.classList.remove('drag-over');
+      canvas?.querySelectorAll('.drop-target-container').forEach(el => el.classList.remove('drop-target-container'));
     }
   };
 
   P.handleDrop = function (e) {
     e.preventDefault();
-    this.querySelector('#builderCanvas')?.classList.remove('drag-active', 'drag-over');
-    
+    const canvas = this.querySelector('#builderCanvas');
+    canvas?.classList.remove('drag-active', 'drag-over');
+    // Limpiar drop-target highlights de containers
+    canvas?.querySelectorAll('.drop-target-container').forEach(el => el.classList.remove('drop-target-container'));
+
     try {
       const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-      
+
       if (data.type === 'new_component') {
-        this.addField(data.templateId, data.templateData);
+        // Drop dentro de un container: el body, accordion-body, tab-panel
+        // o el empty-msg de un container vacío. Subimos al ancestro con
+        // data-container-key para obtener la key del container destino.
+        const containerEl = e.target.closest(
+          '.input-container-body, .input-accordion-body, .input-tab-panel, .input-container--empty, .input-container-empty-msg'
+        );
+        let containerKey = null;
+        if (containerEl) {
+          containerKey = containerEl.getAttribute('data-container-key');
+          if (!containerKey) {
+            const ancestor = containerEl.closest('[data-container-key]');
+            if (ancestor) containerKey = ancestor.getAttribute('data-container-key');
+          }
+        }
+        this.addField(data.templateId, data.templateData, containerKey);
       } else if (data.type === 'reorder') {
-        // Reordenamiento de campos existentes
+        // Reordenamiento de campos existentes (solo root por ahora)
         this.reorderField(data.fromIndex, this.getDropIndex(e));
       }
     } catch (err) {
@@ -487,7 +515,31 @@
     }
   };
 
-  P.addField = function (templateId, templateDataFromDrag) {
+  /** Resolución recursiva: dado un `key` de container, devuelve el array
+   *  `children` correspondiente dentro del inputSchema. Si no se encuentra
+   *  o no hay key, devuelve el root inputSchema. */
+  P.findContainerChildrenArray = function (containerKey) {
+    if (!containerKey) return this.getCanvasFields();
+    const root = this.getCanvasFields();
+    const isContainer = (f) => ['section', 'scope_picker'].indexOf(f && f.input_type) >= 0;
+    const search = (arr) => {
+      for (const f of arr) {
+        if (!f || typeof f !== 'object') continue;
+        if (f.key === containerKey && isContainer(f)) {
+          if (!Array.isArray(f.children)) f.children = [];
+          return f.children;
+        }
+        if (Array.isArray(f.children)) {
+          const found = search(f.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return search(root) || root;
+  };
+
+  P.addField = function (templateId, templateDataFromDrag, containerKey) {
     const template = this.componentTemplates.find(t => String(t.id) === String(templateId));
     // Deep clone para que options/flags_category/etc. no se compartan por referencia entre plantilla y campo
     const cloneDeep = (o) => {
@@ -499,7 +551,7 @@
       : (templateDataFromDrag && typeof templateDataFromDrag === 'object' ? cloneDeep(templateDataFromDrag) : {});
     const defaultUi = template?.default_ui_config && typeof template.default_ui_config === 'object' ? cloneDeep(template.default_ui_config) : {};
     const fieldName = this.generateFieldKey(template?.name || templateId);
-    
+
     const newField = {
       key: fieldName,
       label: template?.name || 'Campo',
@@ -516,14 +568,24 @@
         hidden: defaultUi.hidden != null ? defaultUi.hidden : false
       }
     };
-    
-    const fields = this.getCanvasFields();
-    fields.push(newField);
+    // Si el field nuevo es a su vez container, inicializar children
+    if (newField.input_type === 'section' || newField.input_type === 'scope_picker') {
+      if (!Array.isArray(newField.children)) newField.children = [];
+      if (!newField.display_style) newField.display_style = 'flat';
+    }
+
+    // Resolver dónde insertar: dentro de un container (drop sobre él) o en root
+    const targetArr = this.findContainerChildrenArray(containerKey);
+    targetArr.push(newField);
     this.hasUnsavedChanges = true;
     this.renderCanvas();
     this.updateJsonPreview();
-    
-    this.selectField(fields.length - 1);
+
+    // Solo seleccionar si insertamos en root (los children no tienen overlay
+    // de edición todavía en Fase 2A — Fase 2B lo añadirá)
+    if (!containerKey) {
+      this.selectField(targetArr.length - 1);
+    }
   };
 
   /** Sanitiza una key candidata: lowercase, [^a-z0-9_]→'_', sin dobles/leading/trailing _.

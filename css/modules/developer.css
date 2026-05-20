@@ -3721,6 +3721,33 @@
   position: relative;
 }
 
+/* Drop zones: cuando hay drag activo desde la biblioteca, los bodies de
+   los containers se vuelven drop targets visibles. */
+.builder-canvas.drag-active .input-container-body,
+.builder-canvas.drag-active .input-accordion-body,
+.builder-canvas.drag-active .input-tab-panel.active {
+  outline: 1px dashed rgba(255, 255, 255, 0.18);
+  outline-offset: 4px;
+  transition: outline-color 0.15s ease, background 0.15s ease;
+  border-radius: 6px;
+}
+.builder-canvas .drop-target-container {
+  outline: 2px dashed var(--accent-warm, #e09145) !important;
+  outline-offset: 4px;
+  background: rgba(224, 145, 69, 0.06);
+}
+/* El container vacío también es drop target prominente */
+.builder-canvas.drag-active .input-container-empty-msg {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.02);
+}
+.builder-canvas .input-container-empty-msg.drop-target-container,
+.builder-canvas .input-container--empty.drop-target-container {
+  border-color: var(--accent-warm, #e09145);
+  background: rgba(224, 145, 69, 0.08);
+  color: var(--accent-warm, #e09145);
+}
+
 /* ============================================================
  * Tier 3 — Sliders especializados (color/temperature/rotation)
  * ============================================================ */
