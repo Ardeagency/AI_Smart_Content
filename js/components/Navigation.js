@@ -1988,6 +1988,27 @@ class Navigation {
           });
         }
       });
+
+      // Cierre instantáneo del dropdown al activar cualquier acción interna
+      // (links, botones, radios del switcher Consumidor/Desarrollador). Antes
+      // cada handler individual era responsable de cerrarlo y algunos no lo
+      // hacían (ej. logout) o lo cerraban tarde tras awaits. Usamos pointerdown
+      // para que el cierre ocurra antes que el evento click vuelva al handler
+      // específico — feedback visual inmediato.
+      if (!userDropdown._closeOnActionBound) {
+        userDropdown._closeOnActionBound = true;
+        const closeOnAction = (e) => {
+          const actionable = e.target.closest('a, button, input[type="radio"], label');
+          if (actionable && userDropdown.contains(actionable)) {
+            userDropdown.classList.remove('active');
+          }
+        };
+        userDropdown.addEventListener('pointerdown', closeOnAction);
+        userDropdown.addEventListener('keydown', (e) => {
+          // Enter/Space sobre un actionable también dispara la acción → cerrar.
+          if (e.key === 'Enter' || e.key === ' ') closeOnAction(e);
+        });
+      }
     }
 
     // Logout
