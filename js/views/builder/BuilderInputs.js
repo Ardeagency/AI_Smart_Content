@@ -6,16 +6,62 @@
   'use strict';
   const P = DevBuilderView.prototype;
 
-  /** Mapeo de icon_name a nombre de icono Phosphor cuando no coincide (Phosphor no tiene "type", etc.) */
+  /** Mapeo de icon_name → ícono Phosphor del subset (css/phosphor-subset.css). Cualquier
+   *  ícono que no exista en el subset aquí se rutea a un fallback disponible. */
   const PHOSPHOR_ICON_MAP = {
-    type: 'text-h',
-    tags: 'tag',
-    placeholder: 'square'
+    // mapeos legacy
+    type: 'textbox',
+    tags: 'list-bullets',
+    placeholder: 'squares-four',
+    // íconos comunes de templates que no están en el subset
+    'caret-down': 'caret-down',
+    'squares-four': 'squares-four',
+    'radio-button': 'check-circle',
+    'list-checks': 'list-checks',
+    'check-square': 'check-circle',
+    hash: 'squares-four',
+    sliders: 'sliders',
+    'toggle-left': 'sliders',
+    flag: 'globe',
+    palette: 'image',
+    crop: 'image',
+    target: 'sparkle',
+    storefront: 'stack',
+    package: 'stack',
+    users: 'stack',
+    image: 'image',
+    microphone: 'note',
+    ruler: 'sliders',
+    layout: 'squares-four',
+    minus: 'list-bullets',
+    textbox: 'textbox',
+    aperture: 'image',
+    'video-camera': 'play',
+    mountains: 'image',
+    user: 'stack',
+    megaphone: 'note',
+    'share-network': 'tree-structure',
+    database: 'stack',
+    shapes: 'squares-four',
+    square: 'squares-four'
   };
+
+  /** Lista de íconos del subset (CSS phosphor-subset.css) — todo lo demás cae a 'squares-four'. */
+  const PHOSPHOR_SUBSET = new Set([
+    'arrow-counter-clockwise','arrow-right','arrow-square-out','arrows-clockwise','arrows-out',
+    'brackets-curly','cardholder','caret-down','caret-left','caret-right','caret-up','check','check-circle',
+    'clock','clock-counter-clockwise','cloud','code','copy','cursor-click','dots-six-vertical','download',
+    'eraser','flask','floppy-disk','folder-simple','gear','globe','hand-pointing','heartbeat','image','info',
+    'link','list-bullets','list-checks','magnifying-glass','note','pencil','pencil-simple','play','plus',
+    'plus-circle','question','robot','sliders','sliders-horizontal','sparkle','spin','spinner','squares-four',
+    'stack','terminal','textbox','timer','trash','tree-structure','upload-simple','warning','warning-circle',
+    'webhooks-logo','wrench','x','x-circle'
+  ]);
 
   P.getPhosphorIconName = function (iconName) {
     if (!iconName) return 'textbox';
-    return PHOSPHOR_ICON_MAP[iconName] || iconName;
+    const mapped = PHOSPHOR_ICON_MAP[iconName] || iconName;
+    return PHOSPHOR_SUBSET.has(mapped) ? mapped : 'squares-four';
   };
 
   // ==================================================================
@@ -23,13 +69,13 @@
   // se asigna a una sección por input_type O por category creativa.
   // ==================================================================
   P.LIBRARY_SECTIONS = [
-    { key: 'text',      name: 'Texto',      icon: 'text-aa',     inputTypes: ['text','textarea','string','tags'] },
-    { key: 'choice',    name: 'Selección',  icon: 'list-checks', inputTypes: ['dropdown','select','choice_chips','multi_select_chips','radio','checkboxes','selection_checkboxes','flags','toggle_switch','checkbox','multi_select'] },
-    { key: 'numeric',   name: 'Numérico',   icon: 'hash',        inputTypes: ['number','num_stepper','range'] },
-    { key: 'visual',    name: 'Visual',     icon: 'palette',     inputTypes: ['colores','aspect_ratio','scope_picker','image_selector','focus_selector','color'] },
-    { key: 'data',      name: 'Datos',      icon: 'database',    inputTypes: ['brand_selector','entity_selector','audience_selector','product_selector','tone_selector','length_selector','campaign_selector','cron_selector','flow_selector'] },
-    { key: 'structure', name: 'Estructura', icon: 'rows',        inputTypes: ['section','divider','heading','description','description_block'] },
-    { key: 'templates', name: 'Plantillas', icon: 'sparkle',     categories: ['preset','style','motion','scene','protagonist','branding','distribution','controls'] }
+    { key: 'text',      name: 'Texto',      icon: 'textbox',       inputTypes: ['text','textarea','string','tags'] },
+    { key: 'choice',    name: 'Selección',  icon: 'list-checks',   inputTypes: ['dropdown','select','choice_chips','multi_select_chips','radio','checkboxes','selection_checkboxes','flags','toggle_switch','checkbox','multi_select'] },
+    { key: 'numeric',   name: 'Numérico',   icon: 'sliders',       inputTypes: ['number','num_stepper','range'] },
+    { key: 'visual',    name: 'Visual',     icon: 'image',         inputTypes: ['colores','aspect_ratio','scope_picker','image_selector','focus_selector','color'] },
+    { key: 'data',      name: 'Datos',      icon: 'stack',         inputTypes: ['brand_selector','entity_selector','audience_selector','product_selector','tone_selector','length_selector','campaign_selector','cron_selector','flow_selector'] },
+    { key: 'structure', name: 'Estructura', icon: 'list-bullets',  inputTypes: ['section','divider','heading','description','description_block'] },
+    { key: 'templates', name: 'Plantillas', icon: 'sparkle',       categories: ['preset','style','motion','scene','protagonist','branding','distribution','controls'] }
   ];
 
   /** Decide a qué sección pertenece un template (templates creativos primero, luego por input_type). */
@@ -81,20 +127,20 @@
     const escapeAttr = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
     const escapeHtml = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
 
-    // Render rail
+    // Render rail (solo icono + tooltip, estilo Weavy)
     if (rail) {
       rail.innerHTML = this.LIBRARY_SECTIONS.map(s => {
         const count = buckets[s.key].length;
         if (count === 0) return '';
         const isActive = s.key === activeKey;
+        const icon = this.getPhosphorIconName(s.icon);
         return `
           <button type="button"
                   class="components-rail-item ${isActive ? 'is-active' : ''}"
                   data-section="${escapeAttr(s.key)}"
                   title="${escapeAttr(s.name)}"
                   aria-label="${escapeAttr(s.name)}">
-            <i class="ph ph-${escapeHtml(s.icon)}"></i>
-            <span class="components-rail-label">${escapeHtml(s.name)}</span>
+            <i class="ph ph-${escapeHtml(icon)}"></i>
           </button>
         `;
       }).join('');

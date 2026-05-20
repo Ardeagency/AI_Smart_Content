@@ -1604,7 +1604,7 @@
 }
 
 .builder-main.builder-tab-inputs-active {
-  grid-template-columns: 260px 1fr 280px;
+  grid-template-columns: 320px 1fr 300px;
 }
 
 /* Modo automatizado: misma estructura de 3 columnas pero columna componentes a 0 (no se elimina del DOM) */
@@ -2152,10 +2152,10 @@
 
 @media (max-width: 1200px) {
   .builder-main.builder-tab-inputs-active {
-    grid-template-columns: 220px 1fr 240px;
+    grid-template-columns: 280px 1fr 260px;
   }
   .builder-main.builder-mode-automated.builder-tab-inputs-active {
-    grid-template-columns: 0 1fr 240px;
+    grid-template-columns: 0 1fr 260px;
   }
 }
 
@@ -2222,10 +2222,10 @@
   color: var(--dev-primary);
 }
 
-/* Biblioteca estilo Weavy: rail estrecho con secciones + panel ancho con search+grid */
+/* Biblioteca estilo Weavy: rail estrecho solo-icono + panel ancho con search+grid */
 .builder-sidebar.builder-components {
   display: grid;
-  grid-template-columns: 56px 1fr;
+  grid-template-columns: 48px 1fr;
   background: var(--bg-secondary);
 }
 
@@ -2233,7 +2233,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 6px;
+  padding: 10px 6px;
   background: #0B0B0B;
   border-right: 1px solid #242424;
   overflow-y: auto;
@@ -2242,11 +2242,11 @@
 
 .components-rail-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -2269,18 +2269,6 @@
 .components-rail-item i {
   font-size: 18px;
   line-height: 1;
-}
-
-.components-rail-label {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  opacity: 0.85;
 }
 
 .components-panel {
