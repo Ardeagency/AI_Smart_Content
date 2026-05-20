@@ -4502,6 +4502,42 @@
     border-color: rgba(0, 231, 255, 0.35);
 }
 
+/* Selects nativos: ocultar el chevron del browser para que solo se vea
+   el chevron FA posicionado absoluto en el wrap. Reservar 26px a la
+   derecha para que el chevron no monte sobre el valor del select. */
+.video-view-container .video-director-console-zone .video-director-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0 26px 0 12px;
+    background-image: none;
+}
+.video-view-container .video-director-console-zone .video-director-select::-ms-expand {
+    display: none;
+}
+
+/* Wrap del select alineado con la altura del pill (32 px) y chevron FA
+   centrado verticalmente a 10 px del borde derecho */
+.video-view-container .video-director-console-zone .video-prompt-mode-wrap,
+.video-view-container .video-director-console-zone .video-prompt-aspect-wrap,
+.video-view-container .video-director-console-zone .video-prompt-duration-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+}
+.video-view-container .video-director-console-zone .video-prompt-mode-wrap .video-prompt-aspect-chevron,
+.video-view-container .video-director-console-zone .video-prompt-aspect-wrap .video-prompt-aspect-chevron,
+.video-view-container .video-director-console-zone .video-prompt-duration-wrap .video-prompt-aspect-chevron {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
 /* CTA principal "PROMPT" alineado a la derecha, prominente */
 .video-view-container .video-director-console-zone .video-director-btn-generate {
     margin-left: auto;
