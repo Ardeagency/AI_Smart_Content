@@ -234,7 +234,9 @@ class SignInView extends BaseView {
       }
 
       if (result.error === 'EMAIL_NOT_VERIFIED' || (result.message && result.message.includes('verifica'))) {
-        alert('Por favor verifica tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
+        const target = `/verification?email=${encodeURIComponent(email)}`;
+        if (window.router) window.router.navigate(target, true);
+        else window.location.href = target;
         return;
       }
       const msg = result.error && result.error.includes('Invalid')

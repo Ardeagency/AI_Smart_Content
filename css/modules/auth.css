@@ -637,3 +637,97 @@
     text-align: center;
 }
 
+/* ── /verification + /creation_process — pantallas de onboarding ───── */
+.verification-card {
+    text-align: center;
+}
+
+.verification-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0.25rem auto 0;
+    color: rgba(0, 231, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.verification-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.verification-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.verification-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #a0a0a0);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.verification-email {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    word-break: break-all;
+}
+
+.verification-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b6b6b);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.verification-status {
+    font-size: 0.85rem;
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    line-height: 1.4;
+}
+.verification-status[hidden] { display: none; }
+.verification-status--ok {
+    color: var(--text-primary);
+    background: rgba(0, 214, 20, 0.12);
+    border: 1px solid rgba(0, 214, 20, 0.35);
+}
+.verification-status--err {
+    color: #fca5a5;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+/* Spinner usado en /creation_process */
+.creation-spinner {
+    width: 56px;
+    height: 56px;
+    margin: 0.25rem auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.creation-spinner-ring {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.08);
+    border-top-color: rgba(0, 231, 255, 0.95);
+    animation: creation-spin 1.1s linear infinite;
+}
+@keyframes creation-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .creation-spinner-ring { animation: none; border-top-color: rgba(0, 231, 255, 0.45); }
+}

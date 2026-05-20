@@ -389,10 +389,10 @@ class AuthService {
 
   /**
    * Determinar ruta de redirección para usuario autenticado.
-   * Según modo: developer → /dev/dashboard, user → primera organización o /create.
+   * Según modo: developer → /dev/dashboard, user → primera organización o /creation_process.
    */
   async determineRedirectRoute(userId) {
-    if (!userId) return '/create';
+    if (!userId) return '/creation_process';
 
     try {
       const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
@@ -402,17 +402,18 @@ class AuthService {
       return await this.getDefaultUserRoute(userId);
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/create';
+      return '/creation_process';
     }
   }
 
   /**
-   * Obtener ruta por defecto para usuario consumidor: primera org (Dashboard) o /create si no tiene org.
+   * Obtener ruta por defecto para usuario consumidor: primera org (Dashboard)
+   * o /creation_process si todavía no tiene org/role/workspace asignado.
    * @param {string} userId - ID del usuario
-   * @returns {Promise<string>} /org/:id/dashboard o /create
+   * @returns {Promise<string>} /org/:id/dashboard o /creation_process
    */
   async getDefaultUserRoute(userId) {
-    if (!this.supabase || !userId) return '/create';
+    if (!this.supabase || !userId) return '/creation_process';
     try {
       const selectedId = localStorage.getItem('selectedOrganizationId') || window.appState?.get?.('selectedOrganizationId');
       const [membersRes, ownedRes] = await Promise.all([
@@ -428,16 +429,16 @@ class AuthService {
       (ownedRes.data || []).forEach((o) => {
         if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
       });
-      if (list.length === 0) return '/create';
+      if (list.length === 0) return '/creation_process';
       const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
       if (typeof window.getOrgPathPrefix === 'function') {
         const prefix = window.getOrgPathPrefix(org.id, org.name);
-        return prefix ? `${prefix}/dashboard` : '/create';
+        return prefix ? `${prefix}/dashboard` : '/creation_process';
       }
       return `/org/${org.id}/dashboard`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
-      return '/create';
+      return '/creation_process';
     }
   }
 

@@ -167,6 +167,11 @@ class App {
 
     // ── Públicas (lazy) ──
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);
+    // /verification: usuario aún no ha verificado su correo (pública — viene de
+    // login con EMAIL_NOT_VERIFIED). /creation_process: ya verificó pero no
+    // tiene org/role asignado (auth — espera al aprovisionamiento del workspace).
+    r.register('/verification', this._lazy('VerificationView', ['/js/views/VerificationView.js']), pub);
+    r.register('/creation_process', this._lazy('CreationProcessView', ['/js/views/CreationProcessView.js']), auth);
     // Privacidad/Términos/Eliminación de datos migradas a la landing aismartcontent.io.
     // Los redirects 301 viven en netlify.toml; no se registran rutas SPA para evitar
     // que el router las intercepte y ejecute el redirect en el servidor.
