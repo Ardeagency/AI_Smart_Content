@@ -500,7 +500,9 @@
   /** Renderiza un contenedor (scope_picker o section) con sus children anidados.
    *  display_style soportado: 'flat' (default), 'accordion', 'tabs', 'bordered'.
    *  Si display_style='tabs', cada child cuyo input_type sea section/scope_picker
-   *  se vuelve una tab; el resto va al panel del primer tab. */
+   *  se vuelve una tab; el resto va al panel del primer tab.
+   *  Para scope_picker: el header incluye un toggle "Vera" que cuando ON
+   *  oculta los children y envía un prompt predefinido al LLM. */
   function renderContainerField(f, opts, isPreview, sourceType) {
     opts = opts || {};
     var display = (f.display_style || 'flat').toLowerCase();
@@ -509,6 +511,28 @@
     var description = escapeHtml(f.section_description || f.description || '');
     var key = escapeHtml(f.key || '');
     var typeAttr = ' data-container-type="' + escapeHtml(sourceType || (f.input_type || 'section')) + '"';
+
+    // Vera switch (solo scope_picker)
+    var isScopePicker = sourceType === 'scope_picker' || f.input_type === 'scope_picker';
+    var veraPrompt = escapeHtml(f.vera_prompt || '');
+    var veraSwitch = '';
+    if (isScopePicker) {
+      veraSwitch =
+        '<label class="scope-vera-toggle" title="Cuando está activado, Vera genera los valores usando el prompt predefinido">' +
+          '<input type="checkbox" class="scope-vera-input" data-vera-key="' + key + '"' + (isPreview ? ' disabled' : '') + '>' +
+          '<span class="scope-vera-track"><span class="scope-vera-thumb"></span></span>' +
+          '<span class="scope-vera-label"><i class="ph ph-sparkle"></i> Vera</span>' +
+        '</label>';
+    }
+    // Panel del prompt de Vera (visible cuando switch ON; el dev lo configura en builder)
+    var veraPanel = '';
+    if (isScopePicker) {
+      veraPanel =
+        '<div class="scope-vera-panel" aria-hidden="true">' +
+          '<div class="scope-vera-panel-label"><i class="ph ph-sparkle"></i> Vera generará los valores usando este prompt:</div>' +
+          '<div class="scope-vera-prompt">' + (veraPrompt || '<span class="scope-vera-prompt-empty">Sin prompt configurado. El dev debe definirlo en el builder.</span>') + '</div>' +
+        '</div>';
+    }
 
     var renderChild = function (child) {
       // Hashing recursivo a renderFormFieldWithWrapper sin estructura wrapperClass studio-field
@@ -525,7 +549,8 @@
     // Empty state: si el container no tiene children todavía, mostrar dropzone visual
     if (children.length === 0) {
       return '<div class="input-container input-container--' + display + ' input-container--empty"' + typeAttr + ' data-container-key="' + key + '">' +
-        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
+        veraPanel +
         '<div class="input-container-empty-msg"><i class="ph ph-rows"></i><span>Contenedor vacío — arrastra inputs aquí</span></div>' +
         '</div>';
     }
@@ -553,8 +578,9 @@
       // Single accordion: todo el container colapsable
       var bodyChildren = children.map(renderChild).join('');
       return '<details class="input-container input-container--accordion"' + typeAttr + ' data-container-key="' + key + '" open>' +
-        '<summary class="input-accordion-summary"><span>' + (label || 'Sección') + '</span><i class="ph ph-caret-down"></i></summary>' +
+        '<summary class="input-accordion-summary"><span>' + (label || 'Sección') + '</span>' + veraSwitch + '<i class="ph ph-caret-down"></i></summary>' +
         (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+        veraPanel +
         '<div class="input-accordion-body">' + bodyChildren + '</div>' +
         '</details>';
     }
@@ -576,7 +602,8 @@
           return '<div class="input-tab-panel' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '">' + cChildren + '</div>';
         }).join('');
         return '<div class="input-container input-container--tabs"' + typeAttr + ' data-container-key="' + key + '">' +
-          (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+          ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
+          veraPanel +
           '<div class="input-tabs-header" role="tablist">' + tabsHtml + '</div>' +
           '<div class="input-tabs-body">' + panelsHtml + '</div>' +
           '</div>';
@@ -584,7 +611,8 @@
       // Fallback: si no hay sub-containers, mostrar como flat con un mensaje
       var flatHtml = children.map(renderChild).join('');
       return '<div class="input-container input-container--tabs input-container--tabs-flat"' + typeAttr + ' data-container-key="' + key + '">' +
-        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
+        veraPanel +
         '<p class="input-container-hint">Añade un section/scope_picker como child para crear tabs.</p>' +
         '<div class="input-container-body">' + flatHtml + '</div>' +
         '</div>';
@@ -594,8 +622,9 @@
     if (display === 'bordered') {
       var borderedHtml = children.map(renderChild).join('');
       return '<div class="input-container input-container--bordered"' + typeAttr + ' data-container-key="' + key + '">' +
-        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
         (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+        veraPanel +
         '<div class="input-container-body">' + borderedHtml + '</div>' +
         '</div>';
     }
@@ -603,8 +632,9 @@
     // Default: flat — solo el label (si hay) + children sin borde
     var flatChildren = children.map(renderChild).join('');
     return '<div class="input-container input-container--flat"' + typeAttr + ' data-container-key="' + key + '">' +
-      (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+      ((label || veraSwitch) ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span>' + veraSwitch + '</div>' : '') +
       (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+      veraPanel +
       '<div class="input-container-body">' + flatChildren + '</div>' +
       '</div>';
   }
@@ -1576,6 +1606,22 @@
     initColorsPicker(container);
     initAspectRatioPicker(container);
     initContainerTabs(container);
+    initScopeVeraSwitches(container);
+  }
+
+  /** Toggle "Vera" del scope_picker: cuando se marca, el container añade
+   *  .is-vera-mode → CSS oculta children y muestra el panel del prompt. */
+  function initScopeVeraSwitches(container) {
+    if (!container || !container.querySelectorAll) return;
+    container.querySelectorAll('.scope-vera-input').forEach(function (input) {
+      if (input.__veraWired) return;
+      input.__veraWired = true;
+      input.addEventListener('change', function () {
+        var wrap = input.closest('[data-container-type="scope_picker"]');
+        if (!wrap) return;
+        wrap.classList.toggle('is-vera-mode', input.checked);
+      });
+    });
   }
 
   /** Cambia el panel activo cuando el usuario clickea un tab dentro de un

@@ -1096,6 +1096,10 @@
         delete field.display_style;
       }
     }
+    // 1d. vera_prompt: solo aplica a scope_picker
+    if (newType !== 'scope_picker') {
+      delete field.vera_prompt;
+    }
 
     // 2. min/max/step: limpiar si el nuevo tipo no es numérico/range
     if (!TYPES_WITH_RANGE.has(newType)) {
@@ -1485,6 +1489,14 @@
               <option value="tabs" ${field.display_style === 'tabs' ? 'selected' : ''}>Tabs (cada child sub-container = tab)</option>
             </select>
             <span class="field-help">Define cómo se agrupan los inputs anidados dentro de este contenedor.</span>
+          </div>
+          ` : ''}
+
+          ${((field.input_type || field.type) === 'scope_picker') ? `
+          <div class="property-field">
+            <label for="propVeraPrompt"><i class="ph ph-sparkle"></i> Prompt para Vera</label>
+            <textarea id="propVeraPrompt" rows="4" placeholder="Cuando el usuario active el switch &quot;Vera&quot;, este texto se enviará al LLM para que genere los valores de los inputs anidados...">${(field.vera_prompt || '').replace(/</g, '&lt;')}</textarea>
+            <span class="field-help">Si el usuario activa el switch Vera, los children se ocultan y este prompt se usa para que el LLM genere los valores.</span>
           </div>
           ` : ''}
 
@@ -2217,6 +2229,16 @@
     if (displayStyleSelect) {
       displayStyleSelect.addEventListener('change', (e) => {
         field.display_style = e.target.value;
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+
+    // Vera prompt (solo scope_picker): textarea con el prompt predefinido
+    const veraPromptEl = this.querySelector('#propVeraPrompt');
+    if (veraPromptEl) {
+      veraPromptEl.addEventListener('input', (e) => {
+        field.vera_prompt = e.target.value;
         this.renderCanvas();
         this.onFieldChange();
       });

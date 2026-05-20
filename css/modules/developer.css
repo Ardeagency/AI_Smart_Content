@@ -3721,6 +3721,122 @@
   position: relative;
 }
 
+/* ============================================================
+ * Scope picker — Switch "Vera"
+ * Cuando ON, los children se ocultan y se muestra el panel del
+ * prompt predefinido. El LLM (Vera) generará los valores.
+ * ============================================================ */
+.input-container-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scope-vera-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  margin-left: auto;
+}
+.scope-vera-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.scope-vera-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #242424;
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.scope-vera-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  background: #d9d9d9;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.scope-vera-input:checked + .scope-vera-track {
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+  border-color: transparent;
+}
+.scope-vera-input:checked + .scope-vera-track .scope-vera-thumb {
+  transform: translateX(16px);
+  background: #ffffff;
+}
+.scope-vera-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+.scope-vera-toggle:has(.scope-vera-input:checked) .scope-vera-label {
+  color: #ec4899;
+}
+.scope-vera-label i {
+  font-size: 13px;
+}
+
+/* Panel del prompt (oculto por default; visible cuando .is-vera-mode) */
+.scope-vera-panel {
+  display: none;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08));
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-radius: 8px;
+}
+.is-vera-mode > .scope-vera-panel,
+[data-container-type="scope_picker"].is-vera-mode .scope-vera-panel {
+  display: block;
+}
+.scope-vera-panel-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ec4899;
+  margin-bottom: 8px;
+}
+.scope-vera-prompt {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.scope-vera-prompt-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Cuando Vera está ON: ocultar children del scope_picker */
+[data-container-type="scope_picker"].is-vera-mode > .input-container-body,
+[data-container-type="scope_picker"].is-vera-mode > .input-accordion-body,
+[data-container-type="scope_picker"].is-vera-mode > .input-tabs-header,
+[data-container-type="scope_picker"].is-vera-mode > .input-tabs-body,
+[data-container-type="scope_picker"].is-vera-mode > details > .input-accordion-body {
+  display: none;
+}
+
 /* Drop zones: cuando hay drag activo desde la biblioteca, los bodies de
    los containers se vuelven drop targets visibles. */
 .builder-canvas.drag-active .input-container-body,
