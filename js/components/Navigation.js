@@ -2503,27 +2503,25 @@ class Navigation {
   /**
    * Configurar listeners del switcher Consumidor / Desarrollador.
    *
-   * Antes este flujo hacía `await authService.setUserMode(mode, true)` (que
-   * espera el UPDATE de profiles en Supabase) y, en modo user, además
-   * `await getDefaultUserRoute()` antes de llamar al router. Eso producía
-   * 200–800ms de latencia entre el click y la navegación. Si el usuario
-   * volvía a clicar para "destrabar", se disparaban switchMode concurrentes
-   * que desincronizaban userMode/URL.
-   *
-   * Ahora:
+   * Diseño:
    * - setUserMode actualiza this.userMode + localStorage de forma síncrona;
-   *   solo el persist a Supabase es async → lo lanzamos fire-and-forget.
-   * - Navegamos inmediato a /home (modo user) o /dev/dashboard. /home ya
-   *   resuelve la org por defecto y redirige.
-   * - Deshabilitamos ambos radios durante la transición y los liberamos en
-   *   el siguiente routechange para impedir double-fire / carrera.
+   *   solo el persist a Supabase es async → lo lanzamos fire-and-forget para
+   *   no bloquear la navegación (era la causa original de 200-800ms de
+   *   latencia entre el click del radio y el cambio de página).
+   * - Para modo dev: navegamos directo a /dev/dashboard.
+   * - Para modo user: resolvemos la org URL inline con `getDefaultUserRoute`
+   *   y navegamos directo a /org/.../dashboard. NO pasamos por /home como
+   *   intermedio porque su view paintea "Redirigiendo..." en modo home (sin
+   *   sidebar) y el flash se ve raro al regresar al sidebar de la org.
+   * - Deshabilitamos ambos radios + flag _modeSwitchInFlight hasta el
+   *   próximo routechange (failsafe 4s) para impedir double-fire / carrera.
    */
   setupDeveloperModeSwitcherListeners() {
     const userRadio = document.getElementById('viewModeUser');
     const devRadio = document.getElementById('viewModeDeveloper');
     if (!userRadio || !devRadio) return;
 
-    const switchMode = (mode) => {
+    const switchMode = async (mode) => {
       if (this._modeSwitchInFlight) return;
       this._modeSwitchInFlight = true;
       userRadio.disabled = true;
@@ -2549,7 +2547,24 @@ class Navigation {
         localStorage.setItem('userViewMode', mode);
       }
 
-      const target = mode === 'user' ? '/home' : '/dev/dashboard';
+      let target;
+      if (mode === 'user') {
+        // Resolver la URL final de la org del user para evitar el flash de /home.
+        const userId = window.authService?.getCurrentUser?.()?.id;
+        try {
+          if (userId && typeof window.authService?.getDefaultUserRoute === 'function') {
+            target = await window.authService.getDefaultUserRoute(userId);
+          }
+        } catch (err) {
+          console.warn('Nav.switchMode: getDefaultUserRoute falló', err);
+        }
+        // Fallback: si por alguna razón no pudimos resolver, cae a /home (con
+        // redirect interno arreglado), mejor eso que quedarse colgado.
+        if (!target) target = '/home';
+      } else {
+        target = '/dev/dashboard';
+      }
+
       if (window.router) window.router.navigate(target, true);
       else window.location.href = target;
 
