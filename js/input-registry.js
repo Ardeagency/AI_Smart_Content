@@ -788,10 +788,22 @@
       : [];
     var list = selected.slice(0, maxSel);
     var selectedStr = list.join(',');
+    // Cuando no hay defaultValue pero el template trae options con hex colors,
+    // mostrar esos options como swatches "sugerencia" (con opacity reducida)
+    // para que el preview del canvas/studio no se vea vacío con solo el +.
+    var suggested = [];
+    if (list.length === 0 && Array.isArray(f.options)) {
+      suggested = f.options
+        .map(function (o) { return typeof o === 'string' ? o : (o && (o.value || o.hex)); })
+        .filter(Boolean)
+        .map(normalizeHex)
+        .slice(0, maxSel);
+    }
     if (isPreview) {
-      var previewSwatches = list.map(function (hex) {
+      var previewSwatches = (list.length > 0 ? list : suggested).map(function (hex) {
         var esc = escapeHtml(hex);
-        return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '"></div>';
+        var cls = list.length > 0 ? 'color-swatch' : 'color-swatch color-swatch--suggested';
+        return '<div class="' + cls + '" style="background:' + esc + ';" data-hex="' + esc + '"></div>';
       }).join('');
       var previewAdd = list.length < maxSel ? '<div class="color-swatch-add-btn"><span>+</span></div>' : '';
       return '<div class="input-colors-wrap input-colors-wrap--preview">' + previewSwatches + previewAdd + '</div>';
@@ -801,11 +813,18 @@
       return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '">' +
         '<button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>';
     }).join('');
+    // Swatches sugeridos (template options) si no hay selección — solo visual, no son data
+    var suggestedHtml = (list.length === 0)
+      ? suggested.map(function (hex) {
+          var esc = escapeHtml(hex);
+          return '<div class="color-swatch color-swatch--suggested" style="background:' + esc + ';" data-hex="' + esc + '" title="Sugerencia del template"></div>';
+        }).join('')
+      : '';
     var addBtnHtml = list.length < maxSel
       ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
       : '';
     return '<input type="hidden" class="input-colors-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(selectedStr) + '" data-max="' + maxSel + '">' +
-      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + addBtnHtml + '</div>';
+      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + suggestedHtml + addBtnHtml + '</div>';
   }
 
   /** Placeholder para FILE_CONTAINER (upload) */

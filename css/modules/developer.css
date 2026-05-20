@@ -2946,6 +2946,17 @@
 .input-colors-wrap .color-swatch:hover {
   transform: scale(1.05);
 }
+/* Swatches sugeridos (cuando no hay defaultValue pero el template trae options):
+   visualmente más apagados que los seleccionados, sin botón eliminar. */
+.input-colors-wrap .color-swatch--suggested {
+  opacity: 0.55;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.input-colors-wrap .color-swatch--suggested:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
 .input-colors-wrap .color-delete-btn {
   position: absolute;
   top: -4px;
@@ -3309,6 +3320,11 @@
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-style: italic;
+  min-height: 120px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 .image-selector-carousel-track--empty::before {
   content: attr(data-empty-msg);
