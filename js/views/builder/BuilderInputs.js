@@ -68,103 +68,184 @@
   // Secciones top-level del rail (patrón Weavy/Segmind). Cada template
   // se asigna a una sección por input_type O por category creativa.
   // ==================================================================
-  // Sub-secciones dentro de cada sección top-level: agrupar templates por tipo concreto
-  // (ej. Selección → Desplegables / Chips / Radio / Checkboxes / Switch / Banderas).
+  // Mapeo EXPLÍCITO por name → { section, sub } para templates específicos
+  // (la category de la DB está inconsistente: 'colores' en 'scene', 'file' en
+  // 'basic', 'flags' en 'protagonist', 'aspect_ratio' en 'distribution'…).
+  // Si el name no está aquí, se rutea por category con el fallback de la sección.
+  const NAME_PLACEMENT = {
+    // Texto
+    'string':            { section: 'text',       sub: 'Texto corto' },
+    // Tags / hashtags
+    'tags':              { section: 'text',       sub: 'Etiquetas' },
+    'hashtags_pack':     { section: 'text',       sub: 'Etiquetas' },
+    'keyword_enforcer':  { section: 'text',       sub: 'Etiquetas' },
+    // Selección
+    'dropdown':          { section: 'choice',     sub: 'Desplegable' },
+    'choice_chips':      { section: 'choice',     sub: 'Chips única' },
+    'multi_select_chips':{ section: 'choice',     sub: 'Chips múltiple' },
+    'radio':             { section: 'choice',     sub: 'Radio' },
+    'toggle_switch':     { section: 'choice',     sub: 'Switch (on/off)' },
+    'checkboxes':        { section: 'choice',     sub: 'Checkbox única' },
+    'selection_checkboxes':{ section: 'choice',   sub: 'Checkbox múltiple' },
+    'conditional_block': { section: 'choice',     sub: 'Condicional' },
+    'flags':             { section: 'choice',     sub: 'Banderas' },
+    // Numérico
+    'num_stepper':       { section: 'numeric',    sub: 'Número' },
+    'range':             { section: 'numeric',    sub: 'Slider' },
+    'duration_cap':      { section: 'numeric',    sub: 'Duración / Cantidad' },
+    'render_batch_size': { section: 'numeric',    sub: 'Duración / Cantidad' },
+    // Visual — selectores únicos visuales
+    'colores':           { section: 'visual',     sub: 'Colores' },
+    'aspect_ratio':      { section: 'visual',     sub: 'Aspect ratio' },
+    'scope_picker':      { section: 'visual',     sub: 'Enfoque' },
+    'image_selector':    { section: 'visual',     sub: 'Imagen' },
+    'file':              { section: 'visual',     sub: 'Archivo' },
+    // Audio
+    'audio_mood':        { section: 'audio',      sub: 'Mood' },
+    'lang_selector':     { section: 'audio',      sub: 'Idioma / Voz' },
+    'voice_profile':     { section: 'audio',      sub: 'Idioma / Voz' },
+    'music_bpm':         { section: 'audio',      sub: 'Música' },
+    'sound_design_notes':{ section: 'audio',      sub: 'Sound design' },
+    // Datos
+    'brand_selector':    { section: 'data',       sub: 'Marca' },
+    'entity_selector':   { section: 'data',       sub: 'Entidades / Productos' },
+    'product_selector':  { section: 'data',       sub: 'Entidades / Productos' },
+    'audience_selector': { section: 'data',       sub: 'Audiencia' },
+    'tone_selector':     { section: 'data',       sub: 'Tono / Longitud' },
+    'length_selector':   { section: 'data',       sub: 'Tono / Longitud' },
+    'platform_selector': { section: 'data',       sub: 'Plataforma' },
+    'cron_schedule':     { section: 'data',       sub: 'Programación' },
+    // Branding & Copy
+    'headline_slot':     { section: 'branding',   sub: 'Slots de texto' },
+    'body_slot':         { section: 'branding',   sub: 'Slots de texto' },
+    'brand_positioning': { section: 'branding',   sub: 'Posicionamiento' },
+    'message_focus':     { section: 'branding',   sub: 'Posicionamiento' },
+    'cta_layering':      { section: 'branding',   sub: 'Posicionamiento' },
+    'legal_disclaimer':  { section: 'branding',   sub: 'Legal' },
+    'overlay_safe_zone': { section: 'branding',   sub: 'Overlay & Logo' },
+    'logo_lockup':       { section: 'branding',   sub: 'Overlay & Logo' },
+    // Estructura
+    'section':           { section: 'structure',  sub: 'Sección' },
+    'divider':           { section: 'structure',  sub: 'Divisor' },
+    'heading':           { section: 'structure',  sub: 'Título' },
+    'description':       { section: 'structure',  sub: 'Descripción' }
+  };
+
+  // Fallback por category cuando el name no está mapeado explícitamente
+  const CATEGORY_FALLBACK = {
+    style:       { section: 'visual',     sub: 'Estilo & Cámara' },
+    motion:      { section: 'visual',     sub: 'Motion & Perspectiva' },
+    scene:       { section: 'visual',     sub: 'Escenarios' },
+    protagonist: { section: 'visual',     sub: 'Protagonistas' },
+    audio:       { section: 'audio',      sub: 'Mood' },
+    context:     { section: 'data',       sub: 'Entidades / Productos' },
+    controls:    { section: 'choice',     sub: 'Desplegable' },
+    branding:    { section: 'branding',   sub: 'Slots de texto' },
+    structural:  { section: 'structure',  sub: 'Sección' },
+    distribution:{ section: 'data',       sub: 'Plataforma' },
+    media:       { section: 'visual',     sub: 'Imagen' },
+    preset:      { section: 'templates',  sub: 'Presets completos' },
+    basic:       { section: 'text',       sub: 'Texto corto' }
+  };
+
   P.LIBRARY_SECTIONS = [
     {
       key: 'text', name: 'Texto', icon: 'textbox',
       subs: [
-        { name: 'Texto corto',   inputTypes: ['text','string'] },
-        { name: 'Texto largo',   inputTypes: ['textarea'] },
-        { name: 'Etiquetas',     inputTypes: ['tags'] }
+        { name: 'Texto corto' },
+        { name: 'Texto largo' },
+        { name: 'Etiquetas' }
       ]
     },
     {
       key: 'choice', name: 'Selección', icon: 'list-checks',
       subs: [
-        { name: 'Desplegable',           inputTypes: ['dropdown','select'] },
-        { name: 'Chips',                 inputTypes: ['choice_chips','multi_select_chips'] },
-        { name: 'Radio',                 inputTypes: ['radio'] },
-        { name: 'Checkbox simple (on/off)', inputTypes: ['checkbox','toggle_switch'] },
-        { name: 'Checkbox una opción',   inputTypes: ['checkboxes'] },
-        { name: 'Checkbox múltiple',     inputTypes: ['selection_checkboxes','multi_select'] },
-        { name: 'Banderas',              inputTypes: ['flags'] }
+        { name: 'Desplegable' },
+        { name: 'Chips única' },
+        { name: 'Chips múltiple' },
+        { name: 'Radio' },
+        { name: 'Switch (on/off)' },
+        { name: 'Checkbox única' },
+        { name: 'Checkbox múltiple' },
+        { name: 'Condicional' },
+        { name: 'Banderas' }
       ]
     },
     {
       key: 'numeric', name: 'Numérico', icon: 'sliders',
       subs: [
-        { name: 'Número',  inputTypes: ['number','num_stepper'] },
-        { name: 'Slider',  inputTypes: ['range'] }
+        { name: 'Número' },
+        { name: 'Slider' },
+        { name: 'Duración / Cantidad' }
       ]
     },
     {
       key: 'visual', name: 'Visual', icon: 'image',
       subs: [
-        { name: 'Colores',       inputTypes: ['colores','color'] },
-        { name: 'Aspect ratio',  inputTypes: ['aspect_ratio'] },
-        { name: 'Imagen',        inputTypes: ['image_selector'] },
-        { name: 'Enfoque',       inputTypes: ['scope_picker','focus_selector'] }
+        { name: 'Colores' },
+        { name: 'Aspect ratio' },
+        { name: 'Imagen' },
+        { name: 'Archivo' },
+        { name: 'Enfoque' },
+        { name: 'Estilo & Cámara' },
+        { name: 'Motion & Perspectiva' },
+        { name: 'Escenarios' },
+        { name: 'Protagonistas' }
+      ]
+    },
+    {
+      key: 'audio', name: 'Audio', icon: 'note',
+      subs: [
+        { name: 'Mood' },
+        { name: 'Música' },
+        { name: 'Idioma / Voz' },
+        { name: 'Sound design' }
       ]
     },
     {
       key: 'data', name: 'Datos', icon: 'stack',
       subs: [
-        { name: 'Marca y productos', inputTypes: ['brand_selector','entity_selector','product_selector'] },
-        { name: 'Audiencia',         inputTypes: ['audience_selector'] },
-        { name: 'Tono y longitud',   inputTypes: ['tone_selector','length_selector'] },
-        { name: 'Campañas / Flujos', inputTypes: ['campaign_selector','flow_selector'] },
-        { name: 'Programación',      inputTypes: ['cron_selector'] }
+        { name: 'Marca' },
+        { name: 'Entidades / Productos' },
+        { name: 'Audiencia' },
+        { name: 'Tono / Longitud' },
+        { name: 'Plataforma' },
+        { name: 'Programación' }
+      ]
+    },
+    {
+      key: 'branding', name: 'Branding', icon: 'sparkle',
+      subs: [
+        { name: 'Slots de texto' },
+        { name: 'Posicionamiento' },
+        { name: 'Legal' },
+        { name: 'Overlay & Logo' }
       ]
     },
     {
       key: 'structure', name: 'Estructura', icon: 'list-bullets',
       subs: [
-        { name: 'Sección',      inputTypes: ['section'] },
-        { name: 'Divisor',      inputTypes: ['divider'] },
-        { name: 'Título',       inputTypes: ['heading'] },
-        { name: 'Descripción',  inputTypes: ['description','description_block'] }
+        { name: 'Sección' },
+        { name: 'Divisor' },
+        { name: 'Título' },
+        { name: 'Descripción' }
       ]
     },
     {
-      key: 'templates', name: 'Plantillas', icon: 'sparkle',
-      // Para templates, los subs son por category creativa, no por inputType.
-      subsByCategory: true,
+      key: 'templates', name: 'Plantillas', icon: 'cardholder',
       subs: [
-        { name: 'Presets',                 categories: ['preset'] },
-        { name: 'Estilo & Cámara',         categories: ['style'] },
-        { name: 'Motion & Perspectiva',    categories: ['motion'] },
-        { name: 'Escenarios',              categories: ['scene'] },
-        { name: 'Protagonistas',           categories: ['protagonist'] },
-        { name: 'Branding & Copy',         categories: ['branding'] },
-        { name: 'Distribución / Operación',categories: ['distribution'] },
-        { name: 'Controles UI',            categories: ['controls'] }
+        { name: 'Presets completos' }
       ]
     }
   ];
 
-  /** Decide en qué sección + sub-sección entra un template. */
+  /** Decide en qué sección + sub-sección entra un template.
+   *  Prioridad: 1) NAME_PLACEMENT explícito, 2) CATEGORY_FALLBACK, 3) text/Texto corto. */
   P.resolveLibraryPlacement = function (template) {
-    const sections = this.LIBRARY_SECTIONS;
-    const cat = (template.category || '').toLowerCase();
-    const inputType = ((template.base_schema && (template.base_schema.input_type || template.base_schema.type)) || template.input_type || '').toLowerCase();
-
-    // Categorías creativas → Templates, con su sub por category
-    const tplSection = sections.find(s => s.key === 'templates');
-    if (tplSection) {
-      const tplSub = tplSection.subs.find(sub => Array.isArray(sub.categories) && sub.categories.indexOf(cat) >= 0);
-      if (tplSub) return { section: 'templates', sub: tplSub.name };
-    }
-    // Resto: por input_type
-    for (const s of sections) {
-      if (!Array.isArray(s.subs)) continue;
-      for (const sub of s.subs) {
-        if (Array.isArray(sub.inputTypes) && sub.inputTypes.indexOf(inputType) >= 0) {
-          return { section: s.key, sub: sub.name };
-        }
-      }
-    }
-    // Fallback
+    const name = (template.name || '').toLowerCase().trim();
+    if (NAME_PLACEMENT[name]) return NAME_PLACEMENT[name];
+    const cat = (template.category || '').toLowerCase().trim();
+    if (CATEGORY_FALLBACK[cat]) return CATEGORY_FALLBACK[cat];
     return { section: 'text', sub: 'Texto corto' };
   };
 
