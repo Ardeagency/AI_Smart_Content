@@ -4324,7 +4324,8 @@
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     border-radius: 16px;
-    padding: 12px 12px 14px 14px;
+    /* Padding ajustado para sentirse compacto, tipo input prompt real */
+    padding: 8px 12px 10px;
     color: var(--glass-black-text);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -4365,8 +4366,9 @@
     display: flex;
     justify-content: flex-end;
     padding: 0;
-    margin: 0 0 4px 0;
+    margin: 0;
     border: none;
+    min-height: 0;
 }
 .video-view-container .video-director-console-zone .video-console-model-change {
     background: transparent;
@@ -4403,7 +4405,10 @@
 /* Textarea: sin background, sin border. Solo texto sobre la card.
    Selector con specificity alta para pisar la regla genérica de
    .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input
-   (línea 1559) que le pintaba bg-black + border. */
+   (línea 1559) que le pintaba bg-black + border.
+   min-height bajada a 44px para que la card no sea más alta que un
+   input prompt normal cuando está vacío — el textarea crece a medida
+   que el usuario escribe (hasta max-height 180px). */
 .video-view-container
   .video-director-console-zone.video-prompt-wrap
     .video-prompt-footer-card-inner.video-director-console
@@ -4414,9 +4419,9 @@
     .video-prompt-footer-card-inner
       .video-director-brief-input {
     width: 100%;
-    min-height: 72px;
-    max-height: 200px;
-    padding: 8px 4px;
+    min-height: 44px;
+    max-height: 180px;
+    padding: 4px 4px;
     margin: 0;
     background: transparent;
     border: none;
@@ -4426,8 +4431,8 @@
     /* Font del sistema, no monospace, no italic */
     font-family: var(--font-sans, var(--font-family));
     font-style: normal;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    font-size: 0.9rem;
+    line-height: 1.45;
     color: var(--text-primary);
     letter-spacing: 0;
 }
@@ -4455,18 +4460,24 @@
     display: none;
 }
 
-/* Content wrapper: padding generoso y sin border propio */
+/* Content wrapper: padding mínimo — el textarea ya tiene el suyo */
 .video-view-container .video-director-console-zone .video-director-console-content {
     min-height: auto;
-    padding: 6px 4px 14px;
+    padding: 2px 0 4px;
     border: none;
     background: transparent;
 }
 
-/* Top row (botón + + chips de imágenes) y variables row: spacing tighter */
+/* Top row (botón + + chips de imágenes): muy tight, casi inline con prompt */
 .video-view-container .video-director-console-zone .video-director-top-row {
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 4px;
+    min-height: 30px;
+}
+
+/* Variables row (Cinematografía) — cuando vacía, sin altura extra */
+.video-view-container .video-director-console-zone .video-director-variables-row:empty {
+    display: none;
 }
 
 /* Controles inferiores: una sola fila tipo toolbar minimalista */
@@ -4475,7 +4486,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    padding-top: 2px;
+    padding-top: 4px;
 }
 
 /* Toggles + selects unificados visualmente como pills sutiles */
