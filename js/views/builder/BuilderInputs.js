@@ -513,22 +513,30 @@
     this.selectField(fields.length - 1);
   };
 
-  P.generateFieldKey = function (baseName) {
-    const base = baseName
+  /** Sanitiza una key candidata: lowercase, [^a-z0-9_]→'_', sin dobles/leading/trailing _.
+   *  Si empieza con dígito, prefija 'f_' (claves JSONPath/REST inválidas si empiezan con número).
+   *  Reservada: si queda vacía, devuelve 'campo'. */
+  P.sanitizeKey = function (raw) {
+    let s = String(raw || '')
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_')
+      .replace(/[^a-z0-9_]/g, '_')
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '');
-    
+    if (!s) s = 'campo';
+    if (/^[0-9]/.test(s)) s = 'f_' + s;
+    return s;
+  };
+
+  P.generateFieldKey = function (baseName, excludeIndex) {
+    const base = this.sanitizeKey(baseName);
     const fields = this.getCanvasFields();
+    const isDuplicate = (candidate) => fields.some((f, i) => f.key === candidate && i !== (excludeIndex != null ? excludeIndex : -1));
     let key = base;
     let counter = 1;
-    
-    while (fields.some(f => f.key === key)) {
+    while (isDuplicate(key)) {
       key = `${base}_${counter}`;
       counter++;
     }
-    
     return key;
   };
 
@@ -1174,7 +1182,7 @@
           <h4>Identificación</h4>
           <div class="property-field">
             <label for="propKey">Key (referencia)</label>
-            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z0-9_]*">
+            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _.">
             <span class="field-help">Opcional. No se envía al backend.</span>
           </div>
         </div>`;
@@ -1316,7 +1324,7 @@
           
           <div class="property-field">
             <label for="propKey">Key</label>
-            <input type="text" id="propKey" value="${field.key}" pattern="[a-z0-9_]+">
+            <input type="text" id="propKey" value="${field.key}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _.">
           </div>
           
           <div class="property-field">

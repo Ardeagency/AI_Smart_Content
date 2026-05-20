@@ -388,6 +388,16 @@
     var optsList = f.options || [];
     var multiple = f.is_multiple ? ' multiple' : '';
 
+    // Defensa: si el template no trae options pre-armadas, mostrar el dropdown
+    // deshabilitado con un mensaje claro en lugar de un <select> vacío silencioso.
+    // Así el dev nota que el template está incompleto al verlo en /studio o canvas.
+    if (!Array.isArray(optsList) || optsList.length === 0) {
+      var msg = '⚠ Sin opciones configuradas. Edita las opciones del campo en el panel de propiedades.';
+      var disabledSel = '<select class="modern-input input-dropdown-select input-dropdown-select--no-options" id="' + a.id + '" name="' + a.name + '" disabled>' +
+        '<option value="" disabled selected>' + escapeHtml(msg) + '</option></select>';
+      return '<div class="input-dropdown-wrap input-dropdown-wrap--empty">' + disabledSel + '</div>';
+    }
+
     var optionsHtml = '<option value="" disabled selected>' + ph + '</option>' + optsList.map(function (o) {
       return '<option value="' + escapeHtml(String(optVal(o))) + '">' + escapeHtml(optLabel(o)) + '</option>';
     }).join('');
