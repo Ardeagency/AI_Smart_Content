@@ -159,7 +159,10 @@
     preset_dark_luxury_hero: 'SELECT_CONTAINER',
     preset_editorial_macro: 'SELECT_CONTAINER',
     // Otros selectores que tenían el handler como STRING (corrige)
-    focus_selector: 'SELECT_CONTAINER'
+    focus_selector: 'SELECT_CONTAINER',
+    // Nuevos inputs Tier 2
+    segmented_control: 'SEGMENTED_CONTAINER',
+    steps_slider: 'STEPS_SLIDER_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
@@ -670,6 +673,67 @@
     return '<div class="input-chips-wrap input-chips-wrap--multi" role="group">' + html + '</div>';
   }
 
+  /** Segmented control: pill toggle 2-4 opciones (estilo iOS/tabs).
+   *  HTML: container con N buttons + input hidden con el valor seleccionado. */
+  function renderSegmentedControl(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optsList = (Array.isArray(f.options) && f.options.length > 0)
+      ? f.options
+      : [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+    var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optsList[0]));
+    var buttonsHtml = optsList.map(function (o) {
+      var v = optVal(o);
+      var vs = String(v);
+      var lbl = escapeHtml(optLabel(o));
+      var isSel = (selected === v || selected === vs);
+      return '<button type="button" class="input-segmented-option' + (isSel ? ' selected' : '') +
+        '" data-value="' + escapeHtml(vs) + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' + lbl + '</button>';
+    }).join('');
+    return '<div class="input-segmented" role="radiogroup" data-segmented-key="' + escapeHtml(f.key || '') + '">' + buttonsHtml +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formSegmentedControl(f, opts) {
+    return renderSegmentedControl(f, opts || {}, isPreviewOpts(opts));
+  }
+  function previewSegmentedControl(f) {
+    return renderSegmentedControl(f, {}, true);
+  }
+
+  /** Steps slider: range con markers discretos (steps array). Útil para
+   *  configurar valores como steps de difusión IA (1, 10, 25, 50). */
+  function renderStepsSlider(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var steps = (Array.isArray(f.steps) && f.steps.length > 0) ? f.steps : [1, 10, 25, 50];
+    var defaultVal = f.defaultValue != null ? Number(f.defaultValue) : steps[Math.floor(steps.length / 2)];
+    // Index del step más cercano al defaultValue
+    var idx = 0, minDiff = Infinity;
+    steps.forEach(function (s, i) {
+      var d = Math.abs(Number(s) - defaultVal);
+      if (d < minDiff) { minDiff = d; idx = i; }
+    });
+    var markersHtml = steps.map(function (s, i) {
+      return '<button type="button" class="input-steps-marker' + (i === idx ? ' selected' : '') +
+        '" data-step-index="' + i + '" data-step-value="' + escapeHtml(String(s)) + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled + '>' +
+        '<span class="input-steps-marker-dot" aria-hidden="true"></span>' +
+        '<span class="input-steps-marker-label">' + escapeHtml(String(s)) + '</span>' +
+        '</button>';
+    }).join('');
+    var maxIdx = steps.length - 1;
+    return '<div class="input-steps-slider" data-steps="' + escapeHtml(JSON.stringify(steps)) + '" data-steps-key="' + escapeHtml(f.key || '') + '">' +
+      '<input type="range" class="input-steps-slider-range" min="0" max="' + maxIdx + '" step="1" value="' + idx + '"' + a.disabled + '>' +
+      '<div class="input-steps-slider-markers">' + markersHtml + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(String(steps[idx])) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formStepsSlider(f, opts) {
+    return renderStepsSlider(f, opts || {}, isPreviewOpts(opts));
+  }
+  function previewStepsSlider(f) {
+    return renderStepsSlider(f, {}, true);
+  }
+
   /** Tags: input + list of removable chips (value = array of strings). JS must handle add/remove; aquí solo marcamos contenedor. */
   function renderTagsInput(f, opts, isPreview) {
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
@@ -1084,6 +1148,14 @@
         return previewBlock(labels[t] || f.label || 'Bloque', icons[t] || 'placeholder');
       },
       form: formStructural
+    },
+    SEGMENTED_CONTAINER: {
+      preview: previewSegmentedControl,
+      form: formSegmentedControl
+    },
+    STEPS_SLIDER_CONTAINER: {
+      preview: previewStepsSlider,
+      form: formStepsSlider
     }
   };
 
@@ -1131,6 +1203,8 @@
     register('toggle_switch', { preview: previewSwitch, form: formSwitch });
     register('slider', { preview: previewRange, form: formRange });
     register('cron_schedule', { preview: previewCronSchedule, form: formCronSchedule });
+    register('segmented_control', { preview: previewSegmentedControl, form: formSegmentedControl });
+    register('steps_slider', { preview: previewStepsSlider, form: formStepsSlider });
 
     register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });

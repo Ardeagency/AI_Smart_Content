@@ -87,12 +87,14 @@
     'selection_checkboxes':{ section: 'choice',   sub: 'Múltiple' },
     'conditional_block': { section: 'choice',     sub: 'Condicional' },
     'flags':             { section: 'choice',     sub: 'Banderas' },
+    'segmented_control': { section: 'choice',     sub: 'Segmented' },
     // Aliases para compat con data legacy (si existe)
     'checkboxes':        { section: 'choice',     sub: 'Radio' },
     'multi_select_chips':{ section: 'choice',     sub: 'Múltiple' },
     // Numérico
     'num_stepper':       { section: 'numeric',    sub: 'Número' },
     'range':             { section: 'numeric',    sub: 'Slider' },
+    'steps_slider':      { section: 'numeric',    sub: 'Slider con steps' },
     'duration_cap':      { section: 'numeric',    sub: 'Duración / Cantidad' },
     'render_batch_size': { section: 'numeric',    sub: 'Duración / Cantidad' },
     // Visual — selectores únicos visuales
@@ -164,6 +166,7 @@
         { name: 'Desplegable' },
         { name: 'Radio' },
         { name: 'Chips' },
+        { name: 'Segmented' },
         { name: 'Múltiple' },
         { name: 'Switch (on/off)' },
         { name: 'Banderas' },
@@ -175,6 +178,7 @@
       subs: [
         { name: 'Número' },
         { name: 'Slider' },
+        { name: 'Slider con steps' },
         { name: 'Duración / Cantidad' }
       ]
     },
@@ -850,6 +854,7 @@
         ['number',    'Número'],
         ['num_stepper','Número (stepper)'],
         ['range',     'Slider'],
+        ['steps_slider','Slider con steps discretos'],
         ['file',      'Archivo']
       ]
     },
@@ -859,6 +864,7 @@
         ['dropdown',             'Desplegable (1 opción)'],
         ['radio',                'Radio (1 opción)'],
         ['choice_chips',         'Chips (1 opción)'],
+        ['segmented_control',    'Segmented (2-4 pills)'],
         ['selection_checkboxes', 'Múltiple (array)'],
         ['toggle_switch',        'Switch on/off'],
         ['flags',                'Banderas (idioma/país/etnia)'],
@@ -979,8 +985,10 @@
   // limpian las options/min/max/step que ya no aplican.
   const TYPES_WITH_OPTIONS = new Set([
     'dropdown','select','radio','checkboxes','selection_checkboxes',
-    'choice_chips','multi_select_chips','flags','colores','aspect_ratio'
+    'choice_chips','multi_select_chips','flags','colores','aspect_ratio',
+    'segmented_control'
   ]);
+  const TYPES_WITH_STEPS = new Set(['steps_slider']);
   const TYPES_WITH_RANGE = new Set(['range','num_stepper','number']);
   const TYPES_ARRAY_DATA = new Set(['selection_checkboxes','multi_select_chips','colores']);
   const TYPES_BOOLEAN_DATA = new Set(['checkbox','toggle_switch']);
@@ -1003,6 +1011,10 @@
     // 1. options: limpiar si el nuevo tipo no las usa
     if (!TYPES_WITH_OPTIONS.has(newType)) {
       delete field.options;
+    }
+    // 1b. steps: limpiar si el nuevo tipo no es steps_slider
+    if (!TYPES_WITH_STEPS.has(newType)) {
+      delete field.steps;
     }
 
     // 2. min/max/step: limpiar si el nuevo tipo no es numérico/range
@@ -1106,6 +1118,18 @@
     }
     if (newType === 'checkbox') {
       if (field.defaultValue == null) field.defaultValue = false;
+    }
+    if (newType === 'segmented_control') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.options[0].value;
+    }
+    if (newType === 'steps_slider') {
+      if (!Array.isArray(field.steps) || field.steps.length === 0) {
+        field.steps = [1, 10, 25, 50];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.steps[Math.floor(field.steps.length / 2)];
     }
   };
 
