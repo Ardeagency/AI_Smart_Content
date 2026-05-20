@@ -488,43 +488,125 @@
     );
   }
 
-  /** Scope picker: enfoque de la producción. Toggle "Que la IA decida" + opciones personalizables (field.options). */
+  /** scope_picker AHORA es un contenedor anidable (no más toggle "Que la IA decida").
+   *  section TAMBIÉN es contenedor con display_style. Ambos comparten renderContainerField. */
   function previewScopePicker(f) {
-    return previewFocusSelectorAccordion(f);
+    return renderContainerField(f, {}, true, 'scope_picker');
   }
   function formScopePicker(f, opts) {
-    var a = formAttrs(f, opts || {});
-    var optsList = f.options || [];
-    var label = f.label || 'Enfoque de la producción';
-    var innerHtml;
-    if (optsList.length === 0) {
-      innerHtml = '<p class="focus-selector-empty-msg">Añade opciones de enfoque en el Builder.</p>';
-    } else {
-      innerHtml = '<div class="focus-selector-section">' +
-        '<div class="focus-selector-options">' +
-        optsList.map(function (o) {
-          var v = escapeHtml(String(o.value != null ? o.value : o.label != null ? o.label : o));
-          var lbl = escapeHtml(o.label != null ? o.label : v);
-          return '<label class="focus-selector-option">' +
-            '<input type="checkbox" class="focus-selector-checkbox" data-value="' + v + '">' +
-            '<span>' + lbl + '</span></label>';
-        }).join('') +
-        '</div></div>';
+    return renderContainerField(f, opts || {}, isPreviewOpts(opts), 'scope_picker');
+  }
+
+  /** Renderiza un contenedor (scope_picker o section) con sus children anidados.
+   *  display_style soportado: 'flat' (default), 'accordion', 'tabs', 'bordered'.
+   *  Si display_style='tabs', cada child cuyo input_type sea section/scope_picker
+   *  se vuelve una tab; el resto va al panel del primer tab. */
+  function renderContainerField(f, opts, isPreview, sourceType) {
+    opts = opts || {};
+    var display = (f.display_style || 'flat').toLowerCase();
+    var children = Array.isArray(f.children) ? f.children : [];
+    var label = escapeHtml(f.label || f.title || '');
+    var description = escapeHtml(f.section_description || f.description || '');
+    var key = escapeHtml(f.key || '');
+    var typeAttr = ' data-container-type="' + escapeHtml(sourceType || (f.input_type || 'section')) + '"';
+
+    var renderChild = function (child) {
+      // Hashing recursivo a renderFormFieldWithWrapper sin estructura wrapperClass studio-field
+      // (cada child se renderiza como un field normal, anidable).
+      return renderFormFieldWithWrapper(child, {
+        idPrefix: opts.idPrefix,
+        wrapperClass: 'studio-field input-container-child',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true
+      });
+    };
+
+    // Empty state: si el container no tiene children todavía, mostrar dropzone visual
+    if (children.length === 0) {
+      return '<div class="input-container input-container--' + display + ' input-container--empty"' + typeAttr + ' data-container-key="' + key + '">' +
+        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        '<div class="input-container-empty-msg"><i class="ph ph-rows"></i><span>Contenedor vacío — arrastra inputs aquí</span></div>' +
+        '</div>';
     }
-    return (
-      '<div class="focus-selector-accordion" data-focus-type="scope_picker" data-field-name="' + escapeHtml(a.name) + '">' +
-        '<div class="focus-selector-toggle-wrap">' +
-          '<label class="focus-selector-ai-toggle">' +
-            '<input type="checkbox" class="focus-selector-let-ai-decide" checked aria-label="Que la IA decida">' +
-            '<span class="focus-selector-ai-label">Que la IA decida</span>' +
-          '</label>' +
-        '</div>' +
-        '<div class="focus-selector-body" aria-hidden="true">' +
-          '<div class="focus-selector-accordion-inner">' + innerHtml + '</div>' +
-        '</div>' +
-        '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(JSON.stringify({ let_ai_decide: true })) + '"' + a.disabled + a.required + '>' +
-      '</div>'
-    );
+
+    if (display === 'accordion') {
+      // Si los children son a su vez containers, cada uno = panel del accordion.
+      // Sino, todo el container es UN accordion con los fields planos adentro.
+      var nestedContainers = children.filter(function (c) { return c.input_type === 'section' || c.input_type === 'scope_picker'; });
+      if (nestedContainers.length === children.length && nestedContainers.length > 0) {
+        // Multi-accordion: cada child es un panel
+        var panelsHtml = nestedContainers.map(function (c, i) {
+          var cKey = escapeHtml(c.key || ('panel_' + i));
+          var cLbl = escapeHtml(c.label || c.title || 'Panel ' + (i + 1));
+          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderChild).join('');
+          return '<details class="input-accordion-panel"' + (i === 0 ? ' open' : '') + '>' +
+            '<summary class="input-accordion-summary"><span>' + cLbl + '</span><i class="ph ph-caret-down"></i></summary>' +
+            '<div class="input-accordion-body" data-container-key="' + cKey + '">' + cChildren + '</div>' +
+            '</details>';
+        }).join('');
+        return '<div class="input-container input-container--accordion"' + typeAttr + ' data-container-key="' + key + '">' +
+          (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+          '<div class="input-accordion-group">' + panelsHtml + '</div>' +
+          '</div>';
+      }
+      // Single accordion: todo el container colapsable
+      var bodyChildren = children.map(renderChild).join('');
+      return '<details class="input-container input-container--accordion"' + typeAttr + ' data-container-key="' + key + '" open>' +
+        '<summary class="input-accordion-summary"><span>' + (label || 'Sección') + '</span><i class="ph ph-caret-down"></i></summary>' +
+        (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+        '<div class="input-accordion-body">' + bodyChildren + '</div>' +
+        '</details>';
+    }
+
+    if (display === 'tabs') {
+      // Cada child sub-container (section/scope_picker) = una tab. Si no hay
+      // sub-containers, los fields planos se renderean como un solo panel
+      // (igual que flat, pero con header tabs-like).
+      var tabChildren = children.filter(function (c) { return c.input_type === 'section' || c.input_type === 'scope_picker'; });
+      if (tabChildren.length > 0) {
+        var tabsHtml = tabChildren.map(function (c, i) {
+          var cKey = escapeHtml(c.key || ('tab_' + i));
+          var cLbl = escapeHtml(c.label || c.title || 'Tab ' + (i + 1));
+          return '<button type="button" class="input-tab-btn' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '"' + (isPreview ? ' tabindex="-1"' : '') + '>' + cLbl + '</button>';
+        }).join('');
+        var panelsHtml = tabChildren.map(function (c, i) {
+          var cKey = escapeHtml(c.key || ('tab_' + i));
+          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderChild).join('');
+          return '<div class="input-tab-panel' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '">' + cChildren + '</div>';
+        }).join('');
+        return '<div class="input-container input-container--tabs"' + typeAttr + ' data-container-key="' + key + '">' +
+          (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+          '<div class="input-tabs-header" role="tablist">' + tabsHtml + '</div>' +
+          '<div class="input-tabs-body">' + panelsHtml + '</div>' +
+          '</div>';
+      }
+      // Fallback: si no hay sub-containers, mostrar como flat con un mensaje
+      var flatHtml = children.map(renderChild).join('');
+      return '<div class="input-container input-container--tabs input-container--tabs-flat"' + typeAttr + ' data-container-key="' + key + '">' +
+        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        '<p class="input-container-hint">Añade un section/scope_picker como child para crear tabs.</p>' +
+        '<div class="input-container-body">' + flatHtml + '</div>' +
+        '</div>';
+    }
+
+    // Bordered: con border + radius (estilo card)
+    if (display === 'bordered') {
+      var borderedHtml = children.map(renderChild).join('');
+      return '<div class="input-container input-container--bordered"' + typeAttr + ' data-container-key="' + key + '">' +
+        (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+        (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+        '<div class="input-container-body">' + borderedHtml + '</div>' +
+        '</div>';
+    }
+
+    // Default: flat — solo el label (si hay) + children sin borde
+    var flatChildren = children.map(renderChild).join('');
+    return '<div class="input-container input-container--flat"' + typeAttr + ' data-container-key="' + key + '">' +
+      (label ? '<div class="input-container-header"><span class="input-container-title">' + label + '</span></div>' : '') +
+      (description ? '<p class="input-container-desc">' + description + '</p>' : '') +
+      '<div class="input-container-body">' + flatChildren + '</div>' +
+      '</div>';
   }
 
   function formContextPlaceholder(f, opts, label) {
@@ -575,6 +657,11 @@
     var alignment = (f.alignment || 'left').toLowerCase();
     var alignClass = alignment !== 'left' ? ' structural-align-' + alignment : '';
     if (t === 'section') {
+      // Section AHORA es contenedor: si tiene children o display_style, delega
+      // a renderContainerField (flat/accordion/tabs/bordered)
+      if (Array.isArray(f.children) || f.display_style) {
+        return renderContainerField(f, {}, false, 'section');
+      }
       var collapsible = f.collapsible ? ' structural-section-collapsible' : '';
       return '<div class="form-structural form-section' + collapsible + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' +
         (title ? '<div class="form-section-header"><span class="form-section-title">' + title + '</span></div>' : '') +
@@ -1201,6 +1288,10 @@
     STRUCTURAL_CONTAINER: {
       preview: function (f) {
         var t = getInputType(f);
+        // section como container: render real con children y display_style
+        if (t === 'section' && (Array.isArray(f.children) || f.display_style)) {
+          return renderContainerField(f, {}, true, 'section');
+        }
         var labels = { section: 'Sección', divider: 'Divisor', heading: 'Título', description: 'Texto informativo', description_block: 'Texto informativo', accordion: 'Acordeón', tabs: 'Pestañas', repeater: 'Repetidor', group: 'Grupo' };
         var icons = { section: 'square', divider: 'minus', heading: 'type', description: 'align-left', description_block: 'info', accordion: 'caret-double-down', tabs: 'squares-four', repeater: 'repeat', group: 'stack' };
         return previewBlock(labels[t] || f.label || 'Bloque', icons[t] || 'placeholder');
@@ -1279,7 +1370,15 @@
     register('white_balance', { preview: previewWhiteBalance, form: formWhiteBalance });
     register('rotation_dial', { preview: previewRotationDial, form: formRotationDial });
 
-    register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
+    register('section', {
+      preview: function (f) {
+        if (Array.isArray(f.children) || f.display_style) {
+          return renderContainerField(f, {}, true, 'section');
+        }
+        return previewBlock('Sección', 'square');
+      },
+      form: formStructural
+    });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });
     register('heading', { preview: function () { return previewBlock('Título', 'type'); }, form: formStructural });
     register('description', { preview: function () { return previewBlock('Texto informativo', 'align-left'); }, form: formStructural });
@@ -1476,6 +1575,28 @@
     if (!container) return;
     initColorsPicker(container);
     initAspectRatioPicker(container);
+    initContainerTabs(container);
+  }
+
+  /** Cambia el panel activo cuando el usuario clickea un tab dentro de un
+   *  contenedor con display_style:'tabs'. */
+  function initContainerTabs(container) {
+    if (!container || !container.querySelectorAll) return;
+    container.querySelectorAll('.input-container--tabs').forEach(function (tabsContainer) {
+      var headers = tabsContainer.querySelectorAll('.input-tab-btn');
+      var panels = tabsContainer.querySelectorAll('.input-tab-panel');
+      headers.forEach(function (btn) {
+        if (btn.__tabsWired) return;
+        btn.__tabsWired = true;
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var key = btn.getAttribute('data-tab-key');
+          headers.forEach(function (h) { h.classList.toggle('active', h === btn); });
+          panels.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-tab-key') === key); });
+        });
+      });
+    });
   }
 
   /**

@@ -1025,6 +1025,15 @@
     if (!TYPES_WITH_STEPS.has(newType)) {
       delete field.steps;
     }
+    // 1c. children / display_style: limpiar si el nuevo tipo no es container
+    if (!TYPES_CONTAINER.has(newType)) {
+      delete field.children;
+      // display_style se preserva si aplica (toggle_switch, checkboxes single)
+      // y se limpia si era 'flat'/'accordion'/'tabs'/'bordered' (containers-only)
+      if (['flat','accordion','tabs','bordered'].indexOf(field.display_style) >= 0) {
+        delete field.display_style;
+      }
+    }
 
     // 2. min/max/step: limpiar si el nuevo tipo no es numérico/range
     if (!TYPES_WITH_RANGE.has(newType)) {
@@ -1155,7 +1164,15 @@
       if (field.max == null) field.max = 180;
       if (field.defaultValue == null) field.defaultValue = 0;
     }
+    // Containers: section y scope_picker tienen children + display_style
+    if (newType === 'section' || newType === 'scope_picker') {
+      if (!Array.isArray(field.children)) field.children = [];
+      if (!field.display_style) field.display_style = 'flat';
+    }
   };
+
+  // Containers permitidos: estos input_types pueden tener children y display_style
+  const TYPES_CONTAINER = new Set(['section', 'scope_picker']);
 
   /** Renderiza <optgroup>s con los input_types disponibles. Si el tipo actual NO está
    *  en el catálogo (vino de DB con un input_type desconocido), añade un optgroup
@@ -1395,7 +1412,20 @@
             </select>
             <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
           </div>
-          
+
+          ${(['section','scope_picker'].indexOf((field.input_type || field.type)) >= 0) ? `
+          <div class="property-field">
+            <label for="propDisplayStyle">Estilo del contenedor</label>
+            <select id="propDisplayStyle">
+              <option value="flat" ${(field.display_style || 'flat') === 'flat' ? 'selected' : ''}>Flat (label + lista)</option>
+              <option value="bordered" ${field.display_style === 'bordered' ? 'selected' : ''}>Bordered (card con borde)</option>
+              <option value="accordion" ${field.display_style === 'accordion' ? 'selected' : ''}>Accordion (colapsable)</option>
+              <option value="tabs" ${field.display_style === 'tabs' ? 'selected' : ''}>Tabs (cada child sub-container = tab)</option>
+            </select>
+            <span class="field-help">Define cómo se agrupan los inputs anidados dentro de este contenedor.</span>
+          </div>
+          ` : ''}
+
           <div class="property-field">
             <label for="propPlaceholder">Placeholder</label>
             <input type="text" id="propPlaceholder" value="${(field.placeholder || '').replace(/"/g, '&quot;')}">
@@ -2115,6 +2145,16 @@
       inputTypeSelect.addEventListener('change', (e) => {
         this.applyInputTypeChange(field, e.target.value);
         this.renderPropertiesPanel();
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+
+    // Container display_style (solo aplica si el field es section/scope_picker)
+    const displayStyleSelect = this.querySelector('#propDisplayStyle');
+    if (displayStyleSelect) {
+      displayStyleSelect.addEventListener('change', (e) => {
+        field.display_style = e.target.value;
         this.renderCanvas();
         this.onFieldChange();
       });

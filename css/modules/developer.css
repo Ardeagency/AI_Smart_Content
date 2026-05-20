@@ -3555,6 +3555,173 @@
 }
 
 /* ============================================================
+ * Containers: section + scope_picker como agrupadores anidables
+ * display_style: flat | bordered | accordion | tabs
+ * ============================================================ */
+.input-container {
+  width: 100%;
+}
+.input-container-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.input-container-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.input-container-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+.input-container-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.input-container-empty-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.input-container-empty-msg i {
+  font-size: 24px;
+  opacity: 0.55;
+}
+
+/* Flat: solo header + lista vertical, sin borde */
+.input-container--flat {
+  padding: 0;
+}
+
+/* Bordered: card-like con border + bg sutil */
+.input-container--bordered {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+/* Accordion: usa <details> nativo */
+.input-container--accordion {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #242424;
+  border-radius: 10px;
+}
+.input-accordion-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+.input-accordion-summary::-webkit-details-marker { display: none; }
+.input-accordion-summary:hover { background: rgba(255, 255, 255, 0.03); }
+.input-accordion-summary i {
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.input-container--accordion[open] > .input-accordion-summary i,
+.input-accordion-panel[open] > .input-accordion-summary i {
+  transform: rotate(180deg);
+}
+.input-accordion-body {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.input-accordion-group {
+  display: flex;
+  flex-direction: column;
+}
+.input-accordion-panel {
+  border-top: 1px solid #242424;
+}
+.input-accordion-panel:first-child {
+  border-top: 0;
+}
+
+/* Tabs: header con botones pill + body con panels */
+.input-container--tabs {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 14px 16px 16px;
+}
+.input-tabs-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #242424;
+}
+.input-tab-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.input-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+.input-tab-btn.active {
+  background: var(--accent-warm, #e09145);
+  color: #0B0B0B;
+}
+.input-tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+.input-tab-panel.active {
+  display: flex;
+}
+.input-container-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid rgba(224, 145, 69, 0.5);
+  border-radius: 4px;
+}
+
+/* Children dentro de un container — leve indent visual */
+.input-container-child {
+  position: relative;
+}
+
+/* ============================================================
  * Tier 3 — Sliders especializados (color/temperature/rotation)
  * ============================================================ */
 

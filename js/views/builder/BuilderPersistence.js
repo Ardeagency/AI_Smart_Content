@@ -49,6 +49,10 @@
       }
       // label fallback
       if (!f.label) f.label = f.key;
+      // Containers (section, scope_picker): normalizar children recursivamente
+      if ((f.input_type === 'section' || f.input_type === 'scope_picker') && Array.isArray(f.children)) {
+        f.children = this.normalizeInputSchema(f.children);
+      }
       out.push(f);
     }
     return out;
