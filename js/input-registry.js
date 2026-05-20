@@ -760,8 +760,19 @@
     // Bold, italic
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Links [text](url) — solo http/https/mailto; bloqueamos javascript:, data:, vbscript:, file:
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, text, url) {
+      var safe = String(url).trim();
+      // escapeHtml ya convirtió < > " &, pero los esquemas se evalúan al inicio del string
+      if (/^(javascript|data|vbscript|file|blob):/i.test(safe) || /^\s/.test(url)) {
+        return text; // descartamos el link entero, dejamos solo el texto
+      }
+      // Permitidos: http(s)://, mailto:, anclas internas (#...) y paths relativos (/...)
+      if (!/^(https?:\/\/|mailto:|#|\/)/i.test(safe)) {
+        return text;
+      }
+      return '<a href="' + safe + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+    });
     // Listas (sólo bullet simple)
     html = html.replace(/^(?:-|\*)\s+(.+)$/gm, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>)(?!\s*<li>)/gs, '<ul>$1</ul>');
@@ -2192,7 +2203,13 @@
         var sfx = (minTip && minTip.getAttribute('data-suffix')) || '';
         if (minTip) { minTip.textContent = lo + sfx; minTip.style.left = pctLo + '%'; }
         if (maxTip) { maxTip.textContent = hi + sfx; maxTip.style.left = pctHi + '%'; }
-        if (hidden) hidden.value = lo + ',' + hi;
+        if (hidden) {
+          hidden.value = lo + ',' + hi;
+          if (justChanged && hidden.dispatchEvent) {
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            hidden.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
       };
       update();
       minInput.addEventListener('input', function () { update('min'); });
@@ -2220,8 +2237,13 @@
   function initContainerTabs(container) {
     if (!container || !container.querySelectorAll) return;
     container.querySelectorAll('.input-container--tabs').forEach(function (tabsContainer) {
-      var headers = tabsContainer.querySelectorAll('.input-tab-btn');
-      var panels = tabsContainer.querySelectorAll('.input-tab-panel');
+      // Solo los buttons/panels que pertenecen a ESTE container — los headers/bodies
+      // de containers anidados quedan fuera del scope.
+      var header = tabsContainer.querySelector(':scope > .input-tabs-header');
+      var body = tabsContainer.querySelector(':scope > .input-tabs-body');
+      if (!header || !body) return;
+      var headers = header.querySelectorAll(':scope > .input-tab-btn');
+      var panels = body.querySelectorAll(':scope > .input-tab-panel');
       headers.forEach(function (btn) {
         if (btn.__tabsWired) return;
         btn.__tabsWired = true;

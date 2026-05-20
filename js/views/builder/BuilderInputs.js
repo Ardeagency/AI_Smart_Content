@@ -1149,7 +1149,15 @@
       delete field.flag_category;
       delete field.flags_category;
     }
-    if (newType !== 'toggle_switch' && newType !== 'selection_checkboxes' && newType !== 'switch') {
+    // display_style se preserva si el nuevo tipo lo usa. Tipos que usan display_style:
+    //  - toggle_switch / switch / selection_checkboxes (variantes del control)
+    //  - range (simple / tooltip / range_dual)
+    //  - section / scope_picker (flat / accordion / tabs / bordered) — ya cubierto arriba
+    var TYPES_WITH_DISPLAY_STYLE = new Set([
+      'toggle_switch','switch','selection_checkboxes','range',
+      'section','scope_picker'
+    ]);
+    if (!TYPES_WITH_DISPLAY_STYLE.has(newType)) {
       delete field.display_style;
     }
     if (newType !== 'colores' && !TYPES_ARRAY_DATA.has(newType)) {
