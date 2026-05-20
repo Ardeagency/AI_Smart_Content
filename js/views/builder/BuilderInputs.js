@@ -701,117 +701,121 @@
     return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
   };
 
+  // Delegación: TODOS los listeners van al contenedor estable #canvasFields una sola vez.
+  // Al re-renderizar (innerHTML = ...), los handlers del padre siguen vivos. Cero memory leak.
   P.setupCanvasFieldListeners = function () {
-    const fields = this.querySelectorAll('.canvas-field');
+    const root = this.querySelector('#canvasFields');
+    if (!root || root.__listenersWired) return;
+    root.__listenersWired = true;
 
-    fields.forEach((field, index) => {
-      // El área del input real (todo lo que NO sea el overlay) no debe propagar
-      // el click — así escribir/elegir no cambia la selección.
-      const interactive = field.querySelectorAll('input, select, textarea, .color-swatch, .ratio-option, .image-thumb, .focus-tab');
-      interactive.forEach(el => el.addEventListener('click', (e) => e.stopPropagation()));
+    const getIndex = (el) => {
+      const field = el && el.closest && el.closest('.canvas-field');
+      if (!field) return -1;
+      const i = parseInt(field.dataset.index, 10);
+      return Number.isFinite(i) ? i : -1;
+    };
 
-      // Click en el field (overlay, bordes, label) para seleccionar — exceptuando los action buttons
-      field.addEventListener('click', (e) => {
-        if (e.target.closest('.field-action-btn')) return;
-        if (e.target.closest('input, select, textarea, button')) return;
-        this.selectField(index);
-      });
-      
-      // Drag para reordenar
-      field.addEventListener('dragstart', (e) => {
-        this.draggedFieldIndex = index;
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-          type: 'reorder',
-          fromIndex: index
-        }));
-        field.classList.add('dragging');
-      });
-      
-      field.addEventListener('dragend', () => {
-        field.classList.remove('dragging');
-        this.draggedFieldIndex = null;
-      });
-      
-      field.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== index) {
-          field.classList.add('drag-target');
-        }
-      });
-      
-      field.addEventListener('dragleave', () => {
-        field.classList.remove('drag-target');
-      });
-      
-      field.addEventListener('drop', (e) => {
-        e.preventDefault();
+    // 1. Click → seleccionar field o botones de acción del overlay
+    root.addEventListener('click', (e) => {
+      const dup = e.target.closest('.duplicate-field');
+      if (dup) {
+        e.preventDefault(); e.stopPropagation();
+        const i = getIndex(dup);
+        if (i >= 0) this.duplicateField(i);
+        return;
+      }
+      const del = e.target.closest('.delete-field');
+      if (del) {
+        e.preventDefault(); e.stopPropagation();
+        const i = getIndex(del);
+        if (i >= 0) this.deleteField(i);
+        return;
+      }
+      // Interactivos del preview: NO seleccionar (escribir/elegir no debe robar foco)
+      if (e.target.closest('input, select, textarea, button, .color-swatch, .ratio-option, .image-thumb, .focus-tab')) {
         e.stopPropagation();
-        field.classList.remove('drag-target');
-        
-        if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== index) {
-          this.reorderField(this.draggedFieldIndex, index);
-        }
-      });
-      
-      // Botones de acción del overlay
-      const duplicateBtn = field.querySelector('.duplicate-field');
-      const deleteBtn = field.querySelector('.delete-field');
-
-      if (duplicateBtn) {
-        duplicateBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.duplicateField(index);
-        });
+        return;
       }
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.deleteField(index);
-        });
-      }
+      const i = getIndex(e.target);
+      if (i >= 0) this.selectField(i);
+    });
 
-      // Sincronizar cambios en los inputs del field con el schema (defaultValue)
-      const schemaFields = this.getCanvasFields();
-      const schemaField = schemaFields[index];
-      if (schemaField) {
-        const sync = () => { this.onFieldChange(); if (this.selectedFieldIndex === index) this.renderPropertiesPanel(); };
-        field.querySelectorAll('input, select, textarea').forEach((el) => {
-          const tag = el.tagName.toLowerCase();
-          const type = (el.type || '').toLowerCase();
-          if (type === 'range') {
-            el.addEventListener('input', () => {
-              schemaField.defaultValue = parseFloat(el.value);
-              const span = el.nextElementSibling || field.querySelector('.range-value');
-              if (span) span.textContent = el.value;
-              sync();
-            });
-          } else if (type === 'number') {
-            el.addEventListener('input', () => {
-              const n = parseFloat(el.value);
-              schemaField.defaultValue = isNaN(n) ? undefined : n;
-              sync();
-            });
-          } else if (type === 'checkbox') {
-            el.addEventListener('change', () => {
-              schemaField.defaultValue = el.checked;
-              sync();
-            });
-          } else if (tag === 'select') {
-            el.addEventListener('change', () => {
-              schemaField.defaultValue = el.value === '' ? undefined : el.value;
-              sync();
-            });
-          } else {
-            el.addEventListener('input', () => {
-              schemaField.defaultValue = el.value;
-              sync();
-            });
-          }
-        });
+    // 2. Drag para reordenar fields
+    root.addEventListener('dragstart', (e) => {
+      const field = e.target.closest && e.target.closest('.canvas-field');
+      if (!field) return;
+      const i = getIndex(field);
+      if (i < 0) return;
+      this.draggedFieldIndex = i;
+      try {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'reorder', fromIndex: i }));
+      } catch (_) {}
+      field.classList.add('dragging');
+    });
+
+    root.addEventListener('dragend', (e) => {
+      const field = e.target.closest && e.target.closest('.canvas-field');
+      if (field) field.classList.remove('dragging');
+      this.draggedFieldIndex = null;
+    });
+
+    root.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const field = e.target.closest && e.target.closest('.canvas-field');
+      if (!field) return;
+      const i = getIndex(field);
+      if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== i) {
+        field.classList.add('drag-target');
       }
     });
+
+    root.addEventListener('dragleave', (e) => {
+      const field = e.target.closest && e.target.closest('.canvas-field');
+      if (field) field.classList.remove('drag-target');
+    });
+
+    root.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const field = e.target.closest && e.target.closest('.canvas-field');
+      if (!field) return;
+      field.classList.remove('drag-target');
+      const i = getIndex(field);
+      if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== i && i >= 0) {
+        this.reorderField(this.draggedFieldIndex, i);
+      }
+    });
+
+    // 3. Sync de inputs internos → defaultValue del schema (delegado a input/change que burbujean)
+    const handleSync = (e) => {
+      const el = e.target;
+      if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA')) return;
+      const i = getIndex(el);
+      if (i < 0) return;
+      const schemaField = this.getCanvasFields()[i];
+      if (!schemaField) return;
+      const tag = el.tagName.toLowerCase();
+      const type = (el.type || '').toLowerCase();
+      if (type === 'range') {
+        schemaField.defaultValue = parseFloat(el.value);
+        const field = el.closest('.canvas-field');
+        const span = el.nextElementSibling || (field && field.querySelector('.range-value'));
+        if (span) span.textContent = el.value;
+      } else if (type === 'number') {
+        const n = parseFloat(el.value);
+        schemaField.defaultValue = isNaN(n) ? undefined : n;
+      } else if (type === 'checkbox') {
+        schemaField.defaultValue = el.checked;
+      } else if (tag === 'select') {
+        schemaField.defaultValue = el.value === '' ? undefined : el.value;
+      } else {
+        schemaField.defaultValue = el.value;
+      }
+      this.onFieldChange();
+      if (this.selectedFieldIndex === i) this.renderPropertiesPanel();
+    };
+    root.addEventListener('input', handleSync);
+    root.addEventListener('change', handleSync);
   };
 
   P.selectField = function (index) {
