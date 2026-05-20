@@ -818,6 +818,168 @@
     root.addEventListener('change', handleSync);
   };
 
+  // Catálogo agrupado de input_types disponibles para el select "Tipo de control".
+  // Sincronizado con los ~75 input_types reales de ui_component_templates en Supabase.
+  P.INPUT_TYPE_GROUPS = [
+    {
+      label: 'Básicos',
+      items: [
+        ['text',      'Texto corto'],
+        ['textarea',  'Texto largo'],
+        ['tags',      'Etiquetas / hashtags'],
+        ['number',    'Número'],
+        ['num_stepper','Número (stepper)'],
+        ['range',     'Slider'],
+        ['file',      'Archivo']
+      ]
+    },
+    {
+      label: 'Selección',
+      items: [
+        ['dropdown',             'Desplegable'],
+        ['select',               'Selector (select)'],
+        ['choice_chips',         'Chips única'],
+        ['multi_select_chips',   'Chips múltiple'],
+        ['radio',                'Radio'],
+        ['toggle_switch',        'Switch (on/off)'],
+        ['checkbox',             'Checkbox boolean'],
+        ['checkboxes',           'Checkbox una opción (variable = valor)'],
+        ['selection_checkboxes', 'Checkbox múltiple (array)'],
+        ['flags',                'Banderas (idioma/país/etnia)'],
+        ['conditional_block',    'Bloque condicional']
+      ]
+    },
+    {
+      label: 'Visual',
+      items: [
+        ['colores',         'Colores (círculos)'],
+        ['aspect_ratio',    'Aspect ratio'],
+        ['image_selector',  'Selector de imagen'],
+        ['scope_picker',    'Enfoque producción'],
+        ['focus_selector',  'Selector de enfoque']
+      ]
+    },
+    {
+      label: 'Datos / Contexto',
+      items: [
+        ['brand_selector',    'Selector de marca'],
+        ['entity_selector',   'Selector de entidad'],
+        ['product_selector',  'Selector de producto'],
+        ['audience_selector', 'Selector de audiencia'],
+        ['tone_selector',     'Tono'],
+        ['length_selector',   'Longitud'],
+        ['platform_selector', 'Plataforma'],
+        ['cron_schedule',     'Programación (cron)'],
+        ['duration_cap',      'Duración tope'],
+        ['render_batch_size', 'Tamaño de lote']
+      ]
+    },
+    {
+      label: 'Audio',
+      items: [
+        ['audio_mood',          'Mood de audio'],
+        ['music_bpm',           'BPM música'],
+        ['voice_profile',       'Perfil de voz'],
+        ['lang_selector',       'Idioma'],
+        ['sound_design_notes',  'Sound design']
+      ]
+    },
+    {
+      label: 'Branding & Copy',
+      items: [
+        ['headline_slot',     'Slot de titular'],
+        ['body_slot',          'Slot de cuerpo'],
+        ['brand_positioning',  'Posicionamiento'],
+        ['message_focus',      'Foco de mensaje'],
+        ['cta_layering',       'CTA layering'],
+        ['legal_disclaimer',   'Disclaimer legal'],
+        ['overlay_safe_zone',  'Safe zone overlay'],
+        ['logo_lockup',        'Logo lockup']
+      ]
+    },
+    {
+      label: 'Estilo & Cámara',
+      items: [
+        ['camera_angle',          'Ángulo de cámara'],
+        ['shot_type',             'Tipo de toma'],
+        ['lens_focal_length',     'Lente / focal'],
+        ['depth_of_field',        'Profundidad de campo'],
+        ['composition_structure', 'Composición'],
+        ['lighting_style',        'Estilo de luz'],
+        ['color_grade_preset',    'Color grade'],
+        ['contrast_level',        'Contraste'],
+        ['saturation_level',      'Saturación'],
+        ['grain_amount',          'Grano'],
+        ['glow_amount',           'Glow'],
+        ['finish_type',           'Acabado'],
+        ['floating_product',      'Producto flotante']
+      ]
+    },
+    {
+      label: 'Motion & Perspectiva',
+      items: [
+        ['camera_movement',       'Movimiento de cámara'],
+        ['camera_path',           'Trayectoria'],
+        ['camera_roll',           'Camera roll'],
+        ['focus_pull',            'Focus pull'],
+        ['shot_speed',            'Velocidad'],
+        ['frame_rate_style',      'Frame rate'],
+        ['motion_style_video',    'Estilo motion'],
+        ['zoom_behavior',         'Zoom'],
+        ['loop_behavior',         'Loop'],
+        ['parallax_layers',       'Parallax'],
+        ['perspective_grid',      'Grid perspectiva'],
+        ['transition_anchor',     'Anchor transición'],
+        ['vanishing_point_bias',  'Punto de fuga']
+      ]
+    },
+    {
+      label: 'Escenarios / Protagonistas',
+      items: [
+        ['background_type',     'Tipo de fondo'],
+        ['environment_theme',   'Tema ambiental'],
+        ['emotion_profile',     'Emoción'],
+        ['ethnicity_profile',   'Etnia'],
+        ['eye_color',           'Color de ojos'],
+        ['hair_color',          'Color de cabello'],
+        ['hair_style',          'Peinado'],
+        ['pose_direction',      'Pose'],
+        ['wardrobe_style',      'Vestuario']
+      ]
+    },
+    {
+      label: 'Estructura',
+      items: [
+        ['section',     'Sección'],
+        ['divider',     'Divisor'],
+        ['heading',     'Título'],
+        ['description', 'Descripción']
+      ]
+    }
+  ];
+
+  /** Renderiza <optgroup>s con los input_types disponibles. Si el tipo actual NO está
+   *  en el catálogo (vino de DB con un input_type desconocido), añade un optgroup
+   *  "Personalizado" con esa entrada para que no se pierda al cambiar otra option. */
+  P.renderInputTypeOptions = function (currentType) {
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const known = new Set();
+    let html = '';
+    this.INPUT_TYPE_GROUPS.forEach(group => {
+      html += `<optgroup label="${esc(group.label)}">`;
+      group.items.forEach(([val, label]) => {
+        known.add(val);
+        const sel = (currentType === val) ? ' selected' : '';
+        html += `<option value="${esc(val)}"${sel}>${esc(label)}</option>`;
+      });
+      html += '</optgroup>';
+    });
+    if (currentType && !known.has(currentType)) {
+      html += `<optgroup label="Personalizado"><option value="${esc(currentType)}" selected>${esc(currentType)} (custom)</option></optgroup>`;
+    }
+    return html;
+  };
+
   P.selectField = function (index) {
     this.selectedFieldIndex = index;
     
@@ -1030,21 +1192,7 @@
           <div class="property-field">
             <label for="propInputType">Tipo de control</label>
             <select id="propInputType">
-              <option value="text" ${(field.input_type || field.type || 'text') === 'text' ? 'selected' : ''}>Texto corto</option>
-              <option value="textarea" ${(field.input_type || field.type) === 'textarea' ? 'selected' : ''}>Texto largo</option>
-              <option value="dropdown" ${(field.input_type || field.type) === 'dropdown' ? 'selected' : ''}>Dropdown</option>
-              <option value="select" ${(field.input_type || field.type) === 'select' ? 'selected' : ''}>Selector (select)</option>
-              <option value="number" ${(field.input_type || field.type) === 'number' ? 'selected' : ''}>Número</option>
-              <option value="checkbox" ${(field.input_type || field.type) === 'checkbox' ? 'selected' : ''}>Checkbox on/off (boolean)</option>
-              <option value="checkboxes" ${(field.input_type || field.type) === 'checkboxes' ? 'selected' : ''}>Checkboxes (una opción → variable = valor, ej. cabello = rubio)</option>
-              <option value="selection_checkboxes" ${(field.input_type || field.type) === 'selection_checkboxes' ? 'selected' : ''}>Checkboxes múltiples (varias opciones → array)</option>
-              <option value="radio" ${(field.input_type || field.type) === 'radio' ? 'selected' : ''}>Radio</option>
-              <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
-              <option value="flags" ${(field.input_type || field.type) === 'flags' ? 'selected' : ''}>Flags (idioma, país, etnia)</option>
-              <option value="colores" ${(field.input_type || field.type) === 'colores' ? 'selected' : ''}>Colores (círculos, máx. 6)</option>
-              <option value="aspect_ratio" ${(field.input_type || field.type) === 'aspect_ratio' ? 'selected' : ''}>Aspect ratio (formato producción)</option>
-              <option value="scope_picker" ${(field.input_type || field.type) === 'scope_picker' ? 'selected' : ''}>Scope picker (enfoque producción)</option>
-              <option value="image_selector" ${(field.input_type || field.type) === 'image_selector' ? 'selected' : ''}>Selector de imagen (carrusel)</option>
+              ${this.renderInputTypeOptions(field.input_type || field.type || 'text')}
             </select>
             <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
           </div>
