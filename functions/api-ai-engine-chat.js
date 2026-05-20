@@ -115,12 +115,21 @@ exports.handler = async (event) => {
     };
   }
 
-  const { organization_id, conversation_id, message } = body;
-  if (!organization_id || typeof message !== "string" || !message.trim()) {
+  const { organization_id, conversation_id, message, attachments, confirmed_high_cost } = body;
+  const hasMessage     = typeof message === "string" && message.trim().length > 0;
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+  if (!organization_id || (!hasMessage && !hasAttachments)) {
     return {
       statusCode: 400,
       headers: corsHeaders(event),
-      body: JSON.stringify({ error: "organization_id y message son requeridos" }),
+      body: JSON.stringify({ error: "organization_id y message o attachments son requeridos" }),
+    };
+  }
+  if (hasAttachments && attachments.length > 10) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders(event),
+      body: JSON.stringify({ error: "Máximo 10 archivos adjuntos por mensaje" }),
     };
   }
 
@@ -195,7 +204,13 @@ exports.handler = async (event) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ organization_id, conversation_id, message }),
+      body: JSON.stringify({
+        organization_id,
+        conversation_id,
+        message,
+        ...(hasAttachments ? { attachments } : {}),
+        ...(confirmed_high_cost === true ? { confirmed_high_cost: true } : {}),
+      }),
     });
   } catch (e) {
     const isTimeout = e?.name === "AbortError";
