@@ -1582,22 +1582,18 @@
       </div>
     `;
 
-    const footerEl = this.querySelector('#propertiesFooter');
     panel.innerHTML =
       this.renderPropertiesHeader(field, this.selectedFieldIndex) +
       this.renderPropertiesTabs([
-        { id: 'general',  label: 'General',       icon: 'sliders',     content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
-        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush', content: stylesPanel  },
-        { id: 'config',   label: 'Configuración', icon: 'code',        content: configPanel  }
+        { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
+        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
+        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  },
+        { id: 'json',     label: 'JSON body',     icon: 'brackets-curly',   content: this.renderPropertiesJsonTab(field) }
       ]);
-    if (footerEl) {
-      footerEl.innerHTML = this.renderPropertiesFooter(field);
-      footerEl.removeAttribute('hidden');
-    }
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
-    this.setupPropertiesFooterListeners(field);
+    this.setupPropertiesJsonTabListeners(field);
     this.setupPropertiesSegmentedListeners();
     this.setupStructuralPropertiesListeners(field, t);
   };
@@ -1637,7 +1633,6 @@
 
   P.renderPropertiesPanel = function () {
     const panel = this.querySelector('#propertiesPanel');
-    const footerEl = this.querySelector('#propertiesFooter');
     if (!panel) return;
 
     if (this.selectedFieldIndex === null || !this.getCanvasFields()[this.selectedFieldIndex]) {
@@ -1647,7 +1642,6 @@
           <p>Selecciona un campo para editar sus propiedades</p>
         </div>
       `;
-      if (footerEl) { footerEl.innerHTML = ''; footerEl.setAttribute('hidden', ''); }
       return;
     }
     
@@ -1855,16 +1849,13 @@
       this.renderPropertiesTabs([
         { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel },
         { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
-        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  }
+        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  },
+        { id: 'json',     label: 'JSON body',     icon: 'brackets-curly',   content: this.renderPropertiesJsonTab(field) }
       ]);
-    if (footerEl) {
-      footerEl.innerHTML = this.renderPropertiesFooter(field);
-      footerEl.removeAttribute('hidden');
-    }
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
-    this.setupPropertiesFooterListeners(field);
+    this.setupPropertiesJsonTabListeners(field);
     this.setupPropertiesStyleCardListeners();
     this.setupPropertiesSegmentedListeners();
     this.setupPropertiesListeners();
@@ -1904,25 +1895,21 @@
     `;
   };
 
-  /** Footer: botón "Ver JSON crudo" que despliega un editor JSON read-only del field */
-  P.renderPropertiesFooter = function (field) {
+  /** Contenido del tab "JSON" — viewer read-only del field + botón copiar */
+  P.renderPropertiesJsonTab = function (field) {
     const json = JSON.stringify(field, null, 2);
     const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const expanded = this._propJsonExpanded === true;
     return `
-      <div class="properties-footer ${expanded ? 'is-expanded' : ''}" data-prop-footer="1">
-        <button type="button" class="properties-json-toggle" data-prop-action="toggle-json">
-          <i class="ph ph-${expanded ? 'caret-down' : 'caret-right'}"></i>
-          <i class="ph ph-brackets-curly"></i>
-          <span>Ver JSON crudo del field</span>
-          <span class="properties-json-size">${json.length} chars</span>
-        </button>
-        <div class="properties-json-viewer" ${expanded ? '' : 'hidden'}>
-          <div class="properties-json-toolbar">
-            <button type="button" class="prop-json-btn" data-prop-action="copy-json"><i class="ph ph-copy"></i> Copiar</button>
+      <div class="properties-json-tab" data-prop-json="1">
+        <div class="properties-json-toolbar">
+          <div class="properties-json-meta">
+            <i class="ph ph-brackets-curly"></i>
+            <span>Schema del field</span>
+            <span class="properties-json-size">${json.length} chars</span>
           </div>
-          <pre class="properties-json-pre"><code>${esc(json)}</code></pre>
+          <button type="button" class="prop-json-btn" data-prop-action="copy-json"><i class="ph ph-copy"></i> Copiar</button>
         </div>
+        <pre class="properties-json-pre"><code>${esc(json)}</code></pre>
       </div>
     `;
   };
@@ -2019,29 +2006,11 @@
     });
   };
 
-  /** Listeners del footer (toggle JSON viewer + copiar) */
-  P.setupPropertiesFooterListeners = function (field) {
-    const footer = this.querySelector('[data-prop-footer="1"]');
-    if (!footer) return;
-    const toggleBtn = footer.querySelector('[data-prop-action="toggle-json"]');
-    const copyBtn = footer.querySelector('[data-prop-action="copy-json"]');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this._propJsonExpanded = !this._propJsonExpanded;
-        const viewer = footer.querySelector('.properties-json-viewer');
-        const caret = toggleBtn.querySelector('.ph-caret-right, .ph-caret-down');
-        if (this._propJsonExpanded) {
-          footer.classList.add('is-expanded');
-          if (viewer) viewer.removeAttribute('hidden');
-          if (caret) { caret.classList.remove('ph-caret-right'); caret.classList.add('ph-caret-down'); }
-        } else {
-          footer.classList.remove('is-expanded');
-          if (viewer) viewer.setAttribute('hidden', '');
-          if (caret) { caret.classList.remove('ph-caret-down'); caret.classList.add('ph-caret-right'); }
-        }
-      });
-    }
+  /** Listener del tab "JSON" — botón copiar al portapapeles */
+  P.setupPropertiesJsonTabListeners = function (field) {
+    const root = this.querySelector('[data-prop-json="1"]');
+    if (!root) return;
+    const copyBtn = root.querySelector('[data-prop-action="copy-json"]');
     if (copyBtn) {
       copyBtn.addEventListener('click', async (e) => {
         e.preventDefault();

@@ -448,7 +448,6 @@ class DevBuilderView extends DevBaseView {
               <p>Selecciona un campo para editar sus propiedades</p>
             </div>
           </div>
-          <div class="builder-properties-footer" id="propertiesFooter" hidden></div>
         </aside>
       </main>
 
