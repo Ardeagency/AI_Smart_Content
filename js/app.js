@@ -194,13 +194,14 @@ class App {
       }
       if (window.router) window.router.navigate(url, true);
     };
+    // Mismo patrón que rootRedirectView (/): toda la lógica vive en render().
+    // El override anterior tenía onEnter() pero el router solo llama render(),
+    // así que el redirect nunca corría y la página se quedaba en "Redirigiendo...".
     const redirectToDefaultView = class extends (window.BaseView || class {}) {
-      async onEnter() {
-        await redirectToDefaultOrg();
-      }
       async render() {
         const c = document.getElementById('app-container');
         if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+        await redirectToDefaultOrg();
       }
     };
 
