@@ -103,6 +103,9 @@
     'scope_picker':      { section: 'visual',     sub: 'Enfoque' },
     'image_selector':    { section: 'visual',     sub: 'Imagen' },
     'file':              { section: 'visual',     sub: 'Archivo' },
+    'color_slider':      { section: 'visual',     sub: 'Hue slider' },
+    'white_balance':     { section: 'visual',     sub: 'Temperatura' },
+    'rotation_dial':     { section: 'visual',     sub: 'Rotación' },
     // Audio
     'audio_mood':        { section: 'audio',      sub: 'Mood' },
     'lang_selector':     { section: 'audio',      sub: 'Idioma / Voz' },
@@ -186,6 +189,9 @@
       key: 'visual', name: 'Visual', icon: 'image',
       subs: [
         { name: 'Colores' },
+        { name: 'Hue slider' },
+        { name: 'Temperatura' },
+        { name: 'Rotación' },
         { name: 'Aspect ratio' },
         { name: 'Imagen' },
         { name: 'Archivo' },
@@ -875,6 +881,9 @@
       label: 'Visual',
       items: [
         ['colores',         'Colores (círculos)'],
+        ['color_slider',    'Hue slider (rainbow)'],
+        ['white_balance',   'Temperatura (frío↔cálido)'],
+        ['rotation_dial',   'Rotación (dial ticks)'],
         ['aspect_ratio',    'Aspect ratio'],
         ['image_selector',  'Selector de imagen'],
         ['scope_picker',    'Enfoque producción'],
@@ -989,7 +998,7 @@
     'segmented_control'
   ]);
   const TYPES_WITH_STEPS = new Set(['steps_slider']);
-  const TYPES_WITH_RANGE = new Set(['range','num_stepper','number']);
+  const TYPES_WITH_RANGE = new Set(['range','num_stepper','number','color_slider','white_balance','rotation_dial']);
   const TYPES_ARRAY_DATA = new Set(['selection_checkboxes','multi_select_chips','colores']);
   const TYPES_BOOLEAN_DATA = new Set(['checkbox','toggle_switch']);
   const TYPES_NUMBER_DATA  = new Set(['range','number','num_stepper']);
@@ -1130,6 +1139,21 @@
         field.steps = [1, 10, 25, 50];
       }
       if (field.defaultValue == null) field.defaultValue = field.steps[Math.floor(field.steps.length / 2)];
+    }
+    if (newType === 'color_slider') {
+      if (field.min == null) field.min = 0;
+      if (field.max == null) field.max = 360;
+      if (field.defaultValue == null) field.defaultValue = 180;
+    }
+    if (newType === 'white_balance') {
+      if (field.min == null) field.min = -100;
+      if (field.max == null) field.max = 100;
+      if (field.defaultValue == null) field.defaultValue = 0;
+    }
+    if (newType === 'rotation_dial') {
+      if (field.min == null) field.min = -180;
+      if (field.max == null) field.max = 180;
+      if (field.defaultValue == null) field.defaultValue = 0;
     }
   };
 

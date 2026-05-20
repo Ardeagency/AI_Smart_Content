@@ -162,7 +162,11 @@
     focus_selector: 'SELECT_CONTAINER',
     // Nuevos inputs Tier 2
     segmented_control: 'SEGMENTED_CONTAINER',
-    steps_slider: 'STEPS_SLIDER_CONTAINER'
+    steps_slider: 'STEPS_SLIDER_CONTAINER',
+    // Tier 3 — sliders especializados
+    color_slider: 'COLOR_SLIDER_CONTAINER',
+    white_balance: 'WHITE_BALANCE_CONTAINER',
+    rotation_dial: 'ROTATION_DIAL_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
@@ -701,6 +705,60 @@
     return renderSegmentedControl(f, {}, true);
   }
 
+  /** Color slider: range con gradient HSL arcoíris (variable = grados hue 0-360).
+   *  Útil para selección rápida de hue. Acompañado de un swatch visual del color
+   *  actual a la derecha. */
+  function renderColorSlider(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var min = f.min != null ? Number(f.min) : 0;
+    var max = f.max != null ? Number(f.max) : 360;
+    var val = f.defaultValue != null ? Number(f.defaultValue) : Math.round((min + max) / 2);
+    return '<div class="input-color-slider">' +
+      '<div class="input-color-slider-track">' +
+        '<input type="range" class="input-color-slider-range" min="' + min + '" max="' + max + '" step="1" value="' + val + '"' + a.disabled + '>' +
+      '</div>' +
+      '<span class="input-color-slider-swatch" style="background: hsl(' + val + ', 90%, 55%);" aria-hidden="true"></span>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + val + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formColorSlider(f, opts) { return renderColorSlider(f, opts || {}, isPreviewOpts(opts)); }
+  function previewColorSlider(f) { return renderColorSlider(f, {}, true); }
+
+  /** White balance: slider gradient frío (azul) → cálido (amarillo).
+   *  variable = -100 (frío) a +100 (cálido). 0 = balance neutro. */
+  function renderWhiteBalance(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var min = f.min != null ? Number(f.min) : -100;
+    var max = f.max != null ? Number(f.max) : 100;
+    var val = f.defaultValue != null ? Number(f.defaultValue) : 0;
+    return '<div class="input-white-balance">' +
+      '<div class="input-white-balance-track">' +
+        '<input type="range" class="input-white-balance-range" min="' + min + '" max="' + max + '" step="1" value="' + val + '"' + a.disabled + '>' +
+      '</div>' +
+      '<span class="input-white-balance-value">' + val + '</span>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + val + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formWhiteBalance(f, opts) { return renderWhiteBalance(f, opts || {}, isPreviewOpts(opts)); }
+  function previewWhiteBalance(f) { return renderWhiteBalance(f, {}, true); }
+
+  /** Rotation dial: ruler horizontal con ticks. variable = grados (-180 a 180). */
+  function renderRotationDial(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var min = f.min != null ? Number(f.min) : -180;
+    var max = f.max != null ? Number(f.max) : 180;
+    var val = f.defaultValue != null ? Number(f.defaultValue) : 0;
+    return '<div class="input-rotation-dial">' +
+      '<div class="input-rotation-dial-ruler" aria-hidden="true"></div>' +
+      '<div class="input-rotation-dial-indicator" aria-hidden="true"></div>' +
+      '<input type="range" class="input-rotation-dial-range" min="' + min + '" max="' + max + '" step="1" value="' + val + '"' + a.disabled + '>' +
+      '<span class="input-rotation-dial-value">' + val + '°</span>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + val + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formRotationDial(f, opts) { return renderRotationDial(f, opts || {}, isPreviewOpts(opts)); }
+  function previewRotationDial(f) { return renderRotationDial(f, {}, true); }
+
   /** Steps slider: range con markers discretos (steps array). Útil para
    *  configurar valores como steps de difusión IA (1, 10, 25, 50). */
   function renderStepsSlider(f, opts, isPreview) {
@@ -1156,6 +1214,18 @@
     STEPS_SLIDER_CONTAINER: {
       preview: previewStepsSlider,
       form: formStepsSlider
+    },
+    COLOR_SLIDER_CONTAINER: {
+      preview: previewColorSlider,
+      form: formColorSlider
+    },
+    WHITE_BALANCE_CONTAINER: {
+      preview: previewWhiteBalance,
+      form: formWhiteBalance
+    },
+    ROTATION_DIAL_CONTAINER: {
+      preview: previewRotationDial,
+      form: formRotationDial
     }
   };
 
@@ -1205,6 +1275,9 @@
     register('cron_schedule', { preview: previewCronSchedule, form: formCronSchedule });
     register('segmented_control', { preview: previewSegmentedControl, form: formSegmentedControl });
     register('steps_slider', { preview: previewStepsSlider, form: formStepsSlider });
+    register('color_slider', { preview: previewColorSlider, form: formColorSlider });
+    register('white_balance', { preview: previewWhiteBalance, form: formWhiteBalance });
+    register('rotation_dial', { preview: previewRotationDial, form: formRotationDial });
 
     register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });

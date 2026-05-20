@@ -3554,6 +3554,205 @@
   margin: 0;
 }
 
+/* ============================================================
+ * Tier 3 — Sliders especializados (color/temperature/rotation)
+ * ============================================================ */
+
+/* Color slider: gradient HSL arcoíris horizontal + swatch del color actual */
+.input-color-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.input-color-slider-track {
+  flex: 1;
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(to right,
+    hsl(0, 90%, 55%),
+    hsl(60, 90%, 55%),
+    hsl(120, 90%, 55%),
+    hsl(180, 90%, 55%),
+    hsl(240, 90%, 55%),
+    hsl(300, 90%, 55%),
+    hsl(360, 90%, 55%));
+}
+.input-color-slider-range {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+.input-color-slider-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+.input-color-slider-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+.input-color-slider-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+}
+.input-color-slider-swatch {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  transition: background 0.15s ease;
+}
+
+/* White balance: gradient frío azul → cálido amarillo */
+.input-white-balance {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.input-white-balance-track {
+  flex: 1;
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(to right,
+    #74c0fc 0%,
+    #a5d8ff 25%,
+    #e9ecef 50%,
+    #ffe066 75%,
+    #ffd43b 100%);
+}
+.input-white-balance-range {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+.input-white-balance-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+}
+.input-white-balance-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+}
+.input-white-balance-value {
+  min-width: 36px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rotation dial: ruler horizontal con ticks + indicador central */
+.input-rotation-dial {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.input-rotation-dial-ruler {
+  position: relative;
+  flex: 1;
+  height: 40px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 9px,
+      rgba(255, 255, 255, 0.25) 9px,
+      rgba(255, 255, 255, 0.25) 10px
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 49px,
+      rgba(255, 255, 255, 0.5) 49px,
+      rgba(255, 255, 255, 0.5) 50px
+    );
+  background-position: 0 50%, 0 50%;
+  background-size: 100% 14px, 100% 22px;
+  background-repeat: no-repeat;
+  background-color: #141517;
+  border: 1px solid #242424;
+  border-radius: 6px;
+}
+.input-rotation-dial-indicator {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 28px;
+  background: var(--accent-warm, #e09145);
+  transform: translate(-50%, -50%);
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(224, 145, 69, 0.6);
+  pointer-events: none;
+  z-index: 2;
+}
+.input-rotation-dial-range {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  outline: none;
+  cursor: grab;
+  opacity: 0;
+}
+.input-rotation-dial-range:active { cursor: grabbing; }
+.input-rotation-dial-value {
+  flex: 0 0 auto;
+  min-width: 48px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Segmented control: pill toggle 2-4 opciones (estilo Apple/Linear). */
 .input-segmented {
   display: inline-flex;
