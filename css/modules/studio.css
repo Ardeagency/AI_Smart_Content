@@ -28,14 +28,31 @@
 .studio-canvas-empty {
   flex: 1;
   min-height: 120px;
-  /* Grid de puntos tipo n8n: dos capas para escalar visualmente.
-     Los puntos no compiten con el contenido — quedan sobre cualquier
-     fondo (canvas vacío, imagen del flow, gradient). */
+  position: relative;
+  isolation: isolate;
+}
+
+/* Círculo grande de puntos detrás del canvas. Mismo patrón que video-canvas:
+   grid de dots con mask radial que concentra al centro y desvanece a los
+   bordes — efecto spotlight sin competir con el contenido. */
+.studio-canvas-empty::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
   background-size: 22px 22px, 22px 22px;
   background-position: 0 0, 11px 11px;
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+  mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.studio-canvas-empty > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ========== Estado automático: solo hero + formulario de programación ========== */

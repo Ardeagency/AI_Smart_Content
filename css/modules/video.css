@@ -55,6 +55,34 @@
     overflow-x: hidden;
     margin-bottom: 0;
     -webkit-overflow-scrolling: touch;
+    position: relative;
+    isolation: isolate;
+}
+
+/* Círculo grande de puntos detrás del contenido (cards Kling/Seedance, idle,
+   status, result). El patrón es el mismo grid que usa Studio, pero con un
+   radial-gradient como máscara para concentrarlo al centro y desvanecerlo
+   en los bordes — "spotlight" sutil que da profundidad sin competir. */
+.video-main .video-canvas::before,
+.video-main .video-canva-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+    background-size: 22px 22px, 22px 22px;
+    background-position: 0 0, 11px 11px;
+    -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    mask-image: radial-gradient(circle at 50% 45%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.video-main .video-canvas > *,
+.video-main .video-canva-view > * {
+    position: relative;
+    z-index: 1;
 }
 /* Footer del app-container: Director Console (estático, no scroll) */
 .video-app-footer {
