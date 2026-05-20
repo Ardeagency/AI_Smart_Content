@@ -169,7 +169,11 @@
     rotation_dial: 'ROTATION_DIAL_CONTAINER',
     // Tier 4 — visual pickers (video / fotografía)
     position_picker: 'POSITION_PICKER_CONTAINER',
-    visual_grid_picker: 'VISUAL_GRID_PICKER_CONTAINER'
+    visual_grid_picker: 'VISUAL_GRID_PICKER_CONTAINER',
+    // Tier 5 — pickers especializados
+    palette_picker: 'PALETTE_PICKER_CONTAINER',
+    logo_picker: 'LOGO_PICKER_CONTAINER',
+    thumbnail_picker: 'THUMBNAIL_PICKER_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
@@ -1049,13 +1053,21 @@
       var v = optVal(o);
       var vs = escapeHtml(String(v));
       var lbl = escapeHtml(optLabel(o));
-      var iconKey = (o.icon || o.svg_id || String(v).toLowerCase().replace(/[^a-z0-9]+/g, '_')).toLowerCase();
-      var svg = VISUAL_ICON_LIBRARY[iconKey] || VISUAL_ICON_LIBRARY.placeholder;
       var isSel = (selected === v || selected === String(v));
+      // Si la option tiene 'color' (hex), pinta un swatch coloreado en lugar
+      // de buscar en VISUAL_ICON_LIBRARY. Útil para eye_color, hair_color, etc.
+      var visualHtml;
+      if (o.color) {
+        visualHtml = '<span class="visual-grid-swatch" style="background:' + escapeHtml(String(o.color)) + ';"></span>';
+      } else {
+        var iconKey = (o.icon || o.svg_id || String(v).toLowerCase().replace(/[^a-z0-9]+/g, '_')).toLowerCase();
+        var svg = VISUAL_ICON_LIBRARY[iconKey] || VISUAL_ICON_LIBRARY.placeholder;
+        visualHtml = '<span class="visual-grid-svg">' + svg + '</span>';
+      }
       return '<button type="button" class="visual-grid-card' + (isSel ? ' selected' : '') + '"' +
         ' data-value="' + vs + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
         ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' +
-        '<span class="visual-grid-svg">' + svg + '</span>' +
+        visualHtml +
         '<span class="visual-grid-label">' + lbl + '</span>' +
         '</button>';
     }).join('');
@@ -1066,6 +1078,120 @@
   }
   function formVisualGridPicker(f, opts) { return renderVisualGridPicker(f, opts || {}, isPreviewOpts(opts)); }
   function previewVisualGridPicker(f) { return renderVisualGridPicker(f, {}, true); }
+
+  /** palette_picker: cards con franja horizontal de 3-5 colores swatches.
+   *  Para color_grade_preset, mood palettes, brand color schemes, etc. */
+  function renderPalettePicker(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
+    if (optionsList.length === 0) {
+      return '<div class="palette-picker palette-picker--empty"><i class="ph ph-palette"></i><span>Sin paletas configuradas. Define options con colors[] en el panel.</span></div>';
+    }
+    var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
+    var cards = optionsList.map(function (o) {
+      var v = optVal(o);
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(optLabel(o));
+      var colors = Array.isArray(o.colors) ? o.colors : [];
+      var isSel = (selected === v || selected === String(v));
+      var stripsHtml = colors.length > 0
+        ? colors.map(function (c) { return '<span class="palette-strip" style="background:' + escapeHtml(String(c)) + ';"></span>'; }).join('')
+        : '<span class="palette-strip palette-strip--empty"></span>';
+      return '<button type="button" class="palette-card' + (isSel ? ' selected' : '') + '"' +
+        ' data-value="' + vs + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' +
+        '<span class="palette-strips">' + stripsHtml + '</span>' +
+        '<span class="palette-label">' + lbl + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="palette-picker" data-picker-key="' + escapeHtml(f.key || '') + '">' +
+      '<div class="palette-cards">' + cards + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formPalettePicker(f, opts) { return renderPalettePicker(f, opts || {}, isPreviewOpts(opts)); }
+  function previewPalettePicker(f) { return renderPalettePicker(f, {}, true); }
+
+  /** logo_picker: cards con logos SVG pre-armados (LOGO_LIBRARY) por
+   *  plataforma. Útil para platform_selector. */
+  var LOGO_LIBRARY = {
+    meta:       '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 6c-4 0-7 3-10 9-2 4-1 8 2 8 3 0 5-3 8-7 3 4 5 7 8 7 3 0 4-4 2-8-3-6-6-9-10-9zm0 4c2 0 4 2 6 6 1 2 1 4-1 4-1 0-3-2-5-5-2 3-4 5-5 5-2 0-2-2-1-4 2-4 4-6 6-6z"/></svg>',
+    instagram:  '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="22" height="22" rx="6"/><circle cx="16" cy="16" r="5"/><circle cx="22" cy="10" r="1.2" fill="currentColor"/></svg>',
+    tiktok:     '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M19 4v15a4 4 0 1 1-4-4v-4a8 8 0 1 0 8 8V12a8 8 0 0 0 4 1V9a4 4 0 0 1-4-5h-4z"/></svg>',
+    youtube:    '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M28 10c-.3-1.4-1.3-2.5-2.7-2.8C22.7 7 16 7 16 7s-6.7 0-9.3.2c-1.4.3-2.4 1.4-2.7 2.8C4 12.7 4 16 4 16s0 3.3.2 6c.3 1.4 1.3 2.5 2.7 2.8 2.6.2 9.1.2 9.1.2s6.7 0 9.3-.2c1.4-.3 2.4-1.4 2.7-2.8.2-2.7.2-6 .2-6s0-3.3-.2-6z"/><path d="M13 20.5l7-4.5-7-4.5v9z" fill="#fff"/></svg>',
+    x:          '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M19 5h4l-7 8 8 14h-7l-5-7-6 7H2l8-9-8-13h7l4 7 6-7z"/></svg>',
+    linkedin:   '<svg viewBox="0 0 32 32" fill="currentColor"><rect x="4" y="4" width="24" height="24" rx="3"/><path d="M9 13v10h3v-10h-3zm1.5-4.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM14 13v10h3v-5c0-1.5.5-2.5 2-2.5s2 1 2 2.5v5h3v-6c0-3-1.5-4.5-4-4.5-1.5 0-2.5.5-3 1.5V13h-3z" fill="#fff"/></svg>',
+    pinterest:  '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 4a12 12 0 0 0-4 23v-3l1-4c-1-1-1-3 0-4 1-1 3-1 3 1l-1 4c0 2 2 2 3 1 2-2 2-6 0-8s-6-2-8 0c-2 1-2 5 0 7l-1 1c-2-2-3-5-2-8 2-4 7-6 11-4s5 8 1 11c-2 1-4 1-5-1l-1 3-1 3a12 12 0 1 0 4-22z"/></svg>',
+    snapchat:   '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 4c-5 0-8 3-8 8v3c-1 1-2 1-3 2 0 1 1 2 2 2 0 2-1 4-3 5 1 2 3 2 4 2 1 1 1 2 3 2 1 0 3-1 5-1s4 1 5 1c2 0 2-1 3-2 1 0 3 0 4-2-2-1-3-3-3-5 1 0 2-1 2-2-1-1-2-1-3-2v-3c0-5-3-8-8-8z"/></svg>',
+    facebook:   '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M28 16a12 12 0 1 0-14 12v-8h-3v-4h3v-3c0-3 2-5 5-5h3v4h-2c-1 0-2 0-2 2v2h4l-1 4h-3v8a12 12 0 0 0 10-12z"/></svg>',
+    threads:    '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="16" cy="16" r="12"/><path d="M22 12c-1-2-3-3-6-3s-5 1-6 4c-1 2 0 5 3 6 3 1 5 0 6-1s2-3 0-5"/></svg>',
+    web:        '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="16" r="12"/><path d="M4 16h24 M16 4v24 M8 8a14 14 0 0 1 16 0 M8 24a14 14 0 0 0 16 0"/></svg>',
+    placeholder:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="20" height="20" rx="3"/></svg>'
+  };
+  function renderLogoPicker(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
+    if (optionsList.length === 0) {
+      return '<div class="logo-picker logo-picker--empty"><i class="ph ph-globe"></i><span>Sin plataformas configuradas. Define options con logo:meta/instagram/tiktok/etc.</span></div>';
+    }
+    var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
+    var cards = optionsList.map(function (o) {
+      var v = optVal(o);
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(optLabel(o));
+      var logoKey = (o.logo || String(v).toLowerCase().replace(/[^a-z0-9]+/g, '_')).toLowerCase();
+      var svg = LOGO_LIBRARY[logoKey] || LOGO_LIBRARY.placeholder;
+      var isSel = (selected === v || selected === String(v));
+      return '<button type="button" class="logo-card' + (isSel ? ' selected' : '') + '"' +
+        ' data-value="' + vs + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' +
+        '<span class="logo-svg">' + svg + '</span>' +
+        '<span class="logo-label">' + lbl + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="logo-picker" data-picker-key="' + escapeHtml(f.key || '') + '">' +
+      '<div class="logo-cards">' + cards + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formLogoPicker(f, opts) { return renderLogoPicker(f, opts || {}, isPreviewOpts(opts)); }
+  function previewLogoPicker(f) { return renderLogoPicker(f, {}, true); }
+
+  /** thumbnail_picker: cards grandes (image/gradient como bg) + label overlay.
+   *  Para background_type, environment_theme, scene_mood, etc. */
+  function renderThumbnailPicker(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optionsList = (Array.isArray(f.options) && f.options.length > 0) ? f.options : [];
+    if (optionsList.length === 0) {
+      return '<div class="thumbnail-picker thumbnail-picker--empty"><i class="ph ph-image"></i><span>Sin thumbnails configurados. Define options con thumbnail (gradient o url).</span></div>';
+    }
+    var selected = f.defaultValue != null ? String(f.defaultValue) : String(optVal(optionsList[0]));
+    var cards = optionsList.map(function (o) {
+      var v = optVal(o);
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(optLabel(o));
+      var thumb = String(o.thumbnail || '');
+      var bgStyle = '';
+      if (thumb.indexOf('linear-gradient') === 0 || thumb.indexOf('radial-gradient') === 0) {
+        bgStyle = 'background:' + thumb;
+      } else if (thumb) {
+        bgStyle = 'background-image:url("' + thumb.replace(/"/g, '\\"') + '");background-size:cover;background-position:center';
+      }
+      var isSel = (selected === v || selected === String(v));
+      return '<button type="button" class="thumbnail-card' + (isSel ? ' selected' : '') + '"' +
+        ' data-value="' + vs + '"' + (isPreview ? ' tabindex="-1"' : '') + a.disabled +
+        ' aria-pressed="' + (isSel ? 'true' : 'false') + '">' +
+        '<span class="thumbnail-img" style="' + bgStyle + '"></span>' +
+        '<span class="thumbnail-label">' + lbl + '</span>' +
+        '</button>';
+    }).join('');
+    return '<div class="thumbnail-picker" data-picker-key="' + escapeHtml(f.key || '') + '">' +
+      '<div class="thumbnail-cards">' + cards + '</div>' +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(selected) + '"' + (a.required || '') + '>' +
+      '</div>';
+  }
+  function formThumbnailPicker(f, opts) { return renderThumbnailPicker(f, opts || {}, isPreviewOpts(opts)); }
+  function previewThumbnailPicker(f) { return renderThumbnailPicker(f, {}, true); }
 
   /** Color slider: range con gradient HSL arcoíris (variable = grados hue 0-360).
    *  Útil para selección rápida de hue. Acompañado de un swatch visual del color
@@ -1600,6 +1726,18 @@
     VISUAL_GRID_PICKER_CONTAINER: {
       preview: previewVisualGridPicker,
       form: formVisualGridPicker
+    },
+    PALETTE_PICKER_CONTAINER: {
+      preview: previewPalettePicker,
+      form: formPalettePicker
+    },
+    LOGO_PICKER_CONTAINER: {
+      preview: previewLogoPicker,
+      form: formLogoPicker
+    },
+    THUMBNAIL_PICKER_CONTAINER: {
+      preview: previewThumbnailPicker,
+      form: formThumbnailPicker
     }
   };
 
@@ -1654,6 +1792,9 @@
     register('rotation_dial', { preview: previewRotationDial, form: formRotationDial });
     register('position_picker', { preview: previewPositionPicker, form: formPositionPicker });
     register('visual_grid_picker', { preview: previewVisualGridPicker, form: formVisualGridPicker });
+    register('palette_picker', { preview: previewPalettePicker, form: formPalettePicker });
+    register('logo_picker', { preview: previewLogoPicker, form: formLogoPicker });
+    register('thumbnail_picker', { preview: previewThumbnailPicker, form: formThumbnailPicker });
 
     register('section', {
       preview: function (f) {
@@ -1874,6 +2015,30 @@
     initRangeSliders(container);
     initPositionPickers(container);
     initVisualGridPickers(container);
+    initCardPicker(container, '.palette-picker', '.palette-card');
+    initCardPicker(container, '.logo-picker', '.logo-card');
+    initCardPicker(container, '.thumbnail-picker', '.thumbnail-card');
+  }
+
+  /** Helper genérico para pickers con cards single-select. */
+  function initCardPicker(container, pickerSelector, cardSelector) {
+    if (!container || !container.querySelectorAll) return;
+    container.querySelectorAll(pickerSelector).forEach(function (picker) {
+      if (picker.__pickerWired) return;
+      picker.__pickerWired = true;
+      var hidden = picker.querySelector('input[type="hidden"]');
+      picker.querySelectorAll(cardSelector).forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          picker.querySelectorAll(cardSelector).forEach(function (c) {
+            c.classList.toggle('selected', c === card);
+            c.setAttribute('aria-pressed', c === card ? 'true' : 'false');
+          });
+          if (hidden) hidden.value = card.getAttribute('data-value');
+        });
+      });
+    });
   }
 
   /** Position picker: clic en un punto cambia el seleccionado, actualiza

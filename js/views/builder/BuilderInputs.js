@@ -108,6 +108,9 @@
     'rotation_dial':     { section: 'visual',     sub: 'Rotación' },
     'position_picker':   { section: 'visual',     sub: 'Punto en cuadrícula' },
     'visual_grid_picker':{ section: 'visual',     sub: 'Cards visuales' },
+    'palette_picker':    { section: 'visual',     sub: 'Paletas de color' },
+    'logo_picker':       { section: 'data',       sub: 'Plataforma' },
+    'thumbnail_picker':  { section: 'visual',     sub: 'Thumbnails' },
     // Audio
     'audio_mood':        { section: 'audio',      sub: 'Mood' },
     'lang_selector':     { section: 'audio',      sub: 'Idioma / Voz' },
@@ -196,6 +199,8 @@
         { name: 'Rotación' },
         { name: 'Punto en cuadrícula' },
         { name: 'Cards visuales' },
+        { name: 'Paletas de color' },
+        { name: 'Thumbnails' },
         { name: 'Aspect ratio' },
         { name: 'Imagen' },
         { name: 'Archivo' },
@@ -956,6 +961,9 @@
         ['rotation_dial',   'Rotación (dial ticks)'],
         ['position_picker', 'Punto en cuadrícula (3×3)'],
         ['visual_grid_picker','Cards visuales (SVG por opción)'],
+        ['palette_picker',  'Paleta de colores (franja)'],
+        ['logo_picker',     'Logos de plataforma'],
+        ['thumbnail_picker','Thumbnails (gradient/imagen)'],
         ['aspect_ratio',    'Aspect ratio'],
         ['image_selector',  'Selector de imagen'],
         ['scope_picker',    'Enfoque producción'],
@@ -1067,7 +1075,8 @@
   const TYPES_WITH_OPTIONS = new Set([
     'dropdown','select','radio','checkboxes','selection_checkboxes',
     'choice_chips','multi_select_chips','flags','colores','aspect_ratio',
-    'segmented_control','visual_grid_picker','position_picker'
+    'segmented_control','visual_grid_picker','position_picker',
+    'palette_picker','logo_picker','thumbnail_picker'
   ]);
   const TYPES_WITH_STEPS = new Set(['steps_slider']);
   const TYPES_WITH_RANGE = new Set(['range','num_stepper','number','color_slider','white_balance','rotation_dial']);
@@ -1255,6 +1264,36 @@
         field.options = [
           { value: 'option_a', label: 'Opción A', icon: 'placeholder' },
           { value: 'option_b', label: 'Opción B', icon: 'placeholder' }
+        ];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.options[0].value;
+    }
+    // Palette picker: options con colors array
+    if (newType === 'palette_picker') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [
+          { value: 'palette_a', label: 'Paleta A', colors: ['#1a5e63','#2a8b8e','#f5e1c5','#e8a35d','#c46d2f'] },
+          { value: 'palette_b', label: 'Paleta B', colors: ['#0a1929','#1a3a5c','#4a90e2','#a4cce8','#e0eef9'] }
+        ];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.options[0].value;
+    }
+    // Logo picker: options con logo key
+    if (newType === 'logo_picker') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [
+          { value: 'instagram', label: 'Instagram', logo: 'instagram' },
+          { value: 'tiktok',    label: 'TikTok',    logo: 'tiktok' }
+        ];
+      }
+      if (field.defaultValue == null) field.defaultValue = field.options[0].value;
+    }
+    // Thumbnail picker: options con thumbnail (gradient/url)
+    if (newType === 'thumbnail_picker') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [
+          { value: 'opt_a', label: 'Opción A', thumbnail: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+          { value: 'opt_b', label: 'Opción B', thumbnail: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }
         ];
       }
       if (field.defaultValue == null) field.defaultValue = field.options[0].value;
