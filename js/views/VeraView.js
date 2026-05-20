@@ -522,7 +522,7 @@ async function ensurePrism() {
 
 function renderMarkdown(text, opts = {}) {
   const raw = String(text ?? '');
-  let h = escapeHtml(raw);
+  let h = raw;
   const messageId = opts?.messageId ? String(opts.messageId) : '';
   let taskIdx = 0;
 
@@ -568,15 +568,22 @@ function renderMarkdown(text, opts = {}) {
   };
 
   // --- Protect fenced code blocks first ---
+  // CRÍTICO: extraemos los code blocks ANTES de escapar HTML, así el contenido
+  // crudo (ej: mermaid con --> y <br/>) llega intacto a su renderer. Si
+  // escapamos primero, mermaid recibe "--&gt;" y falla el parse → fallback feo.
   const codeBlocks = [];
   h = h.replace(/```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
     const idx = codeBlocks.length;
     codeBlocks.push({
       lang: (lang || '').trim(),
-      code: code.trim()
+      code: code.trim()  // RAW — sin escapar
     });
     return `@@CODEBLOCK_${idx}@@`;
   });
+
+  // Ahora sí, escapamos el resto del texto markdown (no los code blocks, que
+  // quedaron protegidos como @@CODEBLOCK_N@@ — placeholders sin caracteres HTML).
+  h = escapeHtml(h);
 
   // --- GFM Tables (| col | col |\n|---|---|\n| a | b |) ---
   // Detecta bloques de tabla: header row + delimiter row + N data rows.
