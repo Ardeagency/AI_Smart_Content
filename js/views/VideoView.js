@@ -1818,6 +1818,39 @@ class VideoView extends BaseView {
     return str.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || 'elemento';
   }
 
+  /**
+   * Quita un path de Storage cuando el usuario remueve UNA imagen del
+   * elemento. No-op si:
+   *  - el elemento no tiene _storagePaths (es producto de la BD, no upload)
+   *  - el supabase client no está disponible
+   * Fire-and-forget: errores se loggean pero no rompen la UI.
+   */
+  _removeKlingStoragePath(el, urlIdx) {
+    if (!el || !el._storageBucket || !Array.isArray(el._storagePaths)) return;
+    if (urlIdx < 0 || urlIdx >= el._storagePaths.length) return;
+    const path = el._storagePaths[urlIdx];
+    el._storagePaths.splice(urlIdx, 1);
+    if (!path || !this.supabase || !this.supabase.storage) return;
+    this.supabase.storage.from(el._storageBucket).remove([path]).catch((err) => {
+      console.warn('[VideoView] cleanup storage path failed', path, err);
+    });
+  }
+
+  /**
+   * Borra TODOS los archivos del elemento en Storage. Llamar al quitar
+   * el elemento entero o cuando queda vacío (sin imágenes restantes).
+   * No-op para elementos de producto (sin _storagePaths).
+   */
+  _removeKlingStorageAll(el) {
+    if (!el || !el._storageBucket || !Array.isArray(el._storagePaths)) return;
+    const paths = el._storagePaths.slice();
+    el._storagePaths = [];
+    if (paths.length === 0 || !this.supabase || !this.supabase.storage) return;
+    this.supabase.storage.from(el._storageBucket).remove(paths).catch((err) => {
+      console.warn('[VideoView] cleanup storage element failed', paths, err);
+    });
+  }
+
   async onKlingElementFilesSelected(e) {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
@@ -1886,6 +1919,7 @@ class VideoView extends BaseView {
     const elementId = `el_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const basePath = `kling-elements/${user.id}/${elementId}`;
     const urls = [];
+    const storagePaths = [];
     try {
       if (imageFiles && imageFiles.length > 0) {
         for (let i = 0; i < imageFiles.length; i++) {
@@ -1896,12 +1930,16 @@ class VideoView extends BaseView {
           if (error) throw error;
           const { data: { publicUrl } } = this.supabase.storage.from(bucket).getPublicUrl(fileName);
           urls.push(publicUrl);
+          storagePaths.push(fileName);
         }
         this.klingElements.push({
           name,
           description: description || undefined,
           element_input_urls: urls,
-          _pinned: false
+          _pinned: false,
+          // Paths internos del bucket — usados al quitar para hacer cleanup
+          _storageBucket: bucket,
+          _storagePaths: storagePaths
         });
       } else if (videoFile) {
         const ext = (videoFile.name.split('.').pop() || 'mp4').toLowerCase();
@@ -1913,7 +1951,9 @@ class VideoView extends BaseView {
           name,
           description: description || undefined,
           element_input_video_urls: [publicUrl],
-          _pinned: false
+          _pinned: false,
+          _storageBucket: bucket,
+          _storagePaths: [fileName]
         });
       }
       this.renderKlingElementsList();
@@ -1979,12 +2019,17 @@ class VideoView extends BaseView {
         if (isNaN(elIdx) || isNaN(urlIdx)) return;
         const el = this.klingElements[elIdx];
         if (!el || !Array.isArray(el.element_input_urls)) return;
+        // Cleanup en Storage de la imagen específica (solo si fue subida
+        // manualmente; las de productos no se borran del bucket).
+        this._removeKlingStoragePath(el, urlIdx);
         el.element_input_urls.splice(urlIdx, 1);
         if (el._pinnedIndices) {
           el._pinnedIndices = el._pinnedIndices.filter((i) => i !== urlIdx).map((i) => (i > urlIdx ? i - 1 : i));
           if (el._pinnedIndices.length === 0) delete el._pinnedIndices;
         }
         if (el.element_input_urls.length === 0) {
+          // El elemento quedó vacío — borrar lo que reste de Storage
+          this._removeKlingStorageAll(el);
           this.klingElements.splice(elIdx, 1);
           if (this.klingElements.every((e) => !e._fromProductSelection)) {
             this.selectedAssetId = '';
@@ -2001,6 +2046,8 @@ class VideoView extends BaseView {
         const index = chip ? parseInt(chip.dataset.index, 10) : -1;
         if (index >= 0) {
           const removed = this.klingElements[index];
+          // Cleanup en Storage si el elemento fue subido manualmente
+          this._removeKlingStorageAll(removed);
           this.klingElements.splice(index, 1);
           if (removed && removed._fromProductionQueue && removed._productionOutputId) {
             this.selectedProductionIds.delete(removed._productionOutputId);
