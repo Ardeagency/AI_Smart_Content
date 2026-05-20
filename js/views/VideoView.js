@@ -1832,14 +1832,20 @@ class VideoView extends BaseView {
     // libremente; truncamos al máximo permitido por el modelo (4
     // imágenes por elemento, 1 video).
 
+    // Nombre auto-generado para que el flujo sea de un solo click
+    // (sin modales nativos del browser). El usuario puede editarlo
+    // después si necesita referenciar el elemento con @name en el prompt.
+    const autoName = (prefix) => {
+      const idx = (this.klingElements?.length || 0) + 1;
+      return this.sanitizeElementName(`${prefix}_${idx}`);
+    };
+
     // Si solo hay video(s): primer video como elemento de video
     if (videos.length > 0 && images.length === 0) {
       if (videos.length > 1 && typeof window.showToast === 'function') {
         window.showToast('Se usará solo el primer video — Kling permite uno por elemento.', { type: 'info', duration: 4000 });
       }
-      const name = this.sanitizeElementName(window.prompt('Nombre del elemento (para usar como @nombre en el prompt):', 'elemento_video') || 'elemento_video');
-      const description = window.prompt('Descripción (opcional):', '') || '';
-      await this.uploadAndAddKlingElement({ name, description, videoFile: videos[0] });
+      await this.uploadAndAddKlingElement({ name: autoName('video'), description: '', videoFile: videos[0] });
       return;
     }
 
@@ -1853,9 +1859,7 @@ class VideoView extends BaseView {
       if (images.length > 4 && typeof window.showToast === 'function') {
         window.showToast(`Se usan las primeras 4 imágenes (subiste ${images.length}). Las restantes se ignoran.`, { type: 'info', duration: 5000 });
       }
-      const name = this.sanitizeElementName(window.prompt('Nombre del elemento (para usar como @nombre en el prompt):', 'elemento_imagen') || 'elemento_imagen');
-      const description = window.prompt('Descripción (opcional):', '') || '';
-      await this.uploadAndAddKlingElement({ name, description, imageFiles: usable });
+      await this.uploadAndAddKlingElement({ name: autoName('imagen'), description: '', imageFiles: usable });
       return;
     }
 
