@@ -4338,3 +4338,194 @@
       .video-prompt-footer-card-inner.video-director-console:focus-within {
     border-color: rgba(255, 255, 255, 0.28);
 }
+
+/* ============================================================
+   Director Console — REDISEÑO INPUT PROMPT (override final)
+   ============================================================
+   Patrón "real input prompt" tipo ChatGPT / Apex / Nano Banana:
+   - textarea sin border ni background propio (es texto sobre la card)
+   - placeholder en font del sistema, sin italic ni monospace
+   - "+" como botón circular pequeño
+   - header "DIRECTOR CONSOLE · Kling 3.0" eliminado (el contexto ya
+     se sabe; el botón "Cambiar" queda como link discreto)
+   - separador eliminado (spacing comunica jerarquía mejor)
+   - controles en una sola fila inferior con CTA prominente a la derecha
+   ============================================================ */
+
+/* Header row: ocultar el "•  DIRECTOR CONSOLE · Kling 3.0" — ruido. */
+.video-view-container .video-director-console-zone .video-console-header-row .video-console-dot,
+.video-view-container .video-director-console-zone .video-console-header-row .video-console-label-text,
+.video-view-container .video-director-console-zone .video-console-header-row .video-console-sep,
+.video-view-container .video-director-console-zone .video-console-header-row .video-console-model-text {
+    display: none;
+}
+
+/* Header row queda solo con "Cambiar" alineado a la derecha, discreto */
+.video-view-container .video-director-console-zone .video-console-header-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    margin: 0 0 4px 0;
+    border: none;
+}
+.video-view-container .video-director-console-zone .video-console-model-change {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.video-view-container .video-director-console-zone .video-console-model-change:hover {
+    color: var(--text-primary);
+    background: var(--white-8);
+}
+
+/* "+" botón → círculo pequeño tipo ChatGPT (sin border dashed) */
+.video-view-container .video-director-console-zone .video-director-btn-add {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--white-10);
+    background: var(--white-8);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.video-view-container .video-director-console-zone .video-director-btn-add:hover {
+    background: var(--white-15);
+    color: var(--text-primary);
+    border-color: var(--white-20);
+}
+
+/* Textarea: sin background, sin border. Solo texto sobre la card.
+   Selector con specificity alta para pisar la regla genérica de
+   .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input
+   (línea 1559) que le pintaba bg-black + border. */
+.video-view-container
+  .video-director-console-zone.video-prompt-wrap
+    .video-prompt-footer-card-inner.video-director-console
+      .video-director-console-content
+        .video-director-brief-input,
+.video-view-container
+  .video-director-console-zone.video-prompt-wrap
+    .video-prompt-footer-card-inner
+      .video-director-brief-input {
+    width: 100%;
+    min-height: 72px;
+    max-height: 200px;
+    padding: 8px 4px;
+    margin: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    resize: none;
+    /* Font del sistema, no monospace, no italic */
+    font-family: var(--font-sans, var(--font-family));
+    font-style: normal;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    letter-spacing: 0;
+}
+.video-view-container
+  .video-director-console-zone.video-prompt-wrap
+    .video-prompt-footer-card-inner
+      .video-director-brief-input:focus {
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+.video-view-container
+  .video-director-console-zone.video-prompt-wrap
+    .video-prompt-footer-card-inner
+      .video-director-brief-input::placeholder {
+    color: var(--text-muted);
+    font-style: normal;
+    font-family: inherit;
+    opacity: 0.65;
+}
+
+/* Separador entre prompt y controles: out. El spacing del padding
+   del .video-director-console-content basta para separar visualmente. */
+.video-view-container .video-director-console-zone .video-director-separator {
+    display: none;
+}
+
+/* Content wrapper: padding generoso y sin border propio */
+.video-view-container .video-director-console-zone .video-director-console-content {
+    min-height: auto;
+    padding: 6px 4px 14px;
+    border: none;
+    background: transparent;
+}
+
+/* Top row (botón + + chips de imágenes) y variables row: spacing tighter */
+.video-view-container .video-director-console-zone .video-director-top-row {
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* Controles inferiores: una sola fila tipo toolbar minimalista */
+.video-view-container .video-director-console-zone .video-director-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 2px;
+}
+
+/* Toggles + selects unificados visualmente como pills sutiles */
+.video-view-container .video-director-console-zone .video-director-toggle,
+.video-view-container .video-director-console-zone .video-director-select {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    background: var(--white-8);
+    border: 1px solid var(--white-10);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.video-view-container .video-director-console-zone .video-director-toggle:hover,
+.video-view-container .video-director-console-zone .video-director-select:hover {
+    background: var(--white-10);
+    border-color: var(--white-20);
+    color: var(--text-primary);
+}
+.video-view-container .video-director-console-zone .video-director-toggle.active {
+    color: var(--color-info);
+    background: var(--color-info-light);
+    border-color: rgba(0, 231, 255, 0.35);
+}
+
+/* CTA principal "PROMPT" alineado a la derecha, prominente */
+.video-view-container .video-director-console-zone .video-director-btn-generate {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 999px;
+    /* Gradiente sutil tipo "send" — usa el dynamic brand de la org si existe */
+    background: var(--brand-gradient-dynamic, linear-gradient(135deg, #1f3a8a 0%, #0ea5e9 100%));
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+}
+.video-view-container .video-director-console-zone .video-director-btn-generate:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.video-view-container .video-director-console-zone .video-director-btn-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
