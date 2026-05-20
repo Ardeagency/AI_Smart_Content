@@ -735,6 +735,12 @@
     return renderStepperInput(f, opts || {}, isPreviewOpts(opts));
   }
   function formSelectionCheckboxes(f, opts) {
+    // Si el field tiene display_style: 'chips', usar el visual de chips multi
+    // en lugar de la lista vertical de checkboxes. La lógica (variable=array)
+    // es idéntica — solo cambia el render.
+    if ((f.display_style || '').toLowerCase() === 'chips') {
+      return renderMultiSelectChips(f, opts || {}, isPreviewOpts(opts));
+    }
     return renderSelectionCheckboxes(f, opts || {}, isPreviewOpts(opts));
   }
   function previewCheckboxesSingle(f) {
