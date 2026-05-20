@@ -4628,3 +4628,62 @@
   .video-kling-element-pin-chip .video-kling-pin-active {
     color: inherit;
 }
+
+/* ============================================================
+   Vera (chat) — círculos de dots en esquinas opuestas
+   ============================================================
+   Dos accents decorativos sobre .gpt-layout: uno arriba-izquierda y
+   otro abajo-derecha. Mismo patrón de dots que usa Studio + Video,
+   pero recortado a un círculo con mask-image radial-gradient, dando
+   "respiración" visual al canvas vacío del chat sin invadirlo.
+   ============================================================ */
+.gpt-layout::before,
+.gpt-layout::after {
+    content: '';
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+    background-size: 22px 22px, 22px 22px;
+    background-position: 0 0, 11px 11px;
+}
+
+.gpt-layout::before {
+    top: -100px;
+    left: -100px;
+    -webkit-mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+    mask-image: radial-gradient(circle at 30% 30%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+}
+
+.gpt-layout::after {
+    bottom: -100px;
+    right: -100px;
+    -webkit-mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+    mask-image: radial-gradient(circle at 70% 70%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 60%);
+}
+
+/* El contenido principal queda sobre los dots sin afectar interacción */
+.gpt-layout > .gpt-main {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .gpt-layout::before,
+    .gpt-layout::after {
+        width: 320px;
+        height: 320px;
+    }
+    .gpt-layout::before {
+        top: -60px;
+        left: -60px;
+    }
+    .gpt-layout::after {
+        bottom: -60px;
+        right: -60px;
+    }
+}
