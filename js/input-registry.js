@@ -682,6 +682,40 @@
     return renderToggleInput(f2, opts || {}, isPreviewOpts(opts));
   }
   /** Renderiza bloque estructural en formulario consumidor: section, divider, heading, description */
+  /** Parser markdown minimalista (sin dependencias). Soporta:
+   *  - # / ## / ### encabezados
+   *  - **bold**, *italic*
+   *  - [text](url) links (target=_blank)
+   *  - - item / * item (listas)
+   *  - Líneas en blanco → párrafos
+   *  - Escape HTML primero para evitar XSS */
+  function renderMarkdown(md) {
+    if (!md) return '';
+    var html = escapeHtml(String(md));
+    // Encabezados (orden importa: ### antes de ##)
+    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+    // Bold, italic
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Listas (sólo bullet simple)
+    html = html.replace(/^(?:-|\*)\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)(?!\s*<li>)/gs, '<ul>$1</ul>');
+    // Párrafos: agrupar líneas separadas por blank lines
+    var blocks = html.split(/\n{2,}/);
+    html = blocks.map(function (b) {
+      var trimmed = b.trim();
+      if (!trimmed) return '';
+      // Si ya es un bloque HTML (h1/h2/h3/ul/li/p/blockquote), no envolver
+      if (/^<(h[1-6]|ul|ol|li|p|blockquote|pre)/i.test(trimmed)) return trimmed;
+      return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+    return html;
+  }
+
   function formStructural(f) {
     var t = getInputType(f);
     var title = escapeHtml(f.title || f.label || '');
@@ -710,7 +744,11 @@
       return '<h' + level + ' class="form-structural form-heading' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || 'Título') + '</h' + level + '>';
     }
     if (t === 'description') {
-      return '<p class="form-structural form-description' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || '') + '</p>';
+      // description ahora es un bloque MARKDOWN editable: el dev escribe
+      // markdown en f.markdown (o f.text legacy) y se renderea a HTML.
+      // Soporte: # h1/h2/h3, **bold**, *italic*, [link](url), - lista, párrafos
+      var md = String(f.markdown != null ? f.markdown : (f.text || f.label || ''));
+      return '<div class="form-structural form-description form-description--md' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + renderMarkdown(md) + '</div>';
     }
     return '';
   }
@@ -1527,7 +1565,16 @@
   function wrapFormField(field, inputHtml, opts) {
     opts = opts || {};
     if (!inputHtml || inputHtml.trim() === '') return '';
-    if (isStructural(field)) return inputHtml;
+    if (isStructural(field)) {
+      // En el canvas del builder pedimos wrapperClass que incluya 'canvas-field'
+      // para que el overlay de edición (drag/duplicate/delete) se attache. En
+      // studio (sin canvas-field en wrapperClass) retornamos el HTML raw.
+      var wcStruct = (opts.wrapperClass || '').trim();
+      if (wcStruct && wcStruct.indexOf('canvas-field') >= 0) {
+        return '<div class="' + escapeHtml(wcStruct) + '" data-key="' + escapeHtml(field.key || '') + '">' + inputHtml + '</div>';
+      }
+      return inputHtml;
+    }
     var id = (opts.idPrefix || '') + (field.key || 'field');
     var labelText = escapeHtml(field.label || field.key || '');
     var showLabel = opts.showLabel !== false;

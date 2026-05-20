@@ -3738,6 +3738,82 @@
   position: relative;
 }
 
+/* Icono custom "H1" para el template heading (Phosphor no tiene H1 en subset) */
+.component-icon-h {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  border: 1.5px solid var(--text-secondary);
+  border-radius: 4px;
+  font-family: var(--font-family);
+}
+
+/* Structural fields en el canvas: divider, heading, description.
+   Necesitan visibilidad mínima cuando se renderean dentro del .canvas-field. */
+.form-structural.form-divider {
+  border: 0;
+  border-top: 1px solid #242424;
+  margin: 8px 0;
+}
+.form-structural.form-divider-large { margin: 20px 0; }
+.form-structural.form-divider-medium { margin: 12px 0; }
+.form-structural.form-divider-small { margin: 4px 0; }
+
+.form-structural.form-heading {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.form-structural.form-heading:is(h1) { font-size: 24px; }
+.form-structural.form-heading:is(h2) { font-size: 20px; }
+.form-structural.form-heading:is(h3) { font-size: 17px; }
+.form-structural.form-heading:is(h4) { font-size: 15px; }
+.form-structural.form-heading:is(h5) { font-size: 13px; }
+.form-structural.form-heading:is(h6) { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.structural-align-center { text-align: center; }
+.structural-align-right  { text-align: right; }
+
+/* Description con markdown render */
+.form-description--md {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+.form-description--md p { margin: 0 0 10px; }
+.form-description--md p:last-child { margin-bottom: 0; }
+.form-description--md h1 { font-size: 22px; font-weight: 700; margin: 12px 0 8px; line-height: 1.2; }
+.form-description--md h2 { font-size: 18px; font-weight: 700; margin: 12px 0 6px; line-height: 1.2; }
+.form-description--md h3 { font-size: 15px; font-weight: 700; margin: 10px 0 4px; line-height: 1.2; }
+.form-description--md strong { font-weight: 700; color: var(--text-primary); }
+.form-description--md em { font-style: italic; color: var(--text-secondary); }
+.form-description--md a {
+  color: var(--accent-warm, #e09145);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.form-description--md a:hover { opacity: 0.85; }
+.form-description--md ul {
+  margin: 6px 0 10px;
+  padding-left: 20px;
+  list-style: disc;
+}
+.form-description--md li { margin: 2px 0; }
+
+/* Markdown editor en properties panel */
+.property-md-editor {
+  font-family: var(--font-mono, 'Fira Code', 'SF Mono', monospace);
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
 /* ============================================================
  * Scope picker — Switch "Vera"
  * Cuando ON, los children se ocultan y se muestra el panel del

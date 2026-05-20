@@ -330,6 +330,10 @@
         const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
         const iconName = this.getPhosphorIconName(template.icon_name);
         const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
+        // Iconos especiales custom (no Phosphor) por name de template
+        const iconHtml = (template.name === 'heading')
+          ? '<span class="component-icon-h">H1</span>'
+          : `<i class="ph ph-${escapeHtml(iconName)}"></i>`;
         return `
           <div class="component-item"
                draggable="true"
@@ -337,7 +341,7 @@
                data-template="${escapeAttr(templateJson)}"
                data-search="${escapeAttr(searchText)}"
                title="${escapeAttr(template.description || template.name)}">
-            <i class="ph ph-${escapeHtml(iconName)}"></i>
+            ${iconHtml}
             <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
           </div>
         `;
@@ -1378,12 +1382,14 @@
           </div>
         </div>`;
     } else if (t === 'description' || t === 'description_block') {
+      const md = field.markdown != null ? field.markdown : (field.text || field.label || '');
       content += `
         <div class="property-group">
-          <h4>Texto informativo</h4>
+          <h4>Texto informativo (Markdown)</h4>
           <div class="property-field">
-            <label for="propStructuralText">Texto</label>
-            <textarea id="propStructuralText" rows="3">${esc(field.text || field.label)}</textarea>
+            <label for="propStructuralMarkdown">Contenido</label>
+            <textarea id="propStructuralMarkdown" rows="8" class="property-md-editor" placeholder="# Título&#10;&#10;Párrafo con **negritas**, *italic* y [enlaces](https://...).&#10;&#10;- Item 1&#10;- Item 2">${esc(md)}</textarea>
+            <span class="field-help">Soporta # h1/h2/h3, **bold**, *italic*, [link](url), - listas y párrafos separados por línea en blanco.</span>
           </div>
           <div class="property-field">
             <label for="propStructuralAlignment">Alineación</label>
@@ -1426,9 +1432,9 @@
       if (levelEl) levelEl.addEventListener('change', () => { field.level = Number(levelEl.value); sync(); });
       if (alignEl) alignEl.addEventListener('change', () => { field.alignment = alignEl.value; sync(); });
     } else if (structuralType === 'description' || structuralType === 'description_block') {
-      const textEl = this.querySelector('#propStructuralText');
+      const mdEl = this.querySelector('#propStructuralMarkdown');
       const alignEl = this.querySelector('#propStructuralAlignment');
-      if (textEl) textEl.addEventListener('input', () => { field.text = textEl.value; field.label = textEl.value; sync(); });
+      if (mdEl) mdEl.addEventListener('input', () => { field.markdown = mdEl.value; field.text = mdEl.value; sync(); });
       if (alignEl) alignEl.addEventListener('change', () => { field.alignment = alignEl.value; sync(); });
     }
   };
