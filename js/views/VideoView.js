@@ -1822,25 +1822,49 @@ class VideoView extends BaseView {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
     if (files.length === 0) return;
+
     const images = files.filter((f) => f.type.startsWith('image/'));
     const videos = files.filter((f) => f.type.startsWith('video/'));
-    if (videos.length === 1 && images.length === 0) {
+
+    // Sin validación rígida 2-4: Kling SOLO exige 2-4 cuando se usa
+    // kling_elements con @element_name en el prompt. Para image_urls
+    // (first/last frame) basta con 1 imagen. El usuario puede subir
+    // libremente; truncamos al máximo permitido por el modelo (4
+    // imágenes por elemento, 1 video).
+
+    // Si solo hay video(s): primer video como elemento de video
+    if (videos.length > 0 && images.length === 0) {
+      if (videos.length > 1 && typeof window.showToast === 'function') {
+        window.showToast('Se usará solo el primer video — Kling permite uno por elemento.', { type: 'info', duration: 4000 });
+      }
       const name = this.sanitizeElementName(window.prompt('Nombre del elemento (para usar como @nombre en el prompt):', 'elemento_video') || 'elemento_video');
       const description = window.prompt('Descripción (opcional):', '') || '';
       await this.uploadAndAddKlingElement({ name, description, videoFile: videos[0] });
-    } else if (images.length >= 2 && images.length <= 4 && videos.length === 0) {
+      return;
+    }
+
+    // Si hay imágenes (con o sin videos): usar imágenes, ignorar videos
+    if (images.length > 0) {
+      if (videos.length > 0 && typeof window.showToast === 'function') {
+        window.showToast('Solo se subieron las imágenes — para usar video, súbelo sin imágenes.', { type: 'info', duration: 4000 });
+      }
+      // Truncar a 4 imágenes máximo (límite de Kling por elemento)
+      const usable = images.slice(0, 4);
+      if (images.length > 4 && typeof window.showToast === 'function') {
+        window.showToast(`Se usan las primeras 4 imágenes (subiste ${images.length}). Las restantes se ignoran.`, { type: 'info', duration: 5000 });
+      }
       const name = this.sanitizeElementName(window.prompt('Nombre del elemento (para usar como @nombre en el prompt):', 'elemento_imagen') || 'elemento_imagen');
       const description = window.prompt('Descripción (opcional):', '') || '';
-      await this.uploadAndAddKlingElement({ name, description, imageFiles: images });
-    } else {
-      // Validación de Kling API: necesita 2-4 imágenes O 1 video por
-      // elemento. Mostramos toast en lugar del alert nativo modal.
-      const msg = 'Necesitas 2 a 4 imágenes (JPG/PNG) o 1 video (MP4/MOV) por elemento de referencia.';
-      if (typeof window.showToast === 'function') {
-        window.showToast(msg, { type: 'warning', duration: 6000 });
-      } else if (window.alert) {
-        window.alert(msg);
-      }
+      await this.uploadAndAddKlingElement({ name, description, imageFiles: usable });
+      return;
+    }
+
+    // Ningún tipo reconocido
+    const msg = 'Formato no soportado. Sube imágenes JPG/PNG o video MP4/MOV.';
+    if (typeof window.showToast === 'function') {
+      window.showToast(msg, { type: 'warning', duration: 5000 });
+    } else if (window.alert) {
+      window.alert(msg);
     }
   }
 
