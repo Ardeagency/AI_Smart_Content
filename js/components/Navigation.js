@@ -2480,29 +2480,61 @@ class Navigation {
   }
 
   /**
-   * Configurar listeners del switcher Consumidor / Desarrollador
+   * Configurar listeners del switcher Consumidor / Desarrollador.
+   *
+   * Antes este flujo hacía `await authService.setUserMode(mode, true)` (que
+   * espera el UPDATE de profiles en Supabase) y, en modo user, además
+   * `await getDefaultUserRoute()` antes de llamar al router. Eso producía
+   * 200–800ms de latencia entre el click y la navegación. Si el usuario
+   * volvía a clicar para "destrabar", se disparaban switchMode concurrentes
+   * que desincronizaban userMode/URL.
+   *
+   * Ahora:
+   * - setUserMode actualiza this.userMode + localStorage de forma síncrona;
+   *   solo el persist a Supabase es async → lo lanzamos fire-and-forget.
+   * - Navegamos inmediato a /home (modo user) o /dev/dashboard. /home ya
+   *   resuelve la org por defecto y redirige.
+   * - Deshabilitamos ambos radios durante la transición y los liberamos en
+   *   el siguiente routechange para impedir double-fire / carrera.
    */
   setupDeveloperModeSwitcherListeners() {
     const userRadio = document.getElementById('viewModeUser');
     const devRadio = document.getElementById('viewModeDeveloper');
     if (!userRadio || !devRadio) return;
 
-    const switchMode = async (mode) => {
+    const switchMode = (mode) => {
+      if (this._modeSwitchInFlight) return;
+      this._modeSwitchInFlight = true;
+      userRadio.disabled = true;
+      devRadio.disabled = true;
+
+      const release = () => {
+        this._modeSwitchInFlight = false;
+        const u = document.getElementById('viewModeUser');
+        const d = document.getElementById('viewModeDeveloper');
+        if (u) u.disabled = false;
+        if (d) d.disabled = false;
+      };
+      window.addEventListener('routechange', release, { once: true });
+      // Failsafe por si el routechange no se dispara (ruta misma vista, error, etc.)
+      setTimeout(release, 4000);
+
       if (window.authService) {
-        await window.authService.setUserMode(mode, true);
+        // setUserMode actualiza memoria + localStorage síncronos; el await es
+        // solo para el persist a DB. No bloqueamos la navegación por eso.
+        Promise.resolve(window.authService.setUserMode(mode, true))
+          .catch((err) => console.warn('Nav.switchMode: persist falló', err));
       } else {
         localStorage.setItem('userViewMode', mode);
       }
-      if (mode === 'user') {
-        const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
-          ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
-          : '/home';
-        if (window.router) window.router.navigate(url, true);
-        else window.location.href = url;
-      } else {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        else window.location.href = '/dev/dashboard';
-      }
+
+      const target = mode === 'user' ? '/home' : '/dev/dashboard';
+      if (window.router) window.router.navigate(target, true);
+      else window.location.href = target;
+
+      // Cerrar el dropdown para feedback inmediato (la nueva nav lo destruirá igual).
+      const ud = document.getElementById('userDropdown');
+      if (ud) ud.classList.remove('active');
     };
 
     userRadio.addEventListener('change', () => { if (userRadio.checked) switchMode('user'); });
