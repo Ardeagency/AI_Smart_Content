@@ -958,6 +958,141 @@
     }
   ];
 
+  // Tipos que aceptan options [{value, label}]. Si se cambia entre dos de este set,
+  // las options se preservan. Si se cambia hacia/desde un tipo que NO los usa, se
+  // limpian las options/min/max/step que ya no aplican.
+  const TYPES_WITH_OPTIONS = new Set([
+    'dropdown','select','radio','checkboxes','selection_checkboxes',
+    'choice_chips','multi_select_chips','flags','colores','aspect_ratio'
+  ]);
+  const TYPES_WITH_RANGE = new Set(['range','num_stepper','number']);
+  const TYPES_ARRAY_DATA = new Set(['selection_checkboxes','multi_select_chips','colores']);
+  const TYPES_BOOLEAN_DATA = new Set(['checkbox','toggle_switch']);
+  const TYPES_NUMBER_DATA  = new Set(['range','number','num_stepper']);
+
+  /** Sanitiza un field al cambiar input_type:
+   *  - Preserva options cuando ambos tipos las usan
+   *  - Limpia min/max/step/data_type/max_selections/flag_category/display_style
+   *    que ya no aplican al nuevo tipo
+   *  - Resetea defaultValue si su shape es incompatible con el nuevo tipo
+   *  - Aplica defaults solo cuando faltan
+   */
+  P.applyInputTypeChange = function (field, newType) {
+    const oldType = (field.input_type || field.type || '').toLowerCase();
+    if (newType === oldType) return;
+
+    field.input_type = newType;
+    field.type = newType;
+
+    // 1. options: limpiar si el nuevo tipo no las usa
+    if (!TYPES_WITH_OPTIONS.has(newType)) {
+      delete field.options;
+    }
+
+    // 2. min/max/step: limpiar si el nuevo tipo no es numérico/range
+    if (!TYPES_WITH_RANGE.has(newType)) {
+      delete field.min; delete field.max; delete field.step;
+    }
+
+    // 3. propiedades específicas que dejan de aplicar
+    if (newType !== 'colores') {
+      delete field.max_selections;
+    }
+    if (newType !== 'flags') {
+      delete field.flag_category;
+      delete field.flags_category;
+    }
+    if (newType !== 'toggle_switch' && newType !== 'selection_checkboxes' && newType !== 'switch') {
+      delete field.display_style;
+    }
+    if (newType !== 'colores' && !TYPES_ARRAY_DATA.has(newType)) {
+      delete field.data_type;
+    }
+
+    // 4. defaultValue: resetear si el shape ya no encaja con el target
+    const dv = field.defaultValue;
+    if (dv !== undefined && dv !== null) {
+      if (TYPES_ARRAY_DATA.has(newType) && !Array.isArray(dv)) {
+        delete field.defaultValue;
+      } else if (TYPES_BOOLEAN_DATA.has(newType) && typeof dv !== 'boolean') {
+        delete field.defaultValue;
+      } else if (TYPES_NUMBER_DATA.has(newType) && typeof dv !== 'number') {
+        const n = parseFloat(dv);
+        if (Number.isFinite(n)) field.defaultValue = n;
+        else delete field.defaultValue;
+      } else if (!TYPES_WITH_OPTIONS.has(newType) && !TYPES_NUMBER_DATA.has(newType) && !TYPES_BOOLEAN_DATA.has(newType) && !TYPES_ARRAY_DATA.has(newType)) {
+        if (typeof dv !== 'string') field.defaultValue = String(dv);
+      }
+    }
+
+    // 5. defaults por tipo (solo si los campos faltan)
+    if (newType === 'dropdown' || newType === 'select') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+      }
+    }
+    if (newType === 'radio' || newType === 'choice_chips') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+      }
+    }
+    if (newType === 'multi_select_chips' || newType === 'selection_checkboxes') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }];
+      }
+      if (newType === 'selection_checkboxes') field.display_style = 'selection_checkboxes';
+    }
+    if (newType === 'checkboxes') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }];
+      }
+    }
+    if (newType === 'num_stepper' || newType === 'number') {
+      if (field.min == null) field.min = 0;
+      if (field.max == null) field.max = 100;
+      if (field.step == null) field.step = 1;
+      if (field.defaultValue == null) field.defaultValue = 0;
+    }
+    if (newType === 'range') {
+      if (field.min == null) field.min = 0;
+      if (field.max == null) field.max = 100;
+      if (field.step == null) field.step = 1;
+      if (field.defaultValue == null) field.defaultValue = 50;
+    }
+    if (newType === 'flags') {
+      if (!field.flag_category) field.flag_category = 'language';
+      if (!field.flags_category) field.flags_category = 'language';
+    }
+    if (newType === 'colores') {
+      field.data_type = 'array';
+      if (field.max_selections == null) field.max_selections = 6;
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = [
+          { value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' },
+          { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' },
+          { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }
+        ];
+      }
+    }
+    if (newType === 'aspect_ratio') {
+      if (!Array.isArray(field.options) || field.options.length === 0) {
+        field.options = ['2:3','3:4','4:5','9:16','3:2','4:3','5:4','16:9','21:9','1:1']
+          .map(v => ({ value: v, label: v }));
+      }
+      if (field.defaultValue == null) field.defaultValue = '1:1';
+    }
+    if (newType === 'scope_picker') {
+      if (!Array.isArray(field.options)) field.options = [];
+    }
+    if (newType === 'toggle_switch' || newType === 'switch') {
+      field.display_style = 'switch';
+      if (field.defaultValue == null) field.defaultValue = false;
+    }
+    if (newType === 'checkbox') {
+      if (field.defaultValue == null) field.defaultValue = false;
+    }
+  };
+
   /** Renderiza <optgroup>s con los input_types disponibles. Si el tipo actual NO está
    *  en el catálogo (vino de DB con un input_type desconocido), añade un optgroup
    *  "Personalizado" con esa entrada para que no se pierda al cambiar otra option. */
@@ -1914,56 +2049,7 @@
     const inputTypeSelect = this.querySelector('#propInputType');
     if (inputTypeSelect) {
       inputTypeSelect.addEventListener('change', (e) => {
-        const newType = e.target.value;
-        field.input_type = newType;
-        field.type = newType;
-        if (newType === 'dropdown' || newType === 'select') {
-          if (!Array.isArray(field.options) || field.options.length === 0) {
-            field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
-          }
-        }
-        if (newType === 'stepper_num' || newType === 'num_stepper') {
-          if (field.min == null) field.min = 0;
-          if (field.max == null) field.max = 999;
-          if (field.step == null) field.step = 1;
-          if (field.defaultValue == null) field.defaultValue = 0;
-        }
-        if (newType === 'selection_checkboxes') {
-          if (!Array.isArray(field.options) || field.options.length === 0) {
-            field.options = [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }];
-          }
-          field.display_style = 'selection_checkboxes';
-        }
-        if (newType === 'range') {
-          if (field.min == null) field.min = 0;
-          if (field.max == null) field.max = 100;
-          if (field.step == null) field.step = 1;
-          if (field.defaultValue == null) field.defaultValue = 50;
-        }
-        if (newType === 'flags') {
-          if (!field.flag_category) field.flag_category = 'language';
-          if (!field.flags_category) field.flags_category = 'language';
-        }
-        if (newType === 'colores') {
-          field.data_type = 'array';
-          if (field.max_selections == null) field.max_selections = 6;
-          if (!Array.isArray(field.options) || field.options.length === 0) {
-            field.options = [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }];
-          }
-        }
-        if (newType === 'aspect_ratio') {
-          if (!Array.isArray(field.options) || field.options.length === 0) {
-            field.options = [{ value: '2:3', label: '2:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '9:16', label: '9:16' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '21:9', label: '21:9' }, { value: '1:1', label: '1:1' }];
-          }
-          if (field.defaultValue == null) field.defaultValue = '1:1';
-        }
-        if (newType === 'scope_picker') {
-          if (!Array.isArray(field.options)) field.options = [];
-        }
-        if (newType === 'toggle_switch' || newType === 'switch') {
-          field.display_style = 'switch';
-          if (field.defaultValue == null) field.defaultValue = false;
-        }
+        this.applyInputTypeChange(field, e.target.value);
         this.renderPropertiesPanel();
         this.renderCanvas();
         this.onFieldChange();
