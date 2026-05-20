@@ -1582,14 +1582,18 @@
       </div>
     `;
 
+    const footerEl = this.querySelector('#propertiesFooter');
     panel.innerHTML =
       this.renderPropertiesHeader(field, this.selectedFieldIndex) +
       this.renderPropertiesTabs([
         { id: 'general',  label: 'General',       icon: 'sliders',     content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
         { id: 'styles',   label: 'Estilos',       icon: 'paint-brush', content: stylesPanel  },
         { id: 'config',   label: 'Configuración', icon: 'code',        content: configPanel  }
-      ]) +
-      this.renderPropertiesFooter(field);
+      ]);
+    if (footerEl) {
+      footerEl.innerHTML = this.renderPropertiesFooter(field);
+      footerEl.removeAttribute('hidden');
+    }
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
@@ -1633,8 +1637,9 @@
 
   P.renderPropertiesPanel = function () {
     const panel = this.querySelector('#propertiesPanel');
+    const footerEl = this.querySelector('#propertiesFooter');
     if (!panel) return;
-    
+
     if (this.selectedFieldIndex === null || !this.getCanvasFields()[this.selectedFieldIndex]) {
       panel.innerHTML = `
         <div class="properties-empty">
@@ -1642,6 +1647,7 @@
           <p>Selecciona un campo para editar sus propiedades</p>
         </div>
       `;
+      if (footerEl) { footerEl.innerHTML = ''; footerEl.setAttribute('hidden', ''); }
       return;
     }
     
@@ -1850,8 +1856,11 @@
         { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel },
         { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
         { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  }
-      ]) +
-      this.renderPropertiesFooter(field);
+      ]);
+    if (footerEl) {
+      footerEl.innerHTML = this.renderPropertiesFooter(field);
+      footerEl.removeAttribute('hidden');
+    }
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
