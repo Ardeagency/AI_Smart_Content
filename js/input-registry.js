@@ -88,7 +88,78 @@
     accordion: 'STRUCTURAL_CONTAINER',
     tabs: 'STRUCTURAL_CONTAINER',
     repeater: 'STRUCTURAL_CONTAINER',
-    group: 'STRUCTURAL_CONTAINER'
+    group: 'STRUCTURAL_CONTAINER',
+    conditional_block: 'STRUCTURAL_CONTAINER',
+    // ===== Selectores creativos / preset dropdowns (Bug 6) =====
+    // Todos los input_types específicos de la DB ui_component_templates que antes
+    // caían al fallback STRING_CONTAINER. Cada uno es un select con options
+    // pre-armadas (preset selectors). El dev configura las options del template
+    // y el usuario final elige una en /studio.
+    // Estilo & Cámara
+    camera_angle: 'SELECT_CONTAINER',
+    shot_type: 'SELECT_CONTAINER',
+    lens_focal_length: 'SELECT_CONTAINER',
+    depth_of_field: 'SELECT_CONTAINER',
+    composition_structure: 'SELECT_CONTAINER',
+    lighting_style: 'SELECT_CONTAINER',
+    color_grade_preset: 'SELECT_CONTAINER',
+    contrast_level: 'SELECT_CONTAINER',
+    saturation_level: 'SELECT_CONTAINER',
+    grain_amount: 'SELECT_CONTAINER',
+    glow_amount: 'SELECT_CONTAINER',
+    finish_type: 'SELECT_CONTAINER',
+    floating_product: 'SELECT_CONTAINER',
+    // Motion & Perspectiva
+    camera_movement: 'SELECT_CONTAINER',
+    camera_path: 'SELECT_CONTAINER',
+    camera_roll: 'SELECT_CONTAINER',
+    focus_pull: 'SELECT_CONTAINER',
+    shot_speed: 'SELECT_CONTAINER',
+    frame_rate_style: 'SELECT_CONTAINER',
+    motion_style_video: 'SELECT_CONTAINER',
+    zoom_behavior: 'SELECT_CONTAINER',
+    loop_behavior: 'SELECT_CONTAINER',
+    parallax_layers: 'SELECT_CONTAINER',
+    perspective_grid: 'SELECT_CONTAINER',
+    transition_anchor: 'SELECT_CONTAINER',
+    vanishing_point_bias: 'SELECT_CONTAINER',
+    // Escenarios
+    background_type: 'SELECT_CONTAINER',
+    environment_theme: 'SELECT_CONTAINER',
+    props_density: 'RANGE_CONTAINER',
+    // Protagonistas
+    emotion_profile: 'SELECT_CONTAINER',
+    ethnicity_profile: 'SELECT_CONTAINER',
+    eye_color: 'SELECT_CONTAINER',
+    hair_color: 'SELECT_CONTAINER',
+    hair_style: 'SELECT_CONTAINER',
+    pose_direction: 'SELECT_CONTAINER',
+    wardrobe_style: 'SELECT_CONTAINER',
+    // Audio
+    audio_mood: 'SELECT_CONTAINER',
+    lang_selector: 'SELECT_CONTAINER',
+    music_bpm: 'NUMBER_CONTAINER',
+    voice_profile: 'SELECT_CONTAINER',
+    sound_design_notes: 'STRING_CONTAINER',
+    // Branding & Copy
+    headline_slot: 'STRING_CONTAINER',
+    body_slot: 'STRING_CONTAINER',
+    brand_positioning: 'SELECT_CONTAINER',
+    cta_layering: 'SELECT_CONTAINER',
+    message_focus: 'SELECT_CONTAINER',
+    overlay_safe_zone: 'SELECT_CONTAINER',
+    legal_disclaimer: 'STRING_CONTAINER',
+    logo_lockup: 'SELECT_CONTAINER',
+    // Distribución / Plataforma
+    platform_selector: 'SELECT_CONTAINER',
+    duration_cap: 'NUMBER_CONTAINER',
+    render_batch_size: 'NUMBER_CONTAINER',
+    flow_selector: 'SELECT_CONTAINER',
+    // Presets completos (cada uno aplica un schema entero; visualmente = select)
+    preset_dark_luxury_hero: 'SELECT_CONTAINER',
+    preset_editorial_macro: 'SELECT_CONTAINER',
+    // Otros selectores que tenían el handler como STRING (corrige)
+    focus_selector: 'SELECT_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
