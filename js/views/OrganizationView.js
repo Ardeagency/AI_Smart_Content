@@ -1024,15 +1024,20 @@ class OrganizationView extends BaseView {
 
   async _loadCreditTimeline() {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    // credit_usage usa credits_delta (negativo = consumo). Para el timeline
+    // de uso diario filtramos solo consumos y sumamos su valor absoluto.
     const { data } = await this.supabase
-      .from('credit_usage').select('credits_used, created_at')
-      .eq('organization_id', this.orgId).gte('created_at', since).order('created_at', { ascending: true });
+      .from('credit_usage').select('credits_delta, created_at')
+      .eq('organization_id', this.orgId)
+      .lt('credits_delta', 0)
+      .gte('created_at', since)
+      .order('created_at', { ascending: true });
     const rows = data || [];
     const byDay = {};
     rows.forEach((r) => {
       const day = (r.created_at || '').slice(0, 10);
       if (!day) return;
-      byDay[day] = (byDay[day] || 0) + (Number(r.credits_used) || 0);
+      byDay[day] = (byDay[day] || 0) + Math.abs(Number(r.credits_delta) || 0);
     });
     this.creditTimeline = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).map(([day, total]) => ({ day, total }));
   }

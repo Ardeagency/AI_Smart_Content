@@ -644,7 +644,8 @@ class DevDashboardView extends DevBaseView {
         this.supabase.from('content_flows').select('id', { count: 'exact', head: true }),
         this.supabase.from('content_flows').select('id', { count: 'exact', head: true }).eq('status', 'published'),
         this.supabase.from('flow_runs').select('id', { count: 'exact', head: true }).eq('status', 'completed').gte('created_at', dayAgo),
-        this.supabase.from('credit_usage').select('credits_used').gte('created_at', sevenAgo),
+        // credit_usage usa credits_delta; los consumos son negativos.
+        this.supabase.from('credit_usage').select('credits_delta').lt('credits_delta', 0).gte('created_at', sevenAgo),
         this.supabase.from('developer_logs').select('id', { count: 'exact', head: true }).in('severity', ['error', 'critical']).gte('created_at', dayAgo),
         this.supabase.from('flow_runs').select('id', { count: 'exact', head: true }).gte('created_at', dayAgo),
         this.supabase.from('content_flows').select('category_id, content_categories(name)').limit(2000)
@@ -656,7 +657,7 @@ class DevDashboardView extends DevBaseView {
       const pubN       = published.value?.count ?? 0;
       const runs24N    = runs24.value?.count ?? 0;
       const totRuns24  = runsTotal24.value?.count ?? 0;
-      const credits7N  = (credits7.value?.data || []).reduce((s, r) => s + (r.credits_used || 0), 0);
+      const credits7N  = (credits7.value?.data || []).reduce((s, r) => s + Math.abs(Number(r.credits_delta) || 0), 0);
       const errs24N    = errs24.value?.count ?? 0;
       const successPct = totRuns24 > 0 ? Math.round((runs24N / totRuns24) * 100) : null;
       const errorPct   = totRuns24 > 0 ? Math.round((errs24N / totRuns24) * 100) : null;
