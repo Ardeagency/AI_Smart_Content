@@ -426,8 +426,10 @@ class Router {
         }
       }
 
-      document.body.classList.toggle('route-landing', path === '/');
-      document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
+      // NO togglear route-* aquí: si lo hacemos antes de startViewTransition,
+      // el snapshot "before" ya recoge la clase nueva y el fondo cambia hard
+      // antes del crossfade (otra fuente del "brinco" dev↔org). Se aplica
+      // dentro de doRender para que forme parte del cross-fade del root.
 
       // Si hay HTML en bfCache fresco para esta ruta, pintarlo de inmediato
       // (instant restore). La vista hará su render normal encima — la vista
@@ -448,14 +450,22 @@ class Router {
       // útil para que decida si re-renderizar todo o solo refrescar datos.
       this.currentView._restoredFromCache = !!hasFreshHtml;
 
-      // Navigation render en paralelo con el render de la vista: no bloquea el
-      // pintado de la vista nueva y evita que el sidebar se quede mostrando el
-      // estado anterior durante la transición.
-      const navRenderPromise = (window.appNavigation && typeof window.appNavigation.render === 'function')
-        ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
-        : Promise.resolve();
-
+      // Navigation render se inicia DENTRO de doRender (no fuera) para que su
+      // mutación del DOM forme parte del callback de startViewTransition. Si lo
+      // disparamos en un microtask externo, el sidebar puede haber cambiado
+      // ANTES de que la API capture el snapshot "before" → desincronización
+      // entre el crossfade del sidebar y el de la vista (el "brinco" reportado
+      // al pasar dev↔org). Adentro: ambos snapshots quedan en el mismo tick y
+      // el crossfade nombrado (app-root + nav-root + root) corre sincronizado.
       const doRender = async () => {
+        // Body classes adentro del callback → caen en el snapshot "after" y
+        // se animan junto con el crossfade del root (fondo, brand overlay).
+        document.body.classList.toggle('route-landing', path === '/');
+        document.body.classList.toggle('route-dev', path.startsWith('/dev/'));
+
+        const navRenderPromise = (window.appNavigation && typeof window.appNavigation.render === 'function')
+          ? Promise.resolve().then(() => window.appNavigation.render()).catch(() => {})
+          : Promise.resolve();
         await this.currentView.render();
         await navRenderPromise;
       };

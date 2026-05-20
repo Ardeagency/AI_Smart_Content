@@ -826,12 +826,31 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
    Si el navegador soporta startViewTransition (Chrome 111+, Safari 18+, Edge 111+),
    el router envuelve el render con esa API y obtenemos un crossfade a nivel de
    pintura nativa (60fps). Aquí afinamos timing para que se vea premium y no
-   compita con el .route-fade-in (que sirve como fallback). */
+   compita con el .route-fade-in (que sirve como fallback).
+
+   Tres áreas se transicionan sincronizadas — mismo duration + easing — para que
+   los cambios dev↔org no se sientan como un brinco abrupto:
+   - root           → fondo (body, brand-bg-overlay): crossfade puro.
+   - nav-root       → sidebar (#navigation-container): crossfade puro.
+   - app-root       → vista (#app-container): crossfade + sutil translateY.
+*/
 @media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(nav-root),
+  ::view-transition-new(nav-root),
   ::view-transition-old(app-root),
   ::view-transition-new(app-root) {
     animation-duration: 280ms;
     animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  }
+  ::view-transition-old(root),
+  ::view-transition-old(nav-root) {
+    animation-name: routeVTFadeOut;
+  }
+  ::view-transition-new(root),
+  ::view-transition-new(nav-root) {
+    animation-name: routeVTFadeIn;
   }
   ::view-transition-old(app-root) {
     animation-name: routeVTOut;
@@ -842,12 +861,17 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
 }
 /* La nueva vista entra con leve translateY (mismo timing que .route-fade-in
    fallback). La saliente solo desvanece — sin desplazamiento — para que el
-   crossfade se vea limpio. */
-@keyframes routeVTIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes routeVTOut { from { opacity: 1; } to { opacity: 0; } }
+   crossfade se vea limpio. El sidebar y el fondo NO se mueven, solo desvanecen. */
+@keyframes routeVTIn      { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes routeVTOut     { from { opacity: 1; } to { opacity: 0; } }
+@keyframes routeVTFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes routeVTFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-/* Marca el contenedor que participa de la View Transition. */
-#app-container { view-transition-name: app-root; }
+/* Marca los contenedores que participan en transiciones nombradas — cada uno
+   recibe su propio snapshot y se anima con la regla CSS de arriba. Sin
+   view-transition-name el browser los metería en el root snapshot. */
+#app-container         { view-transition-name: app-root; }
+#navigation-container  { view-transition-name: nav-root; }
 
 /* ========== Skeleton screens (placeholder de carga premium) ==========
    Patrón Linear/Vercel: en lugar de spinner global, cada sección pinta
