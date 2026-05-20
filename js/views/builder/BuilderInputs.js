@@ -68,35 +68,104 @@
   // Secciones top-level del rail (patrón Weavy/Segmind). Cada template
   // se asigna a una sección por input_type O por category creativa.
   // ==================================================================
+  // Sub-secciones dentro de cada sección top-level: agrupar templates por tipo concreto
+  // (ej. Selección → Desplegables / Chips / Radio / Checkboxes / Switch / Banderas).
   P.LIBRARY_SECTIONS = [
-    { key: 'text',      name: 'Texto',      icon: 'textbox',       inputTypes: ['text','textarea','string','tags'] },
-    { key: 'choice',    name: 'Selección',  icon: 'list-checks',   inputTypes: ['dropdown','select','choice_chips','multi_select_chips','radio','checkboxes','selection_checkboxes','flags','toggle_switch','checkbox','multi_select'] },
-    { key: 'numeric',   name: 'Numérico',   icon: 'sliders',       inputTypes: ['number','num_stepper','range'] },
-    { key: 'visual',    name: 'Visual',     icon: 'image',         inputTypes: ['colores','aspect_ratio','scope_picker','image_selector','focus_selector','color'] },
-    { key: 'data',      name: 'Datos',      icon: 'stack',         inputTypes: ['brand_selector','entity_selector','audience_selector','product_selector','tone_selector','length_selector','campaign_selector','cron_selector','flow_selector'] },
-    { key: 'structure', name: 'Estructura', icon: 'list-bullets',  inputTypes: ['section','divider','heading','description','description_block'] },
-    { key: 'templates', name: 'Plantillas', icon: 'sparkle',       categories: ['preset','style','motion','scene','protagonist','branding','distribution','controls'] }
+    {
+      key: 'text', name: 'Texto', icon: 'textbox',
+      subs: [
+        { name: 'Texto corto',   inputTypes: ['text','string'] },
+        { name: 'Texto largo',   inputTypes: ['textarea'] },
+        { name: 'Etiquetas',     inputTypes: ['tags'] }
+      ]
+    },
+    {
+      key: 'choice', name: 'Selección', icon: 'list-checks',
+      subs: [
+        { name: 'Desplegable',           inputTypes: ['dropdown','select'] },
+        { name: 'Chips',                 inputTypes: ['choice_chips','multi_select_chips'] },
+        { name: 'Radio',                 inputTypes: ['radio'] },
+        { name: 'Checkbox simple (on/off)', inputTypes: ['checkbox','toggle_switch'] },
+        { name: 'Checkbox una opción',   inputTypes: ['checkboxes'] },
+        { name: 'Checkbox múltiple',     inputTypes: ['selection_checkboxes','multi_select'] },
+        { name: 'Banderas',              inputTypes: ['flags'] }
+      ]
+    },
+    {
+      key: 'numeric', name: 'Numérico', icon: 'sliders',
+      subs: [
+        { name: 'Número',  inputTypes: ['number','num_stepper'] },
+        { name: 'Slider',  inputTypes: ['range'] }
+      ]
+    },
+    {
+      key: 'visual', name: 'Visual', icon: 'image',
+      subs: [
+        { name: 'Colores',       inputTypes: ['colores','color'] },
+        { name: 'Aspect ratio',  inputTypes: ['aspect_ratio'] },
+        { name: 'Imagen',        inputTypes: ['image_selector'] },
+        { name: 'Enfoque',       inputTypes: ['scope_picker','focus_selector'] }
+      ]
+    },
+    {
+      key: 'data', name: 'Datos', icon: 'stack',
+      subs: [
+        { name: 'Marca y productos', inputTypes: ['brand_selector','entity_selector','product_selector'] },
+        { name: 'Audiencia',         inputTypes: ['audience_selector'] },
+        { name: 'Tono y longitud',   inputTypes: ['tone_selector','length_selector'] },
+        { name: 'Campañas / Flujos', inputTypes: ['campaign_selector','flow_selector'] },
+        { name: 'Programación',      inputTypes: ['cron_selector'] }
+      ]
+    },
+    {
+      key: 'structure', name: 'Estructura', icon: 'list-bullets',
+      subs: [
+        { name: 'Sección',      inputTypes: ['section'] },
+        { name: 'Divisor',      inputTypes: ['divider'] },
+        { name: 'Título',       inputTypes: ['heading'] },
+        { name: 'Descripción',  inputTypes: ['description','description_block'] }
+      ]
+    },
+    {
+      key: 'templates', name: 'Plantillas', icon: 'sparkle',
+      // Para templates, los subs son por category creativa, no por inputType.
+      subsByCategory: true,
+      subs: [
+        { name: 'Presets',                 categories: ['preset'] },
+        { name: 'Estilo & Cámara',         categories: ['style'] },
+        { name: 'Motion & Perspectiva',    categories: ['motion'] },
+        { name: 'Escenarios',              categories: ['scene'] },
+        { name: 'Protagonistas',           categories: ['protagonist'] },
+        { name: 'Branding & Copy',         categories: ['branding'] },
+        { name: 'Distribución / Operación',categories: ['distribution'] },
+        { name: 'Controles UI',            categories: ['controls'] }
+      ]
+    }
   ];
 
-  /** Decide a qué sección pertenece un template (templates creativos primero, luego por input_type). */
-  P.resolveLibrarySection = function (template) {
+  /** Decide en qué sección + sub-sección entra un template. */
+  P.resolveLibraryPlacement = function (template) {
     const sections = this.LIBRARY_SECTIONS;
     const cat = (template.category || '').toLowerCase();
-    // Categorías creativas → siempre van a Templates
-    const tplSection = sections.find(s => s.key === 'templates');
-    if (tplSection && Array.isArray(tplSection.categories) && tplSection.categories.indexOf(cat) >= 0) {
-      return 'templates';
-    }
-    // Por input_type
     const inputType = ((template.base_schema && (template.base_schema.input_type || template.base_schema.type)) || template.input_type || '').toLowerCase();
-    for (const s of sections) {
-      if (Array.isArray(s.inputTypes) && s.inputTypes.indexOf(inputType) >= 0) return s.key;
+
+    // Categorías creativas → Templates, con su sub por category
+    const tplSection = sections.find(s => s.key === 'templates');
+    if (tplSection) {
+      const tplSub = tplSection.subs.find(sub => Array.isArray(sub.categories) && sub.categories.indexOf(cat) >= 0);
+      if (tplSub) return { section: 'templates', sub: tplSub.name };
     }
-    // Fallback: si category coincide con un key de sección, usarlo
-    const byCat = sections.find(s => s.key === cat);
-    if (byCat) return byCat.key;
-    // Default: text
-    return 'text';
+    // Resto: por input_type
+    for (const s of sections) {
+      if (!Array.isArray(s.subs)) continue;
+      for (const sub of s.subs) {
+        if (Array.isArray(sub.inputTypes) && sub.inputTypes.indexOf(inputType) >= 0) {
+          return { section: s.key, sub: sub.name };
+        }
+      }
+    }
+    // Fallback
+    return { section: 'text', sub: 'Texto corto' };
   };
 
   P.renderComponentsList = function () {
@@ -105,12 +174,20 @@
     const title = this.querySelector('#componentsSectionTitle');
     if (!container) return;
 
-    // Asignar cada template a una sección
+    // Estructura: buckets[sectionKey] = { total, subs: Map<subName, [templates]> }
     const buckets = {};
-    this.LIBRARY_SECTIONS.forEach(s => { buckets[s.key] = []; });
+    this.LIBRARY_SECTIONS.forEach(s => {
+      buckets[s.key] = { total: 0, subs: new Map() };
+      // Preservar orden de subs según LIBRARY_SECTIONS
+      s.subs.forEach(sub => buckets[s.key].subs.set(sub.name, []));
+    });
     (this.componentTemplates || []).forEach(t => {
-      const sec = this.resolveLibrarySection(t);
-      if (buckets[sec]) buckets[sec].push(t);
+      const placement = this.resolveLibraryPlacement(t);
+      const bucket = buckets[placement.section];
+      if (!bucket) return;
+      if (!bucket.subs.has(placement.sub)) bucket.subs.set(placement.sub, []);
+      bucket.subs.get(placement.sub).push(t);
+      bucket.total += 1;
     });
 
     // Restaurar sección activa de localStorage (o primera no vacía)
@@ -118,8 +195,8 @@
       try { this._activeLibrarySection = localStorage.getItem('builderLibrarySection') || null; } catch (_) {}
     }
     let activeKey = this._activeLibrarySection;
-    if (!activeKey || !buckets[activeKey] || buckets[activeKey].length === 0) {
-      const firstWithItems = this.LIBRARY_SECTIONS.find(s => buckets[s.key].length > 0);
+    if (!activeKey || !buckets[activeKey] || buckets[activeKey].total === 0) {
+      const firstWithItems = this.LIBRARY_SECTIONS.find(s => buckets[s.key].total > 0);
       activeKey = (firstWithItems && firstWithItems.key) || 'text';
     }
     this._activeLibrarySection = activeKey;
@@ -130,8 +207,8 @@
     // Render rail (solo icono + tooltip, estilo Weavy)
     if (rail) {
       rail.innerHTML = this.LIBRARY_SECTIONS.map(s => {
-        const count = buckets[s.key].length;
-        if (count === 0) return '';
+        const total = buckets[s.key].total;
+        if (total === 0) return '';
         const isActive = s.key === activeKey;
         const icon = this.getPhosphorIconName(s.icon);
         return `
@@ -146,39 +223,47 @@
       }).join('');
     }
 
-    // Render panel (solo la sección activa)
+    // Render panel: sub-secciones de la sección activa
     const activeSection = this.LIBRARY_SECTIONS.find(s => s.key === activeKey);
     if (title && activeSection) title.textContent = activeSection.name;
-    const items = buckets[activeKey] || [];
+    const activeBucket = buckets[activeKey];
 
-    if (items.length === 0) {
+    if (!activeBucket || activeBucket.total === 0) {
       container.innerHTML = `
         <div class="components-empty">
-          <i class="ph ph-package"></i>
+          <i class="ph ph-folder-simple"></i>
           <p>Sin componentes en esta sección.</p>
         </div>
       `;
     } else {
-      container.innerHTML = `
-        <div class="components-section-grid">
-          ${items.map(template => {
-            const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
-            const iconName = this.getPhosphorIconName(template.icon_name);
-            const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
-            return `
-              <div class="component-item"
-                   draggable="true"
-                   data-template-id="${escapeAttr(template.id)}"
-                   data-template="${escapeAttr(templateJson)}"
-                   data-search="${escapeAttr(searchText)}"
-                   title="${escapeAttr(template.description || template.name)}">
-                <i class="ph ph-${escapeHtml(iconName)}"></i>
-                <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
+      const renderCard = (template) => {
+        const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
+        const iconName = this.getPhosphorIconName(template.icon_name);
+        const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
+        return `
+          <div class="component-item"
+               draggable="true"
+               data-template-id="${escapeAttr(template.id)}"
+               data-template="${escapeAttr(templateJson)}"
+               data-search="${escapeAttr(searchText)}"
+               title="${escapeAttr(template.description || template.name)}">
+            <i class="ph ph-${escapeHtml(iconName)}"></i>
+            <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
+          </div>
+        `;
+      };
+
+      const subBlocks = [];
+      activeBucket.subs.forEach((items, subName) => {
+        if (!items || items.length === 0) return;
+        subBlocks.push(`
+          <div class="components-subsection" data-sub="${escapeAttr(subName)}">
+            <div class="components-subsection-title">${escapeHtml(subName)}</div>
+            <div class="components-section-grid">${items.map(renderCard).join('')}</div>
+          </div>
+        `);
+      });
+      container.innerHTML = subBlocks.join('');
     }
 
     this.setupRailListeners(buckets);
@@ -209,16 +294,29 @@
 
     const filter = () => {
       const q = (input.value || '').trim().toLowerCase();
-      const items = container.querySelectorAll('.component-item');
-      let visibleCount = 0;
-      items.forEach(item => {
-        const search = (item.getAttribute('data-search') || '').trim();
-        const show = !q || search.includes(q);
-        item.classList.toggle('component-item-hidden', !show);
-        if (show) visibleCount++;
+      let totalVisible = 0;
+      container.querySelectorAll('.components-subsection').forEach(sub => {
+        const items = sub.querySelectorAll('.component-item');
+        let subVisible = 0;
+        items.forEach(item => {
+          const search = (item.getAttribute('data-search') || '').trim();
+          const show = !q || search.includes(q);
+          item.classList.toggle('component-item-hidden', !show);
+          if (show) subVisible++;
+        });
+        sub.classList.toggle('components-subsection-hidden', subVisible === 0);
+        totalVisible += subVisible;
       });
-      const grid = container.querySelector('.components-section-grid');
-      if (grid) grid.classList.toggle('is-empty-after-search', visibleCount === 0 && !!q);
+      // Mensaje global "Sin resultados" si todo se filtró
+      let emptyMsg = container.querySelector('.components-search-empty');
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.className = 'components-search-empty components-empty';
+        emptyMsg.innerHTML = '<i class="ph ph-magnifying-glass"></i><p>Sin resultados</p>';
+        emptyMsg.hidden = true;
+        container.appendChild(emptyMsg);
+      }
+      emptyMsg.hidden = !(q && totalVisible === 0);
     };
 
     input.addEventListener('input', filter);

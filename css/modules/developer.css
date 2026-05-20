@@ -2389,6 +2389,27 @@
   min-width: 0;
 }
 
+/* Sub-secciones dentro de una sección top-level del rail */
+.components-subsection {
+  margin-bottom: 18px;
+}
+.components-subsection:last-child {
+  margin-bottom: 0;
+}
+.components-subsection-hidden {
+  display: none;
+}
+
+.components-subsection-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  padding: 0 2px;
+}
+
 /* Empty state: cuando la sección no tiene templates o el search no matchea */
 .components-empty {
   display: flex;
