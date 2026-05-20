@@ -103,32 +103,16 @@
 .video-director-wrap .video-prompt-footer-card {
     width: 100%;
 }
-/* Director Console y Sidebar Console: pattern Command Center
-   (bg sólido, borde sutil, sin backdrop-filter). Glass-morphism queda
-   reservado a botones/overlays, no a estos containers. */
-.video-director-console-zone .video-prompt-footer-card-inner.glass-black,
-.video-sidebar-console .video-prompt-footer-card-inner.glass-black {
-    background: var(--bg-card, #141517);
-    border: 1px solid var(--border-divider, #242424);
-    color: var(--text-primary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    border-radius: var(--radius-md);
-    box-shadow: none;
-}
-.video-sidebar-console .video-prompt-footer-card-inner.glass-black {
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
-}
-/* Página Video: degradado estático y más visible (borde y brillo con mayor opacidad) */
+/* Página Video: el wrapper .video-prompt-footer-card es solo contenedor
+   (sin sombra ni pseudo-elementos). Los estilos del Director Console y
+   del Sidebar Console viven en los inners (.video-director-console y
+   .video-sidebar-inner) más abajo en este archivo. */
 .video-view-container .video-prompt-footer-card {
     box-shadow: none;
 }
 .video-view-container .video-prompt-footer-card::after,
 .video-view-container .video-prompt-footer-card::before {
     content: none;
-}
-.video-view-container .video-prompt-footer-card-inner.glass-black {
-    box-shadow: none;
 }
 /* Sidebar Console: wrapper FIJO (sin scroll); el scroll vive en la card
    interna .video-sidebar-inner para que el padding del wrapper siempre
@@ -187,22 +171,8 @@
     background: transparent;
     border-radius: 16px;
 }
-.video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console {
-    /* Mismo sistema glass-black que el footer de Studio (tokens oficiales,
-       sin hardcodear rgba/blur propios). */
-    background: var(--glass-black-bg);
-    border: 1px solid var(--glass-black-border);
-    border-radius: 16px;
-    padding: 12px 12px 14px 14px;
-    color: var(--glass-black-text);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    transition: border-color 0.15s;
-}
-.video-view-container .video-main-director .video-prompt-footer-card-inner.video-director-console:focus-within {
-    border-color: rgba(255, 255, 255, 0.28);
-}
+/* Estilos del Director Console consolidados al FINAL de este archivo
+   con selector de máxima specificity (mismo bloque, sin duplicar acá). */
 /* Textarea: fondo negro era del .video-director-brief-input (p. ej. rgba(0,0,0,0.8) vía .video-prompt-wrap), no del contenedor. Alineado a Brain .gpt-composer-textarea. */
 .video-view-container .video-main-director .video-prompt-wrap .video-prompt-footer-card-inner .video-director-brief-input,
 .video-view-container .video-main-director .video-director-console-content .video-director-brief-input {
@@ -4338,3 +4308,33 @@
     pointer-events: none;
 }
 
+
+/* ============================================================
+   Director Console — glass-black (override al final del archivo)
+   ============================================================
+   Definición consolidada y movida al final para que en caso de empate
+   de specificity gane por orden de cascada. Las propiedades de fondo
+   y blur siempre quedan aplicadas al .video-director-console — ningún
+   default genérico de .video-prompt-footer-card-inner debería pisarlas.
+   Selector con 7 clases para superar cualquier override accidental. */
+.video-view-container
+  .video-director-console-zone.video-main-director
+    .video-prompt-footer-card.video-prompt-footer-card-center
+      .video-prompt-footer-card-inner.video-director-console {
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    border-radius: 16px;
+    padding: 12px 12px 14px 14px;
+    color: var(--glass-black-text);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.15s;
+}
+
+.video-view-container
+  .video-director-console-zone.video-main-director
+    .video-prompt-footer-card.video-prompt-footer-card-center
+      .video-prompt-footer-card-inner.video-director-console:focus-within {
+    border-color: rgba(255, 255, 255, 0.28);
+}
