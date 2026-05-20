@@ -1585,15 +1585,13 @@
     panel.innerHTML =
       this.renderPropertiesHeader(field, this.selectedFieldIndex) +
       this.renderPropertiesTabs([
-        { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
-        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
-        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  },
-        { id: 'json',     label: 'JSON body',     icon: 'brackets-curly',   content: this.renderPropertiesJsonTab(field) }
+        { id: 'general',  label: 'General',       icon: 'sliders',     content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
+        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush', content: stylesPanel  },
+        { id: 'config',   label: 'Configuración', icon: 'code',        content: configPanel  }
       ]);
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
-    this.setupPropertiesJsonTabListeners(field);
     this.setupPropertiesSegmentedListeners();
     this.setupStructuralPropertiesListeners(field, t);
   };
@@ -1849,13 +1847,11 @@
       this.renderPropertiesTabs([
         { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel },
         { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
-        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  },
-        { id: 'json',     label: 'JSON body',     icon: 'brackets-curly',   content: this.renderPropertiesJsonTab(field) }
+        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  }
       ]);
 
     this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
-    this.setupPropertiesJsonTabListeners(field);
     this.setupPropertiesStyleCardListeners();
     this.setupPropertiesSegmentedListeners();
     this.setupPropertiesListeners();
@@ -1895,24 +1891,6 @@
     `;
   };
 
-  /** Contenido del tab "JSON" — viewer read-only del field + botón copiar */
-  P.renderPropertiesJsonTab = function (field) {
-    const json = JSON.stringify(field, null, 2);
-    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return `
-      <div class="properties-json-tab" data-prop-json="1">
-        <div class="properties-json-toolbar">
-          <div class="properties-json-meta">
-            <i class="ph ph-brackets-curly"></i>
-            <span>Schema del field</span>
-            <span class="properties-json-size">${json.length} chars</span>
-          </div>
-          <button type="button" class="prop-json-btn" data-prop-action="copy-json"><i class="ph ph-copy"></i> Copiar</button>
-        </div>
-        <pre class="properties-json-pre"><code>${esc(json)}</code></pre>
-      </div>
-    `;
-  };
 
   /** Mapa input_type → icono Phosphor para el header */
   P.getInputTypeIcon = function (type) {
@@ -2006,24 +1984,6 @@
     });
   };
 
-  /** Listener del tab "JSON" — botón copiar al portapapeles */
-  P.setupPropertiesJsonTabListeners = function (field) {
-    const root = this.querySelector('[data-prop-json="1"]');
-    if (!root) return;
-    const copyBtn = root.querySelector('[data-prop-action="copy-json"]');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        try {
-          const json = JSON.stringify(field, null, 2);
-          await navigator.clipboard.writeText(json);
-          const originalText = copyBtn.innerHTML;
-          copyBtn.innerHTML = '<i class="ph ph-check"></i> Copiado';
-          setTimeout(() => { copyBtn.innerHTML = originalText; }, 1400);
-        } catch (_) {}
-      });
-    }
-  };
 
   /** Listeners para .property-style-card (grid de variantes display_style) */
   P.setupPropertiesStyleCardListeners = function () {
