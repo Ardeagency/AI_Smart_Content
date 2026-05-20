@@ -81,14 +81,15 @@
     'keyword_enforcer':  { section: 'text',       sub: 'Etiquetas' },
     // Selección
     'dropdown':          { section: 'choice',     sub: 'Desplegable' },
-    'choice_chips':      { section: 'choice',     sub: 'Chips única' },
-    'multi_select_chips':{ section: 'choice',     sub: 'Chips múltiple' },
+    'choice_chips':      { section: 'choice',     sub: 'Chips' },
     'radio':             { section: 'choice',     sub: 'Radio' },
     'toggle_switch':     { section: 'choice',     sub: 'Switch (on/off)' },
-    'checkboxes':        { section: 'choice',     sub: 'Checkbox única' },
-    'selection_checkboxes':{ section: 'choice',   sub: 'Checkbox múltiple' },
+    'selection_checkboxes':{ section: 'choice',   sub: 'Múltiple' },
     'conditional_block': { section: 'choice',     sub: 'Condicional' },
     'flags':             { section: 'choice',     sub: 'Banderas' },
+    // Aliases para compat con data legacy (si existe)
+    'checkboxes':        { section: 'choice',     sub: 'Radio' },
+    'multi_select_chips':{ section: 'choice',     sub: 'Múltiple' },
     // Numérico
     'num_stepper':       { section: 'numeric',    sub: 'Número' },
     'range':             { section: 'numeric',    sub: 'Slider' },
@@ -161,14 +162,12 @@
       key: 'choice', name: 'Selección', icon: 'list-checks',
       subs: [
         { name: 'Desplegable' },
-        { name: 'Chips única' },
-        { name: 'Chips múltiple' },
         { name: 'Radio' },
+        { name: 'Chips' },
+        { name: 'Múltiple' },
         { name: 'Switch (on/off)' },
-        { name: 'Checkbox única' },
-        { name: 'Checkbox múltiple' },
-        { name: 'Condicional' },
-        { name: 'Banderas' }
+        { name: 'Banderas' },
+        { name: 'Condicional' }
       ]
     },
     {
@@ -857,15 +856,11 @@
     {
       label: 'Selección',
       items: [
-        ['dropdown',             'Desplegable'],
-        ['select',               'Selector (select)'],
-        ['choice_chips',         'Chips única'],
-        ['multi_select_chips',   'Chips múltiple'],
-        ['radio',                'Radio'],
-        ['toggle_switch',        'Switch (on/off)'],
-        ['checkbox',             'Checkbox boolean'],
-        ['checkboxes',           'Checkbox una opción (variable = valor)'],
-        ['selection_checkboxes', 'Checkbox múltiple (array)'],
+        ['dropdown',             'Desplegable (1 opción)'],
+        ['radio',                'Radio (1 opción)'],
+        ['choice_chips',         'Chips (1 opción)'],
+        ['selection_checkboxes', 'Múltiple (array)'],
+        ['toggle_switch',        'Switch on/off'],
         ['flags',                'Banderas (idioma/país/etnia)'],
         ['conditional_block',    'Bloque condicional']
       ]
