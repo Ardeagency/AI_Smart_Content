@@ -161,7 +161,8 @@
     border: 1px solid var(--border-light, #212126);
     border-radius: 16px;
     padding: 12px 12px 14px 14px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    /* Sombra alineada con Studio sidebar para que ambas cards "floten" igual */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     transition: border-color 0.15s;
 }
 .video-view-container .video-sidebar-console .video-prompt-footer-card-inner.video-sidebar-inner:focus-within {
