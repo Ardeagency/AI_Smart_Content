@@ -2368,11 +2368,52 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--glass-black-text);
 }
 
+/* Custom radio: appearance:none nos permite pintar el relleno con un
+   degradado dinámico (accent-color solo soporta colores sólidos). El fill
+   lee la variable de tema activa: --brand-gradient-dynamic en modo org
+   (set por OrgBrandTheme) y --dev-gradient-dynamic en modo dev (set por
+   DevRankTheme). Así el check del switcher refleja siempre la identidad
+   del contexto actual — gradiente de la marca cuando estás en org/, del
+   rank cuando estás en dev/. */
 .user-dropdown-mode-option input[type="radio"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--accent-brand);
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    background: transparent;
+    position: relative;
     cursor: pointer;
+    transition: border-color 0.18s ease;
+}
+
+.user-dropdown-mode-option input[type="radio"]:hover {
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.user-dropdown-mode-option input[type="radio"]:checked {
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+.user-dropdown-mode-option input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--accent-brand, #00e7ff);
+}
+
+/* Consumidor (value="user") → gradiente de la organización activa */
+.user-dropdown-mode-option input[type="radio"][value="user"]:checked::before {
+    background: var(--brand-gradient-dynamic, var(--accent-brand, #00e7ff));
+}
+
+/* Desarrollador (value="developer") → gradiente del rank del developer */
+.user-dropdown-mode-option input[type="radio"][value="developer"]:checked::before {
+    background: var(--dev-gradient-dynamic, var(--accent-brand, #00e7ff));
 }
 
 .user-dropdown-mode-option input[type="radio"]:checked + span {
