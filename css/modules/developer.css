@@ -3315,19 +3315,48 @@
   cursor: default;
 }
 .image-selector-carousel-track--empty {
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-style: italic;
   min-height: 120px;
+  padding: 8px 0;
+}
+/* Cuando el track tiene skeletons no necesita el data-empty-msg pseudo */
+.image-selector-carousel-track--empty:not(:has(.image-selector-card--skeleton))::before {
+  content: attr(data-empty-msg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100px;
   padding: 24px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 8px;
 }
-.image-selector-carousel-track--empty::before {
-  content: attr(data-empty-msg);
+
+/* Skeleton cards: visibles en el canvas builder hasta que populate del studio
+   reemplace el track con cards reales. Más apagadas que las cards normales
+   para que se entienda que son placeholders. */
+.image-selector-card--skeleton {
+  opacity: 0.45;
+  border-style: dashed !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+.image-selector-card--skeleton .image-selector-card-placeholder {
+  background: transparent;
+}
+.image-selector-card--skeleton .image-selector-card-placeholder .ph {
+  opacity: 0.5;
+}
+.image-selector-card--skeleton .image-selector-card-label {
+  opacity: 0.6;
+  font-style: italic;
 }
 
 .image-selector-empty-msg {

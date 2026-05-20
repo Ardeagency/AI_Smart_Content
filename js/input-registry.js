@@ -923,8 +923,23 @@
     var source = f.media_source || f.function_type || 'other';
     var multi = f.image_selection_mode === 'multiple' || f.selection_mode === 'multiple';
     var placeholderLabel = getMediaSourceLabel(source);
+    // 4 cards skeleton dentro del track: visibles en el canvas del builder
+    // hasta que populateImageSelectorCarousels (StudioView) las reemplace por
+    // las imágenes reales. Cada card tiene .image-selector-card--skeleton
+    // para distinguirlas en CSS y porque el populate las elimina antes de
+    // inyectar las cards reales.
+    var skeletonCount = 4;
+    var skeletons = [];
+    for (var i = 0; i < skeletonCount; i++) {
+      skeletons.push(
+        '<div class="image-selector-card image-selector-card--skeleton" aria-hidden="true">' +
+          '<div class="image-selector-card-placeholder"><i class="ph ph-image"></i></div>' +
+          '<span class="image-selector-card-label">' + escapeHtml(placeholderLabel) + '</span>' +
+        '</div>'
+      );
+    }
     return '<div class="image-selector-carousel" data-media-source="' + escapeHtml(source) + '" data-selection-mode="' + (multi ? 'multiple' : 'single') + '" data-key="' + escapeHtml(f.key || '') + '" data-field-name="' + escapeHtml(a.name) + '">' +
-      '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="' + escapeHtml(placeholderLabel) + '"></div>' +
+      '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="' + escapeHtml(placeholderLabel) + '">' + skeletons.join('') + '</div>' +
       '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value=""' + a.disabled + a.required + '>' +
       '</div>';
   }
