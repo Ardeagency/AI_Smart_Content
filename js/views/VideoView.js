@@ -1670,10 +1670,22 @@ class VideoView extends BaseView {
       // campaigns: contexto_temporal/objetivos_estrategicos/tono_modificador
       // viven en campaign_briefs (BUG-006); resolvemos vía embed PostgREST
       // usando la FK campaigns.brief_id → campaign_briefs.id.
+      //
+      // Scope por tabla (modelo org vs brand_container):
+      //  - products/audience_personas/campaigns: tienen brand_container_id,
+      //    filtran por sub-marca.
+      //  - services/brand_entities: org-scope (compartidos entre todas las
+      //    sub-marcas de la org), filtran por organization_id. Filtrar por
+      //    brand_container_id en estas tablas dispara 400 (columna inexistente).
+      const orgId = this.organizationId || window.currentOrgId;
       const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
         this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        this.supabase.from('services').select('id, nombre_servicio, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        orgId
+          ? this.supabase.from('services').select('id, nombre_servicio').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
+          : Promise.resolve({ data: [] }),
+        orgId
+          ? this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
+          : Promise.resolve({ data: [] }),
         this.supabase.from('audience_personas').select('id, name, description, estilo_lenguaje').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna, persona_id, brief_id, campaign_briefs:brief_id(contexto_temporal, objetivos_estrategicos, tono_modificador)').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
       ]);
