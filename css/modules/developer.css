@@ -2623,18 +2623,35 @@
   justify-content: center;
 }
 
-/* Canvas: ocupa toda la altura disponible del tab content (flex column padre) */
+/* Canvas: ocupa toda la altura disponible del tab content (flex column padre).
+   overflow-y: auto permite scroll interno cuando hay muchos fields apilados;
+   overflow-x: hidden para evitar scroll horizontal accidental. */
 .builder-canvas {
   position: relative;
   flex: 1 1 auto;
-  min-height: 400px;
+  min-height: 0;
   background: transparent;
   border: 1px dashed #242424;
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease, border-color 0.2s ease;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+}
+/* Scrollbar discreta para el canvas */
+.builder-canvas::-webkit-scrollbar {
+  width: 8px;
+}
+.builder-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
+.builder-canvas::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+.builder-canvas::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* Empty state ocupa todo el alto del canvas (se centra dentro);
