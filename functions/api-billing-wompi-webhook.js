@@ -247,8 +247,26 @@ async function applySubscription({ env, orgId, planId, billing, paymentSourceId,
 
   const periodMs   = billing === "year" ? 365 * 24 * 3600 * 1000 : 30 * 24 * 3600 * 1000;
   const now        = Date.now();
-  const periodStart = new Date(now).toISOString();
+  const nowIso     = new Date(now).toISOString();
+  const periodStart = nowIso;
   const periodEnd   = new Date(now + periodMs).toISOString();
+
+  // El índice parcial UNIQUE `one_active_sub_per_org` solo permite 1 sub activa
+  // (trial/active/past_due) por organización. Si la org ya tiene una sub activa
+  // de OTRO provider (típicamente Stripe legacy o tier migrado), debe quedar
+  // canceled antes de insertar la Wompi nueva, o el INSERT fallará por constraint.
+  // Esto modela la realidad de negocio: una org no paga dos pasarelas a la vez.
+  await supabaseRest({
+    url: env.url, serviceKey: env.serviceKey,
+    path: `subscriptions?organization_id=eq.${orgId}&provider=neq.wompi&status=in.(active,trial,past_due)`,
+    method: "PATCH",
+    body: {
+      status:      "canceled",
+      canceled_at: nowIso,
+      updated_at:  nowIso,
+      metadata:    { canceled_reason: "switched_to_wompi", switched_at: nowIso },
+    },
+  }).catch((e) => console.warn("[wompi-webhook] cancel sub otro provider:", e.message));
 
   const row = {
     organization_id:           orgId,
@@ -263,11 +281,11 @@ async function applySubscription({ env, orgId, planId, billing, paymentSourceId,
     cancel_at_period_end:      false,
     canceled_at:               null,
     metadata:                  { billing },
-    updated_at:                new Date().toISOString(),
+    updated_at:                nowIso,
   };
 
-  // Upsert por organization_id + provider (la idx parcial one_active_sub_per_org
-  // ya garantiza máx 1 sub activa por org)
+  // Upsert por organization_id + provider=wompi. Es esperable que solo exista
+  // una fila (renovaciones la van actualizando in-place).
   const existing = await supabaseRest({
     url: env.url, serviceKey: env.serviceKey, path: "subscriptions",
     searchParams: { select: "id,status", organization_id: `eq.${orgId}`, provider: `eq.wompi` },

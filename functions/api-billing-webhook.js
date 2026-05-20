@@ -234,7 +234,27 @@ async function handleSubscriptionUpsert({ env, sub }) {
   const orgId      = await orgFromCustomer({ env, customerId });
   if (!orgId) return console.warn("[billing-webhook] subscription upsert sin org mapeada para customer", customerId);
 
-  const planId = sub.metadata?.plan_id || null;
+  const planId  = sub.metadata?.plan_id || null;
+  const nowIso  = new Date().toISOString();
+  const isActive = ["trial", "active", "past_due"].includes(sub.status);
+
+  // El índice parcial UNIQUE `one_active_sub_per_org` solo permite 1 sub activa
+  // (trial/active/past_due) por org. Si Stripe activa una sub mientras la org
+  // tiene otra activa de provider distinto (típicamente Wompi), cancelamos
+  // primero para evitar conflict. Solo aplicamos si la entrante quedará activa.
+  if (isActive) {
+    await supabaseRest({
+      url: env.url, serviceKey: env.serviceKey,
+      path: `subscriptions?organization_id=eq.${orgId}&provider=neq.stripe&status=in.(active,trial,past_due)`,
+      method: "PATCH",
+      body: {
+        status:      "canceled",
+        canceled_at: nowIso,
+        updated_at:  nowIso,
+        metadata:    { canceled_reason: "switched_to_stripe", switched_at: nowIso },
+      },
+    }).catch((e) => console.warn("[billing-webhook] cancel sub otro provider:", e.message));
+  }
 
   const row = {
     organization_id:        orgId,
@@ -242,12 +262,13 @@ async function handleSubscriptionUpsert({ env, sub }) {
     status:                 sub.status,
     current_period_start:   sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
     current_period_end:     sub.current_period_end   ? new Date(sub.current_period_end   * 1000).toISOString() : null,
+    provider:               "stripe",
     stripe_subscription_id: sub.id,
     stripe_customer_id:     customerId,
     cancel_at_period_end:   Boolean(sub.cancel_at_period_end),
     canceled_at:            sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
     metadata:               sub.metadata || {},
-    updated_at:             new Date().toISOString(),
+    updated_at:             nowIso,
   };
 
   const existing = await supabaseRest({
