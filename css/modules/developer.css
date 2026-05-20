@@ -3337,6 +3337,53 @@
   border-radius: 8px;
 }
 
+/* File input: drop zone estilizada con <input type=file> invisible encima */
+.file-input-wrap {
+  display: block;
+  position: relative;
+  cursor: pointer;
+}
+.file-input-wrap .file-input-native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.file-input-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  text-align: center;
+}
+.file-input-wrap:hover .file-input-zone {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.file-input-icon {
+  font-size: 28px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+.file-input-hint {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.file-input-accept {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
 /* Skeleton cards: visibles en el canvas builder hasta que populate del studio
    reemplace el track con cards reales. Más apagadas que las cards normales
    para que se entienda que son placeholders. */

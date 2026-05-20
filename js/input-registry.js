@@ -834,7 +834,23 @@
   function formFile(f, opts) {
     var a = formAttrs(f, opts || {});
     var accept = (f.fileTypes || f.accept || '').trim() || '*';
-    return '<input type="file" class="modern-input" id="' + a.id + '" name="' + a.name + '" accept="' + escapeHtml(accept) + '"' + (f.multiUpload ? ' multiple' : '') + a.disabled + '>';
+    var multi = !!f.multiUpload;
+    // Drop zone visual: el <input type="file"> queda invisible cubriendo el
+    // <label>; clic en cualquier parte del zone dispara el file picker. El
+    // <span class="file-input-zone-files"> se actualiza vía JS externo si
+    // alguien necesita mostrar nombres (no se requiere para que funcione).
+    var acceptLabel = accept === '*' ? 'Cualquier tipo de archivo' : accept;
+    var hint = multi ? 'Click o arrastra varios archivos' : 'Click o arrastra un archivo';
+    return (
+      '<label class="file-input-wrap" for="' + a.id + '">' +
+        '<input type="file" class="file-input-native" id="' + a.id + '" name="' + a.name + '" accept="' + escapeHtml(accept) + '"' + (multi ? ' multiple' : '') + a.disabled + '>' +
+        '<div class="file-input-zone" aria-hidden="true">' +
+          '<i class="ph ph-upload-simple file-input-icon"></i>' +
+          '<span class="file-input-hint">' + escapeHtml(hint) + '</span>' +
+          '<span class="file-input-accept">' + escapeHtml(acceptLabel) + '</span>' +
+        '</div>' +
+      '</label>'
+    );
   }
 
   /** Etiqueta para selectores de contexto (brand, entity, audience, etc.) */
