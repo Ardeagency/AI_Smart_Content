@@ -3752,7 +3752,78 @@
   white-space: nowrap;
 }
 
-/* Form: selection checkboxes list */
+/* ============================================================
+ * Checkbox / Radio shared base (.modern-checkbox-wrapper + .modern-checkbox-box)
+ * El <input> nativo queda oculto; .modern-checkbox-box es la caja
+ * visual decorativa que cambia de estilo según contexto.
+ * ============================================================ */
+.modern-checkbox-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.modern-checkbox-wrapper input[type="checkbox"],
+.modern-checkbox-wrapper input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.modern-checkbox-box {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #3a3a3a;
+  background: #141517;
+  border-radius: 4px;
+  position: relative;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+/* Radio (estilo por defecto: círculo). Aplica cuando el input type=radio
+   NO está dentro de .input-checkboxes-single (que pide cuadrado) */
+.modern-checkbox-wrapper:not(.input-checkboxes-single) input[type="radio"] ~ .modern-checkbox-box {
+  border-radius: 50%;
+}
+/* Estado checked: círculo radio con punto central */
+.modern-checkbox-wrapper:not(.input-checkboxes-single) input[type="radio"]:checked ~ .modern-checkbox-box {
+  border-color: var(--accent-warm, #e09145);
+}
+.modern-checkbox-wrapper:not(.input-checkboxes-single) input[type="radio"]:checked ~ .modern-checkbox-box::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-warm, #e09145);
+}
+/* Checkbox checked (incluye .input-checkboxes-single con type=radio + cuadrado):
+   cuadrado con palomita */
+.modern-checkbox-wrapper input[type="checkbox"]:checked ~ .modern-checkbox-box,
+.modern-checkbox-wrapper.input-checkboxes-single input[type="radio"]:checked ~ .modern-checkbox-box {
+  background: var(--accent-warm, #e09145);
+  border-color: var(--accent-warm, #e09145);
+}
+.modern-checkbox-wrapper input[type="checkbox"]:checked ~ .modern-checkbox-box::after,
+.modern-checkbox-wrapper.input-checkboxes-single input[type="radio"]:checked ~ .modern-checkbox-box::after {
+  content: '';
+  position: absolute;
+  top: 1px; left: 5px;
+  width: 5px; height: 9px;
+  border: solid #0B0B0B;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.modern-checkbox-wrapper:hover .modern-checkbox-box {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Form: selection checkboxes list (múltiple → cuadrados con type=checkbox) */
 .input-selection-checkboxes {
   display: flex;
   flex-direction: column;
@@ -3762,7 +3833,8 @@
   margin: 0;
 }
 
-/* Checkboxes selección única: variable = opción elegida (ej. cabello = "rubio"), caja cuadrada */
+/* Checkboxes selección única: variable = opción elegida (ej. cabello = "rubio"),
+   visualmente CUADRADO (no círculo) para distinguir de radio */
 .input-checkboxes-single-group {
   display: flex;
   flex-direction: column;
