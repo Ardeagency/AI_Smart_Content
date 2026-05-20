@@ -1405,34 +1405,27 @@
   P.renderStructuralPropertiesPanel = function (field, panel) {
     const t = (field.input_type || field.type || 'section').toLowerCase();
     const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
-    let content = `
-      <div class="properties-form properties-form-structural">
-        <div class="property-group">
-          <h4>Identificación</h4>
-          <div class="property-field">
-            <label for="propKey">Key (referencia)</label>
-            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _.">
-            <span class="field-help">Opcional. No se envía al backend.</span>
-          </div>
-        </div>`;
+
+    // -------- TAB: GENERAL (contenido visible) --------
+    let generalPanel = '';
     if (t === 'section') {
-      content += `
+      generalPanel = `
         <div class="property-group">
           <h4>Sección</h4>
           <div class="property-field">
             <label for="propStructuralTitle">Título</label>
-            <input type="text" id="propStructuralTitle" value="${esc(field.title || field.label)}">
+            <input type="text" id="propStructuralTitle" value="${esc(field.title || field.label)}" placeholder="Ej: Información general">
           </div>
           <div class="property-field">
             <label for="propStructuralDesc">Descripción (subtítulo)</label>
-            <input type="text" id="propStructuralDesc" value="${esc(field.section_description)}">
+            <input type="text" id="propStructuralDesc" value="${esc(field.section_description)}" placeholder="Aparece bajo el título en gris">
           </div>
           <div class="property-toggle">
             <label><input type="checkbox" id="propStructuralCollapsible" ${field.collapsible ? 'checked' : ''}><span>Colapsable</span></label>
           </div>
         </div>`;
     } else if (t === 'divider') {
-      content += `
+      generalPanel = `
         <div class="property-group">
           <h4>Divisor</h4>
           <div class="property-field">
@@ -1445,12 +1438,12 @@
           </div>
         </div>`;
     } else if (t === 'heading') {
-      content += `
+      generalPanel = `
         <div class="property-group">
           <h4>Título</h4>
           <div class="property-field">
             <label for="propStructuralText">Texto</label>
-            <input type="text" id="propStructuralText" value="${esc(field.text || field.label)}">
+            <input type="text" id="propStructuralText" value="${esc(field.text || field.label)}" placeholder="Ej: Configuración avanzada">
           </div>
           <div class="property-field">
             <label for="propStructuralLevel">Nivel (1-6)</label>
@@ -1469,12 +1462,12 @@
         </div>`;
     } else if (t === 'description' || t === 'description_block') {
       const md = field.markdown != null ? field.markdown : (field.text || field.label || '');
-      content += `
+      generalPanel = `
         <div class="property-group">
-          <h4>Texto informativo (Markdown)</h4>
+          <h4>Texto informativo</h4>
           <div class="property-field">
-            <label for="propStructuralMarkdown">Contenido</label>
-            <textarea id="propStructuralMarkdown" rows="8" class="property-md-editor" placeholder="# Título&#10;&#10;Párrafo con **negritas**, *italic* y [enlaces](https://...).&#10;&#10;- Item 1&#10;- Item 2">${esc(md)}</textarea>
+            <label for="propStructuralMarkdown">Contenido (Markdown)</label>
+            <textarea id="propStructuralMarkdown" rows="8" class="property-md-editor property-input--mono" placeholder="# Título&#10;&#10;Párrafo con **negritas**, *italic* y [enlaces](https://...).&#10;&#10;- Item 1&#10;- Item 2">${esc(md)}</textarea>
             <span class="field-help">Soporta # h1/h2/h3, **bold**, *italic*, [link](url), - listas y párrafos separados por línea en blanco.</span>
           </div>
           <div class="property-field">
@@ -1487,8 +1480,32 @@
           </div>
         </div>`;
     }
-    content += '</div>';
-    panel.innerHTML = content;
+
+    // -------- TAB: CÓDIGO (key/identifier) --------
+    const codePanel = `
+      <div class="property-group property-group--mono">
+        <h4>Identificador</h4>
+        <div class="property-field">
+          <label for="propKey"><i class="ph ph-code"></i> Key (referencia)</label>
+          <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
+          <span class="field-help">Opcional. No se envía al backend; útil para referenciar el bloque desde lógica condicional.</span>
+        </div>
+      </div>
+      <div class="property-group">
+        <h4>Tipo</h4>
+        <div class="property-field">
+          <label>Estructural</label>
+          <div class="property-mono-line">${esc(t)}</div>
+          <span class="field-help">Los bloques estructurales no aceptan cambio de tipo desde aquí. Usa la librería para insertar otro tipo.</span>
+        </div>
+      </div>
+    `;
+
+    panel.innerHTML = this.renderPropertiesTabs([
+      { id: 'general', label: 'General', icon: 'sliders', content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
+      { id: 'code',    label: 'Código',  icon: 'code',     content: codePanel }
+    ]);
+    this.setupPropertiesTabsListeners();
     this.setupStructuralPropertiesListeners(field, t);
   };
 
@@ -1547,128 +1564,190 @@
     const isColores = (field.input_type || field.type) === 'colores';
     const dataType = isColores ? 'array' : (field.data_type || this.inferDataType(field));
     const defaultValueBlock = this.renderDefaultValueBlock(field, dataType);
-    
-    panel.innerHTML = `
-      <div class="properties-form">
-        <div class="property-group">
-          <h4>General</h4>
-          
-          <div class="property-field">
-            <label for="propKey">Key</label>
-            <input type="text" id="propKey" value="${field.key}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _.">
-          </div>
-          
-          <div class="property-field">
-            <label for="propLabel">Label</label>
-            <input type="text" id="propLabel" value="${(field.label || '').replace(/"/g, '&quot;')}">
-          </div>
-          
-          <div class="property-field">
-            <label for="propInputType">Tipo de control</label>
-            <select id="propInputType">
-              ${this.renderInputTypeOptions(field.input_type || field.type || 'text')}
-            </select>
-            <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
-          </div>
+    const fieldType = (field.input_type || field.type || 'text');
+    const isContainer = ['section','scope_picker'].indexOf(fieldType) >= 0;
+    const isRange = fieldType === 'range';
+    const isScopePicker = fieldType === 'scope_picker';
+    const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
 
-          ${(['section','scope_picker'].indexOf((field.input_type || field.type)) >= 0) ? `
-          <div class="property-field">
-            <label for="propDisplayStyle">Estilo del contenedor</label>
-            <select id="propDisplayStyle">
-              <option value="flat" ${(field.display_style || 'flat') === 'flat' ? 'selected' : ''}>Flat (label + lista)</option>
-              <option value="bordered" ${field.display_style === 'bordered' ? 'selected' : ''}>Bordered (card con borde)</option>
-              <option value="accordion" ${field.display_style === 'accordion' ? 'selected' : ''}>Accordion (colapsable)</option>
-              <option value="tabs" ${field.display_style === 'tabs' ? 'selected' : ''}>Tabs (cada child sub-container = tab)</option>
-            </select>
-            <span class="field-help">Define cómo se agrupan los inputs anidados dentro de este contenedor.</span>
-          </div>
-          ` : ''}
-
-          ${((field.input_type || field.type) === 'range') ? `
-          <div class="property-field">
-            <label for="propRangeDisplayStyle">Estilo del slider</label>
-            <select id="propRangeDisplayStyle">
-              <option value="simple" ${(field.display_style || 'simple') === 'simple' ? 'selected' : ''}>Simple (valor a la derecha)</option>
-              <option value="tooltip" ${field.display_style === 'tooltip' ? 'selected' : ''}>Tooltip (valor flotando sobre el thumb)</option>
-              <option value="range_dual" ${(field.display_style === 'range_dual' || field.display_style === 'dual' || field.display_style === 'range') ? 'selected' : ''}>Dual (min/max con 2 thumbs)</option>
-            </select>
-          </div>
-          <div class="property-field">
-            <label for="propRangeSuffix">Sufijo del valor (opcional)</label>
-            <input type="text" id="propRangeSuffix" value="${(field.suffix || '').replace(/"/g, '&quot;')}" placeholder="%, °, px, ...">
-            <span class="field-help">Se concatena al valor en tooltip/label (ej. 42%).</span>
-          </div>
-          ` : ''}
-
-          ${((field.input_type || field.type) === 'scope_picker') ? `
-          <div class="property-field">
-            <label for="propVeraPrompt"><i class="ph ph-sparkle"></i> Prompt para Vera</label>
-            <textarea id="propVeraPrompt" rows="4" placeholder="Ej: Adáptate al producto y a la marca para crear un personaje protagonista coherente. Decide cabello, ojos y etnia que mejor encajen con el target.">${(field.vera_prompt || '').replace(/</g, '&lt;')}</textarea>
-            <span class="field-help">Cuando el usuario active el switch <b>Vera</b>, este prompt se envía al LLM junto con las <i>keys</i> de los inputs anidados (cabello, ojos, etc.). Vera genera el valor de cada variable siguiendo este prompt y el contexto del producto/marca.</span>
-          </div>
-          ` : ''}
-
-          <div class="property-field">
-            <label for="propPlaceholder">Placeholder</label>
-            <input type="text" id="propPlaceholder" value="${(field.placeholder || '').replace(/"/g, '&quot;')}">
-          </div>
-          
-          <div class="property-field">
-            <label for="propDescription">Texto de ayuda</label>
-            <input type="text" id="propDescription" value="${(field.description || '').replace(/"/g, '&quot;')}">
-          </div>
-          
-          <div class="property-field">
-            <label for="propDataType">Tipo de dato</label>
-            <select id="propDataType" ${isColores ? 'disabled' : ''}>
-              <option value="string" ${dataType === 'string' ? 'selected' : ''}>String</option>
-              <option value="number" ${dataType === 'number' ? 'selected' : ''}>Number</option>
-              <option value="boolean" ${dataType === 'boolean' ? 'selected' : ''}>Boolean</option>
-              <option value="array" ${dataType === 'array' ? 'selected' : ''}>Array</option>
-              <option value="object" ${dataType === 'object' ? 'selected' : ''}>Object (JSON)</option>
-            </select>
-            ${isColores ? '<span class="field-help">Colores siempre es array (lista de hex).</span>' : ''}
-          </div>
-          
-          ${defaultValueBlock}
-          
-          <div class="property-toggle">
-            <label>
-              <input type="checkbox" id="propRequired" ${field.required ? 'checked' : ''}>
-              <span>Campo requerido</span>
-            </label>
-          </div>
+    // -------- TAB: GENERAL (lo visible al usuario final) --------
+    const generalPanel = `
+      <div class="property-group">
+        <h4>Identidad</h4>
+        <div class="property-field">
+          <label for="propLabel">Título del input</label>
+          <input type="text" id="propLabel" value="${esc(field.label)}" placeholder="Ej: Nombre del producto">
+          <span class="field-help">El texto que ve el usuario encima del control.</span>
         </div>
-        
-        ${this.renderTypeSpecificProperties(field)}
-        
-        <div class="property-group">
-          <h4>Apariencia</h4>
-          
-          <div class="property-field">
-            <label for="propWidth">Ancho</label>
-            <select id="propWidth">
-              <option value="full" ${(field.ui?.width || 'full') === 'full' ? 'selected' : ''}>Completo</option>
-              <option value="half" ${field.ui?.width === 'half' ? 'selected' : ''}>Mitad</option>
-              <option value="third" ${field.ui?.width === 'third' ? 'selected' : ''}>Tercio</option>
-            </select>
-          </div>
-          
-          <div class="property-toggle">
-            <label>
-              <input type="checkbox" id="propHidden" ${field.ui?.hidden ? 'checked' : ''}>
-              <span>Oculto por defecto</span>
-            </label>
-          </div>
+        <div class="property-field">
+          <label for="propPlaceholder">Placeholder</label>
+          <input type="text" id="propPlaceholder" value="${esc(field.placeholder)}" placeholder="Ej: Empieza a escribir...">
         </div>
-        
+        <div class="property-field">
+          <label for="propDescription">Texto de ayuda</label>
+          <input type="text" id="propDescription" value="${esc(field.description)}" placeholder="Aparece debajo del control en gris">
+        </div>
+      </div>
+
+      <div class="property-group">
+        <h4>Comportamiento</h4>
+        <div class="property-toggle">
+          <label>
+            <input type="checkbox" id="propRequired" ${field.required ? 'checked' : ''}>
+            <span>Campo requerido</span>
+          </label>
+        </div>
+        <div class="property-toggle">
+          <label>
+            <input type="checkbox" id="propHidden" ${field.ui?.hidden ? 'checked' : ''}>
+            <span>Oculto por defecto</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="property-group">
+        <h4>Layout</h4>
+        <div class="property-field">
+          <label for="propWidth">Ancho del control</label>
+          <select id="propWidth">
+            <option value="full" ${(field.ui?.width || 'full') === 'full' ? 'selected' : ''}>Completo (100%)</option>
+            <option value="half" ${field.ui?.width === 'half' ? 'selected' : ''}>Mitad (50%)</option>
+            <option value="third" ${field.ui?.width === 'third' ? 'selected' : ''}>Tercio (33%)</option>
+          </select>
+        </div>
       </div>
     `;
-    
+
+    // -------- TAB: CÓDIGO (parte técnica para el dev) --------
+    const codePanel = `
+      <div class="property-group property-group--mono">
+        <h4>Identificador</h4>
+        <div class="property-field">
+          <label for="propKey"><i class="ph ph-code"></i> Key (variable interna)</label>
+          <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
+          <span class="field-help">Se usa como <code>nombre_de_variable</code> en el JSON enviado al backend.</span>
+        </div>
+      </div>
+
+      <div class="property-group">
+        <h4>Tipo de control</h4>
+        <div class="property-field">
+          <label for="propInputType">Input type</label>
+          <select id="propInputType">
+            ${this.renderInputTypeOptions(fieldType || 'text')}
+          </select>
+          <span class="field-help">Define el contenedor de renderizado. Cambiarlo limpia propiedades incompatibles.</span>
+        </div>
+
+        ${isContainer ? `
+        <div class="property-field">
+          <label for="propDisplayStyle">Estilo del contenedor</label>
+          <select id="propDisplayStyle">
+            <option value="flat" ${(field.display_style || 'flat') === 'flat' ? 'selected' : ''}>Flat (label + lista)</option>
+            <option value="bordered" ${field.display_style === 'bordered' ? 'selected' : ''}>Bordered (card con borde)</option>
+            <option value="accordion" ${field.display_style === 'accordion' ? 'selected' : ''}>Accordion (colapsable)</option>
+            <option value="tabs" ${field.display_style === 'tabs' ? 'selected' : ''}>Tabs (cada sub-container = tab)</option>
+          </select>
+        </div>
+        ` : ''}
+
+        ${isRange ? `
+        <div class="property-field">
+          <label for="propRangeDisplayStyle">Variante del slider</label>
+          <select id="propRangeDisplayStyle">
+            <option value="simple" ${(field.display_style || 'simple') === 'simple' ? 'selected' : ''}>Simple (valor a la derecha)</option>
+            <option value="tooltip" ${field.display_style === 'tooltip' ? 'selected' : ''}>Tooltip (valor flotando sobre el thumb)</option>
+            <option value="range_dual" ${(field.display_style === 'range_dual' || field.display_style === 'dual' || field.display_style === 'range') ? 'selected' : ''}>Dual (min/max con 2 thumbs)</option>
+          </select>
+        </div>
+        <div class="property-field">
+          <label for="propRangeSuffix">Sufijo del valor</label>
+          <input type="text" id="propRangeSuffix" value="${esc(field.suffix)}" placeholder="%, °, px, ..." class="property-input--mono">
+          <span class="field-help">Concatenado al valor (ej. 42%).</span>
+        </div>
+        ` : ''}
+      </div>
+
+      ${isScopePicker ? `
+      <div class="property-group property-group--vera">
+        <h4><i class="ph ph-sparkle"></i> Modo Vera</h4>
+        <div class="property-field">
+          <label for="propVeraPrompt">Prompt del LLM</label>
+          <textarea id="propVeraPrompt" rows="5" placeholder="Ej: Adáptate al producto y a la marca para crear un personaje protagonista coherente. Decide cabello, ojos y etnia que mejor encajen con el target." class="property-input--mono">${esc(field.vera_prompt)}</textarea>
+          <span class="field-help">Cuando el usuario active el switch Vera, este prompt + las <code>keys</code> de los inputs anidados se envían al LLM para autocompletar las variables.</span>
+        </div>
+      </div>
+      ` : ''}
+
+      ${this.renderTypeSpecificProperties(field)}
+
+      <div class="property-group">
+        <h4>Datos</h4>
+        <div class="property-field">
+          <label for="propDataType">Tipo de dato (data_type)</label>
+          <select id="propDataType" ${isColores ? 'disabled' : ''}>
+            <option value="string" ${dataType === 'string' ? 'selected' : ''}>String</option>
+            <option value="number" ${dataType === 'number' ? 'selected' : ''}>Number</option>
+            <option value="boolean" ${dataType === 'boolean' ? 'selected' : ''}>Boolean</option>
+            <option value="array" ${dataType === 'array' ? 'selected' : ''}>Array</option>
+            <option value="object" ${dataType === 'object' ? 'selected' : ''}>Object (JSON)</option>
+          </select>
+          ${isColores ? '<span class="field-help">Colores siempre es array (lista de hex).</span>' : '<span class="field-help">Cómo se serializa el valor enviado al backend.</span>'}
+        </div>
+        ${defaultValueBlock}
+      </div>
+    `;
+
+    panel.innerHTML = this.renderPropertiesTabs([
+      { id: 'general', label: 'General', icon: 'sliders', content: generalPanel },
+      { id: 'code',    label: 'Código',  icon: 'code',     content: codePanel    }
+    ]);
+
+    this.setupPropertiesTabsListeners();
     this.setupPropertiesListeners();
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(panel);
     if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) window.InputRegistry.initAspectRatioPicker(panel);
+  };
+
+  /** Renderiza el header de tabs + body con los paneles. Mantiene el último
+   *  tab activo entre re-renders (this._propActiveTab). */
+  P.renderPropertiesTabs = function (tabs) {
+    const activeId = this._propActiveTab && tabs.some(t => t.id === this._propActiveTab)
+      ? this._propActiveTab
+      : tabs[0].id;
+    const headerHtml = tabs.map(t =>
+      `<button type="button" class="properties-tab-btn${t.id === activeId ? ' active' : ''}" data-prop-tab="${t.id}">` +
+        (t.icon ? `<i class="ph ph-${t.icon}"></i>` : '') +
+        `<span>${t.label}</span>` +
+      `</button>`
+    ).join('');
+    const bodyHtml = tabs.map(t =>
+      `<div class="properties-tab-panel${t.id === activeId ? ' active' : ''}" data-prop-tab-panel="${t.id}">` +
+        `<div class="properties-form">${t.content}</div>` +
+      `</div>`
+    ).join('');
+    return `
+      <div class="properties-tabs" data-tabs-root="1">
+        <div class="properties-tabs-header" role="tablist">${headerHtml}</div>
+        <div class="properties-tabs-body">${bodyHtml}</div>
+      </div>
+    `;
+  };
+
+  P.setupPropertiesTabsListeners = function () {
+    const root = this.querySelector('[data-tabs-root="1"]');
+    if (!root) return;
+    const buttons = root.querySelectorAll('.properties-tab-btn');
+    const panels = root.querySelectorAll('.properties-tab-panel');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-prop-tab');
+        this._propActiveTab = id;
+        buttons.forEach(b => b.classList.toggle('active', b === btn));
+        panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-prop-tab-panel') === id));
+      });
+    });
   };
 
   P.inferDataType = function (field) {
