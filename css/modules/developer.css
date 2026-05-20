@@ -2637,12 +2637,14 @@
   flex-direction: column;
 }
 
-/* Empty state y canvas-fields llenan el canvas vertical */
+/* Empty state ocupa todo el alto del canvas (se centra dentro);
+   .canvas-fields se queda en su altura natural arriba — el espacio
+   sobrante del canvas queda como zona drop visible. */
 .builder-canvas .canvas-empty-state {
   flex: 1 1 auto;
 }
 .builder-canvas .canvas-fields {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 /* Builder: canvas plano (sin marco glass) — el preview vive sobre el bg del builder */

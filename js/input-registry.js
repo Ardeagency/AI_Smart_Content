@@ -414,7 +414,12 @@
     var checked = f.defaultValue ? ' checked' : '';
 
     if (displayStyle === 'radio') {
-      var optsList = f.options || [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }];
+      // Si options llega como [] (no solo null/undefined), igual usar fallback
+      // — antes el array vacío cortocircuitaba el ||, dejando un .radio-group
+      // vacío que se veía como una línea fina horizontal.
+      var optsList = (Array.isArray(f.options) && f.options.length > 0)
+        ? f.options
+        : [{ label: 'Opción 1', value: 'opcion1' }, { label: 'Opción 2', value: 'opcion2' }];
       var group = optsList.map(function (o, i) {
         return '<label class="modern-checkbox-wrapper"><input type="radio" name="' + a.name + '" value="' + escapeHtml(String(optVal(o))) + '"' + (i === 0 ? ' checked' : '') + a.disabled + '><div class="modern-checkbox-box" style="border-radius: 50%;"></div><span>' + escapeHtml(optLabel(o)) + '</span></label>';
       }).join('');
