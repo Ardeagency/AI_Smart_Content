@@ -43,7 +43,43 @@
     'share-network': 'tree-structure',
     database: 'stack',
     shapes: 'squares-four',
-    square: 'squares-four'
+    square: 'squares-four',
+    // ===== Iconos del nuevo panel de propiedades =====
+    'text-aa': 'textbox', 'text-h': 'textbox',
+    'toggle-left': 'sliders', 'toggle-right': 'sliders',
+    'paint-brush': 'sparkle', 'paint-brush-broad': 'sparkle',
+    fingerprint: 'hand-pointing',
+    cube: 'stack',
+    'arrow-up': 'caret-up', 'arrow-down': 'caret-down',
+    'text-align-left': 'list-bullets', 'text-align-center': 'list-bullets',
+    'text-align-right': 'list-bullets',
+    'arrows-vertical': 'sliders',
+    crosshair: 'cursor-click',
+    'frame-corners': 'squares-four',
+    'image-square': 'image',
+    'check-circle': 'check-circle',
+    'plus-minus': 'sliders',
+    'list-numbers': 'list-bullets',
+    sun: 'globe',
+    eye: 'magnifying-glass',
+    'film-strip': 'play',
+    gauge: 'sliders',
+    lock: 'wrench',
+    path: 'tree-structure',
+    'arrow-bend-up-right': 'arrow-right',
+    tshirt: 'stack',
+    'markdown-logo': 'terminal',
+    tabs: 'squares-four',
+    rows: 'list-bullets',
+    star: 'sparkle',
+    'number-square-one': 'textbox',
+    paperclip: 'upload-simple',
+    'radio-button-fill': 'check-circle',
+    smiley: 'check-circle',
+    tag: 'list-bullets',
+    'link-simple': 'link',
+    'storefront-alt': 'stack',
+    'wave-sine': 'sliders'
   };
 
   /** Lista de íconos del subset (CSS phosphor-subset.css) — todo lo demás cae a 'squares-four'. */
@@ -1481,31 +1517,84 @@
         </div>`;
     }
 
-    // -------- TAB: CÓDIGO (key/identifier) --------
-    const codePanel = `
+    // -------- TAB: ESTILOS (alignment / spacing visual) --------
+    let stylesPanel = '';
+    if (t === 'heading' || t === 'description' || t === 'description_block') {
+      stylesPanel = `
+        <div class="property-group">
+          <div class="property-group-head">
+            <h4><i class="ph ph-list-bullets"></i> Alineación</h4>
+          </div>
+          <div class="property-field">
+            <label>Alineación del texto</label>
+            <div class="property-segmented" data-segmented="propStructuralAlignment">
+              <button type="button" data-value="left"   ${(field.alignment || 'left') === 'left'   ? 'class="active"' : ''}>Izquierda</button>
+              <button type="button" data-value="center" ${field.alignment === 'center' ? 'class="active"' : ''}>Centro</button>
+              <button type="button" data-value="right"  ${field.alignment === 'right'  ? 'class="active"' : ''}>Derecha</button>
+            </div>
+            <input type="hidden" id="propStructuralAlignment" value="${esc(field.alignment || 'left')}">
+          </div>
+        </div>`;
+    } else if (t === 'divider') {
+      stylesPanel = `
+        <div class="property-group">
+          <div class="property-group-head">
+            <h4><i class="ph ph-sliders"></i> Espaciado</h4>
+          </div>
+          <div class="property-field">
+            <label>Espaciado vertical</label>
+            <div class="property-segmented" data-segmented="propStructuralSpacing">
+              <button type="button" data-value="small"  ${(field.spacing || 'medium') === 'small'  ? 'class="active"' : ''}>Pequeño</button>
+              <button type="button" data-value="medium" ${(field.spacing || 'medium') === 'medium' ? 'class="active"' : ''}>Medio</button>
+              <button type="button" data-value="large"  ${field.spacing === 'large' ? 'class="active"' : ''}>Grande</button>
+            </div>
+            <input type="hidden" id="propStructuralSpacing" value="${esc(field.spacing || 'medium')}">
+          </div>
+        </div>`;
+    } else {
+      stylesPanel = '<div class="properties-empty"><p>Este bloque no tiene opciones de estilo.</p></div>';
+    }
+
+    // -------- TAB: CONFIGURACIÓN (key + tipo read-only) --------
+    const configPanel = `
       <div class="property-group property-group--mono">
-        <h4>Identificador</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-hand-pointing"></i> Identificador</h4>
+        </div>
         <div class="property-field">
-          <label for="propKey"><i class="ph ph-code"></i> Key (referencia)</label>
-          <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
+          <label for="propKey">Variable key (referencia)</label>
+          <div class="property-key-wrap">
+            <span class="property-key-prefix">block.</span>
+            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
+          </div>
           <span class="field-help">Opcional. No se envía al backend; útil para referenciar el bloque desde lógica condicional.</span>
         </div>
       </div>
       <div class="property-group">
-        <h4>Tipo</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-cardholder"></i> Tipo</h4>
+        </div>
         <div class="property-field">
-          <label>Estructural</label>
+          <label>Tipo estructural</label>
           <div class="property-mono-line">${esc(t)}</div>
-          <span class="field-help">Los bloques estructurales no aceptan cambio de tipo desde aquí. Usa la librería para insertar otro tipo.</span>
+          <span class="field-help">Los bloques estructurales no aceptan cambio de tipo. Usa la librería para insertar otro.</span>
         </div>
       </div>
     `;
 
-    panel.innerHTML = this.renderPropertiesTabs([
-      { id: 'general', label: 'General', icon: 'sliders', content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
-      { id: 'code',    label: 'Código',  icon: 'code',     content: codePanel }
-    ]);
+    panel.innerHTML =
+      this.renderPropertiesHeader(field, this.selectedFieldIndex) +
+      this.renderPropertiesTabs([
+        { id: 'general',  label: 'General',       icon: 'sliders',     content: generalPanel || '<div class="properties-empty"><p>Sin propiedades para este tipo.</p></div>' },
+        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush', content: stylesPanel  },
+        { id: 'config',   label: 'Configuración', icon: 'code',        content: configPanel  }
+      ]) +
+      this.renderPropertiesFooter(field);
+
+    this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
+    this.setupPropertiesFooterListeners(field);
+    this.setupPropertiesSegmentedListeners();
     this.setupStructuralPropertiesListeners(field, t);
   };
 
@@ -1570,10 +1659,12 @@
     const isScopePicker = fieldType === 'scope_picker';
     const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
 
-    // -------- TAB: GENERAL (lo visible al usuario final) --------
+    // -------- TAB: GENERAL (etiquetas + comportamiento básico) --------
     const generalPanel = `
       <div class="property-group">
-        <h4>Identidad</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-textbox"></i> Etiquetas</h4>
+        </div>
         <div class="property-field">
           <label for="propLabel">Título del input</label>
           <input type="text" id="propLabel" value="${esc(field.label)}" placeholder="Ej: Nombre del producto">
@@ -1590,91 +1681,144 @@
       </div>
 
       <div class="property-group">
-        <h4>Comportamiento</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-check-circle"></i> Comportamiento</h4>
+        </div>
         <div class="property-toggle">
           <label>
             <input type="checkbox" id="propRequired" ${field.required ? 'checked' : ''}>
             <span>Campo requerido</span>
+            <small>Bloquea el envío del formulario si está vacío</small>
           </label>
+        </div>
+      </div>
+    `;
+
+    // -------- TAB: ESTILOS (apariencia visual) --------
+    const stylesPanel = `
+      <div class="property-group">
+        <div class="property-group-head">
+          <h4><i class="ph ph-squares-four"></i> Layout</h4>
+        </div>
+        <div class="property-field">
+          <label>Ancho del control</label>
+          <div class="property-segmented" data-segmented="propWidth">
+            <button type="button" data-value="full"  ${(field.ui?.width || 'full') === 'full'  ? 'class="active"' : ''}>100%</button>
+            <button type="button" data-value="half"  ${field.ui?.width === 'half'  ? 'class="active"' : ''}>50%</button>
+            <button type="button" data-value="third" ${field.ui?.width === 'third' ? 'class="active"' : ''}>33%</button>
+          </div>
+          <input type="hidden" id="propWidth" value="${(field.ui?.width || 'full')}">
         </div>
         <div class="property-toggle">
           <label>
             <input type="checkbox" id="propHidden" ${field.ui?.hidden ? 'checked' : ''}>
             <span>Oculto por defecto</span>
+            <small>El usuario no lo verá hasta que otra condición lo active</small>
           </label>
         </div>
       </div>
 
+      ${isContainer ? `
       <div class="property-group">
-        <h4>Layout</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-stack"></i> Variante del contenedor</h4>
+        </div>
         <div class="property-field">
-          <label for="propWidth">Ancho del control</label>
-          <select id="propWidth">
-            <option value="full" ${(field.ui?.width || 'full') === 'full' ? 'selected' : ''}>Completo (100%)</option>
-            <option value="half" ${field.ui?.width === 'half' ? 'selected' : ''}>Mitad (50%)</option>
-            <option value="third" ${field.ui?.width === 'third' ? 'selected' : ''}>Tercio (33%)</option>
-          </select>
+          <label>Cómo se agrupan los inputs anidados</label>
+          <div class="property-style-grid">
+            ${[
+              { v: 'flat',      lbl: 'Flat',      desc: 'Lista plana' },
+              { v: 'bordered',  lbl: 'Bordered',  desc: 'Card con borde' },
+              { v: 'accordion', lbl: 'Accordion', desc: 'Colapsable' },
+              { v: 'tabs',      lbl: 'Tabs',      desc: 'Cada sub-container = tab' }
+            ].map(o => `
+              <button type="button" class="property-style-card ${(field.display_style || 'flat') === o.v ? 'active' : ''}" data-style-value="${o.v}" data-style-target="propDisplayStyle">
+                <div class="property-style-card-preview prop-style-${o.v}"></div>
+                <div class="property-style-card-lbl">${o.lbl}</div>
+                <div class="property-style-card-desc">${o.desc}</div>
+              </button>
+            `).join('')}
+          </div>
+          <input type="hidden" id="propDisplayStyle" value="${esc(field.display_style || 'flat')}">
         </div>
       </div>
+      ` : ''}
+
+      ${isRange ? `
+      <div class="property-group">
+        <div class="property-group-head">
+          <h4><i class="ph ph-sliders-horizontal"></i> Variante del slider</h4>
+        </div>
+        <div class="property-field">
+          <label>Estilo visual del slider</label>
+          <div class="property-style-grid">
+            ${[
+              { v: 'simple',     lbl: 'Simple',  desc: 'Valor a la derecha' },
+              { v: 'tooltip',    lbl: 'Tooltip', desc: 'Flota sobre el thumb' },
+              { v: 'range_dual', lbl: 'Dual',    desc: 'Min/max con 2 thumbs' }
+            ].map(o => {
+              const isActive = (field.display_style === o.v) || (o.v === 'simple' && !field.display_style) || (o.v === 'range_dual' && (field.display_style === 'dual' || field.display_style === 'range'));
+              return `
+              <button type="button" class="property-style-card ${isActive ? 'active' : ''}" data-style-value="${o.v}" data-style-target="propRangeDisplayStyle">
+                <div class="property-style-card-preview prop-range-${o.v}"></div>
+                <div class="property-style-card-lbl">${o.lbl}</div>
+                <div class="property-style-card-desc">${o.desc}</div>
+              </button>
+            `;}).join('')}
+          </div>
+          <input type="hidden" id="propRangeDisplayStyle" value="${esc(field.display_style || 'simple')}">
+        </div>
+      </div>
+      ` : ''}
     `;
 
-    // -------- TAB: CÓDIGO (parte técnica para el dev) --------
-    const codePanel = `
+    // -------- TAB: CONFIGURACIÓN (técnico / dev) --------
+    const configPanel = `
       <div class="property-group property-group--mono">
-        <h4>Identificador</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-hand-pointing"></i> Identificador</h4>
+        </div>
         <div class="property-field">
-          <label for="propKey"><i class="ph ph-code"></i> Key (variable interna)</label>
-          <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
-          <span class="field-help">Se usa como <code>nombre_de_variable</code> en el JSON enviado al backend.</span>
+          <label for="propKey">Variable key</label>
+          <div class="property-key-wrap">
+            <span class="property-key-prefix">field.</span>
+            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z_][a-z0-9_]*" title="Letras, números o _. Debe iniciar con letra o _." class="property-input--mono">
+          </div>
+          <span class="field-help">Identificador único enviado al backend en el JSON del formulario.</span>
         </div>
       </div>
 
       <div class="property-group">
-        <h4>Tipo de control</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-cardholder"></i> Tipo de control</h4>
+        </div>
         <div class="property-field">
           <label for="propInputType">Input type</label>
           <select id="propInputType">
             ${this.renderInputTypeOptions(fieldType || 'text')}
           </select>
-          <span class="field-help">Define el contenedor de renderizado. Cambiarlo limpia propiedades incompatibles.</span>
+          <span class="field-help">Cambiarlo limpia propiedades incompatibles.</span>
         </div>
-
-        ${isContainer ? `
-        <div class="property-field">
-          <label for="propDisplayStyle">Estilo del contenedor</label>
-          <select id="propDisplayStyle">
-            <option value="flat" ${(field.display_style || 'flat') === 'flat' ? 'selected' : ''}>Flat (label + lista)</option>
-            <option value="bordered" ${field.display_style === 'bordered' ? 'selected' : ''}>Bordered (card con borde)</option>
-            <option value="accordion" ${field.display_style === 'accordion' ? 'selected' : ''}>Accordion (colapsable)</option>
-            <option value="tabs" ${field.display_style === 'tabs' ? 'selected' : ''}>Tabs (cada sub-container = tab)</option>
-          </select>
-        </div>
-        ` : ''}
 
         ${isRange ? `
         <div class="property-field">
-          <label for="propRangeDisplayStyle">Variante del slider</label>
-          <select id="propRangeDisplayStyle">
-            <option value="simple" ${(field.display_style || 'simple') === 'simple' ? 'selected' : ''}>Simple (valor a la derecha)</option>
-            <option value="tooltip" ${field.display_style === 'tooltip' ? 'selected' : ''}>Tooltip (valor flotando sobre el thumb)</option>
-            <option value="range_dual" ${(field.display_style === 'range_dual' || field.display_style === 'dual' || field.display_style === 'range') ? 'selected' : ''}>Dual (min/max con 2 thumbs)</option>
-          </select>
-        </div>
-        <div class="property-field">
           <label for="propRangeSuffix">Sufijo del valor</label>
           <input type="text" id="propRangeSuffix" value="${esc(field.suffix)}" placeholder="%, °, px, ..." class="property-input--mono">
-          <span class="field-help">Concatenado al valor (ej. 42%).</span>
+          <span class="field-help">Concatenado al valor (ej. <code>42%</code>).</span>
         </div>
         ` : ''}
       </div>
 
       ${isScopePicker ? `
       <div class="property-group property-group--vera">
-        <h4><i class="ph ph-sparkle"></i> Modo Vera</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-sparkle"></i> Modo Vera</h4>
+          <span class="property-group-badge">LLM</span>
+        </div>
         <div class="property-field">
-          <label for="propVeraPrompt">Prompt del LLM</label>
-          <textarea id="propVeraPrompt" rows="5" placeholder="Ej: Adáptate al producto y a la marca para crear un personaje protagonista coherente. Decide cabello, ojos y etnia que mejor encajen con el target." class="property-input--mono">${esc(field.vera_prompt)}</textarea>
-          <span class="field-help">Cuando el usuario active el switch Vera, este prompt + las <code>keys</code> de los inputs anidados se envían al LLM para autocompletar las variables.</span>
+          <label for="propVeraPrompt">Prompt del modelo</label>
+          <textarea id="propVeraPrompt" rows="6" placeholder="Ej: Adáptate al producto y a la marca para crear un personaje protagonista coherente. Decide cabello, ojos y etnia que mejor encajen con el target." class="property-input--mono">${esc(field.vera_prompt)}</textarea>
+          <span class="field-help">Cuando el usuario active el switch <strong>Vera</strong>, este prompt + las <code>keys</code> de los inputs anidados se envían al LLM para autocompletar las variables.</span>
         </div>
       </div>
       ` : ''}
@@ -1682,9 +1826,11 @@
       ${this.renderTypeSpecificProperties(field)}
 
       <div class="property-group">
-        <h4>Datos</h4>
+        <div class="property-group-head">
+          <h4><i class="ph ph-cloud"></i> Datos</h4>
+        </div>
         <div class="property-field">
-          <label for="propDataType">Tipo de dato (data_type)</label>
+          <label for="propDataType">data_type</label>
           <select id="propDataType" ${isColores ? 'disabled' : ''}>
             <option value="string" ${dataType === 'string' ? 'selected' : ''}>String</option>
             <option value="number" ${dataType === 'number' ? 'selected' : ''}>Number</option>
@@ -1698,16 +1844,242 @@
       </div>
     `;
 
-    panel.innerHTML = this.renderPropertiesTabs([
-      { id: 'general', label: 'General', icon: 'sliders', content: generalPanel },
-      { id: 'code',    label: 'Código',  icon: 'code',     content: codePanel    }
-    ]);
+    panel.innerHTML =
+      this.renderPropertiesHeader(field, this.selectedFieldIndex) +
+      this.renderPropertiesTabs([
+        { id: 'general',  label: 'General',       icon: 'sliders',          content: generalPanel },
+        { id: 'styles',   label: 'Estilos',       icon: 'paint-brush',      content: stylesPanel  },
+        { id: 'config',   label: 'Configuración', icon: 'code',             content: configPanel  }
+      ]) +
+      this.renderPropertiesFooter(field);
 
+    this.setupPropertiesHeaderListeners();
     this.setupPropertiesTabsListeners();
+    this.setupPropertiesFooterListeners(field);
+    this.setupPropertiesStyleCardListeners();
+    this.setupPropertiesSegmentedListeners();
     this.setupPropertiesListeners();
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(panel);
     if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) window.InputRegistry.initAspectRatioPicker(panel);
+  };
+
+  /** Header del panel: icono del tipo + label + path/key + quick actions */
+  P.renderPropertiesHeader = function (field, index) {
+    const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
+    const type = (field.input_type || field.type || 'text').toLowerCase();
+    const icon = this.getInputTypeIcon(type);
+    const total = this.getCanvasFields().length;
+    const canMoveUp = index > 0;
+    const canMoveDown = index < total - 1;
+    return `
+      <div class="properties-header">
+        <div class="properties-header-main">
+          <div class="properties-header-icon"><i class="ph ph-${icon}"></i></div>
+          <div class="properties-header-text">
+            <div class="properties-header-title">${esc(field.label || field.key || 'Sin título')}</div>
+            <div class="properties-header-path">
+              <span class="ph-prop-type">${esc(type)}</span>
+              <span class="ph-prop-sep">·</span>
+              <code>${esc(field.key || 'sin_key')}</code>
+            </div>
+          </div>
+        </div>
+        <div class="properties-header-actions">
+          <button type="button" class="prop-action-btn" data-prop-action="move-up" title="Mover arriba" aria-label="Mover arriba" ${canMoveUp ? '' : 'disabled'}><i class="ph ph-caret-up"></i></button>
+          <button type="button" class="prop-action-btn" data-prop-action="move-down" title="Mover abajo" aria-label="Mover abajo" ${canMoveDown ? '' : 'disabled'}><i class="ph ph-caret-down"></i></button>
+          <button type="button" class="prop-action-btn" data-prop-action="duplicate" title="Duplicar" aria-label="Duplicar"><i class="ph ph-copy"></i></button>
+          <button type="button" class="prop-action-btn prop-action-btn--danger" data-prop-action="delete" title="Eliminar" aria-label="Eliminar"><i class="ph ph-trash"></i></button>
+        </div>
+      </div>
+    `;
+  };
+
+  /** Footer: botón "Ver JSON crudo" que despliega un editor JSON read-only del field */
+  P.renderPropertiesFooter = function (field) {
+    const json = JSON.stringify(field, null, 2);
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const expanded = this._propJsonExpanded === true;
+    return `
+      <div class="properties-footer ${expanded ? 'is-expanded' : ''}" data-prop-footer="1">
+        <button type="button" class="properties-json-toggle" data-prop-action="toggle-json">
+          <i class="ph ph-${expanded ? 'caret-down' : 'caret-right'}"></i>
+          <i class="ph ph-brackets-curly"></i>
+          <span>Ver JSON crudo del field</span>
+          <span class="properties-json-size">${json.length} chars</span>
+        </button>
+        <div class="properties-json-viewer" ${expanded ? '' : 'hidden'}>
+          <div class="properties-json-toolbar">
+            <button type="button" class="prop-json-btn" data-prop-action="copy-json"><i class="ph ph-copy"></i> Copiar</button>
+          </div>
+          <pre class="properties-json-pre"><code>${esc(json)}</code></pre>
+        </div>
+      </div>
+    `;
+  };
+
+  /** Mapa input_type → icono Phosphor para el header */
+  P.getInputTypeIcon = function (type) {
+    const map = {
+      // text family
+      text: 'text-aa', textarea: 'text-aa', string: 'text-aa', prompt_input: 'sparkle', prompt_system: 'sparkle',
+      tag_input: 'tag', tags: 'tag', slug_input: 'link-simple', code_input: 'code', markdown: 'markdown-logo',
+      labels: 'tag', instructions: 'note', notes: 'note',
+      // selectors
+      brand_selector: 'storefront', entity_selector: 'cube', audience_selector: 'users', campaign_selector: 'megaphone', product_selector: 'package',
+      // select
+      select: 'caret-down', dropdown: 'caret-down', multi_select: 'list-checks',
+      choice_chips: 'list-bullets', multi_select_chips: 'list-checks', checkboxes: 'check-square',
+      flags: 'flag', tone_selector: 'wave-sine', mood_selector: 'smiley', length_selector: 'ruler',
+      colores: 'palette', aspect_ratio: 'frame-corners',
+      // pickers
+      scope_picker: 'target', image_selector: 'image', gallery_picker: 'images',
+      visual_reference: 'image-square', position_picker: 'crosshair', visual_grid_picker: 'squares-four',
+      palette_picker: 'palette', logo_picker: 'image-square', thumbnail_picker: 'image-square',
+      // boolean
+      radio: 'radio-button', radio_buttons: 'radio-button', checkbox: 'check-square', switch: 'toggle-left',
+      toggle_switch: 'toggle-left', boolean: 'toggle-left', toggle: 'toggle-left', selection_checkboxes: 'check-square',
+      // number
+      number: 'number-square-one', stepper: 'plus-minus', stepper_num: 'plus-minus', num_stepper: 'plus-minus',
+      rating: 'star',
+      // range
+      range: 'sliders-horizontal', slider: 'sliders-horizontal',
+      segmented_control: 'rows', steps_slider: 'list-numbers', color_slider: 'palette',
+      white_balance: 'sun', rotation_dial: 'arrows-clockwise',
+      // file
+      file: 'paperclip', upload: 'upload-simple',
+      cron_schedule: 'clock',
+      // structural
+      section: 'square', divider: 'minus', heading: 'text-h', description: 'text-align-left',
+      description_block: 'text-align-left',
+      accordion: 'caret-down', tabs: 'tabs',
+      // misc
+      camera_angle: 'video-camera', shot_type: 'video-camera', lens_focal_length: 'eye',
+      depth_of_field: 'eye', composition_structure: 'frame-corners', lighting_style: 'sun',
+      color_grade_preset: 'palette', contrast_level: 'sliders-horizontal', saturation_level: 'sliders-horizontal',
+      grain_amount: 'sliders-horizontal', glow_amount: 'sliders-horizontal', finish_type: 'sparkle',
+      floating_product: 'cube', camera_movement: 'arrows-out', camera_path: 'path',
+      camera_roll: 'arrows-clockwise', focus_pull: 'eye', shot_speed: 'gauge',
+      frame_rate_style: 'film-strip', motion_style_video: 'film-strip', zoom_behavior: 'magnifying-glass',
+      loop_behavior: 'arrows-clockwise', parallax_layers: 'stack', perspective_grid: 'frame-corners',
+      transition_anchor: 'lock', vanishing_point_bias: 'crosshair',
+      background_type: 'image-square', environment_theme: 'mountains', props_density: 'sliders-horizontal',
+      emotion_profile: 'smiley', ethnicity_profile: 'user', eye_color: 'eye',
+      hair_color: 'palette', hair_style: 'user', pose_direction: 'arrow-bend-up-right',
+      wardrobe_style: 'tshirt'
+    };
+    const raw = map[type] || 'squares-four';
+    // Ruteamos por getPhosphorIconName para que cualquier icono fuera del subset
+    // caiga a un fallback válido en vez de quedar invisible.
+    return this.getPhosphorIconName ? this.getPhosphorIconName(raw) : raw;
+  };
+
+  /** Mover field por delta (+1 / -1) dentro del array top-level */
+  P.moveFieldByDelta = function (index, delta) {
+    const arr = this.getCanvasFields();
+    const target = index + delta;
+    if (target < 0 || target >= arr.length) return;
+    const [item] = arr.splice(index, 1);
+    arr.splice(target, 0, item);
+    this.selectedFieldIndex = target;
+    this.hasUnsavedChanges = true;
+    this.renderCanvas();
+    this.renderPropertiesPanel();
+    this.updateJsonPreview();
+  };
+
+  /** Listeners del header (mover, duplicar, eliminar) */
+  P.setupPropertiesHeaderListeners = function () {
+    const header = this.querySelector('.properties-header');
+    if (!header) return;
+    header.querySelectorAll('[data-prop-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const action = btn.getAttribute('data-prop-action');
+        const idx = this.selectedFieldIndex;
+        if (idx == null) return;
+        if (action === 'move-up') this.moveFieldByDelta(idx, -1);
+        else if (action === 'move-down') this.moveFieldByDelta(idx, +1);
+        else if (action === 'duplicate') this.duplicateField(idx);
+        else if (action === 'delete') {
+          if (confirm('¿Eliminar este campo? Esta acción no se puede deshacer hasta guardar.')) {
+            this.deleteField(idx);
+          }
+        }
+      });
+    });
+  };
+
+  /** Listeners del footer (toggle JSON viewer + copiar) */
+  P.setupPropertiesFooterListeners = function (field) {
+    const footer = this.querySelector('[data-prop-footer="1"]');
+    if (!footer) return;
+    const toggleBtn = footer.querySelector('[data-prop-action="toggle-json"]');
+    const copyBtn = footer.querySelector('[data-prop-action="copy-json"]');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this._propJsonExpanded = !this._propJsonExpanded;
+        const viewer = footer.querySelector('.properties-json-viewer');
+        const caret = toggleBtn.querySelector('.ph-caret-right, .ph-caret-down');
+        if (this._propJsonExpanded) {
+          footer.classList.add('is-expanded');
+          if (viewer) viewer.removeAttribute('hidden');
+          if (caret) { caret.classList.remove('ph-caret-right'); caret.classList.add('ph-caret-down'); }
+        } else {
+          footer.classList.remove('is-expanded');
+          if (viewer) viewer.setAttribute('hidden', '');
+          if (caret) { caret.classList.remove('ph-caret-down'); caret.classList.add('ph-caret-right'); }
+        }
+      });
+    }
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          const json = JSON.stringify(field, null, 2);
+          await navigator.clipboard.writeText(json);
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="ph ph-check"></i> Copiado';
+          setTimeout(() => { copyBtn.innerHTML = originalText; }, 1400);
+        } catch (_) {}
+      });
+    }
+  };
+
+  /** Listeners para .property-style-card (grid de variantes display_style) */
+  P.setupPropertiesStyleCardListeners = function () {
+    this.querySelectorAll('.property-style-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = card.getAttribute('data-style-target');
+        const value = card.getAttribute('data-style-value');
+        const hidden = this.querySelector('#' + targetId);
+        if (!hidden) return;
+        // marcar activo solo en el mismo grupo (mismo data-style-target)
+        this.querySelectorAll('.property-style-card[data-style-target="' + targetId + '"]').forEach(c => c.classList.toggle('active', c === card));
+        hidden.value = value;
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  };
+
+  /** Listeners para .property-segmented (botones de width) */
+  P.setupPropertiesSegmentedListeners = function () {
+    this.querySelectorAll('[data-segmented]').forEach(grp => {
+      const targetId = grp.getAttribute('data-segmented');
+      const hidden = this.querySelector('#' + targetId);
+      grp.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          grp.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+          if (hidden) {
+            hidden.value = btn.getAttribute('data-value');
+            hidden.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      });
+    });
   };
 
   /** Renderiza el header de tabs + body con los paneles. Mantiene el último
@@ -1716,9 +2088,10 @@
     const activeId = this._propActiveTab && tabs.some(t => t.id === this._propActiveTab)
       ? this._propActiveTab
       : tabs[0].id;
+    const safeIcon = (name) => this.getPhosphorIconName ? this.getPhosphorIconName(name) : name;
     const headerHtml = tabs.map(t =>
       `<button type="button" class="properties-tab-btn${t.id === activeId ? ' active' : ''}" data-prop-tab="${t.id}">` +
-        (t.icon ? `<i class="ph ph-${t.icon}"></i>` : '') +
+        (t.icon ? `<i class="ph ph-${safeIcon(t.icon)}"></i>` : '') +
         `<span>${t.label}</span>` +
       `</button>`
     ).join('');
