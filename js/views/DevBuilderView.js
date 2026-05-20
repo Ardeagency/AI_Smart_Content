@@ -237,7 +237,6 @@ class DevBuilderView extends DevBaseView {
               <div class="technical-tab-main">
             <div class="builder-settings-form builder-config-fullwidth">
                   <div class="settings-section technical-section-modules">
-                    <h4 class="technical-section-title"><i class="ph ph-stack"></i> Módulos del flujo</h4>
                     <div id="technicalModulesList" class="modules-node-map-wrap">
                       <div class="modules-node-map" id="modulesNodeMap"></div>
                       <div class="modules-node-map-actions">
