@@ -311,9 +311,13 @@
     filter: none;
     pointer-events: none;
 }
-/* Interior plano: sin glass, sin blur */
-.video-prompt-footer-card-inner,
-.video-prompt-footer-card-inner.glass-black {
+/* Interior plano: sin glass, sin blur.
+   Exclusiones: .video-director-console y .video-sidebar-inner tienen sus
+   propios estilos (card flotante / glass-black) y NO deben caer en este
+   default — por eso usamos :not() en el selector para que la cascada no
+   los sobrescriba. */
+.video-prompt-footer-card-inner:not(.video-director-console):not(.video-sidebar-inner),
+.video-prompt-footer-card-inner.glass-black:not(.video-director-console):not(.video-sidebar-inner) {
     position: relative;
     z-index: 1;
     margin: 0;
