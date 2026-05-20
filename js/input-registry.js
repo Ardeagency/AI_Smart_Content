@@ -578,11 +578,15 @@
         '</div>';
     }
 
+    // Cada container añade su key al namePrefix/idPrefix para que dos children con
+    // la misma key en containers distintos (ej. dos `pose` en dos tabs) no colisionen
+    // en los <input name> ni en los id HTML.
+    var childPrefix = (opts.namePrefix || '') + (f.key ? f.key + '.' : '');
+    var childIdPrefix = (opts.idPrefix || '') + (f.key ? f.key + '__' : '');
     var renderChild = function (child) {
-      // Hashing recursivo a renderFormFieldWithWrapper sin estructura wrapperClass studio-field
-      // (cada child se renderiza como un field normal, anidable).
       return renderFormFieldWithWrapper(child, {
-        idPrefix: opts.idPrefix,
+        namePrefix: childPrefix,
+        idPrefix: childIdPrefix,
         wrapperClass: 'studio-field input-container-child',
         showLabel: true,
         showHelper: true,
@@ -599,6 +603,23 @@
         '</div>';
     }
 
+    // Helper para grandchildren dentro de un sub-container (tab/accordion-panel):
+    // añade el sub-container key al path para mantener unicidad de name/id.
+    var renderGrandchild = function (subContainerKey) {
+      var gcNamePrefix = childPrefix + (subContainerKey ? subContainerKey + '.' : '');
+      var gcIdPrefix = childIdPrefix + (subContainerKey ? subContainerKey + '__' : '');
+      return function (gc) {
+        return renderFormFieldWithWrapper(gc, {
+          namePrefix: gcNamePrefix,
+          idPrefix: gcIdPrefix,
+          wrapperClass: 'studio-field input-container-child',
+          showLabel: true,
+          showHelper: true,
+          showRequired: true
+        });
+      };
+    };
+
     if (display === 'accordion') {
       // Si los children son a su vez containers, cada uno = panel del accordion.
       // Sino, todo el container es UN accordion con los fields planos adentro.
@@ -608,7 +629,7 @@
         var panelsHtml = nestedContainers.map(function (c, i) {
           var cKey = escapeHtml(c.key || ('panel_' + i));
           var cLbl = escapeHtml(c.label || c.title || 'Panel ' + (i + 1));
-          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderChild).join('');
+          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderGrandchild(c.key || ('panel_' + i))).join('');
           return '<details class="input-accordion-panel"' + (i === 0 ? ' open' : '') + '>' +
             '<summary class="input-accordion-summary"><span>' + cLbl + '</span><i class="ph ph-caret-down"></i></summary>' +
             '<div class="input-accordion-body" data-container-key="' + cKey + '">' + cChildren + '</div>' +
@@ -642,7 +663,7 @@
         }).join('');
         var panelsHtml = tabChildren.map(function (c, i) {
           var cKey = escapeHtml(c.key || ('tab_' + i));
-          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderChild).join('');
+          var cChildren = (Array.isArray(c.children) ? c.children : []).map(renderGrandchild(c.key || ('tab_' + i))).join('');
           return '<div class="input-tab-panel' + (i === 0 ? ' active' : '') + '" data-tab-key="' + cKey + '">' + cChildren + '</div>';
         }).join('');
         return '<div class="input-container input-container--tabs"' + typeAttr + ' data-container-key="' + key + '">' +
@@ -1904,9 +1925,16 @@
     return getContainerType(field) === 'STRUCTURAL_CONTAINER';
   }
 
-  /** true si el control ya incluye su propio label (checkbox, radio, switch). */
+  /** true si el control ya incluye su propio label (checkbox, radio, switch,
+   *  o un container scope_picker/section con su propio header interno). */
   function hasOwnLabel(field) {
-    return getContainerType(field) === 'BOOLEAN_CONTAINER';
+    var ct = getContainerType(field);
+    if (ct === 'BOOLEAN_CONTAINER' || ct === 'SCOPE_PICKER_CONTAINER') return true;
+    // section es estructural pero cuando se renderea como container (tiene
+    // children o display_style) también pinta su propio header
+    var t = (field && (field.input_type || field.type) || '').toLowerCase();
+    if (t === 'section' && (Array.isArray(field.children) || field.display_style)) return true;
+    return false;
   }
 
   /**
@@ -1979,21 +2007,27 @@
     if (!Array.isArray(fields) || fields.length === 0) return '';
     opts = opts || {};
     return fields.map(function (f) {
-      var field = f && typeof f === 'object' ? {
-        key: f.key || f.name || f.id || 'field',
-        name: f.name || f.key || f.id || 'field',
-        label: f.label,
-        description: f.description,
-        required: f.required !== false,
-        input_type: f.input_type || f.type,
-        type: f.type || f.input_type,
-        options: f.options,
-        placeholder: f.placeholder,
-        default: f.default,
-        defaultValue: f.defaultValue !== undefined ? f.defaultValue : f.default
-      } : { key: 'field', label: '', required: false };
+      // Preservamos todas las propiedades del field (children, display_style,
+      // vera_prompt, colors, steps, suffix, markdown, min/max/step, options,
+      // logo, thumbnail, icon, etc.). Solo normalizamos key/name/input_type/type
+      // y resolvemos defaultValue.
+      var field;
+      if (f && typeof f === 'object') {
+        field = Object.assign({}, f);
+        field.key = f.key || f.name || f.id || 'field';
+        field.name = f.name || f.key || f.id || 'field';
+        field.input_type = f.input_type || f.type;
+        field.type = f.type || f.input_type;
+        field.required = f.required !== false;
+        if (field.defaultValue === undefined && f.default !== undefined) {
+          field.defaultValue = f.default;
+        }
+      } else {
+        field = { key: 'field', label: '', required: false };
+      }
       return renderFormFieldWithWrapper(field, {
         idPrefix: opts.idPrefix,
+        namePrefix: opts.namePrefix,
         wrapperClass: opts.wrapperClass,
         showLabel: opts.showLabel !== false,
         showHelper: opts.showHelper !== false,
@@ -2035,7 +2069,13 @@
             c.classList.toggle('selected', c === card);
             c.setAttribute('aria-pressed', c === card ? 'true' : 'false');
           });
-          if (hidden) hidden.value = card.getAttribute('data-value');
+          if (hidden) {
+            hidden.value = card.getAttribute('data-value');
+            if (hidden.dispatchEvent) {
+              hidden.dispatchEvent(new Event('input', { bubbles: true }));
+              hidden.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
         });
       });
     });
@@ -2059,7 +2099,13 @@
             d.setAttribute('aria-pressed', d === dot ? 'true' : 'false');
           });
           var v = dot.getAttribute('data-value');
-          if (hidden) hidden.value = v;
+          if (hidden) {
+            hidden.value = v;
+            if (hidden.dispatchEvent) {
+              hidden.dispatchEvent(new Event('input', { bubbles: true }));
+              hidden.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
           if (label) label.textContent = dot.getAttribute('title') || v;
         });
       });
@@ -2081,7 +2127,13 @@
             c.classList.toggle('selected', c === card);
             c.setAttribute('aria-pressed', c === card ? 'true' : 'false');
           });
-          if (hidden) hidden.value = card.getAttribute('data-value');
+          if (hidden) {
+            hidden.value = card.getAttribute('data-value');
+            if (hidden.dispatchEvent) {
+              hidden.dispatchEvent(new Event('input', { bubbles: true }));
+              hidden.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
         });
       });
     });

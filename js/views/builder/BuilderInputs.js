@@ -1124,6 +1124,22 @@
     if (!TYPES_WITH_RANGE.has(newType)) {
       delete field.min; delete field.max; delete field.step;
     }
+    // 2b. suffix: solo aplica a range con display_style range_dual/tooltip
+    if (newType !== 'range') {
+      delete field.suffix;
+    }
+    // 2c. markdown: solo aplica a description estructural
+    if (newType !== 'description') {
+      delete field.markdown;
+    }
+    // 2d. colors: solo aplica a palette_picker (options[].colors se preserva,
+    //     pero campo top-level field.colors no aplica a otros tipos)
+    if (newType !== 'palette_picker') {
+      delete field.colors;
+    }
+    // 2e. logo / thumbnail / icon top-level no aplican (van en options[])
+    if (newType !== 'logo_picker') delete field.logo;
+    if (newType !== 'thumbnail_picker') delete field.thumbnail;
 
     // 3. propiedades específicas que dejan de aplicar
     if (newType !== 'colores') {

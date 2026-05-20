@@ -27,17 +27,19 @@
     if (!Array.isArray(arr)) return [];
     const seenKeys = new Set();
     const out = [];
-    for (const raw of arr) {
-      if (!raw || typeof raw !== 'object') continue;
-      const f = { ...raw };
+    for (const item of arr) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+      const f = { ...item };
       // key: usar key, sino name, sino id, sino skip
-      const key = f.key || f.name || f.id;
-      if (!key) continue;
-      f.key = String(key).toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      if (!f.key) continue;
+      const rawKey = f.key || f.name || f.id;
+      if (!rawKey || typeof rawKey === 'object') continue;
+      let sanitized = String(rawKey).toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      if (!sanitized) continue;
+      // Prefix con f_ si empieza con dígito (HTML name válido)
+      if (/^[0-9]/.test(sanitized)) sanitized = 'f_' + sanitized;
       // Evitar keys duplicadas (último gana suffix)
-      let finalKey = f.key, n = 1;
-      while (seenKeys.has(finalKey)) { finalKey = `${f.key}_${n++}`; }
+      let finalKey = sanitized, n = 1;
+      while (seenKeys.has(finalKey)) { finalKey = `${sanitized}_${n++}`; }
       f.key = finalKey;
       seenKeys.add(finalKey);
       // input_type: normalizar nombres
@@ -50,8 +52,13 @@
       // label fallback
       if (!f.label) f.label = f.key;
       // Containers (section, scope_picker): normalizar children recursivamente
-      if ((f.input_type === 'section' || f.input_type === 'scope_picker') && Array.isArray(f.children)) {
-        f.children = this.normalizeInputSchema(f.children);
+      if (f.input_type === 'section' || f.input_type === 'scope_picker') {
+        f.children = Array.isArray(f.children)
+          ? this.normalizeInputSchema(f.children)
+          : [];
+      } else if (f.children !== undefined) {
+        // Si NO es container, no debe tener children (legacy data cleanup)
+        delete f.children;
       }
       out.push(f);
     }
