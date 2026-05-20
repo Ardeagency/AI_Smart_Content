@@ -18,71 +18,142 @@
     return PHOSPHOR_ICON_MAP[iconName] || iconName;
   };
 
+  // ==================================================================
+  // Secciones top-level del rail (patrón Weavy/Segmind). Cada template
+  // se asigna a una sección por input_type O por category creativa.
+  // ==================================================================
+  P.LIBRARY_SECTIONS = [
+    { key: 'text',      name: 'Texto',      icon: 'text-aa',     inputTypes: ['text','textarea','string','tags'] },
+    { key: 'choice',    name: 'Selección',  icon: 'list-checks', inputTypes: ['dropdown','select','choice_chips','multi_select_chips','radio','checkboxes','selection_checkboxes','flags','toggle_switch','checkbox','multi_select'] },
+    { key: 'numeric',   name: 'Numérico',   icon: 'hash',        inputTypes: ['number','num_stepper','range'] },
+    { key: 'visual',    name: 'Visual',     icon: 'palette',     inputTypes: ['colores','aspect_ratio','scope_picker','image_selector','focus_selector','color'] },
+    { key: 'data',      name: 'Datos',      icon: 'database',    inputTypes: ['brand_selector','entity_selector','audience_selector','product_selector','tone_selector','length_selector','campaign_selector','cron_selector','flow_selector'] },
+    { key: 'structure', name: 'Estructura', icon: 'rows',        inputTypes: ['section','divider','heading','description','description_block'] },
+    { key: 'templates', name: 'Plantillas', icon: 'sparkle',     categories: ['preset','style','motion','scene','protagonist','branding','distribution','controls'] }
+  ];
+
+  /** Decide a qué sección pertenece un template (templates creativos primero, luego por input_type). */
+  P.resolveLibrarySection = function (template) {
+    const sections = this.LIBRARY_SECTIONS;
+    const cat = (template.category || '').toLowerCase();
+    // Categorías creativas → siempre van a Templates
+    const tplSection = sections.find(s => s.key === 'templates');
+    if (tplSection && Array.isArray(tplSection.categories) && tplSection.categories.indexOf(cat) >= 0) {
+      return 'templates';
+    }
+    // Por input_type
+    const inputType = ((template.base_schema && (template.base_schema.input_type || template.base_schema.type)) || template.input_type || '').toLowerCase();
+    for (const s of sections) {
+      if (Array.isArray(s.inputTypes) && s.inputTypes.indexOf(inputType) >= 0) return s.key;
+    }
+    // Fallback: si category coincide con un key de sección, usarlo
+    const byCat = sections.find(s => s.key === cat);
+    if (byCat) return byCat.key;
+    // Default: text
+    return 'text';
+  };
+
   P.renderComponentsList = function () {
+    const rail = this.querySelector('#componentsRail');
     const container = this.querySelector('#componentsList');
+    const title = this.querySelector('#componentsSectionTitle');
     if (!container) return;
-    
-    // Agrupar por categoría creativa (Style, Escenario, Protagonista, Branding, Motion, etc.)
-    const groups = {
-      preset: { name: 'Presets', icon: 'sparkle', items: [] },
-      style: { name: 'Estilo & Cámara', icon: 'aperture', items: [] },
-      motion: { name: 'Motion & Perspectiva', icon: 'video-camera', items: [] },
-      scene: { name: 'Escenarios', icon: 'mountains', items: [] },
-      protagonist: { name: 'Protagonistas', icon: 'user', items: [] },
-      branding: { name: 'Branding & Copy', icon: 'megaphone', items: [] },
-      distribution: { name: 'Distribución / Operación', icon: 'share-network', items: [] },
-      context: { name: 'Contexto & Productos', icon: 'database', items: [] },
-      media: { name: 'Media / Referencias', icon: 'image', items: [] },
-      controls: { name: 'Controles UI', icon: 'sliders', items: [] },
-      structural: { name: 'Estructura', icon: 'square', items: [] },
-      basic: { name: 'Básicos', icon: 'shapes', items: [] }
-    };
-    this.componentTemplates.forEach(template => {
-      const category = template.category || 'basic';
-      if (groups[category]) {
-        groups[category].items.push(template);
-      } else {
-        groups.basic.items.push(template);
-      }
+
+    // Asignar cada template a una sección
+    const buckets = {};
+    this.LIBRARY_SECTIONS.forEach(s => { buckets[s.key] = []; });
+    (this.componentTemplates || []).forEach(t => {
+      const sec = this.resolveLibrarySection(t);
+      if (buckets[sec]) buckets[sec].push(t);
     });
+
+    // Restaurar sección activa de localStorage (o primera no vacía)
+    if (!this._activeLibrarySection) {
+      try { this._activeLibrarySection = localStorage.getItem('builderLibrarySection') || null; } catch (_) {}
+    }
+    let activeKey = this._activeLibrarySection;
+    if (!activeKey || !buckets[activeKey] || buckets[activeKey].length === 0) {
+      const firstWithItems = this.LIBRARY_SECTIONS.find(s => buckets[s.key].length > 0);
+      activeKey = (firstWithItems && firstWithItems.key) || 'text';
+    }
+    this._activeLibrarySection = activeKey;
 
     const escapeAttr = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
     const escapeHtml = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
-    
-    let html = '';
-    
-    Object.entries(groups).forEach(([key, group]) => {
-      if (group.items.length === 0) return;
-      
-      html += `
-        <div class="component-group" data-group-key="${escapeAttr(key)}">
-          <div class="component-group-header">
-            <span>${escapeHtml(group.name)}</span>
-          </div>
-          <div class="component-group-items component-group-grid">
-            ${group.items.map(template => {
-              const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
-              const iconName = this.getPhosphorIconName(template.icon_name);
-              const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
-              return `
-              <div class="component-item" 
-                   draggable="true" 
-                   data-template-id="${escapeAttr(template.id)}"
-                   data-template="${escapeAttr(templateJson)}"
-                   data-search="${escapeAttr(searchText)}">
-                <i class="ph ph-${escapeHtml(iconName)}"></i>
-                <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
-                </div>
-            `;
-            }).join('')}
-          </div>
+
+    // Render rail
+    if (rail) {
+      rail.innerHTML = this.LIBRARY_SECTIONS.map(s => {
+        const count = buckets[s.key].length;
+        if (count === 0) return '';
+        const isActive = s.key === activeKey;
+        return `
+          <button type="button"
+                  class="components-rail-item ${isActive ? 'is-active' : ''}"
+                  data-section="${escapeAttr(s.key)}"
+                  title="${escapeAttr(s.name)}"
+                  aria-label="${escapeAttr(s.name)}">
+            <i class="ph ph-${escapeHtml(s.icon)}"></i>
+            <span class="components-rail-label">${escapeHtml(s.name)}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Render panel (solo la sección activa)
+    const activeSection = this.LIBRARY_SECTIONS.find(s => s.key === activeKey);
+    if (title && activeSection) title.textContent = activeSection.name;
+    const items = buckets[activeKey] || [];
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="components-empty">
+          <i class="ph ph-package"></i>
+          <p>Sin componentes en esta sección.</p>
         </div>
       `;
-    });
-    
-    container.innerHTML = html;
+    } else {
+      container.innerHTML = `
+        <div class="components-section-grid">
+          ${items.map(template => {
+            const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
+            const iconName = this.getPhosphorIconName(template.icon_name);
+            const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
+            return `
+              <div class="component-item"
+                   draggable="true"
+                   data-template-id="${escapeAttr(template.id)}"
+                   data-template="${escapeAttr(templateJson)}"
+                   data-search="${escapeAttr(searchText)}"
+                   title="${escapeAttr(template.description || template.name)}">
+                <i class="ph ph-${escapeHtml(iconName)}"></i>
+                <span class="component-name">${escapeHtml(template.name).replace(/_/g, '_<wbr>')}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    this.setupRailListeners(buckets);
     this.setupComponentsSearch();
     this.setupDragAndDrop();
+  };
+
+  /** Click en un ítem del rail cambia la sección activa y re-renderiza el panel. */
+  P.setupRailListeners = function (buckets) {
+    const rail = this.querySelector('#componentsRail');
+    if (!rail) return;
+    rail.querySelectorAll('.components-rail-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-section');
+        if (!key || key === this._activeLibrarySection) return;
+        if (buckets && (!buckets[key] || buckets[key].length === 0)) return;
+        this._activeLibrarySection = key;
+        try { localStorage.setItem('builderLibrarySection', key); } catch (_) {}
+        this.renderComponentsList();
+      });
+    });
   };
 
   P.setupComponentsSearch = function () {
@@ -92,17 +163,16 @@
 
     const filter = () => {
       const q = (input.value || '').trim().toLowerCase();
-      container.querySelectorAll('.component-group').forEach(groupEl => {
-        const items = groupEl.querySelectorAll('.component-item');
-        let visibleCount = 0;
-        items.forEach(item => {
-          const search = (item.getAttribute('data-search') || '').trim();
-          const show = !q || search.includes(q);
-          item.classList.toggle('component-item-hidden', !show);
-          if (show) visibleCount++;
-        });
-        groupEl.classList.toggle('component-group-empty', visibleCount === 0);
+      const items = container.querySelectorAll('.component-item');
+      let visibleCount = 0;
+      items.forEach(item => {
+        const search = (item.getAttribute('data-search') || '').trim();
+        const show = !q || search.includes(q);
+        item.classList.toggle('component-item-hidden', !show);
+        if (show) visibleCount++;
       });
+      const grid = container.querySelector('.components-section-grid');
+      if (grid) grid.classList.toggle('is-empty-after-search', visibleCount === 0 && !!q);
     };
 
     input.addEventListener('input', filter);

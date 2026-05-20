@@ -135,16 +135,19 @@ class DevBuilderView extends DevBaseView {
 
       <!-- Main Builder Container -->
       <main class="builder-main">
-        <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
+        <!-- Panel izquierdo: Biblioteca (estilo Weavy): rail estrecho con secciones + panel con search + grid -->
         <aside class="builder-sidebar builder-components" hidden>
-          <div class="builder-sidebar-header builder-components-header">
-            <h3 class="builder-components-title">Componentes</h3>
-            <div class="builder-components-search-wrap">
-              <i class="ph ph-magnifying-glass builder-components-search-icon"></i>
-              <input type="text" class="builder-components-search" id="componentsSearchInput" placeholder="Buscar" aria-label="Buscar componentes">
+          <nav class="components-rail" id="componentsRail" aria-label="Secciones de biblioteca"></nav>
+          <div class="components-panel">
+            <div class="builder-sidebar-header builder-components-header">
+              <h3 class="builder-components-title" id="componentsSectionTitle">Biblioteca</h3>
+              <div class="builder-components-search-wrap">
+                <i class="ph ph-magnifying-glass builder-components-search-icon"></i>
+                <input type="text" class="builder-components-search" id="componentsSearchInput" placeholder="Buscar" aria-label="Buscar componentes">
+              </div>
             </div>
+            <div class="builder-components-list" id="componentsList"></div>
           </div>
-          <div class="builder-components-list" id="componentsList"></div>
         </aside>
 
         <!-- Panel central: contenido de pestañas -->
