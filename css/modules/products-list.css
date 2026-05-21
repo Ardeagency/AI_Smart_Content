@@ -196,3 +196,202 @@
     padding: 1rem;
   }
 }
+
+/* ============================================================
+   Modal: Adjuntar producto (URL / archivos)
+   ============================================================ */
+
+.attach-product-modal {
+  max-width: 880px;
+  width: min(880px, 92vw);
+}
+
+.attach-product-intro {
+  margin: 0 0 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.attach-product-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.attach-product-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-color, #242424);
+  border-radius: var(--radius-md, 12px);
+}
+
+.attach-product-option-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.attach-product-option-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+  color: var(--text-primary, #fff);
+  font-size: 0.95rem;
+}
+
+.attach-product-option-head h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.attach-product-option-head p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.attach-product-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.attach-product-field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.attach-product-url-input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--text-primary, #fff);
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-color, #242424);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.attach-product-url-input:focus {
+  border-color: var(--text-muted, rgba(255, 255, 255, 0.35));
+}
+
+.attach-product-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.025));
+  border: 1px dashed var(--border-color, #242424);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.attach-product-dropzone:hover,
+.attach-product-dropzone:focus,
+.attach-product-dropzone.is-dragover {
+  border-color: var(--text-muted, rgba(255, 255, 255, 0.35));
+  background: rgba(255, 255, 255, 0.04);
+  outline: none;
+}
+
+.attach-product-dropzone i {
+  font-size: 1.5rem;
+  opacity: 0.7;
+}
+
+.attach-product-dropzone-text {
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+}
+
+.attach-product-dropzone-hint {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.attach-product-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.attach-product-file-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.78rem;
+  color: var(--text-primary, #fff);
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-color, #242424);
+  border-radius: 6px;
+}
+
+.attach-product-file-list .attach-product-file-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attach-product-file-list .attach-product-file-size {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.attach-product-submit {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.attach-product-submit:hover {
+  background: var(--brillo-hover, rgba(255, 255, 255, 0.08));
+  border-color: var(--text-muted, rgba(255, 255, 255, 0.25));
+}
+
+@media (max-width: 720px) {
+  .attach-product-options {
+    grid-template-columns: 1fr;
+  }
+}

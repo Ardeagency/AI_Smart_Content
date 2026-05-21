@@ -23,6 +23,10 @@ class ProductsListView extends BaseView {
   <div class="products-list-header">
     <h1 class="products-list-title">Productos</h1>
     <div class="products-list-header-actions">
+      <button type="button" class="products-list-add-btn" id="productsListAttachBtn" aria-label="Adjuntar producto desde URL o archivos">
+        <i class="fas fa-paperclip" aria-hidden="true"></i>
+        <span>Adjuntar producto</span>
+      </button>
       <button type="button" class="products-list-add-btn" id="productsListAddBtn" aria-label="Agregar producto">
         <span>+ Producto</span>
       </button>
@@ -414,6 +418,143 @@ class ProductsListView extends BaseView {
     }
     const addBtn = document.getElementById('productsListAddBtn');
     if (addBtn) addBtn.onclick = () => this._onAddProduct();
+    const attachBtn = document.getElementById('productsListAttachBtn');
+    if (attachBtn) attachBtn.onclick = () => this._onAttachProduct();
+  }
+
+  _onAttachProduct() {
+    if (!window.Modal || typeof window.Modal.show !== 'function') {
+      this._showNotification('Modal no disponible', 'error');
+      return;
+    }
+    const body = `
+      <p class="attach-product-intro">Elegí cómo querés que Vera obtenga la información del producto. En ambos casos, la ficha se crea automáticamente con los datos detectados.</p>
+      <div class="attach-product-options">
+        <section class="attach-product-option" data-source="url">
+          <div class="attach-product-option-head">
+            <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+            <div>
+              <h4>URL del producto</h4>
+              <p>Pegá el enlace de la página del producto. Vera leerá la URL, extraerá nombre, descripción, precio, imágenes y características, y armará la ficha automáticamente.</p>
+            </div>
+          </div>
+          <label class="attach-product-field">
+            <span class="attach-product-field-label">Enlace</span>
+            <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
+          </label>
+          <button type="button" class="attach-product-submit" data-action="submit-url">
+            <i class="fas fa-magic" aria-hidden="true"></i>
+            <span>Analizar URL con Vera</span>
+          </button>
+        </section>
+
+        <section class="attach-product-option" data-source="files">
+          <div class="attach-product-option-head">
+            <span class="attach-product-option-icon"><i class="fas fa-file-arrow-up" aria-hidden="true"></i></span>
+            <div>
+              <h4>Adjuntar archivos del producto</h4>
+              <p>Subí PDFs, fichas técnicas, catálogos, fotos o videos. Vera analizará el contenido y construirá la ficha con los datos que detecte (nombre, beneficios, materiales, variantes, imágenes).</p>
+            </div>
+          </div>
+          <label class="attach-product-dropzone" tabindex="0">
+            <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,image/*,video/*" hidden />
+            <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+            <span class="attach-product-dropzone-text">Arrastrá archivos aquí o hacé click para elegirlos</span>
+            <span class="attach-product-dropzone-hint">PDF, DOC, TXT, imágenes, video</span>
+          </label>
+          <ul class="attach-product-file-list" hidden></ul>
+          <button type="button" class="attach-product-submit" data-action="submit-files">
+            <i class="fas fa-magic" aria-hidden="true"></i>
+            <span>Analizar archivos con Vera</span>
+          </button>
+        </section>
+      </div>
+    `;
+
+    const handle = window.Modal.show({
+      title: 'Adjuntar producto',
+      body,
+      className: 'attach-product-modal',
+    });
+    if (!handle) return;
+    const root = handle.bodyEl;
+
+    const urlInput = root.querySelector('.attach-product-url-input');
+    const fileInput = root.querySelector('.attach-product-file-input');
+    const dropzone = root.querySelector('.attach-product-dropzone');
+    const fileList = root.querySelector('.attach-product-file-list');
+
+    const renderFiles = (files) => {
+      if (!fileList) return;
+      if (!files || !files.length) {
+        fileList.hidden = true;
+        fileList.innerHTML = '';
+        return;
+      }
+      fileList.hidden = false;
+      fileList.innerHTML = Array.from(files).map((f) => {
+        const kb = f.size > 1024 * 1024
+          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.max(1, Math.round(f.size / 1024))} KB`;
+        return `<li><i class="fas fa-file" aria-hidden="true"></i> <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span> <span class="attach-product-file-size">${kb}</span></li>`;
+      }).join('');
+    };
+
+    if (fileInput) {
+      fileInput.addEventListener('change', () => renderFiles(fileInput.files));
+    }
+    if (dropzone) {
+      dropzone.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'INPUT') fileInput?.click();
+      });
+      dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput?.click(); }
+      });
+      ['dragover', 'dragenter'].forEach((ev) => dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('is-dragover');
+      }));
+      ['dragleave', 'drop'].forEach((ev) => dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('is-dragover');
+      }));
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer?.files;
+        if (files && fileInput) {
+          fileInput.files = files;
+          renderFiles(files);
+        }
+      });
+    }
+
+    root.querySelector('[data-action="submit-url"]')?.addEventListener('click', () => {
+      const value = (urlInput?.value || '').trim();
+      if (!value) {
+        urlInput?.focus();
+        this._showNotification('Pegá una URL primero', 'error');
+        return;
+      }
+      try {
+        const u = new URL(value);
+        if (!/^https?:$/.test(u.protocol)) throw new Error('protocol');
+      } catch (_) {
+        urlInput?.focus();
+        this._showNotification('La URL no es válida', 'error');
+        return;
+      }
+      handle.close();
+      this._showNotification('Vera procesará esta URL próximamente.', 'info');
+    });
+
+    root.querySelector('[data-action="submit-files"]')?.addEventListener('click', () => {
+      const count = fileInput?.files?.length || 0;
+      if (!count) {
+        this._showNotification('Adjuntá al menos un archivo', 'error');
+        return;
+      }
+      handle.close();
+      this._showNotification(`Vera procesará ${count} archivo${count === 1 ? '' : 's'} próximamente.`, 'info');
+    });
   }
 
   async onLeave() {
