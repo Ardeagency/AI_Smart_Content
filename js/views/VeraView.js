@@ -27,14 +27,85 @@ function safeColor(c, fallback = '#ffffff') {
   return fallback;
 }
 
+// Aliases comunes que LLMs emiten pero el renderer no conoce nativamente.
+// Mapean al tipo soportado más cercano semánticamente.
+const CHART_TYPE_ALIASES = {
+  // Bar variants
+  'column':         'bar',
+  'columnchart':    'bar',
+  'horizontalbar':  'bar',
+  'horizontal_bar': 'bar',
+  'hbar':           'bar',
+  'verticalbar':    'bar',
+  // Stacked variants
+  'stacked':        'stacked_column',
+  'stackedbar':     'stacked_column',
+  'stacked_bar':    'stacked_column',
+  'stackedcolumn':  'stacked_column',
+  // Line variants
+  'linechart':      'line',
+  'curve':          'spline',
+  'smoothline':     'spline',
+  'smooth':         'spline',
+  // Area variants
+  'areachart':      'area',
+  'filledarea':     'area',
+  // Pie variants
+  'piechart':       'pie',
+  'doughnut':       'donut',
+  'ring':           'donut',
+  // Polar variants
+  'polararea':      'polar',
+  'polar_area':     'polar',
+  'polarchart':     'polar',
+  // Radar variants
+  'radarchart':     'radar',
+  'spider':         'radar',
+  'web':            'radar',
+  // Pyramid variants
+  'funnel':         'pyramid',
+  // Progress variants
+  'progressbar':    'progress',
+  'gauge':          'progress',
+  'meter':          'progress',
+};
+
 function parseChartSpec(jsonText) {
   const t = String(jsonText || '').trim();
   if (!t) throw new Error('Spec vacío');
   const spec = JSON.parse(t);
   if (!spec || typeof spec !== 'object') throw new Error('Spec inválido');
-  const type = String(spec.type || '').trim().toLowerCase();
-  if (!type) throw new Error('Falta spec.type');
+  const rawType = String(spec.type || spec.kind || spec.chartType || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (!rawType) throw new Error('Falta spec.type');
+  // Normaliza vía alias; si ya es un tipo soportado, queda igual.
+  const type = CHART_TYPE_ALIASES[rawType] || CHART_TYPE_ALIASES[rawType.replace(/_/g, '')] || rawType;
   return { ...spec, type };
+}
+
+// Renderiza datos como tabla cuando el tipo no es renderable como chart SVG.
+// Mejor que "Tipo no soportado" sin contexto: el usuario al menos ve los números.
+function renderChartAsDataTable(spec) {
+  const title = spec.title ? String(spec.title) : '';
+  const data = Array.isArray(spec.data) ? spec.data : [];
+  if (!data.length) {
+    return `<div class="gpt-viz gpt-viz--fallback"><strong>${escapeHtml(title || 'Datos')}</strong><p style="color:var(--text-muted);margin-top:8px">El tipo <code>${escapeHtml(spec.type)}</code> no tiene render visual disponible y no hay datos para tabular.</p></div>`;
+  }
+  const hint = spec.type ? `<div style="font-size:.8em;color:var(--text-muted);margin-top:4px;">(tipo solicitado: <code>${escapeHtml(spec.type)}</code> — mostrado como tabla)</div>` : '';
+  const headerKeys = Array.from(new Set(data.flatMap((d) => d && typeof d === 'object' ? Object.keys(d) : [])));
+  const cols = headerKeys.length ? headerKeys : ['valor'];
+  const ths = cols.map((c) => `<th>${escapeHtml(c)}</th>`).join('');
+  const rows = data.map((d) => {
+    const cells = cols.map((c) => {
+      const v = d && typeof d === 'object' ? d[c] : d;
+      return `<td>${escapeHtml(String(v ?? ''))}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  return `<div class="gpt-viz gpt-viz--fallback">` +
+    (title ? `<div style="font-weight:600;font-size:1.05em;margin-bottom:4px;">${escapeHtml(title)}</div>` : '') +
+    hint +
+    `<div class="gpt-md-table-wrap" style="margin-top:10px;"><table class="gpt-md-table"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table></div>` +
+    `</div>`;
 }
 
 function svgArcPath(cx, cy, r, startAngle, endAngle) {
@@ -395,9 +466,21 @@ function renderChartSVG(spec) {
   return svg;
 }
 
+// Tipos que renderChartSVG sabe pintar nativamente. Si parseChartSpec produce
+// algo fuera de esta lista, caemos a renderChartAsDataTable en vez de
+// "Tipo de gráfico no soportado" sin contexto.
+const SUPPORTED_CHART_TYPES = new Set([
+  'pie', 'donut', 'bar', 'line', 'spline', 'area',
+  'progress', 'pyramid', 'stacked_column', 'polar', 'radar'
+]);
+
 function renderChartBlock(code) {
   try {
     const spec = parseChartSpec(code);
+    // Si el tipo (ya pasado por aliases) no es soportado, fallback a tabla
+    if (!SUPPORTED_CHART_TYPES.has(spec.type)) {
+      return renderChartAsDataTable(spec);
+    }
     const svg = renderChartSVG(spec);
     return `<div class="gpt-viz">${svg}</div>`;
   } catch (e) {

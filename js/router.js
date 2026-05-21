@@ -476,15 +476,29 @@ class Router {
       if (typeof document.startViewTransition === 'function' && !this._reduceMotion()) {
         try {
           const transition = document.startViewTransition(doRender);
+          // Silenciar los otros 2 promises del ViewTransition. Si el callback
+          // se pasa del timeout interno del browser (~4s), los 3 promises
+          // (updateCallbackDone/ready/finished) rechazan con TimeoutError.
+          // El try/catch solo cubre el await de updateCallbackDone — los otros
+          // aparecerían como "Uncaught (in promise) TimeoutError". Atacharlos
+          // a noop catch evita el warning en consola sin cambiar el flujo.
+          transition.ready.catch(() => {});
+          transition.finished.catch(() => {});
           await transition.updateCallbackDone;
           // Path success de View Transitions: no se llama _playRouteFade, pero
           // sí necesitamos enhance de a11y labels y document.title en el nuevo DOM.
           this._enhanceA11yLabels(container);
           this._applyDocumentTitle();
         } catch (e) {
-          console.warn('Router: View Transition falló, fallback a fade.', e);
-          await doRender();
-          this._playRouteFade(container);
+          // Solo log si NO es el timeout esperado del browser (4s default).
+          // TimeoutError es benigno: la transición no se animó pero el DOM ya está.
+          if (e?.name !== 'TimeoutError') {
+            console.warn('Router: View Transition falló, fallback a fade.', e);
+            await doRender();
+            this._playRouteFade(container);
+          }
+          // Si fue TimeoutError, doRender ya corrió (es el que se pasó del límite),
+          // así que el DOM nuevo ya está montado — no necesitamos re-renderizar.
         }
       } else {
         await doRender();
