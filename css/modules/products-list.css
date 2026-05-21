@@ -536,6 +536,17 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   gap: 0.5rem;
 }
 
+/* Grupo de upload dentro del paso "attach" (fotos + archivos en una sola pantalla) */
+.attach-product-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.attach-product-field-group + .attach-product-field-group {
+  margin-top: 0.25rem;
+}
+
 .attach-product-field-label {
   font-size: 0.68rem;
   font-weight: 600;

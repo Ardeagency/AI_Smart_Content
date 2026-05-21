@@ -442,36 +442,12 @@ class ProductsListView extends BaseView {
               <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
 
-            <button type="button" class="attach-product-option" data-go="attach-picker" aria-label="Adjuntar archivos o fotos del producto">
+            <button type="button" class="attach-product-option" data-go="attach" aria-label="Adjuntar archivos y fotos del producto">
               <div class="attach-product-option-head">
                 <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
                 <h4 class="attach-product-option-title">Adjuntar archivos</h4>
               </div>
               <p class="attach-product-option-desc">Subi fotos del producto o archivos como PDFs, fichas tecnicas y catalogos. Vera analizara el contenido y construira la ficha automaticamente.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Paso 1b: sub-picker dentro de Adjuntar archivos -->
-        <section class="attach-product-step attach-product-step--picker" data-panel="attach-picker" hidden>
-          <p class="attach-product-intro">Elegi que tipo de contenido vas a adjuntar. Vera genera la ficha usando el contexto de la marca y solo te cobra el costo real de OpenAI.</p>
-          <div class="attach-product-options">
-            <button type="button" class="attach-product-option" data-go="photos" aria-label="Subir fotos del producto">
-              <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-image" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">Subir fotos del producto</h4>
-              </div>
-              <p class="attach-product-option-desc">Subi imagenes del producto (JPG, PNG, WebP). Vera las analiza con vision por IA y genera nombre, descripcion, beneficios, materiales y caracteristicas visuales detectadas.</p>
-              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
-            </button>
-
-            <button type="button" class="attach-product-option" data-go="files" aria-label="Subir archivos del producto">
-              <div class="attach-product-option-head">
-                <span class="attach-product-option-icon"><i class="fas fa-file-pdf" aria-hidden="true"></i></span>
-                <h4 class="attach-product-option-title">Subir archivos del producto</h4>
-              </div>
-              <p class="attach-product-option-desc">Subi PDFs, fichas tecnicas, catalogos o documentos. Vera extrae el texto del archivo y genera la ficha estructurada con los datos detectados.</p>
               <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
             </button>
           </div>
@@ -489,33 +465,33 @@ class ProductsListView extends BaseView {
           </button>
         </section>
 
-        <!-- Paso 2b: Fotos -->
-        <section class="attach-product-step attach-product-step--form" data-panel="photos" hidden>
-          <label class="attach-product-dropzone" tabindex="0">
-            <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
-            <i class="fas fa-image" aria-hidden="true"></i>
-            <span class="attach-product-dropzone-text">Arrastra fotos del producto o hace click para elegirlas</span>
-            <span class="attach-product-dropzone-hint">JPG, PNG, WebP · maximo 10 imagenes · 25MB cada una</span>
-          </label>
-          <ul class="attach-product-file-list attach-product-photos-list" hidden></ul>
-          <button type="button" class="attach-product-submit" data-action="submit-photos">
-            <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar fotos con Vera</span>
-          </button>
-        </section>
+        <!-- Paso 2b: Adjuntar archivos — ambos inputs (fotos + documentos) en una sola pantalla -->
+        <section class="attach-product-step attach-product-step--form" data-panel="attach" hidden>
+          <div class="attach-product-field-group" data-group="photos">
+            <span class="attach-product-field-label">Fotos del producto</span>
+            <label class="attach-product-dropzone" tabindex="0">
+              <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
+              <i class="fas fa-image" aria-hidden="true"></i>
+              <span class="attach-product-dropzone-text">Arrastra fotos o hace click para elegirlas</span>
+              <span class="attach-product-dropzone-hint">JPG, PNG, WebP · max 10 imagenes · 25MB c/u</span>
+            </label>
+            <ul class="attach-product-file-list" hidden></ul>
+          </div>
 
-        <!-- Paso 2c: Archivos (placeholder hasta cablear extraccion server-side) -->
-        <section class="attach-product-step attach-product-step--form" data-panel="files" hidden>
-          <label class="attach-product-dropzone" tabindex="0">
-            <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
-            <i class="fas fa-upload" aria-hidden="true"></i>
-            <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
-            <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
-          </label>
-          <ul class="attach-product-file-list" hidden></ul>
-          <button type="button" class="attach-product-submit" data-action="submit-files">
+          <div class="attach-product-field-group" data-group="files">
+            <span class="attach-product-field-label">Archivos del producto</span>
+            <label class="attach-product-dropzone" tabindex="0">
+              <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
+              <i class="fas fa-paperclip" aria-hidden="true"></i>
+              <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
+              <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
+            </label>
+            <ul class="attach-product-file-list" hidden></ul>
+          </div>
+
+          <button type="button" class="attach-product-submit" data-action="submit-attach">
             <i class="fas fa-magic" aria-hidden="true"></i>
-            <span>Analizar archivos con Vera</span>
+            <span>Analizar con Vera</span>
           </button>
         </section>
 
@@ -564,12 +540,10 @@ class ProductsListView extends BaseView {
     }
 
     const stepConfig = {
-      picker:         { title: 'Adjuntar producto',          icon: null,            back: false, backTo: null            },
-      'attach-picker':{ title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true,  backTo: 'picker'        },
-      url:            { title: 'URL del producto',           icon: 'fa-link',       back: true,  backTo: 'picker'        },
-      photos:         { title: 'Subir fotos del producto',   icon: 'fa-image',      back: true,  backTo: 'attach-picker' },
-      files:          { title: 'Subir archivos del producto',icon: 'fa-file-pdf',   back: true,  backTo: 'attach-picker' },
-      loading:        { title: 'Creando ficha del producto', icon: null,            back: false, backTo: null            },
+      picker:  { title: 'Adjuntar producto',          icon: null,            back: false, backTo: null     },
+      url:     { title: 'URL del producto',           icon: 'fa-link',       back: true,  backTo: 'picker' },
+      attach:  { title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true,  backTo: 'picker' },
+      loading: { title: 'Creando ficha del producto', icon: null,            back: false, backTo: null     },
     };
 
     const goToStep = (step) => {
@@ -597,13 +571,12 @@ class ProductsListView extends BaseView {
 
     const urlInput = root.querySelector('.attach-product-url-input');
 
-    // Wiring generico de dropzones: cada panel form tiene su propio dropzone + input + file list.
-    const wireDropzone = (panelSelector, inputSelector, iconClass = 'fa-file') => {
-      const panel = root.querySelector(panelSelector);
-      if (!panel) return { input: null, list: null };
-      const dropzone = panel.querySelector('.attach-product-dropzone');
-      const input = panel.querySelector(inputSelector);
-      const list = panel.querySelector('.attach-product-file-list');
+    // Wiring generico de dropzones, scopeado a un grupo (un panel puede tener varios grupos).
+    const wireDropzone = (groupEl, iconClass = 'fa-file') => {
+      if (!groupEl) return { input: null, list: null };
+      const dropzone = groupEl.querySelector('.attach-product-dropzone');
+      const input = groupEl.querySelector('input[type="file"]');
+      const list = groupEl.querySelector('.attach-product-file-list');
       const renderList = (files) => {
         if (!list) return;
         if (!files || !files.length) {
@@ -641,9 +614,9 @@ class ProductsListView extends BaseView {
       return { input, list };
     };
 
-    const photos = wireDropzone('[data-panel="photos"]', '.attach-product-photos-input', 'fa-image');
-    const fileSelectors = wireDropzone('[data-panel="files"]', '.attach-product-file-input', 'fa-file');
-    const fileInput = fileSelectors.input;
+    const attachPanel = root.querySelector('[data-panel="attach"]');
+    const photos = wireDropzone(attachPanel?.querySelector('[data-group="photos"]'), 'fa-image');
+    const docs = wireDropzone(attachPanel?.querySelector('[data-group="files"]'), 'fa-file');
 
     root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
@@ -669,53 +642,48 @@ class ProductsListView extends BaseView {
       await this._createPendingProduct({ url: value, modalHandle: handle });
     });
 
-    root.querySelector('[data-action="submit-files"]')?.addEventListener('click', async (e) => {
+    root.querySelector('[data-action="submit-attach"]')?.addEventListener('click', async (e) => {
       const submitBtn = e.currentTarget;
-      const count = fileInput?.files?.length || 0;
-      if (!count) {
-        this._showNotification('Adjunta al menos un archivo', 'error');
-        return;
-      }
-      submitBtn.disabled = true;
-      goToStep('loading');
-      const hint = root.querySelector('[data-loading-hint]');
-      if (hint) hint.textContent = `Analizando ${count} archivo${count === 1 ? '' : 's'} y armando la ficha. Te redirigimos al detalle en un momento.`;
-      const files = Array.from(fileInput?.files || []);
-      await this._createPendingProduct({
-        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-        modalHandle: handle,
-      });
-    });
+      const photoFiles = Array.from(photos.input?.files || []);
+      const docFiles = Array.from(docs.input?.files || []);
 
-    root.querySelector('[data-action="submit-photos"]')?.addEventListener('click', async (e) => {
-      const submitBtn = e.currentTarget;
-      const files = Array.from(photos.input?.files || []);
-      if (!files.length) {
-        this._showNotification('Adjunta al menos una foto', 'error');
+      if (!photoFiles.length && !docFiles.length) {
+        this._showNotification('Adjunta al menos una foto o un archivo', 'error');
         return;
       }
-      const invalid = files.find((f) => !/^image\//.test(f.type));
-      if (invalid) {
-        this._showNotification(`"${invalid.name}" no es una imagen`, 'error');
-        return;
+      if (photoFiles.length) {
+        const invalid = photoFiles.find((f) => !/^image\//.test(f.type));
+        if (invalid) return this._showNotification(`"${invalid.name}" no es una imagen`, 'error');
+        if (photoFiles.length > 10) return this._showNotification('Maximo 10 imagenes por ficha', 'error');
+        const oversize = photoFiles.find((f) => f.size > 25 * 1024 * 1024);
+        if (oversize) return this._showNotification(`"${oversize.name}" supera el limite de 25MB`, 'error');
       }
-      const oversize = files.find((f) => f.size > 25 * 1024 * 1024);
-      if (oversize) {
-        this._showNotification(`"${oversize.name}" supera el limite de 25MB`, 'error');
-        return;
-      }
-      if (files.length > 10) {
-        this._showNotification('Maximo 10 imagenes por ficha', 'error');
-        return;
-      }
+
       submitBtn.disabled = true;
       goToStep('loading');
       const hint = root.querySelector('[data-loading-hint]');
-      await this._analyzePhotosAndCreateProduct({ files, modalHandle: handle, hintEl: hint });
+
+      if (photoFiles.length) {
+        // Hay fotos: flow completo con OpenAI Vision. Los archivos doc se guardan en
+        // metadata.pending_files para procesamiento server-side futuro.
+        await this._analyzePhotosAndCreateProduct({
+          files: photoFiles,
+          docFiles: docFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          modalHandle: handle,
+          hintEl: hint,
+        });
+      } else {
+        // Solo archivos doc, sin fotos: placeholder hasta que cableemos extraccion server-side.
+        if (hint) hint.textContent = `Guardando ${docFiles.length} archivo${docFiles.length === 1 ? '' : 's'} para procesamiento. Te redirigimos al detalle.`;
+        await this._createPendingProduct({
+          files: docFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          modalHandle: handle,
+        });
+      }
     });
   }
 
-  async _analyzePhotosAndCreateProduct({ files, modalHandle, hintEl }) {
+  async _analyzePhotosAndCreateProduct({ files, docFiles = [], modalHandle, hintEl }) {
     if (!this.supabase || !this.organizationId || !this.userId) {
       this._showNotification('Sesion no disponible', 'error');
       modalHandle?.close();
@@ -727,6 +695,11 @@ class ProductsListView extends BaseView {
       setHint('Creando producto inicial...');
       const entityId = await this._ensureEntityId();
       if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+      const placeholderMetadata = { ai_generated: false, pending_ai_enrichment: true, source: 'photos' };
+      if (docFiles.length) {
+        placeholderMetadata.pending_files = docFiles;
+        placeholderMetadata.source = 'photos+files';
+      }
       const { data: created, error: insertError } = await this.supabase
         .from('products')
         .insert({
@@ -736,7 +709,7 @@ class ProductsListView extends BaseView {
           nombre_producto: 'Procesando ficha...',
           descripcion_producto: 'Vera esta analizando las fotos. La ficha se completara en unos segundos.',
           moneda: 'USD',
-          metadata: { ai_generated: false, pending_ai_enrichment: true, source: 'photos' },
+          metadata: placeholderMetadata,
         })
         .select('id')
         .single();
