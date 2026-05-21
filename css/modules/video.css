@@ -2760,6 +2760,73 @@
   justify-content: space-between;
 }
 
+/* ── VERA INTERACTIVE COMPONENTS ────────────────────── */
+/* Bloques interactivos emitidos por VERA dentro del chat:
+   [CLARIFY] [PILLS] [STEPS] [METRICS] [ACTIONS].
+   Render lo hace VeraView._renderInteractiveBlock(). */
+.vera-clarify-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.vera-clarify-question { font-size: 13px; font-weight: 500; margin-bottom: 10px; opacity: 0.8; }
+.vera-clarify-cards { display: flex; flex-direction: column; gap: 6px; }
+.vera-clarify-card {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  background: rgba(255,255,255,0.03);
+}
+.vera-clarify-card:hover { border-color: rgba(139,127,240,0.4); background: rgba(139,127,240,0.06); }
+.vera-clarify-card.selected { border-color: #8b7ff0; background: rgba(139,127,240,0.12); }
+.vera-clarify-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.vera-clarify-title { font-size: 13px; font-weight: 500; display: block; }
+.vera-clarify-card.selected .vera-clarify-title { color: #8b7ff0; }
+.vera-clarify-desc { font-size: 11.5px; opacity: 0.5; display: block; margin-top: 2px; line-height: 1.4; }
+
+.vera-pills-block { margin-top: 10px; }
+.vera-pills-label { font-size: 11px; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; }
+.vera-pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.vera-pill {
+  padding: 5px 13px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 12.5px; cursor: pointer;
+  opacity: 0.7; transition: all 0.15s;
+}
+.vera-pill:hover { border-color: rgba(255,255,255,0.2); opacity: 1; }
+.vera-pill.selected { border-color: #8b7ff0; color: #8b7ff0; opacity: 1; background: rgba(139,127,240,0.1); }
+
+.vera-steps-block { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.vera-step-item { display: flex; gap: 10px; align-items: flex-start; }
+.vera-step-num {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(139,127,240,0.15); border: 1px solid rgba(139,127,240,0.3);
+  color: #8b7ff0; font-size: 10px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.vera-step-text { font-size: 13.5px; line-height: 1.55; opacity: 0.85; }
+
+.vera-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 10px 0; }
+.vera-metric-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 10px 12px; text-align: center;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.vera-metric-label { font-size: 10.5px; opacity: 0.4; }
+.vera-metric-value { font-size: 20px; font-weight: 500; }
+.vera-metric-sub { font-size: 10px; opacity: 0.35; }
+
+.vera-actions-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.vera-action-pill {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; font-size: 12px; opacity: 0.6;
+  cursor: pointer; transition: all 0.15s; color: inherit; font-family: inherit;
+}
+.vera-action-pill:hover { border-color: #8b7ff0; color: #8b7ff0; opacity: 1; background: rgba(139,127,240,0.08); }
+/* ── FIN VERA INTERACTIVE COMPONENTS ────────────────── */
+
 /* ── Adjuntos en composer ───────────────────────────── */
 .gpt-attach-chips {
   display: flex;

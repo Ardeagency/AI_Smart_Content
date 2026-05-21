@@ -1187,257 +1187,12 @@ function buildEChartsOption(rawSpec) {
   return { option, type: rawType };
 }
 
-function renderMarkdown(text, opts = {}) {
-  const raw = String(text ?? '');
-  let h = raw;
-  const messageId = opts?.messageId ? String(opts.messageId) : '';
-  let taskIdx = 0;
-
-  // --- URL sanitizer (prevents javascript: etc.) ---
-  const sanitizeUrl = (url) => {
-    const u = String(url || '').trim();
-    if (!u) return null;
-    const lower = u.toLowerCase();
-    // Evita requests externos de demos hardcodeadas (ej: via.placeholder.com)
-    if (lower.includes('via.placeholder.com') || lower.includes('placehold.co')) return null;
-    if (lower.startsWith('javascript:') || lower.startsWith('data:')) return null;
-    if (lower.startsWith('http://') || lower.startsWith('https://')) return u;
-    // allow site-relative paths (our assets) and simple relative paths
-    if (lower.startsWith('/') || lower.startsWith('./')) return u;
-    return null;
-  };
-
-  const isImageUrl = (url) => {
-    const s = String(url || '').trim();
-    // Standard: ends with an image extension
-    if (/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(s)) return true;
-    // Some CDNs use format as a path segment, e.g. /900x420/png?text=...
-    try {
-      const u = new URL(s, window.location.origin);
-      if (/(^|\/)(png|jpe?g|gif|webp|svg)(\/|$)/i.test(u.pathname)) return true;
-      if (/(^|&)format=(png|jpe?g|gif|webp|svg)(&|$)/i.test(u.search)) return true;
-    } catch (_) {}
-    return false;
-  };
-  const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?.*)?$/i.test(String(url || '').trim());
-
-  // Render media (img/video) from a safe URL
-  const renderMediaFromUrl = (safeUrl, alt = '') => {
-    const u = String(safeUrl || '').trim();
-    if (!u) return '';
-    if (isImageUrl(u)) {
-      return `<img class="gpt-md-img" src="${escapeHtml(u)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
-    }
-    if (isVideoUrl(u)) {
-      return `<video class="gpt-md-video" src="${escapeHtml(u)}" muted playsinline preload="metadata" controls></video>`;
-    }
-    return '';
-  };
-
-  // --- Protect fenced code blocks first ---
-  // CRÍTICO: extraemos los code blocks ANTES de escapar HTML, así el contenido
-  // crudo (ej: mermaid con --> y <br/>) llega intacto a su renderer. Si
-  // escapamos primero, mermaid recibe "--&gt;" y falla el parse → fallback feo.
-  const codeBlocks = [];
-  h = h.replace(/```([a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-    const idx = codeBlocks.length;
-    codeBlocks.push({
-      lang: (lang || '').trim(),
-      code: code.trim()  // RAW — sin escapar
-    });
-    return `@@CODEBLOCK_${idx}@@`;
-  });
-
-  // Ahora sí, escapamos el resto del texto markdown (no los code blocks, que
-  // quedaron protegidos como @@CODEBLOCK_N@@ — placeholders sin caracteres HTML).
-  h = escapeHtml(h);
-
-  // --- GFM Tables (| col | col |\n|---|---|\n| a | b |) ---
-  // Detecta bloques de tabla: header row + delimiter row + N data rows.
-  // El delimiter usa | --- | :--- | ---: | :---: | para alineación.
-  const tableBlocks = [];
-  h = h.replace(
-    /(^|\n)((?:\|[^\n]+\|\s*\n)(?:\|\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)+\|\s*\n)(?:\|[^\n]+\|\s*\n?)+)/g,
-    (full, prefix, block) => {
-      const rows = block.trim().split('\n').map(r => r.trim());
-      if (rows.length < 2) return full;
-      const headerCells = rows[0].slice(1, -1).split('|').map(c => c.trim());
-      const aligns = rows[1].slice(1, -1).split('|').map(c => {
-        const t = c.trim();
-        if (/^:-+:$/.test(t)) return 'center';
-        if (/^-+:$/.test(t)) return 'right';
-        if (/^:-+$/.test(t)) return 'left';
-        return null;
-      });
-      const bodyRows = rows.slice(2)
-        .map(r => r.slice(1, -1).split('|').map(c => c.trim()));
-      const headHtml = '<thead><tr>' + headerCells.map((c, i) => {
-        const a = aligns[i] ? ` style="text-align:${aligns[i]}"` : '';
-        return `<th${a}>${c}</th>`;
-      }).join('') + '</tr></thead>';
-      const bodyHtml = '<tbody>' + bodyRows.map(r =>
-        '<tr>' + r.map((c, i) => {
-          const a = aligns[i] ? ` style="text-align:${aligns[i]}"` : '';
-          return `<td${a}>${c}</td>`;
-        }).join('') + '</tr>'
-      ).join('') + '</tbody>';
-      const idx = tableBlocks.length;
-      tableBlocks.push(`<div class="gpt-md-table-wrap"><table class="gpt-md-table">${headHtml}${bodyHtml}</table></div>`);
-      return `${prefix}@@TABLE_${idx}@@`;
-    }
-  );
-
-  // Inline code (backticks) — apply before emphasis
-  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-
-  // Horizontal rules (---, ***, ___) on their own line
-  h = h.replace(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/gm, '<hr>');
-
-  // Headings (# to ######) on their own line
-  h = h.replace(/^(#{1,6})\s+(.+?)\s*$/gm, (_, hashes, title) => {
-    const level = Math.min(6, Math.max(1, hashes.length));
-    return `<h${level}>${title}</h${level}>`;
-  });
-
-  // Blockquotes: contiguous lines starting with >
-  // Nota: como escapamos HTML al inicio, ">" llega como "&gt;"
-  h = h.replace(/(^|\n)(&gt;\s.+(?:\n&gt;\s.+)*)/g, (m, start, block) => {
-    const inner = block
-      .split('\n')
-      .map((l) => l.replace(/^&gt;\s?/, ''))
-      .join('\n')
-      .trim();
-    return `${start}<blockquote>${inner}</blockquote>`;
-  });
-
-  // Images: ![alt](url)
-  h = h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
-    const safe = sanitizeUrl(url);
-    if (!safe) return `<span>${escapeHtml(`![${alt}](${url})`)}</span>`;
-    const media = renderMediaFromUrl(safe, alt);
-    return media || `<img class="gpt-md-img" src="${escapeHtml(safe)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
-  });
-
-  // Links: [text](url)
-  h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
-    const safe = sanitizeUrl(url);
-    if (!safe) return `<span>${escapeHtml(`[${label}](${url})`)}</span>`;
-    const media = renderMediaFromUrl(safe, label);
-    if (media) return media;
-    const isExternal = /^https?:\/\//i.test(safe);
-    const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return `<a class="gpt-md-link" href="${escapeHtml(safe)}"${attrs}>${label}</a>`;
-  });
-
-  // Bare URLs on their own line → auto-embed (image/video) or link
-  h = h.replace(/^\s*(https?:\/\/[^\s<]+|\/[^\s<]+)\s*$/gm, (m, url) => {
-    const safe = sanitizeUrl(url);
-    if (!safe) return m;
-    const media = renderMediaFromUrl(safe, '');
-    if (media) return media;
-    const isExternal = /^https?:\/\//i.test(safe);
-    const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return `<a class="gpt-md-link" href="${escapeHtml(safe)}"${attrs}>${escapeHtml(safe)}</a>`;
-  });
-
-  // Strikethrough: ~~text~~
-  h = h.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
-
-  // Bold+Italic: ***text*** or ___text___
-  h = h.replace(/\*\*\*([^*\n]+)\*\*\*/g, '<em><strong>$1</strong></em>');
-  h = h.replace(/___([^_\n]+)___/g, '<em><strong>$1</strong></em>');
-
-  // Bold: **text** or __text__
-  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
-  h = h.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
-
-  // Italic: *text* or _text_
-  h = h.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
-  h = h.replace(/_([^_\n]+)_/g, '<em>$1</em>');
-
-  // Lists (unordered and ordered), line-by-line
-  const lines = h.split('\n');
-  const out = [];
-  let listType = null;
-
-  for (const line of lines) {
-    const bullet = line.match(/^[•\-\*\+] (.+)$/);
-    const numbered = line.match(/^\d+\. (.+)$/);
-    if (bullet) {
-      if (listType !== 'ul') {
-        if (listType) out.push(`</${listType}>`);
-        out.push('<ul>');
-        listType = 'ul';
-      }
-      const task = bullet[1].match(/^\[( |x|X)\]\s+([\s\S]+)$/);
-      if (task) {
-        const checked = task[1].toLowerCase() === 'x';
-        const label = task[2];
-        const idx = taskIdx++;
-        out.push(
-          `<li class="gpt-task-item">` +
-            `<label class="gpt-task-label">` +
-              `<input class="gpt-task-checkbox" type="checkbox" ${checked ? 'checked' : ''}` +
-                ` data-task-idx="${idx}"` +
-                (messageId ? ` data-message-id="${escapeHtml(messageId)}"` : '') +
-                ` data-task-text="${escapeHtml(label)}"` +
-              ` />` +
-              `<span class="gpt-task-text">${label}</span>` +
-            `</label>` +
-          `</li>`
-        );
-      } else {
-        out.push(`<li>${bullet[1]}</li>`);
-      }
-    } else if (numbered) {
-      if (listType !== 'ol') {
-        if (listType) out.push(`</${listType}>`);
-        out.push('<ol>');
-        listType = 'ol';
-      }
-      out.push(`<li>${numbered[1]}</li>`);
-    } else {
-      if (listType) { out.push(`</${listType}>`); listType = null; }
-      out.push(line);
-    }
-  }
-  if (listType) out.push(`</${listType}>`);
-
-  // Restore tables first (no further inline processing needed inside)
-  let joined = out.join('\n');
-  joined = joined.replace(/@@TABLE_(\d+)@@/g, (_, idxStr) => {
-    return tableBlocks[Number(idxStr)] || '';
-  });
-
-  // Restore fenced code blocks
-  joined = joined.replace(/@@CODEBLOCK_(\d+)@@/g, (_, idxStr) => {
-    const idx = Number(idxStr);
-    const item = codeBlocks[idx];
-    if (!item) return '';
-    const lang = (item.lang || '').toLowerCase();
-    if (lang === 'chart' || lang === 'vera-chart' || lang === 'viz') {
-      return renderChartBlock(item.code);
-    }
-    if (lang === 'buttons' || lang === 'quickreplies' || lang === 'quick-replies' || lang === 'actions') {
-      return renderButtonsBlock(item.code);
-    }
-    if (lang === 'mermaid') {
-      // Placeholder — el código fuente queda en data-mermaid; un hook post-render
-      // lo procesa y reemplaza por el SVG. Si Mermaid falla, queda visible el código.
-      return `<div class="gpt-md-mermaid" data-mermaid="${escapeHtml(item.code)}"><pre class="gpt-md-mermaid-fallback"><code>${escapeHtml(item.code)}</code></pre></div>`;
-    }
-    const langClass = item.lang ? ` class="language-${escapeHtml(item.lang)}"` : '';
-    return `<pre><code${langClass}>${escapeHtml(item.code)}</code></pre>`;
-  });
-
-  // Paragraphs (double newline). Preserve block-level tags
-  return joined.split(/\n{2,}/).map(p => {
-    p = p.trim();
-    if (!p) return '';
-    if (/^<(ul|ol|pre|blockquote|h[1-6]|hr|img|div|table)/.test(p)) return p;
-    return `<p>${p.replace(/\n/g, '<br>')}</p>`;
-  }).filter(Boolean).join('');
-}
+// ── renderMarkdown (parser regex casero) ELIMINADO 2026-05-21 ──
+// Reemplazado por método de clase VeraView.renderMarkdown() basado en
+// marked@12 + DOMPurify@3 + bloques interactivos [CLARIFY|PILLS|STEPS|
+// METRICS|ACTIONS]. Ver método más abajo en la clase. Los bloques legacy
+// ```chart, ```buttons y ```mermaid siguen renderizándose vía
+// renderChartBlock() / renderButtonsBlock() / hook post-render Mermaid.
 
 const VERA_AVATAR_SRC = '/recursos/vera/Vera.svg';
 
@@ -1782,7 +1537,7 @@ class VeraView extends (window.BaseView || class {}) {
     });
   }
 
-  renderMessages() {
+  async renderMessages() {
     const list = document.getElementById('veraMessageList');
     const scroll = document.getElementById('veraMessagesWrap');
     if (!list) return;
@@ -1792,12 +1547,32 @@ class VeraView extends (window.BaseView || class {}) {
       return;
     }
 
-    list.innerHTML = this.aiState.messages.map(m => this._msgHTML(m)).join('');
+    // Pre-render asíncrono: para cada mensaje del asistente convertimos markdown
+    // a HTML antes de pintar (los del usuario se escapan dentro de _msgHTML).
+    const prepared = await Promise.all(this.aiState.messages.map(async (m) => {
+      if (m.role === 'assistant' || m.role === 'error' || m.role === 'vera') {
+        try {
+          const html = await this.renderMarkdown(m.content || '');
+          return { ...m, _renderedContent: html };
+        } catch (e) {
+          console.warn('VeraView.renderMessages: render falló para msg', m.id, e?.message || e);
+          return { ...m, _renderedContent: '' };
+        }
+      }
+      return m;
+    }));
+
+    list.innerHTML = prepared.map(m => this._msgHTML(m)).join('');
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
+
+    // Handler global para action pills emitidos por bloques [ACTIONS].
+    if (typeof window !== 'undefined') {
+      window._veraSendAction = (text) => this.sendMessage(text);
+    }
   }
 
   /* ── Render adjuntos dentro de un mensaje del usuario ── */
@@ -1822,6 +1597,205 @@ class VeraView extends (window.BaseView || class {}) {
     return `<div class="gpt-msg-attachments">${items}</div>`;
   }
 
+  // ── VERA RENDER SYSTEM ─────────────────────────────────────────────────
+  // Protocolo de bloques interactivos + marked + DOMPurify.
+  // Bloques propios:   [CLARIFY] [PILLS] [STEPS] [METRICS] [ACTIONS]
+  // Bloques legacy:    ```chart  ```buttons  ```mermaid
+
+  async _loadMarkdownLibs() {
+    if (window.__mdLibsLoaded) return;
+    if (VeraView.__mdLibsLoading) return VeraView.__mdLibsLoading;
+    VeraView.__mdLibsLoading = (async () => {
+      await Promise.all([
+        new Promise((res, rej) => {
+          if (window.marked) return res();
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/marked@12/marked.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        }),
+        new Promise((res, rej) => {
+          if (window.DOMPurify) return res();
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        })
+      ]);
+      if (window.marked?.setOptions) {
+        window.marked.setOptions({ breaks: true, gfm: true });
+      }
+      window.__mdLibsLoaded = true;
+    })();
+    return VeraView.__mdLibsLoading;
+  }
+
+  _parseInteractiveBlocks(text) {
+    const blocks = [];
+    let processed = String(text || '');
+
+    // [CLARIFY]
+    processed = processed.replace(/\[CLARIFY\]([\s\S]*?)\[\/CLARIFY\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      const lines = content.trim().split('\n').filter(Boolean);
+      let question = '';
+      const cards = [];
+      lines.forEach(line => {
+        if (line.startsWith('PREGUNTA:')) question = line.replace('PREGUNTA:', '').trim();
+        else if (line.startsWith('- CARD |')) {
+          const parts = line.replace('- CARD |', '').split('|').map(s => s.trim());
+          cards.push({ icon: parts[0], title: parts[1], desc: parts[2] || '' });
+        }
+      });
+      blocks.push({ id, type: 'clarify', question, cards });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    // [PILLS]
+    processed = processed.replace(/\[PILLS\]([\s\S]*?)\[\/PILLS\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      const lines = content.trim().split('\n').filter(Boolean);
+      let label = '';
+      const options = [];
+      lines.forEach(line => {
+        if (line.startsWith('LABEL:')) label = line.replace('LABEL:', '').trim();
+        else if (line.startsWith('- ')) options.push(line.replace(/^- /, '').trim());
+      });
+      blocks.push({ id, type: 'pills', label, options });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    // [STEPS]
+    processed = processed.replace(/\[STEPS\]([\s\S]*?)\[\/STEPS\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      const steps = content.trim().split('\n')
+        .filter(l => /^\d+\./.test(l))
+        .map(l => l.replace(/^\d+\.\s*/, '').trim());
+      blocks.push({ id, type: 'steps', steps });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    // [METRICS]
+    processed = processed.replace(/\[METRICS\]([\s\S]*?)\[\/METRICS\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      const metrics = content.trim().split('\n')
+        .filter(l => l.startsWith('- '))
+        .map(l => {
+          const parts = l.replace(/^- /, '').split('|').map(s => s.trim());
+          return { label: parts[0], value: parts[1], sub: parts[2] || '' };
+        });
+      blocks.push({ id, type: 'metrics', metrics });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    // [ACTIONS]
+    processed = processed.replace(/\[ACTIONS\]([\s\S]*?)\[\/ACTIONS\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      const actions = content.trim().split('\n')
+        .filter(l => l.startsWith('- '))
+        .map(l => l.replace(/^- /, '').trim());
+      blocks.push({ id, type: 'actions', actions });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
+    return { processed, blocks };
+  }
+
+  _renderInteractiveBlock(block) {
+    const esc = escapeHtml;
+    switch (block.type) {
+      case 'clarify': {
+        const cardsHtml = block.cards.map(c => `
+          <div class="vera-clarify-card" onclick="this.closest('.vera-clarify-cards').querySelectorAll('.vera-clarify-card').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">
+            <span class="vera-clarify-icon">${esc(c.icon)}</span>
+            <span class="vera-clarify-title">${esc(c.title)}</span>
+            ${c.desc ? `<span class="vera-clarify-desc">${esc(c.desc)}</span>` : ''}
+          </div>`).join('');
+        return `<div class="vera-clarify-block">
+          ${block.question ? `<p class="vera-clarify-question">${esc(block.question)}</p>` : ''}
+          <div class="vera-clarify-cards">${cardsHtml}</div>
+        </div>`;
+      }
+      case 'pills': {
+        const pillsHtml = block.options.map(o => `
+          <span class="vera-pill" onclick="this.closest('.vera-pills-row').querySelectorAll('.vera-pill').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">${esc(o)}</span>`).join('');
+        return `<div class="vera-pills-block">
+          ${block.label ? `<p class="vera-pills-label">${esc(block.label)}</p>` : ''}
+          <div class="vera-pills-row">${pillsHtml}</div>
+        </div>`;
+      }
+      case 'steps': {
+        const stepsHtml = block.steps.map((s, i) => `
+          <div class="vera-step-item">
+            <span class="vera-step-num">${i + 1}</span>
+            <span class="vera-step-text">${esc(s)}</span>
+          </div>`).join('');
+        return `<div class="vera-steps-block">${stepsHtml}</div>`;
+      }
+      case 'metrics': {
+        const metricsHtml = block.metrics.map(m => `
+          <div class="vera-metric-card">
+            <span class="vera-metric-label">${esc(m.label)}</span>
+            <span class="vera-metric-value">${esc(m.value)}</span>
+            ${m.sub ? `<span class="vera-metric-sub">${esc(m.sub)}</span>` : ''}
+          </div>`).join('');
+        return `<div class="vera-metrics-grid">${metricsHtml}</div>`;
+      }
+      case 'actions': {
+        const actionsHtml = block.actions.map(a => `
+          <button class="vera-action-pill" onclick="window._veraSendAction && window._veraSendAction(${JSON.stringify(a)})">${esc(a)} ↗</button>`).join('');
+        return `<div class="vera-actions-row">${actionsHtml}</div>`;
+      }
+      default: return '';
+    }
+  }
+
+  async renderMarkdown(rawText) {
+    await this._loadMarkdownLibs();
+
+    // 1. Extrae bloques interactivos propios antes de pasar a marked
+    const { processed, blocks } = this._parseInteractiveBlocks(rawText);
+
+    // 2. Protege bloques legacy (chart/buttons) para que marked no los toque
+    const legacyPlaceholders = [];
+    let safeText = processed.replace(/```(chart|vera-chart|viz|buttons|quickreplies|quick-replies|actions)([\s\S]*?)```/g, (match, lang, content) => {
+      const pid = `__legacy_${legacyPlaceholders.length}__`;
+      legacyPlaceholders.push({ pid, lang: lang.toLowerCase(), content: content.replace(/^\n/, '') });
+      return pid;
+    });
+
+    // 3. marked convierte markdown estándar
+    let html = window.marked.parse(safeText);
+
+    // 4. DOMPurify sanitiza (protege contra XSS del LLM)
+    html = window.DOMPurify.sanitize(html, {
+      ADD_TAGS: ['pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+      ADD_ATTR: ['class', 'onclick', 'target', 'rel']
+    });
+
+    // 5. Restaura bloques legacy con sus renders originales
+    legacyPlaceholders.forEach(({ pid, lang, content }) => {
+      let legacyHtml = '';
+      if (['chart', 'vera-chart', 'viz'].includes(lang)) {
+        legacyHtml = renderChartBlock(content);
+      } else if (['buttons', 'quickreplies', 'quick-replies', 'actions'].includes(lang)) {
+        legacyHtml = renderButtonsBlock(content);
+      } else {
+        legacyHtml = `<pre><code>${escapeHtml(content)}</code></pre>`;
+      }
+      html = html.replace(pid, legacyHtml);
+    });
+
+    // 6. Inyecta bloques interactivos en sus placeholders (marked los envuelve en <p>)
+    blocks.forEach(block => {
+      const re = new RegExp(`(<p>)?\\{\\{${block.id}\\}\\}(<\\/p>)?`, 'g');
+      html = html.replace(re, this._renderInteractiveBlock(block));
+    });
+
+    return html;
+  }
+  // ── FIN VERA RENDER SYSTEM ─────────────────────────────────────────────
+
   _msgHTML(m) {
     const id = escapeHtml(m.id || '');
     const isUser = m.role === 'user';
@@ -1839,27 +1813,53 @@ class VeraView extends (window.BaseView || class {}) {
         </div>`;
     }
 
+    // El contenido del asistente llega ya renderizado vía _renderedContent.
+    // Fallback: si por alguna razón no se pre-renderizó, mostramos el texto escapado
+    // para no romper el layout (el contenido real aparecerá tras el async).
+    const content = (typeof m._renderedContent === 'string' && m._renderedContent)
+      ? m._renderedContent
+      : `<p>${escapeHtml(m.content || '').replace(/\n/g, '<br>')}</p>`;
+
     return `
       <div class="gpt-msg gpt-msg--assistant${isError ? ' gpt-msg--error' : ''}" data-message-id="${id}">
         <div class="gpt-msg-avatar">
           <img class="gpt-msg-avatar-img" src="${VERA_AVATAR_SRC}" alt="Vera" loading="lazy" decoding="async" />
         </div>
-        <div class="gpt-msg-content">${renderMarkdown(m.content, { messageId: m.id })}</div>
+        <div class="gpt-msg-content">${content}</div>
       </div>`;
   }
 
-  appendMessage(msg) {
+  async appendMessage(msg) {
     const list = document.getElementById('veraMessageList');
     const scroll = document.getElementById('veraMessagesWrap');
     if (!list) return;
     const welcome = list.querySelector('.gpt-welcome');
     if (welcome) welcome.remove();
-    list.insertAdjacentHTML('beforeend', this._msgHTML(msg));
+
+    // Pre-render del markdown para mensajes de VERA (asistente/error).
+    // Los mensajes del usuario se escapan dentro de _msgHTML (no markdown).
+    let prepared = msg;
+    if (msg.role === 'assistant' || msg.role === 'error' || msg.role === 'vera') {
+      try {
+        const html = await this.renderMarkdown(msg.content || '');
+        prepared = { ...msg, _renderedContent: html };
+      } catch (e) {
+        console.warn('VeraView.renderMarkdown falló, usando fallback escapado:', e?.message || e);
+        prepared = { ...msg, _renderedContent: '' };
+      }
+    }
+
+    list.insertAdjacentHTML('beforeend', this._msgHTML(prepared));
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
+
+    // Handler global para action pills (sobrescribe en cada append, OK).
+    if (typeof window !== 'undefined') {
+      window._veraSendAction = (text) => this.sendMessage(text);
+    }
   }
 
   /* ── Post-render: Mermaid (diagramas) + Prism (syntax highlighting) ──
