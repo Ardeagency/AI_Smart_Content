@@ -517,7 +517,10 @@ function buildScrapedSummary(s) {
       if (v.sku) parts.push(`SKU: ${v.sku}`);
       return `  ${i + 1}. ${parts.join(' · ')}`;
     }).join('\n');
-    lines.push(`Variantes detectadas en la pagina (${s.variants.length}, listadas TODAS — NO inventes adicionales, NO omitas):\n${varSummary}`);
+    lines.push(
+      `Variantes detectadas en la pagina (${s.variants.length}, listadas TODAS — NO inventes adicionales, NO omitas):\n${varSummary}\n` +
+      `REGLA CRITICA para esta lista: en variantes[] usa los nombres y colores EXACTAMENTE como aparecen arriba. NO traduzcas (si dice "Dorado" no lo cambies a "Naranja" porque la luz se vea calida), NO reinterpretes basado en la imagen, NO normalices. La pagina es la fuente autoritativa para color/nombre/sku. Manten el MISMO ORDEN.`
+    );
   }
   return lines.join('\n');
 }
@@ -836,7 +839,32 @@ async function handlerImpl(event) {
   //   product_variants ← una row por variante con su precio/sku/imagen
   let variantsInserted = 0;
   let variantsError = null;
-  const aiVariants = Array.isArray(fiche.variantes) ? fiche.variantes.filter(Boolean) : [];
+  let aiVariants = Array.isArray(fiche.variantes) ? fiche.variantes.filter(Boolean) : [];
+
+  // Merge autoritativo: si el scraping detecto variantes y OpenAI devolvio el
+  // MISMO numero, asumimos correspondencia 1:1 por orden y sobrescribimos
+  // nombre/color/talla/sabor/sku/precio con los datos scrapeados (la pagina
+  // es la fuente de verdad). De OpenAI conservamos solo imagen_index y
+  // descripcion_corta. Esto previene renombramientos visuales tipo
+  // "Dorado" -> "Naranja" cuando la luz engana.
+  if (scraped?.variants && Array.isArray(scraped.variants) &&
+      scraped.variants.length === aiVariants.length && aiVariants.length > 0) {
+    aiVariants = aiVariants.map((aiV, i) => {
+      const sv = scraped.variants[i];
+      const scrapedPrice = parseScrapedPrice(sv.price);
+      return {
+        nombre_variante: sv.variant_name || aiV.nombre_variante,
+        color: sv.color || aiV.color,
+        tamano: sv.size || aiV.tamano,
+        sabor: sv.flavor || aiV.sabor,
+        sku: sv.sku || aiV.sku,
+        precio: scrapedPrice != null ? scrapedPrice : aiV.precio,
+        descripcion_corta: aiV.descripcion_corta,
+        imagen_index: aiV.imagen_index
+      };
+    });
+  }
+
   if (aiVariants.length > 0) {
     try {
       // 1) Detectar que dimensiones tienen mas de un valor (Color con multiples valores = dimension util)
