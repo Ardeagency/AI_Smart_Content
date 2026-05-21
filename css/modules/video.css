@@ -2388,8 +2388,50 @@
 .gpt-msg-content p { margin: 0 0 0.75em; }
 .gpt-msg-content p:last-child { margin-bottom: 0; }
 .gpt-msg-content ul,
-.gpt-msg-content ol { margin: 0.4em 0 0.75em 1.5em; padding: 0; }
-.gpt-msg-content li { margin: 0.2em 0; line-height: 1.6; }
+.gpt-msg-content ol { margin: 0.5em 0 0.85em 0; padding-left: 1.4em; }
+.gpt-msg-content li { margin: 0.35em 0; line-height: 1.65; }
+/* Custom bullets para UL — pequeños diamantes con accent sutil */
+.gpt-msg-content ul { list-style: none; }
+.gpt-msg-content ul > li {
+  position: relative;
+  padding-left: 0.15em;
+}
+.gpt-msg-content ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1em;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.18) 100%);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+}
+.gpt-msg-content ul ul > li::before {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+}
+/* OL: números con accent color */
+.gpt-msg-content ol {
+  counter-reset: gpt-li;
+  list-style: none;
+}
+.gpt-msg-content ol > li {
+  counter-increment: gpt-li;
+  position: relative;
+  padding-left: 0.15em;
+}
+.gpt-msg-content ol > li::before {
+  content: counter(gpt-li) ".";
+  position: absolute;
+  left: -1.55em;
+  top: 0;
+  color: rgba(245, 185, 66, 0.75);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.4em;
+  text-align: right;
+}
 .gpt-msg-content strong { font-weight: 600; color: #fff; }
 .gpt-msg-content em { font-style: italic; color: var(--text-secondary); }
 .gpt-msg-content del { color: var(--text-tertiary, rgba(212, 209, 216, 0.6)); }
@@ -2436,8 +2478,8 @@
 .gpt-msg-content hr {
   border: none;
   height: 1px;
-  background: var(--border-light, #212126);
-  margin: 1em 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
+  margin: 1.4em 0;
 }
 
 .gpt-msg-content blockquote {
@@ -2448,22 +2490,37 @@
 }
 
 .gpt-msg-content a.gpt-md-link {
-  color: var(--link, #7ab7ff);
+  color: #9bcaff;
   text-decoration: none;
-  border-bottom: 1px solid rgba(122, 183, 255, 0.25);
+  background-image: linear-gradient(90deg, rgba(155, 202, 255, 0.5) 0%, rgba(155, 202, 255, 0.5) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  transition: color 0.18s ease, background-size 0.25s ease;
+  padding-bottom: 1px;
 }
 .gpt-msg-content a.gpt-md-link:hover {
-  color: var(--link-hover, #5e83b3);
-  border-bottom-color: rgba(122, 183, 255, 0.45);
+  color: #bfdcff;
+  background-size: 100% 2px;
 }
 
 .gpt-msg-content img.gpt-md-img {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 0.75em 0;
-  border-radius: 10px;
-  border: 1px solid var(--border-light, #212126);
+  margin: 14px 0;
+  border-radius: 12px;
+  border: 1px solid #242429;
+  box-shadow:
+    0 16px 32px -20px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.gpt-msg-content img.gpt-md-img:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 40px -20px rgba(0, 0, 0, 0.7),
+    0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .gpt-msg-content video.gpt-md-video {
@@ -2476,25 +2533,45 @@
   background: var(--bg-card);
 }
 
-/* Vera Charts (```chart ...``` → SVG) */
+/* Vera Charts (```chart ...``` → SVG) — premium card */
 .gpt-viz {
   width: 100%;
-  margin: 0.85em 0;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid var(--border-light, #212126);
-  background: rgba(255, 255, 255, 0.03);
+  margin: 18px 0;
+  padding: 20px 18px 16px;
+  border-radius: 14px;
+  border: 1px solid #242429;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
+    linear-gradient(180deg, #131418 0%, #0e0f12 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 40px -24px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+.gpt-viz::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
 }
 .gpt-viz svg {
   width: 100%;
   height: auto;
   display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 .gpt-viz--error {
-  color: var(--color-error, #ff4444);
+  color: #ff7a7a;
+  border-color: rgba(255, 80, 80, 0.3);
+  background: linear-gradient(180deg, rgba(40, 10, 10, 0.4) 0%, rgba(20, 8, 8, 0.4) 100%);
 }
 .gpt-viz--error pre {
   margin-top: 10px;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* Quick replies / action buttons (```buttons``` → UI) */
@@ -2513,25 +2590,33 @@
   gap: 8px;
 }
 .gpt-qr-btn {
-  border: 1px solid var(--border-light, #212126);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #2c2c34;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
   color: var(--text-primary);
-  padding: 8px 12px;
+  padding: 9px 16px;
   border-radius: 999px;
   font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s, transform 0.08s, border-color 0.15s;
+  transition: background 0.18s ease, transform 0.08s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .gpt-qr-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px -4px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
 }
 .gpt-qr-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.985);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .gpt-qr-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .gpt-qr-btn--primary {
@@ -2820,42 +2905,55 @@
    Tablas GFM, Mermaid (diagramas), Prism (code highlighting)
    ============================================================ */
 
-/* — Tables ———————————————————————————————————————————————— */
+/* — Tables (premium) ————————————————————————————————————— */
 .gpt-msg-content .gpt-md-table-wrap {
-  margin: 12px 0;
+  margin: 16px 0;
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid #242429;
+  background: linear-gradient(180deg, #131418 0%, #0e0f12 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 28px -20px rgba(0, 0, 0, 0.6);
 }
 .gpt-msg-content .gpt-md-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9em;
   min-width: 100%;
 }
 .gpt-msg-content .gpt-md-table thead {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
 }
+.gpt-msg-content .gpt-md-table thead th:first-child { border-top-left-radius: 12px; }
+.gpt-msg-content .gpt-md-table thead th:last-child  { border-top-right-radius: 12px; }
 .gpt-msg-content .gpt-md-table th {
   font-weight: 600;
   text-align: left;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-primary, #ecebda);
+  color: #fff;
   white-space: nowrap;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .gpt-msg-content .gpt-md-table td {
-  padding: 9px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: var(--text-primary, #ecebda);
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #D4D1D8);
   vertical-align: top;
+  transition: background 0.15s ease;
+}
+.gpt-msg-content .gpt-md-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.015);
 }
 .gpt-msg-content .gpt-md-table tbody tr:last-child td {
   border-bottom: none;
 }
-.gpt-msg-content .gpt-md-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+.gpt-msg-content .gpt-md-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.045);
 }
 
 /* — Mermaid diagrams (premium card) ——————————————————————— */
@@ -2925,58 +3023,129 @@
   text-align: left;
 }
 
-/* — Code blocks (mejora la base + preparación para Prism) ——— */
+/* — Code blocks (premium) ——————————————————————————————— */
 .gpt-msg-content pre {
-  margin: 12px 0;
-  padding: 14px 16px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  margin: 16px 0;
+  padding: 16px 18px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+    linear-gradient(180deg, #0c0d10 0%, #08090b 100%);
+  border: 1px solid #242429;
+  border-radius: 12px;
   overflow-x: auto;
   font-size: 0.86em;
-  line-height: 1.5;
+  line-height: 1.6;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 24px -16px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+.gpt-msg-content pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 .gpt-msg-content pre code {
   background: none;
   padding: 0;
-  font-family: "SF Mono", Menlo, Consolas, "Roboto Mono", monospace;
-  color: var(--text-primary, #ecebda);
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, "Roboto Mono", monospace;
+  color: #E8E5EC;
   font-size: inherit;
+  font-variant-ligatures: contextual;
 }
 .gpt-msg-content code:not(pre code) {
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  font-family: "SF Mono", Menlo, Consolas, "Roboto Mono", monospace;
-  font-size: 0.88em;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, "Roboto Mono", monospace;
+  font-size: 0.86em;
+  color: #F0EDE8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 /* Prism Tomorrow tema — overrides para integrar con el chat */
 .gpt-msg-content pre[class*="language-"] {
-  background: rgba(0, 0, 0, 0.45);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+    linear-gradient(180deg, #0c0d10 0%, #08090b 100%);
   text-shadow: none;
 }
 .gpt-msg-content code[class*="language-"] {
   text-shadow: none;
 }
 
-/* — Blockquotes ———————————————————————————————————————————— */
+/* — Blockquotes (premium) —————————————————————————————— */
 .gpt-msg-content blockquote {
-  margin: 12px 0;
-  padding: 8px 14px;
-  border-left: 3px solid rgba(255, 165, 0, 0.5);
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-secondary, #a0a0a0);
-  border-radius: 0 6px 6px 0;
+  margin: 14px 0;
+  padding: 12px 16px 12px 18px;
+  border-left: none;
+  background:
+    linear-gradient(90deg, rgba(245, 185, 66, 0.06) 0%, rgba(255, 255, 255, 0.015) 12%, transparent 80%);
+  color: var(--text-secondary, #B5B0B8);
+  border-radius: 0 10px 10px 0;
+  position: relative;
+  font-style: italic;
+}
+.gpt-msg-content blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(245, 185, 66, 0.7) 0%, rgba(245, 185, 66, 0.2) 100%);
+}
+.gpt-msg-content blockquote p {
+  margin: 0;
+}
+.gpt-msg-content blockquote p + p {
+  margin-top: 0.5em;
 }
 
-/* — Headings dentro del chat (compactos) ————————————————— */
-.gpt-msg-content h1 { font-size: 1.4em; margin: 16px 0 8px; }
-.gpt-msg-content h2 { font-size: 1.25em; margin: 14px 0 7px; }
-.gpt-msg-content h3 { font-size: 1.1em; margin: 12px 0 6px; }
-.gpt-msg-content h4 { font-size: 1em; margin: 10px 0 5px; font-weight: 600; }
+/* — Headings dentro del chat (premium hierarchy) ————————— */
+.gpt-msg-content h1 {
+  font-size: 1.45em;
+  margin: 20px 0 10px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.gpt-msg-content h2 {
+  font-size: 1.22em;
+  margin: 22px 0 10px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.3;
+}
+.gpt-msg-content h3 {
+  font-size: 1.08em;
+  margin: 16px 0 7px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.gpt-msg-content h4 {
+  font-size: 1em;
+  margin: 12px 0 5px;
+  font-weight: 600;
+  color: #F0EDE8;
+}
 .gpt-msg-content h5,
-.gpt-msg-content h6 { font-size: 0.95em; margin: 8px 0 4px; font-weight: 600; }
+.gpt-msg-content h6 {
+  font-size: 0.92em;
+  margin: 10px 0 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary, #B5B0B8);
+}
 
 /* — HR ———————————————————————————————————————————————————— */
 .gpt-msg-content hr {
