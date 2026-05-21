@@ -48,41 +48,20 @@ class BrandOrganizationView extends BaseView {
       this.brandData = null;
       return;
     }
-    // Si la org tiene brand_containers cargados (sub-marcas), usamos el
-    // primero como fuente "viva" del schema de marca (nicho_core,
-    // propuesta_valor, arquetipo, palabras_clave, verbal_dna, etc.).
-    // Sin esto, el panel INFO mostraba un shim de 4 campos perdiendo
-    // todos los demás del schema. Para orgs con varias sub-marcas, el
-    // panel INFO de Brand Storage tiene su propia card por sub-marca.
-    const primaryBc = (this.brandContainers && this.brandContainers[0]) || null;
     const displayName = (org.brand_name_oficial || org.name || '').trim();
-
-    if (primaryBc) {
-      this.brandContainerData = { ...primaryBc };
-      // brandData combina los campos de organizations (workspace) + brand_container
-      // para que el panel pueda mostrar y editar ambos.
-      this.brandData = {
-        ...primaryBc,
-        name: org.name,
-        brand_name_oficial: org.brand_name_oficial,
-        brand_slogan: org.brand_slogan,
-        level_of_autonomy: org.level_of_autonomy
-      };
-    } else {
-      this.brandContainerData = {
-        id: org.id,
-        organization_id: org.id,
-        nombre_marca: displayName,
-        logo_url: org.logo_url || null,
-        mercado_objetivo: []
-      };
-      this.brandData = {
-        name: org.name,
-        brand_name_oficial: org.brand_name_oficial,
-        brand_slogan: org.brand_slogan,
-        level_of_autonomy: org.level_of_autonomy
-      };
-    }
+    this.brandContainerData = {
+      id: org.id,
+      organization_id: org.id,
+      nombre_marca: displayName,
+      logo_url: org.logo_url || null,
+      mercado_objetivo: []
+    };
+    this.brandData = {
+      name: org.name,
+      brand_name_oficial: org.brand_name_oficial,
+      brand_slogan: org.brand_slogan,
+      level_of_autonomy: org.level_of_autonomy
+    };
   }
 
   async _patchOrganization(partial) {
@@ -92,32 +71,6 @@ class BrandOrganizationView extends BaseView {
     if (error) throw error;
     this.organizationRow = { ...this.organizationRow, ...partial };
     this._mergeOrgIntoShim();
-  }
-
-  /**
-   * Patch en brand_containers — para campos del schema de marca que NO
-   * viven en organizations (nicho_core, propuesta_valor, arquetipo,
-   * verbal_dna, visual_dna, palabras_clave, palabras_prohibidas,
-   * objetivos_estrategicos, sub_nichos, mision_vision, mercado_objetivo,
-   * idiomas_contenido).
-   */
-  async _patchBrandContainer(partial) {
-    const bcId = this.brandContainerData?.id;
-    if (!this.supabase || !bcId || !partial || typeof partial !== 'object') return;
-    // Si el bcId es igual al org.id, NO existe brand_container real — el
-    // shim apunta a organizations. Bail silenciosamente.
-    if (bcId === this.organizationRow?.id) return;
-    const { error } = await this.supabase.from('brand_containers').update(partial).eq('id', bcId);
-    if (error) throw error;
-    this.brandContainerData = { ...this.brandContainerData, ...partial };
-    if (this.brandData) {
-      this.brandData = { ...this.brandData, ...partial };
-    }
-    // Refrescar también la fila en this.brandContainers para que las
-    // próximas llamadas a _mergeOrgIntoShim consistan.
-    if (Array.isArray(this.brandContainers)) {
-      this.brandContainers = this.brandContainers.map((b) => b.id === bcId ? { ...b, ...partial } : b);
-    }
   }
 
   renderHTML() {
@@ -470,11 +423,6 @@ class BrandOrganizationView extends BaseView {
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false });
         this.brandContainers = containerRows || [];
-        // Re-merge ahora que tenemos el brand_container primario: el panel
-        // INFO necesita los campos completos del schema (nicho_core,
-        // propuesta_valor, arquetipo, verbal_dna, etc.), no solo los 4 del
-        // shim. Sin esto, el panel mostraba todo vacío.
-        this._mergeOrgIntoShim();
 
         const containerIds = this.brandContainers.map((r) => r.id).filter(Boolean);
         if (containerIds.length) {
@@ -1349,17 +1297,8 @@ class BrandOrganizationView extends BaseView {
 
   async saveBrandField(fieldName, value) {
     if (!this.supabase || !this.organizationRow) return;
-    // Routing: campos del workspace viven en `organizations`, los del schema
-    // de marca viven en `brand_containers`. Sin esto el panel INFO solo
-    // guardaba 4 campos y perdía nicho_core, propuesta_valor, arquetipo,
-    // verbal_dna, visual_dna, etc.
-    const orgFields = new Set(['name', 'brand_name_oficial', 'brand_slogan', 'level_of_autonomy', 'logo_url']);
-    const containerFields = new Set([
-      'nombre_marca', 'idiomas_contenido', 'mercado_objetivo', 'nicho_core',
-      'sub_nichos', 'arquetipo', 'propuesta_valor', 'mision_vision',
-      'verbal_dna', 'visual_dna', 'palabras_clave', 'palabras_prohibidas',
-      'objetivos_estrategicos'
-    ]);
+    const allowed = new Set(['name', 'brand_name_oficial', 'brand_slogan', 'level_of_autonomy']);
+    if (!allowed.has(fieldName)) return;
 
     let v = value;
     if (typeof v === 'string') v = v.trim() || null;
@@ -1368,14 +1307,8 @@ class BrandOrganizationView extends BaseView {
     if (this.savingFields.has(saveKey)) return;
     this.savingFields.add(saveKey);
     try {
-      if (orgFields.has(fieldName)) {
-        await this._patchOrganization({ [fieldName]: v });
-        if (this.brandData) this.brandData[fieldName] = v;
-      } else if (containerFields.has(fieldName)) {
-        await this._patchBrandContainer({ [fieldName]: v });
-      } else {
-        console.warn('BrandOrganizationView saveBrandField: campo desconocido', fieldName);
-      }
+      await this._patchOrganization({ [fieldName]: v });
+      if (this.brandData) this.brandData[fieldName] = v;
     } catch (error) {
       console.error('BrandOrganizationView saveBrandField:', error);
       alert(`Error al guardar ${fieldName}.`);
