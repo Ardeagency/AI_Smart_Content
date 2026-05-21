@@ -312,6 +312,11 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/services', servicesLoader, auth);
     r.register('/services', servicesLoader, auth);
 
+    // ── Org: Lugares (listado masonry) ──
+    const placesListLoader = this._lazy('PlacesView', ['/js/views/PlacesView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/places', placesListLoader, auth);
+    r.register('/places', placesListLoader, auth);
+
     // ── Legacy: /identities → /products (bookmarks viejos) ──
     const redirectIdentitiesToProducts = class extends (window.BaseView || class {}) {
       async onEnter() {
