@@ -583,14 +583,36 @@ class ProductsListView extends BaseView {
           list.hidden = true; list.innerHTML = ''; return;
         }
         list.hidden = false;
-        list.innerHTML = Array.from(files).map((f) => {
+        list.innerHTML = Array.from(files).map((f, idx) => {
           const sizeStr = f.size > 1024 * 1024
             ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
             : `${Math.max(1, Math.round(f.size / 1024))} KB`;
-          return `<li><i class="fas ${iconClass}" aria-hidden="true"></i> <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span> <span class="attach-product-file-size">${sizeStr}</span></li>`;
+          return `<li data-idx="${idx}">
+            <i class="fas ${iconClass}" aria-hidden="true"></i>
+            <span class="attach-product-file-name">${this.escapeHtml(f.name)}</span>
+            <span class="attach-product-file-size">${sizeStr}</span>
+            <button type="button" class="attach-product-file-remove" data-remove-idx="${idx}" aria-label="Quitar archivo" title="Quitar"><i class="fas fa-times" aria-hidden="true"></i></button>
+          </li>`;
         }).join('');
       };
+      const removeFileAt = (idx) => {
+        if (!input || !input.files) return;
+        const dt = new DataTransfer();
+        Array.from(input.files).forEach((f, i) => { if (i !== idx) dt.items.add(f); });
+        input.files = dt.files;
+        renderList(input.files);
+      };
       if (input) input.addEventListener('change', () => renderList(input.files));
+      if (list) {
+        list.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('[data-remove-idx]');
+          if (!removeBtn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const idx = parseInt(removeBtn.getAttribute('data-remove-idx'), 10);
+          if (!Number.isNaN(idx)) removeFileAt(idx);
+        });
+      }
       if (dropzone) {
         dropzone.addEventListener('click', (e) => {
           if (e.target.tagName !== 'INPUT') input?.click();

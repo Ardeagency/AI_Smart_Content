@@ -686,6 +686,45 @@ button.attach-product-option:focus-visible .attach-product-option-cta i {
   font-variant-numeric: tabular-nums;
 }
 
+.attach-product-file-remove {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.72rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.attach-product-file-list li:hover .attach-product-file-remove {
+  opacity: 1;
+}
+
+.attach-product-file-remove:hover {
+  color: #fca5a5;
+  background: rgba(252, 165, 165, 0.08);
+  border-color: rgba(252, 165, 165, 0.25);
+  opacity: 1;
+}
+
+.attach-product-file-remove:focus-visible {
+  outline: none;
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* CTA Submit: pill blanca con sheen + lift (Linear/Vercel style). */
 .attach-product-submit {
   position: relative;
