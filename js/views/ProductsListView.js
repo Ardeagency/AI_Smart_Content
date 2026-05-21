@@ -818,14 +818,22 @@ class ProductsListView extends BaseView {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(payload),
     });
-    const result = await resp.json();
+    // Manejar gateway errors (502/503/504) que no devuelven JSON parseable
+    let result;
+    try { result = await resp.json(); }
+    catch (_) {
+      const text = await resp.text().catch(() => '');
+      throw new Error(`Gateway HTTP ${resp.status}: ${text.slice(0, 200) || 'sin body'}`);
+    }
     if (!resp.ok || !result.ok) {
       const errMsg = result.error || `HTTP ${resp.status}`;
+      const detail = result.detail ? ` (${result.detail})` : '';
       if (resp.status === 402) {
         this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed?.(4) || '?'} creditos`, 'error');
       } else {
-        this._showNotification(`Error generando ficha: ${errMsg}`, 'error');
+        this._showNotification(`Error generando ficha: ${errMsg}${detail}`, 'error');
       }
+      console.error('[ProductsListView] fiche function error:', result);
       throw new Error(errMsg);
     }
 

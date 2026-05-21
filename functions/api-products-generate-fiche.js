@@ -28,14 +28,9 @@ const {
   checkBodySize
 } = require('./lib/ai-shared');
 
-// cheerio 1.0.0 stable es ESM-only. Cargamos via dynamic import desde un
-// contexto CJS. Cache la instancia entre invocaciones (warm starts) para
-// evitar pagar el import en cada llamada.
-let _cheerioCache = null;
-async function getCheerio() {
-  if (!_cheerioCache) _cheerioCache = await import('cheerio');
-  return _cheerioCache;
-}
+// Scraping con regex pura — sin dependencias externas (cheerio 1.0 es
+// ESM-only y bundlearlo desde CJS via Netlify esbuild fallaba con 502).
+// Para JSON-LD y meta tags el output suele ser regular y bien formado.
 
 // gpt-4o pricing (USD por 1M tokens). Actualizar si cambia.
 const PRICE_INPUT_PER_1M = 2.50;
@@ -142,9 +137,38 @@ function fail(event, status, message, extra = {}) {
 
 // ─── URL scraping helpers ───────────────────────────────────────────────
 
+// Decodifica entidades HTML basicas que aparecen en atributos.
+function decodeHtmlEntities(s) {
+  if (typeof s !== 'string') return s;
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
+// Lee un atributo content de un <meta>. Acepta property|name antes O despues
+// de content (algunas paginas invierten el orden). Devuelve null si no hay match.
+function readMeta(html, keyValues) {
+  for (const [attrName, attrValue] of keyValues) {
+    const escVal = attrValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Order 1: <meta property="og:image" content="...">
+    let m = html.match(new RegExp(`<meta[^>]+\\b${attrName}=["']${escVal}["'][^>]*\\bcontent=["']([^"']*)["']`, 'i'));
+    if (m && m[1]) return decodeHtmlEntities(m[1]);
+    // Order 2: <meta content="..." property="og:image">
+    m = html.match(new RegExp(`<meta[^>]+\\bcontent=["']([^"']*)["'][^>]+\\b${attrName}=["']${escVal}["']`, 'i'));
+    if (m && m[1]) return decodeHtmlEntities(m[1]);
+  }
+  return null;
+}
+
 async function scrapeProductFromUrl(targetUrl) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 9000);
   let html;
   try {
     const res = await fetch(targetUrl, {
@@ -160,29 +184,30 @@ async function scrapeProductFromUrl(targetUrl) {
     const contentType = res.headers.get('content-type') || '';
     if (!/html|xml/i.test(contentType)) throw new Error(`Content-Type no soportado: ${contentType}`);
     html = await res.text();
+    // Cap HTML para evitar OOM en functions: 4MB es generoso para una pagina de producto
+    if (html.length > 4 * 1024 * 1024) html = html.slice(0, 4 * 1024 * 1024);
   } finally {
     clearTimeout(timeout);
   }
 
-  const cheerio = await getCheerio();
-  const $ = cheerio.load(html);
   const result = { title: null, description: null, price: null, currency: null, brand: null, availability: null, images: [] };
 
   // 1) JSON-LD Product (canonico para e-commerce con SEO decente)
+  const jsonLdMatches = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   const jsonLdProducts = [];
-  $('script[type="application/ld+json"]').each((_, el) => {
+  for (const m of jsonLdMatches) {
+    const txt = m[1].trim();
+    if (!txt) continue;
     try {
-      const txt = $(el).contents().text();
-      if (!txt) return;
       const parsed = JSON.parse(txt);
       const arr = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
-      arr.forEach((item) => {
-        if (!item || typeof item !== 'object') return;
+      for (const item of arr) {
+        if (!item || typeof item !== 'object') continue;
         const types = Array.isArray(item['@type']) ? item['@type'] : [item['@type']];
         if (types.includes('Product')) jsonLdProducts.push(item);
-      });
+      }
     } catch (_) { /* json malformado, skip */ }
-  });
+  }
 
   if (jsonLdProducts.length) {
     const p = jsonLdProducts[0];
@@ -204,42 +229,46 @@ async function scrapeProductFromUrl(targetUrl) {
     }
   }
 
-  // 2) Open Graph (fallback / complemento)
-  const ogImage = $('meta[property="og:image"], meta[name="og:image"]').attr('content');
-  if (!result.title) result.title = $('meta[property="og:title"]').attr('content') || null;
-  if (!result.description) result.description = $('meta[property="og:description"]').attr('content') || null;
-  if (!result.price) result.price = $('meta[property="product:price:amount"], meta[property="og:price:amount"]').attr('content') || null;
-  if (!result.currency) result.currency = $('meta[property="product:price:currency"], meta[property="og:price:currency"]').attr('content') || null;
-  if (ogImage && !result.images.includes(ogImage)) result.images.unshift(ogImage);
+  // 2) Open Graph y meta tags
+  const ogImage = readMeta(html, [['property', 'og:image'], ['name', 'og:image']]);
+  if (!result.title) result.title = readMeta(html, [['property', 'og:title']]);
+  if (!result.description) result.description = readMeta(html, [['property', 'og:description']]);
+  if (!result.price) result.price = readMeta(html, [['property', 'product:price:amount'], ['property', 'og:price:amount']]);
+  if (!result.currency) result.currency = readMeta(html, [['property', 'product:price:currency'], ['property', 'og:price:currency']]);
+  if (ogImage) result.images.unshift(ogImage);
 
   // 3) Fallbacks finales
-  if (!result.title) result.title = ($('title').text() || '').trim() || null;
-  if (!result.description) result.description = $('meta[name="description"]').attr('content') || null;
+  if (!result.title) {
+    const tm = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    if (tm) result.title = decodeHtmlEntities(tm[1].trim()).slice(0, 250);
+  }
+  if (!result.description) result.description = readMeta(html, [['name', 'description']]);
 
-  // 4) <img> filtrados si todavia no tenemos suficientes
+  // 4) <img> filtrados si necesitamos mas imagenes
   if (result.images.length < 3) {
+    const imgRe = /<img\b[^>]*?(?:\bsrc|\bdata-src|\bdata-original|\bdata-lazy-src)=["']([^"']+)["'][^>]*>/gi;
     const candidates = [];
-    $('img').each((_, el) => {
-      const $el = $(el);
-      const src = $el.attr('src') || $el.attr('data-src') || $el.attr('data-original') || $el.attr('data-lazy-src');
-      if (!src) return;
-      if (/^data:/.test(src)) return;
-      if (/icon|logo|sprite|placeholder|pixel|tracker|badge|flag|cart|menu/i.test(src)) return;
-      const w = parseInt($el.attr('width') || '0', 10);
-      const h = parseInt($el.attr('height') || '0', 10);
-      if ((w && w < 120) || (h && h < 120)) return;
+    let mm;
+    while ((mm = imgRe.exec(html)) && candidates.length < 25) {
+      const src = mm[1];
+      if (/^data:/.test(src)) continue;
+      if (/icon|logo|sprite|placeholder|pixel|tracker|badge|flag-|cart|menu|favicon|gravatar/i.test(src)) continue;
+      // Filtro por width/height inline si vienen
+      const fullTag = mm[0];
+      const wMatch = fullTag.match(/\bwidth=["']?(\d+)/i);
+      const hMatch = fullTag.match(/\bheight=["']?(\d+)/i);
+      if (wMatch && parseInt(wMatch[1], 10) < 120) continue;
+      if (hMatch && parseInt(hMatch[1], 10) < 120) continue;
       candidates.push(src);
-    });
-    candidates.slice(0, 15).forEach((s) => {
-      if (!result.images.includes(s)) result.images.push(s);
-    });
+    }
+    candidates.forEach((s) => { if (!result.images.includes(s)) result.images.push(s); });
   }
 
   // Resolver URLs relativas y deduplicar
   const baseUrl = new URL(targetUrl);
   result.images = [...new Set(
     result.images.map((u) => {
-      try { return new URL(u, baseUrl).toString(); }
+      try { return new URL(decodeHtmlEntities(u), baseUrl).toString(); }
       catch (_) { return null; }
     }).filter((u) => u && /^https?:\/\//i.test(u))
   )];
@@ -301,6 +330,23 @@ function buildScrapedSummary(s) {
 }
 
 exports.handler = async (event) => {
+  try {
+    return await handlerImpl(event);
+  } catch (err) {
+    // Catch-all: ningun error sin reportar — el cliente ve detalle, no 502.
+    console.error('[generate-fiche] Unhandled error:', err?.stack || err);
+    return {
+      statusCode: 500,
+      headers: corsHeaders(event),
+      body: JSON.stringify({
+        error: 'Error interno generando ficha',
+        detail: err?.message || String(err)
+      })
+    };
+  }
+};
+
+async function handlerImpl(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(event), body: '' };
   }
@@ -370,17 +416,17 @@ exports.handler = async (event) => {
     scrapedSummary = buildScrapedSummary(scraped);
 
     const candidates = (scraped.images || []).slice(0, 3);
+    // Paralelizar reuploads — ahorra segundos criticos del timeout de 10s.
+    const results = await Promise.allSettled(
+      candidates.map((src, i) => reuploadImageToBucket({
+        env, sourceUrl: src, userId: user.id, productId, index: i
+      }))
+    );
     const reuploaded = [];
-    for (let i = 0; i < candidates.length; i++) {
-      try {
-        const uploaded = await reuploadImageToBucket({
-          env, sourceUrl: candidates[i], userId: user.id, productId, index: i
-        });
-        if (uploaded) reuploaded.push(uploaded);
-      } catch (e) {
-        console.warn(`[generate-fiche] reupload skipped (${candidates[i]}):`, e.message);
-      }
-    }
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled' && r.value) reuploaded.push(r.value);
+      else if (r.status === 'rejected') console.warn(`[generate-fiche] reupload skipped (${candidates[i]}):`, r.reason?.message || r.reason);
+    });
     // Si todos los reuploads fallaron, intentamos con las URLs externas directas
     // (OpenAI puede fetchearlas si el host las sirve publicas).
     imageUrls = reuploaded.length > 0 ? reuploaded : candidates;
@@ -600,4 +646,4 @@ exports.handler = async (event) => {
       } : {})
     })
   };
-};
+}
