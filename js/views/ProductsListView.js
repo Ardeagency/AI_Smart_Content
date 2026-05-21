@@ -493,6 +493,15 @@ class ProductsListView extends BaseView {
             <span>Analizar archivos con Vera</span>
           </button>
         </section>
+
+        <!-- Paso 3: Loading -->
+        <section class="attach-product-step attach-product-step--loading" data-panel="loading" hidden>
+          <div class="attach-product-loading">
+            <div class="attach-product-spinner" aria-hidden="true"></div>
+            <h4 class="attach-product-loading-title">Creando ficha del producto</h4>
+            <p class="attach-product-loading-hint" data-loading-hint>Vera esta preparando la ficha. Te redirigimos al detalle en un momento.</p>
+          </div>
+        </section>
       </div>
     `;
 
@@ -571,34 +580,107 @@ class ProductsListView extends BaseView {
       });
     }
 
-    root.querySelector('[data-action="submit-url"]')?.addEventListener('click', () => {
+    root.querySelector('[data-action="submit-url"]')?.addEventListener('click', async (e) => {
+      const submitBtn = e.currentTarget;
       const value = (urlInput?.value || '').trim();
       if (!value) {
         urlInput?.focus();
         this._showNotification('Pega una URL primero', 'error');
         return;
       }
+      let parsed;
       try {
-        const u = new URL(value);
-        if (!/^https?:$/.test(u.protocol)) throw new Error('protocol');
+        parsed = new URL(value);
+        if (!/^https?:$/.test(parsed.protocol)) throw new Error('protocol');
       } catch (_) {
         urlInput?.focus();
         this._showNotification('La URL no es valida', 'error');
         return;
       }
-      handle.close();
-      this._showNotification('Vera procesara esta URL proximamente.', 'info');
+      submitBtn.disabled = true;
+      goToStep('loading');
+      const hint = root.querySelector('[data-loading-hint]');
+      if (hint) hint.textContent = `Leyendo ${parsed.hostname} y armando la ficha. Te redirigimos al detalle en un momento.`;
+      await this._createPendingProduct({ url: value, modalHandle: handle });
     });
 
-    root.querySelector('[data-action="submit-files"]')?.addEventListener('click', () => {
+    root.querySelector('[data-action="submit-files"]')?.addEventListener('click', async (e) => {
+      const submitBtn = e.currentTarget;
       const count = fileInput?.files?.length || 0;
       if (!count) {
         this._showNotification('Adjunta al menos un archivo', 'error');
         return;
       }
-      handle.close();
-      this._showNotification(`Vera procesara ${count} archivo${count === 1 ? '' : 's'} proximamente.`, 'info');
+      submitBtn.disabled = true;
+      goToStep('loading');
+      const hint = root.querySelector('[data-loading-hint]');
+      if (hint) hint.textContent = `Analizando ${count} archivo${count === 1 ? '' : 's'} y armando la ficha. Te redirigimos al detalle en un momento.`;
+      const files = Array.from(fileInput?.files || []);
+      await this._createPendingProduct({
+        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+        modalHandle: handle,
+      });
     });
+  }
+
+  async _createPendingProduct({ url = null, files = null, modalHandle = null } = {}) {
+    if (!this.supabase || !this.organizationId) {
+      this._showNotification('Sesion no disponible', 'error');
+      modalHandle?.close();
+      return;
+    }
+    try {
+      const entityId = await this._ensureEntityId();
+      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+
+      const name = url
+        ? this._nameFromUrl(url)
+        : (files?.length ? `Producto sin titulo (${files.length} archivo${files.length === 1 ? '' : 's'})` : 'Producto pendiente');
+
+      const metadata = {
+        pending_ai_enrichment: true,
+        source: url ? 'url' : 'files',
+      };
+      if (files?.length) metadata.pending_files = files;
+
+      const payload = {
+        organization_id: this.organizationId,
+        entity_id: entityId,
+        tipo_producto: 'otro',
+        nombre_producto: name,
+        descripcion_producto: 'Vera esta procesando la informacion. La ficha se completara automaticamente.',
+        moneda: 'USD',
+        metadata,
+      };
+      if (url) payload.url_producto = url;
+
+      const { data, error } = await this.supabase
+        .from('products')
+        .insert(payload)
+        .select('id')
+        .single();
+      if (error) throw error;
+      if (!data?.id) throw new Error('No se obtuvo el id del producto creado');
+
+      this._invalidateCache();
+      modalHandle?.close();
+      this._navigateToProductDetail(entityId, data.id);
+    } catch (err) {
+      console.error('ProductsListView _createPendingProduct:', err);
+      this._showNotification(err?.message || 'No se pudo crear la ficha', 'error');
+      modalHandle?.close();
+    }
+  }
+
+  _nameFromUrl(url) {
+    try {
+      const u = new URL(url);
+      const last = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
+      const clean = decodeURIComponent(last).replace(/[-_]+/g, ' ').replace(/\.[a-z0-9]{2,5}$/i, '').trim();
+      return clean ? clean.replace(/\b\w/g, (c) => c.toUpperCase()) : u.hostname;
+    } catch (_) {
+      return 'Producto pendiente';
+    }
   }
 
   async onLeave() {
