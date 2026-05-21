@@ -747,7 +747,7 @@ const ECHARTS_NATIVE_TYPES = new Set([
   'line', 'spline', 'area', 'stackedarea',
   'pie', 'donut',
   'scatter', 'bubble',
-  'radar',
+  'radar', 'polar', // polar = Nightingale rose (Chart.js "polarArea")
   'heatmap', 'calendar',
   'treemap', 'sunburst',
   'gauge',
@@ -761,17 +761,102 @@ const ECHARTS_NATIVE_TYPES = new Set([
 ]);
 
 /**
- * Convierte una spec de Vera (formato simple) a una option de ECharts.
+ * Detecta el formato Chart.js y lo normaliza a la forma interna que el
+ * converter consume (`{title, categories, series, data:[{label,value,color}]}`).
+ *
+ * Chart.js shape (lo que Claude/Vera emite por default):
+ *   {
+ *     type: "doughnut",
+ *     data: { labels: [...], datasets: [{ data: [...], backgroundColor: [...] }] },
+ *     options: { plugins: { title: {text}, legend: {...} } }
+ *   }
+ *
+ * No mutamos el mensaje original de Vera — solo lo entendemos.
+ */
+function _normalizeChartJsSpec(spec) {
+  if (!spec?.data || Array.isArray(spec.data) || typeof spec.data !== 'object') return spec;
+  const cjsData = spec.data;
+  // Detectar: tiene labels y/o datasets
+  if (!Array.isArray(cjsData.labels) && !Array.isArray(cjsData.datasets)) return spec;
+
+  const labels = Array.isArray(cjsData.labels) ? cjsData.labels : [];
+  const datasets = Array.isArray(cjsData.datasets) ? cjsData.datasets : [];
+  const opts = spec.options || {};
+  const cjsTitle = opts?.plugins?.title?.text || opts?.title?.text;
+  const ds0 = datasets[0] || {};
+
+  // Cutout (doughnut como gauge: "75%" → preservar para el case 'donut')
+  const cutout = ds0.cutout || opts?.cutout;
+
+  // Series multi: una por dataset (line/bar multi-serie)
+  const series = datasets.map((ds, i) => ({
+    name: ds.label || `Serie ${i + 1}`,
+    data: ds.data || [],
+    _backgroundColor: ds.backgroundColor,
+    _borderColor: ds.borderColor,
+    _tension: ds.tension,
+    _fill: ds.fill,
+    _pointRadius: ds.pointRadius,
+  }));
+
+  // Data "plana" para charts circulares (pie/donut/polar) — combina labels[i] con dataset[0].data[i]
+  const dataFlat = (ds0.data || []).map((v, i) => {
+    const base = {
+      label: labels[i] != null ? String(labels[i]) : `Item ${i + 1}`,
+      // value puede ser número o objeto {x,y,r}
+      value: typeof v === 'number' ? v : (typeof v === 'object' ? (v?.value ?? v?.y ?? 0) : Number(v) || 0),
+    };
+    // Color por slice (cuando backgroundColor es array)
+    if (Array.isArray(ds0.backgroundColor) && ds0.backgroundColor[i]) {
+      base.color = ds0.backgroundColor[i];
+    }
+    // Scatter/bubble preservan x,y,r
+    if (typeof v === 'object' && v) {
+      if (v.x != null) base.x = v.x;
+      if (v.y != null) base.y = v.y;
+      if (v.r != null) base.r = v.r;
+    }
+    return base;
+  });
+
+  return {
+    ...spec,
+    // Title: prioriza el explícito; cae al embebido en options.plugins.title.text
+    title: spec.title || cjsTitle,
+    categories: labels.length ? labels : (spec.categories || null),
+    series: series.length > 1 ? series : (spec.series || null),
+    data: dataFlat.length ? dataFlat : (Array.isArray(spec.data) ? spec.data : []),
+    _cutout: cutout,
+    _legendPosition: opts?.plugins?.legend?.position,
+  };
+}
+
+/**
+ * Convierte una spec de Vera (formato simple O Chart.js) a una option de ECharts.
  * Acepta variantes de la spec:
- *   - { type, title, data: [{label, value, color?}] }
- *   - { type, title, categories: [...], series: [{name, data:[...]}] }
- *   - { type, data: [{name, value, children?}] } (treemap/sunburst)
- *   - { type, nodes: [...], links: [...] } (sankey/graph)
+ *   - { type, title, data: [{label, value, color?}] }                  ← simple
+ *   - { type, title, categories: [...], series: [{name, data:[...]}] } ← multi-serie
+ *   - { type, data: { labels:[...], datasets:[{data:[...]}] }, options }← Chart.js (lo que emite Vera)
+ *   - { type, data: [{name, value, children?}] }                       ← treemap/sunburst
+ *   - { type, nodes: [...], links: [...] }                             ← sankey/graph
  * Retorna { option, type } o null si el tipo no es soportado.
  */
-function buildEChartsOption(spec) {
-  const rawType = String(spec.type || '').toLowerCase();
-  if (!ECHARTS_NATIVE_TYPES.has(rawType)) return null;
+function buildEChartsOption(rawSpec) {
+  // Normalizar formato Chart.js (si aplica) ANTES de chequear el tipo
+  const spec = _normalizeChartJsSpec(rawSpec);
+
+  // Type: case-insensitive + sin separadores
+  const rawType = String(spec.type || '').toLowerCase().replace(/[\s_-]+/g, '');
+  // Aliases adicionales que parseChartSpec no captura cuando viene directo del bloque
+  const TYPE_NORMALIZE = {
+    doughnut: 'donut',
+    polararea: 'polar',
+    horizontalbarchart: 'horizontalbar',
+    stackedbar: 'stackedbar',
+  };
+  const normalizedType = TYPE_NORMALIZE[rawType] || rawType;
+  if (!ECHARTS_NATIVE_TYPES.has(normalizedType)) return null;
+  spec.type = normalizedType;
 
   const title = spec.title ? String(spec.title) : '';
   const data = Array.isArray(spec.data) ? spec.data : [];
@@ -794,10 +879,16 @@ function buildEChartsOption(spec) {
       left: 14, top: 12,
     } : undefined,
     grid: { left: 50, right: 30, top: title ? 50 : 24, bottom: 36, containLabel: true },
-    legend: spec.legend !== false ? {
-      textStyle: { color: subColor }, top: title ? 14 : 8, right: 16,
-      icon: 'roundRect', itemWidth: 10, itemHeight: 10,
-    } : undefined,
+    legend: spec.legend !== false ? (() => {
+      // Position: Chart.js usa "right"/"left"/"top"/"bottom"; ECharts usa props x/y
+      const pos = spec._legendPosition || 'top';
+      const cfg = { textStyle: { color: subColor }, icon: 'roundRect', itemWidth: 10, itemHeight: 10 };
+      if (pos === 'right')       Object.assign(cfg, { orient: 'vertical', right: 12, top: 'center' });
+      else if (pos === 'left')   Object.assign(cfg, { orient: 'vertical', left: 12, top: 'center' });
+      else if (pos === 'bottom') Object.assign(cfg, { bottom: 6, left: 'center' });
+      else                       Object.assign(cfg, { top: title ? 14 : 8, right: 16 });
+      return cfg;
+    })() : undefined,
     tooltip: {
       trigger: 'item',
       backgroundColor: tooltipBg,
@@ -816,7 +907,9 @@ function buildEChartsOption(spec) {
     splitLine: { lineStyle: { color: gridColor, type: 'dashed' } },
   };
 
-  switch (rawType) {
+  // Usar normalizedType (post-aliasing) — rawType es el raw del input pre-aliasing.
+  // Ej: rawType="doughnut" → normalizedType="donut" → case 'donut' hace match.
+  switch (normalizedType) {
     case 'bar':
     case 'groupedbar': {
       option.tooltip.trigger = 'axis';
@@ -847,8 +940,8 @@ function buildEChartsOption(spec) {
       option.xAxis = { type: 'category', data: categories || labels(data), boundaryGap: false, ...axisStyle };
       option.yAxis = { type: 'value', ...axisStyle };
       option.series = seriesIn
-        ? seriesIn.map((s) => ({ type: 'line', name: s.name, data: s.data, smooth: rawType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }))
-        : [{ type: 'line', data: values(data), smooth: rawType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }];
+        ? seriesIn.map((s) => ({ type: 'line', name: s.name, data: s.data, smooth: normalizedType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }))
+        : [{ type: 'line', data: values(data), smooth: normalizedType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }];
       break;
     }
     case 'area':
@@ -856,7 +949,7 @@ function buildEChartsOption(spec) {
       option.tooltip.trigger = 'axis';
       option.xAxis = { type: 'category', data: categories || labels(data), boundaryGap: false, ...axisStyle };
       option.yAxis = { type: 'value', ...axisStyle };
-      const stack = rawType === 'stackedarea' ? 'total' : undefined;
+      const stack = normalizedType === 'stackedarea' ? 'total' : undefined;
       option.series = seriesIn
         ? seriesIn.map((s) => ({ type: 'line', name: s.name, stack, data: s.data, smooth: true, areaStyle: { opacity: 0.45 }, lineStyle: { width: 2 } }))
         : [{ type: 'line', data: values(data), smooth: true, areaStyle: { opacity: 0.45 }, lineStyle: { width: 2 } }];
@@ -864,12 +957,34 @@ function buildEChartsOption(spec) {
     }
     case 'pie':
     case 'donut': {
+      // Chart.js usa "cutout" para definir el inner radius del donut.
+      // "75%" → inner 75% del outer → donut delgado (uso típico: gauge fake).
+      // Parseamos % literal o número en píxeles.
+      let innerR = '45%';
+      if (spec._cutout) {
+        const c = String(spec._cutout);
+        innerR = c.endsWith('%') ? c : `${parseInt(c, 10) || 45}%`;
+      }
       option.series = [{
         type: 'pie',
-        radius: rawType === 'donut' ? ['45%', '72%'] : '72%',
+        radius: normalizedType === 'donut' ? [innerR, '72%'] : '72%',
         center: ['50%', '55%'],
         data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
         itemStyle: { borderColor: '#0e0f12', borderWidth: 2, borderRadius: 4 },
+        label: { color: textColor },
+        emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
+      }];
+      break;
+    }
+    case 'polar': {
+      // Nightingale rose chart = pie con roseType (Chart.js "polarArea")
+      option.series = [{
+        type: 'pie',
+        roseType: 'area',
+        radius: ['10%', '72%'],
+        center: ['50%', '55%'],
+        data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
         label: { color: textColor },
         emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
       }];
@@ -884,7 +999,7 @@ function buildEChartsOption(spec) {
       option.series = [{
         type: 'scatter',
         data: points,
-        symbolSize: rawType === 'bubble' ? (val) => Math.sqrt(val[2]) * 4 : 10,
+        symbolSize: normalizedType === 'bubble' ? (val) => Math.sqrt(val[2]) * 4 : 10,
       }];
       break;
     }
@@ -968,7 +1083,7 @@ function buildEChartsOption(spec) {
     case 'pyramid': {
       option.series = [{
         type: 'funnel',
-        sort: rawType === 'pyramid' ? 'ascending' : 'descending',
+        sort: normalizedType === 'pyramid' ? 'ascending' : 'descending',
         data: data.map((d) => ({ name: d.label || d.name, value: d.value })),
         label: { color: '#fff', fontWeight: 500 },
         itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
