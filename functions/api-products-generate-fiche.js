@@ -1,29 +1,22 @@
 /**
- * Netlify Function: genera la ficha de un producto usando OpenAI Vision (gpt-4o detail:low)
- * a partir de imagenes subidas a Supabase Storage + contexto de marca del brand_container.
+ * Netlify Function: genera la ficha de un producto usando OpenAI Vision (gpt-4o detail:low).
  *
- * Token economy:
- *  - detail:low = 85 tokens flat por imagen (vs 765 con detail:high)
- *  - response_format = json_schema (strict) — output limpio sin desperdicio en reasoning
- *  - System prompt comprimido, contexto de marca solo con campos relevantes
- *  - max_tokens en respuesta para evitar runaway
+ * Acepta 2 modos:
+ *   1. Photos: { product_id, organization_id, image_urls[] } — imagenes ya en Supabase Storage
+ *   2. URL:    { product_id, organization_id, url }          — scraping + reupload + analisis
  *
- * Costo aproximado (gpt-4o, 3 imagenes, contexto medio):
- *  - Input ~525 tokens × $2.50/1M = $0.0013
- *  - Output ~600 tokens × $10/1M = $0.006
- *  - Total ~$0.007 = 0.07 creditos (con rate 1 credito = $0.10 USD)
+ * URL flow: fetch HTML → cheerio parse → extrae JSON-LD Product, OG tags, og:image,
+ * fallback a <img> filtrados. Re-uploadea top 3 imagenes a product-images bucket (para
+ * permanencia — URLs externas se rompen). Si reupload falla, usa URLs externas directas.
  *
- * Cobro: via RPC use_credits_numeric (creditos fraccionales, exact passthrough).
+ * Token economy: detail:low = 85 tok/img, json_schema strict, system prompt comprimido,
+ * scraped context capado a campos esenciales.
  *
- * POST body: {
- *   product_id: uuid,            // producto placeholder ya creado
- *   organization_id: uuid,
- *   image_urls: string[]         // URLs publicas de Supabase Storage
- * }
+ * Cobro: via RPC use_credits_numeric (creditos fraccionales, 1 credito = $0.10 USD).
  *
  * Respuesta:
- *  { ok, product_id, usd_cost, credits_charged, tokens: { input, output, vision_images } }
- *  o { error }
+ *  { ok, product_id, usd_cost, credits_charged, tokens, images: { attempted, inserted, error },
+ *    source: 'photos'|'url', scraped?: { title, brand, price, currency } }
  */
 
 const {
@@ -34,6 +27,15 @@ const {
   assertOrgMember,
   checkBodySize
 } = require('./lib/ai-shared');
+
+// cheerio 1.0.0 stable es ESM-only. Cargamos via dynamic import desde un
+// contexto CJS. Cache la instancia entre invocaciones (warm starts) para
+// evitar pagar el import en cada llamada.
+let _cheerioCache = null;
+async function getCheerio() {
+  if (!_cheerioCache) _cheerioCache = await import('cheerio');
+  return _cheerioCache;
+}
 
 // gpt-4o pricing (USD por 1M tokens). Actualizar si cambia.
 const PRICE_INPUT_PER_1M = 2.50;
@@ -138,6 +140,166 @@ function fail(event, status, message, extra = {}) {
   };
 }
 
+// ─── URL scraping helpers ───────────────────────────────────────────────
+
+async function scrapeProductFromUrl(targetUrl) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  let html;
+  try {
+    const res = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AISmartContentBot/1.0; +https://aismartcontent.io)',
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'es-CO,es;q=0.9,en;q=0.8'
+      },
+      signal: controller.signal,
+      redirect: 'follow'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const contentType = res.headers.get('content-type') || '';
+    if (!/html|xml/i.test(contentType)) throw new Error(`Content-Type no soportado: ${contentType}`);
+    html = await res.text();
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const cheerio = await getCheerio();
+  const $ = cheerio.load(html);
+  const result = { title: null, description: null, price: null, currency: null, brand: null, availability: null, images: [] };
+
+  // 1) JSON-LD Product (canonico para e-commerce con SEO decente)
+  const jsonLdProducts = [];
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const txt = $(el).contents().text();
+      if (!txt) return;
+      const parsed = JSON.parse(txt);
+      const arr = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
+      arr.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        const types = Array.isArray(item['@type']) ? item['@type'] : [item['@type']];
+        if (types.includes('Product')) jsonLdProducts.push(item);
+      });
+    } catch (_) { /* json malformado, skip */ }
+  });
+
+  if (jsonLdProducts.length) {
+    const p = jsonLdProducts[0];
+    if (p.name) result.title = String(p.name);
+    if (p.description) result.description = String(p.description);
+    result.brand = typeof p.brand === 'string' ? p.brand : (p.brand?.name || null);
+    if (p.image) {
+      const imgs = Array.isArray(p.image) ? p.image : [p.image];
+      imgs.forEach((img) => {
+        if (typeof img === 'string') result.images.push(img);
+        else if (img?.url) result.images.push(img.url);
+      });
+    }
+    const offer = Array.isArray(p.offers) ? p.offers[0] : p.offers;
+    if (offer && typeof offer === 'object') {
+      result.price = offer.price || offer.lowPrice || null;
+      result.currency = offer.priceCurrency || null;
+      result.availability = offer.availability || null;
+    }
+  }
+
+  // 2) Open Graph (fallback / complemento)
+  const ogImage = $('meta[property="og:image"], meta[name="og:image"]').attr('content');
+  if (!result.title) result.title = $('meta[property="og:title"]').attr('content') || null;
+  if (!result.description) result.description = $('meta[property="og:description"]').attr('content') || null;
+  if (!result.price) result.price = $('meta[property="product:price:amount"], meta[property="og:price:amount"]').attr('content') || null;
+  if (!result.currency) result.currency = $('meta[property="product:price:currency"], meta[property="og:price:currency"]').attr('content') || null;
+  if (ogImage && !result.images.includes(ogImage)) result.images.unshift(ogImage);
+
+  // 3) Fallbacks finales
+  if (!result.title) result.title = ($('title').text() || '').trim() || null;
+  if (!result.description) result.description = $('meta[name="description"]').attr('content') || null;
+
+  // 4) <img> filtrados si todavia no tenemos suficientes
+  if (result.images.length < 3) {
+    const candidates = [];
+    $('img').each((_, el) => {
+      const $el = $(el);
+      const src = $el.attr('src') || $el.attr('data-src') || $el.attr('data-original') || $el.attr('data-lazy-src');
+      if (!src) return;
+      if (/^data:/.test(src)) return;
+      if (/icon|logo|sprite|placeholder|pixel|tracker|badge|flag|cart|menu/i.test(src)) return;
+      const w = parseInt($el.attr('width') || '0', 10);
+      const h = parseInt($el.attr('height') || '0', 10);
+      if ((w && w < 120) || (h && h < 120)) return;
+      candidates.push(src);
+    });
+    candidates.slice(0, 15).forEach((s) => {
+      if (!result.images.includes(s)) result.images.push(s);
+    });
+  }
+
+  // Resolver URLs relativas y deduplicar
+  const baseUrl = new URL(targetUrl);
+  result.images = [...new Set(
+    result.images.map((u) => {
+      try { return new URL(u, baseUrl).toString(); }
+      catch (_) { return null; }
+    }).filter((u) => u && /^https?:\/\//i.test(u))
+  )];
+
+  return result;
+}
+
+async function reuploadImageToBucket({ env, sourceUrl, userId, productId, index }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  let buffer, contentType;
+  try {
+    const res = await fetch(sourceUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AISmartContentBot/1.0)' },
+      signal: controller.signal,
+      redirect: 'follow'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    contentType = (res.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
+    if (!/^image\//.test(contentType)) throw new Error(`No es imagen (${contentType})`);
+    buffer = await res.arrayBuffer();
+    if (buffer.byteLength === 0) throw new Error('Imagen vacia');
+    if (buffer.byteLength > 10 * 1024 * 1024) throw new Error('Imagen >10MB');
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const extMap = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif' };
+  const ext = extMap[contentType] || 'jpg';
+  const fileName = `${userId}/${productId}/${Date.now()}_url_${index}.${ext}`;
+
+  const uploadRes = await fetch(`${env.url}/storage/v1/object/product-images/${fileName}`, {
+    method: 'POST',
+    headers: {
+      apikey: env.serviceKey,
+      Authorization: `Bearer ${env.serviceKey}`,
+      'Content-Type': contentType,
+      'cache-control': '3600',
+      'x-upsert': 'false'
+    },
+    body: Buffer.from(buffer)
+  });
+  if (!uploadRes.ok) {
+    const txt = await uploadRes.text().catch(() => '');
+    throw new Error(`Storage upload HTTP ${uploadRes.status}: ${txt.slice(0, 120)}`);
+  }
+  return `${env.url}/storage/v1/object/public/product-images/${fileName}`;
+}
+
+function buildScrapedSummary(s) {
+  if (!s) return '';
+  const lines = [];
+  if (s.title) lines.push(`Titulo de la pagina: ${String(s.title).slice(0, 240)}`);
+  if (s.brand) lines.push(`Marca declarada: ${String(s.brand).slice(0, 120)}`);
+  if (s.description) lines.push(`Descripcion en la pagina: ${String(s.description).slice(0, 700)}`);
+  if (s.price) lines.push(`Precio: ${s.price}${s.currency ? ' ' + s.currency : ''}`);
+  if (s.availability) lines.push(`Disponibilidad: ${String(s.availability).split('/').pop()}`);
+  return lines.join('\n');
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(event), body: '' };
@@ -159,12 +321,18 @@ exports.handler = async (event) => {
 
   const productId = String(body.product_id || '').trim();
   const organizationId = String(body.organization_id || '').trim();
-  const imageUrls = Array.isArray(body.image_urls)
+  const sourceUrl = typeof body.url === 'string' ? body.url.trim() : null;
+  const providedImageUrls = Array.isArray(body.image_urls)
     ? body.image_urls.filter((u) => typeof u === 'string' && /^https?:\/\//.test(u)).slice(0, MAX_IMAGES)
     : [];
 
   if (!productId || !organizationId) return fail(event, 400, 'product_id y organization_id requeridos');
-  if (imageUrls.length === 0) return fail(event, 400, 'Al menos una imagen es requerida');
+  if (!sourceUrl && providedImageUrls.length === 0) {
+    return fail(event, 400, 'Se requiere url o image_urls');
+  }
+  if (sourceUrl && !/^https?:\/\//i.test(sourceUrl)) {
+    return fail(event, 400, 'URL invalida');
+  }
 
   let env;
   try { env = getSupabaseEnv(); } catch (e) { return fail(event, 500, e.message); }
@@ -183,6 +351,44 @@ exports.handler = async (event) => {
   });
   const product = products?.[0];
   if (!product || product.organization_id !== organizationId) return fail(event, 404, 'Producto no encontrado');
+
+  // ─── Branch URL: scrape + reupload top 3 imagenes ─────────────────────
+  let imageUrls = providedImageUrls;
+  let scraped = null;
+  let scrapedSummary = null;
+  let sourceMode = sourceUrl ? 'url' : 'photos';
+
+  if (sourceUrl) {
+    try {
+      scraped = await scrapeProductFromUrl(sourceUrl);
+    } catch (e) {
+      return fail(event, 502, `No se pudo leer la pagina: ${e.message}`);
+    }
+    if (!scraped.title && !scraped.description && scraped.images.length === 0) {
+      return fail(event, 422, 'La pagina no expone datos de producto (sin JSON-LD, OG tags ni imagenes utiles)');
+    }
+    scrapedSummary = buildScrapedSummary(scraped);
+
+    const candidates = (scraped.images || []).slice(0, 3);
+    const reuploaded = [];
+    for (let i = 0; i < candidates.length; i++) {
+      try {
+        const uploaded = await reuploadImageToBucket({
+          env, sourceUrl: candidates[i], userId: user.id, productId, index: i
+        });
+        if (uploaded) reuploaded.push(uploaded);
+      } catch (e) {
+        console.warn(`[generate-fiche] reupload skipped (${candidates[i]}):`, e.message);
+      }
+    }
+    // Si todos los reuploads fallaron, intentamos con las URLs externas directas
+    // (OpenAI puede fetchearlas si el host las sirve publicas).
+    imageUrls = reuploaded.length > 0 ? reuploaded : candidates;
+  }
+
+  if (imageUrls.length === 0 && !scrapedSummary) {
+    return fail(event, 400, 'Sin imagenes ni contexto extraido');
+  }
 
   // Fetch contexto de marca (brand_container ligado o el mas reciente de la org)
   let brand = null;
@@ -219,8 +425,15 @@ exports.handler = async (event) => {
   const brandContextText = buildBrandContextText(brand, orgName);
 
   // Construir mensaje OpenAI: text con contexto + N images con detail:low
+  const promptParts = [brandContextText];
+  if (scrapedSummary) {
+    promptParts.push(`\nDATOS EXTRAIDOS DE LA PAGINA DEL PRODUCTO:\n${scrapedSummary}`);
+    promptParts.push(`\nGenera la ficha combinando los datos extraidos con lo que veas en las ${imageUrls.length} imagen${imageUrls.length === 1 ? '' : 'es'}. Si la pagina y las imagenes se contradicen, prioriza las imagenes. Adapta tono y vocabulario a la marca (no copies literalmente el texto de la pagina si la marca usa otro registro).`);
+  } else {
+    promptParts.push(`\nGenera la ficha del producto a partir de las ${imageUrls.length} imagen${imageUrls.length === 1 ? '' : 'es'} adjuntas.`);
+  }
   const userContent = [
-    { type: 'text', text: `${brandContextText}\n\nGenera la ficha del producto a partir de las ${imageUrls.length} imagenes adjuntas.` },
+    { type: 'text', text: promptParts.join('\n') },
     ...imageUrls.map((url) => ({ type: 'image_url', image_url: { url, detail: 'low' } }))
   ];
 
@@ -311,14 +524,17 @@ exports.handler = async (event) => {
     metadata: {
       ai_generated: true,
       ai_model: MODEL,
+      ai_source: sourceMode,
       ai_generated_at: new Date().toISOString(),
       ai_usd_cost: usdCost,
       ai_credits_charged: creditsAmount,
       ai_input_tokens: inputTokens,
       ai_output_tokens: outputTokens,
-      ai_image_count: imageUrls.length
+      ai_image_count: imageUrls.length,
+      ...(sourceUrl ? { ai_source_url: sourceUrl, ai_scraped_price: scraped?.price, ai_scraped_currency: scraped?.currency } : {})
     }
   };
+  if (sourceUrl) updates.url_producto = sourceUrl;
 
   try {
     await supabaseRest({
@@ -360,6 +576,7 @@ exports.handler = async (event) => {
     body: JSON.stringify({
       ok: true,
       product_id: productId,
+      source: sourceMode,
       usd_cost: Number(usdCost.toFixed(6)),
       credits_charged: Number(creditsAmount.toFixed(6)),
       tokens: {
@@ -371,7 +588,16 @@ exports.handler = async (event) => {
         attempted: imageRows.length,
         inserted: imagesInserted,
         error: imagesError
-      }
+      },
+      ...(scraped ? {
+        scraped: {
+          title: scraped.title,
+          brand: scraped.brand,
+          price: scraped.price,
+          currency: scraped.currency,
+          image_count_found: scraped.images.length
+        }
+      } : {})
     })
   };
 };

@@ -660,8 +660,7 @@ class ProductsListView extends BaseView {
       submitBtn.disabled = true;
       goToStep('loading');
       const hint = root.querySelector('[data-loading-hint]');
-      if (hint) hint.textContent = `Leyendo ${parsed.hostname} y armando la ficha. Te redirigimos al detalle en un momento.`;
-      await this._createPendingProduct({ url: value, modalHandle: handle });
+      await this._analyzeUrlAndCreateProduct({ url: value, hostname: parsed.hostname, modalHandle: handle, hintEl: hint });
     });
 
     root.querySelector('[data-action="submit-attach"]')?.addEventListener('click', async (e) => {
@@ -754,49 +753,100 @@ class ProductsListView extends BaseView {
 
       // 3) Llamar a la Netlify function que analiza con OpenAI y cobra creditos
       setHint('Vera esta analizando las fotos con OpenAI Vision...');
-      const { data: sessionData } = await this.supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) throw new Error('No hay sesion activa');
-
-      const resp = await fetch('/.netlify/functions/api-products-generate-fiche', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ product_id: productId, organization_id: this.organizationId, image_urls: imageUrls }),
+      await this._callFicheFunction({
+        productId, entityId,
+        payload: { product_id: productId, organization_id: this.organizationId, image_urls: imageUrls },
+        modalHandle, setHint
       });
-      const result = await resp.json();
-      if (!resp.ok || !result.ok) {
-        const errMsg = result.error || `HTTP ${resp.status}`;
-        if (resp.status === 402) {
-          this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed(4) || '?'} creditos`, 'error');
-        } else {
-          this._showNotification(`Error generando ficha: ${errMsg}`, 'error');
-        }
-        throw new Error(errMsg);
-      }
-
-      // 4) Exito: invalidar cache, refrescar creditos, redirigir al detalle
-      setHint(`Ficha generada (costo: ${result.credits_charged.toFixed(4)} creditos). Redirigiendo...`);
-      this._invalidateCache();
-      window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
-      modalHandle?.close();
-      if (result.images?.error) {
-        console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
-        this._showNotification(
-          `Ficha generada · imagenes no se vincularon: ${result.images.error}`,
-          'error'
-        );
-      } else {
-        this._showNotification(
-          `Ficha generada · ${result.credits_charged.toFixed(4)} creditos · ${result.images?.inserted || 0} foto${(result.images?.inserted || 0) === 1 ? '' : 's'} vinculada${(result.images?.inserted || 0) === 1 ? '' : 's'}`,
-          'success'
-        );
-      }
-      this._navigateToProductDetail(entityId, productId);
     } catch (err) {
       console.error('ProductsListView _analyzePhotosAndCreateProduct:', err);
       this._showNotification(err?.message || 'No se pudo generar la ficha', 'error');
       modalHandle?.close();
     }
+  }
+
+  async _analyzeUrlAndCreateProduct({ url, hostname, modalHandle, hintEl }) {
+    if (!this.supabase || !this.organizationId || !this.userId) {
+      this._showNotification('Sesion no disponible', 'error');
+      modalHandle?.close();
+      return;
+    }
+    const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
+    try {
+      // 1) Crear producto placeholder
+      setHint('Creando producto inicial...');
+      const entityId = await this._ensureEntityId();
+      if (!entityId) throw new Error('No se pudo obtener una identidad para vincular el producto');
+      const { data: created, error: insertError } = await this.supabase
+        .from('products')
+        .insert({
+          organization_id: this.organizationId,
+          entity_id: entityId,
+          tipo_producto: 'otro',
+          nombre_producto: 'Procesando ficha...',
+          descripcion_producto: 'Vera esta leyendo la pagina y armando la ficha. Esto toma unos segundos.',
+          moneda: 'USD',
+          url_producto: url,
+          metadata: { ai_generated: false, pending_ai_enrichment: true, source: 'url', source_url: url },
+        })
+        .select('id')
+        .single();
+      if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el producto');
+      const productId = created.id;
+
+      // 2) Llamar a la function (hace scrape + reupload + OpenAI)
+      setHint(`Leyendo ${hostname || 'la pagina'} y extrayendo datos del producto...`);
+      await this._callFicheFunction({
+        productId, entityId,
+        payload: { product_id: productId, organization_id: this.organizationId, url },
+        modalHandle, setHint
+      });
+    } catch (err) {
+      console.error('ProductsListView _analyzeUrlAndCreateProduct:', err);
+      this._showNotification(err?.message || 'No se pudo generar la ficha', 'error');
+      modalHandle?.close();
+    }
+  }
+
+  async _callFicheFunction({ productId, entityId, payload, modalHandle, setHint }) {
+    const { data: sessionData } = await this.supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error('No hay sesion activa');
+
+    const resp = await fetch('/.netlify/functions/api-products-generate-fiche', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const result = await resp.json();
+    if (!resp.ok || !result.ok) {
+      const errMsg = result.error || `HTTP ${resp.status}`;
+      if (resp.status === 402) {
+        this._showNotification(`Creditos insuficientes. Necesitas ${result.credits_needed?.toFixed?.(4) || '?'} creditos`, 'error');
+      } else {
+        this._showNotification(`Error generando ficha: ${errMsg}`, 'error');
+      }
+      throw new Error(errMsg);
+    }
+
+    setHint(`Ficha generada (costo: ${result.credits_charged.toFixed(4)} creditos). Redirigiendo...`);
+    this._invalidateCache();
+    window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
+    modalHandle?.close();
+    const imgCount = result.images?.inserted || 0;
+    if (result.images?.error) {
+      console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
+      this._showNotification(`Ficha generada · imagenes no se vincularon: ${result.images.error}`, 'error');
+    } else {
+      const sourceLabel = result.source === 'url'
+        ? `desde URL${result.scraped?.brand ? ' (' + result.scraped.brand + ')' : ''}`
+        : 'desde fotos';
+      this._showNotification(
+        `Ficha generada ${sourceLabel} · ${result.credits_charged.toFixed(4)} creditos · ${imgCount} foto${imgCount === 1 ? '' : 's'} vinculada${imgCount === 1 ? '' : 's'}`,
+        'success'
+      );
+    }
+    this._navigateToProductDetail(entityId, productId);
   }
 
   async _createPendingProduct({ url = null, files = null, modalHandle = null } = {}) {
