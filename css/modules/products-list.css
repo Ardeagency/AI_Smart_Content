@@ -201,13 +201,25 @@
    Modal: Adjuntar producto (URL / archivos)
    ============================================================ */
 
-.attach-product-modal {
-  max-width: 880px;
-  width: min(880px, 92vw);
+/* Backdrop: pure black + blur (glass-black style, sin tinte morado del default) */
+.modal:has(.attach-product-modal) > .modal-overlay {
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Modal-content: card sólido (bg-card + border-divider), nada de glass translúcido */
+.attach-product-modal.modal-content {
+  max-width: min(860px, calc(100vw - 2rem));
+  width: 100%;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .attach-product-intro {
-  margin: 0 0 1.1rem;
+  margin: 0 0 1.25rem;
   color: var(--text-muted);
   font-size: 0.88rem;
   line-height: 1.5;
@@ -215,50 +227,65 @@
 
 .attach-product-options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
+@media (max-width: 720px) {
+  .attach-product-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cards internas: mismo bg que el modal pero con border-divider visible. */
 .attach-product-option {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.9rem;
   padding: 1.1rem;
   background: var(--bg-card, #141517);
-  border: 1px solid var(--border-color, #242424);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: var(--radius-md, 12px);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.attach-product-option:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: #16181a;
 }
 
 .attach-product-option-head {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .attach-product-option-icon {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-divider, #242424);
   color: var(--text-primary, #fff);
   font-size: 0.95rem;
 }
 
-.attach-product-option-head h4 {
-  margin: 0 0 0.3rem;
-  font-size: 0.95rem;
+.attach-product-option-title {
+  margin: 0;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #fff);
+  letter-spacing: -0.01em;
 }
 
-.attach-product-option-head p {
+.attach-product-option-desc {
   margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.82rem;
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
@@ -269,27 +296,33 @@
 }
 
 .attach-product-field-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .attach-product-url-input {
   width: 100%;
-  padding: 0.55rem 0.7rem;
+  padding: 0.6rem 0.75rem;
   font-size: 0.85rem;
   color: var(--text-primary, #fff);
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border-color, #242424);
+  background: var(--bg-tertiary, #000);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 8px;
   outline: none;
   transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.attach-product-url-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.55;
 }
 
 .attach-product-url-input:focus {
-  border-color: var(--text-muted, rgba(255, 255, 255, 0.35));
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .attach-product-dropzone {
@@ -297,11 +330,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   padding: 1.4rem 1rem;
   text-align: center;
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.025));
-  border: 1px dashed var(--border-color, #242424);
+  background: var(--bg-tertiary, #000);
+  border: 1px dashed var(--border-divider, #2a2a2a);
   border-radius: 10px;
   cursor: pointer;
   color: var(--text-muted);
@@ -310,26 +343,27 @@
 }
 
 .attach-product-dropzone:hover,
-.attach-product-dropzone:focus,
+.attach-product-dropzone:focus-visible,
 .attach-product-dropzone.is-dragover {
-  border-color: var(--text-muted, rgba(255, 255, 255, 0.35));
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.03);
   outline: none;
 }
 
-.attach-product-dropzone i {
-  font-size: 1.5rem;
-  opacity: 0.7;
+.attach-product-dropzone > i {
+  font-size: 1.35rem;
+  opacity: 0.6;
 }
 
 .attach-product-dropzone-text {
   color: var(--text-primary, #fff);
   font-weight: 500;
+  font-size: 0.83rem;
 }
 
 .attach-product-dropzone-hint {
-  font-size: 0.72rem;
-  opacity: 0.7;
+  font-size: 0.7rem;
+  opacity: 0.6;
 }
 
 .attach-product-file-list {
@@ -350,8 +384,8 @@
   padding: 0.4rem 0.55rem;
   font-size: 0.78rem;
   color: var(--text-primary, #fff);
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border-color, #242424);
+  background: var(--bg-tertiary, #000);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 6px;
 }
 
@@ -374,24 +408,18 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.6rem 0.9rem;
+  padding: 0.65rem 0.9rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary, #fff);
-  background: var(--bg-secondary, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .attach-product-submit:hover {
-  background: var(--brillo-hover, rgba(255, 255, 255, 0.08));
-  border-color: var(--text-muted, rgba(255, 255, 255, 0.25));
-}
-
-@media (max-width: 720px) {
-  .attach-product-options {
-    grid-template-columns: 1fr;
-  }
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
