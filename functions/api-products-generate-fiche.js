@@ -444,14 +444,42 @@ async function scrapeProductFromUrl(targetUrl) {
     candidates.forEach((s) => { if (!result.images.includes(s)) result.images.push(s); });
   }
 
-  // Resolver URLs relativas y deduplicar
+  // Resolver URLs relativas
   const baseUrl = new URL(targetUrl);
-  result.images = [...new Set(
-    result.images.map((u) => {
-      try { return new URL(decodeHtmlEntities(u), baseUrl).toString(); }
-      catch (_) { return null; }
-    }).filter((u) => u && /^https?:\/\//i.test(u))
-  )];
+  const resolved = result.images.map((u) => {
+    try { return new URL(decodeHtmlEntities(u), baseUrl).toString(); }
+    catch (_) { return null; }
+  }).filter((u) => u && /^https?:\/\//i.test(u));
+
+  // Dedup inteligente: el mismo asset puede aparecer a varios tamaños y/o con
+  // distintos query params (Shopify CDN sirve pedal.jpg, pedal_800x.jpg,
+  // pedal.jpg?v=123). Normalizamos a una clave "stem" para deduplicar pero
+  // conservamos la URL original mas grande (sin transform o con el numero
+  // mas alto si esta presente).
+  const normalizeKey = (url) => {
+    try {
+      const u = new URL(url);
+      u.search = '';  // strip ?v=, ?width=, etc.
+      u.hash = '';
+      // Sacar suffixes de transform tipo _800x, _x600, _500x500, _small, _medium, _large
+      u.pathname = u.pathname.replace(/_(\d+x\d*|x\d+|\d+x|small|medium|large|grande|thumb|thumbnail|original|master|compact)\./i, '.');
+      return u.toString().toLowerCase();
+    } catch (_) {
+      return url.toLowerCase();
+    }
+  };
+  const sizeHint = (url) => {
+    // Numero mas grande presente en el path = mas resolucion = mejor candidato
+    const m = url.match(/_(\d{3,5})(?:x\d*)?\./i);
+    return m ? parseInt(m[1], 10) : 0;
+  };
+  const byKey = new Map();
+  for (const u of resolved) {
+    const key = normalizeKey(u);
+    const existing = byKey.get(key);
+    if (!existing || sizeHint(u) > sizeHint(existing)) byKey.set(key, u);
+  }
+  result.images = [...byKey.values()];
 
   return result;
 }
