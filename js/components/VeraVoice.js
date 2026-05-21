@@ -102,27 +102,30 @@
           dynamicVariables: session.dynamic_variables || {},
 
           onConnect: (props) => {
-            console.log("[VeraVoice] connected", props);
+            window.veraVoiceDebug = { phase: "connected", at: new Date().toISOString(), props };
+            console.error("%c[VeraVoice] CONNECTED", "background:#1ed760;color:#000;font-size:14px;padding:4px;", props);
             this._active = true;
             this.onState("listening");
           },
           onDisconnect: (details) => {
-            console.warn("[VeraVoice] disconnected", JSON.stringify(details, null, 2));
+            window.veraVoiceDebug = { phase: "disconnected", at: new Date().toISOString(), details };
+            console.error("%c[VeraVoice] DISCONNECTED", "background:#ff5470;color:#000;font-size:14px;padding:4px;", JSON.parse(JSON.stringify(details ?? {})));
             this._active = false;
             this._conversation = null;
             const closeCode = details?.closeCode;
-            const closeReason = details?.closeReason || details?.context?.reason;
+            const closeReason = details?.closeReason || details?.context?.reason || details?.message;
             const reason = details?.reason;
-            if (reason === "error" || closeCode >= 4000) {
-              this.onState("error", {
-                message: `Conexión cerrada (${closeCode || reason}): ${closeReason || details?.message || "sin detalle"}`,
-              });
+            if (reason === "error" || (closeCode && closeCode !== 1000)) {
+              const visibleMsg = `WS cerrado code=${closeCode || "?"} reason=${closeReason || "(sin razón)"}`;
+              this.onState("error", { message: visibleMsg });
+              this.onMessage("agent", `[debug voz] ${visibleMsg}`);
             } else {
               this.onState("idle");
             }
           },
           onError: (msg, context) => {
-            console.error("[VeraVoice] error", msg, context);
+            window.veraVoiceDebug = { phase: "error", at: new Date().toISOString(), msg, context };
+            console.error("%c[VeraVoice] ERROR", "background:#ff5470;color:#fff;font-size:14px;padding:4px;", msg, context);
             const err = new Error(typeof msg === "string" ? msg : "Error en sesión de voz");
             this.onState("error", { message: err.message });
             this.onError(err);
