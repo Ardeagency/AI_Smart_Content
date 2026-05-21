@@ -331,23 +331,27 @@ exports.handler = async (event) => {
     return fail(event, 500, `Error actualizando producto: ${err.message}`);
   }
 
-  // Insertar product_images (la primera = principal)
+  // Insertar product_images (la primera = principal). Si ya existen imagenes del placeholder
+  // las dejamos como estan (UPSERT no aplica por unique constraint; usamos INSERT batch).
   const imageRows = imageUrls.map((url, i) => ({
     product_id: productId,
     image_url: url,
     image_type: i === 0 ? 'principal' : 'secundaria',
     image_order: i
   }));
+  let imagesInserted = 0;
+  let imagesError = null;
   try {
-    await supabaseRest({
+    const inserted = await supabaseRest({
       url: env.url, serviceKey: env.serviceKey,
       path: 'product_images',
       method: 'POST',
       body: imageRows
     });
+    imagesInserted = Array.isArray(inserted) ? inserted.length : imageRows.length;
   } catch (err) {
-    console.error('product_images insert error:', err.message);
-    // No fallamos el request — la ficha textual ya esta. Las imagenes el user puede subirlas manual.
+    imagesError = err.message || String(err);
+    console.error('[generate-fiche] product_images insert error:', imagesError, JSON.stringify(err.details || {}));
   }
 
   return {
@@ -362,6 +366,11 @@ exports.handler = async (event) => {
         input: inputTokens,
         output: outputTokens,
         vision_images: imageUrls.length
+      },
+      images: {
+        attempted: imageRows.length,
+        inserted: imagesInserted,
+        error: imagesError
       }
     })
   };

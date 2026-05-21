@@ -75,6 +75,14 @@
     const close = () => {
       modal.remove();
       document.removeEventListener('keydown', onKey);
+      // A11y: si activamos el portal antes (aria-hidden false) y ya no quedan
+      // modales montados ahi, restauramos aria-hidden="true".
+      if (portalA11yRestored) {
+        const portalEl = document.getElementById('modals-portal');
+        if (portalEl && portalEl.children.length === 0) {
+          portalEl.setAttribute('aria-hidden', 'true');
+        }
+      }
       if (typeof onClose === 'function') onClose();
       // Devolver foco al disparador (botón que abrió el modal, link, etc.).
       // Si el elemento ya no está en el DOM, dejar el foco donde caiga natural.
@@ -82,6 +90,8 @@
         try { previousFocus.focus(); } catch (_) {}
       }
     };
+    // Bandera setada justo despues del appendChild (ver mas abajo).
+    let portalA11yRestored = false;
 
     const onKey = (e) => {
       if (e.key === 'Escape') { close(); return; }
@@ -103,6 +113,14 @@
       ? (document.getElementById('modals-portal') || document.body)
       : (parentEl || document.body);
     target.appendChild(modal);
+
+    // A11y: si el target es #modals-portal y tenia aria-hidden="true" por defecto,
+    // lo desactivamos mientras este modal viva. Sin esto el navegador bloquea
+    // el foco dentro del modal porque el ancestro esta marcado como oculto.
+    if (target && target.id === 'modals-portal' && target.getAttribute('aria-hidden') === 'true') {
+      target.setAttribute('aria-hidden', 'false');
+      portalA11yRestored = true;
+    }
 
     // Foco inicial: primer focusable del body, o el botón de cerrar como
     // fallback. Espera un microtick para que el navegador termine el layout

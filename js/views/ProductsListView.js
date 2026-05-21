@@ -469,23 +469,23 @@ class ProductsListView extends BaseView {
         <section class="attach-product-step attach-product-step--form" data-panel="attach" hidden>
           <div class="attach-product-field-group" data-group="photos">
             <span class="attach-product-field-label">Fotos del producto</span>
-            <label class="attach-product-dropzone" tabindex="0">
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir fotos del producto">
               <input type="file" class="attach-product-photos-input" multiple accept="image/jpeg,image/png,image/webp,image/jpg" hidden />
               <i class="fas fa-image" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">Arrastra fotos o hace click para elegirlas</span>
               <span class="attach-product-dropzone-hint">JPG, PNG, WebP · max 10 imagenes · 25MB c/u</span>
-            </label>
+            </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
 
           <div class="attach-product-field-group" data-group="files">
             <span class="attach-product-field-label">Archivos del producto</span>
-            <label class="attach-product-dropzone" tabindex="0">
+            <div class="attach-product-dropzone" tabindex="0" role="button" aria-label="Subir archivos del producto">
               <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden />
               <i class="fas fa-paperclip" aria-hidden="true"></i>
               <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
               <span class="attach-product-dropzone-hint">PDF, DOC, DOCX, TXT, MD</span>
-            </label>
+            </div>
             <ul class="attach-product-file-list" hidden></ul>
           </div>
 
@@ -757,7 +757,18 @@ class ProductsListView extends BaseView {
       this._invalidateCache();
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
       modalHandle?.close();
-      this._showNotification(`Ficha generada · ${result.credits_charged.toFixed(4)} creditos`, 'success');
+      if (result.images?.error) {
+        console.warn('[ProductsListView] imagenes no se vincularon:', result.images.error);
+        this._showNotification(
+          `Ficha generada · imagenes no se vincularon: ${result.images.error}`,
+          'error'
+        );
+      } else {
+        this._showNotification(
+          `Ficha generada · ${result.credits_charged.toFixed(4)} creditos · ${result.images?.inserted || 0} foto${(result.images?.inserted || 0) === 1 ? '' : 's'} vinculada${(result.images?.inserted || 0) === 1 ? '' : 's'}`,
+          'success'
+        );
+      }
       this._navigateToProductDetail(entityId, productId);
     } catch (err) {
       console.error('ProductsListView _analyzePhotosAndCreateProduct:', err);
