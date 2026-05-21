@@ -1244,6 +1244,27 @@ class VeraView extends (window.BaseView || class {}) {
     this.organizationName = '';
     this.supabase = null;
     this.userId = null;
+    this._initWidgetBridge();
+  }
+
+  /* ── Bridge para iframes sandbox de VERA (```html / ```artifact) ──
+     Escucha `vera_resize` desde iframes null-origin y ajusta su height.
+     Guard estático evita registrar el listener más de una vez si VeraView
+     se instancia varias veces durante la sesión. */
+  _initWidgetBridge() {
+    if (VeraView.__widgetBridgeBound) return;
+    VeraView.__widgetBridgeBound = true;
+    window.addEventListener('message', (event) => {
+      if (event.data?.type !== 'vera_resize') return;
+      const frames = document.querySelectorAll('.vera-sandbox-frame, .vera-artifact-frame');
+      frames.forEach((frame) => {
+        try {
+          if (frame.contentWindow === event.source) {
+            frame.style.height = (event.data.height + 24) + 'px';
+          }
+        } catch (_) { /* contentWindow puede ser inaccesible si el iframe se removió */ }
+      });
+    });
   }
 
   /* ── onEnter: auth + org data ────────────────────────── */
@@ -1756,24 +1777,36 @@ class VeraView extends (window.BaseView || class {}) {
     // 1. Extrae bloques interactivos propios antes de pasar a marked
     const { processed, blocks } = this._parseInteractiveBlocks(rawText);
 
-    // 2. Protege bloques legacy (chart/buttons) para que marked no los toque
+    // 2. Extrae bloques ```html y ```artifact ANTES de todo. Estos NO pasan por
+    //    DOMPurify — se inyectan crudos en un iframe sandbox null-origin
+    //    (sandbox="allow-scripts allow-forms allow-modals" SIN allow-same-origin
+    //    → el iframe no puede tocar localStorage/cookies del parent).
+    const htmlBlocks = [];
+    let safeText = processed.replace(/```(html|artifact)\n?([\s\S]*?)```/g, (_, type, code) => {
+      const id = `__hb_${htmlBlocks.length}__`;
+      htmlBlocks.push({ id, type: type.toLowerCase(), code: code.trim() });
+      return `\n\n${id}\n\n`;
+    });
+
+    // 3. Protege bloques legacy (chart/buttons) para que marked no los toque
     const legacyPlaceholders = [];
-    let safeText = processed.replace(/```(chart|vera-chart|viz|buttons|quickreplies|quick-replies|actions)([\s\S]*?)```/g, (match, lang, content) => {
+    safeText = safeText.replace(/```(chart|vera-chart|viz|buttons|quickreplies|quick-replies|actions)([\s\S]*?)```/g, (match, lang, content) => {
       const pid = `__legacy_${legacyPlaceholders.length}__`;
       legacyPlaceholders.push({ pid, lang: lang.toLowerCase(), content: content.replace(/^\n/, '') });
       return pid;
     });
 
-    // 3. marked convierte markdown estándar
+    // 4. marked convierte markdown estándar
     let html = window.marked.parse(safeText);
 
-    // 4. DOMPurify sanitiza (protege contra XSS del LLM)
+    // 5. DOMPurify sanitiza el markdown (NO los bloques html/artifact, que
+    //    fueron sacados antes y se reinyectan crudos como srcdoc del iframe).
     html = window.DOMPurify.sanitize(html, {
       ADD_TAGS: ['pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
       ADD_ATTR: ['class', 'onclick', 'target', 'rel']
     });
 
-    // 5. Restaura bloques legacy con sus renders originales
+    // 6. Restaura bloques legacy con sus renders originales
     legacyPlaceholders.forEach(({ pid, lang, content }) => {
       let legacyHtml = '';
       if (['chart', 'vera-chart', 'viz'].includes(lang)) {
@@ -1786,7 +1819,64 @@ class VeraView extends (window.BaseView || class {}) {
       html = html.replace(pid, legacyHtml);
     });
 
-    // 6. Inyecta bloques interactivos en sus placeholders (marked los envuelve en <p>)
+    // 7. Restaura bloques html/artifact como iframes sandboxed null-origin.
+    //    El bridge `vera_resize` postMessage lo escucha _initWidgetBridge().
+    htmlBlocks.forEach(({ id, type, code }) => {
+      const resizeScript = [
+        '<script>',
+        '(function(){',
+        'function r(){window.parent.postMessage({type:"vera_resize",height:document.documentElement.scrollHeight},"*");}',
+        'window.addEventListener("load",r);',
+        'try{new ResizeObserver(r).observe(document.body);}catch(e){}',
+        '})();',
+        '<\/script>'
+      ].join('');
+
+      const fullHtml = [
+        '<!DOCTYPE html><html><head>',
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width,initial-scale=1">',
+        '<style>',
+        '*{box-sizing:border-box;margin:0;padding:0}',
+        'body{font-family:system-ui,sans-serif;background:#0d0d0f;color:#f0eff5;padding:16px}',
+        '</style>',
+        '</head><body>',
+        code,
+        resizeScript,
+        '</body></html>'
+      ].join('');
+
+      // Para srcdoc: escapar & primero, luego " (orden importa).
+      const srcdoc = fullHtml
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+
+      let iframeHtml;
+      if (type === 'artifact') {
+        iframeHtml =
+          '<div class="vera-artifact-block">' +
+            '<div class="vera-artifact-bar">' +
+              '<span>⬡ Artifact · VERA</span>' +
+              '<button onclick="this.closest(\'.vera-artifact-block\').querySelector(\'iframe\').requestFullscreen()">⤢ expandir</button>' +
+            '</div>' +
+            '<iframe class="vera-artifact-frame" ' +
+              'sandbox="allow-scripts allow-forms allow-modals" ' +
+              'srcdoc="' + srcdoc + '"></iframe>' +
+          '</div>';
+      } else {
+        iframeHtml =
+          '<div class="vera-html-block">' +
+            '<iframe class="vera-sandbox-frame" ' +
+              'sandbox="allow-scripts allow-forms allow-modals" ' +
+              'srcdoc="' + srcdoc + '"></iframe>' +
+          '</div>';
+      }
+
+      // Marked puede envolver el placeholder solo o en <p>. Cubrimos ambos.
+      html = html.replace(`<p>${id}</p>`, iframeHtml).replace(id, iframeHtml);
+    });
+
+    // 8. Inyecta bloques interactivos en sus placeholders (marked los envuelve en <p>)
     blocks.forEach(block => {
       const re = new RegExp(`(<p>)?\\{\\{${block.id}\\}\\}(<\\/p>)?`, 'g');
       html = html.replace(re, this._renderInteractiveBlock(block));

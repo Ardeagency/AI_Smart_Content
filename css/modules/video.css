@@ -2825,6 +2825,47 @@
   cursor: pointer; transition: all 0.15s; color: inherit; font-family: inherit;
 }
 .vera-action-pill:hover { border-color: #8b7ff0; color: #8b7ff0; opacity: 1; background: rgba(139,127,240,0.08); }
+
+/* ── Widgets HTML (```html) y Artifacts (```artifact) ────
+   Iframes sandbox null-origin emitidos por VERA. Altura ajustada
+   por VeraView._initWidgetBridge() vía postMessage `vera_resize`. */
+.vera-html-block {
+  margin: 12px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+  background: #0d0d0f;
+  min-height: 80px;
+}
+.vera-sandbox-frame {
+  display: block; width: 100%; border: none;
+  min-height: 120px; transition: height 0.3s ease;
+}
+.vera-artifact-block {
+  margin: 12px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(139,127,240,0.3);
+  overflow: hidden;
+  background: #0d0d0f;
+}
+.vera-artifact-bar {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(139,127,240,0.2);
+  font-size: 12px; color: #8b7ff0;
+  font-family: system-ui, sans-serif;
+}
+.vera-artifact-bar button {
+  background: none;
+  border: 1px solid rgba(139,127,240,0.3);
+  color: #8b7ff0; border-radius: 6px;
+  padding: 3px 10px; font-size: 11px; cursor: pointer;
+}
+.vera-artifact-frame {
+  display: block; width: 100%; border: none;
+  min-height: 200px; transition: height 0.3s ease;
+}
 /* ── FIN VERA INTERACTIVE COMPONENTS ────────────────── */
 
 /* ── Adjuntos en composer ───────────────────────────── */
