@@ -101,16 +101,28 @@
           signedUrl: session.signed_url,
           dynamicVariables: session.dynamic_variables || {},
 
-          onConnect: () => {
+          onConnect: (props) => {
+            console.log("[VeraVoice] connected", props);
             this._active = true;
             this.onState("listening");
           },
-          onDisconnect: () => {
+          onDisconnect: (details) => {
+            console.warn("[VeraVoice] disconnected", JSON.stringify(details, null, 2));
             this._active = false;
             this._conversation = null;
-            this.onState("idle");
+            const closeCode = details?.closeCode;
+            const closeReason = details?.closeReason || details?.context?.reason;
+            const reason = details?.reason;
+            if (reason === "error" || closeCode >= 4000) {
+              this.onState("error", {
+                message: `Conexión cerrada (${closeCode || reason}): ${closeReason || details?.message || "sin detalle"}`,
+              });
+            } else {
+              this.onState("idle");
+            }
           },
-          onError: (msg) => {
+          onError: (msg, context) => {
+            console.error("[VeraVoice] error", msg, context);
             const err = new Error(typeof msg === "string" ? msg : "Error en sesión de voz");
             this.onState("error", { message: err.message });
             this.onError(err);
