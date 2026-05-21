@@ -286,37 +286,75 @@
       </section>`;
   },
 
+  /**
+   * Renderiza un control editable para un campo del schema brand.
+   * Soporta: text, textarea, array (multi-select pill), json, select (nicho_core).
+   */
+  _renderBrandFieldControl(field, type) {
+    const f = this.escapeHtml(field);
+    if (type === 'textarea') {
+      return `<textarea class="info-brand-field-value info-brand-textarea" data-field="${f}" data-editor-type="textarea" rows="3" spellcheck="true"></textarea>`;
+    }
+    if (type === 'json') {
+      return `<textarea class="info-brand-field-value info-brand-textarea info-brand-json" data-field="${f}" data-editor-type="json" rows="4" spellcheck="false"></textarea>`;
+    }
+    if (type === 'array') {
+      return `<div class="info-brand-array-editor info-brand-field-value" data-field="${f}" data-editor-type="array"></div>`;
+    }
+    if (type === 'select' && field === 'nicho_core') {
+      const opts = (window.BrandSchema?.NICHO_CORE_OPTIONS || [])
+        .map((o) => `<li class="info-brand-select__option" data-value="${this.escapeHtml(o.value)}" role="option">${this.escapeHtml(o.label)}</li>`)
+        .join('');
+      return `
+        <div class="info-brand-select info-brand-field-value" data-field="${f}" data-editor-type="select">
+          <button type="button" class="info-brand-select__trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="info-brand-select__value">Seleccionar nicho</span>
+            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+          </button>
+          <ul class="info-brand-select__panel" role="listbox" hidden>${opts}</ul>
+        </div>`;
+    }
+    // Default: text
+    return `<div class="info-brand-text-editor info-brand-field-value" data-field="${f}" data-editor-type="text"></div>`;
+  },
+
   renderBrandSchemaAsideHtml() {
-    const blocks = [
+    // Sección "Workspace": campos persistidos en organizations.
+    const workspaceBlocks = [
       { field: 'brand_name_oficial', label: 'Nombre de marca', type: 'text' },
       { field: 'name', label: 'Nombre del workspace', type: 'text' },
       { field: 'brand_slogan', label: 'Tagline / eslogan', type: 'textarea' },
       { field: 'level_of_autonomy', label: 'Nivel de autonomía', type: 'text' }
-    ]
-      .map(({ field, label, type }) => {
-        const f = this.escapeHtml(field);
-        const lab = this.escapeHtml(label);
-        let control = '';
-        if (type === 'text') {
-          control = `<div class="info-brand-text-editor info-brand-field-value" data-field="${f}" data-editor-type="text"></div>`;
-        } else if (type === 'textarea') {
-          control = `<textarea class="info-brand-field-value info-brand-textarea" data-field="${f}" data-editor-type="textarea" rows="3" spellcheck="true"></textarea>`;
-        }
-        return `
-      <div class="info-brand-field" data-brand-field="${f}">
-        <div class="info-brand-field-label">${lab}</div>
-        ${control}
-      </div>`;
-      })
-      .join('');
+    ];
+
+    // Sección "Marca": todos los campos del schema brand_container (fuente
+    // única en window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG). Sin esto, el
+    // panel INFO mostraba solo 4 campos del workspace y perdía nicho_core,
+    // propuesta_valor, arquetipo, verbal_dna, visual_dna, palabras_clave,
+    // palabras_prohibidas, mision_vision, sub_nichos, objetivos_estrategicos.
+    const brandBlocks = window.BrandSchema?.BRAND_SCHEMA_BLOCKS_ORG || [];
+
+    const renderBlocks = (arr) => arr.map(({ field, label, type }) => `
+      <div class="info-brand-field" data-brand-field="${this.escapeHtml(field)}">
+        <div class="info-brand-field-label">${this.escapeHtml(label)}</div>
+        ${this._renderBrandFieldControl(field, type)}
+      </div>`).join('');
 
     return `
       <div class="info-brand-aside-inner">
-        <h3 class="info-section-title" id="infoBrandSchemaHeading">Organización</h3>
+        <h3 class="info-section-title" id="infoBrandSchemaHeading">Workspace</h3>
         <p class="info-brand-aside-lead">Campos persistidos en la fila del workspace.</p>
         <div class="info-brand-fields">
-          ${blocks}
+          ${renderBlocks(workspaceBlocks)}
         </div>
+
+        ${brandBlocks.length ? `
+          <h3 class="info-section-title" style="margin-top:1.25rem">Marca</h3>
+          <p class="info-brand-aside-lead">Identidad, nicho y ADN — viven en brand_containers.</p>
+          <div class="info-brand-fields">
+            ${renderBlocks(brandBlocks)}
+          </div>
+        ` : ''}
       </div>
     `;
   },
