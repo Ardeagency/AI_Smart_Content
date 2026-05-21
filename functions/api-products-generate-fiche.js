@@ -425,16 +425,17 @@ async function scrapeProductFromUrl(targetUrl) {
   }
   if (!result.description) result.description = readMeta(html, [['name', 'description']]);
 
-  // 4) <img> filtrados si necesitamos mas imagenes
+  // 4) <img> filtrados si necesitamos mas imagenes (cubre ML data-flagship-src, srcset, etc.)
   if (result.images.length < 3) {
-    const imgRe = /<img\b[^>]*?(?:\bsrc|\bdata-src|\bdata-original|\bdata-lazy-src)=["']([^"']+)["'][^>]*>/gi;
+    const imgRe = /<img\b[^>]*?(?:\bsrc|\bdata-src|\bdata-original|\bdata-lazy-src|\bdata-flagship-src|\bdata-zoom|\bdata-srcset|\bsrcset)=["']([^"']+)["'][^>]*>/gi;
     const candidates = [];
     let mm;
-    while ((mm = imgRe.exec(html)) && candidates.length < 25) {
-      const src = mm[1];
+    while ((mm = imgRe.exec(html)) && candidates.length < 30) {
+      let src = mm[1];
+      // srcset: agarra solo la primera URL (la mas grande suele estar al final, pero la primera ya sirve)
+      if (src.includes(',') && /\s+\d+w/.test(src)) src = src.split(',').pop().trim().split(/\s+/)[0];
       if (/^data:/.test(src)) continue;
-      if (/icon|logo|sprite|placeholder|pixel|tracker|badge|flag-|cart|menu|favicon|gravatar/i.test(src)) continue;
-      // Filtro por width/height inline si vienen
+      if (/icon|logo|sprite|placeholder|pixel|tracker|badge|flag-|cart|menu|favicon|gravatar|spinner|chevron|arrow/i.test(src)) continue;
       const fullTag = mm[0];
       const wMatch = fullTag.match(/\bwidth=["']?(\d+)/i);
       const hMatch = fullTag.match(/\bheight=["']?(\d+)/i);
@@ -443,6 +444,45 @@ async function scrapeProductFromUrl(targetUrl) {
       candidates.push(src);
     }
     candidates.forEach((s) => { if (!result.images.includes(s)) result.images.push(s); });
+  }
+
+  // 5) Walker JSON recursivo — extrae cualquier URL que parezca imagen desde
+  // CUALQUIER blob JSON en el HTML. Cubre Mercado Libre (window.__PRELOADED_STATE__),
+  // headless React/Vue stores con state hidratada, y JSON-LD anidado.
+  if (result.images.length < 3) {
+    const imageUrlRe = /https?:\/\/[^\s"'<>]+\.(?:jpe?g|png|webp|avif|gif)(?:\?[^\s"'<>]*)?/i;
+    const collectImgUrls = (obj, out, depth = 0) => {
+      if (depth > 6 || out.length >= 30) return;
+      if (obj == null) return;
+      if (typeof obj === 'string') {
+        if (imageUrlRe.test(obj) && !/icon|logo|sprite|placeholder|pixel|tracker|favicon/i.test(obj)) {
+          out.push(obj.match(imageUrlRe)[0]);
+        }
+        return;
+      }
+      if (Array.isArray(obj)) {
+        for (const it of obj) collectImgUrls(it, out, depth + 1);
+        return;
+      }
+      if (typeof obj === 'object') {
+        for (const k in obj) collectImgUrls(obj[k], out, depth + 1);
+      }
+    };
+
+    // (a) <script type="application/json"> — los modernos
+    const jsonScripts = [...html.matchAll(/<script[^>]+type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+    // (b) <script>window.__X__ = {...};</script> — patron Mercado Libre, Next.js, etc.
+    const stateScripts = [...html.matchAll(/<script\b[^>]*>[\s\S]*?(?:window\.__[A-Z_]+__|window\.[A-Z_]+_DATA)\s*=\s*(\{[\s\S]*?\})\s*;?\s*<\/script>/gi)];
+
+    const collected = [];
+    for (const m of [...jsonScripts.map((x) => x[1]), ...stateScripts.map((x) => x[1])]) {
+      try {
+        const obj = JSON.parse(m.trim());
+        collectImgUrls(obj, collected);
+      } catch (_) { /* malformed, skip */ }
+      if (collected.length >= 30) break;
+    }
+    collected.forEach((s) => { if (!result.images.includes(s)) result.images.push(s); });
   }
 
   // Resolver URLs relativas
