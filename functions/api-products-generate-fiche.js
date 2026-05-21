@@ -40,6 +40,20 @@ const MODEL = 'gpt-4o';
 const MAX_IMAGES = 10;
 const MAX_OUTPUT_TOKENS = 900;
 
+const TIPO_PRODUCTO_ENUM = [
+  'bebida', 'bebida_alcoholica', 'agua', 'energetica',
+  'alimento', 'snack', 'suplemento_alimenticio',
+  'cosmetico', 'skincare', 'maquillaje', 'perfume', 'cuidado_cabello', 'cuidado_personal', 'higiene',
+  'app', 'electronico', 'smartphone', 'tablet', 'accesorio_tech', 'gadget',
+  'ropa', 'calzado', 'accesorio_moda', 'reloj', 'joyeria',
+  'suplemento', 'vitamina', 'fitness', 'bienestar', 'salud',
+  'hogar', 'decoracion', 'mueble', 'electrodomestico',
+  'servicio', 'educacion', 'financiero', 'salud_servicio', 'entretenimiento',
+  'libro', 'juego', 'juguete',
+  'automotriz', 'deportivo',
+  'otro'
+];
+
 const FICHE_SCHEMA = {
   name: 'product_fiche',
   strict: true,
@@ -47,6 +61,7 @@ const FICHE_SCHEMA = {
     type: 'object',
     additionalProperties: false,
     required: [
+      'tipo_producto',
       'nombre_producto',
       'descripcion_producto',
       'beneficios_principales',
@@ -56,6 +71,11 @@ const FICHE_SCHEMA = {
       'materiales_composicion'
     ],
     properties: {
+      tipo_producto: {
+        type: 'string',
+        enum: TIPO_PRODUCTO_ENUM,
+        description: 'Categoria principal del producto. Elegi la mas especifica que aplique. Si nada calza, "otro".'
+      },
       nombre_producto: {
         type: 'string',
         description: 'Nombre comercial del producto, sin acentos agudos en vocales (a/e/i/o/u limpias). Mantener ñ.'
@@ -329,6 +349,39 @@ function buildScrapedSummary(s) {
   return lines.join('\n');
 }
 
+// Parsea un precio scrapeado que puede venir como number, "12.99", "1,299.00"
+// (formato US), "1.299,00" (formato latino), "$ 12.99", etc. Devuelve numero
+// o null si no se pudo. Esquema:
+//  - Si hay coma Y punto: el ultimo separador es decimal
+//  - Si hay solo coma: si tiene 2 digitos al final, coma=decimal; sino, miles
+//  - Si hay solo punto: idem
+function parseScrapedPrice(raw) {
+  if (raw == null) return null;
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  // Quitar simbolos de moneda y espacios
+  s = s.replace(/[^\d.,-]/g, '');
+  if (!s) return null;
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+  if (hasComma && hasDot) {
+    // El ultimo separador (mas a la derecha) es el decimal
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (hasComma) {
+    // Solo coma: si tras la coma hay exactamente 2 digitos => decimal
+    const parts = s.split(',');
+    if (parts.length === 2 && parts[1].length === 2) s = s.replace(',', '.');
+    else s = s.replace(/,/g, '');
+  }
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
 exports.handler = async (event) => {
   try {
     return await handlerImpl(event);
@@ -559,7 +612,9 @@ async function handlerImpl(event) {
   }
 
   // Actualizar producto con la ficha generada
+  const tipoFromAi = TIPO_PRODUCTO_ENUM.includes(fiche.tipo_producto) ? fiche.tipo_producto : 'otro';
   const updates = {
+    tipo_producto: tipoFromAi,
     nombre_producto: String(fiche.nombre_producto || '').slice(0, 200) || 'Producto sin nombre',
     descripcion_producto: String(fiche.descripcion_producto || '').slice(0, 4000),
     beneficios_principales: Array.isArray(fiche.beneficios_principales) ? fiche.beneficios_principales.slice(0, 12) : [],
@@ -580,6 +635,14 @@ async function handlerImpl(event) {
       ...(sourceUrl ? { ai_source_url: sourceUrl, ai_scraped_price: scraped?.price, ai_scraped_currency: scraped?.currency } : {})
     }
   };
+  // Precio + moneda desde scraping (URL flow). Para photos no hay datos confiables.
+  if (scraped) {
+    const parsedPrice = parseScrapedPrice(scraped.price);
+    if (parsedPrice != null && parsedPrice > 0) updates.precio_producto = parsedPrice;
+    if (typeof scraped.currency === 'string' && /^[A-Z]{3}$/.test(scraped.currency.toUpperCase())) {
+      updates.moneda = scraped.currency.toUpperCase();
+    }
+  }
   if (sourceUrl) updates.url_producto = sourceUrl;
 
   try {
