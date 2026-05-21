@@ -455,13 +455,6 @@ class ProductsListView extends BaseView {
 
         <!-- Paso 2a: URL -->
         <section class="attach-product-step attach-product-step--form" data-panel="url" hidden>
-          <header class="attach-product-step-head">
-            <button type="button" class="attach-product-back" data-back="picker" aria-label="Volver">
-              <i class="fas fa-arrow-left" aria-hidden="true"></i>
-              <span>Volver</span>
-            </button>
-            <h4 class="attach-product-step-title"><i class="fas fa-link" aria-hidden="true"></i> URL del producto</h4>
-          </header>
           <label class="attach-product-field">
             <span class="attach-product-field-label">Enlace</span>
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
@@ -474,13 +467,6 @@ class ProductsListView extends BaseView {
 
         <!-- Paso 2b: Archivos -->
         <section class="attach-product-step attach-product-step--form" data-panel="files" hidden>
-          <header class="attach-product-step-head">
-            <button type="button" class="attach-product-back" data-back="picker" aria-label="Volver">
-              <i class="fas fa-arrow-left" aria-hidden="true"></i>
-              <span>Volver</span>
-            </button>
-            <h4 class="attach-product-step-title"><i class="fas fa-paperclip" aria-hidden="true"></i> Adjuntar archivos</h4>
-          </header>
           <label class="attach-product-dropzone" tabindex="0">
             <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,image/*,video/*" hidden />
             <i class="fas fa-upload" aria-hidden="true"></i>
@@ -514,22 +500,54 @@ class ProductsListView extends BaseView {
     const root = handle.bodyEl;
     const wizard = root.querySelector('.attach-product-wizard');
 
+    // Inyecta el boton "Volver" en el header del modal (queda junto al titulo).
+    const header = handle.modal.querySelector('.modal-header');
+    const titleEl = header?.querySelector('h3');
+    let backBtn = null;
+    let headerLeft = null;
+    if (header && titleEl) {
+      headerLeft = document.createElement('div');
+      headerLeft.className = 'attach-product-header-left';
+      backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'attach-product-back';
+      backBtn.hidden = true;
+      backBtn.setAttribute('aria-label', 'Volver');
+      backBtn.innerHTML = '<i class="fas fa-arrow-left" aria-hidden="true"></i><span>Volver</span>';
+      backBtn.addEventListener('click', () => goToStep('picker'));
+      header.insertBefore(headerLeft, header.firstChild);
+      headerLeft.appendChild(backBtn);
+      headerLeft.appendChild(titleEl);
+    }
+
+    const stepConfig = {
+      picker:  { title: 'Adjuntar producto',          icon: null,            back: false },
+      url:     { title: 'URL del producto',           icon: 'fa-link',       back: true  },
+      files:   { title: 'Adjuntar archivos',          icon: 'fa-paperclip',  back: true  },
+      loading: { title: 'Creando ficha del producto', icon: null,            back: false },
+    };
+
     const goToStep = (step) => {
       if (!wizard) return;
       wizard.setAttribute('data-step', step);
       root.querySelectorAll('[data-panel]').forEach((panel) => {
         panel.hidden = panel.getAttribute('data-panel') !== step;
       });
+      const cfg = stepConfig[step];
+      if (cfg && titleEl) {
+        const iconHtml = cfg.icon
+          ? `<i class="fas ${cfg.icon} attach-product-header-icon" aria-hidden="true"></i>`
+          : '';
+        titleEl.innerHTML = `${iconHtml}<span>${this.escapeHtml(cfg.title)}</span>`;
+      }
+      if (backBtn) backBtn.hidden = !(cfg && cfg.back);
       const visible = root.querySelector(`[data-panel="${step}"]`);
-      const focusable = visible?.querySelector('input, button:not(.attach-product-back)');
+      const focusable = visible?.querySelector('input, button');
       try { focusable?.focus(); } catch (_) {}
     };
 
     root.querySelectorAll('[data-go]').forEach((btn) => {
       btn.addEventListener('click', () => goToStep(btn.getAttribute('data-go')));
-    });
-    root.querySelectorAll('[data-back]').forEach((btn) => {
-      btn.addEventListener('click', () => goToStep(btn.getAttribute('data-back')));
     });
 
     const urlInput = root.querySelector('.attach-product-url-input');
