@@ -2858,20 +2858,67 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* — Mermaid diagrams ————————————————————————————————————— */
+/* — Mermaid diagrams (premium card) ——————————————————————— */
 .gpt-msg-content .gpt-md-mermaid {
-  margin: 14px 0;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  margin: 18px 0;
+  padding: 22px 20px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.025) 0%, transparent 60%),
+    linear-gradient(180deg, #131418 0%, #0e0f12 100%);
+  border: 1px solid #242429;
+  border-radius: 14px;
   overflow-x: auto;
   text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 40px -24px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+/* Línea de acento sutil arriba */
+.gpt-msg-content .gpt-md-mermaid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+  border-radius: 1px;
 }
 .gpt-msg-content .gpt-md-mermaid svg {
   max-width: 100%;
   height: auto;
   display: inline-block;
+  /* Bordes redondeados en los nodos del diagrama, vía estilizado del SVG */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+/* Mejor estilo a los rect/path internos del diagrama */
+.gpt-msg-content .gpt-md-mermaid svg .node rect,
+.gpt-msg-content .gpt-md-mermaid svg .node polygon,
+.gpt-msg-content .gpt-md-mermaid svg .node circle,
+.gpt-msg-content .gpt-md-mermaid svg .node ellipse,
+.gpt-msg-content .gpt-md-mermaid svg .node path {
+  rx: 8;
+  ry: 8;
+  transition: filter 0.2s ease;
+}
+.gpt-msg-content .gpt-md-mermaid svg .node:hover rect,
+.gpt-msg-content .gpt-md-mermaid svg .node:hover polygon,
+.gpt-msg-content .gpt-md-mermaid svg .node:hover path {
+  filter: brightness(1.15);
+}
+/* Glow sutil en arrows */
+.gpt-msg-content .gpt-md-mermaid svg .edgePath .path,
+.gpt-msg-content .gpt-md-mermaid svg .flowchart-link {
+  stroke-width: 1.8px;
+  opacity: 0.85;
+}
+/* Texto de los nodos: más legible */
+.gpt-msg-content .gpt-md-mermaid svg .nodeLabel,
+.gpt-msg-content .gpt-md-mermaid svg .label {
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 .gpt-msg-content .gpt-md-mermaid-fallback {
   margin: 0;

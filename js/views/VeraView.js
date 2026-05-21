@@ -485,14 +485,109 @@ async function ensureMermaid() {
     if (window.mermaid?.initialize) {
       window.mermaid.initialize({
         startOnLoad: false,
-        theme: 'dark',
+        theme: 'base',
         securityLevel: 'strict',
         fontFamily: 'inherit',
+        // Tema premium matching AI Smart Content. Reemplaza el 'dark' genérico
+        // de mermaid (azules pastel) con paleta del brand (neutros oscuros +
+        // accent vera-red en clusters).
+        themeVariables: {
+          // Canvas
+          background: 'transparent',
+          // Default node
+          primaryColor: '#16171b',
+          primaryBorderColor: '#3a3a44',
+          primaryTextColor: '#E8E5EC',
+          // Edges (arrows)
+          lineColor: '#6f6f78',
+          // Edge labels
+          edgeLabelBackground: '#16171b',
+          tertiaryColor: '#16171b',
+          // Subgraphs (clusters)
+          clusterBkg: 'rgba(255,255,255,0.02)',
+          clusterBorder: '#2c2c34',
+          titleColor: '#D4D1D8',
+          // Flowchart specifics
+          nodeBorder: '#3a3a44',
+          mainBkg: '#16171b',
+          secondBkg: '#1a1b1f',
+          // Misc
+          fontSize: '14px',
+        },
+        flowchart: {
+          curve: 'basis',
+          padding: 20,
+          nodeSpacing: 60,
+          rankSpacing: 70,
+          htmlLabels: true,
+        },
+        sequence: {
+          actorMargin: 60,
+          messageMargin: 40,
+        },
       });
     }
     return window.mermaid;
   })();
   return VERA_RICH_LIBS.mermaidLoading;
+}
+
+/**
+ * Pre-procesa el código mermaid: detecta emojis/keywords en labels y aplica
+ * clases semánticas (critical/warning/success/info) automáticamente. Vera
+ * sigue escribiendo "🔴 CRISIS" como antes, esto convierte los emojis en
+ * colores reales en vez de mostrar todos los nodos del mismo color.
+ *
+ * Heurística:
+ *   - 🔴 / 🚨 / "crisis|amenaza|riesgo|urgente|error" → critical (rojo)
+ *   - 🟡 / ⚠️ / "oportunidad|alerta|warn" → warning (ámbar)
+ *   - 🟢 / ✅ / "éxito|positivo|success|ok" → success (verde)
+ *   - 🔵 / 💡 / "insight|info|tip" → info (azul)
+ */
+function applyMermaidSemanticClasses(src) {
+  if (!src || typeof src !== 'string') return src;
+
+  // Captura definiciones de nodo: id + apertura + label + cierre.
+  // Soporta los shapes comunes de mermaid: [], (), {}, [[]], [()], (()), {{}}.
+  const nodeRegex = /(\b[A-Za-z][\w]*)\s*(\[\[|\[\(|\(\(|\(|\[|\{\{|\{|>)([^\]\)\}>]*?)(\]\]|\)\]|\)\)|\)|\]|\}\}|\})/g;
+
+  const patterns = [
+    { re: /🔴|🚨|\b(crisis|amenaza|riesgo|urgente|error|critical|critico|crítico)\b/i, cls: 'sem-critical' },
+    { re: /🟡|⚠️|⚠|\b(oportunidad|alerta|warning|warn|caution)\b/i,                    cls: 'sem-warning' },
+    { re: /🟢|✅|✓|\b(éxito|exito|positivo|success|ok|good|gano|gana)\b/i,             cls: 'sem-success' },
+    { re: /🔵|💡|ℹ️|ℹ|\b(insight|info|tip|nota|note)\b/i,                              cls: 'sem-info' },
+  ];
+
+  const classMap = { 'sem-critical': [], 'sem-warning': [], 'sem-success': [], 'sem-info': [] };
+  let m;
+  while ((m = nodeRegex.exec(src)) !== null) {
+    const nodeId = m[1];
+    const label = m[3] || '';
+    // Skip palabras reservadas de mermaid (graph, flowchart, subgraph, end, class, classDef, click)
+    if (/^(graph|flowchart|subgraph|end|class|classDef|click|style|linkStyle|direction)$/i.test(nodeId)) continue;
+    for (const p of patterns) {
+      if (p.re.test(label)) {
+        if (!classMap[p.cls].includes(nodeId)) classMap[p.cls].push(nodeId);
+        break; // primer match gana
+      }
+    }
+  }
+
+  const anySemantic = Object.values(classMap).some(arr => arr.length > 0);
+  if (!anySemantic) return src;
+
+  // Apéndice de classDef + asignaciones. Colores en hex (mermaid no acepta vars CSS).
+  const appendix = [
+    '',
+    'classDef sem-critical fill:#2a1414,stroke:#ff5b5b,stroke-width:2px,color:#ffd6d6',
+    'classDef sem-warning  fill:#2a2410,stroke:#f5b942,stroke-width:2px,color:#ffe6b0',
+    'classDef sem-success  fill:#0f2a1c,stroke:#3ec47d,stroke-width:2px,color:#c0f0d0',
+    'classDef sem-info     fill:#15192e,stroke:#7a8fff,stroke-width:2px,color:#d0d8f5',
+  ];
+  for (const [cls, ids] of Object.entries(classMap)) {
+    if (ids.length > 0) appendix.push(`class ${ids.join(',')} ${cls}`);
+  }
+  return src + '\n' + appendix.join('\n');
 }
 
 // Mermaid v10 inyecta un <div id="d{userId}"> temporal en <body> para medir
@@ -1212,8 +1307,17 @@ class VeraView extends (window.BaseView || class {}) {
         mermaidNodes.forEach(async (node, i) => {
           if (node.dataset.veraProcessed) return;
           node.dataset.veraProcessed = '1';
-          const src = node.dataset.mermaid || '';
-          if (!src) return;
+          const rawSrc = node.dataset.mermaid || '';
+          if (!rawSrc) return;
+          // Pre-procesar: detecta emojis/keywords y aplica colores semánticos.
+          // Si el preproceso falla, caemos al source crudo (no romper render).
+          let src;
+          try {
+            src = applyMermaidSemanticClasses(rawSrc) || rawSrc;
+          } catch (e) {
+            console.warn('Mermaid semantic preprocess failed:', e?.message || e);
+            src = rawSrc;
+          }
           // Validar sintaxis antes de render: evita que mermaid v10 deje un
           // div temporal huérfano en <body> con el texto "Syntax error in text".
           try {
