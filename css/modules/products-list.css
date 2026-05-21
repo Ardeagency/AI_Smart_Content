@@ -101,12 +101,56 @@
 
 .product-list-card {
   cursor: pointer;
+  position: relative;
 }
 
 .products-list-page .history-card-flow-name {
   text-transform: none;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.product-list-card-actions {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.product-list-card:hover .product-list-card-actions,
+.product-list-card:focus-within .product-list-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.product-list-card .product-list-card-action {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.product-list-card .product-list-card-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.product-list-card .product-list-card-action--danger:hover:not(:disabled) {
+  color: #fca5a5;
 }
 
 .product-list-card-placeholder {

@@ -268,20 +268,121 @@ class ProductsListView extends BaseView {
     }
 
     container.querySelectorAll('.product-list-card').forEach((card) => {
+      const productId = card.getAttribute('data-product-id');
+      const entityId = card.getAttribute('data-entity-id');
       const open = () => {
-        const productId = card.getAttribute('data-product-id');
-        const entityId = card.getAttribute('data-entity-id');
         if (!productId || !entityId) return;
         this._navigateToProductDetail(entityId, productId);
       };
-      card.addEventListener('click', open);
+      card.addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const action = actionBtn.getAttribute('data-action');
+          if (action === 'delete') this._onDeleteProduct(productId, actionBtn);
+          else if (action === 'duplicate') this._onDuplicateProduct(productId, actionBtn);
+          return;
+        }
+        open();
+      });
       card.addEventListener('keydown', (e) => {
+        if (e.target.closest('[data-action]')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           open();
         }
       });
     });
+  }
+
+  async _onDeleteProduct(productId, btn) {
+    if (!productId || !this.supabase) return;
+    if (!confirm('¿Eliminar este producto? Se borrarán también sus imágenes.')) return;
+    if (btn) btn.disabled = true;
+    try {
+      const { error } = await this.supabase.from('products').delete().eq('id', productId);
+      if (error) throw error;
+      this._invalidateCache();
+      await this._loadData();
+      this._renderProductsMasonry();
+      this._showNotification('Producto eliminado', 'success');
+    } catch (e) {
+      console.error('ProductsListView _onDeleteProduct:', e);
+      this._showNotification(e?.message || 'Error al eliminar el producto', 'error');
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async _onDuplicateProduct(productId, btn) {
+    if (!productId || !this.supabase || !this.organizationId) return;
+    if (btn) btn.disabled = true;
+    try {
+      const { data: product, error: fetchError } = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
+      if (fetchError || !product) throw fetchError || new Error('No se pudo cargar el producto');
+
+      const { id: _id, created_at: _c, updated_at: _u, ...rest } = product;
+      const copyData = {
+        ...rest,
+        nombre_producto: (product.nombre_producto || 'Producto').trim() + ' (copia)',
+      };
+      const { data: newProduct, error: insertError } = await this.supabase
+        .from('products')
+        .insert(copyData)
+        .select('id')
+        .single();
+      if (insertError || !newProduct?.id) throw insertError || new Error('No se pudo crear la copia');
+
+      const { data: images } = await this.supabase
+        .from('product_images')
+        .select('image_url, image_type, image_order')
+        .eq('product_id', productId)
+        .order('image_order', { ascending: true });
+      if (images && images.length) {
+        await this.supabase.from('product_images').insert(
+          images.map((img) => ({
+            product_id: newProduct.id,
+            image_url: img.image_url,
+            image_type: img.image_type,
+            image_order: img.image_order,
+          }))
+        );
+      }
+
+      this._invalidateCache();
+      await this._loadData();
+      this._renderProductsMasonry();
+      this._showNotification('Producto duplicado', 'success');
+    } catch (e) {
+      console.error('ProductsListView _onDuplicateProduct:', e);
+      this._showNotification(e?.message || 'Error al duplicar el producto', 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  _showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 2rem;
+      padding: 0.75rem 1.1rem;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 10000;
+      font-size: 0.85rem;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2800);
   }
 
   _renderProductCard(p, _i) {
@@ -296,6 +397,10 @@ class ProductsListView extends BaseView {
             ? `<img src="${this.escapeHtml(imageUrl)}" alt="${safeName}" loading="lazy" onerror="this.parentNode.classList.add('product-list-card-broken'); this.outerHTML='<div class=&quot;product-list-card-placeholder&quot;><i class=&quot;fas fa-image&quot; aria-hidden=&quot;true&quot;></i></div>';">`
             : `<div class="product-list-card-placeholder"><i class="fas fa-image" aria-hidden="true"></i></div>`
           }
+          <div class="product-list-card-actions">
+            <button type="button" class="glass product-list-card-action" data-action="duplicate" title="Duplicar producto" aria-label="Duplicar producto"><i class="fas fa-copy" aria-hidden="true"></i></button>
+            <button type="button" class="glass product-list-card-action product-list-card-action--danger" data-action="delete" title="Eliminar producto" aria-label="Eliminar producto"><i class="fas fa-trash" aria-hidden="true"></i></button>
+          </div>
           <div class="history-card-flow-name">${safeName}</div>
         </article>
       </div>
