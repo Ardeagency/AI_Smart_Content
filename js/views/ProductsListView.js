@@ -849,8 +849,10 @@ class ProductsListView extends BaseView {
       const sourceLabel = result.source === 'url'
         ? `desde URL${result.scraped?.brand ? ' (' + result.scraped.brand + ')' : ''}`
         : 'desde fotos';
+      const variantCount = result.variants?.inserted || 0;
+      const variantStr = variantCount > 0 ? ` · ${variantCount} variante${variantCount === 1 ? '' : 's'}` : '';
       this._showNotification(
-        `Ficha generada ${sourceLabel} · ${result.credits_charged.toFixed(4)} creditos · ${imgCount} foto${imgCount === 1 ? '' : 's'} vinculada${imgCount === 1 ? '' : 's'}`,
+        `Ficha generada ${sourceLabel} · ${result.credits_charged.toFixed(4)} creditos · ${imgCount} foto${imgCount === 1 ? '' : 's'}${variantStr}`,
         'success'
       );
     }

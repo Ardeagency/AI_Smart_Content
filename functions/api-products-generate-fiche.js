@@ -68,7 +68,8 @@ const FICHE_SCHEMA = {
       'diferenciadores',
       'casos_de_uso',
       'caracteristicas_visuales',
-      'materiales_composicion'
+      'materiales_composicion',
+      'variantes'
     ],
     properties: {
       tipo_producto: {
@@ -113,6 +114,26 @@ const FICHE_SCHEMA = {
         items: { type: 'string' },
         maxItems: 6,
         description: 'Materiales / componentes / ingredientes detectables. Si no detectas ninguno, array vacio.'
+      },
+      variantes: {
+        type: 'array',
+        maxItems: 20,
+        description: 'SOLO incluir si hay EVIDENCIA CLARA de multiples variantes (Schema.org hasVariant, multiples offers con SKUs distintos, opciones color/talla/sabor visibles en imagenes O texto del scraping). Array vacio si es un solo producto sin variaciones. NO inventar.',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['nombre_variante', 'color', 'tamano', 'sabor', 'sku', 'precio', 'descripcion_corta', 'imagen_index'],
+          properties: {
+            nombre_variante: { type: 'string', description: 'Nombre legible: "Rojo M", "Vainilla 250ml", "Edicion Limitada". Sin acentos.' },
+            color: { type: ['string', 'null'], description: 'Color si aplica (sin acentos). Null si no aplica.' },
+            tamano: { type: ['string', 'null'], description: 'Talla / volumen / tamano (XS/S/M/L, 250ml, 500g). Null si no aplica.' },
+            sabor: { type: ['string', 'null'], description: 'Sabor / aroma si aplica. Null si no aplica.' },
+            sku: { type: ['string', 'null'], description: 'SKU si esta en el scraping. Null si no se detecto.' },
+            precio: { type: ['number', 'null'], description: 'Precio de la variante. Null si no se detecto.' },
+            descripcion_corta: { type: ['string', 'null'], description: 'Una linea (max 80 chars) que distinga esta variante. Null si no aporta.' },
+            imagen_index: { type: ['integer', 'null'], description: 'Indice (0-based) de la imagen adjunta que muestra esta variante. Null si no es claro.' }
+          }
+        }
       }
     }
   }
@@ -124,7 +145,8 @@ const SYSTEM_PROMPT = [
   'Idioma: espanol SIN acentos agudos en vocales (escribi "rapido", no "rápido"). Manten enie (ñ) y signos de puntuacion.',
   'No inventes marcas, cifras especificas ni claims medicos. Si algo es genuinamente desconocido, deja el array vacio o usa una descripcion generica.',
   'Tono: ajustate al verbal_dna y arquetipo de la marca. Respeta palabras_prohibidas.',
-  'Concision: descripcion 60-120 palabras, items de arrays 3-12 palabras cada uno.'
+  'Concision: descripcion 60-120 palabras, items de arrays 3-12 palabras cada uno.',
+  'VARIANTES: solo emite el array variantes si EXISTEN de verdad. Evidencia valida = (a) bloque "Variantes detectadas en la pagina" en el scraped context, (b) imagenes que claramente muestran el mismo producto en colores/tallas/sabores distintos, o (c) selector de opciones citado en la descripcion. Si es UN solo producto sin variaciones, variantes=[]. Nunca inventes opciones para "llenar la ficha".'
 ].join(' ');
 
 function buildBrandContextText(brand, orgName) {
@@ -247,6 +269,40 @@ async function scrapeProductFromUrl(targetUrl) {
       result.currency = offer.priceCurrency || null;
       result.availability = offer.availability || null;
     }
+
+    // Detectar variantes via Schema.org Product.hasVariant[] o multiples offers[]
+    // (patron Shopify: un Product con offers[] = array de variantes con su SKU/precio).
+    const variants = [];
+    if (Array.isArray(p.hasVariant)) {
+      for (const v of p.hasVariant.slice(0, 20)) {
+        if (!v || typeof v !== 'object') continue;
+        const vOffer = Array.isArray(v.offers) ? v.offers[0] : v.offers;
+        variants.push({
+          variant_name: v.name || v.sku || null,
+          sku: v.sku || vOffer?.sku || null,
+          price: vOffer?.price || v.price || null,
+          currency: vOffer?.priceCurrency || null,
+          color: v.color || null,
+          size: v.size || null,
+          image: typeof v.image === 'string' ? v.image : v.image?.url || null
+        });
+      }
+    } else if (Array.isArray(p.offers) && p.offers.length > 1) {
+      // Multiples offers = candidato a variantes (Shopify default)
+      for (const o of p.offers.slice(0, 20)) {
+        if (!o || typeof o !== 'object') continue;
+        variants.push({
+          variant_name: o.name || o.sku || null,
+          sku: o.sku || null,
+          price: o.price || null,
+          currency: o.priceCurrency || null,
+          color: null,
+          size: null,
+          image: typeof o.image === 'string' ? o.image : (o.image?.url || null)
+        });
+      }
+    }
+    if (variants.length > 1) result.variants = variants;
   }
 
   // 2) Open Graph y meta tags
@@ -346,6 +402,18 @@ function buildScrapedSummary(s) {
   if (s.description) lines.push(`Descripcion en la pagina: ${String(s.description).slice(0, 700)}`);
   if (s.price) lines.push(`Precio: ${s.price}${s.currency ? ' ' + s.currency : ''}`);
   if (s.availability) lines.push(`Disponibilidad: ${String(s.availability).split('/').pop()}`);
+  if (Array.isArray(s.variants) && s.variants.length > 1) {
+    const varSummary = s.variants.slice(0, 12).map((v, i) => {
+      const parts = [];
+      if (v.variant_name) parts.push(v.variant_name);
+      if (v.color) parts.push(`color: ${v.color}`);
+      if (v.size) parts.push(`talla: ${v.size}`);
+      if (v.price) parts.push(`$${v.price}${v.currency ? ' ' + v.currency : ''}`);
+      if (v.sku) parts.push(`SKU: ${v.sku}`);
+      return `  ${i + 1}. ${parts.join(' · ')}`;
+    }).join('\n');
+    lines.push(`Variantes detectadas en la pagina (${s.variants.length}):\n${varSummary}`);
+  }
   return lines.join('\n');
 }
 
@@ -656,6 +724,98 @@ async function handlerImpl(event) {
     return fail(event, 500, `Error actualizando producto: ${err.message}`);
   }
 
+  // Insertar variantes si OpenAI detecto alguna. Normaliza en:
+  //   product_options (Color/Tamano/Sabor) ← dimensiones con multiples valores
+  //   product_option_values (Rojo/Azul/S/M/L) ← valores unicos por dimension
+  //   product_variants ← una row por variante con su precio/sku/imagen
+  let variantsInserted = 0;
+  let variantsError = null;
+  const aiVariants = Array.isArray(fiche.variantes) ? fiche.variantes.filter(Boolean) : [];
+  if (aiVariants.length > 0) {
+    try {
+      // 1) Detectar que dimensiones tienen mas de un valor (Color con multiples valores = dimension util)
+      const dims = { color: new Set(), tamano: new Set(), sabor: new Set() };
+      for (const v of aiVariants) {
+        if (v.color) dims.color.add(String(v.color).trim());
+        if (v.tamano) dims.tamano.add(String(v.tamano).trim());
+        if (v.sabor) dims.sabor.add(String(v.sabor).trim());
+      }
+      const activeDims = Object.entries(dims).filter(([_, set]) => set.size > 1);
+
+      // 2) Insert product_options para cada dimension activa
+      const optionRows = activeDims.map(([name, _set], i) => ({
+        product_id: productId,
+        organization_id: organizationId,
+        name,
+        display_name: { color: 'Color', tamano: 'Tamano', sabor: 'Sabor' }[name] || name,
+        position: i
+      }));
+      let optionsByName = {};
+      if (optionRows.length) {
+        const inserted = await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'product_options', method: 'POST', body: optionRows
+        });
+        (inserted || []).forEach((r) => { optionsByName[r.name] = r.id; });
+
+        // 3) Insert product_option_values por dimension
+        const valueRows = [];
+        for (const [name, set] of activeDims) {
+          const optionId = optionsByName[name];
+          if (!optionId) continue;
+          let pos = 0;
+          for (const value of set) {
+            valueRows.push({
+              option_id: optionId,
+              product_id: productId,
+              organization_id: organizationId,
+              value: value.toLowerCase(),
+              display_value: value,
+              position: pos++
+            });
+          }
+        }
+        if (valueRows.length) {
+          await supabaseRest({
+            url: env.url, serviceKey: env.serviceKey,
+            path: 'product_option_values', method: 'POST', body: valueRows
+          });
+        }
+      }
+
+      // 4) Insert product_variants (una row por variante). imagen_url se resuelve
+      //    contra imageUrls[imagen_index] si el indice cae en rango.
+      const variantRows = aiVariants.map((v, i) => {
+        const imgIdx = Number.isInteger(v.imagen_index) ? v.imagen_index : null;
+        const imageUrl = (imgIdx != null && imgIdx >= 0 && imgIdx < imageUrls.length) ? imageUrls[imgIdx] : null;
+        const variantPrice = (typeof v.precio === 'number' && v.precio > 0) ? v.precio : (updates.precio_producto || null);
+        return {
+          product_id: productId,
+          organization_id: organizationId,
+          variant_name: String(v.nombre_variante || `Variante ${i + 1}`).slice(0, 120),
+          sku: v.sku ? String(v.sku).slice(0, 80) : null,
+          precio: variantPrice,
+          moneda: updates.moneda || 'USD',
+          descripcion_variante: v.descripcion_corta ? String(v.descripcion_corta).slice(0, 400) : null,
+          imagen_url: imageUrl,
+          position: i,
+          is_active: true,
+          disponible: true
+        };
+      });
+      if (variantRows.length) {
+        const inserted = await supabaseRest({
+          url: env.url, serviceKey: env.serviceKey,
+          path: 'product_variants', method: 'POST', body: variantRows
+        });
+        variantsInserted = Array.isArray(inserted) ? inserted.length : variantRows.length;
+      }
+    } catch (err) {
+      variantsError = err.message || String(err);
+      console.error('[generate-fiche] variants insert error:', variantsError, JSON.stringify(err.details || {}));
+    }
+  }
+
   // Insertar product_images (la primera = principal). Si ya existen imagenes del placeholder
   // las dejamos como estan (UPSERT no aplica por unique constraint; usamos INSERT batch).
   const imageRows = imageUrls.map((url, i) => ({
@@ -697,6 +857,11 @@ async function handlerImpl(event) {
         attempted: imageRows.length,
         inserted: imagesInserted,
         error: imagesError
+      },
+      variants: {
+        attempted: aiVariants.length,
+        inserted: variantsInserted,
+        error: variantsError
       },
       ...(scraped ? {
         scraped: {
