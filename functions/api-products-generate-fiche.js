@@ -27,6 +27,7 @@ const {
   assertOrgMember,
   checkBodySize
 } = require('./lib/ai-shared');
+const crypto = require('crypto');
 
 // Scraping con regex pura — sin dependencias externas (cheerio 1.0 es
 // ESM-only y bundlearlo desde CJS via Netlify esbuild fallaba con 502).
@@ -484,10 +485,12 @@ async function scrapeProductFromUrl(targetUrl) {
   return result;
 }
 
-async function reuploadImageToBucket({ env, sourceUrl, userId, productId, index }) {
+// Descarga la imagen y calcula MD5 del contenido. Permite dedup por bytes reales:
+// dos URLs distintas (Scene7 vs media.falabella vs CDN headless) pueden servir
+// la MISMA imagen — la dedup por URL no las cacha porque los hostnames difieren.
+async function downloadImageWithHash({ sourceUrl }) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
-  let buffer, contentType;
   try {
     const res = await fetch(sourceUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AISmartContentBot/1.0)' },
@@ -495,19 +498,23 @@ async function reuploadImageToBucket({ env, sourceUrl, userId, productId, index 
       redirect: 'follow'
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    contentType = (res.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
+    const contentType = (res.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
     if (!/^image\//.test(contentType)) throw new Error(`No es imagen (${contentType})`);
-    buffer = await res.arrayBuffer();
-    if (buffer.byteLength === 0) throw new Error('Imagen vacia');
-    if (buffer.byteLength > 10 * 1024 * 1024) throw new Error('Imagen >10MB');
+    const arrayBuf = await res.arrayBuffer();
+    if (arrayBuf.byteLength === 0) throw new Error('Imagen vacia');
+    if (arrayBuf.byteLength > 10 * 1024 * 1024) throw new Error('Imagen >10MB');
+    const buffer = Buffer.from(arrayBuf);
+    const hash = crypto.createHash('md5').update(buffer).digest('hex');
+    return { buffer, contentType, hash, sourceUrl };
   } finally {
     clearTimeout(timeout);
   }
+}
 
+async function uploadBufferToBucket({ env, buffer, contentType, userId, productId, index }) {
   const extMap = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif' };
   const ext = extMap[contentType] || 'jpg';
   const fileName = `${userId}/${productId}/${Date.now()}_url_${index}.${ext}`;
-
   const uploadRes = await fetch(`${env.url}/storage/v1/object/product-images/${fileName}`, {
     method: 'POST',
     headers: {
@@ -517,7 +524,7 @@ async function reuploadImageToBucket({ env, sourceUrl, userId, productId, index 
       'cache-control': '3600',
       'x-upsert': 'false'
     },
-    body: Buffer.from(buffer)
+    body: buffer
   });
   if (!uploadRes.ok) {
     const txt = await uploadRes.text().catch(() => '');
@@ -672,22 +679,48 @@ async function handlerImpl(event) {
     }
     scrapedSummary = buildScrapedSummary(scraped);
 
-    // Cap a 6 imagenes: cubre productos con 5+ variantes (una imagen por color/talla)
-    // sin pegar el timeout 10s. Paralelizado por allSettled = ~3s para las 6.
-    const candidates = (scraped.images || []).slice(0, 6);
-    const results = await Promise.allSettled(
-      candidates.map((src, i) => reuploadImageToBucket({
-        env, sourceUrl: src, userId: user.id, productId, index: i
+    // Pipeline: download (con MD5 hash) → dedup por bytes reales → upload uniques.
+    // Cap inicial 8 candidatos (sobre-pedimos para sobrevivir descartes por dedup).
+    const candidates = (scraped.images || []).slice(0, 8);
+    const downloaded = await Promise.allSettled(
+      candidates.map((src) => downloadImageWithHash({ sourceUrl: src }))
+    );
+
+    // Dedup por hash MD5: agarra el primer download exitoso de cada hash.
+    const seenHashes = new Set();
+    const uniques = [];
+    downloaded.forEach((r, i) => {
+      if (r.status !== 'fulfilled' || !r.value) {
+        if (r.status === 'rejected') console.warn(`[generate-fiche] download skipped (${candidates[i]}):`, r.reason?.message || r.reason);
+        return;
+      }
+      if (seenHashes.has(r.value.hash)) return;
+      seenHashes.add(r.value.hash);
+      uniques.push(r.value);
+    });
+
+    // Tope: max 6 imagenes UNICAS hacia OpenAI (tokens + tiempo de upload).
+    const toUpload = uniques.slice(0, 6);
+
+    // Upload paralelo de las unicas
+    const uploads = await Promise.allSettled(
+      toUpload.map((item, i) => uploadBufferToBucket({
+        env, buffer: item.buffer, contentType: item.contentType,
+        userId: user.id, productId, index: i
       }))
     );
     const reuploaded = [];
-    results.forEach((r, i) => {
+    uploads.forEach((r, i) => {
       if (r.status === 'fulfilled' && r.value) reuploaded.push(r.value);
-      else if (r.status === 'rejected') console.warn(`[generate-fiche] reupload skipped (${candidates[i]}):`, r.reason?.message || r.reason);
+      else console.warn(`[generate-fiche] upload skipped (${toUpload[i].sourceUrl}):`, r.reason?.message || r.reason);
     });
-    // Si todos los reuploads fallaron, intentamos con las URLs externas directas
-    // (OpenAI puede fetchearlas si el host las sirve publicas).
-    imageUrls = reuploaded.length > 0 ? reuploaded : candidates;
+    console.log(`[generate-fiche] images: ${candidates.length} candidatas → ${uniques.length} unicas por hash → ${reuploaded.length} uploaded`);
+
+    // Si todos los uploads fallaron pero hay descargas unicas, usamos las URLs
+    // externas directas (OpenAI puede fetchearlas si el host las sirve publicas).
+    imageUrls = reuploaded.length > 0
+      ? reuploaded
+      : (uniques.length > 0 ? uniques.map((u) => u.sourceUrl) : candidates.slice(0, 6));
   }
 
   if (imageUrls.length === 0 && !scrapedSummary) {
