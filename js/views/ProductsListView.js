@@ -302,7 +302,7 @@ class ProductsListView extends BaseView {
 
   async _onDeleteProduct(productId, btn) {
     if (!productId || !this.supabase) return;
-    if (!confirm('¿Eliminar este producto? Se borrarán también sus imágenes.')) return;
+    if (!confirm('¿Eliminar este producto? Se borraran tambien sus imagenes.')) return;
     if (btn) btn.disabled = true;
     try {
       const { error } = await this.supabase.from('products').delete().eq('id', productId);
@@ -428,14 +428,40 @@ class ProductsListView extends BaseView {
       return;
     }
     const body = `
-      <p class="attach-product-intro">Elegí cómo querés que Vera obtenga la información del producto. En ambos casos, la ficha se crea automáticamente con los datos detectados.</p>
-      <div class="attach-product-options">
-        <article class="attach-product-option" data-source="url">
-          <div class="attach-product-option-head">
-            <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
-            <h4 class="attach-product-option-title">URL del producto</h4>
+      <div class="attach-product-wizard" data-step="picker">
+        <!-- Paso 1: elegir fuente -->
+        <section class="attach-product-step attach-product-step--picker" data-panel="picker">
+          <p class="attach-product-intro">Elegi como queres que Vera obtenga la informacion del producto. En ambos casos, la ficha se crea automaticamente con los datos detectados.</p>
+          <div class="attach-product-options">
+            <button type="button" class="attach-product-option" data-go="url" aria-label="Adjuntar producto por URL">
+              <div class="attach-product-option-head">
+                <span class="attach-product-option-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+                <h4 class="attach-product-option-title">URL del producto</h4>
+              </div>
+              <p class="attach-product-option-desc">Pega el enlace de la pagina del producto. Vera leera la URL, extraera nombre, descripcion, precio, imagenes y caracteristicas, y armara la ficha automaticamente.</p>
+              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+            </button>
+
+            <button type="button" class="attach-product-option" data-go="files" aria-label="Adjuntar archivos del producto">
+              <div class="attach-product-option-head">
+                <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
+                <h4 class="attach-product-option-title">Adjuntar archivos</h4>
+              </div>
+              <p class="attach-product-option-desc">Subi PDFs, fichas tecnicas, catalogos, fotos o videos. Vera analizara el contenido y construira la ficha con los datos que detecte (nombre, beneficios, materiales, variantes, imagenes).</p>
+              <span class="attach-product-option-cta">Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+            </button>
           </div>
-          <p class="attach-product-option-desc">Pegá el enlace de la página del producto. Vera leerá la URL, extraerá nombre, descripción, precio, imágenes y características, y armará la ficha automáticamente.</p>
+        </section>
+
+        <!-- Paso 2a: URL -->
+        <section class="attach-product-step attach-product-step--form" data-panel="url" hidden>
+          <header class="attach-product-step-head">
+            <button type="button" class="attach-product-back" data-back="picker" aria-label="Volver">
+              <i class="fas fa-arrow-left" aria-hidden="true"></i>
+              <span>Volver</span>
+            </button>
+            <h4 class="attach-product-step-title"><i class="fas fa-link" aria-hidden="true"></i> URL del producto</h4>
+          </header>
           <label class="attach-product-field">
             <span class="attach-product-field-label">Enlace</span>
             <input type="url" class="attach-product-url-input" placeholder="https://..." autocomplete="off" />
@@ -444,26 +470,29 @@ class ProductsListView extends BaseView {
             <i class="fas fa-magic" aria-hidden="true"></i>
             <span>Analizar URL con Vera</span>
           </button>
-        </article>
+        </section>
 
-        <article class="attach-product-option" data-source="files">
-          <div class="attach-product-option-head">
-            <span class="attach-product-option-icon"><i class="fas fa-paperclip" aria-hidden="true"></i></span>
-            <h4 class="attach-product-option-title">Adjuntar archivos</h4>
-          </div>
-          <p class="attach-product-option-desc">Subí PDFs, fichas técnicas, catálogos, fotos o videos. Vera analizará el contenido y construirá la ficha con los datos que detecte (nombre, beneficios, materiales, variantes, imágenes).</p>
+        <!-- Paso 2b: Archivos -->
+        <section class="attach-product-step attach-product-step--form" data-panel="files" hidden>
+          <header class="attach-product-step-head">
+            <button type="button" class="attach-product-back" data-back="picker" aria-label="Volver">
+              <i class="fas fa-arrow-left" aria-hidden="true"></i>
+              <span>Volver</span>
+            </button>
+            <h4 class="attach-product-step-title"><i class="fas fa-paperclip" aria-hidden="true"></i> Adjuntar archivos</h4>
+          </header>
           <label class="attach-product-dropzone" tabindex="0">
             <input type="file" class="attach-product-file-input" multiple accept=".pdf,.doc,.docx,.txt,image/*,video/*" hidden />
             <i class="fas fa-upload" aria-hidden="true"></i>
-            <span class="attach-product-dropzone-text">Arrastrá archivos o hacé click para elegirlos</span>
-            <span class="attach-product-dropzone-hint">PDF, DOC, TXT, imágenes, video</span>
+            <span class="attach-product-dropzone-text">Arrastra archivos o hace click para elegirlos</span>
+            <span class="attach-product-dropzone-hint">PDF, DOC, TXT, imagenes, video</span>
           </label>
           <ul class="attach-product-file-list" hidden></ul>
           <button type="button" class="attach-product-submit" data-action="submit-files">
             <i class="fas fa-magic" aria-hidden="true"></i>
             <span>Analizar archivos con Vera</span>
           </button>
-        </article>
+        </section>
       </div>
     `;
 
@@ -474,6 +503,25 @@ class ProductsListView extends BaseView {
     });
     if (!handle) return;
     const root = handle.bodyEl;
+    const wizard = root.querySelector('.attach-product-wizard');
+
+    const goToStep = (step) => {
+      if (!wizard) return;
+      wizard.setAttribute('data-step', step);
+      root.querySelectorAll('[data-panel]').forEach((panel) => {
+        panel.hidden = panel.getAttribute('data-panel') !== step;
+      });
+      const visible = root.querySelector(`[data-panel="${step}"]`);
+      const focusable = visible?.querySelector('input, button:not(.attach-product-back)');
+      try { focusable?.focus(); } catch (_) {}
+    };
+
+    root.querySelectorAll('[data-go]').forEach((btn) => {
+      btn.addEventListener('click', () => goToStep(btn.getAttribute('data-go')));
+    });
+    root.querySelectorAll('[data-back]').forEach((btn) => {
+      btn.addEventListener('click', () => goToStep(btn.getAttribute('data-back')));
+    });
 
     const urlInput = root.querySelector('.attach-product-url-input');
     const fileInput = root.querySelector('.attach-product-file-input');
@@ -527,7 +575,7 @@ class ProductsListView extends BaseView {
       const value = (urlInput?.value || '').trim();
       if (!value) {
         urlInput?.focus();
-        this._showNotification('Pegá una URL primero', 'error');
+        this._showNotification('Pega una URL primero', 'error');
         return;
       }
       try {
@@ -535,21 +583,21 @@ class ProductsListView extends BaseView {
         if (!/^https?:$/.test(u.protocol)) throw new Error('protocol');
       } catch (_) {
         urlInput?.focus();
-        this._showNotification('La URL no es válida', 'error');
+        this._showNotification('La URL no es valida', 'error');
         return;
       }
       handle.close();
-      this._showNotification('Vera procesará esta URL próximamente.', 'info');
+      this._showNotification('Vera procesara esta URL proximamente.', 'info');
     });
 
     root.querySelector('[data-action="submit-files"]')?.addEventListener('click', () => {
       const count = fileInput?.files?.length || 0;
       if (!count) {
-        this._showNotification('Adjuntá al menos un archivo', 'error');
+        this._showNotification('Adjunta al menos un archivo', 'error');
         return;
       }
       handle.close();
-      this._showNotification(`Vera procesará ${count} archivo${count === 1 ? '' : 's'} próximamente.`, 'info');
+      this._showNotification(`Vera procesara ${count} archivo${count === 1 ? '' : 's'} proximamente.`, 'info');
     });
   }
 
