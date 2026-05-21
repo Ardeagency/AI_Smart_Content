@@ -477,12 +477,32 @@ const SUPPORTED_CHART_TYPES = new Set([
 function renderChartBlock(code) {
   try {
     const spec = parseChartSpec(code);
-    // Si el tipo (ya pasado por aliases) no es soportado, fallback a tabla
-    if (!SUPPORTED_CHART_TYPES.has(spec.type)) {
-      return renderChartAsDataTable(spec);
+
+    // Ruta principal: ECharts (~25 tipos nativos, tolerante a múltiples
+    // formas de spec). Si el tipo está en su set nativo, emitimos un
+    // placeholder con la spec embebida; _processChatRichContent lo inicializa
+    // tras montar el DOM (ECharts requiere dimensiones conocidas).
+    if (ECHARTS_NATIVE_TYPES.has(spec.type)) {
+      // Embebemos la spec como JSON base64 para evitar problemas de quoting
+      // dentro del atributo data-*.
+      const specStr = JSON.stringify(spec);
+      const encoded = typeof window !== 'undefined' && window.btoa
+        ? window.btoa(unescape(encodeURIComponent(specStr)))
+        : encodeURIComponent(specStr);
+      // Altura del área interna del chart (el wrapper .gpt-viz tiene padding;
+      // el div interno data-echarts-spec es donde ECharts pinta).
+      const height = Math.max(200, Math.min(560, Number(spec.height) || 360));
+      return `<div class="gpt-viz gpt-viz--echarts"><div data-echarts-spec="${encoded}" data-echarts-height="${height}" style="width:100%;height:${height}px;"></div></div>`;
     }
-    const svg = renderChartSVG(spec);
-    return `<div class="gpt-viz">${svg}</div>`;
+
+    // Ruta legacy: tipos simples soportados por el SVG renderer custom
+    if (SUPPORTED_CHART_TYPES.has(spec.type)) {
+      const svg = renderChartSVG(spec);
+      return `<div class="gpt-viz">${svg}</div>`;
+    }
+
+    // Último recurso: mostrar los datos como tabla (mejor que un error críptico)
+    return renderChartAsDataTable(spec);
   } catch (e) {
     const msg = escapeHtml(e?.message || 'Error de chart spec');
     return `<div class="gpt-viz gpt-viz--error"><strong>Chart inválido:</strong> ${msg}<pre><code>${escapeHtml(String(code || '').trim())}</code></pre></div>`;
@@ -532,6 +552,7 @@ function renderButtonsBlock(code) {
 const VERA_RICH_LIBS = {
   mermaidLoading: null,
   prismLoading: null,
+  echartsLoading: null,
 };
 
 function _loadScriptOnce(src, integrity = null) {
@@ -696,6 +717,359 @@ async function ensurePrism() {
     return window.Prism;
   })();
   return VERA_RICH_LIBS.prismLoading;
+}
+
+/* ─── ECharts (lib completa de charts) ─────────────────────────────
+   Carga lazy desde CDN, solo cuando Vera emite un chart. Permite ~25
+   tipos nativos (bar/line/pie/donut/scatter/bubble/radar/heatmap/
+   treemap/sunburst/gauge/funnel/sankey/candlestick/boxplot/...).
+   Para tipos fuera de ese set caemos a renderChartAsDataTable. */
+async function ensureECharts() {
+  if (window.echarts) return window.echarts;
+  if (VERA_RICH_LIBS.echartsLoading) return VERA_RICH_LIBS.echartsLoading;
+  VERA_RICH_LIBS.echartsLoading = (async () => {
+    await _loadScriptOnce('https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js');
+    return window.echarts;
+  })();
+  return VERA_RICH_LIBS.echartsLoading;
+}
+
+// Paleta brand para ECharts — usa los acentos del sistema premium ya cableado
+const VERA_CHART_PALETTE = [
+  '#f5b942', '#3ec47d', '#5b8def', '#ff5b5b', '#a78bfa',
+  '#22d3ee', '#fb923c', '#f472b6', '#84cc16', '#facc15',
+];
+
+// Tipos que ECharts puede renderizar nativamente. Si Vera pide un tipo
+// fuera de este set, caemos a la tabla de datos.
+const ECHARTS_NATIVE_TYPES = new Set([
+  'bar', 'horizontalbar', 'stackedbar', 'groupedbar',
+  'line', 'spline', 'area', 'stackedarea',
+  'pie', 'donut',
+  'scatter', 'bubble',
+  'radar',
+  'heatmap', 'calendar',
+  'treemap', 'sunburst',
+  'gauge',
+  'funnel', 'pyramid',
+  'sankey',
+  'candlestick', 'kline', 'boxplot',
+  'graph', 'network',
+  'themeriver', 'streamgraph',
+  'parallel',
+  'pictogram', 'pictorialbar',
+]);
+
+/**
+ * Convierte una spec de Vera (formato simple) a una option de ECharts.
+ * Acepta variantes de la spec:
+ *   - { type, title, data: [{label, value, color?}] }
+ *   - { type, title, categories: [...], series: [{name, data:[...]}] }
+ *   - { type, data: [{name, value, children?}] } (treemap/sunburst)
+ *   - { type, nodes: [...], links: [...] } (sankey/graph)
+ * Retorna { option, type } o null si el tipo no es soportado.
+ */
+function buildEChartsOption(spec) {
+  const rawType = String(spec.type || '').toLowerCase();
+  if (!ECHARTS_NATIVE_TYPES.has(rawType)) return null;
+
+  const title = spec.title ? String(spec.title) : '';
+  const data = Array.isArray(spec.data) ? spec.data : [];
+  const categories = Array.isArray(spec.categories) ? spec.categories : null;
+  const seriesIn = Array.isArray(spec.series) ? spec.series : null;
+
+  // Theme base — premium dark coherente con el resto del chat
+  const textColor = '#E8E5EC';
+  const subColor = 'rgba(212,209,216,0.65)';
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const tooltipBg = 'rgba(20,21,25,0.95)';
+
+  const option = {
+    backgroundColor: 'transparent',
+    color: VERA_CHART_PALETTE,
+    textStyle: { color: textColor, fontFamily: 'inherit' },
+    title: title ? {
+      text: title,
+      textStyle: { color: '#F0EDE8', fontWeight: 600, fontSize: 15 },
+      left: 14, top: 12,
+    } : undefined,
+    grid: { left: 50, right: 30, top: title ? 50 : 24, bottom: 36, containLabel: true },
+    legend: spec.legend !== false ? {
+      textStyle: { color: subColor }, top: title ? 14 : 8, right: 16,
+      icon: 'roundRect', itemWidth: 10, itemHeight: 10,
+    } : undefined,
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: tooltipBg,
+      borderColor: '#2c2c34',
+      textStyle: { color: textColor, fontSize: 12 },
+      extraCssText: 'box-shadow: 0 8px 20px rgba(0,0,0,0.5); border-radius: 8px;',
+    },
+  };
+
+  // Helpers
+  const labels = (d) => d.map((x) => String(x?.label ?? x?.name ?? ''));
+  const values = (d) => d.map((x) => Number(x?.value ?? 0));
+  const axisStyle = {
+    axisLine: { lineStyle: { color: gridColor } },
+    axisLabel: { color: subColor, fontSize: 11 },
+    splitLine: { lineStyle: { color: gridColor, type: 'dashed' } },
+  };
+
+  switch (rawType) {
+    case 'bar':
+    case 'groupedbar': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: categories || labels(data), ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      option.series = seriesIn
+        ? seriesIn.map((s) => ({ type: 'bar', name: s.name, data: s.data, itemStyle: { borderRadius: [6, 6, 0, 0] } }))
+        : [{ type: 'bar', data: values(data), itemStyle: { borderRadius: [6, 6, 0, 0] } }];
+      break;
+    }
+    case 'horizontalbar': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'value', ...axisStyle };
+      option.yAxis = { type: 'category', data: categories || labels(data), ...axisStyle };
+      option.series = [{ type: 'bar', data: values(data), itemStyle: { borderRadius: [0, 6, 6, 0] } }];
+      break;
+    }
+    case 'stackedbar': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: categories, ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      option.series = (seriesIn || []).map((s) => ({ type: 'bar', name: s.name, stack: 'total', data: s.data, itemStyle: { borderRadius: [4, 4, 0, 0] } }));
+      break;
+    }
+    case 'line':
+    case 'spline': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: categories || labels(data), boundaryGap: false, ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      option.series = seriesIn
+        ? seriesIn.map((s) => ({ type: 'line', name: s.name, data: s.data, smooth: rawType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }))
+        : [{ type: 'line', data: values(data), smooth: rawType === 'spline', symbolSize: 6, lineStyle: { width: 2.5 } }];
+      break;
+    }
+    case 'area':
+    case 'stackedarea': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: categories || labels(data), boundaryGap: false, ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      const stack = rawType === 'stackedarea' ? 'total' : undefined;
+      option.series = seriesIn
+        ? seriesIn.map((s) => ({ type: 'line', name: s.name, stack, data: s.data, smooth: true, areaStyle: { opacity: 0.45 }, lineStyle: { width: 2 } }))
+        : [{ type: 'line', data: values(data), smooth: true, areaStyle: { opacity: 0.45 }, lineStyle: { width: 2 } }];
+      break;
+    }
+    case 'pie':
+    case 'donut': {
+      option.series = [{
+        type: 'pie',
+        radius: rawType === 'donut' ? ['45%', '72%'] : '72%',
+        center: ['50%', '55%'],
+        data: data.map((d) => ({ name: d.label || d.name, value: d.value, itemStyle: d.color ? { color: d.color } : undefined })),
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 2, borderRadius: 4 },
+        label: { color: textColor },
+        emphasis: { itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.5)' } },
+      }];
+      break;
+    }
+    case 'scatter':
+    case 'bubble': {
+      option.tooltip.trigger = 'item';
+      option.xAxis = { type: 'value', ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      const points = data.map((d) => [Number(d.x ?? 0), Number(d.y ?? d.value ?? 0), Number(d.size ?? d.r ?? 8), d.label || d.name || '']);
+      option.series = [{
+        type: 'scatter',
+        data: points,
+        symbolSize: rawType === 'bubble' ? (val) => Math.sqrt(val[2]) * 4 : 10,
+      }];
+      break;
+    }
+    case 'radar': {
+      const indicators = (spec.indicators || labels(data)).map((name) => ({ name: String(name), max: spec.max || undefined }));
+      option.radar = {
+        indicator: indicators,
+        axisName: { color: subColor },
+        splitLine: { lineStyle: { color: gridColor } },
+        splitArea: { areaStyle: { color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.04)'] } },
+        axisLine: { lineStyle: { color: gridColor } },
+      };
+      option.series = [{
+        type: 'radar',
+        data: seriesIn
+          ? seriesIn.map((s) => ({ name: s.name, value: s.data, areaStyle: { opacity: 0.25 } }))
+          : [{ value: values(data), areaStyle: { opacity: 0.25 } }],
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'heatmap': {
+      const xs = spec.x || [];
+      const ys = spec.y || [];
+      const values_ = spec.values || data;
+      option.tooltip.position = 'top';
+      option.xAxis = { type: 'category', data: xs, splitArea: { show: true }, ...axisStyle };
+      option.yAxis = { type: 'category', data: ys, splitArea: { show: true }, ...axisStyle };
+      option.visualMap = {
+        min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal',
+        left: 'center', bottom: 0, textStyle: { color: subColor },
+        inRange: { color: ['#1a1b1f', '#5b8def', '#f5b942', '#ff5b5b'] },
+      };
+      option.series = [{ type: 'heatmap', data: values_, label: { show: false }, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.5)' } } }];
+      break;
+    }
+    case 'treemap': {
+      option.series = [{
+        type: 'treemap',
+        data: data,
+        roam: false,
+        breadcrumb: { show: false },
+        label: { color: '#fff', fontWeight: 500 },
+        upperLabel: { show: true, height: 28, color: '#fff' },
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 2, gapWidth: 2 },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'sunburst': {
+      option.series = [{
+        type: 'sunburst',
+        data: data,
+        radius: ['0%', '85%'],
+        label: { color: '#fff' },
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'gauge': {
+      const val = Number(spec.value ?? data[0]?.value ?? 0);
+      const max = Number(spec.max ?? 100);
+      option.series = [{
+        type: 'gauge',
+        min: 0, max,
+        progress: { show: true, width: 16 },
+        axisLine: { lineStyle: { width: 16, color: [[1, gridColor]] } },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { color: subColor, distance: 22 },
+        pointer: { show: false },
+        detail: { valueAnimation: true, formatter: spec.formatter || '{value}', color: textColor, fontSize: 30, offsetCenter: [0, '5%'] },
+        data: [{ value: val, name: spec.subtitle || '' }],
+        itemStyle: { color: VERA_CHART_PALETTE[0] },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'funnel':
+    case 'pyramid': {
+      option.series = [{
+        type: 'funnel',
+        sort: rawType === 'pyramid' ? 'ascending' : 'descending',
+        data: data.map((d) => ({ name: d.label || d.name, value: d.value })),
+        label: { color: '#fff', fontWeight: 500 },
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 2 },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'sankey': {
+      option.series = [{
+        type: 'sankey',
+        data: spec.nodes || [],
+        links: spec.links || [],
+        nodeAlign: 'justify',
+        label: { color: textColor },
+        lineStyle: { color: 'gradient', opacity: 0.45, curveness: 0.5 },
+        itemStyle: { borderColor: '#0e0f12', borderWidth: 1 },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'graph':
+    case 'network': {
+      option.series = [{
+        type: 'graph',
+        layout: spec.layout || 'force',
+        force: { repulsion: 200, edgeLength: 80 },
+        data: spec.nodes || [],
+        links: spec.links || spec.edges || [],
+        roam: true,
+        label: { show: true, color: textColor },
+        lineStyle: { color: 'source', curveness: 0.15 },
+        emphasis: { focus: 'adjacency' },
+      }];
+      delete option.grid;
+      break;
+    }
+    case 'candlestick':
+    case 'kline': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: categories || data.map((d) => d.date || d.label), ...axisStyle };
+      option.yAxis = { type: 'value', scale: true, ...axisStyle };
+      option.series = [{
+        type: 'candlestick',
+        data: data.map((d) => [d.open, d.close, d.low, d.high]),
+        itemStyle: { color: '#3ec47d', color0: '#ff5b5b', borderColor: '#3ec47d', borderColor0: '#ff5b5b' },
+      }];
+      break;
+    }
+    case 'boxplot': {
+      option.tooltip.trigger = 'item';
+      option.xAxis = { type: 'category', data: categories || labels(data), ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      option.series = [{
+        type: 'boxplot',
+        data: data.map((d) => Array.isArray(d.value) ? d.value : [d.min, d.q1, d.median, d.q3, d.max]),
+        itemStyle: { color: 'rgba(91,141,239,0.3)', borderColor: '#5b8def' },
+      }];
+      break;
+    }
+    case 'themeriver':
+    case 'streamgraph': {
+      option.tooltip.trigger = 'axis';
+      option.singleAxis = { type: 'time', axisLine: { lineStyle: { color: gridColor } }, axisLabel: { color: subColor } };
+      option.series = [{ type: 'themeRiver', data: data, label: { color: textColor } }];
+      delete option.grid;
+      delete option.xAxis;
+      delete option.yAxis;
+      break;
+    }
+    case 'parallel': {
+      option.parallelAxis = (spec.dimensions || []).map((d, i) => ({ dim: i, name: String(d), nameTextStyle: { color: subColor }, axisLine: { lineStyle: { color: gridColor } }, axisLabel: { color: subColor } }));
+      option.parallel = { left: 60, right: 40, top: title ? 50 : 24, bottom: 36 };
+      option.series = [{ type: 'parallel', data: data, lineStyle: { width: 1.5, opacity: 0.6 } }];
+      delete option.grid;
+      delete option.xAxis;
+      delete option.yAxis;
+      break;
+    }
+    case 'pictogram':
+    case 'pictorialbar': {
+      option.tooltip.trigger = 'axis';
+      option.xAxis = { type: 'category', data: labels(data), ...axisStyle };
+      option.yAxis = { type: 'value', ...axisStyle };
+      option.series = [{ type: 'pictorialBar', symbol: spec.symbol || 'circle', symbolRepeat: true, symbolSize: 18, data: values(data), z: 10 }];
+      break;
+    }
+    case 'calendar': {
+      const year = spec.year || new Date().getFullYear();
+      option.calendar = { range: String(year), cellSize: ['auto', 16], itemStyle: { borderColor: '#0e0f12' }, dayLabel: { color: subColor }, monthLabel: { color: subColor }, splitLine: { lineStyle: { color: gridColor } } };
+      option.visualMap = { min: spec.min ?? 0, max: spec.max ?? 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: subColor }, inRange: { color: ['#1a1b1f', '#5b8def', '#f5b942'] } };
+      option.series = [{ type: 'heatmap', coordinateSystem: 'calendar', data: data.map((d) => [d.date, d.value]) }];
+      delete option.grid;
+      delete option.xAxis;
+      delete option.yAxis;
+      break;
+    }
+    default:
+      return null;
+  }
+
+  return { option, type: rawType };
 }
 
 function renderMarkdown(text, opts = {}) {
@@ -1439,6 +1813,48 @@ class VeraView extends (window.BaseView || class {}) {
           try { Prism.highlightElement(node); } catch (_) {}
         });
       }).catch((e) => console.warn('Prism load error:', e?.message || e));
+    }
+
+    // ECharts: inicializa cualquier <div data-echarts-spec="..."> que aún no esté
+    // procesado. Decode base64 → spec → buildEChartsOption → init.
+    const echartsNodes = scope.querySelectorAll('div[data-echarts-spec]:not([data-vera-processed])');
+    if (echartsNodes.length) {
+      ensureECharts().then((echarts) => {
+        if (!echarts?.init) {
+          console.warn('ECharts no se cargó; charts se mostrarán vacíos');
+          return;
+        }
+        echartsNodes.forEach((node) => {
+          if (node.dataset.veraProcessed) return;
+          node.dataset.veraProcessed = '1';
+          try {
+            const encoded = node.dataset.echartsSpec || '';
+            const specStr = decodeURIComponent(escape(atob(encoded)));
+            const spec = JSON.parse(specStr);
+            const built = buildEChartsOption(spec);
+            if (!built) {
+              // Tipo entró a la cola de ECharts pero buildEChartsOption decidió no soportarlo
+              // → mostrar fallback de tabla en el mismo contenedor.
+              node.innerHTML = renderChartAsDataTable(spec);
+              node.style.height = 'auto';
+              return;
+            }
+            const chart = echarts.init(node, null, { renderer: 'svg' });
+            chart.setOption(built.option);
+            // Auto-resize cuando el viewport cambia (el chat es responsive)
+            const onResize = () => chart.resize();
+            window.addEventListener('resize', onResize);
+            // Limpieza si el nodo se remueve
+            node._veraChartDispose = () => {
+              window.removeEventListener('resize', onResize);
+              try { chart.dispose(); } catch (_) {}
+            };
+          } catch (e) {
+            console.warn('ECharts init error:', e?.message || e);
+            node.innerHTML = `<div class="gpt-viz--error" style="padding:14px;">Error renderizando chart: ${escapeHtml(e?.message || 'unknown')}</div>`;
+          }
+        });
+      }).catch((e) => console.warn('ECharts load error:', e?.message || e));
     }
   }
 
