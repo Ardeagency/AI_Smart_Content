@@ -112,6 +112,7 @@
 }
 
 .service-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -125,6 +126,50 @@
 
 .service-card:hover {
   border-color: var(--text-muted, rgba(255, 255, 255, 0.25));
+}
+
+/* Hover-actions de eliminar/duplicar (mismo patron que product-list-card) */
+.service-card-actions {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.service-card:hover .service-card-actions,
+.service-card:focus-within .service-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.service-card .service-card-action {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.service-card .service-card-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.service-card .service-card-action--danger:hover:not(:disabled) {
+  color: #fca5a5;
 }
 
 .service-card-head {
