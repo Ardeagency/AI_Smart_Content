@@ -353,8 +353,8 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/studio/:flowSlug', studioLoader, auth);
     r.register('/studio/:flowSlug', studioLoader, auth);
 
-    // ── Org: Vera (chat) ──
-    const veraLoader = this._lazy('VeraView', ['/js/views/VeraView.js']);
+    // ── Org: Vera (chat + voz en tiempo real con ElevenLabs) ──
+    const veraLoader = this._lazy('VeraView', ['/js/components/VeraVoice.js', '/js/views/VeraView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/vera', veraLoader, auth);
     r.register('/vera', veraLoader, auth);
 

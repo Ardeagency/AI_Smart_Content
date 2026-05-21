@@ -1358,6 +1358,9 @@ class VeraView extends (window.BaseView || class {}) {
                   <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar">
                     <i class="fas fa-paperclip"></i>
                   </button>
+                  <button class="gpt-composer-icon vera-voice-btn" id="veraVoice" title="Hablar con Vera" data-state="idle">
+                    <i class="fas fa-microphone"></i>
+                  </button>
                 </div>
                 <button class="gpt-send-btn" id="veraSend" title="Enviar" disabled>
                   <i class="fas fa-arrow-up"></i>
@@ -2216,6 +2219,72 @@ class VeraView extends (window.BaseView || class {}) {
         this._handleFileSelection(files);
       });
     }
+
+    // Voz en tiempo real (ElevenLabs Conversational AI)
+    this._wireVoiceButton();
+  }
+
+  /* ── Voz en tiempo real ──────────────────────────────── */
+  _wireVoiceButton() {
+    const btn = document.getElementById('veraVoice');
+    if (!btn || !window.VeraVoice) return;
+
+    const setBtnState = (state, meta) => {
+      btn.dataset.state = state;
+      const icon = btn.querySelector('i');
+      const map = {
+        idle:       { cls: 'fas fa-microphone',        title: 'Hablar con Vera' },
+        connecting: { cls: 'fas fa-spinner fa-spin',   title: 'Conectando…' },
+        listening:  { cls: 'fas fa-microphone-lines',  title: 'Vera escucha — clic para terminar' },
+        speaking:   { cls: 'fas fa-waveform-lines',    title: 'Vera está hablando — clic para terminar' },
+        error:      { cls: 'fas fa-microphone-slash',  title: meta?.message || 'Error de voz' },
+      };
+      const cfg = map[state] || map.idle;
+      if (icon) icon.className = cfg.cls;
+      btn.title = cfg.title;
+      btn.setAttribute('aria-pressed', state === 'listening' || state === 'speaking' ? 'true' : 'false');
+    };
+
+    this._voice = new window.VeraVoice({
+      supabase: this.supabase,
+      organizationId: this.aiState.organization_id,
+      onState: (state, meta) => {
+        setBtnState(state, meta);
+        if (state === 'listening') this.updateTypingStatus('Vera te escucha…');
+        else if (state === 'speaking') this.updateTypingStatus('Vera está hablando…');
+        else if (state === 'idle') this.updateTypingStatus('');
+        else if (state === 'error') this.updateTypingStatus(meta?.message || 'Error de voz');
+      },
+      onMessage: (role, text) => {
+        if (!text) return;
+        const msg = {
+          id: `voice-${role}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+          role,
+          content: text,
+          attachments: [],
+          created_at: new Date().toISOString(),
+          _voice: true,
+        };
+        this.aiState.messages.push(msg);
+        this.appendMessage(msg);
+      },
+      onError: (err) => {
+        console.warn('VeraVoice error:', err?.message);
+      },
+    });
+
+    this.addEventListener(btn, 'click', () => {
+      // Re-leer org_id por si cambió de sesión sin recargar la vista
+      this._voice.organizationId = this.aiState.organization_id;
+      this._voice.toggle();
+    });
+  }
+
+  destroy() {
+    // Cortar sesión de voz si está activa antes de desmontar la vista.
+    try { this._voice?.stop(); } catch (_) {}
+    this._voice = null;
+    if (super.destroy) super.destroy();
   }
 
   /* ── Adjuntos: tipo MIME → backend type ──────────────── */

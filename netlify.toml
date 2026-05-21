@@ -65,6 +65,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/ai/voice-session"
+  to = "/.netlify/functions/api-ai-voice-session"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/ai/context"
   to = "/.netlify/functions/api-ai-context"
   status = 200
