@@ -1358,8 +1358,12 @@ class VeraView extends (window.BaseView || class {}) {
                   <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar">
                     <i class="fas fa-paperclip"></i>
                   </button>
-                  <button class="gpt-composer-icon vera-voice-btn" id="veraVoice" title="Hablar con Vera" data-state="idle">
-                    <i class="fas fa-microphone"></i>
+                  <button class="gpt-composer-icon vera-voice-btn" id="veraVoice" title="Hablar con Vera" data-state="idle" aria-label="Hablar con Vera">
+                    <svg class="vera-voice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                      <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
                   </button>
                 </div>
                 <button class="gpt-send-btn" id="veraSend" title="Enviar" disabled>
@@ -2229,19 +2233,16 @@ class VeraView extends (window.BaseView || class {}) {
     const btn = document.getElementById('veraVoice');
     if (!btn || !window.VeraVoice) return;
 
+    const titleByState = {
+      idle:       'Hablar con Vera',
+      connecting: 'Conectando…',
+      listening:  'Vera escucha — clic para terminar',
+      speaking:   'Vera está hablando — clic para terminar',
+      error:      'Error de voz',
+    };
     const setBtnState = (state, meta) => {
       btn.dataset.state = state;
-      const icon = btn.querySelector('i');
-      const map = {
-        idle:       { cls: 'fas fa-microphone',        title: 'Hablar con Vera' },
-        connecting: { cls: 'fas fa-spinner fa-spin',   title: 'Conectando…' },
-        listening:  { cls: 'fas fa-microphone-lines',  title: 'Vera escucha — clic para terminar' },
-        speaking:   { cls: 'fas fa-waveform-lines',    title: 'Vera está hablando — clic para terminar' },
-        error:      { cls: 'fas fa-microphone-slash',  title: meta?.message || 'Error de voz' },
-      };
-      const cfg = map[state] || map.idle;
-      if (icon) icon.className = cfg.cls;
-      btn.title = cfg.title;
+      btn.title = state === 'error' ? (meta?.message || titleByState.error) : (titleByState[state] || titleByState.idle);
       btn.setAttribute('aria-pressed', state === 'listening' || state === 'speaking' ? 'true' : 'false');
     };
 
