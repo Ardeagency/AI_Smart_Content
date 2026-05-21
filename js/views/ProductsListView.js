@@ -711,6 +711,7 @@ class ProductsListView extends BaseView {
       return;
     }
     const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
+    let productId = null;  // declarado fuera para cleanup en error
     try {
       // 1) Crear producto placeholder para tener product_id antes de subir
       setHint('Creando producto inicial...');
@@ -735,7 +736,7 @@ class ProductsListView extends BaseView {
         .select('id')
         .single();
       if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el producto');
-      const productId = created.id;
+      productId = created.id;
 
       // 2) Subir imagenes a Supabase Storage
       setHint(`Subiendo ${files.length} foto${files.length === 1 ? '' : 's'} a storage...`);
@@ -758,9 +759,14 @@ class ProductsListView extends BaseView {
         payload: { product_id: productId, organization_id: this.organizationId, image_urls: imageUrls },
         modalHandle, setHint
       });
+      productId = null;  // exito: NO limpiar
     } catch (err) {
       console.error('ProductsListView _analyzePhotosAndCreateProduct:', err);
-      this._showNotification(err?.message || 'No se pudo generar la ficha', 'error');
+      if (productId) {
+        try { await this.supabase.from('products').delete().eq('id', productId); }
+        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
+        this._invalidateCache();
+      }
       modalHandle?.close();
     }
   }
@@ -772,6 +778,7 @@ class ProductsListView extends BaseView {
       return;
     }
     const setHint = (msg) => { if (hintEl) hintEl.textContent = msg; };
+    let productId = null;  // declarado fuera del try para que el catch pueda limpiarlo
     try {
       // 1) Crear producto placeholder
       setHint('Creando producto inicial...');
@@ -792,7 +799,7 @@ class ProductsListView extends BaseView {
         .select('id')
         .single();
       if (insertError || !created?.id) throw insertError || new Error('No se pudo crear el producto');
-      const productId = created.id;
+      productId = created.id;
 
       // 2) Llamar a la function (hace scrape + reupload + OpenAI)
       setHint(`Leyendo ${hostname || 'la pagina'} y extrayendo datos del producto...`);
@@ -801,9 +808,15 @@ class ProductsListView extends BaseView {
         payload: { product_id: productId, organization_id: this.organizationId, url },
         modalHandle, setHint
       });
+      productId = null;  // exito: NO limpiar el producto creado
     } catch (err) {
       console.error('ProductsListView _analyzeUrlAndCreateProduct:', err);
-      this._showNotification(err?.message || 'No se pudo generar la ficha', 'error');
+      // Limpiar el placeholder vacio para no dejar basura en BD si fallo el scrape/OpenAI
+      if (productId) {
+        try { await this.supabase.from('products').delete().eq('id', productId); }
+        catch (delErr) { console.warn('No se pudo limpiar placeholder:', delErr); }
+        this._invalidateCache();
+      }
       modalHandle?.close();
     }
   }

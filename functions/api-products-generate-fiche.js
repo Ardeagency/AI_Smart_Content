@@ -144,8 +144,10 @@ const SYSTEM_PROMPT = [
   'Sos un extractor de fichas de producto.',
   'Miras imagenes y devolves un JSON estructurado con lo que detectas + lo que infieres con cautela del contexto de marca.',
   'Idioma: espanol SIN acentos agudos en vocales (escribi "rapido", no "rápido"). Manten enie (ñ) y signos de puntuacion.',
-  'No inventes marcas, cifras especificas ni claims medicos. Si algo es genuinamente desconocido, deja el array vacio o usa una descripcion generica.',
-  'Tono: ajustate al verbal_dna y arquetipo de la marca. Respeta palabras_prohibidas.',
+  'REGLA #1 — NO INVENTAR: el brand context describe a la marca cliente (su tono, nichos, productos historicos), NO al producto que estas describiendo ahora. Solo describi el producto que ves en las imagenes/datos scrapeados. Si las imagenes muestran una crema de mani, el producto es una crema de mani — aunque la marca cliente sea de bebidas energeticas. Si los datos son insuficientes para identificar el producto, devolve nombre_producto="Producto no identificado" y arrays vacios. NUNCA construyas un producto ficticio que calce con la marca.',
+  'No inventes cifras especificas ni claims medicos. Si algo es genuinamente desconocido, deja el array vacio o usa una descripcion generica.',
+  'Tono: ajustate al verbal_dna y arquetipo de la marca SOLO para el lenguaje de la descripcion, NUNCA para reinterpretar lo que es el producto.',
+  'Respeta palabras_prohibidas.',
   'Concision: descripcion 60-120 palabras, items de arrays 3-12 palabras cada uno.',
   'VARIANTES: solo emite el array variantes si EXISTEN de verdad. Evidencia valida = (a) bloque "Variantes detectadas en la pagina" en el scraped context, (b) imagenes que claramente muestran el mismo producto en colores/tallas/sabores distintos, o (c) selector de opciones citado en la descripcion. Si es UN solo producto sin variaciones, variantes=[]. Nunca inventes opciones para "llenar la ficha".'
 ].join(' ');
@@ -176,6 +178,63 @@ function fail(event, status, message, extra = {}) {
     headers: corsHeaders(event),
     body: JSON.stringify({ error: message, ...extra })
   };
+}
+
+// Mapea hostname a un nombre legible de plataforma para mensajes al usuario.
+function detectPlatform(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    const map = [
+      [/mercadolibre\.|mercadolivre\./, 'Mercado Libre'],
+      [/amazon\./, 'Amazon'],
+      [/ebay\./, 'eBay'],
+      [/myshopify\.com$/, 'Shopify'],
+      [/aliexpress\./, 'AliExpress'],
+      [/alibaba\./, 'Alibaba'],
+      [/etsy\./, 'Etsy'],
+      [/walmart\./, 'Walmart'],
+      [/falabella\./, 'Falabella'],
+      [/exito\.com/, 'Éxito'],
+      [/carulla\.com/, 'Carulla'],
+      [/linio\./, 'Linio'],
+      [/rappi\./, 'Rappi'],
+      [/jumbo\.co/, 'Jumbo'],
+      [/homecenter\./, 'Homecenter'],
+      [/tiendanube\.com|nuvemshop\./, 'Tiendanube'],
+      [/vtex\.com/, 'VTEX'],
+      [/bigcommerce\.com/, 'BigCommerce'],
+      [/woocommerce\.com/, 'WooCommerce'],
+    ];
+    for (const [re, name] of map) if (re.test(host)) return name;
+    // Fallback: dominio sin TLD ni www
+    return host.replace(/^www\./, '').split('.')[0].replace(/^./, (c) => c.toUpperCase());
+  } catch (_) { return 'la URL provista'; }
+}
+
+// Determina si el scrape tiene suficientes senales reales del producto para
+// permitir la llamada a OpenAI. Sin esto, llegabamos a OpenAI con casi nada
+// (solo brand context) y el modelo inventaba productos ficticios alineados a
+// la marca.
+function isUsefulScrape(scraped) {
+  if (!scraped) return false;
+  const title = String(scraped.title || '').trim();
+  const desc = String(scraped.description || '').trim();
+  const hasImages = Array.isArray(scraped.images) && scraped.images.length > 0;
+  const hasStructured = !!scraped.brand || !!scraped.price || (Array.isArray(scraped.variants) && scraped.variants.length > 0);
+
+  // Titulos genericos de marketplace = senal falsa de pagina cargada pero sin producto util
+  const genericTitleRe = /^(mercado libre|mercadolivre|amazon|ebay|shopify|aliexpress|home|inicio|loading|cargando|404|page not found|access denied|please enable javascript|sign in|iniciar sesion)\b/i;
+  const titleIsGeneric = title && genericTitleRe.test(title);
+
+  // Necesita al menos UNA senal fuerte de producto real:
+  //  - una imagen (og:image apuntando a CDN real)
+  //  - una descripcion sustancial (>30 chars Y distinta a titulo generico)
+  //  - JSON-LD structured (brand/price/variants)
+  if (hasStructured) return true;
+  if (hasImages) return true;
+  if (desc && desc.length > 30 && !genericTitleRe.test(desc)) return true;
+  if (title && !titleIsGeneric && title.length > 10) return true;
+  return false;
 }
 
 // ─── URL scraping helpers ───────────────────────────────────────────────
@@ -709,13 +768,21 @@ async function handlerImpl(event) {
   let sourceMode = sourceUrl ? 'url' : 'photos';
 
   if (sourceUrl) {
+    const platform = detectPlatform(sourceUrl);
     try {
       scraped = await scrapeProductFromUrl(sourceUrl);
     } catch (e) {
-      return fail(event, 502, `No se pudo leer la pagina: ${e.message}`);
+      return fail(event, 502, `No se pudo leer la pagina de ${platform}: ${e.message}. Intenta con otra URL del mismo producto o sube las fotos/archivos directamente.`, { platform });
     }
-    if (!scraped.title && !scraped.description && scraped.images.length === 0) {
-      return fail(event, 422, 'La pagina no expone datos de producto (sin JSON-LD, OG tags ni imagenes utiles)');
+
+    // GUARD CRITICO: el scrape debe tener senales reales del producto. Sin esto
+    // OpenAI inventaria un producto ficticio basado solo en el brand context
+    // (caso real: URL de crema de mani en ML -> ficha de "IGNIS Energy Drink").
+    if (!isUsefulScrape(scraped)) {
+      return fail(event, 422,
+        `El producto no se pudo obtener desde la pagina de ${platform}. La URL no expone datos del producto (probablemente la pagina requiere JavaScript o tiene anti-bot activo). Intenta con otra URL del mismo producto, o sube las fotos y archivos del producto directamente.`,
+        { platform, scraped_hint: { has_title: !!scraped.title, has_description: !!scraped.description, image_count: scraped.images?.length || 0 } }
+      );
     }
     scrapedSummary = buildScrapedSummary(scraped);
 
