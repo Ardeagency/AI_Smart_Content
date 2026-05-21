@@ -305,6 +305,110 @@ async function scrapeProductFromUrl(targetUrl) {
     if (variants.length > 1) result.variants = variants;
   }
 
+  // 1b) Shopify ProductJson (patron muy comun): <script type="application/json" id="ProductJson-...">
+  // o variantes en el AnalyticsObject. Si JSON-LD no nos dio variantes, intentamos esto.
+  if (!result.variants || result.variants.length < 2) {
+    const shopifyJsonMatches = [...html.matchAll(/<script[^>]+type=["']application\/json["'][^>]*\bid=["']ProductJson[^"']*["'][^>]*>([\s\S]*?)<\/script>/gi)];
+    for (const m of shopifyJsonMatches) {
+      try {
+        const sp = JSON.parse(m[1].trim());
+        if (Array.isArray(sp.variants) && sp.variants.length > 1) {
+          const optionNames = (Array.isArray(sp.options) ? sp.options : []).map((o) => typeof o === 'string' ? o : (o?.name || '')).map((s) => s.toLowerCase());
+          const idxColor = optionNames.findIndex((n) => /color|colou?r/i.test(n));
+          const idxSize = optionNames.findIndex((n) => /size|talla|tamano/i.test(n));
+          const idxFlavor = optionNames.findIndex((n) => /sabor|flavor/i.test(n));
+          result.variants = sp.variants.slice(0, 20).map((v) => {
+            const opts = [v.option1, v.option2, v.option3];
+            const featImage = v.featured_image?.src || v.featured_media?.preview_image?.src || null;
+            // Shopify expone precios en centavos (12990 = $129.90)
+            const pricePart = (v.price != null) ? (typeof v.price === 'number' ? v.price / 100 : (Number(String(v.price).replace(/[^\d.]/g, '')) || null)) : null;
+            return {
+              variant_name: v.title || v.public_title || v.name || null,
+              sku: v.sku || null,
+              price: pricePart != null ? String(pricePart) : null,
+              currency: null,
+              color: idxColor >= 0 ? opts[idxColor] : null,
+              size: idxSize >= 0 ? opts[idxSize] : null,
+              flavor: idxFlavor >= 0 ? opts[idxFlavor] : null,
+              image: featImage
+            };
+          });
+          break;
+        }
+      } catch (_) { /* malformed, skip */ }
+    }
+  }
+
+  // 1c) Fallback generico: ANY <script type="application/json"> con array variants/variations
+  if (!result.variants || result.variants.length < 2) {
+    const allJsonScripts = [...html.matchAll(/<script[^>]+type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+    outer: for (const m of allJsonScripts) {
+      try {
+        const obj = JSON.parse(m[1].trim());
+        const queue = [obj];
+        while (queue.length) {
+          const cur = queue.shift();
+          if (!cur || typeof cur !== 'object') continue;
+          for (const key of ['variants', 'variations', 'productVariants']) {
+            if (Array.isArray(cur[key]) && cur[key].length > 1) {
+              const looksLikeVariants = cur[key].every((x) => x && typeof x === 'object' && (x.title || x.name || x.sku || x.option1 || x.attributes));
+              if (looksLikeVariants) {
+                result.variants = cur[key].slice(0, 20).map((v) => ({
+                  variant_name: v.title || v.name || v.public_title || null,
+                  sku: v.sku || null,
+                  price: v.price != null ? (typeof v.price === 'number' && v.price > 1000 ? v.price / 100 : v.price) : (v.display_price || null),
+                  currency: v.currency || null,
+                  color: v.option1 || v.attributes?.attribute_pa_color || v.color || null,
+                  size: v.option2 || v.attributes?.attribute_pa_size || v.size || null,
+                  flavor: v.option3 || null,
+                  image: v.featured_image?.src || v.image?.src || v.image_url || null
+                }));
+                break outer;
+              }
+            }
+          }
+          // BFS shallow (max 2 levels) buscando variants arrays anidados
+          for (const k in cur) {
+            if (cur[k] && typeof cur[k] === 'object' && queue.length < 30) queue.push(cur[k]);
+          }
+        }
+      } catch (_) { /* skip */ }
+    }
+  }
+
+  // 1d) WooCommerce: <form class="variations_form" data-product_variations='[...]'>
+  if (!result.variants || result.variants.length < 2) {
+    const wooMatch = html.match(/data-product_variations=(?:'|&#039;|&apos;)([\s\S]*?)(?:'|&#039;|&apos;)/i)
+                  || html.match(/data-product_variations=["']([\s\S]*?)["']/i);
+    if (wooMatch) {
+      try {
+        const decoded = decodeHtmlEntities(wooMatch[1]);
+        const arr = JSON.parse(decoded);
+        if (Array.isArray(arr) && arr.length > 1) {
+          result.variants = arr.slice(0, 20).map((v) => ({
+            variant_name: Object.values(v.attributes || {}).join(' ') || null,
+            sku: v.sku || null,
+            price: v.display_price || v.price || null,
+            currency: null,
+            color: v.attributes?.attribute_pa_color || v.attributes?.attribute_color || null,
+            size: v.attributes?.attribute_pa_size || v.attributes?.attribute_size || null,
+            flavor: null,
+            image: v.image?.src || v.image?.url || null
+          }));
+        }
+      } catch (_) { /* skip */ }
+    }
+  }
+
+  // Si encontramos variantes con featured_image, las metemos AL FRENTE de result.images
+  // para que el reupload las priorice. Asi OpenAI ve cada variante y puede describirla.
+  if (Array.isArray(result.variants)) {
+    const variantImages = result.variants.map((v) => v.image).filter((u) => u && typeof u === 'string');
+    if (variantImages.length) {
+      result.images = [...new Set([...variantImages, ...result.images])];
+    }
+  }
+
   // 2) Open Graph y meta tags
   const ogImage = readMeta(html, [['property', 'og:image'], ['name', 'og:image']]);
   if (!result.title) result.title = readMeta(html, [['property', 'og:title']]);
@@ -403,16 +507,17 @@ function buildScrapedSummary(s) {
   if (s.price) lines.push(`Precio: ${s.price}${s.currency ? ' ' + s.currency : ''}`);
   if (s.availability) lines.push(`Disponibilidad: ${String(s.availability).split('/').pop()}`);
   if (Array.isArray(s.variants) && s.variants.length > 1) {
-    const varSummary = s.variants.slice(0, 12).map((v, i) => {
+    const varSummary = s.variants.slice(0, 20).map((v, i) => {
       const parts = [];
       if (v.variant_name) parts.push(v.variant_name);
       if (v.color) parts.push(`color: ${v.color}`);
       if (v.size) parts.push(`talla: ${v.size}`);
+      if (v.flavor) parts.push(`sabor: ${v.flavor}`);
       if (v.price) parts.push(`$${v.price}${v.currency ? ' ' + v.currency : ''}`);
       if (v.sku) parts.push(`SKU: ${v.sku}`);
       return `  ${i + 1}. ${parts.join(' · ')}`;
     }).join('\n');
-    lines.push(`Variantes detectadas en la pagina (${s.variants.length}):\n${varSummary}`);
+    lines.push(`Variantes detectadas en la pagina (${s.variants.length}, listadas TODAS — NO inventes adicionales, NO omitas):\n${varSummary}`);
   }
   return lines.join('\n');
 }
@@ -536,8 +641,9 @@ async function handlerImpl(event) {
     }
     scrapedSummary = buildScrapedSummary(scraped);
 
-    const candidates = (scraped.images || []).slice(0, 3);
-    // Paralelizar reuploads — ahorra segundos criticos del timeout de 10s.
+    // Cap a 6 imagenes: cubre productos con 5+ variantes (una imagen por color/talla)
+    // sin pegar el timeout 10s. Paralelizado por allSettled = ~3s para las 6.
+    const candidates = (scraped.images || []).slice(0, 6);
     const results = await Promise.allSettled(
       candidates.map((src, i) => reuploadImageToBucket({
         env, sourceUrl: src, userId: user.id, productId, index: i
