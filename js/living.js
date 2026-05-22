@@ -1953,11 +1953,17 @@ class LivingManager {
         if (!container) return;
         const tp = this._safeParseJSON(output?.technical_params) || {};
         const meta = this._safeParseJSON(output?.metadata) || {};
-        // Model: prioriza la columna nueva runs_outputs.model (poblada por trigger
-        // o por n8n explicitamente); fallback a tp/meta para rows pre-trigger.
-        const model = output?.model
-            || tp.model || meta.model || meta.engine || meta.model_name
-            || '—';
+        // Modelos: la columna runs_outputs.models es jsonb array (puede traer
+        // varios: GPT para el plan creativo + Nanobanana para imagen + Kling
+        // para animar). Fallback a tp/meta para rows pre-trigger.
+        const rawModels = (Array.isArray(output?.models) ? output.models : null)
+            || this._safeParseJSON(output?.models)
+            || (tp.model || meta.model || meta.engine || meta.model_name
+                ? [tp.model || meta.model || meta.engine || meta.model_name]
+                : []);
+        const models = Array.isArray(rawModels)
+            ? rawModels.map(m => typeof m === 'string' ? m : (m?.name || m?.model || '')).filter(Boolean)
+            : [];
         const quality = tp.quality || meta.quality || meta.resolution_tier || (meta.is_4k ? '4k' : '');
         const size = (() => {
             const w = tp.width || meta.width || meta.size_x;
@@ -1978,20 +1984,30 @@ class LivingManager {
         const campaignName = run?.campaigns?.nombre_campana || (run?.campaign_id ? 'Sin nombre' : '—');
         const audienceName = run?.audience_personas?.name || (run?.persona_id ? 'Sin nombre' : '—');
 
+        // Renderizado especial para modelos: chips en lugar de texto plano.
+        const modelsHtml = models.length
+            ? `<span class="pmodal-info-models">${models.map(m =>
+                `<span class="pmodal-model-chip">${this.escapeHtml(m)}</span>`
+              ).join('')}</span>`
+            : '<span class="pmodal-info-value">—</span>';
+
         const rows = [
-            ['Flow', flowName || '—'],
-            ['Campana', campaignName],
-            ['Audiencia', audienceName],
-            ['Model', model || '—'],
-            quality ? ['Quality', String(quality)] : null,
-            size ? ['Size', size] : null,
-            createdStr ? ['Created', createdStr] : null
+            ['Flow', flowName || '—', null],
+            ['Campana', campaignName, null],
+            ['Audiencia', audienceName, null],
+            [models.length > 1 ? 'Modelos' : 'Modelo', null, modelsHtml],
+            quality ? ['Quality', String(quality), null] : null,
+            size ? ['Size', size, null] : null,
+            createdStr ? ['Created', createdStr, null] : null
         ].filter(Boolean);
 
-        container.innerHTML = rows.map(([label, value]) => `
+        container.innerHTML = rows.map(([label, value, customHtml]) => `
             <div class="pmodal-info-row">
                 <span class="pmodal-info-label">${this.escapeHtml(label)}</span>
-                <span class="pmodal-info-value">${this.escapeHtml(value)}</span>
+                ${customHtml
+                    ? customHtml
+                    : `<span class="pmodal-info-value">${this.escapeHtml(value)}</span>`
+                }
             </div>
         `).join('');
     }

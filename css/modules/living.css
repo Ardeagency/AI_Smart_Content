@@ -1072,6 +1072,28 @@ body.production-filters-in-header .living-container > .living-history-section {
     white-space: nowrap;
     min-width: 0;
 }
+/* Cadena de modelos: chips inline alineados a la derecha (multi-modelo:
+   GPT + Nanobanana + Kling, etc). Se permite wrap si no caben. */
+.pmodal-info-models {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+.pmodal-model-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
 
 /* CTAs grandes Animate / Publish — accent fijo, NO brand theme */
 .pmodal-cta-grid {
