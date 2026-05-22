@@ -184,11 +184,22 @@
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-radius: 14px;
-    --glass-blur: blur(7px);
+    /* glass-blur: era blur(7px) — visualmente insuficiente para sentirse glass
+       sobre fondos de alto contraste. El equipo lo parcho hardcoded en
+       #userDropdown.glass-black y #notificationsDropdown.glass-black con
+       blur(18px) saturate(160%). Lo subimos al token para que la clase
+       utility .glass-black y todos los elementos que usen var(--glass-blur)
+       se vean consistentes. */
+    --glass-blur: blur(18px) saturate(160%);
     --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
-    --glass-black-bg: rgba(0, 0, 0, 0.5);
-    --glass-black-border: var(--glass-border);
+    /* Transparencia controlada: 0.34 es el valor real que el equipo usa en los
+       overrides hardcoded (#userDropdown.glass-black). Era 0.5 — demasiado
+       opaco para sentirse "transluciente" sobre el blur fuerte. */
+    --glass-black-bg: rgba(0, 0, 0, 0.34);
+    /* Border ligeramente mas opaco que glass-border: matchea el patron real
+       del estandar (era var(--glass-border) = 0.10). */
+    --glass-black-border: rgba(255, 255, 255, 0.14);
     --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
     --glass-white-bg: rgba(255, 255, 255, 0.14);
