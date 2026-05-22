@@ -42,13 +42,13 @@ function getKieAuthHeaders() {
 }
 
 async function createKieTask({ headers, imageUrl }) {
-  // Payload conservador segun patron kie.ai. Si el modelo exacto requiere
-  // otro nombre de campo (p.ej. image_input array), el primer test devolvera
-  // el error exacto y ajustamos.
+  // Payload exacto segun doc kie.ai recraft/remove-background:
+  //   input.image (string URL, PNG/JPG/WebP, max 5MB, max 16MP,
+  //   max 4096px, min 256px).
   const payload = {
     model: KIE_MODEL,
     input: {
-      image_url: imageUrl
+      image: imageUrl
     }
   };
   const callBackUrl = process.env.KIE_NANO_CALLBACK_URL || '';
