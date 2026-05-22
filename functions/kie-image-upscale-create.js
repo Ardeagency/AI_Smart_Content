@@ -44,14 +44,14 @@ function getKieAuthHeaders() {
 }
 
 async function createKieTask({ headers, imageUrl, scale }) {
+  // Payload exacto segun doc kie.ai topaz/image-upscale:
+  //   input.image_url (string, JPG/PNG/WebP, max 10MB)
+  //   input.upscale_factor (STRING enum: "1", "2", "4", "8")
   const payload = {
     model: KIE_MODEL,
     input: {
       image_url: imageUrl,
-      image_input: [imageUrl],
-      scale_factor: scale,
-      scale: scale,
-      output_format: 'png'
+      upscale_factor: String(scale)
     }
   };
   const callBackUrl = process.env.KIE_NANO_CALLBACK_URL || '';
@@ -130,8 +130,9 @@ exports.handler = async (event) => {
   const imageUrl = String(body.image_url || '').trim();
   const sourceOutputId = String(body.source_output_id || '').trim() || null;
   const organizationId = String(body.organization_id || '').trim();
+  // Topaz soporta 1, 2, 4, 8. Default 4 (Mejorar 4K). 8 puede tardar mucho.
   const scaleRaw = Number(body.scale || 4);
-  const scale = [2, 4].includes(scaleRaw) ? scaleRaw : 4;
+  const scale = [1, 2, 4, 8].includes(scaleRaw) ? scaleRaw : 4;
 
   if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
   if (!organizationId) return fail(event, 400, 'organization_id requerido');
