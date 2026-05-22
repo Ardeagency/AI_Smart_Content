@@ -39,15 +39,30 @@
       const containerW = container.getBoundingClientRect().width;
       if (containerW <= 0) return;
 
-      // Recolecta ratios; default = 1 (cuadrado) si la imagen aún no cargó.
+      // Recolecta ratios. Prioridad:
+      //   1) data-aspect-ratio del item (placeholder estable)
+      //   2) naturalWidth/Height del <img> ya cargado
+      //   3) videoWidth/Height del <video> ya cargado (preload=none = no disponible)
+      //   4) default 0.8 (4:5, formato vertical tipico de IG/feed) si nada esta resuelto
+      // El default 0.8 evita el salto visual del 1.0 (cuadrado) al ratio real.
+      const DEFAULT_RATIO = 0.8;
       const entries = items.map((item) => {
-        const media = item.querySelector('img, video');
-        let ratio = 1;
-        if (media) {
-          const w = media.tagName === 'IMG' ? media.naturalWidth  : media.videoWidth;
-          const h = media.tagName === 'IMG' ? media.naturalHeight : media.videoHeight;
-          if (w && h) ratio = w / h;
+        let ratio = NaN;
+        const declared = parseFloat(item.getAttribute('data-aspect-ratio') || '');
+        if (declared > 0) ratio = declared;
+        if (!ratio || Number.isNaN(ratio)) {
+          const media = item.querySelector('img, video');
+          if (media) {
+            const w = media.tagName === 'IMG' ? media.naturalWidth  : media.videoWidth;
+            const h = media.tagName === 'IMG' ? media.naturalHeight : media.videoHeight;
+            if (w && h) {
+              ratio = w / h;
+              // Cachear para futuros re-layouts sin esperar al evento load.
+              item.setAttribute('data-aspect-ratio', ratio.toFixed(4));
+            }
+          }
         }
+        if (!ratio || Number.isNaN(ratio)) ratio = DEFAULT_RATIO;
         ratio = Math.max(opts.minRatio, Math.min(opts.maxRatio, ratio));
         return { item, ratio };
       });

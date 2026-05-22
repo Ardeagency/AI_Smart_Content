@@ -1071,8 +1071,7 @@ class LivingManager {
                         if (u) thumbnailUrl = u;
                     }
                 }
-                const card = this.renderVideoCard(thumbnailUrl, item.run, item.output, item.prompt, index);
-                return `<div class="living-masonry-item living-masonry-item-video">${card}</div>`;
+                return this.renderVideoCard(thumbnailUrl, item.run, item.output, item.prompt, index);
             }
             if (item.contentType === 'text') {
                 return this.renderTextCard(item.run, item.output, index);
@@ -1091,7 +1090,7 @@ class LivingManager {
         // Justified rows layout (Flickr/Google Photos/Higgsfield). El JS calcula
         // las dimensiones de cada item según su aspect ratio para que cada fila
         // tenga altura uniforme y llene el ancho exacto del container.
-        const gridHtml = `<div class="living-masonry-grid living-history-masonry">${itemHtmls.join('')}</div>`;
+        const gridHtml = `<div class="living-masonry-grid living-history-masonry" role="list" aria-label="Producciones">${itemHtmls.join('')}</div>`;
         container.innerHTML = gridHtml;
 
         const grid = container.querySelector('.living-masonry-grid') || container;
@@ -1387,21 +1386,27 @@ class LivingManager {
             prompt: prompt || '',
             item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
-        
+
+        const eager = (typeof index === 'number' && index < 4);
+        const loadingAttr = eager ? 'eager' : 'lazy';
+        const fetchAttr = eager ? 'high' : 'auto';
         const isVideoUrl = finalUrl && /\.(mp4|webm|mov)(\?|$)/i.test(finalUrl);
+        // preload="none": el grid no descarga video hasta que el usuario haga hover/abra el modal.
+        // El layout JS espera loadedmetadata para conocer dimensiones, asi que damos una clase data-needs-meta
+        // que se hidrata bajo demanda en setupHistoryCardListeners (hover) o en applyJustifiedLayout (ya en viewport).
         const thumbnailHtml = finalUrl
             ? (isVideoUrl
-                ? `<video class="history-video-card-thumbnail" src="${this.escapeHtml(finalUrl)}" muted playsinline preload="metadata" loading="lazy" crossorigin="anonymous" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center;min-width:180px;min-height:120px'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--living-text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
-                : `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" onload="this.parentElement.style.width=this.naturalWidth/(this.naturalHeight/240)+'px';" />`)
-            : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center; width: 180px;">
-                <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
+                ? `<video class="history-video-card-thumbnail" data-src="${this.escapeHtml(finalUrl)}" muted playsinline preload="none" crossorigin="anonymous" aria-label="Vista previa de video" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--living-text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
+                : `<img src="${this.escapeHtml(finalUrl)}" alt="Vista previa de video" class="history-video-card-thumbnail" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`)
+            : `<div class="history-video-card-thumbnail history-video-card-thumbnail--empty" aria-hidden="true">
+                <i class="fas fa-video"></i>
             </div>`;
         return `
-            <div class="history-video-card" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
-                <div class="history-video-card-thumbnail-wrap">${thumbnailHtml}</div>
+            <article class="living-masonry-item history-video-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de video')}">
+                <figure class="history-video-card-thumbnail-wrap">${thumbnailHtml}</figure>
                 ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
-                <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
-            </div>
+                <figcaption class="history-card-flow-name">${this.escapeHtml(flowName)}</figcaption>
+            </article>
         `;
     }
 
@@ -1415,33 +1420,32 @@ class LivingManager {
             prompt: prompt || '',
             item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
-        
+
+        const eager = (typeof index === 'number' && index < 4);
+        const loadingAttr = eager ? 'eager' : 'lazy';
+        const fetchAttr = eager ? 'high' : 'auto';
+
         return `
-            <div class="living-masonry-item">
-                <div class="history-image-card" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
+            <article class="living-masonry-item history-image-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de imagen')}">
+                <figure class="history-image-card-media">
                     ${finalUrl
-                        ? `<img src="${this.escapeHtml(finalUrl)}" alt="Producción" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--living-text-muted);\\'><i class=\\'fas fa-image\\'></i></div>';" />`
-                        : `<div style="padding: 2rem; text-align: center; color: var(--living-text-muted);">
-                            <i class="fas fa-image" style="font-size: 2rem;"></i>
-                        </div>`
+                        ? `<img src="${this.escapeHtml(finalUrl)}" alt="${this.escapeHtml(flowName || 'Produccion')}" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.closest('figure').innerHTML='<div class=\\'history-image-card-fallback\\'><i class=\\'fas fa-image\\'></i></div>';" />`
+                        : `<div class="history-image-card-fallback" aria-hidden="true"><i class="fas fa-image"></i></div>`
                     }
-                    ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
-                    <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
-                </div>
-            </div>
+                </figure>
+                ${this._renderCardOverlay(output?.id, finalUrl, this.escapeHtml(promptSafe))}
+                <figcaption class="history-card-flow-name">${this.escapeHtml(flowName)}</figcaption>
+            </article>
         `;
     }
-    
+
     renderTextCard(run, output, index) {
         const productionId = run?.id || output?.id;
-        
         return `
-            <div class="living-masonry-item">
-                <div class="history-text-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
-                    <div class="history-text-card-icon">?</div>
-                    <div class="history-text-card-title">Producción de texto</div>
-                </div>
-            </div>
+            <article class="living-masonry-item history-text-card" role="listitem" data-production-id="${productionId}" data-run-id="${run?.id || ''}" aria-label="Produccion de texto">
+                <div class="history-text-card-icon" aria-hidden="true">?</div>
+                <p class="history-text-card-title">Produccion de texto</p>
+            </article>
         `;
     }
     
@@ -1488,13 +1492,23 @@ class LivingManager {
             ? `.history-${type}-card, .history-text-card`
             : '.history-video-card, .history-image-card, .history-text-card';
 
-        // Hover de video (preview en mute) — sigue siendo por-card.
+        // Hover de video (preview en mute). preload="none" + data-src: solo descargamos
+        // cuando el usuario hace hover por primera vez. Asi el grid no descarga decenas
+        // de videos solo por scrollear.
         container.querySelectorAll(selector).forEach(card => {
             if (!card.classList.contains('history-video-card')) return;
             const wrap = card.querySelector('.history-video-card-thumbnail-wrap');
+            const hydrate = (video) => {
+                if (!video || video.src) return;
+                const ds = video.getAttribute('data-src');
+                if (ds) { video.src = ds; video.removeAttribute('data-src'); }
+            };
             card.addEventListener('mouseenter', () => {
                 const video = wrap && wrap.querySelector('video');
-                if (video) { video.muted = true; video.play().catch(() => {}); }
+                if (!video) return;
+                hydrate(video);
+                video.muted = true;
+                video.play().catch(() => {});
             });
             card.addEventListener('mouseleave', () => {
                 const video = wrap && wrap.querySelector('video');
@@ -1724,21 +1738,33 @@ class LivingManager {
         const isVideo = (mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl))
             || /video|reel|clip/.test(outputType);
 
-        // Pintar visual.
+        // Pintar visual. Lazy: solo asignamos src al video DESPUES de que el modal sea
+        // visible, no antes. Asi un click rapido no dispara descarga si el usuario cierra.
         const imgEl = document.getElementById('pmodalImage');
         const videoEl = document.getElementById('pmodalVideo');
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
         if (isVideo && mediaUrl) {
-            imgEl.hidden = true; imgEl.src = '';
+            imgEl.hidden = true; imgEl.removeAttribute('src');
             videoEl.hidden = false;
-            videoEl.src = mediaUrl;
-            videoEl.load();
-            videoEl.play().catch(() => {});
+            videoEl.preload = 'metadata';
+            // Defer la asignacion hasta el siguiente frame (despues de que clase .is-open haya pintado).
+            requestAnimationFrame(() => {
+                if (!this._modalState || this._modalState.outputId !== outputId) return;
+                videoEl.src = mediaUrl;
+                videoEl.load();
+                videoEl.play().catch(() => {});
+            });
         } else {
             videoEl.hidden = true;
             imgEl.hidden = !mediaUrl;
-            imgEl.src = mediaUrl || '';
-            imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Production');
+            if (mediaUrl) {
+                imgEl.decoding = 'async';
+                imgEl.setAttribute('fetchpriority', 'high');
+                imgEl.src = mediaUrl;
+            } else {
+                imgEl.removeAttribute('src');
+            }
+            imgEl.alt = (typeof data?.prompt === 'string' ? data.prompt : 'Produccion');
         }
 
         // Prompt → bloques labeled. La fuente primaria es output.generated_copy
@@ -1779,6 +1805,12 @@ class LivingManager {
         if (!modal) return;
         const videoEl = document.getElementById('pmodalVideo');
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
+        const imgEl = document.getElementById('pmodalImage');
+        if (imgEl) { imgEl.removeAttribute('src'); imgEl.hidden = true; }
+        if (this._siblingObserver) {
+            try { this._siblingObserver.disconnect(); } catch (_) {}
+            this._siblingObserver = null;
+        }
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('production-modal-open');
@@ -1980,16 +2012,44 @@ class LivingManager {
         const siblings = (this.flowOutputs || []).filter(o => o && o.run_id === runId && o.id !== currentOutputId);
         if (!siblings.length) { strip.hidden = true; strip.innerHTML = ''; return; }
         strip.hidden = false;
+        // data-src + IntersectionObserver: las thumbs no descargan hasta que entran al viewport
+        // del scroll container. loading="lazy" en <img> dentro de overflow:auto no es confiable.
         strip.innerHTML = siblings.slice(0, 8).map(s => {
             const url = this.resolveOutputMediaUrl(s)
                 || (s.storage_path ? (this.getPublicUrlFromStorage('production-outputs', s.storage_path) || this.getPublicUrlFromStorage('outputs', s.storage_path)) : '')
                 || '';
             return `
-                <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante">
-                    ${url ? `<img src="${this.escapeHtml(url)}" alt="" loading="lazy">` : `<i class="fas fa-image"></i>`}
+                <button type="button" class="pmodal-sibling" data-output-id="${this.escapeHtml(s.id)}" title="Abrir variante" aria-label="Variante de produccion">
+                    ${url ? `<img data-src="${this.escapeHtml(url)}" alt="" decoding="async" loading="lazy">` : `<i class="fas fa-image" aria-hidden="true"></i>`}
                 </button>
             `;
         }).join('');
+        this._observeSiblingThumbs(strip);
+    }
+
+    _observeSiblingThumbs(strip) {
+        if (!strip) return;
+        if (this._siblingObserver) { try { this._siblingObserver.disconnect(); } catch (_) {} }
+        const scrollRoot = document.getElementById('pmodalScroll') || null;
+        const hydrate = (img) => {
+            const ds = img.getAttribute('data-src');
+            if (!ds) return;
+            img.src = ds;
+            img.removeAttribute('data-src');
+        };
+        if (!('IntersectionObserver' in window)) {
+            strip.querySelectorAll('img[data-src]').forEach(hydrate);
+            return;
+        }
+        this._siblingObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    hydrate(entry.target);
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { root: scrollRoot, rootMargin: '200px', threshold: 0.01 });
+        strip.querySelectorAll('img[data-src]').forEach(img => this._siblingObserver.observe(img));
     }
 
     async _renderModalAuthor(userId) {
