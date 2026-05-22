@@ -148,8 +148,11 @@
     },
 
   renderBrandReadonlySchema(item) {
-    const schemaBlocks = window.BrandSchema?.BRAND_SCHEMA_BLOCKS_CONTAINER || [];
-    const fieldHtml = [{ field: 'nombre_marca', label: 'Nombre de sub-marca', type: 'text' }, ...schemaBlocks].map((block) => {
+    // nombre_marca se edita inline arriba en .brand-storage-info-title;
+    // propuesta_valor (subtitle) tambien. Aqui solo el resto del schema.
+    const schemaBlocks = (window.BrandSchema?.BRAND_SCHEMA_BLOCKS_CONTAINER || [])
+      .filter((block) => block.field !== 'propuesta_valor');
+    const fieldHtml = schemaBlocks.map((block) => {
       const raw = item?.[block.field];
       let valueHtml = '';
       if (block.type === 'select') {
@@ -284,16 +287,15 @@
               </div>
             </div>
             <div class="brand-storage-info-summary">
-              <div class="brand-storage-info-title">${name}</div>
-              <div class="brand-storage-info-subtitle">${slogan || 'Sin propuesta de valor definida'}</div>
+              <div class="brand-storage-info-title editable-inline-title" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="nombre_marca" data-placeholder="Nombre de sub-marca">${name}</div>
+              <div class="brand-storage-info-subtitle editable-inline-subtitle" role="textbox" contenteditable="true" spellcheck="true" data-inline-field="propuesta_valor" data-placeholder="Sin propuesta de valor definida">${slogan}</div>
               <div class="brand-storage-info-dates">${updated ? `Última actualización ${this.escapeHtml(updated)}` : 'Sin actualizaciones'}</div>
             </div>
           </section>
           ${this.renderIntegrationsSection(item?.id)}
         </div>
-        <aside class="info-panel-grid__secondary" aria-labelledby="infoBrandMetaHeading">
+        <aside class="info-panel-grid__secondary">
           <div class="info-brand-aside-inner">
-            <h3 class="info-section-title" id="infoBrandMetaHeading">Ficha completa de la sub-marca</h3>
             ${this.renderBrandReadonlySchema(item)}
           </div>
         </aside>
@@ -687,6 +689,42 @@
 
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
+
+    // Editores inline sin chrome (mismo patron que el slogan del corner):
+    // nombre_marca + propuesta_valor en la columna primary del panel.
+    panelRoot.querySelectorAll('[data-inline-field]').forEach((el) => {
+      if (el.dataset.boundInlineField === '1') return;
+      el.dataset.boundInlineField = '1';
+      const field = el.getAttribute('data-inline-field');
+      if (!field) return;
+
+      el.addEventListener('blur', async () => {
+        const next = String(el.textContent || '').trim();
+        const item = (this.brandContainers || []).find((r) => String(r.id) === String(brandContainerId));
+        const prev = String(item?.[field] || '').trim();
+        if (next === prev) {
+          el.textContent = prev;
+          return;
+        }
+        const ok = await this.saveBrandContainerFieldById(brandContainerId, field, next || null);
+        if (!ok) {
+          el.textContent = prev;
+        }
+      });
+
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          el.blur();
+        }
+      });
+
+      el.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        document.execCommand('insertText', false, text);
+      });
+    });
 
     panelRoot.querySelectorAll('.info-connect-action.is-connect[data-connect-provider][data-brand-container-id]').forEach((btn) => {
       if (btn.dataset.boundConnectAction === '1') return;
