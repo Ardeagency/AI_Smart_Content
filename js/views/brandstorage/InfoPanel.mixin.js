@@ -172,8 +172,13 @@
         const textValue = raw == null ? '' : String(raw);
         valueHtml = `<div class="info-brand-text-editor editable-field" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="text" contenteditable="true">${this.escapeHtml(textValue)}</div>`;
       }
+      // Fields tipo JSON tienen sub-bloques con sus propios containers
+      // (TONO, FORMATO, PILARES...). Anidarlos dentro de otro container
+      // se ve sucio. Modifier class abre el outer y vuelve al label en
+      // titulo de seccion con linea inferior.
+      const modifier = block.type === 'json' ? ' info-brand-field--json' : '';
       return `
-        <div class="info-brand-field">
+        <div class="info-brand-field${modifier}">
           <div class="info-brand-field-label">${this.escapeHtml(block.label)}</div>
           ${valueHtml}
         </div>`;

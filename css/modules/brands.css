@@ -2167,6 +2167,38 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Fields tipo JSON (ADN VERBAL, ADN VISUAL): el label se vuelve titulo de
+   seccion con linea inferior (separa del schema flat). El editor outer
+   pierde su bg/border para evitar el efecto "container dentro de container"
+   con los sub-bloques (TONO, FORMATO, PILARES) que ya tienen su propio
+   container.
+   ───────────────────────────────────────────────────────────────────────── */
+
+#infoPanelContent .info-brand-field--json {
+    margin-top: 1.5rem;
+}
+
+#infoPanelContent .info-brand-field--json > .info-brand-field-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* El outer del JSON editor pierde su bg/border — los sub-bloques internos
+   conservan el suyo (info-brand-json-subgroup, info-brand-tags-editor, etc.). */
+#infoPanelContent .info-brand-field--json .info-brand-json-editor {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Editores inline sin chrome con affordance editable
    Aplica a:
      - Nombre + slogan del corner de la org (.brand-name-large, .brand-slogan-input)
