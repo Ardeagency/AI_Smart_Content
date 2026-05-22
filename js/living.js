@@ -1049,7 +1049,8 @@ class LivingManager {
             _isPendingEdit: true,
             _pendingTaskId: p.taskId,
             _pendingSourceImage: p.sourceImageUrl,
-            _pendingAspectRatio: p.aspectRatio
+            _pendingAspectRatio: p.aspectRatio,
+            _pendingLabel: p.label || 'Editando con IA'
         }));
 
         const seenIds = new Set();
@@ -2298,7 +2299,7 @@ class LivingManager {
                 this._openEditOverlay();
                 break;
             case 'upscale':
-                this._toolbarSoonToast('Mejorar 4K', 'Topaz');
+                this._applyUpscale();
                 break;
             case 'remove-bg':
                 this._toolbarSoonToast('Sin fondo', 'Recraft');
@@ -2312,6 +2313,128 @@ class LivingManager {
                 break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * Mejora 4K via kie.ai Topaz upscale. Sin overlay ni prompt — click directo
+     * dispara: validacion → POST function → cerrar modal → skeleton card en grid
+     * → polling → descarga → upload Storage → insert system_ai_outputs.
+     * Reusa todos los helpers del flujo de edit (background tasks).
+     */
+    async _applyUpscale() {
+        const state = this._modalState || {};
+        const imageUrl = state.mediaUrl;
+        const sourceOutputId = state.outputId || null;
+        if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
+            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            return;
+        }
+        if (!this.organizationId) {
+            if (typeof window.showToast === 'function') window.showToast('Falta organization_id');
+            return;
+        }
+
+        if (typeof window.showToast === 'function') window.showToast('Mejorando a 4K — toma 30-60s');
+
+        let aspectRatio = this._sourceProductInfo?.aspectRatio || null;
+        if (!aspectRatio) {
+            try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
+            catch (_) { aspectRatio = '1:1'; }
+        }
+
+        let createPayload;
+        try {
+            const accessToken = await this._getAccessToken();
+            if (!accessToken) throw new Error('No hay sesion activa');
+            const res = await fetch('/.netlify/functions/kie-image-upscale-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    image_url: imageUrl,
+                    source_output_id: sourceOutputId,
+                    organization_id: this.organizationId,
+                    scale: 4
+                })
+            });
+            let parsed;
+            try { parsed = await res.json(); }
+            catch (_) {
+                const text = await res.text().catch(() => '');
+                throw new Error(`Gateway HTTP ${res.status}: ${text.slice(0, 200) || 'sin body'}`);
+            }
+            if (!res.ok) {
+                if (res.status === 402) throw new Error(`Creditos insuficientes (${parsed.credits_needed ?? '?'} cred)`);
+                throw new Error(parsed.error || `HTTP ${res.status}`);
+            }
+            createPayload = parsed;
+        } catch (err) {
+            console.error('[upscale] create error:', err);
+            if (typeof window.showToast === 'function') window.showToast(`No se pudo iniciar: ${err.message}`);
+            return;
+        }
+
+        const clientId = `pending-upscale-${createPayload.taskId}`;
+        this.closeProductionModal?.();
+        this._addPendingEditCard({
+            clientId,
+            taskId: createPayload.taskId,
+            sourceImageUrl: imageUrl,
+            aspectRatio,
+            label: 'Mejorando a 4K'
+        });
+
+        this._completeUpscaleInBackground({
+            clientId,
+            taskId: createPayload.taskId,
+            createPayload,
+            sourceOutputId,
+            sourceImageUrl: imageUrl,
+            aspectRatio
+        });
+    }
+
+    async _completeUpscaleInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio }) {
+        try {
+            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
+            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
+
+            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
+            if (!this.userId) throw new Error('Falta user_id');
+            const row = {
+                brand_container_id: this.brandContainerId,
+                user_id: this.userId,
+                provider: 'kie',
+                output_type: 'image',
+                external_job_id: taskId,
+                status: 'completed',
+                storage_path: storagePath,
+                technical_params: {
+                    output_format: 'png',
+                    kie_model: createPayload.kie_model,
+                    scale_factor: createPayload.scale_factor,
+                    aspect_ratio: aspectRatio
+                },
+                metadata: {
+                    kind: 'image_upscale',
+                    source_output_id: sourceOutputId,
+                    source_image_url: sourceImageUrl,
+                    scale_factor: createPayload.scale_factor,
+                    aspect_ratio: aspectRatio
+                }
+            };
+            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
+            if (error) throw error;
+
+            this._removePendingEditCard(clientId);
+            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
+            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') window.showToast('Imagen mejorada a 4K lista en el grid');
+        } catch (err) {
+            console.error('[upscale] background error:', err);
+            this._removePendingEditCard(clientId);
+            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') window.showToast(`Mejora 4K fallo: ${err.message || err}`);
         }
     }
 
@@ -3120,7 +3243,7 @@ class LivingManager {
      * Production. Util para que el usuario sepa que hay algo en proceso aun
      * con el modal cerrado.
      */
-    _addPendingEditCard({ clientId, taskId, sourceImageUrl, aspectRatio }) {
+    _addPendingEditCard({ clientId, taskId, sourceImageUrl, aspectRatio, label }) {
         if (!Array.isArray(this.pendingEdits)) this.pendingEdits = [];
         if (this.pendingEdits.some(p => p.clientId === clientId)) return;
         this.pendingEdits.unshift({
@@ -3128,6 +3251,7 @@ class LivingManager {
             taskId,
             sourceImageUrl,
             aspectRatio: aspectRatio || '1:1',
+            label: label || 'Editando con IA',
             createdAt: new Date().toISOString()
         });
         this._historyVisibleCount = 0;
@@ -3149,19 +3273,20 @@ class LivingManager {
         const [w, h] = ar.split(':').map(Number);
         const ratio = (w > 0 && h > 0) ? (w / h) : 1;
         const src = this.escapeHtml(item._pendingSourceImage || '');
+        const label = this.escapeHtml(item._pendingLabel || 'Editando con IA');
         return `
             <article class="living-masonry-item history-image-card pending-edit-card"
                      role="listitem"
                      data-aspect-ratio="${ratio}"
                      data-pending-client-id="${this.escapeHtml(item._outputId)}"
-                     aria-label="Edicion en curso">
+                     aria-label="${label}">
                 <div class="pending-edit-card-media">
                     ${src ? `<img src="${src}" alt="" class="pending-edit-card-source" loading="lazy">` : ''}
                     <div class="pending-edit-card-shimmer"></div>
                 </div>
                 <div class="pending-edit-card-overlay">
                     <span class="pending-edit-card-spinner" aria-hidden="true"></span>
-                    <span class="pending-edit-card-label">Editando con IA</span>
+                    <span class="pending-edit-card-label">${label}</span>
                 </div>
             </article>
         `;
