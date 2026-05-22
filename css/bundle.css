@@ -184,18 +184,18 @@
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-radius: 14px;
-    /* glass-blur: estandar real de la plataforma. Receta validada en
-       planes.css con !important (comentario indica que .glass-black + var()
-       no se aplicaba correctamente — heredamos hardcoded en la clase). */
-    --glass-blur: blur(70px) saturate(180%);
+    /* glass-blur: receta EXACTA validada en el card de login (auth.css).
+       blur(24px) + saturate(140%) — equilibrio entre frosted real y
+       performance, sin oversaturar como blur(70px). */
+    --glass-blur: blur(24px) saturate(140%);
     --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
-    /* glass-black-bg: spec Figma. Sobre el blur(70px) este alpha deja ver el
-       fondo difuminado sin opacar demasiado el contenido. */
-    --glass-black-bg: rgba(0, 0, 0, 0.52);
-    /* glass-black-border: 0.14 alpha (mas opaco que glass-border 0.10) para
-       que el filete sea visible sobre superficies oscuras + glass. */
-    --glass-black-border: rgba(255, 255, 255, 0.14);
+    /* glass-black-bg: receta del card de login. rgba(11,11,11,0.55) usa el
+       negro de la plataforma (#0b0b0b = --bg-primary) con alpha 0.55. */
+    --glass-black-bg: rgba(11, 11, 11, 0.55);
+    /* glass-black-border: receta del card de login. 0.08 alpha — filete
+       muy sutil que mantiene la estetica frosted. */
+    --glass-black-border: rgba(255, 255, 255, 0.08);
     --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
     --glass-white-bg: rgba(255, 255, 255, 0.14);
@@ -634,25 +634,16 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
 }
-/* glass-black: estandar real de la plataforma (receta Apple/iOS-style).
-   Combina 3 capas para verse como glass aun cuando detras hay color
-   uniforme:
-     1. Gradient interno diagonal (highlight de cristal)
-     2. Capa de tinte negro semi-transparente (la profundidad)
-     3. backdrop-filter blur+saturate (lo que captura del fondo)
-   Hardcoded con !important porque la herencia via var() falla en muchos
-   contextos (documentado por el equipo en planes.css:198). */
+/* glass-black: receta EXACTA del card de login (auth.css). Validada como
+   el unico glass-black que se ve correcto en la plataforma. Los valores
+   anteriores eran demasiado agresivos (blur 70px) o tan debiles (blur 7px)
+   que no se notaban. */
 .glass-black {
-    background:
-        linear-gradient(135deg,
-            rgba(255, 255, 255, 0.08) 0%,
-            rgba(255, 255, 255, 0.02) 40%,
-            rgba(255, 255, 255, 0.00) 100%),
-        rgba(0, 0, 0, 0.52) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background: rgba(11, 11, 11, 0.55) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: var(--glass-black-text);
-    backdrop-filter: blur(70px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(70px) saturate(180%) !important;
+    backdrop-filter: blur(24px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
     border-radius: var(--glass-radius);
 }
 /* .glass-white — superficie sólida de card (#141517) en lugar de la blanca translúcida.
