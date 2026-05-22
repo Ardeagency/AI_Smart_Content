@@ -634,14 +634,21 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
 }
-/* glass-black: estandar real de la plataforma. Valores hardcoded con
-   !important porque la herencia desde var() no se aplica correctamente
-   en muchos contextos (confirmado en planes.css:198). El equipo ya
-   replico esta receta en plan-card-small, #userDropdown, etc. — esta
-   clase canonica los unifica para que nuevos elementos no necesiten
-   parches locales. */
+/* glass-black: estandar real de la plataforma (receta Apple/iOS-style).
+   Combina 3 capas para verse como glass aun cuando detras hay color
+   uniforme:
+     1. Gradient interno diagonal (highlight de cristal)
+     2. Capa de tinte negro semi-transparente (la profundidad)
+     3. backdrop-filter blur+saturate (lo que captura del fondo)
+   Hardcoded con !important porque la herencia via var() falla en muchos
+   contextos (documentado por el equipo en planes.css:198). */
 .glass-black {
-    background: rgba(0, 0, 0, 0.52) !important;
+    background:
+        linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 40%,
+            rgba(255, 255, 255, 0.00) 100%),
+        rgba(0, 0, 0, 0.52) !important;
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
     color: var(--glass-black-text);
     backdrop-filter: blur(70px) saturate(180%) !important;

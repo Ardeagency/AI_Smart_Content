@@ -1885,11 +1885,20 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     top: 0;
     right: 0;
     height: var(--app-header-height, 45.8px);
-    background: var(--glass-black-bg);
+    /* Glass-black estandar (mismo patron que .glass-black utility):
+       gradient interno + tinte negro + backdrop blur. El gradient interno
+       crea el highlight de cristal cuando no hay contenido variado detras
+       (ej. top de Production sin scroll). */
+    background:
+        linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 40%,
+            rgba(255, 255, 255, 0.00) 100%),
+        rgba(0, 0, 0, 0.52);
     border: none;
-    border-bottom: 1px solid var(--glass-black-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(70px) saturate(180%);
+    -webkit-backdrop-filter: blur(70px) saturate(180%);
     color: var(--glass-black-text);
     --text-primary: var(--glass-black-text);
     --text-secondary: rgba(255, 255, 255, 0.85);
