@@ -175,18 +175,12 @@
         valueHtml = `<div class="info-brand-text-editor editable-field" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="text" contenteditable="true"${maxAttr}>${this.escapeHtml(textValue)}</div>`;
       }
 
-      // Counter + hint footer: aparece cuando el field tiene maxChars/maxItems
-      // o hint explicito en el schema. Para arrays el counter cuenta items;
-      // para textarea/text cuenta caracteres. Estado warn (>=90%) y over (>limite).
+      // Counter footer: aparece cuando el field tiene maxChars/maxItems.
+      // Para arrays cuenta items; para textarea/text cuenta caracteres.
+      // Estado warn (>=90%) y over (>limite).
       const limitMeta = this._computeFieldLimit(block, raw);
-      const counterHtml = limitMeta.hasLimit
-        ? `<span class="info-brand-counter ${limitMeta.state}" data-counter-for="${this.escapeHtml(block.field)}">${limitMeta.current}/${limitMeta.max}</span>`
-        : '';
-      const hintHtml = block.hint
-        ? `<span class="info-brand-hint">${this.escapeHtml(block.hint)}</span>`
-        : '';
-      const footerHtml = (counterHtml || hintHtml)
-        ? `<div class="info-brand-field-footer">${counterHtml}${hintHtml}</div>`
+      const footerHtml = limitMeta.hasLimit
+        ? `<div class="info-brand-field-footer"><span class="info-brand-counter ${limitMeta.state}" data-counter-for="${this.escapeHtml(block.field)}">${limitMeta.current}/${limitMeta.max}</span></div>`
         : '';
 
       // Fields tipo JSON tienen sub-bloques con sus propios containers
@@ -201,12 +195,7 @@
           ${footerHtml}
         </div>`;
     }).join('');
-    const helperHtml = `
-      <div class="info-brand-helper" role="note">
-        <i class="fas fa-info-circle" aria-hidden="true"></i>
-        <span>Estos campos son <strong>inspiracion</strong> para los LLM generadores, no instruccion literal. Menos texto + listas cortas = mas espacio creativo.</span>
-      </div>`;
-    return `${helperHtml}<div class="info-brand-fields">${fieldHtml}</div>`;
+    return `<div class="info-brand-fields">${fieldHtml}</div>`;
     },
 
   /**

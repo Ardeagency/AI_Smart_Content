@@ -2199,52 +2199,20 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Limites visibles del schema: counter inline + hint + helper global
+   Limites visibles del schema: counter inline X/Y
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Helper de la cabecera del aside: "Estos campos son inspiracion, no instruccion". */
-#infoPanelContent .info-brand-helper {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    padding: 0.7rem 0.85rem;
-    margin-bottom: 1rem;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    color: rgba(255, 255, 255, 0.78);
-    font-size: var(--font-size-sm);
-    line-height: 1.45;
-}
-
-#infoPanelContent .info-brand-helper i {
-    color: rgba(255, 200, 90, 0.8);
-    font-size: 0.95rem;
-    flex-shrink: 0;
-    margin-top: 0.15rem;
-}
-
-#infoPanelContent .info-brand-helper strong {
-    color: rgba(255, 255, 255, 0.92);
-    font-weight: 600;
-}
-
-/* Footer del field con counter + hint */
 #infoPanelContent .info-brand-field-footer {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.65rem;
+    justify-content: flex-end;
     margin-top: 0.35rem;
     font-size: 0.75rem;
     line-height: 1.4;
 }
 
-/* Counter X/Y (default, warn, over) */
 #infoPanelContent .info-brand-counter {
     font-variant-numeric: tabular-nums;
     color: rgba(255, 255, 255, 0.5);
-    flex-shrink: 0;
     font-weight: 500;
     letter-spacing: 0.02em;
     transition: color 0.15s ease;
@@ -2257,19 +2225,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
 #infoPanelContent .info-brand-counter.is-over {
     color: #ff5a5f;
     font-weight: 600;
-}
-
-/* Hint inline (helper text por field) */
-#infoPanelContent .info-brand-hint {
-    color: rgba(255, 255, 255, 0.55);
-    font-style: italic;
-    flex: 1;
-    min-width: 0;
-}
-
-/* Cuando solo hay counter (sin hint), pegarlo a la derecha */
-#infoPanelContent .info-brand-field-footer:not(:has(.info-brand-hint)) {
-    justify-content: flex-end;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
