@@ -2365,8 +2365,7 @@ class LivingManager {
     }
 
     /**
-     * Bindea click en pills de modo y cards de producto. Idempotente: solo
-     * monta listeners una vez por instancia de overlay.
+     * Bindea click en pills, "+", attachments y picker. Idempotente.
      */
     _bindEditModeControlsOnce() {
         const panel = document.querySelector('.pmodal-edit-panel');
@@ -2376,24 +2375,30 @@ class LivingManager {
         panel.addEventListener('click', (e) => {
             const pill = e.target.closest('[data-edit-mode]');
             if (pill) {
-                const mode = pill.getAttribute('data-edit-mode');
-                this._setEditMode(mode);
+                this._setEditMode(pill.getAttribute('data-edit-mode'));
                 return;
             }
-            const card = e.target.closest('[data-product-id]');
-            if (card && panel.contains(card)) {
-                const id = card.getAttribute('data-product-id');
-                this._selectedProductId = (this._selectedProductId === id) ? null : id;
-                this._renderProductDrawer();
+            const addBtn = e.target.closest('[data-edit-action="add-attachment"]');
+            if (addBtn) { this._toggleEditPicker(); return; }
+            const removeAtt = e.target.closest('[data-edit-attachment-remove]');
+            if (removeAtt) {
+                const type = removeAtt.getAttribute('data-edit-attachment-remove');
+                this._removeEditAttachment(type);
+                return;
+            }
+            const productCard = e.target.closest('[data-product-id]');
+            if (productCard && panel.contains(productCard)) {
+                this._selectedProductId = productCard.getAttribute('data-product-id');
+                this._closeEditPicker();
+                this._renderEditAttachments();
+                return;
+            }
+            // Click fuera del picker cierra el popover.
+            const picker = document.getElementById('pmodalEditPicker');
+            if (picker && !picker.hidden && !e.target.closest('#pmodalEditPicker') && !e.target.closest('#pmodalEditAddBtn')) {
+                this._closeEditPicker();
             }
         });
-
-        const refInput = document.getElementById('pmodalEditRefUrl');
-        if (refInput) {
-            refInput.addEventListener('input', () => {
-                this._editReferenceImageUrl = refInput.value.trim();
-            });
-        }
     }
 
     _setEditMode(mode) {
@@ -2404,9 +2409,9 @@ class LivingManager {
     }
 
     /**
-     * Aplica el estado activo a las pills + muestra/oculta drawer de
-     * productos + campo ref segun el modo. Llama a _renderProductDrawer
-     * cuando el modo requiere productos.
+     * Aplica el estado activo a las pills + decide visibilidad del "+" +
+     * cierra el picker al cambiar de modo + auto-selecciona producto en
+     * fix-product si lo detectamos del meta original. Renderiza attachments.
      */
     _refreshEditModeUI() {
         const mode = this._editMode || 'remove';
@@ -2416,68 +2421,161 @@ class LivingManager {
             pill.setAttribute('aria-selected', active ? 'true' : 'false');
         });
 
-        const needsProducts = (mode === 'fix-product' || mode === 'change-product');
-        const drawer = document.getElementById('pmodalEditProductDrawer');
-        if (drawer) drawer.hidden = !needsProducts;
+        // El "+" solo aparece en modos que aceptan adjuntos.
+        const allowsAttachment = (mode === 'replace' || mode === 'fix-product' || mode === 'change-product');
+        const addBtn = document.getElementById('pmodalEditAddBtn');
+        if (addBtn) addBtn.hidden = !allowsAttachment;
 
-        const refRow = document.getElementById('pmodalEditRefRow');
-        if (refRow) refRow.hidden = (mode !== 'replace');
-
-        const title = document.getElementById('pmodalEditProductDrawerTitle');
-        const hint = document.getElementById('pmodalEditProductDrawerHint');
-        if (mode === 'fix-product') {
-            if (title) title.textContent = 'Producto a corregir';
-            if (hint) hint.textContent = this._sourceProductInfo?.productId
-                ? 'Detectamos el producto de la produccion original'
-                : 'Selecciona el producto a corregir';
-        } else if (mode === 'change-product') {
-            if (title) title.textContent = 'Cambiar por este producto';
-            if (hint) hint.textContent = 'Selecciona el producto que reemplazara la zona';
+        // Auto-seleccionar producto detectado al entrar a fix-product.
+        if (mode === 'fix-product' && !this._selectedProductId && this._sourceProductInfo?.productId) {
+            this._selectedProductId = this._sourceProductInfo.productId;
         }
 
-        if (needsProducts) {
-            // Auto-select del producto detectado en modo fix-product.
-            if (mode === 'fix-product' && !this._selectedProductId && this._sourceProductInfo?.productId) {
-                this._selectedProductId = this._sourceProductInfo.productId;
-            }
-            this._renderProductDrawer();
-        }
+        // Limpiar adjuntos del modo opuesto al cambiar.
+        if (mode !== 'replace') this._editReferenceImageUrl = '';
+        if (mode !== 'fix-product' && mode !== 'change-product') this._selectedProductId = null;
+
+        this._closeEditPicker();
+        this._renderEditAttachments();
     }
 
     /**
-     * Pinta el grid de productos en el drawer. Carga productos de la org si
-     * aun no estan cargados (cache en this._orgProductsCache).
+     * Renderiza las cards de adjuntos (producto o URL referencia) arriba de
+     * la barra. Las cards llevan thumb + X.
      */
-    async _renderProductDrawer() {
-        const grid = document.getElementById('pmodalEditProductGrid');
-        if (!grid) return;
-        if (!this._orgProductsCache) {
-            grid.innerHTML = '<div class="pmodal-edit-product-empty">Cargando productos...</div>';
-            this._orgProductsCache = await this._loadOrgProducts();
+    _renderEditAttachments() {
+        const row = document.getElementById('pmodalEditAttachments');
+        if (!row) return;
+        const cards = [];
+
+        if (this._selectedProductId && Array.isArray(this._orgProductsCache)) {
+            const prod = this._orgProductsCache.find(p => p.id === this._selectedProductId);
+            if (prod) {
+                const thumb = (prod.images && prod.images[0]) || '';
+                cards.push(`
+                    <div class="pmodal-edit-attachment" title="${this.escapeHtml(prod.name)}">
+                        <div class="pmodal-edit-attachment-thumb">${thumb ? `<img src="${this.escapeHtml(thumb)}" alt="">` : ''}</div>
+                        <span class="pmodal-edit-attachment-label">${this.escapeHtml(prod.name)}</span>
+                        <button type="button" class="pmodal-edit-attachment-remove" data-edit-attachment-remove="product" aria-label="Quitar producto">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                `);
+            }
         }
-        const products = this._orgProductsCache || [];
-        if (!products.length) {
-            grid.innerHTML = '<div class="pmodal-edit-product-empty">No hay productos en esta organizacion</div>';
+        if (this._editReferenceImageUrl) {
+            cards.push(`
+                <div class="pmodal-edit-attachment" title="${this.escapeHtml(this._editReferenceImageUrl)}">
+                    <div class="pmodal-edit-attachment-thumb"><img src="${this.escapeHtml(this._editReferenceImageUrl)}" alt=""></div>
+                    <span class="pmodal-edit-attachment-label">Referencia</span>
+                    <button type="button" class="pmodal-edit-attachment-remove" data-edit-attachment-remove="reference" aria-label="Quitar referencia">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+            `);
+        }
+
+        if (cards.length === 0) {
+            row.hidden = true;
+            row.innerHTML = '';
+        } else {
+            row.hidden = false;
+            row.innerHTML = cards.join('');
+        }
+    }
+
+    _removeEditAttachment(type) {
+        if (type === 'product') this._selectedProductId = null;
+        else if (type === 'reference') this._editReferenceImageUrl = '';
+        this._renderEditAttachments();
+    }
+
+    /**
+     * Abre/cierra el picker popover sobre la barra. Contenido segun modo:
+     *   replace        → input URL inline
+     *   fix-product    → grid de productos (auto-detectado pre-seleccionado)
+     *   change-product → grid de productos
+     */
+    _toggleEditPicker() {
+        const picker = document.getElementById('pmodalEditPicker');
+        if (!picker) return;
+        if (!picker.hidden) { this._closeEditPicker(); return; }
+        this._renderPickerContent(picker);
+        picker.hidden = false;
+    }
+
+    _closeEditPicker() {
+        const picker = document.getElementById('pmodalEditPicker');
+        if (!picker) return;
+        picker.hidden = true;
+        picker.innerHTML = '';
+    }
+
+    _renderPickerContent(picker) {
+        const mode = this._editMode || 'remove';
+        if (mode === 'replace') {
+            picker.innerHTML = `
+                <div class="pmodal-edit-picker-head">
+                    <span class="pmodal-edit-picker-title">Imagen referencia</span>
+                </div>
+                <div class="pmodal-edit-picker-body">
+                    <input type="url" class="pmodal-edit-ref-input" id="pmodalEditRefUrl"
+                           placeholder="Pega la URL de la imagen de referencia"
+                           value="${this.escapeHtml(this._editReferenceImageUrl || '')}">
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" id="pmodalEditRefConfirm">Adjuntar</button>
+                </div>
+            `;
+            const input = picker.querySelector('#pmodalEditRefUrl');
+            const confirm = picker.querySelector('#pmodalEditRefConfirm');
+            const apply = () => {
+                const v = (input?.value || '').trim();
+                if (!v || !/^https?:\/\//i.test(v)) return;
+                this._editReferenceImageUrl = v;
+                this._closeEditPicker();
+                this._renderEditAttachments();
+            };
+            confirm?.addEventListener('click', apply);
+            input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+            setTimeout(() => input?.focus(), 30);
             return;
         }
-        const html = products.map(p => {
-            const thumb = (p.images && p.images[0]) || '';
-            const selected = (this._selectedProductId === p.id);
-            return `
-                <button type="button"
-                        class="pmodal-edit-product-card ${selected ? 'is-selected' : ''}"
-                        role="option"
-                        aria-selected="${selected ? 'true' : 'false'}"
-                        data-product-id="${this.escapeHtml(p.id)}"
-                        title="${this.escapeHtml(p.name)}">
-                    <div class="pmodal-edit-product-thumb">
-                        ${thumb ? `<img src="${this.escapeHtml(thumb)}" alt="" loading="lazy">` : ''}
-                    </div>
-                    <div class="pmodal-edit-product-name">${this.escapeHtml(p.name)}</div>
-                </button>
+        if (mode === 'fix-product' || mode === 'change-product') {
+            const hint = (mode === 'fix-product')
+                ? 'Producto a corregir'
+                : 'Cambiar por este producto';
+            picker.innerHTML = `
+                <div class="pmodal-edit-picker-head">
+                    <span class="pmodal-edit-picker-title">${hint}</span>
+                </div>
+                <div class="pmodal-edit-product-grid" id="pmodalEditProductGrid" role="listbox" aria-label="Productos">
+                    <div class="pmodal-edit-product-empty">Cargando productos...</div>
+                </div>
             `;
-        }).join('');
-        grid.innerHTML = html;
+            // Cargar y pintar productos.
+            (async () => {
+                if (!this._orgProductsCache) this._orgProductsCache = await this._loadOrgProducts();
+                const grid = picker.querySelector('#pmodalEditProductGrid');
+                if (!grid) return;
+                const products = this._orgProductsCache || [];
+                if (!products.length) {
+                    grid.innerHTML = '<div class="pmodal-edit-product-empty">No hay productos</div>';
+                    return;
+                }
+                grid.innerHTML = products.map(p => {
+                    const thumb = (p.images && p.images[0]) || '';
+                    const selected = (this._selectedProductId === p.id);
+                    return `
+                        <button type="button"
+                                class="pmodal-edit-product-card ${selected ? 'is-selected' : ''}"
+                                data-product-id="${this.escapeHtml(p.id)}"
+                                title="${this.escapeHtml(p.name)}">
+                            <div class="pmodal-edit-product-thumb">${thumb ? `<img src="${this.escapeHtml(thumb)}" alt="" loading="lazy">` : ''}</div>
+                            <div class="pmodal-edit-product-name">${this.escapeHtml(p.name)}</div>
+                        </button>
+                    `;
+                }).join('');
+            })();
+        }
     }
 
     /**

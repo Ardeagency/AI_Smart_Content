@@ -111,22 +111,6 @@ class ProductionView extends BaseView {
                         </button>
                     </div>
                     <div class="pmodal-edit-panel pmodal-edit-director">
-                        <!-- Drawer: galeria de productos (visible solo en fix-product/change-product). -->
-                        <div class="pmodal-edit-product-drawer" id="pmodalEditProductDrawer" hidden>
-                            <div class="pmodal-edit-product-drawer-head">
-                                <span class="pmodal-edit-product-drawer-title" id="pmodalEditProductDrawerTitle">Elige el producto</span>
-                                <span class="pmodal-edit-product-drawer-hint" id="pmodalEditProductDrawerHint"></span>
-                            </div>
-                            <div class="pmodal-edit-product-grid" id="pmodalEditProductGrid" role="listbox" aria-label="Productos disponibles">
-                                <!-- inyectado por living.js -->
-                            </div>
-                        </div>
-
-                        <!-- Campo de imagen referencia (visible solo en replace). -->
-                        <div class="pmodal-edit-ref-row" id="pmodalEditRefRow" hidden>
-                            <input type="url" id="pmodalEditRefUrl" class="pmodal-edit-ref-input" placeholder="URL de imagen referencia (opcional)">
-                        </div>
-
                         <!-- Textarea estilo Director Console (sin label, placeholder guia). -->
                         <div class="pmodal-edit-director-content">
                             <textarea
@@ -138,8 +122,17 @@ class ProductionView extends BaseView {
                                 aria-label="Describe el cambio"></textarea>
                         </div>
 
-                        <!-- Barra inferior: pills de modo a la izquierda, Cancelar/Aplicar a la derecha. -->
+                        <!-- Attachments row: visible cuando hay producto/referencia seleccionado. -->
+                        <div class="pmodal-edit-attachments" id="pmodalEditAttachments" hidden></div>
+
+                        <!-- Picker popover: se abre al click del + segun el modo. -->
+                        <div class="pmodal-edit-picker" id="pmodalEditPicker" hidden></div>
+
+                        <!-- Barra inferior estilo Director Console. -->
                         <div class="pmodal-edit-director-controls">
+                            <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="Adjuntar imagen o producto" hidden>
+                                <i class="fas fa-plus" aria-hidden="true"></i>
+                            </button>
                             <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
                                 <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove">
                                     <i class="fas fa-eraser" aria-hidden="true"></i>
@@ -162,7 +155,7 @@ class ProductionView extends BaseView {
                                 <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
                                 <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply">
                                     <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                                    <span>Aplicar</span>
+                                    <span>APLICAR</span>
                                 </button>
                             </div>
                         </div>
