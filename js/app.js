@@ -257,11 +257,13 @@ class App {
     ];
 
     // ── Org: Marca organizacional (sin galería Brand Storage) ──
+    // El InfoPanel de sub-marca se comparte con BrandstorageView: cuando el
+    // workspace tiene 1 sola sub-marca, la card INFO abre el mismo panel.
     const brandViewLoader = this._lazy('BrandOrganizationView', [
       ...brandSharedDeps,
       '/js/views/BrandOrganizationView.js',
       ...brandSharedMixins,
-      '/js/views/brand-organization/InfoPanel.mixin.js'
+      '/js/views/brandstorage/InfoPanel.mixin.js'
     ]);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandViewLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandViewLoader, auth);

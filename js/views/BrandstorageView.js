@@ -1670,6 +1670,6 @@ class BrandstorageView extends BaseView {
 }
 
 window.BrandstorageView = BrandstorageView;
-['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews'].forEach((k) => {
+['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews', '__applyBrandstorageInfoPanelMixin'].forEach((k) => {
   if (typeof window[k] === 'function') window[k]();
 });

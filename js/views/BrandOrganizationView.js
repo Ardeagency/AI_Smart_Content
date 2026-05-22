@@ -874,6 +874,30 @@ class BrandOrganizationView extends BaseView {
     return '/brand-storage';
   }
 
+  /** Path al detalle de un brand_container concreto (mismo formato que BrandstorageView). */
+  getBrandContainerHref(id) {
+    const orgId = window.currentOrgId || this.organizationRow?.id || this.brandContainerData?.organization_id;
+    const orgName = (window.currentOrgName || this.organizationRow?.name || '').trim();
+    if (orgId && orgName && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(orgId, orgName);
+      if (prefix) return `${prefix}/brand/${id}`;
+    }
+    return `/brand/${id}`;
+  }
+
+  /** URL de retorno OAuth tras conectar integraciones desde el panel INFO. */
+  getBrandStorageReturnPath() {
+    return this.getBrandStoragePageHref();
+  }
+
+  /** Fecha legible para "Ultima actualizacion" en el panel INFO. */
+  formatInfoDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
   renderBrandEntities() {
     const container = (this.container && this.container.querySelector('#brandEntitiesList')) ||
                       document.getElementById('brandEntitiesList');
@@ -1291,19 +1315,30 @@ class BrandOrganizationView extends BaseView {
   setupEventListeners() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
-    
+
     const infoBtn = container.querySelector('.card-info');
     if (infoBtn && infoBtn.dataset.brandsInfoClickBound !== '1') {
       infoBtn.dataset.brandsInfoClickBound = '1';
       infoBtn.style.cursor = 'pointer';
-      infoBtn.addEventListener('click', () => {
-        this.openInfoPanel();
-      });
+      infoBtn.addEventListener('click', () => this._openOrgBrandInfoPanel());
     }
 
     if (localStorage.getItem('brands_open_info') === '1') {
       localStorage.removeItem('brands_open_info');
-      setTimeout(() => this.openInfoPanel(), 300);
+      setTimeout(() => this._openOrgBrandInfoPanel(), 300);
+    }
+  }
+
+  /**
+   * Cuando el workspace tiene una sola sub-marca, abrimos el mismo panel INFO
+   * que usa Brand Storage para esa sub-marca (ficha completa, integraciones,
+   * schema editable inline). Con varias sub-marcas la card ya esta oculta en
+   * renderCards(), asi que este handler no se invoca.
+   */
+  _openOrgBrandInfoPanel() {
+    const containers = Array.isArray(this.brandContainers) ? this.brandContainers : [];
+    if (containers.length === 1 && typeof this.openBrandContainerInfoPanel === 'function') {
+      this.openBrandContainerInfoPanel(containers[0].id);
     }
   }
 
@@ -1528,6 +1563,6 @@ class BrandOrganizationView extends BaseView {
 }
 
 window.BrandOrganizationView = BrandOrganizationView;
-['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews'].forEach((k) => {
+['__applyTypographyMixinToBrandViews', '__applyUploadsMixinToBrandViews', '__applyColorEditorMixinToBrandViews', '__applyBrandstorageInfoPanelMixin'].forEach((k) => {
   if (typeof window[k] === 'function') window[k]();
 });

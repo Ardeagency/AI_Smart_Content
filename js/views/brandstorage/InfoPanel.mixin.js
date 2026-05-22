@@ -1,26 +1,25 @@
 /**
- * BrandstorageView — InfoPanel mixin.
+ * BrandstorageView / BrandOrganizationView — InfoPanel mixin compartido.
  *
- * Panel INFO del Brand Storage: contiene el render + wiring + persistencia de
- * dos paneles distintos, ambos escondidos tras un drawer lateral:
+ * Panel INFO de sub-marca (`openBrandContainerInfoPanel`): renderiza la ficha
+ * completa del brand_container (idiomas, mercado, nicho, sub-nichos, arquetipo,
+ * propuesta, mision, ADN verbal/visual, palabras clave/prohibidas, objetivos),
+ * integraciones (Google/Facebook/Shopify OAuth), campanas, audiencias y entidades.
  *
- *   1. Panel de SUB-MARCA (`openBrandContainerInfoPanel`): para cada brand_container
- *      renderiza su schema (idiomas, mercado, nicho, sub-nichos, arquetipo, propuesta,
- *      misión, ADN verbal/visual, palabras clave/prohibidas, objetivos), sus
- *      integraciones (Google/Facebook OAuth), sus campañas, audiencias y entidades.
- *   2. Panel de ORGANIZACIÓN (`openInfoPanel` / `closeInfoPanel`): vista readonly
- *      del schema de organización + assets + bloque Identidad.
+ * Cuando el workspace tiene una sola sub-marca, BrandOrganizationView abre este
+ * mismo panel directamente — la card INFO de "Marca / IGNIS" es identica a la
+ * de Brand Storage. Cuando hay varias sub-marcas, brand-organization esconde la
+ * card y el panel solo es accesible desde /brand-storage.
  *
- * También incluye los helpers de accesores por container y de persistencia
- * inline (save on blur) para sub-marca, integraciones y entidades.
+ * Referencias estaticas via window.BrandSchema (no via BrandstorageView.X) para
+ * que el mixin sea aplicable a cualquier vista de marca sin acoplarse.
  *
- * Mixin vanilla: aplica sobre BrandstorageView.prototype. Cargar DESPUÉS de
- * BrandstorageView.js (ver app.js brandStorageViewLoader).
+ * Cargar DESPUES de la vista. Ver brandViewLoader y brandStorageViewLoader en app.js.
  */
 (function () {
   'use strict';
-  if (typeof BrandstorageView === 'undefined') {
-    console.warn('[InfoPanel.mixin] BrandstorageView no disponible; se aborta el mixin.');
+  if (typeof BrandstorageView === 'undefined' && typeof BrandOrganizationView === 'undefined') {
+    console.warn('[InfoPanel.mixin] ninguna vista de marca disponible; se aborta el mixin.');
     return;
   }
 
@@ -149,11 +148,12 @@
     },
 
   renderBrandReadonlySchema(item) {
-    const fieldHtml = [{ field: 'nombre_marca', label: 'Nombre de sub-marca', type: 'text' }, ...BrandstorageView.BRAND_SCHEMA_BLOCKS].map((block) => {
+    const schemaBlocks = window.BrandSchema?.BRAND_SCHEMA_BLOCKS_CONTAINER || [];
+    const fieldHtml = [{ field: 'nombre_marca', label: 'Nombre de sub-marca', type: 'text' }, ...schemaBlocks].map((block) => {
       const raw = item?.[block.field];
       let valueHtml = '';
       if (block.type === 'select') {
-        valueHtml = this.renderBrandSingleSelect(block.field, raw, BrandstorageView.NICHO_CORE_OPTIONS);
+        valueHtml = this.renderBrandSingleSelect(block.field, raw, window.BrandSchema?.NICHO_CORE_OPTIONS || []);
       } else if (block.type === 'array') {
         if (block.field === 'idiomas_contenido' || block.field === 'mercado_objetivo' || block.field === 'sub_nichos') {
           valueHtml = this.renderBrandArrayMultiSelect(block.field, raw);
@@ -707,7 +707,7 @@
           if (check) check.textContent = isSelected ? '✓' : '';
         });
         valueEl.textContent = field === 'nicho_core'
-          ? BrandstorageView.getNichoCoreLabel(selected)
+          ? (window.BrandSchema?.getNichoCoreLabel ? window.BrandSchema.getNichoCoreLabel(selected) : selected)
           : (selected || 'Seleccionar');
         wrap.setAttribute('data-selected', selected);
       };
@@ -1401,8 +1401,11 @@
      * @returns {string|string[]|object}
      */
   _normalizeBrandFieldForDb(fieldName, value) {
-    const jsonFields = BrandstorageView.BRAND_JSON_FIELDS;
-    const arrFields = BrandstorageView.BRAND_ARRAY_FIELDS;
+    const BS = window.BrandSchema;
+    const schema = BS?.BRAND_SCHEMA_BLOCKS_CONTAINER || [];
+    const byType = (type) => BS?.fieldsByType ? BS.fieldsByType(schema, type) : [];
+    const jsonFields = byType('json');
+    const arrFields = byType('array');
 
     if (jsonFields.includes(fieldName)) {
       if (value == null || value === '') return {};
@@ -1426,7 +1429,7 @@
       return String(value ?? '').trim();
     }
 
-    if (BrandstorageView.BRAND_TEXTAREA_FIELDS.includes(fieldName) || BrandstorageView.BRAND_TEXT_FIELDS.includes(fieldName)) {
+    if (byType('textarea').includes(fieldName) || byType('text').includes(fieldName)) {
       const s = value == null ? '' : String(value).trim();
       return s === '' ? null : s;
     }
@@ -1547,7 +1550,7 @@
 
     const refreshLabel = () => {
       const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
-      valueEl.textContent = BrandstorageView.getNichoCoreLabel(cur);
+      valueEl.textContent = window.BrandSchema?.getNichoCoreLabel ? window.BrandSchema.getNichoCoreLabel(cur) : cur;
     };
 
     refreshLabel();
@@ -1579,8 +1582,12 @@
     },
   };
 
-  // El último método no debe llevar coma final; el sed de arriba añade coma a todos los
-  // cierres de método. Arreglamos el último sacando la coma del prototype assign:
-  // eliminamos la coma que queda justo antes del cierre del objeto.
-  Object.assign(BrandstorageView.prototype, InfoPanelMixin);
+  function applyInfoPanelToBrandViews() {
+    if (typeof BrandstorageView !== 'undefined') Object.assign(BrandstorageView.prototype, InfoPanelMixin);
+    if (typeof BrandOrganizationView !== 'undefined') Object.assign(BrandOrganizationView.prototype, InfoPanelMixin);
+  }
+  applyInfoPanelToBrandViews();
+  /** Tras visitar otra vista de marca, el script del mixin puede estar en cache y no
+   *  re-ejecutarse; las vistas llaman esto al definirse para garantizar parchado. */
+  window.__applyBrandstorageInfoPanelMixin = applyInfoPanelToBrandViews;
 })();
