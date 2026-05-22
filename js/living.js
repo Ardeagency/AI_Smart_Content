@@ -2662,12 +2662,21 @@ class LivingManager {
             const d = data?.data || {};
             const state = (d.state || d.status || '').toLowerCase();
             if (state === 'success') {
-                let urls = d.resultUrls || d.resultJson?.resultUrls || d.result_urls || [];
+                // kie devuelve resultJson como STRING JSON; hay que parsearlo
+                // para sacar resultUrls. Mismo patron que VideoView.
+                let resultJson = d.resultJson;
+                if (typeof resultJson === 'string') {
+                    try { resultJson = JSON.parse(resultJson); } catch (_) { resultJson = null; }
+                }
+                let urls = resultJson?.resultUrls || d.resultUrls || d.result_urls || [];
                 if (typeof urls === 'string') {
                     try { urls = JSON.parse(urls); } catch (_) { urls = [urls]; }
                 }
                 const url = Array.isArray(urls) ? urls[0] : urls;
-                if (!url) throw new Error('kie devolvio success sin resultUrls');
+                if (!url) {
+                    console.warn('[edit-overlay] kie success sin url. data:', d);
+                    throw new Error('kie devolvio success sin resultUrls');
+                }
                 return url;
             }
             if (state === 'fail' || state === 'failed') {
