@@ -1885,20 +1885,28 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     top: 0;
     right: 0;
     height: var(--app-header-height, 45.8px);
-    /* Receta EXACTA del card de login (auth.css) — el unico glass-black
-       que se ve correcto en la plataforma. */
-    background: rgba(11, 11, 11, 0.55);
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    color: var(--glass-black-text);
-    --text-primary: var(--glass-black-text);
+    color: #ffffff;
+    --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.85);
     z-index: 900;
     display: flex;
     align-items: center;
     overflow: visible;
+}
+
+/* EXPERIMENTO: aplicar valores hardcoded EXACTOS del #userDropdown que SI
+   funciona en la plataforma, sin depender de var() ni de la clase
+   .glass-black. !important fuerza la cascada sobre cualquier regla
+   contradictoria. Si esto no se ve glass, el bug es de stacking context
+   o de browser cache, no de CSS rules. */
+.app-header,
+.app-header.with-sidebar,
+body.production-filters-in-header .app-header.with-sidebar {
+    background: rgba(0, 0, 0, 0.34) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
 }
 .app-header .header-title,
 .app-header .header-left,
