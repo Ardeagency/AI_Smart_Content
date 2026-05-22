@@ -14,7 +14,6 @@ class SignInView extends BaseView {
     this.signinMain = null;
     this.signinRecover = null;
     this.signinMfa = null;
-    this.signinMagic = null;
     this._pendingMfa = null; // { factorId, factorName }
   }
 
@@ -49,8 +48,6 @@ class SignInView extends BaseView {
                 </div>
                 <button type="button" class="signin-forgot signin-forgot-btn" id="linkForgotPassword">¿Olvidaste tu contraseña?</button>
                 <button type="submit" class="btn btn-primary signin-submit" id="btnSignIn">Login</button>
-                <div class="signin-divider"><span>o</span></div>
-                <button type="button" class="btn btn-secondary signin-submit" id="btnMagicLink">Enviar link de acceso por email</button>
               </div>
             </form>
           </div>
@@ -64,13 +61,6 @@ class SignInView extends BaseView {
               <button type="submit" class="btn btn-primary signin-submit" id="btnVerifyMfa">Verificar</button>
               <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkMfaBack">Volver</button>
             </form>
-          </div>
-
-          <div class="signin-magic" id="signinMagic" aria-hidden="true" hidden>
-            <h2 class="signin-recover-title">Revisa tu email</h2>
-            <p class="signin-recover-desc">Te enviamos un link de acceso a <strong id="magicLinkEmail"></strong>. Haz click en el enlace para entrar — no necesitas contraseña.</p>
-            <p class="signin-recover-desc" style="font-size: 0.85rem; color: var(--text-muted);">¿No te llega? Revisa la carpeta de spam.</p>
-            <button type="button" class="signin-recover-back signin-recover-back-btn" id="linkMagicBack">Volver al inicio de sesión</button>
           </div>
 
           <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
@@ -135,7 +125,6 @@ class SignInView extends BaseView {
     this.signinMain = this.querySelector('#signinMain');
     this.signinRecover = this.querySelector('#signinRecover');
     this.signinMfa = this.querySelector('#signinMfa');
-    this.signinMagic = this.querySelector('#signinMagic');
     if (linkForgot) {
       this.addEventListener(linkForgot, 'click', (e) => {
         e.preventDefault();
@@ -154,7 +143,7 @@ class SignInView extends BaseView {
       });
     }
 
-    // ── FEAT-020 · MFA + magic link ────────────────────────────
+    // ── FEAT-020 · MFA ────────────────────────────
     const mfaForm = this.querySelector('#form_mfa');
     if (mfaForm) {
       this.addEventListener(mfaForm, 'submit', (e) => { e.preventDefault(); this.handleVerifyMfa(); });
@@ -167,18 +156,6 @@ class SignInView extends BaseView {
         this.hideMfaState();
       });
     }
-    const btnMagic = this.querySelector('#btnMagicLink');
-    if (btnMagic) {
-      this.addEventListener(btnMagic, 'click', () => this.handleMagicLink());
-    }
-    const linkMagicBack = this.querySelector('#linkMagicBack');
-    if (linkMagicBack) {
-      this.addEventListener(linkMagicBack, 'click', (e) => {
-        e.preventDefault();
-        this.hideMagicState();
-      });
-    }
-
     // Navegación SPA para footer (sin full reload)
     const spaLinks = this.querySelectorAll('a[data-href]');
     spaLinks.forEach((link) => {
@@ -310,49 +287,6 @@ class SignInView extends BaseView {
       if (errorEl) { errorEl.textContent = 'Error inesperado verificando código.'; errorEl.hidden = false; }
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = 'Verificar'; }
-    }
-  }
-
-  // ── FEAT-020 · Magic link state ─────────────────────────
-  async handleMagicLink() {
-    const email = this.querySelector('#signinEmail')?.value?.trim();
-    if (!email) {
-      alert('Ingresa tu email arriba antes de pedir el link.');
-      this.querySelector('#signinEmail')?.focus();
-      return;
-    }
-    const btn = this.querySelector('#btnMagicLink');
-    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
-    try {
-      const result = await window.authService.sendMagicLink(email);
-      if (result.success) {
-        const emailLabel = this.querySelector('#magicLinkEmail');
-        if (emailLabel) emailLabel.textContent = email;
-        this.showMagicState();
-      } else {
-        alert(result.error || 'No se pudo enviar el link.');
-      }
-    } catch (e) {
-      console.error('handleMagicLink:', e);
-      alert('Error enviando link. Intenta de nuevo.');
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Enviar link de acceso por email'; }
-    }
-  }
-
-  showMagicState() {
-    if (this.signinMain) this.signinMain.style.display = 'none';
-    if (this.signinMagic) {
-      this.signinMagic.removeAttribute('hidden');
-      this.signinMagic.setAttribute('aria-hidden', 'false');
-    }
-  }
-
-  hideMagicState() {
-    if (this.signinMain) this.signinMain.style.display = '';
-    if (this.signinMagic) {
-      this.signinMagic.setAttribute('hidden', '');
-      this.signinMagic.setAttribute('aria-hidden', 'true');
     }
   }
 
