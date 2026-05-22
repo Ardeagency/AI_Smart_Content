@@ -865,51 +865,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 .pmodal-side-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 18px 20px 14px;
-    gap: 12px;
-}
-
-.pmodal-author {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.pmodal-author-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: hsl(120, 55%, 45%);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1rem;
-    line-height: 1;
-    flex-shrink: 0;
-    box-shadow: 0 0 0 2px var(--pmodal-bg-side), 0 0 0 3px rgba(255, 255, 255, 0.08);
-}
-
-.pmodal-author-info { min-width: 0; }
-.pmodal-author-name {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 220px;
-    line-height: 1.2;
-}
-.pmodal-author-role {
-    margin: 2px 0 0;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    line-height: 1;
+    justify-content: flex-end;
+    padding: 14px 16px 6px;
 }
 
 .pmodal-close {
@@ -927,42 +884,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-size: 1rem;
 }
 .pmodal-close:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
-
-/* Tabs — underline en activo (no border full) */
-.pmodal-tabs {
-    display: flex;
-    gap: 4px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--pmodal-border);
-}
-.pmodal-tab {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 8px;
-    background: transparent;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 140ms ease, border-color 140ms ease;
-    margin-bottom: -1px;
-}
-.pmodal-tab.is-active {
-    color: var(--text-primary);
-    border-bottom-color: var(--text-primary);
-}
-.pmodal-tab:not(.is-active):not([disabled]):hover {
-    color: var(--text-primary);
-}
-.pmodal-tab[disabled] {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
 
 /* Contenido scrolleable */
 .pmodal-scroll {

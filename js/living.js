@@ -1778,9 +1778,6 @@ class LivingManager {
         // Siblings.
         this._renderModalSiblings(run?.id, outputId);
 
-        // Author (avatar + name) — lazy fetch.
-        this._renderModalAuthor(run?.user_id);
-
         // Estado del like sincronizado con likedOutputs.
         const likeBtn = modal.querySelector('[data-action="like"]');
         if (likeBtn) {
@@ -2050,40 +2047,6 @@ class LivingManager {
             });
         }, { root: scrollRoot, rootMargin: '200px', threshold: 0.01 });
         strip.querySelectorAll('img[data-src]').forEach(img => this._siblingObserver.observe(img));
-    }
-
-    async _renderModalAuthor(userId) {
-        const nameEl = document.getElementById('pmodalAuthorName');
-        const avatarEl = document.getElementById('pmodalAuthorAvatar');
-        if (!nameEl || !avatarEl) return;
-        // Default mientras carga.
-        nameEl.textContent = '—';
-        avatarEl.style.background = '';
-        avatarEl.textContent = '';
-        if (!userId || !this.supabase) return;
-        try {
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .select('id, full_name, email')
-                .eq('id', userId)
-                .maybeSingle();
-            if (error) throw error;
-            const name = (data?.full_name && data.full_name.trim()) || (data?.email ? data.email.split('@')[0] : 'Usuario');
-            nameEl.textContent = name;
-            avatarEl.textContent = name.slice(0, 1).toUpperCase();
-            avatarEl.style.background = this._colorFromId(userId);
-        } catch (_) {
-            nameEl.textContent = 'Usuario';
-        }
-    }
-
-    /** Color determinista a partir de un id (avatar fallback). */
-    _colorFromId(id) {
-        let h = 0;
-        const s = String(id || '');
-        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-        const hue = Math.abs(h) % 360;
-        return `hsl(${hue}, 55%, 45%)`;
     }
 
     _bindModalListenersOnce(modal) {

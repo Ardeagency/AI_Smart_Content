@@ -89,29 +89,13 @@ class ProductionView extends BaseView {
                 </div>
             </div>
 
-            <!-- Columna derecha: autor, tabs, contenido scrolleable, CTAs y footer -->
-            <aside class="production-modal-side" aria-label="Detalles de la producción">
+            <!-- Columna derecha: header con cerrar, contenido scrolleable, CTAs y footer -->
+            <aside class="production-modal-side" aria-label="Detalles de la produccion">
                 <header class="pmodal-side-header">
-                    <div class="pmodal-author">
-                        <div class="pmodal-author-avatar" id="pmodalAuthorAvatar" aria-hidden="true"></div>
-                        <div class="pmodal-author-info">
-                            <p class="pmodal-author-name" id="pmodalAuthorName">—</p>
-                            <p class="pmodal-author-role">Author</p>
-                        </div>
-                    </div>
                     <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar">
                         <i class="fas fa-times"></i>
                     </button>
                 </header>
-
-                <nav class="pmodal-tabs" role="tablist">
-                    <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="details">
-                        <i class="fas fa-circle-info"></i> Details
-                    </button>
-                    <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="comments" disabled title="Próximamente">
-                        <span>Comments</span>
-                    </button>
-                </nav>
 
                 <div class="pmodal-scroll" id="pmodalScroll">
                     <!-- Strip de siblings (otros outputs del mismo run) -->
