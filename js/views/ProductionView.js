@@ -99,10 +99,10 @@ class ProductionView extends BaseView {
 
                 <nav class="pmodal-tabs" role="tablist" aria-label="Vistas de produccion">
                     <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">
-                        Output
+                        Resultado
                     </button>
                     <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">
-                        Input
+                        Briefing
                     </button>
                 </nav>
 

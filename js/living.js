@@ -2104,8 +2104,8 @@ class LivingManager {
             container.innerHTML = `
                 <div class="pmodal-input-empty">
                     <i class="fas fa-inbox" aria-hidden="true"></i>
-                    <p>No se registraron los inputs de esta produccion.</p>
-                    <p class="pmodal-input-empty-hint">Las producciones nuevas guardan automaticamente el formulario que las origino.</p>
+                    <p>No quedo registrado el briefing de esta produccion.</p>
+                    <p class="pmodal-input-empty-hint">Las producciones nuevas guardan automaticamente todo lo que usaste para crearlas.</p>
                 </div>`;
             return;
         }
@@ -2182,7 +2182,7 @@ class LivingManager {
 
         const briefHtml = briefing
             ? `<section class="pmodal-section pmodal-input-brief">
-                <h3 class="pmodal-section-title"><i class="fas fa-quote-left"></i> BRIEFING</h3>
+                <h3 class="pmodal-section-title"><i class="fas fa-quote-left"></i> INSTRUCCIONES</h3>
                 <p class="pmodal-input-brief-text">${this.escapeHtml(briefing)}</p>
             </section>`
             : '';
