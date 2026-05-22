@@ -1580,6 +1580,132 @@
       }
     });
     },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Helpers para arrays con catalogo (idiomas / mercado / sub-nichos).
+  // Compartidos por ambas vistas; referencias estaticas a window.BrandSchema
+  // para no acoplarse a BrandstorageView.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  getBrandArrayFieldOptions(fieldName) {
+    const BS = window.BrandSchema;
+    if (!BS) return [];
+    if (fieldName === 'idiomas_contenido') return BS.BRAND_IDIOMAS_OPTIONS || [];
+    if (fieldName === 'mercado_objetivo')  return BS.BRAND_MERCADO_OPTIONS || [];
+    if (fieldName === 'sub_nichos')        return BS.BRAND_SUB_NICHOS_OPTIONS || [];
+    return [];
+    },
+
+  normalizeBrandArrayValues(fieldName, rawValues) {
+    const values = Array.isArray(rawValues) ? rawValues : [];
+    const aliases = window.BrandSchema?.BRAND_IDIOMAS_ALIASES || {};
+    const normalized = values
+      .map((v) => String(v).trim())
+      .filter(Boolean)
+      .map((value) => {
+        if (fieldName !== 'idiomas_contenido') return value;
+        const key = value.toLowerCase();
+        return aliases[key] || key;
+      });
+    return Array.from(new Set(normalized));
+    },
+
+  getBrandArrayOptionEntries(fieldName, rawValues) {
+    const baseOptions = this.getBrandArrayFieldOptions(fieldName) || [];
+    const entries = baseOptions.map((option) => {
+      if (typeof option === 'string') return { value: option, label: option };
+      return {
+        value: String(option?.value ?? '').trim(),
+        label: String(option?.label ?? option?.value ?? '').trim()
+      };
+    }).filter((entry) => entry.value);
+
+    const selectedValues = this.normalizeBrandArrayValues(fieldName, rawValues);
+    const map = new Map(entries.map((entry) => [entry.value, entry]));
+    selectedValues.forEach((value) => {
+      if (!map.has(value)) map.set(value, { value, label: this.getBrandArrayValueLabel(fieldName, value) });
+    });
+    return Array.from(map.values());
+    },
+
+  getBrandArrayValueLabel(fieldName, value) {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) return '';
+    if (fieldName === 'idiomas_contenido') {
+      const opts = window.BrandSchema?.BRAND_IDIOMAS_OPTIONS || [];
+      const match = opts.find((opt) => String(opt.value) === normalized);
+      if (match) return match.label;
+    }
+    return normalized;
+    },
+
+  renderBrandArrayMultiSelect(fieldName, rawValues) {
+    const selected = this.normalizeBrandArrayValues(fieldName, rawValues);
+    const options = this.getBrandArrayOptionEntries(fieldName, selected);
+    const selectedSet = new Set(selected);
+    const selectedLabel = selected.length
+      ? selected
+          .map((value) => `
+            <span class="info-brand-multiselect__chip">
+              <span class="info-brand-multiselect__chip-label">${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}</span>
+              <button type="button" class="info-brand-multiselect__chip-remove" data-value="${this.escapeHtml(value)}" aria-label="Quitar ${this.escapeHtml(this.getBrandArrayValueLabel(fieldName, value))}">×</button>
+            </span>
+          `)
+          .join('')
+      : '<span class="info-brand-multiselect__placeholder">Seleccionar</span>';
+    const optionsHtml = options.map((option) => {
+      const optionValue = String(option.value || '');
+      const optionLabel = String(option.label || optionValue);
+      const isSelected = selectedSet.has(optionValue);
+      return `
+        <button type="button" class="info-brand-multiselect__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(optionValue)}">
+          <span class="info-brand-multiselect__check" aria-hidden="true">${isSelected ? '✓' : ''}</span>
+          <span>${this.escapeHtml(optionLabel)}</span>
+        </button>
+      `;
+    }).join('');
+    return `
+      <div class="info-brand-multiselect" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="array-multiselect" data-selected='${this.escapeHtml(JSON.stringify(selected))}'>
+        <div class="info-brand-multiselect__trigger" role="button" tabindex="0" aria-expanded="false">
+          <span class="info-brand-multiselect__value">${selectedLabel}</span>
+          <span class="info-brand-multiselect__caret" aria-hidden="true"></span>
+        </div>
+        <div class="info-brand-multiselect__panel" hidden>
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+    },
+
+  renderBrandSingleSelect(fieldName, rawValue, options) {
+    const normalized = rawValue == null ? '' : String(rawValue);
+    const currentLabel = fieldName === 'nicho_core'
+      ? (window.BrandSchema?.getNichoCoreLabel ? window.BrandSchema.getNichoCoreLabel(normalized) : normalized)
+      : (normalized || 'Seleccionar');
+    const optionsHtml = (options || []).map((opt) => {
+      const value = String(opt?.value ?? '');
+      const label = String(opt?.label ?? value);
+      const isSelected = value === normalized;
+      return `
+        <button type="button" class="info-brand-single-select__option ${isSelected ? 'is-selected' : ''}" data-value="${this.escapeHtml(value)}">
+          <span class="info-brand-single-select__check" aria-hidden="true">${isSelected ? '✓' : ''}</span>
+          <span>${this.escapeHtml(label)}</span>
+        </button>
+      `;
+    }).join('');
+    return `
+      <div class="info-brand-single-select" data-brand-field="${this.escapeHtml(fieldName)}" data-brand-input-type="single-select" data-selected="${this.escapeHtml(normalized)}">
+        <button type="button" class="info-brand-single-select__trigger" aria-expanded="false">
+          <span class="info-brand-single-select__value">${this.escapeHtml(currentLabel)}</span>
+          <span class="info-brand-single-select__caret" aria-hidden="true"></span>
+        </button>
+        <div class="info-brand-single-select__panel" hidden>
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+    },
+
   };
 
   function applyInfoPanelToBrandViews() {
