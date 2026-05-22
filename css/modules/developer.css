@@ -11560,24 +11560,36 @@
 }
 
 
+
 /* ============================================================
-   Provisioning dashboard - Crear usuario en grid
-   ============================================================ */
+   Provisioning - "Crear usuario" PRO dashboard
+   ============================================================
+   Layout: stepper vertical (220px sticky) + form scroll central +
+   summary panel sticky (320px) con CTA primario.
+   Patron usado por Stripe, Linear, Vercel para flows de creacion
+   de cierto peso: la stepper guia, el centro foca, el summary
+   confirma y dispara la accion.
+*/
+
+/* Container wrapper: ya no constraint a 720px (legacy wizard).
+   Toma el ancho del .dev-lead-content padre. */
 .provision-dashboard {
-  /* Sobrescribe el max-width 720px legacy de .provision-wizard */
   max-width: none;
 }
 
-.provision-dashboard .provision-stage-container {
-  width: 100%;
+.provision-dashboard .provision-wizard {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
-/* Pending jobs banner: horizontal cards en lugar de stack vertical */
+/* ───────── Pending jobs banner ───────── */
 .provision-pending-banner {
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md) var(--spacing-lg);
-  background: rgba(224, 145, 69, 0.06);
-  border: 1px solid rgba(224, 145, 69, 0.25);
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-left: 3px solid var(--accent-warm);
   border-radius: var(--radius-md);
 }
 
@@ -11612,19 +11624,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  padding: 2px 8px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
   background: var(--accent-warm);
   color: #0f0f0f;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
 }
 
 .provision-pending-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--spacing-sm);
 }
 
 .provision-pending-card {
@@ -11632,7 +11645,7 @@
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-sm);
 }
@@ -11648,9 +11661,10 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  background: var(--bg-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
   border-radius: 999px;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -11659,11 +11673,13 @@
 
 .provision-pending-status.status-pending_email_confirmation {
   color: var(--accent-warm);
+  border-color: rgba(224, 145, 69, 0.4);
 }
 
 .provision-pending-status.status-email_confirmed,
 .provision-pending-status.status-finalizing {
   color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .provision-pending-date {
@@ -11674,6 +11690,7 @@
 .provision-pending-email {
   font-size: 0.9375rem;
   color: var(--text-primary);
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -11690,38 +11707,355 @@
   justify-content: center;
 }
 
-/* Form grid: 3 columnas para Identidad / Plataforma / Organizacion;
-   Permisos full-width abajo */
-.provision-form {
+/* ───────── Main 3-col shell ───────── */
+.provision-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  gap: var(--spacing-xl);
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .provision-shell {
+    grid-template-columns: 200px minmax(0, 1fr) 300px;
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 1080px) {
+  .provision-shell {
+    grid-template-columns: 1fr;
+  }
+  .provision-stepper { display: none; }
+  .provision-summary { position: static; }
+}
+
+/* ───────── Stepper vertical ───────── */
+.provision-stepper {
+  position: sticky;
+  top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+}
+
+.provision-stepper-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 0;
 }
 
-.provision-grid {
+.provision-step {
+  position: relative;
+}
+
+.provision-step-link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.provision-step-link:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.provision-step.is-active .provision-step-link {
+  color: var(--text-primary);
+  background: var(--warm-10);
+}
+
+.provision-step.is-disabled .provision-step-link {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Marker: circulo con numero + conector vertical */
+.provision-step-marker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Conector vertical entre steps */
+.provision-step:not(:last-child) .provision-step-marker::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: calc(var(--spacing-sm) * 2 + 16px);
+  background: var(--border-color);
+}
+
+.provision-step.is-active .provision-step-marker {
+  background: var(--accent-warm);
+  border-color: var(--accent-warm);
+  color: #0f0f0f;
+}
+
+.provision-step.is-done .provision-step-marker {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.provision-step.is-done .provision-step-marker .provision-step-num::before {
+  content: '\f00c'; /* fa-check */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+}
+
+.provision-step.is-done .provision-step-marker .provision-step-num {
+  font-size: 0;
+}
+
+.provision-step-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.provision-step-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.provision-step-sub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ───────── Form body central ───────── */
+.provision-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  min-width: 0;
+}
+
+.provision-section {
+  padding: var(--spacing-xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  scroll-margin-top: var(--spacing-lg);
+}
+
+.provision-section[hidden] {
+  display: none !important;
+}
+
+.provision-section-head {
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.provision-section-eyebrow {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 4px;
+}
+
+.provision-section-title {
+  margin: 0 0 4px 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.provision-section-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* Grid interno: 2 cols por defecto, full-width opcional con --full */
+.provision-section-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md) var(--spacing-lg);
 }
 
-.provision-card--perms {
+.provision-section-grid .settings-field--full {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 1100px) {
-  .provision-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .provision-card--org { grid-column: 1 / -1; }
-}
-
 @media (max-width: 720px) {
-  .provision-grid {
+  .provision-section-grid {
     grid-template-columns: 1fr;
   }
-  .provision-card--org { grid-column: auto; }
 }
 
+/* ───────── Summary panel sticky derecho ───────── */
+.provision-summary {
+  position: sticky;
+  top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.provision-summary-head {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-divider);
+  background: var(--bg-secondary);
+}
+
+.provision-summary-head h3 {
+  margin: 0 0 2px 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.provision-summary-head p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.provision-summary-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.provision-summary-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm);
+}
+
+.provision-summary-tile[hidden] {
+  display: none;
+}
+
+.provision-summary-tile-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.provision-summary-tile-label i {
+  color: var(--accent-warm);
+  font-size: 0.75rem;
+}
+
+.provision-summary-tile-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.provision-summary-tile-value.is-empty {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.provision-summary-tile-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.provision-summary-tile-meta[hidden] {
+  display: none;
+}
+
+.provision-summary-divider {
+  display: inline-block;
+  width: 2px;
+  height: 2px;
+  margin: 0 6px;
+  background: var(--text-muted);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.provision-summary-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-divider);
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+}
+
+.provision-status {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-height: 1em;
+}
+
+.provision-status.is-error {
+  color: var(--accent-danger, #ef4444);
+}
+
+.provision-status.is-success {
+  color: #22c55e;
+}
+
+.provision-submit {
+  width: 100%;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.provision-summary-fineprint {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ───────── Stages waiting / done (card centrada) ───────── */
 .provision-card {
   display: flex;
   flex-direction: column;
@@ -11731,9 +12065,7 @@
   overflow: hidden;
 }
 
-.provision-card[hidden] {
-  display: none !important;
-}
+.provision-card[hidden] { display: none !important; }
 
 .provision-card-head {
   display: flex;
@@ -11752,8 +12084,8 @@
 
 .provision-card-head p {
   margin: 0;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
 }
 
 .provision-card-icon {
@@ -11769,72 +12101,19 @@
   font-size: 0.9375rem;
 }
 
-.provision-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-}
-
-/* Permisos card: el body usa grid interno para la matriz de capabilities */
-.provision-card--perms .provision-card-body {
-  gap: var(--spacing-lg);
-}
-
-.provision-card--perms .provision-caps-grid {
-  margin-top: 0;
-}
-
-/* Action bar sticky abajo */
-.provision-action-bar {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-card);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-md);
-  backdrop-filter: var(--glass-blur, none);
-  z-index: 5;
-}
-
-.provision-status {
-  flex: 1;
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  min-height: 1.2em;
-}
-
-.provision-status.is-error {
-  color: var(--accent-danger, #ef4444);
-}
-
-.provision-status.is-success {
-  color: #22c55e;
-}
-
-/* Limpiar override del wizard legacy cuando estamos en dashboard mode */
-.provision-dashboard .provision-wizard {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* Provision waiting / done: cards full-width centradas */
-.provision-card--waiting,
-.provision-card--done {
-  grid-column: 1 / -1;
-  max-width: 720px;
-  margin: var(--spacing-lg) auto 0;
-}
-
 .provision-card-icon--success {
   background: rgba(34, 197, 94, 0.12);
   color: #22c55e;
+}
+
+.provision-card-body {
+  padding: var(--spacing-lg);
+}
+
+.provision-card--waiting,
+.provision-card--done {
+  max-width: 640px;
+  margin: var(--spacing-lg) auto 0;
 }
 
 .provision-waiting-indicator {
@@ -11842,11 +12121,11 @@
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-xl) var(--spacing-md);
 }
 
 .provision-spinner i {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   color: var(--accent-warm);
 }
 
@@ -11887,4 +12166,20 @@
   background: var(--bg-secondary);
   border-radius: 4px;
   color: var(--text-primary);
+}
+
+.provision-card .provision-action-bar {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-divider);
+  background: var(--bg-secondary);
+}
+
+.provision-actions-right {
+  display: flex;
+  gap: var(--spacing-sm);
 }
