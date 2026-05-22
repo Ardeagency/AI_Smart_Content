@@ -2094,6 +2094,79 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   UNIFICACION DE INPUTS DEL SCHEMA EN EL PANEL INFO
+   El fondo del panel INFO siempre es oscuro (gradient de marca), asi que
+   todos los inputs del schema usan el MISMO bg/border/radius/padding.
+   Esta capa va al final para sobreescribir las reglas mas antiguas
+   (text-editor, textarea, multiselect, single-select, tags, json) que
+   variaban entre glass-black y glass-bg.
+
+   Tokens unificados (no usar var(--glass-*) aqui — son para botones):
+     bg     = rgba(0, 0, 0, 0.28)
+     border = 1px solid rgba(255, 255, 255, 0.14)
+     radius = 10px
+     padding (single line)  = 0.65rem 0.85rem
+     padding (textarea/box) = 0.7rem 0.85rem
+   ───────────────────────────────────────────────────────────────────────── */
+
+#infoPanelContent .info-brand-multiselect__trigger,
+#infoPanelContent .info-brand-single-select__trigger,
+#infoPanelContent .info-brand-text-editor.editable-field,
+#infoPanelContent .info-brand-textarea,
+#infoPanelContent .info-brand-json-textarea,
+#infoPanelContent .info-brand-tags-editor,
+#infoPanelContent .info-brand-json-editor,
+#infoPanelContent .info-brand-json-number {
+    background: rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 10px !important;
+}
+
+#infoPanelContent .info-brand-multiselect__trigger,
+#infoPanelContent .info-brand-single-select__trigger,
+#infoPanelContent .info-brand-text-editor.editable-field {
+    padding: 0.65rem 0.85rem !important;
+    min-height: 2.65rem;
+}
+
+#infoPanelContent .info-brand-textarea,
+#infoPanelContent .info-brand-json-textarea {
+    padding: 0.7rem 0.85rem !important;
+}
+
+/* Focus consistente: ring sutil en todos. */
+#infoPanelContent .info-brand-multiselect__trigger:focus,
+#infoPanelContent .info-brand-single-select__trigger:focus,
+#infoPanelContent .info-brand-text-editor.editable-field:focus,
+#infoPanelContent .info-brand-textarea:focus,
+#infoPanelContent .info-brand-json-textarea:focus {
+    border-color: rgba(255, 255, 255, 0.28) !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+/* Panel desplegable (multiselect/single-select) — bg solido consistente. */
+#infoPanelContent .info-brand-multiselect__panel,
+#infoPanelContent .info-brand-single-select__panel {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-divider) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Chips de multiselect — mismo look en cualquier variante. */
+#infoPanelContent .info-brand-multiselect__chip,
+#infoPanelContent .info-brand-tag {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Inputs JSON anidados (tono, formato): mismo look. */
+#infoPanelContent .info-brand-json-string {
+    background: rgba(0, 0, 0, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Editores inline sin chrome con affordance editable
    Aplica a:
      - Nombre + slogan del corner de la org (.brand-name-large, .brand-slogan-input)

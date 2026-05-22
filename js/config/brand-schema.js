@@ -54,8 +54,8 @@
     { field: 'arquetipo',             label: 'Arquetipo',                type: 'text' },
     { field: 'propuesta_valor',       label: 'Propuesta de valor',       type: 'textarea' },
     { field: 'mision_vision',         label: 'Misión y visión',          type: 'textarea' },
-    { field: 'verbal_dna',            label: 'ADN verbal (JSON)',        type: 'json' },
-    { field: 'visual_dna',            label: 'ADN visual (JSON)',        type: 'json' },
+    { field: 'verbal_dna',            label: 'ADN verbal',               type: 'json' },
+    { field: 'visual_dna',            label: 'ADN visual',               type: 'json' },
     { field: 'palabras_clave',        label: 'Palabras clave',           type: 'array' },
     { field: 'palabras_prohibidas',   label: 'Palabras prohibidas',      type: 'array' },
     { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos',  type: 'array' }
