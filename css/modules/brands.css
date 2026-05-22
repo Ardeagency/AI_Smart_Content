@@ -529,9 +529,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 1px solid var(--glass-white-border);
 }
 
-/* Typography dropdown dinámico en Brand */
+/* Trigger del dropdown (boton) sigue el patron glass de la card.
+   El PANEL desplegable usa su propio bg solido (.typography-dropdown-panel),
+   no se sobre-escribe aqui — la regla "Glass solo para botones, NO containers"
+   aplica: panels flotantes deben bloquear lo que tienen detras. */
 #brandsListContainer.brand-cards-glass-black .typography-dropdown-trigger,
-#brandsListContainer.brand-cards-glass-black .typography-dropdown-panel,
 #brandsListContainer.brand-cards-glass-black .typography-select {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
@@ -539,7 +541,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 #brandsListContainer.brand-cards-glass-white .typography-dropdown-trigger,
-#brandsListContainer.brand-cards-glass-white .typography-dropdown-panel,
 #brandsListContainer.brand-cards-glass-white .typography-select {
     background: var(--glass-white-bg);
     border: 1px solid var(--glass-white-border);
@@ -1211,14 +1212,14 @@ h1.brand-name-large[contenteditable="true"]:hover,
     top: 100%;
     left: 0;
     right: 0;
-    margin-top: 2px;
+    margin-top: 4px;
     max-height: 280px;
     overflow-y: auto;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    /* Panel flotante = container, no boton → solid card (regla del proyecto). */
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
     border-radius: var(--glass-radius);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
     z-index: var(--z-dropdown);
 }
 
