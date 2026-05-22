@@ -1,6 +1,14 @@
 # FEAT-021 — Public read-only preview (`/demo`) over IGNIS
 
-**Status**: implemented 2026-05-19. Pending live verification after deploy.
+**Status**: ✅ Codigo implementado — ⏳ **PENDIENTE: realizar verificacion live post-deploy** (un humano entra a `/demo`, valida que las 6 known limitations se comporten como esperado, prueba conectar Meta/Google/Shopify desde demo y confirma que abre el modal "Solicitar acceso").
+
+## Cambios 2026-05-22
+
+- TODO #3 (data-attribute `data-demo-cta` en OAuth buttons) RESUELTO via guard
+  inline en `js/views/brandstorage/InfoPanel.mixin.js`:
+  - `startBrandIntegrationOAuth` ahora chequea `DemoGuard.isDemo()` antes del fetch al endpoint de start y abre el modal de signup
+  - `disconnectBrandIntegration` mismo guard (tambien usa fetch directo, no estaba interceptado por el monkey-patch de Supabase)
+  - No hizo falta agregar atributos HTML — el guard es 100% en JS.
 
 ## What was built
 
@@ -41,11 +49,10 @@ All mutations are blocked at three layers (DB RLS, JS interceptor, UI banner).
    calls bypass. Audit each `/api/*` function for explicit anon check or
    move flow execution behind `supabase.functions.invoke`.
 
-3. **OAuth Connect buttons (Settings, Brand Storage)** — they redirect to
-   Meta/Google/Shopify OAuth and never come back to demo since the callback
-   tries to write `brand_integrations`. Should be replaced by the CTA modal
-   in those specific views. **TODO**: data-attribute `data-demo-cta` on
-   those buttons + handler in DemoGuard.
+3. ~~**OAuth Connect buttons (Settings, Brand Storage)**~~ — ✅ RESUELTO 2026-05-22.
+   `startBrandIntegrationOAuth` y `disconnectBrandIntegration` ahora chequean
+   `DemoGuard.isDemo()` al inicio y abren el modal de signup. No hace falta
+   atributo HTML — el guard es JS-only.
 
 4. **Anonymous auth enabled globally** — `signup` is open since the demo
    needs it. This means anyone can call `/auth/v1/signup` with `{}` and get

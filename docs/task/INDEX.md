@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-19** (FEAT-019 + FEAT-020 deployed; ambos pendientes solo de activación externa / prueba humana E2E. Pasarela dual Stripe + Wompi validada end-to-end en sandbox 2026-05-19 09:52).
+Última actualización: **2026-05-22** (VERA v3 cobertura 26/26 cerrada — Fase A aliases + Fase B bloques 1/2/3. Fase C14 prompt cycle-pulse reescrito al canonical v3: 23/23 tools inyectadas + 3 movimientos + Reglas NUNCA + AUTONOMOUS_TOOLS 39. Bucket A billing fix deployed. Bug brands table parcialmente cerrado en brand.tools.js — falta brand-write.tools.js y context.builder.js. FEAT-019 + FEAT-020 siguen pendientes solo de activación externa / prueba humana E2E. **Cleanup docs/task/ (2026-05-22)**: 7 archivos eliminados sin deuda + 2 TODOs de codigo resueltos — BuilderPersistence.js (RPC `can_access_flow`) y FEAT-021 OAuth buttons (DemoGuard inline).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -79,6 +79,33 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 
 - **FEAT-019** — pasarela de pago dual Stripe + Wompi end-to-end. Schema en Supabase (`stripe_customers`, `stripe_invoices`, `stripe_webhook_events`, `wompi_customers`, `wompi_transactions`, `wompi_webhook_events`, columnas en `plans`/`credit_packages`/`subscriptions`). 6 Netlify functions: `api-billing-{checkout, portal, webhook, gateways}` + `api-billing-wompi-{checkout, webhook}`. `js/services/BillingService.js` con orquestación auto/Stripe/Wompi y modal selector. `PlanesView` y `CreditsShopView` con buttons cableados. Tab "Facturación" en `OrganizationView` con plan activo, próximo cobro, listado unificado Stripe+Wompi y botón Customer Portal Stripe. Seeds COP aplicados (Creator/Team/Agency + 4 packs). **Validado E2E en sandbox**: pago $240k aprobado, webhook procesado en 434ms, 500 créditos sumados a `organization_credits` (commits `b7364115`, `d6a0004a`, `a9fd7af8`, `6e73e713`, `6579456d`).
 - **FEAT-020** — MFA TOTP + magic link + revoke sessions deployed 2026-05-18 (commit `b9511e19`). Falta solo prueba humana E2E con Authenticator real.
+
+## Resueltas el 2026-05-22
+
+- **VERA v3 cobertura 26/26 (100%)** — protocolo `VERA_AI-ENGINE_v3_Protocolo_Tecnico.docx` §04 cerrado en tres bloques:
+  - **Fase A (aliases canonicos)**: 10/12 aliases registrados en `tool.dispatcher.js` TOOL_REGISTRY mapeando nombres v3 → handlers existentes (`getBrandDNA`, `getPendingBriefs`, `getFlows`, `getScraperStatus`, `updateBrandDNA`, `updateProduct`, `updateAudienceConcept`, `addCompetitorToMonitoring`, `triggerFlow`, `inspectRun`). `getMonitoringTargets` bumpeado a MISSING porque no existía canonical equivalente.
+  - **Fase B bloque 1**: 6 tools MISSING implementadas en `vera-actions.tools.js` — `getMonitoringTriggers`, `pauseFlow`, `updateCampaignConcept`, `addKeywordToTrends`, `removeKeywordFromTrends`, `createDefensiveWatch`. Migración tabla `defensive_watches` aplicada via Management API.
+  - **Fase B bloque 2**: `triggerDeepScrape` implementado bumpeando `priority` y `next_run_at` en `monitoring_triggers` (no invoca Apify directo; el scheduler lo agarra en ~5min). Smoke E2E con Liquid Death/IGNIS OK.
+  - **Fase B bloque 3**: `getBrandHealthMetrics(bc?, org, windowHours?)` calcula engagement_avg + sentiment_score + fatigue_curve (4 buckets) + posting_rhythm sobre `brand_posts` propios (clamp [24h, 4380h]). `searchIntelligence({query, scope?, max_results?}, bc?, org)` con OpenAI `text-embedding-3-large` dim=1536 + RPC `match_ai_brand_vectors`/`match_ai_global_vectors` (cosine) + fallback ILIKE. Validados via `dispatchTool()` en IGNIS: 5/5 smoke cases pasan.
+  - **Fase C tarea 14**: prompt `cycle-pulse-analysis` reescrito en `vera-brain-feed.service.js` al canonical v3. SKILL_CYCLE_PULSE (+2347 chars) con catálogo de 26 tools + sección "3 movimientos cuando ai-engine no puede" + 8 reglas NUNCA. `buildVeraPrompt` (+1776 chars) inyecta 23/23 tools v3 con sintaxis `[[TOOL:nombre|params]]` agrupadas en LECTURA/ESCRITURA/INTELIGENCIA ACTIVA/FLOWS+NOTIFS, prompt template 4938 chars (holgado vs 16KB CLI limit). `AUTONOMOUS_TOOLS` expandido de 11 a 39 entradas (incluye aliases v3 + canonicos legacy para soportar transición). Restart ai-engine limpio.
+  - Total: 9 tools nuevas en `vera-actions.tools.js`, 10 aliases en TOOL_REGISTRY, schemas en `tool-call.validator.js`, ambas listadas en `tool-phases.js` PHASE_B_TOOLS, prompt cycle-pulse alineado al protocolo. Pendientes Fase C: C15 (fix parser `[[TOOL:...]]` para params con JSON anidado), C16 (E2E del Brain Feed con catálogo v3 en IGNIS), C17 (cierre de memoria).
+
+- **Bucket A billing fix (vera chat)** — ai-engine + 3 Netlify functions (`api-products-generate-fiche`, `api-services-generate-fiche`, `api-places-generate-fiche`) ahora cobran fraccional via `use_credits_numeric` (1 cred = $0.10 → conversión decimal interna). Audit drift residual $0.99 (no refund, dentro de tolerancia). Modelo cambiado a 1 cred = $1 USD con `v_org_credits_display` + FLOOR; refund retroactivo 99.59 cr a IGNIS aplicado.
+
+- **Bug brands table fix (parcial)** — 3 sites en `brand.tools.js` migrados de tabla legacy `brands` (no existe) a `brand_containers` + `audience_personas`. `getBrandProfile` / `getBrandDNA` / `getOrgOverview` funcionando E2E. **Falta**: 4 sites en `brand-write.tools.js` + 1 site en `context.builder.js`.
+
+- **B1 multi-sesion descartado** — auditoría confirma que OpenClaw bridge SI respeta `sessionId` per request, no hay mezcla de contexto entre conversaciones distintas. B2 del roadmap Vera chat no aplica.
+
+- **Cleanup docs/task/ (2026-05-22)** — auditoria profunda de 15 archivos sospechosos contra el codigo vivo. Resultado:
+  - **7 archivos eliminados sin deuda**: `AUDIT-005-fase1-bd-applied`, `AUDIT-005-fase2a-productivity-applied`, `AUDIT-005-fase2b-advanced-applied`, `AUDIT-005-fase2c-3-4-applied`, `AUDIT-005-builder-paas-readiness` (los 4 subhijos + el master doc), `FEAT-024-dev-rank-gradients`, `SESSION-IMPACT-2026-05-12`. Codigo verificado activo en repo.
+  - **2 deudas obvias de codigo resueltas**:
+    - `BuilderPersistence.js:89` TODO "Verificar si es colaborador" → ahora invoca RPC `can_access_flow(_flow_id)` (existente en BD desde Fase 1 AUDIT-005). Owner OR developer OR collaborator pueden cargar el flujo.
+    - `FEAT-021` TODO #3 (OAuth buttons en demo): `startBrandIntegrationOAuth` y `disconnectBrandIntegration` en `InfoPanel.mixin.js` chequean `DemoGuard.isDemo()` antes del fetch a Netlify y abren el signup modal en vez de bloquearse silenciosamente.
+  - **4 archivos actualizados con status claro para futuras sesiones** (en vez de re-investigar):
+    - `FEAT-016-tendencias-engine-refactor` → DONE 2026-05-21 (cableado via `monitoring_triggers` sensor `trends_run`, no via systemd)
+    - `CHARTJS_FORMAT_SUPPORT` → "Realizar pruebas manuales con Vera" (codigo en `VeraView.js:776`, falta validar los 10 chart types con prompt en Vera)
+    - `AUDIT-001-frontend-vs-backend` → marcado historico + tabla de cobertura actual; gaps reales: `FEAT-026 NotificationBell` y `OPS-012 lexicon review` (sin task formal aun)
+    - `ROADMAP-POST-OPTIMIZATION-2026-05-12` → marcado historico + items 1-2 pendientes con sugerencia de task formal (`FEAT-027 web-vitals-dashboard`, `FEAT-028 modal-migration`)
 
 ## Resueltas el 2026-05-18
 

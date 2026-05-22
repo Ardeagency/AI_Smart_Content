@@ -1,6 +1,21 @@
 # Auditoría Frontend vs Backend — 2026-05-05
 
-**Estado:** El frontend está **masivamente desfasado** respecto al backend. Se construyeron **31 migraciones SQL nuevas (v23-v53)**, **6 servicios Python nuevos** y **30+ endpoints FastAPI nuevos** que el frontend NO consume.
+> **Status (2026-05-22):** ⚠️ Documento HISTORICO. La auditoria identifico 5
+> areas no consumidas. Estado actual de cada una:
+>
+> | Area auditada | Cubierta hoy por |
+> |---|---|
+> | P0: Activar TendenciasView + EstrategiaView | ✅ Scope de [SPRINT-FRONTEND-100](./SPRINT-FRONTEND-100-2026-05-06.md) (martes 26/05) |
+> | P1: NotificationBell + inbox `org_notifications` | ⚠️ **NO COVERED** — crear task formal `FEAT-026-notification-bell` |
+> | P2: Multi-platform provision UI | ⚠️ Parcial: backend `populator` cerrado (memoria `multiplatform-populator`); falta UI de aprobacion para emerging brands |
+> | P3: Servicios mejorados (Mi Marca/Competencia con nuevas RPCs) | ⚠️ Cubierto parcial por [FEAT-007](./FEAT-007-frontend-services-refactor.md) (refactor) y [FEAT-008](./FEAT-008-frontend-new-services.md) |
+> | P4: Lexicon review (admin) | ⚠️ **NO COVERED** — crear task formal `OPS-012-lexicon-review-admin` o decidir si scope futuro |
+>
+> **Accion**: cuando se cierren las 2 areas "NO COVERED" (con task formal o
+> decision explicita de descarte), borrar este archivo. Por ahora se mantiene
+> como referencia historica del gap.
+
+**Estado original (2026-05-05):** El frontend está **masivamente desfasado** respecto al backend. Se construyeron **31 migraciones SQL nuevas (v23-v53)**, **6 servicios Python nuevos** y **30+ endpoints FastAPI nuevos** que el frontend NO consume.
 
 ---
 

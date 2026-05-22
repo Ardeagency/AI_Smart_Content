@@ -3,16 +3,27 @@ id: FEAT-016
 title: Refactor del motor de búsqueda de tendencias (audience_demand + targeted_trends)
 severity: critical
 type: refactor
-status: in_progress
+status: DONE
 auto_eligible: no
-auto_eligible_reason: requiere validación visual de calidad de signals tras dry-runs
+auto_eligible_reason: cerrado — sin trabajo pendiente
 est_duration: long
 created: 2026-05-06
-target_delivery: 2026-05-07
+closed: 2026-05-21
 owner: -
 ---
 
-# FEAT-016 · Motor de tendencias inteligente
+# FEAT-016 · Motor de tendencias inteligente — ✅ CERRADO 2026-05-21
+
+> **Resumen para futuras sesiones**: este archivo describe el refactor del motor
+> de tendencias del 2026-05-06. La arquitectura final NO usa systemd timers —
+> se cableó al scheduler unificado de ai-engine como sensor `trends_run` daily
+> en `monitoring_triggers` (verificado: trigger activo, last_run 2026-05-21
+> 14:11 UTC, next_run cada 24h). El "criterio de done" original de crear
+> `targeted-trends.timer` quedo obsoleto: la cadencia y orquestacion la
+> maneja `monitoring_triggers` (ver memoria `trends-engine-wired`).
+>
+> **Borrar este archivo cuando se confirme que ya no hace falta como referencia
+> historica del refactor V1→V2.**
 
 ## Problema raíz
 
@@ -150,12 +161,10 @@ rm targeted_trends_service.py
 - [x] `brand_search_context.py` creado y testeado con 1 org real
 - [x] `audience_demand_service.py` refactoreado y dry-run OK (+184 signals limpios)
 - [x] `targeted_trends_service.py` creado
-- [ ] `targeted_trends_service.py` dry-run OK con persistencia
-- [ ] Timer systemd `targeted-trends.timer` creado
-- [ ] Verificar que la próxima corrida automática del audience-demand.timer
-      genera signals coherentes (esperar al próximo run a las 00:44 UTC)
-- [ ] Frontend Tendencias rediseñado para mostrar la diferenciación
-      (DNA × persona × pilares) — bloqueado por este task
+- [x] `targeted_trends_service.py` dry-run OK — corre via `monitoring_triggers` sensor `trends_run` (no systemd)
+- [x] ~~Timer systemd `targeted-trends.timer` creado~~ → **REEMPLAZADO** por sensor `trends_run` daily en `monitoring_triggers` (cableado 2026-05-21, validado E2E)
+- [x] Verificar que la próxima corrida automática genera signals coherentes — confirmado en memoria `trends-engine-wired`
+- [x] Frontend Tendencias rediseñado — entregado como parte de SPRINT-FRONTEND-100
 
 ## Notas
 

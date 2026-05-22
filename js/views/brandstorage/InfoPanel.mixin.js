@@ -440,6 +440,10 @@
     const brandId = String(brandContainerId || '').trim();
     const SUPPORTED = ['google', 'facebook', 'shopify'];
     if (!brandId || !SUPPORTED.includes(normalizedProvider)) return;
+    if (window.DemoGuard?.isDemo?.()) {
+      window.DemoGuard.showSignupModal(`conectar ${normalizedProvider}`);
+      return;
+    }
     if (!this.supabase) {
       alert('Supabase no disponible para conectar integración.');
       return;
@@ -603,6 +607,10 @@
     const normalizedProvider = String(provider || '').toLowerCase();
     const brandId = String(brandContainerId || '').trim();
     if (!brandId || !['google', 'facebook', 'shopify'].includes(normalizedProvider)) return;
+    if (window.DemoGuard?.isDemo?.()) {
+      window.DemoGuard.showSignupModal(`desconectar ${normalizedProvider}`);
+      return;
+    }
     if (!this.supabase) {
       alert('Supabase no disponible para desconectar integración.');
       return;

@@ -10,6 +10,18 @@ related:
 
 # Roadmap post-sesión de optimización (2026-05-12)
 
+> **Status (2026-05-22):** ⚠️ Documento HISTORICO. De los 4 items originales:
+>
+> | Item | Estado actual |
+> |---|---|
+> | 1. Web Vitals Dashboard UI | ⚠️ **PENDIENTE — NO en INDEX**. Crear task formal `FEAT-027-web-vitals-dashboard` si se quiere atacar; modulo `js/utils/webvitals.js` ya envia samples a `frontend_errors`. |
+> | 2. Migrar modales custom (20 archivos) | ⚠️ **PENDIENTE — NO en INDEX**. Crear task formal `FEAT-028-modal-migration` o decidir si se queda como deuda permanente. |
+> | 3. Background sync (offline writes) | ✅ Descartado explicitamente (backlog) — sin caso de uso real |
+> | 4. Image srcset Supabase Pro | ✅ Descartado — requiere upgrade $25/mes injustificado hasta ver LCP real |
+>
+> **Accion**: cuando los items 1-2 se conviertan en tasks formales (o se
+> descarten explicitamente), borrar este archivo.
+
 Tras los 32 commits de optimización (perf + a11y + observabilidad + SEO),
 quedan 4 items grandes pendientes que se evaluaron y descartaron de la
 sesión por scope o complejidad. Este doc detalla cada uno: qué es, qué

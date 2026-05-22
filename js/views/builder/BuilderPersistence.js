@@ -84,12 +84,15 @@
         return;
       }
       
-      // Verificar permisos
+      // Verificar permisos: owner, developer o colaborador (via RPC can_access_flow)
       if (flow.owner_id !== this.userId) {
-        // TODO: Verificar si es colaborador
-        this.showNotification('No tienes permisos para editar este flujo', 'error');
-        window.router?.navigate('/dev/flows');
-        return;
+        const { data: canAccess, error: accessErr } = await this.supabase
+          .rpc('can_access_flow', { _flow_id: this.flowId });
+        if (accessErr || !canAccess) {
+          this.showNotification('No tienes permisos para editar este flujo', 'error');
+          window.router?.navigate('/dev/flows');
+          return;
+        }
       }
       
       // Cargar datos (alineado con content_flows: subcategory_id, execution_mode, show_in_catalog)

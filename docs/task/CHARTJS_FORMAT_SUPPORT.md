@@ -1,8 +1,19 @@
 # Soporte de formato Chart.js en el renderer del chat
 
 **Fecha**: 2026-05-21
-**Estado**: Pendiente de implementación
-**Prioridad**: Alta (bloquea demo)
+**Estado**: ✅ Codigo implementado — ⏳ **PENDIENTE: realizar pruebas manuales con Vera**
+**Prioridad**: Alta (bloquea demo si tests fallan)
+
+## Que falta hacer (lo unico bloqueante)
+
+Pedir a Vera el prompt de validacion (ver "Tests manuales post-deploy" abajo) y
+verificar que los 10 charts rendericen sin fallar. Si TODOS los checkboxes
+quedan en ✅, borrar este archivo entero (`docs/task/CHARTJS_FORMAT_SUPPORT.md`).
+
+**Codigo ya esta en produccion** (verificado 2026-05-22):
+- `_normalizeChartJsSpec()` en `js/views/VeraView.js:776`
+- Invocado desde `buildEChartsOption()` en `js/views/VeraView.js:844`
+- Aliases case-insensitive + multi-serie + per-item colors implementados
 
 ## Contexto
 
