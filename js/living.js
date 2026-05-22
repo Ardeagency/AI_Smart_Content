@@ -12,6 +12,7 @@ class LivingManager {
         this.products = [];
         this.flowRuns = [];
         this.flowOutputs = [];
+        this.flowInputs = []; // runs_inputs (snapshot del payload por run)
         this.creditUsage = [];
         this.brandId = null;
         this.brandContainerId = null;
@@ -314,6 +315,35 @@ class LivingManager {
             this.flowOutputs = [...(this.flowOutputs || []), ...newOutputs.filter(o => o?.id && !existing.has(o.id))];
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
+        }
+        // Paralelo: hidratar runs_inputs para los mismos run_ids (tab Input del modal).
+        this.loadFlowInputs({ reset, runIds }).catch(() => {});
+    }
+
+    /**
+     * Carga las filas de runs_inputs para los runs visibles. Alimenta el tab
+     * Input del modal: snapshot del payload del usuario (entidad, referencias,
+     * briefing). Tolerante a errores: si RLS o tabla no responde, falla silencioso.
+     */
+    async loadFlowInputs({ reset = false, runIds = [] } = {}) {
+        if (!this.supabase) {
+            if (reset) this.flowInputs = [];
+            return;
+        }
+        if (reset) this.flowInputs = [];
+        try {
+            const targetRunIds = (runIds && runIds.length ? runIds : (this.flowRuns || []).map(r => r?.id).filter(Boolean));
+            if (!targetRunIds.length) return;
+            const { data, error } = await this.supabase
+                .from('runs_inputs').select('*')
+                .in('run_id', targetRunIds);
+            if (error) throw error;
+            const newInputs = data || [];
+            const existing = new Set((this.flowInputs || []).map(i => i?.id).filter(Boolean));
+            this.flowInputs = [...(this.flowInputs || []), ...newInputs.filter(i => i?.id && !existing.has(i.id))];
+        } catch (error) {
+            // No bloqueamos el modal si falla; el tab Input mostrara estado vacio.
+            console.warn('runs_inputs hydrate fallo:', error);
         }
     }
 
@@ -1778,6 +1808,12 @@ class LivingManager {
         // Siblings.
         this._renderModalSiblings(run?.id, outputId);
 
+        // Input pane (lo que se uso para generar).
+        this._renderModalInput(run, output);
+
+        // Reset a tab Output cada vez que se abre.
+        this._switchModalTab('output');
+
         // Estado del like sincronizado con likedOutputs.
         const likeBtn = modal.querySelector('[data-action="like"]');
         if (likeBtn) {
@@ -2021,6 +2057,156 @@ class LivingManager {
         return t;
     }
 
+    /**
+     * Cambia entre tabs (output / input). Actualiza aria-selected, is-active
+     * y hidden de los panes. Idempotente.
+     */
+    _switchModalTab(tab) {
+        const modal = document.getElementById('productionModal');
+        if (!modal) return;
+        const tabs = modal.querySelectorAll('.pmodal-tab');
+        const panes = modal.querySelectorAll('.pmodal-pane');
+        tabs.forEach(btn => {
+            const active = btn.getAttribute('data-tab') === tab;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        panes.forEach(pane => {
+            const active = pane.getAttribute('data-pane') === tab;
+            pane.classList.toggle('is-active', active);
+            if (active) pane.removeAttribute('hidden'); else pane.setAttribute('hidden', '');
+        });
+        const scroll = document.getElementById('pmodalScroll');
+        if (scroll) scroll.scrollTo(0, 0);
+    }
+
+    /**
+     * Renderiza el tab Input: lo que el usuario adjunto al disparar la
+     * produccion. Lee de this.flowInputs (cargado en loadFlowInputs).
+     *
+     * Estructura del card:
+     *  - Entidad (producto/servicio/lugar) con thumbnail + nombre
+     *  - Referencias (imagenes adjuntas)
+     *  - Briefing (texto libre)
+     *  - Audiencia + Campania (resumidas como chips)
+     *  - Resto de claves del payload como rows clave/valor
+     *
+     * Cuando no hay runs_inputs (corrida pre-instrumentacion), muestra estado
+     * vacio explicando como llenar el snapshot.
+     */
+    _renderModalInput(run, output) {
+        const container = document.getElementById('pmodalInputContent');
+        if (!container) return;
+        const inputRow = (this.flowInputs || []).find(i => i?.run_id === run?.id);
+        const data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || null;
+
+        if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+            container.innerHTML = `
+                <div class="pmodal-input-empty">
+                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                    <p>No se registraron los inputs de esta produccion.</p>
+                    <p class="pmodal-input-empty-hint">Las producciones nuevas guardan automaticamente el formulario que las origino.</p>
+                </div>`;
+            return;
+        }
+
+        // 1) Entidad (producto / servicio / lugar)
+        const entityName = data.entity_name || data.product_name || data.service_name || data.place_name || '';
+        const entityImg = data.entity_image_url || data.product_image_url || data.image_url || '';
+        const entityType = data.entity_type || (entityName ? 'Entidad' : null);
+
+        // 2) Referencias adjuntadas (imagenes / archivos)
+        const refs = []
+            .concat(Array.isArray(data.reference_images) ? data.reference_images : [])
+            .concat(Array.isArray(data.references) ? data.references : [])
+            .concat(Array.isArray(data.mood_images) ? data.mood_images : [])
+            .concat(data.reference_image_url ? [data.reference_image_url] : [])
+            .filter(Boolean);
+
+        // 3) Briefing
+        const briefing = data.briefing || data.brief || data.user_brief || data.instructions || '';
+
+        // 4) Audiencia / Campania (mostradas tambien como chips)
+        const audienceName = data.persona_name || data.audience_name || run?.audience_personas?.name || '';
+        const campaignName = data.campaign_name || run?.campaigns?.nombre_campana || '';
+
+        // 5) Resto del payload (excluye lo ya pintado arriba)
+        const HIDDEN_KEYS = new Set([
+            'entity_id','entity_name','entity_image_url','entity_type',
+            'product_id','product_name','product_image_url','image_url',
+            'service_id','service_name','place_id','place_name',
+            'reference_images','references','mood_images','reference_image_url',
+            'briefing','brief','user_brief','instructions',
+            'persona_id','persona_name','audience_id','audience_name','audience_ids',
+            'campaign_id','campaign_ids','campaign_name','brief_id'
+        ]);
+        const extraRows = Object.entries(data)
+            .filter(([k, v]) => !HIDDEN_KEYS.has(k) && v !== null && v !== '' && v !== undefined)
+            .map(([k, v]) => {
+                const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const valStr = (typeof v === 'object') ? JSON.stringify(v) : String(v);
+                return `<div class="pmodal-input-row">
+                    <span class="pmodal-info-label">${this.escapeHtml(label)}</span>
+                    <span class="pmodal-info-value pmodal-input-row-val">${this.escapeHtml(valStr.length > 200 ? valStr.slice(0, 200) + '…' : valStr)}</span>
+                </div>`;
+            }).join('');
+
+        const entityHtml = entityName
+            ? `<section class="pmodal-section pmodal-input-entity">
+                <h3 class="pmodal-section-title"><i class="fas fa-cube"></i> ${this.escapeHtml(entityType || 'Entidad')}</h3>
+                <div class="pmodal-entity-card">
+                    ${entityImg
+                        ? `<img src="${this.escapeHtml(entityImg)}" alt="${this.escapeHtml(entityName)}" class="pmodal-entity-img" loading="lazy" decoding="async">`
+                        : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="fas fa-cube"></i></div>`
+                    }
+                    <div class="pmodal-entity-meta">
+                        <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
+                        ${entityType ? `<p class="pmodal-entity-type">${this.escapeHtml(entityType)}</p>` : ''}
+                    </div>
+                </div>
+            </section>`
+            : '';
+
+        const refsHtml = refs.length
+            ? `<section class="pmodal-section pmodal-input-refs">
+                <h3 class="pmodal-section-title"><i class="fas fa-image"></i> REFERENCIAS</h3>
+                <div class="pmodal-refs-grid">
+                    ${refs.map((url, i) => `
+                        <a class="pmodal-ref-thumb" href="${this.escapeHtml(url)}" target="_blank" rel="noopener" aria-label="Referencia ${i+1}">
+                            <img src="${this.escapeHtml(url)}" alt="" loading="lazy" decoding="async">
+                        </a>
+                    `).join('')}
+                </div>
+            </section>`
+            : '';
+
+        const briefHtml = briefing
+            ? `<section class="pmodal-section pmodal-input-brief">
+                <h3 class="pmodal-section-title"><i class="fas fa-quote-left"></i> BRIEFING</h3>
+                <p class="pmodal-input-brief-text">${this.escapeHtml(briefing)}</p>
+            </section>`
+            : '';
+
+        const contextChips = [];
+        if (campaignName) contextChips.push(`<span class="pmodal-context-chip"><i class="fas fa-bullhorn"></i> ${this.escapeHtml(campaignName)}</span>`);
+        if (audienceName) contextChips.push(`<span class="pmodal-context-chip"><i class="fas fa-users"></i> ${this.escapeHtml(audienceName)}</span>`);
+        const contextHtml = contextChips.length
+            ? `<section class="pmodal-section pmodal-input-context">
+                <div class="pmodal-context-chips">${contextChips.join('')}</div>
+            </section>`
+            : '';
+
+        const extrasHtml = extraRows
+            ? `<section class="pmodal-section pmodal-input-extras">
+                <h3 class="pmodal-section-title"><i class="fas fa-list"></i> PARAMETROS</h3>
+                <div class="pmodal-info-rows">${extraRows}</div>
+            </section>`
+            : '';
+
+        container.innerHTML = entityHtml + contextHtml + refsHtml + briefHtml + extrasHtml
+            || `<div class="pmodal-input-empty"><i class="fas fa-inbox"></i><p>Sin inputs registrados.</p></div>`;
+    }
+
     _safeParseJSON(v) {
         if (v == null) return null;
         if (typeof v === 'object') return v;
@@ -2078,6 +2264,13 @@ class LivingManager {
     _bindModalListenersOnce(modal) {
         if (modal._listenersBound) return;
         modal._listenersBound = true;
+
+        // Tabs Output / Input.
+        modal.addEventListener('click', (e) => {
+            const tabBtn = e.target.closest('.pmodal-tab[data-tab]');
+            if (!tabBtn) return;
+            this._switchModalTab(tabBtn.getAttribute('data-tab'));
+        });
 
         modal.addEventListener('click', async (e) => {
             const btn = e.target.closest('[data-action]');

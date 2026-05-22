@@ -89,7 +89,7 @@ class ProductionView extends BaseView {
                 </div>
             </div>
 
-            <!-- Columna derecha: header con cerrar, contenido scrolleable, CTAs y footer -->
+            <!-- Columna derecha: header con cerrar, tabs Output/Input, contenido scrolleable, CTAs y footer -->
             <aside class="production-modal-side" aria-label="Detalles de la produccion">
                 <header class="pmodal-side-header">
                     <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar">
@@ -97,27 +97,44 @@ class ProductionView extends BaseView {
                     </button>
                 </header>
 
+                <nav class="pmodal-tabs" role="tablist" aria-label="Vistas de produccion">
+                    <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">
+                        Output
+                    </button>
+                    <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">
+                        Input
+                    </button>
+                </nav>
+
                 <div class="pmodal-scroll" id="pmodalScroll">
-                    <!-- Strip de siblings (otros outputs del mismo run) -->
-                    <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
+                    <!-- Pane Output: lo que la produccion genero -->
+                    <div class="pmodal-pane pmodal-pane--output is-active" data-pane="output" role="tabpanel">
+                        <!-- Strip de siblings (otros outputs del mismo run) -->
+                        <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
 
-                    <!-- Prompt: bloques labeled Notion-style + disclosure de generation details -->
-                    <section class="pmodal-section pmodal-prompt-section">
-                        <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
-                        <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
-                            <summary>
-                                <i class="fas fa-chevron-right pmodal-prompt-raw-caret"></i>
-                                <span>Show generation details</span>
-                            </summary>
-                            <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
-                        </details>
-                    </section>
+                        <!-- Prompt: bloques labeled Notion-style + disclosure de generation details -->
+                        <section class="pmodal-section pmodal-prompt-section">
+                            <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
+                            <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
+                                <summary>
+                                    <i class="fas fa-chevron-right pmodal-prompt-raw-caret"></i>
+                                    <span>Show generation details</span>
+                                </summary>
+                                <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
+                            </details>
+                        </section>
 
-                    <!-- Information rows -->
-                    <section class="pmodal-section pmodal-info-section">
-                        <h3 class="pmodal-section-title"><i class="fas fa-circle-info"></i> INFORMATION</h3>
-                        <div class="pmodal-info-rows" id="pmodalInfoRows"></div>
-                    </section>
+                        <!-- Information rows -->
+                        <section class="pmodal-section pmodal-info-section">
+                            <h3 class="pmodal-section-title"><i class="fas fa-circle-info"></i> INFORMATION</h3>
+                            <div class="pmodal-info-rows" id="pmodalInfoRows"></div>
+                        </section>
+                    </div>
+
+                    <!-- Pane Input: lo que se uso para generar (entidad, referencias, briefing) -->
+                    <div class="pmodal-pane pmodal-pane--input" data-pane="input" role="tabpanel" hidden>
+                        <div id="pmodalInputContent"></div>
+                    </div>
                 </div>
 
                 <!-- CTAs primarios -->
