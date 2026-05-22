@@ -2521,8 +2521,7 @@ class LivingManager {
                     mask_data_url: maskDataUrl,
                     user_instruction: userInstruction,
                     source_output_id: sourceOutputId,
-                    organization_id: this.organizationId,
-                    brand_id: this.brandId || null
+                    organization_id: this.organizationId
                 })
             });
             let parsed;
@@ -2571,7 +2570,6 @@ class LivingManager {
 
         try {
             await this._insertEditOutput({
-                runId: createPayload.run_id || sourceRunId,
                 sourceOutputId,
                 sourceImageUrl: imageUrl,
                 storagePath,
@@ -2713,28 +2711,33 @@ class LivingManager {
     }
 
     /**
-     * Inserta el output editado en runs_outputs con metadata de linaje.
+     * Inserta el output editado en system_ai_outputs (tabla flat, sin flow_run).
+     * Mismo destino que VideoView para producciones standalone — el grid de
+     * Production las recoge via loadSystemAiOutputs (provider != 'openai').
      */
-    async _insertEditOutput({ runId, sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId }) {
+    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId }) {
+        if (!this.brandContainerId) throw new Error('Falta brand_container_id');
+        if (!this.userId) throw new Error('Falta user_id');
         const row = {
-            run_id: runId,
-            output_type: 'ai_content',
-            organization_id: this.organizationId,
-            storage_path: storagePath,
+            brand_container_id: this.brandContainerId,
+            user_id: this.userId,
+            provider: 'kie',
+            output_type: 'image',
+            external_job_id: kieTaskId,
+            status: 'completed',
             prompt_used: refinedPrompt,
-            reference_image_url: sourceImageUrl,
-            models: { editor: kieModel, prompter: openaiModel },
+            storage_path: storagePath,
+            technical_params: { output_format: 'png', kie_model: kieModel, openai_model: openaiModel },
             metadata: {
                 kind: 'image_edit',
                 source_output_id: sourceOutputId,
+                source_image_url: sourceImageUrl,
                 edit_user_instruction: userInstruction,
                 edit_refined_prompt: refinedPrompt,
-                mask_storage_path: maskStoragePath,
-                kie_task_id: kieTaskId
-            },
-            technical_params: { output_format: 'png' }
+                mask_storage_path: maskStoragePath
+            }
         };
-        const { error } = await this.supabase.from('runs_outputs').insert(row);
+        const { error } = await this.supabase.from('system_ai_outputs').insert(row);
         if (error) throw error;
     }
 

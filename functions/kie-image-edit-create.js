@@ -8,20 +8,18 @@
  *      devuelve un prompt en ingles para nano-banana describiendo el cambio
  *      exclusivamente en la zona marcada y preservando todo lo demas.
  *   4. kie.ai createTask con modelo nano-banana-pro (image-to-image) + prompt.
- *   5. Crea un `flow_runs` (status=running) para que el output editado pueda
- *      colgarse de el cuando termine y aparezca en el grid de Production.
- *   6. Cobro: 0.10 cred via use_credits_numeric (1 cred = 1 USD).
+ *   5. Cobro: 0.10 cred via use_credits_numeric (1 cred = 1 USD).
  *
- * Devuelve { taskId, run_id, refined_prompt, mask_storage_path, mask_public_url }
+ * Devuelve { taskId, refined_prompt, mask_storage_path, mask_public_url, ... }
  * para que el frontend haga polling con kling-video-status?taskId=... y al
- * success descargue + suba a Storage + inserte en runs_outputs.
+ * success descargue + suba a Storage + inserte en system_ai_outputs (la misma
+ * tabla flat que VideoView usa para producciones standalone, sin flow_run).
  */
 
 const {
   corsHeaders,
   getSupabaseEnv,
   requireAuth,
-  supabaseRest,
   checkBodySize
 } = require('./lib/ai-shared');
 
@@ -177,33 +175,7 @@ async function createKieTask({ headers, prompt, imageUrl }) {
   return String(taskId);
 }
 
-async function createFlowRun({ env, userId, organizationId, brandId, sourceOutputId, refinedPrompt, userInstruction, kieTaskId, maskStoragePath }) {
-  const rows = await supabaseRest({
-    url: env.url, serviceKey: env.serviceKey,
-    path: 'flow_runs', method: 'POST',
-    body: [{
-      flow_id: null,
-      brand_id: brandId || null,
-      user_id: userId,
-      organization_id: organizationId,
-      status: 'running',
-      step_history: {
-        kind: 'image_edit',
-        source_output_id: sourceOutputId,
-        kie_task_id: kieTaskId,
-        kie_model: KIE_MODEL,
-        openai_model: OPENAI_MODEL,
-        mask_storage_path: maskStoragePath,
-        user_instruction: userInstruction,
-        refined_prompt: refinedPrompt,
-        created_at: new Date().toISOString()
-      }
-    }]
-  });
-  return rows?.[0]?.id || null;
-}
-
-async function chargeCredits({ env, organizationId, userId, runId, usdCost, metadata }) {
+async function chargeCredits({ env, organizationId, userId, kieTaskId, usdCost, metadata }) {
   const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
     method: 'POST',
     headers: {
@@ -217,8 +189,8 @@ async function chargeCredits({ env, organizationId, userId, runId, usdCost, meta
       p_credits_amount: CREDITS_PER_EDIT,
       p_kind: 'tool_call',
       p_usd_cost: usdCost,
-      p_source_table: 'flow_runs',
-      p_source_id: runId,
+      p_source_table: 'system_ai_outputs',
+      p_source_id: kieTaskId,
       p_metadata: metadata
     })
   });
@@ -254,7 +226,6 @@ exports.handler = async (event) => {
   const userInstruction = String(body.user_instruction || '').trim();
   const sourceOutputId = String(body.source_output_id || '').trim() || null;
   const organizationId = String(body.organization_id || '').trim();
-  const brandId = String(body.brand_id || '').trim() || null;
 
   if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
   if (!userInstruction) return fail(event, 400, 'user_instruction requerido');
@@ -292,24 +263,13 @@ exports.handler = async (event) => {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
 
-  let runId = null;
-  try {
-    runId = await createFlowRun({
-      env, userId: user.id, organizationId, brandId,
-      sourceOutputId, refinedPrompt, userInstruction,
-      kieTaskId, maskStoragePath: mask.storagePath
-    });
-  } catch (e) {
-    console.warn('[kie-image-edit-create] flow_runs insert fallo:', e?.message || e);
-  }
-
   // Estimacion de USD para el ledger (tokens OpenAI ~ centavos + kie nano ~ $0.04).
   const usdCost = (inputTokens * 0.15 + outputTokens * 0.60) / 1_000_000 + 0.04;
   const charge = await chargeCredits({
     env,
     organizationId,
     userId: user.id,
-    runId,
+    kieTaskId,
     usdCost: Math.round(usdCost * 10000) / 10000,
     metadata: {
       operation: 'image_edit',
@@ -324,7 +284,6 @@ exports.handler = async (event) => {
   if (!charge.ok) {
     return fail(event, 402, 'Creditos insuficientes para aplicar la edicion', {
       taskId: kieTaskId,
-      run_id: runId,
       credits_needed: CREDITS_PER_EDIT
     });
   }
@@ -334,7 +293,6 @@ exports.handler = async (event) => {
     headers: c,
     body: JSON.stringify({
       taskId: kieTaskId,
-      run_id: runId,
       refined_prompt: refinedPrompt,
       mask_storage_path: mask.storagePath,
       mask_public_url: mask.publicUrl,
