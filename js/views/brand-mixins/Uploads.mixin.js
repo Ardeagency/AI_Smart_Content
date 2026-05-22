@@ -201,7 +201,6 @@
       if (!this.supabase || !assetId) return;
       const asset = (this.brandAssets || []).find((a) => a.id === assetId);
       if (!asset) return;
-      if (!window.confirm('¿Eliminar este asset?')) return;
 
       try {
         const bucket = asset.bucket || 'brand-core';
@@ -214,10 +213,11 @@
         if (error) throw error;
 
         this.brandAssets = (this.brandAssets || []).filter((a) => a.id !== assetId);
-        this.renderAssetsFiles();
+        // Re-rendear ambas cards: el asset borrado podia estar en cualquiera de las dos.
+        if (typeof this.renderIdentityFiles === 'function') this.renderIdentityFiles();
+        if (typeof this.renderAssetsFiles === 'function') this.renderAssetsFiles();
       } catch (error) {
         console.error('BrandstorageView removeAsset:', error);
-        alert('No se pudo eliminar el asset.');
       }
     },
 
