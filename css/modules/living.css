@@ -736,10 +736,18 @@ body.production-filters-in-header .living-container > .living-history-section {
 
     position: fixed;
     inset: 0;
-    z-index: 1600;
+    /* Por encima de header (900), sidebar (850), flyouts (10050) y modales del sistema (10001). */
+    z-index: 10100;
     display: none;
+    /* Aisla el stacking context si el padre (main, etc) tuviera transforms. */
+    isolation: isolate;
 }
 .production-modal.is-open { display: block; }
+
+/* El atributo HTML `hidden` debe ganar siempre dentro del modal. Algunas reglas
+   internas declaran display:block, que sin esta regla hacen visible el video
+   o la imagen vacios cuando deberian estar ocultos. */
+.production-modal [hidden] { display: none !important; }
 
 .production-modal-backdrop {
     position: absolute;

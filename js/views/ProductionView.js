@@ -241,6 +241,11 @@ class ProductionView extends BaseView {
     // Mover filtros al header principal (solo en Production)
     this.moveFiltersToHeader();
 
+    // Portal: re-anclar el modal al <body> para escapar cualquier stacking
+    // context del <main> de la vista. Sin esto, z-index del modal queda
+    // atrapado dentro del main y el sidebar/header lo tapan.
+    this.portalModalToBody();
+
     // Cargar script si es necesario
     if (!window.LivingManager) {
       await this.loadScript('js/living.js', 'LivingManager');
@@ -258,6 +263,19 @@ class ProductionView extends BaseView {
 
     // Setup links para usar router con orgId
     this.setupRouterLinks();
+  }
+
+  /**
+   * Re-ancla el #productionModal a document.body si esta dentro de la vista.
+   * Necesario para que el modal cubra header y sidebar (escapar el stacking
+   * context del <main>). Idempotente: si ya esta en body, no hace nada.
+   */
+  portalModalToBody() {
+    const modal = document.getElementById('productionModal');
+    if (!modal) return;
+    if (modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
   }
 
   /**
