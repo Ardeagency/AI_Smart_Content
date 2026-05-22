@@ -1954,6 +1954,15 @@ body.production-filters-in-header .app-header.with-sidebar {
     height: auto;
     min-height: var(--app-header-height, 45.8px);
     padding-top: 12px;
+    /* Override hardcoded del glass-black real (spec Figma): rgba(0,0,0,0.52)
+       + blur(18px) saturate(160%). Mismo patron que #userDropdown.glass-black
+       en navigation.css:2185 — los tokens --glass-blur (blur 7px) y
+       --glass-black-bg (rgba 0.5) son insuficientes para imagenes de alto
+       contraste como las cards de Production. */
+    background: rgba(0, 0, 0, 0.52) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
 }
 body.production-filters-in-header .app-header .header-content {
     padding-bottom: 14px;
