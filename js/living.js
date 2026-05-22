@@ -582,11 +582,12 @@ class LivingManager {
     }
 
     /**
-     * Carga producciones de system_ai_outputs (solo las que NO son de OpenAI).
-     * Se usa brand_container_id y user_id; provider != 'openai'.
+     * Carga producciones de system_ai_outputs (excluye OpenAI puro tipo
+     * generated text). Filtra por organization_id (consistente con
+     * runs_outputs). Selecciona los campos FK canonicos.
      */
     async loadSystemAiOutputs({ reset = false } = {}) {
-        if (!this.supabase || !this.brandContainerId || !this.userId) {
+        if (!this.supabase || !this.organizationId) {
             if (reset) this.systemAiOutputs = [];
             return;
         }
@@ -599,9 +600,8 @@ class LivingManager {
         try {
             const { data, error } = await this.supabase
                 .from('system_ai_outputs')
-                .select('id, brand_container_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, metadata, created_at')
-                .eq('brand_container_id', this.brandContainerId)
-                .eq('user_id', this.userId)
+                .select('id, brand_container_id, organization_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, technical_params, metadata, models, entity_id, reference_image_url, brief_id, persona_id, campaign_id, created_at')
+                .eq('organization_id', this.organizationId)
                 .neq('provider', 'openai')
                 .order('created_at', { ascending: false })
                 .range(this._systemAiOffset, this._systemAiOffset + this._historySourceBatchSize - 1);
@@ -2425,26 +2425,28 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+            const sm = this._sourceProductInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
+                organization_id: this.organizationId || null,
                 user_id: this.userId,
                 provider: 'kie',
                 output_type: 'image',
                 external_job_id: taskId,
                 status: 'completed',
+                entity_id: sm.entityId || null,
+                reference_image_url: sourceImageUrl || null,
+                models: { editor: createPayload.kie_model || null, prompter: null },
                 storage_path: storagePath,
                 technical_params: {
                     output_format: 'png',
-                    kie_model: createPayload.kie_model,
                     scale_factor: createPayload.scale_factor,
                     aspect_ratio: aspectRatio
                 },
                 metadata: {
                     kind: 'image_upscale',
                     source_output_id: sourceOutputId,
-                    source_image_url: sourceImageUrl,
-                    scale_factor: createPayload.scale_factor,
-                    aspect_ratio: aspectRatio
+                    scale_factor: createPayload.scale_factor
                 }
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
@@ -2545,25 +2547,27 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+            const sm = this._sourceProductInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
+                organization_id: this.organizationId || null,
                 user_id: this.userId,
                 provider: 'kie',
                 output_type: 'image',
                 external_job_id: taskId,
                 status: 'completed',
+                entity_id: sm.entityId || null,
+                reference_image_url: sourceImageUrl || null,
+                models: { editor: createPayload.kie_model || null, prompter: null },
                 storage_path: storagePath,
                 technical_params: {
                     output_format: 'png',
-                    kie_model: createPayload.kie_model,
                     aspect_ratio: aspectRatio,
                     has_alpha: true
                 },
                 metadata: {
                     kind: 'image_remove_bg',
-                    source_output_id: sourceOutputId,
-                    source_image_url: sourceImageUrl,
-                    aspect_ratio: aspectRatio
+                    source_output_id: sourceOutputId
                 }
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
@@ -2686,29 +2690,30 @@ class LivingManager {
             if (!this.userId) throw new Error('Falta user_id');
             const row = {
                 brand_container_id: this.brandContainerId,
+                organization_id: this.organizationId || null,
                 user_id: this.userId,
                 provider: 'kie',
                 output_type: 'image',
                 external_job_id: taskId,
                 status: 'completed',
+                entity_id: entityId || null,
+                reference_image_url: sourceImageUrl || null,
+                models: {
+                    editor: createPayload.kie_model || null,
+                    prompter: createPayload.openai_model || null
+                },
                 prompt_used: createPayload.refined_prompt,
                 storage_path: storagePath,
                 technical_params: {
                     output_format: 'png',
-                    kie_model: createPayload.kie_model,
-                    openai_model: createPayload.openai_model,
-                    aspect_ratio: aspectRatio,
-                    entity_id: entityId
+                    aspect_ratio: aspectRatio
                 },
                 metadata: {
                     kind: 'image_fix_text',
                     source_output_id: sourceOutputId,
-                    source_image_url: sourceImageUrl,
                     edit_refined_prompt: createPayload.refined_prompt,
                     product_id: productId,
-                    product_name: productName,
-                    entity_id: entityId,
-                    aspect_ratio: aspectRatio
+                    product_name: productName
                 }
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
@@ -3759,36 +3764,37 @@ class LivingManager {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
         const row = {
+            // Identidad + provider
             brand_container_id: this.brandContainerId,
+            organization_id: this.organizationId || null,
             user_id: this.userId,
             provider: 'kie',
             output_type: 'image',
             external_job_id: kieTaskId,
             status: 'completed',
+            // Linaje FK (canonico, igual que runs_outputs)
+            entity_id: entityId || null,
+            reference_image_url: sourceImageUrl || null,
+            // Modelos usados (jsonb dedicado)
+            models: {
+                editor: kieModel || null,
+                prompter: openaiModel || null
+            },
             prompt_used: refinedPrompt,
             storage_path: storagePath,
-            // technical_params: campos canonicos para que futuras ediciones
-            // y otros consumidores los lean igual que en runs_outputs.
             technical_params: {
                 output_format: 'png',
-                kie_model: kieModel,
-                openai_model: openaiModel,
-                aspect_ratio: aspectRatio || null,
-                entity_id: entityId || null
+                aspect_ratio: aspectRatio || null
             },
             metadata: {
                 kind: 'image_edit',
                 edit_mode: mode || 'remove',
                 source_output_id: sourceOutputId,
-                source_image_url: sourceImageUrl,
                 edit_user_instruction: userInstruction,
                 edit_refined_prompt: refinedPrompt,
                 mask_storage_path: maskStoragePath,
                 product_id: productId || null,
-                product_name: productName || null,
-                entity_id: entityId || null,
-                aspect_ratio: aspectRatio || null,
-                reference_image_url: referenceImageUrl || null
+                product_name: productName || null
             }
         };
         const { error } = await this.supabase.from('system_ai_outputs').insert(row);
