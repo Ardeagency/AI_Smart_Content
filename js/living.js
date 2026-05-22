@@ -2347,8 +2347,238 @@ class LivingManager {
         // Sincronizar tamano del canvas con la imagen ya pintada.
         this._syncEditCanvasSize(img);
         this._bindEditCanvasOnce();
+        this._bindEditModeControlsOnce();
+
+        // Reset state: modo default + limpiar selecciones previas.
+        this._editMode = 'remove';
+        this._selectedProductId = null;
+        this._editReferenceImageUrl = '';
+        this._refreshEditModeUI();
+
+        // Detectar producto del output abierto en background (no bloquea).
+        this._detectSourceProductInfo()
+            .then(info => { this._sourceProductInfo = info; })
+            .catch(() => { this._sourceProductInfo = null; });
+
         // Focus al prompt para escritura inmediata.
         setTimeout(() => document.getElementById('pmodalEditPrompt')?.focus(), 50);
+    }
+
+    /**
+     * Bindea click en pills de modo y cards de producto. Idempotente: solo
+     * monta listeners una vez por instancia de overlay.
+     */
+    _bindEditModeControlsOnce() {
+        const panel = document.querySelector('.pmodal-edit-panel');
+        if (!panel || panel._modeControlsBound) return;
+        panel._modeControlsBound = true;
+
+        panel.addEventListener('click', (e) => {
+            const pill = e.target.closest('[data-edit-mode]');
+            if (pill) {
+                const mode = pill.getAttribute('data-edit-mode');
+                this._setEditMode(mode);
+                return;
+            }
+            const card = e.target.closest('[data-product-id]');
+            if (card && panel.contains(card)) {
+                const id = card.getAttribute('data-product-id');
+                this._selectedProductId = (this._selectedProductId === id) ? null : id;
+                this._renderProductDrawer();
+            }
+        });
+
+        const refInput = document.getElementById('pmodalEditRefUrl');
+        if (refInput) {
+            refInput.addEventListener('input', () => {
+                this._editReferenceImageUrl = refInput.value.trim();
+            });
+        }
+    }
+
+    _setEditMode(mode) {
+        const valid = new Set(['remove', 'replace', 'fix-product', 'change-product']);
+        if (!valid.has(mode)) return;
+        this._editMode = mode;
+        this._refreshEditModeUI();
+    }
+
+    /**
+     * Aplica el estado activo a las pills + muestra/oculta drawer de
+     * productos + campo ref segun el modo. Llama a _renderProductDrawer
+     * cuando el modo requiere productos.
+     */
+    _refreshEditModeUI() {
+        const mode = this._editMode || 'remove';
+        document.querySelectorAll('.pmodal-edit-mode-pill[data-edit-mode]').forEach(pill => {
+            const active = pill.getAttribute('data-edit-mode') === mode;
+            pill.classList.toggle('is-active', active);
+            pill.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        const needsProducts = (mode === 'fix-product' || mode === 'change-product');
+        const drawer = document.getElementById('pmodalEditProductDrawer');
+        if (drawer) drawer.hidden = !needsProducts;
+
+        const refRow = document.getElementById('pmodalEditRefRow');
+        if (refRow) refRow.hidden = (mode !== 'replace');
+
+        const title = document.getElementById('pmodalEditProductDrawerTitle');
+        const hint = document.getElementById('pmodalEditProductDrawerHint');
+        if (mode === 'fix-product') {
+            if (title) title.textContent = 'Producto a corregir';
+            if (hint) hint.textContent = this._sourceProductInfo?.productId
+                ? 'Detectamos el producto de la produccion original'
+                : 'Selecciona el producto a corregir';
+        } else if (mode === 'change-product') {
+            if (title) title.textContent = 'Cambiar por este producto';
+            if (hint) hint.textContent = 'Selecciona el producto que reemplazara la zona';
+        }
+
+        if (needsProducts) {
+            // Auto-select del producto detectado en modo fix-product.
+            if (mode === 'fix-product' && !this._selectedProductId && this._sourceProductInfo?.productId) {
+                this._selectedProductId = this._sourceProductInfo.productId;
+            }
+            this._renderProductDrawer();
+        }
+    }
+
+    /**
+     * Pinta el grid de productos en el drawer. Carga productos de la org si
+     * aun no estan cargados (cache en this._orgProductsCache).
+     */
+    async _renderProductDrawer() {
+        const grid = document.getElementById('pmodalEditProductGrid');
+        if (!grid) return;
+        if (!this._orgProductsCache) {
+            grid.innerHTML = '<div class="pmodal-edit-product-empty">Cargando productos...</div>';
+            this._orgProductsCache = await this._loadOrgProducts();
+        }
+        const products = this._orgProductsCache || [];
+        if (!products.length) {
+            grid.innerHTML = '<div class="pmodal-edit-product-empty">No hay productos en esta organizacion</div>';
+            return;
+        }
+        const html = products.map(p => {
+            const thumb = (p.images && p.images[0]) || '';
+            const selected = (this._selectedProductId === p.id);
+            return `
+                <button type="button"
+                        class="pmodal-edit-product-card ${selected ? 'is-selected' : ''}"
+                        role="option"
+                        aria-selected="${selected ? 'true' : 'false'}"
+                        data-product-id="${this.escapeHtml(p.id)}"
+                        title="${this.escapeHtml(p.name)}">
+                    <div class="pmodal-edit-product-thumb">
+                        ${thumb ? `<img src="${this.escapeHtml(thumb)}" alt="" loading="lazy">` : ''}
+                    </div>
+                    <div class="pmodal-edit-product-name">${this.escapeHtml(p.name)}</div>
+                </button>
+            `;
+        }).join('');
+        grid.innerHTML = html;
+    }
+
+    /**
+     * Carga productos de la org con sus imagenes (max 3 por producto).
+     * Cache en memoria mientras viva el LivingManager.
+     */
+    async _loadOrgProducts() {
+        if (!this.supabase || !this.organizationId) return [];
+        try {
+            const { data: products, error } = await this.supabase
+                .from('products')
+                .select('id, nombre_producto, entity_id')
+                .eq('organization_id', this.organizationId)
+                .order('nombre_producto', { ascending: true })
+                .limit(80);
+            if (error) throw error;
+            if (!products?.length) return [];
+
+            const ids = products.map(p => p.id);
+            const { data: images } = await this.supabase
+                .from('product_images')
+                .select('product_id, image_url, storage_path, image_order')
+                .in('product_id', ids)
+                .order('image_order', { ascending: true });
+
+            const byProduct = new Map();
+            (images || []).forEach(img => {
+                const arr = byProduct.get(img.product_id) || [];
+                let url = img.image_url;
+                if (!url && img.storage_path) {
+                    url = this.getPublicUrlFromStorage('product-images', img.storage_path);
+                }
+                if (url) arr.push(url);
+                byProduct.set(img.product_id, arr);
+            });
+
+            return products.map(p => ({
+                id: p.id,
+                name: p.nombre_producto,
+                entity_id: p.entity_id,
+                images: (byProduct.get(p.id) || []).slice(0, 3)
+            }));
+        } catch (err) {
+            console.warn('[edit-overlay] _loadOrgProducts:', err?.message || err);
+            return [];
+        }
+    }
+
+    /**
+     * Intenta detectar el producto usado en la produccion original. Estrategia:
+     *   1) Si tenemos run_id en el modal state, consultar runs_inputs.input_data.entity_id.
+     *   2) Si no, leer metadata.entity_id del output (caso ediciones encadenadas).
+     *   3) Resolver entity_id -> products (entity_id es FK indirecto via brand_entities).
+     * Devuelve { productId, productName, imageUrls } o null.
+     */
+    async _detectSourceProductInfo() {
+        if (!this.supabase) return null;
+        const state = this._modalState || {};
+        let entityId = null;
+
+        if (state.runId) {
+            try {
+                const { data } = await this.supabase
+                    .from('runs_inputs')
+                    .select('input_data')
+                    .eq('run_id', state.runId)
+                    .limit(1)
+                    .maybeSingle();
+                entityId = data?.input_data?.entity_id || null;
+            } catch (_) { /* noop */ }
+        }
+        if (!entityId && state.outputId) {
+            try {
+                const { data } = await this.supabase
+                    .from('system_ai_outputs')
+                    .select('metadata')
+                    .eq('id', state.outputId)
+                    .maybeSingle();
+                entityId = data?.metadata?.entity_id || data?.metadata?.source_entity_id || null;
+            } catch (_) { /* noop */ }
+        }
+        if (!entityId) return null;
+
+        try {
+            const { data: prod } = await this.supabase
+                .from('products')
+                .select('id, nombre_producto')
+                .eq('entity_id', entityId)
+                .maybeSingle();
+            if (!prod?.id) return { entityId, productId: null, productName: null, imageUrls: [] };
+            const { data: imgs } = await this.supabase
+                .from('product_images')
+                .select('image_url, storage_path')
+                .eq('product_id', prod.id)
+                .order('image_order', { ascending: true })
+                .limit(3);
+            const urls = (imgs || []).map(i => i.image_url || this.getPublicUrlFromStorage('product-images', i.storage_path)).filter(Boolean);
+            return { entityId, productId: prod.id, productName: prod.nombre_producto, imageUrls: urls };
+        } catch (_) {
+            return { entityId, productId: null, productName: null, imageUrls: [] };
+        }
     }
 
     _closeEditOverlay() {
@@ -2502,14 +2732,21 @@ class LivingManager {
         const applyBtn = document.querySelector('.pmodal-edit-btn--accent[data-edit-action="apply"]');
         const cancelBtn = document.querySelector('.pmodal-edit-btn--ghost[data-edit-action="cancel"]');
         const userInstruction = (promptEl?.value || '').trim();
+        const mode = this._editMode || 'remove';
 
-        if (!userInstruction) {
+        if (!canvas || !this._canvasHasContent(canvas)) {
+            this._setEditApplyState({ phase: 'error', message: 'Pinta la zona a editar antes de aplicar' });
+            return;
+        }
+        // En remove + replace pedimos texto; en fix/change-product el producto basta.
+        const requiresPrompt = (mode === 'remove' || mode === 'replace');
+        if (requiresPrompt && !userInstruction) {
             this._setEditApplyState({ phase: 'error', message: 'Describe que quieres cambiar antes de aplicar' });
             promptEl?.focus();
             return;
         }
-        if (!canvas || !this._canvasHasContent(canvas)) {
-            this._setEditApplyState({ phase: 'error', message: 'Pinta la zona a editar antes de aplicar' });
+        if ((mode === 'fix-product' || mode === 'change-product') && !this._selectedProductId) {
+            this._setEditApplyState({ phase: 'error', message: 'Selecciona un producto del listado' });
             return;
         }
 
@@ -2526,6 +2763,19 @@ class LivingManager {
             this._setEditApplyState({ phase: 'error', message: 'Falta organization_id en el contexto' });
             return;
         }
+
+        // Resolver imagenes del producto seleccionado (si aplica) desde el cache.
+        let productImageUrls = [];
+        let productName = '';
+        if (this._selectedProductId && Array.isArray(this._orgProductsCache)) {
+            const prod = this._orgProductsCache.find(p => p.id === this._selectedProductId);
+            if (prod) {
+                productImageUrls = prod.images || [];
+                productName = prod.name || '';
+            }
+        }
+        // Referencia opcional para modo replace.
+        const referenceImageUrl = (mode === 'replace') ? (this._editReferenceImageUrl || '').trim() : '';
 
         const maskDataUrl = canvas.toDataURL('image/png');
         this._setEditApplyState({ phase: 'loading', message: 'Iniciando edicion...', lock: true });
@@ -2550,7 +2800,12 @@ class LivingManager {
                     user_instruction: userInstruction,
                     source_output_id: sourceOutputId,
                     organization_id: this.organizationId,
-                    aspect_ratio: aspectRatio
+                    aspect_ratio: aspectRatio,
+                    mode,
+                    product_id: this._selectedProductId || null,
+                    product_name: productName || null,
+                    product_image_urls: productImageUrls,
+                    reference_image_url: referenceImageUrl || null
                 })
             });
             let parsed;
@@ -2586,6 +2841,16 @@ class LivingManager {
             aspectRatio
         });
 
+        // Resolver entity_id del producto seleccionado (para preservar linaje
+        // en futuras ediciones encadenadas).
+        let entityId = null;
+        if (this._selectedProductId && Array.isArray(this._orgProductsCache)) {
+            entityId = this._orgProductsCache.find(p => p.id === this._selectedProductId)?.entity_id || null;
+        }
+        if (!entityId && this._sourceProductInfo?.entityId) {
+            entityId = this._sourceProductInfo.entityId;
+        }
+
         // Polling + persistencia en background; el modal ya cerro.
         this._completeEditInBackground({
             clientId,
@@ -2593,7 +2858,12 @@ class LivingManager {
             createPayload,
             userInstruction,
             sourceOutputId,
-            sourceImageUrl: imageUrl
+            sourceImageUrl: imageUrl,
+            mode,
+            productId: this._selectedProductId || null,
+            productName: productName || null,
+            entityId,
+            referenceImageUrl: referenceImageUrl || null
         });
     }
 
@@ -2693,7 +2963,7 @@ class LivingManager {
      * Polling + descarga + upload + insert + refresh, todo en background.
      * Manda toast al final (exito o error) y remueve el skeleton.
      */
-    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl }) {
+    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
@@ -2706,7 +2976,12 @@ class LivingManager {
                 maskStoragePath: createPayload.mask_storage_path,
                 kieModel: createPayload.kie_model,
                 openaiModel: createPayload.openai_model,
-                kieTaskId: taskId
+                kieTaskId: taskId,
+                mode,
+                productId,
+                productName,
+                entityId,
+                referenceImageUrl
             });
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
@@ -2849,7 +3124,7 @@ class LivingManager {
      * Mismo destino que VideoView para producciones standalone — el grid de
      * Production las recoge via loadSystemAiOutputs (provider != 'openai').
      */
-    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId }) {
+    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl }) {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
         const row = {
@@ -2864,11 +3139,16 @@ class LivingManager {
             technical_params: { output_format: 'png', kie_model: kieModel, openai_model: openaiModel },
             metadata: {
                 kind: 'image_edit',
+                edit_mode: mode || 'remove',
                 source_output_id: sourceOutputId,
                 source_image_url: sourceImageUrl,
                 edit_user_instruction: userInstruction,
                 edit_refined_prompt: refinedPrompt,
-                mask_storage_path: maskStoragePath
+                mask_storage_path: maskStoragePath,
+                product_id: productId || null,
+                product_name: productName || null,
+                entity_id: entityId || null,
+                reference_image_url: referenceImageUrl || null
             }
         };
         const { error } = await this.supabase.from('system_ai_outputs').insert(row);

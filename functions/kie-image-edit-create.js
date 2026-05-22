@@ -85,29 +85,87 @@ async function uploadMask({ env, userId, buffer, mime }) {
   };
 }
 
-async function generateEditPromptWithVision({ apiKey, imageUrl, maskUrl, userInstruction }) {
-  const system = [
+const MODE_SYSTEM_PROMPTS = {
+  remove: [
     'You are a senior advertising photo retoucher.',
-    'You receive two images: (1) the ORIGINAL image, and (2) a MASK that highlights',
-    'with semi-transparent painted pixels the EXACT zone the user wants modified.',
-    'Your job: produce ONE concise English prompt (under 220 words) for nano-banana',
-    '(an image-to-image model) that REGENERATES the original image applying ONLY',
-    'the user instruction inside the masked zone, while preserving EVERYTHING ELSE',
-    '(framing, subjects, lighting direction, background, color grading, brand text,',
-    'product geometry, perspective). Describe the change with strong visual nouns',
-    'and material cues so the model places it correctly. Do NOT mention masks,',
-    'instructions, or the user. Do NOT add unrelated stylistic changes. Output the',
-    'prompt as a single paragraph, no preamble, no bullets, no quotes.'
-  ].join(' ');
+    'You receive: (1) the ORIGINAL image, (2) a MASK highlighting with painted',
+    'pixels the EXACT zone to remove. Your job: produce ONE concise English',
+    'prompt (under 220 words) for nano-banana (image-to-image) that regenerates',
+    'the original WITHOUT the object that was inside the masked zone. The space',
+    'where it used to be must be filled coherently with the surrounding scene',
+    '(extend the background, table, surface, lighting). Preserve everything else',
+    'exactly: framing, subjects, lighting direction, color grading, brand text,',
+    'product geometry, perspective. Output the prompt as a single paragraph, no',
+    'preamble, no bullets, no quotes.'
+  ].join(' '),
+  replace: [
+    'You are a senior advertising photo retoucher.',
+    'You receive: (1) the ORIGINAL image, (2) a MASK highlighting the zone to',
+    'replace, and optionally (3) a REFERENCE image that shows what should go in',
+    'that zone. Produce ONE concise English prompt (under 220 words) for',
+    'nano-banana that regenerates the original substituting only the masked zone',
+    'with the new object, matching the original lighting/shadows/perspective/',
+    'color grading so it looks shot in the same scene. Preserve everything',
+    'outside the mask exactly. Output the prompt as a single paragraph, no',
+    'preamble.'
+  ].join(' '),
+  'fix-product': [
+    'You are a senior advertising photo retoucher.',
+    'You receive: (1) the ORIGINAL ad image, (2) a MASK highlighting the product',
+    'zone that has rendering issues (warped logo, wrong colors, garbled text,',
+    'distorted geometry), and (3) one or more REFERENCE photos of the real',
+    'product. Your job: produce ONE concise English prompt (under 240 words) for',
+    'nano-banana that regenerates the original image fixing the product inside',
+    'the mask so it matches the reference (correct logo, packaging text, color',
+    'accuracy, geometry, label placement), while preserving the original',
+    'lighting, shadows, reflections, perspective and scene. Be explicit about',
+    'the brand text, colors and packaging details you see in the references.',
+    'Output the prompt as a single paragraph, no preamble.'
+  ].join(' '),
+  'change-product': [
+    'You are a senior advertising photo retoucher.',
+    'You receive: (1) the ORIGINAL ad image, (2) a MASK highlighting the zone',
+    'where the current product lives, and (3) one or more REFERENCE photos of a',
+    'DIFFERENT product that should replace it. Produce ONE concise English',
+    'prompt (under 240 words) for nano-banana that regenerates the original',
+    'image swapping the product inside the masked zone for the reference',
+    'product. Match the original scene: lighting direction, shadows, surface',
+    'contact, perspective, color grading. Keep the same camera framing,',
+    'background and any text outside the mask. Be explicit about the new',
+    'product packaging, logo and colors as seen in the references. Output the',
+    'prompt as a single paragraph, no preamble.'
+  ].join(' ')
+};
+
+async function generateEditPromptWithVision({ apiKey, imageUrl, maskUrl, userInstruction, mode, productName, productImageUrls, referenceImageUrl }) {
+  const effectiveMode = MODE_SYSTEM_PROMPTS[mode] ? mode : 'remove';
+  const system = MODE_SYSTEM_PROMPTS[effectiveMode];
+
+  const userTextParts = [];
+  if (userInstruction) {
+    userTextParts.push(`User instruction (Spanish, may be informal): "${userInstruction}"`);
+  }
+  if (productName) {
+    userTextParts.push(`Target product name: ${productName}`);
+  }
+  userTextParts.push('Task: write the regeneration prompt now. Only change what falls inside the painted mask zone, keep everything else identical.');
 
   const userContent = [
-    {
-      type: 'text',
-      text: `User instruction (Spanish, may be informal): "${userInstruction}"\n\nTask: write the regeneration prompt now. Remember: only change what falls inside the painted mask zone, keep everything else identical.`
-    },
+    { type: 'text', text: userTextParts.join('\n\n') },
     { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
     { type: 'image_url', image_url: { url: maskUrl, detail: 'low' } }
   ];
+
+  // Adjuntar hasta 3 imagenes adicionales (referencia + producto), priorizando referencia.
+  const extraImages = [];
+  if (referenceImageUrl) extraImages.push(referenceImageUrl);
+  for (const u of (productImageUrls || [])) {
+    if (extraImages.length >= 3) break;
+    if (typeof u === 'string' && u && extraImages[extraImages.length - 1] !== u) extraImages.push(u);
+  }
+  for (const u of extraImages) {
+    userContent.push({ type: 'image_url', image_url: { url: u, detail: 'high' } });
+  }
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -137,12 +195,17 @@ async function generateEditPromptWithVision({ apiKey, imageUrl, maskUrl, userIns
   };
 }
 
-async function createKieTask({ headers, prompt, imageUrl, aspectRatio }) {
+async function createKieTask({ headers, prompt, imageUrl, aspectRatio, extraImages }) {
+  const imageInput = [imageUrl];
+  for (const u of (extraImages || [])) {
+    if (imageInput.length >= 4) break;
+    if (typeof u === 'string' && /^https?:\/\//i.test(u) && !imageInput.includes(u)) imageInput.push(u);
+  }
   const payload = {
     model: KIE_MODEL,
     input: {
       prompt,
-      image_input: [imageUrl],
+      image_input: imageInput,
       aspect_ratio: ALLOWED_ASPECT_RATIOS.has(aspectRatio) ? aspectRatio : 'auto',
       output_format: 'png'
     }
@@ -228,6 +291,13 @@ exports.handler = async (event) => {
   const sourceOutputId = String(body.source_output_id || '').trim() || null;
   const organizationId = String(body.organization_id || '').trim();
   const aspectRatio = String(body.aspect_ratio || 'auto').trim();
+  const mode = String(body.mode || 'remove').trim();
+  const productId = String(body.product_id || '').trim() || null;
+  const productName = String(body.product_name || '').trim() || null;
+  const referenceImageUrl = String(body.reference_image_url || '').trim() || null;
+  const productImageUrls = Array.isArray(body.product_image_urls)
+    ? body.product_image_urls.filter(u => typeof u === 'string' && /^https?:\/\//i.test(u)).slice(0, 3)
+    : [];
 
   if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
   if (!userInstruction) return fail(event, 400, 'user_instruction requerido');
@@ -252,15 +322,33 @@ exports.handler = async (event) => {
       apiKey: openaiKey,
       imageUrl,
       maskUrl: mask.publicUrl,
-      userInstruction
+      userInstruction,
+      mode,
+      productName,
+      productImageUrls,
+      referenceImageUrl
     }));
   } catch (e) {
     return fail(event, 502, `OpenAI no pudo generar el prompt: ${e.message}`);
   }
 
+  // Imagenes adicionales para kie image_input: priorizar referencia, luego producto.
+  const kieExtraImages = [];
+  if (referenceImageUrl) kieExtraImages.push(referenceImageUrl);
+  for (const u of productImageUrls) {
+    if (kieExtraImages.length >= 3) break;
+    if (!kieExtraImages.includes(u)) kieExtraImages.push(u);
+  }
+
   let kieTaskId;
   try {
-    kieTaskId = await createKieTask({ headers: kieHeaders, prompt: refinedPrompt, imageUrl, aspectRatio });
+    kieTaskId = await createKieTask({
+      headers: kieHeaders,
+      prompt: refinedPrompt,
+      imageUrl,
+      aspectRatio,
+      extraImages: kieExtraImages
+    });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
@@ -275,6 +363,8 @@ exports.handler = async (event) => {
     usdCost: Math.round(usdCost * 10000) / 10000,
     metadata: {
       operation: 'image_edit',
+      mode,
+      product_id: productId,
       kie_task_id: kieTaskId,
       kie_model: KIE_MODEL,
       openai_model: OPENAI_MODEL,
