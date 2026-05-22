@@ -2527,18 +2527,37 @@ class LivingManager {
     }
 
     /**
-     * Intenta detectar el producto usado en la produccion original. Estrategia:
-     *   1) Si tenemos run_id en el modal state, consultar runs_inputs.input_data.entity_id.
-     *   2) Si no, leer metadata.entity_id del output (caso ediciones encadenadas).
-     *   3) Resolver entity_id -> products (entity_id es FK indirecto via brand_entities).
-     * Devuelve { productId, productName, imageUrls } o null.
+     * Detecta el meta de la produccion abierta en el modal: aspect_ratio +
+     * entidad seleccionada (producto/servicio/lugar/identidad). Fuente
+     * canonica nueva: runs_outputs.technical_params. Fallback legacy:
+     * runs_inputs.input_data. Fallback cadena: system_ai_outputs.metadata.
+     *
+     * Devuelve { aspectRatio, entityId, entityType, entityName, productId,
+     *           productName, imageUrls } o null.
      */
     async _detectSourceProductInfo() {
         if (!this.supabase) return null;
         const state = this._modalState || {};
+        let aspectRatio = null;
         let entityId = null;
 
-        if (state.runId) {
+        // 1) runs_outputs.technical_params (fuente canonica nueva).
+        if (state.outputId) {
+            try {
+                const { data } = await this.supabase
+                    .from('runs_outputs')
+                    .select('technical_params, metadata')
+                    .eq('id', state.outputId)
+                    .maybeSingle();
+                const tp = data?.technical_params || {};
+                const md = data?.metadata || {};
+                aspectRatio = tp.aspect_ratio || md.aspect_ratio || null;
+                entityId = tp.entity_id || md.entity_id || null;
+            } catch (_) { /* noop */ }
+        }
+
+        // 2) runs_inputs.input_data (legacy: outputs antes del cambio).
+        if ((!aspectRatio || !entityId) && state.runId) {
             try {
                 const { data } = await this.supabase
                     .from('runs_inputs')
@@ -2546,39 +2565,97 @@ class LivingManager {
                     .eq('run_id', state.runId)
                     .limit(1)
                     .maybeSingle();
-                entityId = data?.input_data?.entity_id || null;
+                const inp = data?.input_data || {};
+                if (!aspectRatio) aspectRatio = inp.aspect_ratio || null;
+                if (!entityId) entityId = inp.entity_id || null;
             } catch (_) { /* noop */ }
         }
-        if (!entityId && state.outputId) {
+
+        // 3) system_ai_outputs.metadata (cadena: editar una edicion).
+        if ((!aspectRatio || !entityId) && state.outputId) {
             try {
                 const { data } = await this.supabase
                     .from('system_ai_outputs')
-                    .select('metadata')
+                    .select('metadata, technical_params')
                     .eq('id', state.outputId)
                     .maybeSingle();
-                entityId = data?.metadata?.entity_id || data?.metadata?.source_entity_id || null;
+                const md = data?.metadata || {};
+                const tp = data?.technical_params || {};
+                if (!aspectRatio) aspectRatio = md.aspect_ratio || tp.aspect_ratio || null;
+                if (!entityId) entityId = md.entity_id || md.source_entity_id || null;
             } catch (_) { /* noop */ }
         }
-        if (!entityId) return null;
+
+        if (!entityId) {
+            return aspectRatio ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [] } : null;
+        }
+
+        // Resolver entity_id -> brand_entities -> products|services|brand_places
+        let entityType = null, entityName = null, productId = null, productName = null;
+        let imageUrls = [];
 
         try {
-            const { data: prod } = await this.supabase
-                .from('products')
-                .select('id, nombre_producto')
-                .eq('entity_id', entityId)
+            const { data: ent } = await this.supabase
+                .from('brand_entities')
+                .select('id, name, entity_type')
+                .eq('id', entityId)
                 .maybeSingle();
-            if (!prod?.id) return { entityId, productId: null, productName: null, imageUrls: [] };
-            const { data: imgs } = await this.supabase
-                .from('product_images')
-                .select('image_url, storage_path')
-                .eq('product_id', prod.id)
-                .order('image_order', { ascending: true })
-                .limit(3);
-            const urls = (imgs || []).map(i => i.image_url || this.getPublicUrlFromStorage('product-images', i.storage_path)).filter(Boolean);
-            return { entityId, productId: prod.id, productName: prod.nombre_producto, imageUrls: urls };
-        } catch (_) {
-            return { entityId, productId: null, productName: null, imageUrls: [] };
-        }
+            if (ent) {
+                entityType = ent.entity_type || null;
+                entityName = ent.name || null;
+            }
+        } catch (_) { /* noop */ }
+
+        try {
+            if (entityType === 'product' || !entityType) {
+                const { data: prod } = await this.supabase
+                    .from('products')
+                    .select('id, nombre_producto')
+                    .eq('entity_id', entityId)
+                    .maybeSingle();
+                if (prod?.id) {
+                    productId = prod.id;
+                    productName = prod.nombre_producto || entityName;
+                    const { data: imgs } = await this.supabase
+                        .from('product_images')
+                        .select('image_url, storage_path')
+                        .eq('product_id', prod.id)
+                        .order('image_order', { ascending: true })
+                        .limit(3);
+                    imageUrls = (imgs || [])
+                        .map(i => i.image_url || this.getPublicUrlFromStorage('product-images', i.storage_path))
+                        .filter(Boolean);
+                }
+            } else if (entityType === 'service') {
+                const { data: svc } = await this.supabase
+                    .from('services')
+                    .select('id, nombre_servicio')
+                    .eq('entity_id', entityId)
+                    .maybeSingle();
+                if (svc?.id) {
+                    productName = svc.nombre_servicio || entityName;
+                }
+            } else if (entityType === 'place') {
+                const { data: place } = await this.supabase
+                    .from('brand_places')
+                    .select('id, name')
+                    .eq('entity_id', entityId)
+                    .maybeSingle();
+                if (place?.id) {
+                    productName = place.name || entityName;
+                    const { data: imgs } = await this.supabase
+                        .from('place_images')
+                        .select('image_url, storage_path')
+                        .eq('place_id', place.id)
+                        .limit(3);
+                    imageUrls = (imgs || [])
+                        .map(i => i.image_url || this.getPublicUrlFromStorage('place-images', i.storage_path))
+                        .filter(Boolean);
+                }
+            }
+        } catch (_) { /* noop */ }
+
+        return { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls };
     }
 
     _closeEditOverlay() {
@@ -2780,11 +2857,14 @@ class LivingManager {
         const maskDataUrl = canvas.toDataURL('image/png');
         this._setEditApplyState({ phase: 'loading', message: 'Iniciando edicion...', lock: true });
 
-        // Detectar aspect ratio de la imagen original para que kie regenere
-        // con la misma dimension (sin esto kie con 'auto' colapsa a cuadrado).
-        let aspectRatio = '1:1';
-        try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
-        catch (_) { aspectRatio = '1:1'; }
+        // Aspect ratio: priorizar el guardado en runs_outputs.technical_params
+        // (precision absoluta). Si no esta, detectar via dimensiones reales de
+        // la imagen. Sin esto kie con 'auto' colapsa a cuadrado.
+        let aspectRatio = this._sourceProductInfo?.aspectRatio || null;
+        if (!aspectRatio) {
+            try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
+            catch (_) { aspectRatio = '1:1'; }
+        }
 
         let createPayload;
         try {
@@ -2863,7 +2943,8 @@ class LivingManager {
             productId: this._selectedProductId || null,
             productName: productName || null,
             entityId,
-            referenceImageUrl: referenceImageUrl || null
+            referenceImageUrl: referenceImageUrl || null,
+            aspectRatio
         });
     }
 
@@ -2963,7 +3044,7 @@ class LivingManager {
      * Polling + descarga + upload + insert + refresh, todo en background.
      * Manda toast al final (exito o error) y remueve el skeleton.
      */
-    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl }) {
+    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl, aspectRatio }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
@@ -2981,7 +3062,8 @@ class LivingManager {
                 productId,
                 productName,
                 entityId,
-                referenceImageUrl
+                referenceImageUrl,
+                aspectRatio
             });
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
@@ -3124,7 +3206,7 @@ class LivingManager {
      * Mismo destino que VideoView para producciones standalone — el grid de
      * Production las recoge via loadSystemAiOutputs (provider != 'openai').
      */
-    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl }) {
+    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio }) {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
         const row = {
@@ -3136,7 +3218,15 @@ class LivingManager {
             status: 'completed',
             prompt_used: refinedPrompt,
             storage_path: storagePath,
-            technical_params: { output_format: 'png', kie_model: kieModel, openai_model: openaiModel },
+            // technical_params: campos canonicos para que futuras ediciones
+            // y otros consumidores los lean igual que en runs_outputs.
+            technical_params: {
+                output_format: 'png',
+                kie_model: kieModel,
+                openai_model: openaiModel,
+                aspect_ratio: aspectRatio || null,
+                entity_id: entityId || null
+            },
             metadata: {
                 kind: 'image_edit',
                 edit_mode: mode || 'remove',
@@ -3148,6 +3238,7 @@ class LivingManager {
                 product_id: productId || null,
                 product_name: productName || null,
                 entity_id: entityId || null,
+                aspect_ratio: aspectRatio || null,
                 reference_image_url: referenceImageUrl || null
             }
         };
