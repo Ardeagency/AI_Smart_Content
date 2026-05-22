@@ -147,10 +147,16 @@ class BrandOrganizationView extends BaseView {
                 <h2 class="card-title">Archivos de identidad</h2>
             </div>
             <div class="card-content">
-                <!-- Archivos -->
+                <!-- Lista (reescrita por renderIdentityFiles) -->
                 <div class="identity-files" id="identityFilesContainer">
                     <!-- Se renderizarán dinámicamente -->
                 </div>
+                <!-- Controles estaticos (no se reescriben en cada render) -->
+                <input type="file" id="identityFileInput" class="brand-file-input" multiple
+                       accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.md,.odt,.odp,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.ms-excel,text/plain,text/markdown">
+                <button type="button" class="file-upload-btn identity-upload-btn" id="identityUploadBtn">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Subir archivo
+                </button>
             </div>
         </div>
 
@@ -160,7 +166,14 @@ class BrandOrganizationView extends BaseView {
                 <h2 class="card-title">Assets</h2>
             </div>
             <div class="card-content">
+                <!-- Lista (reescrita por renderAssetsFiles) -->
                 <div class="assets-files" id="assetsFilesContainer"></div>
+                <!-- Controles estaticos (no se reescriben en cada render) -->
+                <input type="file" id="assetsFileInput" class="brand-file-input" multiple
+                       accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,.ai,.eps,.psd">
+                <button type="button" class="file-upload-btn assets-upload-btn" id="assetsUploadBtn">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Subir archivo
+                </button>
             </div>
         </div>
 
@@ -1129,8 +1142,6 @@ class BrandOrganizationView extends BaseView {
         this.removeAsset(btn.getAttribute('data-remove-asset-id'));
       });
     });
-
-    if (typeof this.setupIdentityUpload === 'function') this.setupIdentityUpload();
   }
 
   /** Devuelve clase fa + variante visual segun el tipo de documento de identidad. */
@@ -1217,9 +1228,6 @@ class BrandOrganizationView extends BaseView {
     });
 
     this.setupAssetsCarouselNavigation(container);
-    // El innerHTML de arriba borra el boton "Subir archivo" insertado por setupAssetsUpload;
-    // reinstalarlo asegura que sobreviva a re-renders (p. ej. tras removeAsset).
-    if (typeof this.setupAssetsUpload === 'function') this.setupAssetsUpload();
   }
 
   /** Scroll horizontal con flechas: page = ancho del track menos un solapamiento de 80px. */

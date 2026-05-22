@@ -230,57 +230,51 @@
       return '';
     },
 
+    /**
+     * Bindea el boton + input estaticos de "Subir archivo de identidad".
+     * Idempotente (data-flag). Los elementos deben venir del HTML de la vista
+     * (renderHTML) — viven FUERA del subcontainer de lista para sobrevivir a
+     * re-renders. Si la vista no los emite (legacy), no hace nada.
+     */
     setupIdentityUpload() {
-      const container = document.getElementById('identityFilesContainer');
-      if (!container) return;
+      const root = this.container || document;
+      const uploadBtn = root.querySelector('#identityUploadBtn');
+      const fileInput = root.querySelector('#identityFileInput');
+      if (!uploadBtn || !fileInput) return;
 
-      let uploadBtn = container.querySelector('.identity-upload-btn');
-      if (!uploadBtn) {
-        uploadBtn = document.createElement('button');
-        uploadBtn.className = 'file-upload-btn identity-upload-btn';
-        uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
-
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.style.display = 'none';
-        fileInput.multiple = true;
-        fileInput.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.md,.odt,.odp,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.ms-excel,text/plain,text/markdown';
+      if (uploadBtn.dataset.identityUploadBound !== '1') {
+        uploadBtn.dataset.identityUploadBound = '1';
+        uploadBtn.addEventListener('click', () => fileInput.click());
+      }
+      if (fileInput.dataset.identityUploadBound !== '1') {
+        fileInput.dataset.identityUploadBound = '1';
         fileInput.addEventListener('change', (e) => {
           Array.from(e.target.files).forEach((file) => this.uploadIdentityFile(file));
           fileInput.value = '';
         });
-
-        uploadBtn.addEventListener('click', () => fileInput.click());
-        container.appendChild(fileInput);
-        container.appendChild(uploadBtn);
       }
     },
 
+    /**
+     * Bindea el boton + input estaticos de "Subir asset". Misma logica que el
+     * de identity — controles permanentes en el HTML, no se crean dinamicamente.
+     */
     setupAssetsUpload() {
-      const container = document.getElementById('assetsFilesContainer');
-      if (!container) return;
+      const root = this.container || document;
+      const uploadBtn = root.querySelector('#assetsUploadBtn');
+      const fileInput = root.querySelector('#assetsFileInput');
+      if (!uploadBtn || !fileInput) return;
 
-      let uploadBtn = container.querySelector('.file-upload-btn');
-      if (!uploadBtn) {
-        uploadBtn = document.createElement('button');
-        uploadBtn.className = 'file-upload-btn assets-upload-btn';
-        uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
-
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.style.display = 'none';
-        fileInput.multiple = true;
-        fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,.ai,.eps,.psd';
+      if (uploadBtn.dataset.assetsUploadBound !== '1') {
+        uploadBtn.dataset.assetsUploadBound = '1';
+        uploadBtn.addEventListener('click', () => fileInput.click());
+      }
+      if (fileInput.dataset.assetsUploadBound !== '1') {
+        fileInput.dataset.assetsUploadBound = '1';
         fileInput.addEventListener('change', (e) => {
-          Array.from(e.target.files).forEach(file => {
-            this.uploadAsset(file);
-          });
+          Array.from(e.target.files).forEach((file) => this.uploadAsset(file));
           fileInput.value = '';
         });
-
-        uploadBtn.addEventListener('click', () => fileInput.click());
-        container.appendChild(fileInput);
-        container.appendChild(uploadBtn);
       }
     }
   };

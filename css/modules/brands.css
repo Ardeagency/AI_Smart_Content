@@ -1666,6 +1666,19 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transition: var(--transition);
 }
 
+/* Input file permanente de las cards de marca: oculto pero accesible. */
+.brand-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Botón Subir archivo — efecto glass */
 .file-upload-btn {
     margin-top: 1rem;
