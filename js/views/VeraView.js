@@ -1248,22 +1248,98 @@ class VeraView extends (window.BaseView || class {}) {
   }
 
   /* ── Bridge para iframes sandbox de VERA (```html / ```artifact) ──
-     Escucha `vera_resize` desde iframes null-origin y ajusta su height.
-     Guard estático evita registrar el listener más de una vez si VeraView
-     se instancia varias veces durante la sesión. */
+     Escucha 2 tipos de mensajes desde iframes null-origin:
+      1) `vera_resize` → ajusta height del iframe.
+      2) `vera_action` → widget invoca accion en plataforma (allowlist).
+
+     Guard estatico evita registrar el listener mas de una vez si VeraView
+     se instancia varias veces durante la sesion. */
   _initWidgetBridge() {
     if (VeraView.__widgetBridgeBound) return;
     VeraView.__widgetBridgeBound = true;
-    window.addEventListener('message', (event) => {
-      if (event.data?.type !== 'vera_resize') return;
-      const frames = document.querySelectorAll('.vera-sandbox-frame, .vera-artifact-frame');
-      frames.forEach((frame) => {
+    // Allowlist de actionType. Read-only ejecutan directo en backend;
+    // write actions se persisten en vera_pending_actions para revision humana.
+    const ACTION_ALLOWLIST = new Set([
+      // Read
+      'get_metric',
+      'list_campaigns',
+      'list_products',
+      'list_brands',
+      'list_audiences',
+      'list_pending_actions',
+      // Write con pending_action
+      'propose_brief',
+      'flag_competitor',
+    ]);
+
+    window.addEventListener('message', async (event) => {
+      const t = event.data?.type;
+      if (!t) return;
+
+      if (t === 'vera_resize') {
+        const frames = document.querySelectorAll('.vera-sandbox-frame, .vera-artifact-frame');
+        frames.forEach((frame) => {
+          try {
+            if (frame.contentWindow === event.source) {
+              frame.style.height = (event.data.height + 24) + 'px';
+            }
+          } catch (_) { /* contentWindow puede ser inaccesible si el iframe se removio */ }
+        });
+        return;
+      }
+
+      if (t === 'vera_action') {
+        // Validar que event.source es uno de nuestros iframes (anti-spoofing).
+        const iframe = [...document.querySelectorAll('.vera-sandbox-frame, .vera-artifact-frame')]
+          .find((f) => f.contentWindow === event.source);
+        if (!iframe) return; // mensaje no viene de iframe nuestro -> ignorar
+
+        const { requestId, actionType, payload, reasoning } = event.data || {};
+        const reply = (ok, data, error) => {
+          try { event.source.postMessage({ type: 'vera_action_result', requestId, ok, data, error }, '*'); }
+          catch (_) { /* iframe puede haberse removido */ }
+        };
+
+        if (!requestId || typeof actionType !== 'string') {
+          reply(false, null, 'invalid_request'); return;
+        }
+        if (!ACTION_ALLOWLIST.has(actionType)) {
+          reply(false, null, `action_not_allowed:${actionType}`); return;
+        }
+        if (!this.aiState.organization_id) {
+          reply(false, null, 'no_organization_context'); return;
+        }
+
         try {
-          if (frame.contentWindow === event.source) {
-            frame.style.height = (event.data.height + 24) + 'px';
+          const token = this.supabase
+            ? (await this.supabase.auth.getSession())?.data?.session?.access_token
+            : null;
+          const res = await fetch('/.netlify/functions/api-widget-action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              organization_id: this.aiState.organization_id,
+              conversation_id: this.aiState.active_conversation_id || null,
+              brand_container_id: this.aiState.brand_container_id || null,
+              actionType,
+              payload: payload || {},
+              reasoning: reasoning || '',
+            }),
+          });
+          let json = null;
+          try { json = await res.json(); } catch (_) {}
+          if (!res.ok) {
+            reply(false, null, json?.error || `http_${res.status}`); return;
           }
-        } catch (_) { /* contentWindow puede ser inaccesible si el iframe se removió */ }
-      });
+          reply(json?.ok !== false, json?.data, json?.error);
+        } catch (e) {
+          reply(false, null, e?.message || 'network_error');
+        }
+        return;
+      }
     });
   }
 
@@ -1864,6 +1940,9 @@ class VeraView extends (window.BaseView || class {}) {
 
     // 7. Restaura bloques html/artifact como iframes sandboxed null-origin.
     //    El bridge `vera_resize` postMessage lo escucha _initWidgetBridge().
+    //    Tambien inyectamos `window.__veraAction(actionType, payload, reasoning)`
+    //    para que widgets puedan invocar acciones lectura/escritura en la
+    //    plataforma a traves del receiver de VeraView -> /api/widget-action.
     htmlBlocks.forEach(({ id, type, code }) => {
       const resizeScript = [
         '<script>',
@@ -1871,6 +1950,21 @@ class VeraView extends (window.BaseView || class {}) {
         'function r(){window.parent.postMessage({type:"vera_resize",height:document.documentElement.scrollHeight},"*");}',
         'window.addEventListener("load",r);',
         'try{new ResizeObserver(r).observe(document.body);}catch(e){}',
+        // ── Widget action bridge ───────────────────────────────────────
+        'window.__veraActionCallbacks = {};',
+        'window.__veraAction = function(actionType, payload, reasoning){',
+          'return new Promise(function(resolve){',
+            'var rid = Math.random().toString(36).slice(2) + Date.now().toString(36);',
+            'window.__veraActionCallbacks[rid] = resolve;',
+            'setTimeout(function(){if(window.__veraActionCallbacks[rid]){window.__veraActionCallbacks[rid]({ok:false,error:"timeout"});delete window.__veraActionCallbacks[rid];}}, 20000);',
+            'window.parent.postMessage({type:"vera_action",requestId:rid,actionType:actionType,payload:payload||{},reasoning:reasoning||""}, "*");',
+          '});',
+        '};',
+        'window.addEventListener("message", function(e){',
+          'if(!e.data || e.data.type !== "vera_action_result") return;',
+          'var cb = window.__veraActionCallbacks[e.data.requestId];',
+          'if(cb){ cb({ok:e.data.ok,data:e.data.data,error:e.data.error}); delete window.__veraActionCallbacks[e.data.requestId]; }',
+        '});',
         '})();',
         '<\/script>'
       ].join('');
