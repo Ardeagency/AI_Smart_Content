@@ -2370,7 +2370,9 @@ class LivingManager {
             const size = this._editState.size;
             if (this._editState.tool === 'brush') {
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = 'rgba(197, 255, 0, 0.45)'; // accent-yellow semi-transparente
+                // Mascara: blanco al 40% alpha → la zona pintada se ve sin tapar
+                // la imagen y sin introducir color de marca/accent en la UX.
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
             } else {
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.fillStyle = 'rgba(0,0,0,1)';
