@@ -2310,14 +2310,16 @@ class LivingManager {
 
     _openEditOverlay() {
         const overlay = document.getElementById('pmodalEditOverlay');
+        const canvas = document.getElementById('pmodalEditCanvas');
         const visual = document.querySelector('.production-modal-visual-inner');
         const img = document.getElementById('pmodalImage');
-        if (!overlay || !visual || !img || img.hidden || !img.src) {
+        if (!overlay || !canvas || !visual || !img || img.hidden || !img.src) {
             if (typeof window.showToast === 'function') window.showToast('Editar solo disponible para imagenes');
             return;
         }
         overlay.hidden = false;
         overlay.setAttribute('aria-hidden', 'false');
+        canvas.hidden = false;
         this._editState = this._editState || { tool: 'brush', size: 60, drawing: false };
 
         // Sincronizar tamano del canvas con la imagen ya pintada.
@@ -2329,9 +2331,12 @@ class LivingManager {
 
     _closeEditOverlay() {
         const overlay = document.getElementById('pmodalEditOverlay');
-        if (!overlay) return;
-        overlay.hidden = true;
-        overlay.setAttribute('aria-hidden', 'true');
+        const canvas = document.getElementById('pmodalEditCanvas');
+        if (overlay) {
+            overlay.hidden = true;
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        if (canvas) canvas.hidden = true;
         this._clearEditCanvas();
         const promptEl = document.getElementById('pmodalEditPrompt');
         if (promptEl) promptEl.value = '';
@@ -2339,10 +2344,14 @@ class LivingManager {
 
     _syncEditCanvasSize(img) {
         const canvas = document.getElementById('pmodalEditCanvas');
-        if (!canvas) return;
+        if (!canvas || !img) return;
         const rect = img.getBoundingClientRect();
-        const parentRect = canvas.parentElement.getBoundingClientRect();
-        // Canvas dimensions = pixel resolution; CSS size = display size matching img.
+        // Posicionar el canvas exactamente sobre el bounding box renderizado de
+        // la imagen. Como el canvas es sibling del img dentro de .production-
+        // modal-visual-inner (flex container con padding), calculamos offset
+        // relativo a ese contenedor.
+        const parent = canvas.parentElement;
+        const parentRect = parent.getBoundingClientRect();
         canvas.width = Math.round(rect.width);
         canvas.height = Math.round(rect.height);
         canvas.style.width = rect.width + 'px';
@@ -2370,9 +2379,11 @@ class LivingManager {
             const size = this._editState.size;
             if (this._editState.tool === 'brush') {
                 ctx.globalCompositeOperation = 'source-over';
-                // Mascara: blanco al 40% alpha → la zona pintada se ve sin tapar
-                // la imagen y sin introducir color de marca/accent en la UX.
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+                // Blanco al 30% alpha + mix-blend-mode:difference en CSS produce
+                // un negativo parcial de la zona pintada: en fondos claros se ve
+                // oscuro, en fondos oscuros se ve claro. Visible en cualquier
+                // imagen sin introducir color de marca.
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
             } else {
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.fillStyle = 'rgba(0,0,0,1)';

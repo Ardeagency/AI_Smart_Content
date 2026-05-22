@@ -854,30 +854,31 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* ============================================
    OVERLAY DE EDICION (mask drawing + prompt)
-   Aparece sobre la imagen al activar "Editar".
-   Canvas client-side (no IA) para que el usuario pinte la zona.
+   El canvas es sibling de la imagen para aplicar mix-blend-mode:difference
+   directamente sobre ella (zona pintada se ve como negativo, no como capa
+   blanca aparte). El overlay solo contiene los floats (toolbar + panel).
    ============================================ */
 .pmodal-edit-overlay {
     position: absolute;
     inset: 0;
     z-index: 5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    pointer-events: auto;
+    pointer-events: none; /* deja pasar clicks al canvas que esta detras en DOM */
 }
 .pmodal-edit-overlay[hidden] { display: none; }
+.pmodal-edit-overlay > * { pointer-events: auto; } /* toolbar y panel si capturan eventos */
 
 .pmodal-edit-canvas {
     position: absolute;
     cursor: crosshair;
     touch-action: none;
     border-radius: 10px;
+    /* mix-blend-mode:difference invierte el color de los pixeles de la imagen
+       bajo la zona pintada. En fondo negro pinta blanco; en fondo blanco pinta
+       negro; en colores intermedios da el negativo. Funciona porque img y canvas
+       son siblings en .production-modal-visual-inner (mismo stacking context). */
+    mix-blend-mode: difference;
 }
+.pmodal-edit-canvas[hidden] { display: none; }
 
 .pmodal-edit-toolbar {
     position: absolute;

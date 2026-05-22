@@ -78,6 +78,10 @@ class ProductionView extends BaseView {
                 <div class="production-modal-visual-inner">
                     <img id="pmodalImage" src="" alt="" hidden>
                     <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
+                    <!-- Canvas de mascara: sibling de la imagen para compartir stacking
+                         context y permitir mix-blend-mode:difference (invierte la zona
+                         pintada sobre la imagen, visible en fondos claros y oscuros). -->
+                    <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas" hidden></canvas>
                 </div>
                 <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
                     <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
@@ -87,12 +91,10 @@ class ProductionView extends BaseView {
                     <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>Animar</span></button>
                 </div>
 
-                <!-- Overlay de edicion: aparece encima de la imagen cuando se activa "Editar".
-                     El canvas se posiciona sobre la imagen para que el usuario pinte
-                     la zona a modificar; debajo, textarea + tools (pincel/borrador/limpiar)
-                     + botones Cancelar/Aplicar. La mascara se captura como PNG dataURL. -->
+                <!-- Overlay de edicion: solo contiene los floats de tools y panel.
+                     El canvas vive como sibling de la imagen (arriba) para que
+                     mix-blend-mode:difference se aplique directamente sobre ella. -->
                 <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
-                    <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas"></canvas>
                     <div class="pmodal-edit-toolbar" role="toolbar" aria-label="Herramientas de edicion">
                         <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="Pincel" aria-label="Pincel">
                             <i class="fas fa-paintbrush"></i>
