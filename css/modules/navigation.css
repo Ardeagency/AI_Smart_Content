@@ -1954,6 +1954,12 @@ body.production-filters-in-header .app-header.with-sidebar {
     height: auto;
     min-height: var(--app-header-height, 45.8px);
     padding-top: 12px;
+    /* Production muestra imagenes grandes de alto contraste detras del header.
+       7px de blur (glass default) no alcanza para que el header se sienta
+       "glass-black". Reforzamos blur + fondo solo aqui. */
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
 }
 body.production-filters-in-header .app-header .header-content {
     padding-bottom: 14px;
