@@ -1478,8 +1478,18 @@ class LivingManager {
         const loadingAttr = eager ? 'eager' : 'lazy';
         const fetchAttr = eager ? 'high' : 'auto';
 
+        // Cards con alpha (PNG transparente del flujo remove-bg) muestran un
+        // fondo glass-black para que el usuario perciba la transparencia. Si
+        // no, sobre fondo negro solido pareceria que la imagen tiene fondo.
+        const meta = output?.metadata || {};
+        const tp = output?.technical_params || {};
+        const hasAlpha = meta.kind === 'image_remove_bg'
+            || meta.has_alpha === true
+            || tp.has_alpha === true;
+        const alphaCls = hasAlpha ? ' is-alpha-bg' : '';
+
         return `
-            <article class="living-masonry-item history-image-card" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de imagen')}">
+            <article class="living-masonry-item history-image-card${alphaCls}" role="listitem" data-production-id="${productionId}" data-output-id="${this.escapeHtml(output?.id || '')}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" aria-label="${this.escapeHtml(flowName || 'Produccion de imagen')}">
                 <figure class="history-image-card-media">
                     ${finalUrl
                         ? `<img src="${this.escapeHtml(finalUrl)}" alt="${this.escapeHtml(flowName || 'Produccion')}" loading="${loadingAttr}" decoding="async" fetchpriority="${fetchAttr}" onerror="this.closest('figure').innerHTML='<div class=\\'history-image-card-fallback\\'><i class=\\'fas fa-image\\'></i></div>';" />`
@@ -1845,6 +1855,18 @@ class LivingManager {
             const ic = likeBtn.querySelector('i');
             if (ic) ic.className = 'fas fa-heart';
             likeBtn.classList.toggle('is-liked', liked);
+        }
+
+        // Si el output abierto es PNG transparente (remove-bg) marcamos
+        // el modal con clase para que el panel visual muestre glass-black
+        // en vez de #0a0a0c solido. Asi la transparencia se percibe.
+        {
+            const meta = output?.metadata || {};
+            const tp = output?.technical_params || {};
+            const hasAlpha = meta.kind === 'image_remove_bg'
+                || meta.has_alpha === true
+                || tp.has_alpha === true;
+            modal.classList.toggle('has-alpha-output', !!hasAlpha);
         }
 
         // Estado interno + abrir.

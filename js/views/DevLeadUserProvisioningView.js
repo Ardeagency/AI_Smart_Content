@@ -18,6 +18,9 @@ class DevLeadUserProvisioningView extends DevBaseView {
     this.activeJob = null;
     this.pollTimer = null;
     this.POLL_INTERVAL_MS = 3000;
+    // Wizard interno del stage 'form'. Cambia con Next/Back; los inputs viven en
+    // sub-secciones del MISMO <form>, asi los valores persisten sin innerHTML reset.
+    this.wizardStep = 'signup';
   }
 
   async onEnter() {
@@ -78,6 +81,37 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   // ─── Stage 1: form ─────────────────────────────────────────────────────
 
+  /** Catalogo completo de pasos del wizard. Algunos solo aparecen segun el flujo. */
+  WIZARD_STEPS = [
+    { key: 'signup',     label: 'Sign up',      sub: 'Identidad y rol' },
+    { key: 'org',        label: 'Organizacion', sub: 'Sin org / afiliar / crear' },
+    { key: 'create_org', label: 'Crear org',    sub: 'Datos principales' },
+    { key: 'perms',      label: 'Permisos',     sub: 'Rol en la organizacion' },
+    { key: 'review',     label: 'Listo',        sub: 'Confirmar y enviar' }
+  ];
+
+  /**
+   * Devuelve los pasos visibles del wizard segun el estado actual del form.
+   * - Dev (platform_role=dev o dev_role set): solo signup + review
+   * - Consumer: signup → org → [create_org si mode=create] → [perms si org] → review
+   */
+  getActiveWizardSteps() {
+    const form = this.container?.querySelector('#provisionForm');
+    const get = (name) => (form?.elements[name]?.value || '').trim();
+
+    const isDev = (get('platform_role') === 'dev') || !!get('dev_role');
+    if (isDev) {
+      return this.WIZARD_STEPS.filter((s) => s.key === 'signup' || s.key === 'review');
+    }
+    const mode = get('org_mode') || 'none';
+    const hasOrg = (mode === 'existing' || mode === 'create');
+    return this.WIZARD_STEPS.filter((s) => {
+      if (s.key === 'create_org') return mode === 'create';
+      if (s.key === 'perms') return hasOrg;
+      return true;
+    });
+  }
+
   renderFormStage() {
     const pending = this.pendingJobs.filter((j) =>
       ['pending_email_confirmation', 'email_confirmed', 'finalizing'].includes(j.status)
@@ -114,145 +148,204 @@ class DevLeadUserProvisioningView extends DevBaseView {
     return `
       ${pendingHtml}
 
-      <form id="provisionForm" class="provision-shell">
+      <form id="provisionForm" class="provision-wizard-shell">
 
-        <!-- Stepper vertical: tabla de contenidos navegable -->
-        <aside class="provision-stepper" aria-label="Secciones del formulario">
-          <ol class="provision-stepper-list">
-            <li class="provision-step is-active" data-step="identity" aria-current="step">
-              <a class="provision-step-link" href="#provSecIdentity">
-                <span class="provision-step-marker"><span class="provision-step-num">1</span></span>
-                <span class="provision-step-meta">
-                  <span class="provision-step-title">Identidad</span>
-                  <span class="provision-step-sub">Nombre, email, password</span>
-                </span>
-              </a>
-            </li>
-            <li class="provision-step" data-step="platform">
-              <a class="provision-step-link" href="#provSecPlatform">
-                <span class="provision-step-marker"><span class="provision-step-num">2</span></span>
-                <span class="provision-step-meta">
-                  <span class="provision-step-title">Plataforma</span>
-                  <span class="provision-step-sub">Rol y vista por defecto</span>
-                </span>
-              </a>
-            </li>
-            <li class="provision-step" data-step="organization">
-              <a class="provision-step-link" href="#provSecOrg">
-                <span class="provision-step-marker"><span class="provision-step-num">3</span></span>
-                <span class="provision-step-meta">
-                  <span class="provision-step-title">Organizacion</span>
-                  <span class="provision-step-sub">Sin org / existente / nueva</span>
-                </span>
-              </a>
-            </li>
-            <li class="provision-step is-optional" data-step="perms">
-              <a class="provision-step-link" href="#provSecPerms">
-                <span class="provision-step-marker"><span class="provision-step-num">4</span></span>
-                <span class="provision-step-meta">
-                  <span class="provision-step-title">Permisos</span>
-                  <span class="provision-step-sub">Solo si hay organizacion</span>
-                </span>
-              </a>
-            </li>
-          </ol>
+        <!-- Stepper vertical: pasos del wizard. Se actualiza dinamico en updateWizardStepper(). -->
+        <aside class="provision-stepper" aria-label="Pasos del wizard">
+          <ol class="provision-stepper-list" id="provisionStepperList"></ol>
         </aside>
 
-        <!-- Form principal: secciones flow con anchors para el stepper -->
-        <div class="provision-form-body" id="provisionFormBody">
+        <!-- Wizard body: contiene TODAS las sub-secciones en el DOM (los valores
+             persisten entre Next/Back porque no innerHTML-reset). Solo .is-current
+             es visible via CSS. -->
+        <div class="provision-wizard-body" id="provisionWizardBody">
 
-          <section class="provision-section" id="provSecIdentity" data-step="identity">
-            <header class="provision-section-head">
-              <span class="provision-section-eyebrow">Paso 1</span>
-              <h2 class="provision-section-title">Identidad del usuario</h2>
-              <p class="provision-section-sub">El Lead define la contrasena ahora; el usuario solo confirma el email.</p>
+          <!-- ── STEP signup: identidad + plataforma ── -->
+          <section class="provision-step-pane" data-pane="signup">
+            <header class="provision-pane-head">
+              <span class="provision-pane-eyebrow">Paso 1 · Sign up</span>
+              <h2 class="provision-pane-title">Datos del usuario</h2>
+              <p class="provision-pane-sub">Identidad y rol en plataforma. El Lead define la contrasena ahora; el usuario solo confirmara el email.</p>
             </header>
-            <div class="provision-section-grid">
-              <div class="settings-field">
-                <label>Nombre completo</label>
-                <input type="text" name="full_name" placeholder="Ej. Maria Garcia" required>
-              </div>
-              <div class="settings-field">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="usuario@gmail.com" required>
-              </div>
-              <div class="settings-field settings-field--full">
-                <label>Contrasena temporal</label>
-                <input type="password" name="password" placeholder="Minimo 8 caracteres" required minlength="8">
-                <small class="field-hint">El usuario podra cambiarla despues de confirmar el email.</small>
+
+            <div class="provision-pane-section">
+              <h3 class="provision-pane-section-title">Identidad</h3>
+              <div class="provision-grid-2">
+                <div class="settings-field">
+                  <label>Nombre completo</label>
+                  <input type="text" name="full_name" placeholder="Ej. Maria Garcia" required>
+                </div>
+                <div class="settings-field">
+                  <label>Email</label>
+                  <input type="email" name="email" placeholder="usuario@gmail.com" required>
+                </div>
+                <div class="settings-field settings-field--full">
+                  <label>Contrasena temporal</label>
+                  <input type="password" name="password" placeholder="Minimo 8 caracteres" required minlength="8">
+                  <small class="field-hint">El usuario podra cambiarla despues de confirmar el email.</small>
+                </div>
               </div>
             </div>
-          </section>
 
-          <section class="provision-section" id="provSecPlatform" data-step="platform">
-            <header class="provision-section-head">
-              <span class="provision-section-eyebrow">Paso 2</span>
-              <h2 class="provision-section-title">Cuenta de plataforma</h2>
-              <p class="provision-section-sub">Que rol tiene a nivel sistema y que vista ve por defecto al entrar.</p>
-            </header>
-            <div class="provision-section-grid">
-              <div class="settings-field">
-                <label>Rol plataforma</label>
-                <select name="platform_role">
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                  <option value="dev">Dev</option>
-                </select>
-              </div>
-              <div class="settings-field">
-                <label>Vista por defecto</label>
-                <select name="default_view_mode">
-                  <option value="user">User</option>
-                  <option value="developer">Developer</option>
-                </select>
-              </div>
-              <div class="settings-field settings-field--full">
-                <label>Dev role (portal developer)</label>
-                <select name="dev_role">
-                  <option value="">Ninguno</option>
-                  <option value="contributor">Contributor</option>
-                  <option value="lead">Lead</option>
-                </select>
+            <div class="provision-pane-section">
+              <h3 class="provision-pane-section-title">Rol y vista</h3>
+              <div class="provision-grid-2">
+                <div class="settings-field">
+                  <label>Rol plataforma</label>
+                  <select name="platform_role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="dev">Dev</option>
+                  </select>
+                </div>
+                <div class="settings-field">
+                  <label>Vista por defecto</label>
+                  <select name="default_view_mode">
+                    <option value="user">User</option>
+                    <option value="developer">Developer</option>
+                  </select>
+                </div>
+                <div class="settings-field settings-field--full">
+                  <label>Dev role (portal developer)</label>
+                  <select name="dev_role">
+                    <option value="">Ninguno</option>
+                    <option value="contributor">Contributor</option>
+                    <option value="lead">Lead</option>
+                  </select>
+                  <small class="field-hint">Si se asigna, el usuario es dev: no se pediran datos de organizacion en los siguientes pasos.</small>
+                </div>
               </div>
             </div>
+
+            <footer class="provision-pane-actions">
+              <span class="provision-pane-spacer"></span>
+              <button type="button" class="btn btn-primary" data-wizard-next>
+                Siguiente <i class="fas fa-arrow-right"></i>
+              </button>
+            </footer>
           </section>
 
-          <section class="provision-section" id="provSecOrg" data-step="organization">
-            <header class="provision-section-head">
-              <span class="provision-section-eyebrow">Paso 3</span>
-              <h2 class="provision-section-title">Organizacion</h2>
-              <p class="provision-section-sub">Asigna el usuario a una organizacion existente, crea una nueva, o dejalo suelto.</p>
+          <!-- ── STEP org: picker de modo ── -->
+          <section class="provision-step-pane" data-pane="org">
+            <header class="provision-pane-head">
+              <span class="provision-pane-eyebrow">Paso 2 · Organizacion</span>
+              <h2 class="provision-pane-title">Donde vive este usuario</h2>
+              <p class="provision-pane-sub">Afilialo a una organizacion existente, crea una nueva, o dejalo sin organizacion.</p>
             </header>
-            <div class="provision-section-grid">
-              <div class="settings-field settings-field--full">
-                <label>Modo</label>
-                <select id="orgModeSelect" name="org_mode">
-                  <option value="none">Sin organizacion</option>
-                  <option value="existing">Afiliar a existente</option>
-                  <option value="create">Crear nueva</option>
-                </select>
+
+            <div class="provision-pane-section">
+              <div class="provision-mode-picker" role="radiogroup" aria-label="Modo de organizacion">
+                <label class="provision-mode-option">
+                  <input type="radio" name="org_mode" value="none" checked>
+                  <span class="provision-mode-card">
+                    <i class="fas fa-user-slash"></i>
+                    <strong>Sin organizacion</strong>
+                    <small>El usuario no pertenece a ninguna org todavia.</small>
+                  </span>
+                </label>
+                <label class="provision-mode-option">
+                  <input type="radio" name="org_mode" value="existing">
+                  <span class="provision-mode-card">
+                    <i class="fas fa-building"></i>
+                    <strong>Afiliar a existente</strong>
+                    <small>Elige una organizacion ya creada en el sistema.</small>
+                  </span>
+                </label>
+                <label class="provision-mode-option">
+                  <input type="radio" name="org_mode" value="create">
+                  <span class="provision-mode-card">
+                    <i class="fas fa-plus-circle"></i>
+                    <strong>Crear nueva</strong>
+                    <small>Construye una organizacion nueva para este usuario.</small>
+                  </span>
+                </label>
               </div>
-              <div class="settings-field settings-field--full" id="existingOrgField" hidden>
+
+              <div class="settings-field settings-field--full" id="existingOrgField" hidden style="margin-top: var(--spacing-md);">
                 <label>Organizacion existente</label>
                 <select id="existingOrgSelect" name="organization_id">
                   <option value="">Seleccionar...</option>
                   ${this.organizations.map((o) => `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`).join('')}
                 </select>
               </div>
-              <div class="settings-field settings-field--full" id="newOrgField" hidden>
-                <label>Nombre nueva organizacion</label>
-                <input type="text" name="new_organization_name" placeholder="Ej. ACME Corp">
-              </div>
+
+              <!-- Helper field para evitar input vacio cuando se crea nueva (se llenara en el siguiente step) -->
+              <input type="hidden" name="new_organization_name" id="newOrgFieldHidden">
             </div>
+
+            <footer class="provision-pane-actions">
+              <button type="button" class="btn btn-secondary" data-wizard-back>
+                <i class="fas fa-arrow-left"></i> Atras
+              </button>
+              <button type="button" class="btn btn-primary" data-wizard-next>
+                Siguiente <i class="fas fa-arrow-right"></i>
+              </button>
+            </footer>
           </section>
 
-          <section class="provision-section" id="provSecPerms" data-step="perms" hidden>
-            <header class="provision-section-head">
-              <span class="provision-section-eyebrow">Paso 4 — opcional</span>
-              <h2 class="provision-section-title">Rol y permisos en la organizacion</h2>
-              <p class="provision-section-sub">Elige un rol base; los checkboxes precargan el preset. Ajusta lo que necesites.</p>
+          <!-- ── STEP create_org: preview lateral + form (Image #8 style) ── -->
+          <section class="provision-step-pane provision-pane--create-org" data-pane="create_org">
+            <header class="provision-pane-head">
+              <span class="provision-pane-eyebrow">Paso 3 · Crear organizacion</span>
+              <h2 class="provision-pane-title">Datos de la nueva organizacion</h2>
+              <p class="provision-pane-sub">Define la identidad visible. Otros ajustes (plan, autonomia) se editan despues desde Organizaciones.</p>
             </header>
-            <div class="provision-section-grid">
+
+            <div class="provision-create-org-grid">
+              <!-- Preview card: live update al teclear -->
+              <aside class="provision-org-preview" aria-label="Vista previa de la organizacion">
+                <div class="provision-org-preview-logo" id="orgPreviewLogo">
+                  <i class="fas fa-building"></i>
+                </div>
+                <strong class="provision-org-preview-name" id="orgPreviewName">Nueva organizacion</strong>
+                <span class="provision-org-preview-brand" id="orgPreviewBrand" hidden></span>
+                <p class="provision-org-preview-slogan" id="orgPreviewSlogan">Pon un nombre para empezar.</p>
+                <div class="provision-org-preview-meta">
+                  <span><i class="fas fa-crown"></i> Owner: usuario nuevo</span>
+                </div>
+              </aside>
+
+              <!-- Form de datos -->
+              <div class="provision-org-form">
+                <div class="settings-field">
+                  <label>Nombre <span class="form-required">*</span></label>
+                  <input type="text" name="new_organization_name" id="newOrgNameInput" placeholder="Ej. ACME Corp" maxlength="120">
+                </div>
+                <div class="settings-field">
+                  <label>Nombre oficial de marca</label>
+                  <input type="text" name="new_brand_name_oficial" id="newOrgBrandNameInput" placeholder="Ej. ACME Brand SAS" maxlength="120">
+                </div>
+                <div class="settings-field">
+                  <label>Slogan</label>
+                  <input type="text" name="new_brand_slogan" id="newOrgSloganInput" placeholder="Frase de marca" maxlength="200">
+                </div>
+                <div class="settings-field">
+                  <label>Logo URL</label>
+                  <input type="url" name="new_logo_url" id="newOrgLogoInput" placeholder="https://...">
+                  <small class="field-hint">Aceptamos PNG/JPG/SVG via URL publica. Puedes subir desde Brand mas adelante.</small>
+                </div>
+              </div>
+            </div>
+
+            <footer class="provision-pane-actions">
+              <button type="button" class="btn btn-secondary" data-wizard-back>
+                <i class="fas fa-arrow-left"></i> Atras
+              </button>
+              <button type="button" class="btn btn-primary" data-wizard-next>
+                Siguiente <i class="fas fa-arrow-right"></i>
+              </button>
+            </footer>
+          </section>
+
+          <!-- ── STEP perms: rol + capabilities ── -->
+          <section class="provision-step-pane" data-pane="perms">
+            <header class="provision-pane-head">
+              <span class="provision-pane-eyebrow">Permisos en la organizacion</span>
+              <h2 class="provision-pane-title">Rol y capacidades</h2>
+              <p class="provision-pane-sub">Elige un rol base; los checkboxes se precargan con el preset. Ajusta lo que necesites.</p>
+            </header>
+
+            <div class="provision-pane-section">
               <div class="settings-field settings-field--full">
                 <label>Rol base</label>
                 <select id="orgRoleSelect" name="organization_role">
@@ -265,56 +358,39 @@ class DevLeadUserProvisioningView extends DevBaseView {
                 ${this.renderCapabilitiesMatrix()}
               </div>
             </div>
+
+            <footer class="provision-pane-actions">
+              <button type="button" class="btn btn-secondary" data-wizard-back>
+                <i class="fas fa-arrow-left"></i> Atras
+              </button>
+              <button type="button" class="btn btn-primary" data-wizard-next>
+                Siguiente <i class="fas fa-arrow-right"></i>
+              </button>
+            </footer>
+          </section>
+
+          <!-- ── STEP review: resumen + submit ── -->
+          <section class="provision-step-pane" data-pane="review">
+            <header class="provision-pane-head">
+              <span class="provision-pane-eyebrow">Listo</span>
+              <h2 class="provision-pane-title">Revisa y confirma</h2>
+              <p class="provision-pane-sub">Esto es lo que se va a crear. Si todo se ve bien, envia la verificacion al usuario.</p>
+            </header>
+
+            <div class="provision-review-summary" id="provisionReviewSummary"></div>
+
+            <footer class="provision-pane-actions">
+              <button type="button" class="btn btn-secondary" data-wizard-back>
+                <i class="fas fa-arrow-left"></i> Atras
+              </button>
+              <button type="submit" class="btn btn-primary provision-submit" id="provisionStartBtn">
+                <i class="fas fa-paper-plane"></i> Crear y enviar verificacion
+              </button>
+            </footer>
+            <p id="provisionStatus" class="provision-status" role="status" aria-live="polite"></p>
           </section>
 
         </div>
-
-        <!-- Summary panel: live preview de lo que se va a crear + CTA primario -->
-        <aside class="provision-summary" aria-label="Resumen de lo que se va a crear">
-          <header class="provision-summary-head">
-            <h3>Resumen</h3>
-            <p>Live preview de lo que se creara al enviar.</p>
-          </header>
-
-          <div class="provision-summary-body" id="provisionSummaryBody">
-
-            <div class="provision-summary-tile">
-              <span class="provision-summary-tile-label"><i class="fas fa-user"></i> Usuario</span>
-              <strong class="provision-summary-tile-value" data-summary="full_name">—</strong>
-              <span class="provision-summary-tile-meta" data-summary="email">sin email</span>
-            </div>
-
-            <div class="provision-summary-tile">
-              <span class="provision-summary-tile-label"><i class="fas fa-id-badge"></i> Plataforma</span>
-              <strong class="provision-summary-tile-value" data-summary="platform_role">user</strong>
-              <span class="provision-summary-tile-meta">
-                vista: <span data-summary="default_view_mode">user</span>
-                <span class="provision-summary-divider"></span>
-                dev: <span data-summary="dev_role">ninguno</span>
-              </span>
-            </div>
-
-            <div class="provision-summary-tile">
-              <span class="provision-summary-tile-label"><i class="fas fa-building"></i> Organizacion</span>
-              <strong class="provision-summary-tile-value" data-summary="org_target">Sin organizacion</strong>
-              <span class="provision-summary-tile-meta" data-summary="org_role" hidden></span>
-            </div>
-
-            <div class="provision-summary-tile" data-summary-block="caps" hidden>
-              <span class="provision-summary-tile-label"><i class="fas fa-user-shield"></i> Permisos</span>
-              <strong class="provision-summary-tile-value" data-summary="caps_count">0 capacidades</strong>
-              <span class="provision-summary-tile-meta">marca los checkboxes en el paso 4</span>
-            </div>
-          </div>
-
-          <footer class="provision-summary-foot">
-            <p id="provisionStatus" class="provision-status" role="status" aria-live="polite"></p>
-            <button type="submit" class="btn btn-primary provision-submit" id="provisionStartBtn">
-              <i class="fas fa-paper-plane"></i> Crear y enviar verificacion
-            </button>
-            <p class="provision-summary-fineprint">El usuario recibira un email para confirmar y activar su cuenta.</p>
-          </footer>
-        </aside>
 
       </form>
     `;
@@ -362,46 +438,50 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   wireFormStage() {
     const form = this.container.querySelector('#provisionForm');
-    const orgMode = this.container.querySelector('#orgModeSelect');
     this.addEventListener(form, 'submit', (e) => this.handleStart(e));
-    this.addEventListener(orgMode, 'change', () => {
-      this.updateOrgModeUI();
-      this.updateSummary();
-      this.updateStepperState();
+
+    // Org mode picker: radio (no select) — re-toggle conditional fields y update stepper
+    form.querySelectorAll('input[name="org_mode"]').forEach((radio) => {
+      this.addEventListener(radio, 'change', () => {
+        this.updateOrgModeUI();
+        this.updateWizardStepper();
+      });
     });
 
     const orgRoleSelect = this.container.querySelector('#orgRoleSelect');
     if (orgRoleSelect) {
-      this.addEventListener(orgRoleSelect, 'change', () => {
-        this.applyRolePreset(orgRoleSelect.value);
-        this.updateSummary();
-      });
-      this.applyRolePreset(orgRoleSelect.value); // initial preset
-    }
-    this.updateOrgModeUI();
-
-    // Live summary: cada cambio en el form actualiza el panel derecho + stepper
-    if (form) {
-      this.addEventListener(form, 'input', () => {
-        this.updateSummary();
-        this.updateStepperState();
-      });
-      this.addEventListener(form, 'change', () => {
-        this.updateSummary();
-        this.updateStepperState();
-      });
+      this.addEventListener(orgRoleSelect, 'change', () => this.applyRolePreset(orgRoleSelect.value));
+      this.applyRolePreset(orgRoleSelect.value);
     }
 
-    // Scroll spy: marcar paso activo segun la seccion mas visible
-    this.setupStepperScrollSpy();
+    // Live update del preview de la org en step crear-org
+    ['newOrgNameInput', 'newOrgBrandNameInput', 'newOrgSloganInput', 'newOrgLogoInput'].forEach((id) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) this.addEventListener(el, 'input', () => this.updateOrgPreview());
+    });
 
-    // Click en step lleva al usuario a esa seccion del form
-    this.container.querySelectorAll('.provision-step-link').forEach((link) => {
-      this.addEventListener(link, 'click', (e) => {
-        e.preventDefault();
-        const targetId = link.getAttribute('href')?.replace(/^#/, '');
-        const target = targetId ? this.container.querySelector('#' + targetId) : null;
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Cualquier cambio en signup (platform_role / dev_role) recomputa pasos activos
+    ['platform_role', 'dev_role'].forEach((name) => {
+      const el = form.elements[name];
+      if (el) this.addEventListener(el, 'change', () => this.updateWizardStepper());
+    });
+
+    // Navegacion Next/Back
+    this.container.querySelectorAll('[data-wizard-next]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => this.advanceWizard(+1));
+    });
+    this.container.querySelectorAll('[data-wizard-back]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => this.advanceWizard(-1));
+    });
+
+    // Click en step del stepper (solo a pasos ya completados o el actual)
+    this.container.querySelectorAll('.provision-stepper-list').forEach((list) => {
+      this.addEventListener(list, 'click', (e) => {
+        const item = e.target.closest('.provision-step');
+        if (!item) return;
+        const key = item.getAttribute('data-step');
+        if (!key) return;
+        if (item.classList.contains('is-clickable')) this.goToWizardStep(key);
       });
     });
 
@@ -421,151 +501,229 @@ class DevLeadUserProvisioningView extends DevBaseView {
       });
     });
 
-    // Estado inicial del summary
-    this.updateSummary();
-    this.updateStepperState();
+    // Estado inicial: stepper + preview + step activo
+    this.updateOrgModeUI();
+    this.updateOrgPreview();
+    this.wizardStep = 'signup';
+    this.updateWizardStepper();
+    this.showWizardPane('signup');
   }
 
-  /**
-   * Actualiza el panel de resumen lateral en base al estado actual del form.
-   * Read-only: solo lee values, no muta nada del form.
-   */
-  updateSummary() {
-    const form = this.container.querySelector('#provisionForm');
-    if (!form) return;
-    const val = (name) => (form.elements[name]?.value || '').trim();
-
-    const setText = (key, text, opts = {}) => {
-      const el = this.container.querySelector(`[data-summary="${key}"]`);
-      if (!el) return;
-      el.textContent = text;
-      el.classList.toggle('is-empty', opts.empty === true);
-    };
-
-    const fullName = val('full_name');
-    const email = val('email');
-    setText('full_name', fullName || 'Sin nombre', { empty: !fullName });
-    setText('email', email || 'sin email', { empty: !email });
-
-    const role = val('platform_role') || 'user';
-    const view = val('default_view_mode') || 'user';
-    const dev = val('dev_role') || 'ninguno';
-    setText('platform_role', role);
-    setText('default_view_mode', view);
-    setText('dev_role', dev);
-
-    const mode = val('org_mode') || 'none';
-    let orgTarget = 'Sin organizacion';
-    if (mode === 'existing') {
-      const orgId = val('organization_id');
-      const org = this.organizations.find((o) => o.id === orgId);
-      orgTarget = org ? (org.name || 'Org seleccionada') : 'Selecciona una org';
-    } else if (mode === 'create') {
-      const newName = val('new_organization_name');
-      orgTarget = newName ? `Nueva: ${newName}` : 'Nombre pendiente';
+  /** Renderiza el stepper segun los pasos activos del flujo. */
+  updateWizardStepper() {
+    const list = this.container.querySelector('#provisionStepperList');
+    if (!list) return;
+    const active = this.getActiveWizardSteps();
+    // Si el step actual ya no es valido (ej: cambio de dev a user), saltar al primero activo
+    if (!active.find((s) => s.key === this.wizardStep)) {
+      this.wizardStep = active[0]?.key || 'signup';
+      this.showWizardPane(this.wizardStep);
     }
-    setText('org_target', orgTarget, { empty: mode !== 'none' && orgTarget.startsWith('Selecciona') });
+    const completedKeys = this.getCompletedSteps(active);
+    const currentIdx = active.findIndex((s) => s.key === this.wizardStep);
 
-    const orgRole = val('organization_role');
-    const orgRoleEl = this.container.querySelector('[data-summary="org_role"]');
-    if (orgRoleEl) {
-      if (mode !== 'none' && orgRole) {
-        orgRoleEl.textContent = `Rol: ${orgRole}`;
-        orgRoleEl.hidden = false;
-      } else {
-        orgRoleEl.hidden = true;
-      }
-    }
-
-    // Caps count
-    const capsBlock = this.container.querySelector('[data-summary-block="caps"]');
-    const capsCountEl = this.container.querySelector('[data-summary="caps_count"]');
-    if (capsBlock && capsCountEl) {
-      const showCaps = mode !== 'none';
-      capsBlock.hidden = !showCaps;
-      if (showCaps) {
-        const checks = form.querySelectorAll('input[type="checkbox"][data-cap]');
-        const total = checks.length;
-        const on = Array.from(checks).filter((c) => c.checked).length;
-        capsCountEl.textContent = `${on}/${total} capacidades`;
-      }
-    }
+    list.innerHTML = active.map((s, i) => {
+      const state = completedKeys.has(s.key) ? 'is-done'
+                  : s.key === this.wizardStep ? 'is-active'
+                  : 'is-pending';
+      const clickable = (state === 'is-done' || i <= currentIdx) ? 'is-clickable' : '';
+      const num = i + 1;
+      return `
+        <li class="provision-step ${state} ${clickable}" data-step="${s.key}">
+          <span class="provision-step-marker"><span class="provision-step-num">${num}</span></span>
+          <span class="provision-step-meta">
+            <span class="provision-step-title">${this.escapeHtml(s.label)}</span>
+            <span class="provision-step-sub">${this.escapeHtml(s.sub)}</span>
+          </span>
+        </li>
+      `;
+    }).join('');
   }
 
-  /**
-   * Marca el estado de cada step en el stepper: done si la seccion esta "completa"
-   * (todos los required llenos), o pending si no.
-   */
-  updateStepperState() {
+  /** Pasos cuyas validaciones pasan = se marcan como done en el stepper. */
+  getCompletedSteps(active) {
     const form = this.container.querySelector('#provisionForm');
-    if (!form) return;
-    const val = (name) => (form.elements[name]?.value || '').trim();
+    const done = new Set();
+    if (!form) return done;
+    const get = (name) => (form.elements[name]?.value || '').trim();
+    const password = form.elements['password']?.value || '';
 
-    const completeness = {
-      identity: !!(val('full_name') && val('email') && (form.elements['password']?.value || '').length >= 8),
-      platform: true, // siempre tiene defaults
-      organization: (() => {
-        const m = val('org_mode') || 'none';
-        if (m === 'none') return true;
-        if (m === 'existing') return !!val('organization_id');
-        if (m === 'create') return !!val('new_organization_name');
-        return false;
-      })(),
-      perms: (val('org_mode') || 'none') === 'none' ? null : true // null = N/A
-    };
+    // signup
+    if (get('full_name') && get('email') && password.length >= 8) done.add('signup');
 
-    this.container.querySelectorAll('.provision-step').forEach((stepEl) => {
-      const key = stepEl.getAttribute('data-step');
-      stepEl.classList.remove('is-done', 'is-pending', 'is-na');
-      const state = completeness[key];
-      if (state === true) stepEl.classList.add('is-done');
-      else if (state === null) stepEl.classList.add('is-na');
-      else stepEl.classList.add('is-pending');
+    // org
+    const mode = get('org_mode') || 'none';
+    if (mode === 'none') done.add('org');
+    else if (mode === 'existing' && get('organization_id')) done.add('org');
+    else if (mode === 'create') done.add('org'); // se valida en create_org
+
+    // create_org
+    if (mode === 'create' && get('new_organization_name')) done.add('create_org');
+
+    // perms
+    if (active.some((s) => s.key === 'perms')) {
+      if (get('organization_role')) done.add('perms');
+    }
+
+    return done;
+  }
+
+  showWizardPane(key) {
+    this.container.querySelectorAll('.provision-step-pane').forEach((pane) => {
+      pane.classList.toggle('is-current', pane.getAttribute('data-pane') === key);
     });
+    // Si entramos al review, repintamos el resumen con el estado vigente del form
+    if (key === 'review') this.renderReviewSummary();
+    // Scroll up cuando cambias de paso
+    const body = this.container.querySelector('#provisionWizardBody');
+    if (body && body.scrollTo) body.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /** Intersection observer: marca como is-active el step cuya seccion es la mas visible en el viewport */
-  setupStepperScrollSpy() {
-    if (this._scrollSpyObserver) {
-      this._scrollSpyObserver.disconnect();
+  advanceWizard(delta) {
+    const active = this.getActiveWizardSteps();
+    const idx = active.findIndex((s) => s.key === this.wizardStep);
+    if (idx === -1) return;
+
+    // Validacion al avanzar (no al retroceder)
+    if (delta > 0) {
+      const err = this.validateWizardStep(this.wizardStep);
+      if (err) { this.setStatus(err, 'is-error'); return; }
+      this.setStatus('', '');
     }
-    const body = this.container.querySelector('#provisionFormBody');
-    if (!body) return;
-    const sections = Array.from(this.container.querySelectorAll('.provision-section'));
-    if (sections.length === 0) return;
 
-    const setActive = (stepKey) => {
-      this.container.querySelectorAll('.provision-step').forEach((s) => {
-        s.classList.toggle('is-active', s.getAttribute('data-step') === stepKey);
-      });
-    };
-
-    this._scrollSpyObserver = new IntersectionObserver((entries) => {
-      // Toma la entry con mayor intersectionRatio
-      const visible = entries
-        .filter((e) => e.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) {
-        const key = visible.target.getAttribute('data-step');
-        if (key) setActive(key);
-      }
-    }, { rootMargin: '-30% 0px -50% 0px', threshold: [0, 0.2, 0.5, 0.8] });
-
-    sections.forEach((s) => this._scrollSpyObserver.observe(s));
+    const nextIdx = idx + delta;
+    if (nextIdx < 0 || nextIdx >= active.length) return;
+    this.wizardStep = active[nextIdx].key;
+    this.updateWizardStepper();
+    this.showWizardPane(this.wizardStep);
   }
 
+  goToWizardStep(key) {
+    const active = this.getActiveWizardSteps();
+    if (!active.find((s) => s.key === key)) return;
+    this.wizardStep = key;
+    this.updateWizardStepper();
+    this.showWizardPane(key);
+  }
+
+  /** Validacion local del paso actual. Devuelve string error o null si ok. */
+  validateWizardStep(key) {
+    const form = this.container.querySelector('#provisionForm');
+    if (!form) return null;
+    const get = (name) => (form.elements[name]?.value || '').trim();
+    const password = form.elements['password']?.value || '';
+
+    if (key === 'signup') {
+      if (!get('full_name')) return 'Falta el nombre completo.';
+      if (!get('email')) return 'Falta el email.';
+      if (password.length < 8) return 'La contrasena debe tener al menos 8 caracteres.';
+    }
+    if (key === 'org') {
+      const mode = get('org_mode') || 'none';
+      if (mode === 'existing' && !get('organization_id')) return 'Selecciona la organizacion existente.';
+    }
+    if (key === 'create_org') {
+      if (!get('new_organization_name')) return 'Pon un nombre para la organizacion.';
+    }
+    if (key === 'perms') {
+      if (!get('organization_role')) return 'Elige un rol base.';
+    }
+    return null;
+  }
+
+  /** Live preview del card de la izquierda en el step crear-org. */
+  updateOrgPreview() {
+    const name = this.container.querySelector('#newOrgNameInput')?.value?.trim() || '';
+    const brand = this.container.querySelector('#newOrgBrandNameInput')?.value?.trim() || '';
+    const slogan = this.container.querySelector('#newOrgSloganInput')?.value?.trim() || '';
+    const logo = this.container.querySelector('#newOrgLogoInput')?.value?.trim() || '';
+
+    const nameEl = this.container.querySelector('#orgPreviewName');
+    const brandEl = this.container.querySelector('#orgPreviewBrand');
+    const sloganEl = this.container.querySelector('#orgPreviewSlogan');
+    const logoEl = this.container.querySelector('#orgPreviewLogo');
+
+    if (nameEl) {
+      nameEl.textContent = name || 'Nueva organizacion';
+      nameEl.classList.toggle('is-empty', !name);
+    }
+    if (brandEl) {
+      if (brand) {
+        brandEl.textContent = brand;
+        brandEl.hidden = false;
+      } else {
+        brandEl.hidden = true;
+      }
+    }
+    if (sloganEl) {
+      sloganEl.textContent = slogan || 'Pon un nombre para empezar.';
+      sloganEl.classList.toggle('is-empty', !slogan);
+    }
+    if (logoEl) {
+      if (logo && /^https?:\/\//i.test(logo)) {
+        logoEl.innerHTML = `<img src="${this.escapeHtml(logo)}" alt="${this.escapeHtml(name || 'Logo')}" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-building'}))">`;
+      } else {
+        logoEl.innerHTML = '<i class="fas fa-building"></i>';
+      }
+    }
+  }
+
+  /** Pinta el card de resumen del step final. */
+  renderReviewSummary() {
+    const host = this.container.querySelector('#provisionReviewSummary');
+    if (!host) return;
+    const form = this.container.querySelector('#provisionForm');
+    const get = (name) => (form.elements[name]?.value || '').trim();
+    const password = form.elements['password']?.value || '';
+
+    const mode = get('org_mode') || 'none';
+    let orgLine = 'Sin organizacion';
+    if (mode === 'existing') {
+      const org = this.organizations.find((o) => o.id === get('organization_id'));
+      orgLine = `Afiliar a ${org?.name || get('organization_id') || '—'}`;
+    } else if (mode === 'create') {
+      orgLine = `Crear nueva: ${get('new_organization_name') || '—'}`;
+    }
+
+    const role = get('platform_role') || 'user';
+    const dev = get('dev_role') || 'ninguno';
+    const orgRole = mode !== 'none' ? (get('organization_role') || '—') : null;
+
+    const checks = form.querySelectorAll('input[type="checkbox"][data-cap]');
+    const totalCaps = checks.length;
+    const onCaps = Array.from(checks).filter((c) => c.checked).length;
+
+    host.innerHTML = `
+      <div class="provision-review-grid">
+        <div class="provision-review-tile">
+          <span class="provision-review-label"><i class="fas fa-user"></i> Usuario</span>
+          <strong>${this.escapeHtml(get('full_name') || 'Sin nombre')}</strong>
+          <span>${this.escapeHtml(get('email') || 'sin email')}</span>
+          <span class="provision-review-meta">contrasena ${password ? '✓ definida' : 'pendiente'}</span>
+        </div>
+        <div class="provision-review-tile">
+          <span class="provision-review-label"><i class="fas fa-id-badge"></i> Plataforma</span>
+          <strong>${this.escapeHtml(role)}</strong>
+          <span>vista por defecto: ${this.escapeHtml(get('default_view_mode') || 'user')}</span>
+          <span class="provision-review-meta">dev role: ${this.escapeHtml(dev)}</span>
+        </div>
+        <div class="provision-review-tile">
+          <span class="provision-review-label"><i class="fas fa-building"></i> Organizacion</span>
+          <strong>${this.escapeHtml(orgLine)}</strong>
+          ${orgRole ? `<span>rol: ${this.escapeHtml(orgRole)}</span>` : '<span class="provision-review-meta">sin rol</span>'}
+          ${mode !== 'none' ? `<span class="provision-review-meta">${onCaps}/${totalCaps} capacidades activas</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  /** Toggle del field "organizacion existente" segun el radio org_mode seleccionado. */
   updateOrgModeUI() {
-    const mode = this.container.querySelector('#orgModeSelect')?.value || 'none';
+    const form = this.container.querySelector('#provisionForm');
+    if (!form) return;
+    const mode = (form.elements['org_mode']?.value) || 'none';
     const existingField = this.container.querySelector('#existingOrgField');
-    const newOrgField   = this.container.querySelector('#newOrgField');
-    const permsSection  = this.container.querySelector('#provSecPerms');
-    const permsStep     = this.container.querySelector('.provision-step[data-step="perms"]');
-    if (!existingField || !newOrgField || !permsSection) return;
-    const orgEnabled = mode === 'existing' || mode === 'create';
-    existingField.hidden = mode !== 'existing';
-    newOrgField.hidden   = mode !== 'create';
-    permsSection.hidden  = !orgEnabled;
-    if (permsStep) permsStep.classList.toggle('is-disabled', !orgEnabled);
+    if (existingField) existingField.hidden = mode !== 'existing';
   }
 
   async handleStart(event) {
@@ -626,6 +784,9 @@ class DevLeadUserProvisioningView extends DevBaseView {
         mode: value('org_mode') || 'none',
         organization_id: value('organization_id') || null,
         new_organization_name: value('new_organization_name') || null,
+        new_brand_name_oficial: value('new_brand_name_oficial') || null,
+        new_brand_slogan: value('new_brand_slogan') || null,
+        new_logo_url: value('new_logo_url') || null,
         organization_role: value('organization_role') || null,
         capabilities,
       },

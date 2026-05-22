@@ -11562,17 +11562,15 @@
 
 
 /* ============================================================
-   Provisioning - "Crear usuario" PRO dashboard
+   Provisioning - "Crear usuario" wizard one-step-at-a-time
    ============================================================
-   Layout: stepper vertical (220px sticky) + form scroll central +
-   summary panel sticky (320px) con CTA primario.
-   Patron usado por Stripe, Linear, Vercel para flows de creacion
-   de cierto peso: la stepper guia, el centro foca, el summary
-   confirma y dispara la accion.
+   Patron DNB/Stripe/Notion: stepper vertical a la izquierda
+   muestra los pasos del flow activo (filtrados segun el tipo de
+   usuario: dev solo signup+review, consumer signup+org+...+review).
+   El centro muestra SOLO el paso actual; Next/Back navegan.
 */
 
-/* Container wrapper: ya no constraint a 720px (legacy wizard).
-   Toma el ancho del .dev-lead-content padre. */
+/* Container override del legacy 720px */
 .provision-dashboard {
   max-width: none;
 }
@@ -11583,7 +11581,7 @@
   padding: 0;
 }
 
-/* ───────── Pending jobs banner ───────── */
+/* ───────── Pending jobs banner (full-width arriba) ───────── */
 .provision-pending-banner {
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md) var(--spacing-lg);
@@ -11610,9 +11608,7 @@
   color: var(--text-primary);
 }
 
-.provision-pending-banner-head h2 i {
-  color: var(--accent-warm);
-}
+.provision-pending-banner-head h2 i { color: var(--accent-warm); }
 
 .provision-pending-banner-head p {
   margin: 0;
@@ -11707,30 +11703,31 @@
   justify-content: center;
 }
 
-/* ───────── Main 3-col shell ───────── */
-.provision-shell {
+/* ───────── Wizard shell: stepper izquierda + pane central ───────── */
+.provision-wizard-shell {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: var(--spacing-xl);
   align-items: start;
 }
 
-@media (max-width: 1280px) {
-  .provision-shell {
-    grid-template-columns: 200px minmax(0, 1fr) 300px;
+@media (max-width: 1080px) {
+  .provision-wizard-shell {
+    grid-template-columns: 1fr;
     gap: var(--spacing-lg);
   }
-}
-
-@media (max-width: 1080px) {
-  .provision-shell {
-    grid-template-columns: 1fr;
+  .provision-stepper {
+    position: static !important;
   }
-  .provision-stepper { display: none; }
-  .provision-summary { position: static; }
+  .provision-stepper-list {
+    flex-direction: row !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .provision-step:not(:last-child) .provision-step-marker::after { display: none; }
 }
 
-/* ───────── Stepper vertical ───────── */
+/* ───────── Stepper vertical (sticky en desktop) ───────── */
 .provision-stepper {
   position: sticky;
   top: var(--spacing-lg);
@@ -11750,36 +11747,31 @@
 }
 
 .provision-step {
-  position: relative;
-}
-
-.provision-step-link {
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-sm);
+  padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
-  text-decoration: none;
+  cursor: default;
   color: var(--text-secondary);
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
+  position: relative;
 }
 
-.provision-step-link:hover {
+.provision-step.is-clickable {
+  cursor: pointer;
+}
+
+.provision-step.is-clickable:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.provision-step.is-active .provision-step-link {
-  color: var(--text-primary);
+.provision-step.is-active {
   background: var(--warm-10);
+  color: var(--text-primary);
 }
 
-.provision-step.is-disabled .provision-step-link {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-/* Marker: circulo con numero + conector vertical */
 .provision-step-marker {
   position: relative;
   display: inline-flex;
@@ -11797,7 +11789,6 @@
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-/* Conector vertical entre steps */
 .provision-step:not(:last-child) .provision-step-marker::after {
   content: '';
   position: absolute;
@@ -11805,7 +11796,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 1px;
-  height: calc(var(--spacing-sm) * 2 + 16px);
+  height: calc(var(--spacing-sm) * 2 + 18px);
   background: var(--border-color);
 }
 
@@ -11816,19 +11807,29 @@
 }
 
 .provision-step.is-done .provision-step-marker {
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(34, 197, 94, 0.18);
   border-color: #22c55e;
   color: #22c55e;
 }
 
-.provision-step.is-done .provision-step-marker .provision-step-num::before {
-  content: '\f00c'; /* fa-check */
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 900;
-}
-
 .provision-step.is-done .provision-step-marker .provision-step-num {
   font-size: 0;
+}
+
+.provision-step.is-done .provision-step-marker::before {
+  content: '\f00c';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.provision-step.is-done:not(:last-child) .provision-step-marker::after {
+  background: rgba(34, 197, 94, 0.5);
 }
 
 .provision-step-meta {
@@ -11850,33 +11851,39 @@
   margin-top: 1px;
 }
 
-/* ───────── Form body central ───────── */
-.provision-form-body {
+/* ───────── Wizard body: solo el pane current visible ───────── */
+.provision-wizard-body {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
   min-width: 0;
 }
 
-.provision-section {
+.provision-step-pane {
+  display: none;
   padding: var(--spacing-xl);
   background: var(--bg-card);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md);
-  scroll-margin-top: var(--spacing-lg);
 }
 
-.provision-section[hidden] {
-  display: none !important;
+.provision-step-pane.is-current {
+  display: flex;
+  flex-direction: column;
+  animation: provision-pane-in 0.25s ease;
 }
 
-.provision-section-head {
+@keyframes provision-pane-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.provision-pane-head {
   margin-bottom: var(--spacing-lg);
   padding-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--border-divider);
 }
 
-.provision-section-eyebrow {
+.provision-pane-eyebrow {
   display: inline-block;
   font-size: 0.625rem;
   font-weight: 700;
@@ -11886,89 +11893,247 @@
   margin-bottom: 4px;
 }
 
-.provision-section-title {
+.provision-pane-title {
   margin: 0 0 4px 0;
-  font-size: 1.0625rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.provision-section-sub {
+.provision-pane-sub {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
+  max-width: 640px;
 }
 
-/* Grid interno: 2 cols por defecto, full-width opcional con --full */
-.provision-section-grid {
+/* ───────── Secciones internas del pane ───────── */
+.provision-pane-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.provision-pane-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.provision-pane-section-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.provision-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-md) var(--spacing-lg);
 }
 
-.provision-section-grid .settings-field--full {
+.provision-grid-2 .settings-field--full {
   grid-column: 1 / -1;
 }
 
 @media (max-width: 720px) {
-  .provision-section-grid {
-    grid-template-columns: 1fr;
-  }
+  .provision-grid-2 { grid-template-columns: 1fr; }
 }
 
-/* ───────── Summary panel sticky derecho ───────── */
-.provision-summary {
-  position: sticky;
-  top: var(--spacing-lg);
+/* ───────── Pane footer: Back / Next ───────── */
+.provision-pane-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-divider);
+}
+
+.provision-pane-spacer { flex: 1; }
+
+.provision-pane-actions .btn-primary {
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* ───────── Step "Org mode": radio cards ───────── */
+.provision-mode-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.provision-mode-option {
+  display: block;
+  cursor: pointer;
+}
+
+.provision-mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.provision-mode-card {
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
+  gap: 6px;
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 
-.provision-summary-head {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-divider);
-  background: var(--bg-secondary);
+.provision-mode-card i {
+  font-size: 1.25rem;
+  color: var(--accent-warm);
 }
 
-.provision-summary-head h3 {
-  margin: 0 0 2px 0;
+.provision-mode-card strong {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.provision-summary-head p {
-  margin: 0;
+.provision-mode-card small {
   font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.provision-mode-option input:checked + .provision-mode-card {
+  border-color: var(--accent-warm);
+  background: var(--warm-10);
+}
+
+.provision-mode-option:hover .provision-mode-card {
+  border-color: var(--accent-warm);
+}
+
+.provision-mode-option:focus-within .provision-mode-card {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+/* ───────── Step "Crear org": preview lateral + form (Image #8 style) ───────── */
+.provision-create-org-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--spacing-xl);
+}
+
+@media (max-width: 880px) {
+  .provision-create-org-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.provision-org-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  text-align: center;
+  position: sticky;
+  top: var(--spacing-lg);
+}
+
+.provision-org-preview-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--accent-warm);
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.provision-org-preview-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provision-org-preview-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.provision-org-preview-name.is-empty {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.provision-org-preview-brand {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.provision-org-preview-slogan {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.provision-org-preview-slogan.is-empty {
   color: var(--text-muted);
 }
 
-.provision-summary-body {
+.provision-org-preview-meta {
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-md);
-  gap: var(--spacing-sm);
+  gap: 4px;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-divider);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  width: 100%;
 }
 
-.provision-summary-tile {
+.provision-org-form {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+/* ───────── Step review: summary tiles ───────── */
+.provision-review-summary { margin-top: var(--spacing-md); }
+
+.provision-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.provision-review-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-md);
   background: var(--bg-secondary);
   border: 1px solid var(--border-divider);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
-.provision-summary-tile[hidden] {
-  display: none;
-}
-
-.provision-summary-tile-label {
+.provision-review-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -11979,81 +12144,40 @@
   color: var(--text-muted);
 }
 
-.provision-summary-tile-label i {
-  color: var(--accent-warm);
-  font-size: 0.75rem;
-}
+.provision-review-label i { color: var(--accent-warm); }
 
-.provision-summary-tile-value {
+.provision-review-tile strong {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
   word-break: break-word;
 }
 
-.provision-summary-tile-value.is-empty {
-  color: var(--text-muted);
-  font-weight: 400;
-  font-style: italic;
-}
-
-.provision-summary-tile-meta {
-  font-size: 0.75rem;
+.provision-review-tile span {
+  font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
-.provision-summary-tile-meta[hidden] {
-  display: none;
+.provision-review-meta {
+  font-size: 0.6875rem !important;
+  color: var(--text-muted) !important;
 }
 
-.provision-summary-divider {
-  display: inline-block;
-  width: 2px;
-  height: 2px;
-  margin: 0 6px;
-  background: var(--text-muted);
-  border-radius: 999px;
-  vertical-align: middle;
+/* Submit del review */
+.provision-submit {
+  min-width: 200px;
 }
 
-.provision-summary-foot {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--border-divider);
-  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-}
-
+/* Status line bajo el pane */
 .provision-status {
-  margin: 0;
-  font-size: 0.75rem;
+  margin-top: var(--spacing-md);
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   min-height: 1em;
 }
 
-.provision-status.is-error {
-  color: var(--accent-danger, #ef4444);
-}
-
-.provision-status.is-success {
-  color: #22c55e;
-}
-
-.provision-submit {
-  width: 100%;
-  justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.provision-summary-fineprint {
-  margin: 0;
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  text-align: center;
-}
+.provision-status.is-error { color: var(--accent-danger, #ef4444); }
+.provision-status.is-success { color: #22c55e; }
 
 /* ───────── Stages waiting / done (card centrada) ───────── */
 .provision-card {
@@ -12063,6 +12187,8 @@
   border: 1px solid var(--border-divider);
   border-radius: var(--radius-md);
   overflow: hidden;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .provision-card[hidden] { display: none !important; }
@@ -12106,15 +12232,7 @@
   color: #22c55e;
 }
 
-.provision-card-body {
-  padding: var(--spacing-lg);
-}
-
-.provision-card--waiting,
-.provision-card--done {
-  max-width: 640px;
-  margin: var(--spacing-lg) auto 0;
-}
+.provision-card-body { padding: var(--spacing-lg); }
 
 .provision-waiting-indicator {
   display: flex;
@@ -12140,12 +12258,14 @@
   color: var(--text-muted);
 }
 
-.provision-waiting-meta code {
+.provision-waiting-meta code,
+.provision-done-summary code {
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.6875rem;
   padding: 2px 6px;
   background: var(--bg-secondary);
   border-radius: 4px;
+  color: var(--text-primary);
 }
 
 .provision-done-summary {
@@ -12157,15 +12277,6 @@
 .provision-done-summary div {
   font-size: 0.875rem;
   color: var(--text-secondary);
-}
-
-.provision-done-summary code {
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  color: var(--text-primary);
 }
 
 .provision-card .provision-action-bar {

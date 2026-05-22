@@ -454,6 +454,16 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: var(--media-container-shadow);
 }
 
+/* Cards con PNG transparente (output del flujo remove-bg) llevan fondo
+   glass-black para que la transparencia sea visualmente perceptible. Si
+   no, sobre el negro #0b0b0b parece que la imagen tiene fondo solido. */
+.living-masonry-grid .living-masonry-item.is-alpha-bg {
+    background: rgba(11, 11, 11, 0.55) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(24px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+}
+
 .living-masonry-grid .living-masonry-item:hover {
     box-shadow: var(--media-container-shadow-hover);
 }
@@ -783,6 +793,15 @@ body.production-filters-in-header .living-container > .living-history-section {
     overflow: hidden;
     background: var(--pmodal-bg-visual);
     display: flex;
+}
+
+/* Output con alpha (remove-bg): glass-black estandar para que la
+   transparencia sea perceptible (si no, el #0a0a0c solido del visual
+   hace ver la imagen como si tuviera fondo). */
+.production-modal.has-alpha-output .production-modal-visual {
+    background: rgba(11, 11, 11, 0.55);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 
 .production-modal-visual-inner {
