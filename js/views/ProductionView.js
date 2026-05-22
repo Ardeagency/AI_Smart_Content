@@ -110,27 +110,7 @@ class ProductionView extends BaseView {
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    <div class="pmodal-edit-panel">
-                        <!-- Selector de modo: cambia el comportamiento del backend y la UI visible -->
-                        <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
-                            <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove">
-                                <i class="fas fa-eraser" aria-hidden="true"></i>
-                                <span>Eliminar objeto</span>
-                            </button>
-                            <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace">
-                                <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
-                                <span>Reemplazar objeto</span>
-                            </button>
-                            <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product">
-                                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                                <span>Corregir producto</span>
-                            </button>
-                            <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product">
-                                <i class="fas fa-box" aria-hidden="true"></i>
-                                <span>Cambiar producto</span>
-                            </button>
-                        </div>
-
+                    <div class="pmodal-edit-panel pmodal-edit-director">
                         <!-- Drawer: galeria de productos (visible solo en fix-product/change-product). -->
                         <div class="pmodal-edit-product-drawer" id="pmodalEditProductDrawer" hidden>
                             <div class="pmodal-edit-product-drawer-head">
@@ -144,15 +124,47 @@ class ProductionView extends BaseView {
 
                         <!-- Campo de imagen referencia (visible solo en replace). -->
                         <div class="pmodal-edit-ref-row" id="pmodalEditRefRow" hidden>
-                            <label class="pmodal-edit-label" for="pmodalEditRefUrl">Imagen referencia (opcional)</label>
-                            <input type="url" id="pmodalEditRefUrl" class="pmodal-edit-ref-input" placeholder="https://... o pega URL de imagen">
+                            <input type="url" id="pmodalEditRefUrl" class="pmodal-edit-ref-input" placeholder="URL de imagen referencia (opcional)">
                         </div>
 
-                        <label class="pmodal-edit-label" for="pmodalEditPrompt">Que quieres cambiar?</label>
-                        <textarea id="pmodalEditPrompt" class="pmodal-edit-prompt" rows="2" placeholder="Ej: cambia el fondo a piedra mate, quita la lata roja, agrega vapor saliendo de la lata..."></textarea>
-                        <div class="pmodal-edit-actions">
-                            <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
-                            <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply">Aplicar</button>
+                        <!-- Textarea estilo Director Console (sin label, placeholder guia). -->
+                        <div class="pmodal-edit-director-content">
+                            <textarea
+                                id="pmodalEditPrompt"
+                                class="pmodal-edit-prompt pmodal-edit-director-input"
+                                rows="3"
+                                placeholder="Tu idea en texto — describe que cambiar en la zona pintada. La IA generara el prompt final."
+                                autocomplete="off"
+                                aria-label="Describe el cambio"></textarea>
+                        </div>
+
+                        <!-- Barra inferior: pills de modo a la izquierda, Cancelar/Aplicar a la derecha. -->
+                        <div class="pmodal-edit-director-controls">
+                            <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
+                                <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove">
+                                    <i class="fas fa-eraser" aria-hidden="true"></i>
+                                    <span>Eliminar</span>
+                                </button>
+                                <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace">
+                                    <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
+                                    <span>Reemplazar</span>
+                                </button>
+                                <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product">
+                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                                    <span>Corregir producto</span>
+                                </button>
+                                <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product">
+                                    <i class="fas fa-box" aria-hidden="true"></i>
+                                    <span>Cambiar producto</span>
+                                </button>
+                            </div>
+                            <div class="pmodal-edit-actions">
+                                <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
+                                <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply">
+                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                                    <span>Aplicar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

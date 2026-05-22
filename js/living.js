@@ -3095,7 +3095,15 @@ class LivingManager {
         if (!status) {
             status = document.createElement('div');
             status.className = 'pmodal-edit-status';
-            panel.insertBefore(status, panel.querySelector('.pmodal-edit-actions'));
+            // El anchor debe ser hijo directo del panel: usamos el bloque de
+            // controles del Director Console (donde viven pills + acciones).
+            const anchor = panel.querySelector('.pmodal-edit-director-controls')
+                || panel.querySelector('.pmodal-edit-actions');
+            if (anchor && anchor.parentElement === panel) {
+                panel.insertBefore(status, anchor);
+            } else {
+                panel.appendChild(status);
+            }
         }
 
         if (phase === 'loading') {
