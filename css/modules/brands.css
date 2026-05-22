@@ -313,22 +313,27 @@
     display: block;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    width: 100%;
+    white-space: pre-wrap;
+    max-width: 100%;
+    min-width: 0;
     border: 0;
     background: transparent;
     padding: 0;
     margin: 0;
     outline: none;
+    cursor: text;
 }
 
-.brand-slogan-input::placeholder {
+/* Placeholder para contenteditable: solo se muestra cuando esta vacio y sin foco. */
+.brand-slogan-input:empty::before {
+    content: attr(data-placeholder);
     color: rgba(255, 255, 255, 0.62);
     font-style: italic;
+    pointer-events: none;
 }
 
-.brand-slogan-input.is-placeholder {
-    opacity: 0.62;
-    font-style: italic;
+.brand-slogan-input:focus:empty::before {
+    content: '';
 }
 
 .brand-name-large {

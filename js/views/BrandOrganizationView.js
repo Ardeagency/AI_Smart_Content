@@ -98,7 +98,7 @@ class BrandOrganizationView extends BaseView {
                 <div class="brand-status-indicator"><span class="status-dot"></span></div>
             </div>
             <div class="brand-slogan-row">
-                <input type="text" class="brand-slogan-input" id="brandSloganInput" placeholder="Slogan" aria-label="Slogan">
+                <div class="brand-slogan-input" id="brandSloganInput" role="textbox" contenteditable="true" data-placeholder="Slogan" aria-label="Slogan" spellcheck="true"></div>
             </div>
         </div>
         <div class="brand-market-row">
@@ -782,32 +782,32 @@ class BrandOrganizationView extends BaseView {
     const el = document.getElementById('brandSloganInput');
     if (!el) return;
     const slogan = String(this.brandData?.brand_slogan || '').trim();
-    el.value = slogan;
-    el.classList.toggle('is-placeholder', !slogan);
+    el.textContent = slogan;
 
     if (el.dataset.sloganBound === '1') return;
     el.dataset.sloganBound = '1';
 
-    el.addEventListener('focus', () => {
-      el.classList.remove('is-placeholder');
-    });
-
     el.addEventListener('blur', async () => {
-      const next = String(el.value || '').trim();
+      const next = String(el.textContent || '').trim();
       const prev = String(this.brandData?.brand_slogan || '').trim();
-      if (next === prev) {
-        el.classList.toggle('is-placeholder', !next);
-        return;
-      }
+      if (next === prev) return;
       await this.saveBrandField('brand_slogan', next || null);
-      el.classList.toggle('is-placeholder', !next);
+      el.textContent = next;
     });
 
     el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      // Enter sin Shift cierra la edicion; Shift+Enter permite salto de linea.
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         el.blur();
       }
+    });
+
+    el.addEventListener('paste', (e) => {
+      // Forzar paste como plain text para evitar HTML pegado desde Word/web.
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      document.execCommand('insertText', false, text);
     });
   }
 
