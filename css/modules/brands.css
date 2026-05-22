@@ -2173,6 +2173,23 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transform: none;
 }
 
+/* Dentro del panel INFO no hay espacio para el icono fuera del bounding
+   (el grid primary ocupa el ancho disponible). Lo metemos DENTRO del
+   editable, en la esquina superior derecha, alineado a la primera linea
+   del texto wrappeado. Esto reserva espacio visual pero solo se ve
+   durante hover/focus, asi que no afecta lectura. */
+#infoPanelContent .editable-inline-title::after,
+#infoPanelContent .editable-inline-subtitle::after {
+    right: 6px;
+    top: 0.4em;
+    transform: none;
+}
+
+#infoPanelContent .editable-inline-title,
+#infoPanelContent .editable-inline-subtitle {
+    padding-right: 24px;
+}
+
 .brand-name-large[contenteditable="true"]:hover,
 .brand-slogan-input[contenteditable="true"]:hover,
 #infoPanelContent .editable-inline-title:hover,
