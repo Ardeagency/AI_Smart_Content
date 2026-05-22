@@ -21,9 +21,11 @@
   const MAX_IDENTITY_SIZE = 50 * 1024 * 1024;   // 50 MB
 
   // Extensiones seguras permitidas por tipo de archivo.
+  // Identity = documentos (manuales de marca, brand books, calligraphy specs).
+  // Assets   = piezas visuales (imagenes, video, archivos de diseño editables).
   const ALLOWED_LOGO_EXT     = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
-  const ALLOWED_ASSET_EXT    = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'mp4', 'mov', 'ai', 'eps', 'psd']);
-  const ALLOWED_IDENTITY_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'ai', 'eps', 'psd']);
+  const ALLOWED_ASSET_EXT    = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'mp4', 'mov', 'webm', 'ai', 'eps', 'psd']);
+  const ALLOWED_IDENTITY_EXT = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'rtf', 'md', 'odt', 'odp', 'ods']);
 
   function _validateFile(file, maxSize, allowedExtensions, label) {
     if (!file) return 'Archivo no proporcionado.';
@@ -242,7 +244,7 @@
         fileInput.type = 'file';
         fileInput.style.display = 'none';
         fileInput.multiple = true;
-        fileInput.accept = 'image/*,application/pdf,.svg,.ai,.eps,.psd';
+        fileInput.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,.md,.odt,.odp,.ods,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.ms-excel,text/plain,text/markdown';
         fileInput.addEventListener('change', (e) => {
           Array.from(e.target.files).forEach((file) => this.uploadIdentityFile(file));
           fileInput.value = '';
@@ -268,6 +270,7 @@
         fileInput.type = 'file';
         fileInput.style.display = 'none';
         fileInput.multiple = true;
+        fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml,video/mp4,video/quicktime,video/webm,.ai,.eps,.psd';
         fileInput.addEventListener('change', (e) => {
           Array.from(e.target.files).forEach(file => {
             this.uploadAsset(file);

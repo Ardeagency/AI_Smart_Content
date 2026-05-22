@@ -1102,15 +1102,11 @@ class BrandOrganizationView extends BaseView {
 
     container.innerHTML = identityAssets.map((asset) => {
       const fileName = asset.file_name || 'Archivo identidad';
-      const fileType = String(asset.file_type || '').toLowerCase();
       const fileUrl = String(asset.file_url || '').trim();
-      const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
-      const preview = isImage && fileUrl
-        ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="identity-logo-preview" loading="lazy">`
-        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+      const { icon, variant } = this.getIdentityDocumentIcon(fileName, asset.file_type);
       return `
-        <div class="identity-file-item identity-file-item--logo" data-identity-asset-id="${asset.id}">
-          <div class="assets-file-preview">${preview}</div>
+        <div class="identity-file-item identity-file-item--doc" data-identity-asset-id="${asset.id}">
+          <div class="identity-doc-icon identity-doc-icon--${variant}"><i class="${icon}" aria-hidden="true"></i></div>
           <div class="identity-file-info">
             <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
           </div>
@@ -1133,6 +1129,20 @@ class BrandOrganizationView extends BaseView {
         this.removeAsset(btn.getAttribute('data-remove-asset-id'));
       });
     });
+
+    if (typeof this.setupIdentityUpload === 'function') this.setupIdentityUpload();
+  }
+
+  /** Devuelve clase fa + variante visual segun el tipo de documento de identidad. */
+  getIdentityDocumentIcon(fileName, fileType) {
+    const ext = String(fileName || '').split('.').pop().toLowerCase();
+    const mime = String(fileType || '').toLowerCase();
+    if (ext === 'pdf' || mime.includes('pdf')) return { icon: 'fas fa-file-pdf', variant: 'pdf' };
+    if (['doc', 'docx', 'odt', 'rtf'].includes(ext) || mime.includes('word')) return { icon: 'fas fa-file-word', variant: 'word' };
+    if (['ppt', 'pptx', 'odp'].includes(ext) || mime.includes('presentation')) return { icon: 'fas fa-file-powerpoint', variant: 'ppt' };
+    if (['xls', 'xlsx', 'ods'].includes(ext) || mime.includes('sheet')) return { icon: 'fas fa-file-excel', variant: 'excel' };
+    if (['txt', 'md'].includes(ext) || mime.startsWith('text/')) return { icon: 'fas fa-file-alt', variant: 'text' };
+    return { icon: 'fas fa-file', variant: 'generic' };
   }
 
   renderAssetsFiles() {
@@ -1150,37 +1160,51 @@ class BrandOrganizationView extends BaseView {
 
     container.classList.remove('assets-files--empty');
 
-    container.innerHTML = assets.map((asset) => {
+    const cards = assets.map((asset) => {
       const fileName = asset.file_name || 'Archivo';
-      const fileType = String(asset.file_type || asset.asset_type || 'file').toLowerCase();
+      const fileType = String(asset.file_type || '').toLowerCase();
       const fileUrl = String(asset.file_url || '').trim();
-      const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
-      const isImage = fileType.includes('image') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
+      const isImage = fileType.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(fileName);
+      const isVideo = fileType.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(fileName);
 
-      const dateText = uploadDate
-        ? `Subido · ${uploadDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}`
-        : '';
-
-      const preview = isImage && fileUrl
-        ? `<img src="${this.escapeHtml(fileUrl)}" alt="" class="asset-file-thumb" loading="lazy">`
-        : '<i class="fas fa-file asset-file-fallback-icon"></i>';
+      let preview;
+      if (isImage && fileUrl) {
+        preview = `<img src="${this.escapeHtml(fileUrl)}" alt="" class="asset-card-media" loading="lazy">`;
+      } else if (isVideo && fileUrl) {
+        preview = `<video class="asset-card-media" src="${this.escapeHtml(fileUrl)}" muted playsinline preload="metadata"></video>`;
+      } else {
+        preview = '<div class="asset-card-fallback"><i class="fas fa-image"></i></div>';
+      }
 
       return `
-        <div class="assets-file-item" data-asset-id="${asset.id}">
-          <div class="assets-file-preview">${preview}</div>
-          <div class="identity-file-info">
-            <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
-            ${dateText ? `<div class="identity-file-date">${dateText}</div>` : ''}
+        <div class="assets-carousel-card" data-asset-id="${asset.id}">
+          <div class="asset-card-media-wrap">
+            ${preview}
+            <div class="asset-card-actions">
+              ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir asset"><i class="fas fa-external-link-alt"></i></a>` : ''}
+              <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar asset">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
           </div>
-          <div class="assets-file-actions">
-            ${fileUrl ? `<a href="${this.escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="asset-action-btn" aria-label="Abrir asset"><i class="fas fa-external-link-alt"></i></a>` : ''}
-            <button type="button" class="asset-action-btn asset-action-btn--danger" data-remove-asset-id="${asset.id}" aria-label="Eliminar asset">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
+          <div class="asset-card-name" title="${this.escapeHtml(fileName)}">${this.escapeHtml(fileName)}</div>
         </div>
       `;
     }).join('');
+
+    container.innerHTML = `
+      <div class="assets-carousel" data-carousel-root>
+        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--prev" aria-label="Anterior" data-carousel-prev>
+          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <div class="assets-carousel-track" data-carousel-track>
+          ${cards}
+        </div>
+        <button type="button" class="assets-carousel-arrow assets-carousel-arrow--next" aria-label="Siguiente" data-carousel-next>
+          <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    `;
 
     container.querySelectorAll('[data-remove-asset-id]').forEach((btn) => {
       if (btn.dataset.assetBound === '1') return;
@@ -1191,15 +1215,62 @@ class BrandOrganizationView extends BaseView {
         this.removeAsset(btn.getAttribute('data-remove-asset-id'));
       });
     });
+
+    this.setupAssetsCarouselNavigation(container);
+    // El innerHTML de arriba borra el boton "Subir archivo" insertado por setupAssetsUpload;
+    // reinstalarlo asegura que sobreviva a re-renders (p. ej. tras removeAsset).
+    if (typeof this.setupAssetsUpload === 'function') this.setupAssetsUpload();
+  }
+
+  /** Scroll horizontal con flechas: page = ancho del track menos un solapamiento de 80px. */
+  setupAssetsCarouselNavigation(container) {
+    const root = container.querySelector('[data-carousel-root]') || container;
+    const track = root.querySelector('[data-carousel-track]');
+    const prev = root.querySelector('[data-carousel-prev]');
+    const next = root.querySelector('[data-carousel-next]');
+    if (!track || !prev || !next) return;
+
+    const updateArrows = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth - 1;
+      prev.toggleAttribute('disabled', track.scrollLeft <= 0);
+      next.toggleAttribute('disabled', track.scrollLeft >= maxScroll);
+      const hasOverflow = track.scrollWidth > track.clientWidth + 1;
+      root.classList.toggle('assets-carousel--has-overflow', hasOverflow);
+    };
+
+    const scrollByPage = (direction) => {
+      const page = Math.max(track.clientWidth - 80, 200);
+      track.scrollBy({ left: direction * page, behavior: 'smooth' });
+    };
+
+    if (prev.dataset.carouselBound !== '1') {
+      prev.dataset.carouselBound = '1';
+      prev.addEventListener('click', () => scrollByPage(-1));
+    }
+    if (next.dataset.carouselBound !== '1') {
+      next.dataset.carouselBound = '1';
+      next.addEventListener('click', () => scrollByPage(1));
+    }
+    if (track.dataset.carouselBound !== '1') {
+      track.dataset.carouselBound = '1';
+      track.addEventListener('scroll', updateArrows, { passive: true });
+    }
+    requestAnimationFrame(updateArrows);
   }
 
   getIdentityAssets() {
     return (this.brandAssets || []).filter((asset) => {
       if (!asset || !asset.id) return false;
       const assetType = String(asset.asset_type || '').toLowerCase();
-      if (assetType === 'identity') return true;
       const path = String(asset.storage_path || '').toLowerCase();
-      return path.includes('/identity/');
+      const flaggedIdentity = assetType === 'identity' || path.includes('/identity/');
+      if (!flaggedIdentity) return false;
+      // Identidad = documentos. Imagenes/video con flag legacy se reclasifican a Assets.
+      const mime = String(asset.file_type || '').toLowerCase();
+      const name = String(asset.file_name || '').toLowerCase();
+      const isVisual = mime.startsWith('image/') || mime.startsWith('video/') ||
+        /\.(png|jpe?g|gif|webp|svg|mp4|mov|webm|ai|eps|psd)$/i.test(name);
+      return !isVisual;
     });
   }
 
