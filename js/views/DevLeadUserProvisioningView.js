@@ -33,10 +33,14 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   renderHTML() {
     return `
-      <div class="builder-main">
-        <div class="builder-settings-form provision-wizard" id="provisionRoot">
-          <div class="provision-stage-container" id="provisionStage"></div>
-        </div>
+      <div class="dev-lead-container provision-dashboard">
+        <header class="dev-lead-header">
+          <div class="dev-header-content">
+            <h1 class="dev-header-title"><i class="fas fa-user-plus"></i> Crear usuario</h1>
+            <p class="dev-header-subtitle">Provisiona un usuario nuevo: identidad, cuenta plataforma, organizacion y permisos en un solo paso.</p>
+          </div>
+        </header>
+        <div class="provision-stage-container" id="provisionStage"></div>
       </div>
     `;
   }
@@ -76,17 +80,19 @@ class DevLeadUserProvisioningView extends DevBaseView {
     );
 
     const pendingHtml = pending.length === 0 ? '' : `
-      <div class="settings-section provision-pending-block">
-        <h4><i class="fas fa-hourglass-half"></i> Jobs en curso (${pending.length})</h4>
-        <p class="section-description">Provisionamientos pendientes que puedes reanudar.</p>
-        <div class="provision-pending-list">
+      <section class="provision-pending-banner">
+        <header class="provision-pending-banner-head">
+          <h2><i class="fas fa-hourglass-half"></i> Jobs en curso <span class="provision-pending-count">${pending.length}</span></h2>
+          <p>Provisionamientos pendientes que puedes reanudar.</p>
+        </header>
+        <div class="provision-pending-cards">
           ${pending.map((j) => `
-            <div class="provision-pending-row">
-              <div class="provision-pending-info">
-                <strong>${this.escapeHtml(j.email)}</strong>
+            <article class="provision-pending-card">
+              <header class="provision-pending-card-head">
                 <span class="provision-pending-status status-${j.status}">${this.statusLabel(j.status)}</span>
                 <span class="provision-pending-date">${this.formatDate(j.created_at)}</span>
-              </div>
+              </header>
+              <strong class="provision-pending-email" title="${this.escapeHtml(j.email)}">${this.escapeHtml(j.email)}</strong>
               <div class="provision-pending-actions">
                 <button type="button" class="btn btn-secondary btn-sm" data-resume-job="${j.id}">
                   <i class="fas fa-play"></i> Reanudar
@@ -95,107 +101,139 @@ class DevLeadUserProvisioningView extends DevBaseView {
                   <i class="fas fa-times"></i> Cancelar
                 </button>
               </div>
-            </div>
+            </article>
           `).join('')}
         </div>
-      </div>
+      </section>
     `;
 
     return `
       ${pendingHtml}
 
-      <form id="provisionForm">
-        <div class="settings-section">
-          <h4><i class="fas fa-user"></i> Identidad</h4>
-          <div class="settings-field">
-            <label>Nombre completo</label>
-            <input type="text" name="full_name" placeholder="Ej. María García" required>
-          </div>
-          <div class="settings-field">
-            <label>Email</label>
-            <input type="email" name="email" placeholder="usuario@gmail.com" required>
-          </div>
-          <div class="settings-field">
-            <label>Contraseña temporal</label>
-            <input type="password" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
-            <small class="field-hint">El Lead la define ahora; el usuario solo confirmará el email.</small>
-          </div>
+      <form id="provisionForm" class="provision-form">
+        <div class="provision-grid">
+
+          <section class="provision-card provision-card--identity">
+            <header class="provision-card-head">
+              <span class="provision-card-icon"><i class="fas fa-user"></i></span>
+              <div>
+                <h3>Identidad</h3>
+                <p>Quien sera este usuario.</p>
+              </div>
+            </header>
+            <div class="provision-card-body">
+              <div class="settings-field">
+                <label>Nombre completo</label>
+                <input type="text" name="full_name" placeholder="Ej. Maria Garcia" required>
+              </div>
+              <div class="settings-field">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="usuario@gmail.com" required>
+              </div>
+              <div class="settings-field">
+                <label>Contrasena temporal</label>
+                <input type="password" name="password" placeholder="Minimo 8 caracteres" required minlength="8">
+                <small class="field-hint">El Lead la define ahora; el usuario solo confirmara el email.</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="provision-card provision-card--platform">
+            <header class="provision-card-head">
+              <span class="provision-card-icon"><i class="fas fa-id-badge"></i></span>
+              <div>
+                <h3>Cuenta plataforma</h3>
+                <p>Rol y vista por defecto.</p>
+              </div>
+            </header>
+            <div class="provision-card-body">
+              <div class="settings-field">
+                <label>Rol plataforma</label>
+                <select name="platform_role">
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="dev">Dev</option>
+                </select>
+              </div>
+              <div class="settings-field">
+                <label>Vista por defecto</label>
+                <select name="default_view_mode">
+                  <option value="user">User</option>
+                  <option value="developer">Developer</option>
+                </select>
+              </div>
+              <div class="settings-field">
+                <label>Dev role (portal developer)</label>
+                <select name="dev_role">
+                  <option value="">Ninguno</option>
+                  <option value="contributor">Contributor</option>
+                  <option value="lead">Lead</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="provision-card provision-card--org">
+            <header class="provision-card-head">
+              <span class="provision-card-icon"><i class="fas fa-building"></i></span>
+              <div>
+                <h3>Organizacion</h3>
+                <p>Donde vive este usuario.</p>
+              </div>
+            </header>
+            <div class="provision-card-body">
+              <div class="settings-field">
+                <label>Modo</label>
+                <select id="orgModeSelect" name="org_mode">
+                  <option value="none">Sin organizacion</option>
+                  <option value="existing">Afiliar a existente</option>
+                  <option value="create">Crear nueva</option>
+                </select>
+              </div>
+              <div class="settings-field" id="existingOrgField" hidden>
+                <label>Organizacion existente</label>
+                <select id="existingOrgSelect" name="organization_id">
+                  <option value="">Seleccionar...</option>
+                  ${this.organizations.map((o) => `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="settings-field" id="newOrgField" hidden>
+                <label>Nombre nueva organizacion</label>
+                <input type="text" name="new_organization_name" placeholder="Ej. ACME Corp">
+              </div>
+            </div>
+          </section>
+
+          <section class="provision-card provision-card--perms" id="orgPermissionsSection" hidden>
+            <header class="provision-card-head">
+              <span class="provision-card-icon"><i class="fas fa-user-shield"></i></span>
+              <div>
+                <h3>Rol y permisos en la organizacion</h3>
+                <p>Elige un rol base; los checkboxes precargan el preset. Puedes ajustarlos uno a uno.</p>
+              </div>
+            </header>
+            <div class="provision-card-body">
+              <div class="settings-field">
+                <label>Rol base</label>
+                <select id="orgRoleSelect" name="organization_role">
+                  ${(window.OrgCapabilities?.ROLES || []).map((r) => `
+                    <option value="${r.key}">${this.escapeHtml(r.label)} — ${this.escapeHtml(r.desc)}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              ${this.renderCapabilitiesMatrix()}
+            </div>
+          </section>
+
         </div>
 
-        <div class="settings-section">
-          <h4><i class="fas fa-id-badge"></i> Cuenta plataforma</h4>
-          <div class="settings-field">
-            <label>Rol plataforma</label>
-            <select name="platform_role">
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="dev">Dev</option>
-            </select>
-          </div>
-          <div class="settings-field">
-            <label>Vista por defecto</label>
-            <select name="default_view_mode">
-              <option value="user">User</option>
-              <option value="developer">Developer</option>
-            </select>
-          </div>
-          <div class="settings-field">
-            <label>Dev role (portal developer)</label>
-            <select name="dev_role">
-              <option value="">Ninguno</option>
-              <option value="contributor">Contributor</option>
-              <option value="lead">Lead</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h4><i class="fas fa-building"></i> Organización</h4>
-          <div class="settings-field">
-            <label>Modo</label>
-            <select id="orgModeSelect" name="org_mode">
-              <option value="none">Sin organización</option>
-              <option value="existing">Afiliar a existente</option>
-              <option value="create">Crear nueva</option>
-            </select>
-          </div>
-          <div class="settings-field" id="existingOrgField" hidden>
-            <label>Organización existente</label>
-            <select id="existingOrgSelect" name="organization_id">
-              <option value="">Seleccionar...</option>
-              ${this.organizations.map((o) => `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="settings-field" id="newOrgField" hidden>
-            <label>Nombre nueva organización</label>
-            <input type="text" name="new_organization_name" placeholder="Ej. ACME Corp">
-          </div>
-        </div>
-
-        <div class="settings-section" id="orgPermissionsSection" hidden>
-          <h4><i class="fas fa-user-shield"></i> Rol y permisos en la organización</h4>
-          <p class="section-description">
-            Elige un rol base; rellena los permisos por defecto. Puedes ajustar los checkboxes
-            individualmente después.
-          </p>
-          <div class="settings-field">
-            <label>Rol base</label>
-            <select id="orgRoleSelect" name="organization_role">
-              ${(window.OrgCapabilities?.ROLES || []).map((r) => `
-                <option value="${r.key}">${this.escapeHtml(r.label)} — ${this.escapeHtml(r.desc)}</option>
-              `).join('')}
-            </select>
-          </div>
-
-          ${this.renderCapabilitiesMatrix()}
-        </div>
-
-        <div class="provision-nav">
+        <footer class="provision-action-bar">
+          <p id="provisionStatus" class="provision-status" role="status" aria-live="polite"></p>
           <button type="submit" class="btn btn-primary" id="provisionStartBtn">
-            <i class="fas fa-paper-plane"></i> Crear y enviar verificación
+            <i class="fas fa-paper-plane"></i> Crear y enviar verificacion
           </button>
-        </div>
-        <p id="provisionStatus" class="pp-form__status" role="status" aria-live="polite"></p>
+        </footer>
       </form>
     `;
   }
@@ -370,35 +408,40 @@ class DevLeadUserProvisioningView extends DevBaseView {
   renderWaitingStage() {
     const job = this.activeJob || {};
     return `
-      <div class="settings-section provision-waiting">
-        <h4><i class="fas fa-envelope-open-text"></i> Esperando confirmación</h4>
-        <p class="section-description">
-          Enviamos un email de verificación a <strong>${this.escapeHtml(job.email || '')}</strong>.
-          La página seguirá escuchando hasta que el usuario haga click en el link.
-          Puedes cerrar esta vista y reanudar más tarde.
-        </p>
-
-        <div class="provision-waiting-indicator">
-          <div class="provision-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
-          <div class="provision-waiting-status" id="provisionWaitingStatus">
-            Esperando que el usuario confirme su email…
+      <section class="provision-card provision-card--waiting">
+        <header class="provision-card-head">
+          <span class="provision-card-icon"><i class="fas fa-envelope-open-text"></i></span>
+          <div>
+            <h3>Esperando confirmacion</h3>
+            <p>
+              Enviamos un email de verificacion a <strong>${this.escapeHtml(job.email || '')}</strong>.
+              Puedes cerrar esta vista y reanudar mas tarde.
+            </p>
           </div>
-          <div class="provision-waiting-meta" id="provisionWaitingMeta">
-            Job ID: <code>${this.escapeHtml(job.id || '')}</code>
+        </header>
+        <div class="provision-card-body">
+          <div class="provision-waiting-indicator">
+            <div class="provision-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+            <div class="provision-waiting-status" id="provisionWaitingStatus">
+              Esperando que el usuario confirme su email...
+            </div>
+            <div class="provision-waiting-meta" id="provisionWaitingMeta">
+              Job ID: <code>${this.escapeHtml(job.id || '')}</code>
+            </div>
           </div>
         </div>
-
-        <div class="provision-nav">
-          <button type="button" class="btn btn-secondary" id="provisionBackBtn">
-            <i class="fas fa-arrow-left"></i> Volver al formulario
-          </button>
-          <button type="button" class="btn btn-danger" id="provisionCancelBtn">
-            <i class="fas fa-times"></i> Cancelar provisioning
-          </button>
-        </div>
-
-        <p id="provisionStatus" class="pp-form__status" role="status" aria-live="polite"></p>
-      </div>
+        <footer class="provision-action-bar">
+          <p id="provisionStatus" class="provision-status" role="status" aria-live="polite"></p>
+          <div class="provision-actions-right">
+            <button type="button" class="btn btn-secondary" id="provisionBackBtn">
+              <i class="fas fa-arrow-left"></i> Volver al formulario
+            </button>
+            <button type="button" class="btn btn-danger" id="provisionCancelBtn">
+              <i class="fas fa-times"></i> Cancelar provisioning
+            </button>
+          </div>
+        </footer>
+      </section>
     `;
   }
 
@@ -483,19 +526,28 @@ class DevLeadUserProvisioningView extends DevBaseView {
   renderDoneStage() {
     const j = this.activeJob || {};
     return `
-      <div class="settings-section provision-done">
-        <h4><i class="fas fa-check-circle"></i> Usuario aprovisionado</h4>
-        <div class="provision-done-summary">
-          <div><strong>Email:</strong> ${this.escapeHtml(j.email || '')}</div>
-          <div><strong>Auth user:</strong> <code>${this.escapeHtml(j.auth_user_id || '')}</code></div>
-          ${j.organization_id ? `<div><strong>Organización:</strong> <code>${this.escapeHtml(j.organization_id)}</code></div>` : ''}
+      <section class="provision-card provision-card--done">
+        <header class="provision-card-head">
+          <span class="provision-card-icon provision-card-icon--success"><i class="fas fa-check-circle"></i></span>
+          <div>
+            <h3>Usuario aprovisionado</h3>
+            <p>Cuenta creada y verificada. Ya puede iniciar sesion.</p>
+          </div>
+        </header>
+        <div class="provision-card-body">
+          <div class="provision-done-summary">
+            <div><strong>Email:</strong> ${this.escapeHtml(j.email || '')}</div>
+            <div><strong>Auth user:</strong> <code>${this.escapeHtml(j.auth_user_id || '')}</code></div>
+            ${j.organization_id ? `<div><strong>Organizacion:</strong> <code>${this.escapeHtml(j.organization_id)}</code></div>` : ''}
+          </div>
         </div>
-        <div class="provision-nav">
+        <footer class="provision-action-bar">
+          <p class="provision-status"></p>
           <button type="button" class="btn btn-primary" id="provisionResetBtn">
             <i class="fas fa-user-plus"></i> Provisionar otro
           </button>
-        </div>
-      </div>
+        </footer>
+      </section>
     `;
   }
 
