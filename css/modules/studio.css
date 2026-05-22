@@ -55,6 +55,46 @@
   z-index: 1;
 }
 
+/* ========== Galeria de producciones del flow (LivingManager embedido) ========== */
+/* El canvas pasa a ser scrolleable cuando hay producciones; mantiene el dot
+   spotlight cuando esta vacio. Mismo masonry justified que /production. */
+.studio-canvas--gallery {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.studio-canvas-living {
+  width: 100%;
+  padding: var(--spacing-lg, 24px);
+  box-sizing: border-box;
+}
+
+/* Cuando el masonry tiene items, ocultamos el dot pattern para no competir
+   con el contenido. Se mantiene solo en el estado vacio. */
+.studio-canvas--gallery:has(.living-masonry-grid)::before {
+  display: none;
+}
+
+/* Empty state propio de Studio: centrado, sin tapar los dots de fondo. */
+.studio-canvas-living .studio-history-empty {
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+  min-height: 320px;
+}
+
+.studio-canvas-living .studio-history-empty .living-history-empty-message {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.studio-canvas-living .studio-history-empty .living-history-empty-hint {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+
 /* ========== Estado automático: solo hero + formulario de programación ========== */
 .studio-layout--automated .studio-center {
   max-width: 100%;

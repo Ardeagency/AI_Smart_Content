@@ -19,6 +19,8 @@ class StudioView extends BaseView {
     this.credits = { available: 0, total: 0 };
     this.flows = [];
     this.selectedFlow = null;
+    this.livingManager = null;
+    this._livingScopedFlowName = null;
   }
 
   _notify(message, _type = 'info') {
@@ -71,7 +73,9 @@ class StudioView extends BaseView {
     return `
       <div class="studio-layout" id="studioContainer">
         <main class="studio-center">
-          <div class="studio-canvas-empty" id="studioCanvas"></div>
+          <div class="studio-canvas-empty studio-canvas--gallery" id="studioCanvas">
+            <div id="livingHistoryContent" class="studio-canvas-living"></div>
+          </div>
           <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
             <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
             <div class="studio-automation-shell">
@@ -353,7 +357,170 @@ class StudioView extends BaseView {
         const cost = flow.token_cost ?? 1;
         btn.disabled = !flow.webhook_url || this.credits.available < cost;
       }
+      // Galería de producciones del flujo (mismo masonry justified que /production)
+      this.initOrRefreshLivingGallery(flow);
     }
+  }
+
+  /**
+   * Carga LivingManager bajo demanda y lo arranca filtrado por el flow seleccionado.
+   * Si ya esta inicializado, solo actualiza el filterFlowName y re-renderiza.
+   */
+  async initOrRefreshLivingGallery(flow) {
+    if (!flow || !flow.name) return;
+    const flowName = flow.name;
+    if (this.livingManager && this._livingScopedFlowName === flowName) return;
+
+    if (this.livingManager) {
+      this.livingManager.filterFlowName = flowName;
+      this._livingScopedFlowName = flowName;
+      this.livingManager._historyVisibleCount = 0;
+      if (typeof this.livingManager.renderHistorySection === 'function') {
+        await this.livingManager.renderHistorySection();
+      }
+      return;
+    }
+
+    try {
+      if (!window.LivingManager) {
+        await this.loadScript('js/living.js', 'LivingManager');
+      }
+      if (!window.LivingManager) return;
+
+      this._ensureProductionModalInBody();
+
+      const lm = new window.LivingManager();
+      lm.organizationId = this.organizationId;
+      lm.filterFlowName = flowName;
+      // Studio scope: empty state propio (mantiene dot-pattern de fondo).
+      lm.renderEmptyState = () => `
+        <div class="living-history-empty studio-history-empty">
+          <p class="living-history-empty-message">Aun no hay producciones de este flow</p>
+          <p class="living-history-empty-hint">Llena el formulario de la derecha y pulsa Producir.</p>
+        </div>
+      `;
+      this.livingManager = lm;
+      this._livingScopedFlowName = flowName;
+      await lm.init();
+    } catch (e) {
+      console.error('Studio initLivingGallery:', e);
+    }
+  }
+
+  /**
+   * Inyecta el shell del #productionModal en <body> si no existe ya (p.ej. cuando el
+   * usuario llega a /studio sin haber pasado por /production primero). Idempotente.
+   */
+  _ensureProductionModalInBody() {
+    if (document.getElementById('productionModal')) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = this._buildProductionModalHTML();
+    const modal = wrap.firstElementChild;
+    if (modal) document.body.appendChild(modal);
+  }
+
+  /** HTML del production-modal (mismo shell que ProductionView). LivingManager lo popula. */
+  _buildProductionModalHTML() {
+    return `
+      <div class="production-modal" id="productionModal" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="production-modal-backdrop" data-action="modal-close"></div>
+        <div class="production-modal-content">
+          <div class="production-modal-visual">
+            <div class="production-modal-visual-inner">
+              <img id="pmodalImage" src="" alt="" hidden>
+              <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
+              <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas" hidden></canvas>
+            </div>
+            <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
+              <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
+              <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>Animar</span></button>
+            </div>
+            <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
+              <div class="pmodal-edit-toolbar" role="toolbar" aria-label="Herramientas de edicion">
+                <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="Pincel" aria-label="Pincel"><i class="fas fa-paintbrush"></i></button>
+                <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="Borrador" aria-label="Borrador"><i class="fas fa-eraser"></i></button>
+                <label class="pmodal-edit-size"><i class="fas fa-circle" aria-hidden="true"></i><input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="Tamano del pincel"></label>
+                <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="Limpiar mascara" aria-label="Limpiar mascara"><i class="fas fa-trash"></i></button>
+              </div>
+              <div class="pmodal-edit-panel pmodal-edit-director">
+                <div class="pmodal-edit-director-content">
+                  <textarea id="pmodalEditPrompt" class="pmodal-edit-prompt pmodal-edit-director-input" rows="3" placeholder="Tu idea en texto — describe que cambiar en la zona pintada. La IA generara el prompt final." autocomplete="off" aria-label="Describe el cambio"></textarea>
+                </div>
+                <div class="pmodal-edit-attachments" id="pmodalEditAttachments" hidden></div>
+                <div class="pmodal-edit-picker" id="pmodalEditPicker" hidden></div>
+                <input type="file" id="pmodalEditFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;" aria-hidden="true">
+                <div class="pmodal-edit-director-controls">
+                  <button type="button" class="pmodal-edit-add-btn" id="pmodalEditAddBtn" data-edit-action="add-attachment" aria-label="Adjuntar imagen o producto" hidden><i class="fas fa-plus" aria-hidden="true"></i></button>
+                  <div class="pmodal-edit-mode-pills" role="tablist" aria-label="Modo de edicion">
+                    <button type="button" class="pmodal-edit-mode-pill is-active" role="tab" aria-selected="true" data-edit-mode="remove"><i class="fas fa-eraser" aria-hidden="true"></i><span>Eliminar</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="replace"><i class="fas fa-arrows-rotate" aria-hidden="true"></i><span>Reemplazar</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="fix-product"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Corregir producto</span></button>
+                    <button type="button" class="pmodal-edit-mode-pill" role="tab" aria-selected="false" data-edit-mode="change-product"><i class="fas fa-box" aria-hidden="true"></i><span>Cambiar producto</span></button>
+                  </div>
+                  <div class="pmodal-edit-actions">
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
+                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>APLICAR</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="production-modal-side" aria-label="Detalles de la produccion">
+            <header class="pmodal-side-header">
+              <button type="button" class="pmodal-close" data-action="modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            </header>
+            <nav class="pmodal-tabs" role="tablist" aria-label="Vistas de produccion">
+              <button type="button" class="pmodal-tab is-active" role="tab" aria-selected="true" data-tab="output">Resultado</button>
+              <button type="button" class="pmodal-tab" role="tab" aria-selected="false" data-tab="input">Briefing</button>
+            </nav>
+            <div class="pmodal-scroll" id="pmodalScroll">
+              <div class="pmodal-pane pmodal-pane--output is-active" data-pane="output" role="tabpanel">
+                <div class="pmodal-siblings" id="pmodalSiblings" hidden></div>
+                <section class="pmodal-section pmodal-prompt-section">
+                  <div class="pmodal-prompt-blocks" id="pmodalPromptBlocks"></div>
+                  <details class="pmodal-prompt-raw" id="pmodalPromptRaw" hidden>
+                    <summary><i class="fas fa-chevron-right pmodal-prompt-raw-caret"></i><span>Show generation details</span></summary>
+                    <pre class="pmodal-prompt-raw-text" id="pmodalPromptRawText"></pre>
+                  </details>
+                </section>
+                <section class="pmodal-section pmodal-info-section">
+                  <h3 class="pmodal-section-title"><i class="fas fa-circle-info"></i> INFORMATION</h3>
+                  <div class="pmodal-info-rows" id="pmodalInfoRows"></div>
+                </section>
+              </div>
+              <div class="pmodal-pane pmodal-pane--input" data-pane="input" role="tabpanel" hidden>
+                <div id="pmodalInputContent"></div>
+              </div>
+            </div>
+            <div class="pmodal-cta-grid">
+              <button type="button" class="pmodal-cta pmodal-cta--accent" data-action="animate"><i class="fas fa-film"></i><span>Animate</span></button>
+              <button type="button" class="pmodal-cta pmodal-cta--outline" data-action="publish" disabled title="Proximamente"><i class="fas fa-upload"></i><span>Publish</span></button>
+            </div>
+            <div class="pmodal-secondary-grid">
+              <button type="button" class="pmodal-secondary" data-action="open-in"><i class="fas fa-external-link-alt"></i><span>Open in</span></button>
+              <button type="button" class="pmodal-secondary" data-action="reference" disabled title="Proximamente"><i class="fas fa-bookmark"></i><span>Reference</span></button>
+            </div>
+            <footer class="pmodal-footer">
+              <button type="button" class="pmodal-footer-download" data-action="download"><i class="fas fa-download"></i><span>Download</span></button>
+              <div class="pmodal-footer-icons">
+                <button type="button" class="pmodal-icon-btn" data-action="like" aria-pressed="false" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
+                <div class="pmodal-kebab-wrap">
+                  <button type="button" class="pmodal-icon-btn" data-action="kebab" aria-expanded="false" aria-label="Mas"><i class="fas fa-bars"></i></button>
+                  <div class="pmodal-kebab-menu" role="menu" hidden>
+                    <button type="button" role="menuitem" data-action="copy-prompt"><i class="fas fa-copy"></i> Copiar prompt</button>
+                    <button type="button" role="menuitem" data-action="copy-url"><i class="fas fa-link"></i> Copiar enlace</button>
+                    <button type="button" role="menuitem" class="pmodal-kebab-danger" data-action="delete"><i class="fas fa-trash"></i> Eliminar produccion</button>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </aside>
+        </div>
+      </div>
+    `;
   }
 
   /** Aplica la imagen del flujo como fondo del wrap automático (mismo patrón que product-view::before+::after). */
@@ -1661,6 +1828,11 @@ class StudioView extends BaseView {
 
   async onLeave() {
     this.cleanup();
+    if (this.livingManager && typeof this.livingManager.destroy === 'function') {
+      this.livingManager.destroy();
+    }
+    this.livingManager = null;
+    this._livingScopedFlowName = null;
     window.studioView = null;
     this.supabase = null;
     this.userId = null;
