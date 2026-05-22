@@ -337,21 +337,44 @@
       header.appendChild(closeBtn);
     }
 
-    this.brandContainerInfoState = { dashboardContainer };
-    dashboardContainer.classList.add('info-mode-secondary');
-    dashboardContainer.appendChild(infoCard);
-    infoCard.style.opacity = '0';
-    infoCard.style.transform = 'scale(0.97) translateY(10px)';
-    requestAnimationFrame(() => {
-      infoCard.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
-      infoCard.style.opacity = '1';
-      infoCard.style.transform = 'scale(1) translateY(0)';
+    // Animacion en cascada de las otras cards + corner (igual que el viejo
+    // openInfoPanel de brand-organization). Aporta el fade visual antes de
+    // que la card INFO entre desde abajo.
+    const otherCards = cardsZone ? Array.from(cardsZone.querySelectorAll('.brand-card:not(.card-info)')) : [];
+    const cornerInfo = container.querySelector('.brand-corner-bottom-left');
+    otherCards.forEach((card, index) => {
+      card.style.willChange = 'opacity, transform';
+      card.style.transition = `opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.03}s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.03}s`;
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-12px) scale(0.98)';
     });
-    this.setupBrandContainerInfoPanelEditables(infoCard, item.id);
-
-    if (typeof this.updateLinksForRouter === 'function') {
-      this.updateLinksForRouter();
+    if (cornerInfo) {
+      cornerInfo.style.willChange = 'opacity, transform';
+      cornerInfo.style.transition = 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s';
+      cornerInfo.style.opacity = '0';
+      cornerInfo.style.transform = 'translateY(12px) scale(0.98)';
     }
+
+    this.brandContainerInfoState = { dashboardContainer, otherCards, cornerInfo };
+
+    // Pequeño delay para que el fade-out empiece antes de montar la card INFO.
+    setTimeout(() => {
+      dashboardContainer.classList.add('info-mode-secondary');
+      dashboardContainer.appendChild(infoCard);
+
+      infoCard.style.opacity = '0';
+      infoCard.style.transform = 'scale(0.96) translateY(15px)';
+      infoCard.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          infoCard.style.opacity = '1';
+          infoCard.style.transform = 'scale(1) translateY(0)';
+        });
+      });
+
+      this.setupBrandContainerInfoPanelEditables(infoCard, item.id);
+      if (typeof this.updateLinksForRouter === 'function') this.updateLinksForRouter();
+    }, 150);
     },
 
   async saveBrandContainerFieldById(brandContainerId, fieldName, value) {
@@ -1027,11 +1050,54 @@
     const panel = dashboardContainer.querySelector('.brand-card.card-info.expanded.brand-storage-item-info-panel');
     if (!panel) return;
 
-    panel.style.opacity = '0';
-    panel.style.transform = 'scale(0.97) translateY(-10px)';
+    const state = this.brandContainerInfoState || {};
+    const otherCards = state.otherCards || [];
+    const cornerInfo = state.cornerInfo || null;
+
+    panel.style.willChange = 'opacity, transform';
+    panel.style.transition = 'opacity 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19), transform 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19)';
+    requestAnimationFrame(() => {
+      panel.style.opacity = '0';
+      panel.style.transform = 'scale(0.96) translateY(-15px)';
+    });
+
     setTimeout(() => {
       panel.remove();
       dashboardContainer.classList.remove('info-mode-secondary');
+
+      // Restaurar el fade-in en cascada de las otras cards y corner.
+      requestAnimationFrame(() => {
+        otherCards.forEach((card, index) => {
+          if (!card.parentElement) return;
+          card.style.willChange = 'opacity, transform';
+          card.style.transition = `opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${0.1 + index * 0.04}s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${0.1 + index * 0.04}s`;
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0) scale(1)';
+        });
+        if (cornerInfo && cornerInfo.parentElement) {
+          cornerInfo.style.willChange = 'opacity, transform';
+          cornerInfo.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s';
+          cornerInfo.style.opacity = '1';
+          cornerInfo.style.transform = 'translateY(0) scale(1)';
+        }
+
+        // Limpiar inline styles tras la animacion para no contaminar futuros renders.
+        setTimeout(() => {
+          otherCards.forEach((card) => {
+            card.style.transition = '';
+            card.style.opacity = '';
+            card.style.transform = '';
+            card.style.willChange = '';
+          });
+          if (cornerInfo) {
+            cornerInfo.style.transition = '';
+            cornerInfo.style.opacity = '';
+            cornerInfo.style.transform = '';
+            cornerInfo.style.willChange = '';
+          }
+        }, 800);
+      });
+
       if (Array.isArray(this._brandInfoPanelDisposers)) {
         this._brandInfoPanelDisposers.forEach((fn) => {
           try { fn(); } catch (_) {}
@@ -1039,7 +1105,7 @@
       }
       this._brandInfoPanelDisposers = [];
       this.brandContainerInfoState = null;
-    }, 220);
+    }, 500);
     },
 
   // ============================================
