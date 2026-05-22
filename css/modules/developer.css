@@ -1915,12 +1915,12 @@
   margin-top: var(--spacing-sm);
 }
 
-/* Ficha del Flujo: visualización de la card + visualización del formulario */
+/* Ficha del Flujo: card real del catalogo (izq) + embed del Studio real (der) */
 .builder-ficha-wrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: var(--spacing-xl);
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
   align-items: start;
 }
@@ -1930,6 +1930,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
+  min-width: 0;
 }
 
 .ficha-section-title {
@@ -1946,7 +1947,7 @@
   color: var(--text-secondary);
 }
 
-/* Contenedor de la card de flujo (mismo estilo que en catálogo) */
+/* Contenedor de la card de flujo (mismo estilo que en catalogo) */
 .ficha-flow-card-wrap {
   display: flex;
   justify-content: center;
@@ -1954,12 +1955,33 @@
   min-height: 120px;
 }
 
-/* Misma card que en catálogo de flows: 200px, 4/5, sin interacción */
+/* Misma card que en catalogo de flows: 200px, 4/5, sin interaccion */
 .flow-card--ficha-preview {
   pointer-events: none;
   cursor: default;
   width: 200px;
   flex: 0 0 200px;
+}
+
+/* En el preview de ficha mostramos siempre los pills extra y los iconos like/save,
+   ignorando los hover-states del catalogo publico */
+.flow-card--ficha-preview .flow-card-actions {
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+}
+.flow-card--ficha-preview .flow-card-info-extra {
+  max-height: 80px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+.ficha-section--form {
+  padding: var(--spacing-md);
+}
+
+.ficha-section--form .ficha-section-title {
+  padding: 0 var(--spacing-sm);
 }
 
 .ficha-section--form .ficha-inputs-preview {
@@ -1977,9 +1999,56 @@
   font-style: italic;
 }
 
+/* Embed del Studio real: el .studio-layout del Studio normal es position:absolute
+   ocupando viewport. Aqui lo scopeamos a un contenedor relativo con altura fija. */
+.ficha-studio-embed {
+  position: relative;
+  width: 100%;
+  height: 640px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-divider);
+  background: var(--view-bg-base);
+}
+
+.ficha-studio-embed__layout.studio-layout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+}
+
+/* Producir queda visualmente deshabilitado: es solo preview */
+.ficha-studio-embed .studio-btn-producir {
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .builder-ficha-wrapper {
+    grid-template-columns: 1fr;
+  }
+  .ficha-studio-embed {
+    height: 720px;
+  }
+}
+
 @media (max-width: 768px) {
   .builder-ficha-wrapper {
     grid-template-columns: 1fr;
+  }
+  .ficha-studio-embed {
+    height: auto;
+    min-height: 520px;
+  }
+  .ficha-studio-embed__layout.studio-layout {
+    position: relative;
+    flex-direction: column;
+  }
+  .ficha-studio-embed .studio-sidebar-creative {
+    width: 100%;
+    min-width: 0;
   }
 }
 

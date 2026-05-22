@@ -428,7 +428,7 @@ class DevBuilderView extends DevBaseView {
                 </div>
               </section>
               <section class="ficha-section ficha-section--form" aria-labelledby="fichaFormHeading">
-                <h3 id="fichaFormHeading" class="ficha-section-title"><i class="ph ph-textbox"></i> Vista del formulario</h3>
+                <h3 id="fichaFormHeading" class="ficha-section-title"><i class="ph ph-monitor-play"></i> Vista en el Studio</h3>
                 <div class="ficha-inputs-preview" id="fichaInputsPreview">
                   <p class="ficha-inputs-empty">Sin campos de entrada.</p>
                 </div>
@@ -895,7 +895,8 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Actualiza la vista "Ficha del Flujo": visualización de la card de flow + visualización del formulario.
+   * Actualiza la vista "Ficha del Flujo": card de catalogo real + embed del Studio real.
+   * El embed usa el mismo InputRegistry que Studio, asi los pickers se ven y comportan igual.
    */
   renderFicha() {
     const cardWrap = this.querySelector('#fichaFlowCardWrap');
@@ -903,12 +904,75 @@ class DevBuilderView extends DevBaseView {
 
     if (cardWrap) cardWrap.innerHTML = this.renderFichaFlowCard();
 
-    if (inputsPreview) {
-      if (this.inputSchema.length === 0) {
-        inputsPreview.innerHTML = '<p class="ficha-inputs-empty">Sin campos de entrada.</p>';
-      } else {
-        inputsPreview.innerHTML = this.generateFormPreview();
-      }
+    if (!inputsPreview) return;
+
+    if (this.inputSchema.length === 0) {
+      inputsPreview.innerHTML = '<p class="ficha-inputs-empty">Sin campos de entrada.</p>';
+      return;
+    }
+
+    inputsPreview.innerHTML = this.renderFichaStudioEmbed();
+    this.initFichaStudioPickers();
+  }
+
+  /**
+   * Construye el shell del Studio real para usar como preview en la pestana Ficha.
+   * Espeja la estructura de StudioView.renderHTML() (manual mode) pero scopeado
+   * dentro de .ficha-studio-embed para que viva embebido sin position: absolute.
+   */
+  renderFichaStudioEmbed() {
+    const name = this.escapeHtml(this.flowData.name || 'Sin nombre');
+    const cost = this.flowData.token_cost ?? 1;
+    return `
+      <div class="ficha-studio-embed" aria-label="Vista previa del Studio">
+        <div class="studio-layout ficha-studio-embed__layout">
+          <main class="studio-center">
+            <div class="studio-canvas-empty" id="fichaStudioCanvas"></div>
+            <footer class="studio-footer">
+              <div class="studio-footer-credits">
+                <div class="studio-credits-icon"><i class="fas fa-coins"></i></div>
+                <span class="studio-credits-text">— creditos restantes</span>
+                <span class="studio-credits-cost">${cost} creditos esta produccion</span>
+              </div>
+              <button type="button" class="studio-btn-producir" id="fichaStudioProducirBtn" disabled aria-disabled="true" title="Vista previa, no ejecutable">
+                Producir
+              </button>
+            </footer>
+          </main>
+          <aside class="studio-sidebar-creative">
+            <div class="studio-sidebar-content">
+              <div class="studio-flow-form-wrap">
+                <h3 class="studio-form-title">${name}</h3>
+                <form class="studio-flow-form" id="fichaStudioFlowForm" onsubmit="return false;"></form>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Pinta los campos del input_schema en el form del embed usando InputRegistry,
+   * el mismo motor que usa Studio. Inicializa pickers para que sean interactivos
+   * (Producir queda deshabilitado para evitar side effects).
+   */
+  initFichaStudioPickers() {
+    const formEl = this.querySelector('#fichaStudioFlowForm');
+    if (!formEl) return;
+    const fields = this.inputSchema || [];
+    const Registry = window.InputRegistry;
+    if (Registry && Registry.renderFormFromSchema) {
+      formEl.innerHTML = Registry.renderFormFromSchema(fields, {
+        idPrefix: 'ficha-studio-',
+        wrapperClass: 'studio-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true
+      });
+      if (Registry.initFormPickers) Registry.initFormPickers(formEl);
+    } else {
+      formEl.innerHTML = '<p class="studio-form-empty">InputRegistry no disponible.</p>';
     }
   }
 
@@ -940,11 +1004,10 @@ class DevBuilderView extends DevBaseView {
    * dev-flow-card-wrapper + flow-card--with-footer + flow-card-footer--dev.
    */
   renderFichaFlowCard() {
+    // Espejo 1:1 de FlowCatalogView.renderFlowCard(): asi el dev ve exactamente
+    // la card que vera el usuario final en el catalogo publico.
     const name = this.escapeHtml(this.flowData.name || 'Sin nombre');
     const cost = this.flowData.token_cost ?? 1;
-    const likes = this.flowData.likes_count ?? 0;
-    const saves = this.flowData.saves_count ?? 0;
-    const runs = this.flowData.run_count ?? 0;
     const version = (this.flowData.version || '1.0.0').toString();
     const type = this.flowData.flow_category_type || 'manual';
     const isAutopilotLike = (type === 'autopilot' || type === 'scraping');
@@ -955,16 +1018,12 @@ class DevBuilderView extends DevBaseView {
     // Leer del state (no del DOM) para evitar races con loadCategories/loadSubcategories
     const categoryRow = this.categories.find(c => c.id === this.flowData.category_id);
     const subcategoryRow = this.subcategories.find(s => s.id === this.flowData.subcategory_id);
-    const categoryName = categoryRow ? this.escapeHtml(categoryRow.name) : '—';
-    const subcategoryName = subcategoryRow ? this.escapeHtml(subcategoryRow.name) : '—';
+    const primaryTag = subcategoryRow?.name || categoryRow?.name || null;
+    const primaryTagHtml = primaryTag
+      ? `<span class="flow-card-info-tag">${this.escapeHtml(primaryTag)}</span>`
+      : '';
     const outputTypeLabel = this.getOutputTypeLabel(this.flowData.output_type);
     const executionLabel = this.getExecutionModeLabel(this.flowData.execution_mode);
-
-    const tags = [];
-    if (categoryRow?.name) tags.push(this.escapeHtml(categoryRow.name));
-    if (subcategoryRow?.name) tags.push(this.escapeHtml(subcategoryRow.name));
-    if (isAutopilotLike) tags.push('Autopilot');
-    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
 
     const img = this.flowData.flow_image_url
       ? `<img src="${this.escapeHtml(this.flowData.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
@@ -975,27 +1034,22 @@ class DevBuilderView extends DevBaseView {
         <article class="flow-card flow-card--catalog flow-card--ficha-preview" aria-hidden="true">
           <div class="flow-card-media">
             ${img}
-            <div class="flow-card-media-veil" aria-hidden="true"></div>
+            <div class="flow-card-gradient" aria-hidden="true"></div>
             <div class="flow-card-badges">${badges.join('')}</div>
-            <div class="flow-card-icons flow-card-icons--default">
-              <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
-              <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
-              <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
+            <div class="flow-card-actions">
+              <button type="button" class="flow-card-icon-btn flow-card-icon-like" data-action="like" title="Like" aria-label="Like" tabindex="-1"><i class="fas fa-heart"></i></button>
+              <button type="button" class="flow-card-icon-btn flow-card-icon-save" data-action="save" title="Guardar" aria-label="Guardar" tabindex="-1"><i class="fas fa-bookmark"></i></button>
             </div>
-            <div class="flow-card-overlay flow-card-overlay--default">
+            <div class="flow-card-info">
               <h3 class="flow-card-title">${name}</h3>
-              ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
-            </div>
-            <div class="flow-card-overlay flow-card-overlay--hover">
-              <div class="flow-card-hover-content">
-                <div class="flow-card-credits">${cost}</div>
-                <div class="flow-card-meta-list">
-                  <span class="flow-card-meta-item">${categoryName}</span>
-                  <span class="flow-card-meta-item">${subcategoryName}</span>
-                  <span class="flow-card-meta-item">${outputTypeLabel}</span>
-                  <span class="flow-card-meta-item">${executionLabel}</span>
-                  <span class="flow-card-meta-item">v${version}</span>
-                </div>
+              <div class="flow-card-info-meta">
+                ${primaryTagHtml}
+                <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="fas fa-bolt"></i>${cost}</span>
+              </div>
+              <div class="flow-card-info-extra">
+                <span class="flow-card-info-pill">${outputTypeLabel}</span>
+                <span class="flow-card-info-pill">${executionLabel}</span>
+                <span class="flow-card-info-pill">v${version}</span>
               </div>
             </div>
           </div>
