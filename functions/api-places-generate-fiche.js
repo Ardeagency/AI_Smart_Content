@@ -21,7 +21,7 @@ const crypto = require('crypto');
 
 const PRICE_INPUT_PER_1M = 2.50;
 const PRICE_OUTPUT_PER_1M = 10.00;
-const USD_PER_CREDIT = 0.10;
+const USD_PER_CREDIT = 1.0;
 const MODEL = 'gpt-4o';
 const MAX_IMAGES = 10;
 const MAX_OUTPUT_TOKENS = 900;

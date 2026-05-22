@@ -23,7 +23,7 @@ const {
 // no necesitamos vision en servicios.
 const PRICE_INPUT_PER_1M = 0.150;
 const PRICE_OUTPUT_PER_1M = 0.600;
-const USD_PER_CREDIT = 0.10;
+const USD_PER_CREDIT = 1.0;
 const MODEL = 'gpt-4o-mini';
 const MAX_OUTPUT_TOKENS = 800;
 

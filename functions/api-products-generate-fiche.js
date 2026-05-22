@@ -12,7 +12,7 @@
  * Token economy: detail:low = 85 tok/img, json_schema strict, system prompt comprimido,
  * scraped context capado a campos esenciales.
  *
- * Cobro: via RPC use_credits_numeric (creditos fraccionales, 1 credito = $0.10 USD).
+ * Cobro: via RPC use_credits_numeric (creditos fraccionales, 1 credito = $1 USD).
  *
  * Respuesta:
  *  { ok, product_id, usd_cost, credits_charged, tokens, images: { attempted, inserted, error },
@@ -36,7 +36,7 @@ const crypto = require('crypto');
 // gpt-4o pricing (USD por 1M tokens). Actualizar si cambia.
 const PRICE_INPUT_PER_1M = 2.50;
 const PRICE_OUTPUT_PER_1M = 10.00;
-const USD_PER_CREDIT = 0.10;
+const USD_PER_CREDIT = 1.0;
 const MODEL = 'gpt-4o';
 const MAX_IMAGES = 10;
 const MAX_OUTPUT_TOKENS = 900;
