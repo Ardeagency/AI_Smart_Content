@@ -2826,6 +2826,69 @@
 }
 .vera-action-pill:hover { border-color: #8b7ff0; color: #8b7ff0; opacity: 1; background: rgba(139,127,240,0.08); }
 
+/* ── Input-area options (CLARIFY / PILLS) ──
+   Reemplazan temporalmente el textarea cuando VERA emite opciones.
+   Al hacer click en una card, se envia su title como mensaje del usuario. */
+.vera-input-options {
+  padding: 12px 16px 8px;
+}
+.vera-input-options-label {
+  font-size: 13px;
+  color: var(--text-secondary, #9997ad);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.vera-input-options-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.vera-input-option-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.vera-input-option-card:hover {
+  border-color: rgba(139,127,240,0.4);
+  background: rgba(139,127,240,0.06);
+}
+.vera-input-option-card.selected {
+  border-color: #8b7ff0;
+  background: rgba(139,127,240,0.12);
+}
+.vera-option-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+.vera-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vera-option-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f0eff5;
+}
+.vera-input-option-card.selected .vera-option-title {
+  color: #8b7ff0;
+}
+.vera-option-desc {
+  font-size: 12px;
+  color: #6b6980;
+}
+
 /* ── [CONFIRM] — bloque de confirmacion de tarea costosa ──
    Emitido por backend (chat.controller) cuando estimateClaudeTaskCost
    supera el confirm_threshold_usd de la org. Tres acciones:

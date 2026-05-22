@@ -1461,6 +1461,23 @@ class VeraView extends (window.BaseView || class {}) {
     this.bindInput();
     this._requestNotificationPermission();
 
+    // Handler global de seleccion de opciones del input-area (CLARIFY / PILLS).
+    // Re-asignado en init de cada onEnter — si VeraView se monta varias veces,
+    // siempre apunta a la instancia activa.
+    window._veraSelectOption = (text) => {
+      // Marca la card seleccionada para feedback visual
+      document.querySelectorAll('.vera-input-option-card').forEach((c) => {
+        c.classList.remove('selected');
+        const title = c.querySelector('.vera-option-title')?.textContent;
+        if (title === text) c.classList.add('selected');
+      });
+      // Pequeno delay para que el usuario vea el highlight, luego envia
+      setTimeout(() => {
+        this._hideInputOptions();
+        this.sendMessage(text);
+      }, 250);
+    };
+
     await this.loadActiveConversation();
 
     if (this.aiState.active_conversation_id) {
@@ -1814,10 +1831,61 @@ class VeraView extends (window.BaseView || class {}) {
     return { processed, blocks };
   }
 
+  /* ── Input-area options (CLARIFY / PILLS) ─────────────────
+     Cuando VERA emite [CLARIFY] o [PILLS], las opciones aparecen reemplazando
+     temporalmente el textarea en el composer. Al seleccionar una, se envia el
+     title como mensaje del usuario y vuelve el textarea. */
+  _showInputOptions(question, options) {
+    const wrap = document.getElementById('veraInputWrap');
+    const overlay = document.getElementById('chatInputOverlay');
+    if (!overlay) return;
+
+    // Quita opciones anteriores si las hay (multiples CLARIFY en cola)
+    document.getElementById('vera-input-options')?.remove();
+
+    // Oculta el textarea
+    if (wrap) wrap.style.display = 'none';
+
+    const esc = (s) => String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    const escAttr = (s) => String(s ?? '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    const cardsHtml = (options || []).map((opt) => `
+      <div class="vera-input-option-card"
+           onclick="window._veraSelectOption && window._veraSelectOption('${escAttr(opt.title)}')">
+        ${opt.icon ? `<span class="vera-option-icon">${esc(opt.icon)}</span>` : '<span class="vera-option-icon"></span>'}
+        <div class="vera-option-body">
+          <span class="vera-option-title">${esc(opt.title)}</span>
+          ${opt.desc ? `<span class="vera-option-desc">${esc(opt.desc)}</span>` : ''}
+        </div>
+      </div>`).join('');
+
+    const el = document.createElement('div');
+    el.id = 'vera-input-options';
+    el.className = 'vera-input-options';
+    el.innerHTML = `
+      ${question ? `<div class="vera-input-options-label">${esc(question)}</div>` : ''}
+      <div class="vera-input-options-cards">${cardsHtml}</div>`;
+
+    overlay.prepend(el);
+  }
+
+  _hideInputOptions() {
+    document.getElementById('vera-input-options')?.remove();
+    const wrap = document.getElementById('veraInputWrap');
+    if (wrap) wrap.style.display = '';
+  }
+
   _renderInteractiveBlock(block) {
     const esc = escapeHtml;
     switch (block.type) {
       case 'clarify': {
+        // Las cards van al input-area (no al bubble). El bubble solo muestra
+        // la pregunta como texto, las opciones aparecen reemplazando el textarea.
+        setTimeout(() => {
+          this._showInputOptions(block.question, block.cards);
+        }, 100);
         const cardsHtml = block.cards.map(c => `
           <div class="vera-clarify-card" onclick="this.closest('.vera-clarify-cards').querySelectorAll('.vera-clarify-card').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">
             <span class="vera-clarify-icon">${esc(c.icon)}</span>
@@ -1830,6 +1898,12 @@ class VeraView extends (window.BaseView || class {}) {
         </div>`;
       }
       case 'pills': {
+        setTimeout(() => {
+          this._showInputOptions(
+            block.label,
+            (block.options || []).map((o) => ({ title: o, icon: '', desc: '' }))
+          );
+        }, 100);
         const pillsHtml = block.options.map(o => `
           <span class="vera-pill" onclick="this.closest('.vera-pills-row').querySelectorAll('.vera-pill').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">${esc(o)}</span>`).join('');
         return `<div class="vera-pills-block">
