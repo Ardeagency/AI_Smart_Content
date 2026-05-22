@@ -875,8 +875,12 @@ body.production-filters-in-header .living-container > .living-history-section {
     /* mix-blend-mode:difference invierte el color de los pixeles de la imagen
        bajo la zona pintada. En fondo negro pinta blanco; en fondo blanco pinta
        negro; en colores intermedios da el negativo. Funciona porque img y canvas
-       son siblings en .production-modal-visual-inner (mismo stacking context). */
+       son siblings en .production-modal-visual-inner (mismo stacking context).
+       opacity:0.3 escala el resultado del blend a 30% una sola vez al final del
+       composite — asi por mas veces que el usuario pase sobre la misma zona, el
+       trazo no se oscurece (los pixeles del canvas siempre son alpha 1.0). */
     mix-blend-mode: difference;
+    opacity: 0.3;
 }
 .pmodal-edit-canvas[hidden] { display: none; }
 

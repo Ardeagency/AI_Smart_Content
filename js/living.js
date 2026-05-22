@@ -2372,33 +2372,65 @@ class LivingManager {
             return { x: t.clientX - rect.left, y: t.clientY - rect.top };
         };
 
-        const stroke = (e) => {
-            if (!this._editState?.drawing) return;
-            e.preventDefault();
-            const p = getPos(e);
+        // Estrategia anti-acumulacion: pintar a alpha 1.0 internamente y
+        // bajar la opacidad a 30% por CSS sobre todo el canvas. Asi por mas
+        // veces que el usuario pase sobre la misma zona, el pixel es siempre
+        // blanco alpha 1 → NO se oscurece. La opacidad final visible (30%)
+        // se aplica al composite del canvas con la imagen detras, una sola
+        // vez, despues del mix-blend-mode.
+        const setupBrush = () => {
             const size = this._editState.size;
             if (this._editState.tool === 'brush') {
                 ctx.globalCompositeOperation = 'source-over';
-                // Blanco al 30% alpha + mix-blend-mode:difference en CSS produce
-                // un negativo parcial de la zona pintada: en fondos claros se ve
-                // oscuro, en fondos oscuros se ve claro. Visible en cualquier
-                // imagen sin introducir color de marca.
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 1)';
             } else {
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.fillStyle = 'rgba(0,0,0,1)';
+                ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 1)';
             }
+            ctx.lineWidth = size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        };
+
+        const startStroke = (e) => {
+            if (!this._editState) return;
+            e.preventDefault();
+            this._editState.drawing = true;
+            const p = getPos(e);
+            const size = this._editState.size;
+            setupBrush();
+            // Punto inicial visible (un solo arc lleno) por si el usuario
+            // hace click sin arrastrar.
             ctx.beginPath();
             ctx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
             ctx.fill();
+            // Iniciar path para los lineTo subsiguientes.
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
         };
 
-        canvas.addEventListener('mousedown', (e) => { this._editState.drawing = true; stroke(e); });
-        canvas.addEventListener('mousemove', stroke);
-        window.addEventListener('mouseup', () => { if (this._editState) this._editState.drawing = false; });
-        canvas.addEventListener('touchstart', (e) => { this._editState.drawing = true; stroke(e); }, { passive: false });
-        canvas.addEventListener('touchmove', stroke, { passive: false });
-        canvas.addEventListener('touchend', () => { if (this._editState) this._editState.drawing = false; });
+        const moveStroke = (e) => {
+            if (!this._editState?.drawing) return;
+            e.preventDefault();
+            const p = getPos(e);
+            // lineTo + stroke construyen una linea continua. Como pintamos a
+            // alpha 1, repintar el path no acumula opacidad — solo extiende.
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        };
+
+        const endStroke = () => {
+            if (this._editState) this._editState.drawing = false;
+        };
+
+        canvas.addEventListener('mousedown', startStroke);
+        canvas.addEventListener('mousemove', moveStroke);
+        window.addEventListener('mouseup', endStroke);
+        canvas.addEventListener('touchstart', startStroke, { passive: false });
+        canvas.addEventListener('touchmove', moveStroke, { passive: false });
+        canvas.addEventListener('touchend', endStroke);
 
         // Re-sincronizar tamano al cambiar viewport (re-layout de la imagen).
         const img = document.getElementById('pmodalImage');
