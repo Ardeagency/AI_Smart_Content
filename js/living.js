@@ -1859,6 +1859,12 @@ class LivingManager {
     closeProductionModal() {
         const modal = document.getElementById('productionModal');
         if (!modal) return;
+        // Si el focus actual esta dentro del modal, soltarlo ANTES de marcar
+        // aria-hidden — sino el browser warning: "Blocked aria-hidden on an
+        // element because its descendant retained focus".
+        if (modal.contains(document.activeElement) && document.activeElement?.blur) {
+            document.activeElement.blur();
+        }
         const videoEl = document.getElementById('pmodalVideo');
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
         const imgEl = document.getElementById('pmodalImage');
@@ -2397,7 +2403,7 @@ class LivingManager {
     async _completeUpscaleInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
+            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'upscale' });
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
@@ -3430,35 +3436,36 @@ class LivingManager {
     }
 
     /**
-     * Descarga la URL de kie via proxy kie-video-download (evita CORS), sube
-     * a production-outputs/image-edits/{userId}/{taskId}.png y devuelve la
-     * ruta de Storage + URL publica.
+     * Persiste el output de kie a Supabase Storage SERVER-SIDE via
+     * /.netlify/functions/kie-output-persist. Evita el limite de 6MB de
+     * Netlify Functions en el response body (browser-side haria base64 que
+     * infla 33% — una imagen 4K de 5-15MB sobrepasa el limite y devuelve 502).
+     *
+     * @param {{kieUrl: string, taskId: string, kind?: string}} args
+     *   kind: 'edit' | 'upscale' | 'remove-bg' | 'variations' (default 'edit')
      */
-    async _downloadAndUploadEditResult({ kieUrl, taskId }) {
-        if (!this.supabase?.storage) throw new Error('Supabase storage no disponible');
-        const userId = this.userId || (await this.supabase.auth.getUser()).data?.user?.id;
-        if (!userId) throw new Error('No hay userId para guardar la edicion');
+    async _downloadAndUploadEditResult({ kieUrl, taskId, kind = 'edit' }) {
+        const accessToken = await this._getAccessToken();
+        if (!accessToken) throw new Error('No hay sesion activa');
 
-        const proxy = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieUrl)}`;
-        const res = await fetch(proxy);
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || `Descarga fallida: ${res.status}`);
-        }
-        const blob = await res.blob();
-        const contentType = res.headers.get('content-type') || 'image/png';
-        const ext = (contentType.includes('jpeg') || contentType.includes('jpg')) ? 'jpg'
-            : contentType.includes('webp') ? 'webp' : 'png';
-        const safeTaskId = String(taskId || Date.now()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
-        const storagePath = `image-edits/${userId}/${safeTaskId}.${ext}`;
-
-        const { error } = await this.supabase.storage.from('production-outputs').upload(storagePath, blob, {
-            contentType,
-            upsert: true
+        const res = await fetch('/.netlify/functions/kie-output-persist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({
+                kie_url: kieUrl,
+                task_id: taskId,
+                kind,
+                bucket: 'production-outputs'
+            })
         });
-        if (error) throw error;
-        const { data: urlData } = this.supabase.storage.from('production-outputs').getPublicUrl(storagePath);
-        return { storagePath, publicUrl: urlData?.publicUrl || null };
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(data.error || `Persist HTTP ${res.status}`);
+        }
+        return {
+            storagePath: data.storage_path,
+            publicUrl: data.public_url
+        };
     }
 
     /**
