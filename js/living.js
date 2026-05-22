@@ -2464,29 +2464,278 @@ class LivingManager {
     }
 
     /**
-     * Aplica la edicion. Captura la mascara (PNG dataURL) + el prompt y por
-     * ahora muestra un toast. Cuando el backend Netlify este listo, este
-     * metodo hace POST a /.netlify/functions/api-kie-edit con
-     *   { image_url: state.mediaUrl, mask_png: dataURL, prompt }.
+     * Aplica la edicion. Captura la mascara (PNG dataURL) + el prompt y dispara
+     * el flujo end-to-end contra /.netlify/functions/kie-image-edit-create:
+     *   1) sube mascara a Storage (production-inputs/edit-masks).
+     *   2) OpenAI Vision genera el prompt para nano-banana.
+     *   3) kie.ai encola la tarea -> taskId.
+     *   4) polling con kling-video-status (kie usa recordInfo generico).
+     *   5) descarga la URL kie, sube a production-outputs/image-edits y
+     *      crea una nueva fila en runs_outputs con linaje al output original.
+     *   6) refresca el grid y cierra el modal.
      */
-    _applyEditOverlay() {
+    async _applyEditOverlay() {
         const promptEl = document.getElementById('pmodalEditPrompt');
         const canvas = document.getElementById('pmodalEditCanvas');
-        const prompt = (promptEl?.value || '').trim();
-        if (!prompt) {
-            if (typeof window.showToast === 'function') window.showToast('Describe que quieres cambiar antes de aplicar');
+        const applyBtn = document.querySelector('.pmodal-edit-btn--accent[data-edit-action="apply"]');
+        const cancelBtn = document.querySelector('.pmodal-edit-btn--ghost[data-edit-action="cancel"]');
+        const userInstruction = (promptEl?.value || '').trim();
+
+        if (!userInstruction) {
+            this._setEditApplyState({ phase: 'error', message: 'Describe que quieres cambiar antes de aplicar' });
             promptEl?.focus();
             return;
         }
-        const hasMask = canvas && this._canvasHasContent(canvas);
-        const maskPng = hasMask ? canvas.toDataURL('image/png') : null;
-        const msg = hasMask
-            ? `Edicion encolada con mascara: "${prompt.slice(0, 60)}${prompt.length > 60 ? '…' : ''}"`
-            : `Edicion encolada (sin mascara): "${prompt.slice(0, 60)}${prompt.length > 60 ? '…' : ''}"`;
-        if (typeof window.showToast === 'function') window.showToast(msg);
-        // Persistimos en window para inspeccion / wire-up futuro.
-        window.__lastEditIntent = { prompt, maskPng, mediaUrl: this._modalState?.mediaUrl, outputId: this._modalState?.outputId };
+        if (!canvas || !this._canvasHasContent(canvas)) {
+            this._setEditApplyState({ phase: 'error', message: 'Pinta la zona a editar antes de aplicar' });
+            return;
+        }
+
+        const state = this._modalState || {};
+        const imageUrl = state.mediaUrl;
+        const sourceOutputId = state.outputId || null;
+        const sourceRunId = state.runId || null;
+
+        if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
+            this._setEditApplyState({ phase: 'error', message: 'No hay URL valida de la imagen original' });
+            return;
+        }
+        if (!this.organizationId) {
+            this._setEditApplyState({ phase: 'error', message: 'Falta organization_id en el contexto' });
+            return;
+        }
+
+        const maskDataUrl = canvas.toDataURL('image/png');
+        this._setEditApplyState({ phase: 'loading', message: 'Analizando seleccion...', lock: true });
+
+        let createPayload;
+        try {
+            const accessToken = await this._getAccessToken();
+            if (!accessToken) throw new Error('No hay sesion activa. Vuelve a iniciar sesion.');
+
+            const createRes = await fetch('/.netlify/functions/kie-image-edit-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    image_url: imageUrl,
+                    mask_data_url: maskDataUrl,
+                    user_instruction: userInstruction,
+                    source_output_id: sourceOutputId,
+                    organization_id: this.organizationId,
+                    brand_id: this.brandId || null
+                })
+            });
+            let parsed;
+            try { parsed = await createRes.json(); }
+            catch (_) {
+                const text = await createRes.text().catch(() => '');
+                throw new Error(`Gateway HTTP ${createRes.status}: ${text.slice(0, 200) || 'sin body'}`);
+            }
+            if (!createRes.ok) {
+                if (createRes.status === 402) {
+                    throw new Error(`Creditos insuficientes. Necesitas ${parsed.credits_needed ?? '?'} cred.`);
+                }
+                throw new Error(parsed.error || `HTTP ${createRes.status}`);
+            }
+            createPayload = parsed;
+        } catch (err) {
+            console.error('[edit-overlay] create error:', err);
+            this._setEditApplyState({ phase: 'error', message: err.message || 'Error al iniciar la edicion' });
+            return;
+        }
+
+        this._setEditApplyState({ phase: 'loading', message: 'Generando edicion (30-60s)...', lock: true });
+
+        let kieResultUrl;
+        try {
+            kieResultUrl = await this._pollKieTask(createPayload.taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
+        } catch (err) {
+            console.error('[edit-overlay] poll error:', err);
+            this._setEditApplyState({ phase: 'error', message: err.message || 'La edicion fallo en kie.ai' });
+            return;
+        }
+
+        this._setEditApplyState({ phase: 'loading', message: 'Guardando produccion...', lock: true });
+
+        let storagePath, publicUrl;
+        try {
+            ({ storagePath, publicUrl } = await this._downloadAndUploadEditResult({
+                kieUrl: kieResultUrl,
+                taskId: createPayload.taskId
+            }));
+        } catch (err) {
+            console.error('[edit-overlay] download/upload error:', err);
+            this._setEditApplyState({ phase: 'error', message: `No se pudo guardar el resultado: ${err.message}` });
+            return;
+        }
+
+        try {
+            await this._insertEditOutput({
+                runId: createPayload.run_id || sourceRunId,
+                sourceOutputId,
+                sourceImageUrl: imageUrl,
+                storagePath,
+                refinedPrompt: createPayload.refined_prompt,
+                userInstruction,
+                maskStoragePath: createPayload.mask_storage_path,
+                kieModel: createPayload.kie_model,
+                openaiModel: createPayload.openai_model,
+                kieTaskId: createPayload.taskId
+            });
+        } catch (err) {
+            console.error('[edit-overlay] insert error:', err);
+            this._setEditApplyState({ phase: 'error', message: `Edicion lista pero no se guardo en BD: ${err.message}` });
+            return;
+        }
+
+        try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
+        try { await this.renderHistorySection(); } catch (_) { /* noop */ }
+
+        this._setEditApplyState({ phase: 'idle' });
         this._closeEditOverlay();
+        this.closeProductionModal?.();
+        if (typeof window.showToast === 'function') {
+            window.showToast('Edicion lista. Mira tu nueva produccion en el grid.');
+        }
+        if (applyBtn) applyBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+    }
+
+    /**
+     * Pinta el estado del CTA apply: idle | loading | error. En loading bloquea
+     * Aplicar+Cancelar; en error desbloquea ambos y muestra mensaje inline.
+     */
+    _setEditApplyState({ phase, message, lock }) {
+        const applyBtn = document.querySelector('.pmodal-edit-btn--accent[data-edit-action="apply"]');
+        const cancelBtn = document.querySelector('.pmodal-edit-btn--ghost[data-edit-action="cancel"]');
+        const panel = document.querySelector('.pmodal-edit-panel');
+        if (!panel) return;
+
+        let status = panel.querySelector('.pmodal-edit-status');
+        if (!status) {
+            status = document.createElement('div');
+            status.className = 'pmodal-edit-status';
+            panel.insertBefore(status, panel.querySelector('.pmodal-edit-actions'));
+        }
+
+        if (phase === 'loading') {
+            status.textContent = message || 'Procesando...';
+            status.dataset.state = 'loading';
+            status.hidden = false;
+            if (applyBtn) applyBtn.disabled = true;
+            if (cancelBtn) cancelBtn.disabled = !!lock;
+            return;
+        }
+        if (phase === 'error') {
+            status.textContent = message || 'Error';
+            status.dataset.state = 'error';
+            status.hidden = false;
+            if (applyBtn) applyBtn.disabled = false;
+            if (cancelBtn) cancelBtn.disabled = false;
+            return;
+        }
+        // idle
+        status.textContent = '';
+        status.hidden = true;
+        delete status.dataset.state;
+        if (applyBtn) applyBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+    }
+
+    async _getAccessToken() {
+        if (!this.supabase?.auth?.getSession) return null;
+        const { data } = await this.supabase.auth.getSession();
+        return data?.session?.access_token || null;
+    }
+
+    /**
+     * Poll kling-video-status (que es generico para cualquier taskId de kie.ai).
+     * Devuelve la URL de la imagen generada cuando state=success.
+     */
+    async _pollKieTask(taskId, { timeoutMs = 5 * 60 * 1000, intervalMs = 3000 } = {}) {
+        const accessToken = await this._getAccessToken();
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            const res = await fetch(`/.netlify/functions/kling-video-status?taskId=${encodeURIComponent(taskId)}`, {
+                method: 'GET',
+                headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+            });
+            const data = await res.json().catch(() => ({}));
+            const d = data?.data || {};
+            const state = (d.state || d.status || '').toLowerCase();
+            if (state === 'success') {
+                let urls = d.resultUrls || d.resultJson?.resultUrls || d.result_urls || [];
+                if (typeof urls === 'string') {
+                    try { urls = JSON.parse(urls); } catch (_) { urls = [urls]; }
+                }
+                const url = Array.isArray(urls) ? urls[0] : urls;
+                if (!url) throw new Error('kie devolvio success sin resultUrls');
+                return url;
+            }
+            if (state === 'fail' || state === 'failed') {
+                throw new Error(d.failMsg || d.failReason || 'kie reporto fallo');
+            }
+            await new Promise(r => setTimeout(r, intervalMs));
+        }
+        throw new Error('Tiempo de espera agotado esperando a kie.ai');
+    }
+
+    /**
+     * Descarga la URL de kie via proxy kie-video-download (evita CORS), sube
+     * a production-outputs/image-edits/{userId}/{taskId}.png y devuelve la
+     * ruta de Storage + URL publica.
+     */
+    async _downloadAndUploadEditResult({ kieUrl, taskId }) {
+        if (!this.supabase?.storage) throw new Error('Supabase storage no disponible');
+        const userId = this.userId || (await this.supabase.auth.getUser()).data?.user?.id;
+        if (!userId) throw new Error('No hay userId para guardar la edicion');
+
+        const proxy = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieUrl)}`;
+        const res = await fetch(proxy);
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `Descarga fallida: ${res.status}`);
+        }
+        const blob = await res.blob();
+        const contentType = res.headers.get('content-type') || 'image/png';
+        const ext = (contentType.includes('jpeg') || contentType.includes('jpg')) ? 'jpg'
+            : contentType.includes('webp') ? 'webp' : 'png';
+        const safeTaskId = String(taskId || Date.now()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+        const storagePath = `image-edits/${userId}/${safeTaskId}.${ext}`;
+
+        const { error } = await this.supabase.storage.from('production-outputs').upload(storagePath, blob, {
+            contentType,
+            upsert: true
+        });
+        if (error) throw error;
+        const { data: urlData } = this.supabase.storage.from('production-outputs').getPublicUrl(storagePath);
+        return { storagePath, publicUrl: urlData?.publicUrl || null };
+    }
+
+    /**
+     * Inserta el output editado en runs_outputs con metadata de linaje.
+     */
+    async _insertEditOutput({ runId, sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId }) {
+        const row = {
+            run_id: runId,
+            output_type: 'ai_content',
+            organization_id: this.organizationId,
+            storage_path: storagePath,
+            prompt_used: refinedPrompt,
+            reference_image_url: sourceImageUrl,
+            models: { editor: kieModel, prompter: openaiModel },
+            metadata: {
+                kind: 'image_edit',
+                source_output_id: sourceOutputId,
+                edit_user_instruction: userInstruction,
+                edit_refined_prompt: refinedPrompt,
+                mask_storage_path: maskStoragePath,
+                kie_task_id: kieTaskId
+            },
+            technical_params: { output_format: 'png' }
+        };
+        const { error } = await this.supabase.from('runs_outputs').insert(row);
+        if (error) throw error;
     }
 
     _canvasHasContent(canvas) {
