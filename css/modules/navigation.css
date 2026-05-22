@@ -1954,15 +1954,6 @@ body.production-filters-in-header .app-header.with-sidebar {
     height: auto;
     min-height: var(--app-header-height, 45.8px);
     padding-top: 12px;
-    /* Override hardcoded del glass-black real (spec Figma): rgba(0,0,0,0.52)
-       + blur(18px) saturate(160%). Mismo patron que #userDropdown.glass-black
-       en navigation.css:2185 — los tokens --glass-blur (blur 7px) y
-       --glass-black-bg (rgba 0.5) son insuficientes para imagenes de alto
-       contraste como las cards de Production. */
-    background: rgba(0, 0, 0, 0.52) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(18px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
 }
 body.production-filters-in-header .app-header .header-content {
     padding-bottom: 14px;
@@ -2183,16 +2174,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: flex !important;
 }
 
-/* Capa glass dedicada del dropdown principal:
-   evita que el backdrop se "aplane" por el contexto visual del header. */
-#userDropdown.glass-black,
-#userDropdown.user-dropdown.glass-black,
-.app-header .header-user-menu-wrap .user-dropdown.glass-black {
-    background: rgba(0, 0, 0, 0.34) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(18px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-}
+/* userDropdown.glass-black: hereda del token --glass-black-bg / --glass-blur
+   en bundle.css. El override hardcoded fue removido tras subir los tokens
+   al valor real del estandar. */
 
 /* Mismo patrón que #userDropdown: panel en document.body, visible solo con .active */
 #notificationsDropdown,
@@ -2220,14 +2204,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     display: flex !important;
 }
 
-#notificationsDropdown.glass-black,
-#notificationsDropdown.user-dropdown.glass-black,
-#notificationsDropdown.notifications-dropdown.glass-black {
-    background: rgba(0, 0, 0, 0.34) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(18px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
-}
+/* notificationsDropdown.glass-black: hereda del token. Override removido. */
 
 .notifications-dropdown-inner {
     display: flex;

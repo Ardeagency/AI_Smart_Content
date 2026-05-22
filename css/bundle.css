@@ -184,11 +184,18 @@
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-radius: 14px;
-    --glass-blur: blur(7px);
+    /* glass-blur: standard de la plataforma (referencia: #userDropdown.glass-black).
+       blur(18px) + saturate(160%) = frosted glass real. Antes era blur(7px)
+       — visualmente apenas perceptible sobre fondos de alto contraste. */
+    --glass-blur: blur(18px) saturate(160%);
     --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
-    --glass-black-bg: rgba(0, 0, 0, 0.5);
-    --glass-black-border: var(--glass-border);
+    /* glass-black-bg: 0.34 alpha — translucidez correcta sobre el blur fuerte.
+       Era 0.5: demasiado opaco, no se sentia glass. */
+    --glass-black-bg: rgba(0, 0, 0, 0.34);
+    /* glass-black-border: 0.14 alpha (mas opaco que glass-border 0.10) para
+       que el filete sea visible sobre superficies oscuras + glass. */
+    --glass-black-border: rgba(255, 255, 255, 0.14);
     --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
     --glass-white-bg: rgba(255, 255, 255, 0.14);
