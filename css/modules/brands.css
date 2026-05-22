@@ -2129,19 +2129,22 @@ h1.brand-name-large[contenteditable="true"]:hover,
     content: '';
 }
 
-/* Affordance editable: aplicar a contenteditable-style inline fields. */
+/* Affordance editable: el editable no reserva padding-right (no fragmenta
+   el texto en wrap). El icono lapiz se posiciona FUERA del bounding box
+   para no superponerse con las letras. El padding-left + margin-left
+   negativo dan la sensacion de "hit area" sin desplazar visualmente. */
 .brand-name-large[contenteditable="true"],
 .brand-slogan-input[contenteditable="true"],
 #infoPanelContent .editable-inline-title,
 #infoPanelContent .editable-inline-subtitle {
     position: relative;
     border-radius: 6px;
-    padding: 2px 28px 2px 6px;
+    padding: 2px 0 2px 6px;
     margin-left: -6px;
     transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* Pencil icon affordance — aparece en reposo bajo opacidad sutil, sube al hover. */
+/* Pencil icon fuera del flow del texto (right negativo). */
 .brand-name-large[contenteditable="true"]::after,
 .brand-slogan-input[contenteditable="true"]::after,
 #infoPanelContent .editable-inline-title::after,
@@ -2150,16 +2153,24 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome;
     font-weight: 900;
     position: absolute;
-    top: 0.5em;
-    right: 8px;
+    top: 50%;
+    right: -22px;
+    transform: translateY(-50%);
     /* Tamaño absoluto para no escalar con el font-size del padre (h1 de 6rem
-       quemaria al lapiz). Constante 12px se ve bien en cualquier contexto. */
-    font-size: 12px;
+       quemaria al lapiz). 14px se ve bien en cualquier contexto. */
+    font-size: 14px;
     line-height: 1;
     opacity: 0;
     transition: opacity 0.18s ease;
     pointer-events: none;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+/* En h1 grande (brand-name-large, 6rem), centrar verticalmente queda muy
+   abajo. Anclamos al baseline del top en su lugar. */
+.brand-name-large[contenteditable="true"]::after {
+    top: 0.4em;
+    transform: none;
 }
 
 .brand-name-large[contenteditable="true"]:hover,
@@ -2173,7 +2184,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .brand-slogan-input[contenteditable="true"]:hover::after,
 #infoPanelContent .editable-inline-title:hover::after,
 #infoPanelContent .editable-inline-subtitle:hover::after {
-    opacity: 0.7;
+    opacity: 0.75;
 }
 
 .brand-name-large[contenteditable="true"]:focus,
