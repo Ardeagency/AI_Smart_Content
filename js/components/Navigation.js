@@ -173,10 +173,20 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     icon: 'fa-book',
     iconSrc: '/recursos/icons/memory.svg',
     children: [
-      { label: 'Vector Memory', route: '/dev/lead/ai-vectors' }
+      { label: 'Entrenamiento de Vera', route: '/dev/lead/vera-training' },
+      { label: 'Ver conocimientos', route: '/dev/lead/vera-knowledge' }
     ]
   },
   { type: 'section', label: 'Admin', role_required: 'lead' },
+  {
+    type: 'page',
+    id: 'admin-orgs',
+    label: 'Organizaciones',
+    icon: 'fa-building',
+    iconSrc: '/recursos/icons/organization.svg',
+    role_required: 'lead',
+    route: '/dev/lead/orgs'
+  },
   {
     type: 'page',
     id: 'admin-team',

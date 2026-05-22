@@ -409,9 +409,11 @@ class App {
     // ── Dev Lead ──
     r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);
     r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js']), auth);
+    r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js']), auth);
     r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js']), auth);
     r.register('/dev/lead/input-schemas', this._lazy('DevLeadInputSchemasView', [...devBase, '/js/views/DevLeadInputSchemasView.js']), auth);
-    r.register('/dev/lead/ai-vectors', this._lazy('DevLeadVectorsView', [...devBase, '/js/views/DevLeadVectorsView.js']), auth);
+    r.register('/dev/lead/vera-training', this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js']), auth);
+    r.register('/dev/lead/vera-knowledge', this._lazy('DevLeadVeraKnowledgeView', [...devBase, '/js/views/DevLeadVeraKnowledgeView.js']), auth);
     r.register('/dev/lead/flows', this._lazy('DevLeadAllFlowsView', [...devBase, '/js/views/DevLeadAllFlowsView.js']), auth);
     r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
 
