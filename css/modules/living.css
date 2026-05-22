@@ -454,20 +454,20 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: var(--media-container-shadow);
 }
 
-/* Cards con PNG transparente (output del flujo remove-bg): checkerboard
-   pattern (convencion universal Photoshop/Figma) para indicar transparencia.
-   Si la imagen REALMENTE tiene alpha, el patron se ve donde era el fondo;
-   si no se ve nada distinto al fondo solido, Recraft no quito el fondo. */
+/* Cards con PNG transparente (output del flujo remove-bg): contenedor
+   glass-black para indicar transparencia. La imagen <img> tiene
+   background: var(--media-container-bg-fill) por defecto (#141517
+   opaco), que tapa la transparencia. La regla siguiente la fuerza a
+   transparent para que el fondo glass-black de la card sea visible
+   donde el PNG tiene alpha=0. */
 .living-masonry-grid .living-masonry-item.is-alpha-bg {
-    background-color: #1a1a1a !important;
-    background-image:
-        linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
-        linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
-        linear-gradient(-45deg, transparent 75%, #2a2a2a 75%) !important;
-    background-size: 16px 16px !important;
-    background-position: 0 0, 0 8px, 8px -8px, 8px 0 !important;
+    background: rgba(11, 11, 11, 0.55) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(24px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+}
+.living-masonry-grid .living-masonry-item.is-alpha-bg img {
+    background: transparent !important;
 }
 
 .living-masonry-grid .living-masonry-item:hover {
@@ -801,17 +801,16 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
 }
 
-/* Output con alpha (remove-bg): checkerboard pattern para que la
-   transparencia sea inequivoca (convencion universal Photoshop/Figma). */
+/* Output con alpha (remove-bg): glass-black + img transparente para que
+   la transparencia sea perceptible (la <img> hereda background solido
+   por default, hay que forzarla a transparent). */
 .production-modal.has-alpha-output .production-modal-visual {
-    background-color: #1a1a1a;
-    background-image:
-        linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
-        linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
-        linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
-    background-size: 24px 24px;
-    background-position: 0 0, 0 12px, 12px -12px, 12px 0;
+    background: rgba(11, 11, 11, 0.55);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+.production-modal.has-alpha-output #pmodalImage {
+    background: transparent !important;
 }
 
 .production-modal-visual-inner {
