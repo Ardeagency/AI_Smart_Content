@@ -337,10 +337,13 @@
       header.appendChild(closeBtn);
     }
 
-    // Animacion en cascada de las otras cards + corner (igual que el viejo
-    // openInfoPanel de brand-organization). Aporta el fade visual antes de
-    // que la card INFO entre desde abajo.
-    const otherCards = cardsZone ? Array.from(cardsZone.querySelectorAll('.brand-card:not(.card-info)')) : [];
+    // Animacion en cascada de TODAS las otras cards (incluida la card-info
+    // chiquita original) + corner. Excluimos la card nueva que estamos
+    // creando (brand-storage-item-info-panel) — esa entra con su propia
+    // animacion de aparicion.
+    const otherCards = cardsZone
+      ? Array.from(cardsZone.querySelectorAll('.brand-card:not(.brand-storage-item-info-panel)'))
+      : [];
     const cornerInfo = container.querySelector('.brand-corner-bottom-left');
     otherCards.forEach((card, index) => {
       card.style.willChange = 'opacity, transform';
