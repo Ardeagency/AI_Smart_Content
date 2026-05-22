@@ -2491,17 +2491,72 @@ class LivingManager {
     }
 
     /**
-     * Abre/cierra el picker popover sobre la barra. Contenido segun modo:
-     *   replace        → input URL inline
-     *   fix-product    → grid de productos (auto-detectado pre-seleccionado)
-     *   change-product → grid de productos
+     * Abre el adjuntador segun el modo:
+     *   replace        → file picker nativo (sube y adjunta automaticamente)
+     *   fix-product    → grid de productos (popover, auto-pre-selecciona)
+     *   change-product → grid de productos (popover)
      */
     _toggleEditPicker() {
+        const mode = this._editMode || 'remove';
+        if (mode === 'replace') {
+            this._closeEditPicker();
+            this._openReferenceFilePicker();
+            return;
+        }
         const picker = document.getElementById('pmodalEditPicker');
         if (!picker) return;
         if (!picker.hidden) { this._closeEditPicker(); return; }
         this._renderPickerContent(picker);
         picker.hidden = false;
+    }
+
+    /**
+     * Dispara el file input nativo y bindea el change handler una sola vez.
+     */
+    _openReferenceFilePicker() {
+        const input = document.getElementById('pmodalEditFileInput');
+        if (!input) return;
+        if (!input._editChangeBound) {
+            input._editChangeBound = true;
+            input.addEventListener('change', async () => {
+                const file = input.files && input.files[0];
+                input.value = ''; // permite re-seleccionar el mismo archivo
+                if (!file) return;
+                try {
+                    const publicUrl = await this._uploadEditReferenceFile(file);
+                    if (publicUrl) {
+                        this._editReferenceImageUrl = publicUrl;
+                        this._renderEditAttachments();
+                    }
+                } catch (err) {
+                    console.error('[edit-overlay] upload ref:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(`No se pudo subir la referencia: ${err.message || err}`);
+                    }
+                }
+            });
+        }
+        input.click();
+    }
+
+    /**
+     * Sube un archivo de referencia a production-inputs/edit-refs y devuelve
+     * la URL publica. Bucket existente, RLS permite insert con auth.
+     */
+    async _uploadEditReferenceFile(file) {
+        if (!this.supabase?.storage) throw new Error('Storage no disponible');
+        const userId = this.userId || (await this.supabase.auth.getUser()).data?.user?.id;
+        if (!userId) throw new Error('No hay sesion');
+        const extMap = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+        const ext = extMap[file.type] || (file.name.split('.').pop() || 'png').toLowerCase();
+        const path = `edit-refs/${userId}/${Date.now()}.${ext}`;
+        const { error } = await this.supabase.storage.from('production-inputs').upload(path, file, {
+            contentType: file.type || 'image/png',
+            upsert: false
+        });
+        if (error) throw error;
+        const { data: urlData } = this.supabase.storage.from('production-inputs').getPublicUrl(path);
+        return urlData?.publicUrl || null;
     }
 
     _closeEditPicker() {
@@ -2513,32 +2568,6 @@ class LivingManager {
 
     _renderPickerContent(picker) {
         const mode = this._editMode || 'remove';
-        if (mode === 'replace') {
-            picker.innerHTML = `
-                <div class="pmodal-edit-picker-head">
-                    <span class="pmodal-edit-picker-title">Imagen referencia</span>
-                </div>
-                <div class="pmodal-edit-picker-body">
-                    <input type="url" class="pmodal-edit-ref-input" id="pmodalEditRefUrl"
-                           placeholder="Pega la URL de la imagen de referencia"
-                           value="${this.escapeHtml(this._editReferenceImageUrl || '')}">
-                    <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" id="pmodalEditRefConfirm">Adjuntar</button>
-                </div>
-            `;
-            const input = picker.querySelector('#pmodalEditRefUrl');
-            const confirm = picker.querySelector('#pmodalEditRefConfirm');
-            const apply = () => {
-                const v = (input?.value || '').trim();
-                if (!v || !/^https?:\/\//i.test(v)) return;
-                this._editReferenceImageUrl = v;
-                this._closeEditPicker();
-                this._renderEditAttachments();
-            };
-            confirm?.addEventListener('click', apply);
-            input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
-            setTimeout(() => input?.focus(), 30);
-            return;
-        }
         if (mode === 'fix-product' || mode === 'change-product') {
             const hint = (mode === 'fix-product')
                 ? 'Producto a corregir'

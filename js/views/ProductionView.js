@@ -125,8 +125,11 @@ class ProductionView extends BaseView {
                         <!-- Attachments row: visible cuando hay producto/referencia seleccionado. -->
                         <div class="pmodal-edit-attachments" id="pmodalEditAttachments" hidden></div>
 
-                        <!-- Picker popover: se abre al click del + segun el modo. -->
+                        <!-- Picker popover: se abre al click del + para fix/change-product. -->
                         <div class="pmodal-edit-picker" id="pmodalEditPicker" hidden></div>
+
+                        <!-- File input nativo para Replace (subida directa de imagen referencia). -->
+                        <input type="file" id="pmodalEditFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;" aria-hidden="true">
 
                         <!-- Barra inferior estilo Director Console. -->
                         <div class="pmodal-edit-director-controls">
