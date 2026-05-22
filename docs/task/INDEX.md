@@ -112,6 +112,14 @@ Código en producción, falta acción humana o credenciales externas para cerrar
   - **Smoke backend** validado con IGNIS: threshold 0.01 USD temporal → mensaje pesado dispara `confirm_required` → INSERT OK con `[CONFIRM]` block + metadata preservado → cleanup OK + threshold restaurada a 5.00 USD.
   - **Pendiente**: prueba visual post-deploy en `console.aismartcontent.io` (push de VeraView.js + video.css a main → Netlify build → click real en bloque [CONFIRM] con IGNIS).
 
+- **Vera chat Bucket D widget bridge cerrado (2026-05-22)** — `window.__veraAction(actionType, payload, reasoning)` inyectado en srcdoc de iframes `[[html]]/[[artifact]]`:
+  - **Allowlist v1**: 6 read (`get_metric`, `list_campaigns`, `list_products`, `list_brands`, `list_audiences`, `list_pending_actions`) + 2 write con `vera_pending_actions` (`propose_brief`, `flag_competitor`).
+  - **VeraView**: `_initWidgetBridge` extendido para escuchar `vera_action` además de `vera_resize`. Validation `event.source === iframe.contentWindow` anti-spoofing.
+  - **Netlify Function** `functions/api-widget-action.js`: auth JWT + `assertOrgMember` + dispatch por allowlist. Reads via `supabaseRest`, writes a `vera_pending_actions` con autonomy=parcial.
+  - Commit `32bad26f` → Netlify build.
+
+- **Vera chat Buckets E+F (2026-05-22)** — Bucket F cleanup cerrado (memorias `1cr=$0.10` actualizadas a `$1`, comment de apify.client corregido, 3 test scripts movidos a `scripts/smoke-tests/`, 16 backups duplicados de ai-engine borrados). **Bucket E (max_tokens IGNIS 4096→16000) DIFERIDO** por decisión del usuario hasta cerrar optimización de VERA — no tocar IGNIS server hasta entonces.
+
 - **Bucket A billing fix (vera chat)** — ai-engine + 3 Netlify functions (`api-products-generate-fiche`, `api-services-generate-fiche`, `api-places-generate-fiche`) ahora cobran fraccional via `use_credits_numeric` (1 cred = $0.10 → conversión decimal interna). Audit drift residual $0.99 (no refund, dentro de tolerancia). Modelo cambiado a 1 cred = $1 USD con `v_org_credits_display` + FLOOR; refund retroactivo 99.59 cr a IGNIS aplicado.
 
 - **Bug brands table fix (parcial)** — 3 sites en `brand.tools.js` migrados de tabla legacy `brands` (no existe) a `brand_containers` + `audience_personas`. `getBrandProfile` / `getBrandDNA` / `getOrgOverview` funcionando E2E. **Falta**: 4 sites en `brand-write.tools.js` + 1 site en `context.builder.js`.
