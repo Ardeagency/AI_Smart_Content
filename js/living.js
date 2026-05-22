@@ -2619,9 +2619,6 @@ class LivingManager {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = 'auto'; }
         }
-        // GPT Image-2 solo acepta auto/1:1/9:16/16:9/4:3/3:4. Cualquier otro -> 'auto'.
-        const allowed = new Set(['auto', '1:1', '9:16', '16:9', '4:3', '3:4']);
-        const arForGpt = allowed.has(aspectRatio) ? aspectRatio : 'auto';
 
         let createPayload;
         try {
@@ -2637,8 +2634,7 @@ class LivingManager {
                     product_id: info?.productId || null,
                     product_name: info?.productName || null,
                     product_image_urls: productImageUrls,
-                    aspect_ratio: arForGpt,
-                    resolution: arForGpt === 'auto' || arForGpt === '1:1' ? '1K' : '2K'
+                    aspect_ratio: aspectRatio
                 })
             });
             let parsed;
@@ -2664,7 +2660,7 @@ class LivingManager {
             clientId,
             taskId: createPayload.taskId,
             sourceImageUrl: imageUrl,
-            aspectRatio: arForGpt,
+            aspectRatio,
             label: 'Mejorando textos'
         });
 
@@ -2674,7 +2670,7 @@ class LivingManager {
             createPayload,
             sourceOutputId,
             sourceImageUrl: imageUrl,
-            aspectRatio: arForGpt,
+            aspectRatio,
             productId: info?.productId || null,
             productName: info?.productName || null,
             entityId: info?.entityId || null

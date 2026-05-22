@@ -87,7 +87,7 @@ class ProductionView extends BaseView {
                     <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
                     <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
                     <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="gpt-image-2-text-to-image"><i class="fas fa-font"></i><span>Mejorar texto</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="fix-text" data-kie-model="nano-banana-pro"><i class="fas fa-font"></i><span>Mejorar texto</span></button>
                 </div>
 
                 <!-- Overlay de edicion: solo contiene los floats de tools y panel.

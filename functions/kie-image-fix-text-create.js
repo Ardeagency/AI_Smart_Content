@@ -1,21 +1,24 @@
 /**
  * Netlify Function: corrige los textos rotos/distorsionados de una imagen
- * usando GPT Image-2 (text-to-image) + OpenAI Vision como bridge.
+ * usando nano-banana-pro (image-to-image) + OpenAI Vision como bridge.
  *
- * GPT Image-2 es text-to-image puro (no acepta image inputs). Por eso usamos
- * el patron bridge:
- *   1. OpenAI gpt-4o-mini Vision lee la imagen ORIGINAL (con texto roto) y
- *      las imagenes de REFERENCIA del producto (con texto correcto), genera
- *      un prompt en ingles para GPT Image-2 que regenere la imagen
- *      conservando composicion / lighting / escena pero con los textos
- *      correctos del producto.
- *   2. kie.ai createTask con model gpt-image-2-text-to-image + el prompt
- *      + aspect_ratio + resolution.
+ * IMPORTANTE: la primera version usaba gpt-image-2-text-to-image. Ese modelo
+ * es text-to-image PURO (no acepta image_input) y por lo tanto re-generaba
+ * la imagen desde cero — la composicion no se preservaba pixel-perfect.
+ * Cambiado a nano-banana-pro que SI es image-to-image: el modelo VE la
+ * imagen original + las imagenes de referencia del producto y regenera
+ * preservando la escena.
+ *
+ * Patron:
+ *   1. OpenAI gpt-4o-mini Vision lee la imagen ORIGINAL (texto roto) y las
+ *      imagenes de REFERENCIA del producto (texto correcto), genera un
+ *      prompt corto y especifico para nano-banana-pro que indique SOLO
+ *      las correcciones de texto. No necesita describir la escena entera
+ *      (el modelo la ve).
+ *   2. kie.ai createTask con model=nano-banana-pro,
+ *      input.image_input=[imageUrl, ...productImageUrls],
+ *      input.prompt=refinedPrompt, input.aspect_ratio.
  *   3. Cobro: 0.10 cred via use_credits_numeric.
- *
- * Devuelve { taskId, refined_prompt, kie_model, openai_model, credits_charged }
- * para que el frontend haga polling con kling-video-status?taskId= y al
- * success persista via kie-output-persist (kind='fix-text').
  */
 
 const {
@@ -27,13 +30,12 @@ const {
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
 const CREATE_PATH = '/api/v1/jobs/createTask';
-const KIE_MODEL = process.env.KIE_IMAGE_FIX_TEXT_MODEL || 'gpt-image-2-text-to-image';
+const KIE_MODEL = process.env.KIE_IMAGE_FIX_TEXT_MODEL || 'nano-banana-pro';
 const OPENAI_MODEL = process.env.OPENAI_FIX_TEXT_PROMPT_MODEL || 'gpt-4o-mini';
 const CREDITS_PER_FIX_TEXT = 0.10;
 
-// kie GPT Image-2 acepta estos aspect ratios. Si no matchea, cae a 'auto'.
-const ALLOWED_ASPECT_RATIOS = new Set(['auto', '1:1', '9:16', '16:9', '4:3', '3:4']);
-const ALLOWED_RESOLUTIONS = new Set(['1K', '2K', '4K']);
+// nano-banana-pro acepta los 10 aspect ratios + auto.
+const ALLOWED_ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']);
 
 function fail(event, status, error, extra = {}) {
   return {
@@ -54,20 +56,27 @@ function getKieAuthHeaders() {
 
 const SYSTEM_PROMPT = [
   'You are a senior advertising photo retoucher specializing in text correction.',
-  'You receive: (1) the ORIGINAL ad image whose printed/painted text is broken,',
-  'distorted, or hallucinated; and (2) one or more REFERENCE photos of the real',
-  'product showing the correct typography, brand name, labels, and copy.',
-  'Your job: produce ONE detailed English prompt (under 280 words) for GPT',
-  'Image-2 (text-to-image) that REGENERATES the original image from scratch',
-  'preserving the EXACT visual scene — framing, camera angle, subjects, props,',
-  'background, surfaces, lighting direction, color grading, shadows, materials,',
-  'composition — but with the typography, brand names, and any printed text',
-  'rendered CORRECTLY as shown in the reference product photos. Be very',
-  'explicit about the exact text strings, font weight (sans-serif display vs.',
-  'serif vs. script), color, and placement of each text element. If the original',
-  'image has text in the background or signage, preserve it correctly too. Do',
-  'NOT add new elements, do NOT change the product or scene. Output the prompt',
-  'as a single paragraph, no preamble, no bullets, no quotes.'
+  'The image generation model (nano-banana-pro, image-to-image) WILL receive',
+  'the ORIGINAL image and the product REFERENCE images you are about to see.',
+  'It will regenerate from the original — you do NOT need to describe the',
+  'entire scene.',
+  '',
+  'You receive: (1) the ORIGINAL ad image whose printed/painted text is',
+  'broken, distorted, or hallucinated; and (2) one or more REFERENCE photos',
+  'of the real product showing the correct typography, brand name, labels,',
+  'and copy.',
+  '',
+  'Your job: produce ONE concise English prompt (under 160 words) telling',
+  'nano-banana to keep the original image EXACTLY as-is and ONLY correct the',
+  'printed text/typography/brand-name in the product zone to match the',
+  'reference product photos. Be explicit about:',
+  '  - the exact text strings to render (quote them verbatim from references)',
+  '  - the font style (display sans-serif / serif / script) and weight',
+  '  - the color and placement',
+  'Repeat strongly: PRESERVE all other pixels — composition, framing, camera',
+  'angle, lighting, shadows, surfaces, materials, background, color grading,',
+  'product geometry — UNCHANGED. Do NOT add elements, do NOT change the scene.',
+  'Output the prompt as a single paragraph, no preamble, no bullets, no quotes.'
 ].join(' ');
 
 async function generateFixTextPromptWithVision({ apiKey, imageUrl, productImageUrls, productName }) {
@@ -120,18 +129,25 @@ async function generateFixTextPromptWithVision({ apiKey, imageUrl, productImageU
   };
 }
 
-async function createKieTask({ headers, prompt, aspectRatio, resolution }) {
-  // GPT Image-2 doc: input.prompt (required, max 20K chars), input.aspect_ratio,
-  // input.resolution. Importante: aspect_ratio=auto solo permite resolution=1K.
+async function createKieTask({ headers, prompt, imageUrl, productImageUrls, aspectRatio }) {
+  // nano-banana-pro doc: input.prompt + input.image_input (array URLs) +
+  // input.aspect_ratio + input.output_format. image-to-image — el modelo VE
+  // la imagen original y la regenera con los cambios indicados en el prompt.
+  const imageInput = [imageUrl];
+  for (const u of (productImageUrls || [])) {
+    if (imageInput.length >= 4) break;
+    if (typeof u === 'string' && /^https?:\/\//i.test(u) && !imageInput.includes(u)) {
+      imageInput.push(u);
+    }
+  }
   const ar = ALLOWED_ASPECT_RATIOS.has(aspectRatio) ? aspectRatio : 'auto';
-  let res = ALLOWED_RESOLUTIONS.has(resolution) ? resolution : '2K';
-  if (ar === 'auto' || ar === '1:1') res = '1K'; // 1:1 no soporta 4K, auto solo 1K
   const payload = {
     model: KIE_MODEL,
     input: {
-      prompt: String(prompt).slice(0, 20000),
+      prompt: String(prompt).slice(0, 2500),
+      image_input: imageInput,
       aspect_ratio: ar,
-      resolution: res
+      output_format: 'png'
     }
   };
   const callBackUrl = process.env.KIE_NANO_CALLBACK_URL || '';
@@ -215,7 +231,6 @@ exports.handler = async (event) => {
   const productId = String(body.product_id || '').trim() || null;
   const productName = String(body.product_name || '').trim() || null;
   const aspectRatio = String(body.aspect_ratio || 'auto').trim();
-  const resolution = String(body.resolution || '2K').trim();
   const productImageUrls = Array.isArray(body.product_image_urls)
     ? body.product_image_urls.filter(u => typeof u === 'string' && /^https?:\/\//i.test(u)).slice(0, 3)
     : [];
@@ -244,7 +259,13 @@ exports.handler = async (event) => {
 
   let kieTaskId;
   try {
-    kieTaskId = await createKieTask({ headers: kieHeaders, prompt: refinedPrompt, aspectRatio, resolution });
+    kieTaskId = await createKieTask({
+      headers: kieHeaders,
+      prompt: refinedPrompt,
+      imageUrl,
+      productImageUrls,
+      aspectRatio
+    });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
@@ -285,7 +306,6 @@ exports.handler = async (event) => {
       kie_model: KIE_MODEL,
       openai_model: OPENAI_MODEL,
       aspect_ratio: aspectRatio,
-      resolution,
       credits_charged: CREDITS_PER_FIX_TEXT
     })
   };
