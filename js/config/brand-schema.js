@@ -45,20 +45,28 @@
    * Schema del panel INFO de sub-marca (BrandstorageView). Incluye campos de
    * `idiomas_contenido` y `mercado_objetivo` — NO aplican en el panel INFO de
    * organización (BrandOrganizationView), que usa la variante ORG abajo.
+   *
+   * Limites (maxChars / maxItems): elegidos para evitar sobre-saturacion del
+   * payload que se entrega al LLM creativo (ver FEAT-029 Fase 1). Cuando un
+   * field excede su limite, los LLM tienden a tomar el contenido literal,
+   * matando la creatividad de la generacion. Los limites son sugeridos
+   * (warning visual), no bloqueantes: el usuario puede pasarse, pero ve
+   * counter en rojo + advertencia.
    */
   const BRAND_SCHEMA_BLOCKS_CONTAINER = [
-    { field: 'idiomas_contenido',     label: 'Idiomas de contenido',     type: 'array' },
-    { field: 'mercado_objetivo',      label: 'Mercado objetivo',         type: 'array' },
+    { field: 'creative_brief',        label: 'Sintesis creativa',        type: 'textarea', maxChars: 280, hint: 'Lo que el LLM creativo lee como inspiracion principal. Brevedad ayuda mas que detalle.' },
+    { field: 'idiomas_contenido',     label: 'Idiomas de contenido',     type: 'array',    maxItems: 4 },
+    { field: 'mercado_objetivo',      label: 'Mercado objetivo',         type: 'array',    maxItems: 6 },
     { field: 'nicho_core',            label: 'Nicho core',               type: 'select' },
-    { field: 'sub_nichos',            label: 'Sub-nichos',               type: 'array' },
-    { field: 'arquetipo',             label: 'Arquetipo',                type: 'text' },
-    { field: 'propuesta_valor',       label: 'Propuesta de valor',       type: 'textarea' },
-    { field: 'mision_vision',         label: 'Misión y visión',          type: 'textarea' },
+    { field: 'sub_nichos',            label: 'Sub-nichos',               type: 'array',    maxItems: 5,  hint: 'Nombres limpios, sin descripciones largas. El LLM tiende a pegar el label completo en el producto.' },
+    { field: 'arquetipo',             label: 'Arquetipo',                type: 'text',     maxChars: 60 },
+    { field: 'propuesta_valor',       label: 'Propuesta de valor',       type: 'textarea', maxChars: 300 },
+    { field: 'mision_vision',         label: 'Misión y visión',          type: 'textarea', maxChars: 400 },
     { field: 'verbal_dna',            label: 'ADN verbal',               type: 'json' },
     { field: 'visual_dna',            label: 'ADN visual',               type: 'json' },
-    { field: 'palabras_clave',        label: 'Palabras clave',           type: 'array' },
-    { field: 'palabras_prohibidas',   label: 'Palabras prohibidas',      type: 'array' },
-    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos',  type: 'array' }
+    { field: 'palabras_clave',        label: 'Palabras clave',           type: 'array',    maxItems: 12, hint: 'No es vocabulario obligatorio para el LLM. Mas items dilute la inspiracion en literalidad.' },
+    { field: 'palabras_prohibidas',   label: 'Palabras prohibidas',      type: 'array',    maxItems: 12 },
+    { field: 'objetivos_estrategicos', label: 'Objetivos estratégicos',  type: 'array',    maxItems: 5,  hint: 'Para reporting interno, no para el prompt creativo.' }
   ];
 
   /** Variante para panel INFO de organización: sin `idiomas_contenido`/`mercado_objetivo`. */

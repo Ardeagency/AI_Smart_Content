@@ -167,11 +167,28 @@
         valueHtml = this.renderBrandJsonEditor(block.field, raw);
       } else if (block.type === 'textarea') {
         const textValue = raw == null ? '' : String(raw);
-        valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="textarea" rows="3" spellcheck="true">${this.escapeHtml(textValue)}</textarea>`;
+        const maxAttr = block.maxChars ? ` data-brand-max-chars="${block.maxChars}"` : '';
+        valueHtml = `<textarea class="info-brand-textarea" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="textarea" rows="3" spellcheck="true"${maxAttr}>${this.escapeHtml(textValue)}</textarea>`;
       } else {
         const textValue = raw == null ? '' : String(raw);
-        valueHtml = `<div class="info-brand-text-editor editable-field" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="text" contenteditable="true">${this.escapeHtml(textValue)}</div>`;
+        const maxAttr = block.maxChars ? ` data-brand-max-chars="${block.maxChars}"` : '';
+        valueHtml = `<div class="info-brand-text-editor editable-field" data-brand-field="${this.escapeHtml(block.field)}" data-brand-input-type="text" contenteditable="true"${maxAttr}>${this.escapeHtml(textValue)}</div>`;
       }
+
+      // Counter + hint footer: aparece cuando el field tiene maxChars/maxItems
+      // o hint explicito en el schema. Para arrays el counter cuenta items;
+      // para textarea/text cuenta caracteres. Estado warn (>=90%) y over (>limite).
+      const limitMeta = this._computeFieldLimit(block, raw);
+      const counterHtml = limitMeta.hasLimit
+        ? `<span class="info-brand-counter ${limitMeta.state}" data-counter-for="${this.escapeHtml(block.field)}">${limitMeta.current}/${limitMeta.max}</span>`
+        : '';
+      const hintHtml = block.hint
+        ? `<span class="info-brand-hint">${this.escapeHtml(block.hint)}</span>`
+        : '';
+      const footerHtml = (counterHtml || hintHtml)
+        ? `<div class="info-brand-field-footer">${counterHtml}${hintHtml}</div>`
+        : '';
+
       // Fields tipo JSON tienen sub-bloques con sus propios containers
       // (TONO, FORMATO, PILARES...). Anidarlos dentro de otro container
       // se ve sucio. Modifier class abre el outer y vuelve al label en
@@ -181,9 +198,41 @@
         <div class="info-brand-field${modifier}">
           <div class="info-brand-field-label">${this.escapeHtml(block.label)}</div>
           ${valueHtml}
+          ${footerHtml}
         </div>`;
     }).join('');
-    return `<div class="info-brand-fields">${fieldHtml}</div>`;
+    const helperHtml = `
+      <div class="info-brand-helper" role="note">
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        <span>Estos campos son <strong>inspiracion</strong> para los LLM generadores, no instruccion literal. Menos texto + listas cortas = mas espacio creativo.</span>
+      </div>`;
+    return `${helperHtml}<div class="info-brand-fields">${fieldHtml}</div>`;
+    },
+
+  /**
+   * Calcula el estado del counter/limite de un field segun el schema.
+   * @returns {{hasLimit: boolean, current: number, max: number, state: string}}
+   */
+  _computeFieldLimit(block, raw) {
+    if (block.maxChars) {
+      const len = (raw == null ? '' : String(raw)).length;
+      return {
+        hasLimit: true,
+        current: len,
+        max: block.maxChars,
+        state: len > block.maxChars ? 'is-over' : (len >= block.maxChars * 0.9 ? 'is-warn' : ''),
+      };
+    }
+    if (block.maxItems) {
+      const arr = Array.isArray(raw) ? raw.filter((v) => v != null && String(v).trim() !== '') : [];
+      return {
+        hasLimit: true,
+        current: arr.length,
+        max: block.maxItems,
+        state: arr.length > block.maxItems ? 'is-over' : (arr.length >= block.maxItems * 0.9 ? 'is-warn' : ''),
+      };
+    }
+    return { hasLimit: false, current: 0, max: 0, state: '' };
     },
 
   renderBrandTagsEditor(field, values, opts = {}) {
@@ -694,6 +743,27 @@
 
   setupBrandContainerInfoPanelEditables(panelRoot, brandContainerId) {
     if (!panelRoot || !brandContainerId) return;
+
+    // Live counter para inputs con data-brand-max-chars (textarea / text editor).
+    // Actualiza el counter sibling con la longitud actual y aplica clase
+    // is-warn (>=90%) o is-over (>limite).
+    panelRoot.querySelectorAll('[data-brand-max-chars]').forEach((el) => {
+      if (el.dataset.boundCharCounter === '1') return;
+      el.dataset.boundCharCounter = '1';
+      const field = el.getAttribute('data-brand-field');
+      const max = parseInt(el.getAttribute('data-brand-max-chars'), 10);
+      if (!field || !max) return;
+      const counter = panelRoot.querySelector(`.info-brand-counter[data-counter-for="${CSS.escape(field)}"]`);
+      if (!counter) return;
+      const update = () => {
+        const value = el.tagName === 'TEXTAREA' ? el.value : (el.textContent || '');
+        const len = value.length;
+        counter.textContent = `${len}/${max}`;
+        counter.classList.toggle('is-over', len > max);
+        counter.classList.toggle('is-warn', len <= max && len >= max * 0.9);
+      };
+      el.addEventListener('input', update);
+    });
 
     // Editores inline sin chrome (mismo patron que el slogan del corner):
     // nombre_marca + propuesta_valor en la columna primary del panel.
