@@ -1719,6 +1719,22 @@ class VeraView extends (window.BaseView || class {}) {
       return `\n\n{{${id}}}\n\n`;
     });
 
+    // [CONFIRM] — tarea costosa, requiere aprobacion del usuario antes de ejecutar
+    processed = processed.replace(/\[CONFIRM\]([\s\S]*?)\[\/CONFIRM\]/g, (_, content) => {
+      const id = `vb_${blocks.length}`;
+      let usdRange = '';
+      let minutesRange = '';
+      const reasons = [];
+      content.trim().split('\n').forEach((line) => {
+        const l = line.trim();
+        if (l.startsWith('ESTIMATE_USD:'))      usdRange = l.replace('ESTIMATE_USD:', '').trim();
+        else if (l.startsWith('ESTIMATE_MINUTES:')) minutesRange = l.replace('ESTIMATE_MINUTES:', '').trim();
+        else if (l.startsWith('REASON:'))       reasons.push(l.replace('REASON:', '').trim());
+      });
+      blocks.push({ id, type: 'confirm', usdRange, minutesRange, reasons });
+      return `\n\n{{${id}}}\n\n`;
+    });
+
     return { processed, blocks };
   }
 
@@ -1767,15 +1783,42 @@ class VeraView extends (window.BaseView || class {}) {
           <button class="vera-action-pill" onclick="window._veraSendAction && window._veraSendAction(${JSON.stringify(a)})">${esc(a)} ↗</button>`).join('');
         return `<div class="vera-actions-row">${actionsHtml}</div>`;
       }
+      case 'confirm': {
+        const msgId = block._msgId || '';
+        const reasonsHtml = (block.reasons || []).map(r => `<li>${esc(r)}</li>`).join('');
+        const usd = esc(block.usdRange || '?');
+        const mins = esc(block.minutesRange || '?');
+        const handler = (action) => `window._veraConfirmAction && window._veraConfirmAction(${JSON.stringify(msgId)}, ${JSON.stringify(action)}, this)`;
+        return `<div class="vera-confirm-block" data-msg-id="${esc(msgId)}">
+          <div class="vera-confirm-header">
+            <span class="vera-confirm-icon">⚠</span>
+            <span class="vera-confirm-title">Tarea de alto costo detectada</span>
+          </div>
+          <div class="vera-confirm-estimate">
+            <strong>$${usd} USD</strong>
+            <span class="vera-confirm-sep">·</span>
+            <span class="vera-confirm-minutes">${mins} min</span>
+          </div>
+          ${reasonsHtml ? `<ul class="vera-confirm-reasons">${reasonsHtml}</ul>` : ''}
+          <div class="vera-confirm-actions">
+            <button class="vera-confirm-btn vera-confirm-btn-primary" onclick="${handler('authorize')}">Autorizar</button>
+            <button class="vera-confirm-btn" onclick="${handler('simplify')}">Simplificar</button>
+            <button class="vera-confirm-btn vera-confirm-btn-cancel" onclick="${handler('cancel')}">Cancelar</button>
+          </div>
+        </div>`;
+      }
       default: return '';
     }
   }
 
-  async renderMarkdown(rawText) {
+  async renderMarkdown(rawText, msgId = '') {
     await this._loadMarkdownLibs();
 
     // 1. Extrae bloques interactivos propios antes de pasar a marked
     const { processed, blocks } = this._parseInteractiveBlocks(rawText);
+    // Inyecta msgId a los bloques que lo necesiten (e.g. CONFIRM lo usa para
+    // localizar la metadata original del ai_message al accionar).
+    blocks.forEach((b) => { if (msgId) b._msgId = msgId; });
 
     // 2. Extrae bloques ```html y ```artifact ANTES de todo. Estos NO pasan por
     //    DOMPurify — se inyectan crudos en un iframe sandbox null-origin
@@ -1931,7 +1974,7 @@ class VeraView extends (window.BaseView || class {}) {
     let prepared = msg;
     if (msg.role === 'assistant' || msg.role === 'error' || msg.role === 'vera') {
       try {
-        const html = await this.renderMarkdown(msg.content || '');
+        const html = await this.renderMarkdown(msg.content || '', msg.id || '');
         prepared = { ...msg, _renderedContent: html };
       } catch (e) {
         console.warn('VeraView.renderMarkdown falló, usando fallback escapado:', e?.message || e);
@@ -1949,6 +1992,35 @@ class VeraView extends (window.BaseView || class {}) {
     // Handler global para action pills (sobrescribe en cada append, OK).
     if (typeof window !== 'undefined') {
       window._veraSendAction = (text) => this.sendMessage(text);
+      // Handler de [CONFIRM] — busca metadata.original_message en el ai_message
+      // por id y re-envia segun la accion (authorize / simplify / cancel).
+      window._veraConfirmAction = (msgId, action, btnEl) => {
+        const msg = (this.aiState.messages || []).find((m) => m.id === msgId);
+        const meta = msg?.metadata || {};
+        const original = meta.original_message || '';
+        const attachments = meta.original_attachments || [];
+        // Marca el bloque como ya accionado para evitar doble-click + UX clara.
+        const block = btnEl?.closest?.('.vera-confirm-block');
+        if (block) {
+          block.classList.add('vera-confirm-block--dismissed');
+          block.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+          const tag = document.createElement('div');
+          tag.className = 'vera-confirm-status';
+          const labels = { authorize: '✓ Autorizado', simplify: '✓ Autorizado (version simplificada)', cancel: '✕ Cancelado' };
+          tag.textContent = labels[action] || `accion: ${action}`;
+          block.appendChild(tag);
+        }
+        if (action === 'cancel') return;
+        if (!original) {
+          console.warn('vera-confirm: original_message vacio en metadata, no se puede re-enviar');
+          return;
+        }
+        this.sendMessage(original, {
+          confirmedHighCost: true,
+          simplifyRequest: action === 'simplify',
+          attachments,
+        });
+      };
     }
   }
 
@@ -2408,6 +2480,7 @@ class VeraView extends (window.BaseView || class {}) {
           message: text,
           attachments,
           confirmed_high_cost: opts.confirmedHighCost === true,
+          simplify_request: opts.simplifyRequest === true,
         })
       });
 
@@ -2437,19 +2510,24 @@ class VeraView extends (window.BaseView || class {}) {
 
       const convId = json?.conversation_id || this.aiState.active_conversation_id;
 
-      if (json?.status === 'cost_confirmation_required') {
-        // ── Pre-flight: backend estima alto costo y pide confirmación ───────
+      if (json?.status === 'cost_confirmation_inline') {
+        // ── Backend persistio el [CONFIRM] como ai_message. Llega via Realtime
+        //    y se renderiza con 3 botones (Autorizar / Simplificar / Cancelar).
+        //    No hacemos nada aqui — solo soltamos el spinner y dejamos que el
+        //    bloque aparezca cuando Supabase Realtime lo entregue.
+        this.hideTypingIndicator();
+        this.aiState.isLoading = false;
+        return;
+
+      } else if (json?.status === 'cost_confirmation_required') {
+        // ── Fallback legacy: backend devolvio el status viejo (e.g. el INSERT
+        //    del [CONFIRM] fallo). Usa el window.confirm() de respaldo.
         this.hideTypingIndicator();
         this.aiState.isLoading = false;
         const accepted = await this._confirmHighCost(json.estimate);
         if (accepted) {
-          // Reintentar con flag confirmed_high_cost=true. Mantenemos el
-          // mismo userMsg en pantalla; el backend insertará el row real
-          // y vendrá vía realtime.
           await this.sendMessage(text, { confirmedHighCost: true });
         } else {
-          // Usuario canceló: removemos el bubble optimista para que no
-          // quede como si Vera lo hubiera ignorado.
           if (userMsg) this._removeMessage(userMsg.id);
         }
         return;
