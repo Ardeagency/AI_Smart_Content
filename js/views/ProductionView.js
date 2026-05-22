@@ -80,12 +80,42 @@ class ProductionView extends BaseView {
                     <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
                 </div>
                 <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
-                    <button type="button" class="pmodal-toolpill is-active" data-tool="overview"><i class="fas fa-bars"></i><span>Overview</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit" disabled title="Proximamente"><i class="fas fa-pen"></i><span>Editar</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale" disabled title="Proximamente"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background" disabled title="Proximamente"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="variations" disabled title="Proximamente"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="animate" disabled title="Proximamente"><i class="fas fa-film"></i><span>Animar</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit"><i class="fas fa-pen"></i><span>Editar</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="variations"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="animate"><i class="fas fa-film"></i><span>Animar</span></button>
+                </div>
+
+                <!-- Overlay de edicion: aparece encima de la imagen cuando se activa "Editar".
+                     El canvas se posiciona sobre la imagen para que el usuario pinte
+                     la zona a modificar; debajo, textarea + tools (pincel/borrador/limpiar)
+                     + botones Cancelar/Aplicar. La mascara se captura como PNG dataURL. -->
+                <div class="pmodal-edit-overlay" id="pmodalEditOverlay" hidden aria-hidden="true">
+                    <canvas class="pmodal-edit-canvas" id="pmodalEditCanvas"></canvas>
+                    <div class="pmodal-edit-toolbar" role="toolbar" aria-label="Herramientas de edicion">
+                        <button type="button" class="pmodal-edit-tool is-active" data-edit-tool="brush" title="Pincel" aria-label="Pincel">
+                            <i class="fas fa-paintbrush"></i>
+                        </button>
+                        <button type="button" class="pmodal-edit-tool" data-edit-tool="eraser" title="Borrador" aria-label="Borrador">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                        <label class="pmodal-edit-size">
+                            <i class="fas fa-circle" aria-hidden="true"></i>
+                            <input type="range" id="pmodalEditBrushSize" min="10" max="200" value="60" aria-label="Tamano del pincel">
+                        </label>
+                        <button type="button" class="pmodal-edit-tool" data-edit-action="clear" title="Limpiar mascara" aria-label="Limpiar mascara">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="pmodal-edit-panel">
+                        <label class="pmodal-edit-label" for="pmodalEditPrompt">Que quieres cambiar?</label>
+                        <textarea id="pmodalEditPrompt" class="pmodal-edit-prompt" rows="2" placeholder="Ej: cambia el fondo a piedra mate, quita la lata roja, agrega vapor saliendo de la lata..."></textarea>
+                        <div class="pmodal-edit-actions">
+                            <button type="button" class="pmodal-edit-btn pmodal-edit-btn--ghost" data-edit-action="cancel">Cancelar</button>
+                            <button type="button" class="pmodal-edit-btn pmodal-edit-btn--accent" data-edit-action="apply">Aplicar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -1840,6 +1840,8 @@ class LivingManager {
         if (videoEl) { videoEl.pause(); videoEl.removeAttribute('src'); videoEl.load(); }
         const imgEl = document.getElementById('pmodalImage');
         if (imgEl) { imgEl.removeAttribute('src'); imgEl.hidden = true; }
+        // Cerrar overlay de edicion si estaba abierto, liberando canvas y prompt.
+        this._closeEditOverlay();
         if (this._siblingObserver) {
             try { this._siblingObserver.disconnect(); } catch (_) {}
             this._siblingObserver = null;
@@ -2261,6 +2263,201 @@ class LivingManager {
         strip.querySelectorAll('img[data-src]').forEach(img => this._siblingObserver.observe(img));
     }
 
+    /**
+     * Despacha clicks del toolbar del modal. Cada accion mapea a un endpoint
+     * Kie (data-kie-model en el HTML); por ahora solo "edit" abre UI propia,
+     * los demas muestran toast porque el backend (Netlify Functions) sigue
+     * pendiente. Cuando se conecten, este switch llama al endpoint y refresca.
+     */
+    _handleToolbarAction(tool, btn) {
+        const state = this._modalState || {};
+        switch (tool) {
+            case 'edit':
+                this._openEditOverlay();
+                break;
+            case 'upscale':
+                this._toolbarSoonToast('Mejorar 4K', 'Topaz');
+                break;
+            case 'remove-bg':
+                this._toolbarSoonToast('Sin fondo', 'Recraft');
+                break;
+            case 'variations':
+                this._toolbarSoonToast('Variar', 're-roll');
+                break;
+            case 'animate':
+                if (window.router) window.router.navigate('/video');
+                this.closeProductionModal();
+                break;
+            default:
+                break;
+        }
+    }
+
+    _toolbarSoonToast(label, vendor) {
+        const msg = vendor
+            ? `${label} (${vendor}) — wire-up con Kie en sprint dedicado.`
+            : `${label} — pendiente de wire-up.`;
+        if (typeof window.showToast === 'function') window.showToast(msg);
+        else console.info(msg);
+    }
+
+    // ====================================================================
+    // OVERLAY DE EDICION CON MASCARA
+    // El usuario pinta una zona sobre la imagen (canvas client-side, no IA)
+    // y escribe que quiere cambiar. La mascara se captura como PNG dataURL
+    // y se envia junto al prompt al endpoint Kie (cuando este wire-up).
+    // ====================================================================
+
+    _openEditOverlay() {
+        const overlay = document.getElementById('pmodalEditOverlay');
+        const visual = document.querySelector('.production-modal-visual-inner');
+        const img = document.getElementById('pmodalImage');
+        if (!overlay || !visual || !img || img.hidden || !img.src) {
+            if (typeof window.showToast === 'function') window.showToast('Editar solo disponible para imagenes');
+            return;
+        }
+        overlay.hidden = false;
+        overlay.setAttribute('aria-hidden', 'false');
+        this._editState = this._editState || { tool: 'brush', size: 60, drawing: false };
+
+        // Sincronizar tamano del canvas con la imagen ya pintada.
+        this._syncEditCanvasSize(img);
+        this._bindEditCanvasOnce();
+        // Focus al prompt para escritura inmediata.
+        setTimeout(() => document.getElementById('pmodalEditPrompt')?.focus(), 50);
+    }
+
+    _closeEditOverlay() {
+        const overlay = document.getElementById('pmodalEditOverlay');
+        if (!overlay) return;
+        overlay.hidden = true;
+        overlay.setAttribute('aria-hidden', 'true');
+        this._clearEditCanvas();
+        const promptEl = document.getElementById('pmodalEditPrompt');
+        if (promptEl) promptEl.value = '';
+    }
+
+    _syncEditCanvasSize(img) {
+        const canvas = document.getElementById('pmodalEditCanvas');
+        if (!canvas) return;
+        const rect = img.getBoundingClientRect();
+        const parentRect = canvas.parentElement.getBoundingClientRect();
+        // Canvas dimensions = pixel resolution; CSS size = display size matching img.
+        canvas.width = Math.round(rect.width);
+        canvas.height = Math.round(rect.height);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        canvas.style.left = (rect.left - parentRect.left) + 'px';
+        canvas.style.top = (rect.top - parentRect.top) + 'px';
+    }
+
+    _bindEditCanvasOnce() {
+        const canvas = document.getElementById('pmodalEditCanvas');
+        if (!canvas || canvas._editBound) return;
+        canvas._editBound = true;
+        const ctx = canvas.getContext('2d');
+
+        const getPos = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const t = e.touches ? e.touches[0] : e;
+            return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+        };
+
+        const stroke = (e) => {
+            if (!this._editState?.drawing) return;
+            e.preventDefault();
+            const p = getPos(e);
+            const size = this._editState.size;
+            if (this._editState.tool === 'brush') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = 'rgba(197, 255, 0, 0.45)'; // accent-yellow semi-transparente
+            } else {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.fillStyle = 'rgba(0,0,0,1)';
+            }
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        canvas.addEventListener('mousedown', (e) => { this._editState.drawing = true; stroke(e); });
+        canvas.addEventListener('mousemove', stroke);
+        window.addEventListener('mouseup', () => { if (this._editState) this._editState.drawing = false; });
+        canvas.addEventListener('touchstart', (e) => { this._editState.drawing = true; stroke(e); }, { passive: false });
+        canvas.addEventListener('touchmove', stroke, { passive: false });
+        canvas.addEventListener('touchend', () => { if (this._editState) this._editState.drawing = false; });
+
+        // Re-sincronizar tamano al cambiar viewport (re-layout de la imagen).
+        const img = document.getElementById('pmodalImage');
+        if (img) {
+            const ro = new ResizeObserver(() => this._syncEditCanvasSize(img));
+            ro.observe(img);
+        }
+
+        // Slider de tamano de pincel.
+        const slider = document.getElementById('pmodalEditBrushSize');
+        if (slider) {
+            slider.addEventListener('input', (e) => {
+                if (this._editState) this._editState.size = parseInt(e.target.value, 10) || 60;
+            });
+        }
+    }
+
+    _setEditTool(tool) {
+        if (!this._editState) this._editState = { tool: 'brush', size: 60, drawing: false };
+        this._editState.tool = (tool === 'eraser' ? 'eraser' : 'brush');
+        document.querySelectorAll('[data-edit-tool]').forEach(el => {
+            el.classList.toggle('is-active', el.getAttribute('data-edit-tool') === this._editState.tool);
+        });
+    }
+
+    _clearEditCanvas() {
+        const canvas = document.getElementById('pmodalEditCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /**
+     * Aplica la edicion. Captura la mascara (PNG dataURL) + el prompt y por
+     * ahora muestra un toast. Cuando el backend Netlify este listo, este
+     * metodo hace POST a /.netlify/functions/api-kie-edit con
+     *   { image_url: state.mediaUrl, mask_png: dataURL, prompt }.
+     */
+    _applyEditOverlay() {
+        const promptEl = document.getElementById('pmodalEditPrompt');
+        const canvas = document.getElementById('pmodalEditCanvas');
+        const prompt = (promptEl?.value || '').trim();
+        if (!prompt) {
+            if (typeof window.showToast === 'function') window.showToast('Describe que quieres cambiar antes de aplicar');
+            promptEl?.focus();
+            return;
+        }
+        const hasMask = canvas && this._canvasHasContent(canvas);
+        const maskPng = hasMask ? canvas.toDataURL('image/png') : null;
+        const msg = hasMask
+            ? `Edicion encolada con mascara: "${prompt.slice(0, 60)}${prompt.length > 60 ? '…' : ''}"`
+            : `Edicion encolada (sin mascara): "${prompt.slice(0, 60)}${prompt.length > 60 ? '…' : ''}"`;
+        if (typeof window.showToast === 'function') window.showToast(msg);
+        // Persistimos en window para inspeccion / wire-up futuro.
+        window.__lastEditIntent = { prompt, maskPng, mediaUrl: this._modalState?.mediaUrl, outputId: this._modalState?.outputId };
+        this._closeEditOverlay();
+    }
+
+    _canvasHasContent(canvas) {
+        try {
+            const ctx = canvas.getContext('2d');
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            // Scan alpha channel; rapido salir al primer pixel no-transparente.
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 0) return true;
+            }
+            return false;
+        } catch (_) {
+            return false;
+        }
+    }
+
     _bindModalListenersOnce(modal) {
         if (modal._listenersBound) return;
         modal._listenersBound = true;
@@ -2270,6 +2467,30 @@ class LivingManager {
             const tabBtn = e.target.closest('.pmodal-tab[data-tab]');
             if (!tabBtn) return;
             this._switchModalTab(tabBtn.getAttribute('data-tab'));
+        });
+
+        // Toolbar acciones (Editar / Mejorar 4K / Sin fondo / Variar / Animar).
+        modal.addEventListener('click', (e) => {
+            const toolBtn = e.target.closest('.pmodal-toolpill[data-tool]');
+            if (!toolBtn || toolBtn.hasAttribute('disabled')) return;
+            const tool = toolBtn.getAttribute('data-tool');
+            this._handleToolbarAction(tool, toolBtn);
+        });
+
+        // Acciones internas del overlay de edicion.
+        modal.addEventListener('click', (e) => {
+            const editAction = e.target.closest('[data-edit-action]');
+            if (editAction) {
+                const act = editAction.getAttribute('data-edit-action');
+                if (act === 'cancel') this._closeEditOverlay();
+                else if (act === 'apply') this._applyEditOverlay();
+                else if (act === 'clear') this._clearEditCanvas();
+                return;
+            }
+            const toolSel = e.target.closest('[data-edit-tool]');
+            if (toolSel) {
+                this._setEditTool(toolSel.getAttribute('data-edit-tool'));
+            }
         });
 
         modal.addEventListener('click', async (e) => {
