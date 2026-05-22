@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-22** (VERA v3 cobertura 26/26 cerrada — Fase A aliases + Fase B bloques 1/2/3. Fase C14 prompt cycle-pulse reescrito al canonical v3: 23/23 tools inyectadas + 3 movimientos + Reglas NUNCA + AUTONOMOUS_TOOLS 39. Bucket A billing fix deployed. Bug brands table parcialmente cerrado en brand.tools.js — falta brand-write.tools.js y context.builder.js. FEAT-019 + FEAT-020 siguen pendientes solo de activación externa / prueba humana E2E. **Cleanup docs/task/ (2026-05-22)**: 7 archivos eliminados sin deuda + 2 TODOs de codigo resueltos — BuilderPersistence.js (RPC `can_access_flow`) y FEAT-021 OAuth buttons (DemoGuard inline).
+Última actualización: **2026-05-22** (VERA v3 cobertura 26/26 cerrada — Fase A aliases + Fase B bloques 1/2/3. Fase C14 prompt cycle-pulse reescrito al canonical v3: 23/23 tools inyectadas + 3 movimientos + Reglas NUNCA + AUTONOMOUS_TOOLS 39. Bucket A billing fix deployed. Bug brands table parcialmente cerrado en brand.tools.js — falta brand-write.tools.js y context.builder.js. FEAT-019 + FEAT-020 + FEAT-021b siguen pendientes solo de activación externa / prueba humana E2E. **Cleanup docs/task/ (2026-05-22)**: 7 archivos eliminados sin deuda + 2 TODOs de codigo resueltos — BuilderPersistence.js (RPC `can_access_flow`) y FEAT-021 OAuth buttons (DemoGuard inline). **Round 2 cleanup**: FEAT-016 eliminado (DONE), AUDIT-001 y ROADMAP-POST convertidos a tasks formales (FEAT-026, OPS-012, FEAT-027, FEAT-028) y eliminados, FEAT-021-demo-preview renombrado a FEAT-021b para resolver colision de ID. 6 tasks "sueltas" agregadas formalmente al INDEX (FEAT-018, FEAT-025, CHARTJS_FORMAT_SUPPORT, fa-subset-regen + las 4 nuevas + FEAT-021b).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -18,6 +18,7 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 |---|---|---|---|
 | [FEAT-019](./FEAT-019-payment-gateway.md) | Pasarela de pago dual Stripe (USD) + Wompi (COP). Schema, 6 functions Netlify, BillingService, tab Facturación, seeds COP. Wompi sandbox validado E2E (pago $240k aprobado, webhook procesado, créditos sumados). | Cuenta Stripe + 2 env vars · Wompi producción cuando llegue | b7364115, d6a0004a, a9fd7af8, 6e73e713, 6579456d |
 | [FEAT-020](./FEAT-020-auth-mfa.md) | MFA TOTP + magic link + revoke sessions. Migration `mfa_required` + RPC + VIEW aplicadas. UI tab Seguridad live. | 5 escenarios E2E en browser real con Authenticator | b9511e19 |
+| [FEAT-021b](./FEAT-021b-demo-preview-public.md) | Demo `/demo` con anon auth + RLS + DemoGuard sobre IGNIS. TODO #3 (OAuth buttons) cerrado 2026-05-22. | Verificacion live post-deploy: entrar a `/demo`, validar 6 known limitations + abrir modal "Solicitar acceso" en Meta/Google/Shopify | (varios) |
 
 ## 🔴 Critical
 
@@ -40,6 +41,9 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC granular — roles formales (owner/admin/editor/viewer) + matriz permisos + UI + invitaciones email | feature | 👤 | long | — |
 | [OPS-010](./OPS-010-ci-gates-staging.md) | CI/CD — vitest gate en Netlify pre-deploy + staging branch separado de prod | ops | 👤 | medium | — |
 | [FEAT-023](./FEAT-023-mis-campanas-dashboard.md) | Dashboard "Mis Campañas" (FEAT-023) — Ola 1 (backend+frontend) live: ad_insights_daily, sync Meta cron, 4 RPCs causales, mixin MyBrands con KPI strip + winners/burners + tabla + briefs. Ola 2 pendiente: pulse orgánico (15 dimensiones del director creativo) | feature | 👤 | long | — |
+| [CHARTJS_FORMAT_SUPPORT](./CHARTJS_FORMAT_SUPPORT.md) | Soporte Chart.js en chat — codigo ya en `VeraView.js:776`. **Bloqueante: realizar pruebas manuales con Vera** (10 chart types, prompt incluido) | test | 👤 | short | — |
+| [FEAT-018](./FEAT-018-notifications-rich-model.md) | Notifications rich model — Fase 1A definida, Fases 1B-1E pendientes (UI frontend del modelo rico) | feature | 👤 | long | — |
+| [FEAT-026](./FEAT-026-notification-bell.md) | NotificationBell + inbox per-user en navbar (consumir `org_notifications` + `org_notification_user_state`). Backend listo, frontend no consume nada | feature | 👤 | medium | — |
 
 ## 🟡 Medium
 
@@ -50,6 +54,9 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 | [FEAT-013](./FEAT-013-monitoring-crud.md) | CRUD de sensores y URL watchers en MonitoringView | feature | 👤 | medium | — |
 | [OPS-006](./OPS-006-meta-ad-library-diagnostico.md) | Meta Ad Library — decidir A (Meta App Review) / B (Apify actor) / C (pausar). Legacy fallback ya eliminado. | ops | 👤 | medium | — |
 | [OPS-011](./OPS-011-rls-hygiene-review.md) | RLS hygiene — clasificar/activar las 13 tablas con RLS off (catalogos globales vs leak potencial) | ops | 👤 | short | — |
+| [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | Ficha MercadoLibre via API publica — plan especificado, 5 tareas concretas sin checkmarks | feature | 👤 | medium | — |
+| [OPS-012](./OPS-012-lexicon-review-admin.md) | UI admin de revision de lexicon (`dimension_lexicon` + `enrich_lexicon_proposal`). Backend listo, frontend no consume | ops | 👤 | medium | — |
+| [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~20 modales custom a `window.Modal` (a11y consistente, mata duplicacion). Strategia: 3-5 modales por sesion | refactor | 👤 | long | — |
 
 ## 🟢 Low
 
@@ -61,19 +68,21 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 | [OPS-005](./OPS-005-secrets-backup-strategy.md) | Backup del `.env` del ai-engine en secret manager (Supabase Vault) | ops | 👤 | medium | — |
 | [OPS-007](./OPS-007-tokens-encryption-supabase-vault.md) | Cifrado global de tokens de integración (Meta/Google/Shopify) vía Supabase Vault | ops | 👤 | long | — |
 | [BUG-004](./BUG-004-vera-chat-uso.md) | Verificar VeraView end-to-end (no es bug — auditoría backend OK, falta prueba humana) | test | 👤 | short | — |
+| [fa-subset-regen](./fa-subset-regen.md) | Script `scripts/fa-subset.sh` para regenerar Font Awesome subset (pasos 1-4 documentados) | ops | 👤 | short | — |
+| [FEAT-027](./FEAT-027-web-vitals-dashboard.md) | Web Vitals Dashboard UI (`/dev/web-vitals` con p75/p95 LCP/CLS/FCP/INP/TTFB). `webvitals.js` ya envia samples a `frontend_errors` | feature | 👤 | short | — |
 
 ---
 
-**Total:** 21 tareas activas + 2 deployed pendientes activación (0 auto-eligibles 🤖 + 23 requieren humano 👤).
+**Total:** 26 tareas activas + 3 deployed pendientes activación (0 auto-eligibles 🤖 + 29 requieren humano 👤).
 
 | Estado | Total | Auto-eligibles 🤖 | Requieren humano 👤 |
 |---|---|---|---|
-| 🟣 deployed pending | 2 | 0 | 2 |
+| 🟣 deployed pending | 3 | 0 | 3 |
 | 🔴 critical | 1 | 0 | 1 |
-| 🟠 high | 9 | 0 | 9 |
-| 🟡 medium | 5 | 0 | 5 |
-| 🟢 low | 6 | 0 | 6 |
-| **Suma** | **23** | **0** | **23** |
+| 🟠 high | 12 | 0 | 12 |
+| 🟡 medium | 8 | 0 | 8 |
+| 🟢 low | 8 | 0 | 8 |
+| **Suma** | **29** | **0** | **29** |
 
 ## Movidas a "Deployed pending" el 2026-05-19
 
@@ -96,7 +105,18 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 
 - **B1 multi-sesion descartado** — auditoría confirma que OpenClaw bridge SI respeta `sessionId` per request, no hay mezcla de contexto entre conversaciones distintas. B2 del roadmap Vera chat no aplica.
 
-- **Cleanup docs/task/ (2026-05-22)** — auditoria profunda de 15 archivos sospechosos contra el codigo vivo. Resultado:
+- **Cleanup docs/task/ Round 2 (2026-05-22)** — formalizacion de tasks sueltas para que aparezcan en el INDEX:
+  - **3 archivos borrados**: `FEAT-016-tendencias-engine-refactor` (DONE 2026-05-21), `AUDIT-001-frontend-vs-backend` (items convertidos en FEAT-026 + OPS-012), `ROADMAP-POST-OPTIMIZATION-2026-05-12` (items convertidos en FEAT-027 + FEAT-028).
+  - **1 archivo renombrado**: `FEAT-021-demo-preview-public.md` → `FEAT-021b-demo-preview-public.md` (resolver colision de ID con `FEAT-021-audit-log-ui.md`).
+  - **4 tasks formales creadas**:
+    - `FEAT-026` NotificationBell + inbox per-user (🟠 High, medium) — desde AUDIT-001 P1
+    - `OPS-012` UI admin lexicon review (🟡 Medium, medium) — desde AUDIT-001 P4
+    - `FEAT-027` Web Vitals Dashboard UI (🟢 Low, short) — desde ROADMAP-POST item 1
+    - `FEAT-028` Modal migration ~20 archivos (🟡 Medium, long) — desde ROADMAP-POST item 2
+  - **5 sueltas agregadas al INDEX** (existian como archivo pero no estaban listadas): `CHARTJS_FORMAT_SUPPORT`, `FEAT-018-notifications-rich-model`, `FEAT-025-mercadolibre`, `fa-subset-regen`, `FEAT-021b-demo-preview` (la ultima en 🟣 Deployed pending).
+  - **Total: docs/task/ de 35 → 36 archivos** (mismo total nominal pero ahora todas las tasks reales aparecen en INDEX; activas suben de 23 → 29).
+
+- **Cleanup docs/task/ Round 1 (2026-05-22)** — auditoria profunda de 15 archivos sospechosos contra el codigo vivo. Resultado:
   - **7 archivos eliminados sin deuda**: `AUDIT-005-fase1-bd-applied`, `AUDIT-005-fase2a-productivity-applied`, `AUDIT-005-fase2b-advanced-applied`, `AUDIT-005-fase2c-3-4-applied`, `AUDIT-005-builder-paas-readiness` (los 4 subhijos + el master doc), `FEAT-024-dev-rank-gradients`, `SESSION-IMPACT-2026-05-12`. Codigo verificado activo en repo.
   - **2 deudas obvias de codigo resueltas**:
     - `BuilderPersistence.js:89` TODO "Verificar si es colaborador" → ahora invoca RPC `can_access_flow(_flow_id)` (existente en BD desde Fase 1 AUDIT-005). Owner OR developer OR collaborator pueden cargar el flujo.
