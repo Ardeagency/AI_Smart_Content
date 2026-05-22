@@ -1111,20 +1111,8 @@ class VideoView extends BaseView {
     try {
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user?.id) return;
-      const { data: runs } = await this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
-      const runIds = (runs || []).map((r) => r.id).filter(Boolean);
-      if (runIds.length === 0) {
-        this.videoProductions = [];
-        return;
-      }
-      const { data } = await this.supabase
-        .from('runs_outputs')
-        .select('id, run_id, output_type, storage_path, metadata, created_at')
-        .in('run_id', runIds)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      const list = data || [];
-      const withUrl = list.map((o) => {
+
+      const resolveMedia = (o) => {
         let media_url = null;
         const rawPath = o.storage_path && typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
         if (rawPath) {
@@ -1139,8 +1127,51 @@ class VideoView extends BaseView {
         const isVideo = type.includes('video') || /\.(mp4|webm|mov)(\?|$)/i.test(media_url || '');
         const isImage = type.includes('image') || type.includes('img') || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(media_url || '');
         return { ...o, media_url, isVideo, isImage };
-      }).filter((o) => o.media_url);
-      this.videoProductions = withUrl;
+      };
+
+      // Origen 1: runs_outputs (linkeados a flow_runs del usuario)
+      const { data: runs } = await this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
+      const runIds = (runs || []).map((r) => r.id).filter(Boolean);
+      let fromRuns = [];
+      if (runIds.length > 0) {
+        const { data: roData } = await this.supabase
+          .from('runs_outputs')
+          .select('id, run_id, output_type, storage_path, metadata, created_at')
+          .in('run_id', runIds)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        fromRuns = roData || [];
+      }
+
+      // Origen 2: system_ai_outputs (videos generados desde VideoView mismo
+      // o cualquier herramienta standalone). Filtrar por organization_id
+      // para que el contexto sea consistente con loadFlowOutputs en
+      // LivingManager.
+      let fromSystem = [];
+      if (this.organizationId) {
+        const { data: saoData } = await this.supabase
+          .from('system_ai_outputs')
+          .select('id, output_type, storage_path, metadata, created_at')
+          .eq('organization_id', this.organizationId)
+          .neq('provider', 'openai')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        fromSystem = saoData || [];
+      }
+
+      const merged = [...fromRuns, ...fromSystem]
+        .map(resolveMedia)
+        .filter((o) => o.media_url)
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+      // Dedupe por id (defensive — runs_outputs y system_ai_outputs tienen
+      // namespace de id distinto pero por si acaso).
+      const seen = new Set();
+      this.videoProductions = merged.filter((o) => {
+        if (seen.has(o.id)) return false;
+        seen.add(o.id);
+        return true;
+      });
     } catch (e) {
       console.warn('VideoView loadVideoProductions:', e);
       this.videoProductions = [];
@@ -2208,9 +2239,16 @@ class VideoView extends BaseView {
       if (!user?.id) return null;
       const brandContainerId = this.brandContainerId || await this.getBrandContainerId();
       if (!brandContainerId) return null;
+      // Schema unificado runs_outputs <-> system_ai_outputs (2026-05-22).
+      // Pueblan automaticamente los campos comunes desde el state del view;
+      // el caller solo pasa lo especifico (provider, output_type, prompt,
+      // metadata, etc.).
       const row = {
         brand_container_id: brandContainerId,
+        organization_id: this.organizationId || null,
         user_id: user.id,
+        campaign_id: this.selectedCampaignId || null,
+        persona_id: this.selectedAudienceId || null,
         ...record,
         updated_at: new Date().toISOString()
       };
@@ -2300,6 +2338,7 @@ class VideoView extends BaseView {
           status: 'completed',
           prompt_used: payload.idea || null,
           text_content: this.multiPrompts.join('\n\n'),
+          models: { prompter: 'gpt-4o-mini' },
           metadata: { source: 'openai-cine-prompt', multi_prompt: true, shots: this.multiPrompts.length }
         });
       } else if (data.prompt && this.promptInput) {
@@ -2315,6 +2354,7 @@ class VideoView extends BaseView {
           status: 'completed',
           prompt_used: payload.idea || null,
           text_content: data.prompt,
+          models: { prompter: 'gpt-4o-mini' },
           metadata: { source: 'openai-cine-prompt', has_cinematography: true }
         });
       } else {
@@ -2502,13 +2542,30 @@ class VideoView extends BaseView {
 
       console.log('[Video] Tarea creada, taskId:', taskId, '→ iniciando polling');
 
+      // Reference image: la primera imagen pasada como input al modelo
+      // (preserva linaje con el output original que sirvio de seed visual).
+      const refImg = Array.isArray(payload.image_urls) && payload.image_urls.length > 0
+        ? payload.image_urls[0]
+        : null;
       this._lastKieOutputId = await this.saveSystemAIOutput({
-        provider: 'kie_api',
+        provider: 'kie',
         output_type: 'video',
         status: 'processing',
         external_job_id: taskId,
         prompt_used: promptText,
-        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, kling_elements_count: (payload.kling_elements || []).length }
+        reference_image_url: refImg,
+        models: { editor: 'kling-3.0/video', prompter: 'gpt-4o-mini' },
+        technical_params: {
+          mode: payload.mode || 'pro',
+          duration: payload.duration,
+          aspect_ratio: payload.aspect_ratio,
+          output_format: 'mp4'
+        },
+        metadata: {
+          kind: 'video_generated',
+          kling_elements_count: (payload.kling_elements || []).length,
+          image_urls_count: Array.isArray(payload.image_urls) ? payload.image_urls.length : 0
+        }
       });
 
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);
@@ -2596,10 +2653,17 @@ class VideoView extends BaseView {
               if (uploaded?.publicUrl) {
                 this.showResult(uploaded.publicUrl);
                 if (this._lastKieOutputId) {
+                  // Merge metadata: preserva kind y campos del insert original.
+                  // jsonb || jsonb concatena al mas profundo en Postgres.
                   await this.updateSystemAIOutput(this._lastKieOutputId, {
                     status: 'completed',
                     storage_path: uploaded.storagePath,
-                    metadata: { resultUrls: urls, video_url: uploaded.publicUrl, kie_source_url: kieUrl },
+                    metadata: {
+                      kind: 'video_generated',
+                      resultUrls: urls,
+                      video_url: uploaded.publicUrl,
+                      kie_source_url: kieUrl
+                    },
                     error_message: null
                   });
                   this._lastKieOutputId = null;
