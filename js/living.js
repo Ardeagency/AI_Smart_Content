@@ -2332,12 +2332,8 @@ class LivingManager {
             case 'remove-bg':
                 this._applyRemoveBg();
                 break;
-            case 'variations':
-                this._toolbarSoonToast('Variar', 're-roll');
-                break;
-            case 'animate':
-                if (window.router) window.router.navigate('/video');
-                this.closeProductionModal();
+            case 'fix-text':
+                this._applyFixText();
                 break;
             default:
                 break;
@@ -2582,6 +2578,155 @@ class LivingManager {
             this._removePendingEditCard(clientId);
             try { this.renderHistorySection(); } catch (_) { /* noop */ }
             if (typeof window.showToast === 'function') window.showToast(`Quitar fondo fallo: ${err.message || err}`);
+        }
+    }
+
+    /**
+     * Mejorar texto via GPT Image-2 + OpenAI Vision bridge. Sin overlay ni
+     * prompt — auto-detecta producto del output. GPT Image-2 es text-to-image
+     * puro, asi que OpenAI Vision lee imagen original + imagenes de producto
+     * y genera un prompt detallado que regenera la escena con los textos
+     * correctos.
+     */
+    async _applyFixText() {
+        const state = this._modalState || {};
+        const imageUrl = state.mediaUrl;
+        const sourceOutputId = state.outputId || null;
+        if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
+            if (typeof window.showToast === 'function') window.showToast('No hay URL valida de la imagen original');
+            return;
+        }
+        if (!this.organizationId) {
+            if (typeof window.showToast === 'function') window.showToast('Falta organization_id');
+            return;
+        }
+
+        // Auto-detect producto del output original. Si no hay, no podemos
+        // mejorar textos sin referencia visual.
+        const info = this._sourceProductInfo;
+        const productImageUrls = info?.imageUrls || [];
+        if (!productImageUrls.length) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('No detectamos producto en esta produccion. Usa "Editar" → "Corregir producto" y selecciona uno manualmente.');
+            }
+            return;
+        }
+
+        if (typeof window.showToast === 'function') window.showToast('Mejorando textos — toma 30-60s');
+
+        let aspectRatio = info?.aspectRatio || null;
+        if (!aspectRatio) {
+            try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
+            catch (_) { aspectRatio = 'auto'; }
+        }
+        // GPT Image-2 solo acepta auto/1:1/9:16/16:9/4:3/3:4. Cualquier otro -> 'auto'.
+        const allowed = new Set(['auto', '1:1', '9:16', '16:9', '4:3', '3:4']);
+        const arForGpt = allowed.has(aspectRatio) ? aspectRatio : 'auto';
+
+        let createPayload;
+        try {
+            const accessToken = await this._getAccessToken();
+            if (!accessToken) throw new Error('No hay sesion activa');
+            const res = await fetch('/.netlify/functions/kie-image-fix-text-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    image_url: imageUrl,
+                    source_output_id: sourceOutputId,
+                    organization_id: this.organizationId,
+                    product_id: info?.productId || null,
+                    product_name: info?.productName || null,
+                    product_image_urls: productImageUrls,
+                    aspect_ratio: arForGpt,
+                    resolution: arForGpt === 'auto' || arForGpt === '1:1' ? '1K' : '2K'
+                })
+            });
+            let parsed;
+            try { parsed = await res.json(); }
+            catch (_) {
+                const text = await res.text().catch(() => '');
+                throw new Error(`Gateway HTTP ${res.status}: ${text.slice(0, 200) || 'sin body'}`);
+            }
+            if (!res.ok) {
+                if (res.status === 402) throw new Error(`Creditos insuficientes (${parsed.credits_needed ?? '?'} cred)`);
+                throw new Error(parsed.error || `HTTP ${res.status}`);
+            }
+            createPayload = parsed;
+        } catch (err) {
+            console.error('[fix-text] create error:', err);
+            if (typeof window.showToast === 'function') window.showToast(`No se pudo iniciar: ${err.message}`);
+            return;
+        }
+
+        const clientId = `pending-fixtext-${createPayload.taskId}`;
+        this.closeProductionModal?.();
+        this._addPendingEditCard({
+            clientId,
+            taskId: createPayload.taskId,
+            sourceImageUrl: imageUrl,
+            aspectRatio: arForGpt,
+            label: 'Mejorando textos'
+        });
+
+        this._completeFixTextInBackground({
+            clientId,
+            taskId: createPayload.taskId,
+            createPayload,
+            sourceOutputId,
+            sourceImageUrl: imageUrl,
+            aspectRatio: arForGpt,
+            productId: info?.productId || null,
+            productName: info?.productName || null,
+            entityId: info?.entityId || null
+        });
+    }
+
+    async _completeFixTextInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, productId, productName, entityId }) {
+        try {
+            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
+            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'fix-text' });
+
+            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
+            if (!this.userId) throw new Error('Falta user_id');
+            const row = {
+                brand_container_id: this.brandContainerId,
+                user_id: this.userId,
+                provider: 'kie',
+                output_type: 'image',
+                external_job_id: taskId,
+                status: 'completed',
+                prompt_used: createPayload.refined_prompt,
+                storage_path: storagePath,
+                technical_params: {
+                    output_format: 'png',
+                    kie_model: createPayload.kie_model,
+                    openai_model: createPayload.openai_model,
+                    aspect_ratio: aspectRatio,
+                    entity_id: entityId
+                },
+                metadata: {
+                    kind: 'image_fix_text',
+                    source_output_id: sourceOutputId,
+                    source_image_url: sourceImageUrl,
+                    edit_refined_prompt: createPayload.refined_prompt,
+                    product_id: productId,
+                    product_name: productName,
+                    entity_id: entityId,
+                    aspect_ratio: aspectRatio
+                }
+            };
+            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
+            if (error) throw error;
+
+            this._removePendingEditCard(clientId);
+            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
+            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') window.showToast('Textos mejorados lista en el grid');
+        } catch (err) {
+            console.error('[fix-text] background error:', err);
+            this._removePendingEditCard(clientId);
+            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') window.showToast(`Mejorar textos fallo: ${err.message || err}`);
         }
     }
 
