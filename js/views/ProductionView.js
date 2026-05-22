@@ -79,13 +79,13 @@ class ProductionView extends BaseView {
                     <img id="pmodalImage" src="" alt="" hidden>
                     <video id="pmodalVideo" controls playsinline preload="metadata" hidden aria-label="Production video"></video>
                 </div>
-                <div class="production-modal-toolbar" role="toolbar" aria-label="Editar producción">
+                <div class="production-modal-toolbar" role="toolbar" aria-label="Acciones sobre la produccion">
                     <button type="button" class="pmodal-toolpill is-active" data-tool="overview"><i class="fas fa-bars"></i><span>Overview</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="upscale" disabled><i class="fas fa-expand-alt"></i><span>Upscale</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="enhancer" disabled><i class="fas fa-wand-magic-sparkles"></i><span>Enhancer</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="relight" disabled><i class="fas fa-lightbulb"></i><span>Relight</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="inpaint" disabled><i class="fas fa-paintbrush"></i><span>Inpaint</span></button>
-                    <button type="button" class="pmodal-toolpill" data-tool="angles" disabled><i class="fas fa-rotate-right"></i><span>Angles</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="edit" data-kie-model="google/nano-banana-edit" disabled title="Proximamente"><i class="fas fa-pen"></i><span>Editar</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="upscale" data-kie-model="topaz/image-upscale" disabled title="Proximamente"><i class="fas fa-expand-alt"></i><span>Mejorar 4K</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="remove-bg" data-kie-model="recraft/remove-background" disabled title="Proximamente"><i class="fas fa-cut"></i><span>Sin fondo</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="variations" disabled title="Proximamente"><i class="fas fa-arrows-rotate"></i><span>Variar</span></button>
+                    <button type="button" class="pmodal-toolpill" data-tool="animate" disabled title="Proximamente"><i class="fas fa-film"></i><span>Animar</span></button>
                 </div>
             </div>
 
