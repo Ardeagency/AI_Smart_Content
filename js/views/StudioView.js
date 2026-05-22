@@ -1507,13 +1507,22 @@ class StudioView extends BaseView {
     let creditsDeducted = false;
 
     try {
-      // 1) Deducción atómica de créditos + creación de run (RPC)
+      // 1) Deducción atómica de créditos + creación de run (RPC).
+      // Pasamos campaign/persona/brief para que queden ligados al flow_run
+      // (la RPC los inserta directamente). Asi el modal de Production puede
+      // mostrar a que campania y audiencia pertenece cada produccion.
+      const campaignId = payload?.campaign_id || (Array.isArray(payload?.campaign_ids) ? payload.campaign_ids[0] : null) || null;
+      const personaId = payload?.persona_id || payload?.audience_id || null;
+      const briefId = payload?.brief_id || null;
       const { data: deductResult, error: rpcError } = await this.supabase
         .rpc('deduct_credits_and_create_run', {
           p_organization_id: this.organizationId,
           p_user_id: this.userId,
           p_flow_id: this.selectedFlow.id,
-          p_amount: cost
+          p_amount: cost,
+          p_brief_id: briefId,
+          p_persona_id: personaId,
+          p_campaign_id: campaignId
         });
 
       if (rpcError) {
@@ -1537,6 +1546,30 @@ class StudioView extends BaseView {
       this.updateCreditsDisplay();
       // Invalida apiClient: la próxima lectura (sidebar/tienda) verá créditos frescos.
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
+
+      // 1b) Persistir snapshot del payload del usuario en runs_inputs.
+      // Cierra el hueco "runs_inputs vacio": cada produccion deja registro
+      // del formulario que la origino (entity ids, referencias, briefing,
+      // etc) para auditoria + alimentar el bloque INFORMATION del modal.
+      try {
+        const moduleId = this.selectedFlow?.flow_module_id
+          || this.selectedFlow?.module_id
+          || this.selectedFlow?.modules?.[0]?.id
+          || null;
+        await this.supabase.from('runs_inputs').insert({
+          run_id: runId,
+          input_data: payload,
+          flow_module_id: moduleId,
+          organization_id: this.organizationId,
+          metadata: {
+            captured_from: 'studio_ui',
+            flow_id: this.selectedFlow?.id || null
+          }
+        });
+      } catch (inputsErr) {
+        // No bloqueamos la produccion si falla el snapshot: log y seguimos.
+        console.warn('runs_inputs snapshot fallo (no bloquea produccion):', inputsErr);
+      }
 
       // 2) Ejecutar webhook con reintentos y timeout
       const res = await Service.executeWebhook({

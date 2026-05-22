@@ -257,7 +257,7 @@ class LivingManager {
             const to = from + this._historySourceBatchSize - 1;
             let query = this.supabase
                 .from('flow_runs')
-                .select('*, content_flows(name)')
+                .select('*, content_flows(name), campaigns(nombre_campana), audience_personas(name)')
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
@@ -1953,7 +1953,11 @@ class LivingManager {
         if (!container) return;
         const tp = this._safeParseJSON(output?.technical_params) || {};
         const meta = this._safeParseJSON(output?.metadata) || {};
-        const model = tp.model || meta.model || meta.engine || meta.model_name || '—';
+        // Model: prioriza la columna nueva runs_outputs.model (poblada por trigger
+        // o por n8n explicitamente); fallback a tp/meta para rows pre-trigger.
+        const model = output?.model
+            || tp.model || meta.model || meta.engine || meta.model_name
+            || '—';
         const quality = tp.quality || meta.quality || meta.resolution_tier || (meta.is_4k ? '4k' : '');
         const size = (() => {
             const w = tp.width || meta.width || meta.size_x;
@@ -1966,12 +1970,18 @@ class LivingManager {
         const createdStr = created
             ? new Date(created).toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             : '';
-        const outputTypeLabel = this._humanizeOutputType(output?.output_type);
         const flowName = this.getFlowName(run);
+        // Campania y audiencia: nombres vienen de los joins de loadFlowRuns
+        // (campaigns(nombre_campana), audience_personas(name)). Si el run no
+        // tiene campaign_id/persona_id, mostramos guion en vez de ocultar la fila,
+        // asi el usuario ve que el flujo no estaba ligado a ninguna.
+        const campaignName = run?.campaigns?.nombre_campana || (run?.campaign_id ? 'Sin nombre' : '—');
+        const audienceName = run?.audience_personas?.name || (run?.persona_id ? 'Sin nombre' : '—');
 
         const rows = [
             ['Flow', flowName || '—'],
-            ['Tipo', outputTypeLabel || '—'],
+            ['Campana', campaignName],
+            ['Audiencia', audienceName],
             ['Model', model || '—'],
             quality ? ['Quality', String(quality)] : null,
             size ? ['Size', size] : null,
