@@ -19,6 +19,7 @@ class LivingManager {
         this.organizationId = null;
         this.latestGeneratedContent = [];
         this.systemAiOutputs = []; // Producciones de system_ai_outputs (excl. OpenAI)
+        this.pendingEdits = []; // Ediciones en curso: { clientId, taskId, sourceImageUrl, aspectRatio, createdAt }
         this.eventListenersSetup = false;
         this.initialized = false;
         // Filtros del historial
@@ -1036,6 +1037,21 @@ class LivingManager {
             return false;
         };
 
+        // Cards skeleton de ediciones en curso: aparecen siempre al inicio.
+        const fromPending = (this.pendingEdits || []).map(p => ({
+            contentType: 'image',
+            fileUrl: null,
+            prompt: 'Edicion en curso...',
+            run: null,
+            output: null,
+            created_at: p.createdAt,
+            _outputId: p.clientId,
+            _isPendingEdit: true,
+            _pendingTaskId: p.taskId,
+            _pendingSourceImage: p.sourceImageUrl,
+            _pendingAspectRatio: p.aspectRatio
+        }));
+
         const seenIds = new Set();
         let allItems = [...fromRuns, ...fromGenerated, ...fromSystemAi]
             .filter(it => {
@@ -1052,6 +1068,9 @@ class LivingManager {
                 return true;
             })
             .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        // Skeletons siempre al inicio (sobre cualquier filtro de fecha/tipo).
+        allItems = [...fromPending, ...allItems];
 
         // Aplicar filtros
         if (this.filterDateFrom != null) {
@@ -1091,6 +1110,9 @@ class LivingManager {
         const visibleItems = allItems.slice(0, this._historyVisibleCount);
 
         const itemHtmls = visibleItems.map((item, index) => {
+            if (item._isPendingEdit) {
+                return this._renderPendingEditSkeleton(item, index);
+            }
             if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
                 if (!thumbnailUrl && item.output) thumbnailUrl = this.resolveOutputMediaUrl(item.output);
@@ -2506,7 +2528,13 @@ class LivingManager {
         }
 
         const maskDataUrl = canvas.toDataURL('image/png');
-        this._setEditApplyState({ phase: 'loading', message: 'Analizando seleccion...', lock: true });
+        this._setEditApplyState({ phase: 'loading', message: 'Iniciando edicion...', lock: true });
+
+        // Detectar aspect ratio de la imagen original para que kie regenere
+        // con la misma dimension (sin esto kie con 'auto' colapsa a cuadrado).
+        let aspectRatio = '1:1';
+        try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
+        catch (_) { aspectRatio = '1:1'; }
 
         let createPayload;
         try {
@@ -2521,7 +2549,8 @@ class LivingManager {
                     mask_data_url: maskDataUrl,
                     user_instruction: userInstruction,
                     source_output_id: sourceOutputId,
-                    organization_id: this.organizationId
+                    organization_id: this.organizationId,
+                    aspect_ratio: aspectRatio
                 })
             });
             let parsed;
@@ -2543,60 +2572,156 @@ class LivingManager {
             return;
         }
 
-        this._setEditApplyState({ phase: 'loading', message: 'Generando edicion (30-60s)...', lock: true });
+        // POST OK: cerrar modal + meter skeleton card en el grid.
+        const clientId = `pending-edit-${createPayload.taskId}`;
+        this._setEditApplyState({ phase: 'idle' });
+        if (applyBtn) applyBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+        this._closeEditOverlay();
+        this.closeProductionModal?.();
+        this._addPendingEditCard({
+            clientId,
+            taskId: createPayload.taskId,
+            sourceImageUrl: imageUrl,
+            aspectRatio
+        });
 
-        let kieResultUrl;
+        // Polling + persistencia en background; el modal ya cerro.
+        this._completeEditInBackground({
+            clientId,
+            taskId: createPayload.taskId,
+            createPayload,
+            userInstruction,
+            sourceOutputId,
+            sourceImageUrl: imageUrl
+        });
+    }
+
+    /**
+     * Detecta el aspect ratio de la imagen original y lo mapea al valor
+     * soportado mas cercano por kie nano-banana (1:1, 9:16, 3:4, 2:3, 4:5,
+     * 5:4, 3:2, 4:3, 16:9, 21:9).
+     */
+    _detectKieAspectRatio(imageUrl) {
+        return new Promise((resolve, reject) => {
+            try {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const w = img.naturalWidth || img.width;
+                    const h = img.naturalHeight || img.height;
+                    if (!w || !h) return reject(new Error('Dimensiones invalidas'));
+                    const r = w / h;
+                    const options = [
+                        { key: '9:16', r: 9 / 16 },
+                        { key: '2:3',  r: 2 / 3 },
+                        { key: '3:4',  r: 3 / 4 },
+                        { key: '4:5',  r: 4 / 5 },
+                        { key: '1:1',  r: 1 },
+                        { key: '5:4',  r: 5 / 4 },
+                        { key: '4:3',  r: 4 / 3 },
+                        { key: '3:2',  r: 3 / 2 },
+                        { key: '16:9', r: 16 / 9 },
+                        { key: '21:9', r: 21 / 9 }
+                    ];
+                    let best = options[0], bestDiff = Math.abs(Math.log(r) - Math.log(best.r));
+                    for (const o of options) {
+                        const d = Math.abs(Math.log(r) - Math.log(o.r));
+                        if (d < bestDiff) { best = o; bestDiff = d; }
+                    }
+                    resolve(best.key);
+                };
+                img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
+                img.src = imageUrl;
+            } catch (e) { reject(e); }
+        });
+    }
+
+    /**
+     * Inserta una card skeleton de edicion en curso al inicio del grid de
+     * Production. Util para que el usuario sepa que hay algo en proceso aun
+     * con el modal cerrado.
+     */
+    _addPendingEditCard({ clientId, taskId, sourceImageUrl, aspectRatio }) {
+        if (!Array.isArray(this.pendingEdits)) this.pendingEdits = [];
+        if (this.pendingEdits.some(p => p.clientId === clientId)) return;
+        this.pendingEdits.unshift({
+            clientId,
+            taskId,
+            sourceImageUrl,
+            aspectRatio: aspectRatio || '1:1',
+            createdAt: new Date().toISOString()
+        });
+        this._historyVisibleCount = 0;
+        try { this.renderHistorySection(); } catch (_) { /* noop */ }
+    }
+
+    _removePendingEditCard(clientId) {
+        if (!Array.isArray(this.pendingEdits)) return;
+        this.pendingEdits = this.pendingEdits.filter(p => p.clientId !== clientId);
+    }
+
+    /**
+     * Renderiza una card skeleton ocupando el mismo aspect ratio que la
+     * imagen origen, mostrando la imagen original tenue + shimmer encima +
+     * texto "Editando" para que el justified layout no se rompa.
+     */
+    _renderPendingEditSkeleton(item, index) {
+        const ar = item._pendingAspectRatio || '1:1';
+        const [w, h] = ar.split(':').map(Number);
+        const ratio = (w > 0 && h > 0) ? (w / h) : 1;
+        const src = this.escapeHtml(item._pendingSourceImage || '');
+        return `
+            <article class="living-masonry-item history-image-card pending-edit-card"
+                     role="listitem"
+                     data-aspect-ratio="${ratio}"
+                     data-pending-client-id="${this.escapeHtml(item._outputId)}"
+                     aria-label="Edicion en curso">
+                <div class="pending-edit-card-media">
+                    ${src ? `<img src="${src}" alt="" class="pending-edit-card-source" loading="lazy">` : ''}
+                    <div class="pending-edit-card-shimmer"></div>
+                </div>
+                <div class="pending-edit-card-overlay">
+                    <span class="pending-edit-card-spinner" aria-hidden="true"></span>
+                    <span class="pending-edit-card-label">Editando con IA</span>
+                </div>
+            </article>
+        `;
+    }
+
+    /**
+     * Polling + descarga + upload + insert + refresh, todo en background.
+     * Manda toast al final (exito o error) y remueve el skeleton.
+     */
+    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl }) {
         try {
-            kieResultUrl = await this._pollKieTask(createPayload.taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-        } catch (err) {
-            console.error('[edit-overlay] poll error:', err);
-            this._setEditApplyState({ phase: 'error', message: err.message || 'La edicion fallo en kie.ai' });
-            return;
-        }
-
-        this._setEditApplyState({ phase: 'loading', message: 'Guardando produccion...', lock: true });
-
-        let storagePath, publicUrl;
-        try {
-            ({ storagePath, publicUrl } = await this._downloadAndUploadEditResult({
-                kieUrl: kieResultUrl,
-                taskId: createPayload.taskId
-            }));
-        } catch (err) {
-            console.error('[edit-overlay] download/upload error:', err);
-            this._setEditApplyState({ phase: 'error', message: `No se pudo guardar el resultado: ${err.message}` });
-            return;
-        }
-
-        try {
+            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
+            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
             await this._insertEditOutput({
                 sourceOutputId,
-                sourceImageUrl: imageUrl,
+                sourceImageUrl,
                 storagePath,
                 refinedPrompt: createPayload.refined_prompt,
                 userInstruction,
                 maskStoragePath: createPayload.mask_storage_path,
                 kieModel: createPayload.kie_model,
                 openaiModel: createPayload.openai_model,
-                kieTaskId: createPayload.taskId
+                kieTaskId: taskId
             });
+            this._removePendingEditCard(clientId);
+            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
+            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') {
+                window.showToast('Edicion lista. Mira tu nueva produccion en el grid.');
+            }
         } catch (err) {
-            console.error('[edit-overlay] insert error:', err);
-            this._setEditApplyState({ phase: 'error', message: `Edicion lista pero no se guardo en BD: ${err.message}` });
-            return;
+            console.error('[edit-overlay] background error:', err);
+            this._removePendingEditCard(clientId);
+            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') {
+                window.showToast(`Edicion fallo: ${err.message || err}`);
+            }
         }
-
-        try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
-        try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-
-        this._setEditApplyState({ phase: 'idle' });
-        this._closeEditOverlay();
-        this.closeProductionModal?.();
-        if (typeof window.showToast === 'function') {
-            window.showToast('Edicion lista. Mira tu nueva produccion en el grid.');
-        }
-        if (applyBtn) applyBtn.disabled = false;
-        if (cancelBtn) cancelBtn.disabled = false;
     }
 
     /**

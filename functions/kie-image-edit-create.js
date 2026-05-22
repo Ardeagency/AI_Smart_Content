@@ -31,6 +31,7 @@ const OPENAI_MODEL = process.env.OPENAI_EDIT_PROMPT_MODEL || 'gpt-4o-mini';
 const MASK_BUCKET = 'production-inputs';
 const CREDITS_PER_EDIT = 0.10;
 const USD_PER_CREDIT = 1;
+const ALLOWED_ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']);
 
 function fail(event, status, error, extra = {}) {
   return {
@@ -136,13 +137,13 @@ async function generateEditPromptWithVision({ apiKey, imageUrl, maskUrl, userIns
   };
 }
 
-async function createKieTask({ headers, prompt, imageUrl }) {
+async function createKieTask({ headers, prompt, imageUrl, aspectRatio }) {
   const payload = {
     model: KIE_MODEL,
     input: {
       prompt,
       image_input: [imageUrl],
-      aspect_ratio: 'auto',
+      aspect_ratio: ALLOWED_ASPECT_RATIOS.has(aspectRatio) ? aspectRatio : 'auto',
       output_format: 'png'
     }
   };
@@ -226,6 +227,7 @@ exports.handler = async (event) => {
   const userInstruction = String(body.user_instruction || '').trim();
   const sourceOutputId = String(body.source_output_id || '').trim() || null;
   const organizationId = String(body.organization_id || '').trim();
+  const aspectRatio = String(body.aspect_ratio || 'auto').trim();
 
   if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
   if (!userInstruction) return fail(event, 400, 'user_instruction requerido');
@@ -258,7 +260,7 @@ exports.handler = async (event) => {
 
   let kieTaskId;
   try {
-    kieTaskId = await createKieTask({ headers: kieHeaders, prompt: refinedPrompt, imageUrl });
+    kieTaskId = await createKieTask({ headers: kieHeaders, prompt: refinedPrompt, imageUrl, aspectRatio });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
