@@ -490,9 +490,8 @@
               border-color 0.2s ease;
   display: block;
   text-align: left;
-  content-visibility: auto;
-  contain-intrinsic-size: 240px 300px;
-  isolation: isolate;
+  /* content-visibility: auto + contain-intrinsic-size + isolation: isolate
+     removidos: las tres crean backdrop root y rompen .glass-black global. */
 }
 .flow-card:hover,
 .flow-card:focus-visible {

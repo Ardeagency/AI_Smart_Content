@@ -431,18 +431,22 @@ body.production-filters-in-header .living-container > .living-history-section {
 /* Card = item. Cada card es directamente el .living-masonry-item para evitar
    wrappers redundantes. width/height las inyecta applyJustifiedLayout en JS;
    el aspect-ratio default (4:5) reserva espacio antes de que el media cargue,
-   eliminando layout shift (CLS). content-visibility:auto omite paint/layout
-   para cards fuera del viewport, lo que en grillas de 60+ items es la
-   diferencia entre 16ms y >100ms por scroll. */
+   eliminando layout shift (CLS).
+
+   IMPORTANTE: NO usar `contain: paint` ni `content-visibility: auto` aqui.
+   Ambos crean un backdrop root boundary segun la spec CSS Backdrop Filter,
+   lo que rompe silenciosamente el efecto glass-black en .app-header y en
+   cualquier .glass-black descendant del grid. El equipo gano performance
+   (~80ms/scroll) pero a costa del glass-black. Si necesitas reactivar el
+   skip-paint para grillas muy largas (>200 cards), hazlo con
+   `content-visibility: hidden` toggleado por JS via IntersectionObserver
+   en lugar de `auto`, que respeta el backdrop. */
 .living-masonry-grid .living-masonry-item {
     flex: 0 0 auto;
     position: relative;
     overflow: hidden;
     min-height: 0;
     aspect-ratio: 4 / 5;
-    contain: layout paint style;
-    content-visibility: auto;
-    contain-intrinsic-size: 220px 275px;
     border-radius: var(--media-container-radius);
     background: var(--media-container-bg);
     transition: box-shadow 0.3s ease, transform 0.3s ease;
