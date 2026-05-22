@@ -1915,13 +1915,12 @@
   margin-top: var(--spacing-sm);
 }
 
-/* Ficha del Flujo: card real del catalogo (izq) + embed del Studio real (der) */
+/* Ficha del Flujo: card real del catalogo (izq, ancho fijo) + embed del Studio (der, dominante) */
 .builder-ficha-wrapper {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: var(--spacing-xl);
-  max-width: 1400px;
-  margin: 0 auto;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  width: 100%;
   align-items: start;
 }
 
@@ -1931,6 +1930,10 @@
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   min-width: 0;
+}
+
+.ficha-section--card {
+  padding: var(--spacing-md);
 }
 
 .ficha-section-title {
