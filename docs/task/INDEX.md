@@ -3,7 +3,7 @@
 Ordenado por severity desc → prioridad.
 Cuando se cierra una tarea: eliminar el archivo Y la línea aquí.
 
-Última actualización: **2026-05-22** (VERA v3 cobertura 26/26 cerrada + roadmap completo Fase A/B/C — 17/17 tareas. C14 prompt + C15 parser + C16 E2E synthetic (7/7 con IGNIS) + C17 cierre memorias. Bucket A billing fix deployed. Bug brands table parcialmente cerrado en brand.tools.js — falta brand-write.tools.js y context.builder.js. FEAT-019 + FEAT-020 + FEAT-021b siguen pendientes solo de activación externa / prueba humana E2E. **Cleanup docs/task/ (2026-05-22)**: 7 archivos eliminados sin deuda + 2 TODOs de codigo resueltos — BuilderPersistence.js (RPC `can_access_flow`) y FEAT-021 OAuth buttons (DemoGuard inline). **Round 2 cleanup**: FEAT-016 eliminado (DONE), AUDIT-001 y ROADMAP-POST convertidos a tasks formales (FEAT-026, OPS-012, FEAT-027, FEAT-028) y eliminados, FEAT-021-demo-preview renombrado a FEAT-021b para resolver colision de ID. 6 tasks "sueltas" agregadas formalmente al INDEX (FEAT-018, FEAT-025, CHARTJS_FORMAT_SUPPORT, fa-subset-regen + las 4 nuevas + FEAT-021b).
+Última actualización: **2026-05-23** (FEAT-031 agregada: dev portal iteration 2026-05-22 documenta Ficha builder + Studio canvas masonry + 3 paginas nuevas dev/lead/ + provisioning wizard one-step. Frontend deployado, faltan 2 backends: B1 endpoint ai-engine `POST /api/vera/train` y B2 extender edge function `provision-user-start` para aceptar new_brand_name_oficial/slogan/logo_url).
 
 **Leyenda de columnas:**
 - 🤖 = `auto_eligible: yes` — agente programado puede ejecutar sola en ventana 23:00–03:00 Bogota
@@ -57,6 +57,7 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 | [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | Ficha MercadoLibre via API publica — plan especificado, 5 tareas concretas sin checkmarks | feature | 👤 | medium | — |
 | [OPS-012](./OPS-012-lexicon-review-admin.md) | UI admin de revision de lexicon (`dimension_lexicon` + `enrich_lexicon_proposal`). Backend listo, frontend no consume | ops | 👤 | medium | — |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~20 modales custom a `window.Modal` (a11y consistente, mata duplicacion). Strategia: 3-5 modales por sesion | refactor | 👤 | long | — |
+| [FEAT-031](./FEAT-031-dev-portal-iteration-2026-05-22.md) | Dev portal iteration 2026-05-22 — Ficha builder + Studio canvas masonry + 3 paginas dev/lead/ (Vera training/knowledge + Organizaciones) + provisioning wizard one-step. **Falta backend**: B1 endpoint ai-engine POST /api/vera/train (vectoriza file/prompt/image en ai_global_vectors); B2 extender edge function provision-user-start para guardar new_brand_name_oficial/slogan/logo_url | feature | 👤 | medium | — |
 
 ## 🟢 Low
 
