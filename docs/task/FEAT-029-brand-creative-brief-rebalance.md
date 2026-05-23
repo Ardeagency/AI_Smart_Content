@@ -59,25 +59,84 @@ active_brand = {
 
 Smoke test post-deploy contra IGNIS: pasa, todos los buckets pueblan correctamente.
 
-## Fase 2 — Pendiente (proximo turno)
+## Fase 2 — Parcialmente cerrada 2026-05-22
 
-### UI del INFO panel
+### Cerrado: UI del INFO panel (counters + caps)
 
-1. Campo `creative_brief` editable en el panel (textarea con counter `0/280`).
-2. Max-chars hint en `propuesta_valor` (recomendar <=300 chars).
-3. Max-items hint en `palabras_clave` (<=12), `palabras_prohibidas` (<=12),
-   `objetivos_estrategicos` (<=5).
-4. Helper text en cada seccion: "Esto es **inspiracion**, no instruccion.
-   Los LLM creativos lo usan como contexto, no como vocabulario obligatorio."
-5. Warning visual cuando el field excede el limite recomendado.
+| Item | Estado | Commit |
+|---|---|---|
+| Counter X/Y vivo en footer de cada field (warn/over states) | LIVE pre-Fase2 (preservado) | — |
+| Caps bajados en schema (10 fields) | DONE | `aaded354` |
+| Banner "inspiracion no instruccion" en aside | DESCARTADO por usuario | `f8968fd0` |
+| Hints inline por field (en brand-schema.js) | DESCARTADO por usuario | `f8968fd0` |
+| IGNIS data limpia (paleta + formato + palabras vaciadas) | DONE via Supabase PATCH | (no commit, BD) |
 
-### Tooling
+**Decision clave:** el usuario rechazo banner y hints — el counter X/Y comunica
+el limite sin texto adicional. No agregar mensajes guia en futuros panels.
 
-1. Generador de `creative_brief` con LLM cheap (gpt-4o-mini) que destile
-   propuesta_valor + arquetipo + tono en 280 chars. Disponible como
-   accion "Sugerir brief".
-2. Validacion server-side en `saveBrandContainerFieldById` para detectar
-   sobre-saturacion y avisar.
+**Caps nuevos en `js/config/brand-schema.js`:**
+
+| Field | Antes | Despues |
+|---|---|---|
+| creative_brief | 280 ch | 200 ch |
+| propuesta_valor | 300 ch | 200 ch |
+| mision_vision | 400 ch | 250 ch |
+| arquetipo | 60 ch | 40 ch |
+| idiomas_contenido | 4 items | 3 |
+| mercado_objetivo | 6 items | 4 |
+| sub_nichos | 5 items | 3 |
+| palabras_clave | 12 items | 6 |
+| palabras_prohibidas | 12 items | 6 |
+| objetivos_estrategicos | 5 items | 3 |
+
+**Limpieza IGNIS (brand_containers `a3000000-...0001`):**
+- `palabras_clave`: 8 items → `[]`
+- `palabras_prohibidas`: 10 items → `[]`
+- `visual_dna.paleta`: borrada (acentos #E63329/#FF6B00/#F5F5F5 + dominante #0A0A0A)
+- `verbal_dna.formato`: borrado (emojis_principal, signos_exclamacion, max_palabras_oracion 14)
+- Resto de visual_dna/verbal_dna intacto (never, estetica, preferred_moods,
+  signature_hints / tono, pilares, tagline, verbos_inspiracion).
+
+### Pendiente Fase 2b — Para proxima sesion
+
+**Tooling (no UI):**
+
+1. **Generador de `creative_brief` con LLM cheap (gpt-4o-mini).** Destila
+   propuesta_valor + arquetipo + tono en <=200 chars. Disponible como accion
+   "Sugerir brief" en el panel INFO. Costo objetivo: ~0.005 cred por brief
+   (comparable a [[service-fiche-openai]]).
+2. **Validacion server-side en `saveBrandContainerFieldById`** para enforce
+   los caps al guardar (no solo warning visual). Hoy el counter se pone rojo
+   pero el guardado pasa. Decision pendiente: enforce hard o soft?
+3. **Migrar otras orgs reales que excedan los caps nuevos.** Query:
+   ```sql
+   SELECT id, nombre_marca,
+          jsonb_array_length(palabras_clave) AS pc,
+          jsonb_array_length(palabras_prohibidas) AS pp,
+          length(creative_brief) AS cb_chars,
+          length(propuesta_valor) AS pv_chars
+   FROM brand_containers
+   WHERE jsonb_array_length(palabras_clave) > 6
+      OR jsonb_array_length(palabras_prohibidas) > 6
+      OR length(creative_brief) > 200
+      OR length(propuesta_valor) > 200;
+   ```
+   IGNIS ya quedo bajo cap (esta vacia). Otros orgs reales hoy se ven con
+   counter en rojo pero data intacta.
+
+**Validacion visual post-deploy (manual):**
+
+- Refrescar console.aismartcontent.io → org IGNIS → abrir panel INFO de la
+  card de organizacion + de cualquier sub-marca.
+- Confirmar: cero banner, cero hints, counters X/Y visibles en cada field
+  con maxItems/maxChars, paleta vacia en visual_dna, formato vacio en
+  verbal_dna, palabras_clave y palabras_prohibidas vacias.
+
+**Generar 4 piezas nuevas para IGNIS y comparar contra las 4 originales
+(2026-05-22)** para medir el impacto real del cleanup. Metricas:
+- % de copy que usa verbos fuera del `verbos_inspiracion` pool (esperado >50%).
+- Cuantas piezas usan label completo de sub_nichos en producto (esperado: 0).
+- Diversidad visual de backdrop/lighting (esperado: alta).
 
 ## Fase 3 — Pendiente (turno futuro)
 
@@ -115,3 +174,23 @@ desde la BD (saltandose `context.builder.js`).
 - `SQL/migrations/2026_05_22_brand_creative_brief.sql` (nuevo, aplicado)
 - ai-engine: `src/services/context.builder.js` (deployed + restart OK)
 - BD: brand_containers row de IGNIS limpiada via Management API
+
+## Archivos tocados (Fase 2 — 2026-05-22)
+
+- `js/views/brandstorage/InfoPanel.mixin.js` — banner helper eliminado +
+  render del hint por field eliminado.
+- `js/config/brand-schema.js` — props `hint:` borradas; caps bajados en 10 fields.
+- `css/modules/brands.css` — clases `.info-brand-helper` y `.info-brand-hint`
+  eliminadas; `info-brand-field-footer` simplificado a solo-counter.
+- BD: brand_containers IGNIS — `palabras_clave[]`, `palabras_prohibidas[]`,
+  `visual_dna.paleta` borrada, `verbal_dna.formato` borrado (via PATCH REST).
+
+## Como retomar en una sesion futura
+
+1. Leer este archivo + la memoria [[feat029-brand-brief-fase1]].
+2. Decidir prioridad entre los 3 items de Fase 2b (generador de brief,
+   validacion server-side, migracion otros orgs). El generador es el unico
+   user-facing — los otros dos son housekeeping.
+3. Para Fase 3 (schema redesign): el plan ya esta abajo, esperar a tener
+   evidencia de que `context.builder.js` se vuelve mantenimiento pesado
+   antes de promover los buckets a columnas. Hoy aun es manejable.
