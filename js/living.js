@@ -2435,6 +2435,9 @@ class LivingManager {
                 external_job_id: taskId,
                 status: 'completed',
                 entity_id: sm.entityId || null,
+                brief_id: sm.briefId || null,
+                persona_id: sm.personaId || null,
+                campaign_id: sm.campaignId || null,
                 reference_image_url: sourceImageUrl || null,
                 models: { editor: createPayload.kie_model || null, prompter: null },
                 storage_path: storagePath,
@@ -2447,7 +2450,8 @@ class LivingManager {
                     kind: 'image_upscale',
                     source_output_id: sourceOutputId,
                     scale_factor: createPayload.scale_factor
-                }
+                },
+                updated_at: new Date().toISOString()
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
             if (error) throw error;
@@ -2557,6 +2561,9 @@ class LivingManager {
                 external_job_id: taskId,
                 status: 'completed',
                 entity_id: sm.entityId || null,
+                brief_id: sm.briefId || null,
+                persona_id: sm.personaId || null,
+                campaign_id: sm.campaignId || null,
                 reference_image_url: sourceImageUrl || null,
                 models: { editor: createPayload.kie_model || null, prompter: null },
                 storage_path: storagePath,
@@ -2568,7 +2575,8 @@ class LivingManager {
                 metadata: {
                     kind: 'image_remove_bg',
                     source_output_id: sourceOutputId
-                }
+                },
+                updated_at: new Date().toISOString()
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
             if (error) throw error;
@@ -2688,6 +2696,7 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+            const sm = this._sourceProductInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
                 organization_id: this.organizationId || null,
@@ -2696,7 +2705,10 @@ class LivingManager {
                 output_type: 'image',
                 external_job_id: taskId,
                 status: 'completed',
-                entity_id: entityId || null,
+                entity_id: entityId || sm.entityId || null,
+                brief_id: sm.briefId || null,
+                persona_id: sm.personaId || null,
+                campaign_id: sm.campaignId || null,
                 reference_image_url: sourceImageUrl || null,
                 models: {
                     editor: createPayload.kie_model || null,
@@ -2714,7 +2726,8 @@ class LivingManager {
                     edit_refined_prompt: createPayload.refined_prompt,
                     product_id: productId,
                     product_name: productName
-                }
+                },
+                updated_at: new Date().toISOString()
             };
             const { error } = await this.supabase.from('system_ai_outputs').insert(row);
             if (error) throw error;
@@ -3071,31 +3084,39 @@ class LivingManager {
 
     /**
      * Detecta el meta de la produccion abierta en el modal: aspect_ratio +
-     * entidad seleccionada (producto/servicio/lugar/identidad). Fuente
-     * canonica nueva: runs_outputs.technical_params. Fallback legacy:
-     * runs_inputs.input_data. Fallback cadena: system_ai_outputs.metadata.
+     * entidad + linaje (brief/persona/campaign) para que las ediciones
+     * standalone hereden el contexto del source.
+     *
+     * Fuentes en orden: runs_outputs (canonica) -> runs_inputs (legacy) ->
+     * system_ai_outputs (cadena: editar una edicion).
      *
      * Devuelve { aspectRatio, entityId, entityType, entityName, productId,
-     *           productName, imageUrls } o null.
+     *           productName, imageUrls, briefId, personaId, campaignId } o null.
      */
     async _detectSourceProductInfo() {
         if (!this.supabase) return null;
         const state = this._modalState || {};
         let aspectRatio = null;
         let entityId = null;
+        let briefId = null;
+        let personaId = null;
+        let campaignId = null;
 
-        // 1) runs_outputs.technical_params (fuente canonica nueva).
+        // 1) runs_outputs (fuente canonica nueva — incluye linaje FK directo).
         if (state.outputId) {
             try {
                 const { data } = await this.supabase
                     .from('runs_outputs')
-                    .select('technical_params, metadata')
+                    .select('technical_params, metadata, brief_id, persona_id, campaign_id, entity_id')
                     .eq('id', state.outputId)
                     .maybeSingle();
                 const tp = data?.technical_params || {};
                 const md = data?.metadata || {};
                 aspectRatio = tp.aspect_ratio || md.aspect_ratio || null;
-                entityId = tp.entity_id || md.entity_id || null;
+                entityId = data?.entity_id || tp.entity_id || md.entity_id || null;
+                briefId = data?.brief_id || null;
+                personaId = data?.persona_id || null;
+                campaignId = data?.campaign_id || null;
             } catch (_) { /* noop */ }
         }
 
@@ -3111,26 +3132,34 @@ class LivingManager {
                 const inp = data?.input_data || {};
                 if (!aspectRatio) aspectRatio = inp.aspect_ratio || null;
                 if (!entityId) entityId = inp.entity_id || null;
+                if (!briefId) briefId = inp.brief_id || null;
+                if (!personaId) personaId = inp.persona_id || inp.audience_id || null;
+                if (!campaignId) campaignId = inp.campaign_id || null;
             } catch (_) { /* noop */ }
         }
 
-        // 3) system_ai_outputs.metadata (cadena: editar una edicion).
-        if ((!aspectRatio || !entityId) && state.outputId) {
+        // 3) system_ai_outputs (cadena: editar una edicion ya hecha).
+        if (state.outputId) {
             try {
                 const { data } = await this.supabase
                     .from('system_ai_outputs')
-                    .select('metadata, technical_params')
+                    .select('metadata, technical_params, brief_id, persona_id, campaign_id, entity_id')
                     .eq('id', state.outputId)
                     .maybeSingle();
                 const md = data?.metadata || {};
                 const tp = data?.technical_params || {};
                 if (!aspectRatio) aspectRatio = md.aspect_ratio || tp.aspect_ratio || null;
-                if (!entityId) entityId = md.entity_id || md.source_entity_id || null;
+                if (!entityId) entityId = data?.entity_id || md.entity_id || md.source_entity_id || null;
+                if (!briefId) briefId = data?.brief_id || null;
+                if (!personaId) personaId = data?.persona_id || null;
+                if (!campaignId) campaignId = data?.campaign_id || null;
             } catch (_) { /* noop */ }
         }
 
         if (!entityId) {
-            return aspectRatio ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [] } : null;
+            return (aspectRatio || briefId || personaId || campaignId)
+                ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [], briefId, personaId, campaignId }
+                : null;
         }
 
         // Resolver entity_id -> brand_entities -> products|services|brand_places
@@ -3198,7 +3227,7 @@ class LivingManager {
             }
         } catch (_) { /* noop */ }
 
-        return { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls };
+        return { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls, briefId, personaId, campaignId };
     }
 
     _closeEditOverlay() {
@@ -3763,6 +3792,7 @@ class LivingManager {
     async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio }) {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
+        const sm = this._sourceProductInfo || {};
         const row = {
             // Identidad + provider
             brand_container_id: this.brandContainerId,
@@ -3773,7 +3803,10 @@ class LivingManager {
             external_job_id: kieTaskId,
             status: 'completed',
             // Linaje FK (canonico, igual que runs_outputs)
-            entity_id: entityId || null,
+            entity_id: entityId || sm.entityId || null,
+            brief_id: sm.briefId || null,
+            persona_id: sm.personaId || null,
+            campaign_id: sm.campaignId || null,
             reference_image_url: sourceImageUrl || null,
             // Modelos usados (jsonb dedicado)
             models: {
@@ -3795,7 +3828,8 @@ class LivingManager {
                 mask_storage_path: maskStoragePath,
                 product_id: productId || null,
                 product_name: productName || null
-            }
+            },
+            updated_at: new Date().toISOString()
         };
         const { error } = await this.supabase.from('system_ai_outputs').insert(row);
         if (error) throw error;
