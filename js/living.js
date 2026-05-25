@@ -1018,11 +1018,16 @@ class LivingManager {
             if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
             else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
             else contentType = 'text';
+            // Derivar el "Flow" desde metadata.kind: las ediciones standalone
+            // no son flujos n8n, son operaciones puntuales (Editar/Mejorar 4K/
+            // Sin fondo/Mejorar texto/Video). El label generico "System AI"
+            // no aporta nada al usuario.
+            const operationName = this._operationNameFromOutput(item, contentType);
             return {
                 contentType,
                 fileUrl: resolvedUrl,
                 prompt,
-                run: { id: null, content_flows: { name: 'System AI' } },
+                run: { id: null, content_flows: { name: operationName } },
                 output: item,
                 created_at: item.created_at,
                 _outputId: item.id
@@ -1361,10 +1366,18 @@ class LivingManager {
             const name = this.getFlowName(run);
             if (name && !set.has(name)) { set.add(name); names.push(name); }
         });
-        if ((this.systemAiOutputs || []).length > 0 && !set.has('System AI')) {
-            set.add('System AI');
-            names.push('System AI');
-        }
+        // Producciones standalone: agregan una opcion por cada operacion
+        // distinta (Editar / Mejorar 4K / Sin fondo / Mejorar texto / Video)
+        // detectada en los outputs cargados. Asi el filtro refleja la
+        // operacion real y no un literal generico "System AI".
+        (this.systemAiOutputs || []).forEach(item => {
+            const outputType = (item?.output_type || '').toLowerCase();
+            const contentType = outputType.includes('video') ? 'video'
+                              : outputType.includes('image') ? 'image'
+                              : 'text';
+            const name = this._operationNameFromOutput(item, contentType);
+            if (name && !set.has(name)) { set.add(name); names.push(name); }
+        });
         const current = flowSelect.value;
         flowSelect.innerHTML = '<option value="">Todos los flujos</option>' + names.map(n => `<option value="${this.escapeHtml(n)}">${this.escapeHtml(n)}</option>`).join('');
         if (set.has(current)) flowSelect.value = current;
@@ -1377,7 +1390,30 @@ class LivingManager {
         if (run.flow_name) return run.flow_name;
         return 'Producción';
     }
-    
+
+    /**
+     * Etiqueta human-readable para una produccion standalone (sin flow_run).
+     * Lee metadata.kind como fuente canonica y cae a output_type para outputs
+     * pre-instrumentacion.
+     */
+    _operationNameFromOutput(output, contentType) {
+        const meta = this._safeParseJSON(output?.metadata) || {};
+        const kind = (meta?.kind || '').toString();
+        const KIND_LABELS = {
+            image_edit: 'Editar',
+            image_upscale: 'Mejorar 4K',
+            image_remove_bg: 'Sin fondo',
+            image_fix_text: 'Mejorar texto',
+            video_generated: 'Video'
+        };
+        if (KIND_LABELS[kind]) return KIND_LABELS[kind];
+        if (contentType === 'video') return 'Video';
+        if (contentType === 'image') return 'Imagen';
+        if (contentType === 'text') return 'Texto';
+        return 'Producción';
+    }
+
+
     /**
      * Overlay común de cards (image + video):
      *  - top-left: checkbox de selección
