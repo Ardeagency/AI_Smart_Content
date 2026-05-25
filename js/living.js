@@ -65,6 +65,19 @@ class LivingManager {
         // y Set de output_ids seleccionados para bulk-actions.
         this.likedOutputs = new Set();
         this.selectedOutputs = new Set();
+
+        // Estado del modal/overlay de Production (P3#2 audit: init defensivo
+        // para que primer acceso no sea undefined).
+        this._modalState = null;
+        this._editMode = 'remove';
+        this._editState = null;
+        this._selectedProductId = null;
+        this._editReferenceImageUrl = '';
+        this._editOverlayLastFocus = null;
+        this._sourceProductInfo = null;
+        this._sourceInfoCache = new Map();
+        this._inflightToolbarOps = new Set();
+        this._orgProductsCache = null;
         
         // Datos de la Sección 3: Tráfico y Control de Producción
         this.section3Data = {
@@ -2441,8 +2454,6 @@ class LivingManager {
             return;
         }
 
-        if (typeof window.showToast === 'function') window.showToast('Mejorando a 4K — toma 30-60s');
-
         // Snapshot del linaje del source al click (protege contra race si el
         // usuario abre otra produccion mientras esta tarea esta polling).
         const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
@@ -2452,6 +2463,9 @@ class LivingManager {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = '1:1'; }
         }
+
+        // Feedback al usuario: ya sabemos AR antes de disparar (P3#1 audit).
+        if (typeof window.showToast === 'function') window.showToast(`Mejorando a 4K en ${aspectRatio} — toma 30-60s`);
 
         let createPayload;
         try {
@@ -2540,8 +2554,6 @@ class LivingManager {
             return;
         }
 
-        if (typeof window.showToast === 'function') window.showToast('Quitando fondo — toma 15-30s');
-
         // Snapshot del linaje al click (anti-race entre modales).
         const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
 
@@ -2550,6 +2562,8 @@ class LivingManager {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = '1:1'; }
         }
+
+        if (typeof window.showToast === 'function') window.showToast(`Quitando fondo en ${aspectRatio} — toma 15-30s`);
 
         let createPayload;
         try {
@@ -2647,13 +2661,13 @@ class LivingManager {
             return;
         }
 
-        if (typeof window.showToast === 'function') window.showToast('Mejorando textos — toma 30-60s');
-
         let aspectRatio = info?.aspectRatio || null;
         if (!aspectRatio) {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = 'auto'; }
         }
+
+        if (typeof window.showToast === 'function') window.showToast(`Mejorando textos en ${aspectRatio} — toma 30-60s`);
 
         let createPayload;
         try {
@@ -3496,7 +3510,6 @@ class LivingManager {
         const referenceImageUrl = (mode === 'replace') ? (this._editReferenceImageUrl || '').trim() : '';
 
         const maskDataUrl = canvas.toDataURL('image/png');
-        this._setEditApplyState({ phase: 'loading', message: 'Iniciando edicion...', lock: true });
 
         // Aspect ratio: priorizar el guardado en runs_outputs.technical_params
         // (precision absoluta). Si no esta, detectar via dimensiones reales de
@@ -3506,6 +3519,10 @@ class LivingManager {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = '1:1'; }
         }
+
+        // Loading message incluye AR (P3#1 audit): user sabe que va a generar
+        // 16:9 vs 1:1 antes de esperar 30-60s.
+        this._setEditApplyState({ phase: 'loading', message: `Iniciando edicion en ${aspectRatio}...`, lock: true });
 
         let createPayload;
         try {

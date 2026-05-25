@@ -70,6 +70,11 @@ class VideoView extends BaseView {
     this.brandContextCollapsed = true;
     this.promptPreviewCollapsed = true;
     this.generatedPromptPreview = null;
+    // Tokens del ultimo cine-prompt — usados al finalize del video para
+    // cobrar dinamico (KIE_real + OpenAI_tokens + 5 markup). Init explicito
+    // para que primer acceso no sea undefined (P3#2 audit 2026-05-25).
+    this._cinePromptTokens = null;
+    this._lastKieOutputId = null;
   }
 
   static get CINEMATOGRAPHY_PRESETS() {
