@@ -1400,14 +1400,14 @@ class LivingManager {
         const meta = this._safeParseJSON(output?.metadata) || {};
         const kind = (meta?.kind || '').toString();
         const KIND_LABELS = {
-            image_edit: 'Editar',
-            image_upscale: 'Mejorar 4K',
-            image_remove_bg: 'Sin fondo',
-            image_fix_text: 'Mejorar texto',
-            video_generated: 'Video'
+            image_edit: 'Editado',
+            image_upscale: 'Mejorado 4K',
+            image_remove_bg: 'Fondo Eliminado',
+            image_fix_text: 'Texto corregido',
+            video_generated: 'Video Studio'
         };
         if (KIND_LABELS[kind]) return KIND_LABELS[kind];
-        if (contentType === 'video') return 'Video';
+        if (contentType === 'video') return 'Video Studio';
         if (contentType === 'image') return 'Imagen';
         if (contentType === 'text') return 'Texto';
         return 'Producción';
