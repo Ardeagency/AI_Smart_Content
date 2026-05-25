@@ -257,7 +257,9 @@ class DevFlowsView extends DevBaseView {
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
     const img = flow.flow_image_url
-      ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
+      ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
+          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-card-img" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`)
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
 
     const primaryTag = flow.content_subcategories?.name || flow.content_categories?.name || null;
