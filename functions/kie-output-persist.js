@@ -81,6 +81,20 @@ async function downloadBinary(url, maxAttempts = 3) {
     }
   } catch (_) { /* noop */ }
 
+  // Exponential backoff: 500ms, 1s, 2s, 4s, 8s. Para 429 respetamos el
+  // header Retry-After del upstream si llega (segundos o HTTP date).
+  // Cap a 10s por intento para no quedar colgados en una Lambda.
+  const RETRY_STATUSES = new Set([429, 502, 503, 504]);
+  const computeBackoffMs = (attempt) => Math.min(500 * Math.pow(2, attempt - 1), 10000);
+  const parseRetryAfter = (h) => {
+    if (!h) return null;
+    const n = Number(h);
+    if (Number.isFinite(n) && n >= 0) return Math.min(n * 1000, 10000);
+    const date = Date.parse(h);
+    if (Number.isFinite(date)) return Math.max(0, Math.min(date - Date.now(), 10000));
+    return null;
+  };
+
   let lastErr = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -91,15 +105,16 @@ async function downloadBinary(url, maxAttempts = 3) {
         return { buffer, contentType };
       }
       lastErr = new Error(`upstream ${resp.status}`);
-      if ([502, 503, 504, 429].includes(resp.status) && attempt < maxAttempts) {
-        await sleep(500 * attempt);
+      if (RETRY_STATUSES.has(resp.status) && attempt < maxAttempts) {
+        const retryAfterMs = parseRetryAfter(resp.headers.get('retry-after')) ?? computeBackoffMs(attempt);
+        await sleep(retryAfterMs);
         continue;
       }
       throw lastErr;
     } catch (err) {
       lastErr = err;
       if (attempt < maxAttempts) {
-        await sleep(500 * attempt);
+        await sleep(computeBackoffMs(attempt));
         continue;
       }
       throw lastErr;

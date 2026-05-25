@@ -3,6 +3,21 @@
  * Featured content, categorías y grid de producciones
  */
 
+/**
+ * Defaults compartidos para polling de tasks KIE. 5 min cubre el peor caso
+ * de Topaz upscale 8x; 3s es el balance entre latencia perceptual y carga
+ * en KIE recordInfo endpoint.
+ */
+const KIE_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const KIE_POLL_INTERVAL_MS = 3000;
+
+/**
+ * TTL del cache de _sourceProductInfo por outputId. 5 min es suficiente
+ * para que reapariciones del mismo modal no re-fetchen 4 queries a BD,
+ * sin quedarse stale si el dev modifica el producto subyacente.
+ */
+const SOURCE_INFO_CACHE_TTL_MS = 5 * 60 * 1000;
+
 class LivingManager {
     constructor() {
         this.supabase = null;
@@ -1072,6 +1087,15 @@ class LivingManager {
                 if (it.run && !it.output) return false;
                 // No mostrar ítems de tipo "text" sin contenido mostrable
                 if ((it.contentType || '') === 'text' && !hasTextContent(it)) return false;
+                // Backwards compat (P2#4 audit 2026-05-25): outputs viejos sin
+                // storage_path NI URL resolvible quedaban como cards rotas
+                // (ghost cards sin imagen). Si es image/video y no hay fileUrl
+                // ni texto util, dropear silenciosamente.
+                if ((it.contentType === 'image' || it.contentType === 'video')
+                    && !it.fileUrl
+                    && !it._isPendingEdit) {
+                    return false;
+                }
                 return true;
             })
             .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
@@ -2481,70 +2505,21 @@ class LivingManager {
         });
     }
 
-    async _completeUpscaleInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, sourceInfo }) {
-        try {
-            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'upscale' });
-
-            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
-            if (!this.userId) throw new Error('Falta user_id');
-
-            // Cobrar tras success leyendo creditsConsumed real de KIE.
-            const finalize = await this._finalizeKieTask({
-                taskId,
-                kind: 'image_upscale',
-                sourceOutputId
-            });
-
-            const sm = sourceInfo || {};
-            const row = {
-                brand_container_id: this.brandContainerId,
-                organization_id: this.organizationId || null,
-                user_id: this.userId,
-                provider: 'kie',
-                output_type: 'image',
-                external_job_id: taskId,
-                status: 'completed',
-                entity_id: sm.entityId || null,
-                brief_id: sm.briefId || null,
-                persona_id: sm.personaId || null,
-                campaign_id: sm.campaignId || null,
-                reference_image_url: sourceImageUrl || null,
-                models: { editor: createPayload.kie_model || null, prompter: null },
-                storage_path: storagePath,
-                technical_params: {
-                    output_format: 'png',
-                    scale_factor: createPayload.scale_factor,
-                    aspect_ratio: aspectRatio
-                },
-                metadata: {
-                    kind: 'image_upscale',
-                    source_output_id: sourceOutputId,
-                    scale_factor: createPayload.scale_factor,
-                    credits_charged: finalize?.credits_charged ?? null,
-                    cost_breakdown: finalize?.cost_breakdown ?? null
-                },
-                updated_at: new Date().toISOString()
-            };
-            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
-            if (error) throw error;
-
-            this._removePendingEditCard(clientId);
-            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
-            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') {
-                const c = finalize?.credits_charged;
-                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
-                window.showToast(`Imagen mejorada a 4K lista en el grid${suffix}`);
-            }
-        } catch (err) {
-            console.error('[upscale] background error:', err);
-            // Marcar como error en lugar de remover: skeleton card queda
-            // visible con badge rojo + boton Dismiss para que el usuario
-            // sepa que fallo (toast efimero se cierra antes de leerlo).
-            this._markPendingEditError(clientId, err.message || String(err));
-            if (typeof window.showToast === 'function') window.showToast(`Mejora 4K fallo: ${err.message || err}`);
-        }
+    _completeUpscaleInBackground(args) {
+        return this._runStandaloneKieOp({
+            ...args,
+            kind: 'image_upscale',
+            downloadKind: 'upscale',
+            successLabel: 'Imagen mejorada a 4K lista en el grid',
+            failLabel: 'Mejora 4K fallo',
+            buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
+            buildTechnicalParams: (cp, ar) => ({
+                output_format: 'png',
+                scale_factor: cp.scale_factor,
+                aspect_ratio: ar
+            }),
+            buildMetadataExtras: (cp) => ({ scale_factor: cp.scale_factor })
+        });
     }
 
     /**
@@ -2627,65 +2602,17 @@ class LivingManager {
         });
     }
 
-    async _completeRemoveBgInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, sourceInfo }) {
-        try {
-            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'remove-bg' });
-
-            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
-            if (!this.userId) throw new Error('Falta user_id');
-
-            const finalize = await this._finalizeKieTask({
-                taskId,
-                kind: 'image_remove_bg',
-                sourceOutputId
-            });
-
-            const sm = sourceInfo || {};
-            const row = {
-                brand_container_id: this.brandContainerId,
-                organization_id: this.organizationId || null,
-                user_id: this.userId,
-                provider: 'kie',
-                output_type: 'image',
-                external_job_id: taskId,
-                status: 'completed',
-                entity_id: sm.entityId || null,
-                brief_id: sm.briefId || null,
-                persona_id: sm.personaId || null,
-                campaign_id: sm.campaignId || null,
-                reference_image_url: sourceImageUrl || null,
-                models: { editor: createPayload.kie_model || null, prompter: null },
-                storage_path: storagePath,
-                technical_params: {
-                    output_format: 'png',
-                    aspect_ratio: aspectRatio,
-                    has_alpha: true
-                },
-                metadata: {
-                    kind: 'image_remove_bg',
-                    source_output_id: sourceOutputId,
-                    credits_charged: finalize?.credits_charged ?? null,
-                    cost_breakdown: finalize?.cost_breakdown ?? null
-                },
-                updated_at: new Date().toISOString()
-            };
-            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
-            if (error) throw error;
-
-            this._removePendingEditCard(clientId);
-            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
-            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') {
-                const c = finalize?.credits_charged;
-                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
-                window.showToast(`Fondo eliminado, PNG transparente en el grid${suffix}`);
-            }
-        } catch (err) {
-            console.error('[remove-bg] background error:', err);
-            this._markPendingEditError(clientId, err.message || String(err));
-            if (typeof window.showToast === 'function') window.showToast(`Quitar fondo fallo: ${err.message || err}`);
-        }
+    _completeRemoveBgInBackground(args) {
+        return this._runStandaloneKieOp({
+            ...args,
+            kind: 'image_remove_bg',
+            downloadKind: 'remove-bg',
+            successLabel: 'Fondo eliminado, PNG transparente en el grid',
+            failLabel: 'Quitar fondo fallo',
+            buildModels: (cp) => ({ editor: cp.kie_model || null, prompter: null }),
+            buildTechnicalParams: (cp, ar) => ({ output_format: 'png', aspect_ratio: ar, has_alpha: true }),
+            buildMetadataExtras: () => ({})
+        });
     }
 
     /**
@@ -2786,74 +2713,32 @@ class LivingManager {
         });
     }
 
-    async _completeFixTextInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, productId, productName, entityId, sourceInfo }) {
-        try {
-            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'fix-text' });
-
-            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
-            if (!this.userId) throw new Error('Falta user_id');
-
-            const finalize = await this._finalizeKieTask({
-                taskId,
-                kind: 'image_fix_text',
-                sourceOutputId,
-                openaiInputTokens: createPayload.openai_input_tokens || 0,
-                openaiOutputTokens: createPayload.openai_output_tokens || 0,
-                openaiModel: createPayload.openai_model || 'gpt-4o-mini'
-            });
-
-            const sm = sourceInfo || {};
-            const row = {
-                brand_container_id: this.brandContainerId,
-                organization_id: this.organizationId || null,
-                user_id: this.userId,
-                provider: 'kie',
-                output_type: 'image',
-                external_job_id: taskId,
-                status: 'completed',
-                entity_id: entityId || sm.entityId || null,
-                brief_id: sm.briefId || null,
-                persona_id: sm.personaId || null,
-                campaign_id: sm.campaignId || null,
-                reference_image_url: sourceImageUrl || null,
-                models: {
-                    editor: createPayload.kie_model || null,
-                    prompter: createPayload.openai_model || null
-                },
-                prompt_used: createPayload.refined_prompt,
-                storage_path: storagePath,
-                technical_params: {
-                    output_format: 'png',
-                    aspect_ratio: aspectRatio
-                },
-                metadata: {
-                    kind: 'image_fix_text',
-                    source_output_id: sourceOutputId,
-                    edit_refined_prompt: createPayload.refined_prompt,
-                    product_id: productId,
-                    product_name: productName,
-                    credits_charged: finalize?.credits_charged ?? null,
-                    cost_breakdown: finalize?.cost_breakdown ?? null
-                },
-                updated_at: new Date().toISOString()
-            };
-            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
-            if (error) throw error;
-
-            this._removePendingEditCard(clientId);
-            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
-            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') {
-                const c = finalize?.credits_charged;
-                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
-                window.showToast(`Textos mejorados lista en el grid${suffix}`);
-            }
-        } catch (err) {
-            console.error('[fix-text] background error:', err);
-            this._markPendingEditError(clientId, err.message || String(err));
-            if (typeof window.showToast === 'function') window.showToast(`Mejorar textos fallo: ${err.message || err}`);
-        }
+    _completeFixTextInBackground(args) {
+        const { productId, productName, entityId, createPayload } = args;
+        return this._runStandaloneKieOp({
+            ...args,
+            kind: 'image_fix_text',
+            downloadKind: 'fix-text',
+            successLabel: 'Textos mejorados lista en el grid',
+            failLabel: 'Mejorar textos fallo',
+            entityIdOverride: entityId,
+            promptUsed: createPayload.refined_prompt,
+            openaiTokens: {
+                input: createPayload.openai_input_tokens || 0,
+                output: createPayload.openai_output_tokens || 0,
+                model: createPayload.openai_model || 'gpt-4o-mini'
+            },
+            buildModels: (cp) => ({
+                editor: cp.kie_model || null,
+                prompter: cp.openai_model || null
+            }),
+            buildTechnicalParams: (_cp, ar) => ({ output_format: 'png', aspect_ratio: ar }),
+            buildMetadataExtras: (cp) => ({
+                edit_refined_prompt: cp.refined_prompt,
+                product_id: productId,
+                product_name: productName
+            })
+        });
     }
 
     _toolbarSoonToast(label, vendor) {
@@ -3250,6 +3135,20 @@ class LivingManager {
     async _detectSourceProductInfo() {
         if (!this.supabase) return null;
         const state = this._modalState || {};
+
+        // Cache por outputId (P2#6 audit 2026-05-25). Evita re-disparar 4
+        // queries a BD cuando el usuario abre/cierra el mismo modal varias
+        // veces, o clickea multiples botones del toolbar en la misma sesion.
+        const cacheKey = state.outputId || state.runId;
+        const now = Date.now();
+        if (!this._sourceInfoCache) this._sourceInfoCache = new Map();
+        if (cacheKey) {
+            const cached = this._sourceInfoCache.get(cacheKey);
+            if (cached && (now - cached.t) < SOURCE_INFO_CACHE_TTL_MS) {
+                return cached.v;
+            }
+        }
+
         let aspectRatio = null;
         let entityId = null;
         let briefId = null;
@@ -3311,9 +3210,11 @@ class LivingManager {
         }
 
         if (!entityId) {
-            return (aspectRatio || briefId || personaId || campaignId)
+            const val = (aspectRatio || briefId || personaId || campaignId)
                 ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [], briefId, personaId, campaignId }
                 : null;
+            if (cacheKey) this._sourceInfoCache.set(cacheKey, { t: now, v: val });
+            return val;
         }
 
         // Resolver entity_id -> brand_entities -> products|services|brand_places
@@ -3381,7 +3282,9 @@ class LivingManager {
             }
         } catch (_) { /* noop */ }
 
-        return { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls, briefId, personaId, campaignId };
+        const result = { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls, briefId, personaId, campaignId };
+        if (cacheKey) this._sourceInfoCache.set(cacheKey, { t: now, v: result });
+        return result;
     }
 
     _closeEditOverlay() {
@@ -3819,56 +3722,35 @@ class LivingManager {
      * Polling + descarga + upload + insert + refresh, todo en background.
      * Manda toast al final (exito o error) y remueve el skeleton.
      */
-    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo }) {
-        try {
-            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
-            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
-
-            // Cobrar tras success leyendo creditsConsumed real de KIE +
-            // OpenAI tokens del refined prompt + markup_per_kind ($3 para edit).
-            const finalize = await this._finalizeKieTask({
-                taskId,
-                kind: 'image_edit',
-                sourceOutputId,
-                openaiInputTokens: createPayload.openai_input_tokens || 0,
-                openaiOutputTokens: createPayload.openai_output_tokens || 0,
-                openaiModel: createPayload.openai_model || 'gpt-4o-mini'
-            });
-
-            await this._insertEditOutput({
-                sourceOutputId,
-                sourceImageUrl,
-                storagePath,
-                refinedPrompt: createPayload.refined_prompt,
-                userInstruction,
-                maskStoragePath: createPayload.mask_storage_path,
-                kieModel: createPayload.kie_model,
-                openaiModel: createPayload.openai_model,
-                kieTaskId: taskId,
-                mode,
-                productId,
-                productName,
-                sourceInfo,
-                entityId,
-                referenceImageUrl,
-                aspectRatio,
-                finalize
-            });
-            this._removePendingEditCard(clientId);
-            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
-            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') {
-                const c = finalize?.credits_charged;
-                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
-                window.showToast(`Edicion lista en el grid${suffix}`);
-            }
-        } catch (err) {
-            console.error('[edit-overlay] background error:', err);
-            this._markPendingEditError(clientId, err.message || String(err));
-            if (typeof window.showToast === 'function') {
-                window.showToast(`Edicion fallo: ${err.message || err}`);
-            }
-        }
+    _completeEditInBackground(args) {
+        const { createPayload, userInstruction, mode, productId, productName, entityId } = args;
+        return this._runStandaloneKieOp({
+            ...args,
+            kind: 'image_edit',
+            downloadKind: undefined, // _downloadAndUploadEditResult default
+            successLabel: 'Edicion lista en el grid',
+            failLabel: 'Edicion fallo',
+            entityIdOverride: entityId,
+            promptUsed: createPayload.refined_prompt,
+            openaiTokens: {
+                input: createPayload.openai_input_tokens || 0,
+                output: createPayload.openai_output_tokens || 0,
+                model: createPayload.openai_model || 'gpt-4o-mini'
+            },
+            buildModels: (cp) => ({
+                editor: cp.kie_model || null,
+                prompter: cp.openai_model || null
+            }),
+            buildTechnicalParams: (_cp, ar) => ({ output_format: 'png', aspect_ratio: ar || null }),
+            buildMetadataExtras: (cp, sourceOutputId) => ({
+                edit_mode: mode || 'remove',
+                edit_user_instruction: userInstruction,
+                edit_refined_prompt: cp.refined_prompt,
+                mask_storage_path: cp.mask_storage_path,
+                product_id: productId || null,
+                product_name: productName || null
+            })
+        });
     }
 
     /**
@@ -3965,10 +3847,110 @@ class LivingManager {
     }
 
     /**
+     * Helper unificado para los 4 background completers (upscale, remove-bg,
+     * fix-text, edit). Antes cada uno duplicaba ~80 lineas con la misma
+     * estructura: poll → download+upload → finalize → insert → toast/cleanup.
+     *
+     * Refactor del audit P2#1 (2026-05-25): un solo flujo, los completers
+     * son ahora wrappers de 5 lineas que pasan la config especifica al op.
+     *
+     * @param {Object} opts
+     * @param {string} opts.clientId — id del skeleton pending card
+     * @param {string} opts.taskId — KIE task id (del create endpoint)
+     * @param {Object} opts.createPayload — respuesta del create endpoint
+     * @param {string|null} opts.sourceOutputId — output original (para linaje)
+     * @param {string} opts.sourceImageUrl — imagen original (reference_image_url)
+     * @param {string|null} opts.aspectRatio — aspect ratio detectado
+     * @param {Object} opts.sourceInfo — snapshot del linaje (brief/persona/campaign)
+     * @param {string} opts.kind — metadata.kind canonico (image_upscale, image_edit, etc)
+     * @param {string} opts.downloadKind — etiqueta para storage path (upscale, fix-text, etc)
+     * @param {string} opts.successLabel — toast de exito (sin sufijo "cobrado")
+     * @param {string} opts.failLabel — toast de fallo (sin mensaje de error)
+     * @param {Function} opts.buildTechnicalParams — (createPayload, aspectRatio) => {}
+     * @param {Function} opts.buildMetadataExtras — (createPayload, sourceOutputId) => {}
+     * @param {Function} opts.buildModels — (createPayload) => { editor, prompter }
+     * @param {string|null} [opts.promptUsed] — texto del prompt si aplica
+     * @param {string|null} [opts.entityIdOverride] — gana sobre sourceInfo.entityId (edit usa producto seleccionado)
+     * @param {{input:number,output:number,model:string}|null} [opts.openaiTokens] — para finalize cobro dinamico
+     * @returns {Promise<{credits_charged?:number}|null>} finalize result o null si fallo
+     */
+    async _runStandaloneKieOp(opts) {
+        const {
+            clientId, taskId, createPayload, sourceOutputId, sourceImageUrl,
+            aspectRatio, sourceInfo, kind, downloadKind, successLabel, failLabel,
+            buildTechnicalParams, buildMetadataExtras, buildModels,
+            promptUsed = null, entityIdOverride = null, openaiTokens = null
+        } = opts;
+        try {
+            const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: KIE_POLL_TIMEOUT_MS, intervalMs: KIE_POLL_INTERVAL_MS });
+            const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: downloadKind });
+
+            if (!this.brandContainerId) throw new Error('Falta brand_container_id');
+            if (!this.userId) throw new Error('Falta user_id');
+
+            const finalize = await this._finalizeKieTask({
+                taskId,
+                kind,
+                sourceOutputId,
+                openaiInputTokens: openaiTokens?.input || 0,
+                openaiOutputTokens: openaiTokens?.output || 0,
+                openaiModel: openaiTokens?.model || 'gpt-4o-mini'
+            });
+
+            const sm = sourceInfo || {};
+            const row = {
+                brand_container_id: this.brandContainerId,
+                organization_id: this.organizationId || null,
+                user_id: this.userId,
+                provider: 'kie',
+                output_type: 'image',
+                external_job_id: taskId,
+                status: 'completed',
+                entity_id: entityIdOverride || sm.entityId || null,
+                brief_id: sm.briefId || null,
+                persona_id: sm.personaId || null,
+                campaign_id: sm.campaignId || null,
+                reference_image_url: sourceImageUrl || null,
+                models: buildModels(createPayload),
+                ...(promptUsed ? { prompt_used: promptUsed } : {}),
+                storage_path: storagePath,
+                technical_params: buildTechnicalParams(createPayload, aspectRatio),
+                metadata: {
+                    kind,
+                    source_output_id: sourceOutputId,
+                    ...buildMetadataExtras(createPayload, sourceOutputId),
+                    credits_charged: finalize?.credits_charged ?? null,
+                    cost_breakdown: finalize?.cost_breakdown ?? null
+                },
+                updated_at: new Date().toISOString()
+            };
+            const { error } = await this.supabase.from('system_ai_outputs').insert(row);
+            if (error) throw error;
+
+            this._removePendingEditCard(clientId);
+            try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
+            try { await this.renderHistorySection(); } catch (_) { /* noop */ }
+            if (typeof window.showToast === 'function') {
+                const c = finalize?.credits_charged;
+                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
+                window.showToast(`${successLabel}${suffix}`);
+            }
+            return finalize;
+        } catch (err) {
+            console.error(`[${kind}] background error:`, err);
+            this._markPendingEditError(clientId, err.message || String(err));
+            if (typeof window.showToast === 'function') {
+                window.showToast(`${failLabel}: ${err.message || err}`);
+            }
+            return null;
+        }
+    }
+
+    /**
      * Poll kling-video-status (que es generico para cualquier taskId de kie.ai).
      * Devuelve la URL de la imagen generada cuando state=success.
      */
-    async _pollKieTask(taskId, { timeoutMs = 5 * 60 * 1000, intervalMs = 3000 } = {}) {
+    async _pollKieTask(taskId, { timeoutMs = KIE_POLL_TIMEOUT_MS, intervalMs = KIE_POLL_INTERVAL_MS } = {}) {
         const accessToken = await this._getAccessToken();
         const start = Date.now();
         while (Date.now() - start < timeoutMs) {
@@ -4036,59 +4018,6 @@ class LivingManager {
             storagePath: data.storage_path,
             publicUrl: data.public_url
         };
-    }
-
-    /**
-     * Inserta el output editado en system_ai_outputs (tabla flat, sin flow_run).
-     * Mismo destino que VideoView para producciones standalone — el grid de
-     * Production las recoge via loadSystemAiOutputs (provider != 'openai').
-     */
-    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo, finalize }) {
-        if (!this.brandContainerId) throw new Error('Falta brand_container_id');
-        if (!this.userId) throw new Error('Falta user_id');
-        const sm = sourceInfo || {};
-        const row = {
-            // Identidad + provider
-            brand_container_id: this.brandContainerId,
-            organization_id: this.organizationId || null,
-            user_id: this.userId,
-            provider: 'kie',
-            output_type: 'image',
-            external_job_id: kieTaskId,
-            status: 'completed',
-            // Linaje FK (canonico, igual que runs_outputs)
-            entity_id: entityId || sm.entityId || null,
-            brief_id: sm.briefId || null,
-            persona_id: sm.personaId || null,
-            campaign_id: sm.campaignId || null,
-            reference_image_url: sourceImageUrl || null,
-            // Modelos usados (jsonb dedicado)
-            models: {
-                editor: kieModel || null,
-                prompter: openaiModel || null
-            },
-            prompt_used: refinedPrompt,
-            storage_path: storagePath,
-            technical_params: {
-                output_format: 'png',
-                aspect_ratio: aspectRatio || null
-            },
-            metadata: {
-                kind: 'image_edit',
-                edit_mode: mode || 'remove',
-                source_output_id: sourceOutputId,
-                edit_user_instruction: userInstruction,
-                edit_refined_prompt: refinedPrompt,
-                mask_storage_path: maskStoragePath,
-                product_id: productId || null,
-                product_name: productName || null,
-                credits_charged: finalize?.credits_charged ?? null,
-                cost_breakdown: finalize?.cost_breakdown ?? null
-            },
-            updated_at: new Date().toISOString()
-        };
-        const { error } = await this.supabase.from('system_ai_outputs').insert(row);
-        if (error) throw error;
     }
 
     _canvasHasContent(canvas) {
