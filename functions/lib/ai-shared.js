@@ -262,6 +262,40 @@ function validateExternalUrl(rawUrl) {
   return { ok: true };
 }
 
+/**
+ * Pre-check de balance ANTES de disparar una operacion cara (KIE create).
+ * Lee organization_credits.credits_available via REST (sin consumir). Si el
+ * balance es menor al estimado, retorna { ok:false } para que el endpoint
+ * devuelva 402 sin disparar el create.
+ *
+ * Premium SaaS: protege contra abuso (spam createTask sin saldo) sin pre-cobrar.
+ */
+async function ensureBalanceAtLeast({ env, organizationId, minCredits }) {
+  if (!organizationId) return { ok: false, reason: 'organization_id requerido' };
+  const minCr = Number(minCredits) || 0;
+  if (minCr <= 0) return { ok: true, balance: null };
+  const url = `${env.url}/rest/v1/organization_credits?organization_id=eq.${encodeURIComponent(organizationId)}&select=credits_available`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: env.serviceKey,
+      Authorization: `Bearer ${env.serviceKey}`,
+      Accept: 'application/json'
+    }
+  });
+  if (!res.ok) {
+    return { ok: false, reason: `no se pudo leer balance (HTTP ${res.status})` };
+  }
+  const rows = await res.json().catch(() => null);
+  const balance = Number(rows?.[0]?.credits_available ?? 0);
+  if (!Number.isFinite(balance)) {
+    return { ok: false, reason: 'balance no numerico' };
+  }
+  if (balance < minCr) {
+    return { ok: false, reason: 'saldo insuficiente', balance, required: minCr };
+  }
+  return { ok: true, balance };
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
@@ -272,6 +306,7 @@ module.exports = {
   assertOrgMember,
   checkBodySize,
   logUserAudit,
-  validateExternalUrl
+  validateExternalUrl,
+  ensureBalanceAtLeast
 };
 

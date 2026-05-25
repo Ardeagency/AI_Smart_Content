@@ -2702,9 +2702,41 @@ class VideoView extends BaseView {
               const uploaded = await this.downloadAndUploadKieVideo(kieUrl, taskId);
               if (uploaded?.publicUrl) {
                 this.showResult(uploaded.publicUrl);
+
+                // Cobro dinamico: kie-task-finalize lee creditsConsumed real
+                // de KIE + suma OpenAI tokens del cine-prompt + 5 cred markup.
+                // Reemplaza el cobro fijo previo de 25 cred (deduct_credits_for_video).
+                let finalizeResult = null;
+                try {
+                  const { data: { session } } = await this.supabase.auth.getSession();
+                  const accessToken = session?.access_token;
+                  if (accessToken && this.organizationId) {
+                    const finalizeRes = await fetch('/.netlify/functions/kie-task-finalize', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                      body: JSON.stringify({
+                        task_id: taskId,
+                        kind: 'video_generated',
+                        organization_id: this.organizationId,
+                        source_output_id: this._lastKieOutputId || null,
+                        openai_input_tokens: this._cinePromptTokens?.input || 0,
+                        openai_output_tokens: this._cinePromptTokens?.output || 0,
+                        openai_model: this._cinePromptTokens?.model || 'gpt-4o-mini'
+                      })
+                    });
+                    finalizeResult = await finalizeRes.json().catch(() => null);
+                    if (!finalizeRes.ok) {
+                      console.warn('[Video] finalize fallo, video guardado sin cobro:', finalizeResult);
+                    } else if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+                      window.appNavigation.loadCreditsFromDb(this.organizationId);
+                    }
+                  }
+                } catch (e) {
+                  console.warn('[Video] finalize exception:', e);
+                }
+
                 if (this._lastKieOutputId) {
                   // Merge metadata: preserva kind y campos del insert original.
-                  // jsonb || jsonb concatena al mas profundo en Postgres.
                   await this.updateSystemAIOutput(this._lastKieOutputId, {
                     status: 'completed',
                     storage_path: uploaded.storagePath,
@@ -2712,35 +2744,13 @@ class VideoView extends BaseView {
                       kind: 'video_generated',
                       resultUrls: urls,
                       video_url: uploaded.publicUrl,
-                      kie_source_url: kieUrl
+                      kie_source_url: kieUrl,
+                      credits_charged: finalizeResult?.credits_charged ?? null,
+                      cost_breakdown: finalizeResult?.cost_breakdown ?? null
                     },
                     error_message: null
                   });
                   this._lastKieOutputId = null;
-                }
-                // Cobro automático de 25 créditos al guardar el video exitosamente
-                const VIDEO_CREDITS = 25;
-                if (this.supabase && this.organizationId) {
-                  try {
-                    const { data: { user } } = await this.supabase.auth.getUser();
-                    if (user?.id) {
-                      const { data: deductResult, error: rpcError } = await this.supabase
-                        .rpc('deduct_credits_for_video', {
-                          p_organization_id: this.organizationId,
-                          p_user_id: user.id,
-                          p_amount: VIDEO_CREDITS
-                        });
-                      if (!rpcError && deductResult?.success === true) {
-                        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
-                          window.appNavigation.loadCreditsFromDb(this.organizationId);
-                        }
-                      } else if (deductResult?.error_message === 'insufficient_credits') {
-                        console.warn('[Video] Video guardado pero créditos insuficientes para cobrar', deductResult.credits_available);
-                      }
-                    }
-                  } catch (e) {
-                    console.warn('[Video] Error al cobrar créditos:', e);
-                  }
                 }
               } else {
                 this.showError('No se pudo guardar el video en tu cuenta');

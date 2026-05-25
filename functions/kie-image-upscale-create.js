@@ -17,7 +17,8 @@ const {
   getSupabaseEnv,
   requireAuth,
   checkBodySize,
-  validateExternalUrl
+  validateExternalUrl,
+  ensureBalanceAtLeast
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -25,7 +26,9 @@ const CREATE_PATH = '/api/v1/jobs/createTask';
 // Modelo Topaz para upscaling profesional. Si kie.ai usa un slug distinto,
 // override via env. El HTML del toolbar tiene data-kie-model="topaz/image-upscale".
 const KIE_MODEL = process.env.KIE_IMAGE_UPSCALE_MODEL || 'topaz/image-upscale';
-const CREDITS_PER_UPSCALE = 0.20;
+// Pre-check: minimo estimado en cred para no disparar KIE sin saldo. Cobro real
+// se hace en kie-task-finalize tras success (lee creditsConsumed de KIE).
+const MIN_BALANCE_UPSCALE_CRED = Number(process.env.MIN_BALANCE_UPSCALE_CRED || 0.50);
 
 function fail(event, status, error, extra = {}) {
   return {
@@ -84,29 +87,6 @@ async function createKieTask({ headers, imageUrl, scale }) {
   return String(taskId);
 }
 
-async function chargeCredits({ env, organizationId, userId, kieTaskId, metadata }) {
-  const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
-    method: 'POST',
-    headers: {
-      apikey: env.serviceKey,
-      Authorization: `Bearer ${env.serviceKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      p_organization_id: organizationId,
-      p_user_id: userId,
-      p_credits_amount: CREDITS_PER_UPSCALE,
-      p_kind: 'tool_call',
-      p_usd_cost: CREDITS_PER_UPSCALE,
-      p_source_table: 'system_ai_outputs',
-      p_source_id: kieTaskId,
-      p_metadata: metadata
-    })
-  });
-  const out = await res.json().catch(() => null);
-  return { ok: res.ok && out !== false, status: res.status, body: out };
-}
-
 exports.handler = async (event) => {
   const c = corsHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
@@ -143,31 +123,22 @@ exports.handler = async (event) => {
   try { env = getSupabaseEnv(); }
   catch (e) { return fail(event, 500, e.message); }
 
+  // Pre-check de balance: no disparamos KIE si el org no tiene saldo minimo.
+  // Cobro real se hace en kie-task-finalize tras success (lee creditsConsumed).
+  const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_UPSCALE_CRED });
+  if (!balance.ok) {
+    return fail(event, 402, 'Creditos insuficientes para iniciar el upscale', {
+      balance: balance.balance,
+      required: balance.required || MIN_BALANCE_UPSCALE_CRED,
+      reason: balance.reason
+    });
+  }
+
   let kieTaskId;
   try {
     kieTaskId = await createKieTask({ headers: kieHeaders, imageUrl, scale });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
-  }
-
-  const charge = await chargeCredits({
-    env,
-    organizationId,
-    userId: user.id,
-    kieTaskId,
-    metadata: {
-      operation: 'image_upscale',
-      kie_task_id: kieTaskId,
-      kie_model: KIE_MODEL,
-      scale_factor: scale,
-      source_output_id: sourceOutputId
-    }
-  });
-  if (!charge.ok) {
-    return fail(event, 402, 'Creditos insuficientes para mejorar la imagen', {
-      taskId: kieTaskId,
-      credits_needed: CREDITS_PER_UPSCALE
-    });
   }
 
   return {
@@ -177,7 +148,7 @@ exports.handler = async (event) => {
       taskId: kieTaskId,
       kie_model: KIE_MODEL,
       scale_factor: scale,
-      credits_charged: CREDITS_PER_UPSCALE
+      kind: 'image_upscale'
     })
   };
 };

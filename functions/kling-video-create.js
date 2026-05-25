@@ -6,67 +6,12 @@
  */
 
 const shared = require('./lib/kie-video-shared');
-const { getSupabaseEnv } = require('./lib/ai-shared');
+const { getSupabaseEnv, ensureBalanceAtLeast } = require('./lib/ai-shared');
 
-// Cobro: KIE Kling real cost + OpenAI tokens cost + $5 markup.
-// Pricing oficial KIE kling-3.0/video (2026):
-//   Standard: no-audio $0.07/s · with-audio $0.10/s
-//   Pro:      no-audio $0.09/s · with-audio $0.135/s
-//   4K:       $0.335/s (regardless of audio)
-// Cualquiera de los 5 valores puede overridarse via env si KIE ajusta.
-const KIE_KLING_STD_NOAUDIO_USD_PER_SEC = Number(process.env.KIE_KLING_STD_NOAUDIO_USD_PER_SEC || 0.07);
-const KIE_KLING_STD_AUDIO_USD_PER_SEC = Number(process.env.KIE_KLING_STD_AUDIO_USD_PER_SEC || 0.10);
-const KIE_KLING_PRO_NOAUDIO_USD_PER_SEC = Number(process.env.KIE_KLING_PRO_NOAUDIO_USD_PER_SEC || 0.09);
-const KIE_KLING_PRO_AUDIO_USD_PER_SEC = Number(process.env.KIE_KLING_PRO_AUDIO_USD_PER_SEC || 0.135);
-const KIE_KLING_4K_USD_PER_SEC = Number(process.env.KIE_KLING_4K_USD_PER_SEC || 0.335);
-const VIDEO_MARKUP_USD = Number(process.env.VIDEO_MARKUP_USD || 5);
-const OPENAI_INPUT_USD_PER_TOKEN = 0.15 / 1_000_000;
-const OPENAI_OUTPUT_USD_PER_TOKEN = 0.60 / 1_000_000;
-
-function klingUsdPerSec({ mode, sound, is4k }) {
-  if (is4k) return KIE_KLING_4K_USD_PER_SEC;
-  if (mode === 'pro') return sound ? KIE_KLING_PRO_AUDIO_USD_PER_SEC : KIE_KLING_PRO_NOAUDIO_USD_PER_SEC;
-  return sound ? KIE_KLING_STD_AUDIO_USD_PER_SEC : KIE_KLING_STD_NOAUDIO_USD_PER_SEC;
-}
-
-function computeVideoCharge({ mode, sound, is4k, durationSec, inputTokens, outputTokens }) {
-  const perSec = klingUsdPerSec({ mode, sound, is4k });
-  const kieUsd = perSec * durationSec;
-  const openaiUsd = inputTokens * OPENAI_INPUT_USD_PER_TOKEN + outputTokens * OPENAI_OUTPUT_USD_PER_TOKEN;
-  const totalUsd = kieUsd + openaiUsd + VIDEO_MARKUP_USD;
-  return {
-    credits: Math.round(totalUsd * 10000) / 10000,
-    breakdown: {
-      kie_usd_per_sec: perSec,
-      kie_usd: Math.round(kieUsd * 10000) / 10000,
-      openai_usd: Math.round(openaiUsd * 100000) / 100000,
-      markup_usd: VIDEO_MARKUP_USD
-    }
-  };
-}
-
-async function chargeCredits({ env, organizationId, userId, kieTaskId, creditsAmount, metadata }) {
-  const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
-    method: 'POST',
-    headers: {
-      apikey: env.serviceKey,
-      Authorization: `Bearer ${env.serviceKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      p_organization_id: organizationId,
-      p_user_id: userId,
-      p_credits_amount: creditsAmount,
-      p_kind: 'tool_call',
-      p_usd_cost: creditsAmount,
-      p_source_table: 'system_ai_outputs',
-      p_source_id: kieTaskId,
-      p_metadata: metadata
-    })
-  });
-  const out = await res.json().catch(() => null);
-  return { ok: res.ok && out !== false, status: res.status, body: out };
-}
+// Pre-check estimado para no disparar KIE sin saldo. Cobro real en
+// kie-task-finalize tras success (lee creditsConsumed de KIE).
+// Estimado conservador: max KIE-4K 12s ($0.335*12=$4.02) + OpenAI (~$0.005) + 5 markup = ~9 cred.
+const MIN_BALANCE_VIDEO_CRED = Number(process.env.MIN_BALANCE_VIDEO_CRED || 9);
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -108,12 +53,28 @@ exports.handler = async (event) => {
 
   const organizationId = String(body.organization_id || '').trim();
   if (!organizationId) {
-    return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'organization_id requerido para cobrar creditos' }) };
+    return { statusCode: 400, headers: shared.corsHeaders(event), body: JSON.stringify({ error: 'organization_id requerido' }) };
   }
 
   let env;
   try { env = getSupabaseEnv(); }
   catch (e) { return { statusCode: 500, headers: shared.corsHeaders(event), body: JSON.stringify({ error: e.message }) }; }
+
+  // Pre-check balance: no disparamos KIE Kling sin saldo. Cobro real en
+  // kie-task-finalize tras success (lee creditsConsumed real de KIE).
+  const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_VIDEO_CRED });
+  if (!balance.ok) {
+    return {
+      statusCode: 402,
+      headers: shared.corsHeaders(event),
+      body: JSON.stringify({
+        error: 'Creditos insuficientes para iniciar el video',
+        balance: balance.balance,
+        required: balance.required || MIN_BALANCE_VIDEO_CRED,
+        reason: balance.reason
+      })
+    };
+  }
 
   let createResp;
   try {
@@ -127,56 +88,22 @@ exports.handler = async (event) => {
     };
   }
 
-  // Si KIE no acepto la tarea, no cobramos.
   if (createResp.statusCode !== 200) return createResp;
 
+  // Adjuntar kind + tokens en la respuesta para que el frontend los pase al finalize.
   let parsedCreate;
   try { parsedCreate = JSON.parse(createResp.body); }
   catch (_) { return createResp; }
-  const kieTaskId = parsedCreate.taskId;
-  if (!kieTaskId) return createResp;
 
-  const durationSec = Math.min(12, Math.max(1, Math.round(Number(body.duration || 5))));
-  const mode = body.mode === 'pro' ? 'pro' : 'std';
-  const sound = body.sound === true || body.sound === 'true';
-  const is4k = body.is_4k === true || body.is_4k === 'true' || body.quality === '4k';
-  const inputTokens = Math.max(0, Number(body.openai_input_tokens || 0));
-  const outputTokens = Math.max(0, Number(body.openai_output_tokens || 0));
-  const { credits, breakdown } = computeVideoCharge({ mode, sound, is4k, durationSec, inputTokens, outputTokens });
-
-  const charge = await chargeCredits({
-    env,
-    organizationId,
-    userId: user.id,
-    kieTaskId,
-    creditsAmount: credits,
-    metadata: {
-      operation: 'video_generated',
-      kie_task_id: kieTaskId,
-      kie_model: 'kling-3.0/video',
-      kling_mode: mode,
-      kling_sound: sound,
-      kling_is_4k: is4k,
-      kling_duration_sec: durationSec,
-      openai_model: body.openai_model || 'gpt-4o-mini',
-      openai_input_tokens: inputTokens,
-      openai_output_tokens: outputTokens,
-      cost_breakdown_usd: breakdown
-    }
-  });
-
-  if (!charge.ok) {
-    return {
-      statusCode: 402,
-      headers: shared.corsHeaders(event),
-      body: JSON.stringify({ error: 'Creditos insuficientes para generar el video', credits_needed: credits, taskId: kieTaskId })
-    };
-  }
-
-  // Enriquecer la respuesta de createTask con info de cobro.
   return {
     statusCode: 200,
     headers: shared.corsHeaders(event),
-    body: JSON.stringify({ ...parsedCreate, credits_charged: credits, cost_breakdown: breakdown })
+    body: JSON.stringify({
+      ...parsedCreate,
+      kind: 'video_generated',
+      openai_input_tokens: Math.max(0, Number(body.openai_input_tokens || 0)),
+      openai_output_tokens: Math.max(0, Number(body.openai_output_tokens || 0)),
+      openai_model: body.openai_model || 'gpt-4o-mini'
+    })
   };
 };

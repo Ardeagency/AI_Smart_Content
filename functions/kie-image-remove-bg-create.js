@@ -17,13 +17,15 @@ const {
   getSupabaseEnv,
   requireAuth,
   checkBodySize,
-  validateExternalUrl
+  validateExternalUrl,
+  ensureBalanceAtLeast
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
 const CREATE_PATH = '/api/v1/jobs/createTask';
 const KIE_MODEL = process.env.KIE_IMAGE_REMOVE_BG_MODEL || 'recraft/remove-background';
-const CREDITS_PER_REMOVE_BG = 0.05;
+// Pre-check: Recraft remove-bg es barato. Cobro real en kie-task-finalize.
+const MIN_BALANCE_REMOVE_BG_CRED = Number(process.env.MIN_BALANCE_REMOVE_BG_CRED || 0.10);
 
 function fail(event, status, error, extra = {}) {
   return {
@@ -81,29 +83,6 @@ async function createKieTask({ headers, imageUrl }) {
   return String(taskId);
 }
 
-async function chargeCredits({ env, organizationId, userId, kieTaskId, metadata }) {
-  const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
-    method: 'POST',
-    headers: {
-      apikey: env.serviceKey,
-      Authorization: `Bearer ${env.serviceKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      p_organization_id: organizationId,
-      p_user_id: userId,
-      p_credits_amount: CREDITS_PER_REMOVE_BG,
-      p_kind: 'tool_call',
-      p_usd_cost: CREDITS_PER_REMOVE_BG,
-      p_source_table: 'system_ai_outputs',
-      p_source_id: kieTaskId,
-      p_metadata: metadata
-    })
-  });
-  const out = await res.json().catch(() => null);
-  return { ok: res.ok && out !== false, status: res.status, body: out };
-}
-
 exports.handler = async (event) => {
   const c = corsHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
@@ -137,30 +116,20 @@ exports.handler = async (event) => {
   try { env = getSupabaseEnv(); }
   catch (e) { return fail(event, 500, e.message); }
 
+  const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_REMOVE_BG_CRED });
+  if (!balance.ok) {
+    return fail(event, 402, 'Creditos insuficientes para quitar fondo', {
+      balance: balance.balance,
+      required: balance.required || MIN_BALANCE_REMOVE_BG_CRED,
+      reason: balance.reason
+    });
+  }
+
   let kieTaskId;
   try {
     kieTaskId = await createKieTask({ headers: kieHeaders, imageUrl });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
-  }
-
-  const charge = await chargeCredits({
-    env,
-    organizationId,
-    userId: user.id,
-    kieTaskId,
-    metadata: {
-      operation: 'image_remove_bg',
-      kie_task_id: kieTaskId,
-      kie_model: KIE_MODEL,
-      source_output_id: sourceOutputId
-    }
-  });
-  if (!charge.ok) {
-    return fail(event, 402, 'Creditos insuficientes para quitar fondo', {
-      taskId: kieTaskId,
-      credits_needed: CREDITS_PER_REMOVE_BG
-    });
   }
 
   return {
@@ -169,7 +138,7 @@ exports.handler = async (event) => {
     body: JSON.stringify({
       taskId: kieTaskId,
       kie_model: KIE_MODEL,
-      credits_charged: CREDITS_PER_REMOVE_BG
+      kind: 'image_remove_bg'
     })
   };
 };

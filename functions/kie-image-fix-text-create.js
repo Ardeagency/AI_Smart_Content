@@ -26,7 +26,8 @@ const {
   getSupabaseEnv,
   requireAuth,
   checkBodySize,
-  validateExternalUrl
+  validateExternalUrl,
+  ensureBalanceAtLeast
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -34,24 +35,8 @@ const CREATE_PATH = '/api/v1/jobs/createTask';
 const KIE_MODEL = process.env.KIE_IMAGE_FIX_TEXT_MODEL || 'nano-banana-pro';
 const OPENAI_MODEL = process.env.OPENAI_FIX_TEXT_PROMPT_MODEL || 'gpt-4o-mini';
 
-// Cobro dinamico: KIE_real + OpenAI_tokens + markup (mismo modelo que edit).
-const KIE_FIX_TEXT_USD = Number(process.env.KIE_FIX_TEXT_USD || 0.10);
-const OPENAI_OPS_MARKUP_USD = Number(process.env.OPENAI_OPS_MARKUP_USD || 3);
-const OPENAI_INPUT_USD_PER_TOKEN = 0.15 / 1_000_000;
-const OPENAI_OUTPUT_USD_PER_TOKEN = 0.60 / 1_000_000;
-
-function computeCreditCharge(inputTokens, outputTokens) {
-  const openaiUsd = inputTokens * OPENAI_INPUT_USD_PER_TOKEN + outputTokens * OPENAI_OUTPUT_USD_PER_TOKEN;
-  const totalUsd = KIE_FIX_TEXT_USD + openaiUsd + OPENAI_OPS_MARKUP_USD;
-  return {
-    credits: Math.round(totalUsd * 10000) / 10000,
-    breakdown: {
-      kie_usd: KIE_FIX_TEXT_USD,
-      openai_usd: Math.round(openaiUsd * 100000) / 100000,
-      markup_usd: OPENAI_OPS_MARKUP_USD
-    }
-  };
-}
+// Pre-check estimado (cobro real en kie-task-finalize tras success).
+const MIN_BALANCE_FIX_TEXT_CRED = Number(process.env.MIN_BALANCE_FIX_TEXT_CRED || 3.5);
 
 // nano-banana-pro acepta los 10 aspect ratios + auto.
 const ALLOWED_ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']);
@@ -198,29 +183,6 @@ async function createKieTask({ headers, prompt, imageUrl, productImageUrls, aspe
   return String(taskId);
 }
 
-async function chargeCredits({ env, organizationId, userId, kieTaskId, creditsAmount, usdCost, metadata }) {
-  const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
-    method: 'POST',
-    headers: {
-      apikey: env.serviceKey,
-      Authorization: `Bearer ${env.serviceKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      p_organization_id: organizationId,
-      p_user_id: userId,
-      p_credits_amount: creditsAmount,
-      p_kind: 'tool_call',
-      p_usd_cost: usdCost,
-      p_source_table: 'system_ai_outputs',
-      p_source_id: kieTaskId,
-      p_metadata: metadata
-    })
-  });
-  const out = await res.json().catch(() => null);
-  return { ok: res.ok && out !== false, status: res.status, body: out };
-}
-
 exports.handler = async (event) => {
   const c = corsHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: c, body: '' };
@@ -265,6 +227,16 @@ exports.handler = async (event) => {
   try { env = getSupabaseEnv(); }
   catch (e) { return fail(event, 500, e.message); }
 
+  // Pre-check balance: no quemamos OpenAI Vision ni KIE sin saldo.
+  const balance = await ensureBalanceAtLeast({ env, organizationId, minCredits: MIN_BALANCE_FIX_TEXT_CRED });
+  if (!balance.ok) {
+    return fail(event, 402, 'Creditos insuficientes para mejorar los textos', {
+      balance: balance.balance,
+      required: balance.required || MIN_BALANCE_FIX_TEXT_CRED,
+      reason: balance.reason
+    });
+  }
+
   let refinedPrompt, inputTokens, outputTokens;
   try {
     ({ refinedPrompt, inputTokens, outputTokens } = await generateFixTextPromptWithVision({
@@ -290,34 +262,7 @@ exports.handler = async (event) => {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
 
-  // Cobro dinamico: KIE_real + OpenAI tokens + $3 markup.
-  const { credits, breakdown } = computeCreditCharge(inputTokens, outputTokens);
-  const charge = await chargeCredits({
-    env,
-    organizationId,
-    userId: user.id,
-    kieTaskId,
-    creditsAmount: credits,
-    usdCost: credits,
-    metadata: {
-      operation: 'image_fix_text',
-      kie_task_id: kieTaskId,
-      kie_model: KIE_MODEL,
-      openai_model: OPENAI_MODEL,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      source_output_id: sourceOutputId,
-      product_id: productId,
-      cost_breakdown_usd: breakdown
-    }
-  });
-  if (!charge.ok) {
-    return fail(event, 402, 'Creditos insuficientes para mejorar los textos', {
-      taskId: kieTaskId,
-      credits_needed: credits
-    });
-  }
-
+  // No cobro aqui. kie-task-finalize cobra tras polling success.
   return {
     statusCode: 200,
     headers: c,
@@ -327,8 +272,9 @@ exports.handler = async (event) => {
       kie_model: KIE_MODEL,
       openai_model: OPENAI_MODEL,
       aspect_ratio: aspectRatio,
-      credits_charged: credits,
-      cost_breakdown: breakdown
+      kind: 'image_fix_text',
+      openai_input_tokens: inputTokens,
+      openai_output_tokens: outputTokens
     })
   };
 };

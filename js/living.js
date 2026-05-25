@@ -2466,6 +2466,14 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+
+            // Cobrar tras success leyendo creditsConsumed real de KIE.
+            const finalize = await this._finalizeKieTask({
+                taskId,
+                kind: 'image_upscale',
+                sourceOutputId
+            });
+
             const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
@@ -2490,7 +2498,9 @@ class LivingManager {
                 metadata: {
                     kind: 'image_upscale',
                     source_output_id: sourceOutputId,
-                    scale_factor: createPayload.scale_factor
+                    scale_factor: createPayload.scale_factor,
+                    credits_charged: finalize?.credits_charged ?? null,
+                    cost_breakdown: finalize?.cost_breakdown ?? null
                 },
                 updated_at: new Date().toISOString()
             };
@@ -2500,7 +2510,11 @@ class LivingManager {
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
             try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') window.showToast('Imagen mejorada a 4K lista en el grid');
+            if (typeof window.showToast === 'function') {
+                const c = finalize?.credits_charged;
+                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
+                window.showToast(`Imagen mejorada a 4K lista en el grid${suffix}`);
+            }
         } catch (err) {
             console.error('[upscale] background error:', err);
             this._removePendingEditCard(clientId);
@@ -2596,6 +2610,13 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+
+            const finalize = await this._finalizeKieTask({
+                taskId,
+                kind: 'image_remove_bg',
+                sourceOutputId
+            });
+
             const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
@@ -2619,7 +2640,9 @@ class LivingManager {
                 },
                 metadata: {
                     kind: 'image_remove_bg',
-                    source_output_id: sourceOutputId
+                    source_output_id: sourceOutputId,
+                    credits_charged: finalize?.credits_charged ?? null,
+                    cost_breakdown: finalize?.cost_breakdown ?? null
                 },
                 updated_at: new Date().toISOString()
             };
@@ -2629,7 +2652,11 @@ class LivingManager {
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
             try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') window.showToast('Fondo eliminado, PNG transparente en el grid');
+            if (typeof window.showToast === 'function') {
+                const c = finalize?.credits_charged;
+                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
+                window.showToast(`Fondo eliminado, PNG transparente en el grid${suffix}`);
+            }
         } catch (err) {
             console.error('[remove-bg] background error:', err);
             this._removePendingEditCard(clientId);
@@ -2743,6 +2770,16 @@ class LivingManager {
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
+
+            const finalize = await this._finalizeKieTask({
+                taskId,
+                kind: 'image_fix_text',
+                sourceOutputId,
+                openaiInputTokens: createPayload.openai_input_tokens || 0,
+                openaiOutputTokens: createPayload.openai_output_tokens || 0,
+                openaiModel: createPayload.openai_model || 'gpt-4o-mini'
+            });
+
             const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
@@ -2772,7 +2809,9 @@ class LivingManager {
                     source_output_id: sourceOutputId,
                     edit_refined_prompt: createPayload.refined_prompt,
                     product_id: productId,
-                    product_name: productName
+                    product_name: productName,
+                    credits_charged: finalize?.credits_charged ?? null,
+                    cost_breakdown: finalize?.cost_breakdown ?? null
                 },
                 updated_at: new Date().toISOString()
             };
@@ -2782,7 +2821,11 @@ class LivingManager {
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
             try { await this.renderHistorySection(); } catch (_) { /* noop */ }
-            if (typeof window.showToast === 'function') window.showToast('Textos mejorados lista en el grid');
+            if (typeof window.showToast === 'function') {
+                const c = finalize?.credits_charged;
+                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
+                window.showToast(`Textos mejorados lista en el grid${suffix}`);
+            }
         } catch (err) {
             console.error('[fix-text] background error:', err);
             this._removePendingEditCard(clientId);
@@ -3675,6 +3718,18 @@ class LivingManager {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
+
+            // Cobrar tras success leyendo creditsConsumed real de KIE +
+            // OpenAI tokens del refined prompt + markup_per_kind ($3 para edit).
+            const finalize = await this._finalizeKieTask({
+                taskId,
+                kind: 'image_edit',
+                sourceOutputId,
+                openaiInputTokens: createPayload.openai_input_tokens || 0,
+                openaiOutputTokens: createPayload.openai_output_tokens || 0,
+                openaiModel: createPayload.openai_model || 'gpt-4o-mini'
+            });
+
             await this._insertEditOutput({
                 sourceOutputId,
                 sourceImageUrl,
@@ -3691,13 +3746,16 @@ class LivingManager {
                 sourceInfo,
                 entityId,
                 referenceImageUrl,
-                aspectRatio
+                aspectRatio,
+                finalize
             });
             this._removePendingEditCard(clientId);
             try { await this.loadMoreHistorySources({ reset: true }); } catch (_) { /* noop */ }
             try { await this.renderHistorySection(); } catch (_) { /* noop */ }
             if (typeof window.showToast === 'function') {
-                window.showToast('Edicion lista. Mira tu nueva produccion en el grid.');
+                const c = finalize?.credits_charged;
+                const suffix = (typeof c === 'number') ? ` (cobrado: ${c.toFixed(2)} cred)` : '';
+                window.showToast(`Edicion lista en el grid${suffix}`);
             }
         } catch (err) {
             console.error('[edit-overlay] background error:', err);
@@ -3762,6 +3820,44 @@ class LivingManager {
         if (!this.supabase?.auth?.getSession) return null;
         const { data } = await this.supabase.auth.getSession();
         return data?.session?.access_token || null;
+    }
+
+    /**
+     * Cierra el cobro tras polling success. Llama kie-task-finalize que lee
+     * creditsConsumed REAL de KIE y cobra: KIE_real_usd + OpenAI_tokens +
+     * markup_per_kind. Patron premium SaaS: no se cobra si la tarea falla.
+     *
+     * @returns {Promise<{credits_charged, cost_breakdown} | null>} null si
+     *   el finalize falla — el frontend debe igual insertar el row pero
+     *   loguear el incidente (KIE genero sin que cobraramos = perdida nuestra).
+     */
+    async _finalizeKieTask({ taskId, kind, sourceOutputId = null, openaiInputTokens = 0, openaiOutputTokens = 0, openaiModel = 'gpt-4o-mini' }) {
+        try {
+            const accessToken = await this._getAccessToken();
+            if (!accessToken) throw new Error('No hay sesion activa');
+            const res = await fetch('/.netlify/functions/kie-task-finalize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                    task_id: taskId,
+                    kind,
+                    organization_id: this.organizationId,
+                    source_output_id: sourceOutputId,
+                    openai_input_tokens: openaiInputTokens,
+                    openai_output_tokens: openaiOutputTokens,
+                    openai_model: openaiModel
+                })
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                console.warn('[finalize] failed', { kind, taskId, status: res.status, body: data });
+                return null;
+            }
+            return data;
+        } catch (err) {
+            console.error('[finalize] exception', { kind, taskId, err });
+            return null;
+        }
     }
 
     /**
@@ -3843,7 +3939,7 @@ class LivingManager {
      * Mismo destino que VideoView para producciones standalone — el grid de
      * Production las recoge via loadSystemAiOutputs (provider != 'openai').
      */
-    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo }) {
+    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo, finalize }) {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
         const sm = sourceInfo || {};
@@ -3881,7 +3977,9 @@ class LivingManager {
                 edit_refined_prompt: refinedPrompt,
                 mask_storage_path: maskStoragePath,
                 product_id: productId || null,
-                product_name: productName || null
+                product_name: productName || null,
+                credits_charged: finalize?.credits_charged ?? null,
+                cost_breakdown: finalize?.cost_breakdown ?? null
             },
             updated_at: new Date().toISOString()
         };
