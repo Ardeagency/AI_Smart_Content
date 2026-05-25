@@ -16,7 +16,8 @@ const {
   corsHeaders,
   getSupabaseEnv,
   requireAuth,
-  checkBodySize
+  checkBodySize,
+  validateExternalUrl
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -134,7 +135,8 @@ exports.handler = async (event) => {
   const scaleRaw = Number(body.scale || 4);
   const scale = [1, 2, 4, 8].includes(scaleRaw) ? scaleRaw : 4;
 
-  if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
+  const urlCheck = validateExternalUrl(imageUrl);
+  if (!urlCheck.ok) return fail(event, 400, `image_url invalida: ${urlCheck.reason}`);
   if (!organizationId) return fail(event, 400, 'organization_id requerido');
 
   let env;

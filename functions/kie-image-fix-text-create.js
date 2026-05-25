@@ -25,7 +25,8 @@ const {
   corsHeaders,
   getSupabaseEnv,
   requireAuth,
-  checkBodySize
+  checkBodySize,
+  validateExternalUrl
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -232,10 +233,11 @@ exports.handler = async (event) => {
   const productName = String(body.product_name || '').trim() || null;
   const aspectRatio = String(body.aspect_ratio || 'auto').trim();
   const productImageUrls = Array.isArray(body.product_image_urls)
-    ? body.product_image_urls.filter(u => typeof u === 'string' && /^https?:\/\//i.test(u)).slice(0, 3)
+    ? body.product_image_urls.filter(u => typeof u === 'string' && validateExternalUrl(u).ok).slice(0, 3)
     : [];
 
-  if (!/^https?:\/\//i.test(imageUrl)) return fail(event, 400, 'image_url invalida');
+  const urlCheck = validateExternalUrl(imageUrl);
+  if (!urlCheck.ok) return fail(event, 400, `image_url invalida: ${urlCheck.reason}`);
   if (!organizationId) return fail(event, 400, 'organization_id requerido');
   if (!productImageUrls.length) {
     return fail(event, 400, 'Se requieren imagenes del producto (product_image_urls) para corregir los textos');

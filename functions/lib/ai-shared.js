@@ -213,6 +213,55 @@ async function logUserAudit({ env, event, user, organizationId, action, resource
   }
 }
 
+/**
+ * Valida que una URL sea segura para reenviar a un servicio tercero (KIE,
+ * OpenAI Vision, etc). Bloquea SSRF a infra interna o IPs privadas.
+ *
+ * Reglas:
+ *   - Solo HTTPS (HTTP permite http://localhost que pasa /^https?:/).
+ *   - Bloquea hostnames sospechosos: localhost, *.local, *.internal, IPs
+ *     literales privadas/loopback/link-local (IPv4 + IPv6).
+ *   - Bloquea metadata endpoints conocidos (AWS 169.254.169.254, GCP).
+ *
+ * Devuelve { ok: true } o { ok: false, reason: '...' }.
+ */
+function validateExternalUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return { ok: false, reason: 'url vacia' };
+  let u;
+  try { u = new URL(rawUrl); }
+  catch (_) { return { ok: false, reason: 'url malformada' }; }
+  if (u.protocol !== 'https:') return { ok: false, reason: 'solo https permitido' };
+  const host = (u.hostname || '').toLowerCase();
+  if (!host) return { ok: false, reason: 'host vacio' };
+
+  // Hostnames bloqueados (DNS rebinding + nombres reservados).
+  const BLOCKED_HOST_RE = /^(localhost|.*\.local|.*\.internal|.*\.localdomain)$/;
+  if (BLOCKED_HOST_RE.test(host)) return { ok: false, reason: 'host interno' };
+
+  // IPv4 literal: bloquear privadas/loopback/link-local/cloud metadata.
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (a === 10) return { ok: false, reason: 'ip privada 10/8' };
+    if (a === 127) return { ok: false, reason: 'ip loopback' };
+    if (a === 169 && b === 254) return { ok: false, reason: 'ip link-local / metadata' };
+    if (a === 172 && b >= 16 && b <= 31) return { ok: false, reason: 'ip privada 172.16/12' };
+    if (a === 192 && b === 168) return { ok: false, reason: 'ip privada 192.168/16' };
+    if (a === 0 || a >= 224) return { ok: false, reason: 'ip reservada' };
+  }
+
+  // IPv6 literal: bloquear loopback (::1), link-local (fe80::/10), ULA (fc00::/7),
+  // y la IPv4-mapped 0:0:...:ffff:a.b.c.d hacia rangos privados.
+  if (host.includes(':')) {
+    const v6 = host.replace(/^\[|\]$/g, '');
+    if (v6 === '::1' || v6 === '0:0:0:0:0:0:0:1') return { ok: false, reason: 'ipv6 loopback' };
+    if (/^fe[89ab][0-9a-f]:/i.test(v6)) return { ok: false, reason: 'ipv6 link-local' };
+    if (/^f[cd][0-9a-f][0-9a-f]:/i.test(v6)) return { ok: false, reason: 'ipv6 ula' };
+  }
+
+  return { ok: true };
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
@@ -222,6 +271,7 @@ module.exports = {
   supabaseRest,
   assertOrgMember,
   checkBodySize,
-  logUserAudit
+  logUserAudit,
+  validateExternalUrl
 };
 

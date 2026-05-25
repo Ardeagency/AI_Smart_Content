@@ -2397,7 +2397,11 @@ class LivingManager {
 
         if (typeof window.showToast === 'function') window.showToast('Mejorando a 4K — toma 30-60s');
 
-        let aspectRatio = this._sourceProductInfo?.aspectRatio || null;
+        // Snapshot del linaje del source al click (protege contra race si el
+        // usuario abre otra produccion mientras esta tarea esta polling).
+        const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
+
+        let aspectRatio = sourceInfo.aspectRatio || null;
         if (!aspectRatio) {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = '1:1'; }
@@ -2450,18 +2454,19 @@ class LivingManager {
             createPayload,
             sourceOutputId,
             sourceImageUrl: imageUrl,
-            aspectRatio
+            aspectRatio,
+            sourceInfo
         });
     }
 
-    async _completeUpscaleInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio }) {
+    async _completeUpscaleInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, sourceInfo }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'upscale' });
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
-            const sm = this._sourceProductInfo || {};
+            const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
                 organization_id: this.organizationId || null,
@@ -2524,7 +2529,10 @@ class LivingManager {
 
         if (typeof window.showToast === 'function') window.showToast('Quitando fondo — toma 15-30s');
 
-        let aspectRatio = this._sourceProductInfo?.aspectRatio || null;
+        // Snapshot del linaje al click (anti-race entre modales).
+        const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
+
+        let aspectRatio = sourceInfo.aspectRatio || null;
         if (!aspectRatio) {
             try { aspectRatio = await this._detectKieAspectRatio(imageUrl); }
             catch (_) { aspectRatio = '1:1'; }
@@ -2576,18 +2584,19 @@ class LivingManager {
             createPayload,
             sourceOutputId,
             sourceImageUrl: imageUrl,
-            aspectRatio
+            aspectRatio,
+            sourceInfo
         });
     }
 
-    async _completeRemoveBgInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio }) {
+    async _completeRemoveBgInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, sourceInfo }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'remove-bg' });
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
-            const sm = this._sourceProductInfo || {};
+            const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
                 organization_id: this.organizationId || null,
@@ -2649,9 +2658,10 @@ class LivingManager {
             return;
         }
 
-        // Auto-detect producto del output original. Si no hay, no podemos
-        // mejorar textos sin referencia visual.
-        const info = this._sourceProductInfo;
+        // Auto-detect producto del output original. Snapshot al click (no
+        // diferido) para no condicionarse al estado previo del modal —
+        // anti-race con otras producciones abiertas.
+        const info = (await this._detectSourceProductInfo().catch(() => null)) || {};
         const productImageUrls = info?.imageUrls || [];
         if (!productImageUrls.length) {
             if (typeof window.showToast === 'function') {
@@ -2721,18 +2731,19 @@ class LivingManager {
             aspectRatio,
             productId: info?.productId || null,
             productName: info?.productName || null,
-            entityId: info?.entityId || null
+            entityId: info?.entityId || null,
+            sourceInfo: info
         });
     }
 
-    async _completeFixTextInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, productId, productName, entityId }) {
+    async _completeFixTextInBackground({ clientId, taskId, createPayload, sourceOutputId, sourceImageUrl, aspectRatio, productId, productName, entityId, sourceInfo }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId, kind: 'fix-text' });
 
             if (!this.brandContainerId) throw new Error('Falta brand_container_id');
             if (!this.userId) throw new Error('Falta user_id');
-            const sm = this._sourceProductInfo || {};
+            const sm = sourceInfo || {};
             const row = {
                 brand_container_id: this.brandContainerId,
                 organization_id: this.organizationId || null,
@@ -3529,14 +3540,19 @@ class LivingManager {
             aspectRatio
         });
 
+        // Snapshot del linaje del source al click (anti-race entre modales).
+        // _sourceProductInfo se setea async cuando abre el overlay; aqui hago
+        // sync para garantizar que es el del modal vigente.
+        const sourceInfo = (await this._detectSourceProductInfo().catch(() => null)) || {};
+
         // Resolver entity_id del producto seleccionado (para preservar linaje
         // en futuras ediciones encadenadas).
         let entityId = null;
         if (this._selectedProductId && Array.isArray(this._orgProductsCache)) {
             entityId = this._orgProductsCache.find(p => p.id === this._selectedProductId)?.entity_id || null;
         }
-        if (!entityId && this._sourceProductInfo?.entityId) {
-            entityId = this._sourceProductInfo.entityId;
+        if (!entityId && sourceInfo.entityId) {
+            entityId = sourceInfo.entityId;
         }
 
         // Polling + persistencia en background; el modal ya cerro.
@@ -3552,7 +3568,8 @@ class LivingManager {
             productName: productName || null,
             entityId,
             referenceImageUrl: referenceImageUrl || null,
-            aspectRatio
+            aspectRatio,
+            sourceInfo
         });
     }
 
@@ -3654,7 +3671,7 @@ class LivingManager {
      * Polling + descarga + upload + insert + refresh, todo en background.
      * Manda toast al final (exito o error) y remueve el skeleton.
      */
-    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl, aspectRatio }) {
+    async _completeEditInBackground({ clientId, taskId, createPayload, userInstruction, sourceOutputId, sourceImageUrl, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo }) {
         try {
             const kieResultUrl = await this._pollKieTask(taskId, { timeoutMs: 5 * 60 * 1000, intervalMs: 3000 });
             const { storagePath } = await this._downloadAndUploadEditResult({ kieUrl: kieResultUrl, taskId });
@@ -3671,6 +3688,7 @@ class LivingManager {
                 mode,
                 productId,
                 productName,
+                sourceInfo,
                 entityId,
                 referenceImageUrl,
                 aspectRatio
@@ -3825,10 +3843,10 @@ class LivingManager {
      * Mismo destino que VideoView para producciones standalone — el grid de
      * Production las recoge via loadSystemAiOutputs (provider != 'openai').
      */
-    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio }) {
+    async _insertEditOutput({ sourceOutputId, sourceImageUrl, storagePath, refinedPrompt, userInstruction, maskStoragePath, kieModel, openaiModel, kieTaskId, mode, productId, productName, entityId, referenceImageUrl, aspectRatio, sourceInfo }) {
         if (!this.brandContainerId) throw new Error('Falta brand_container_id');
         if (!this.userId) throw new Error('Falta user_id');
-        const sm = this._sourceProductInfo || {};
+        const sm = sourceInfo || {};
         const row = {
             // Identidad + provider
             brand_container_id: this.brandContainerId,
