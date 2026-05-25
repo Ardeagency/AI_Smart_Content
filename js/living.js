@@ -1046,7 +1046,7 @@ class LivingManager {
         const fromPending = (this.pendingEdits || []).map(p => ({
             contentType: 'image',
             fileUrl: null,
-            prompt: 'Edicion en curso...',
+            prompt: p.error ? `Error: ${p.error}` : 'Edicion en curso...',
             run: null,
             output: null,
             created_at: p.createdAt,
@@ -1055,7 +1055,8 @@ class LivingManager {
             _pendingTaskId: p.taskId,
             _pendingSourceImage: p.sourceImageUrl,
             _pendingAspectRatio: p.aspectRatio,
-            _pendingLabel: p.label || 'Editando con IA'
+            _pendingLabel: p.label || 'Editando con IA',
+            _pendingError: p.error || null
         }));
 
         const seenIds = new Set();
@@ -1638,6 +1639,16 @@ class LivingManager {
             const outputId = actionEl.dataset.outputId || card?.dataset.outputId || '';
 
             switch (action) {
+                case 'dismiss-pending': {
+                    // Quita el skeleton de error del grid (el usuario ya leyo
+                    // el mensaje). El error persiste en console.error para audit.
+                    const clientId = actionEl.dataset.clientId || '';
+                    if (clientId) {
+                        this._removePendingEditCard(clientId);
+                        try { this.renderHistorySection(); } catch (_) { /* noop */ }
+                    }
+                    break;
+                }
                 case 'like': {
                     const nowLiked = await this.toggleLike(outputId);
                     actionEl.classList.toggle('is-liked', nowLiked);
@@ -2357,22 +2368,33 @@ class LivingManager {
      * pendiente. Cuando se conecten, este switch llama al endpoint y refresca.
      */
     _handleToolbarAction(tool, btn) {
+        // Debounce double-click: si el mismo source+tool esta inflight, ignoramos
+        // el click. Cada handler lockea/desbloquea via _toolbarLock(tool, outputId).
         const state = this._modalState || {};
+        const outputId = state.outputId || 'no-source';
+        const lockKey = `${tool}:${outputId}`;
+        if (!this._inflightToolbarOps) this._inflightToolbarOps = new Set();
+        if (this._inflightToolbarOps.has(lockKey)) {
+            if (typeof window.showToast === 'function') window.showToast('Ya estamos procesando esta accion. Espera unos segundos.');
+            return;
+        }
+        // Edit abre overlay: no lock aqui (el lock va en _applyEditOverlay).
+        if (tool === 'edit') { this._openEditOverlay(); return; }
+
+        // Para click-directos (upscale/remove-bg/fix-text), lock al click + UI feedback.
+        this._inflightToolbarOps.add(lockKey);
+        if (btn) { btn.setAttribute('aria-busy', 'true'); btn.setAttribute('disabled', ''); }
+        const release = () => {
+            this._inflightToolbarOps.delete(lockKey);
+            if (btn) { btn.removeAttribute('aria-busy'); btn.removeAttribute('disabled'); }
+        };
+        const run = (fn) => Promise.resolve().then(fn).finally(release);
+
         switch (tool) {
-            case 'edit':
-                this._openEditOverlay();
-                break;
-            case 'upscale':
-                this._applyUpscale();
-                break;
-            case 'remove-bg':
-                this._applyRemoveBg();
-                break;
-            case 'fix-text':
-                this._applyFixText();
-                break;
-            default:
-                break;
+            case 'upscale':   run(() => this._applyUpscale()); break;
+            case 'remove-bg': run(() => this._applyRemoveBg()); break;
+            case 'fix-text':  run(() => this._applyFixText()); break;
+            default: release(); break;
         }
     }
 
@@ -2517,8 +2539,10 @@ class LivingManager {
             }
         } catch (err) {
             console.error('[upscale] background error:', err);
-            this._removePendingEditCard(clientId);
-            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            // Marcar como error en lugar de remover: skeleton card queda
+            // visible con badge rojo + boton Dismiss para que el usuario
+            // sepa que fallo (toast efimero se cierra antes de leerlo).
+            this._markPendingEditError(clientId, err.message || String(err));
             if (typeof window.showToast === 'function') window.showToast(`Mejora 4K fallo: ${err.message || err}`);
         }
     }
@@ -2659,8 +2683,7 @@ class LivingManager {
             }
         } catch (err) {
             console.error('[remove-bg] background error:', err);
-            this._removePendingEditCard(clientId);
-            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            this._markPendingEditError(clientId, err.message || String(err));
             if (typeof window.showToast === 'function') window.showToast(`Quitar fondo fallo: ${err.message || err}`);
         }
     }
@@ -2828,8 +2851,7 @@ class LivingManager {
             }
         } catch (err) {
             console.error('[fix-text] background error:', err);
-            this._removePendingEditCard(clientId);
-            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            this._markPendingEditError(clientId, err.message || String(err));
             if (typeof window.showToast === 'function') window.showToast(`Mejorar textos fallo: ${err.message || err}`);
         }
     }
@@ -2858,8 +2880,16 @@ class LivingManager {
             if (typeof window.showToast === 'function') window.showToast('Editar solo disponible para imagenes');
             return;
         }
+        // Guardar el elemento que tenia focus para restaurar al cerrar (a11y).
+        this._editOverlayLastFocus = document.activeElement;
+
         overlay.hidden = false;
         overlay.setAttribute('aria-hidden', 'false');
+        // role=dialog + aria-modal: screen readers anuncian como dialogo modal
+        // y tab cycle queda contenido (con el focus trap bindeado abajo).
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Editar imagen con IA');
         canvas.hidden = false;
         this._editState = this._editState || { tool: 'brush', size: 60, drawing: false };
 
@@ -2867,6 +2897,7 @@ class LivingManager {
         this._syncEditCanvasSize(img);
         this._bindEditCanvasOnce();
         this._bindEditModeControlsOnce();
+        this._bindEditOverlayKeyboardOnce(overlay);
 
         // Reset state: modo default + limpiar selecciones previas.
         this._editMode = 'remove';
@@ -2881,6 +2912,39 @@ class LivingManager {
 
         // Focus al prompt para escritura inmediata.
         setTimeout(() => document.getElementById('pmodalEditPrompt')?.focus(), 50);
+    }
+
+    /**
+     * A11y: Escape cierra el overlay (NO el modal entero), Tab queda atrapado
+     * dentro del overlay para no perder contexto. Idempotente — solo se
+     * bindea una vez por overlay element.
+     */
+    _bindEditOverlayKeyboardOnce(overlay) {
+        if (!overlay || overlay._kbBound) return;
+        overlay._kbBound = true;
+        overlay.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                e.preventDefault();
+                this._closeEditOverlay();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            // Focus trap: redirige al primer/ultimo focusable del overlay.
+            const focusables = overlay.querySelectorAll(
+                'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            if (focusables.length === 0) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
     }
 
     /**
@@ -3331,6 +3395,18 @@ class LivingManager {
         this._clearEditCanvas();
         const promptEl = document.getElementById('pmodalEditPrompt');
         if (promptEl) promptEl.value = '';
+        // A11y: restaurar focus al elemento que lo tenia antes de abrir overlay
+        // (tipicamente el boton "Editar" del toolbar). Si no es valido, focus
+        // al body para no dejarlo huerfano.
+        try {
+            const target = this._editOverlayLastFocus;
+            if (target && typeof target.focus === 'function' && document.body.contains(target)) {
+                target.focus();
+            } else {
+                document.querySelector('.pmodal-toolpill[data-tool="edit"]')?.focus();
+            }
+        } catch (_) { /* noop */ }
+        this._editOverlayLastFocus = null;
     }
 
     _syncEditCanvasSize(img) {
@@ -3682,6 +3758,21 @@ class LivingManager {
     }
 
     /**
+     * Marca un pending card como error en lugar de quitarlo. La card queda
+     * visible con badge rojo + mensaje + boton Dismiss para que el usuario
+     * NO se pierda el fallo (el toast efimero a veces se cierra antes).
+     * Premium SaaS: no silenciar errores.
+     */
+    _markPendingEditError(clientId, errorMessage) {
+        if (!Array.isArray(this.pendingEdits)) return;
+        const item = this.pendingEdits.find(p => p.clientId === clientId);
+        if (!item) return;
+        item.error = String(errorMessage || 'Operacion fallo');
+        item.label = `Error: ${item.error}`;
+        try { this.renderHistorySection(); } catch (_) { /* noop */ }
+    }
+
+    /**
      * Renderiza una card skeleton ocupando el mismo aspect ratio que la
      * imagen origen, mostrando la imagen original tenue + shimmer encima +
      * texto "Editando" para que el justified layout no se rompa.
@@ -3692,19 +3783,33 @@ class LivingManager {
         const ratio = (w > 0 && h > 0) ? (w / h) : 1;
         const src = this.escapeHtml(item._pendingSourceImage || '');
         const label = this.escapeHtml(item._pendingLabel || 'Editando con IA');
+        const errorMsg = item._pendingError ? this.escapeHtml(item._pendingError) : '';
+        const isError = !!item._pendingError;
+        // role="status" + aria-live = anuncio a screen readers cuando se inserta
+        // el card o cambia (error). El polite no interrumpe al usuario.
         return `
-            <article class="living-masonry-item history-image-card pending-edit-card"
-                     role="listitem"
+            <article class="living-masonry-item history-image-card pending-edit-card${isError ? ' pending-edit-card--error' : ''}"
+                     role="status"
+                     aria-live="polite"
+                     aria-atomic="true"
                      data-aspect-ratio="${ratio}"
                      data-pending-client-id="${this.escapeHtml(item._outputId)}"
-                     aria-label="${label}">
+                     aria-label="${isError ? `Error: ${errorMsg}` : `En progreso: ${label}`}">
                 <div class="pending-edit-card-media">
                     ${src ? `<img src="${src}" alt="" class="pending-edit-card-source" loading="lazy">` : ''}
-                    <div class="pending-edit-card-shimmer"></div>
+                    ${isError ? '' : '<div class="pending-edit-card-shimmer"></div>'}
                 </div>
                 <div class="pending-edit-card-overlay">
-                    <span class="pending-edit-card-spinner" aria-hidden="true"></span>
-                    <span class="pending-edit-card-label">${label}</span>
+                    ${isError ? `
+                        <i class="fas fa-exclamation-triangle pending-edit-card-error-icon" aria-hidden="true"></i>
+                        <span class="pending-edit-card-label pending-edit-card-error-label">${errorMsg}</span>
+                        <button type="button" class="pending-edit-card-dismiss" data-action="dismiss-pending" data-client-id="${this.escapeHtml(item._outputId)}" aria-label="Cerrar mensaje de error">
+                            <i class="fas fa-times" aria-hidden="true"></i> Cerrar
+                        </button>
+                    ` : `
+                        <span class="pending-edit-card-spinner" aria-hidden="true"></span>
+                        <span class="pending-edit-card-label">${label}</span>
+                    `}
                 </div>
             </article>
         `;
@@ -3759,8 +3864,7 @@ class LivingManager {
             }
         } catch (err) {
             console.error('[edit-overlay] background error:', err);
-            this._removePendingEditCard(clientId);
-            try { this.renderHistorySection(); } catch (_) { /* noop */ }
+            this._markPendingEditError(clientId, err.message || String(err));
             if (typeof window.showToast === 'function') {
                 window.showToast(`Edicion fallo: ${err.message || err}`);
             }
@@ -4190,11 +4294,17 @@ class LivingManager {
             });
         }
 
-        // Esc cierra.
+        // Esc cierra el modal. Si el overlay de edit esta abierto, su propio
+        // handler captura Escape primero (stopPropagation) y este no se dispara.
+        // Defensive: si por alguna razon stopPropagation falla, no cerrar el
+        // modal mientras el overlay esta visible.
         if (!this._modalEscBound) {
             this._modalEscBound = true;
             this._modalEscHandler = (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('is-open')) this.closeProductionModal();
+                if (e.key !== 'Escape' || !modal.classList.contains('is-open')) return;
+                const editOverlay = document.getElementById('pmodalEditOverlay');
+                if (editOverlay && !editOverlay.hidden) return;
+                this.closeProductionModal();
             };
             document.addEventListener('keydown', this._modalEscHandler);
         }
