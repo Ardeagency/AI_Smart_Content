@@ -2359,6 +2359,14 @@ class VideoView extends BaseView {
         this.showError(data.error || 'Error al generar el prompt');
         return;
       }
+      // Acumular tokens del cine-prompt para cobrar al disparar el video.
+      // Las regeneraciones del prompt son gratis; el costo se traslada al
+      // createVideo (KIE_kling + sum_openai_tokens + 5 cred markup).
+      this._cinePromptTokens = {
+        input: Number(data.openai_input_tokens || 0),
+        output: Number(data.openai_output_tokens || 0),
+        model: data.openai_model || 'gpt-4o-mini'
+      };
       if (data.multi_prompts && Array.isArray(data.multi_prompts) && data.multi_prompts.length > 0) {
         this.multiPrompts = data.multi_prompts.map((p) => (typeof p === 'string' ? p.trim() : String(p)));
         if (this.promptInput) {
@@ -2480,7 +2488,13 @@ class VideoView extends BaseView {
       mode,
       duration,
       aspect_ratio,
-      sound
+      sound,
+      organization_id: this.organizationId || null,
+      // Tokens del cine-prompt para cobrar al usuario: el backend calcula
+      // KIE_kling_per_second*duration + OpenAI_tokens_cost + 5 cred markup.
+      openai_input_tokens: this._cinePromptTokens?.input || 0,
+      openai_output_tokens: this._cinePromptTokens?.output || 0,
+      openai_model: this._cinePromptTokens?.model || 'gpt-4o-mini'
     };
 
     if (this.multiShotEnabled) {

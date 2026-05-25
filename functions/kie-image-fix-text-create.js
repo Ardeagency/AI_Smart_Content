@@ -33,7 +33,25 @@ const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(
 const CREATE_PATH = '/api/v1/jobs/createTask';
 const KIE_MODEL = process.env.KIE_IMAGE_FIX_TEXT_MODEL || 'nano-banana-pro';
 const OPENAI_MODEL = process.env.OPENAI_FIX_TEXT_PROMPT_MODEL || 'gpt-4o-mini';
-const CREDITS_PER_FIX_TEXT = 0.10;
+
+// Cobro dinamico: KIE_real + OpenAI_tokens + markup (mismo modelo que edit).
+const KIE_FIX_TEXT_USD = Number(process.env.KIE_FIX_TEXT_USD || 0.10);
+const OPENAI_OPS_MARKUP_USD = Number(process.env.OPENAI_OPS_MARKUP_USD || 3);
+const OPENAI_INPUT_USD_PER_TOKEN = 0.15 / 1_000_000;
+const OPENAI_OUTPUT_USD_PER_TOKEN = 0.60 / 1_000_000;
+
+function computeCreditCharge(inputTokens, outputTokens) {
+  const openaiUsd = inputTokens * OPENAI_INPUT_USD_PER_TOKEN + outputTokens * OPENAI_OUTPUT_USD_PER_TOKEN;
+  const totalUsd = KIE_FIX_TEXT_USD + openaiUsd + OPENAI_OPS_MARKUP_USD;
+  return {
+    credits: Math.round(totalUsd * 10000) / 10000,
+    breakdown: {
+      kie_usd: KIE_FIX_TEXT_USD,
+      openai_usd: Math.round(openaiUsd * 100000) / 100000,
+      markup_usd: OPENAI_OPS_MARKUP_USD
+    }
+  };
+}
 
 // nano-banana-pro acepta los 10 aspect ratios + auto.
 const ALLOWED_ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']);
@@ -180,7 +198,7 @@ async function createKieTask({ headers, prompt, imageUrl, productImageUrls, aspe
   return String(taskId);
 }
 
-async function chargeCredits({ env, organizationId, userId, kieTaskId, usdCost, metadata }) {
+async function chargeCredits({ env, organizationId, userId, kieTaskId, creditsAmount, usdCost, metadata }) {
   const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
     method: 'POST',
     headers: {
@@ -191,7 +209,7 @@ async function chargeCredits({ env, organizationId, userId, kieTaskId, usdCost, 
     body: JSON.stringify({
       p_organization_id: organizationId,
       p_user_id: userId,
-      p_credits_amount: CREDITS_PER_FIX_TEXT,
+      p_credits_amount: creditsAmount,
       p_kind: 'tool_call',
       p_usd_cost: usdCost,
       p_source_table: 'system_ai_outputs',
@@ -272,15 +290,15 @@ exports.handler = async (event) => {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
 
-  // Estimacion USD: OpenAI tokens + GPT Image-2 ~$0.04
-  const usdCost = (inputTokens * 0.15 + outputTokens * 0.60) / 1_000_000 + 0.04;
-
+  // Cobro dinamico: KIE_real + OpenAI tokens + $3 markup.
+  const { credits, breakdown } = computeCreditCharge(inputTokens, outputTokens);
   const charge = await chargeCredits({
     env,
     organizationId,
     userId: user.id,
     kieTaskId,
-    usdCost: Math.round(usdCost * 10000) / 10000,
+    creditsAmount: credits,
+    usdCost: credits,
     metadata: {
       operation: 'image_fix_text',
       kie_task_id: kieTaskId,
@@ -289,13 +307,14 @@ exports.handler = async (event) => {
       input_tokens: inputTokens,
       output_tokens: outputTokens,
       source_output_id: sourceOutputId,
-      product_id: productId
+      product_id: productId,
+      cost_breakdown_usd: breakdown
     }
   });
   if (!charge.ok) {
     return fail(event, 402, 'Creditos insuficientes para mejorar los textos', {
       taskId: kieTaskId,
-      credits_needed: CREDITS_PER_FIX_TEXT
+      credits_needed: credits
     });
   }
 
@@ -308,7 +327,8 @@ exports.handler = async (event) => {
       kie_model: KIE_MODEL,
       openai_model: OPENAI_MODEL,
       aspect_ratio: aspectRatio,
-      credits_charged: CREDITS_PER_FIX_TEXT
+      credits_charged: credits,
+      cost_breakdown: breakdown
     })
   };
 };

@@ -29,10 +29,29 @@ const CREATE_PATH = '/api/v1/jobs/createTask';
 const KIE_MODEL = process.env.KIE_IMAGE_EDIT_MODEL || 'nano-banana-pro';
 const OPENAI_MODEL = process.env.OPENAI_EDIT_PROMPT_MODEL || 'gpt-4o-mini';
 
+// Modelo de cobro premium: KIE_real + OpenAI_tokens + markup fijo.
+// 1 cred = $1 USD (project_credits_1usd_per_credit). Override via env.
+const KIE_EDIT_USD = Number(process.env.KIE_EDIT_USD || 0.10);
+const OPENAI_OPS_MARKUP_USD = Number(process.env.OPENAI_OPS_MARKUP_USD || 3);
+// gpt-4o-mini pricing oficial OpenAI (Jan 2026): input $0.15 / output $0.60 per 1M tokens.
+const OPENAI_INPUT_USD_PER_TOKEN = 0.15 / 1_000_000;
+const OPENAI_OUTPUT_USD_PER_TOKEN = 0.60 / 1_000_000;
+
 const MASK_BUCKET = 'production-inputs';
-const CREDITS_PER_EDIT = 0.10;
-const USD_PER_CREDIT = 1;
 const ALLOWED_ASPECT_RATIOS = new Set(['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']);
+
+function computeCreditCharge(inputTokens, outputTokens) {
+  const openaiUsd = inputTokens * OPENAI_INPUT_USD_PER_TOKEN + outputTokens * OPENAI_OUTPUT_USD_PER_TOKEN;
+  const totalUsd = KIE_EDIT_USD + openaiUsd + OPENAI_OPS_MARKUP_USD;
+  return {
+    credits: Math.round(totalUsd * 10000) / 10000,
+    breakdown: {
+      kie_usd: KIE_EDIT_USD,
+      openai_usd: Math.round(openaiUsd * 100000) / 100000,
+      markup_usd: OPENAI_OPS_MARKUP_USD
+    }
+  };
+}
 
 function fail(event, status, error, extra = {}) {
   return {
@@ -240,7 +259,7 @@ async function createKieTask({ headers, prompt, imageUrl, aspectRatio, extraImag
   return String(taskId);
 }
 
-async function chargeCredits({ env, organizationId, userId, kieTaskId, usdCost, metadata }) {
+async function chargeCredits({ env, organizationId, userId, kieTaskId, creditsAmount, usdCost, metadata }) {
   const res = await fetch(`${env.url}/rest/v1/rpc/use_credits_numeric`, {
     method: 'POST',
     headers: {
@@ -251,7 +270,7 @@ async function chargeCredits({ env, organizationId, userId, kieTaskId, usdCost, 
     body: JSON.stringify({
       p_organization_id: organizationId,
       p_user_id: userId,
-      p_credits_amount: CREDITS_PER_EDIT,
+      p_credits_amount: creditsAmount,
       p_kind: 'tool_call',
       p_usd_cost: usdCost,
       p_source_table: 'system_ai_outputs',
@@ -359,14 +378,15 @@ exports.handler = async (event) => {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });
   }
 
-  // Estimacion de USD para el ledger (tokens OpenAI ~ centavos + kie nano ~ $0.04).
-  const usdCost = (inputTokens * 0.15 + outputTokens * 0.60) / 1_000_000 + 0.04;
+  // Cobro dinamico: KIE_real ($0.10 nano-banana-pro) + OpenAI tokens + $3 markup.
+  const { credits, breakdown } = computeCreditCharge(inputTokens, outputTokens);
   const charge = await chargeCredits({
     env,
     organizationId,
     userId: user.id,
     kieTaskId,
-    usdCost: Math.round(usdCost * 10000) / 10000,
+    creditsAmount: credits,
+    usdCost: credits,
     metadata: {
       operation: 'image_edit',
       mode,
@@ -376,13 +396,14 @@ exports.handler = async (event) => {
       openai_model: OPENAI_MODEL,
       input_tokens: inputTokens,
       output_tokens: outputTokens,
-      source_output_id: sourceOutputId
+      source_output_id: sourceOutputId,
+      cost_breakdown_usd: breakdown
     }
   });
   if (!charge.ok) {
     return fail(event, 402, 'Creditos insuficientes para aplicar la edicion', {
       taskId: kieTaskId,
-      credits_needed: CREDITS_PER_EDIT
+      credits_needed: credits
     });
   }
 
@@ -396,7 +417,8 @@ exports.handler = async (event) => {
       mask_public_url: mask.publicUrl,
       kie_model: KIE_MODEL,
       openai_model: OPENAI_MODEL,
-      credits_charged: CREDITS_PER_EDIT
+      credits_charged: credits,
+      cost_breakdown: breakdown
     })
   };
 };

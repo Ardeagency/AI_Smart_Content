@@ -209,6 +209,11 @@ Each prompt must focus on: camera movement, lighting, lens, motion—not describ
 Output ONLY a valid JSON array of English strings, e.g. ["macro shot of finger pressing button...", "camera transitions into product hero...", "wide shot revealing environment..."].
 No other text. Never invent elements not in the references.`;
 
+  // Acumulador de tokens — cobramos al usuario por el costo real de OpenAI
+  // (input + output) cuando el video se genera. El cine-prompt en si es free.
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
   async function openaiChat(messages, maxTokens, temp = 0.5) {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -217,6 +222,9 @@ No other text. Never invent elements not in the references.`;
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error.message || 'OpenAI error');
+    const usage = data.usage || {};
+    totalInputTokens += Number(usage.prompt_tokens || 0);
+    totalOutputTokens += Number(usage.completion_tokens || 0);
     const content = data.choices?.[0]?.message?.content;
     return typeof content === 'string' ? content.trim() : '';
   }
@@ -278,14 +286,25 @@ Example: "Camera orbit around the product. Slow movement. Hero product commercia
       return {
         statusCode: 200,
         headers: corsHeaders(event),
-        body: JSON.stringify({ prompt: multiPrompts.join('\n\n'), multi_prompts: multiPrompts })
+        body: JSON.stringify({
+          prompt: multiPrompts.join('\n\n'),
+          multi_prompts: multiPrompts,
+          openai_input_tokens: totalInputTokens,
+          openai_output_tokens: totalOutputTokens,
+          openai_model: model
+        })
       };
     }
 
     return {
       statusCode: 200,
       headers: corsHeaders(event),
-      body: JSON.stringify({ prompt: raw })
+      body: JSON.stringify({
+        prompt: raw,
+        openai_input_tokens: totalInputTokens,
+        openai_output_tokens: totalOutputTokens,
+        openai_model: model
+      })
     };
   } catch (err) {
     console.error('openai-cine-prompt error:', err);
