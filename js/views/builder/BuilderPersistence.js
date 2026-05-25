@@ -106,7 +106,15 @@
         subcategory_id: flow.subcategory_id || null,
         output_type: flow.output_type || 'text',
         flow_category_type: flow.flow_category_type || 'manual',
-        token_cost: flow.token_cost || 1,
+        token_cost: flow.token_cost != null ? Number(flow.token_cost) : 1,
+        // Pricing dinamico (auto/fixed) + observed stats — 2026-05-25.
+        credit_pricing_mode: flow.credit_pricing_mode || 'auto',
+        credit_pricing_first_observed: flow.credit_pricing_first_observed,
+        credit_pricing_first_observed_at: flow.credit_pricing_first_observed_at,
+        credit_pricing_runs_observed: flow.credit_pricing_runs_observed || 0,
+        credit_pricing_avg_observed: flow.credit_pricing_avg_observed,
+        credit_pricing_min_observed: flow.credit_pricing_min_observed,
+        credit_pricing_max_observed: flow.credit_pricing_max_observed,
         flow_image_url: flow.flow_image_url,
         status: flow.status || 'draft',
         version: flow.version || '1.0.0',
@@ -222,6 +230,9 @@
     if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost ?? 1;
     if (versionInput) versionInput.value = this.flowData.version;
     if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type || 'text';
+
+    // Pricing panel (toggle auto/fixed + observed stats).
+    if (typeof this.renderPricingPanel === 'function') this.renderPricingPanel();
     
     // Image preview
     if (this.flowData.flow_image_url) {
@@ -286,6 +297,7 @@
         output_type: this.flowData.output_type,
         flow_category_type: this.flowData.flow_category_type,
         token_cost: this.flowData.token_cost,
+        credit_pricing_mode: this.flowData.credit_pricing_mode || 'auto',
         flow_image_url: this.flowData.flow_image_url,
         status: this.flowData.status,
         version: this.flowData.version,

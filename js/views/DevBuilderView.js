@@ -22,6 +22,18 @@ class DevBuilderView extends DevBaseView {
       // Valores posibles en BD: manual | autopilot | system | scraping
       flow_category_type: 'manual',
       token_cost: 1,
+      // Pricing dinamico/estatico (2026-05-25):
+      //   auto = cobra payload.tokens_cost reportado por n8n cada run (real-time)
+      //   fixed = cobra siempre token_cost (precio plano set por dev)
+      // El RPC siempre trackea credit_pricing_first/avg/min/max_observed para
+      // que el dev portal pueda sugerir un precio basado en uso real.
+      credit_pricing_mode: 'auto',
+      credit_pricing_first_observed: null,
+      credit_pricing_first_observed_at: null,
+      credit_pricing_runs_observed: 0,
+      credit_pricing_avg_observed: null,
+      credit_pricing_min_observed: null,
+      credit_pricing_max_observed: null,
       flow_image_url: null,
       status: 'draft',
       version: '1.0.0',
@@ -178,9 +190,57 @@ class DevBuilderView extends DevBaseView {
                     <label for="flowVersion">Versión</label>
                     <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
                   </div>
-                  <div class="settings-field" id="settingsTokenCostWrap">
-                    <label for="flowTokenCost">Créditos (por ejecución)</label>
-                    <input type="number" id="flowTokenCost" min="0" max="100" value="1">
+                  <div class="settings-field settings-field--pricing" id="settingsTokenCostWrap">
+                    <label>Modelo de cobro</label>
+                    <div class="pricing-mode-toggle" role="radiogroup" aria-label="Modelo de cobro">
+                      <button type="button" class="pricing-mode-btn" data-pricing-mode="auto" role="radio" aria-checked="true">
+                        <i class="fas fa-bolt"></i>
+                        <div>
+                          <strong>Automatico</strong>
+                          <span>Cobra lo que reporte n8n cada run</span>
+                        </div>
+                      </button>
+                      <button type="button" class="pricing-mode-btn" data-pricing-mode="fixed" role="radio" aria-checked="false">
+                        <i class="fas fa-lock"></i>
+                        <div>
+                          <strong>Fijo</strong>
+                          <span>Cobra siempre el mismo precio</span>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="settings-field pricing-fixed-row" id="pricingFixedRow" hidden>
+                      <label for="flowTokenCost">Creditos por ejecucion</label>
+                      <input type="number" id="flowTokenCost" min="0" max="1000" step="0.01" value="1">
+                    </div>
+                    <div class="pricing-observed" id="pricingObservedBox" hidden>
+                      <div class="pricing-observed-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Uso real observado</span>
+                        <span class="pricing-observed-runs" id="pricingObservedRuns">— runs</span>
+                      </div>
+                      <div class="pricing-observed-grid">
+                        <div class="pricing-observed-cell">
+                          <span class="pricing-observed-label">Primer run</span>
+                          <span class="pricing-observed-value" id="pricingObservedFirst">—</span>
+                        </div>
+                        <div class="pricing-observed-cell">
+                          <span class="pricing-observed-label">Promedio</span>
+                          <span class="pricing-observed-value" id="pricingObservedAvg">—</span>
+                        </div>
+                        <div class="pricing-observed-cell">
+                          <span class="pricing-observed-label">Min</span>
+                          <span class="pricing-observed-value" id="pricingObservedMin">—</span>
+                        </div>
+                        <div class="pricing-observed-cell">
+                          <span class="pricing-observed-label">Max</span>
+                          <span class="pricing-observed-value" id="pricingObservedMax">—</span>
+                        </div>
+                      </div>
+                      <button type="button" class="pricing-observed-apply" id="pricingApplyAvgBtn" hidden>
+                        <i class="fas fa-magic"></i>
+                        Usar promedio como precio fijo
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1258,6 +1318,7 @@ class DevBuilderView extends DevBaseView {
 
     // Settings form listeners
     this.setupSettingsListeners();
+    this.setupPricingListeners();
 
     // Modal listeners
     this.setupModalListeners();
@@ -1380,14 +1441,94 @@ class DevBuilderView extends DevBaseView {
     this.applyTabLayout(tabId);
   }
 
+  /**
+   * Bind del toggle de pricing (auto/fixed) + boton "usar promedio como fijo".
+   * El render del bloque (visibility del fixed-row y populacion del observed-box)
+   * lo hace renderPricingPanel(), llamado cada vez que cambia flowData.
+   */
+  setupPricingListeners() {
+    const toggle = this.querySelector('.pricing-mode-toggle');
+    if (toggle && !toggle._bound) {
+      toggle._bound = true;
+      toggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pricing-mode]');
+        if (!btn) return;
+        const mode = btn.getAttribute('data-pricing-mode');
+        if (mode !== 'auto' && mode !== 'fixed') return;
+        if (this.flowData.credit_pricing_mode === mode) return;
+        this.flowData.credit_pricing_mode = mode;
+        this.hasUnsavedChanges = true;
+        this.renderPricingPanel();
+      });
+    }
+    const applyBtn = this.querySelector('#pricingApplyAvgBtn');
+    if (applyBtn && !applyBtn._bound) {
+      applyBtn._bound = true;
+      applyBtn.addEventListener('click', () => {
+        const avg = Number(this.flowData.credit_pricing_avg_observed);
+        if (!Number.isFinite(avg) || avg <= 0) return;
+        // Redondear a 2 decimales para que el input no muestre 3.499999...
+        const rounded = Math.round(avg * 100) / 100;
+        this.flowData.token_cost = rounded;
+        this.flowData.credit_pricing_mode = 'fixed';
+        this.hasUnsavedChanges = true;
+        this.renderPricingPanel();
+        const input = this.querySelector('#flowTokenCost');
+        if (input) input.value = rounded;
+      });
+    }
+  }
+
+  /**
+   * Pinta el toggle activo + visibilidad del input fixed + datos observados.
+   * Idempotente: se puede llamar tantas veces como sea necesario tras
+   * cualquier cambio en flowData.credit_pricing_*.
+   */
+  renderPricingPanel() {
+    const mode = this.flowData.credit_pricing_mode || 'auto';
+    // Toggle activo
+    this.querySelectorAll('.pricing-mode-btn').forEach((btn) => {
+      const m = btn.getAttribute('data-pricing-mode');
+      const active = m === mode;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+    // Input fijo visible solo cuando mode=fixed
+    const fixedRow = this.querySelector('#pricingFixedRow');
+    if (fixedRow) fixedRow.hidden = mode !== 'fixed';
+
+    // Observed stats: visible solo si hay al menos 1 run observado
+    const runs = Number(this.flowData.credit_pricing_runs_observed || 0);
+    const box = this.querySelector('#pricingObservedBox');
+    if (box) box.hidden = runs <= 0;
+    if (runs <= 0) return;
+
+    const fmt = (v) => (v == null || !Number.isFinite(Number(v))) ? '—' : `${Number(v).toFixed(4).replace(/0+$/, '').replace(/\.$/, '')} cred`;
+    const setText = (id, v) => { const el = this.querySelector(`#${id}`); if (el) el.textContent = v; };
+    setText('pricingObservedRuns', `${runs} ${runs === 1 ? 'run' : 'runs'}`);
+    setText('pricingObservedFirst', fmt(this.flowData.credit_pricing_first_observed));
+    setText('pricingObservedAvg', fmt(this.flowData.credit_pricing_avg_observed));
+    setText('pricingObservedMin', fmt(this.flowData.credit_pricing_min_observed));
+    setText('pricingObservedMax', fmt(this.flowData.credit_pricing_max_observed));
+
+    // Boton apply-avg solo si en auto y hay avg distinto al token_cost actual
+    const applyBtn = this.querySelector('#pricingApplyAvgBtn');
+    if (applyBtn) {
+      const avg = Number(this.flowData.credit_pricing_avg_observed);
+      const canApply = mode === 'auto' && Number.isFinite(avg) && avg > 0;
+      applyBtn.hidden = !canApply;
+    }
+  }
+
   setupSettingsListeners() {
     const fields = {
       flowDescription: (v) => this.flowData.description = v,
       flowCategory: (v) => this.flowData.category_id = v || null,
       flowSubcategory: (v) => this.flowData.subcategory_id = v || null,
       flowTokenCost: (v) => {
-        const n = parseInt(v, 10);
-        const min = (this.flowData.flow_category_type === 'system') ? 0 : 1;
+        // Numeric ahora (no int) — soporta decimales tipo 3.25 cred.
+        const n = parseFloat(v);
+        const min = (this.flowData.flow_category_type === 'system') ? 0 : 0.01;
         this.flowData.token_cost = isNaN(n) ? min : Math.max(min, n);
       },
       flowVersion: (v) => this.flowData.version = v
