@@ -1710,9 +1710,9 @@ class VideoView extends BaseView {
       //    brand_container_id en estas tablas dispara 400 (columna inexistente).
       const orgId = this.organizationId || window.currentOrgId;
       const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
-        this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        this.supabase.from('products').select('id, entity_id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         orgId
-          ? this.supabase.from('services').select('id, nombre_servicio').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
+          ? this.supabase.from('services').select('id, entity_id, nombre_servicio').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
           : Promise.resolve({ data: [] }),
         orgId
           ? this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50)
@@ -1733,6 +1733,7 @@ class VideoView extends BaseView {
           nombre_campana: c.nombre_campana,
           descripcion_interna: c.descripcion_interna,
           persona_id: c.persona_id,
+          brief_id: c.brief_id,
           contexto_temporal: brief.contexto_temporal || null,
           objetivos_estrategicos: brief.objetivos_estrategicos || null,
           tono_modificador: brief.tono_modificador || null,
@@ -2243,12 +2244,16 @@ class VideoView extends BaseView {
       // Pueblan automaticamente los campos comunes desde el state del view;
       // el caller solo pasa lo especifico (provider, output_type, prompt,
       // metadata, etc.).
+      const briefId = this._resolveSelectedBriefId();
+      const entityId = this._resolveSelectedEntityId();
       const row = {
         brand_container_id: brandContainerId,
         organization_id: this.organizationId || null,
         user_id: user.id,
         campaign_id: this.selectedCampaignId || null,
         persona_id: this.selectedAudienceId || null,
+        brief_id: briefId,
+        entity_id: entityId,
         ...record,
         updated_at: new Date().toISOString()
       };
@@ -2262,6 +2267,37 @@ class VideoView extends BaseView {
       console.warn('VideoView saveSystemAIOutput:', e);
       return null;
     }
+  }
+
+  /**
+   * Resuelve brief_id desde la campana seleccionada (campaigns.brief_id ya
+   * viene aplanado en dbData.campaigns). Devuelve null si no hay campana
+   * seleccionada o la campana no tiene brief.
+   */
+  _resolveSelectedBriefId() {
+    if (!this.selectedCampaignId) return null;
+    const c = (this.dbData?.campaigns || []).find((x) => String(x.id) === String(this.selectedCampaignId));
+    return c?.brief_id || null;
+  }
+
+  /**
+   * Resuelve entity_id desde el asset seleccionado segun scope (product /
+   * service). products.entity_id y services.entity_id son FK a brand_entities
+   * y dan el linaje canonico al output. Devuelve null si no hay asset o
+   * scope no soportado.
+   */
+  _resolveSelectedEntityId() {
+    if (!this.selectedAssetId) return null;
+    const scope = this.assetScope || 'product';
+    if (scope === 'product') {
+      const p = (this.dbData?.products || []).find((x) => String(x.id) === String(this.selectedAssetId));
+      return p?.entity_id || null;
+    }
+    if (scope === 'service') {
+      const s = (this.dbData?.services || []).find((x) => String(x.id) === String(this.selectedAssetId));
+      return s?.entity_id || null;
+    }
+    return null;
   }
 
   async updateSystemAIOutput(id, updates) {
