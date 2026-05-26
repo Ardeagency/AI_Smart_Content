@@ -2301,6 +2301,9 @@ class LivingManager {
             .concat(data.reference_image_url ? [data.reference_image_url] : [])
             .filter(Boolean);
 
+        // 2b) Identidades usadas (productos/marcas) como carrusel con preview chiquita
+        const identities = Array.isArray(data.identities) ? data.identities : [];
+
         // 3) Briefing
         const briefing = data.briefing || data.brief || data.user_brief || data.instructions || '';
 
@@ -2316,7 +2319,8 @@ class LivingManager {
             'reference_images','references','mood_images','reference_image_url',
             'briefing','brief','user_brief','instructions',
             'persona_id','persona_name','audience_id','audience_name','audience_ids',
-            'campaign_id','campaign_ids','campaign_name','brief_id'
+            'campaign_id','campaign_ids','campaign_name','brief_id',
+            'identities','productos','referencias_estilo'
         ]);
         const extraRows = Object.entries(data)
             .filter(([k, v]) => !HIDDEN_KEYS.has(k) && v !== null && v !== '' && v !== undefined)
@@ -2341,6 +2345,21 @@ class LivingManager {
                         <p class="pmodal-entity-name">${this.escapeHtml(entityName)}</p>
                         ${entityType ? `<p class="pmodal-entity-type">${this.escapeHtml(entityType)}</p>` : ''}
                     </div>
+                </div>
+            </section>`
+            : '';
+
+        const identitiesHtml = identities.length
+            ? `<section class="pmodal-section pmodal-input-identities">
+                <h3 class="pmodal-section-title"><i class="fas fa-fingerprint"></i> IDENTIDADES (${identities.length})</h3>
+                <div class="pmodal-refs-grid">
+                    ${identities.map((it) => {
+                        const nm = this.escapeHtml(it.name || it.entity_name || 'Identidad');
+                        const im = it.image_url || it.preview || '';
+                        return `<div class="pmodal-ref-thumb" title="${nm}" style="position:relative;">
+                            ${im ? `<img src="${this.escapeHtml(im)}" alt="${nm}" loading="lazy" decoding="async">` : `<div class="pmodal-entity-img pmodal-entity-img--empty" aria-hidden="true"><i class="fas fa-cube"></i></div>`}
+                        </div>`;
+                    }).join('')}
                 </div>
             </section>`
             : '';
@@ -2381,7 +2400,7 @@ class LivingManager {
             </section>`
             : '';
 
-        container.innerHTML = entityHtml + contextHtml + refsHtml + briefHtml + extrasHtml
+        container.innerHTML = entityHtml + identitiesHtml + contextHtml + refsHtml + briefHtml + extrasHtml
             || `<div class="pmodal-input-empty"><i class="fas fa-inbox"></i><p>Sin inputs registrados.</p></div>`;
     }
 
