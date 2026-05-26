@@ -81,24 +81,6 @@ class DevFlowsView extends DevBaseView {
           </button>
         </div>
       </div>
-
-      <!-- Modal de confirmación para eliminar -->
-      <div class="modal" id="deleteFlowModal" hidden>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Eliminar Flujo</h3>
-            <button class="modal-close" id="deleteModalClose">&times;</button>
-          </div>
-          <div class="modal-body">
-            <p>¿Estás seguro de que deseas eliminar este flujo?</p>
-            <p class="modal-warning">Esta acción no se puede deshacer.</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" id="deleteModalCancel">Cancelar</button>
-            <button class="btn btn-danger" id="deleteModalConfirm">Eliminar</button>
-          </div>
-        </div>
-      </div>
     `;
   }
 
@@ -333,9 +315,6 @@ class DevFlowsView extends DevBaseView {
         this.applyFilters();
       });
     }
-
-    // Modal de eliminar
-    this.setupDeleteModal();
   }
 
   /**
@@ -421,37 +400,40 @@ class DevFlowsView extends DevBaseView {
   }
 
   /**
-   * Configurar modal de eliminar
-   */
-  setupDeleteModal() {
-    const modal = document.getElementById('deleteFlowModal');
-    const closeBtn = document.getElementById('deleteModalClose');
-    const cancelBtn = document.getElementById('deleteModalCancel');
-    const confirmBtn = document.getElementById('deleteModalConfirm');
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hideDeleteModal());
-    }
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.hideDeleteModal());
-    }
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) this.hideDeleteModal();
-      });
-    }
-    if (confirmBtn) {
-      confirmBtn.addEventListener('click', () => this.confirmDelete());
-    }
-  }
-
-  /**
-   * Mostrar modal de eliminar
+   * Mostrar modal de eliminar (via window.Modal; fallback a confirm nativo).
    */
   showDeleteModal(flowId) {
     this.flowToDelete = flowId;
-    const modal = document.getElementById('deleteFlowModal');
-    if (modal) modal.style.display = 'flex';
+
+    if (!window.Modal || typeof window.Modal.show !== 'function') {
+      if (confirm('¿Eliminar este flujo? Esta acción no se puede deshacer.')) {
+        this.confirmDelete();
+      } else {
+        this.flowToDelete = null;
+      }
+      return;
+    }
+
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <p>¿Estás seguro de que deseas eliminar este flujo?</p>
+      <p class="modal-warning">Esta acción no se puede deshacer.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-modal-cancel>Cancelar</button>
+        <button type="button" class="btn btn-danger" data-modal-confirm>Eliminar</button>
+      </div>`;
+
+    const { close } = window.Modal.show({
+      title: 'Eliminar Flujo',
+      body,
+      className: 'delete-flow-modal',
+      onClose: () => { this.flowToDelete = null; this._deleteModalClose = null; this._deleteConfirmBtn = null; }
+    });
+    this._deleteModalClose = close;
+    this._deleteConfirmBtn = body.querySelector('[data-modal-confirm]');
+
+    body.querySelector('[data-modal-cancel]').addEventListener('click', () => this.hideDeleteModal());
+    this._deleteConfirmBtn.addEventListener('click', () => this.confirmDelete());
   }
 
   /**
@@ -459,8 +441,10 @@ class DevFlowsView extends DevBaseView {
    */
   hideDeleteModal() {
     this.flowToDelete = null;
-    const modal = document.getElementById('deleteFlowModal');
-    if (modal) modal.style.display = 'none';
+    if (this._deleteModalClose) {
+      this._deleteModalClose();
+      this._deleteModalClose = null;
+    }
   }
 
   /**
@@ -472,7 +456,7 @@ class DevFlowsView extends DevBaseView {
       return;
     }
 
-    const confirmBtn = document.getElementById('deleteModalConfirm');
+    const confirmBtn = this._deleteConfirmBtn;
     if (confirmBtn) {
       confirmBtn.disabled = true;
       confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
@@ -494,7 +478,7 @@ class DevFlowsView extends DevBaseView {
     } catch (error) {
       console.error('Error eliminando flujo:', error);
       this.showNotification('Error al eliminar el flujo', 'error');
-    } finally {
+      // El modal sigue abierto: rehabilitar el boton para reintentar.
       if (confirmBtn) {
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = 'Eliminar';

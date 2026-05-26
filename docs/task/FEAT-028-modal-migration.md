@@ -53,6 +53,15 @@ Existen ~20 archivos con modales implementados a mano (HTML + listeners ad-hoc p
 - Reescribir el componente `window.Modal` (asumir API estable)
 - Modales de librerias externas (Stripe Elements, etc.)
 
+## Progreso
+
+- **2026-05-26** — Migrado el modal de borrar flujo en `DevFlowsView.js` (eliminado HTML
+  estatico `#deleteFlowModal` + `setupDeleteModal()`; `showDeleteModal/hideDeleteModal/
+  confirmDelete` ahora usan `window.Modal.show` con fallback a `confirm()` nativo).
+  **Pendiente: validacion visual humana** (esc/backdrop/focus + boton danger). Si OK,
+  replicar el patron en los demas modales del portal dev. Restantes (~20) por
+  `grep -rIc "modal-overlay" js/`.
+
 ## Referencias
 
 - `js/utils/modal.js` (definicion `window.Modal`)
