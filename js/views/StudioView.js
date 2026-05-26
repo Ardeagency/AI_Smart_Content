@@ -1230,13 +1230,21 @@ class StudioView extends BaseView {
    * Imagen principal: primera de la lista o la que tenga image_type === 'principal'.
    */
   async loadProductsWithImages(brandContainerId) {
-    if (!this.supabase || !brandContainerId) return [];
+    // Los productos son org-scope (organization_id); brand_container_id suele venir NULL.
+    // Igual que products.js loadProducts(), filtramos por organization_id y solo caemos
+    // a brand_container_id si no hay org (caso de marca por usuario sin org).
+    const orgId = this.organizationId || null;
+    if (!this.supabase || (!orgId && !brandContainerId)) return [];
     try {
+      const cacheScope = orgId ? `org:${orgId}` : `bc:${brandContainerId}`;
       const fetcher = async () => {
-        const { data: products, error: productsError } = await this.supabase
+        let query = this.supabase
           .from('products')
-          .select('id, nombre_producto, tipo_producto, brand_container_id, created_at')
-          .eq('brand_container_id', brandContainerId)
+          .select('id, nombre_producto, tipo_producto, brand_container_id, organization_id, created_at');
+        query = orgId
+          ? query.eq('organization_id', orgId)
+          : query.eq('brand_container_id', brandContainerId);
+        const { data: products, error: productsError } = await query
           .order('created_at', { ascending: false });
         if (productsError || !products || products.length === 0) return [];
 
@@ -1269,7 +1277,7 @@ class StudioView extends BaseView {
         return products;
       };
       return window.apiClient
-        ? await window.apiClient.query(`studio:products_bc:${brandContainerId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query(`studio:products:${cacheScope}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
     } catch (e) {
       console.error('Studio loadProductsWithImages:', e);
@@ -1324,13 +1332,11 @@ class StudioView extends BaseView {
    * Rellena los carruseles dados con productos de la marca (internal).
    */
   async _fillProductCarousels(carousels) {
+    // Los productos son org-scope; el brand_container es opcional (puede no existir).
     const brandContainerId = await this.getBrandContainerId();
-    if (!brandContainerId) {
-      console.warn('[Studio] No se encontró marca: ni organization_id ni user_id tienen brand_containers. Comprueba que la org o el usuario tengan al menos una marca.');
-    }
     const products = await this.loadProductsWithImages(brandContainerId);
-    if (brandContainerId && (!products || products.length === 0)) {
-      console.warn('[Studio] Marca encontrada pero sin productos. brand_container_id=', brandContainerId, '- Añade productos en la sección Productos de la app.');
+    if ((this.organizationId || brandContainerId) && (!products || products.length === 0)) {
+      console.warn('[Studio] Sin productos para esta org. organization_id=', this.organizationId, 'brand_container_id=', brandContainerId, '- Añade productos en la sección Productos de la app.');
     }
 
     const escapeHtml = (s) => {
