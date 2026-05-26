@@ -2111,10 +2111,11 @@ class LivingManager {
             }
         }
 
-        // Si después de los parses sigue siendo string → un solo bloque "Prompt".
+        // Si después de los parses sigue siendo string → un solo bloque "Copy".
+        // (Resultado = copy de marketing; el prompt tecnico vive en Briefing.)
         if (typeof value === 'string') {
             const s = value.trim();
-            return s ? [{ label: 'Prompt', value: s }] : [];
+            return s ? [{ label: 'Copy', value: s }] : [];
         }
         if (Array.isArray(value)) {
             return value
