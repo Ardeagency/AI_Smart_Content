@@ -13,18 +13,12 @@ class BrandstorageView extends BaseView {
     this.userId = null;
     this.brandContainerData = null;
     this.brandData = null;
-    this.products = [];
     this.brandColors = [];
     this.brandFonts = [];
-    this.brandRules = [];
     this.brandAssets = [];
     this.brandEntities = [];
     this.brandPlaces = [];
     this.brandIntegrations = [];
-    this.brandSocialLinks = [];
-    this.organizationMembers = [];
-    this.organizationCredits = { credits_available: 100 };
-    this.creditUsage = [];
     this.isActive = false;
     this.savingFields = new Set();
     this._tryRenderTimeout = null;
@@ -278,14 +272,10 @@ class BrandstorageView extends BaseView {
         this.brandContainerData = null;
         this.brandContainers = [];
         this.brandData = null;
-        this.products = [];
         this.brandAssets = [];
         this.brandEntities = [];
         this.brandPlaces = [];
         this.brandIntegrations = [];
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
         this.brandColors = [];
         this.brandFonts = [];
         this._dataLoaded = true;
@@ -308,14 +298,10 @@ class BrandstorageView extends BaseView {
         this.brandContainerData = null;
         this.brandContainers = [];
         this.brandData = null;
-        this.products = [];
         this.brandAssets = [];
         this.brandEntities = [];
         this.brandPlaces = [];
         this.brandIntegrations = [];
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
         this.brandColors = [];
         this.brandFonts = [];
         this._dataLoaded = true;
@@ -336,18 +322,6 @@ class BrandstorageView extends BaseView {
         this.brandContainers = [];
       } else {
         this.brandContainers = containerRows || [];
-      }
-
-      const { data: products, error: productsError } = await this.supabase
-        .from('products')
-        .select('*')
-        .eq('organization_id', orgId)
-        .limit(5);
-      if (productsError) {
-        console.warn('BrandstorageView: productos', productsError);
-        this.products = [];
-      } else {
-        this.products = products || [];
       }
 
       const { data: assets, error: assetsError } = await this.supabase
@@ -412,50 +386,9 @@ class BrandstorageView extends BaseView {
 
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
-      this.brandRules = [];
       // Las CSS vars --brand-gradient-dynamic* las gestiona OrgBrandTheme
       // (window.OrgBrandTheme.applyOrgBrandTheme); onEnter ya las aplicó
       // desde el cache SWR, así que aquí no escribimos en :root.
-
-      try {
-        const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
-          this.supabase
-            .from('organization_members')
-            .select('*, profiles(id, full_name, email)')
-            .eq('organization_id', orgId)
-            .limit(5),
-          this.supabase.from('organization_credits').select('*').eq('organization_id', orgId).maybeSingle(),
-          this.supabase.from('credit_usage').select('*').eq('organization_id', orgId).limit(10)
-        ]);
-
-        if (membersResult.status === 'fulfilled' && !membersResult.value.error) {
-          this.organizationMembers = membersResult.value.data || [];
-        } else {
-          const { data: membersSimple } = await this.supabase
-            .from('organization_members')
-            .select('*')
-            .eq('organization_id', orgId)
-            .limit(5);
-          this.organizationMembers = (membersSimple || []).map((m) => ({ ...m, profiles: null }));
-        }
-
-        if (creditsResult.status === 'fulfilled' && !creditsResult.value.error) {
-          this.organizationCredits = creditsResult.value.data || { credits_available: 100 };
-        } else {
-          this.organizationCredits = { credits_available: 100 };
-        }
-
-        if (usageResult.status === 'fulfilled' && !usageResult.value.error) {
-          this.creditUsage = usageResult.value.data || [];
-        } else {
-          this.creditUsage = [];
-        }
-      } catch (e) {
-        console.warn('BrandstorageView: datos org secundarios', e);
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
-      }
     } catch (error) {
       console.error('BrandstorageView loadData:', error);
     } finally {
