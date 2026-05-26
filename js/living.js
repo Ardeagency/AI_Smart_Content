@@ -2049,16 +2049,15 @@ class LivingManager {
 
         // 1) Determinar la fuente. El "copy" estructurado vive en generated_copy
         //    o como string en prompt_used. Si rawCopyOrPrompt viene null, fallback.
-        const source = rawCopyOrPrompt
-            || output?.generated_copy
-            || output?.prompt_used
+        // Resultado = COPY (texto de marketing). El prompt tecnico va al Briefing.
+        const source = output?.generated_copy
             || output?.text_content
             || '';
 
         const blocks = this._parsePromptBlocks(source);
 
         if (!blocks.length) {
-            container.innerHTML = `<p class="pmodal-prompt-empty">Sin prompt registrado.</p>`;
+            container.innerHTML = `<p class="pmodal-prompt-empty">Sin copy registrado.</p>`;
         } else {
             container.innerHTML = blocks.map(b => `
                 <div class="pmodal-prompt-block">
@@ -2276,9 +2275,14 @@ class LivingManager {
         const container = document.getElementById('pmodalInputContent');
         if (!container) return;
         const inputRow = (this.flowInputs || []).find(i => i?.run_id === run?.id);
-        const data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || null;
+        let data = this._safeParseJSON(inputRow?.input_data) || inputRow?.input_data || null;
 
-        if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+        // El prompt tecnico (prompt_used del output) se muestra en el Briefing.
+        const promptText = (output?.prompt_used && String(output.prompt_used).trim() && String(output.prompt_used).trim().toLowerCase() !== 'completed')
+            ? String(output.prompt_used) : '';
+        const noData = !data || (typeof data === 'object' && Object.keys(data).length === 0);
+
+        if (noData && !promptText) {
             container.innerHTML = `
                 <div class="pmodal-input-empty">
                     <i class="fas fa-inbox" aria-hidden="true"></i>
@@ -2287,6 +2291,7 @@ class LivingManager {
                 </div>`;
             return;
         }
+        if (noData) data = {};
 
         // 1) Entidad (producto / servicio / lugar)
         const entityName = data.entity_name || data.product_name || data.service_name || data.place_name || '';
@@ -2400,7 +2405,13 @@ class LivingManager {
             </section>`
             : '';
 
-        container.innerHTML = entityHtml + identitiesHtml + contextHtml + refsHtml + briefHtml + extrasHtml
+        const promptHtml = promptText
+            ? `<section class="pmodal-section pmodal-input-prompt">
+                <h3 class="pmodal-section-title"><i class="fas fa-terminal"></i> PROMPT</h3>
+                <p class="pmodal-input-brief-text" style="white-space:pre-wrap;">${this.escapeHtml(promptText)}</p>
+            </section>`
+            : '';
+        container.innerHTML = entityHtml + identitiesHtml + promptHtml + contextHtml + refsHtml + briefHtml + extrasHtml
             || `<div class="pmodal-input-empty"><i class="fas fa-inbox"></i><p>Sin inputs registrados.</p></div>`;
     }
 
