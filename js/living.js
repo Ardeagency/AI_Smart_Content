@@ -2316,7 +2316,7 @@ class LivingManager {
         const audienceName = data.persona_name || data.audience_name || run?.audience_personas?.name || '';
         const campaignName = data.campaign_name || run?.campaigns?.nombre_campana || '';
 
-        // 5) Resto del payload (excluye lo ya pintado arriba)
+        // 5) PARAMETROS: solo escalares con sentido. Nunca dumps de objetos/arrays ni plumbing interno del motor.
         const HIDDEN_KEYS = new Set([
             'entity_id','entity_name','entity_image_url','entity_type',
             'product_id','product_name','product_image_url','image_url',
@@ -2327,14 +2327,31 @@ class LivingManager {
             'campaign_id','campaign_ids','campaign_name','brief_id',
             'identities','productos','referencias_estilo'
         ]);
+        // Plumbing del contexto del motor — jamas se muestra como parametro.
+        const PLUMBING_KEYS = new Set([
+            'meta','user','credits','entities','products','services',
+            'brand_fonts','brand_assets','brand_colors','brand_places',
+            'brand_identity','brand_identities','brand_entities','previous_trends',
+            'schedule_config','context','raw','payload','captured_from','flow_name',
+            'flow_id','flow_slug','org_id','organization_id','user_id',
+            'schedule_id','run_id','brand_id','brand_container_id'
+        ]);
+        const PARAM_LABELS = {
+            aspect_ratio: 'Aspect Ratio', output_count: 'Salidas', num_outputs: 'Salidas',
+            language: 'Idioma', tone: 'Tono', resolution: 'Resolucion', model: 'Modelo',
+            format: 'Formato', duration: 'Duracion', quality: 'Calidad', style: 'Estilo',
+            generar_video: 'Video', nota: 'Nota'
+        };
         const extraRows = Object.entries(data)
-            .filter(([k, v]) => !HIDDEN_KEYS.has(k) && v !== null && v !== '' && v !== undefined)
+            .filter(([k, v]) => !HIDDEN_KEYS.has(k) && !PLUMBING_KEYS.has(k)
+                && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')
+                && String(v).trim() !== '' && String(v).length <= 80)
             .map(([k, v]) => {
-                const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                const valStr = (typeof v === 'object') ? JSON.stringify(v) : String(v);
+                const label = PARAM_LABELS[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const valStr = (typeof v === 'boolean') ? (v ? 'Si' : 'No') : String(v);
                 return `<div class="pmodal-input-row">
                     <span class="pmodal-info-label">${this.escapeHtml(label)}</span>
-                    <span class="pmodal-info-value pmodal-input-row-val">${this.escapeHtml(valStr.length > 200 ? valStr.slice(0, 200) + '…' : valStr)}</span>
+                    <span class="pmodal-info-value pmodal-input-row-val">${this.escapeHtml(valStr)}</span>
                 </div>`;
             }).join('');
 
