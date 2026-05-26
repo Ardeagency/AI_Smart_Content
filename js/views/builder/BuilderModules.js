@@ -237,15 +237,29 @@
     const sel = this.querySelector('#moduleNodeModalComfyFlow');
     if (!sel || !this.supabase) return;
     try {
-      const { data, error } = await this.supabase.from('comfy_flow_definitions').select('slug, name, content_flow_id');
+      const { data, error } = await this.supabase.from('comfy_flow_definitions').select('slug, name, content_flow_id, input_schema');
       if (error) throw error;
       const flowId = this.flowId || null;
       const avail = (data || []).filter(d => !d.content_flow_id || d.content_flow_id === flowId);
       const current = (data || []).find(d => d.content_flow_id && d.content_flow_id === flowId);
+      this._comfyDefsBySlug = {};
+      (data || []).forEach(d => { this._comfyDefsBySlug[d.slug] = d; });
       const opts = ['<option value="">— Selecciona un flujo del servidor —</option>'];
       avail.forEach(d => opts.push(`<option value="${this.escapeHtml(d.slug)}">${this.escapeHtml(d.name || d.slug)}</option>`));
       sel.innerHTML = opts.join('');
       sel.value = current ? current.slug : '';
+      // AUTO-DETECCIÓN de inputs: al elegir un flujo del servidor, sus inputs se cargan solos al canvas
+      sel.onchange = () => {
+        const def = (this._comfyDefsBySlug || {})[sel.value];
+        const fields = def && def.input_schema && def.input_schema.fields;
+        if (Array.isArray(fields)) {
+          this.inputSchema = def.input_schema;
+          if (this.flowModules && this.flowModules[0]) this.flowModules[0].input_schema = def.input_schema;
+          if (typeof this.renderCanvas === 'function') this.renderCanvas();
+          if (typeof this.showNotification === 'function') this.showNotification(`${fields.length} inputs detectados automáticamente del flujo "${def.name || sel.value}"`, 'success');
+          if (typeof this.onFieldChange === 'function') this.onFieldChange();
+        }
+      };
     } catch (e) {
       sel.innerHTML = '<option value="">(no se pudieron cargar los flujos)</option>';
     }
