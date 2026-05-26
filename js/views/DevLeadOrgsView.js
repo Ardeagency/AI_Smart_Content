@@ -148,7 +148,7 @@ class DevLeadOrgsView extends DevBaseView {
           id, name, brand_name_oficial, brand_slogan, logo_url,
           level_of_autonomy, owner_user_id, created_at, deleted_at,
           organization_credits (credits_available, credits_total),
-          subscriptions (plan_type, status, expires_at)
+          subscriptions (status, current_period_end, plans (name))
         `)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -183,7 +183,7 @@ class DevLeadOrgsView extends DevBaseView {
 
   renderRow(org) {
     const sub = this.activeSubscription(org.subscriptions);
-    const planLabel = sub ? this.escapeHtml(sub.plan_type || '—') : '<span class="text-muted">sin plan</span>';
+    const planLabel = sub ? this.escapeHtml((sub.plans && sub.plans.name) || '—') : '<span class="text-muted">sin plan</span>';
     const credits = org.organization_credits;
     const creditsLabel = credits
       ? `${credits.credits_available ?? 0}/${credits.credits_total ?? 0}`
