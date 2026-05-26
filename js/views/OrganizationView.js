@@ -658,7 +658,7 @@ class OrganizationView extends BaseView {
         const created = f.created_at ? new Date(f.created_at).toLocaleDateString() : '—';
         personal.innerHTML = `
           <div class="org-mfa-status org-mfa-status--on">
-            <i class="fas fa-shield-check"></i>
+            <i class="fas fa-shield-halved"></i>
             <div>
               <strong>2FA activa</strong>
               <p>Factor TOTP enrolado el ${this.escapeHtml(created)}. En tu próximo login se te pedirá el código de 6 dígitos.</p>
