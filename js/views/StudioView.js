@@ -58,16 +58,39 @@ class StudioView extends BaseView {
     }
   }
 
-  /** Poll corto tras producir: los outputs del run llegan async (webhook → n8n → ai-engine). */
+  /**
+   * Poll tras producir: los outputs del run llegan async (webhook → n8n → ai-engine)
+   * y pueden tardar varios minutos (render 4K). Mientras tanto el canvas muestra un
+   * skeleton (ver renderEmptyState). El poll NO se rinde tras unos segundos: hace un
+   * burst inicial y luego una cola sostenida hasta que aparece el output o se alcanza
+   * un tope generoso. En cuanto hay outputs renderizados, detiene el poll (el skeleton
+   * ya fue reemplazado por el output real).
+   */
   _pollActiveRunOutputs(runId, attempt = 0) {
     if (this._activeRunId !== runId) return; // el usuario cambio de run; abortar
-    const delays = [4000, 6000, 8000, 10000, 15000, 20000];
-    if (attempt >= delays.length) return;
+    if (this._activeRunHasOutputs(runId)) return; // ya llegó el output; nada que esperar
+    const burst = [4000, 6000, 8000, 10000, 15000];
+    const TAIL_MS = 20000;        // cola sostenida cada 20s
+    const MAX_ATTEMPTS = 90;      // ~ burst (43s) + 85·20s ≈ 29 min de espera máxima
+    if (attempt >= MAX_ATTEMPTS) return;
+    const delay = attempt < burst.length ? burst[attempt] : TAIL_MS;
     setTimeout(async () => {
       if (this._activeRunId !== runId || !this.livingManager) return;
       try { await this.livingManager.setActiveRun(runId); } catch (_) {}
+      if (this._activeRunHasOutputs(runId)) return; // output ya visible → no seguir
       this._pollActiveRunOutputs(runId, attempt + 1);
-    }, delays[attempt]);
+    }, delay);
+  }
+
+  /** ¿El run activo ya tiene outputs renderizados en el canvas? (skeleton reemplazado) */
+  _activeRunHasOutputs(runId) {
+    if (runId && this._activeRunId !== runId) return false;
+    try {
+      const canvas = document.getElementById('studioCanvas');
+      return !!(canvas && canvas.querySelector('.living-masonry-item'));
+    } catch (_) {
+      return false;
+    }
   }
 
   _notify(message, _type = 'info') {
@@ -452,11 +475,17 @@ class StudioView extends BaseView {
       lm.runScoped = true;
       lm.filterRunId = activeRun;
       // Studio scope: empty state propio (mantiene dot-pattern de fondo).
+      // Run activo sin outputs todavia → SKELETON de carga (simula el producto que
+      // viene en camino). Se mantiene hasta que el output del run aparece y lo
+      // reemplaza (el poll persistente sigue trayendo el output aunque tarde).
       lm.renderEmptyState = () => (this.livingManager && this.livingManager.filterRunId)
         ? `
-        <div class="living-history-empty studio-history-empty">
-          <p class="living-history-empty-message">Este run aun no tiene producciones</p>
-          <p class="living-history-empty-hint">Cuando termine la generacion apareceran aqui.</p>
+        <div class="studio-skeleton" role="status" aria-live="polite" aria-label="Generando producción">
+          <div class="studio-skeleton-grid">
+            <div class="studio-skeleton-card"><div class="living-history-skeleton"></div></div>
+          </div>
+          <p class="studio-skeleton-label">Generando tu producción…</p>
+          <p class="studio-skeleton-hint">Esto puede tardar un momento. Tu resultado aparecerá aquí en cuanto esté listo.</p>
         </div>
       `
         : `
