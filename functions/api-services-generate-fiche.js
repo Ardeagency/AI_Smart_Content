@@ -18,6 +18,7 @@
 const {
   corsHeaders, getSupabaseEnv, requireAuth, supabaseRest, assertOrgMember, checkBodySize
 } = require('./lib/ai-shared');
+const { decodeHtmlEntities, readMeta } = require('./lib/scraping-shared');
 
 // gpt-4o-mini pricing (USD por 1M tokens). Mucho mas barato que gpt-4o porque
 // no necesitamos vision en servicios.
@@ -94,26 +95,9 @@ const FICHE_SCHEMA = {
   }
 };
 
-// ─── Helpers de scraping (copiados de api-products-generate-fiche para no acoplar
-// ambos. TODO: extraer a functions/lib/scraping-shared.js — ver FEAT-026 si se crea). ───
-
-function decodeHtmlEntities(s) {
-  if (typeof s !== 'string') return s;
-  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'")
-    .replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ');
-}
-
-function readMeta(html, keyValues) {
-  for (const [attrName, attrValue] of keyValues) {
-    const escVal = attrValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    let m = html.match(new RegExp(`<meta[^>]+\\b${attrName}=["']${escVal}["'][^>]*\\bcontent=["']([^"']*)["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-    m = html.match(new RegExp(`<meta[^>]+\\bcontent=["']([^"']*)["'][^>]+\\b${attrName}=["']${escVal}["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-  }
-  return null;
-}
+// ─── Helpers de scraping: decodeHtmlEntities + readMeta viven en
+// ./lib/scraping-shared (compartidos). detectPlatform / isUsefulScrape se quedan
+// locales (especializados por dominio). ───
 
 function parseScrapedPrice(raw) {
   if (raw == null) return null;

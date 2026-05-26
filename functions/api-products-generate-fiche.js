@@ -27,6 +27,7 @@ const {
   assertOrgMember,
   checkBodySize
 } = require('./lib/ai-shared');
+const { decodeHtmlEntities, readMeta } = require('./lib/scraping-shared');
 const crypto = require('crypto');
 
 // Scraping con regex pura — sin dependencias externas (cheerio 1.0 es
@@ -238,35 +239,9 @@ function isUsefulScrape(scraped) {
 }
 
 // ─── URL scraping helpers ───────────────────────────────────────────────
-
-// Decodifica entidades HTML basicas que aparecen en atributos.
-function decodeHtmlEntities(s) {
-  if (typeof s !== 'string') return s;
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ');
-}
-
-// Lee un atributo content de un <meta>. Acepta property|name antes O despues
-// de content (algunas paginas invierten el orden). Devuelve null si no hay match.
-function readMeta(html, keyValues) {
-  for (const [attrName, attrValue] of keyValues) {
-    const escVal = attrValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Order 1: <meta property="og:image" content="...">
-    let m = html.match(new RegExp(`<meta[^>]+\\b${attrName}=["']${escVal}["'][^>]*\\bcontent=["']([^"']*)["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-    // Order 2: <meta content="..." property="og:image">
-    m = html.match(new RegExp(`<meta[^>]+\\bcontent=["']([^"']*)["'][^>]+\\b${attrName}=["']${escVal}["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-  }
-  return null;
-}
+// decodeHtmlEntities + readMeta viven en ./lib/scraping-shared (identicos entre
+// productos/lugares/servicios). detectPlatform / isUsefulScrape se quedan locales
+// porque divergen por dominio.
 
 async function scrapeProductFromUrl(targetUrl) {
   const controller = new AbortController();

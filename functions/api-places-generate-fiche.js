@@ -17,6 +17,7 @@
 const {
   corsHeaders, getSupabaseEnv, requireAuth, supabaseRest, assertOrgMember, checkBodySize
 } = require('./lib/ai-shared');
+const { decodeHtmlEntities, readMeta } = require('./lib/scraping-shared');
 const crypto = require('crypto');
 
 const PRICE_INPUT_PER_1M = 2.50;
@@ -83,25 +84,8 @@ const FICHE_SCHEMA = {
   }
 };
 
-// ─── Helpers (copiados de productos — TODO: extraer a lib/scraping-shared) ───
-
-function decodeHtmlEntities(s) {
-  if (typeof s !== 'string') return s;
-  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'")
-    .replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ');
-}
-
-function readMeta(html, keyValues) {
-  for (const [attrName, attrValue] of keyValues) {
-    const escVal = attrValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    let m = html.match(new RegExp(`<meta[^>]+\\b${attrName}=["']${escVal}["'][^>]*\\bcontent=["']([^"']*)["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-    m = html.match(new RegExp(`<meta[^>]+\\bcontent=["']([^"']*)["'][^>]+\\b${attrName}=["']${escVal}["']`, 'i'));
-    if (m && m[1]) return decodeHtmlEntities(m[1]);
-  }
-  return null;
-}
+// decodeHtmlEntities + readMeta: ver ./lib/scraping-shared (compartidos).
+// detectPlatform / isUsefulScrape se quedan locales (especializados para lugares).
 
 function detectPlatform(url) {
   try {
