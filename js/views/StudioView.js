@@ -1843,11 +1843,41 @@ class StudioView extends BaseView {
         console.warn('runs_inputs snapshot fallo (no bloquea produccion):', inputsErr);
       }
 
+      // 1c) Flows MANUALES (single_step/form): enriquecer el payload con el
+      // contexto rico (meta.run_id, entities con imagenes, brand_identity,
+      // brand_colors, schedule_config) via rpc_build_manual_context — el mismo
+      // shape que el body de autopilot, para que el flow n8n moderno lo lea
+      // igual. El payload original del form se preserva (merge) por compat.
+      let webhookBody = payload;
+      try {
+        const schema = this.selectedFlow.input_schema || {};
+        const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
+        const prodFields = (Array.isArray(fields) ? fields : []).filter(f => this._isProductSelectorField(f));
+        const entityIds = [];
+        for (const f of prodFields) {
+          const v = payload[f.key || f.name];
+          const arr = Array.isArray(v) ? v : (v ? [v] : []);
+          for (const p of arr) { const eid = (p && (p.entity_id || p.id)) || (typeof p === 'string' ? p : null); if (eid) entityIds.push(eid); }
+        }
+        const coloresVal = Array.isArray(payload.colores) ? payload.colores.join(',') : (payload.colores || null);
+        const aspect = payload.aspect_ratio || '1:1';
+        const specs = payload.production_specifications || payload.specs || '';
+        const { data: ctx, error: ctxErr } = await this.supabase.rpc('rpc_build_manual_context', {
+          p_run_id: runId, p_org_id: this.organizationId, p_user_id: this.userId,
+          p_flow_id: this.selectedFlow.id, p_entity_ids: entityIds,
+          p_colores: coloresVal, p_aspect_ratio: aspect, p_specs: specs
+        });
+        if (!ctxErr && ctx && typeof ctx === 'object') webhookBody = { ...payload, ...ctx };
+        else if (ctxErr) console.warn('[Studio] rpc_build_manual_context:', ctxErr.message);
+      } catch (ctxE) {
+        console.warn('[Studio] rpc_build_manual_context (no bloquea):', ctxE);
+      }
+
       // 2) Ejecutar webhook con reintentos y timeout
       const res = await Service.executeWebhook({
         url: this.selectedFlow.webhook_url,
         method: (this.selectedFlow.webhook_method || 'POST').toUpperCase(),
-        body: payload,
+        body: webhookBody,
         timeoutMs,
         maxRetries
       });
