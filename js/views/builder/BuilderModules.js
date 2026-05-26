@@ -103,6 +103,12 @@
     if (urlProdEl) urlProdEl.value = mod.webhook_url_prod || '';
     if (indexEl) indexEl.value = String(index);
 
+    // Engine: alternar campos n8n (URLs) vs ComfyUI (dropdown de flujos del servidor)
+    if (typeEl) {
+      this._toggleModuleEngineFields(typeEl.value);
+      typeEl.onchange = () => this._toggleModuleEngineFields(typeEl.value);
+    }
+
     // Poblar selector "Siguiente módulo" con los otros módulos del flujo
     if (nextEl) {
       const opts = ['<option value="">— Auto (siguiente por orden) —</option>'];
@@ -195,6 +201,12 @@
     mod.execution_type = (typeEl && typeEl.value) || 'webhook';
     mod.webhook_url_test = (urlTestEl && urlTestEl.value.trim()) || '';
     mod.webhook_url_prod = (urlProdEl && urlProdEl.value.trim()) || '';
+    if (mod.execution_type === 'comfy') {
+      const comfyEl = this.querySelector('#moduleNodeModalComfyFlow');
+      mod.comfy_slug = (comfyEl && comfyEl.value) || null;
+      mod.webhook_url_test = ''; mod.webhook_url_prod = '';
+      this._bindComfyFlow(mod.comfy_slug);
+    }
     mod.next_module_id = (nextEl && nextEl.value) ? nextEl.value : null;
     mod.routing_rules = routingResult.value;
     mod.output_schema = outputResult.value;
@@ -208,6 +220,43 @@
     this.renderTechnicalModulesList();
     this.setupTechnicalModulesListeners();
     this.onFieldChange();
+  };
+
+  // Alterna campos segun software: ComfyUI = dropdown de flujos del servidor; n8n = URLs.
+  P._toggleModuleEngineFields = function (type) {
+    const comfyField = this.querySelector('#moduleNodeModalComfyField');
+    const n8nFields = this.querySelector('#moduleNodeModalN8nFields');
+    const isComfy = type === 'comfy';
+    if (comfyField) comfyField.hidden = !isComfy;
+    if (n8nFields) n8nFields.hidden = isComfy;
+    if (isComfy) this._populateComfyFlows();
+  };
+
+  // Carga flujos ComfyUI del servidor DISPONIBLES (no conectados a otro flow) + el ya conectado a ESTE flow.
+  P._populateComfyFlows = async function () {
+    const sel = this.querySelector('#moduleNodeModalComfyFlow');
+    if (!sel || !this.supabase) return;
+    try {
+      const { data, error } = await this.supabase.from('comfy_flow_definitions').select('slug, name, content_flow_id');
+      if (error) throw error;
+      const flowId = this.flowId || null;
+      const avail = (data || []).filter(d => !d.content_flow_id || d.content_flow_id === flowId);
+      const current = (data || []).find(d => d.content_flow_id && d.content_flow_id === flowId);
+      const opts = ['<option value="">— Selecciona un flujo del servidor —</option>'];
+      avail.forEach(d => opts.push(`<option value="${this.escapeHtml(d.slug)}">${this.escapeHtml(d.name || d.slug)}</option>`));
+      sel.innerHTML = opts.join('');
+      sel.value = current ? current.slug : '';
+    } catch (e) {
+      sel.innerHTML = '<option value="">(no se pudieron cargar los flujos)</option>';
+    }
+  };
+
+  // Conexion 1:1 segura: desconecta cualquier definicion previa de ESTE flow y conecta la elegida.
+  P._bindComfyFlow = async function (slug) {
+    if (!this.supabase || !this.flowId) return; // requiere flow ya guardado (con id)
+    try {
+      await this.supabase.rpc('bind_comfy_flow', { p_slug: slug || null, p_content_flow_id: this.flowId });
+    } catch (e) { console.warn('bindComfyFlow:', e?.message || e); }
   };
 
   P.setupTechnicalModulesListeners = function () {

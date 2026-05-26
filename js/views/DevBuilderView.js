@@ -323,21 +323,24 @@ class DevBuilderView extends DevBaseView {
                           <div class="settings-field">
                             <label for="moduleNodeModalExecutionType">Tipo de ejecución</label>
                             <select id="moduleNodeModalExecutionType">
-                              <option value="webhook">Webhook</option>
-                              <option value="python">Python</option>
-                              <option value="make">Make</option>
-                              <option value="internal">Internal</option>
-                              <option value="ai_direct">AI direct</option>
-                              <option value="aggregator">Aggregator</option>
+                              <option value="webhook">n8n</option>
+                              <option value="comfy">ComfyUI</option>
                             </select>
                           </div>
-                          <div class="settings-field">
-                            <label for="moduleNodeModalUrlTest">URL Test</label>
-                            <input type="url" id="moduleNodeModalUrlTest" placeholder="https://...">
+                          <div class="settings-field" id="moduleNodeModalComfyField" hidden>
+                            <label for="moduleNodeModalComfyFlow">Flujo del servidor (ComfyUI)</label>
+                            <select id="moduleNodeModalComfyFlow"></select>
+                            <span class="field-help">Solo aparecen flujos del servidor no conectados a otro flow (conexión 1:1 segura).</span>
                           </div>
-                          <div class="settings-field">
-                            <label for="moduleNodeModalUrlProd">URL Producción</label>
-                            <input type="url" id="moduleNodeModalUrlProd" placeholder="https://...">
+                          <div id="moduleNodeModalN8nFields">
+                            <div class="settings-field">
+                              <label for="moduleNodeModalUrlTest">URL Test</label>
+                              <input type="url" id="moduleNodeModalUrlTest" placeholder="https://...">
+                            </div>
+                            <div class="settings-field">
+                              <label for="moduleNodeModalUrlProd">URL Producción</label>
+                              <input type="url" id="moduleNodeModalUrlProd" placeholder="https://...">
+                            </div>
                           </div>
                           <div class="settings-field">
                             <label for="moduleNodeModalNext">Siguiente módulo</label>
