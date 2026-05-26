@@ -71,7 +71,7 @@ Código en producción, falta acción humana o credenciales externas para cerrar
 | [BUG-004](./BUG-004-vera-chat-uso.md) | Verificar VeraView end-to-end (no es bug — auditoría backend OK, falta prueba humana) | test | 👤 | short | — |
 | [fa-subset-regen](./fa-subset-regen.md) | Script `scripts/fa-subset.sh` para regenerar Font Awesome subset (pasos 1-4 documentados) | ops | 👤 | short | — |
 | [FEAT-027](./FEAT-027-web-vitals-dashboard.md) | Web Vitals Dashboard UI (`/dev/web-vitals` con p75/p95 LCP/CLS/FCP/INP/TTFB). `webvitals.js` ya envia samples a `frontend_errors` | feature | 👤 | short | — |
-| [REFACTOR-brand-organization](./REFACTOR-brand-organization-deadcode.md) | Podar ~525 lineas muertas en BrandOrganizationView (entidades + queries no leidas + bindings InfoPanel huerfanos). Mismo problema en BrandstorageView. | refactor | 👤 | medium | — |
+| [REFACTOR-brandstorage](./REFACTOR-brandstorage-deadcode.md) | BrandstorageView arrastra estado cargado-pero-nunca-leido (products, organizationMembers/Credits, creditUsage, brandIntegrations, brandSocialLinks, brandRules). Heredado del cierre de brand-organization-deadcode. NO tocar el cluster de entidades (aqui SI se usa). | refactor | 🤖 | medium | — |
 | [FEAT-029](./FEAT-029-brand-creative-brief-rebalance.md) | Rebalance creativo del brand context: Fase 1 cerrada (creative_brief col + IGNIS limpiado -69% payload + context.builder con buckets hard/soft/brief). Fases 2 (UI con counters/hints) y 3 (schema redesign formal hard_constraints/soft_inspiration como columnas) pendientes. | feature | 👤 | long | — |
 
 ---

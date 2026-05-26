@@ -370,46 +370,6 @@
     this.setupInfoBrandFieldEditors(container);
   },
 
-  /**
-   * Normaliza valores para insert/update en `brands` según tipo de columna.
-   * @param {string} fieldName
-   * @param {*} value
-   * @returns {string|string[]|object}
-   */
-  _normalizeBrandFieldForDb(fieldName, value) {
-    const jsonFields = BrandOrganizationView.BRAND_JSON_FIELDS;
-    const arrFields = BrandOrganizationView.BRAND_ARRAY_FIELDS;
-
-    if (jsonFields.includes(fieldName)) {
-      if (value == null || value === '') return {};
-      if (typeof value === 'string') {
-        try {
-          const o = JSON.parse(value);
-          return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
-        } catch (_) {
-          return {};
-        }
-      }
-      if (typeof value === 'object' && !Array.isArray(value)) return value;
-      return {};
-    }
-
-    if (arrFields.includes(fieldName)) {
-      return Array.isArray(value) ? value : [];
-    }
-
-    if (fieldName === 'nicho_core') {
-      return String(value ?? '').trim();
-    }
-
-    if (BrandOrganizationView.BRAND_TEXTAREA_FIELDS.includes(fieldName) || BrandOrganizationView.BRAND_TEXT_FIELDS.includes(fieldName)) {
-      const s = value == null ? '' : String(value).trim();
-      return s === '' ? null : s;
-    }
-
-    return value;
-  },
-
   setupInfoBrandFieldEditors(container) {
     const brand = this.brandData;
 
@@ -435,123 +395,10 @@
       });
     });
 
-    container.querySelectorAll('[data-editor-type="json"]').forEach((el) => {
-      const field = el.getAttribute('data-field');
-      if (!field) return;
-      const raw = brand?.[field];
-      if (raw && typeof raw === 'object') {
-        el.value = JSON.stringify(raw, null, 2);
-      } else if (typeof raw === 'string') {
-        el.value = raw;
-      } else {
-        el.value = '{}';
-      }
-      if (el.dataset.brandJsonBound === '1') return;
-      el.dataset.brandJsonBound = '1';
-      el.addEventListener('blur', async () => {
-        let parsed = {};
-        const t = el.value.trim();
-        if (t) {
-          try {
-            parsed = JSON.parse(t);
-          } catch (_) {
-            alert(`JSON no válido en ${field}. Revisá la sintaxis.`);
-            el.focus();
-            return;
-          }
-        }
-        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          alert('Este campo debe ser un objeto JSON (por ejemplo { "clave": "valor" }).');
-          return;
-        }
-        const prev = JSON.stringify(this.brandData?.[field] || {});
-        const next = JSON.stringify(parsed);
-        if (prev !== next) await this.saveBrandField(field, parsed);
-        el.value = JSON.stringify(this.brandData?.[field] || {}, null, 2);
-      });
-    });
-
-    container.querySelectorAll('.info-brand-array-editor[data-field]').forEach((el) => {
-      const field = el.getAttribute('data-field');
-      if (!field) return;
-      this.makeEditableMultiSelect(el, field, [], 'brand', null);
-    });
-
-    container.querySelectorAll('.info-brand-select[data-editor-type="select"]').forEach((wrap) => {
-      this._bindInfoBrandNichoSelect(wrap);
-    });
-  },
-
-  /**
-   * Desplegable custom para nicho_core (estilo pill + lista, sin depender de &lt;select&gt; nativo).
-   */
-  _bindInfoBrandNichoSelect(wrap) {
-    const field = wrap.getAttribute('data-field');
-    if (field !== 'nicho_core' || wrap.dataset.nichoSelectBound === '1') return;
-    wrap.dataset.nichoSelectBound = '1';
-
-    const trigger = wrap.querySelector('.info-brand-select__trigger');
-    const panel = wrap.querySelector('.info-brand-select__panel');
-    const valueEl = wrap.querySelector('.info-brand-select__value');
-    if (!trigger || !panel || !valueEl) return;
-
-    const getOptions = () => panel.querySelectorAll('.info-brand-select__option');
-
-    const setOpen = (open) => {
-      if (wrap._nichoDocCloser) {
-        document.removeEventListener('click', wrap._nichoDocCloser, true);
-        wrap._nichoDocCloser = null;
-      }
-      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      panel.hidden = !open;
-      wrap.classList.toggle('is-open', open);
-      if (open) {
-        wrap._nichoDocCloser = (ev) => {
-          if (!wrap.contains(ev.target)) setOpen(false);
-        };
-        setTimeout(() => document.addEventListener('click', wrap._nichoDocCloser, true), 0);
-      }
-    };
-
-    const syncSelectionClasses = () => {
-      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
-      getOptions().forEach((li) => {
-        const v = li.getAttribute('data-value') != null ? li.getAttribute('data-value') : '';
-        li.classList.toggle('is-selected', v === cur);
-      });
-    };
-
-    const refreshLabel = () => {
-      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
-      valueEl.textContent = BrandOrganizationView.getNichoCoreLabel(cur);
-    };
-
-    refreshLabel();
-    syncSelectionClasses();
-
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      setOpen(panel.hidden);
-    });
-
-    panel.addEventListener('click', async (e) => {
-      const li = e.target.closest('.info-brand-select__option');
-      if (!li || !panel.contains(li)) return;
-      e.stopPropagation();
-      const v = li.getAttribute('data-value') != null ? li.getAttribute('data-value') : '';
-      const cur = this.brandData?.[field] != null ? String(this.brandData[field]) : '';
-      if (v !== cur) await this.saveBrandField(field, v);
-      refreshLabel();
-      syncSelectionClasses();
-      setOpen(false);
-    });
-
-    wrap.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && wrap.classList.contains('is-open')) {
-        e.preventDefault();
-        setOpen(false);
-      }
-    });
+    // El aside del panel INFO solo emite editores text/textarea (ver
+    // renderBrandSchemaAsideHtml). Los editores json/array/select y el
+    // desplegable de nicho_core vivian aqui pero nunca se renderizaban en
+    // esta vista; se eliminaron (REFACTOR brand-organization deadcode).
   },
 
   };

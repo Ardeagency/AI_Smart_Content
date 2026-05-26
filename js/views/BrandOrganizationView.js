@@ -12,18 +12,9 @@ class BrandOrganizationView extends BaseView {
     this.userId = null;
     this.brandContainerData = null;
     this.brandData = null;
-    this.products = [];
     this.brandColors = [];
     this.brandFonts = [];
-    this.brandRules = [];
     this.brandAssets = [];
-    this.brandEntities = [];
-    this.brandPlaces = [];
-    this.brandAudiences = [];
-    this.brandSocialLinks = [];
-    this.organizationMembers = [];
-    this.organizationCredits = { credits_available: 100 };
-    this.creditUsage = [];
     this.isActive = false;
     this.savingFields = new Set();
     this._tryRenderTimeout = null;
@@ -31,12 +22,8 @@ class BrandOrganizationView extends BaseView {
     this._dataLoaded = false;
     /** @type {object|null} Fila `organizations` del workspace activo */
     this.organizationRow = null;
-    /** @type {Array} Filas brand_containers de la organización (sub-marcas) */
+    /** @type {Array} Filas brand_containers de la organización (sub-marcas, solo id + nombre_marca) */
     this.brandContainers = [];
-    /** @type {Array} Integraciones de sub-marcas (brand_integrations) */
-    this.brandIntegrations = [];
-    /** @type {Array} Campañas de sub-marcas (campaigns) */
-    this.brandCampaigns = [];
     /** Org UUID con la que se cargó la vista (navegación suave mismo ViewClass) */
     this._mountedOrgId = null;
   }
@@ -348,14 +335,8 @@ class BrandOrganizationView extends BaseView {
         this.organizationRow = null;
         this.brandContainerData = null;
         this.brandData = null;
-        this.products = [];
         this.brandAssets = [];
-        this.brandEntities = [];
-        this.brandPlaces = [];
-        this.brandAudiences = [];
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
+        this.brandContainers = [];
         this.brandColors = [];
         this.brandFonts = [];
         this._dataLoaded = true;
@@ -378,14 +359,8 @@ class BrandOrganizationView extends BaseView {
         this.organizationRow = null;
         this.brandContainerData = null;
         this.brandData = null;
-        this.products = [];
         this.brandAssets = [];
-        this.brandEntities = [];
-        this.brandPlaces = [];
-        this.brandAudiences = [];
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
+        this.brandContainers = [];
         this.brandColors = [];
         this.brandFonts = [];
         this._dataLoaded = true;
@@ -395,19 +370,6 @@ class BrandOrganizationView extends BaseView {
 
       this.organizationRow = org;
       this._mergeOrgIntoShim();
-
-      // `this.products` no se consume aquí; query mínima por compatibilidad con el shape esperado.
-      const { data: products, error: productsError } = await this.supabase
-        .from('products')
-        .select('id')
-        .eq('organization_id', orgId)
-        .limit(5);
-      if (productsError) {
-        console.warn('BrandOrganizationView: productos', productsError);
-        this.products = [];
-      } else {
-        this.products = products || [];
-      }
 
       // Campos efectivamente leídos: id, asset_type, storage_path, bucket, file_name,
       // file_type, file_url, created_at. Añadimos file_size por paridad con otras vistas.
@@ -424,93 +386,22 @@ class BrandOrganizationView extends BaseView {
         this.brandAssets = assets || [];
       }
 
-      this.brandEntities = [];
-      this.brandPlaces = [];
-      this.brandAudiences = [];
-
-      // Cargar sub-marcas (brand_containers) para el estado dual
+      // Sub-marcas (brand_containers): solo se consume `length` (card INFO) y la
+      // primera fila (`id`, `nombre_marca`) cuando hay una sola sub-marca.
       try {
         const { data: containerRows } = await this.supabase
           .from('brand_containers')
-          .select('id, nombre_marca, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, updated_at, created_at')
+          .select('id, nombre_marca')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false });
         this.brandContainers = containerRows || [];
-
-        const containerIds = this.brandContainers.map((r) => r.id).filter(Boolean);
-        if (containerIds.length) {
-          // audiences: a menudo no existe en PostgREST (404); esta vista no pinta audiencias en UI → no prefetch.
-          const [campaignsRes, integrationsRes] = await Promise.allSettled([
-            this.supabase
-              .from('campaigns')
-              .select('id, brand_container_id, nombre_campana, descripcion_interna, platform, status, starts_at, ends_at, platform_objective, persona_id, brief_id, created_at')
-              .in('brand_container_id', containerIds)
-              .order('created_at', { ascending: false }),
-            this.supabase
-              .from('brand_integrations')
-              .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
-              .in('brand_container_id', containerIds)
-              .order('platform', { ascending: true })
-          ]);
-          this.brandAudiences = [];
-          this.brandCampaigns = campaignsRes.status === 'fulfilled' && !campaignsRes.value.error
-            ? (campaignsRes.value.data || []) : [];
-          this.brandIntegrations = integrationsRes.status === 'fulfilled' && !integrationsRes.value.error
-            ? (integrationsRes.value.data || []) : [];
-        } else {
-          this.brandCampaigns = [];
-          this.brandIntegrations = [];
-        }
       } catch (e) {
         console.warn('BrandOrganizationView: brand_containers', e);
         this.brandContainers = [];
-        this.brandCampaigns = [];
-        this.brandIntegrations = [];
       }
 
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
-      this.brandRules = [];
-
-      try {
-        const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
-          this.supabase
-            .from('organization_members')
-            .select('*, profiles(id, full_name, email)')
-            .eq('organization_id', orgId)
-            .limit(5),
-          this.supabase.from('organization_credits').select('*').eq('organization_id', orgId).maybeSingle(),
-          this.supabase.from('credit_usage').select('*').eq('organization_id', orgId).limit(10)
-        ]);
-
-        if (membersResult.status === 'fulfilled' && !membersResult.value.error) {
-          this.organizationMembers = membersResult.value.data || [];
-        } else {
-          const { data: membersSimple } = await this.supabase
-            .from('organization_members')
-            .select('*')
-            .eq('organization_id', orgId)
-            .limit(5);
-          this.organizationMembers = (membersSimple || []).map((m) => ({ ...m, profiles: null }));
-        }
-
-        if (creditsResult.status === 'fulfilled' && !creditsResult.value.error) {
-          this.organizationCredits = creditsResult.value.data || { credits_available: 100 };
-        } else {
-          this.organizationCredits = { credits_available: 100 };
-        }
-
-        if (usageResult.status === 'fulfilled' && !usageResult.value.error) {
-          this.creditUsage = usageResult.value.data || [];
-        } else {
-          this.creditUsage = [];
-        }
-      } catch (e) {
-        console.warn('BrandOrganizationView: datos org secundarios', e);
-        this.organizationMembers = [];
-        this.organizationCredits = { credits_available: 100 };
-        this.creditUsage = [];
-      }
     } catch (error) {
       console.error('BrandOrganizationView loadData:', error);
     } finally {
@@ -588,13 +479,11 @@ class BrandOrganizationView extends BaseView {
   // Catálogos ahora viven en /js/config/brand-schema.js (fuente única compartida
   // con BrandstorageView). Variante ORG = schema sin `idiomas_contenido` ni
   // `mercado_objetivo` (aplican solo a sub-marca, no a organización).
+  // NICHO_CORE_* se conservan para una eventual reactivacion del editor de nicho.
+  // Los getters BRAND_*_FIELDS / BRAND_SCHEMA_BLOCKS se eliminaron: solo alimentaban
+  // el _normalizeBrandFieldForDb muerto (REFACTOR brand-organization deadcode).
   static get NICHO_CORE_OPTIONS()    { return window.BrandSchema.NICHO_CORE_OPTIONS; }
   static getNichoCoreLabel(v)        { return window.BrandSchema.getNichoCoreLabel(v); }
-  static get BRAND_SCHEMA_BLOCKS()   { return window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG; }
-  static get BRAND_ARRAY_FIELDS()    { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'array'); }
-  static get BRAND_JSON_FIELDS()     { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'json'); }
-  static get BRAND_TEXT_FIELDS()     { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'text'); }
-  static get BRAND_TEXTAREA_FIELDS() { return window.BrandSchema.fieldsByType(window.BrandSchema.BRAND_SCHEMA_BLOCKS_ORG, 'textarea'); }
   static get TYPOGRAPHY_FONTS()      { return window.BrandSchema.TYPOGRAPHY_FONTS; }
 
   // ============================================
@@ -898,162 +787,6 @@ class BrandOrganizationView extends BaseView {
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  renderBrandEntities() {
-    const container = (this.container && this.container.querySelector('#brandEntitiesList')) ||
-                      document.getElementById('brandEntitiesList');
-    if (!container) return;
-
-    const entities = this.brandEntities || [];
-    if (!entities.length) {
-      container.innerHTML = '<p class="entities-empty">Sin entidades. Agrega productos o servicios como entidades de marca.</p>';
-    } else {
-      container.innerHTML = entities.map(e => {
-        const places = (this.brandPlaces || []).filter(p => p.entity_id === e.id);
-        const placesHtml = places.length
-          ? places.map(p => `<span class="entity-place-tag" title="${this.escapeHtml(p.address || '')}"><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(p.name)}</span>`).join('')
-          : '';
-        return `
-          <div class="entity-row" data-entity-id="${e.id}">
-            <span class="entity-type-badge entity-type-${this.escapeHtml(e.entity_type || 'other')}">${this.escapeHtml(e.entity_type || 'otro')}</span>
-            <div class="entity-main">
-              <span class="entity-name">${this.escapeHtml(e.name)}</span>
-              ${places.length ? `<div class="entity-places">${placesHtml}</div>` : ''}
-            </div>
-            ${e.price != null ? `<span class="entity-price">${e.price} ${e.currency || 'USD'}</span>` : ''}
-            <button type="button" class="entity-add-place-btn btn btn-ghost btn-sm" data-entity-id="${e.id}" title="Agregar lugar"><i class="fas fa-map-pin"></i></button>
-            <button type="button" class="entity-delete-btn" data-entity-id="${e.id}" title="Eliminar" aria-label="Eliminar entidad">×</button>
-          </div>
-        `;
-      }).join('');
-
-      container.querySelectorAll('.entity-delete-btn').forEach(btn => {
-        btn.addEventListener('click', ev => {
-          ev.stopPropagation();
-          this.deleteEntity(btn.getAttribute('data-entity-id'));
-        });
-      });
-
-      container.querySelectorAll('.entity-add-place-btn').forEach(btn => {
-        btn.addEventListener('click', ev => {
-          ev.stopPropagation();
-          this.openAddPlaceModal(btn.getAttribute('data-entity-id'));
-        });
-      });
-    }
-
-    const addBtn = (this.container || document).querySelector('#addEntityBtn');
-    if (addBtn && !addBtn._entityBound) {
-      addBtn._entityBound = true;
-      addBtn.addEventListener('click', () => this.openAddEntityModal());
-    }
-  }
-
-  openAddPlaceModal(entityId) {
-    document.getElementById('brandPlaceModal')?.remove();
-    const entity = (this.brandEntities || []).find(e => e.id === entityId);
-    const entityName = entity ? entity.name : entityId;
-
-    const modalHtml = `
-      <div class="modal-overlay" id="brandPlaceModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Agregar lugar a <em>${this.escapeHtml(entityName)}</em></h3><button type="button" class="modal-close" id="placeModalClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="place_name">Nombre del lugar <span class="form-required">*</span></label><input type="text" id="place_name" class="form-input" placeholder="Ej: Tienda Ciudad de México" required></div>
-            <div class="form-group"><label for="place_address">Dirección</label><input type="text" id="place_address" class="form-input" placeholder="Ej: Av. Insurgentes Sur 1234"></div>
-            <div class="form-row">
-              <div class="form-group"><label for="place_city">Ciudad</label><input type="text" id="place_city" class="form-input" placeholder="Ciudad"></div>
-              <div class="form-group"><label for="place_country">País</label><input type="text" id="place_country" class="form-input" placeholder="País"></div>
-            </div>
-            <div class="form-group"><label for="place_type">Tipo</label><select id="place_type" class="form-input"><option value="store">Tienda</option><option value="office">Oficina</option><option value="warehouse">Bodega</option><option value="other">Otro</option></select></div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="placeModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="placeModalSubmit">Agregar</button></div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('placeModalClose')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
-    document.getElementById('placeModalCancel')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
-    document.getElementById('placeModalSubmit')?.addEventListener('click', async () => {
-      if (!this.supabase) return;
-      const name = document.getElementById('place_name')?.value?.trim();
-      if (!name) { alert('El nombre del lugar es obligatorio.'); return; }
-      const payload = {
-        entity_id: entityId,
-        name,
-        address: document.getElementById('place_address')?.value?.trim() || null,
-        city: document.getElementById('place_city')?.value?.trim() || null,
-        country: document.getElementById('place_country')?.value?.trim() || null,
-        place_type: document.getElementById('place_type')?.value || 'other',
-      };
-      const { data, error } = await this.supabase.from('brand_places').insert(payload).select().single();
-      if (error) { console.error('BrandOrganizationView addPlace:', error); alert('Error al agregar el lugar.'); return; }
-      this.brandPlaces = [...(this.brandPlaces || []), data];
-      document.getElementById('brandPlaceModal')?.remove();
-      this.renderBrandEntities();
-    });
-  }
-
-  openAddEntityModal() {
-    document.getElementById('brandEntityModal')?.remove();
-    const ENTITY_TYPES = ['product', 'service', 'place', 'brand', 'influencer', 'competitor', 'other'];
-    const typeOpts = ENTITY_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
-
-    const modalHtml = `
-      <div class="modal-overlay" id="brandEntityModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Nueva Entidad de Marca</h3><button type="button" class="modal-close" id="entityModalClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="ent_name">Nombre <span class="form-required">*</span></label><input type="text" id="ent_name" class="form-input" placeholder="Ej: Producto X" required></div>
-            <div class="form-group"><label for="ent_type">Tipo <span class="form-required">*</span></label><select id="ent_type" class="form-input">${typeOpts}</select></div>
-            <div class="form-group"><label for="ent_description">Descripción</label><textarea id="ent_description" class="form-input" rows="2"></textarea></div>
-            <div class="form-row">
-              <div class="form-group"><label for="ent_price">Precio</label><input type="number" id="ent_price" class="form-input" step="any" placeholder="0"></div>
-              <div class="form-group"><label for="ent_currency">Moneda</label><select id="ent_currency" class="form-input"><option>USD</option><option>EUR</option><option>MXN</option><option>COP</option><option>ARS</option></select></div>
-            </div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="entityModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="entityModalSubmit">Crear</button></div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('entityModalClose')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
-    document.getElementById('entityModalCancel')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
-    document.getElementById('entityModalSubmit')?.addEventListener('click', () => this.submitCreateEntity());
-  }
-
-  async submitCreateEntity() {
-    if (!this.supabase || !this.brandContainerData?.organization_id) return;
-    const name = document.getElementById('ent_name')?.value?.trim();
-    if (!name) { alert('El nombre es obligatorio.'); return; }
-
-    const priceRaw = document.getElementById('ent_price')?.value;
-    const payload = {
-      organization_id: this.brandContainerData.organization_id,
-      name,
-      entity_type: document.getElementById('ent_type')?.value || 'other',
-      description: document.getElementById('ent_description')?.value?.trim() || null,
-      price: priceRaw ? parseFloat(priceRaw) : null,
-      currency: document.getElementById('ent_currency')?.value || 'USD',
-    };
-
-    const { data, error } = await this.supabase.from('brand_entities').insert(payload).select().single();
-    if (error) { console.error('BrandOrganizationView createEntity:', error); alert('Error al crear la entidad.'); return; }
-    this.brandEntities = [...(this.brandEntities || []), data];
-    document.getElementById('brandEntityModal')?.remove();
-    this.renderBrandEntities();
-  }
-
-  async deleteEntity(entityId) {
-    if (!confirm('¿Eliminar esta entidad? Se eliminarán también sus vínculos con productos y servicios.')) return;
-    if (!this.supabase || !entityId) return;
-
-    const { error } = await this.supabase.from('brand_entities').delete().eq('id', entityId);
-    if (error) { console.error('BrandOrganizationView deleteEntity:', error); alert('Error al eliminar.'); return; }
-    this.brandEntities = (this.brandEntities || []).filter(e => e.id !== entityId);
-    this.renderBrandEntities();
-  }
-
-
   renderBrandColors() {
     const container = (this.container && this.container.querySelector('#brandColorSwatches')) ||
                       document.getElementById('brandColorSwatches');
@@ -1349,8 +1082,7 @@ class BrandOrganizationView extends BaseView {
   // Métodos movidos: openInfoPanel, closeInfoPanel, _refreshInfoPanelIfOpen,
   //   renderInfoAssetsSectionHtml, renderBrandSchemaAsideHtml,
   //   renderInfoPanelContent, setupInfoPanelEditables,
-  //   _normalizeBrandFieldForDb, setupInfoBrandFieldEditors,
-  //   _bindInfoBrandNichoSelect.
+  //   setupInfoBrandFieldEditors.
   // ─────────────────────────────────────────────────────────────────────────
 
   renderIdentitySection(brandContainer) {
@@ -1389,8 +1121,6 @@ class BrandOrganizationView extends BaseView {
       if (fieldName === 'nombre_marca') {
         const v = (value || '').trim() || null;
         await this._patchOrganization({ brand_name_oficial: v });
-      } else if (fieldName === 'mercado_objetivo') {
-        /* no columna en organizations */
       } else if (fieldName === 'logo_url') {
         await this._patchOrganization({ logo_url: value || null });
       } else {
