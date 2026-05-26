@@ -42,6 +42,11 @@ class LivingManager {
         this.filterDateTo = null;
         this.filterContentType = '';
         this.filterFlowName = '';
+        // Studio: scoping del canvas a un solo run (modelo "un output pertenece a un run").
+        // runScoped=true => el canvas solo muestra outputs del run activo (filterRunId).
+        // Sin run activo (filterRunId null) => canvas vacio. Las 3 fuentes se filtran por run_id.
+        this.runScoped = false;
+        this.filterRunId = null;
         this._calendarMonth = null;
         this._calendarYear = null;
         this._dateRangeStart = null;
@@ -347,6 +352,23 @@ class LivingManager {
         }
         // Paralelo: hidratar runs_inputs para los mismos run_ids (tab Input del modal).
         this.loadFlowInputs({ reset, runIds }).catch(() => {});
+    }
+
+    /**
+     * Studio: activa el scope a un run concreto y carga sus outputs directamente
+     * por run_id (no depende de que el run este en la pagina reciente de flow_runs).
+     * Pasar runId null limpia el scope (canvas vacio). Re-renderiza al terminar.
+     */
+    async setActiveRun(runId) {
+        this.runScoped = true;
+        this.filterRunId = runId || null;
+        this._historyVisibleCount = 0;
+        if (runId) {
+            await this.loadFlowOutputs({ reset: false, runIds: [runId] });
+        }
+        if (typeof this.renderHistorySection === 'function') {
+            await this.renderHistorySection();
+        }
     }
 
     /**
@@ -1134,8 +1156,27 @@ class LivingManager {
         if (this.filterContentType) {
             allItems = allItems.filter(it => (it.contentType || '') === this.filterContentType);
         }
-        if (this.filterFlowName) {
+        // En modo run-scoped el filtro autoritativo es filterRunId (mas abajo): no
+        // aplicamos filterFlowName porque descartaria outputs cuyo run aun no esta
+        // hidratado en flowRuns (getFlowName no coincidiria) justo tras producir.
+        if (this.filterFlowName && !this.runScoped) {
             allItems = allItems.filter(it => this.getFlowName(it.run) === this.filterFlowName);
+        }
+
+        // Studio: scope a un solo run. Sin run activo => canvas vacio; con run activo
+        // => solo outputs de ese run (cualquier fuente que exponga run_id). Las ediciones
+        // standalone (system_ai_outputs, run_id null) no pertenecen a un run y se omiten.
+        // Las cards de edicion en curso (_isPendingEdit) se conservan siempre.
+        if (this.runScoped) {
+            if (!this.filterRunId) {
+                allItems = allItems.filter(it => it._isPendingEdit);
+            } else {
+                allItems = allItems.filter(it => {
+                    if (it._isPendingEdit) return true;
+                    const rid = (it.run && it.run.id) || (it.output && it.output.run_id) || null;
+                    return rid === this.filterRunId;
+                });
+            }
         }
 
         this._historyCurrentItems = allItems;

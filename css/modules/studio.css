@@ -318,6 +318,15 @@
   color: var(--brand-primary, #ffffff);
 }
 
+/* Toggles (ej. "Generar video"): el switch "on" usa el degradado dinámico de la
+   marca en vez del cyan dev-primary. Scoped a Studio para no tocar el portal dev. */
+.studio-layout .modern-switch-wrapper input:checked ~ .modern-switch-track {
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+}
+.studio-layout .modern-switch-wrapper input:focus-visible ~ .modern-switch-track {
+  outline-color: var(--brand-primary, #ffffff);
+}
+
 /* Inputs/selects: border más suave, focus brand */
 .studio-schedule-card input,
 .studio-schedule-card select,

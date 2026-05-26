@@ -21,6 +21,53 @@ class StudioView extends BaseView {
     this.selectedFlow = null;
     this.livingManager = null;
     this._livingScopedFlowName = null;
+    // Run activo del canvas (modelo Shakker: el canvas muestra solo los outputs de
+    // este run). Se siembra desde ?run= en la URL (deep-link) y se actualiza al producir.
+    this._activeRunId = null;
+  }
+
+  /** Lee el run activo desde la query string (?run=ID). */
+  _getRunFromUrl() {
+    try {
+      return new URLSearchParams(window.location.search).get('run') || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /** Refleja (o limpia) el run activo en la URL sin recargar, para deep-link/continuar. */
+  _syncRunInUrl(runId) {
+    try {
+      const url = new URL(window.location.href);
+      if (runId) url.searchParams.set('run', runId);
+      else url.searchParams.delete('run');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    } catch (_) {}
+  }
+
+  /**
+   * Fija el run activo del canvas: actualiza estado, URL y livingManager, y carga
+   * sus outputs. Como los outputs llegan async tras el webhook, hace un poll corto.
+   */
+  async setActiveRun(runId, { poll = false } = {}) {
+    this._activeRunId = runId || null;
+    this._syncRunInUrl(runId);
+    if (this.livingManager && typeof this.livingManager.setActiveRun === 'function') {
+      await this.livingManager.setActiveRun(runId);
+      if (poll && runId) this._pollActiveRunOutputs(runId);
+    }
+  }
+
+  /** Poll corto tras producir: los outputs del run llegan async (webhook → n8n → ai-engine). */
+  _pollActiveRunOutputs(runId, attempt = 0) {
+    if (this._activeRunId !== runId) return; // el usuario cambio de run; abortar
+    const delays = [4000, 6000, 8000, 10000, 15000, 20000];
+    if (attempt >= delays.length) return;
+    setTimeout(async () => {
+      if (this._activeRunId !== runId || !this.livingManager) return;
+      try { await this.livingManager.setActiveRun(runId); } catch (_) {}
+      this._pollActiveRunOutputs(runId, attempt + 1);
+    }, delays[attempt]);
   }
 
   _notify(message, _type = 'info') {
@@ -372,7 +419,12 @@ class StudioView extends BaseView {
     if (this.livingManager && this._livingScopedFlowName === flowName) return;
 
     if (this.livingManager) {
+      // Cambio de flow: el run activo pertenece al flow anterior, se limpia.
+      this._activeRunId = null;
+      this._syncRunInUrl(null);
       this.livingManager.filterFlowName = flowName;
+      this.livingManager.runScoped = true;
+      this.livingManager.filterRunId = null;
       this._livingScopedFlowName = flowName;
       this.livingManager._historyVisibleCount = 0;
       if (typeof this.livingManager.renderHistorySection === 'function') {
@@ -389,19 +441,37 @@ class StudioView extends BaseView {
 
       this._ensureProductionModalInBody();
 
+      // Run activo: deep-link (?run=ID) en la primera carga, si existe.
+      const activeRun = this._activeRunId || this._getRunFromUrl();
+      this._activeRunId = activeRun;
+
       const lm = new window.LivingManager();
       lm.organizationId = this.organizationId;
       lm.filterFlowName = flowName;
+      // Studio: el canvas se scopea a un solo run (modelo Shakker).
+      lm.runScoped = true;
+      lm.filterRunId = activeRun;
       // Studio scope: empty state propio (mantiene dot-pattern de fondo).
-      lm.renderEmptyState = () => `
+      lm.renderEmptyState = () => (this.livingManager && this.livingManager.filterRunId)
+        ? `
         <div class="living-history-empty studio-history-empty">
-          <p class="living-history-empty-message">Aun no hay producciones de este flow</p>
-          <p class="living-history-empty-hint">Llena el formulario de la derecha y pulsa Producir.</p>
+          <p class="living-history-empty-message">Este run aun no tiene producciones</p>
+          <p class="living-history-empty-hint">Cuando termine la generacion apareceran aqui.</p>
+        </div>
+      `
+        : `
+        <div class="living-history-empty studio-history-empty">
+          <p class="living-history-empty-message">Empieza una nueva produccion</p>
+          <p class="living-history-empty-hint">Llena el formulario de la derecha y pulsa Producir. Veras aqui los resultados de este run.</p>
         </div>
       `;
       this.livingManager = lm;
       this._livingScopedFlowName = flowName;
       await lm.init();
+      // Si venimos con un run por deep-link, asegurar que sus outputs esten cargados.
+      if (activeRun) {
+        await lm.setActiveRun(activeRun);
+      }
     } catch (e) {
       console.error('Studio initLivingGallery:', e);
     }
@@ -1788,6 +1858,9 @@ class StudioView extends BaseView {
         await window.appNavigation.loadCreditsFromDb(this.organizationId);
       }
       this._notify('Producción enviada correctamente.');
+      // Scope el canvas al run recien creado: solo veremos los outputs de este run.
+      // Los outputs llegan async (webhook → n8n → ai-engine), por eso hacemos poll.
+      await this.setActiveRun(runId, { poll: true });
     } catch (e) {
       if (creditsDeducted && runId) {
         await this._refundCreditsSafe(runId, cost);
