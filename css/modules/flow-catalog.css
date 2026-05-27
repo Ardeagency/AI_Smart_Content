@@ -1094,7 +1094,8 @@
    panel se estiliza con `.modal-content.flow-detail-modal`.
    ======================================================================== */
 .modal-content.flow-detail-modal {
-  max-width: min(1180px, calc(100vw - 2rem));
+  width: 100%;
+  max-width: min(1280px, calc(100vw - 3rem));
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
 }
@@ -1172,8 +1173,10 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  gap: clamp(1.25rem, 3vw, 2.5rem);
+  /* Izquierda fija/angosta (solo 2 run cards), derecha toma el resto → el
+     bloque de info es ancho y el titulo no se parte en 4 lineas. */
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.5rem, 3vw, 2.75rem);
   align-items: stretch;
 }
@@ -1198,12 +1201,18 @@
 }
 .flow-detail-title {
   margin: 0;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.08;
   color: #ffffff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  /* Tope de 3 lineas para que titulos largos no estiren la card a vertical */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .flow-detail-badges-inline {
   display: flex;
