@@ -683,6 +683,18 @@
         if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); }
       };
       panel.addEventListener('click', this._panelClick);
+
+      // Accesibilidad: flechas arriba/abajo mueven el foco entre tabs del rail.
+      this._railKey = (e) => {
+        const btn = e.target.closest('.cc-rail-btn');
+        if (!btn || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+        e.preventDefault();
+        const btns = [...document.querySelectorAll('#ccPanelRail .cc-rail-btn')];
+        const i = btns.indexOf(btn);
+        const next = btns[(i + (e.key === 'ArrowDown' ? 1 : btns.length - 1)) % btns.length];
+        if (next) next.focus();
+      };
+      panel.addEventListener('keydown', this._railKey);
     }
 
     // Drag-and-drop: campana real del sidebar → canvas (como Segmind).
@@ -1057,7 +1069,7 @@
     rail.innerHTML = secs.map((s) => {
       const items = this._libItemsFor(s.key);
       const count = Array.isArray(items) ? items.length : null;
-      return `<button class="cc-rail-btn ${active === s.key ? 'is-active' : ''}" data-rail-sec="${s.key}" title="${this.escapeHtml(s.label)}" aria-label="${this.escapeHtml(s.label)}">
+      return `<button class="cc-rail-btn ${active === s.key ? 'is-active' : ''}" data-rail-sec="${s.key}" role="tab" aria-selected="${active === s.key ? 'true' : 'false'}" title="${this.escapeHtml(s.label)}" aria-label="${this.escapeHtml(s.label)}">
         <i class="fas ${s.icon}"></i>
         ${count ? `<span class="cc-rail-badge">${count}</span>` : ''}
       </button>`;
@@ -1357,6 +1369,7 @@
     if (canvas && this._canvasDragOver)  { canvas.removeEventListener('dragover', this._canvasDragOver); canvas.removeEventListener('dragleave', this._canvasDragLeave); canvas.removeEventListener('drop', this._canvasDrop); this._canvasDragOver = null; }
     if (list && this._campDragStart)     { list.removeEventListener('dragstart', this._campDragStart); list.removeEventListener('dragend', this._campDragEnd); this._campDragStart = null; }
     if (panel && this._panelClick)       { panel.removeEventListener('click', this._panelClick); this._panelClick = null; }
+    if (panel && this._railKey)          { panel.removeEventListener('keydown', this._railKey); this._railKey = null; }
     if (typeof _origDestroy === 'function') _origDestroy.call(this);
   };
 

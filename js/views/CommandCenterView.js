@@ -148,14 +148,14 @@ class CommandCenterView extends BaseView {
              una seccion. Colapsado por defecto = solo el rail. -->
         <aside class="cc-floating-panel glass-black" id="ccSidebar">
           <!-- Rail de navegacion (iconos, sin texto) -->
-          <nav class="cc-fp-rail" id="ccPanelRail" aria-label="Biblioteca"></nav>
+          <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="Biblioteca"></nav>
           <!-- Panel de datos de la seccion activa -->
-          <div class="cc-fp-panel">
+          <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">
-              <span class="cc-fp-title" id="ccPanelTitle">Biblioteca</span>
               <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Cerrar seccion" aria-label="Cerrar seccion">
-                <i class="fas fa-chevron-left"></i>
+                <i class="fas fa-times"></i>
               </button>
+              <span class="cc-fp-title" id="ccPanelTitle">Biblioteca</span>
             </div>
             <div class="cc-fp-body" id="ccPanelBody"></div>
           </div>

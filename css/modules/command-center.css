@@ -1454,9 +1454,8 @@
 /* ── Panel flotante tipo Figma: rail de iconos + panel de datos ─────── */
 .cc-floating-panel {
   position: absolute;
-  top: 14px; right: 14px;
+  top: 14px; right: 14px; bottom: 14px;   /* altura 100% (siempre, tambien colapsado) */
   z-index: 8;
-  max-height: calc(100% - 28px);
   display: flex;            /* fila: rail | panel */
   align-items: stretch;
   border-radius: 14px;
@@ -1464,26 +1463,34 @@
   overflow: hidden;
 }
 
-/* Rail de navegacion (siempre visible, solo iconos). */
+/* Rail de navegacion (siempre visible, full height, solo iconos). */
 .cc-fp-rail {
   flex: 0 0 auto;
   display: flex; flex-direction: column; gap: 6px;
-  padding: 8px;
+  padding: 10px 8px;
   overflow-y: auto;
 }
 .cc-rail-btn {
   position: relative;
-  width: 36px; height: 36px;
+  width: 38px; height: 38px;
   display: grid; place-items: center;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-secondary);
-  cursor: pointer; font-size: 0.85rem;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer; font-size: 0.88rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.cc-rail-btn:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
-.cc-rail-btn.is-active { background: rgba(255, 255, 255, 0.16); color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+.cc-rail-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary, #fff); }
+.cc-rail-btn.is-active { background: rgba(255, 255, 255, 0.12); color: #fff; }
+/* Indicador de activo: barra vertical al borde izquierdo (estilo VS Code). */
+.cc-rail-btn::before {
+  content: ''; position: absolute; left: -8px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0; border-radius: 0 2px 2px 0;
+  background: #fff; transition: height 0.15s ease;
+}
+.cc-rail-btn.is-active::before { height: 20px; }
 .cc-rail-badge {
   position: absolute; top: -3px; right: -3px;
   min-width: 15px; height: 15px; padding: 0 3px;
@@ -1504,13 +1511,13 @@
 }
 .cc-floating-panel.cc-fp-open .cc-fp-panel { display: flex; width: 290px; }
 .cc-fp-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px;
+  display: flex; align-items: center;
+  gap: 10px;
   padding: 11px 12px;
   flex: 0 0 auto;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.cc-fp-title { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-primary, #fff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-fp-title { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-primary, #fff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cc-fp-title i { font-size: 0.78rem; color: var(--text-muted); }
 .cc-fp-toggle {
   flex: 0 0 auto;
