@@ -271,7 +271,7 @@ class CommandCenterView extends BaseView {
         const [audRes, segRes, campRes, intRes] = await Promise.all([
           supabase
             .from('audience_personas')
-            .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
+            .select('id, name, description, awareness_level, alignment_score, dolores, deseos, objeciones, gatillos_compra, datos_demograficos, datos_psicograficos, target_age_min, target_age_max, target_genders, is_liked, is_featured, is_active, real_age_distribution, real_gender_distribution, real_location_distribution, real_interests, updated_at')
             .eq('brand_container_id', bid)
             .order('updated_at', { ascending: false }),
           supabase

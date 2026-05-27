@@ -169,6 +169,32 @@
   };
   P._linesOf = function (arr) { return Array.isArray(arr) ? arr.join('\n') : ''; };
 
+  /** Rango de edades: dos inputs numericos en una fila. */
+  P._fieldAgeRange = function (minV, maxV) {
+    const mv = (minV == null || minV === '') ? '' : String(minV);
+    const xv = (maxV == null || maxV === '') ? '' : String(maxV);
+    return `
+      <div class="cc-field">
+        <div class="cc-field-head"><span class="cc-field-label">Rango de edades</span><span class="cc-field-type">int</span></div>
+        <div class="cc-field-row">
+          <input class="cc-field-input" data-field="target_age_min" data-type="number" type="number" min="13" max="99" value="${mv}" placeholder="Min" />
+          <span class="cc-field-row-sep">–</span>
+          <input class="cc-field-input" data-field="target_age_max" data-type="number" type="number" min="13" max="99" value="${xv}" placeholder="Max" />
+        </div>
+      </div>`;
+  };
+
+  /** Objetivos de genero: checkboxes multi (vacio = todos). */
+  P._fieldGenders = function (genders) {
+    const set = new Set(Array.isArray(genders) ? genders.map(String) : []);
+    const opt = (val, lbl) => `<label class="cc-check"><input type="checkbox" data-field="target_genders" data-multi="checks" value="${val}" ${set.has(val) ? 'checked' : ''} /> ${lbl}</label>`;
+    return `
+      <div class="cc-field">
+        <div class="cc-field-head"><span class="cc-field-label">Objetivos de genero</span><span class="cc-field-type">array</span></div>
+        <div class="cc-checks">${opt('male', 'Hombres')}${opt('female', 'Mujeres')}<span class="cc-checks-hint">${set.size ? '' : 'vacio = todos'}</span></div>
+      </div>`;
+  };
+
   P._nodeActionsHTML = function (collapsed) {
     return `
         <div class="cc-node-actions">
@@ -180,24 +206,34 @@
   P._nodeAudienceHTML = function (n, pos) {
     const a = n.row;
     const collapsed = this._collapsed && this._collapsed.has(n.key);
-    const title = this.escapeHtml(a.name || '');
+    const off = a.is_active === false;
+    const liked = !!a.is_liked, featured = !!a.is_featured;
     return `
-    <div class="cc-node cc-node--audience ${collapsed ? 'cc-node--collapsed' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+    <div class="cc-node cc-node--audience ${collapsed ? 'cc-node--collapsed' : ''} ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
-        <input class="cc-node-title-input" data-field="name" value="${title}" placeholder="Nombre de la audiencia" title="${title}" />
-        ${this._nodeActionsHTML(collapsed)}
+        <span class="cc-node-title">Audiencia</span>
+        <div class="cc-node-actions">
+          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta esta audiencia"><i class="fas fa-heart"></i></button>
+          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar audiencia"><i class="fas fa-star"></i></button>
+          <button type="button" class="cc-node-act cc-node-toggle cc-toggle-power ${off ? 'is-off' : 'is-on'}" data-toggle="is_active" title="${off ? 'Encender audiencia' : 'Apagar audiencia'}"><i class="fas fa-lightbulb"></i></button>
+          <button type="button" class="cc-node-act cc-node-collapse" title="${collapsed ? 'Expandir' : 'Colapsar'}"><i class="fas fa-${collapsed ? 'chevron-down' : 'chevron-up'}"></i></button>
+          <button type="button" class="cc-node-act cc-node-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
+        </div>
       </div>
       <div class="cc-node-body">
+        ${this._fieldText('Nombre', 'str', 'name', a.name, { placeholder: 'Nombre de la audiencia' })}
+        ${this._fieldAgeRange(a.target_age_min, a.target_age_max)}
+        ${this._fieldGenders(a.target_genders)}
         ${this._fieldSelect('Awareness', 'awareness_level', a.awareness_level, [
           ['', 'Sin definir'], ['unaware', 'Unaware'], ['problem_aware', 'Problem aware'],
           ['solution_aware', 'Solution aware'], ['product_aware', 'Product aware'], ['most_aware', 'Most aware'],
         ])}
         ${this._fieldArea('Descripcion', 'str', 'description', a.description, { rows: 2, placeholder: 'Quien es esta audiencia' })}
-        ${this._fieldArea('Dolores', 'list', 'dolores', this._linesOf(a.dolores), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Deseos', 'list', 'deseos', this._linesOf(a.deseos), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Objeciones', 'list', 'objeciones', this._linesOf(a.objeciones), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Gatillos de compra', 'list', 'gatillos_compra', this._linesOf(a.gatillos_compra), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
+        ${this._fieldArea('Dolores', 'array', 'dolores', this._linesOf(a.dolores), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
+        ${this._fieldArea('Deseos', 'array', 'deseos', this._linesOf(a.deseos), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
+        ${this._fieldArea('Objeciones', 'array', 'objeciones', this._linesOf(a.objeciones), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
+        ${this._fieldArea('Gatillos de compra', 'array', 'gatillos_compra', this._linesOf(a.gatillos_compra), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
       </div>
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra hacia una campana para vincular"></span>
     </div>`;
@@ -221,13 +257,14 @@
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia objetivo"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--camp"><i class="fas fa-bullhorn"></i></span>
-        <span class="cc-node-title" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Campana')}</span>
+        <span class="cc-node-title">Campana real</span>
         <div class="cc-node-actions">
           <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
         </div>
       </div>
       <div class="cc-node-body">
-        <div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--real">Real</span>${platLabel ? `<span class="cc-node-badge cc-node-badge--plat">${this.escapeHtml(platLabel)}</span>` : ''}${c.status ? `<span class="cc-node-badge">${this.escapeHtml(c.status)}</span>` : ''}</div>
+        <div class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Campana')}</div>
+        <div class="cc-node-badges">${platLabel ? `<span class="cc-node-badge cc-node-badge--plat">${this.escapeHtml(platLabel)}</span>` : ''}${c.status ? `<span class="cc-node-badge">${this.escapeHtml(c.status)}</span>` : ''}</div>
         <dl class="cc-node-stats">
           <div><dt>Resultados</dt><dd>${fmt(c.cached_conversions)}</dd></div>
           <div><dt>Gasto</dt><dd>${fmt(c.cached_spend)} ${this.escapeHtml(c.budget_currency || '')}</dd></div>
@@ -246,17 +283,17 @@
     }
 
     // Conceptual: editable.
-    const title = this.escapeHtml(c.nombre_campana || '');
     return `
     <div class="cc-node cc-node--campaign ${collapsed ? 'cc-node--collapsed' : ''}" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia objetivo"></span>
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon cc-node-icon--camp"><i class="fas fa-bullhorn"></i></span>
-        <input class="cc-node-title-input" data-field="nombre_campana" value="${title}" placeholder="Nombre de la campana" title="${title}" />
+        <span class="cc-node-title">Campana conceptual</span>
         ${this._nodeActionsHTML(collapsed)}
       </div>
       <div class="cc-node-body">
-        <div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--concept">Conceptual</span>${linkedName ? `<span class="cc-node-badge cc-node-badge--link"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span>` : ''}</div>
+        ${this._fieldText('Nombre', 'str', 'nombre_campana', c.nombre_campana, { placeholder: 'Nombre de la campana' })}
+        ${linkedName ? `<div class="cc-node-badges"><span class="cc-node-badge cc-node-badge--link"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span></div>` : ''}
         ${this._fieldArea('Descripcion interna', 'str', 'descripcion_interna', c.descripcion_interna, { rows: 2, placeholder: 'Objetivo del concepto' })}
         ${this._fieldSelect('Estado', 'status', c.status || 'draft', [
           ['draft', 'Borrador'], ['conceptual', 'Conceptual'], ['active', 'Activa'],
@@ -545,6 +582,12 @@
         const key  = nodeEl.getAttribute('data-node-key');
         const type = nodeEl.getAttribute('data-type');
         const id   = nodeEl.getAttribute('data-id');
+        const toggleBtn = e.target.closest('.cc-node-toggle');
+        if (toggleBtn) {
+          e.preventDefault(); e.stopPropagation();
+          this._toggleAudienceFlag(id, toggleBtn.getAttribute('data-toggle'), nodeEl);
+          return;
+        }
         if (e.target.closest('.cc-node-collapse')) {
           e.preventDefault(); e.stopPropagation();
           this._toggleCollapse(key, nodeEl);
@@ -625,6 +668,40 @@
     }
   };
 
+  /** Flags de audiencia (me gusta / destacar / apagar). Persiste en BD. */
+  P._toggleAudienceFlag = async function (id, flag, nodeEl) {
+    if (!this._supabase || !['is_liked', 'is_featured', 'is_active'].includes(flag)) return;
+    const row = (this._audiences || []).find((a) => String(a.id) === String(id));
+    if (!row) return;
+    const prev = row[flag] === undefined ? (flag === 'is_active') : !!row[flag];
+    const next = !prev;
+    row[flag] = next;
+
+    // Actualiza UI sin re-render completo (preserva edicion en curso).
+    const btn = nodeEl.querySelector(`.cc-node-toggle[data-toggle="${flag}"]`);
+    if (flag === 'is_active') {
+      nodeEl.classList.toggle('cc-node--off', !next);
+      if (btn) { btn.classList.toggle('is-off', !next); btn.title = next ? 'Apagar audiencia' : 'Encender audiencia'; }
+    } else {
+      nodeEl.classList.toggle(flag === 'is_featured' ? 'cc-node--featured' : 'cc-node--liked', next);
+      if (btn) btn.classList.toggle('is-on', next);
+    }
+    try {
+      const { error } = await this._supabase
+        .from('audience_personas')
+        .update({ [flag]: next, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      console.error('CommandCenter toggle flag:', e);
+      row[flag] = prev;  // rollback visual minimo
+      if (btn) {
+        if (flag === 'is_active') { nodeEl.classList.toggle('cc-node--off', prev === false ? true : !prev); btn.classList.toggle('is-off', !prev); }
+        else { btn.classList.toggle('is-on', prev); nodeEl.classList.toggle(flag === 'is_featured' ? 'cc-node--featured' : 'cc-node--liked', prev); }
+      }
+    }
+  };
+
   /** Colapsa/expande un nodo sin re-render completo (preserva foco/edicion). */
   P._toggleCollapse = function (key, nodeEl) {
     if (!this._collapsed) this._collapsed = new Set();
@@ -657,7 +734,10 @@
     const dataType = fieldEl.getAttribute('data-type');
     const multi    = fieldEl.getAttribute('data-multi');
     let val = fieldEl.value;
-    if (multi === 'lines') {
+    if (multi === 'checks') {
+      const nodeEl = fieldEl.closest('.cc-node');
+      val = nodeEl ? [...nodeEl.querySelectorAll(`[data-field="${field}"]`)].filter((x) => x.checked).map((x) => x.value) : [];
+    } else if (multi === 'lines') {
       val = String(val || '').split('\n').map((s) => s.trim()).filter(Boolean);
     } else if (dataType === 'number') {
       val = val === '' ? null : Number(val);
