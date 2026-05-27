@@ -78,6 +78,14 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'page', id: 'production', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production', requireCap: 'production.create' },
     {
       type: 'page',
+      id: 'execution-history',
+      label: 'Sessions',
+      icon: 'fa-clock-rotate-left',
+      route: 'execution-history',
+      requireCap: 'production.create'
+    },
+    {
+      type: 'page',
       id: 'tasks',
       label: 'Tasks',
       icon: 'fa-list-check',

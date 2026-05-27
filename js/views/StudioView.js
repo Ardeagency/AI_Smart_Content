@@ -162,6 +162,74 @@ class StudioView extends BaseView {
     }
   }
 
+  /** Conteo real de outputs de un run en BD (para detectar el output NUEVO en append). */
+  async _runOutputCount(runId) {
+    if (!runId || !this.supabase) return 0;
+    try {
+      const { count } = await this.supabase
+        .from('runs_outputs')
+        .select('id', { count: 'exact', head: true })
+        .eq('run_id', runId);
+      return count || 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /** Inyecta una card skeleton al frente del canvas mientras llega el output nuevo (append). */
+  _showAppendSkeleton() {
+    try {
+      const content = document.getElementById('livingHistoryContent');
+      if (!content || content.querySelector('.studio-append-skeleton')) return;
+      const card = document.createElement('div');
+      card.className = 'living-masonry-item studio-append-skeleton';
+      card.setAttribute('role', 'status');
+      card.setAttribute('aria-label', 'Generando producción');
+      card.innerHTML = '<div class="studio-skeleton-card"><div class="living-history-skeleton"></div></div>';
+      content.prepend(card);
+    } catch (_) {}
+  }
+
+  _removeAppendSkeleton() {
+    try {
+      document.querySelectorAll('.studio-append-skeleton').forEach(el => el.remove());
+    } catch (_) {}
+  }
+
+  /**
+   * Poll para el modelo Sessions (append): el run ya tiene outputs previos, por eso
+   * NO basta con "¿hay algún output?" — esperamos a que el conteo SUPERE el baseline
+   * capturado antes de producir. Cuando llega, re-render del canvas (trae todos los
+   * outputs del run, incluido el nuevo) y se quita el skeleton inyectado.
+   */
+  async _pollActiveRunNewOutputs(runId, baseline, attempt = 0) {
+    if (this._activeRunId !== runId) return; // el usuario cambió de run; abortar
+    const burst = [4000, 6000, 8000, 10000, 15000];
+    const TAIL_MS = 20000;
+    const MAX_ATTEMPTS = 90;
+    if (attempt >= MAX_ATTEMPTS) {
+      this._removeAppendSkeleton();
+      this._notify('La producción está tardando más de lo normal. Aparecerá en el historial cuando esté lista.');
+      return;
+    }
+    const delay = attempt < burst.length ? burst[attempt] : TAIL_MS;
+    setTimeout(async () => {
+      if (this._activeRunId !== runId || !this.livingManager) return;
+      const count = await this._runOutputCount(runId);
+      if (count > baseline) {
+        try { await this.livingManager.setActiveRun(runId); } catch (_) {}
+        this._removeAppendSkeleton();
+        return;
+      }
+      if (await this._isRunFailed(runId)) {
+        this._removeAppendSkeleton();
+        this._notify('La producción falló. Intenta de nuevo.');
+        return;
+      }
+      this._pollActiveRunNewOutputs(runId, baseline, attempt + 1);
+    }, delay);
+  }
+
   _notify(message, _type = 'info') {
     if (typeof alert === 'function') alert(message);
   }
@@ -1846,44 +1914,81 @@ class StudioView extends BaseView {
     const maxRetries = DEFAULT_STUDIO_MAX_RETRIES;
     let runId = null;
     let creditsDeducted = false;
+    let isAppend = false;
+    // Modelo Sessions: si hay un run activo (sesion abierta, o reabierta desde
+    // Execution History con ?run=ID), los outputs nuevos caen DENTRO de ese run.
+    // Capturamos el conteo previo de outputs para detectar el output NUEVO.
+    const resumeRunId = this._activeRunId || null;
+    const appendBaseline = resumeRunId ? await this._runOutputCount(resumeRunId) : 0;
 
     try {
-      // 1) Deducción atómica de créditos + creación de run (RPC).
-      // Pasamos campaign/persona/brief para que queden ligados al flow_run
-      // (la RPC los inserta directamente). Asi el modal de Production puede
+      // 1) Deducción de créditos. Pasamos campaign/persona/brief para que queden
+      // ligados al flow_run (la RPC los inserta). Asi el modal de Production puede
       // mostrar a que campania y audiencia pertenece cada produccion.
       const campaignId = payload?.campaign_id || (Array.isArray(payload?.campaign_ids) ? payload.campaign_ids[0] : null) || null;
       const personaId = payload?.persona_id || payload?.audience_id || null;
       const briefId = payload?.brief_id || null;
-      const { data: deductResult, error: rpcError } = await this.supabase
-        .rpc('deduct_credits_and_create_run', {
-          p_organization_id: this.organizationId,
-          p_user_id: this.userId,
-          p_flow_id: this.selectedFlow.id,
-          p_amount: cost,
-          p_brief_id: briefId,
-          p_persona_id: personaId,
-          p_campaign_id: campaignId
-        });
 
-      if (rpcError) {
-        console.error('Studio deduct RPC:', rpcError);
-        this._notify('No se pudo reservar créditos. Intenta de nuevo.');
-        return;
+      if (resumeRunId) {
+        // Append: cobrar reusando el run existente (NO crea run nuevo).
+        const { data: dr, error: appendErr } = await this.supabase
+          .rpc('deduct_credits_for_run', {
+            p_organization_id: this.organizationId,
+            p_user_id: this.userId,
+            p_run_id: resumeRunId,
+            p_amount: cost
+          });
+        if (appendErr) {
+          console.error('Studio deduct_credits_for_run:', appendErr);
+          this._notify('No se pudo reservar créditos. Intenta de nuevo.');
+          return;
+        }
+        if (dr?.success === true && dr?.run_id) {
+          runId = dr.run_id;
+          isAppend = true;
+          creditsDeducted = true;
+          this.credits.available = dr.new_available ?? this.credits.available - cost;
+        } else if (dr?.error_message === 'run_not_found') {
+          // El run de la URL ya no existe: caemos a crear uno nuevo (no abortar).
+          this._activeRunId = null;
+        } else {
+          this._notify(dr?.error_message === 'insufficient_credits'
+            ? 'Créditos insuficientes para esta producción.'
+            : (dr?.error_message || 'Error al reservar créditos.'));
+          return;
+        }
       }
 
-      const success = deductResult?.success === true;
-      runId = deductResult?.run_id;
-      if (!success || !runId) {
-        const msg = deductResult?.error_message === 'insufficient_credits'
-          ? 'Créditos insuficientes para esta producción.'
-          : (deductResult?.error_message || 'Error al reservar créditos.');
-        this._notify(msg);
-        return;
+      if (!runId) {
+        // Sesion nueva: deducción atómica + creación de run.
+        const { data: deductResult, error: rpcError } = await this.supabase
+          .rpc('deduct_credits_and_create_run', {
+            p_organization_id: this.organizationId,
+            p_user_id: this.userId,
+            p_flow_id: this.selectedFlow.id,
+            p_amount: cost,
+            p_brief_id: briefId,
+            p_persona_id: personaId,
+            p_campaign_id: campaignId
+          });
+        if (rpcError) {
+          console.error('Studio deduct RPC:', rpcError);
+          this._notify('No se pudo reservar créditos. Intenta de nuevo.');
+          return;
+        }
+        const success = deductResult?.success === true;
+        runId = deductResult?.run_id;
+        if (!success || !runId) {
+          const msg = deductResult?.error_message === 'insufficient_credits'
+            ? 'Créditos insuficientes para esta producción.'
+            : (deductResult?.error_message || 'Error al reservar créditos.');
+          this._notify(msg);
+          return;
+        }
+        creditsDeducted = true;
+        this.credits.available = deductResult.new_available ?? this.credits.available - cost;
       }
 
-      creditsDeducted = true;
-      this.credits.available = deductResult.new_available ?? this.credits.available - cost;
       this.updateCreditsDisplay();
       // Invalida apiClient: la próxima lectura (sidebar/tienda) verá créditos frescos.
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
@@ -1970,14 +2075,13 @@ class StudioView extends BaseView {
         return;
       }
 
-      // 3) Marcar run como completado
+      // 3) Marcar run como completado. En append NO tocamos tokens_consumed: la
+      //    RPC deduct_credits_for_run ya sumó el costo al acumulado del run.
+      const runUpdate = { status: 'completed', webhook_response_code: res.status };
+      if (!isAppend) runUpdate.tokens_consumed = cost;
       await this.supabase
         .from('flow_runs')
-        .update({
-          status: 'completed',
-          webhook_response_code: res.status,
-          tokens_consumed: cost
-        })
+        .update(runUpdate)
         .eq('id', runId);
 
       await this.loadCredits();
@@ -1986,10 +2090,17 @@ class StudioView extends BaseView {
         await window.appNavigation.loadCreditsFromDb(this.organizationId);
       }
       // Sin popup de éxito: el canvas pasa directo al skeleton de carga.
-      // Scope el canvas al run recien creado: solo veremos los outputs de este run.
       // Los outputs llegan async (webhook → n8n → ai-engine), por eso hacemos poll.
-      // Si el output no llega (o el run queda fallido) el poll pinta el estado de error.
-      await this.setActiveRun(runId, { poll: true });
+      if (isAppend) {
+        // La sesion ya es el run activo del canvas: mostramos un skeleton al frente
+        // y esperamos el output NUEVO (conteo > baseline) sin perder los previos.
+        this._showAppendSkeleton();
+        this._pollActiveRunNewOutputs(runId, appendBaseline, 0);
+      } else {
+        // Sesion nueva: scope del canvas al run recien creado (skeleton hasta que
+        // aparezca su primer output; si no llega, el poll pinta el estado de error).
+        await this.setActiveRun(runId, { poll: true });
+      }
     } catch (e) {
       if (creditsDeducted && runId) {
         await this._refundCreditsSafe(runId, cost);

@@ -1,0 +1,197 @@
+/* ============================================================
+   Execution History — historial de ejecuciones agrupado por run.
+   Grid de "sesiones": cada card es un flow_run manual reabrible.
+   Cards = bg-card + border-divider (glass solo en botones, ver guia).
+   ============================================================ */
+
+.exec-page {
+  min-height: 100%;
+}
+
+.exec-container {
+  padding: calc(var(--app-header-height, 56px) + 2rem) 4rem 4rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.exec-header {
+  margin-bottom: 2rem;
+}
+
+.exec-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.exec-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.exec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Card de sesion ── */
+.exec-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-lg, 14px);
+  overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+}
+
+.exec-card:hover {
+  border-color: var(--accent-brand, #c0392b);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.exec-card:focus-visible {
+  outline: 2px solid var(--accent-brand, #c0392b);
+  outline-offset: 2px;
+}
+
+.exec-card--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.exec-card--disabled:hover {
+  transform: none;
+  border-color: var(--border-divider, #242424);
+  box-shadow: none;
+}
+
+/* ── Cover ── */
+.exec-card-cover {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #0d0e10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.exec-card-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.exec-card-cover-placeholder {
+  color: var(--text-tertiary, #555);
+  font-size: 2rem;
+}
+
+.exec-card-count {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.exec-card-status {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+}
+
+/* ── Info ── */
+.exec-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem 0.6rem;
+}
+
+.exec-card-flow {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exec-card-when {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.exec-card-resume {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  border-top: 1px solid var(--border-divider, #242424);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color 0.18s ease;
+}
+
+.exec-card:hover .exec-card-resume {
+  color: var(--accent-brand, #c0392b);
+}
+
+/* ── Empty / error ── */
+.exec-empty {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--text-secondary);
+}
+
+.exec-empty-icon {
+  font-size: 2.5rem;
+  color: var(--text-tertiary, #555);
+  margin-bottom: 1rem;
+}
+
+.exec-empty-hint {
+  font-size: 0.9rem;
+  color: var(--text-tertiary, #777);
+  max-width: 48ch;
+  margin: 0.5rem auto 0;
+}
+
+.exec-error {
+  color: var(--text-secondary);
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .exec-container {
+    padding: calc(var(--app-header-height, 56px) + 1.5rem) 1.25rem 2.5rem;
+  }
+  .exec-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.85rem;
+  }
+}

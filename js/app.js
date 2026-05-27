@@ -241,6 +241,11 @@ class App {
     r.register('/tasks', tasksLoader, auth);
     r.register('/tasks/:taskId', tasksLoader, auth);
 
+    // ── Org: Execution History (sesiones de produccion manual reabribles) ──
+    const execHistoryLoader = this._lazy('ExecutionHistoryView', ['/js/views/ExecutionHistoryView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/execution-history', execHistoryLoader, auth);
+    r.register('/execution-history', execHistoryLoader, auth);
+
     // ── Deps compartidas de marca: mixins que aplican sobre BrandstorageView
     // y/o BrandOrganizationView según cuál esté definido al cargar.
     // Typography, Uploads y ColorEditor son idénticos entre ambas vistas.
