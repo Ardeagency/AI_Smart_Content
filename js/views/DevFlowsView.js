@@ -112,25 +112,13 @@ class DevFlowsView extends DevBaseView {
               <i class="fas fa-sync-alt"></i> Actualizar
             </button>
           </div>
-          <div class="dev-table-container">
-            <table class="dev-table" id="allFlowsTable">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Estado</th>
-                  <th>Categoría</th>
-                  <th>Propietario</th>
-                  <th>Runs</th>
-                  <th>Creado</th>
-                  <th class="dev-lead-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="allFlowsBody"></tbody>
-            </table>
-            <div class="dev-lead-empty" id="allFlowsEmpty" hidden>
+          <div class="dev-flows-grid" id="allFlowsGrid"></div>
+          <div class="dev-flows-empty" id="allFlowsEmpty" hidden>
+            <div class="dev-empty-icon">
               <i class="fas fa-diagram-project"></i>
-              <p>No hay flujos en la plataforma.</p>
             </div>
+            <h3>No hay flujos en la plataforma</h3>
+            <p>Cuando los desarrolladores creen flujos, aparecerán aquí.</p>
           </div>
         </div>
       </div>
@@ -318,9 +306,13 @@ class DevFlowsView extends DevBaseView {
    * (la card es una previsualización 1:1 del catálogo público), con un footer
    * dev añadido al final con las acciones edit/test/logs/delete.
    */
-  renderFlowCard(flow) {
+  renderFlowCard(flow, opts = {}) {
     const name = this.escapeHtml(flow.name);
     const cost = flow.token_cost ?? 1;
+    // En "Todos los flujos" (Lead) mostramos el propietario del flujo.
+    const ownerName = opts.showOwner
+      ? (this.ownersMap[flow.owner_id]?.full_name || this.ownersMap[flow.owner_id]?.email || (flow.owner_id ? flow.owner_id.slice(0, 8) + '…' : 'Sin propietario'))
+      : null;
 
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
@@ -358,6 +350,7 @@ class DevFlowsView extends DevBaseView {
                 <span class="flow-card-info-pill">${outputTypeLabel}</span>
                 <span class="flow-card-info-pill">${executionLabel}</span>
                 <span class="flow-card-info-pill">v${version}</span>
+                ${ownerName ? `<span class="flow-card-info-pill flow-card-info-pill--owner"><i class="fas fa-user"></i> ${this.escapeHtml(ownerName)}</span>` : ''}
               </div>
             </div>
           </div>
@@ -411,9 +404,9 @@ class DevFlowsView extends DevBaseView {
   /**
    * Configurar listeners de las cards de flujos
    */
-  setupFlowCardListeners() {
-    const cards = document.querySelectorAll('#devFlowsGrid .dev-flow-card-wrapper');
-    
+  setupFlowCardListeners(gridSelector = '#devFlowsGrid', allScope = false) {
+    const cards = document.querySelectorAll(`${gridSelector} .dev-flow-card-wrapper`);
+
     cards.forEach(card => {
       const flowId = card.dataset.flowId;
 
@@ -436,16 +429,16 @@ class DevFlowsView extends DevBaseView {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const action = btn.dataset.action;
-          this.handleFlowAction(action, flowId);
+          this.handleFlowAction(action, flowId, allScope);
         });
       });
     });
   }
 
   /**
-   * Manejar acción de flujo
+   * Manejar acción de flujo. allScope = true cuando viene de "Todos los flujos" (Lead).
    */
-  handleFlowAction(action, flowId) {
+  handleFlowAction(action, flowId, allScope = false) {
     switch (action) {
       case 'edit':
         this.navigateToBuilder(flowId);
@@ -457,7 +450,7 @@ class DevFlowsView extends DevBaseView {
         this.navigateToLogs(flowId);
         break;
       case 'delete':
-        this.showDeleteModal(flowId);
+        this.showDeleteModal(flowId, allScope);
         break;
     }
   }
@@ -572,7 +565,7 @@ class DevFlowsView extends DevBaseView {
       const deletedId = this.flowToDelete;
       this.flows = this.flows.filter(f => f.id !== deletedId);
       this.allFlows = this.allFlows.filter(f => f.id !== deletedId);
-      if (this.deleteAllScope) this.renderAllFlowsTable();
+      if (this.deleteAllScope) this.renderAllFlowsGrid();
       this.applyFilters();
       this.hideDeleteModal();
     } catch (error) {
@@ -600,12 +593,20 @@ class DevFlowsView extends DevBaseView {
           id,
           name,
           description,
-          status,
           output_type,
+          status,
           run_count,
+          likes_count,
+          saves_count,
+          token_cost,
+          version,
+          execution_mode,
+          flow_category_type,
+          flow_image_url,
           created_at,
           owner_id,
-          content_categories (name)
+          content_categories (name),
+          content_subcategories (name)
         `)
         .order('created_at', { ascending: false });
 
@@ -626,63 +627,30 @@ class DevFlowsView extends DevBaseView {
       }
 
       this.allFlowsLoaded = true;
-      this.renderAllFlowsTable();
+      this.renderAllFlowsGrid();
     } catch (error) {
       console.error('Error cargando todos los flujos:', error);
-      this.renderAllFlowsTable();
+      this.renderAllFlowsGrid();
     }
   }
 
-  renderAllFlowsTable() {
-    const tbody = document.getElementById('allFlowsBody');
+  /** Galería de TODOS los flujos — mismo formato de cards que "Mis flujos", con el dueño visible. */
+  renderAllFlowsGrid() {
+    const grid = document.getElementById('allFlowsGrid');
     const empty = document.getElementById('allFlowsEmpty');
-    if (!tbody) return;
+    if (!grid) return;
 
     if (!this.allFlows || this.allFlows.length === 0) {
-      tbody.innerHTML = '';
-      if (empty) empty.style.display = 'block';
+      grid.style.display = 'none';
+      if (empty) empty.style.display = 'flex';
       return;
     }
+
+    grid.style.display = 'grid';
     if (empty) empty.style.display = 'none';
 
-    tbody.innerHTML = this.allFlows.map(f => {
-      const owner = f.owner_id
-        ? (this.ownersMap[f.owner_id]?.full_name || this.ownersMap[f.owner_id]?.email || (f.owner_id.slice(0, 8) + '…'))
-        : 'Sin propietario';
-      const statusLabel = this.getStatusLabel(f.status);
-      const dateStr = f.created_at ? new Date(f.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) : '-';
-      return `
-        <tr data-id="${f.id}">
-          <td>
-            <strong>${this.escapeHtml(f.name)}</strong>
-            ${f.description ? `<br><span class="dev-lead-flow-desc">${this.escapeHtml(this.truncate(f.description, 50))}</span>` : ''}
-          </td>
-          <td><span class="dev-lead-status dev-lead-status-${f.status}">${statusLabel}</span></td>
-          <td>${this.escapeHtml(f.content_categories?.name || f.output_type || '-')}</td>
-          <td>${this.escapeHtml(owner)}</td>
-          <td>${f.run_count != null ? f.run_count : 0}</td>
-          <td>${dateStr}</td>
-          <td class="dev-lead-actions">
-            <a href="/dev/builder?flow=${f.id}" class="btn-icon" title="Editar en Builder" data-action="edit"><i class="fas fa-edit"></i></a>
-            <a href="/dev/test?flow=${f.id}" class="btn-icon" title="Probar" data-action="test"><i class="fas fa-play"></i></a>
-            <a href="/dev/logs?flow=${f.id}" class="btn-icon" title="Logs" data-action="logs"><i class="fas fa-terminal"></i></a>
-            <button type="button" class="btn-icon delete-flow-lead" title="Eliminar" data-id="${f.id}"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>`;
-    }).join('');
-
-    tbody.querySelectorAll('a[data-action]').forEach(a => {
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.router) window.router.navigate(a.getAttribute('href'));
-      });
-    });
-    tbody.querySelectorAll('.delete-flow-lead').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.showDeleteModal(btn.getAttribute('data-id'), true);
-      });
-    });
+    grid.innerHTML = this.allFlows.map(flow => this.renderFlowCard(flow, { showOwner: true })).join('');
+    this.setupFlowCardListeners('#allFlowsGrid', true);
   }
 
   // ========== Utilidades ==========
