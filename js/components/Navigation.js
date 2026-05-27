@@ -290,16 +290,31 @@ class Navigation {
           ? await window.supabaseService.getClient()
           : window.supabase;
         if (!supabase) return [];
-        const { data, error } = await supabase
-          .from('content_categories')
-          .select('id, name, is_visible')
-          .order('order_index', { ascending: true, nullsFirst: false })
-          .order('name');
-        if (error) return [];
-        return Array.isArray(data) ? data : [];
+        // Categorias + category_ids con al menos un flow publicado en catalogo
+        // (mismos filtros que FlowCatalogView). Una categoria vacia no entra al sidebar.
+        const [catsRes, flowsRes] = await Promise.all([
+          supabase
+            .from('content_categories')
+            .select('id, name, is_visible')
+            .order('order_index', { ascending: true, nullsFirst: false })
+            .order('name'),
+          supabase
+            .from('content_flows')
+            .select('category_id')
+            .eq('is_active', true)
+            .eq('status', 'published')
+            .eq('show_in_catalog', true)
+            .neq('flow_category_type', 'system')
+        ]);
+        if (catsRes.error) return [];
+        const cats = Array.isArray(catsRes.data) ? catsRes.data : [];
+        // Si la consulta de flows falla, no escondemos nada (fallback seguro).
+        if (flowsRes.error || !Array.isArray(flowsRes.data)) return cats;
+        const withFlows = new Set(flowsRes.data.map((f) => f.category_id).filter(Boolean));
+        return cats.filter((c) => withFlows.has(c.id));
       };
       const list = window.apiClient
-        ? await window.apiClient.query('nav:content_categories', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
+        ? await window.apiClient.query('nav:content_categories:v2', fetcher, { ttl: 10 * 60 * 1000, staleWhileRevalidate: true })
         : await fetcher();
       this._catalogCategories = (list || []).filter((c) => c.is_visible !== false);
       return this._catalogCategories;
