@@ -1087,4 +1087,222 @@
   color: var(--text-secondary, rgba(255, 255, 255, 0.62));
 }
 
+/* ========================================================================
+   FEAT-035 Fase 2 — modal de detalle / preview (Netflix takeover)
+   Reusa window.Modal.show (.modal/.modal-content/.modal-body) + el row-scroll
+   del catalogo para los relacionados. Solo overrides scope flow-detail-modal.
+   ======================================================================== */
+.flow-detail-modal .modal-content {
+  max-width: min(880px, calc(100vw - 2rem));
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+}
+.flow-detail-modal .modal-body {
+  padding: 0;
+}
+/* Header vacio (sin titulo): el boton de cerrar flota sobre el media */
+.flow-detail-modal .modal-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: 0.7rem;
+  border-bottom: none;
+  justify-content: flex-end;
+  z-index: 6;
+  pointer-events: none;
+}
+.flow-detail-modal .modal-header h3 { display: none; }
+.flow-detail-modal .modal-close {
+  pointer-events: auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(10, 11, 13, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+.flow-detail-modal .modal-close:hover {
+  background: rgba(10, 11, 13, 0.88);
+  color: #ffffff;
+}
+
+/* Media hero del modal */
+.flow-detail-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 46vh;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1a1b1f 0%, #0e0f12 100%);
+}
+.flow-detail-media-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.flow-detail-media-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 3.5rem;
+}
+.flow-detail-media-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    var(--bg-card, #141517) 1%,
+    rgba(20, 21, 23, 0.6) 24%,
+    rgba(0, 0, 0, 0.05) 58%,
+    transparent 78%
+  );
+}
+.flow-detail-badges {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  z-index: 3;
+}
+.flow-detail-hero-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.25rem 1.5rem 1rem;
+  z-index: 2;
+}
+.flow-detail-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-warm, #d4b896);
+  margin-bottom: 0.4rem;
+}
+.flow-detail-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Contenido del modal */
+.flow-detail-content {
+  padding: 1.25rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.flow-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.flow-detail-cta--run {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.3rem;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.flow-detail-cta--run:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.flow-detail-cta--run i { font-size: 0.78rem; }
+.flow-detail-cta-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.25rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+}
+.flow-detail-cta-cost i { font-size: 0.7rem; }
+.flow-detail-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.flow-detail-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.flow-detail-like.is-active {
+  background: rgba(255, 70, 90, 0.95);
+  color: #ffffff;
+  border-color: transparent;
+}
+.flow-detail-save.is-active {
+  background: rgba(135, 134, 139, 0.95);
+  color: #ffffff;
+  border-color: transparent;
+}
+.flow-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.flow-detail-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.66));
+}
+.flow-detail-meta-item i {
+  font-size: 0.72rem;
+  color: var(--accent-warm, #d4b896);
+  opacity: 0.85;
+}
+.flow-detail-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.78));
+}
+.flow-detail-section-title {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+.flow-detail-related { margin-top: 0.25rem; }
+.flow-detail-related-row { padding-bottom: 0.25rem; }
+
 

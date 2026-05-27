@@ -227,6 +227,10 @@ class FlowCatalogView extends BaseView {
     // flujos. renderSectionAllFlows en home y renderGalleryBySubcategory en
     // categoría — ambos inyectan .flow-catalog-empty--in-section cuando no
     // hay rows que mostrar.
+
+    // Deep-link: ?flow=<id> abre el modal de detalle si el flow esta cargado.
+    const deepFlowId = new URLSearchParams(window.location.search).get('flow');
+    if (deepFlowId && this.getFlowById(deepFlowId)) this.openFlowDetail(deepFlowId);
   }
 
   showContentError() {
@@ -878,6 +882,7 @@ class FlowCatalogView extends BaseView {
 
   async onLeave() {
     this.clearHeroTimers();
+    this.closeFlowDetail();
     if (document && document.body) {
       document.body.classList.remove('route-flows');
     }
@@ -888,6 +893,7 @@ class FlowCatalogView extends BaseView {
   // además del cleanup que hereda de BaseView.
   destroy() {
     this.clearHeroTimers();
+    this.closeFlowDetail();
     if (typeof super.destroy === 'function') super.destroy();
   }
 
@@ -1104,15 +1110,15 @@ class FlowCatalogView extends BaseView {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.openFlow(flowId); }
       });
       card.querySelectorAll('.flow-card-icon-btn[data-action="like"]').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(flowId, card); });
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(flowId); });
       });
       card.querySelectorAll('.flow-card-icon-btn[data-action="save"]').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(flowId, card); });
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(flowId); });
       });
     });
   }
 
-  async toggleLike(flowId, cardEl) {
+  async toggleLike(flowId) {
     if (!this.supabase || !this.userId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
     try {
@@ -1127,10 +1133,10 @@ class FlowCatalogView extends BaseView {
       console.error('toggleLike:', e);
       return;
     }
-    this.updateCardLikeSaveUI(cardEl, flow);
+    this.refreshFlowLikeSaveUI(flowId);
   }
 
-  async toggleSave(flowId, cardEl) {
+  async toggleSave(flowId) {
     if (!this.supabase || !this.organizationId) return;
     const flow = this.flowsById.get(flowId) || this.flows.find(f => f.id === flowId);
     try {
@@ -1148,26 +1154,32 @@ class FlowCatalogView extends BaseView {
       console.error('toggleSave:', e);
       return;
     }
-    this.updateCardLikeSaveUI(cardEl, flow);
+    this.refreshFlowLikeSaveUI(flowId);
   }
 
-  updateCardLikeSaveUI(cardEl, flow) {
-    if (!cardEl || !flow) return;
-    const likeBtn = cardEl.querySelector('.flow-card-icon-like');
-    const saveBtn = cardEl.querySelector('.flow-card-icon-save');
-    if (likeBtn) {
-      likeBtn.classList.toggle('is-active', this.likedFlowIds.has(flow.id));
-      const countEl = likeBtn.querySelector('.flow-card-icon-count');
-      if (countEl) countEl.textContent = flow.likes_count ?? 0;
-    }
-    if (saveBtn) {
-      saveBtn.classList.toggle('is-active', this.savedFlowIds.has(flow.id));
-      const countEl = saveBtn.querySelector('.flow-card-icon-count');
-      if (countEl) countEl.textContent = flow.saves_count ?? 0;
+  // Refresca el estado like/save en TODAS las superficies del flow: cards del
+  // catalogo (puede haber varias) y los botones del modal de detalle si esta abierto.
+  refreshFlowLikeSaveUI(flowId) {
+    const liked = this.likedFlowIds.has(flowId);
+    const saved = this.savedFlowIds.has(flowId);
+    document.querySelectorAll(`.flow-card[data-flow-id="${flowId}"]`).forEach(cardEl => {
+      cardEl.querySelector('.flow-card-icon-like')?.classList.toggle('is-active', liked);
+      cardEl.querySelector('.flow-card-icon-save')?.classList.toggle('is-active', saved);
+    });
+    const detail = document.querySelector(`.flow-detail[data-flow-id="${flowId}"]`);
+    if (detail) {
+      detail.querySelector('.flow-detail-like')?.classList.toggle('is-active', liked);
+      detail.querySelector('.flow-detail-save')?.classList.toggle('is-active', saved);
     }
   }
 
+  // Clic en card → modal de detalle (Netflix takeover). El CTA "Ejecutar" del
+  // modal es quien navega a StudioView (runFlow).
   openFlow(flowId) {
+    this.openFlowDetail(flowId);
+  }
+
+  runFlow(flowId) {
     const flow = this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId);
     const slug = flow?.name ? this.flowNameToSlug(flow.name) : '';
     if (slug && window.router) {
@@ -1177,6 +1189,162 @@ class FlowCatalogView extends BaseView {
     if (window.appState) window.appState.set('selectedFlowId', flowId, true);
     else localStorage.setItem('selectedFlowId', flowId);
     if (window.router) window.router.navigate(this.getStudioPath());
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FEAT-035 Fase 2 — modal de detalle / preview
+  // ─────────────────────────────────────────────────────────────────────────
+
+  getFlowById(flowId) {
+    return this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId) || null;
+  }
+
+  // Flows relacionados: misma subcategoria; si no alcanza, misma categoria.
+  getRelatedFlows(flow, limit = 12) {
+    if (!flow) return [];
+    const pool = (this.flows || []).filter(f => f.id !== flow.id);
+    const sameSub = flow.subcategory_id
+      ? pool.filter(f => f.subcategory_id === flow.subcategory_id)
+      : [];
+    const sameCat = flow.category_id
+      ? pool.filter(f => f.category_id === flow.category_id && !sameSub.includes(f))
+      : [];
+    const score = (f) => (f.run_count || 0) + (f.likes_count || 0);
+    const ranked = [...sameSub, ...sameCat].sort((a, b) => score(b) - score(a));
+    return ranked.slice(0, limit);
+  }
+
+  renderFlowDetailBody(flow) {
+    const name = this.escapeHtml(flow.name);
+    const cost = flow.token_cost ?? 1;
+    const isLiked = this.likedFlowIds.has(flow.id);
+    const isSaved = this.savedFlowIds.has(flow.id);
+    const runs = flow.run_count || 0;
+
+    const badges = [];
+    if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
+    else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
+    const ftype = flow.flow_category_type || 'manual';
+    if (ftype === 'autopilot' || ftype === 'scraping') badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+
+    const media = flow.flow_image_url
+      ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
+          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-detail-media-el" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-detail-media-el">`)
+      : `<div class="flow-detail-media-ph"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+
+    const catLabel = [flow._categoryName, flow._subcategoryName].filter(Boolean).map(s => this.escapeHtml(s)).join('  ·  ');
+    const desc = flow.description ? this.escapeHtml(flow.description) : 'Sin descripcion disponible para este flow.';
+
+    const meta = [
+      runs > 0 ? `<span class="flow-detail-meta-item"><i class="fas fa-play"></i>${this.formatCount(runs)} usos</span>` : '',
+      `<span class="flow-detail-meta-item"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i>${this.getOutputTypeLabel(flow.output_type)}</span>`,
+      `<span class="flow-detail-meta-item"><i class="fas fa-diagram-project"></i>${this.getExecutionModeLabel(flow.execution_mode)}</span>`,
+      `<span class="flow-detail-meta-item">v${this.escapeHtml((flow.version || '1.0.0').toString())}</span>`
+    ].filter(Boolean).join('');
+
+    const related = this.getRelatedFlows(flow);
+    const relatedHtml = related.length ? `
+      <div class="flow-detail-related">
+        <h3 class="flow-detail-section-title">Relacionados</h3>
+        <div class="flow-catalog-row-scroll flow-detail-related-row">
+          ${related.map(f => this.renderFlowCard(f)).join('')}
+        </div>
+      </div>` : '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'flow-detail';
+    wrap.dataset.flowId = flow.id;
+    wrap.innerHTML = `
+      <div class="flow-detail-media">
+        ${media}
+        <div class="flow-detail-media-scrim" aria-hidden="true"></div>
+        ${badges.length ? `<div class="flow-detail-badges">${badges.join('')}</div>` : ''}
+        <div class="flow-detail-hero-text">
+          ${catLabel ? `<span class="flow-detail-eyebrow">${catLabel}</span>` : ''}
+          <h2 class="flow-detail-title">${name}</h2>
+        </div>
+      </div>
+      <div class="flow-detail-content">
+        <div class="flow-detail-actions">
+          <button type="button" class="flow-detail-cta flow-detail-cta--run" data-detail-action="run">
+            <i class="fas fa-play" aria-hidden="true"></i>
+            <span>Ejecutar</span>
+            <span class="flow-detail-cta-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
+          </button>
+          <button type="button" class="flow-detail-icon-btn flow-detail-save ${isSaved ? 'is-active' : ''}" data-detail-action="save" aria-label="Guardar" title="Guardar">
+            <i class="fas fa-bookmark" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="flow-detail-icon-btn flow-detail-like ${isLiked ? 'is-active' : ''}" data-detail-action="like" aria-label="Like" title="Like">
+            <i class="fas fa-heart" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="flow-detail-meta">${meta}</div>
+        <p class="flow-detail-desc">${desc}</p>
+        ${relatedHtml}
+      </div>`;
+    return wrap;
+  }
+
+  openFlowDetail(flowId) {
+    const flow = this.getFlowById(flowId);
+    if (!flow) { this.runFlow(flowId); return; }
+    // Si ya hay un modal abierto (clic en relacionado), cierra el anterior.
+    this.closeFlowDetail();
+    if (!window.Modal || typeof window.Modal.show !== 'function') { this.runFlow(flowId); return; }
+
+    const body = this.renderFlowDetailBody(flow);
+    const { modal, close } = window.Modal.show({
+      title: '',
+      body,
+      className: 'flow-detail-modal',
+      onClose: () => {
+        this._detailClose = null;
+        this._detailFlowId = null;
+        this._setFlowParam(null);
+      }
+    });
+    this._detailClose = close;
+    this._detailFlowId = flowId;
+    this._setFlowParam(flowId);
+
+    // CTA Ejecutar
+    modal.querySelector('[data-detail-action="run"]')?.addEventListener('click', () => {
+      close();
+      this.runFlow(flowId);
+    });
+    // Like / Save dentro del modal
+    modal.querySelector('[data-detail-action="like"]')?.addEventListener('click', () => this.toggleLike(flowId));
+    modal.querySelector('[data-detail-action="save"]')?.addEventListener('click', () => this.toggleSave(flowId));
+    // Cards relacionadas: abren su propio detalle (swap)
+    modal.querySelectorAll('.flow-detail-related-row .flow-card').forEach(card => {
+      const relId = card.getAttribute('data-flow-id');
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.flow-card-icon-btn')) return;
+        this.openFlowDetail(relId);
+      });
+      card.querySelector('.flow-card-icon-btn[data-action="like"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(relId); });
+      card.querySelector('.flow-card-icon-btn[data-action="save"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(relId); });
+    });
+  }
+
+  closeFlowDetail() {
+    if (typeof this._detailClose === 'function') {
+      const fn = this._detailClose;
+      this._detailClose = null;
+      fn();
+    }
+  }
+
+  // Sincroniza ?flow=<id> en la URL sin perder otros params (ej. ?sub=).
+  _setFlowParam(flowId) {
+    try {
+      const url = new URL(window.location.href);
+      if (flowId) url.searchParams.set('flow', flowId);
+      else url.searchParams.delete('flow');
+      window.history.replaceState(window.history.state, '', url);
+    } catch (_) {}
   }
 }
 
