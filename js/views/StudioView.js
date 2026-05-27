@@ -211,7 +211,7 @@ class StudioView extends BaseView {
       card.className = 'living-masonry-item studio-append-skeleton';
       card.setAttribute('role', 'status');
       card.setAttribute('aria-label', 'Generando producción');
-      card.innerHTML = '<div class="studio-skeleton-card"><div class="living-history-skeleton"></div></div>';
+      card.innerHTML = '<div class="studio-skeleton-card" style="' + this._skeletonCardStyle() + '"><div class="living-history-skeleton"></div></div>';
       content.prepend(card);
     } catch (_) {}
   }
@@ -1918,6 +1918,7 @@ class StudioView extends BaseView {
   }
 
   async producir() {
+    if (this._producing) return; // lock anti doble-clic / doble produccion
     if (!this.selectedFlow || !this.selectedFlow.webhook_url) return;
     const cost = this.selectedFlow.token_cost ?? 1;
     if (this.credits.available < cost) {
@@ -1931,11 +1932,9 @@ class StudioView extends BaseView {
       return;
     }
 
-    let payload = this.collectFormData();
-    payload = await this.enrichProductPayload(payload);
-    // Aspect ratio elegido: el skeleton de carga lo usa para mostrarse con la
-    // misma proporcion que la produccion en camino (horizontal/cuadrado/vertical).
-    this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
+    // Bloqueo anti doble-clic: deshabilitar el boton ANTES de cualquier await,
+    // para que un segundo clic no dispare una segunda produccion.
+    this._producing = true;
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.disabled = true;
 
@@ -1944,13 +1943,18 @@ class StudioView extends BaseView {
     let runId = null;
     let creditsDeducted = false;
     let isAppend = false;
-    // Modelo Sessions: si hay un run activo (sesion abierta, o reabierta desde
-    // Execution History con ?run=ID), los outputs nuevos caen DENTRO de ese run.
-    // Capturamos el conteo previo de outputs para detectar el output NUEVO.
-    const resumeRunId = this._activeRunId || null;
-    const appendBaseline = resumeRunId ? await this._runOutputCount(resumeRunId) : 0;
 
     try {
+      let payload = this.collectFormData();
+      payload = await this.enrichProductPayload(payload);
+      // Aspect ratio elegido: el skeleton lo usa para mostrarse con la misma
+      // proporcion que la produccion en camino (horizontal/cuadrado/vertical).
+      this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
+      // Modelo Sessions: si hay un run activo (sesion abierta, o reabierta desde
+      // Execution History con ?run=ID), los outputs nuevos caen DENTRO de ese run.
+      const resumeRunId = this._activeRunId || null;
+      const appendBaseline = resumeRunId ? await this._runOutputCount(resumeRunId) : 0;
+
       // 1) Deducción de créditos. Pasamos campaign/persona/brief para que queden
       // ligados al flow_run (la RPC los inserta). Asi el modal de Production puede
       // mostrar a que campania y audiencia pertenece cada produccion.
@@ -2021,6 +2025,10 @@ class StudioView extends BaseView {
       this.updateCreditsDisplay();
       // Invalida apiClient: la próxima lectura (sidebar/tienda) verá créditos frescos.
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
+      // Skeleton INMEDIATO (antes del webhook) para feedback al instante: si no,
+      // el tramo deduct->contexto->webhook deja el canvas sin senal y parece roto.
+      if (isAppend) this._showAppendSkeleton();
+      else { try { await this.setActiveRun(runId); } catch (_) {} }
 
       // 1b) Persistir snapshot del payload del usuario en runs_inputs.
       // Cierra el hueco "runs_inputs vacio": cada produccion deja registro
@@ -2144,6 +2152,7 @@ class StudioView extends BaseView {
       console.error('Studio producir:', e);
       this._notify(msg);
     } finally {
+      this._producing = false;
       if (btn) btn.disabled = false;
     }
   }
