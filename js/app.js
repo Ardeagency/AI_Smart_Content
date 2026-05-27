@@ -348,6 +348,9 @@ class App {
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
+    // 'saved' (My Flows) ANTES de :categoryId para que el literal gane al param.
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/saved', catalogLoader, auth);
+    r.register('/studio/flows/saved', catalogLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/sub/:subcategoryId', catalogLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/:categoryId', catalogLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/studio/flows', catalogLoader, auth);

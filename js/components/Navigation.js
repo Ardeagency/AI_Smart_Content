@@ -79,7 +79,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'page',
       id: 'execution-history',
-      label: 'Sessions',
+      label: 'Record',
       icon: 'fa-clock-rotate-left',
       route: 'execution-history',
       requireCap: 'production.create'
@@ -1539,8 +1539,15 @@ class Navigation {
         // vez el link a "All" (studio/flows) y el toggle de la sección. Clic en el
         // label → navega a All y, vía updateActiveLink, despliega las categorías.
         const catalogHref = full('studio/flows');
+        const savedHref = full('studio/flows/saved');
         const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
-        const catChildren = cats
+        // "My Flows" = flujos guardados (org_flow_saves). Va primero como acceso
+        // rapido a la biblioteca personal, antes de las categorias del catalogo.
+        const myFlowsChild = `
+            <a href="${savedHref}" class="nav-submenu-link nav-submenu-link--myflows" data-route="${savedHref}" data-tooltip="My Flows">
+              <span><i class="fas fa-bookmark nav-submenu-icon" aria-hidden="true"></i> My Flows</span>
+            </a>`;
+        const catChildren = myFlowsChild + cats
           .map((c) => {
             const route = full(`studio/flows/${c.id}`);
             return `

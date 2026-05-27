@@ -1498,3 +1498,53 @@
 }
 
 
+
+/* ============================================================
+   My Flows (vista de guardados, modo savedView de FlowCatalogView)
+   ============================================================ */
+.flow-catalog--saved .flow-catalog-content {
+  padding: calc(var(--app-header-height, 56px) + 2rem) 4rem 0;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.flow-catalog-saved-header {
+  margin-bottom: 2rem;
+}
+
+.flow-catalog-saved-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.flow-catalog-saved-sub {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.flow-catalog-saved-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+/* Icono del item "My Flows" en el submenu de Flows */
+.nav-submenu-link--myflows .nav-submenu-icon {
+  margin-right: 0.45rem;
+  font-size: 0.78em;
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .flow-catalog--saved .flow-catalog-content {
+    padding: calc(var(--app-header-height, 56px) + 1.5rem) 1.25rem 0;
+  }
+  .flow-catalog-saved-grid {
+    gap: 0.85rem;
+    justify-content: center;
+  }
+}

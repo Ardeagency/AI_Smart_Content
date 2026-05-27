@@ -45,8 +45,12 @@ class FlowCatalogView extends BaseView {
     if (document && document.body) {
       document.body.classList.add('route-flows');
     }
-    this.selectedSubcategoryId = this.routeParams?.subcategoryId || null;
-    this.selectedCategoryId = this.routeParams?.categoryId || null;
+    // My Flows = vista de guardados (org_flow_saves). Robusto: literal en path o
+    // el param :categoryId resuelto a 'saved' si el router cayo en esa ruta.
+    this.savedView = /\/studio\/flows\/saved(\/|\?|$)/.test(window.location.pathname || '')
+      || this.routeParams?.categoryId === 'saved';
+    this.selectedSubcategoryId = this.savedView ? null : (this.routeParams?.subcategoryId || null);
+    this.selectedCategoryId = this.savedView ? null : (this.routeParams?.categoryId || null);
   }
 
   getStudioPath() {
@@ -130,6 +134,28 @@ class FlowCatalogView extends BaseView {
   }
 
   renderHTML() {
+    if (this.savedView) {
+      return `
+      <div class="flow-catalog flow-catalog--saved" id="flowCatalogContainer">
+        <div class="flow-catalog-loading" id="flowCatalogLoading" aria-hidden="true">
+          <div class="flow-skeleton-section">
+            <div class="flow-skeleton-title"></div>
+            <div class="flow-skeleton-row">
+              ${Array.from({ length: 6 }).map(() => '<div class="flow-skeleton-card"></div>').join('')}
+            </div>
+          </div>
+        </div>
+        <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
+          <header class="flow-catalog-saved-header">
+            <h1 class="flow-catalog-saved-title">My Flows</h1>
+            <p class="flow-catalog-saved-sub">Tus flujos guardados. Toca el icono de guardar en cualquier flujo del catalogo para tenerlo aqui a la mano.</p>
+          </header>
+          <section class="flow-catalog-row-section flow-catalog-row-section--unframed">
+            <div class="flow-catalog-saved-grid" id="savedFlowsGrid"></div>
+          </section>
+        </div>
+      </div>`;
+    }
     const isCategoryView = !!(this.selectedCategoryId || this.selectedSubcategoryId);
     return `
       <div class="flow-catalog" id="flowCatalogContainer">
@@ -209,6 +235,12 @@ class FlowCatalogView extends BaseView {
 
     document.getElementById('flowCatalogLoading').style.display = 'none';
     document.getElementById('flowCatalogContent').style.display = 'block';
+
+    if (this.savedView) {
+      // My Flows: solo render del grid de guardados (sin hero ni categorias).
+      this.renderSavedFlows();
+      return;
+    }
 
     this.renderHero();
     if (this.selectedCategoryId || this.selectedSubcategoryId) {
@@ -977,6 +1009,24 @@ class FlowCatalogView extends BaseView {
   /**
    * Sección Todos los flujos: mismo catálogo por categoría y subcategoría, o "Próximamente" si no hay flujos.
    */
+  /** My Flows: grid de los flujos guardados por la org (org_flow_saves). */
+  renderSavedFlows() {
+    const grid = document.getElementById('savedFlowsGrid');
+    if (!grid) return;
+    const saved = this.flows.filter(f => this.savedFlowIds.has(f.id));
+    if (!saved.length) {
+      grid.innerHTML = `
+        <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
+          <i class="fas fa-bookmark flow-catalog-empty-icon" aria-hidden="true"></i>
+          <p class="flow-catalog-empty-title">Aun no has guardado flujos</p>
+          <p class="flow-catalog-empty-sub">Explora el catalogo y toca el icono de guardar en los flujos que mas uses. Apareceran aqui para acceso rapido.</p>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = saved.map(f => this.renderFlowCard(f)).join('');
+    this.bindFlowCardListeners(grid);
+  }
+
   renderSectionAllFlows() {
     const section = document.getElementById('sectionAllFlows');
     const gallery = document.getElementById('galleryAllByCategorySub');
@@ -1152,6 +1202,8 @@ class FlowCatalogView extends BaseView {
       return;
     }
     this.refreshFlowLikeSaveUI(flowId);
+    // En My Flows, desguardar saca el card de la vista al instante.
+    if (this.savedView) this.renderSavedFlows();
   }
 
   // Refresca el estado like/save en TODAS las superficies del flow: cards del
