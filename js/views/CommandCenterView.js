@@ -155,6 +155,11 @@ class CommandCenterView extends BaseView {
           <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
         </div>
 
+        <!-- Minimapa flotante (esquina inferior izquierda), estilo n8n/React Flow -->
+        <div class="cc-minimap-float" id="ccMinimapWrap" style="display:none;">
+          <canvas id="ccMinimap" class="cc-minimap" width="220" height="140"></canvas>
+        </div>
+
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
              visible, sin texto) + panel de datos que se abre al seleccionar
              una seccion. Colapsado por defecto = solo el rail. -->

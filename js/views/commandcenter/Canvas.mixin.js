@@ -421,7 +421,7 @@
     world.style.transformOrigin = '0 0';
     this._updateLOD();
     this._cullNodes();
-    if (this._activeSection === 'dashboard') this._drawMinimap();
+    this._drawMinimap();
   };
 
   /** Level-of-detail: al alejar, oculta glow + cuerpo de los nodos (solo header)
@@ -873,6 +873,9 @@
       canvas.addEventListener('keydown', this._canvasTagKey);
     }
 
+    // Minimapa flotante (click para navegar) — se cablea una vez.
+    this._setupMinimap();
+
     // Rail de la biblioteca (delegado en el panel): icono → abre/cierra seccion.
     const panel = document.getElementById('ccSidebar');
     if (panel && !this._panelClick) {
@@ -1209,7 +1212,7 @@
         this._scheduleEdges();
       }
       this._savePositions();
-      if (this._activeSection === 'dashboard') this._drawMinimap();
+      this._drawMinimap();
       // reset flag tras el ciclo de click
       setTimeout(() => { this._didDrag = false; }, 0);
     };
@@ -1307,7 +1310,6 @@
   /** Definicion de secciones (orden + icono + label). */
   P._librarySections = function () {
     return [
-      { key: 'dashboard', label: 'Dashboard',           icon: 'fa-gauge-high' },
       { key: 'audiences', label: 'Audiencias',          icon: 'fa-users' },
       { key: 'campaigns', label: 'Campanas reales',     icon: 'fa-bullhorn' },
       { key: 'concepts',  label: 'Conceptualizaciones', icon: 'fa-lightbulb' },
@@ -1322,7 +1324,6 @@
 
   /** Items de una seccion. Locales (sincronos) o lazy (cache; undefined = sin cargar). */
   P._libItemsFor = function (key) {
-    if (key === 'dashboard') return null; // no es lista; render especial
     if (key === 'audiences') {
       return (this._audiences || []).map((a) => ({ id: a.id, name: a.name || 'Audiencia', sub: a.is_active === false ? 'apagada' : '' }));
     }
@@ -1363,15 +1364,13 @@
       const s = secs.find((x) => x.key === active) || { label: 'Biblioteca', icon: 'fa-sliders' };
       if (titleEl) titleEl.innerHTML = `<i class="fas ${s.icon}"></i> ${this.escapeHtml(s.label)}`;
       body.innerHTML = this._libBodyHTML(active);
-      if (active === 'dashboard') requestAnimationFrame(() => this._setupMinimap());
-      else if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);
+      if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);
     } else {
       body.innerHTML = '';
     }
   };
 
   P._libBodyHTML = function (key) {
-    if (key === 'dashboard') return this._dashboardHTML();
     const items = this._libItemsFor(key);
     if (items === undefined) return '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
     if (!items.length) return '<div class="cc-lib-empty">Sin elementos.</div>';
@@ -1384,38 +1383,11 @@
       </div>`).join('');
   };
 
-  /* ── Dashboard del sidebar: minimapa + resumen ─────────────────────── */
-  P._dashboardHTML = function () {
-    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
-    const auds  = Array.isArray(this._audiences) ? this._audiences : [];
-    this._loadPlaced();
-    const real = camps.filter((c) => c.last_synced_at).length;
-    const concept = camps.length - real;
-    const placed = (this._placed || []).length;
-    const stat = (n, label) => `<div class="cc-dash-stat"><span class="cc-dash-num">${n}</span><span class="cc-dash-label">${label}</span></div>`;
-    return `
-      <div class="cc-dash">
-        <div class="cc-dash-minimap-wrap">
-          <canvas id="ccMinimap" class="cc-minimap" width="258" height="168"></canvas>
-        </div>
-        <div class="cc-dash-stats">
-          ${stat(auds.length, 'Audiencias')}
-          ${stat(real, 'Campanas reales')}
-          ${stat(concept, 'Conceptuales')}
-          ${stat(placed, 'Identities')}
-        </div>
-        <ul class="cc-dash-legend">
-          <li><span class="cc-dash-dot" style="background:#e0a045"></span> Audiencia</li>
-          <li><span class="cc-dash-dot" style="background:#6aa3ff"></span> Conceptual</li>
-          <li><span class="cc-dash-dot" style="background:#e15760"></span> Campana real</li>
-          <li><span class="cc-dash-dot" style="background:#5fe0c0"></span> Identity</li>
-        </ul>
-      </div>`;
-  };
-
+  /* ── Minimapa flotante (esquina inferior izquierda) ────────────────── */
   P._setupMinimap = function () {
     const cv = document.getElementById('ccMinimap');
-    if (!cv) return;
+    if (!cv || this._minimapWired) return;
+    this._minimapWired = true;
     cv.onclick = (e) => {
       if (!this._miniTransform) return;
       const r = cv.getBoundingClientRect();
@@ -1434,13 +1406,15 @@
 
   P._drawMinimap = function () {
     const cv = document.getElementById('ccMinimap');
+    const wrap = document.getElementById('ccMinimapWrap');
     if (!cv) return;
     const ctx = cv.getContext('2d');
     const W = cv.width, H = cv.height;
     ctx.clearRect(0, 0, W, H);
     this._loadPositions();
     const nodes = this._canvasNodes();
-    if (!nodes.length) { this._miniTransform = null; return; }
+    if (!nodes.length) { this._miniTransform = null; if (wrap) wrap.style.display = 'none'; return; }
+    if (wrap) wrap.style.display = '';
     const NW = 268, NH = 200;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     nodes.forEach((n) => {
