@@ -190,61 +190,9 @@ class DevBuilderView extends DevBaseView {
                     <label for="flowVersion">Versión</label>
                     <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
                   </div>
-                  <div class="settings-field settings-field--pricing" id="settingsTokenCostWrap">
-                    <label>Modelo de cobro</label>
-                    <div class="pricing-mode-toggle" role="radiogroup" aria-label="Modelo de cobro">
-                      <button type="button" class="pricing-mode-btn" data-pricing-mode="auto" role="radio" aria-checked="true">
-                        <i class="fas fa-bolt"></i>
-                        <div>
-                          <strong>Automatico</strong>
-                          <span>Cobra lo que reporte n8n cada run</span>
-                        </div>
-                      </button>
-                      <button type="button" class="pricing-mode-btn" data-pricing-mode="fixed" role="radio" aria-checked="false">
-                        <i class="fas fa-lock"></i>
-                        <div>
-                          <strong>Fijo</strong>
-                          <span>Cobra siempre el mismo precio</span>
-                        </div>
-                      </button>
-                    </div>
-                    <div class="settings-field pricing-fixed-row" id="pricingFixedRow" hidden>
-                      <label for="flowTokenCost">Creditos por ejecucion</label>
-                      <input type="number" id="flowTokenCost" min="0" max="1000" step="0.01" value="1">
-                    </div>
-                    <div class="pricing-observed" id="pricingObservedBox" hidden>
-                      <div class="pricing-observed-header">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Uso real observado</span>
-                        <span class="pricing-observed-runs" id="pricingObservedRuns">— runs</span>
-                      </div>
-                      <div class="pricing-observed-grid">
-                        <div class="pricing-observed-cell">
-                          <span class="pricing-observed-label">Primer run</span>
-                          <span class="pricing-observed-value" id="pricingObservedFirst">—</span>
-                        </div>
-                        <div class="pricing-observed-cell">
-                          <span class="pricing-observed-label">Promedio</span>
-                          <span class="pricing-observed-value" id="pricingObservedAvg">—</span>
-                        </div>
-                        <div class="pricing-observed-cell">
-                          <span class="pricing-observed-label">Min</span>
-                          <span class="pricing-observed-value" id="pricingObservedMin">—</span>
-                        </div>
-                        <div class="pricing-observed-cell">
-                          <span class="pricing-observed-label">Max</span>
-                          <span class="pricing-observed-value" id="pricingObservedMax">—</span>
-                        </div>
-                      </div>
-                      <button type="button" class="pricing-observed-apply" id="pricingApplyAvgBtn" hidden>
-                        <i class="fas fa-magic"></i>
-                        Usar promedio como precio fijo
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
-              <!-- Sección 2: nombre, descripción -->
+              <!-- Sección 2: nombre, descripción, modelo de cobro -->
               <div class="builder-config-section builder-config-section--name">
                 <div class="settings-field">
                   <label for="flowNameConfig">Nombre del flujo *</label>
@@ -253,6 +201,58 @@ class DevBuilderView extends DevBaseView {
                 <div class="settings-field">
                   <label for="flowDescription">Descripción</label>
                   <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                </div>
+                <div class="settings-field settings-field--pricing" id="settingsTokenCostWrap">
+                  <label>Modelo de cobro</label>
+                  <div class="pricing-mode-toggle" role="radiogroup" aria-label="Modelo de cobro">
+                    <button type="button" class="pricing-mode-btn" data-pricing-mode="auto" role="radio" aria-checked="true">
+                      <i class="fas fa-bolt"></i>
+                      <div>
+                        <strong>Automatico</strong>
+                        <span>Cobra lo que reporte n8n cada run</span>
+                      </div>
+                    </button>
+                    <button type="button" class="pricing-mode-btn" data-pricing-mode="fixed" role="radio" aria-checked="false">
+                      <i class="fas fa-lock"></i>
+                      <div>
+                        <strong>Fijo</strong>
+                        <span>Cobra siempre el mismo precio</span>
+                      </div>
+                    </button>
+                  </div>
+                  <div class="settings-field pricing-fixed-row" id="pricingFixedRow" hidden>
+                    <label for="flowTokenCost">Creditos por ejecucion</label>
+                    <input type="number" id="flowTokenCost" min="0" max="1000" step="0.01" value="1">
+                  </div>
+                  <div class="pricing-observed" id="pricingObservedBox" hidden>
+                    <div class="pricing-observed-header">
+                      <i class="fas fa-chart-line"></i>
+                      <span>Uso real observado</span>
+                      <span class="pricing-observed-runs" id="pricingObservedRuns">— runs</span>
+                    </div>
+                    <div class="pricing-observed-grid">
+                      <div class="pricing-observed-cell">
+                        <span class="pricing-observed-label">Primer run</span>
+                        <span class="pricing-observed-value" id="pricingObservedFirst">—</span>
+                      </div>
+                      <div class="pricing-observed-cell">
+                        <span class="pricing-observed-label">Promedio</span>
+                        <span class="pricing-observed-value" id="pricingObservedAvg">—</span>
+                      </div>
+                      <div class="pricing-observed-cell">
+                        <span class="pricing-observed-label">Min</span>
+                        <span class="pricing-observed-value" id="pricingObservedMin">—</span>
+                      </div>
+                      <div class="pricing-observed-cell">
+                        <span class="pricing-observed-label">Max</span>
+                        <span class="pricing-observed-value" id="pricingObservedMax">—</span>
+                      </div>
+                    </div>
+                    <button type="button" class="pricing-observed-apply" id="pricingApplyAvgBtn" hidden>
+                      <i class="fas fa-magic"></i>
+                      Usar promedio como precio fijo
+                    </button>
+                  </div>
                 </div>
               </div>
               <!-- Sección 3: tipo de flujo, categoría, subcategoría, tipo de output -->

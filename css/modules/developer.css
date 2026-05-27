@@ -1671,15 +1671,12 @@
   min-width: 0;
 }
 
-/* El field de Descripción se estira; el de Nombre se queda en su altura natural */
+/* Descripción: altura acotada, no se estira para llenar la columna */
 .builder-config-section--name .settings-field:nth-child(2) {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
-}
-.builder-config-section--name .settings-field:nth-child(2) textarea {
-  flex: 1 1 auto;
 }
 
 .builder-config-section--meta {
@@ -1716,11 +1713,17 @@
   gap: 10px;
 }
 
-/* Descripción ocupa el resto de la columna name (rellena vertical) */
+/* Descripción: altura compacta y fija, el usuario puede expandir manualmente */
 .builder-config-section--name #flowDescription {
-  min-height: 140px;
-  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 200px;
+  flex: 0 0 auto;
   resize: vertical;
+}
+
+/* Modelo de cobro vive ahora bajo la descripción, en la columna derecha */
+.builder-config-section--name .settings-field--pricing {
+  margin-top: 4px;
 }
 
 /* Portada: aspect 3:4 (proporción de la card del catálogo) — ocupa la
