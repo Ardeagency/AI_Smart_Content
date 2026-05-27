@@ -183,19 +183,22 @@ class FlowCatalogView extends BaseView {
             <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
           </section>
           ` : `
-          <!-- VIEW CATEGORÍA: header (sustituye al hero del home).
-               La nav de subcategorías (texto editorial) se renderiza DENTRO del
-               banner desde renderCategoryHeader (#subcategoriesStrip). -->
+          <!-- VIEW CATEGORÍA: header (sustituye al hero del home) -->
           <header class="flow-catalog-category-header" id="flowCatalogCategoryHeader"></header>
 
-          <!-- Últimos en esta categoría -->
-          <section class="flow-catalog-row-section" id="sectionRecentCategory">
-            <h2 class="flow-catalog-row-title">Continuar</h2>
-            <div class="flow-catalog-row-scroll" id="rowRecentCategory"></div>
-          </section>
-
-          <!-- Galería por subcategoría -->
-          <div class="flow-catalog-gallery-by-sub" id="galleryBySub"></div>
+          <!-- Cuerpo: galería (izquierda) + subnav vertical tipo sidebar (derecha) -->
+          <div class="flow-catalog-category-body">
+            <div class="flow-catalog-category-main">
+              <!-- Últimos en esta categoría -->
+              <section class="flow-catalog-row-section" id="sectionRecentCategory">
+                <h2 class="flow-catalog-row-title">Continuar</h2>
+                <div class="flow-catalog-row-scroll" id="rowRecentCategory"></div>
+              </section>
+              <!-- Galería por subcategoría -->
+              <div class="flow-catalog-gallery-by-sub" id="galleryBySub"></div>
+            </div>
+            <nav class="flow-catalog-subnav-side" id="subcategoriesStrip" aria-label="Subcategorias"></nav>
+          </div>
           `}
         </div>
       </div>
@@ -895,7 +898,6 @@ class FlowCatalogView extends BaseView {
         ${desc ? `<p class="flow-catalog-category-header-desc">${desc}</p>` : ''}
         ${countLabel ? `<span class="flow-catalog-category-header-count">${countLabel}</span>` : ''}
       </div>
-      <nav class="flow-catalog-subnav" id="subcategoriesStrip" aria-label="Subcategorias"></nav>
     `;
   }
 

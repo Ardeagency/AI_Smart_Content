@@ -59,37 +59,43 @@
   justify-content: flex-end;
 }
 
-/* Nav de subcategorias dentro del banner: estilo editorial (texto, activo
-   subrayado), una sola fila scrolleable para no crecer en alto. */
-.flow-catalog-subnav {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: clamp(1.1rem, 2vw, 1.75rem);
-  margin-top: clamp(1rem, 2vw, 1.5rem);
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
+/* Vista categoria: cuerpo = galeria (izquierda) + subnav vertical (derecha) */
+.flow-catalog-category-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(150px, 15vw, 210px);
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  align-items: start;
+  padding-right: clamp(2rem, 5vw, 4rem);
 }
-.flow-catalog-subnav::-webkit-scrollbar { display: none; }
+.flow-catalog-category-main { min-width: 0; }
+
+/* Subnav de subcategorias: columna vertical a la derecha, tipo sidebar pero
+   sin fondo ni bordes — solo texto. Sticky para que acompañe el scroll. */
+.flow-catalog-subnav-side {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.85rem;
+  padding-top: clamp(2.25rem, 4vw, 3.25rem);
+}
 .flow-catalog-subnav-item {
   position: relative;
   flex: 0 0 auto;
-  padding: 0 0 0.4rem;
+  width: auto;
+  padding: 0 0 0.3rem;
   background: none;
   border: none;
   font-family: inherit;
-  font-size: clamp(0.88rem, 1vw, 0.98rem);
+  font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.005em;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.55);
+  text-align: right;
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: color 0.18s ease;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 .flow-catalog-subnav-item:hover { color: rgba(255, 255, 255, 0.88); }
 .flow-catalog-subnav-item.active { color: #ffffff; }
@@ -102,6 +108,24 @@
   height: 1.5px;
   background: #ffffff;
   border-radius: 2px;
+}
+
+/* Responsive: en pantallas estrechas el sidebar se vuelve fila arriba */
+@media (max-width: 760px) {
+  .flow-catalog-category-body {
+    grid-template-columns: 1fr;
+    padding-right: 0;
+  }
+  .flow-catalog-subnav-side {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem 1.25rem;
+    padding: 0 clamp(2rem, 5vw, 4rem) 1.25rem;
+    order: -1;
+  }
+  .flow-catalog-subnav-item { text-align: left; }
 }
 .flow-catalog-category-header-bg {
   position: absolute;
