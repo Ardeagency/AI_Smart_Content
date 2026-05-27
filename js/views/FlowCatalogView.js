@@ -51,6 +51,11 @@ class FlowCatalogView extends BaseView {
       || this.routeParams?.categoryId === 'saved';
     this.selectedSubcategoryId = this.savedView ? null : (this.routeParams?.subcategoryId || null);
     this.selectedCategoryId = this.savedView ? null : (this.routeParams?.categoryId || null);
+    // Estado de la toolbar (Fase 3): busqueda + orden + filtros del home.
+    this.searchQuery = '';
+    this.sortMode = 'trending';
+    this.filterOutput = '';
+    this.filterExec = '';
   }
 
   getStudioPath() {
@@ -176,11 +181,49 @@ class FlowCatalogView extends BaseView {
           </section>
 
           ${!isCategoryView ? `
+          <!-- Toolbar marketplace: buscar + orden + filtros (sticky) -->
+          <div class="flow-catalog-toolbar" id="flowCatalogToolbar">
+            <div class="flow-toolbar-search">
+              <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" id="flowSearchInput" placeholder="Buscar flows..." autocomplete="off" aria-label="Buscar flows">
+              <button type="button" class="flow-search-clear" id="flowSearchClear" style="display:none" aria-label="Limpiar busqueda"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="flow-toolbar-controls">
+              <select id="flowSortSelect" class="flow-toolbar-select" aria-label="Ordenar">
+                <option value="trending">Trending</option>
+                <option value="new">Nuevos</option>
+                <option value="used">Mas usados</option>
+                <option value="az">A-Z</option>
+              </select>
+              <select id="flowFilterOutput" class="flow-toolbar-select" aria-label="Tipo de salida">
+                <option value="">Todo tipo</option>
+                <option value="image">Imagen</option>
+                <option value="video">Video</option>
+                <option value="text">Texto</option>
+                <option value="audio">Audio</option>
+                <option value="document">Documento</option>
+                <option value="mixed">Mixto</option>
+              </select>
+              <select id="flowFilterExec" class="flow-toolbar-select" aria-label="Modo de ejecucion">
+                <option value="">Todo modo</option>
+                <option value="single_step">Un paso</option>
+                <option value="multi_step">Multi paso</option>
+                <option value="sequential">Secuencial</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Catálogo completo: cada categoría se renderiza como su propio
                bloque con header (no hace falta un título paraguas tipo
                "All Flows" — las categorías ya hacen ese trabajo). -->
           <section class="flow-catalog-row-section flow-catalog-row-section--unframed" id="sectionAllFlows" style="display: none;">
             <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
+          </section>
+
+          <!-- Resultados de busqueda/filtro (grid plana). Oculta en browse. -->
+          <section class="flow-catalog-results" id="flowCatalogResults" style="display:none">
+            <div class="flow-catalog-results-head"><span id="flowResultsCount"></span></div>
+            <div class="flow-catalog-results-grid" id="flowResultsGrid"></div>
           </section>
           ` : `
           <!-- VIEW CATEGORÍA: header (sustituye al hero del home) -->
@@ -253,6 +296,7 @@ class FlowCatalogView extends BaseView {
       this.renderGalleryBySubcategory();
     } else {
       this.renderSectionAllFlows();
+      this.bindToolbar();
     }
 
     // Empty states: cada vista los maneja inline en el área donde irían los
@@ -1056,6 +1100,93 @@ class FlowCatalogView extends BaseView {
       </div>
     `).join('');
     this.bindFlowCardListeners(gallery);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FEAT-035 Fase 3 — toolbar marketplace (buscar + orden + filtros)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  bindToolbar() {
+    const input = document.getElementById('flowSearchInput');
+    const clearBtn = document.getElementById('flowSearchClear');
+    const sortSel = document.getElementById('flowSortSelect');
+    const outSel = document.getElementById('flowFilterOutput');
+    const execSel = document.getElementById('flowFilterExec');
+    if (input) {
+      input.addEventListener('input', () => {
+        this.searchQuery = input.value;
+        if (clearBtn) clearBtn.style.display = input.value ? '' : 'none';
+        clearTimeout(this._searchDebounce);
+        this._searchDebounce = setTimeout(() => this.updateCatalogView(), 160);
+      });
+    }
+    clearBtn?.addEventListener('click', () => {
+      this.searchQuery = '';
+      if (input) input.value = '';
+      clearBtn.style.display = 'none';
+      this.updateCatalogView();
+      input?.focus();
+    });
+    sortSel?.addEventListener('change', () => { this.sortMode = sortSel.value; this.updateCatalogView(); });
+    outSel?.addEventListener('change', () => { this.filterOutput = outSel.value; this.updateCatalogView(); });
+    execSel?.addEventListener('change', () => { this.filterExec = execSel.value; this.updateCatalogView(); });
+  }
+
+  // Hay busqueda/filtro/orden activo → modo resultados (grid plana).
+  isToolbarActive() {
+    return !!((this.searchQuery || '').trim() || this.filterOutput || this.filterExec || this.sortMode !== 'trending');
+  }
+
+  getFilteredSortedFlows() {
+    const q = (this.searchQuery || '').trim().toLowerCase();
+    let list = (this.flows || []).slice();
+    if (q) list = list.filter(f => (f.name || '').toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q));
+    if (this.filterOutput) list = list.filter(f => (f.output_type || '').toLowerCase() === this.filterOutput);
+    if (this.filterExec) list = list.filter(f => (f.execution_mode || '').toLowerCase() === this.filterExec);
+    const score = f => (f.run_count || 0) + (f.likes_count || 0) + (f.saves_count || 0);
+    switch (this.sortMode) {
+      case 'new': list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); break;
+      case 'used': list.sort((a, b) => (b.run_count || 0) - (a.run_count || 0)); break;
+      case 'az': list.sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+      default: list.sort((a, b) => score(b) - score(a)); // trending
+    }
+    return list;
+  }
+
+  updateCatalogView() {
+    const hero = document.getElementById('flowCatalogHeroSection');
+    const browse = document.getElementById('sectionAllFlows');
+    const results = document.getElementById('flowCatalogResults');
+    if (!results) return;
+    if (this.isToolbarActive()) {
+      if (hero) hero.style.display = 'none';
+      if (browse) browse.style.display = 'none';
+      results.style.display = '';
+      this.renderResults();
+    } else {
+      if (hero) hero.style.display = '';
+      if (browse) browse.style.display = '';
+      results.style.display = 'none';
+    }
+  }
+
+  renderResults() {
+    const grid = document.getElementById('flowResultsGrid');
+    const count = document.getElementById('flowResultsCount');
+    if (!grid) return;
+    const list = this.getFilteredSortedFlows();
+    if (count) count.textContent = `${list.length} flow${list.length !== 1 ? 's' : ''}`;
+    if (!list.length) {
+      grid.innerHTML = `
+        <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
+          <i class="fas fa-magnifying-glass flow-catalog-empty-icon" aria-hidden="true"></i>
+          <p class="flow-catalog-empty-title">Sin resultados</p>
+          <p class="flow-catalog-empty-sub">Prueba con otra busqueda o quita algun filtro.</p>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(f => this.renderFlowCard(f)).join('');
+    this.bindFlowCardListeners(grid);
   }
 
   renderRecentInCategory() {

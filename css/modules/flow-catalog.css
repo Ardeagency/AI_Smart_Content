@@ -1565,3 +1565,100 @@
     justify-content: center;
   }
 }
+
+/* ========================================================================
+   FEAT-035 Fase 3 — toolbar marketplace (buscar + orden + filtros) + grid
+   de resultados. Solo en el home del catalogo.
+   ======================================================================== */
+.flow-catalog-toolbar {
+  position: sticky;
+  top: var(--app-header-height, 56px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  padding: 0.85rem clamp(2rem, 5vw, 4rem);
+  background: var(--view-bg-base, #0b0b0b);
+  border-bottom: 1px solid var(--border-divider, #242424);
+}
+.flow-toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 280px;
+  max-width: 460px;
+  padding: 0.55rem 0.9rem;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px;
+}
+.flow-toolbar-search > i {
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  font-size: 0.85rem;
+}
+.flow-toolbar-search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #ffffff);
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+.flow-toolbar-search input::placeholder { color: var(--text-muted, rgba(255, 255, 255, 0.45)); }
+.flow-toolbar-search input::-webkit-search-cancel-button { display: none; }
+.flow-search-clear {
+  display: inline-flex;
+  background: none;
+  border: none;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.flow-search-clear:hover { color: var(--text-primary, #ffffff); }
+.flow-toolbar-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.flow-toolbar-select {
+  padding: 0.55rem 2rem 0.55rem 0.9rem;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 10px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.82));
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
+.flow-toolbar-select:hover { border-color: rgba(255, 255, 255, 0.18); color: var(--text-primary, #fff); }
+.flow-toolbar-select option { background: var(--bg-card, #141517); color: var(--text-primary, #fff); }
+
+/* Resultados: grid plana responsiva (la card pierde su ancho fijo de 240px) */
+.flow-catalog-results {
+  padding: 1.5rem clamp(2rem, 5vw, 4rem) 2.5rem;
+}
+.flow-catalog-results-head {
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.62));
+}
+.flow-catalog-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.flow-catalog-results-grid .flow-card {
+  flex: initial;
+  width: 100%;
+}
