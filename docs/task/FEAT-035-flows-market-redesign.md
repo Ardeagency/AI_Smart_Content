@@ -76,10 +76,14 @@ Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
 - Rails con padding vertical extra (0.9/1.1rem) para que el scale no se recorte con overflow-y:hidden. Home grid (overflow visible) no recorta.
 - Sin romper glass: solo transform/scale (ya se usaba), nada de content-visibility/isolation/contain.
 
-### Fase 5 — Personalizacion + colecciones (premium + Netflix)
-- Rails: "Recomendados para ti", "Top 10" con numeracion gigante, "Porque usaste X".
-- Colecciones / bundles curados (tabla nueva `flow_collections` + junction). Requiere schema.
-- Posible `created_by` / curador en `content_flows` si se decide atribucion.
+### Fase 5 — Personalizacion + colecciones (premium + Netflix) ← PARCIAL
+- Rails de personalizacion (client-side, sin schema): HECHO.
+  - **Top 10** con numeracion gigante outline (Netflix), umbral >=3 flows.
+  - **Porque usaste X**: semilla = ultimo run, flows afines (misma sub/cat). Solo si hay runs recientes.
+  - **Recomendados para ti**: flows en las cat/subcat con las que el usuario interactuo (like/save/run). Solo si hay señales.
+  - Se ocultan en modo busqueda/filtro; se rebindean los cards.
+- Colecciones / bundles curados: **DIFERIDO**. Requiere schema (`flow_collections` + `flow_collection_items`), UI de admin para crearlas y contenido real (hoy 0 flows asignados, 3 demo). Sin eso las colecciones nacen vacias. Retomar cuando haya catalogo real + tooling de curaduria.
+- `created_by` / curador en `content_flows`: DIFERIDO (atribucion), junto con colecciones.
 
 ---
 

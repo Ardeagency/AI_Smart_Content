@@ -213,6 +213,10 @@ class FlowCatalogView extends BaseView {
             </div>
           </div>
 
+          <!-- Rails de personalizacion (Fase 5): Top 10, Porque usaste X,
+               Recomendados para ti. Se rellenan en renderPersonalRails(). -->
+          <div class="flow-catalog-rails" id="flowCatalogRails"></div>
+
           <!-- Catálogo completo: cada categoría se renderiza como su propio
                bloque con header (no hace falta un título paraguas tipo
                "All Flows" — las categorías ya hacen ese trabajo). -->
@@ -295,6 +299,7 @@ class FlowCatalogView extends BaseView {
       this.renderRecentInCategory();
       this.renderGalleryBySubcategory();
     } else {
+      this.renderPersonalRails();
       this.renderSectionAllFlows();
       this.bindToolbar();
       this.moveToolbarToHeader();
@@ -1188,16 +1193,19 @@ class FlowCatalogView extends BaseView {
   updateCatalogView() {
     const hero = document.getElementById('flowCatalogHeroSection');
     const browse = document.getElementById('sectionAllFlows');
+    const rails = document.getElementById('flowCatalogRails');
     const results = document.getElementById('flowCatalogResults');
     if (!results) return;
     if (this.isToolbarActive()) {
       if (hero) hero.style.display = 'none';
       if (browse) browse.style.display = 'none';
+      if (rails) rails.style.display = 'none';
       results.style.display = '';
       this.renderResults();
     } else {
       if (hero) hero.style.display = '';
       if (browse) browse.style.display = '';
+      if (rails) rails.style.display = '';
       results.style.display = 'none';
     }
   }
@@ -1219,6 +1227,89 @@ class FlowCatalogView extends BaseView {
     }
     grid.innerHTML = list.map(f => this.renderFlowCard(f)).join('');
     this.bindFlowCardListeners(grid);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FEAT-035 Fase 5 — rails de personalizacion (Top 10, Porque usaste X,
+  // Recomendados para ti). Client-side sobre this.flows + senales del usuario.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _engagementScore(f) {
+    return (f.run_count || 0) + (f.likes_count || 0) + (f.saves_count || 0);
+  }
+
+  getTop10() {
+    return (this.flows || []).slice().sort((a, b) => this._engagementScore(b) - this._engagementScore(a)).slice(0, 10);
+  }
+
+  // Recomendados: flows en las categorias/subcategorias con las que el usuario
+  // interactuo (like/save/run). Solo si hay señales (si no, se omite el rail).
+  getRecommendedFlows(limit = 12) {
+    const signalIds = new Set([...this.likedFlowIds, ...this.savedFlowIds, ...(this.recentRunFlowIds || [])]);
+    if (!signalIds.size) return [];
+    const signalFlows = (this.flows || []).filter(f => signalIds.has(f.id));
+    const cats = new Set(signalFlows.map(f => f.category_id).filter(Boolean));
+    const subs = new Set(signalFlows.map(f => f.subcategory_id).filter(Boolean));
+    const pool = (this.flows || []).filter(f => !signalIds.has(f.id));
+    const rec = pool.filter(f => subs.has(f.subcategory_id) || cats.has(f.category_id));
+    rec.sort((a, b) => this._engagementScore(b) - this._engagementScore(a));
+    return rec.slice(0, limit);
+  }
+
+  // "Porque usaste X": semilla = ultimo run; muestra flows afines (misma sub/cat).
+  getBecauseYouUsed(limit = 12) {
+    const recentId = (this.recentRunFlowIds || [])[0];
+    if (!recentId) return null;
+    const seed = this.getFlowById(recentId);
+    if (!seed) return null;
+    const pool = (this.flows || []).filter(f => f.id !== seed.id &&
+      (f.subcategory_id === seed.subcategory_id || f.category_id === seed.category_id));
+    if (!pool.length) return null;
+    pool.sort((a, b) => this._engagementScore(b) - this._engagementScore(a));
+    return { seedName: seed.name, flows: pool.slice(0, limit) };
+  }
+
+  _railHtml(title, innerHtml) {
+    return `
+      <section class="flow-catalog-row-section">
+        <h2 class="flow-catalog-row-title">${title}</h2>
+        <div class="flow-catalog-row-scroll">${innerHtml}</div>
+      </section>`;
+  }
+
+  renderPersonalRails() {
+    const host = document.getElementById('flowCatalogRails');
+    if (!host) return;
+    const parts = [];
+
+    // Top 10 (con numeracion gigante)
+    const top = this.getTop10();
+    if (top.length >= 3) {
+      const items = top.map((f, i) => `
+        <div class="flow-rank-item">
+          <span class="flow-rank-num" aria-hidden="true">${i + 1}</span>
+          ${this.renderFlowCard(f)}
+        </div>`).join('');
+      parts.push(this._railHtml('Top 10', items));
+    }
+
+    // Porque usaste X
+    const because = this.getBecauseYouUsed();
+    if (because) {
+      parts.push(this._railHtml(
+        `Porque usaste ${this.escapeHtml(because.seedName)}`,
+        because.flows.map(f => this.renderFlowCard(f)).join('')
+      ));
+    }
+
+    // Recomendados para ti
+    const rec = this.getRecommendedFlows();
+    if (rec.length) {
+      parts.push(this._railHtml('Recomendados para ti', rec.map(f => this.renderFlowCard(f)).join('')));
+    }
+
+    host.innerHTML = parts.join('');
+    host.querySelectorAll('.flow-catalog-row-scroll').forEach(scroll => this.bindFlowCardListeners(scroll));
   }
 
   renderRecentInCategory() {

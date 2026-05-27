@@ -1710,3 +1710,36 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   flex: initial;
   width: 100%;
 }
+
+/* ========================================================================
+   FEAT-035 Fase 5 — rails de personalizacion (Top 10 con numeracion gigante,
+   Porque usaste X, Recomendados para ti). Usan los rails horizontales base.
+   ======================================================================== */
+.flow-catalog-rails {
+  display: block;
+}
+/* Top 10: numero gigante outline a la izquierda, la card lo solapa (Netflix) */
+.flow-rank-item {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+.flow-rank-num {
+  align-self: flex-end;
+  margin-right: -1.6rem;
+  font-size: clamp(5rem, 9vw, 9rem);
+  font-weight: 800;
+  line-height: 0.78;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.38);
+  text-stroke: 2px rgba(255, 255, 255, 0.38);
+  user-select: none;
+  pointer-events: none;
+  font-family: inherit;
+}
+.flow-rank-item .flow-card {
+  position: relative;
+  z-index: 1;
+}
