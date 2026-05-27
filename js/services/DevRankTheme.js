@@ -114,6 +114,8 @@
     root.style.removeProperty('--dev-gradient-dynamic-vertical');
     root.style.removeProperty('--dev-gradient-dynamic-horizontal');
     root.style.removeProperty('--dev-rank-label');
+    root.style.removeProperty('--dev-rank-accent');
+    root.style.removeProperty('--dev-rank-accent-2');
     root.style.removeProperty('--dev-gradient-app-container');
     document.body.classList.remove('dev-rank-context');
     // Limpiar clases granulares
@@ -136,6 +138,12 @@
     root.style.setProperty('--dev-gradient-dynamic-vertical', `var(${map.v})`);
     if (map.hz) root.style.setProperty('--dev-gradient-dynamic-horizontal', `var(${map.hz})`);
     root.style.setProperty('--dev-rank-label', `"${RANK_LABEL[canonical] || canonical}"`);
+    // Acento sólido del rango (para tints/bordes de pills activos en el portal dev).
+    const pal = RANK_PALETTE[canonical];
+    if (pal) {
+      root.style.setProperty('--dev-rank-accent', pal.secondary);
+      root.style.setProperty('--dev-rank-accent-2', pal.primary);
+    }
     // App-container edge gradient: 4 esquinas rainbow para el modo developer (visible vía #brand-bg-overlay)
     const corners = RANK_CORNERS[canonical];
     const edge = _buildEdgeGradient(corners);
