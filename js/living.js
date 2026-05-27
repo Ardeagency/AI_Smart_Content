@@ -650,7 +650,7 @@ class LivingManager {
         try {
             const { data, error } = await this.supabase
                 .from('system_ai_outputs')
-                .select('id, brand_container_id, organization_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, technical_params, metadata, models, entity_id, reference_image_url, brief_id, persona_id, campaign_id, created_at')
+                .select('id, run_id, brand_container_id, organization_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, technical_params, metadata, models, entity_id, reference_image_url, brief_id, persona_id, campaign_id, created_at')
                 .eq('organization_id', this.organizationId)
                 .neq('provider', 'openai')
                 .order('created_at', { ascending: false })
@@ -3257,13 +3257,17 @@ class LivingManager {
         let briefId = null;
         let personaId = null;
         let campaignId = null;
+        // run_id del output original: lo conoce el modal (run del output abierto).
+        // Permite que las ediciones standalone (Editar/4K/Sin fondo/Mejorar texto)
+        // hereden el run y aparezcan en el canvas run-scoped (DEBT 2026-05-26).
+        let runId = state.runId || null;
 
         // 1) runs_outputs (fuente canonica nueva — incluye linaje FK directo).
         if (state.outputId) {
             try {
                 const { data } = await this.supabase
                     .from('runs_outputs')
-                    .select('technical_params, metadata, brief_id, persona_id, campaign_id, entity_id')
+                    .select('run_id, technical_params, metadata, brief_id, persona_id, campaign_id, entity_id')
                     .eq('id', state.outputId)
                     .maybeSingle();
                 const tp = data?.technical_params || {};
@@ -3273,6 +3277,7 @@ class LivingManager {
                 briefId = data?.brief_id || null;
                 personaId = data?.persona_id || null;
                 campaignId = data?.campaign_id || null;
+                if (!runId) runId = data?.run_id || null;
             } catch (_) { /* noop */ }
         }
 
@@ -3299,7 +3304,7 @@ class LivingManager {
             try {
                 const { data } = await this.supabase
                     .from('system_ai_outputs')
-                    .select('metadata, technical_params, brief_id, persona_id, campaign_id, entity_id')
+                    .select('run_id, metadata, technical_params, brief_id, persona_id, campaign_id, entity_id')
                     .eq('id', state.outputId)
                     .maybeSingle();
                 const md = data?.metadata || {};
@@ -3309,12 +3314,13 @@ class LivingManager {
                 if (!briefId) briefId = data?.brief_id || null;
                 if (!personaId) personaId = data?.persona_id || null;
                 if (!campaignId) campaignId = data?.campaign_id || null;
+                if (!runId) runId = data?.run_id || null;
             } catch (_) { /* noop */ }
         }
 
         if (!entityId) {
-            const val = (aspectRatio || briefId || personaId || campaignId)
-                ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [], briefId, personaId, campaignId }
+            const val = (aspectRatio || briefId || personaId || campaignId || runId)
+                ? { aspectRatio, entityId: null, entityType: null, entityName: null, productId: null, productName: null, imageUrls: [], briefId, personaId, campaignId, runId }
                 : null;
             if (cacheKey) this._sourceInfoCache.set(cacheKey, { t: now, v: val });
             return val;
@@ -3385,7 +3391,7 @@ class LivingManager {
             }
         } catch (_) { /* noop */ }
 
-        const result = { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls, briefId, personaId, campaignId };
+        const result = { aspectRatio, entityId, entityType, entityName, productId, productName, imageUrls, briefId, personaId, campaignId, runId };
         if (cacheKey) this._sourceInfoCache.set(cacheKey, { t: now, v: result });
         return result;
     }
@@ -3574,7 +3580,6 @@ class LivingManager {
         const state = this._modalState || {};
         const imageUrl = state.mediaUrl;
         const sourceOutputId = state.outputId || null;
-        const sourceRunId = state.runId || null;
 
         if (!imageUrl || !/^https?:\/\//i.test(imageUrl)) {
             this._setEditApplyState({ phase: 'error', message: 'No hay URL valida de la imagen original' });
@@ -4012,6 +4017,9 @@ class LivingManager {
                 output_type: 'image',
                 external_job_id: taskId,
                 status: 'completed',
+                // Hereda el run del output original (DEBT 2026-05-26): asi la
+                // edicion standalone aparece en el canvas run-scoped del run activo.
+                run_id: sm.runId || null,
                 entity_id: entityIdOverride || sm.entityId || null,
                 brief_id: sm.briefId || null,
                 persona_id: sm.personaId || null,
