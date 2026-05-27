@@ -1094,8 +1094,11 @@
    panel se estiliza con `.modal-content.flow-detail-modal`.
    ======================================================================== */
 .modal-content.flow-detail-modal {
-  width: 100%;
-  max-width: min(1280px, calc(100vw - 3rem));
+  /* `width` explicito (no solo max-width): el panel base trae width:100% y se
+     quedaba pequeño en monitores grandes. Aqui ocupa 94vw hasta un tope de
+     1400px → landscape real. !important para ganarle a cualquier .modal-content. */
+  width: min(1400px, 94vw) !important;
+  max-width: min(1400px, 94vw) !important;
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
 }
@@ -1173,9 +1176,9 @@
   position: relative;
   z-index: 2;
   display: grid;
-  /* Izquierda fija/angosta (solo 2 run cards), derecha toma el resto → el
-     bloque de info es ancho y el titulo no se parte en 4 lineas. */
-  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  /* Izquierda fija (solo 2 run cards), derecha toma TODO el resto → bloque de
+     info ancho y el titulo no se parte palabra por palabra. */
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.5rem, 3vw, 2.75rem);
   align-items: stretch;
@@ -1200,19 +1203,15 @@
   color: var(--accent-warm, #d4b896);
 }
 .flow-detail-title {
+  width: 100%;
   margin: 0;
-  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.08;
   color: #ffffff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-  /* Tope de 3 lineas para que titulos largos no estiren la card a vertical */
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  text-wrap: balance;
 }
 .flow-detail-badges-inline {
   display: flex;
