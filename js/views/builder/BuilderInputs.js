@@ -135,6 +135,7 @@
     'render_batch_size': { section: 'numeric',    sub: 'Duración / Cantidad' },
     // Visual — selectores únicos visuales
     'colores':           { section: 'visual',     sub: 'Colores' },
+    'gradient':          { section: 'visual',     sub: 'Degradado de fondo' },
     'aspect_ratio':      { section: 'visual',     sub: 'Aspect ratio' },
     'scope_picker':      { section: 'visual',     sub: 'Enfoque' },
     'image_selector':    { section: 'visual',     sub: 'Imagen' },
@@ -992,6 +993,7 @@
       label: 'Visual',
       items: [
         ['colores',         'Colores (círculos)'],
+        ['gradient',        'Degradado de fondo (2-4 paradas + dirección)'],
         ['color_slider',    'Hue slider (rainbow)'],
         ['white_balance',   'Temperatura (frío↔cálido)'],
         ['rotation_dial',   'Rotación (dial ticks)'],
@@ -1919,6 +1921,7 @@
       // range
       range: 'sliders-horizontal', slider: 'sliders-horizontal',
       segmented_control: 'rows', steps_slider: 'list-numbers', color_slider: 'palette',
+      gradient: 'paint-bucket',
       white_balance: 'sun', rotation_dial: 'arrows-clockwise',
       // file
       file: 'paperclip', upload: 'upload-simple',

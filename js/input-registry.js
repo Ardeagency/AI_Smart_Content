@@ -12,6 +12,7 @@
     'STRING_CONTAINER',
     'SELECT_CONTAINER',
     'COLORS_CONTAINER',
+    'GRADIENT_CONTAINER',
     'ASPECT_RATIO_CONTAINER',
     'SCOPE_PICKER_CONTAINER',
     'MEDIA_CONTAINER',
@@ -173,7 +174,9 @@
     // Tier 5 — pickers especializados
     palette_picker: 'PALETTE_PICKER_CONTAINER',
     logo_picker: 'LOGO_PICKER_CONTAINER',
-    thumbnail_picker: 'THUMBNAIL_PICKER_CONTAINER'
+    thumbnail_picker: 'THUMBNAIL_PICKER_CONTAINER',
+    // Constructor de degradado de fondo (2-4 paradas + direccion)
+    gradient: 'GRADIENT_CONTAINER'
   };
 
   // Delegamos en BaseView.escapeHtml (fuente única). Fallback defensivo por si
@@ -1480,6 +1483,77 @@
       '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + suggestedHtml + addBtnHtml + '</div>';
   }
 
+  /**
+   * gradient: constructor de degradado de fondo. El humano define 2-4 paradas de
+   * color (reusa ColorPickerModal) + direccion (lineal con angulo / radial).
+   * El valor se serializa como JSON en el hidden input:
+   *   {"type":"linear","angle":135,"stops":["#0b0b0b","#e02020"]}
+   * collectFormData() auto-parsea el JSON (empieza con "{") => llega como objeto.
+   */
+  function parseGradientValue(f) {
+    var v = f && f.defaultValue;
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { v = null; } }
+    if (!v || typeof v !== 'object') v = {};
+    var type = (v.type === 'radial') ? 'radial' : 'linear';
+    var angle = (v.angle != null && !isNaN(Number(v.angle))) ? Number(v.angle) : 135;
+    var stops = Array.isArray(v.stops) ? v.stops.map(normalizeHex) : [];
+    if (stops.length < 2) {
+      var opt = [];
+      if (f && Array.isArray(f.options)) {
+        opt = f.options.map(function (o) { return typeof o === 'string' ? o : (o && (o.value || o.hex)); })
+          .filter(Boolean).map(normalizeHex);
+      }
+      stops = (opt.length >= 2 ? opt : ['#e02020', '#0b0b0b']);
+    }
+    return { type: type, angle: angle, stops: stops.slice(0, 4) };
+  }
+  function gradientToCss(g) {
+    var n = g.stops.length;
+    var parts = g.stops.map(function (h, i) {
+      var pct = n <= 1 ? 100 : Math.round((i / (n - 1)) * 100);
+      return h + ' ' + pct + '%';
+    });
+    if (g.type === 'radial') return 'radial-gradient(circle at 50% 50%, ' + parts.join(', ') + ')';
+    return 'linear-gradient(' + g.angle + 'deg, ' + parts.join(', ') + ')';
+  }
+  function formGradient(f, opts) {
+    opts = opts || {};
+    var a = formAttrs(f, opts);
+    var isPreview = isPreviewOpts(opts);
+    var g = parseGradientValue(f);
+    var css = gradientToCss(g);
+    if (isPreview) {
+      return '<div class="input-gradient input-gradient--preview"><div class="input-gradient-preview" style="background:' + css + ';"></div></div>';
+    }
+    var max = 4;
+    var jsonStr = JSON.stringify(g);
+    var swatches = g.stops.map(function (hex) {
+      var esc = escapeHtml(hex);
+      return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '">' +
+        '<button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>';
+    }).join('');
+    var addBtn = g.stops.length < max
+      ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+      : '';
+    var angleStyle = g.type === 'radial' ? ' style="display:none;"' : '';
+    return '<input type="hidden" class="input-gradient-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(jsonStr) + '">' +
+      '<div class="input-gradient" data-gradient-key="' + escapeHtml(f.key || '') + '" data-gradient-max="' + max + '" role="group" aria-label="' + escapeHtml(f.label || 'Degradado') + '">' +
+        '<div class="input-gradient-preview" style="background:' + css + ';" aria-hidden="true"></div>' +
+        '<div class="input-colors-wrap input-gradient-stops">' + swatches + addBtn + '</div>' +
+        '<div class="input-gradient-dir">' +
+          '<div class="input-gradient-type" role="group" aria-label="Tipo de degradado">' +
+            '<button type="button" class="input-gradient-type-btn' + (g.type === 'linear' ? ' active' : '') + '" data-type="linear">Lineal</button>' +
+            '<button type="button" class="input-gradient-type-btn' + (g.type === 'radial' ? ' active' : '') + '" data-type="radial">Radial</button>' +
+          '</div>' +
+          '<div class="input-gradient-angle-wrap"' + angleStyle + '>' +
+            '<input type="range" class="input-gradient-angle" min="0" max="360" step="5" value="' + g.angle + '" aria-label="Angulo del degradado">' +
+            '<span class="input-gradient-angle-val">' + g.angle + '°</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+  function previewGradient(f) { return formGradient(f, { preview: true }); }
+
   /** Placeholder para FILE_CONTAINER (upload) */
   function previewFile(f) {
     return '<div class="preview-structural"><i class="ph ph-upload-simple"></i><span>' + escapeHtml(f.label || 'Subir archivo') + '</span></div>';
@@ -1661,6 +1735,10 @@
       preview: previewColores,
       form: formColores
     },
+    GRADIENT_CONTAINER: {
+      preview: previewGradient,
+      form: formGradient
+    },
     ASPECT_RATIO_CONTAINER: {
       preview: previewAspectRatio,
       form: formAspectRatio
@@ -1808,6 +1886,7 @@
     register('multi_select_chips', { preview: previewMultiSelectChips, form: formMultiSelectChips });
     register('flags', { preview: previewFlags, form: formFlags });
     register('colores', { preview: previewColores, form: formColores });
+    register('gradient', { preview: previewGradient, form: formGradient });
     register('aspect_ratio', { preview: previewAspectRatio, form: formAspectRatio });
     register('tags', { preview: previewTags, form: formTags });
     register('stepper_num', { preview: previewStepper, form: formStepper });
@@ -2054,6 +2133,7 @@
   function initFormPickers(container) {
     if (!container) return;
     initColorsPicker(container);
+    initGradientPicker(container);
     initAspectRatioPicker(container);
     initContainerTabs(container);
     initScopeVeraSwitches(container);
@@ -2346,6 +2426,113 @@
       wrap.querySelectorAll('.color-swatch').forEach(bindDelete);
       var addBtn = wrap.querySelector('.color-swatch-add-btn');
       if (addBtn) bindAddBtn(addBtn);
+    });
+  }
+
+  /**
+   * Inicializa los constructores de degradado (input_type 'gradient'): agregar/quitar
+   * paradas (min 2, max 4) via ColorPickerModal, toggle lineal/radial, slider de angulo.
+   * Cada cambio re-serializa el JSON al hidden input y actualiza el preview en vivo.
+   */
+  function initGradientPicker(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll('.input-gradient[data-gradient-key]').forEach(function (box) {
+      if (box._gradInit) return;
+      box._gradInit = true;
+      var max = parseInt(box.getAttribute('data-gradient-max'), 10) || 4;
+      var hidden = box.parentElement.querySelector('.input-gradient-value');
+      if (!hidden) { var p = box.previousElementSibling; if (p && p.classList && p.classList.contains('input-gradient-value')) hidden = p; }
+      if (!hidden) return;
+      var stopsWrap = box.querySelector('.input-gradient-stops');
+      var preview = box.querySelector('.input-gradient-preview');
+      var angleWrap = box.querySelector('.input-gradient-angle-wrap');
+      var angleInput = box.querySelector('.input-gradient-angle');
+      var angleVal = box.querySelector('.input-gradient-angle-val');
+
+      function readState() {
+        var typeBtn = box.querySelector('.input-gradient-type-btn.active');
+        var type = typeBtn ? typeBtn.getAttribute('data-type') : 'linear';
+        var angle = angleInput ? Number(angleInput.value) : 135;
+        var stops = [];
+        stopsWrap.querySelectorAll('.color-swatch[data-hex]').forEach(function (el) { stops.push(el.getAttribute('data-hex')); });
+        return { type: type, angle: angle, stops: stops.filter(Boolean) };
+      }
+      function cssOf(g) {
+        var n = g.stops.length;
+        var parts = g.stops.map(function (h, i) { var pct = n <= 1 ? 100 : Math.round((i / (n - 1)) * 100); return h + ' ' + pct + '%'; });
+        if (g.type === 'radial') return 'radial-gradient(circle at 50% 50%, ' + parts.join(', ') + ')';
+        return 'linear-gradient(' + g.angle + 'deg, ' + parts.join(', ') + ')';
+      }
+      function sync() {
+        var g = readState();
+        hidden.value = JSON.stringify(g);
+        if (preview) preview.style.background = cssOf(g);
+        if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      function refreshAddBtn() {
+        var count = stopsWrap.querySelectorAll('.color-swatch[data-hex]').length;
+        var addEl = stopsWrap.querySelector('.color-swatch-add-btn');
+        if (count >= max && addEl) addEl.remove();
+        if (count < max && !addEl) {
+          var add = document.createElement('button');
+          add.type = 'button';
+          add.className = 'color-swatch-add-btn';
+          add.title = 'Agregar color';
+          add.setAttribute('aria-label', 'Agregar color');
+          add.innerHTML = '<span>+</span>';
+          stopsWrap.appendChild(add);
+          bindAdd(add);
+        }
+      }
+      function bindDelete(sw) {
+        var btn = sw && sw.querySelector('.color-delete-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (stopsWrap.querySelectorAll('.color-swatch[data-hex]').length <= 2) return; // minimo 2 paradas
+          sw.remove();
+          refreshAddBtn();
+          sync();
+        });
+      }
+      function bindAdd(addBtn) {
+        addBtn.addEventListener('click', function () {
+          if (stopsWrap.querySelectorAll('.color-swatch[data-hex]').length >= max) return;
+          var els = stopsWrap.querySelectorAll('.color-swatch[data-hex]');
+          var last = els.length ? els[els.length - 1].getAttribute('data-hex') : '#888888';
+          openColorPickerModal(last || '#888888', function (hex) {
+            if (stopsWrap.querySelectorAll('.color-swatch[data-hex]').length >= max) return;
+            var norm = normalizeHex(hex);
+            var div = document.createElement('div');
+            div.className = 'color-swatch';
+            div.style.background = norm;
+            div.setAttribute('data-hex', norm);
+            div.innerHTML = '<button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>';
+            var addEl = stopsWrap.querySelector('.color-swatch-add-btn');
+            if (addEl) stopsWrap.insertBefore(div, addEl); else stopsWrap.appendChild(div);
+            bindDelete(div);
+            refreshAddBtn();
+            sync();
+          });
+        });
+      }
+      stopsWrap.querySelectorAll('.color-swatch').forEach(bindDelete);
+      var addB = stopsWrap.querySelector('.color-swatch-add-btn');
+      if (addB) bindAdd(addB);
+      box.querySelectorAll('.input-gradient-type-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          box.querySelectorAll('.input-gradient-type-btn').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var isRadial = btn.getAttribute('data-type') === 'radial';
+          if (angleWrap) angleWrap.style.display = isRadial ? 'none' : '';
+          sync();
+        });
+      });
+      if (angleInput) angleInput.addEventListener('input', function () {
+        if (angleVal) angleVal.textContent = angleInput.value + '°';
+        sync();
+      });
+      sync(); // asegurar hidden coherente al iniciar
     });
   }
 
