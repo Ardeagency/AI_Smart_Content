@@ -329,6 +329,33 @@
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
   };
 
+  /** Redibujo agrupado a un frame. Durante arrastre/paneo solo actualiza la
+      geometria (atributo `d` + posicion del boton) de las aristas existentes,
+      SIN recrear el DOM del SVG. Evita el parpadeo (recrear nodos SVG en cada
+      mousemove reevaluaba selectores :has() a nivel documento). */
+  P._scheduleEdges = function () {
+    if (this._edgesRaf) return;
+    this._edgesRaf = requestAnimationFrame(() => { this._edgesRaf = null; this._updateEdgeGeometry(); });
+  };
+
+  P._updateEdgeGeometry = function () {
+    const svg = document.getElementById('ccCanvasEdges');
+    if (!svg) return;
+    const groups = svg.querySelectorAll('.cc-edge');
+    if (!groups.length) return;
+    groups.forEach((g) => {
+      const audId  = g.getAttribute('data-edge-aud');
+      const campId = g.getAttribute('data-edge-camp');
+      const from = this._portCenter(`aud:${audId}`, '.cc-node-port--out');
+      const to   = this._portCenter(`camp:${campId}`, '.cc-node-port--in');
+      if (!from || !to) return;
+      const d = this._bezier(from.x, from.y, to.x, to.y);
+      g.querySelectorAll('path').forEach((p) => p.setAttribute('d', d));
+      const fo = g.querySelector('.cc-edge-action');
+      if (fo) { fo.setAttribute('x', String((from.x + to.x) / 2 - 12)); fo.setAttribute('y', String((from.y + to.y) / 2 - 12)); }
+    });
+  };
+
   P._renderEdges = function () {
     const svg    = document.getElementById('ccCanvasEdges');
     const canvas = document.getElementById('ccCanvas');
@@ -351,6 +378,8 @@
 
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', 'cc-edge');
+      g.setAttribute('data-edge-aud', String(c.persona_id));
+      g.setAttribute('data-edge-camp', String(c.id));
 
       const hit = document.createElementNS(NS, 'path');
       hit.setAttribute('d', this._bezier(from.x, from.y, to.x, to.y));
@@ -678,7 +707,7 @@
     const onMove = (ev) => {
       this._canvasPan = { x: p0.x + (ev.clientX - start.x), y: p0.y + (ev.clientY - start.y) };
       this._applyCanvasTransform();
-      this._renderEdges();
+      this._scheduleEdges();
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
@@ -706,7 +735,7 @@
       nodeEl.style.left = `${nx}px`;
       nodeEl.style.top  = `${ny}px`;
       this._positions[key] = { x: nx, y: ny };
-      this._renderEdges();
+      this._scheduleEdges();
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
@@ -1042,6 +1071,7 @@
   P.destroy = function () {
     const canvas = document.getElementById('ccCanvas');
     const list   = document.getElementById('ccCampList');
+    if (this._edgesRaf) { cancelAnimationFrame(this._edgesRaf); this._edgesRaf = null; }
     if (this._canvasResizeObs) { try { this._canvasResizeObs.disconnect(); } catch (_) {} this._canvasResizeObs = null; }
     if (canvas && this._canvasWheel)     { canvas.removeEventListener('wheel', this._canvasWheel); this._canvasWheel = null; }
     if (canvas && this._canvasMouseDown) { canvas.removeEventListener('mousedown', this._canvasMouseDown); this._canvasMouseDown = null; }
