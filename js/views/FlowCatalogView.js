@@ -699,7 +699,7 @@ class FlowCatalogView extends BaseView {
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
     else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
     const t = flow.flow_category_type || 'manual';
-    const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
+    const isAutopilotLike = (t === 'autopilot');
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
     const img = flow.flow_image_url
       ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
@@ -1572,7 +1572,7 @@ class FlowCatalogView extends BaseView {
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
     else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
     const ftype = flow.flow_category_type || 'manual';
-    if (ftype === 'autopilot' || ftype === 'scraping') badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+    if (ftype === 'autopilot') badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
     // El banner del flow es el fondo de toda la card.
     const bg = flow.flow_image_url

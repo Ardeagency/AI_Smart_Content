@@ -714,7 +714,7 @@
     if (!canvas) return;
 
     const type = (this.flowData && this.flowData.flow_category_type) || 'manual';
-    const isAutomated = (type === 'autopilot' || type === 'scraping');
+    const isAutomated = (type === 'autopilot');
 
     // Aplicar/quitar wrap automated en el #builderCanvas
     if (builderCanvas) {

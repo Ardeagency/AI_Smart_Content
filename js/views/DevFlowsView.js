@@ -235,7 +235,7 @@ class DevFlowsView extends DevBaseView {
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
     const t = flow.flow_category_type || 'manual';
-    const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
+    const isAutopilotLike = (t === 'autopilot');
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
     const img = flow.flow_image_url

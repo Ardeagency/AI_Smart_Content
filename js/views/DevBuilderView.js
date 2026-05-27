@@ -19,7 +19,7 @@ class DevBuilderView extends DevBaseView {
       category_id: null,
       subcategory_id: null,
       output_type: 'text',
-      // Valores posibles en BD: manual | autopilot | system | scraping
+      // Valores posibles en BD: manual | autopilot
       flow_category_type: 'manual',
       token_cost: 1,
       // Pricing dinamico/estatico (2026-05-25):
@@ -200,7 +200,7 @@ class DevBuilderView extends DevBaseView {
                 </div>
                 <div class="settings-field">
                   <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                  <textarea id="flowDescription" placeholder="Una línea: qué hace este flujo" rows="2" maxlength="140"></textarea>
                 </div>
                 <div class="settings-field settings-field--pricing" id="settingsTokenCostWrap">
                   <label>Modelo de cobro</label>
@@ -262,9 +262,7 @@ class DevBuilderView extends DevBaseView {
                   <input type="hidden" id="flowType" value="manual">
                   <div class="flow-type-tabs" id="flowTypePicker" role="tablist" aria-label="Tipo de flujo">
                     <button type="button" class="flow-type-tab" role="tab" data-value="manual" title="Input 100% dinámico">Manual</button>
-                    <button type="button" class="flow-type-tab" role="tab" data-value="system" title="Funciones de plataforma">System</button>
                     <button type="button" class="flow-type-tab" role="tab" data-value="autopilot" title="Generación programable">Autopilot</button>
-                    <button type="button" class="flow-type-tab" role="tab" data-value="scraping" title="Scrapeo">Scraping</button>
                   </div>
                 </div>
                 <div class="settings-field">
@@ -1073,7 +1071,7 @@ class DevBuilderView extends DevBaseView {
     const cost = this.flowData.token_cost ?? 1;
     const version = (this.flowData.version || '1.0.0').toString();
     const type = this.flowData.flow_category_type || 'manual';
-    const isAutopilotLike = (type === 'autopilot' || type === 'scraping');
+    const isAutopilotLike = (type === 'autopilot');
 
     const badges = [];
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
@@ -1138,8 +1136,7 @@ class DevBuilderView extends DevBaseView {
 
   applyFlowTypeUI() {
     const type = this.flowData.flow_category_type || 'manual';
-    const isAutopilotLike = (type === 'autopilot' || type === 'scraping');
-    const isSystem = type === 'system';
+    const isAutopilotLike = (type === 'autopilot');
     this.isAutomatedFlow = isAutopilotLike;
 
     const main = this.querySelector('.builder-main');
@@ -1153,9 +1150,9 @@ class DevBuilderView extends DevBaseView {
     const tabsHeader = document.getElementById('builderTabsHeader');
     const tabModules = tabsHeader ? tabsHeader.querySelector('.builder-tab[data-tab="technical"]') : this.querySelector('.builder-tab[data-tab="technical"]');
 
-    // Todos los tipos de flujo (manual, autopilot, system, scraping) comparten la misma
-    // experiencia de Builder: siempre con módulos e inputs disponibles.
-    // Para tipos autopilot/scraping, si no hay schema aún, se preinicializa con DEFAULT_SCHEDULE_SCHEMA,
+    // Ambos tipos de flujo (manual, autopilot) comparten la misma experiencia de
+    // Builder: siempre con módulos e inputs disponibles.
+    // Para autopilot, si no hay schema aún, se preinicializa con DEFAULT_SCHEDULE_SCHEMA,
     // pero no se oculta nada de la UI.
     if (isAutopilotLike && this.inputSchema.length === 0) {
       this.inputSchema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA.fields));
@@ -1183,7 +1180,7 @@ class DevBuilderView extends DevBaseView {
       canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
     }
     if (tokenCostInput) {
-      const minCost = isSystem ? 0 : 1;
+      const minCost = 1;
       tokenCostInput.min = minCost;
       tokenCostInput.max = 100;
       tokenCostInput.disabled = false;
@@ -1194,9 +1191,8 @@ class DevBuilderView extends DevBaseView {
       tokenCostInput.value = norm;
     }
     if (uiShowInCatalog) {
-      // Flujos de sistema se comportan como manuales pero nunca deben aparecer en catálogo
-      uiShowInCatalog.disabled = isSystem;
-      uiShowInCatalog.checked = isSystem ? false : !!this.flowData.show_in_catalog;
+      uiShowInCatalog.disabled = false;
+      uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
     }
     if (testFlowBtn) {
       testFlowBtn.hidden = false; testFlowBtn.style.display = '';
@@ -1531,7 +1527,7 @@ class DevBuilderView extends DevBaseView {
       flowTokenCost: (v) => {
         // Numeric ahora (no int) — soporta decimales tipo 3.25 cred.
         const n = parseFloat(v);
-        const min = (this.flowData.flow_category_type === 'system') ? 0 : 0.01;
+        const min = 0.01;
         this.flowData.token_cost = isNaN(n) ? min : Math.max(min, n);
       },
       flowVersion: (v) => this.flowData.version = v
@@ -1551,16 +1547,16 @@ class DevBuilderView extends DevBaseView {
       }
     });
 
-    // Tipo de flujo: picker Manual | System | Autopilot | Scraping
+    // Tipo de flujo: picker Manual | Autopilot
     const flowTypeInput = this.querySelector('#flowType');
     const flowTypePicker = this.querySelector('#flowTypePicker');
-    const leadOnlyTypes = ['autopilot', 'scraping'];
+    const leadOnlyTypes = ['autopilot'];
     if (flowTypePicker && flowTypeInput) {
       flowTypePicker.querySelectorAll('.flow-type-tab').forEach((tab) => {
         tab.addEventListener('click', () => {
           const v = tab.getAttribute('data-value');
           if (leadOnlyTypes.includes(v) && !this.isLead()) {
-            this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot o Scraping.', 'warning');
+            this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot.', 'warning');
             return;
           }
           flowTypeInput.value = v;
@@ -1573,7 +1569,7 @@ class DevBuilderView extends DevBaseView {
         const v = e.target.value;
         if (leadOnlyTypes.includes(v) && !this.isLead()) {
           e.target.value = this.flowData.flow_category_type || 'manual';
-          this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot o Scraping.', 'warning');
+          this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot.', 'warning');
           this.updateFlowTypePicker(e.target.value);
           return;
         }

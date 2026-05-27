@@ -560,7 +560,7 @@ class StudioView extends BaseView {
    */
   applyStudioMode(flow) {
     const type = flow && flow.flow_category_type ? flow.flow_category_type : 'manual';
-    const isAutomated = (type === 'autopilot' || type === 'scraping');
+    const isAutomated = (type === 'autopilot');
     const container = document.getElementById('studioContainer');
     const canvasEl = document.getElementById('studioCanvas');
     const automatedWrap = document.getElementById('studioAutomatedWrap');
