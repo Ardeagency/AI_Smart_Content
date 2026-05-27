@@ -1199,19 +1199,140 @@ class FlowCatalogView extends BaseView {
     return this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId) || null;
   }
 
-  // Flows relacionados: misma subcategoria; si no alcanza, misma categoria.
-  getRelatedFlows(flow, limit = 12) {
-    if (!flow) return [];
-    const pool = (this.flows || []).filter(f => f.id !== flow.id);
-    const sameSub = flow.subcategory_id
-      ? pool.filter(f => f.subcategory_id === flow.subcategory_id)
-      : [];
-    const sameCat = flow.category_id
-      ? pool.filter(f => f.category_id === flow.category_id && !sameSub.includes(f))
-      : [];
-    const score = (f) => (f.run_count || 0) + (f.likes_count || 0);
-    const ranked = [...sameSub, ...sameCat].sort((a, b) => score(b) - score(a));
-    return ranked.slice(0, limit);
+  // ---- helpers de runs (columna izquierda del modal) ----
+
+  getPublicUrlFromStorage(bucket, filePath) {
+    if (!this.supabase?.storage?.from || !bucket || typeof filePath !== 'string' || !filePath.trim()) return null;
+    try {
+      let path = filePath.trim();
+      if (path.startsWith(`${bucket}/`)) path = path.slice(bucket.length + 1);
+      else if (path.startsWith('/')) path = path.slice(1);
+      const { data } = this.supabase.storage.from(bucket).getPublicUrl(path);
+      return data?.publicUrl || null;
+    } catch (_) { return null; }
+  }
+
+  // Resuelve el media de un output (runs_outputs) a una URL mostrable.
+  resolveRunMedia(o) {
+    if (!o) return null;
+    let media_url = null;
+    const rawPath = typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
+    if (rawPath) {
+      media_url = rawPath.startsWith('http')
+        ? rawPath
+        : (this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath));
+    }
+    const meta = o.metadata && typeof o.metadata === 'object' ? o.metadata : {};
+    if (!media_url) media_url = meta.url || meta.image_url || meta.file_url || meta.output_url || meta.publicUrl || meta.src || meta.video_url || null;
+    const type = (o.output_type || '').toLowerCase();
+    const isVideo = type.includes('video') || /\.(mp4|webm|mov)(\?|$)/i.test(media_url || '');
+    return { media_url, isVideo };
+  }
+
+  // Ultimos runs de ESTE flow (del usuario), con su primer output resuelto.
+  async loadFlowRuns(flowId, limit = 2) {
+    if (!this.supabase || !flowId) return [];
+    try {
+      const base = () => this.supabase
+        .from('flow_runs')
+        .select('id, created_at, status')
+        .eq('flow_id', flowId)
+        .order('created_at', { ascending: false })
+        .limit(8);
+      let q = base();
+      if (this.userId) q = q.eq('user_id', this.userId);
+      let { data: runs, error } = await q;
+      if (error) {
+        // status puede no existir en algun entorno → reintento minimo
+        let q2 = this.supabase.from('flow_runs').select('id, created_at').eq('flow_id', flowId).order('created_at', { ascending: false }).limit(8);
+        if (this.userId) q2 = q2.eq('user_id', this.userId);
+        const r2 = await q2;
+        runs = r2.data; error = r2.error;
+      }
+      if (error || !Array.isArray(runs) || !runs.length) return [];
+      const runIds = runs.map(r => r.id);
+      const { data: outs } = await this.supabase
+        .from('runs_outputs')
+        .select('id, run_id, output_type, storage_path, metadata, created_at')
+        .in('run_id', runIds)
+        .order('created_at', { ascending: false });
+      const byRun = new Map();
+      (outs || []).forEach(o => { if (!byRun.has(o.run_id)) byRun.set(o.run_id, this.resolveRunMedia(o)); });
+      const result = [];
+      for (const r of runs) {
+        result.push({ ...r, output: byRun.get(r.id) || null });
+        if (result.length >= limit) break;
+      }
+      return result;
+    } catch (e) { console.warn('loadFlowRuns:', e); return []; }
+  }
+
+  relativeTime(dateStr) {
+    const d = dateStr ? new Date(dateStr).getTime() : 0;
+    if (!d) return '';
+    const min = Math.floor((Date.now() - d) / 60000);
+    if (min < 1) return 'ahora';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `hace ${h} h`;
+    const days = Math.floor(h / 24);
+    if (days < 30) return `hace ${days} d`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `hace ${months} mes${months > 1 ? 'es' : ''}`;
+    return `hace ${Math.floor(months / 12)} a`;
+  }
+
+  _runStatusInfo(status) {
+    const s = (status || '').toLowerCase();
+    if (['completed', 'success', 'done', 'ready', 'completado'].includes(s)) return { label: 'Listo', cls: 'ok' };
+    if (['failed', 'error'].includes(s)) return { label: 'Fallo', cls: 'err' };
+    if (['running', 'processing', 'pending', 'queued', 'in_progress'].includes(s)) return { label: 'En proceso', cls: 'run' };
+    return { label: s ? this.escapeHtml(s) : 'Run', cls: 'idle' };
+  }
+
+  renderRunItem(run) {
+    const m = run.output;
+    let mediaHtml;
+    if (m && m.media_url) {
+      mediaHtml = m.isVideo
+        ? `<video src="${this.escapeHtml(m.media_url)}" class="flow-detail-run-media-el" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
+        : `<img src="${this.escapeHtml(m.media_url)}" alt="" class="flow-detail-run-media-el" loading="lazy">`;
+    } else {
+      mediaHtml = `<div class="flow-detail-run-ph"><i class="fas fa-image"></i></div>`;
+    }
+    const st = this._runStatusInfo(run.status);
+    return `
+      <button type="button" class="flow-detail-run" data-run-id="${this.escapeHtml(run.id)}">
+        <div class="flow-detail-run-media">${mediaHtml}</div>
+        <div class="flow-detail-run-info">
+          <span class="flow-detail-run-status flow-detail-run-status--${st.cls}">${st.label}</span>
+          <span class="flow-detail-run-date">${this.relativeTime(run.created_at)}</span>
+        </div>
+      </button>`;
+  }
+
+  async populateFlowRuns(modal, flow) {
+    const host = modal.querySelector('[data-runs]');
+    if (!host) return;
+    const runs = await this.loadFlowRuns(flow.id, 2);
+    if (!document.body.contains(host)) return; // modal cerrado mientras cargaba
+    if (!runs.length) {
+      host.innerHTML = `<div class="flow-detail-runs-empty">Aun no has ejecutado este flow. Cuando lo hagas, veras aqui tus ultimos resultados.</div>`;
+      return;
+    }
+    host.innerHTML = runs.map(r => this.renderRunItem(r)).join('');
+    host.querySelectorAll('.flow-detail-run').forEach(el => {
+      el.addEventListener('click', () => this.openRun(flow, el.getAttribute('data-run-id')));
+    });
+  }
+
+  openRun(flow, runId) {
+    this.closeFlowDetail();
+    const slug = flow?.name ? this.flowNameToSlug(flow.name) : '';
+    const base = slug ? `${this.getStudioPath()}/${encodeURIComponent(slug)}` : this.getStudioPath();
+    const url = runId ? `${base}?run=${encodeURIComponent(runId)}` : base;
+    if (window.router) window.router.navigate(url);
+    else window.location.href = url;
   }
 
   renderFlowDetailBody(flow) {
@@ -1228,11 +1349,12 @@ class FlowCatalogView extends BaseView {
     const ftype = flow.flow_category_type || 'manual';
     if (ftype === 'autopilot' || ftype === 'scraping') badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
 
-    const media = flow.flow_image_url
+    // El banner del flow es el fondo de toda la card.
+    const bg = flow.flow_image_url
       ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
-          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-detail-media-el" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
-          : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-detail-media-el">`)
-      : `<div class="flow-detail-media-ph"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-detail-bg-el" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="" class="flow-detail-bg-el">`)
+      : '';
 
     const catLabel = [flow._categoryName, flow._subcategoryName].filter(Boolean).map(s => this.escapeHtml(s)).join('  ·  ');
     const desc = flow.description ? this.escapeHtml(flow.description) : 'Sin descripcion disponible para este flow.';
@@ -1244,45 +1366,40 @@ class FlowCatalogView extends BaseView {
       `<span class="flow-detail-meta-item">v${this.escapeHtml((flow.version || '1.0.0').toString())}</span>`
     ].filter(Boolean).join('');
 
-    const related = this.getRelatedFlows(flow);
-    const relatedHtml = related.length ? `
-      <div class="flow-detail-related">
-        <h3 class="flow-detail-section-title">Relacionados</h3>
-        <div class="flow-catalog-row-scroll flow-detail-related-row">
-          ${related.map(f => this.renderFlowCard(f)).join('')}
-        </div>
-      </div>` : '';
-
     const wrap = document.createElement('div');
     wrap.className = 'flow-detail';
     wrap.dataset.flowId = flow.id;
     wrap.innerHTML = `
-      <div class="flow-detail-media">
-        ${media}
-        <div class="flow-detail-media-scrim" aria-hidden="true"></div>
-        ${badges.length ? `<div class="flow-detail-badges">${badges.join('')}</div>` : ''}
-        <div class="flow-detail-hero-text">
+      <div class="flow-detail-bg" aria-hidden="true">${bg}</div>
+      <div class="flow-detail-bg-scrim" aria-hidden="true"></div>
+      <div class="flow-detail-grid">
+        <aside class="flow-detail-col flow-detail-col--runs">
+          <h3 class="flow-detail-section-title">Ultimos runs</h3>
+          <div class="flow-detail-runs" data-runs>
+            <div class="flow-detail-run flow-detail-run--skel"></div>
+            <div class="flow-detail-run flow-detail-run--skel"></div>
+          </div>
+        </aside>
+        <div class="flow-detail-col flow-detail-col--info">
           ${catLabel ? `<span class="flow-detail-eyebrow">${catLabel}</span>` : ''}
           <h2 class="flow-detail-title">${name}</h2>
+          ${badges.length ? `<div class="flow-detail-badges-inline">${badges.join('')}</div>` : ''}
+          <div class="flow-detail-actions">
+            <button type="button" class="flow-detail-cta flow-detail-cta--run" data-detail-action="run">
+              <i class="fas fa-play" aria-hidden="true"></i>
+              <span>Ejecutar</span>
+              <span class="flow-detail-cta-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
+            </button>
+            <button type="button" class="flow-detail-icon-btn flow-detail-save ${isSaved ? 'is-active' : ''}" data-detail-action="save" aria-label="Guardar" title="Guardar">
+              <i class="fas fa-bookmark" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="flow-detail-icon-btn flow-detail-like ${isLiked ? 'is-active' : ''}" data-detail-action="like" aria-label="Like" title="Like">
+              <i class="fas fa-heart" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="flow-detail-meta">${meta}</div>
+          <p class="flow-detail-desc">${desc}</p>
         </div>
-      </div>
-      <div class="flow-detail-content">
-        <div class="flow-detail-actions">
-          <button type="button" class="flow-detail-cta flow-detail-cta--run" data-detail-action="run">
-            <i class="fas fa-play" aria-hidden="true"></i>
-            <span>Ejecutar</span>
-            <span class="flow-detail-cta-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
-          </button>
-          <button type="button" class="flow-detail-icon-btn flow-detail-save ${isSaved ? 'is-active' : ''}" data-detail-action="save" aria-label="Guardar" title="Guardar">
-            <i class="fas fa-bookmark" aria-hidden="true"></i>
-          </button>
-          <button type="button" class="flow-detail-icon-btn flow-detail-like ${isLiked ? 'is-active' : ''}" data-detail-action="like" aria-label="Like" title="Like">
-            <i class="fas fa-heart" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="flow-detail-meta">${meta}</div>
-        <p class="flow-detail-desc">${desc}</p>
-        ${relatedHtml}
       </div>`;
     return wrap;
   }
@@ -1290,7 +1407,6 @@ class FlowCatalogView extends BaseView {
   openFlowDetail(flowId) {
     const flow = this.getFlowById(flowId);
     if (!flow) { this.runFlow(flowId); return; }
-    // Si ya hay un modal abierto (clic en relacionado), cierra el anterior.
     this.closeFlowDetail();
     if (!window.Modal || typeof window.Modal.show !== 'function') { this.runFlow(flowId); return; }
 
@@ -1309,24 +1425,15 @@ class FlowCatalogView extends BaseView {
     this._detailFlowId = flowId;
     this._setFlowParam(flowId);
 
-    // CTA Ejecutar
     modal.querySelector('[data-detail-action="run"]')?.addEventListener('click', () => {
       close();
       this.runFlow(flowId);
     });
-    // Like / Save dentro del modal
     modal.querySelector('[data-detail-action="like"]')?.addEventListener('click', () => this.toggleLike(flowId));
     modal.querySelector('[data-detail-action="save"]')?.addEventListener('click', () => this.toggleSave(flowId));
-    // Cards relacionadas: abren su propio detalle (swap)
-    modal.querySelectorAll('.flow-detail-related-row .flow-card').forEach(card => {
-      const relId = card.getAttribute('data-flow-id');
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.flow-card-icon-btn')) return;
-        this.openFlowDetail(relId);
-      });
-      card.querySelector('.flow-card-icon-btn[data-action="like"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(relId); });
-      card.querySelector('.flow-card-icon-btn[data-action="save"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(relId); });
-    });
+
+    // Columna izquierda: ultimos runs (async).
+    this.populateFlowRuns(modal, flow);
   }
 
   closeFlowDetail() {
