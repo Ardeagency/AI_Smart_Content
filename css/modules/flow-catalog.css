@@ -1094,9 +1094,16 @@
    panel se estiliza con `.modal-content.flow-detail-modal`.
    ======================================================================== */
 .modal-content.flow-detail-modal {
-  max-width: min(1040px, calc(100vw - 2rem));
+  max-width: min(1180px, calc(100vw - 2rem));
   background: var(--bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
+}
+/* Backdrop del modal de detalle = glass-black (no el --bg-overlay morado).
+   La clase vive en .modal-content, asi que scopeamos el overlay via :has. */
+.modal:has(.modal-content.flow-detail-modal) .modal-overlay {
+  background: var(--glass-black-bg, rgba(11, 11, 11, 0.55));
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
 }
 .flow-detail-modal .modal-body {
   padding: 0;
@@ -1387,6 +1394,21 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* Footer: "Flows que te pueden interesar" (tercera fila, full-width) */
+.flow-detail-footer {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.25rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem) clamp(1.5rem, 3vw, 2.75rem) clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.flow-detail-footer .flow-detail-section-title {
+  margin-bottom: 0.9rem;
+}
+.flow-detail-related-row {
+  padding-bottom: 0.25rem;
 }
 
 /* Responsive: apilar columnas en pantallas estrechas */

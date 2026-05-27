@@ -1199,6 +1199,21 @@ class FlowCatalogView extends BaseView {
     return this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId) || null;
   }
 
+  // Flows relacionados: misma subcategoria; si no alcanza, misma categoria.
+  getRelatedFlows(flow, limit = 12) {
+    if (!flow) return [];
+    const pool = (this.flows || []).filter(f => f.id !== flow.id);
+    const sameSub = flow.subcategory_id
+      ? pool.filter(f => f.subcategory_id === flow.subcategory_id)
+      : [];
+    const sameCat = flow.category_id
+      ? pool.filter(f => f.category_id === flow.category_id && !sameSub.includes(f))
+      : [];
+    const score = (f) => (f.run_count || 0) + (f.likes_count || 0);
+    const ranked = [...sameSub, ...sameCat].sort((a, b) => score(b) - score(a));
+    return ranked.slice(0, limit);
+  }
+
   // ---- helpers de runs (columna izquierda del modal) ----
 
   getPublicUrlFromStorage(bucket, filePath) {
@@ -1366,6 +1381,15 @@ class FlowCatalogView extends BaseView {
       `<span class="flow-detail-meta-item">v${this.escapeHtml((flow.version || '1.0.0').toString())}</span>`
     ].filter(Boolean).join('');
 
+    const related = this.getRelatedFlows(flow);
+    const footerHtml = related.length ? `
+      <div class="flow-detail-footer">
+        <h3 class="flow-detail-section-title">Flows que te pueden interesar</h3>
+        <div class="flow-catalog-row-scroll flow-detail-related-row">
+          ${related.map(f => this.renderFlowCard(f)).join('')}
+        </div>
+      </div>` : '';
+
     const wrap = document.createElement('div');
     wrap.className = 'flow-detail';
     wrap.dataset.flowId = flow.id;
@@ -1400,7 +1424,8 @@ class FlowCatalogView extends BaseView {
           <div class="flow-detail-meta">${meta}</div>
           <p class="flow-detail-desc">${desc}</p>
         </div>
-      </div>`;
+      </div>
+      ${footerHtml}`;
     return wrap;
   }
 
@@ -1431,6 +1456,17 @@ class FlowCatalogView extends BaseView {
     });
     modal.querySelector('[data-detail-action="like"]')?.addEventListener('click', () => this.toggleLike(flowId));
     modal.querySelector('[data-detail-action="save"]')?.addEventListener('click', () => this.toggleSave(flowId));
+
+    // Footer "Flows que te pueden interesar": abren su propio detalle (swap).
+    modal.querySelectorAll('.flow-detail-related-row .flow-card').forEach(card => {
+      const relId = card.getAttribute('data-flow-id');
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.flow-card-icon-btn')) return;
+        this.openFlowDetail(relId);
+      });
+      card.querySelector('.flow-card-icon-btn[data-action="like"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(relId); });
+      card.querySelector('.flow-card-icon-btn[data-action="save"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(relId); });
+    });
 
     // Columna izquierda: ultimos runs (async).
     this.populateFlowRuns(modal, flow);
