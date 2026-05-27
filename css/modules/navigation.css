@@ -1861,6 +1861,12 @@ body.has-sidebar #app-container:has(> .brand-dashboard-container) {
     padding: 0;
 }
 
+/* Flows y Organizacion: sin padding — contenido full-bleed bajo el header glass */
+body.has-sidebar #app-container:has(> .flow-catalog),
+body.has-sidebar #app-container:has(> .organization-container) {
+    padding: 0;
+}
+
 body.has-sidebar.sidebar-collapsed #app-container {
     margin-left: var(--nav-width-collapsed, 72px);
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));
