@@ -54,11 +54,12 @@ Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
 5. **Estado vacio que enseña** (reemplaza "PROXIMAMENTE" pelado): mensaje + sugerencia/CTA.
 6. **Pieza destacada editorial** en home: el primer slide del hero o un bloque "Destacado" con copy narrativo y direccion de arte.
 
-### Fase 2 — Detalle / preview modal (Netflix takeover + premium)
-- Modal takeover al hacer clic en una card: preview (imagen/video), nombre, descripcion, que hace, output type, creditos, usos, badges, CTA "Ejecutar" + "Guardar".
-- Row de flows relacionados dentro del modal (misma subcategoria).
-- Reemplaza el salto directo a StudioView (el CTA del modal navega a StudioView).
-- Deep-link: `?flow=<id>` abre el modal.
+### Fase 2 — Detalle / preview modal (Netflix takeover + premium) ← HECHA (commit c81bae20)
+- Modal takeover al hacer clic en una card: media hero (img/video) + scrim + badges + titulo, descripcion, output type, creditos, usos, CTA "Ejecutar" (con costo) + Guardar/Like. HECHO.
+- Row de flows relacionados dentro del modal (misma subcategoria, fallback categoria); swap in-place al clickear. HECHO.
+- Reemplaza el salto directo a StudioView (el CTA del modal navega via runFlow). HECHO.
+- Deep-link `?flow=<id>` abre el modal y se limpia al cerrar. HECHO.
+- Reusa `window.Modal.show` (focus-trap/ESC/portal/a11y) con scope `flow-detail-modal`. toggleLike/toggleSave ahora refrescan cards + modal por flowId.
 
 ### Fase 3 — Search + filtros + orden (marketplace)
 - Buscador (nombre + descripcion, client-side sobre flows cargados; server-side si crece).
