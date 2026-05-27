@@ -59,36 +59,47 @@ Existen ~20 archivos con modales implementados a mano (HTML + listeners ad-hoc p
   estatico `#deleteFlowModal` + `setupDeleteModal()`; `showDeleteModal/hideDeleteModal/
   confirmDelete` ahora usan `window.Modal.show` con fallback a `confirm()` nativo).
 
-- **2026-05-27 — Batch 1: familia dev-lead (3 modales).** Patron de migracion de
-  menor riesgo: se mueve el HTML del form a un `_modalBodyHtml()`, se construye via
-  `window.Modal.show` en el open, se guarda el `close` devuelto, y se cablean
-  Cancel/Save dentro del modal dinamico. **Se mantienen los mismos IDs de campo**
-  para NO tocar la logica de guardado.
-  - `DevLeadOrgsView.js` — `#orgsModal` (form crear/editar org). openCreate/openEdit
-    + `_openModal` + `_modalBodyHtml(showOwner)`; `saveOrg`/`setFormValues` intactos.
-  - `DevLeadVeraKnowledgeView.js` — `#veraKnowledgeDetailModal` (detalle read-only).
-    `openDetail` arma el body y llama Modal.show; `closeDetail` usa el close guardado.
-  - `DevLeadInputSchemasView.js` — `#inputSchemaModal` (form ancho input schema).
-    `_openModal('...')` muestra primero y luego puebla campos; `saveTemplate` intacto;
-    eliminado `setupModalHandlers`.
-  - **Pendiente validacion humana** de los 3: abrir cada modal, confirmar esc/backdrop/
+- **2026-05-27 — 11 modales ad-hoc migrados (5 batches).** Patron de menor riesgo:
+  el HTML del form se mueve a un body (mismos IDs de campo => logica de guardado
+  intacta), se construye via `window.Modal.show` en el open, se guarda el `close`
+  devuelto y se cablean Cancel/Save dentro del modal dinamico. Eliminado el HTML
+  estatico + listeners ad-hoc de cada uno.
+  - **Batch 1 (dev-lead):** `DevLeadOrgsView` #orgsModal, `DevLeadVeraKnowledgeView`
+    #veraKnowledgeDetailModal (read-only), `DevLeadInputSchemasView` #inputSchemaModal.
+  - **Batch 2 (produccion):** `products.js` #newProduct, `TasksView` taskEdit (schedule),
+    `MonitoringView` mn-modal entity + watcher (2; se conservan clases mn-form/mn-btn).
+  - **Batch 3:** `BrandstorageView` #brandPlaceModal + #brandEntityModal (2).
+  - **Batch 4:** `DevLeadCategoriesView` #categoryModal + #subcategoryModal (2;
+    cover upload preservado).
+  - (Pre-existente 2026-05-26: `DevFlowsView` #deleteFlowModal.)
+  - **Pendiente validacion humana** de los 11: abrir cada uno, confirmar esc/backdrop/
     focus-trap, que el form guarde (crear+editar) y que Cancel cierre.
 
-### Restantes por migrar (conteo `grep -rIc "modal-overlay"`)
+### Diferidos con justificacion (NO migrar a ciegas)
 
-Formularios de produccion (mayor riesgo, validar guardado): `products.js` (#newProduct),
-`TasksView.js` (schedule), `MonitoringView.js` (mn-modal entity+watcher),
-`DevLeadCategoriesView.js`, `DevWebhooksView.js`, `DevTestView.js`, `DevBuilderView.js`
-(12 ocurrencias — multiple modales), `BrandstorageView.js`, `builder/BuilderModules.js`,
-`builder/BuilderProductivity.js`, `builder/BuilderAdvanced.js`, `builder/BuilderEnterprise.js`,
-`components/navigation/Settings.mixin.js`, `components/Navigation.js`.
-Nota: varios de los "1-2 ocurrencias" son querySelector a un modal compartido o el panel
-de versiones (slide-panel), no necesariamente un modal a migrar — inspeccionar antes.
+Son modales que NO encajan en el patron de bajo riesgo y requieren sesion dedicada
+CON validacion en browser:
 
-> El criterio de done (0 modales custom + validacion visual por modal) sigue abierto:
-> este task NO se cierra hasta migrar todos y validarlos en browser. La lista viva de
-> "que probar" de los ya migrados esta en `PENDING-HUMAN-VERIFICATION.md` no aplica aun
-> porque el task no esta completo; se consolidara ahi cuando se cierre.
+- **Persistentes-toggle con estado interno** (se construyen una vez y se muestran/ocultan
+  con `display`, con logica embebida): `DevWebhooksView` (#webhookModal con test-panel +
+  flow-selector, #healthCheckModal, #deleteWebhookModal), `DevTestView` (#saveTestCaseModal,
+  #runDetailModal, #expandResponseModal). Migrarlos = cambio de lifecycle (toggle ->
+  create/destroy) + re-arquitectura del estado. Alto riesgo en tooling dev de 1300-2000 lineas.
+- **`DevBuilderView`** (6+ modales: moduleNode, test, versions, sandbox, variables,
+  commandPalette). Varios YA tienen `role="dialog"`/`aria-modal`. Command-palette y sandbox
+  son UX no-estandar. Es el flow builder (herramienta core); requiere su propia sesion.
+- **`Settings.mixin` #userSettingsModal** y **`Navigation` #notificationsModal**: persistentes,
+  ya tienen role/aria-modal/ESC/overlay-close; son chrome global (alto blast radius). Solo
+  les falta focus-trap. Ganancia marginal vs riesgo de refactor de lifecycle.
+- **Paneles slide / no-dialogos:** `BuilderEnterprise` (panel de versiones), `BuilderProductivity`
+  (command palette + issues panel), `BuilderAdvanced` (sandbox). No son modales-form.
+- **Falso positivo:** `BuilderModules:322` es un `querySelector('.modal-overlay')` sobre un
+  modal existente, no una definicion.
+
+> Criterio de done (0 modales custom ad-hoc + validacion visual) — los 11 ad-hoc estan
+> migrados; los diferidos arriba quedan documentados con su razon. Cuando se validen en
+> browser, consolidar el "que probar" en `PENDING-HUMAN-VERIFICATION.md` y, si se decide
+> cerrar el alcance a "solo ad-hoc", borrar este doc.
 
 ## Referencias
 
