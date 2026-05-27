@@ -1205,10 +1205,10 @@
 .flow-detail-title {
   width: 100%;
   margin: 0;
-  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+  font-size: clamp(1.9rem, 3.2vw, 2.9rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
   color: #ffffff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
   text-wrap: balance;
@@ -1391,7 +1391,8 @@
 }
 .flow-detail-desc {
   margin: 0;
-  font-size: 0.95rem;
+  max-width: 60ch; /* columna de lectura: evita la linea unica delgada */
+  font-size: 1.05rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.84);
 }
@@ -1417,6 +1418,22 @@
 }
 .flow-detail-related-row {
   padding-bottom: 0.25rem;
+}
+/* Sugerencias pequeñas: secundarias en la jerarquia (no compiten con el
+   bloque de info). Cards compactas ~150px en vez de las 240px del catalogo. */
+.flow-detail-related-row .flow-card {
+  flex: 0 0 150px;
+  width: 150px;
+}
+.flow-detail-related-row .flow-card--catalog .flow-card-title {
+  font-size: 0.8rem;
+}
+.flow-detail-related-row .flow-card-info-meta {
+  font-size: 0.64rem;
+}
+/* En el footer no hace falta el detalle extra en hover (mantener minimal) */
+.flow-detail-related-row .flow-card-info-extra {
+  display: none;
 }
 
 /* Responsive: apilar columnas en pantallas estrechas */
