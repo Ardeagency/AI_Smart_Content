@@ -26,6 +26,7 @@
   const COL_CAMP = 392;   // x columna campanas
   const ROW_GAP  = 150;   // separacion vertical en auto-layout
   const ROW_TOP  = 40;
+  const MAX_TAGS = 8;     // tope por campo array (no sobresaturar al LLM)
 
   // ------------------------------------------------------------------
   // Estado / helpers
@@ -169,6 +170,23 @@
   };
   P._linesOf = function (arr) { return Array.isArray(arr) ? arr.join('\n') : ''; };
 
+  /** Editor de array tipo chips/tags con tope (no sobresaturar al LLM). */
+  P._fieldTags = function (label, field, arr, max) {
+    const items = Array.isArray(arr) ? arr.filter(Boolean) : [];
+    const m = max || MAX_TAGS;
+    const atMax = items.length >= m;
+    const chips = items.map((v) =>
+      `<span class="cc-tag" data-val="${this.escapeHtml(v)}">${this.escapeHtml(v)}<button type="button" class="cc-tag-x" aria-label="Quitar">&times;</button></span>`).join('');
+    return `
+      <div class="cc-field cc-field--tags" data-field-tags="${field}" data-max="${m}">
+        <div class="cc-field-head"><span class="cc-field-label">${this.escapeHtml(label)}</span><span class="cc-field-count ${atMax ? 'is-max' : ''}">${items.length}/${m}</span></div>
+        <div class="cc-tags">
+          ${chips}
+          <input class="cc-tag-input" type="text" placeholder="${atMax ? 'Limite alcanzado' : 'Escribe y Enter'}" ${atMax ? 'disabled' : ''} />
+        </div>
+      </div>`;
+  };
+
   /** Rango de edades: dos inputs numericos en una fila. */
   P._fieldAgeRange = function (minV, maxV) {
     const mv = (minV == null || minV === '') ? '' : String(minV);
@@ -230,10 +248,10 @@
           ['solution_aware', 'Solution aware'], ['product_aware', 'Product aware'], ['most_aware', 'Most aware'],
         ])}
         ${this._fieldArea('Descripcion', 'str', 'description', a.description, { rows: 2, placeholder: 'Quien es esta audiencia' })}
-        ${this._fieldArea('Dolores', 'array', 'dolores', this._linesOf(a.dolores), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Deseos', 'array', 'deseos', this._linesOf(a.deseos), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Objeciones', 'array', 'objeciones', this._linesOf(a.objeciones), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
-        ${this._fieldArea('Gatillos de compra', 'array', 'gatillos_compra', this._linesOf(a.gatillos_compra), { multi: 'lines', rows: 3, placeholder: 'Uno por linea' })}
+        ${this._fieldTags('Dolores', 'dolores', a.dolores)}
+        ${this._fieldTags('Deseos', 'deseos', a.deseos)}
+        ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
+        ${this._fieldTags('Gatillos de compra', 'gatillos_compra', a.gatillos_compra)}
       </div>
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra hacia una campana para vincular"></span>
     </div>`;
@@ -531,11 +549,17 @@
     document.getElementById('ccBtnZoomReset')?.addEventListener('click', () => { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); this._renderEdges(); });
     document.getElementById('ccBtnRelayout')?.addEventListener('click', () => this._relayout());
 
+    // Panel flotante colapsable (estado persistido).
+    document.getElementById('ccPanelToggle')?.addEventListener('click', () => this._togglePanel());
+    try {
+      if (localStorage.getItem('cc:panel:collapsed') === '1') this._togglePanel(true);
+    } catch (_) { /* noop */ }
+
     // Rueda → zoom anclado al cursor
     if (!this._canvasWheel) {
       this._canvasWheel = (e) => {
-        // Scroll dentro del cuerpo de un nodo (campos / ads): no hacer zoom.
-        if (e.target.closest('.cc-node-body, .cc-node-ads')) return;
+        // Scroll dentro de un nodo o del panel flotante: no hacer zoom.
+        if (e.target.closest('.cc-node-body, .cc-node-ads, .cc-floating-panel')) return;
         if (!e.ctrlKey && Math.abs(e.deltaY) < 1) return;
         e.preventDefault();
         const dir = e.deltaY < 0 ? 1 : -1;
@@ -557,9 +581,9 @@
         const port = e.target.closest('.cc-node-port--out');
         if (port) { this._beginConnect(e, port); return; }
 
-        // Controles editables y botones de accion: dejar que reciban el evento
-        // nativo (focus / click), sin iniciar drag ni pan.
-        if (e.target.closest('input, textarea, select, option, .cc-node-act, .cc-edge-disconnect')) return;
+        // Panel flotante, controles editables y botones de accion: dejar que
+        // reciban el evento nativo (focus / click), sin iniciar drag ni pan.
+        if (e.target.closest('.cc-floating-panel, input, textarea, select, option, .cc-node-act, .cc-edge-disconnect')) return;
 
         const handle = e.target.closest('[data-drag-handle]');
         const nodeEl = e.target.closest('.cc-node');
@@ -582,6 +606,14 @@
         const key  = nodeEl.getAttribute('data-node-key');
         const type = nodeEl.getAttribute('data-type');
         const id   = nodeEl.getAttribute('data-id');
+        const tagX = e.target.closest('.cc-tag-x');
+        if (tagX) {
+          e.preventDefault(); e.stopPropagation();
+          const chip = tagX.closest('.cc-tag');
+          const cont = chip ? chip.closest('.cc-field--tags') : null;
+          if (chip && cont) { chip.remove(); this._commitTags(cont); }
+          return;
+        }
         const toggleBtn = e.target.closest('.cc-node-toggle');
         if (toggleBtn) {
           e.preventDefault(); e.stopPropagation();
@@ -623,6 +655,23 @@
       };
       canvas.addEventListener('input', this._canvasFieldEdit);
       canvas.addEventListener('change', this._canvasFieldEdit);
+    }
+
+    // Tags/chips: Enter o coma agrega; Backspace en vacio quita el ultimo.
+    if (!this._canvasTagKey) {
+      this._canvasTagKey = (e) => {
+        const input = e.target.closest('.cc-tag-input');
+        if (!input) return;
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          this._addTag(input);
+        } else if (e.key === 'Backspace' && input.value === '') {
+          const cont = input.closest('.cc-field--tags');
+          const chips = cont ? cont.querySelectorAll('.cc-tag') : null;
+          if (chips && chips.length) { chips[chips.length - 1].remove(); this._commitTags(cont); }
+        }
+      };
+      canvas.addEventListener('keydown', this._canvasTagKey);
     }
 
     // Drag-and-drop: campana real del sidebar → canvas (como Segmind).
@@ -668,6 +717,67 @@
     }
   };
 
+  /* ── Tags/chips ────────────────────────────────────────────────────── */
+  P._addTag = function (input) {
+    const cont = input.closest('.cc-field--tags');
+    if (!cont) return;
+    const max = parseInt(cont.getAttribute('data-max'), 10) || MAX_TAGS;
+    const chips = [...cont.querySelectorAll('.cc-tag')];
+    if (chips.length >= max) { input.value = ''; return; }
+    const val = String(input.value || '').trim();
+    if (!val) return;
+    if (chips.some((t) => (t.getAttribute('data-val') || '').toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
+    const chip = document.createElement('span');
+    chip.className = 'cc-tag';
+    chip.setAttribute('data-val', val);
+    chip.innerHTML = `${this.escapeHtml(val)}<button type="button" class="cc-tag-x" aria-label="Quitar">&times;</button>`;
+    input.parentNode.insertBefore(chip, input);
+    input.value = '';
+    this._commitTags(cont);
+    if ([...cont.querySelectorAll('.cc-tag')].length < max) input.focus();
+  };
+
+  /** Recolecta los chips de un campo, actualiza el contador/limite y persiste. */
+  P._commitTags = function (cont) {
+    const nodeEl = cont.closest('.cc-node');
+    if (!nodeEl) return;
+    const field = cont.getAttribute('data-field-tags');
+    const max   = parseInt(cont.getAttribute('data-max'), 10) || MAX_TAGS;
+    const vals  = [...cont.querySelectorAll('.cc-tag')].map((t) => t.getAttribute('data-val'));
+    const atMax = vals.length >= max;
+
+    const count = cont.querySelector('.cc-field-count');
+    if (count) { count.textContent = `${vals.length}/${max}`; count.classList.toggle('is-max', atMax); }
+    const input = cont.querySelector('.cc-tag-input');
+    if (input) { input.disabled = atMax; input.placeholder = atMax ? 'Limite alcanzado' : 'Escribe y Enter'; }
+
+    const type = nodeEl.getAttribute('data-type');
+    const id   = nodeEl.getAttribute('data-id');
+    this._persistField(type, id, field, vals, cont.querySelector('.cc-tags'));
+  };
+
+  /** Persiste un campo arbitrario (usado por tags). Optimista + estados. */
+  P._persistField = async function (type, id, field, val, indicatorEl) {
+    if (!this._supabase || !id || !field) return;
+    const isAudience = type === 'audience';
+    const table = isAudience ? 'audience_personas' : 'campaigns';
+    const arr = isAudience ? this._audiences : this._campaigns;
+    const row = (arr || []).find((x) => String(x.id) === String(id));
+    if (row) row[field] = val;
+    if (indicatorEl) indicatorEl.classList.add('cc-field--saving');
+    try {
+      const { error } = await this._supabase
+        .from(table)
+        .update({ [field]: val, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+      if (indicatorEl) { indicatorEl.classList.remove('cc-field--saving'); indicatorEl.classList.add('cc-field--saved'); setTimeout(() => indicatorEl.classList.remove('cc-field--saved'), 900); }
+    } catch (e) {
+      console.error('CommandCenter persist field:', e);
+      if (indicatorEl) { indicatorEl.classList.remove('cc-field--saving'); indicatorEl.classList.add('cc-field--invalid'); }
+    }
+  };
+
   /** Flags de audiencia (me gusta / destacar / apagar). Persiste en BD. */
   P._toggleAudienceFlag = async function (id, flag, nodeEl) {
     if (!this._supabase || !['is_liked', 'is_featured', 'is_active'].includes(flag)) return;
@@ -700,6 +810,20 @@
         else { btn.classList.toggle('is-on', prev); nodeEl.classList.toggle(flag === 'is_featured' ? 'cc-node--featured' : 'cc-node--liked', prev); }
       }
     }
+  };
+
+  /** Colapsa/expande el panel flotante. `force` (bool) fija el estado. */
+  P._togglePanel = function (force) {
+    const panel = document.getElementById('ccSidebar');
+    if (!panel) return;
+    const collapsed = (typeof force === 'boolean')
+      ? (panel.classList.toggle('cc-floating-panel--collapsed', force), force)
+      : panel.classList.toggle('cc-floating-panel--collapsed');
+    const ic = document.querySelector('#ccPanelToggle i');
+    if (ic) ic.className = `fas fa-chevron-${collapsed ? 'left' : 'right'}`;
+    const btn = document.getElementById('ccPanelToggle');
+    if (btn) { btn.title = collapsed ? 'Expandir panel' : 'Colapsar panel'; btn.setAttribute('aria-label', btn.title); }
+    try { localStorage.setItem('cc:panel:collapsed', collapsed ? '1' : '0'); } catch (_) { /* noop */ }
   };
 
   /** Colapsa/expande un nodo sin re-render completo (preserva foco/edicion). */
@@ -1157,6 +1281,7 @@
     if (canvas && this._canvasMouseDown) { canvas.removeEventListener('mousedown', this._canvasMouseDown); this._canvasMouseDown = null; }
     if (canvas && this._canvasClick)     { canvas.removeEventListener('click', this._canvasClick); this._canvasClick = null; }
     if (canvas && this._canvasFieldEdit) { canvas.removeEventListener('input', this._canvasFieldEdit); canvas.removeEventListener('change', this._canvasFieldEdit); this._canvasFieldEdit = null; }
+    if (canvas && this._canvasTagKey)    { canvas.removeEventListener('keydown', this._canvasTagKey); this._canvasTagKey = null; }
     if (canvas && this._canvasDragOver)  { canvas.removeEventListener('dragover', this._canvasDragOver); canvas.removeEventListener('dragleave', this._canvasDragLeave); canvas.removeEventListener('drop', this._canvasDrop); this._canvasDragOver = null; }
     if (list && this._campDragStart)     { list.removeEventListener('dragstart', this._campDragStart); list.removeEventListener('dragend', this._campDragEnd); this._campDragStart = null; }
     if (typeof _origDestroy === 'function') _origDestroy.call(this);

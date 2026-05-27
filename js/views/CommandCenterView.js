@@ -111,10 +111,8 @@ class CommandCenterView extends BaseView {
     </div>
   </section>
 
-  <!-- LAYOUT CANVAS: lienzo de nodos LEFT (flex 1) + mini-dashboard 360px ── -->
+  <!-- LAYOUT CANVAS: el lienzo abarca todo; el panel va flotante dentro ── -->
   <div class="cc-cc-layout" id="ccTwoCol" style="display:none;">
-
-    <!-- IZQUIERDA: canvas de nodos (audiencias ↔ campanas) ───────────── -->
     <div class="cc-canvas-wrap">
       <div class="cc-canvas-toolbar">
         <div class="cc-canvas-toolbar-group">
@@ -142,33 +140,32 @@ class CommandCenterView extends BaseView {
           <i class="fas fa-diagram-project"></i>
           <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
         </div>
+
+        <!-- Panel flotante dentro del canvas (glass-black, colapsable) ── -->
+        <aside class="cc-floating-panel glass-black" id="ccSidebar">
+          <div class="cc-fp-head">
+            <span class="cc-fp-title"><i class="fas fa-sliders"></i> Panel</span>
+            <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Colapsar panel" aria-label="Colapsar panel">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <div class="cc-fp-body" id="ccPanelBody">
+            <div class="cc-mini-stats" id="ccMiniStats"></div>
+            <section class="cc-mini-section">
+              <div class="cc-mini-section-head">
+                <h4 class="cc-mini-section-title">Campanas reales</h4>
+                <span class="cc-mini-section-count" id="ccCampCount">0</span>
+              </div>
+              <div class="cc-list" id="ccCampList"></div>
+              <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+                <i class="fas fa-bullhorn"></i>
+                <span>Sin campanas sincronizadas. Conecta una integracion (Meta, Google, etc.).</span>
+              </div>
+            </section>
+          </div>
+        </aside>
       </div>
     </div>
-
-    <!-- DERECHA: mini-dashboard (patron Studio/Video) ────────────────── -->
-    <aside class="cc-mini-dash" id="ccSidebar">
-      <div class="cc-mini-dash-card">
-        <div class="cc-mini-dash-head">
-          <span class="cc-mini-dash-eyebrow">Panel</span>
-          <h3 class="cc-mini-dash-title">Mercado y campanas</h3>
-        </div>
-
-        <div class="cc-mini-stats" id="ccMiniStats"></div>
-
-        <section class="cc-mini-section">
-          <div class="cc-mini-section-head">
-            <h4 class="cc-mini-section-title">Campanas reales</h4>
-            <span class="cc-mini-section-count" id="ccCampCount">0</span>
-          </div>
-          <div class="cc-list" id="ccCampList"></div>
-          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
-            <i class="fas fa-bullhorn"></i>
-            <span>Sin campanas sincronizadas. Conecta una integracion (Meta, Google, etc.).</span>
-          </div>
-        </section>
-
-      </div>
-    </aside>
   </div>
 
   <!-- OCULTO: mapa de mercado. No se elimina; se retoma a futuro con

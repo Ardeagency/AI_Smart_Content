@@ -1324,9 +1324,47 @@
 .cc-field-input:focus { border-color: var(--cc-concept); background: rgba(255, 255, 255, 0.05); }
 .cc-field-area { resize: vertical; min-height: 38px; line-height: 1.4; }
 .cc-field-select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%); background-position: calc(100% - 14px) center, calc(100% - 9px) center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 26px; }
-.cc-field--invalid { border-color: var(--cc-real) !important; }
-.cc-field--saving { border-color: var(--cc-concept) !important; }
+.cc-field--invalid { border-color: #e15760 !important; }
+.cc-field--saving { border-color: rgba(255, 255, 255, 0.45) !important; }
 .cc-field--saved { border-color: #3cd264 !important; }
+
+/* ── Arrays como chips/tags (con tope) ─────────────────────────────── */
+.cc-field-count { font-size: 0.62rem; color: var(--text-muted); font-family: ui-monospace, monospace; }
+.cc-field-count.is-max { color: var(--text-primary, #fff); font-weight: 700; }
+.cc-tags {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.15s ease;
+}
+.cc-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  max-width: 100%;
+  font-size: 0.72rem; line-height: 1.3;
+  padding: 3px 5px 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-divider, #242424);
+}
+.cc-tag-x {
+  display: inline-grid; place-items: center;
+  width: 15px; height: 15px;
+  border: none; border-radius: 50%;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0;
+}
+.cc-tag-x:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+.cc-tag-input {
+  flex: 1; min-width: 90px;
+  border: none; background: transparent; outline: none;
+  color: var(--text-primary, #fff); font-size: 0.74rem; font-family: inherit;
+  padding: 3px 2px;
+}
+.cc-tag-input::placeholder { color: var(--text-muted); }
+.cc-tag-input:disabled { cursor: not-allowed; }
 
 /* ── Nodo real: stats + expandible (conjuntos/ads) ─────────────────── */
 .cc-node-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; }
@@ -1413,31 +1451,49 @@
 .cc-edge-disconnect:hover { background: rgba(225, 87, 96, 0.2); color: var(--cc-real); border-color: var(--cc-real); }
 
 /* ── Mini-dashboard (patron Studio/Video) ──────────────────────────── */
-.cc-mini-dash {
-  width: 360px;
-  flex: 0 0 360px;
-  min-height: 0;
+/* ── Panel flotante dentro del canvas (glass-black, colapsable) ─────── */
+.cc-floating-panel {
+  position: absolute;
+  top: 14px; right: 14px;
+  z-index: 8;
+  width: 340px;
+  max-height: calc(100% - 28px);
   display: flex;
   flex-direction: column;
+  /* glass-black aporta background/blur/border; aqui solo radio+sombra */
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  transition: width 0.2s ease, max-height 0.2s ease;
 }
-.cc-mini-dash-card {
-  flex: 1;
-  min-height: 0;
-  background: var(--bg-secondary, #141517);
-  border: 1px solid var(--border-light, #242424);
-  border-radius: 16px;
-  padding: 16px 16px 18px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  overflow-y: auto;
+.cc-fp-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.cc-mini-dash-head { margin-bottom: 14px; }
-.cc-mini-dash-eyebrow {
-  display: block;
-  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--text-muted);
+.cc-fp-title { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); }
+.cc-fp-title i { font-size: 0.78rem; color: var(--text-muted); }
+.cc-fp-toggle {
+  flex: 0 0 auto;
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  cursor: pointer; font-size: 0.7rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.cc-mini-dash-title { margin: 2px 0 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary, #fff); }
+.cc-fp-toggle:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.cc-fp-body { padding: 14px 14px 16px; overflow-y: auto; min-height: 0; }
+
+/* Colapsado: el panel se reduce a la cabecera (pill con el toggle). */
+.cc-floating-panel--collapsed { width: auto; }
+.cc-floating-panel--collapsed .cc-fp-body { display: none; }
+.cc-floating-panel--collapsed .cc-fp-head { border-bottom: none; }
+.cc-floating-panel--collapsed .cc-fp-title { display: none; }
 
 .cc-mini-stats {
   display: grid;
@@ -1466,8 +1522,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);
 }
-@media (max-width: 1100px) {
-  .cc-cc-layout { flex-direction: column; }
-  .cc-mini-dash { width: 100%; flex: 0 0 auto; max-height: 320px; }
-  .cc-canvas-wrap { min-height: 420px; }
+@media (max-width: 720px) {
+  /* En pantallas chicas el panel flotante se angosta para no tapar el canvas. */
+  .cc-floating-panel { width: calc(100% - 28px); max-width: 340px; }
 }
