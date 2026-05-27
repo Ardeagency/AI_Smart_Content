@@ -549,10 +549,10 @@
     document.getElementById('ccBtnZoomReset')?.addEventListener('click', () => { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); this._renderEdges(); });
     document.getElementById('ccBtnRelayout')?.addEventListener('click', () => this._relayout());
 
-    // Panel flotante colapsable (estado persistido).
-    document.getElementById('ccPanelToggle')?.addEventListener('click', () => this._togglePanel());
+    // Restaura la seccion activa del sidebar (si habia una abierta).
     try {
-      if (localStorage.getItem('cc:panel:collapsed') === '1') this._togglePanel(true);
+      const saved = localStorage.getItem('cc:panel:active');
+      if (saved && this._librarySections().some((s) => s.key === saved)) this._activeSection = saved;
     } catch (_) { /* noop */ }
 
     // Rueda → zoom anclado al cursor
@@ -674,15 +674,13 @@
       canvas.addEventListener('keydown', this._canvasTagKey);
     }
 
-    // Acordeon + rail de la biblioteca (delegado en el panel).
+    // Rail de la biblioteca (delegado en el panel): icono → abre/cierra seccion.
     const panel = document.getElementById('ccSidebar');
     if (panel && !this._panelClick) {
       this._panelClick = (e) => {
-        const secToggle = e.target.closest('[data-sec-toggle]');
-        if (secToggle) { this._toggleLibSection(secToggle.getAttribute('data-sec-toggle')); return; }
         const railSec = e.target.closest('[data-rail-sec]');
-        if (railSec) { this._togglePanel(false); this._toggleLibSection(railSec.getAttribute('data-rail-sec'), true); return; }
-        if (e.target.closest('[data-rail-expand]')) { this._togglePanel(false); return; }
+        if (railSec) { this._setActiveSection(railSec.getAttribute('data-rail-sec')); return; }
+        if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); }
       };
       panel.addEventListener('click', this._panelClick);
     }
@@ -823,20 +821,6 @@
         else { btn.classList.toggle('is-on', prev); nodeEl.classList.toggle(flag === 'is_featured' ? 'cc-node--featured' : 'cc-node--liked', prev); }
       }
     }
-  };
-
-  /** Colapsa/expande el panel flotante. `force` (bool) fija el estado. */
-  P._togglePanel = function (force) {
-    const panel = document.getElementById('ccSidebar');
-    if (!panel) return;
-    const collapsed = (typeof force === 'boolean')
-      ? (panel.classList.toggle('cc-floating-panel--collapsed', force), force)
-      : panel.classList.toggle('cc-floating-panel--collapsed');
-    const ic = document.querySelector('#ccPanelToggle i');
-    if (ic) ic.className = `fas fa-chevron-${collapsed ? 'left' : 'right'}`;
-    const btn = document.getElementById('ccPanelToggle');
-    if (btn) { btn.title = collapsed ? 'Expandir panel' : 'Colapsar panel'; btn.setAttribute('aria-label', btn.title); }
-    try { localStorage.setItem('cc:panel:collapsed', collapsed ? '1' : '0'); } catch (_) { /* noop */ }
   };
 
   /** Colapsa/expande un nodo sin re-render completo (preserva foco/edicion). */
@@ -1061,36 +1045,34 @@
   };
 
   P._renderLibrary = function () {
-    const rail = document.getElementById('ccPanelRail');
-    const body = document.getElementById('ccPanelBody');
-    if (!body) return;
-    if (!this._libOpen) this._libOpen = new Set(['campaigns']);
+    const rail    = document.getElementById('ccPanelRail');
+    const body    = document.getElementById('ccPanelBody');
+    const panel   = document.getElementById('ccSidebar');
+    const titleEl = document.getElementById('ccPanelTitle');
+    if (!rail || !body) return;
     const secs = this._librarySections();
+    const active = this._activeSection;
 
-    if (rail) {
-      rail.innerHTML =
-        `<button class="cc-rail-expand" data-rail-expand title="Expandir panel" aria-label="Expandir panel"><i class="fas fa-chevron-left"></i></button>` +
-        secs.map((s) => `<button class="cc-rail-btn ${this._libOpen.has(s.key) ? 'is-active' : ''}" data-rail-sec="${s.key}" title="${this.escapeHtml(s.label)}" aria-label="${this.escapeHtml(s.label)}"><i class="fas ${s.icon}"></i></button>`).join('');
-    }
-
-    body.innerHTML = secs.map((s) => {
-      const open = this._libOpen.has(s.key);
+    // Rail: solo iconos (sin texto) + badge de conteo cuando se conoce.
+    rail.innerHTML = secs.map((s) => {
       const items = this._libItemsFor(s.key);
-      const count = Array.isArray(items) ? items.length : '';
-      return `
-      <section class="cc-lib-sec ${open ? 'is-open' : ''}" data-sec="${s.key}">
-        <button type="button" class="cc-lib-sec-head" data-sec-toggle="${s.key}">
-          <i class="fas ${s.icon} cc-lib-sec-icon"></i>
-          <span class="cc-lib-sec-label">${this.escapeHtml(s.label)}</span>
-          <span class="cc-lib-sec-count">${count}</span>
-          <i class="fas fa-chevron-${open ? 'up' : 'down'} cc-lib-sec-chev"></i>
-        </button>
-        <div class="cc-lib-sec-body" data-sec-body="${s.key}" ${open ? '' : 'style="display:none;"'}>${open ? this._libBodyHTML(s.key) : ''}</div>
-      </section>`;
+      const count = Array.isArray(items) ? items.length : null;
+      return `<button class="cc-rail-btn ${active === s.key ? 'is-active' : ''}" data-rail-sec="${s.key}" title="${this.escapeHtml(s.label)}" aria-label="${this.escapeHtml(s.label)}">
+        <i class="fas ${s.icon}"></i>
+        ${count ? `<span class="cc-rail-badge">${count}</span>` : ''}
+      </button>`;
     }).join('');
 
-    // Dispara fetch de secciones lazy abiertas sin cache.
-    secs.forEach((s) => { if (this._libOpen.has(s.key) && this._libItemsFor(s.key) === undefined) this._fetchLibrary(s.key); });
+    // Panel de datos: visible solo si hay seccion activa.
+    if (panel) panel.classList.toggle('cc-fp-open', !!active);
+    if (active) {
+      const s = secs.find((x) => x.key === active) || { label: 'Biblioteca', icon: 'fa-sliders' };
+      if (titleEl) titleEl.innerHTML = `<i class="fas ${s.icon}"></i> ${this.escapeHtml(s.label)}`;
+      body.innerHTML = this._libBodyHTML(active);
+      if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);
+    } else {
+      body.innerHTML = '';
+    }
   };
 
   P._libBodyHTML = function (key) {
@@ -1106,25 +1088,11 @@
       </div>`).join('');
   };
 
-  /** Abre/cierra una seccion del acordeon (lazy-fetch al abrir). */
-  P._toggleLibSection = function (key, forceOpen) {
-    if (!this._libOpen) this._libOpen = new Set();
-    const isOpen = this._libOpen.has(key);
-    const open = (typeof forceOpen === 'boolean') ? forceOpen : !isOpen;
-    if (open) this._libOpen.add(key); else this._libOpen.delete(key);
-
-    const sec  = document.querySelector(`.cc-lib-sec[data-sec="${cssEsc(key)}"]`);
-    const bodyEl = document.querySelector(`.cc-lib-sec-body[data-sec-body="${cssEsc(key)}"]`);
-    const chev = sec ? sec.querySelector('.cc-lib-sec-chev') : null;
-    const railBtn = document.querySelector(`.cc-rail-btn[data-rail-sec="${cssEsc(key)}"]`);
-    if (sec) sec.classList.toggle('is-open', open);
-    if (chev) chev.className = `fas fa-chevron-${open ? 'up' : 'down'} cc-lib-sec-chev`;
-    if (railBtn) railBtn.classList.toggle('is-active', open);
-    if (!bodyEl) return;
-    bodyEl.style.display = open ? '' : 'none';
-    if (!open) return;
-    bodyEl.innerHTML = this._libBodyHTML(key);
-    if (this._libItemsFor(key) === undefined) this._fetchLibrary(key);
+  /** Selecciona una seccion (toggle: re-click colapsa el panel de datos). */
+  P._setActiveSection = function (key) {
+    this._activeSection = (this._activeSection === key) ? null : key;
+    try { localStorage.setItem('cc:panel:active', this._activeSection || ''); } catch (_) { /* noop */ }
+    this._renderLibrary();
   };
 
   /** Carga lazy de una seccion (productos/servicios/lugares/flows/briefs). */
@@ -1170,15 +1138,22 @@
     }
   };
 
-  /** Rellena el body de una seccion ya abierta tras el fetch + actualiza conteo. */
+  /** Tras el fetch: rellena el body si la seccion sigue activa + actualiza el
+      badge del rail. */
   P._fillLibSection = function (key) {
-    if (!this._libOpen.has(key)) return;
-    const bodyEl = document.querySelector(`.cc-lib-sec-body[data-sec-body="${cssEsc(key)}"]`);
-    if (bodyEl) bodyEl.innerHTML = this._libBodyHTML(key);
-    const sec = document.querySelector(`.cc-lib-sec[data-sec="${cssEsc(key)}"]`);
-    const count = sec ? sec.querySelector('.cc-lib-sec-count') : null;
     const items = this._libItemsFor(key);
-    if (count && Array.isArray(items)) count.textContent = String(items.length);
+    if (this._activeSection === key) {
+      const bodyEl = document.getElementById('ccPanelBody');
+      if (bodyEl) bodyEl.innerHTML = this._libBodyHTML(key);
+    }
+    const railBtn = document.querySelector(`.cc-rail-btn[data-rail-sec="${cssEsc(key)}"]`);
+    if (railBtn && Array.isArray(items)) {
+      let badge = railBtn.querySelector('.cc-rail-badge');
+      if (items.length) {
+        if (!badge) { badge = document.createElement('span'); badge.className = 'cc-rail-badge'; railBtn.appendChild(badge); }
+        badge.textContent = String(items.length);
+      } else if (badge) { badge.remove(); }
+    }
   };
 
   /** Compat: el flujo de carga/mutaciones llama _renderCampaigns. */

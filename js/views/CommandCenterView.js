@@ -32,7 +32,7 @@ class CommandCenterView extends BaseView {
     this._onCanvas        = new Set();  // ids de campanas reales puestas en el canvas
     this._expandedReal    = new Set();  // ids de campanas reales expandidas (ver ads)
     this._adData          = {};         // cache de conjuntos/ads por campaign_id
-    this._libOpen         = new Set(['campaigns']); // secciones abiertas en el sidebar
+    this._activeSection   = null;       // seccion activa del sidebar (null = colapsado, solo rail)
     this._libCache        = {};         // cache de items por seccion lazy
   }
 
@@ -143,18 +143,18 @@ class CommandCenterView extends BaseView {
           <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
         </div>
 
-        <!-- Panel flotante = biblioteca de entidades conectables. glass-black,
-             colapsable a una barra de iconos (rail). Secciones pobladas por el
-             mixin (_renderLibrary). -->
+        <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
+             visible, sin texto) + panel de datos que se abre al seleccionar
+             una seccion. Colapsado por defecto = solo el rail. -->
         <aside class="cc-floating-panel glass-black" id="ccSidebar">
-          <!-- Rail de iconos: visible en estado colapsado -->
-          <div class="cc-fp-rail" id="ccPanelRail"></div>
-          <!-- Contenido completo: visible en estado expandido -->
-          <div class="cc-fp-main">
+          <!-- Rail de navegacion (iconos, sin texto) -->
+          <nav class="cc-fp-rail" id="ccPanelRail" aria-label="Biblioteca"></nav>
+          <!-- Panel de datos de la seccion activa -->
+          <div class="cc-fp-panel">
             <div class="cc-fp-head">
-              <span class="cc-fp-title"><i class="fas fa-sliders"></i> Biblioteca</span>
-              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Colapsar panel" aria-label="Colapsar panel">
-                <i class="fas fa-chevron-right"></i>
+              <span class="cc-fp-title" id="ccPanelTitle">Biblioteca</span>
+              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Cerrar seccion" aria-label="Cerrar seccion">
+                <i class="fas fa-chevron-left"></i>
               </button>
             </div>
             <div class="cc-fp-body" id="ccPanelBody"></div>
