@@ -220,8 +220,8 @@
   pointer-events: none;
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, 0.04) 0%, transparent 55%),
-    var(--brand-gradient-dynamic, var(--brand-gradient));
-  opacity: 0.06;
+    var(--dev-gradient-dynamic, var(--brand-gradient-dynamic, var(--brand-gradient)));
+  opacity: 0.08;
 }
 
 /* Todas las vistas dev: acento sobrio (Organization-like) */

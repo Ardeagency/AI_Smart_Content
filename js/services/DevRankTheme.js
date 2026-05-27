@@ -8,13 +8,14 @@
  *   --dev-gradient-dynamic-vertical  (vertical, angle 180)
  *   --dev-rank-label                 (nombre del rank en minúscula, para CSS opcional)
  *
- * Rangos canónicos (5 + legend):
- *   rookie    →  verde único           (1 color)
- *   junior    →  azul → cyan           (2 colores)
- *   builder   →  rojo → naranja → amarillo  (paleta cálida = brand-gradient-1)
- *   expert    →  lima → verde → cyan        (paleta fría  = brand-gradient-2)
- *   master    →  azul → violeta → magenta   (paleta noche = brand-gradient-3)
- *   legend    →  toda la paleta              (= brand-gradient completo)
+ * Rangos canónicos (6) — cada uno es un segmento consecutivo de 2 colores del
+ * --brand-gradient (paleta oficial de la plataforma), avanzando por el arcoíris:
+ *   rookie    →  lima → verde        (#9acc00 → #00d614)
+ *   junior    →  verde → cyan        (#00d614 → #00e7ff)
+ *   builder   →  cyan → azul         (#00e7ff → #0018ee)
+ *   expert    →  azul → violeta      (#0018ee → #5b00ea)
+ *   master    →  violeta → magenta   (#5b00ea → #900090)
+ *   legend    →  magenta → rojo      (#900090 → #ff0000)
  *
  * Los gradientes prefab se definen en :root (bundle.css). Este service solo elige
  * cuál mapear a --dev-gradient-dynamic según el rank del usuario.
@@ -46,23 +47,23 @@
 
   /** Rank → {primary, secondary} hex para retrocompat con BrandColors fallback. */
   const RANK_PALETTE = {
-    rookie:  { primary: '#00d614', secondary: '#9acc00' },
-    junior:  { primary: '#00e7ff', secondary: '#0018ee' },
-    builder: { primary: '#ff0000', secondary: '#ffe500' },
-    expert:  { primary: '#9acc00', secondary: '#00e7ff' },
+    rookie:  { primary: '#9acc00', secondary: '#00d614' },
+    junior:  { primary: '#00d614', secondary: '#00e7ff' },
+    builder: { primary: '#00e7ff', secondary: '#0018ee' },
+    expert:  { primary: '#0018ee', secondary: '#5b00ea' },
     master:  { primary: '#5b00ea', secondary: '#900090' },
-    legend:  { primary: '#ff0000', secondary: '#900090' }
+    legend:  { primary: '#900090', secondary: '#ff0000' }
   };
 
   /** Rank → 4 colores (TL, TR, BR, BL) para el edge gradient del app-container.
-   *  LEGEND usa el espectro rainbow distribuido en las 4 esquinas. */
+   *  Cada rank usa sus 2 colores: izquierda (TL/BL) = color 1, derecha (TR/BR) = color 2. */
   const RANK_CORNERS = {
-    rookie:  { tl: '#00d614', tr: '#9acc00', br: '#9acc00', bl: '#00d614' },
-    junior:  { tl: '#00e7ff', tr: '#0018ee', br: '#0018ee', bl: '#00e7ff' },
-    builder: { tl: '#ff0000', tr: '#ff6500', br: '#ffe500', bl: '#ff6500' },
-    expert:  { tl: '#9acc00', tr: '#00d614', br: '#00e7ff', bl: '#9acc00' },
-    master:  { tl: '#0018ee', tr: '#5b00ea', br: '#900090', bl: '#5b00ea' },
-    legend:  { tl: '#ff0000', tr: '#ffe500', br: '#0018ee', bl: '#900090' }
+    rookie:  { tl: '#9acc00', tr: '#00d614', br: '#00d614', bl: '#9acc00' },
+    junior:  { tl: '#00d614', tr: '#00e7ff', br: '#00e7ff', bl: '#00d614' },
+    builder: { tl: '#00e7ff', tr: '#0018ee', br: '#0018ee', bl: '#00e7ff' },
+    expert:  { tl: '#0018ee', tr: '#5b00ea', br: '#5b00ea', bl: '#0018ee' },
+    master:  { tl: '#5b00ea', tr: '#900090', br: '#900090', bl: '#5b00ea' },
+    legend:  { tl: '#900090', tr: '#ff0000', br: '#ff0000', bl: '#900090' }
   };
 
   function _hexToRgba(hex, alpha) {

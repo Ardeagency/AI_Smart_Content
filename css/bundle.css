@@ -154,24 +154,24 @@
        DevRankTheme.js mapea profiles.dev_rank → --dev-gradient-dynamic. */
     --dev-gradient-rookie:           linear-gradient(135deg, #9acc00 0%, #00d614 100%);
     --dev-gradient-rookie-vertical:  linear-gradient(180deg, #9acc00 0%, #00d614 100%);
-    --dev-gradient-junior:           linear-gradient(135deg, #0018ee 0%, #00e7ff 100%);
-    --dev-gradient-junior-vertical:  linear-gradient(180deg, #0018ee 0%, #00e7ff 100%);
-    --dev-gradient-builder:          linear-gradient(135deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
-    --dev-gradient-builder-vertical: linear-gradient(180deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
-    --dev-gradient-expert:           linear-gradient(135deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);
-    --dev-gradient-expert-vertical:  linear-gradient(180deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);
-    --dev-gradient-master:           linear-gradient(135deg, #0018ee 0%, #5b00ea 50%, #900090 100%);
-    --dev-gradient-master-vertical:  linear-gradient(180deg, #0018ee 0%, #5b00ea 50%, #900090 100%);
-    --dev-gradient-legend:           linear-gradient(135deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-    --dev-gradient-legend-vertical:  linear-gradient(180deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+    --dev-gradient-junior:           linear-gradient(135deg, #00d614 0%, #00e7ff 100%);
+    --dev-gradient-junior-vertical:  linear-gradient(180deg, #00d614 0%, #00e7ff 100%);
+    --dev-gradient-builder:          linear-gradient(135deg, #00e7ff 0%, #0018ee 100%);
+    --dev-gradient-builder-vertical: linear-gradient(180deg, #00e7ff 0%, #0018ee 100%);
+    --dev-gradient-expert:           linear-gradient(135deg, #0018ee 0%, #5b00ea 100%);
+    --dev-gradient-expert-vertical:  linear-gradient(180deg, #0018ee 0%, #5b00ea 100%);
+    --dev-gradient-master:           linear-gradient(135deg, #5b00ea 0%, #900090 100%);
+    --dev-gradient-master-vertical:  linear-gradient(180deg, #5b00ea 0%, #900090 100%);
+    --dev-gradient-legend:           linear-gradient(135deg, #900090 0%, #ff0000 100%);
+    --dev-gradient-legend-vertical:  linear-gradient(180deg, #900090 0%, #ff0000 100%);
     /* Versiones horizontales (90deg) para líneas decorativas finas — evita que el ángulo 135deg
        corte el espectro cuando el strip es muy delgado (e.g. 2px de alto). */
     --dev-gradient-rookie-horizontal:  linear-gradient(90deg, #9acc00 0%, #00d614 100%);
-    --dev-gradient-junior-horizontal:  linear-gradient(90deg, #0018ee 0%, #00e7ff 100%);
-    --dev-gradient-builder-horizontal: linear-gradient(90deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
-    --dev-gradient-expert-horizontal:  linear-gradient(90deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);
-    --dev-gradient-master-horizontal:  linear-gradient(90deg, #0018ee 0%, #5b00ea 50%, #900090 100%);
-    --dev-gradient-legend-horizontal:  linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+    --dev-gradient-junior-horizontal:  linear-gradient(90deg, #00d614 0%, #00e7ff 100%);
+    --dev-gradient-builder-horizontal: linear-gradient(90deg, #00e7ff 0%, #0018ee 100%);
+    --dev-gradient-expert-horizontal:  linear-gradient(90deg, #0018ee 0%, #5b00ea 100%);
+    --dev-gradient-master-horizontal:  linear-gradient(90deg, #5b00ea 0%, #900090 100%);
+    --dev-gradient-legend-horizontal:  linear-gradient(90deg, #900090 0%, #ff0000 100%);
     --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 12px;
