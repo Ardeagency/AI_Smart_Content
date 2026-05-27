@@ -28,7 +28,6 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
-| [OPS-011](./OPS-011-rls-hygiene-review.md) | **Seguridad multi-tenant.** 15 tablas `public` sin RLS. (a) Drop `_bak_stuck_actions/missions_2026_05_05` (>30d); (b) activar RLS+policy en catalogos globales; (c) clasificar `emerging_patterns`/`viral_predictions`/`lexicon_enrichment_runs` (org-scope vs global); (d) revisar `external_api_cache`. |
 | [FEAT-022](./FEAT-022-rbac-granular.md) | RBAC formal owner/admin/editor/viewer: matriz de permisos + audit de RLS policies + UI + transfer ownership. Hoy solo hay selector de rol suelto. |
 | [FEAT-018](./FEAT-018-notifications-rich-model.md) | Modelo rico de notifs: render ya existe (`Navigation.js:944`), pero falta backfill SQL de `metadata.label` (solo 2 de ~50 filas lo tienen) + backend que escriba metadata al crear. |
 | [FEAT-031](./FEAT-031-dev-portal-iteration-2026-05-22.md) | Backend ai-engine: B1 endpoint `POST /api/vera/train` (vectoriza file/prompt/image en `ai_global_vectors`); B2 extender edge function `provision-user-start` para guardar `new_brand_name_oficial`/`slogan`/`logo_url`. Frontend ya cablea ambos. |
@@ -80,6 +79,20 @@ conservan como referencia, no se ejecutan directamente.
 **Reconciliacion total docs/task vs codigo vivo.** Se auditaron las 29 tareas
 listadas como activas + 3 deployed-pending verificando contra `js/` y la BD
 (`tsdpbqcwjckbfsdqacam`).
+
+- **OPS-011 (RLS hygiene)** — RESUELTA. Las 17 tablas `public` sin RLS quedaron en 0.
+  Verificado contra `js/` + `functions/`: solo el frontend lee `trend_query_jobs`
+  (con filtro org) y `comfy_flow_definitions` (catalogo global). Clasificacion aplicada:
+  - **13 deny-all** (enable RLS, sin policy; solo service_role): `_bak_stuck_actions/missions_2026_05_05`,
+    `external_api_cache`, `viral_predictions`, `emerging_patterns`, `lexicon_enrichment_runs`,
+    `pending_downloads`, `classifier_blacklist`, `commercial_query_qualifiers`, `country_aliases`,
+    `intent_classifier_rules`, `trends_category_templates`, `provocative_brand_exceptions`.
+  - **2 backups extra** detectados (`content_subcategor*_bak_20260527`) → deny-all.
+  - **comfy_flow_definitions** → enable RLS (ya tenia `comfy_def_read` SELECT USING(true)).
+  - **trend_query_jobs** → enable RLS + nueva policy `trend_query_jobs_select` FOR SELECT
+    `USING (is_developer() OR is_org_member(organization_id))` (patron canonico). Las 3
+    policies demo-block de write seguian inertes por RLS off; ahora activas.
+  - Los `_bak_stuck_*` (org data) ya no son leak. Drop opcional tras 2026-06-04.
 
 - **DEBT-system-ai-outputs-run-id** — RESUELTA. `system_ai_outputs.run_id uuid` FK
   `flow_runs` ON DELETE SET NULL + indice; `living.js` (loadSystemAiOutputs select,
