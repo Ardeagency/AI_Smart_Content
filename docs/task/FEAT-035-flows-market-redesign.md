@@ -82,6 +82,13 @@ Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
   - **Porque usaste X**: semilla = ultimo run, flows afines (misma sub/cat). Solo si hay runs recientes.
   - **Recomendados para ti**: flows en las cat/subcat con las que el usuario interactuo (like/save/run). Solo si hay señales.
   - Se ocultan en modo busqueda/filtro; se rebindean los cards.
+- Funciones de descubrimiento dinamico (ampliacion Fase 5, deterministas, sin LLM): HECHO.
+  - **Destacado del dia**: feature landscape, pick rotado por seed de fecha (_dailySeed).
+  - **Hechos para tu marca**: score de afinidad = lo que la marca uso/guardo/likeo (cat/subcat/output) ×2 + comunidad (likes+saves+runs normalizado) ×1.5 + frescura. Reemplaza al generico "Recomendados para ti".
+  - **Novedades**: creados en ultimos 14 dias.
+  - **Favoritos de la audiencia**: ranking por likes+saves de la comunidad de la plataforma (solo si >0).
+  - **Rails por subcategoria** (estilo Netflix "novelas coreanas"): subcategorias CON flows, rotando cuales aparecen por dia (seededShuffle). Vacio hoy (0 flows etiquetados a subcat).
+  - Rotacion diaria via seed de fecha → "hoy hay algo nuevo" sin aleatoriedad por recarga. Todos los rails con guard (no renderan vacios).
 - Colecciones / bundles curados: **DIFERIDO**. Requiere schema (`flow_collections` + `flow_collection_items`), UI de admin para crearlas y contenido real (hoy 0 flows asignados, 3 demo). Sin eso las colecciones nacen vacias. Retomar cuando haya catalogo real + tooling de curaduria.
 - `created_by` / curador en `content_flows`: DIFERIDO (atribucion), junto con colecciones.
 

@@ -1230,30 +1230,104 @@ class FlowCatalogView extends BaseView {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // FEAT-035 Fase 5 — rails de personalizacion (Top 10, Porque usaste X,
-  // Recomendados para ti). Client-side sobre this.flows + senales del usuario.
+  // FEAT-035 Fase 5 — rails de personalizacion + descubrimiento (deterministas,
+  // sin LLM). Destacado del dia, Hechos para tu marca (afinidad), Novedades,
+  // Favoritos de la audiencia, Top 10, rails por subcategoria, Porque usaste X.
   // ─────────────────────────────────────────────────────────────────────────
 
   _engagementScore(f) {
     return (f.run_count || 0) + (f.likes_count || 0) + (f.saves_count || 0);
   }
 
+  // Seed determinista por dia (YYYYMMDD) → la rotacion cambia 1 vez al dia, no
+  // por recarga. Da el efecto "hoy hay algo nuevo" sin aleatoriedad.
+  _dailySeed() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+  _seededShuffle(arr, seed) {
+    const a = arr.slice();
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
   getTop10() {
     return (this.flows || []).slice().sort((a, b) => this._engagementScore(b) - this._engagementScore(a)).slice(0, 10);
   }
 
-  // Recomendados: flows en las categorias/subcategorias con las que el usuario
-  // interactuo (like/save/run). Solo si hay señales (si no, se omite el rail).
-  getRecommendedFlows(limit = 12) {
+  // Hechos para tu marca: score de afinidad determinista. Combina lo que TU marca
+  // ya uso/guardo/likeo (cat/subcat/output) + desempeño de comunidad + frescura.
+  // Mientras mas interactua la marca, mas afina. Sin señales → degrada a popular+nuevo.
+  getBrandFitFlows(limit = 12) {
+    const flows = this.flows || [];
+    if (!flows.length) return [];
     const signalIds = new Set([...this.likedFlowIds, ...this.savedFlowIds, ...(this.recentRunFlowIds || [])]);
-    if (!signalIds.size) return [];
-    const signalFlows = (this.flows || []).filter(f => signalIds.has(f.id));
+    const signalFlows = flows.filter(f => signalIds.has(f.id));
     const cats = new Set(signalFlows.map(f => f.category_id).filter(Boolean));
     const subs = new Set(signalFlows.map(f => f.subcategory_id).filter(Boolean));
-    const pool = (this.flows || []).filter(f => !signalIds.has(f.id));
-    const rec = pool.filter(f => subs.has(f.subcategory_id) || cats.has(f.category_id));
-    rec.sort((a, b) => this._engagementScore(b) - this._engagementScore(a));
-    return rec.slice(0, limit);
+    const outs = new Set(signalFlows.map(f => (f.output_type || '').toLowerCase()).filter(Boolean));
+    const maxScore = Math.max(1, ...flows.map(f => this._engagementScore(f)));
+    const fit = (f) => {
+      let aff = 0;
+      if (f.subcategory_id && subs.has(f.subcategory_id)) aff += 2;
+      if (f.category_id && cats.has(f.category_id)) aff += 1;
+      if (outs.has((f.output_type || '').toLowerCase())) aff += 1;
+      const community = this._engagementScore(f) / maxScore;
+      const fresh = this.isNew(f) ? 0.5 : 0;
+      return aff * 2 + community * 1.5 + fresh;
+    };
+    return flows.slice().sort((a, b) => fit(b) - fit(a)).slice(0, limit);
+  }
+
+  // Novedades: creados en los ultimos N dias, mas recientes primero.
+  getNewFlows(days = 14, limit = 12) {
+    const cutoff = Date.now() - days * 86400000;
+    return (this.flows || [])
+      .filter(f => f.created_at && new Date(f.created_at).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, limit);
+  }
+
+  // Favoritos de la audiencia: ranking por likes+saves de la comunidad. Solo los
+  // que tienen alguna señal (si todos en 0, el rail se omite).
+  getAudienceFavorites(limit = 12) {
+    const fav = f => (f.likes_count || 0) + (f.saves_count || 0);
+    return (this.flows || []).filter(f => fav(f) > 0).sort((a, b) => fav(b) - fav(a)).slice(0, limit);
+  }
+
+  // Destacado del dia: pick rotado por fecha dentro del top de afinidad.
+  getDailyFeatured() {
+    const pool = this.getBrandFitFlows(8);
+    if (!pool.length) return null;
+    return pool[this._dailySeed() % pool.length];
+  }
+
+  // Rails por subcategoria (estilo Netflix "novelas coreanas"): subcategorias que
+  // TIENEN flows, rotando cuales se muestran cada dia. La subcategoria es el estilo
+  // visual (Splash Art, Hero Shot, ...). Vacio si ningun flow esta etiquetado.
+  getSubcategoryRails(maxRails = 2, perRail = 12) {
+    const bySub = new Map();
+    (this.flows || []).forEach(f => {
+      if (!f.subcategory_id) return;
+      if (!bySub.has(f.subcategory_id)) bySub.set(f.subcategory_id, []);
+      bySub.get(f.subcategory_id).push(f);
+    });
+    const subIds = [...bySub.keys()];
+    if (!subIds.length) return [];
+    return this._seededShuffle(subIds, this._dailySeed())
+      .slice(0, maxRails)
+      .map(subId => {
+        const sub = (this.subcategories || []).find(s => s.id === subId);
+        const flows = bySub.get(subId).slice().sort((a, b) => this._engagementScore(b) - this._engagementScore(a));
+        return { name: sub?.name || 'Estilo', flows: flows.slice(0, perRail) };
+      })
+      .filter(r => r.flows.length);
   }
 
   // "Porque usaste X": semilla = ultimo run; muestra flows afines (misma sub/cat).
@@ -1277,12 +1351,60 @@ class FlowCatalogView extends BaseView {
       </section>`;
   }
 
+  renderDailyFeaturedHtml(flow) {
+    const name = this.escapeHtml(flow.name);
+    const cost = flow.token_cost ?? 1;
+    const desc = flow.description
+      ? this.escapeHtml(flow.description.slice(0, 150)) + (flow.description.length > 150 ? '…' : '')
+      : '';
+    const bg = flow.flow_image_url
+      ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
+          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-featured-bg-el" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="" class="flow-featured-bg-el">`)
+      : '';
+    return `
+      <section class="flow-catalog-row-section flow-catalog-featured-section">
+        <article class="flow-featured" data-flow-id="${flow.id}" role="button" tabindex="0">
+          <div class="flow-featured-bg" aria-hidden="true">${bg}</div>
+          <div class="flow-featured-scrim" aria-hidden="true"></div>
+          <div class="flow-featured-body">
+            <span class="flow-featured-eyebrow">Destacado hoy</span>
+            <h2 class="flow-featured-title">${name}</h2>
+            ${desc ? `<p class="flow-featured-desc">${desc}</p>` : ''}
+            <div class="flow-featured-actions">
+              <button type="button" class="flow-featured-cta" data-action="run">
+                <i class="fas fa-play" aria-hidden="true"></i><span>Ejecutar</span>
+                <span class="flow-featured-cost"><i class="fas fa-bolt" aria-hidden="true"></i>${cost}</span>
+              </button>
+              <button type="button" class="flow-featured-cta flow-featured-cta--ghost" data-action="detail">Ver detalle</button>
+            </div>
+          </div>
+        </article>
+      </section>`;
+  }
+
   renderPersonalRails() {
     const host = document.getElementById('flowCatalogRails');
     if (!host) return;
     const parts = [];
 
-    // Top 10 (con numeracion gigante)
+    // 1) Destacado del dia (rota por fecha)
+    const featured = this.getDailyFeatured();
+    if (featured) parts.push(this.renderDailyFeaturedHtml(featured));
+
+    // 2) Hechos para tu marca (afinidad)
+    const fit = this.getBrandFitFlows();
+    if (fit.length) parts.push(this._railHtml('Hechos para tu marca', fit.map(f => this.renderFlowCard(f)).join('')));
+
+    // 3) Novedades
+    const nuevos = this.getNewFlows();
+    if (nuevos.length) parts.push(this._railHtml('Novedades', nuevos.map(f => this.renderFlowCard(f)).join('')));
+
+    // 4) Favoritos de la audiencia (comunidad: likes+saves)
+    const fav = this.getAudienceFavorites();
+    if (fav.length) parts.push(this._railHtml('Favoritos de la audiencia', fav.map(f => this.renderFlowCard(f)).join('')));
+
+    // 5) Top 10 (numeracion gigante)
     const top = this.getTop10();
     if (top.length >= 3) {
       const items = top.map((f, i) => `
@@ -1293,23 +1415,29 @@ class FlowCatalogView extends BaseView {
       parts.push(this._railHtml('Top 10', items));
     }
 
-    // Porque usaste X
+    // 6) Rails por subcategoria (estilo "novelas coreanas"), rotan por dia
+    this.getSubcategoryRails().forEach(rail => {
+      parts.push(this._railHtml(this.escapeHtml(rail.name), rail.flows.map(f => this.renderFlowCard(f)).join('')));
+    });
+
+    // 7) Porque usaste X
     const because = this.getBecauseYouUsed();
     if (because) {
-      parts.push(this._railHtml(
-        `Porque usaste ${this.escapeHtml(because.seedName)}`,
-        because.flows.map(f => this.renderFlowCard(f)).join('')
-      ));
-    }
-
-    // Recomendados para ti
-    const rec = this.getRecommendedFlows();
-    if (rec.length) {
-      parts.push(this._railHtml('Recomendados para ti', rec.map(f => this.renderFlowCard(f)).join('')));
+      parts.push(this._railHtml(`Porque usaste ${this.escapeHtml(because.seedName)}`, because.flows.map(f => this.renderFlowCard(f)).join('')));
     }
 
     host.innerHTML = parts.join('');
     host.querySelectorAll('.flow-catalog-row-scroll').forEach(scroll => this.bindFlowCardListeners(scroll));
+
+    // Bind del destacado del dia
+    const feat = host.querySelector('.flow-featured');
+    if (feat) {
+      const fid = feat.getAttribute('data-flow-id');
+      feat.querySelector('[data-action="run"]')?.addEventListener('click', (e) => { e.stopPropagation(); this.runFlow(fid); });
+      feat.querySelector('[data-action="detail"]')?.addEventListener('click', (e) => { e.stopPropagation(); this.openFlowDetail(fid); });
+      feat.addEventListener('click', (e) => { if (!e.target.closest('button')) this.openFlowDetail(fid); });
+      feat.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.openFlowDetail(fid); } });
+    }
   }
 
   renderRecentInCategory() {

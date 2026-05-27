@@ -1743,3 +1743,101 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
   position: relative;
   z-index: 1;
 }
+
+/* Destacado del dia: feature landscape que rota por fecha */
+.flow-catalog-featured-section { padding-top: 0.25rem; }
+.flow-featured {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: clamp(220px, 30vh, 340px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(160deg, #1a1b1f, #0e0f12);
+  border: 1px solid var(--border-divider, #242424);
+  text-align: left;
+}
+.flow-featured-bg { position: absolute; inset: 0; z-index: 0; }
+.flow-featured-bg-el { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5); }
+.flow-featured-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(13, 14, 16, 0.92) 0%, rgba(13, 14, 16, 0.6) 45%, rgba(13, 14, 16, 0.25) 100%),
+    linear-gradient(to top, rgba(13, 14, 16, 0.85), transparent 60%);
+}
+.flow-featured-body {
+  position: relative;
+  z-index: 2;
+  max-width: min(560px, 72%);
+  min-height: clamp(220px, 30vh, 340px);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.55rem;
+}
+.flow-featured-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-warm, #d4b896);
+}
+.flow-featured-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+.flow-featured-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.84);
+  max-width: 48ch;
+}
+.flow-featured-actions { display: flex; gap: 0.6rem; margin-top: 0.4rem; flex-wrap: wrap; }
+.flow-featured-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #ffffff;
+  color: #000000;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.flow-featured-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+.flow-featured-cta i { font-size: 0.72rem; }
+.flow-featured-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.2rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+}
+.flow-featured-cta--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.flow-featured-cta--ghost:hover { background: rgba(255, 255, 255, 0.16); }
+@media (max-width: 640px) {
+  .flow-featured-body { max-width: 100%; }
+}
