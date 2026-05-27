@@ -265,6 +265,7 @@ class Navigation {
     this._devCache = null;
     this._devCacheTime = 0;
     this._catalogCategories = [];
+    this._hasSavedFlows = false; // ¿la org tiene flujos guardados? (muestra/oculta "My Flows")
     /** @type {Array<{id:string,nombre_marca?:string}>} Sub-marcas para el submenú de Brand Storage */
     this._brandStorageSubbrands = [];
     this._CACHE_TTL = 60000;
@@ -321,6 +322,33 @@ class Navigation {
     } catch (e) {
       console.warn('Navigation: no se pudieron cargar content_categories', e);
       return [];
+    }
+  }
+
+  /**
+   * ¿La org activa tiene flujos guardados? Decide si "My Flows" entra al sidebar
+   * (mismo patron que las categorias: si esta vacio, no se muestra).
+   */
+  async loadHasSavedFlows() {
+    try {
+      if (!this.currentOrgId) { this._hasSavedFlows = false; return false; }
+      const fetcher = async () => {
+        const supabase = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
+        if (!supabase) return 0;
+        const { count, error } = await supabase
+          .from('org_flow_saves')
+          .select('flow_id', { count: 'exact', head: true })
+          .eq('organization_id', this.currentOrgId);
+        return error ? 0 : (count || 0);
+      };
+      const n = window.apiClient
+        ? await window.apiClient.query(`nav:org_flow_saves_count:${this.currentOrgId}`, fetcher, { ttl: 60 * 1000, staleWhileRevalidate: true })
+        : await fetcher();
+      this._hasSavedFlows = n > 0;
+      return this._hasSavedFlows;
+    } catch (e) {
+      this._hasSavedFlows = false;
+      return false;
     }
   }
 
@@ -404,7 +432,10 @@ class Navigation {
     }
 
     if (config.mode === 'user') {
-      await this.loadCatalogCategories();
+      await Promise.all([
+        this.loadCatalogCategories(),
+        this.loadHasSavedFlows()
+      ]);
     }
 
     // Renderizar según el modo
@@ -1541,12 +1572,12 @@ class Navigation {
         const catalogHref = full('studio/flows');
         const savedHref = full('studio/flows/saved');
         const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
-        // "My Flows" = flujos guardados (org_flow_saves). Va primero como acceso
-        // rapido a la biblioteca personal, antes de las categorias del catalogo.
-        const myFlowsChild = `
+        // "My Flows" = flujos guardados (org_flow_saves). Solo entra al sidebar si
+        // la org tiene guardados (mismo patron que una categoria vacia: se oculta).
+        const myFlowsChild = this._hasSavedFlows ? `
             <a href="${savedHref}" class="nav-submenu-link nav-submenu-link--myflows" data-route="${savedHref}" data-tooltip="My Flows">
-              <span><i class="fas fa-bookmark nav-submenu-icon" aria-hidden="true"></i> My Flows</span>
-            </a>`;
+              <span>My Flows</span>
+            </a>` : '';
         const catChildren = myFlowsChild + cats
           .map((c) => {
             const route = full(`studio/flows/${c.id}`);

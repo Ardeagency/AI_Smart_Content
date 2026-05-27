@@ -1532,13 +1532,6 @@
   gap: 1.25rem;
 }
 
-/* Icono del item "My Flows" en el submenu de Flows */
-.nav-submenu-link--myflows .nav-submenu-icon {
-  margin-right: 0.45rem;
-  font-size: 0.78em;
-  opacity: 0.85;
-}
-
 @media (max-width: 768px) {
   .flow-catalog--saved .flow-catalog-content {
     padding: calc(var(--app-header-height, 56px) + 1.5rem) 1.25rem 0;
