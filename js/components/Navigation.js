@@ -224,15 +224,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'page',
-    id: 'admin-flows',
-    label: 'All flows',
-    icon: 'fa-stream',
-    iconSrc: '/recursos/icons/flows.svg',
-    role_required: 'lead',
-    route: '/dev/lead/flows'
-  },
-  {
-    type: 'page',
     id: 'admin-lexicon',
     label: 'Lexicon',
     icon: 'fa-book',

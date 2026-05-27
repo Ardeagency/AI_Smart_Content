@@ -771,6 +771,49 @@
   color: var(--text-primary);
 }
 
+/* Toggle de alcance (Lead): Mis flujos / Todos los flujos — control segmentado */
+.dev-flows-scope-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  background: var(--dev-bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
+}
+
+.dev-scope-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dev-scope-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dev-scope-btn.active {
+  background: var(--brillo-hover, #1a1c20);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--accent-warm, rgba(255, 255, 255, 0.18));
+}
+
+.dev-flows-all-hint {
+  margin: 0;
+  flex: 1;
+}
+
 .dev-flows-search {
   display: flex;
   align-items: center;

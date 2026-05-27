@@ -17,6 +17,16 @@ class DevFlowsView extends DevBaseView {
     this.filteredFlows = [];
     this.currentFilter = 'all';
     this.searchQuery = '';
+    // Alcance de la vista: 'mine' = mis flujos | 'all' = todos los de la plataforma (solo lead)
+    this.scope = 'mine';
+    this.allFlows = [];
+    this.allFlowsLoaded = false;
+    this.ownersMap = {};
+  }
+
+  /** ¿El usuario es Lead? Solo entonces se ofrece la sección "Todos los flujos". */
+  isLead() {
+    return window.authService?.isLead?.() === true;
   }
 
   renderHTML() {
@@ -39,46 +49,89 @@ class DevFlowsView extends DevBaseView {
           </div>
         </header>
 
-        <!-- Toolbar: Filtros y búsqueda -->
-        <div class="dev-flows-toolbar">
-          <div class="dev-flows-filters">
-            <button class="dev-filter-btn active" data-filter="all">
-              <i class="fas fa-border-all"></i>
-              Todos
-            </button>
-            <button class="dev-filter-btn" data-filter="draft">
-              <i class="fas fa-file-alt"></i>
-              Borradores
-            </button>
-            <button class="dev-filter-btn" data-filter="testing">
-              <i class="fas fa-flask"></i>
-              En Pruebas
-            </button>
-            <button class="dev-filter-btn" data-filter="published">
-              <i class="fas fa-globe"></i>
-              Publicados
-            </button>
+        <!-- Toggle de alcance (solo Lead): Mis flujos / Todos los flujos -->
+        <div class="dev-flows-scope-toggle" id="devFlowsScopeToggle" hidden>
+          <button type="button" class="dev-scope-btn active" data-scope="mine">
+            <i class="fas fa-user"></i> Mis flujos
+          </button>
+          <button type="button" class="dev-scope-btn" data-scope="all">
+            <i class="fas fa-project-diagram"></i> Todos los flujos
+          </button>
+        </div>
+
+        <!-- Panel: Mis flujos -->
+        <div class="dev-flows-scope-panel" data-scope="mine">
+          <!-- Toolbar: Filtros y búsqueda -->
+          <div class="dev-flows-toolbar">
+            <div class="dev-flows-filters">
+              <button class="dev-filter-btn active" data-filter="all">
+                <i class="fas fa-border-all"></i>
+                Todos
+              </button>
+              <button class="dev-filter-btn" data-filter="draft">
+                <i class="fas fa-file-alt"></i>
+                Borradores
+              </button>
+              <button class="dev-filter-btn" data-filter="testing">
+                <i class="fas fa-flask"></i>
+                En Pruebas
+              </button>
+              <button class="dev-filter-btn" data-filter="published">
+                <i class="fas fa-globe"></i>
+                Publicados
+              </button>
+            </div>
+            <div class="dev-flows-search">
+              <i class="fas fa-search"></i>
+              <input type="text" id="flowSearchInput" placeholder="Buscar flujos...">
+            </div>
           </div>
-          <div class="dev-flows-search">
-            <i class="fas fa-search"></i>
-            <input type="text" id="flowSearchInput" placeholder="Buscar flujos...">
+
+          <!-- Grid de flujos -->
+          <div class="dev-flows-grid" id="devFlowsGrid"></div>
+
+          <!-- Estado vacío (se mostrará si no hay flujos) -->
+          <div class="dev-flows-empty" id="devFlowsEmpty" hidden>
+            <div class="dev-empty-icon">
+              <i class="fas fa-diagram-project"></i>
+            </div>
+            <h3>No tienes flujos creados</h3>
+            <p>Crea tu primer flujo de IA para empezar a generar contenido automáticamente</p>
+            <button class="btn btn-primary" id="createFlowEmptyBtn">
+              <i class="fas fa-plus"></i>
+              Crear mi primer flujo
+            </button>
           </div>
         </div>
 
-        <!-- Grid de flujos -->
-        <div class="dev-flows-grid" id="devFlowsGrid"></div>
-
-        <!-- Estado vacío (se mostrará si no hay flujos) -->
-        <div class="dev-flows-empty" id="devFlowsEmpty" hidden>
-          <div class="dev-empty-icon">
-            <i class="fas fa-diagram-project"></i>
+        <!-- Panel: Todos los flujos (solo Lead) -->
+        <div class="dev-flows-scope-panel" data-scope="all" hidden>
+          <div class="dev-flows-toolbar">
+            <p class="dev-header-subtitle dev-flows-all-hint">Vista Lead: todos los flujos de la plataforma. Editar, probar, ver logs o eliminar cualquier flujo.</p>
+            <button type="button" class="btn btn-secondary" id="refreshAllFlowsBtn">
+              <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
           </div>
-          <h3>No tienes flujos creados</h3>
-          <p>Crea tu primer flujo de IA para empezar a generar contenido automáticamente</p>
-          <button class="btn btn-primary" id="createFlowEmptyBtn">
-            <i class="fas fa-plus"></i>
-            Crear mi primer flujo
-          </button>
+          <div class="dev-table-container">
+            <table class="dev-table" id="allFlowsTable">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Estado</th>
+                  <th>Categoría</th>
+                  <th>Propietario</th>
+                  <th>Runs</th>
+                  <th>Creado</th>
+                  <th class="dev-lead-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="allFlowsBody"></tbody>
+            </table>
+            <div class="dev-lead-empty" id="allFlowsEmpty" hidden>
+              <i class="fas fa-diagram-project"></i>
+              <p>No hay flujos en la plataforma.</p>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -91,6 +144,44 @@ class DevFlowsView extends DevBaseView {
     await this.initSupabase();
     await this.loadFlows();
     this.setupEventListeners();
+    this.setupScopeToggle();
+  }
+
+  /**
+   * Habilita el toggle "Mis flujos / Todos los flujos" solo para Lead y lo cablea.
+   * Si se llegó por la ruta legacy /dev/lead/flows, arranca en alcance 'all'.
+   */
+  setupScopeToggle() {
+    if (!this.isLead()) return;
+    const toggle = document.getElementById('devFlowsScopeToggle');
+    if (!toggle) return;
+    toggle.hidden = false;
+
+    toggle.querySelectorAll('.dev-scope-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.setScope(btn.dataset.scope));
+    });
+
+    const refreshBtn = document.getElementById('refreshAllFlowsBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => this.loadAllFlows(true));
+
+    // Ruta legacy: /dev/lead/flows entra directo a "Todos los flujos".
+    const path = (window.location && window.location.pathname) || '';
+    if (path.includes('/dev/lead/flows')) this.setScope('all');
+  }
+
+  /** Cambia el panel visible y carga la data del alcance bajo demanda. */
+  setScope(scope) {
+    if (scope !== 'all' || !this.isLead()) scope = 'mine';
+    this.scope = scope;
+
+    document.querySelectorAll('#devFlowsScopeToggle .dev-scope-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scope === scope);
+    });
+    document.querySelectorAll('.dev-flows-scope-panel').forEach(panel => {
+      panel.hidden = panel.dataset.scope !== scope;
+    });
+
+    if (scope === 'all' && !this.allFlowsLoaded) this.loadAllFlows();
   }
 
   /**
@@ -402,8 +493,10 @@ class DevFlowsView extends DevBaseView {
   /**
    * Mostrar modal de eliminar (via window.Modal; fallback a confirm nativo).
    */
-  showDeleteModal(flowId) {
+  showDeleteModal(flowId, allScope = false) {
     this.flowToDelete = flowId;
+    // allScope = borrado desde "Todos los flujos" (Lead): sin restricción de owner.
+    this.deleteAllScope = allScope === true;
 
     if (!window.Modal || typeof window.Modal.show !== 'function') {
       if (confirm('¿Eliminar este flujo? Esta acción no se puede deshacer.')) {
@@ -441,6 +534,7 @@ class DevFlowsView extends DevBaseView {
    */
   hideDeleteModal() {
     this.flowToDelete = null;
+    this.deleteAllScope = false;
     if (this._deleteModalClose) {
       this._deleteModalClose();
       this._deleteModalClose = null;
@@ -463,16 +557,22 @@ class DevFlowsView extends DevBaseView {
     }
 
     try {
-      const { error } = await this.supabase
+      let query = this.supabase
         .from('content_flows')
         .delete()
-        .eq('id', this.flowToDelete)
-        .eq('owner_id', this.userId);
+        .eq('id', this.flowToDelete);
+      // En "Mis flujos" se restringe al owner; en "Todos los flujos" (Lead) no.
+      if (!this.deleteAllScope) query = query.eq('owner_id', this.userId);
+
+      const { error } = await query;
 
       if (error) throw error;
 
-      // Remover de la lista local
-      this.flows = this.flows.filter(f => f.id !== this.flowToDelete);
+      // Remover de las listas locales (ambas pueden contener el flujo)
+      const deletedId = this.flowToDelete;
+      this.flows = this.flows.filter(f => f.id !== deletedId);
+      this.allFlows = this.allFlows.filter(f => f.id !== deletedId);
+      if (this.deleteAllScope) this.renderAllFlowsTable();
       this.applyFilters();
       this.hideDeleteModal();
     } catch (error) {
@@ -484,6 +584,105 @@ class DevFlowsView extends DevBaseView {
         confirmBtn.innerHTML = 'Eliminar';
       }
     }
+  }
+
+  // ========== Todos los flujos (Lead) ==========
+
+  /** Carga TODOS los flujos de la plataforma + nombres de propietarios. */
+  async loadAllFlows(force = false) {
+    if (!this.supabase || !this.isLead()) return;
+    if (this.allFlowsLoaded && !force) return;
+
+    try {
+      const { data: flows, error } = await this.supabase
+        .from('content_flows')
+        .select(`
+          id,
+          name,
+          description,
+          status,
+          output_type,
+          run_count,
+          created_at,
+          owner_id,
+          content_categories (name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      this.allFlows = Array.isArray(flows) ? flows : [];
+
+      const ownerIds = [...new Set(this.allFlows.map(f => f.owner_id).filter(Boolean))];
+      this.ownersMap = {};
+      if (ownerIds.length > 0) {
+        const { data: profileList } = await this.supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', ownerIds);
+        (profileList || []).forEach(u => {
+          this.ownersMap[u.id] = { full_name: u.full_name, email: u.email };
+        });
+      }
+
+      this.allFlowsLoaded = true;
+      this.renderAllFlowsTable();
+    } catch (error) {
+      console.error('Error cargando todos los flujos:', error);
+      this.renderAllFlowsTable();
+    }
+  }
+
+  renderAllFlowsTable() {
+    const tbody = document.getElementById('allFlowsBody');
+    const empty = document.getElementById('allFlowsEmpty');
+    if (!tbody) return;
+
+    if (!this.allFlows || this.allFlows.length === 0) {
+      tbody.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    tbody.innerHTML = this.allFlows.map(f => {
+      const owner = f.owner_id
+        ? (this.ownersMap[f.owner_id]?.full_name || this.ownersMap[f.owner_id]?.email || (f.owner_id.slice(0, 8) + '…'))
+        : 'Sin propietario';
+      const statusLabel = this.getStatusLabel(f.status);
+      const dateStr = f.created_at ? new Date(f.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+      return `
+        <tr data-id="${f.id}">
+          <td>
+            <strong>${this.escapeHtml(f.name)}</strong>
+            ${f.description ? `<br><span class="dev-lead-flow-desc">${this.escapeHtml(this.truncate(f.description, 50))}</span>` : ''}
+          </td>
+          <td><span class="dev-lead-status dev-lead-status-${f.status}">${statusLabel}</span></td>
+          <td>${this.escapeHtml(f.content_categories?.name || f.output_type || '-')}</td>
+          <td>${this.escapeHtml(owner)}</td>
+          <td>${f.run_count != null ? f.run_count : 0}</td>
+          <td>${dateStr}</td>
+          <td class="dev-lead-actions">
+            <a href="/dev/builder?flow=${f.id}" class="btn-icon" title="Editar en Builder" data-action="edit"><i class="fas fa-edit"></i></a>
+            <a href="/dev/test?flow=${f.id}" class="btn-icon" title="Probar" data-action="test"><i class="fas fa-play"></i></a>
+            <a href="/dev/logs?flow=${f.id}" class="btn-icon" title="Logs" data-action="logs"><i class="fas fa-terminal"></i></a>
+            <button type="button" class="btn-icon delete-flow-lead" title="Eliminar" data-id="${f.id}"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('a[data-action]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.router) window.router.navigate(a.getAttribute('href'));
+      });
+    });
+    tbody.querySelectorAll('.delete-flow-lead').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.showDeleteModal(btn.getAttribute('data-id'), true);
+      });
+    });
   }
 
   // ========== Utilidades ==========
