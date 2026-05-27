@@ -1463,13 +1463,16 @@
   overflow: hidden;
 }
 
-/* Rail de navegacion (siempre visible, full height, solo iconos). */
+/* Rail de navegacion (fijo a la derecha, full height, solo iconos). */
 .cc-fp-rail {
   flex: 0 0 auto;
   display: flex; flex-direction: column; gap: 6px;
   padding: 10px 8px;
   overflow-y: auto;
+  order: 2;                 /* rail siempre a la derecha */
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
+.cc-floating-panel:not(.cc-fp-open) .cc-fp-rail { border-left: none; }
 .cc-rail-btn {
   position: relative;
   width: 38px; height: 38px;
@@ -1483,11 +1486,12 @@
 }
 .cc-rail-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary, #fff); }
 .cc-rail-btn.is-active { background: rgba(255, 255, 255, 0.12); color: #fff; }
-/* Indicador de activo: barra vertical al borde izquierdo (estilo VS Code). */
+/* Indicador de activo: barra vertical al borde derecho del rail (apunta al
+   panel, que abre a la izquierda). */
 .cc-rail-btn::before {
-  content: ''; position: absolute; left: -8px; top: 50%;
+  content: ''; position: absolute; right: -8px; top: 50%;
   transform: translateY(-50%);
-  width: 3px; height: 0; border-radius: 0 2px 2px 0;
+  width: 3px; height: 0; border-radius: 2px 0 0 2px;
   background: #fff; transition: height 0.15s ease;
 }
 .cc-rail-btn.is-active::before { height: 20px; }
@@ -1507,7 +1511,6 @@
   display: none;
   flex-direction: column;
   min-height: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 .cc-floating-panel.cc-fp-open .cc-fp-panel { display: flex; width: 290px; }
 .cc-fp-head {

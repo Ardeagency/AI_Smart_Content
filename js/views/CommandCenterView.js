@@ -146,10 +146,10 @@ class CommandCenterView extends BaseView {
         <!-- Panel flotante = biblioteca tipo Figma: rail de iconos (siempre
              visible, sin texto) + panel de datos que se abre al seleccionar
              una seccion. Colapsado por defecto = solo el rail. -->
+        <!-- El rail queda fijo a la derecha; el panel de datos abre a su
+             izquierda. Orden DOM: panel (izq) primero, rail (der) ultimo. -->
         <aside class="cc-floating-panel glass-black" id="ccSidebar">
-          <!-- Rail de navegacion (iconos, sin texto) -->
-          <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="Biblioteca"></nav>
-          <!-- Panel de datos de la seccion activa -->
+          <!-- Panel de datos de la seccion activa (abre a la izquierda) -->
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">
               <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Cerrar seccion" aria-label="Cerrar seccion">
@@ -159,6 +159,8 @@ class CommandCenterView extends BaseView {
             </div>
             <div class="cc-fp-body" id="ccPanelBody"></div>
           </div>
+          <!-- Rail de navegacion (fijo a la derecha, iconos sin texto) -->
+          <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="Biblioteca"></nav>
         </aside>
       </div>
     </div>
