@@ -173,8 +173,8 @@
   font-size: var(--font-size-base);
 }
 #app-container:has(.builder-footer) .builder-main .builder-config-section--cover input,
-#app-container:has(.builder-footer) .builder-main .builder-config-section--cover select,
-#app-container:has(.builder-footer) .builder-main .builder-config-section--name input {
+#app-container:has(.builder-footer) .builder-main .builder-config-section--details input,
+#app-container:has(.builder-footer) .builder-main .builder-config-section--details select {
   height: 36px;
 }
 #app-container:has(.builder-footer) .builder-main input:focus,
@@ -1653,8 +1653,7 @@
   padding: 0;
 }
 
-/* Columna izquierda: portada + toggle + versión + tipo de flujo / categoría /
-   subcategoría / tipo de output (todo apilado). */
+/* Columna izquierda: portada (banner) + nombre + descripción del flujo. */
 .builder-config-section--cover {
   grid-column: 1;
   display: flex;
@@ -1663,51 +1662,61 @@
   min-width: 0;
 }
 
-/* Columna derecha: nombre, descripción, modelo de cobro. */
-.builder-config-section--name {
+/* Columna derecha: catálogo, versión, tipo de flujo, categoría, subcategoría,
+   tipo de output y modelo de cobro. */
+.builder-config-section--details {
   grid-column: 2;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
 
-/* Descripción: altura acotada, no se estira para llenar la columna */
-.builder-config-section--name .settings-field:nth-child(2) {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 auto;
-  min-height: 0;
+/* Rejilla de 2 columnas para los datos del flujo. */
+.builder-config-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  align-content: start;
 }
 
-.builder-config-section--name .settings-field,
+.builder-config-details-grid .settings-field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* Campos que ocupan el ancho completo de la rejilla derecha. */
+.builder-config-field--full {
+  grid-column: 1 / -1;
+}
+
+.builder-config-section--details .settings-field,
 .builder-config-section--cover .settings-field {
   margin-bottom: 0;
 }
 
-/* Selects del bloque izquierdo ocupan todo el ancho de la columna */
-.builder-config-section--cover .builder-config-meta select,
-.builder-config-section--cover .builder-config-meta .flow-type-tabs {
+/* Selects/tabs de la rejilla derecha ocupan el ancho de su celda. */
+.builder-config-details-grid select,
+.builder-config-details-grid .flow-type-tabs {
   width: 100%;
 }
 
-.builder-config-meta {
+/* Descripción: muy corta (1-2 líneas, máx 140 chars). No crece. */
+.builder-config-section--cover .settings-field--description {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  flex: 0 0 auto;
 }
-
-/* Descripción: muy corta (1-2 líneas, máx 140 chars). No crece. */
-.builder-config-section--name #flowDescription {
+.builder-config-section--cover #flowDescription {
   min-height: 56px;
   max-height: 84px;
   flex: 0 0 auto;
   resize: none;
 }
 
-/* Modelo de cobro vive ahora bajo la descripción, en la columna derecha */
-.builder-config-section--name .settings-field--pricing {
-  margin-top: 4px;
+/* Modelo de cobro: bloque al pie de la columna derecha. */
+.builder-config-section--details .settings-field--pricing {
+  margin-top: 0;
 }
 
 /* Portada: aspect 3:4 (proporción de la card del catálogo) — ocupa la
@@ -1812,9 +1821,12 @@
     grid-column: 1;
     grid-row: 1;
   }
-  .builder-config-section--name {
+  .builder-config-section--details {
     grid-column: 1;
     grid-row: 2;
+  }
+  .builder-config-details-grid {
+    grid-template-columns: 1fr;
   }
 }
 

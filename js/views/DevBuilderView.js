@@ -164,10 +164,10 @@ class DevBuilderView extends DevBaseView {
 
         <!-- Panel central: contenido de pestañas -->
         <div class="builder-canvas-wrapper">
-          <!-- Tab 1: Configuración — grid 2 columnas, derecha en 2 filas (3 secciones) -->
+          <!-- Tab 1: Configuración — izquierda: banner + nombre + descripción | derecha: el resto -->
           <div class="builder-tab-content active" id="tabSettings">
             <div class="builder-config-layout">
-              <!-- Sección 1: portada grande + mostrar en catálogo, versión, créditos -->
+              <!-- Izquierda: portada, nombre y descripción del flujo -->
               <div class="builder-config-section builder-config-section--cover">
                 <div class="flow-cover-container" id="flowImageUpload">
                   <div class="flow-cover-preview" id="flowImagePreview" title="Subir portada">
@@ -180,12 +180,23 @@ class DevBuilderView extends DevBaseView {
                   </div>
                   <input type="file" id="flowImageInput" accept="image/*,video/*" hidden>
                 </div>
-                <div class="builder-config-meta">
-                  <label class="toggle-switch-row">
-                    <input type="checkbox" id="uiShowInCatalog" checked class="toggle-switch-input">
-                    <span class="toggle-switch" aria-hidden="true"></span>
-                    <span class="toggle-switch-label">Mostrar en catálogo</span>
-                  </label>
+                <div class="settings-field">
+                  <label for="flowNameConfig">Nombre del flujo *</label>
+                  <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
+                </div>
+                <div class="settings-field settings-field--description">
+                  <label for="flowDescription">Descripción</label>
+                  <textarea id="flowDescription" placeholder="Una línea: qué hace este flujo" rows="2" maxlength="140"></textarea>
+                </div>
+              </div>
+              <!-- Derecha: catálogo, versión, tipo de flujo, categoría, subcategoría, output, modelo de cobro -->
+              <div class="builder-config-section builder-config-section--details">
+                <label class="toggle-switch-row">
+                  <input type="checkbox" id="uiShowInCatalog" checked class="toggle-switch-input">
+                  <span class="toggle-switch" aria-hidden="true"></span>
+                  <span class="toggle-switch-label">Mostrar en catálogo</span>
+                </label>
+                <div class="builder-config-details-grid">
                   <div class="settings-field">
                     <label for="flowVersion">Versión</label>
                     <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
@@ -210,7 +221,7 @@ class DevBuilderView extends DevBaseView {
                       <option value="">Seleccionar subcategoría...</option>
                     </select>
                   </div>
-                  <div class="settings-field">
+                  <div class="settings-field builder-config-field--full">
                     <label for="flowOutputType">Tipo de output</label>
                     <select id="flowOutputType">
                       <option value="text">Texto</option>
@@ -221,17 +232,6 @@ class DevBuilderView extends DevBaseView {
                       <option value="mixed">Mixto</option>
                     </select>
                   </div>
-                </div>
-              </div>
-              <!-- Sección 2: nombre, descripción, modelo de cobro -->
-              <div class="builder-config-section builder-config-section--name">
-                <div class="settings-field">
-                  <label for="flowNameConfig">Nombre del flujo *</label>
-                  <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
-                </div>
-                <div class="settings-field">
-                  <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Una línea: qué hace este flujo" rows="2" maxlength="140"></textarea>
                 </div>
                 <div class="settings-field settings-field--pricing" id="settingsTokenCostWrap">
                   <label>Modelo de cobro</label>
