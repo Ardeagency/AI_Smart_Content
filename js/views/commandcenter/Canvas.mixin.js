@@ -11,7 +11,7 @@
  * - Arrastrar el header de un nodo lo reposiciona; las posiciones persisten en
  *   localStorage por brand_container (cc:canvas:pos:<id>).
  * - Pan arrastrando el fondo; zoom con rueda o botones de la toolbar.
- * - Click en nodo conceptual/audiencia → editor existente (_openEditor).
+ * - Crear/editar nodos: el modal editor fue eliminado; el flujo se definira aparte.
  *
  * Patron de overlay SVG + bezier + drag-to-connect tomado de BuilderGraph.js.
  */
@@ -125,7 +125,6 @@
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
         <span class="cc-node-title" title="${this.escapeHtml(a.name || 'Audiencia')}">${this.escapeHtml(a.name || 'Audiencia')}</span>
         <div class="cc-node-actions">
-          <button type="button" class="cc-node-act cc-node-edit" title="Editar"><i class="fas fa-pen"></i></button>
           <button type="button" class="cc-node-act cc-node-delete" title="Eliminar"><i class="fas fa-times"></i></button>
         </div>
       </div>
@@ -148,7 +147,6 @@
     const platBadge = platLabel ? `<span class="cc-node-badge cc-node-badge--plat">${this.escapeHtml(platLabel)}</span>` : '';
     const actions = isReal ? '' : `
         <div class="cc-node-actions">
-          <button type="button" class="cc-node-act cc-node-edit" title="Editar"><i class="fas fa-pen"></i></button>
           <button type="button" class="cc-node-act cc-node-delete" title="Eliminar"><i class="fas fa-times"></i></button>
         </div>`;
     const linked = !!c.persona_id;
@@ -390,7 +388,7 @@
       canvas.addEventListener('mousedown', this._canvasMouseDown);
     }
 
-    // Click en acciones / nodo → editar o eliminar
+    // Click en accion eliminar de un nodo (el editor modal fue eliminado).
     if (!this._canvasClick) {
       this._canvasClick = (e) => {
         const nodeEl = e.target.closest('.cc-node');
@@ -401,18 +399,7 @@
           e.preventDefault(); e.stopPropagation();
           const et = type === 'audience' ? 'audience' : 'campaign-concept';
           this._confirmAndDelete(et, id, null);
-          return;
         }
-        if (e.target.closest('.cc-node-edit')) {
-          e.preventDefault(); e.stopPropagation();
-          this._openEditor(type === 'audience' ? 'audience' : 'campaign-concept', id);
-          return;
-        }
-        if (e.target.closest('.cc-node-port')) return;
-        // Click simple en el cuerpo (no drag) → abrir editor (real = no editable)
-        if (this._didDrag) return;
-        if (type === 'campaign-real') return;
-        this._openEditor(type === 'audience' ? 'audience' : 'campaign-concept', id);
       };
       canvas.addEventListener('click', this._canvasClick);
     }
