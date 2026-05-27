@@ -150,29 +150,32 @@ class ExecutionHistoryView extends BaseView {
 
       const flowMap = (flowsRes.data || []).reduce((acc, f) => { acc[f.id] = f; return acc; }, {});
 
-      // Agrupar outputs por run: conteo + primer output con imagen como cover.
+      // Agrupar outputs por run (orden desc por created_at).
       const outputsByRun = {};
       (outputsRes.data || []).forEach(o => {
         (outputsByRun[o.run_id] = outputsByRun[o.run_id] || []).push(o);
       });
 
+      const MAX_CAROUSEL = 8; // tope de imagenes que recorre el hover
       return list.map(r => {
         const flow = flowMap[r.flow_id] || null;
         const outs = outputsByRun[r.id] || [];
-        const coverOut = outs.find(o => (o.output_type || '').toLowerCase() !== 'text' && (o.storage_path || o.storage_object_id))
-          || outs.find(o => o.storage_path || o.storage_object_id);
-        let coverUrl = null;
-        if (coverOut) {
-          coverUrl = this.getPublicUrlFromStorage('production-outputs', coverOut.storage_path)
-            || this.getPublicUrlFromStorage('outputs', coverOut.storage_path)
-            || this.getPublicUrlFromStorage('production-outputs', coverOut.storage_object_id);
+        // Todas las imagenes resolubles del run (para el carrusel en hover).
+        const images = [];
+        for (const o of outs) {
+          if ((o.output_type || '').toLowerCase() === 'text') continue;
+          const url = this.getPublicUrlFromStorage('production-outputs', o.storage_path)
+            || this.getPublicUrlFromStorage('outputs', o.storage_path)
+            || this.getPublicUrlFromStorage('production-outputs', o.storage_object_id);
+          if (url && !images.includes(url)) images.push(url);
+          if (images.length >= MAX_CAROUSEL) break;
         }
-        if (!coverUrl && flow?.flow_image_url) coverUrl = flow.flow_image_url;
+        if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
         return {
           ...r,
           flow_name: flow?.name || 'Flujo eliminado',
           flow_slug: flow ? this.flowNameToSlug(flow.name) : '',
-          cover_url: coverUrl,
+          images,
           output_count: outs.length
         };
       });
@@ -195,6 +198,7 @@ class ExecutionHistoryView extends BaseView {
     }
     if (empty) empty.style.display = 'none';
     grid.innerHTML = this.runs.map(r => this.renderRunCard(r)).join('');
+    this._bindCarousels();
   }
 
   renderRunCard(r) {
@@ -208,26 +212,37 @@ class ExecutionHistoryView extends BaseView {
                       : status === 'running' || status === 'in_progress' ? 'En curso'
                       : status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
     const { rel } = this._formatRunDateParts(r.created_at);
-    const cover = r.cover_url
-      ? `<img class="exec-card-cover-img" src="${this.escapeHtml(r.cover_url)}" alt="" loading="lazy">`
-      : `<span class="exec-card-cover-placeholder"><i class="fas fa-wand-magic-sparkles"></i></span>`;
+    const images = Array.isArray(r.images) ? r.images : [];
     const count = r.output_count || 0;
     const disabled = !r.flow_slug;
+    const multi = images.length > 1;
+
+    // Capas de imagen apiladas: la primera visible; el hover recorre el resto.
+    const media = images.length
+      ? images.map((url, i) => `<img class="exec-card-img${i === 0 ? ' is-visible' : ''}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`).join('')
+      : `<div class="exec-card-placeholder"><i class="fas fa-wand-magic-sparkles"></i></div>`;
+
+    // Puntos indicadores del carrusel (solo si hay >1 imagen).
+    const dots = multi
+      ? `<div class="exec-card-dots" aria-hidden="true">${images.map((_, i) => `<span class="exec-card-dot${i === 0 ? ' is-active' : ''}"></span>`).join('')}</div>`
+      : '';
 
     return `
-      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}" data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ' disabled title="El flujo de esta sesion ya no existe"' : ''}>
-        <div class="exec-card-cover">
-          ${cover}
+      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ' disabled title="El flujo de esta sesion ya no existe"' : ''}>
+        <div class="exec-card-media">
+          ${media}
+          <div class="exec-card-gradient" aria-hidden="true"></div>
           <span class="exec-card-count"><i class="fas fa-layer-group"></i> ${count}</span>
           <span class="task-card-badge ${statusClass} exec-card-status">
             <span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}
           </span>
+          ${dots}
+          <div class="exec-card-info">
+            <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
+            <span class="exec-card-when">${this.escapeHtml(rel)}</span>
+            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> Continuar sesion</span>
+          </div>
         </div>
-        <div class="exec-card-info">
-          <span class="exec-card-flow">${this.escapeHtml(r.flow_name)}</span>
-          <span class="exec-card-when">${this.escapeHtml(rel)}</span>
-        </div>
-        <div class="exec-card-resume"><i class="fas fa-arrow-right"></i> Continuar sesion</div>
       </button>
     `;
   }
@@ -242,6 +257,47 @@ class ExecutionHistoryView extends BaseView {
       const slug = card.getAttribute('data-flow-slug');
       if (runId && slug) this.resumeSession(slug, runId);
     });
+  }
+
+  /**
+   * Carrusel automatico en hover: al entrar a una card con varias imagenes,
+   * recorre los outputs uno por uno (crossfade) hasta salir. Sin librerias.
+   */
+  _bindCarousels() {
+    const cards = this.querySelectorAll('.exec-card[data-carousel]');
+    cards.forEach(card => {
+      const imgs = Array.from(card.querySelectorAll('.exec-card-img'));
+      const dots = Array.from(card.querySelectorAll('.exec-card-dot'));
+      if (imgs.length < 2) return;
+      let idx = 0;
+      let timer = null;
+      const show = (n) => {
+        imgs[idx]?.classList.remove('is-visible');
+        dots[idx]?.classList.remove('is-active');
+        idx = (n + imgs.length) % imgs.length;
+        imgs[idx]?.classList.add('is-visible');
+        dots[idx]?.classList.add('is-active');
+      };
+      const start = () => {
+        if (timer) return;
+        timer = setInterval(() => show(idx + 1), 900);
+      };
+      const stop = () => {
+        if (timer) { clearInterval(timer); timer = null; }
+        show(0); // vuelve al primer output al salir
+      };
+      this.addEventListener(card, 'mouseenter', start);
+      this.addEventListener(card, 'mouseleave', stop);
+      // Cleanup al destruir la vista.
+      this._carouselTimers = this._carouselTimers || [];
+      this._carouselTimers.push(() => { if (timer) clearInterval(timer); });
+    });
+  }
+
+  async onLeave() {
+    // Detener cualquier carrusel en curso para no dejar intervals huerfanos.
+    (this._carouselTimers || []).forEach(stop => { try { stop(); } catch (_) {} });
+    this._carouselTimers = [];
   }
 
   /** Navega a Studio scopeado al run para continuar produciendo dentro de la sesion. */
