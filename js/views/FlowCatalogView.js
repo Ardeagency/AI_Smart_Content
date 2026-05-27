@@ -297,6 +297,7 @@ class FlowCatalogView extends BaseView {
     } else {
       this.renderSectionAllFlows();
       this.bindToolbar();
+      this.moveToolbarToHeader();
     }
 
     // Empty states: cada vista los maneja inline en el área donde irían los
@@ -959,6 +960,7 @@ class FlowCatalogView extends BaseView {
   async onLeave() {
     this.clearHeroTimers();
     this.closeFlowDetail();
+    this.clearToolbarFromHeader();
     if (document && document.body) {
       document.body.classList.remove('route-flows');
     }
@@ -970,6 +972,7 @@ class FlowCatalogView extends BaseView {
   destroy() {
     this.clearHeroTimers();
     this.closeFlowDetail();
+    this.clearToolbarFromHeader();
     if (typeof super.destroy === 'function') super.destroy();
   }
 
@@ -1130,6 +1133,29 @@ class FlowCatalogView extends BaseView {
     sortSel?.addEventListener('change', () => { this.sortMode = sortSel.value; this.updateCatalogView(); });
     outSel?.addEventListener('change', () => { this.filterOutput = outSel.value; this.updateCatalogView(); });
     execSel?.addEventListener('change', () => { this.filterExec = execSel.value; this.updateCatalogView(); });
+  }
+
+  // Mueve la toolbar a la segunda fila del header principal (mismo slot que
+  // Production) para ahorrar espacio. Retry breve por la race con Navigation.render.
+  moveToolbarToHeader(attempts = 0) {
+    const toolbar = document.getElementById('flowCatalogToolbar');
+    if (!toolbar) return;
+    const slot = document.getElementById('headerProductionSlot');
+    if (!slot) {
+      if (attempts < 20) this._toolbarMoveTimer = setTimeout(() => this.moveToolbarToHeader(attempts + 1), 50);
+      return;
+    }
+    slot.innerHTML = '';
+    slot.appendChild(toolbar);
+    slot.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('flows-filters-in-header');
+  }
+
+  clearToolbarFromHeader() {
+    if (this._toolbarMoveTimer) { clearTimeout(this._toolbarMoveTimer); this._toolbarMoveTimer = null; }
+    const slot = document.getElementById('headerProductionSlot');
+    if (slot) { slot.innerHTML = ''; slot.setAttribute('aria-hidden', 'true'); }
+    document.body.classList.remove('flows-filters-in-header');
   }
 
   // Hay busqueda/filtro/orden activo → modo resultados (grid plana).
