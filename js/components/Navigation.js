@@ -87,12 +87,14 @@ const SIDEBAR_USER_CONFIG = {
     },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
     {
-      type: 'container',
+      // Item unico: "Flows" navega directo al catalogo (studio/flows = "All").
+      // Antes era un container desplegable con un solo hijo "All"; se fusionaron.
+      type: 'page',
       id: 'catalog',
       label: 'Flows',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
-      children: [], // Se rellenan con content_categories (schema 218-224) en render
+      route: 'studio/flows',
       requireCap: 'studio.create'
     }
   ],
@@ -378,10 +380,6 @@ class Navigation {
     this.currentBrandId = config.brandId;
     if (config.mode !== 'user') {
       this._stopCreditsRefreshInterval();
-    }
-
-    if (config.mode === 'user') {
-      await this.loadCatalogCategories();
     }
 
     // Renderizar según el modo
@@ -1512,13 +1510,6 @@ class Navigation {
         </div>`;
       }
       let childItems = item.children || [];
-      if (item.id === 'catalog') {
-        const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
-        childItems = [
-          { label: 'All', route: 'studio/flows' },
-          ...cats.map((c) => ({ label: c.name, route: `studio/flows/${c.id}` }))
-        ];
-      }
       const children = childItems
         .map(
           (c) => {
