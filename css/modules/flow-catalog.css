@@ -1191,7 +1191,7 @@
 .flow-detail-col--runs { gap: 0.7rem; }
 .flow-detail-col--info {
   gap: 0.85rem;
-  justify-content: center;
+  justify-content: flex-start;
   padding-right: 2.5rem; /* deja aire para el boton cerrar */
 }
 .flow-detail-eyebrow {
@@ -1405,16 +1405,15 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Footer: "Flows que te pueden interesar" (tercera fila, full-width) */
-.flow-detail-footer {
-  position: relative;
-  z-index: 2;
-  margin-top: 0.25rem;
-  padding: clamp(1.25rem, 2vw, 1.75rem) clamp(1.5rem, 3vw, 2.75rem) clamp(1.5rem, 3vw, 2.25rem);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+/* Sugerencias: ahora viven DENTRO de la columna de info (no full-width).
+   Secundarias: separador sutil arriba + cards pequeñas. */
+.flow-detail-suggest {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-.flow-detail-footer .flow-detail-section-title {
-  margin-bottom: 0.9rem;
+.flow-detail-suggest .flow-detail-section-title {
+  margin-bottom: 0.7rem;
 }
 .flow-detail-related-row {
   padding-bottom: 0.25rem;

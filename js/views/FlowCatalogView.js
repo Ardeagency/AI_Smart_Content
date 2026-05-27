@@ -1244,24 +1244,26 @@ class FlowCatalogView extends BaseView {
     return { media_url, isVideo };
   }
 
-  // Ultimos runs de ESTE flow (del usuario), con su primer output resuelto.
+  // Ultimas PRODUCCIONES de ESTE flow (flow_runs por flow_id), sin filtrar por
+  // usuario ni por fecha — las mas recientes que existan. El scope de visibilidad
+  // lo da RLS (org del usuario).
   async loadFlowRuns(flowId, limit = 2) {
     if (!this.supabase || !flowId) return [];
     try {
-      const base = () => this.supabase
+      let { data: runs, error } = await this.supabase
         .from('flow_runs')
         .select('id, created_at, status')
         .eq('flow_id', flowId)
         .order('created_at', { ascending: false })
         .limit(8);
-      let q = base();
-      if (this.userId) q = q.eq('user_id', this.userId);
-      let { data: runs, error } = await q;
       if (error) {
         // status puede no existir en algun entorno → reintento minimo
-        let q2 = this.supabase.from('flow_runs').select('id, created_at').eq('flow_id', flowId).order('created_at', { ascending: false }).limit(8);
-        if (this.userId) q2 = q2.eq('user_id', this.userId);
-        const r2 = await q2;
+        const r2 = await this.supabase
+          .from('flow_runs')
+          .select('id, created_at')
+          .eq('flow_id', flowId)
+          .order('created_at', { ascending: false })
+          .limit(8);
         runs = r2.data; error = r2.error;
       }
       if (error || !Array.isArray(runs) || !runs.length) return [];
@@ -1332,7 +1334,7 @@ class FlowCatalogView extends BaseView {
     const runs = await this.loadFlowRuns(flow.id, 2);
     if (!document.body.contains(host)) return; // modal cerrado mientras cargaba
     if (!runs.length) {
-      host.innerHTML = `<div class="flow-detail-runs-empty">Aun no has ejecutado este flow. Cuando lo hagas, veras aqui tus ultimos resultados.</div>`;
+      host.innerHTML = `<div class="flow-detail-runs-empty">Este flow aun no tiene producciones. Cuando se ejecute, veras aqui las ultimas.</div>`;
       return;
     }
     host.innerHTML = runs.map(r => this.renderRunItem(r)).join('');
@@ -1382,8 +1384,8 @@ class FlowCatalogView extends BaseView {
     ].filter(Boolean).join('');
 
     const related = this.getRelatedFlows(flow);
-    const footerHtml = related.length ? `
-      <div class="flow-detail-footer">
+    const suggestHtml = related.length ? `
+      <div class="flow-detail-suggest">
         <h3 class="flow-detail-section-title">Flows que te pueden interesar</h3>
         <div class="flow-catalog-row-scroll flow-detail-related-row">
           ${related.map(f => this.renderFlowCard(f)).join('')}
@@ -1398,7 +1400,7 @@ class FlowCatalogView extends BaseView {
       <div class="flow-detail-bg-scrim" aria-hidden="true"></div>
       <div class="flow-detail-grid">
         <aside class="flow-detail-col flow-detail-col--runs">
-          <h3 class="flow-detail-section-title">Ultimos runs</h3>
+          <h3 class="flow-detail-section-title">Ultimas producciones</h3>
           <div class="flow-detail-runs" data-runs>
             <div class="flow-detail-run flow-detail-run--skel"></div>
             <div class="flow-detail-run flow-detail-run--skel"></div>
@@ -1423,9 +1425,9 @@ class FlowCatalogView extends BaseView {
           </div>
           <div class="flow-detail-meta">${meta}</div>
           <p class="flow-detail-desc">${desc}</p>
+          ${suggestHtml}
         </div>
-      </div>
-      ${footerHtml}`;
+      </div>`;
     return wrap;
   }
 
