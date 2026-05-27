@@ -72,14 +72,58 @@ class StudioView extends BaseView {
     const burst = [4000, 6000, 8000, 10000, 15000];
     const TAIL_MS = 20000;        // cola sostenida cada 20s
     const MAX_ATTEMPTS = 90;      // ~ burst (43s) + 85·20s ≈ 29 min de espera máxima
-    if (attempt >= MAX_ATTEMPTS) return;
+    if (attempt >= MAX_ATTEMPTS) {
+      // Se agotó la espera sin output: tratamos el run como fallido y avisamos
+      // al usuario en el canvas (sin popup).
+      if (!this._activeRunHasOutputs(runId)) this._renderRunErrorState(runId);
+      return;
+    }
     const delay = attempt < burst.length ? burst[attempt] : TAIL_MS;
     setTimeout(async () => {
       if (this._activeRunId !== runId || !this.livingManager) return;
       try { await this.livingManager.setActiveRun(runId); } catch (_) {}
       if (this._activeRunHasOutputs(runId)) return; // output ya visible → no seguir
+      // ¿El backend marcó el run como fallido? Avisar ya, sin esperar el tope.
+      if (await this._isRunFailed(runId)) { this._renderRunErrorState(runId); return; }
       this._pollActiveRunOutputs(runId, attempt + 1);
     }, delay);
+  }
+
+  /** ¿El backend marcó este run como fallido? (status 'failed'/'error' en flow_runs). */
+  async _isRunFailed(runId) {
+    if (!runId || !this.supabase || this._activeRunId !== runId) return false;
+    try {
+      const { data } = await this.supabase
+        .from('flow_runs')
+        .select('status')
+        .eq('id', runId)
+        .maybeSingle();
+      const s = (data?.status || '').toLowerCase();
+      return s === 'failed' || s === 'error';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * Reemplaza el skeleton de carga por un estado de error dentro del canvas
+   * (sin popup): el flujo de n8n no entregó output a tiempo o el run quedó fallido.
+   */
+  _renderRunErrorState(runId) {
+    if (runId && this._activeRunId !== runId) return;
+    if (this._activeRunHasOutputs(runId)) return; // por si el output llegó justo ahora
+    try {
+      const canvas = document.getElementById('studioCanvas');
+      if (!canvas) return;
+      const target = canvas.querySelector('.studio-skeleton') || canvas.querySelector('.studio-history-empty');
+      const html = `
+        <div class="studio-skeleton studio-run-error" role="alert" aria-live="assertive">
+          <p class="studio-skeleton-label">Se produjo un error en la producción</p>
+          <p class="studio-skeleton-hint">No pudimos generar tu resultado. Intenta de nuevo o ajusta el formulario; si el problema persiste, contacta al administrador.</p>
+        </div>`;
+      if (target) target.outerHTML = html;
+      else canvas.insertAdjacentHTML('afterbegin', html);
+    } catch (_) {}
   }
 
   /** ¿El run activo ya tiene outputs renderizados en el canvas? (skeleton reemplazado) */
@@ -1916,9 +1960,10 @@ class StudioView extends BaseView {
       if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
         await window.appNavigation.loadCreditsFromDb(this.organizationId);
       }
-      this._notify('Producción enviada correctamente.');
+      // Sin popup de éxito: el canvas pasa directo al skeleton de carga.
       // Scope el canvas al run recien creado: solo veremos los outputs de este run.
       // Los outputs llegan async (webhook → n8n → ai-engine), por eso hacemos poll.
+      // Si el output no llega (o el run queda fallido) el poll pinta el estado de error.
       await this.setActiveRun(runId, { poll: true });
     } catch (e) {
       if (creditsDeducted && runId) {

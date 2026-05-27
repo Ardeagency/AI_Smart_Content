@@ -141,6 +141,10 @@
   color: var(--text-muted);
   text-align: center;
 }
+/* Estado de error: el run no entregó output o quedó fallido (sin popup). */
+.studio-run-error .studio-skeleton-label {
+  color: var(--color-danger, #e02020);
+}
 
 /* ========== Estado automático: solo hero + formulario de programación ========== */
 .studio-layout--automated .studio-center {
