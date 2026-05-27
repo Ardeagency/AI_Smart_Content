@@ -37,7 +37,6 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
-| [FEAT-027](./FEAT-027-web-vitals-dashboard.md) | Vista `/dev/web-vitals` + RPC `dashboard_web_vitals` (p75/p95 LCP/CLS/FCP/INP/TTFB). La captura (`webvitals.js`) ya manda samples a `frontend_errors`. |
 | [FEAT-034](./FEAT-034-dev-flows-test-button.md) | `DevFlowsView.js:396` `testFlow()` es stub (console.log + toast "en desarrollo"); cablear corrida real en modo test (coordinar con FEAT-033). |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~17 modales custom restantes a `window.Modal` (1 migrado + validado). 3-5 por sesion. |
 | [FEAT-029](./FEAT-029-brand-creative-brief-rebalance.md) | Fase 1 cerrada (caps + IGNIS limpiado). Falta Fase 2b (validacion server-side de hard caps en `InfoPanel.mixin.js` saveBrandContainerFieldById + generador de brief con LLM cheap) y Fase 3 (schema redesign formal). No urgente. |
@@ -79,6 +78,10 @@ conservan como referencia, no se ejecutan directamente.
 **Reconciliacion total docs/task vs codigo vivo.** Se auditaron las 29 tareas
 listadas como activas + 3 deployed-pending verificando contra `js/` y la BD
 (`tsdpbqcwjckbfsdqacam`).
+
+- **FEAT-027 (Web Vitals dashboard)** — CODIGO HECHO. RPC `dashboard_web_vitals` +
+  `DevWebVitalsView.js` + ruta `/dev/web-vitals` + link en nav dev. Solo falta
+  verificacion visual en browser → movida a [`PENDING-HUMAN-VERIFICATION.md`](./PENDING-HUMAN-VERIFICATION.md).
 
 - **OPS-011 (RLS hygiene)** — RESUELTA. Las 17 tablas `public` sin RLS quedaron en 0.
   Verificado contra `js/` + `functions/`: solo el frontend lee `trend_query_jobs`

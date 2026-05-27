@@ -414,6 +414,7 @@ class App {
     r.register('/dev/runs', devTestLoader, auth);
     r.register('/dev/test/:flowId', devTestLoader, auth);
     r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js']), auth);
+    r.register('/dev/web-vitals', this._lazy('DevWebVitalsView', [...devBase, '/js/views/DevWebVitalsView.js']), auth);
 
     // ── Dev Lead ──
     r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);

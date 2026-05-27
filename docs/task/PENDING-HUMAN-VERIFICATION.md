@@ -64,6 +64,17 @@ CHARTJS, BUG-004, SPRINT-FRONTEND-100) fueron eliminados y consolidados aqui.
 - **Falta (humano)**: escribir un mensaje real desde el browser autenticado y confirmar
   POST + respuesta via realtime.
 
+## FEAT-027 — Web Vitals Dashboard (`/dev/web-vitals`)
+- **Hecho** (2026-05-27): RPC `dashboard_web_vitals(p_days, p_route)` (gated `is_developer()`,
+  percentiles p75/p95 + trend + routes sobre `frontend_errors` source=webvital);
+  vista `DevWebVitalsView.js` (5 cards LCP/INP/CLS/FCP/TTFB con thresholds Google +
+  sparklines SVG + filtro rango 7/30/90d + filtro ruta); ruta registrada en `app.js` +
+  link "Web Vitals" en nav dev (Operations). Validado: el RPC devuelve data real
+  (561 muestras, 5 metricas).
+- **Falta (humano)**: entrar a `/dev/web-vitals` como developer en browser y confirmar:
+  (a) las 5 cards pintan con color correcto segun threshold, (b) el filtro de rango y
+  de ruta refrescan la data, (c) los sparklines de tendencia se ven. Carga <2s.
+
 ## SPRINT-FRONTEND-100 — Sprint exponer 100% del backend
 - **Hecho**: las features individuales del sprint se verificaron COMPLETED por separado
   (FEAT-007/008/011/013/021/023/026 + dashboards). El plan ya esta sustancialmente
