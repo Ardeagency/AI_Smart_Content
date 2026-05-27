@@ -827,6 +827,60 @@
   flex: 1;
 }
 
+/* ===== Léxico de dimensiones ===== */
+.dev-lexicon-hint {
+  margin: 0 0 20px;
+  max-width: 70ch;
+}
+
+/* Chip de conteo dentro de los filtros de estado */
+.lex-count {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 6px;
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary, #9a9a9a);
+}
+
+.dev-filter-btn.active .lex-count {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text-primary, #f0f0f0);
+}
+
+/* Badges de estado del léxico */
+.lex-status {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.lex-status-proposed {
+  background: color-mix(in srgb, #e0a945 16%, transparent);
+  border-color: color-mix(in srgb, #e0a945 40%, transparent);
+  color: #e0a945;
+}
+.lex-status-approved {
+  background: color-mix(in srgb, #3fb950 16%, transparent);
+  border-color: color-mix(in srgb, #3fb950 40%, transparent);
+  color: #3fb950;
+}
+.lex-status-rejected {
+  background: color-mix(in srgb, #f85149 14%, transparent);
+  border-color: color-mix(in srgb, #f85149 36%, transparent);
+  color: #f85149;
+}
+
+.dev-lexicon .lex-approve:hover { color: #3fb950; }
+.dev-lexicon .lex-reject:hover { color: #f85149; }
+
 .dev-flows-search {
   display: flex;
   align-items: center;
