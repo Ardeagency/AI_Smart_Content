@@ -1581,18 +1581,9 @@
   background: var(--view-bg-base, #0b0b0b);
   border-bottom: 1px solid var(--border-divider, #242424);
 }
-/* En el header: el slot provee el layout; la toolbar va plana, sin chrome propio */
-body.flows-filters-in-header .app-header .header-production-slot {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
-  padding: 0 20px 14px;
-  box-sizing: border-box;
-}
-body.flows-filters-in-header .app-header .header-production-slot .flow-catalog-toolbar {
+/* En el header (reusa el slot y la clase de Production, que ya dan el layout de
+   2a fila): la toolbar va plana, sin chrome propio. */
+body.production-filters-in-header .app-header .header-production-slot .flow-catalog-toolbar {
   width: 100%;
   margin: 0;
   padding: 0;

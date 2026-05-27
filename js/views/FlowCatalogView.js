@@ -1148,14 +1148,17 @@ class FlowCatalogView extends BaseView {
     slot.innerHTML = '';
     slot.appendChild(toolbar);
     slot.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('flows-filters-in-header');
+    // Reusa la MISMA clase que Production: hereda el crecimiento del header a
+    // dos filas (flex-direction column + height auto). Sin esto la barra se
+    // desbordaba porque .app-header tiene height fijo.
+    document.body.classList.add('production-filters-in-header');
   }
 
   clearToolbarFromHeader() {
     if (this._toolbarMoveTimer) { clearTimeout(this._toolbarMoveTimer); this._toolbarMoveTimer = null; }
     const slot = document.getElementById('headerProductionSlot');
     if (slot) { slot.innerHTML = ''; slot.setAttribute('aria-hidden', 'true'); }
-    document.body.classList.remove('flows-filters-in-header');
+    document.body.classList.remove('production-filters-in-header');
   }
 
   // Hay busqueda/filtro/orden activo → modo resultados (grid plana).
