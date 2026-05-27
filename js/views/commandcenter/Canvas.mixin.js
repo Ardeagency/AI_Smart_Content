@@ -421,6 +421,7 @@
     world.style.transformOrigin = '0 0';
     this._updateLOD();
     this._cullNodes();
+    if (this._activeSection === 'dashboard') this._drawMinimap();
   };
 
   /** Level-of-detail: al alejar, oculta glow + cuerpo de los nodos (solo header)
@@ -1198,6 +1199,7 @@
         this._scheduleEdges();
       }
       this._savePositions();
+      if (this._activeSection === 'dashboard') this._drawMinimap();
       // reset flag tras el ciclo de click
       setTimeout(() => { this._didDrag = false; }, 0);
     };
@@ -1294,6 +1296,7 @@
   /** Definicion de secciones (orden + icono + label). */
   P._librarySections = function () {
     return [
+      { key: 'dashboard', label: 'Dashboard',           icon: 'fa-gauge-high' },
       { key: 'audiences', label: 'Audiencias',          icon: 'fa-users' },
       { key: 'campaigns', label: 'Campanas reales',     icon: 'fa-bullhorn' },
       { key: 'concepts',  label: 'Conceptualizaciones', icon: 'fa-lightbulb' },
@@ -1308,6 +1311,7 @@
 
   /** Items de una seccion. Locales (sincronos) o lazy (cache; undefined = sin cargar). */
   P._libItemsFor = function (key) {
+    if (key === 'dashboard') return null; // no es lista; render especial
     if (key === 'audiences') {
       return (this._audiences || []).map((a) => ({ id: a.id, name: a.name || 'Audiencia', sub: a.is_active === false ? 'apagada' : '' }));
     }
@@ -1348,13 +1352,15 @@
       const s = secs.find((x) => x.key === active) || { label: 'Biblioteca', icon: 'fa-sliders' };
       if (titleEl) titleEl.innerHTML = `<i class="fas ${s.icon}"></i> ${this.escapeHtml(s.label)}`;
       body.innerHTML = this._libBodyHTML(active);
-      if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);
+      if (active === 'dashboard') requestAnimationFrame(() => this._setupMinimap());
+      else if (this._libItemsFor(active) === undefined) this._fetchLibrary(active);
     } else {
       body.innerHTML = '';
     }
   };
 
   P._libBodyHTML = function (key) {
+    if (key === 'dashboard') return this._dashboardHTML();
     const items = this._libItemsFor(key);
     if (items === undefined) return '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
     if (!items.length) return '<div class="cc-lib-empty">Sin elementos.</div>';
@@ -1365,6 +1371,97 @@
         <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
         ${it.sub ? `<span class="cc-lib-item-sub">${this.escapeHtml(it.sub)}</span>` : ''}
       </div>`).join('');
+  };
+
+  /* ── Dashboard del sidebar: minimapa + resumen ─────────────────────── */
+  P._dashboardHTML = function () {
+    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
+    const auds  = Array.isArray(this._audiences) ? this._audiences : [];
+    this._loadPlaced();
+    const real = camps.filter((c) => c.last_synced_at).length;
+    const concept = camps.length - real;
+    const placed = (this._placed || []).length;
+    const stat = (n, label) => `<div class="cc-dash-stat"><span class="cc-dash-num">${n}</span><span class="cc-dash-label">${label}</span></div>`;
+    return `
+      <div class="cc-dash">
+        <div class="cc-dash-minimap-wrap">
+          <canvas id="ccMinimap" class="cc-minimap" width="258" height="168"></canvas>
+        </div>
+        <div class="cc-dash-stats">
+          ${stat(auds.length, 'Audiencias')}
+          ${stat(real, 'Campanas reales')}
+          ${stat(concept, 'Conceptuales')}
+          ${stat(placed, 'Identities')}
+        </div>
+        <ul class="cc-dash-legend">
+          <li><span class="cc-dash-dot" style="background:#e0a045"></span> Audiencia</li>
+          <li><span class="cc-dash-dot" style="background:#6aa3ff"></span> Conceptual</li>
+          <li><span class="cc-dash-dot" style="background:#e15760"></span> Campana real</li>
+          <li><span class="cc-dash-dot" style="background:#5fe0c0"></span> Identity</li>
+        </ul>
+      </div>`;
+  };
+
+  P._setupMinimap = function () {
+    const cv = document.getElementById('ccMinimap');
+    if (!cv) return;
+    cv.onclick = (e) => {
+      if (!this._miniTransform) return;
+      const r = cv.getBoundingClientRect();
+      const { sc, ox, oy } = this._miniTransform;
+      const wx = ((e.clientX - r.left) - ox) / sc;
+      const wy = ((e.clientY - r.top) - oy) / sc;
+      const canvas = document.getElementById('ccCanvas');
+      const cr = canvas.getBoundingClientRect();
+      const s = this._canvasScale || 1;
+      this._canvasPan = { x: cr.width / 2 - wx * s, y: cr.height / 2 - wy * s };
+      this._applyCanvasTransform();
+      this._renderEdges();
+    };
+    this._drawMinimap();
+  };
+
+  P._drawMinimap = function () {
+    const cv = document.getElementById('ccMinimap');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    this._loadPositions();
+    const nodes = this._canvasNodes();
+    if (!nodes.length) { this._miniTransform = null; return; }
+    const NW = 268, NH = 200;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    nodes.forEach((n) => {
+      const p = this._positions[n.key]; if (!p) return;
+      x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
+      x1 = Math.max(x1, p.x + NW); y1 = Math.max(y1, p.y + NH);
+    });
+    if (!Number.isFinite(x0)) { this._miniTransform = null; return; }
+    const pad = 10;
+    const sc = Math.min((W - pad * 2) / Math.max(1, x1 - x0), (H - pad * 2) / Math.max(1, y1 - y0));
+    const ox = pad - x0 * sc, oy = pad - y0 * sc;
+    this._miniTransform = { sc, ox, oy };
+    const colorByType = { audience: '#e0a045', 'campaign-concept': '#6aa3ff', 'campaign-real': '#e15760', identity: '#5fe0c0' };
+    nodes.forEach((n) => {
+      const p = this._positions[n.key]; if (!p) return;
+      ctx.fillStyle = colorByType[n.type] || '#888';
+      ctx.globalAlpha = (this._focusSet && !this._focusSet.has(n.key)) ? 0.25 : 0.9;
+      const rw = Math.max(3, NW * sc), rh = Math.max(3, 60 * sc);
+      ctx.fillRect(p.x * sc + ox, p.y * sc + oy, rw, rh);
+    });
+    ctx.globalAlpha = 1;
+    // Viewport actual
+    const canvas = document.getElementById('ccCanvas');
+    if (canvas) {
+      const r = canvas.getBoundingClientRect();
+      const s = this._canvasScale || 1;
+      const pn = this._canvasPan || { x: 0, y: 0 };
+      const vx = (-pn.x) / s, vy = (-pn.y) / s, vw = r.width / s, vh = r.height / s;
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(vx * sc + ox, vy * sc + oy, vw * sc, vh * sc);
+    }
   };
 
   /** Selecciona una seccion (toggle: re-click colapsa el panel de datos). */
