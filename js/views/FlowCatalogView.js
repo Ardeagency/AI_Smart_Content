@@ -133,9 +133,15 @@ class FlowCatalogView extends BaseView {
     const isCategoryView = !!(this.selectedCategoryId || this.selectedSubcategoryId);
     return `
       <div class="flow-catalog" id="flowCatalogContainer">
-        <div class="flow-catalog-loading" id="flowCatalogLoading">
-          <i class="fas fa-circle-notch fa-spin"></i>
-          <p>Cargando flows...</p>
+        <div class="flow-catalog-loading" id="flowCatalogLoading" aria-hidden="true">
+          <div class="flow-skeleton-hero"></div>
+          ${[0, 1].map(() => `
+          <div class="flow-skeleton-section">
+            <div class="flow-skeleton-title"></div>
+            <div class="flow-skeleton-row">
+              ${Array.from({ length: 6 }).map(() => '<div class="flow-skeleton-card"></div>').join('')}
+            </div>
+          </div>`).join('')}
         </div>
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
           <!-- HERO: carrusel full-bleed por categoría, auto-avance, sin flechas -->
@@ -558,6 +564,19 @@ class FlowCatalogView extends BaseView {
     return top.some(f => f.id === flow.id);
   }
 
+  // Popular = uso absoluto alto. Umbral fijo: prueba social honesta sin schema nuevo.
+  isPopular(flow) {
+    return (flow.run_count || 0) >= 50;
+  }
+
+  // 1234 -> "1.2k", 1200000 -> "1.2M". Sin decimal redundante (.0).
+  formatCount(n) {
+    const v = Number(n) || 0;
+    if (v >= 1000000) return (v / 1000000).toFixed(v >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+    if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+    return String(v);
+  }
+
   getOutputTypeIcon(type) {
     const t = (type || 'text').toLowerCase();
     if (t === 'video') return 'fa-video';
@@ -595,7 +614,9 @@ class FlowCatalogView extends BaseView {
 
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    // Trending (top engagement) tiene prioridad sobre Popular (uso absoluto) para no apilar dos badges de prueba social.
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
+    else if (this.isPopular(flow)) badges.push('<span class="flow-card-badge flow-card-badge--popular">Popular</span>');
     const t = flow.flow_category_type || 'manual';
     const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
@@ -610,6 +631,10 @@ class FlowCatalogView extends BaseView {
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
     const executionLabel = this.getExecutionModeLabel(flow.execution_mode);
     const version = (flow.version || '1.0.0').toString();
+    const runs = flow.run_count || 0;
+    const usesHtml = runs > 0
+      ? `<span class="flow-card-info-uses" title="Ejecuciones"><i class="fas fa-play"></i>${this.formatCount(runs)} usos</span>`
+      : '';
 
     return `
       <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
@@ -625,7 +650,8 @@ class FlowCatalogView extends BaseView {
             <h3 class="flow-card-title">${name}</h3>
             <div class="flow-card-info-meta">
               ${primaryTagHtml}
-              <span class="flow-card-info-credits" title="Créditos por ejecución"><i class="fas fa-bolt"></i>${cost}</span>
+              ${usesHtml}
+              <span class="flow-card-info-credits" title="Creditos por ejecucion"><i class="fas fa-bolt"></i>${cost}</span>
             </div>
             <div class="flow-card-info-extra">
               <span class="flow-card-info-pill">${outputTypeLabel}</span>
@@ -956,8 +982,10 @@ class FlowCatalogView extends BaseView {
     section.style.display = '';
     if (data.length === 0) {
       gallery.innerHTML = `
-        <div class="flow-catalog-empty flow-catalog-empty--in-section" aria-live="polite">
-          <p class="flow-catalog-empty-text">Próximamente</p>
+        <div class="flow-catalog-empty flow-catalog-empty--teach" aria-live="polite">
+          <i class="fas fa-wand-magic-sparkles flow-catalog-empty-icon" aria-hidden="true"></i>
+          <p class="flow-catalog-empty-title">Tu catalogo de flows esta por encenderse</p>
+          <p class="flow-catalog-empty-sub">Los flows son recetas listas para producir contenido de tu marca: posts, historias, piezas de campaña. En cuanto se publiquen, apareceran aqui organizados por categoria.</p>
         </div>`;
       return;
     }

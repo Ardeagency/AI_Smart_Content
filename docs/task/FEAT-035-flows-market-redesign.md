@@ -1,0 +1,92 @@
+# FEAT-035 — Rediseño del Market de Flows (premium + Netflix + editorial)
+
+**Fecha:** 2026-05-27
+**Estado:** plan aprobado, ejecucion por fases
+**Decisiones del usuario:**
+- Alcance: TODO por fases (plan completo + ejecucion fase por fase con revision intermedia).
+- Metrica de confianza en cards: **usos (`run_count`) + badge automatico Popular/Trending** por umbral. NO rating de estrellas (de momento).
+
+---
+
+## 1. Objetivo
+
+Evolucionar el catalogo de Flows (`FlowCatalogView.js`) de su base actual "Netflix" a una sintesis de tres archetipos:
+
+- **Marketplace premium** (Figma Community, Vercel/Linear templates, App Store Today): search-first, orden/filtro explicito, prueba social, detalle rico antes de ejecutar.
+- **Netflix cinematografico** (ya parcialmente logrado): hero billboard, rails, hover-expand, modal takeover, rails algoritmicos.
+- **Editorial minimalista** (Apple, Aesop, Stripe): whitespace, jerarquia tipografica de portada, restraint, storytelling en la pieza destacada.
+
+**Regla de sintesis:** editorial arriba (hero + 1-2 destacados con direccion de arte), Netflix en el cuerpo (rails densos poster-forward), premium en los bordes (search + filtros + prueba social + detalle). Restraint transversal: paleta y efectos ya existentes (glass solo en botones, bg-card #141517, accent-warm), sin ruido nuevo.
+
+**No reescribir.** La base es buena. Se añaden capas.
+
+---
+
+## 2. Estado actual (base, ya funciona)
+
+- Hero carousel full-bleed + Ken Burns + dots con progress (Netflix). `flow-catalog.css:131-347`
+- Mask fade-out que funde el hero con el fondo brand (editorial).
+- Rails horizontales por categoria/subcategoria + flechas en hover. `flow-catalog.css:349-430`
+- Cards poster 4:5, hover lift + zoom 1.04, gradient legibilidad, glass like/save. `flow-catalog.css:477-741`
+- Badges Nuevo / Trending / Autopilot, chips de subcategoria, header de categoria con cover.
+- Datos: `content_flows` (+ categories, subcategories), `user_flow_likes`, `org_flow_saves`, `flow_runs`. Cache SWR.
+- Vista unica: `js/views/FlowCatalogView.js` (~1156 lineas).
+
+---
+
+## 3. Gaps (priorizados)
+
+Criticos (marketplace): sin buscador, sin detalle/preview, sin orden/filtro explicito, prueba social no visible.
+Importantes (Netflix premium): sin hover-expand, sin rails de personalizacion/Top 10, previews estaticos, sin colecciones.
+Editoriales: tratamiento editorial debil, tipografia funcional no de portada, estado vacio que no enseña, loading spinner no skeleton.
+Datos: sin `created_by` (autor), sin rating (decidido: usamos usos, no rating).
+
+---
+
+## 4. Fases
+
+### Fase 1 — Editorial + premium visual (bajo riesgo, sin backend) ← EN CURSO
+Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
+1. **Prueba social en card:** mostrar `run_count` formateado ("1.2k usos") en el meta de la card.
+2. **Badge Popular/Trending automatico:** umbral sobre `run_count` (Popular) y sobre engagement reciente (Trending, ya existe la nocion top-20%). Definir umbrales en el render.
+3. **Skeleton shimmer** con la forma de los rails (reemplaza el spinner `flow-catalog-loading`).
+4. **Jerarquia tipografica editorial:** escala de display en titulos de seccion y category-block; refinar tracking/leading.
+5. **Estado vacio que enseña** (reemplaza "PROXIMAMENTE" pelado): mensaje + sugerencia/CTA.
+6. **Pieza destacada editorial** en home: el primer slide del hero o un bloque "Destacado" con copy narrativo y direccion de arte.
+
+### Fase 2 — Detalle / preview modal (Netflix takeover + premium)
+- Modal takeover al hacer clic en una card: preview (imagen/video), nombre, descripcion, que hace, output type, creditos, usos, badges, CTA "Ejecutar" + "Guardar".
+- Row de flows relacionados dentro del modal (misma subcategoria).
+- Reemplaza el salto directo a StudioView (el CTA del modal navega a StudioView).
+- Deep-link: `?flow=<id>` abre el modal.
+
+### Fase 3 — Search + filtros + orden (marketplace)
+- Buscador (nombre + descripcion, client-side sobre flows cargados; server-side si crece).
+- Dropdown de orden: Trending / Nuevos / Mas usados / A-Z.
+- Filtros por output_type y execution_mode.
+- Barra sticky superior con search + controles.
+
+### Fase 4 — Hover-expand card + previews en movimiento (firma Netflix)
+- Card crece en hover (delay ~400ms), revela preview en movimiento (video si existe) + acciones rapidas (Ejecutar / Guardar / Detalle).
+- Cuidado con `backdrop-filter` global (ver [[silent-bug-methodology]] y el comentario en `flow-card` sobre content-visibility/isolation que rompen glass).
+
+### Fase 5 — Personalizacion + colecciones (premium + Netflix)
+- Rails: "Recomendados para ti", "Top 10" con numeracion gigante, "Porque usaste X".
+- Colecciones / bundles curados (tabla nueva `flow_collections` + junction). Requiere schema.
+- Posible `created_by` / curador en `content_flows` si se decide atribucion.
+
+---
+
+## 5. Schema (solo fases tardias)
+- Fase 1-4: cero cambios de schema (todo con columnas existentes).
+- Fase 5: `flow_collections`, `flow_collection_items`; opcional `content_flows.created_by`.
+
+## 6. Archivos
+- `js/views/FlowCatalogView.js` — render de cards, rails, hero, (fase 2) modal, (fase 3) search.
+- `css/modules/flow-catalog.css` — toda la capa visual.
+- Posible `js/components/FlowDetailModal.js` (fase 2) si conviene extraer.
+
+## 7. Riesgos
+- `backdrop-filter` global se rompe con content-visibility/isolation/contain en ancestros (ya documentado en el CSS de `.flow-card`). Aplica a fase 4.
+- Performance de rails con muchos flows: lazy-load de imagenes, no montar todo.
+- No meter LLM en background (no aplica aqui, es UI pura).

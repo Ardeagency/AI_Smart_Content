@@ -972,4 +972,119 @@
   max-width: 100%;
 }
 
+/* ========================================================================
+   FEAT-035 Fase 1 — capa premium + editorial (prueba social, skeleton,
+   badge Popular, estado vacio que enseña). Solo visual, sin schema nuevo.
+   ======================================================================== */
+
+/* ---------- Prueba social en card: usos (run_count) ---------- */
+.flow-card-info-uses {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+.flow-card-info-uses i {
+  font-size: 0.58rem;
+  opacity: 0.85;
+}
+
+/* ---------- Badge Popular (uso absoluto alto) ---------- */
+.flow-card-badge--popular {
+  background: var(--accent-warm, #d4b896);
+  color: #1a1305;
+  border-color: transparent;
+}
+
+/* ---------- Skeleton de carga (reemplaza el spinner) ---------- */
+.flow-catalog-loading {
+  display: block;
+  min-height: 60vh;
+  padding-bottom: 2rem;
+  gap: 0;
+}
+@keyframes flowSkeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.flow-skeleton-hero,
+.flow-skeleton-title,
+.flow-skeleton-card {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.035) 30%,
+    rgba(255, 255, 255, 0.085) 50%,
+    rgba(255, 255, 255, 0.035) 70%
+  );
+  background-size: 200% 100%;
+  animation: flowSkeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+.flow-skeleton-hero {
+  width: 100%;
+  height: 60vh;
+  min-height: 360px;
+  max-height: 600px;
+  border-radius: 0;
+  margin-bottom: 1.75rem;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+}
+.flow-skeleton-section {
+  padding: 0 clamp(2rem, 5vw, 4rem) clamp(2rem, 4vw, 3rem);
+}
+.flow-skeleton-title {
+  width: clamp(140px, 18vw, 220px);
+  height: 18px;
+  margin-bottom: 1.25rem;
+  border-radius: 6px;
+}
+.flow-skeleton-row {
+  display: flex;
+  gap: 1rem;
+  overflow: hidden;
+}
+.flow-skeleton-card {
+  flex: 0 0 240px;
+  width: 240px;
+  aspect-ratio: 4 / 5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-skeleton-hero,
+  .flow-skeleton-title,
+  .flow-skeleton-card { animation: none; }
+}
+
+/* ---------- Estado vacio que enseña (editorial, no "PROXIMAMENTE" pelado) ---------- */
+.flow-catalog-empty--teach {
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 38vh;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 5vw, 4rem) 2rem;
+}
+.flow-catalog-empty-icon {
+  font-size: 2rem;
+  color: var(--accent-warm, #d4b896);
+  opacity: 0.9;
+  margin-bottom: 0.35rem;
+}
+.flow-catalog-empty-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--text-primary, #ffffff);
+}
+.flow-catalog-empty-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.62));
+}
+
 
