@@ -151,6 +151,205 @@ class StudioView extends BaseView {
     } catch (_) {}
   }
 
+  // ===================== Flujos SECUENCIALES (UGC) — etapas + aprobacion =====================
+
+  /** Contenedor del canvas donde renderizamos las etapas. */
+  _stageHost() { return document.getElementById('livingHistoryContent') || document.getElementById('studioCanvas'); }
+
+  /** Indicador de pasos (Guion -> Imagenes -> Video) segun los modulos del flujo. */
+  _renderStageIndicator(currentOrder) {
+    const mods = (this._seq && this._seq.modules) || (this.selectedFlow && this.selectedFlow.modules) || [];
+    const steps = mods.map(m => {
+      const cls = m.step_order < currentOrder ? 'is-done' : (m.step_order === currentOrder ? 'is-active' : '');
+      return `<span class="stage-step ${cls}"><b>${m.step_order}</b> ${this.escapeHtmlSafe(m.name || ('Etapa ' + m.step_order))}</span>`;
+    }).join('<span class="stage-step-sep">›</span>');
+    return `<div class="studio-stage-steps">${steps}</div>`;
+  }
+
+  escapeHtmlSafe(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /** Skeleton de etapa (mientras la etapa N genera su output). */
+  _renderStageSkeleton(order, label) {
+    const host = this._stageHost();
+    if (!host) return;
+    host.innerHTML = `
+      <div class="studio-stage" data-stage="${order}">
+        ${this._renderStageIndicator(order)}
+        <div class="studio-stage-body">
+          <div class="studio-skeleton" role="status" aria-live="polite">
+            <div class="studio-skeleton-grid"><div class="studio-skeleton-card" style="${this._skeletonCardStyle()}"><div class="living-history-skeleton"></div></div></div>
+            <p class="studio-skeleton-label">${this.escapeHtmlSafe(label || 'Generando…')}</p>
+            <p class="studio-skeleton-hint">Esto puede tardar un momento. Podras revisar y aprobar antes de continuar.</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /** Entra a esperar el output de la etapa `order`. Etapa 1 (guion) hace poll real;
+   *  etapas 2+ (Fase 1: aun no modernizadas) muestran un stub honesto. */
+  _enterStageWait(runId, order) {
+    const mods = (this._seq && this._seq.modules) || [];
+    const mod = mods.find(m => m.step_order === order);
+    this._renderStageSkeleton(order, order === 1 ? 'Generando guion…' : `Encolando ${mod ? mod.name : 'etapa ' + order}…`);
+    if (order >= 2) { // Fase 1: Imagenes/Video aun no conectadas
+      setTimeout(() => this._renderStageStub(order, mod), 1000);
+      return;
+    }
+    this._pollStageOutput(runId, order, 0);
+  }
+
+  _renderStageStub(order, mod) {
+    const host = this._stageHost();
+    if (!host) return;
+    host.innerHTML = `
+      <div class="studio-stage" data-stage="${order}">
+        ${this._renderStageIndicator(order)}
+        <div class="studio-stage-body">
+          <div class="studio-skeleton">
+            <p class="studio-skeleton-label">Guion aprobado ✓ — el run avanzó a “${this.escapeHtmlSafe(mod ? mod.name : 'la siguiente etapa')}”.</p>
+            <p class="studio-skeleton-hint">Esta etapa todavía no está conectada (Fase 2 — migración a KIE+Supabase en construcción).</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /** Busca el output de la etapa `order` del run en runs_outputs (metadata.stage). */
+  async _fetchStageOutput(runId, order) {
+    if (!this.supabase) return null;
+    try {
+      const { data } = await this.supabase
+        .from('runs_outputs')
+        .select('id, metadata, created_at')
+        .eq('run_id', runId)
+        .order('created_at', { ascending: false })
+        .limit(8);
+      const rows = data || [];
+      return rows.find(r => Number(r?.metadata?.stage) === Number(order)) || null;
+    } catch (_) { return null; }
+  }
+
+  _pollStageOutput(runId, order, attempt) {
+    if (this._activeRunId !== runId) return; // el usuario cambio de run
+    const burst = [4000, 6000, 8000, 10000, 15000];
+    const TAIL = 20000;
+    const MAX = 40;
+    const delay = attempt < burst.length ? burst[attempt] : TAIL;
+    setTimeout(async () => {
+      if (this._activeRunId !== runId) return;
+      const out = await this._fetchStageOutput(runId, order);
+      if (out) { this._renderStageApproval(order, out); return; }
+      if (attempt + 1 >= MAX) { this._renderRunErrorState(runId); return; }
+      this._pollStageOutput(runId, order, attempt + 1);
+    }, delay);
+  }
+
+  /** Render de la card de aprobacion del GUION: 3 variantes seleccionables + ajustes. */
+  _renderStageApproval(order, output) {
+    const host = this._stageHost();
+    if (!host) return;
+    const payload = (output && output.metadata && output.metadata.stage_payload) || {};
+    const variantes = Array.isArray(payload.variantes) ? payload.variantes : [];
+    this._stageApprovalState = { order, outputId: output.id, variantes };
+    const cards = variantes.map((v, i) => {
+      const escenas = Array.isArray(v.escenas) ? v.escenas.map(e =>
+        `<li><b>${this.escapeHtmlSafe(e.n)}.</b> ${this.escapeHtmlSafe(e.descripcion_visual || '')}${e.voz_en_off ? ` — <i>“${this.escapeHtmlSafe(e.voz_en_off)}”</i>` : ''}${e.texto_en_pantalla ? ` <span class="stage-onscreen">[${this.escapeHtmlSafe(e.texto_en_pantalla)}]</span>` : ''}</li>`
+      ).join('') : '';
+      return `
+        <label class="stage-variant" data-variant="${i}">
+          <input type="radio" name="guionVariant" value="${i}"${i === 0 ? ' checked' : ''}>
+          <div class="stage-variant-head"><b>${this.escapeHtmlSafe(v.titulo || ('Variante ' + (i + 1)))}</b>${v.tono ? ` · <span>${this.escapeHtmlSafe(v.tono)}</span>` : ''}</div>
+          ${v.gancho ? `<div class="stage-variant-hook">Gancho: ${this.escapeHtmlSafe(v.gancho)}</div>` : ''}
+          <ol class="stage-variant-scenes">${escenas}</ol>
+        </label>`;
+    }).join('');
+    host.innerHTML = `
+      <div class="studio-stage" data-stage="${order}">
+        ${this._renderStageIndicator(order)}
+        <div class="studio-stage-body">
+          <div class="stage-approval">
+            <p class="stage-approval-title">Elige la variante de guion para continuar</p>
+            <div class="stage-variants">${cards || '<p class="studio-skeleton-hint">El guion no devolvió variantes legibles.</p>'}</div>
+            <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa (ej: enfatiza el producto en la escena 2)…"></textarea>
+            <div class="stage-actions">
+              <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
+              <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar guion</button>
+            </div>
+            <p class="stage-approval-msg" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>`;
+    this._bindStageApproval(host);
+  }
+
+  _bindStageApproval(host) {
+    const body = host.querySelector('.stage-approval');
+    if (!body || body._bound) return;
+    body._bound = true;
+    body.querySelectorAll('.stage-variant').forEach(lbl => {
+      lbl.addEventListener('click', () => {
+        const r = lbl.querySelector('input[type=radio]'); if (r) r.checked = true;
+        body.querySelectorAll('.stage-variant').forEach(x => x.classList.toggle('is-selected', x === lbl));
+      });
+    });
+    const sel = body.querySelector('.stage-variant input:checked');
+    if (sel) sel.closest('.stage-variant').classList.add('is-selected');
+    body.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-stage-action]'); if (!btn) return;
+      const action = btn.getAttribute('data-stage-action');
+      const idx = Number((body.querySelector('input[name=guionVariant]:checked') || {}).value || 0);
+      const ajustes = (body.querySelector('.stage-ajustes') || {}).value || '';
+      this._stageAction(action, { idx, ajustes }, btn);
+    });
+  }
+
+  async _stageAction(action, sel, btn) {
+    const st = this._stageApprovalState; const seq = this._seq;
+    if (!st || !seq) return;
+    const msgEl = document.querySelector('.stage-approval-msg');
+    const setMsg = (t) => { if (msgEl) msgEl.textContent = t; };
+    const btns = document.querySelectorAll('.stage-actions [data-stage-action]');
+    btns.forEach(b => { b.disabled = true; });
+    try {
+      const token = await this._studioAccessToken();
+      if (!token) { setMsg('No hay sesión activa.'); btns.forEach(b => b.disabled = false); return; }
+      const variante = (st.variantes || [])[sel.idx] || null;
+      const bodyReq = {
+        organization_id: this.organizationId,
+        run_id: seq.runId,
+        from_order: st.order,
+        action,
+        approved_output_id: st.outputId,
+        edits: { variante_elegida: sel.idx, variante, ajustes: sel.ajustes },
+        context: seq.contextBody,
+        cost: (this.selectedFlow && this.selectedFlow.token_cost) || 5
+      };
+      setMsg(action === 'regenerate' ? 'Regenerando guion…' : 'Aprobando…');
+      const res = await fetch('/.netlify/functions/api-flow-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(bodyReq)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) { setMsg('Error: ' + (data.error || res.status)); btns.forEach(b => b.disabled = false); return; }
+      if (action === 'regenerate') {
+        // El webhook del guion se redisparó: volver a esperar el nuevo output.
+        this._enterStageWait(seq.runId, st.order);
+        return;
+      }
+      // approve / edit
+      const r = data.data || {};
+      if (r.done) { this._renderStageStub(st.order, { name: 'Final' }); return; }
+      const next = r.next_module;
+      if (next) { this._enterStageWait(seq.runId, next.step_order); }
+      else { setMsg('Etapa aprobada.'); }
+    } catch (e) {
+      setMsg('Error: ' + (e && e.message || e));
+      btns.forEach(b => b.disabled = false);
+    }
+  }
+
   /** Aspect ratio de la produccion en camino (para el skeleton): el elegido al
    * producir, si no el del form, fallback 4:5. */
   _currentAspectRatio() {
@@ -479,7 +678,7 @@ class StudioView extends BaseView {
             execution_mode,
             flow_category_type,
             flow_image_url,
-            flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
+            flow_modules ( id, name, step_order, is_human_approval_required, input_schema, webhook_url_test, webhook_url_prod )
           `)
           .eq('is_active', true);
         return !error && data ? data : [];
@@ -516,8 +715,28 @@ class StudioView extends BaseView {
       input_schema: first?.input_schema ?? {},
       webhook_url: webhookUrlProd,
       webhook_url_test: first?.webhook_url_test,
-      webhook_url_prod: first?.webhook_url_prod
+      webhook_url_prod: first?.webhook_url_prod,
+      // Etapas (flujos secuenciales): lista de modulos para orquestar la aprobacion.
+      modules: modules.map(m => ({
+        id: m.id, name: m.name, step_order: m.step_order,
+        is_human_approval_required: !!m.is_human_approval_required,
+        webhook_url_prod: m.webhook_url_prod
+      }))
     };
+  }
+
+  /** ¿El flujo seleccionado es secuencial (pipeline por etapas con aprobacion)? */
+  _isSequential() {
+    return this.selectedFlow && this.selectedFlow.execution_mode === 'sequential'
+      && Array.isArray(this.selectedFlow.modules) && this.selectedFlow.modules.length > 1;
+  }
+
+  async _studioAccessToken() {
+    try {
+      if (!this.supabase?.auth?.getSession) return null;
+      const { data } = await this.supabase.auth.getSession();
+      return data?.session?.access_token || null;
+    } catch (_) { return null; }
   }
 
   updateCreditsDisplay() {
@@ -1952,7 +2171,9 @@ class StudioView extends BaseView {
       this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
       // Modelo Sessions: si hay un run activo (sesion abierta, o reabierta desde
       // Execution History con ?run=ID), los outputs nuevos caen DENTRO de ese run.
-      const resumeRunId = this._activeRunId || null;
+      // Los flujos SECUENCIALES no appendean: cada produccion arranca un pipeline nuevo.
+      const sequential = this._isSequential();
+      const resumeRunId = sequential ? null : (this._activeRunId || null);
       const appendBaseline = resumeRunId ? await this._runOutputCount(resumeRunId) : 0;
 
       // 1) Deducción de créditos. Pasamos campaign/persona/brief para que queden
@@ -2027,7 +2248,8 @@ class StudioView extends BaseView {
       window.apiClient?.invalidate(`nav:credits:${this.organizationId}`);
       // Skeleton INMEDIATO (antes del webhook) para feedback al instante: si no,
       // el tramo deduct->contexto->webhook deja el canvas sin senal y parece roto.
-      if (isAppend) this._showAppendSkeleton();
+      if (sequential) { this._activeRunId = runId; this._renderStageSkeleton(1, 'Generando guion…'); }
+      else if (isAppend) this._showAppendSkeleton();
       else { try { await this.setActiveRun(runId); } catch (_) {} }
 
       // 1b) Persistir snapshot del payload del usuario en runs_inputs.
@@ -2114,12 +2336,16 @@ class StudioView extends BaseView {
 
       // 3) Marcar run como completado. En append NO tocamos tokens_consumed: la
       //    RPC deduct_credits_for_run ya sumó el costo al acumulado del run.
-      const runUpdate = { status: 'completed', webhook_response_code: res.status };
-      if (!isAppend) runUpdate.tokens_consumed = cost;
-      await this.supabase
-        .from('flow_runs')
-        .update(runUpdate)
-        .eq('id', runId);
+      //    SECUENCIAL: NO marcar completed — rpc_ingest_stage_output dejó el run
+      //    'running'+is_paused esperando aprobacion; marcarlo aqui lo pisaria.
+      if (!sequential) {
+        const runUpdate = { status: 'completed', webhook_response_code: res.status };
+        if (!isAppend) runUpdate.tokens_consumed = cost;
+        await this.supabase
+          .from('flow_runs')
+          .update(runUpdate)
+          .eq('id', runId);
+      }
 
       await this.loadCredits();
       this.updateCreditsDisplay();
@@ -2128,7 +2354,13 @@ class StudioView extends BaseView {
       }
       // Sin popup de éxito: el canvas pasa directo al skeleton de carga.
       // Los outputs llegan async (webhook → n8n → ai-engine), por eso hacemos poll.
-      if (isAppend) {
+      if (sequential) {
+        // Pipeline por etapas: tomamos el canvas y esperamos el output de la etapa 1
+        // (guion) para mostrar la card de aprobacion. La plataforma orquesta el resto.
+        this._seq = { runId, contextBody: webhookBody, modules: this.selectedFlow.modules || [] };
+        this._activeRunId = runId;
+        this._enterStageWait(runId, 1);
+      } else if (isAppend) {
         // La sesion ya es el run activo del canvas: mostramos un skeleton al frente
         // y esperamos el output NUEVO (conteo > baseline) sin perder los previos.
         this._showAppendSkeleton();

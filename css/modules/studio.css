@@ -146,6 +146,36 @@
   color: var(--color-danger, #e02020);
 }
 
+/* ========== Flujos secuenciales (UGC): etapas + aprobacion ========== */
+.studio-stage { display: flex; flex-direction: column; gap: var(--spacing-md, 16px); padding: var(--spacing-lg, 24px); width: 100%; }
+.studio-stage-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stage-step { font-size: var(--font-size-sm); color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+.stage-step b { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--border-divider, #242424); color: var(--text-muted); font-size: 0.7rem; }
+.stage-step.is-active { color: var(--text-primary); }
+.stage-step.is-active b { background: var(--color-critical, #e02020); color: #fff; }
+.stage-step.is-done { color: var(--text-secondary); }
+.stage-step.is-done b { background: #2e7d32; color: #fff; }
+.stage-step-sep { color: var(--text-muted); opacity: 0.5; }
+.studio-stage-body { width: 100%; }
+
+.stage-approval { display: flex; flex-direction: column; gap: var(--spacing-md, 16px); max-width: 760px; }
+.stage-approval-title { margin: 0; font-size: var(--font-size-md); font-weight: 600; color: var(--text-primary); }
+.stage-variants { display: grid; gap: 12px; }
+.stage-variant { display: block; cursor: pointer; border: 1px solid var(--border-divider, #242424); background: var(--bg-card, #141517); border-radius: var(--radius-md, 10px); padding: 14px; transition: var(--transition); }
+.stage-variant:hover { border-color: var(--text-muted); }
+.stage-variant.is-selected { border-color: var(--color-critical, #e02020); box-shadow: 0 0 0 1px var(--color-critical, #e02020) inset; }
+.stage-variant input[type=radio] { margin-right: 8px; accent-color: var(--color-critical, #e02020); }
+.stage-variant-head { font-size: var(--font-size-base); color: var(--text-primary); }
+.stage-variant-head span { color: var(--text-muted); font-weight: 400; }
+.stage-variant-hook { font-size: var(--font-size-sm); color: var(--text-secondary); margin: 6px 0; }
+.stage-variant-scenes { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.stage-variant-scenes li { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.stage-onscreen { color: var(--text-muted); }
+.stage-ajustes { width: 100%; background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: var(--radius-sm, 6px); color: var(--text-primary); padding: 10px; font: inherit; font-size: var(--font-size-base); resize: vertical; }
+.stage-actions { display: flex; gap: 10px; align-items: center; }
+.stage-actions [data-stage-action]:disabled { opacity: 0.5; pointer-events: none; }
+.stage-approval-msg { font-size: var(--font-size-sm); color: var(--text-muted); margin: 0; min-height: 1em; }
+
 /* ========== Estado automático: solo hero + formulario de programación ========== */
 .studio-layout--automated .studio-center {
   max-width: 100%;
