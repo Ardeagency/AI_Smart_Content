@@ -157,13 +157,10 @@ class FlowCatalogView extends BaseView {
             <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
           </section>
           ` : `
-          <!-- VIEW CATEGORÍA: header (sustituye al hero del home) -->
+          <!-- VIEW CATEGORÍA: header (sustituye al hero del home).
+               La nav de subcategorías (texto editorial) se renderiza DENTRO del
+               banner desde renderCategoryHeader (#subcategoriesStrip). -->
           <header class="flow-catalog-category-header" id="flowCatalogCategoryHeader"></header>
-
-          <!-- Subcategorías strip (chips de navegación dentro de la categoría) -->
-          <section class="flow-catalog-row-section flow-catalog-row-section--strip" id="sectionSubcategories">
-            <div class="flow-catalog-categories-strip flow-catalog-subcategories-strip" id="subcategoriesStrip"></div>
-          </section>
 
           <!-- Últimos en esta categoría -->
           <section class="flow-catalog-row-section" id="sectionRecentCategory">
@@ -866,6 +863,7 @@ class FlowCatalogView extends BaseView {
         ${desc ? `<p class="flow-catalog-category-header-desc">${desc}</p>` : ''}
         ${countLabel ? `<span class="flow-catalog-category-header-count">${countLabel}</span>` : ''}
       </div>
+      <nav class="flow-catalog-subnav" id="subcategoriesStrip" aria-label="Subcategorias"></nav>
     `;
   }
 
@@ -898,14 +896,13 @@ class FlowCatalogView extends BaseView {
   }
 
   renderSubcategoriesStrip() {
-    const section = document.getElementById('sectionSubcategories');
     const strip = document.getElementById('subcategoriesStrip');
-    if (!section || !strip) return;
+    if (!strip) return;
     if (!this.subcategoriesInCategory.length) {
-      section.style.display = 'none';
+      strip.style.display = 'none';
       return;
     }
-    section.style.display = '';
+    strip.style.display = '';
     const activeSubFromUrl = new URLSearchParams(window.location.search).get('sub');
     const chips = [
       { id: '', name: 'Todos', isAll: true },
@@ -913,7 +910,7 @@ class FlowCatalogView extends BaseView {
     ];
     strip.innerHTML = chips.map(chip => `
       <button type="button"
-        class="flow-catalog-category-chip flow-catalog-sub-chip${(activeSubFromUrl ? chip.id === activeSubFromUrl : chip.isAll) ? ' active' : ''}"
+        class="flow-catalog-subnav-item${(activeSubFromUrl ? chip.id === activeSubFromUrl : chip.isAll) ? ' active' : ''}"
         data-subcategory-id="${this.escapeHtml(chip.id)}">
         ${this.escapeHtml(chip.name)}
       </button>
@@ -957,7 +954,7 @@ class FlowCatalogView extends BaseView {
         const subId = btn.getAttribute('data-subcategory-id');
         applyFilter(subId);
         updateUrl(subId);
-        strip.querySelectorAll('.flow-catalog-sub-chip').forEach(b => b.classList.remove('active'));
+        strip.querySelectorAll('.flow-catalog-subnav-item').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });

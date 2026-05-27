@@ -50,12 +50,58 @@
    Tamaño más contenido (no full-bleed), con cover sutil y mask fade-out. */
 .flow-catalog-category-header {
   position: relative;
-  padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2.25rem);
+  padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 5vw, 4rem) clamp(1.25rem, 2.5vw, 1.75rem);
   margin-bottom: clamp(1rem, 2vw, 1.75rem);
   min-height: clamp(200px, 28vh, 320px);
   overflow: hidden;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* Nav de subcategorias dentro del banner: estilo editorial (texto, activo
+   subrayado), una sola fila scrolleable para no crecer en alto. */
+.flow-catalog-subnav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: clamp(1.1rem, 2vw, 1.75rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.flow-catalog-subnav::-webkit-scrollbar { display: none; }
+.flow-catalog-subnav-item {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0 0 0.4rem;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: clamp(0.88rem, 1vw, 0.98rem);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 0.18s ease;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.flow-catalog-subnav-item:hover { color: rgba(255, 255, 255, 0.88); }
+.flow-catalog-subnav-item.active { color: #ffffff; }
+.flow-catalog-subnav-item.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  background: #ffffff;
+  border-radius: 2px;
 }
 .flow-catalog-category-header-bg {
   position: absolute;
