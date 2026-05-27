@@ -1189,6 +1189,7 @@
   --cc-glow-1: rgba(40, 95, 210, 0.42);
   --cc-glow-2: rgba(109, 153, 255, 0.2);
   --cc-glow-3: rgba(31, 98, 255, 0.08);
+  --cc-accent: #6aa3ff;
   background: linear-gradient(180deg, #0b0909 0%, var(--cc-grad-end) 100%);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
@@ -1213,18 +1214,22 @@
 .cc-node--audience {
   --cc-grad-end: #15110b; --cc-glow-1: rgba(214, 150, 60, 0.38);
   --cc-glow-2: rgba(224, 160, 69, 0.18); --cc-glow-3: rgba(224, 160, 69, 0.08);
+  --cc-accent: #e0a045;
 }
 .cc-node--campaign {
   --cc-grad-end: #0a1019; --cc-glow-1: rgba(40, 95, 210, 0.42);
   --cc-glow-2: rgba(109, 153, 255, 0.2); --cc-glow-3: rgba(31, 98, 255, 0.08);
+  --cc-accent: #6aa3ff;
 }
 .cc-node--campaign.cc-node--readonly {
   --cc-grad-end: #160a0c; --cc-glow-1: rgba(175, 45, 60, 0.38);
   --cc-glow-2: rgba(255, 109, 125, 0.18); --cc-glow-3: rgba(255, 31, 61, 0.07);
+  --cc-accent: #e15760;
 }
 .cc-node--identity {
   --cc-grad-end: #08151a; --cc-glow-1: rgba(25, 120, 130, 0.38);
   --cc-glow-2: rgba(95, 224, 200, 0.16); --cc-glow-3: rgba(31, 200, 180, 0.07);
+  --cc-accent: #5fe0c0;
 }
 
 /* Focus de flujo: atenua nodos/edges fuera del flujo seleccionado. */
@@ -1468,18 +1473,19 @@
   top: 16px;
   z-index: 3;
 }
+/* Puertos tipados: toman el color del tipo del nodo (estilo Weavy). */
 .cc-node-port--out {
   right: -7px;
-  background: var(--text-secondary, #d4d1d8);
+  background: var(--cc-accent, #6aa3ff);
   cursor: crosshair;
 }
-.cc-node-port--out:hover { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2); }
+.cc-node-port--out:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-accent, #6aa3ff) 35%, transparent); }
 .cc-node-port--in {
   left: -7px;
-  background: #3a3b40;
+  background: var(--cc-accent, #6aa3ff);
+  opacity: 0.55;
 }
-.cc-node-port--in.cc-node-port--linked { background: var(--text-secondary, #d4d1d8); }
-.cc-node--readonly .cc-node-port--in.cc-node-port--linked { background: var(--text-secondary, #d4d1d8); }
+.cc-node-port--in.cc-node-port--linked { opacity: 1; }
 
 /* ── Aristas ───────────────────────────────────────────────────────── */
 .cc-edge-path {

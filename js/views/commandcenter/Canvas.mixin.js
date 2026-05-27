@@ -496,6 +496,15 @@
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
   };
 
+  /** Color del tipo del nodo (para puertos/cables tipados). */
+  P._nodeTypeColor = function (key) {
+    const el = document.querySelector(`.cc-node[data-node-key="${cssEsc(key)}"]`);
+    const t = el ? el.getAttribute('data-type') : '';
+    return ({
+      audience: '#e0a045', 'campaign-concept': '#6aa3ff', 'campaign-real': '#e15760', identity: '#5fe0c0',
+    })[t] || 'rgba(255,255,255,0.45)';
+  };
+
   /** Zoom-to-fit: encuadra todos los nodos del canvas con padding. */
   P._zoomToFit = function () {
     const canvas = document.getElementById('ccCanvas');
@@ -563,12 +572,13 @@
 
     // limpiar conexiones previas (mantener defs/preview)
     Array.from(svg.querySelectorAll('.cc-edge')).forEach((n) => n.remove());
-    this._ensureArrowMarker(svg);
 
     this._allLinks().forEach((link) => {
       const from = this._portCenter(link.from, '.cc-node-port--out');
       const to   = this._portCenter(link.to, '.cc-node-port--in');
       if (!from || !to) return;
+
+      const color = this._nodeTypeColor(link.from); // cable = color del tipo origen
 
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', `cc-edge ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
@@ -585,7 +595,7 @@
       path.setAttribute('d', this._bezier(from.x, from.y, to.x, to.y));
       path.setAttribute('class', 'cc-edge-path');
       path.setAttribute('fill', 'none');
-      path.setAttribute('marker-end', 'url(#ccEdgeArrow)');
+      path.setAttribute('stroke', color);
       g.appendChild(path);
 
       const midX = (from.x + to.x) / 2;
@@ -1226,6 +1236,7 @@
     const preview = document.createElementNS(NS, 'path');
     preview.setAttribute('class', 'cc-edge-path cc-edge-path--preview');
     preview.setAttribute('fill', 'none');
+    preview.setAttribute('stroke', this._nodeTypeColor(fromKey)); // preview = color del origen
     svg.appendChild(preview);
     canvas.classList.add('cc-canvas--connecting');
 
