@@ -1387,44 +1387,35 @@ class FlowCatalogView extends BaseView {
     const host = document.getElementById('flowCatalogRails');
     if (!host) return;
     const parts = [];
+    // Dedupe inteligente: cada rail secundario solo aparece si aporta >= minNew
+    // flows que NO se han mostrado arriba. Asi no se repite todo en cada columna
+    // y en catalogos chicos simplemente salen menos rails (se ocultan solos).
+    const seen = new Set();
+    const numberedHtml = (flows) => flows.map((f, i) => `
+      <div class="flow-rank-item"><span class="flow-rank-num" aria-hidden="true">${i + 1}</span>${this.renderFlowCard(f)}</div>`).join('');
+    const addRail = (title, flows, opts = {}) => {
+      if (!flows || !flows.length) return;
+      const minNew = opts.minNew ?? 4;
+      const fresh = flows.filter(f => !seen.has(f.id));
+      if (fresh.length < minNew) return; // no aporta suficiente nuevo → se oculta
+      flows.forEach(f => seen.add(f.id));
+      parts.push(this._railHtml(title, opts.numbered ? numberedHtml(flows) : flows.map(f => this.renderFlowCard(f)).join('')));
+    };
 
-    // 1) Destacado del dia (rota por fecha)
+    // Destacado del dia (siempre; 1 flow rotado por fecha)
     const featured = this.getDailyFeatured();
-    if (featured) parts.push(this.renderDailyFeaturedHtml(featured));
+    if (featured) { parts.push(this.renderDailyFeaturedHtml(featured)); seen.add(featured.id); }
 
-    // 2) Hechos para tu marca (afinidad)
-    const fit = this.getBrandFitFlows();
-    if (fit.length) parts.push(this._railHtml('Hechos para tu marca', fit.map(f => this.renderFlowCard(f)).join('')));
+    // Hechos para tu marca: rail primario, siempre (siembra el set de vistos)
+    addRail('Hechos para tu marca', this.getBrandFitFlows(), { minNew: 0 });
 
-    // 3) Novedades
-    const nuevos = this.getNewFlows();
-    if (nuevos.length) parts.push(this._railHtml('Novedades', nuevos.map(f => this.renderFlowCard(f)).join('')));
-
-    // 4) Favoritos de la audiencia (comunidad: likes+saves)
-    const fav = this.getAudienceFavorites();
-    if (fav.length) parts.push(this._railHtml('Favoritos de la audiencia', fav.map(f => this.renderFlowCard(f)).join('')));
-
-    // 5) Top 10 (numeracion gigante)
-    const top = this.getTop10();
-    if (top.length >= 3) {
-      const items = top.map((f, i) => `
-        <div class="flow-rank-item">
-          <span class="flow-rank-num" aria-hidden="true">${i + 1}</span>
-          ${this.renderFlowCard(f)}
-        </div>`).join('');
-      parts.push(this._railHtml('Top 10', items));
-    }
-
-    // 6) Rails por subcategoria (estilo "novelas coreanas"), rotan por dia
-    this.getSubcategoryRails().forEach(rail => {
-      parts.push(this._railHtml(this.escapeHtml(rail.name), rail.flows.map(f => this.renderFlowCard(f)).join('')));
-    });
-
-    // 7) Porque usaste X
+    // Secundarios: condicionales — solo si aportan contenido nuevo suficiente
+    addRail('Novedades', this.getNewFlows(), { minNew: 4 });
+    addRail('Favoritos de la audiencia', this.getAudienceFavorites(), { minNew: 4 });
+    addRail('Top 10', this.getTop10(), { minNew: 5, numbered: true });
+    this.getSubcategoryRails().forEach(rail => addRail(this.escapeHtml(rail.name), rail.flows, { minNew: 3 }));
     const because = this.getBecauseYouUsed();
-    if (because) {
-      parts.push(this._railHtml(`Porque usaste ${this.escapeHtml(because.seedName)}`, because.flows.map(f => this.renderFlowCard(f)).join('')));
-    }
+    if (because) addRail(`Porque usaste ${this.escapeHtml(because.seedName)}`, because.flows, { minNew: 3 });
 
     host.innerHTML = parts.join('');
     host.querySelectorAll('.flow-catalog-row-scroll').forEach(scroll => this.bindFlowCardListeners(scroll));
