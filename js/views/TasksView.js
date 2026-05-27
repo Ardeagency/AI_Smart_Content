@@ -687,18 +687,44 @@ class TasksView extends BaseView {
     }
   }
 
+  /**
+   * Run_ids generados por autopilot: runs_inputs.metadata->>'captured_from' =
+   * 'autopilot_ingest'. Acotado y deduplicado (un run puede tener varios inputs).
+   */
+  async _autopilotRunIds() {
+    if (!this.supabase) return [];
+    try {
+      let q = this.supabase
+        .from('runs_inputs')
+        .select('run_id')
+        .eq('metadata->>captured_from', 'autopilot_ingest')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
+    } catch (e) {
+      console.error('TasksView _autopilotRunIds:', e);
+      return [];
+    }
+  }
+
   /** Carga últimos flow_runs del usuario con flow info, entity, productos, campaña y audiencia. */
   async loadFlowRuns(limit = 50) {
     if (!this.supabase || !this.userId) return [];
     try {
-      // Historial = solo flows de autopilot (programados). Los runs manuales de
-      // Studio se crean via RPC sin entity_id; los del scheduler siempre asignan
-      // una entidad. Por eso filtramos entity_id IS NOT NULL para excluir lo manual.
+      // Historial = SOLO autopilot. El marcador fiable es runs_inputs.metadata
+      // ->>'captured_from' = 'autopilot_ingest' (lo escribe el ciclo autonomo de
+      // ai-engine). Los runs manuales llevan 'studio_ui' y los seeds 'demo_backfill';
+      // entity_id / n8n_execution_id NO sirven (los manuales tambien los traen).
+      const autopilotIds = await this._autopilotRunIds();
+      if (!autopilotIds.length) return [];
       const { data: runs, error } = await this.supabase
         .from('flow_runs')
         .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, campaign_id, persona_id')
         .eq('user_id', this.userId)
-        .not('entity_id', 'is', null)
+        .in('id', autopilotIds)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;

@@ -288,7 +288,8 @@ class App {
     r.register('/brand-storage', brandStorageViewLoader, auth);
     r.register('/brandstorage', brandStorageViewLoader, auth);
 
-    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js']);
+    // El mixin Canvas debe ir DESPUÉS de CommandCenterView.js (extiende su prototype).
+    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js', '/js/views/commandcenter/Canvas.mixin.js']);
     // Canónico: shortId del brand_container + slug del nombre (mismo patrón que /org/...).
     // El shortId garantiza unicidad incluso si dos sub-marcas comparten nombre.
     r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);

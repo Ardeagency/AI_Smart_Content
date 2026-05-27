@@ -19,6 +19,14 @@ class CommandCenterView extends BaseView {
     this._integrations    = [];   // brand_integrations (sync status)
     this._pendingActions  = [];   // vera_pending_actions (status='pending')
     this._supabase        = null;
+
+    // Canvas (v6): Command Center es un canvas de nodos audiencias↔campanas.
+    // El mapa de mercado queda oculto (this._mapEnabled = false) pero su codigo
+    // y HTML siguen vivos en #ccMapLegacy para retomarlo a futuro.
+    this._mapEnabled      = false;
+    this._canvasScale     = 1;
+    this._canvasPan       = { x: 0, y: 0 };
+    this._positions       = {};   // { 'aud:<id>'|'camp:<id>': {x,y} }
   }
 
   /* ── Redirect legacy ──────────────────────────────────────────────── */
@@ -98,21 +106,84 @@ class CommandCenterView extends BaseView {
     </div>
   </section>
 
-  <!-- LAYOUT ENTORNO: mapa LEFT (flex 1) + sidebar derecho 380px ────── -->
-  <div class="cc-entorno-layout" id="ccTwoCol" style="display:none;">
+  <!-- LAYOUT CANVAS: lienzo de nodos LEFT (flex 1) + mini-dashboard 360px ── -->
+  <div class="cc-cc-layout" id="ccTwoCol" style="display:none;">
 
-    <!-- IZQUIERDA: Mapa con overlays (controles, leyenda, filtro) ───── -->
+    <!-- IZQUIERDA: canvas de nodos (audiencias ↔ campanas) ───────────── -->
+    <div class="cc-canvas-wrap">
+      <div class="cc-canvas-toolbar">
+        <div class="cc-canvas-toolbar-group">
+          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="Crear audiencia">
+            <i class="fas fa-user-plus"></i><span>Audiencia</span>
+          </button>
+          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateCampaign" type="button" title="Crear campana">
+            <i class="fas fa-bullhorn"></i><span>Campana</span>
+          </button>
+        </div>
+        <div class="cc-canvas-toolbar-group">
+          <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="Reorganizar nodos">
+            <i class="fas fa-table-cells"></i><span>Reorganizar</span>
+          </button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="Alejar" aria-label="Alejar"><i class="fas fa-minus"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="Centrar" aria-label="Centrar zoom"><i class="fas fa-compress"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="Acercar" aria-label="Acercar"><i class="fas fa-plus"></i></button>
+        </div>
+      </div>
+
+      <div class="cc-canvas" id="ccCanvas">
+        <svg class="cc-canvas-edges" id="ccCanvasEdges" aria-hidden="true"></svg>
+        <div class="cc-canvas-world" id="ccCanvasWorld"></div>
+        <div class="cc-canvas-empty" id="ccCanvasEmpty" style="display:none;">
+          <i class="fas fa-diagram-project"></i>
+          <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DERECHA: mini-dashboard (patron Studio/Video) ────────────────── -->
+    <aside class="cc-mini-dash" id="ccSidebar">
+      <div class="cc-mini-dash-card">
+        <div class="cc-mini-dash-head">
+          <span class="cc-mini-dash-eyebrow">Panel</span>
+          <h3 class="cc-mini-dash-title">Mercado y campanas</h3>
+        </div>
+
+        <div class="cc-mini-stats" id="ccMiniStats"></div>
+
+        <section class="cc-mini-section">
+          <div class="cc-mini-section-head">
+            <h4 class="cc-mini-section-title">Campanas reales</h4>
+            <span class="cc-mini-section-count" id="ccCampCount">0</span>
+          </div>
+          <div class="cc-list" id="ccCampList"></div>
+          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
+            <i class="fas fa-bullhorn"></i>
+            <span>Sin campanas sincronizadas. Conecta una integracion (Meta, Google, etc.).</span>
+          </div>
+        </section>
+
+        <section class="cc-mini-section">
+          <h4 class="cc-mini-section-title">Leyenda</h4>
+          <ul class="cc-mini-legend">
+            <li><span class="cc-legend-dot cc-legend-dot--aud"></span> Audiencia</li>
+            <li><span class="cc-legend-dot cc-legend-dot--concept"></span> Campana conceptual</li>
+            <li><span class="cc-legend-dot cc-legend-dot--real"></span> Campana real (Meta/Google)</li>
+            <li><span class="cc-legend-line"></span> Vinculo audiencia → campana</li>
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <!-- OCULTO: mapa de mercado. No se elimina; se retoma a futuro con
+       this._mapEnabled = true + mostrar #ccMapLegacy. -->
+  <div class="cc-entorno-layout" id="ccMapLegacy" style="display:none;">
     <div class="cc-entorno-map">
-      <!-- Loading overlay -->
       <div class="cc-entorno-loading" id="ccEntornoLoading" style="display:none;">
         <div class="cc-entorno-spinner"></div>
         <div class="cc-entorno-loading-text">Cargando lectura del mercado…</div>
       </div>
-
-      <!-- Choropleth canvas container -->
       <div class="cc-entorno-map-canvas" id="ccAudienceMap"></div>
-
-      <!-- Demografía: edades bottom-LEFT, géneros bottom-RIGHT (sin fondo) -->
       <div class="cc-entorno-demog cc-entorno-demog--age" id="ccEntornoDemogAge" style="display:none;">
         <div class="cc-break-group" id="ccBreakAge"></div>
       </div>
@@ -120,80 +191,6 @@ class CommandCenterView extends BaseView {
         <div class="cc-break-group" id="ccBreakGender"></div>
       </div>
     </div>
-
-    <!-- DERECHA: Sidebar — dos modos: reading (compacto) + analysis (expandido) -->
-    <aside class="cc-entorno-sidebar" id="ccSidebar">
-      <div class="cc-entorno-breadcrumb">
-        <span class="cc-entorno-bc-item">Panel</span>
-        <i class="fas fa-chevron-right cc-entorno-bc-sep"></i>
-        <span class="cc-entorno-bc-item cc-entorno-bc-current">Campañas</span>
-        <div class="cc-panel-actions">
-          <!-- Visibles solo en analysis mode (CSS las oculta en reading). -->
-          <button class="cc-panel-action-btn" id="ccBtnCreateCampaign" type="button" title="Crear campaña">
-            <i class="fas fa-bullhorn"></i>
-            <span>Crear campaña</span>
-          </button>
-          <button class="cc-panel-action-btn" id="ccBtnCreateAudience" type="button" title="Crear audiencia">
-            <i class="fas fa-user-plus"></i>
-            <span>Crear audiencia</span>
-          </button>
-          <button class="cc-panel-expand-btn" id="ccPanelExpandBtn" title="Ver análisis del entorno" aria-label="Expandir panel">
-            <i class="fas fa-expand-alt"></i>
-            <i class="fas fa-compress-alt"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- MODO 1: lectura (default) — lista compacta de campañas -->
-      <div class="cc-panel-reading">
-        <section class="cc-entorno-section">
-          <div class="cc-list" id="ccCampList"></div>
-          <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
-            <i class="fas fa-bullhorn"></i>
-            <span>Sin campañas sincronizadas. Conecta una integración (Meta, Google, etc.).</span>
-          </div>
-        </section>
-      </div>
-
-      <!-- MODO 2: análisis (expandido) — galería de campañas + audiencias -->
-      <div class="cc-panel-analysis" id="ccPanelAnalysis">
-        <section class="cc-entorno-section">
-          <div class="cc-entorno-subsection-head">
-            <h3 class="cc-entorno-section-title">Campañas reales</h3>
-            <span class="cc-entorno-subsection-count" id="ccGalleryCampCount">0</span>
-          </div>
-          <div class="cc-gallery" id="ccGalleryCamp"></div>
-          <div class="cc-empty cc-empty--compact" id="ccGalleryCampEmpty" style="display:none;">
-            <i class="fas fa-bullhorn"></i>
-            <span>Sin campañas sincronizadas.</span>
-          </div>
-        </section>
-
-        <section class="cc-entorno-section">
-          <div class="cc-entorno-subsection-head">
-            <h3 class="cc-entorno-section-title">Campañas conceptuales</h3>
-            <span class="cc-entorno-subsection-count" id="ccGalleryConceptCount">0</span>
-          </div>
-          <div class="cc-gallery" id="ccGalleryConcept"></div>
-          <div class="cc-empty cc-empty--compact" id="ccGalleryConceptEmpty" style="display:none;">
-            <i class="fas fa-lightbulb"></i>
-            <span>Sin campañas conceptuales. Crea una con el botón de arriba.</span>
-          </div>
-        </section>
-
-        <section class="cc-entorno-section">
-          <div class="cc-entorno-subsection-head">
-            <h3 class="cc-entorno-section-title">Audiencias</h3>
-            <span class="cc-entorno-subsection-count" id="ccGalleryAudCount">0</span>
-          </div>
-          <div class="cc-gallery" id="ccGalleryAud"></div>
-          <div class="cc-empty cc-empty--compact" id="ccGalleryAudEmpty" style="display:none;">
-            <i class="fas fa-users-slash"></i>
-            <span>Sin audiencias definidas.</span>
-          </div>
-        </section>
-      </div>
-    </aside>
   </div>
 
   <!-- Modal editor universal: audiencias y campañas conceptuales ────── -->
@@ -341,9 +338,10 @@ class CommandCenterView extends BaseView {
     if (twoCol) twoCol.style.display = '';
 
     this._renderVeraInbox();
-    this._renderCampaigns();
-    this._renderGallery();
-    this._renderAudienceMap();
+    this._renderCampaigns();    // alimenta la lista compacta del mini-dashboard
+    this._renderCanvas();       // (mixin Canvas) nodos + aristas
+    this._renderMiniDash();     // (mixin Canvas) stats + conteos
+    this._renderAudienceMap();  // no-op mientras this._mapEnabled === false
     this.updateLinksForRouter();
   }
 
@@ -588,214 +586,11 @@ class CommandCenterView extends BaseView {
     }).join('');
   }
 
-  /* ── GALERÍA (analysis mode): grilla detallada de campañas + audiencias ── */
-  _renderGallery() {
-    this._renderGalleryCampaigns();
-    this._renderGalleryConceptCampaigns();
-    this._renderGalleryAudiences();
-  }
-
-  _renderGalleryCampaigns() {
-    const grid  = document.getElementById('ccGalleryCamp');
-    const empty = document.getElementById('ccGalleryCampEmpty');
-    const count = document.getElementById('ccGalleryCampCount');
-    if (!grid) return;
-
-    const rows = (Array.isArray(this._campaigns) ? this._campaigns : []).filter(c => c?.last_synced_at);
-    if (count) count.textContent = String(rows.length);
-
-    if (!rows.length) {
-      grid.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
-      return;
-    }
-    if (empty) empty.style.display = 'none';
-
-    const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
-    const resultLabel = (obj) => {
-      const s = String(obj || '').toLowerCase();
-      if (s.includes('lead'))                                     return 'leads';
-      if (s.includes('purchase') || s.includes('sales') || s.includes('conversion')) return 'compras';
-      if (s.includes('install') || s.includes('app'))             return 'instalaciones';
-      if (s.includes('message') || s.includes('chat'))            return 'mensajes';
-      if (s.includes('engagement') || s.includes('reach'))        return 'interacciones';
-      if (s.includes('traffic') || s.includes('link_click'))      return 'clics';
-      if (s.includes('view') || s.includes('thruplay'))           return 'vistas';
-      return 'resultados';
-    };
-    const fmtCompact = (v) => {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return '0';
-      if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-      if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-      return n.toLocaleString('es-ES');
-    };
-    const fmtMoney = (v, currency) => {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return `0 ${currency || 'USD'}`;
-      const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
-      return `${compact} ${currency || 'USD'}`;
-    };
-    const fmtDate = (d) => {
-      if (!d) return '—';
-      const t = new Date(d);
-      return Number.isFinite(t.getTime())
-        ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-        : '—';
-    };
-
-    grid.innerHTML = rows.map((c) => {
-      const stBadge   = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
-      const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
-      const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
-      const resultsN  = Number(c.cached_conversions);
-      const resultsV  = Number.isFinite(resultsN) ? resultsN : 0;
-      const resultsL  = resultLabel(c.platform_objective || c.cta);
-      const ctaText   = String(c.cta || c.platform_objective || c.descripcion_interna || '').trim();
-      const ctaShort  = ctaText.length > 120 ? ctaText.slice(0, 120) + '…' : ctaText;
-
-      // Campañas reales = view-only (vienen de Meta/Google). No se editan
-      // ni se eliminan localmente — el ground truth vive en la plataforma.
-      return `
-      <article class="cc-gallery-card cc-gallery-card--readonly">
-        <header class="cc-gallery-card-head">
-          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
-          <div class="cc-camp-badges">${stBadge}${platBadge}</div>
-        </header>
-        ${ctaShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(ctaShort)}</p>` : ''}
-        <dl class="cc-gallery-stats">
-          <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Resultados</dt><dd>${fmtCompact(resultsV)} <small>${this.escapeHtml(resultsL)}</small></dd></div>
-          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${this.escapeHtml(fmtMoney(c.cached_spend, c.budget_currency))}</dd></div>
-          <div class="cc-camp-stat"><dt>Impresiones</dt><dd>${fmtCompact(c.cached_impressions || 0)}</dd></div>
-          <div class="cc-camp-stat"><dt>Clics</dt><dd>${fmtCompact(c.cached_clicks || 0)}</dd></div>
-          <div class="cc-camp-stat"><dt>ROAS</dt><dd>${c.cached_roas != null ? `${Number(c.cached_roas).toFixed(2)}x` : '—'}</dd></div>
-        </dl>
-      </article>`;
-    }).join('');
-  }
-
-  _renderGalleryConceptCampaigns() {
-    const grid  = document.getElementById('ccGalleryConcept');
-    const empty = document.getElementById('ccGalleryConceptEmpty');
-    const count = document.getElementById('ccGalleryConceptCount');
-    if (!grid) return;
-
-    // Conceptuales = creadas localmente, sin sync de plataforma.
-    const rows = (Array.isArray(this._campaigns) ? this._campaigns : []).filter(c => !c?.last_synced_at);
-    if (count) count.textContent = String(rows.length);
-
-    if (!rows.length) {
-      grid.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
-      return;
-    }
-    if (empty) empty.style.display = 'none';
-
-    const statusClass = { active: 'cc-badge--green', conceptual: 'cc-badge--blue', draft: 'cc-badge--gray', paused: 'cc-badge--yellow', ended: 'cc-badge--red', archived: 'cc-badge--gray' };
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Orgánico', internal: 'Interno' };
-    const fmtMoney = (v, currency) => {
-      const n = Number(v);
-      if (!Number.isFinite(n) || n === 0) return '—';
-      const compact = n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
-      return `${compact} ${currency || 'USD'}`;
-    };
-    const fmtDate = (d) => {
-      if (!d) return '—';
-      const t = new Date(d);
-      return Number.isFinite(t.getTime())
-        ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-        : '—';
-    };
-    const personaById = this._personaNameById();
-
-    grid.innerHTML = rows.map((c) => {
-      const stBadge   = `<span class="cc-badge ${statusClass[c.status] || 'cc-badge--gray'}">${this.escapeHtml(c.status || 'draft')}</span>`;
-      const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : null);
-      const platBadge = platLabel ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(platLabel)}</span>` : '';
-      const ctaText   = String(c.cta || c.descripcion_interna || c.platform_objective || '').trim();
-      const ctaShort  = ctaText.length > 140 ? ctaText.slice(0, 140) + '…' : ctaText;
-      const pName     = c.persona_id ? personaById[String(c.persona_id)] : '';
-
-      return `
-      <article class="cc-gallery-card cc-gallery-card--concept" data-entity-type="campaign-concept" data-entity-id="${this.escapeHtml(String(c.id))}">
-        <div class="cc-gallery-card-actions">
-          <button type="button" class="cc-gallery-edit-btn" aria-label="Editar campaña" title="Editar"><i class="fas fa-pen"></i></button>
-          <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar campaña conceptual" title="Eliminar"><i class="fas fa-times"></i></button>
-        </div>
-        <header class="cc-gallery-card-head">
-          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(c.nombre_campana || 'Campaña')}">${this.escapeHtml(c.nombre_campana || 'Campaña')}</h4>
-          <div class="cc-camp-badges">${stBadge}${platBadge}</div>
-        </header>
-        ${ctaShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(ctaShort)}</p>` : ''}
-        <dl class="cc-gallery-stats cc-gallery-stats--concept">
-          <div class="cc-camp-stat"><dt>Creada</dt><dd>${this.escapeHtml(fmtDate(c.created_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Inicio plan</dt><dd>${this.escapeHtml(fmtDate(c.starts_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Presupuesto/día</dt><dd>${this.escapeHtml(fmtMoney(c.budget_daily, c.budget_currency))}</dd></div>
-          <div class="cc-camp-stat"><dt>Audiencia</dt><dd>${this.escapeHtml(pName || '—')}</dd></div>
-        </dl>
-      </article>`;
-    }).join('');
-  }
-
-  _renderGalleryAudiences() {
-    const grid  = document.getElementById('ccGalleryAud');
-    const empty = document.getElementById('ccGalleryAudEmpty');
-    const count = document.getElementById('ccGalleryAudCount');
-    if (!grid) return;
-
-    const rows = Array.isArray(this._audiences) ? this._audiences : [];
-    if (count) count.textContent = String(rows.length);
-
-    if (!rows.length) {
-      grid.innerHTML = '';
-      if (empty) empty.style.display = 'flex';
-      return;
-    }
-    if (empty) empty.style.display = 'none';
-
-    const awarenessLabel = {
-      unaware: 'Unaware', problem_aware: 'Problem aware', solution_aware: 'Solution aware',
-      product_aware: 'Product aware', most_aware: 'Most aware',
-    };
-
-    grid.innerHTML = rows.map((a) => {
-      const scoreNum  = a.alignment_score != null ? Math.round(Number(a.alignment_score) * 100) : null;
-      const scoreCls  = scoreNum == null ? '' : (scoreNum >= 70 ? 'cc-aud-score--hi' : scoreNum >= 40 ? 'cc-aud-score--mid' : 'cc-aud-score--lo');
-      const scoreBadge = scoreNum != null ? `<span class="cc-aud-score ${scoreCls}" title="Alineación">${scoreNum}%</span>` : '';
-      const levelTxt  = awarenessLabel[a.awareness_level] || 'Sin awareness';
-      const desc      = String(a.description || '').trim();
-      const descShort = desc.length > 160 ? desc.slice(0, 160) + '…' : desc;
-      const dolorN    = Array.isArray(a.dolores)         ? a.dolores.length         : 0;
-      const deseoN    = Array.isArray(a.deseos)          ? a.deseos.length          : 0;
-      const objN      = Array.isArray(a.objeciones)      ? a.objeciones.length      : 0;
-      const gatN      = Array.isArray(a.gatillos_compra) ? a.gatillos_compra.length : 0;
-
-      return `
-      <article class="cc-gallery-card" data-entity-type="audience" data-entity-id="${this.escapeHtml(String(a.id))}">
-        <div class="cc-gallery-card-actions">
-          <button type="button" class="cc-gallery-edit-btn" aria-label="Editar audiencia" title="Editar"><i class="fas fa-pen"></i></button>
-          <button type="button" class="cc-gallery-delete-btn" aria-label="Eliminar audiencia" title="Eliminar"><i class="fas fa-times"></i></button>
-        </div>
-        <header class="cc-gallery-card-head">
-          <h4 class="cc-gallery-card-title" title="${this.escapeHtml(a.name || 'Audiencia')}">${this.escapeHtml(a.name || 'Audiencia')}</h4>
-          ${scoreBadge}
-        </header>
-        <span class="cc-aud-level cc-aud-level--${this.escapeHtml(a.awareness_level || 'unaware')}">${this.escapeHtml(levelTxt)}</span>
-        ${descShort ? `<p class="cc-gallery-card-cta">${this.escapeHtml(descShort)}</p>` : ''}
-        <dl class="cc-gallery-stats">
-          <div class="cc-camp-stat"><dt>Dolores</dt><dd>${dolorN}</dd></div>
-          <div class="cc-camp-stat"><dt>Deseos</dt><dd>${deseoN}</dd></div>
-          <div class="cc-camp-stat"><dt>Objeciones</dt><dd>${objN}</dd></div>
-          <div class="cc-camp-stat"><dt>Gatillos</dt><dd>${gatN}</dd></div>
-        </dl>
-      </article>`;
-    }).join('');
-  }
-
   /* ── Mapa choropleth + breakdowns (segmentación real) ─────────────── */
   async _renderAudienceMap() {
+    // OCULTO (v6): el mapa de mercado vive en #ccMapLegacy pero no se pinta.
+    // Reactivar con this._mapEnabled = true + mostrar #ccMapLegacy.
+    if (!this._mapEnabled) return;
     const mapEl       = document.getElementById('ccAudienceMap');
     const ageOverlay  = document.getElementById('ccEntornoDemogAge');
     const genOverlay  = document.getElementById('ccEntornoDemogGender');
@@ -946,36 +741,10 @@ class CommandCenterView extends BaseView {
      conectamos a esos eventos. Fallback alert para que la UI no se sienta
      muerta mientras tanto. */
   _setupEventListeners() {
-    const sidebar = document.getElementById('ccSidebar');
-    const layout  = document.getElementById('ccTwoCol');
-    const btnExp  = document.getElementById('ccPanelExpandBtn');
-    if (btnExp && sidebar && layout) {
-      btnExp.addEventListener('click', () => {
-        const expanded = sidebar.classList.toggle('cc-sidebar--expanded');
-        layout.classList.toggle('cc-entorno-layout--expanded', expanded);
-        btnExp.setAttribute('title', expanded ? 'Cerrar análisis' : 'Ver análisis del entorno');
-        btnExp.setAttribute('aria-label', expanded ? 'Cerrar panel' : 'Expandir panel');
-      });
-    }
-
     document.getElementById('ccBtnCreateCampaign')?.addEventListener('click', () => this._createAndEdit('campaign'));
     document.getElementById('ccBtnCreateAudience')?.addEventListener('click', () => this._createAndEdit('audience'));
 
-    // Delegated: editar y eliminar en cualquier card de la galería.
-    const page = document.getElementById('commandCenterPage');
-    page?.addEventListener('click', (ev) => {
-      const delBtn  = ev.target.closest?.('.cc-gallery-delete-btn');
-      const editBtn = ev.target.closest?.('.cc-gallery-edit-btn');
-      const card    = (delBtn || editBtn)?.closest('.cc-gallery-card');
-      if (!card) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      const entityType = card.getAttribute('data-entity-type');
-      const entityId   = card.getAttribute('data-entity-id');
-      if (!entityType || !entityId) return;
-      if (delBtn)  this._confirmAndDelete(entityType, entityId, card);
-      if (editBtn) this._openEditor(entityType, entityId);
-    });
+    // Editar/eliminar nodos del canvas se maneja en _setupCanvasListeners (mixin).
 
     // Cerrar modal: backdrop click, botón X, botón Cancelar, Escape.
     const backdrop = document.getElementById('ccEditorBackdrop');
@@ -989,6 +758,9 @@ class CommandCenterView extends BaseView {
       ev.preventDefault();
       this._saveEditor();
     });
+
+    // Canvas (mixin): drag-to-connect, node-drag, pan/zoom, toolbar zoom.
+    if (typeof this._setupCanvasListeners === 'function') this._setupCanvasListeners();
   }
 
   /* ── Crear audiencia / campaña con nombre auto-incrementado ─────────
@@ -1040,11 +812,11 @@ class CommandCenterView extends BaseView {
       // Push al state local y re-render
       if (isAudience) {
         this._audiences = [data, ...(this._audiences || [])];
-        this._renderGalleryAudiences();
       } else {
         this._campaigns = [data, ...(this._campaigns || [])];
-        this._renderGalleryConceptCampaigns();
       }
+      this._renderCanvas();
+      this._renderMiniDash();
       // Abrir editor de la fila recién creada
       this._openEditor(isAudience ? 'audience' : 'campaign-concept', data.id);
     } catch (e) {
@@ -1264,14 +1036,14 @@ class CommandCenterView extends BaseView {
       if (entityType === 'audience') {
         const idx = (this._audiences || []).findIndex(a => String(a.id) === String(entityId));
         if (idx >= 0) this._audiences[idx] = { ...this._audiences[idx], ...data };
-        this._renderGalleryAudiences();
-        this._renderAudienceMap();
       } else {
         const idx = (this._campaigns || []).findIndex(c => String(c.id) === String(entityId));
         if (idx >= 0) this._campaigns[idx] = { ...this._campaigns[idx], ...data };
-        this._renderGalleryConceptCampaigns();
         this._renderCampaigns();
       }
+      this._renderCanvas();
+      this._renderMiniDash();
+      this._renderAudienceMap();
       this._closeEditor();
     } catch (e) {
       console.error('CommandCenterView save:', e);
@@ -1317,13 +1089,14 @@ class CommandCenterView extends BaseView {
       // reales no se tocan: no se pueden eliminar desde aquí.
       if (isAudience) {
         this._audiences = (this._audiences || []).filter(a => String(a.id) !== String(entityId));
-        this._renderGalleryAudiences();
         this._renderAudienceMap();
       } else {
         // isConcept
         this._campaigns = (this._campaigns || []).filter(c => String(c.id) !== String(entityId));
-        this._renderGalleryConceptCampaigns();
+        this._renderCampaigns();
       }
+      this._renderCanvas();
+      this._renderMiniDash();
     } catch (e) {
       console.error('CommandCenterView delete:', e);
       window.alert(`No se pudo eliminar: ${e?.message || 'error desconocido'}`);
