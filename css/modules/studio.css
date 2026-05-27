@@ -101,24 +101,24 @@
 .studio-skeleton {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: var(--spacing-sm, 8px);
   width: 100%;
   min-height: 320px;
-  padding: var(--spacing-md, 16px);
+  padding: var(--spacing-lg, 24px);
 }
 .studio-skeleton-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
+  gap: 12px;
+  justify-content: flex-start;
   width: 100%;
 }
+/* El tamano/proporcion del card se fija inline desde _skeletonCardStyle()
+   para que coincida con el aspect ratio de la produccion en camino. */
 .studio-skeleton-card {
   flex: 0 0 auto;
-  width: clamp(200px, 32vw, 300px);
-  aspect-ratio: 4 / 5;
   border-radius: var(--media-container-radius, 12px);
   overflow: hidden;
   background: var(--media-container-bg, #141517);

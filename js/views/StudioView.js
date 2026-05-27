@@ -151,6 +151,32 @@ class StudioView extends BaseView {
     } catch (_) {}
   }
 
+  /** Aspect ratio de la produccion en camino (para el skeleton): el elegido al
+   * producir, si no el del form, fallback 4:5. */
+  _currentAspectRatio() {
+    if (this._activeAspectRatio) return this._activeAspectRatio;
+    try {
+      const el = document.querySelector('[name="aspect_ratio"]');
+      if (el && el.value) return el.value;
+    } catch (_) {}
+    return '4:5';
+  }
+
+  /** Estilo inline del skeleton-card: misma proporcion que la produccion +
+   * tamano acorde a la orientacion (horizontal ancho / vertical acotado). */
+  _skeletonCardStyle() {
+    const ar = this._currentAspectRatio();
+    const parts = String(ar).split(/[:/x]/).map(function (s) { return parseFloat(s); }).filter(function (n) { return n > 0; });
+    const w = parts[0] || 4;
+    const h = parts[1] || 5;
+    const ratio = w / h;
+    let size;
+    if (ratio > 1.15) size = 'width: min(100%, 560px);';            // horizontal
+    else if (ratio < 0.87) size = 'width: clamp(180px, 26vw, 240px);'; // vertical
+    else size = 'width: clamp(220px, 30vw, 320px);';                 // cuadrado
+    return 'aspect-ratio: ' + w + ' / ' + h + '; ' + size + ' max-height: 70vh;';
+  }
+
   /** ¿El run activo ya tiene outputs renderizados en el canvas? (skeleton reemplazado) */
   _activeRunHasOutputs(runId) {
     if (runId && this._activeRunId !== runId) return false;
@@ -619,7 +645,7 @@ class StudioView extends BaseView {
         ? `
         <div class="studio-skeleton" role="status" aria-live="polite" aria-label="Generando producción">
           <div class="studio-skeleton-grid">
-            <div class="studio-skeleton-card"><div class="living-history-skeleton"></div></div>
+            <div class="studio-skeleton-card" style="${this._skeletonCardStyle()}"><div class="living-history-skeleton"></div></div>
           </div>
           <p class="studio-skeleton-label">Generando tu producción…</p>
           <p class="studio-skeleton-hint">Esto puede tardar un momento. Tu resultado aparecerá aquí en cuanto esté listo.</p>
@@ -1907,6 +1933,9 @@ class StudioView extends BaseView {
 
     let payload = this.collectFormData();
     payload = await this.enrichProductPayload(payload);
+    // Aspect ratio elegido: el skeleton de carga lo usa para mostrarse con la
+    // misma proporcion que la produccion en camino (horizontal/cuadrado/vertical).
+    this._activeAspectRatio = payload.aspect_ratio || this._activeAspectRatio || null;
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.disabled = true;
 
