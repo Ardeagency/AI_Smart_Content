@@ -177,13 +177,12 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   },
   {
     type: 'container',
-    id: 'resources',
-    label: 'Library',
-    icon: 'fa-book',
+    id: 'llm',
+    label: 'LLM',
+    icon: 'fa-brain',
     iconSrc: '/recursos/icons/memory.svg',
     children: [
-      { label: 'Entrenamiento de Vera', route: '/dev/lead/vera-training' },
-      { label: 'Ver conocimientos', route: '/dev/lead/vera-knowledge' }
+      { label: 'Entrenamiento', route: '/dev/lead/vera-training' }
     ]
   },
   { type: 'section', label: 'Admin', role_required: 'lead' },
