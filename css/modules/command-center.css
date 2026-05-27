@@ -1583,6 +1583,81 @@
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);
 }
+/* ── Nodo seleccionado ─────────────────────────────────────────────── */
+.cc-node--selected { border-color: rgba(255, 255, 255, 0.55) !important; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 6px 20px rgba(0, 0, 0, 0.45); }
+
+/* ── Dropdown "Crear informe" ──────────────────────────────────────── */
+.cc-report-dd { position: relative; }
+.cc-report-caret { font-size: 0.58rem !important; margin-left: 2px; opacity: 0.8; }
+.cc-report-menu {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  z-index: 20; min-width: 232px;
+  background: rgba(11, 11, 11, 0.92);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+  padding: 6px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+.cc-report-menu button {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 8px 10px;
+  border: none; border-radius: 8px; background: transparent;
+  color: var(--text-secondary); font-size: 0.8rem; font-weight: 500;
+  text-align: left; cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.cc-report-menu button:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.cc-report-menu button i { width: 15px; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+
+/* ── Modal del informe ─────────────────────────────────────────────── */
+.cc-report-backdrop {
+  position: fixed; inset: 0; z-index: 10060;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.6); padding: 4vh 16px;
+}
+.cc-report-modal {
+  width: min(820px, 100%); max-height: 92vh;
+  display: flex; flex-direction: column;
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.cc-report-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; flex: 0 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.cc-report-title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary, #fff); display: inline-flex; align-items: center; gap: 9px; }
+.cc-report-title i { color: var(--text-muted); font-size: 0.85rem; }
+.cc-report-head-actions { display: flex; gap: 6px; }
+.cc-report-act {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05); color: var(--text-secondary);
+  cursor: pointer; font-size: 0.78rem; transition: background 0.15s ease, color 0.15s ease;
+}
+.cc-report-act:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.cc-report-body { padding: 18px 22px; overflow-y: auto; min-height: 0; }
+.cc-report-loading, .cc-report-error { display: flex; align-items: center; gap: 9px; color: var(--text-muted); font-size: 0.9rem; padding: 24px 0; }
+.cc-report-foot { flex: 0 0 auto; padding: 8px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-muted); font-size: 0.72rem; text-align: right; min-height: 14px; }
+
+/* Markdown del informe */
+.cc-report-md { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; }
+.cc-report-md h1, .cc-report-md h2, .cc-report-md h3 { color: var(--text-primary, #fff); line-height: 1.3; margin: 1.1em 0 0.5em; }
+.cc-report-md h1 { font-size: 1.4rem; } .cc-report-md h2 { font-size: 1.15rem; } .cc-report-md h3 { font-size: 1rem; }
+.cc-report-md p { margin: 0.6em 0; }
+.cc-report-md ul, .cc-report-md ol { margin: 0.6em 0; padding-left: 1.4em; }
+.cc-report-md li { margin: 0.25em 0; }
+.cc-report-md strong { color: var(--text-primary, #fff); }
+.cc-report-md a { color: #6aa3ff; }
+.cc-report-md code { background: rgba(255, 255, 255, 0.08); padding: 1px 5px; border-radius: 5px; font-size: 0.85em; }
+.cc-report-md table { width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 0.82rem; }
+.cc-report-md th, .cc-report-md td { border: 1px solid var(--border-divider, #242424); padding: 6px 9px; text-align: left; }
+.cc-report-md th { background: rgba(255, 255, 255, 0.05); color: var(--text-primary, #fff); }
+.cc-report-md blockquote { border-left: 3px solid rgba(255, 255, 255, 0.2); margin: 0.8em 0; padding: 0.2em 0 0.2em 1em; color: var(--text-muted); }
+
 @media (max-width: 720px) {
   /* En pantallas chicas el panel flotante se angosta para no tapar el canvas. */
   .cc-floating-panel { width: calc(100% - 28px); max-width: 340px; }

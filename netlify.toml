@@ -1,5 +1,6 @@
 # - OPENAI_API_KEY (solo para backend: funciones que llamen a OpenAI)
 # - KIE_API_KEY (solo para backend: funciones que llamen a KIE)
+# - CLAUDE_AI_API (solo para backend: api-generate-report llama a Claude/Anthropic)
 
 # Netlify Configuration for AI Smart Content (SPA)
 

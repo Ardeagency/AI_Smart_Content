@@ -629,6 +629,40 @@
       if (saved && this._librarySections().some((s) => s.key === saved)) this._activeSection = saved;
     } catch (_) { /* noop */ }
 
+    // Dropdown "Crear informe".
+    if (!this._reportDocClick) {
+      const ddBtn = document.getElementById('ccBtnReport');
+      const menu  = document.getElementById('ccReportMenu');
+      ddBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+      });
+      menu?.addEventListener('click', (e) => {
+        const opt = e.target.closest('[data-scope]');
+        if (!opt) return;
+        menu.style.display = 'none';
+        this._generateReport(opt.getAttribute('data-scope'));
+      });
+      // Cerrar el menu al hacer click afuera.
+      this._reportDocClick = (e) => { if (menu && !e.target.closest('#ccReportDD')) menu.style.display = 'none'; };
+      document.addEventListener('click', this._reportDocClick);
+      // Modal: cerrar / copiar / descargar.
+      document.getElementById('ccReportClose')?.addEventListener('click', () => this._closeReport());
+      document.getElementById('ccReportBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'ccReportBackdrop') this._closeReport(); });
+      document.getElementById('ccReportCopy')?.addEventListener('click', () => {
+        if (this._lastReport) navigator.clipboard?.writeText(this._lastReport).catch(() => {});
+      });
+      document.getElementById('ccReportDownload')?.addEventListener('click', () => {
+        if (!this._lastReport) return;
+        const blob = new Blob([this._lastReport], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `informe-${new Date().toISOString().slice(0, 10)}.md`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      });
+    }
+
     // Rueda → zoom anclado al cursor
     if (!this._canvasWheel) {
       this._canvasWheel = (e) => {
@@ -714,7 +748,11 @@
           e.preventDefault(); e.stopPropagation();
           const et = type === 'audience' ? 'audience' : 'campaign-concept';
           this._confirmAndDelete(et, id, null);
+          return;
         }
+        // Click en cualquier otra parte del nodo (no control/puerto/campo): seleccionar.
+        if (e.target.closest('input, textarea, select, .cc-node-port')) return;
+        this._selectNode(nodeEl);
       };
       canvas.addEventListener('click', this._canvasClick);
     }
@@ -1491,6 +1529,101 @@
   };
 
   // ------------------------------------------------------------------
+  // Seleccion de nodo + informes (Claude)
+  // ------------------------------------------------------------------
+  P._selectNode = function (nodeEl) {
+    const key = nodeEl.getAttribute('data-node-key');
+    document.querySelectorAll('.cc-node--selected').forEach((n) => n.classList.remove('cc-node--selected'));
+    if (this._selectedKey === key) { this._selectedKey = null; this._selected = null; return; }
+    nodeEl.classList.add('cc-node--selected');
+    this._selectedKey = key;
+    this._selected = { type: nodeEl.getAttribute('data-type'), id: nodeEl.getAttribute('data-id'), key };
+    // Para identity, el tipo util es el identityType.
+    if (this._selected.type === 'identity') this._selected.type = nodeEl.getAttribute('data-identity-type');
+  };
+
+  P._loadMarkdownLibs = async function () {
+    if (window.__mdLibsLoaded) return;
+    if (this.constructor.__mdLibsLoading) return this.constructor.__mdLibsLoading;
+    this.constructor.__mdLibsLoading = (async () => {
+      const load = (src, ready) => new Promise((res) => {
+        if (ready()) return res();
+        const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res;
+        document.head.appendChild(s);
+      });
+      await Promise.all([
+        load('https://cdn.jsdelivr.net/npm/marked@12/marked.min.js', () => window.marked),
+        load('https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js', () => window.DOMPurify),
+      ]);
+      if (window.marked?.setOptions) window.marked.setOptions({ breaks: true, gfm: true });
+      window.__mdLibsLoaded = true;
+    })();
+    return this.constructor.__mdLibsLoading;
+  };
+
+  P._openReport = function () {
+    const bd = document.getElementById('ccReportBackdrop');
+    if (bd) bd.style.display = 'flex';
+  };
+  P._closeReport = function () {
+    const bd = document.getElementById('ccReportBackdrop');
+    if (bd) bd.style.display = 'none';
+  };
+
+  P._generateReport = async function (scope) {
+    const titleByScope = {
+      all: 'Informe integral', campaign: 'Informe de campana', audience: 'Informe de audiencia',
+      ecosystem: 'Aprendizaje del ecosistema', selection: 'Informe del seleccionado',
+    };
+    const body  = document.getElementById('ccReportBody');
+    const titleEl = document.getElementById('ccReportTitle');
+    const foot  = document.getElementById('ccReportFoot');
+    if (titleEl) titleEl.innerHTML = `<i class="fas fa-file-lines"></i> ${this.escapeHtml(titleByScope[scope] || 'Informe')}`;
+    if (foot) foot.textContent = '';
+
+    // Resolver seleccion para los scopes que la requieren.
+    let selected = null;
+    if (scope === 'campaign') {
+      if (!this._selected || !String(this._selected.type).startsWith('campaign')) { window.alert('Selecciona una campana en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      selected = { type: this._selected.type, id: this._selected.id };
+    } else if (scope === 'audience') {
+      if (!this._selected || this._selected.type !== 'audience') { window.alert('Selecciona una audiencia en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      selected = { type: 'audience', id: this._selected.id };
+    } else if (scope === 'selection') {
+      if (!this._selected) { window.alert('Selecciona un elemento en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      selected = { type: this._selected.type, id: this._selected.id };
+    }
+
+    this._openReport();
+    if (body) body.innerHTML = '<div class="cc-report-loading"><i class="fas fa-spinner fa-spin"></i> Vera esta redactando el informe…</div>';
+
+    try {
+      const { data: { session } } = await this._supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sesion expirada');
+      const res = await fetch('/.netlify/functions/api-generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ organization_id: this._organizationId, brand_container_id: this._containerRow?.id, scope, selected }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) throw new Error(json.error || `Error ${res.status}`);
+
+      this._lastReport = json.report || '';
+      await this._loadMarkdownLibs();
+      let html = this.escapeHtml(this._lastReport).replace(/\n/g, '<br>');
+      if (window.marked && window.DOMPurify) {
+        html = window.DOMPurify.sanitize(window.marked.parse(this._lastReport));
+      }
+      if (body) body.innerHTML = `<article class="cc-report-md">${html}</article>`;
+      if (foot) foot.innerHTML = `<span class="cc-report-cost">${json.credits_charged != null ? `${Number(json.credits_charged).toFixed(2)} creditos` : ''}</span>`;
+    } catch (e) {
+      console.error('generate report:', e);
+      if (body) body.innerHTML = `<div class="cc-report-error"><i class="fas fa-triangle-exclamation"></i> No se pudo generar el informe: ${this.escapeHtml(e?.message || 'error')}</div>`;
+    }
+  };
+
+  // ------------------------------------------------------------------
   // Cleanup
   // ------------------------------------------------------------------
   const _origDestroy = P.destroy;
@@ -1509,6 +1642,7 @@
     if (list && this._campDragStart)     { list.removeEventListener('dragstart', this._campDragStart); list.removeEventListener('dragend', this._campDragEnd); this._campDragStart = null; }
     if (panel && this._panelClick)       { panel.removeEventListener('click', this._panelClick); this._panelClick = null; }
     if (panel && this._railKey)          { panel.removeEventListener('keydown', this._railKey); this._railKey = null; }
+    if (this._reportDocClick)            { document.removeEventListener('click', this._reportDocClick); this._reportDocClick = null; }
     if (typeof _origDestroy === 'function') _origDestroy.call(this);
   };
 

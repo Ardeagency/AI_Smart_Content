@@ -124,6 +124,18 @@ class CommandCenterView extends BaseView {
           <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateCampaign" type="button" title="Crear campana">
             <i class="fas fa-bullhorn"></i><span>Campana</span>
           </button>
+          <div class="cc-report-dd" id="ccReportDD">
+            <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="Crear informe con Vera (Claude)">
+              <i class="fas fa-file-lines"></i><span>Crear informe</span><i class="fas fa-chevron-down cc-report-caret"></i>
+            </button>
+            <div class="cc-report-menu" id="ccReportMenu" role="menu" style="display:none;">
+              <button type="button" role="menuitem" data-scope="all"><i class="fas fa-layer-group"></i> Informar todo</button>
+              <button type="button" role="menuitem" data-scope="campaign"><i class="fas fa-bullhorn"></i> Campana seleccionada</button>
+              <button type="button" role="menuitem" data-scope="audience"><i class="fas fa-users"></i> Audiencia seleccionada</button>
+              <button type="button" role="menuitem" data-scope="ecosystem"><i class="fas fa-brain"></i> Aprendizaje del ecosistema</button>
+              <button type="button" role="menuitem" data-scope="selection"><i class="fas fa-bullseye"></i> Seleccionado</button>
+            </div>
+          </div>
         </div>
         <div class="cc-canvas-toolbar-group">
           <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="Reorganizar nodos">
@@ -163,6 +175,22 @@ class CommandCenterView extends BaseView {
           <nav class="cc-fp-rail" id="ccPanelRail" role="tablist" aria-orientation="vertical" aria-label="Biblioteca"></nav>
         </aside>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal del informe generado por Claude -->
+  <div class="cc-report-backdrop" id="ccReportBackdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ccReportTitle">
+    <div class="cc-report-modal glass-black">
+      <header class="cc-report-head">
+        <h3 class="cc-report-title" id="ccReportTitle"><i class="fas fa-file-lines"></i> Informe</h3>
+        <div class="cc-report-head-actions">
+          <button type="button" class="cc-report-act" id="ccReportCopy" title="Copiar" aria-label="Copiar"><i class="fas fa-copy"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportDownload" title="Descargar .md" aria-label="Descargar"><i class="fas fa-download"></i></button>
+          <button type="button" class="cc-report-act" id="ccReportClose" title="Cerrar" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+        </div>
+      </header>
+      <div class="cc-report-body" id="ccReportBody"></div>
+      <footer class="cc-report-foot" id="ccReportFoot"></footer>
     </div>
   </div>
 
