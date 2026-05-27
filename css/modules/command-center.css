@@ -1178,25 +1178,62 @@
 .cc-canvas-empty i { font-size: 2rem; opacity: 0.5; }
 .cc-canvas-empty p { max-width: 360px; font-size: 0.9rem; line-height: 1.5; margin: 0; }
 
-/* ── Nodos ─────────────────────────────────────────────────────────── */
+/* ── Nodos: premium dark gradient + glow inferior por tipo ──────────── */
+/* Vars por tipo: --cc-grad-end (fin del gradiente), --cc-glow-1 (profundo),
+   --cc-glow-2 (medio), --cc-glow-3 (sutil). Default = azul (referencia). */
 .cc-node {
   position: absolute;
   width: 268px;
   border-radius: 14px;
-  background: var(--bg-card, #141517);
-  border: 1px solid var(--border-divider, #242424);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --cc-grad-end: #091120;
+  --cc-glow-1: #134bcd;
+  --cc-glow-2: rgba(109, 153, 255, 0.5);
+  --cc-glow-3: rgba(31, 98, 255, 0.16);
+  background: linear-gradient(180deg, #0b0909 0%, var(--cc-grad-end) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   z-index: 2;
+  isolation: isolate;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
+/* Glow inferior (inner shadows apiladas, estilo referencia). */
+.cc-node::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; z-index: 0;
+  box-shadow:
+    inset 0 -70px 60px -30px var(--cc-glow-1),
+    inset 0 -40px 30px -10px var(--cc-glow-2),
+    inset 0 -20px 20px -5px rgba(255, 255, 255, 0.2),
+    inset 0 -6px 6px -2px var(--cc-glow-3);
+}
+.cc-node > * { position: relative; z-index: 1; }
+
+/* Colores por tipo */
+.cc-node--audience {
+  --cc-grad-end: #1a1208; --cc-glow-1: #8a5a14;
+  --cc-glow-2: rgba(224, 160, 69, 0.45); --cc-glow-3: rgba(224, 160, 69, 0.16);
+}
+.cc-node--campaign {
+  --cc-grad-end: #091120; --cc-glow-1: #134bcd;
+  --cc-glow-2: rgba(109, 153, 255, 0.5); --cc-glow-3: rgba(31, 98, 255, 0.16);
+}
+.cc-node--campaign.cc-node--readonly {
+  --cc-grad-end: #1a0b0e; --cc-glow-1: #9b1b2e;
+  --cc-glow-2: rgba(255, 109, 125, 0.42); --cc-glow-3: rgba(255, 31, 61, 0.14);
+}
+.cc-node--identity {
+  --cc-grad-end: #08171a; --cc-glow-1: #0f6b78;
+  --cc-glow-2: rgba(95, 224, 200, 0.4); --cc-glow-3: rgba(31, 200, 180, 0.14);
+}
+
 .cc-node--readonly { width: 248px; }
 .cc-node--identity { width: 208px; }
 .cc-node--readonly.cc-node--expanded { width: 340px; z-index: 4; }
-.cc-node:hover { border-color: rgba(255, 255, 255, 0.22); }
-.cc-node.cc-node--dragging { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55); z-index: 5; }
-.cc-node--drop-target { border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28); }
-/* Nodos sin color: monocromo. El tipo se indica por el titulo, no por color. */
-.cc-node--featured { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45), 0 6px 20px rgba(0, 0, 0, 0.4); }
+.cc-node:hover { border-color: rgba(255, 255, 255, 0.2); }
+.cc-node.cc-node--dragging { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6); z-index: 5; }
+.cc-node--drop-target { border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 6px 22px rgba(0, 0, 0, 0.45); }
+.cc-node--featured { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 6px 22px rgba(0, 0, 0, 0.45); }
 .cc-node--off { opacity: 0.45; filter: grayscale(0.4); }
 
 .cc-node-head {
