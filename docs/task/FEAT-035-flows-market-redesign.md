@@ -69,9 +69,12 @@ Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
 - Al activar busqueda/filtro/orden: grid plana de resultados responsiva; sin actividad vuelve al browse editorial. Solo en home (categorias usan su subnav).
 - Pendiente opcional: search server-side si el catalogo crece; search dentro de vista categoria.
 
-### Fase 4 — Hover-expand card + previews en movimiento (firma Netflix)
-- Card crece en hover (delay ~400ms), revela preview en movimiento (video si existe) + acciones rapidas (Ejecutar / Guardar / Detalle).
-- Cuidado con `backdrop-filter` global (ver [[silent-bug-methodology]] y el comentario en `flow-card` sobre content-visibility/isolation que rompen glass).
+### Fase 4 — Hover-expand card + previews en movimiento (firma Netflix) ← HECHA
+- Card crece en hover: `scale(1.06)` + z-index 5 + sombra fuerte, con delay 140ms en el transform (expand con retardo). HECHO.
+- Preview en movimiento: el video de la card ya NO autoplay; se reproduce solo en hover (play/pause + reset en mouseenter/leave) → mejor rendimiento con muchas cards. HECHO.
+- Accion rapida "Ejecutar" (play blanco) en las acciones de la card → runFlow directo sin abrir el detalle. Guardar/Like ya existian; "Detalle" = clic en la card. HECHO.
+- Rails con padding vertical extra (0.9/1.1rem) para que el scale no se recorte con overflow-y:hidden. Home grid (overflow visible) no recorta.
+- Sin romper glass: solo transform/scale (ya se usaba), nada de content-visibility/isolation/contain.
 
 ### Fase 5 — Personalizacion + colecciones (premium + Netflix)
 - Rails: "Recomendados para ti", "Top 10" con numeracion gigante, "Porque usaste X".

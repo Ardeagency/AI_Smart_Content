@@ -701,9 +701,11 @@ class FlowCatalogView extends BaseView {
     const t = flow.flow_category_type || 'manual';
     const isAutopilotLike = (t === 'autopilot');
     if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+    // Video: NO autoplay — se reproduce solo en hover (preview Netflix + mejor
+    // rendimiento con muchas cards). El play/pause lo maneja bindFlowCardListeners.
     const img = flow.flow_image_url
       ? (/\.(mp4|webm|mov)(\?|$)/i.test(flow.flow_image_url)
-          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-card-img" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          ? `<video src="${this.escapeHtml(flow.flow_image_url)}" class="flow-card-img" muted loop playsinline preload="metadata" aria-hidden="true"></video>`
           : `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`)
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
 
@@ -724,6 +726,7 @@ class FlowCatalogView extends BaseView {
           <div class="flow-card-gradient" aria-hidden="true"></div>
           <div class="flow-card-badges">${badges.join('')}</div>
           <div class="flow-card-actions">
+            <button type="button" class="flow-card-icon-btn flow-card-icon-run" data-action="run" title="Ejecutar" aria-label="Ejecutar"><i class="fas fa-play"></i></button>
             <button type="button" class="flow-card-icon-btn flow-card-icon-like ${isLiked ? 'is-active' : ''}" data-action="like" title="Like" aria-label="Like"><i class="fas fa-heart"></i></button>
             <button type="button" class="flow-card-icon-btn flow-card-icon-save ${isSaved ? 'is-active' : ''}" data-action="save" title="Guardar" aria-label="Guardar"><i class="fas fa-bookmark"></i></button>
           </div>
@@ -1318,12 +1321,19 @@ class FlowCatalogView extends BaseView {
       card.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.openFlow(flowId); }
       });
+      card.querySelector('.flow-card-icon-btn[data-action="run"]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.runFlow(flowId); });
       card.querySelectorAll('.flow-card-icon-btn[data-action="like"]').forEach(btn => {
         btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleLike(flowId); });
       });
       card.querySelectorAll('.flow-card-icon-btn[data-action="save"]').forEach(btn => {
         btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSave(flowId); });
       });
+      // Preview en movimiento: el video se reproduce solo en hover (Netflix).
+      const vid = card.querySelector('video.flow-card-img');
+      if (vid) {
+        card.addEventListener('mouseenter', () => { const p = vid.play(); if (p && p.catch) p.catch(() => {}); });
+        card.addEventListener('mouseleave', () => { try { vid.pause(); vid.currentTime = 0; } catch (_) {} });
+      }
     });
   }
 
