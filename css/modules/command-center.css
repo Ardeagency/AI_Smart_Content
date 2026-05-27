@@ -1185,47 +1185,53 @@
   position: absolute;
   width: 268px;
   border-radius: 14px;
-  --cc-grad-end: #091120;
-  --cc-glow-1: #134bcd;
-  --cc-glow-2: rgba(109, 153, 255, 0.5);
-  --cc-glow-3: rgba(31, 98, 255, 0.16);
+  --cc-grad-end: #0a1019;
+  --cc-glow-1: rgba(40, 95, 210, 0.42);
+  --cc-glow-2: rgba(109, 153, 255, 0.2);
+  --cc-glow-3: rgba(31, 98, 255, 0.08);
   background: linear-gradient(180deg, #0b0909 0%, var(--cc-grad-end) 100%);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   z-index: 2;
   isolation: isolate;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.2s ease;
 }
-/* Glow inferior (inner shadows apiladas, estilo referencia). */
+/* Glow inferior (inner shadows apiladas, estilo referencia, intensidad suave). */
 .cc-node::before {
   content: '';
   position: absolute; inset: 0; border-radius: inherit;
   pointer-events: none; z-index: 0;
   box-shadow:
-    inset 0 -70px 60px -30px var(--cc-glow-1),
-    inset 0 -40px 30px -10px var(--cc-glow-2),
-    inset 0 -20px 20px -5px rgba(255, 255, 255, 0.2),
-    inset 0 -6px 6px -2px var(--cc-glow-3);
+    inset 0 -60px 50px -34px var(--cc-glow-1),
+    inset 0 -34px 26px -14px var(--cc-glow-2),
+    inset 0 -16px 16px -8px rgba(255, 255, 255, 0.1),
+    inset 0 -6px 6px -3px var(--cc-glow-3);
 }
 .cc-node > * { position: relative; z-index: 1; }
 
-/* Colores por tipo */
+/* Colores por tipo (alphas suaves) */
 .cc-node--audience {
-  --cc-grad-end: #1a1208; --cc-glow-1: #8a5a14;
-  --cc-glow-2: rgba(224, 160, 69, 0.45); --cc-glow-3: rgba(224, 160, 69, 0.16);
+  --cc-grad-end: #15110b; --cc-glow-1: rgba(214, 150, 60, 0.38);
+  --cc-glow-2: rgba(224, 160, 69, 0.18); --cc-glow-3: rgba(224, 160, 69, 0.08);
 }
 .cc-node--campaign {
-  --cc-grad-end: #091120; --cc-glow-1: #134bcd;
-  --cc-glow-2: rgba(109, 153, 255, 0.5); --cc-glow-3: rgba(31, 98, 255, 0.16);
+  --cc-grad-end: #0a1019; --cc-glow-1: rgba(40, 95, 210, 0.42);
+  --cc-glow-2: rgba(109, 153, 255, 0.2); --cc-glow-3: rgba(31, 98, 255, 0.08);
 }
 .cc-node--campaign.cc-node--readonly {
-  --cc-grad-end: #1a0b0e; --cc-glow-1: #9b1b2e;
-  --cc-glow-2: rgba(255, 109, 125, 0.42); --cc-glow-3: rgba(255, 31, 61, 0.14);
+  --cc-grad-end: #160a0c; --cc-glow-1: rgba(175, 45, 60, 0.38);
+  --cc-glow-2: rgba(255, 109, 125, 0.18); --cc-glow-3: rgba(255, 31, 61, 0.07);
 }
 .cc-node--identity {
-  --cc-grad-end: #08171a; --cc-glow-1: #0f6b78;
-  --cc-glow-2: rgba(95, 224, 200, 0.4); --cc-glow-3: rgba(31, 200, 180, 0.14);
+  --cc-grad-end: #08151a; --cc-glow-1: rgba(25, 120, 130, 0.38);
+  --cc-glow-2: rgba(95, 224, 200, 0.16); --cc-glow-3: rgba(31, 200, 180, 0.07);
 }
+
+/* Focus de flujo: atenua nodos/edges fuera del flujo seleccionado. */
+.cc-canvas--focusing .cc-node { opacity: 0.22; }
+.cc-canvas--focusing .cc-node--in-focus { opacity: 1; }
+.cc-canvas--focusing .cc-edge { opacity: 0.12; }
+.cc-canvas--focusing .cc-edge--in-focus { opacity: 1; }
 
 .cc-node--readonly { width: 248px; }
 .cc-node--identity { width: 208px; }

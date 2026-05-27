@@ -538,6 +538,7 @@
 
       svg.appendChild(g);
     });
+    if (this._focusSet) this._applyFocus();
   };
 
   P._ensureArrowMarker = function (svg) {
@@ -710,7 +711,17 @@
     if (!this._canvasClick) {
       this._canvasClick = (e) => {
         const nodeEl = e.target.closest('.cc-node');
-        if (!nodeEl) return;
+        if (!nodeEl) {
+          // Click en vacio (sin haber paneado) → limpia focus + seleccion.
+          if (this._didPan) { this._didPan = false; return; }
+          if (e.target.closest('.cc-floating-panel')) return;
+          if (this._focusSet) this._clearFocus();
+          if (this._selectedKey) {
+            document.querySelectorAll('.cc-node--selected').forEach((n) => n.classList.remove('cc-node--selected'));
+            this._selectedKey = null; this._selected = null;
+          }
+          return;
+        }
         const key  = nodeEl.getAttribute('data-node-key');
         const type = nodeEl.getAttribute('data-type');
         const id   = nodeEl.getAttribute('data-id');
@@ -793,7 +804,10 @@
       this._panelClick = (e) => {
         const railSec = e.target.closest('[data-rail-sec]');
         if (railSec) { this._setActiveSection(railSec.getAttribute('data-rail-sec')); return; }
-        if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); }
+        if (e.target.closest('#ccPanelToggle')) { this._activeSection = null; this._renderLibrary(); return; }
+        // Click (sin drag) en una campana del sidebar → enfoca su flujo en el canvas.
+        const campItem = e.target.closest('.cc-lib-item[data-lib-type="campaigns"]');
+        if (campItem) { this._focusCampaignFromSidebar(campItem.getAttribute('data-lib-id')); return; }
       };
       panel.addEventListener('click', this._panelClick);
 
@@ -1070,7 +1084,9 @@
     const p0 = { ...(this._canvasPan || { x: 0, y: 0 }) };
     const canvas = document.getElementById('ccCanvas');
     canvas?.classList.add('cc-canvas--panning');
+    this._didPan = false;
     const onMove = (ev) => {
+      if (Math.abs(ev.clientX - start.x) > 3 || Math.abs(ev.clientY - start.y) > 3) this._didPan = true;
       this._canvasPan = { x: p0.x + (ev.clientX - start.x), y: p0.y + (ev.clientY - start.y) };
       this._applyCanvasTransform();
       this._scheduleEdges();
@@ -1366,12 +1382,19 @@
     this._loadOnCanvas();
     this._onCanvas.add(String(campId));
     this._saveOnCanvas();
-    // Posicion = punto de drop (centrado un poco a la izquierda del cursor).
-    const w = this._worldPointFromClient(clientX, clientY);
+    // Posicion = punto de drop, o centro del viewport si no hay coords (click).
+    let w;
+    if (clientX == null) {
+      const canvas = document.getElementById('ccCanvas');
+      const r = canvas.getBoundingClientRect();
+      w = this._worldPointFromClient(r.left + r.width / 2, r.top + r.height / 2);
+    } else {
+      w = this._worldPointFromClient(clientX, clientY);
+    }
     this._positions[`camp:${campId}`] = { x: Math.max(0, w.x - 120), y: Math.max(0, w.y - 20) };
     this._savePositions();
     // Si cayo sobre una audiencia, vincular.
-    const audEl = this._audienceNodeAt(clientX, clientY);
+    const audEl = clientX == null ? null : this._audienceNodeAt(clientX, clientY);
     if (audEl) {
       const audId = audEl.getAttribute('data-id');
       if (audId) { this._connectCampaignToPersona(campId, audId); return; }
@@ -1529,17 +1552,89 @@
   };
 
   // ------------------------------------------------------------------
+  // Focus de flujo: resalta el componente conectado y atenua el resto.
+  // ------------------------------------------------------------------
+  P._computeFlowSet = function (rootKey) {
+    const adj = new Map();
+    const add = (a, b) => { if (!adj.has(a)) adj.set(a, new Set()); adj.get(a).add(b); };
+    this._allLinks().forEach((l) => { add(l.from, l.to); add(l.to, l.from); });
+    const set = new Set([rootKey]);
+    const q = [rootKey];
+    while (q.length) {
+      const k = q.shift();
+      (adj.get(k) || []).forEach((n) => { if (!set.has(n)) { set.add(n); q.push(n); } });
+    }
+    return set;
+  };
+
+  P._applyFocus = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    const on = !!(this._focusSet && this._focusSet.size);
+    canvas.classList.toggle('cc-canvas--focusing', on);
+    if (!on) {
+      document.querySelectorAll('.cc-node--in-focus').forEach((n) => n.classList.remove('cc-node--in-focus'));
+      document.querySelectorAll('.cc-edge--in-focus').forEach((g) => g.classList.remove('cc-edge--in-focus'));
+      return;
+    }
+    document.querySelectorAll('#ccCanvasWorld .cc-node').forEach((n) => {
+      n.classList.toggle('cc-node--in-focus', this._focusSet.has(n.getAttribute('data-node-key')));
+    });
+    document.querySelectorAll('#ccCanvasEdges .cc-edge').forEach((g) => {
+      const f = g.getAttribute('data-edge-from'), t = g.getAttribute('data-edge-to');
+      g.classList.toggle('cc-edge--in-focus', this._focusSet.has(f) && this._focusSet.has(t));
+    });
+  };
+
+  P._focusFlow = function (rootKey) {
+    this._focusSet = this._computeFlowSet(rootKey);
+    this._focusedRoot = rootKey;
+    this._applyFocus();
+  };
+  P._clearFocus = function () {
+    this._focusSet = null; this._focusedRoot = null;
+    this._applyFocus();
+  };
+
+  /** Centra el viewport sobre un nodo (para llevar el flujo a la vista). */
+  P._centerOnNode = function (key) {
+    const pos = this._positions[key];
+    const canvas = document.getElementById('ccCanvas');
+    if (!pos || !canvas) return;
+    const r = canvas.getBoundingClientRect();
+    const s = this._canvasScale || 1;
+    this._canvasPan = { x: r.width / 2 - (pos.x + 130) * s, y: r.height / 2 - 90 * s };
+    this._applyCanvasTransform();
+    this._scheduleEdges();
+  };
+
+  /** Selecciona una campana del sidebar → la trae al canvas (si falta) y enfoca su flujo. */
+  P._focusCampaignFromSidebar = function (id) {
+    const c = (this._campaigns || []).find((x) => String(x.id) === String(id));
+    if (!c) return;
+    const key = `camp:${id}`;
+    this._loadOnCanvas();
+    if (!this._realOnCanvas(c)) this._addRealToCanvas(id);  // sin coords = centro
+    else this._renderCanvas();
+    this._focusFlow(key);
+    this._centerOnNode(key);
+  };
+
+  // ------------------------------------------------------------------
   // Seleccion de nodo + informes (Claude)
   // ------------------------------------------------------------------
   P._selectNode = function (nodeEl) {
     const key = nodeEl.getAttribute('data-node-key');
     document.querySelectorAll('.cc-node--selected').forEach((n) => n.classList.remove('cc-node--selected'));
-    if (this._selectedKey === key) { this._selectedKey = null; this._selected = null; return; }
+    // Re-click sobre el mismo nodo: deselecciona y limpia el focus.
+    if (this._selectedKey === key) { this._selectedKey = null; this._selected = null; this._clearFocus(); return; }
     nodeEl.classList.add('cc-node--selected');
     this._selectedKey = key;
     this._selected = { type: nodeEl.getAttribute('data-type'), id: nodeEl.getAttribute('data-id'), key };
     // Para identity, el tipo util es el identityType.
     if (this._selected.type === 'identity') this._selected.type = nodeEl.getAttribute('data-identity-type');
+    // Resalta el flujo conectado del nodo (atenua el resto).
+    this._focusFlow(key);
   };
 
   P._loadMarkdownLibs = async function () {
