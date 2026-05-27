@@ -914,31 +914,24 @@ class BrandstorageView extends BaseView {
   }
 
   openAddPlaceModal(entityId) {
-    document.getElementById('brandPlaceModal')?.remove();
     const entity = (this.brandEntities || []).find(e => e.id === entityId);
     const entityName = entity ? entity.name : entityId;
 
-    const modalHtml = `
-      <div class="modal-overlay" id="brandPlaceModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Agregar lugar a <em>${this.escapeHtml(entityName)}</em></h3><button type="button" class="modal-close" id="placeModalClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="place_name">Nombre del lugar <span class="form-required">*</span></label><input type="text" id="place_name" class="form-input" placeholder="Ej: Tienda Ciudad de México" required></div>
-            <div class="form-group"><label for="place_address">Dirección</label><input type="text" id="place_address" class="form-input" placeholder="Ej: Av. Insurgentes Sur 1234"></div>
-            <div class="form-row">
-              <div class="form-group"><label for="place_city">Ciudad</label><input type="text" id="place_city" class="form-input" placeholder="Ciudad"></div>
-              <div class="form-group"><label for="place_country">País</label><input type="text" id="place_country" class="form-input" placeholder="País"></div>
-            </div>
-            <div class="form-group"><label for="place_type">Tipo</label><select id="place_type" class="form-input"><option value="store">Tienda</option><option value="office">Oficina</option><option value="warehouse">Bodega</option><option value="other">Otro</option></select></div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="placeModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="placeModalSubmit">Agregar</button></div>
-        </div>
+    // FEAT-028: migrado a window.Modal (mismos IDs de campo).
+    const body = `
+      <div class="form-group"><label for="place_name">Nombre del lugar <span class="form-required">*</span></label><input type="text" id="place_name" class="form-input" placeholder="Ej: Tienda Ciudad de México" required></div>
+      <div class="form-group"><label for="place_address">Dirección</label><input type="text" id="place_address" class="form-input" placeholder="Ej: Av. Insurgentes Sur 1234"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="place_city">Ciudad</label><input type="text" id="place_city" class="form-input" placeholder="Ciudad"></div>
+        <div class="form-group"><label for="place_country">País</label><input type="text" id="place_country" class="form-input" placeholder="País"></div>
       </div>
+      <div class="form-group"><label for="place_type">Tipo</label><select id="place_type" class="form-input"><option value="store">Tienda</option><option value="office">Oficina</option><option value="warehouse">Bodega</option><option value="other">Otro</option></select></div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost" id="placeModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="placeModalSubmit">Agregar</button></div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('placeModalClose')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
-    document.getElementById('placeModalCancel')?.addEventListener('click', () => document.getElementById('brandPlaceModal')?.remove());
-    document.getElementById('placeModalSubmit')?.addEventListener('click', async () => {
+    const { modal, close } = window.Modal.show({ title: `Agregar lugar a ${entityName}`, body, className: 'brandstorage-modal-content' });
+    this._modalClose = close;
+    modal.querySelector('#placeModalCancel')?.addEventListener('click', () => close());
+    modal.querySelector('#placeModalSubmit')?.addEventListener('click', async () => {
       if (!this.supabase) return;
       const name = document.getElementById('place_name')?.value?.trim();
       if (!name) { alert('El nombre del lugar es obligatorio.'); return; }
@@ -953,37 +946,30 @@ class BrandstorageView extends BaseView {
       const { data, error } = await this.supabase.from('brand_places').insert(payload).select().single();
       if (error) { console.error('BrandstorageView addPlace:', error); alert('Error al agregar el lugar.'); return; }
       this.brandPlaces = [...(this.brandPlaces || []), data];
-      document.getElementById('brandPlaceModal')?.remove();
+      close();
       this.renderBrandEntities();
     });
   }
 
   openAddEntityModal() {
-    document.getElementById('brandEntityModal')?.remove();
     const ENTITY_TYPES = ['product', 'service', 'place', 'brand', 'influencer', 'competitor', 'other'];
     const typeOpts = ENTITY_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
 
-    const modalHtml = `
-      <div class="modal-overlay" id="brandEntityModal">
-        <div class="modal">
-          <div class="modal-header"><h3>Nueva Entidad de Marca</h3><button type="button" class="modal-close" id="entityModalClose"><i class="fas fa-times"></i></button></div>
-          <div class="modal-body">
-            <div class="form-group"><label for="ent_name">Nombre <span class="form-required">*</span></label><input type="text" id="ent_name" class="form-input" placeholder="Ej: Producto X" required></div>
-            <div class="form-group"><label for="ent_type">Tipo <span class="form-required">*</span></label><select id="ent_type" class="form-input">${typeOpts}</select></div>
-            <div class="form-group"><label for="ent_description">Descripción</label><textarea id="ent_description" class="form-input" rows="2"></textarea></div>
-            <div class="form-row">
-              <div class="form-group"><label for="ent_price">Precio</label><input type="number" id="ent_price" class="form-input" step="any" placeholder="0"></div>
-              <div class="form-group"><label for="ent_currency">Moneda</label><select id="ent_currency" class="form-input"><option>USD</option><option>EUR</option><option>MXN</option><option>COP</option><option>ARS</option></select></div>
-            </div>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-ghost" id="entityModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="entityModalSubmit">Crear</button></div>
-        </div>
+    // FEAT-028: migrado a window.Modal (mismos IDs de campo).
+    const body = `
+      <div class="form-group"><label for="ent_name">Nombre <span class="form-required">*</span></label><input type="text" id="ent_name" class="form-input" placeholder="Ej: Producto X" required></div>
+      <div class="form-group"><label for="ent_type">Tipo <span class="form-required">*</span></label><select id="ent_type" class="form-input">${typeOpts}</select></div>
+      <div class="form-group"><label for="ent_description">Descripción</label><textarea id="ent_description" class="form-input" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label for="ent_price">Precio</label><input type="number" id="ent_price" class="form-input" step="any" placeholder="0"></div>
+        <div class="form-group"><label for="ent_currency">Moneda</label><select id="ent_currency" class="form-input"><option>USD</option><option>EUR</option><option>MXN</option><option>COP</option><option>ARS</option></select></div>
       </div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost" id="entityModalCancel">Cancelar</button><button type="button" class="btn btn-primary" id="entityModalSubmit">Crear</button></div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('entityModalClose')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
-    document.getElementById('entityModalCancel')?.addEventListener('click', () => document.getElementById('brandEntityModal')?.remove());
-    document.getElementById('entityModalSubmit')?.addEventListener('click', () => this.submitCreateEntity());
+    const { modal, close } = window.Modal.show({ title: 'Nueva Entidad de Marca', body, className: 'brandstorage-modal-content' });
+    this._modalClose = close;
+    modal.querySelector('#entityModalCancel')?.addEventListener('click', () => close());
+    modal.querySelector('#entityModalSubmit')?.addEventListener('click', () => this.submitCreateEntity());
   }
 
   async submitCreateEntity() {
@@ -1004,7 +990,7 @@ class BrandstorageView extends BaseView {
     const { data, error } = await this.supabase.from('brand_entities').insert(payload).select().single();
     if (error) { console.error('BrandstorageView createEntity:', error); alert('Error al crear la entidad.'); return; }
     this.brandEntities = [...(this.brandEntities || []), data];
-    document.getElementById('brandEntityModal')?.remove();
+    if (this._modalClose) this._modalClose();
     this.renderBrandEntities();
   }
 
