@@ -935,6 +935,20 @@
   padding: 0;
 }
 
+/* All Flows (home): las filas pasan de rail horizontal a grid que LLENA el
+   ancho (auto-fit) — elimina el espacio vacio a la derecha cuando hay pocos
+   flows. Las vistas de categoria mantienen sus rails (scroll horizontal). */
+.flow-catalog-gallery-by-category-sub .flow-catalog-row-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  overflow: visible;
+}
+.flow-catalog-gallery-by-category-sub .flow-catalog-row-scroll .flow-card {
+  flex: initial;
+  width: 100%;
+}
+
 /* ---------- LEGACY card overlays (DevFlowsView / DevBuilderView preview) ---------- */
 /* El catálogo público usa .flow-card-info / .flow-card-actions. Las vistas Dev
    conservan el HTML viejo (overlay--default/--hover, icon-stat, etc). */
