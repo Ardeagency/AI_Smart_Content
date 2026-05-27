@@ -190,6 +190,37 @@ class DevBuilderView extends DevBaseView {
                     <label for="flowVersion">Versión</label>
                     <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
                   </div>
+                  <div class="settings-field">
+                    <label for="flowTypePicker">Tipo de flujo</label>
+                    <input type="hidden" id="flowType" value="manual">
+                    <div class="flow-type-tabs" id="flowTypePicker" role="tablist" aria-label="Tipo de flujo">
+                      <button type="button" class="flow-type-tab" role="tab" data-value="manual" title="Input 100% dinámico">Manual</button>
+                      <button type="button" class="flow-type-tab" role="tab" data-value="autopilot" title="Generación programable">Autopilot</button>
+                    </div>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowCategory">Categoría</label>
+                    <select id="flowCategory">
+                      <option value="">Seleccionar categoría...</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowSubcategory">Subcategoría</label>
+                    <select id="flowSubcategory">
+                      <option value="">Seleccionar subcategoría...</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowOutputType">Tipo de output</label>
+                    <select id="flowOutputType">
+                      <option value="text">Texto</option>
+                      <option value="image">Imagen</option>
+                      <option value="video">Video</option>
+                      <option value="audio">Audio</option>
+                      <option value="document">Documento</option>
+                      <option value="mixed">Mixto</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <!-- Sección 2: nombre, descripción, modelo de cobro -->
@@ -253,40 +284,6 @@ class DevBuilderView extends DevBaseView {
                       Usar promedio como precio fijo
                     </button>
                   </div>
-                </div>
-              </div>
-              <!-- Sección 3: tipo de flujo, categoría, subcategoría, tipo de output -->
-              <div class="builder-config-section builder-config-section--meta">
-                <div class="settings-field">
-                  <label for="flowTypePicker">Tipo de flujo</label>
-                  <input type="hidden" id="flowType" value="manual">
-                  <div class="flow-type-tabs" id="flowTypePicker" role="tablist" aria-label="Tipo de flujo">
-                    <button type="button" class="flow-type-tab" role="tab" data-value="manual" title="Input 100% dinámico">Manual</button>
-                    <button type="button" class="flow-type-tab" role="tab" data-value="autopilot" title="Generación programable">Autopilot</button>
-                  </div>
-                </div>
-                <div class="settings-field">
-                  <label for="flowCategory">Categoría</label>
-                  <select id="flowCategory">
-                    <option value="">Seleccionar categoría...</option>
-                  </select>
-                </div>
-                <div class="settings-field">
-                  <label for="flowSubcategory">Subcategoría</label>
-                  <select id="flowSubcategory">
-                    <option value="">Seleccionar subcategoría...</option>
-                  </select>
-                </div>
-                <div class="settings-field">
-                  <label for="flowOutputType">Tipo de output</label>
-                  <select id="flowOutputType">
-                    <option value="text">Texto</option>
-                    <option value="image">Imagen</option>
-                    <option value="video">Video</option>
-                    <option value="audio">Audio</option>
-                    <option value="document">Documento</option>
-                    <option value="mixed">Mixto</option>
-                  </select>
                 </div>
               </div>
             </div>
