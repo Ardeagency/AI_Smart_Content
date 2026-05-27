@@ -691,10 +691,14 @@ class TasksView extends BaseView {
   async loadFlowRuns(limit = 50) {
     if (!this.supabase || !this.userId) return [];
     try {
+      // Historial = solo flows de autopilot (programados). Los runs manuales de
+      // Studio se crean via RPC sin entity_id; los del scheduler siempre asignan
+      // una entidad. Por eso filtramos entity_id IS NOT NULL para excluir lo manual.
       const { data: runs, error } = await this.supabase
         .from('flow_runs')
         .select('id, flow_id, brand_id, status, created_at, entity_id, tokens_consumed, campaign_id, persona_id')
         .eq('user_id', this.userId)
+        .not('entity_id', 'is', null)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
