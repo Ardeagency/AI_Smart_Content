@@ -91,16 +91,41 @@ class ExecutionHistoryView extends BaseView {
   }
 
   /**
-   * Carga los runs manuales (entity_id NULL) de la org actual + hidrata nombre del
-   * flow, cover (ultimo output imagen) y conteo de outputs por run.
+   * Run_ids de produccion MANUAL: runs_inputs.metadata->>'captured_from' = 'studio_ui'
+   * (lo escribe StudioView.producir). Es el marcador inverso al de Tasks/autopilot.
+   */
+  async _manualRunIds() {
+    if (!this.supabase) return [];
+    try {
+      let q = this.supabase
+        .from('runs_inputs')
+        .select('run_id')
+        .eq('metadata->>captured_from', 'studio_ui')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
+    } catch (e) {
+      console.error('ExecutionHistoryView _manualRunIds:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Carga los runs MANUALES (captured_from='studio_ui') de la org actual + hidrata
+   * nombre del flow, cover (ultimo output imagen) y conteo de outputs por run.
    */
   async loadRuns() {
     if (!this.supabase) return [];
     try {
+      const manualIds = await this._manualRunIds();
+      if (!manualIds.length) return [];
       let q = this.supabase
         .from('flow_runs')
         .select('id, flow_id, status, created_at, tokens_consumed')
-        .is('entity_id', null)
+        .in('id', manualIds)
         .order('created_at', { ascending: false })
         .limit(this.pageSize);
       if (this.organizationId) q = q.eq('organization_id', this.organizationId);
