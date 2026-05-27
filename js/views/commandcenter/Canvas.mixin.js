@@ -27,6 +27,7 @@
   const ROW_GAP  = 150;   // separacion vertical en auto-layout
   const ROW_TOP  = 40;
   const MAX_TAGS = 8;     // tope por campo array (no sobresaturar al LLM)
+  const ID_TYPES = ['products', 'services', 'places', 'flows', 'briefs']; // identities
 
   // ------------------------------------------------------------------
   // Estado / helpers
@@ -67,10 +68,55 @@
     return !!c.persona_id || this._onCanvas.has(String(c.id));
   };
 
-  /** Lista normalizada de nodos del canvas. Las campanas reales sin vinculo
-      y sin colocar manualmente NO entran al lienzo (viven en el sidebar). */
+  /* ── Identities colocadas en el canvas (productos/servicios/.../briefs) ─ */
+  P._placedKey = function () { return `cc:canvas:placed:${this._containerRow?.id || 'unknown'}`; };
+  P._loadPlaced = function () {
+    try {
+      const raw = localStorage.getItem(this._placedKey());
+      this._placed = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+    } catch (_) { this._placed = []; }
+    return this._placed;
+  };
+  P._savePlaced = function () {
+    try { localStorage.setItem(this._placedKey(), JSON.stringify(this._placed || [])); } catch (_) { /* noop */ }
+  };
+
+  /* ── Links libres (visual, localStorage) ────────────────────────────── */
+  P._linksKey = function () { return `cc:canvas:links:${this._containerRow?.id || 'unknown'}`; };
+  P._loadLinks = function () {
+    try {
+      const arr = JSON.parse(localStorage.getItem(this._linksKey()));
+      this._links = Array.isArray(arr) ? arr : [];
+    } catch (_) { this._links = []; }
+    return this._links;
+  };
+  P._saveLinks = function () {
+    try { localStorage.setItem(this._linksKey(), JSON.stringify(this._links || [])); } catch (_) { /* noop */ }
+  };
+  /** Todos los links a dibujar: persona_id (BD) + libres (localStorage), deduplicados. */
+  P._allLinks = function () {
+    if (!this._links) this._loadLinks();
+    const present = new Set(this._canvasNodes().map((n) => n.key));
+    const out = [];
+    const seen = new Set();
+    const push = (from, to, persona) => {
+      if (!present.has(from) || !present.has(to) || from === to) return;
+      const k = `${from}->${to}`;
+      if (seen.has(k)) return; seen.add(k);
+      out.push({ from, to, persona: !!persona });
+    };
+    // persona_id: audiencia -> campana
+    (this._campaigns || []).forEach((c) => { if (c.persona_id) push(`aud:${c.persona_id}`, `camp:${c.id}`, true); });
+    // libres
+    (this._links || []).forEach((l) => push(l.from, l.to, false));
+    return out;
+  };
+
+  /** Lista normalizada de nodos del canvas: audiencias + campanas (en canvas)
+      + identities colocadas. */
   P._canvasNodes = function () {
     this._loadOnCanvas();
+    this._loadPlaced();
     const auds = (this._audiences || []).map((a) => ({
       key: `aud:${a.id}`, type: 'audience', id: a.id, row: a,
     }));
@@ -80,18 +126,21 @@
         key: `camp:${c.id}`, type: c.last_synced_at ? 'campaign-real' : 'campaign-concept',
         id: c.id, row: c,
       }));
-    return [...auds, ...camps];
+    const ids = (this._placed || []).map((p) => ({
+      key: `${p.type}:${p.id}`, type: 'identity', identityType: p.type, id: p.id, row: p,
+    }));
+    return [...auds, ...camps, ...ids];
   };
 
   /** Posicion de un nodo; si falta, calcula auto-layout por columnas y la fija. */
-  P._posFor = function (node, audIdx, campIdx) {
+  P._posFor = function (node, audIdx, campIdx, idIdx) {
     const pos = this._positions[node.key];
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) return pos;
-    const isAud = node.type === 'audience';
-    const next = {
-      x: isAud ? COL_AUD : COL_CAMP,
-      y: ROW_TOP + (isAud ? audIdx : campIdx) * ROW_GAP,
-    };
+    let x, row;
+    if (node.type === 'audience') { x = COL_AUD; row = audIdx; }
+    else if (node.type === 'identity') { x = COL_CAMP + 320; row = idIdx; }
+    else { x = COL_CAMP; row = campIdx; }
+    const next = { x, y: ROW_TOP + row * ROW_GAP };
     this._positions[node.key] = next;
     return next;
   };
@@ -123,13 +172,13 @@
     }
     if (empty) empty.style.display = 'none';
 
-    let audIdx = 0, campIdx = 0;
+    let audIdx = 0, campIdx = 0, idIdx = 0;
     world.innerHTML = nodes.map((n) => {
-      const pos = this._posFor(n, audIdx, campIdx);
-      if (n.type === 'audience') audIdx++; else campIdx++;
-      return n.type === 'audience'
-        ? this._nodeAudienceHTML(n, pos)
-        : this._nodeCampaignHTML(n, pos);
+      const pos = this._posFor(n, audIdx, campIdx, idIdx);
+      if (n.type === 'audience') audIdx++; else if (n.type === 'identity') idIdx++; else campIdx++;
+      if (n.type === 'audience') return this._nodeAudienceHTML(n, pos);
+      if (n.type === 'identity') return this._nodeIdentityHTML(n, pos);
+      return this._nodeCampaignHTML(n, pos);
     }).join('');
 
     this._applyCanvasTransform();
@@ -253,7 +302,32 @@
         ${this._fieldTags('Objeciones', 'objeciones', a.objeciones)}
         ${this._fieldTags('Gatillos de compra', 'gatillos_compra', a.gatillos_compra)}
       </div>
-      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra hacia una campana para vincular"></span>
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
+    </div>`;
+  };
+
+  /* ── Nodo identity (producto/servicio/lugar/flow/brief): conexion libre ─ */
+  P._nodeIdentityHTML = function (n, pos) {
+    const r = n.row || {};
+    const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', flows: 'Flow', briefs: 'Brief' };
+    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const t = n.identityType;
+    return `
+    <div class="cc-node cc-node--identity" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <div class="cc-node-head" data-drag-handle>
+        <span class="cc-node-icon"><i class="fas ${icons[t] || 'fa-cube'}"></i></span>
+        <span class="cc-node-title">${this.escapeHtml(labels[t] || 'Identity')}</span>
+        <div class="cc-node-actions">
+          <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
+        </div>
+      </div>
+      <div class="cc-node-body">
+        <div class="cc-node-realname" title="${this.escapeHtml(r.name || '')}">${this.escapeHtml(r.name || labels[t] || 'Identity')}</div>
+        ${r.sub ? `<span class="cc-node-meta">${this.escapeHtml(r.sub)}</span>` : ''}
+      </div>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
   };
 
@@ -297,6 +371,7 @@
           ${expanded ? (this._adsHTML(n.id) || '<div class="cc-ads-loading"><i class="fas fa-spinner fa-spin"></i> Cargando ads…</div>') : ''}
         </div>
       </div>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
     }
 
@@ -330,6 +405,7 @@
         ${this._fieldText('Inicio', 'date', 'starts_at', c.starts_at ? String(c.starts_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
         ${this._fieldText('Fin', 'date', 'ends_at', c.ends_at ? String(c.ends_at).slice(0, 10) : '', { inputType: 'date', dataType: 'date' })}
       </div>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
   };
 
@@ -399,10 +475,10 @@
     const groups = svg.querySelectorAll('.cc-edge');
     if (!groups.length) return;
     groups.forEach((g) => {
-      const audId  = g.getAttribute('data-edge-aud');
-      const campId = g.getAttribute('data-edge-camp');
-      const from = this._portCenter(`aud:${audId}`, '.cc-node-port--out');
-      const to   = this._portCenter(`camp:${campId}`, '.cc-node-port--in');
+      const fromKey = g.getAttribute('data-edge-from');
+      const toKey   = g.getAttribute('data-edge-to');
+      const from = this._portCenter(fromKey, '.cc-node-port--out');
+      const to   = this._portCenter(toKey, '.cc-node-port--in');
       if (!from || !to) return;
       const d = this._bezier(from.x, from.y, to.x, to.y);
       g.querySelectorAll('path').forEach((p) => p.setAttribute('d', d));
@@ -424,17 +500,15 @@
     Array.from(svg.querySelectorAll('.cc-edge')).forEach((n) => n.remove());
     this._ensureArrowMarker(svg);
 
-    const audSet = new Set((this._audiences || []).map((a) => String(a.id)));
-    (this._campaigns || []).forEach((c) => {
-      if (!c.persona_id || !audSet.has(String(c.persona_id))) return;
-      const from = this._portCenter(`aud:${c.persona_id}`, '.cc-node-port--out');
-      const to   = this._portCenter(`camp:${c.id}`, '.cc-node-port--in');
+    this._allLinks().forEach((link) => {
+      const from = this._portCenter(link.from, '.cc-node-port--out');
+      const to   = this._portCenter(link.to, '.cc-node-port--in');
       if (!from || !to) return;
 
       const g = document.createElementNS(NS, 'g');
-      g.setAttribute('class', 'cc-edge');
-      g.setAttribute('data-edge-aud', String(c.persona_id));
-      g.setAttribute('data-edge-camp', String(c.id));
+      g.setAttribute('class', `cc-edge ${link.persona ? 'cc-edge--persona' : 'cc-edge--free'}`);
+      g.setAttribute('data-edge-from', link.from);
+      g.setAttribute('data-edge-to', link.to);
 
       const hit = document.createElementNS(NS, 'path');
       hit.setAttribute('d', this._bezier(from.x, from.y, to.x, to.y));
@@ -457,9 +531,9 @@
       fo.setAttribute('width', '24');
       fo.setAttribute('height', '24');
       fo.setAttribute('class', 'cc-edge-action');
-      fo.innerHTML = `<button type="button" class="cc-edge-disconnect" title="Desvincular" aria-label="Desvincular audiencia"><i class="fas fa-times"></i></button>`;
+      fo.innerHTML = `<button type="button" class="cc-edge-disconnect" title="Quitar conexion" aria-label="Quitar conexion"><i class="fas fa-times"></i></button>`;
       const btn = fo.querySelector('.cc-edge-disconnect');
-      if (btn) btn.onclick = (e) => { e.stopPropagation(); this._disconnectCampaign(c.id); };
+      if (btn) btn.onclick = (e) => { e.stopPropagation(); this._removeLink(link.from, link.to); };
       g.appendChild(fo);
 
       svg.appendChild(g);
@@ -627,7 +701,8 @@
         }
         if (e.target.closest('.cc-node-uncanvas')) {
           e.preventDefault(); e.stopPropagation();
-          this._removeRealFromCanvas(id);
+          if (type === 'identity') this._removeIdentityFromCanvas(nodeEl.getAttribute('data-identity-type'), id);
+          else this._removeRealFromCanvas(id);
           return;
         }
         if (e.target.closest('.cc-node-expand-btn')) {
@@ -697,47 +772,87 @@
       panel.addEventListener('keydown', this._railKey);
     }
 
-    // Drag-and-drop: campana real del sidebar → canvas (como Segmind).
+    // Drag-and-drop: cualquier item del sidebar → canvas.
     const list = document.getElementById('ccPanelBody');
     if (list && !this._campDragStart) {
       this._campDragStart = (e) => {
-        const row = e.target.closest('[data-camp-id]');
-        if (!row) return;
-        this._draggingCampId = row.getAttribute('data-camp-id');
-        try { e.dataTransfer.setData('text/plain', this._draggingCampId); e.dataTransfer.effectAllowed = 'copy'; } catch (_) {}
-        row.classList.add('cc-camp-row--dragging');
+        const item = e.target.closest('[data-lib-id]');
+        if (!item) return;
+        this._dragLib = {
+          type: item.getAttribute('data-lib-type'),
+          id: item.getAttribute('data-lib-id'),
+          name: (item.querySelector('.cc-lib-item-name') || {}).textContent || '',
+          sub: (item.querySelector('.cc-lib-item-sub') || {}).textContent || '',
+        };
+        try { e.dataTransfer.setData('text/plain', this._dragLib.id); e.dataTransfer.effectAllowed = 'copy'; } catch (_) {}
+        item.classList.add('cc-camp-row--dragging');
       };
       this._campDragEnd = (e) => {
-        const row = e.target.closest('[data-camp-id]');
-        if (row) row.classList.remove('cc-camp-row--dragging');
+        const item = e.target.closest('[data-lib-id]');
+        if (item) item.classList.remove('cc-camp-row--dragging');
       };
       list.addEventListener('dragstart', this._campDragStart);
       list.addEventListener('dragend', this._campDragEnd);
     }
     if (!this._canvasDragOver) {
       this._canvasDragOver = (e) => {
-        if (!this._draggingCampId) return;
+        if (!this._dragLib) return;
         e.preventDefault();
         try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
         canvas.classList.add('cc-canvas--droptarget');
-        const audEl = this._audienceNodeAt(e.clientX, e.clientY);
-        canvas.querySelectorAll('.cc-node--audience').forEach((n) => n.classList.remove('cc-node--drop-target'));
-        if (audEl) audEl.classList.add('cc-node--drop-target');
+        canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
+        const tgt = this._nodeAt(e.clientX, e.clientY, null);
+        if (tgt) tgt.classList.add('cc-node--drop-target');
       };
       this._canvasDragLeave = () => { canvas.classList.remove('cc-canvas--droptarget'); };
       this._canvasDrop = (e) => {
-        const id = this._draggingCampId || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
+        const lib = this._dragLib;
         canvas.classList.remove('cc-canvas--droptarget');
-        canvas.querySelectorAll('.cc-node--audience').forEach((n) => n.classList.remove('cc-node--drop-target'));
-        this._draggingCampId = null;
-        if (!id) return;
+        canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
+        this._dragLib = null;
+        if (!lib) return;
         e.preventDefault();
-        this._addRealToCanvas(id, e.clientX, e.clientY);
+        if (lib.type === 'campaigns') { this._addRealToCanvas(lib.id, e.clientX, e.clientY); return; }
+        if (ID_TYPES.includes(lib.type)) { this._addIdentityToCanvas(lib, e.clientX, e.clientY); return; }
+        // audiences / concepts ya viven en el canvas → no-op
       };
       canvas.addEventListener('dragover', this._canvasDragOver);
       canvas.addEventListener('dragleave', this._canvasDragLeave);
       canvas.addEventListener('drop', this._canvasDrop);
     }
+  };
+
+  /** Coloca un identity (producto/servicio/.../brief) como nodo en el canvas.
+      Si se suelta sobre otro nodo, ademas crea el link libre. */
+  P._addIdentityToCanvas = function (lib, clientX, clientY) {
+    if (!lib || !lib.type || !lib.id) return;
+    this._loadPlaced();
+    const key = `${lib.type}:${lib.id}`;
+    if (!this._placed.some((p) => p.type === lib.type && String(p.id) === String(lib.id))) {
+      this._placed.push({ type: lib.type, id: lib.id, name: lib.name, sub: lib.sub });
+      this._savePlaced();
+    }
+    const w = this._worldPointFromClient(clientX, clientY);
+    this._positions[key] = { x: Math.max(0, w.x - 110), y: Math.max(0, w.y - 20) };
+    this._savePositions();
+    const target = this._nodeAt(clientX, clientY, key);
+    const toKey = target && target.getAttribute('data-node-key');
+    this._renderCanvas();
+    this._renderLibrary();
+    if (toKey && toKey !== key) this._addLink(key, toKey);
+  };
+
+  /** Quita un identity del canvas + sus links. */
+  P._removeIdentityFromCanvas = function (type, id) {
+    const key = `${type}:${id}`;
+    this._loadPlaced();
+    this._placed = this._placed.filter((p) => !(p.type === type && String(p.id) === String(id)));
+    this._savePlaced();
+    this._loadLinks();
+    this._links = this._links.filter((l) => l.from !== key && l.to !== key);
+    this._saveLinks();
+    this._renderCanvas();
+    this._renderLibrary();
   };
 
   /* ── Tags/chips ────────────────────────────────────────────────────── */
@@ -962,14 +1077,16 @@
     document.addEventListener('mouseup', onUp);
   };
 
-  /** Drag-to-connect desde el puerto de salida de una audiencia. */
+  /** Drag-to-connect libre: desde el puerto de salida de CUALQUIER nodo a
+      cualquier otro nodo. Crea un link (audiencia→campana persiste persona_id;
+      el resto es link libre en localStorage). */
   P._beginConnect = function (e, port) {
     e.preventDefault(); e.stopPropagation();
     const svg    = document.getElementById('ccCanvasEdges');
     const canvas = document.getElementById('ccCanvas');
     const nodeEl = port.closest('.cc-node');
     if (!svg || !canvas || !nodeEl) return;
-    const audId = nodeEl.getAttribute('data-id');
+    const fromKey = nodeEl.getAttribute('data-node-key');
 
     const cr = canvas.getBoundingClientRect();
     const pr = port.getBoundingClientRect();
@@ -983,37 +1100,59 @@
     canvas.classList.add('cc-canvas--connecting');
 
     const onMove = (ev) => {
-      const x = ev.clientX - cr.left;
-      const y = ev.clientY - cr.top;
-      preview.setAttribute('d', this._bezier(startX, startY, x, y));
-      canvas.querySelectorAll('.cc-node--campaign').forEach((n) => n.classList.remove('cc-node--drop-target'));
-      const target = this._campaignNodeAt(ev.clientX, ev.clientY);
+      preview.setAttribute('d', this._bezier(startX, startY, ev.clientX - cr.left, ev.clientY - cr.top));
+      canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
+      const target = this._nodeAt(ev.clientX, ev.clientY, fromKey);
       if (target) target.classList.add('cc-node--drop-target');
     };
     const onUp = (ev) => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       canvas.classList.remove('cc-canvas--connecting');
-      canvas.querySelectorAll('.cc-node--campaign').forEach((n) => n.classList.remove('cc-node--drop-target'));
+      canvas.querySelectorAll('.cc-node').forEach((n) => n.classList.remove('cc-node--drop-target'));
       preview.remove();
-      const target = this._campaignNodeAt(ev.clientX, ev.clientY);
-      if (target && audId) {
-        const campId = target.getAttribute('data-id');
-        if (campId) this._connectCampaignToPersona(campId, audId);
-      }
+      const target = this._nodeAt(ev.clientX, ev.clientY, fromKey);
+      const toKey = target && target.getAttribute('data-node-key');
+      if (toKey && toKey !== fromKey) this._addLink(fromKey, toKey);
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   };
 
-  /** Nodo campana bajo coords cliente (para drop de conexion). */
-  P._campaignNodeAt = function (clientX, clientY) {
-    const nodes = document.querySelectorAll('.cc-node--campaign');
+  /** Cualquier nodo bajo coords cliente, excluyendo el de origen. */
+  P._nodeAt = function (clientX, clientY, excludeKey) {
+    const nodes = document.querySelectorAll('.cc-node');
     for (const n of nodes) {
+      if (n.getAttribute('data-node-key') === excludeKey) continue;
       const r = n.getBoundingClientRect();
       if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) return n;
     }
     return null;
+  };
+
+  /* ── Links: crear / quitar ─────────────────────────────────────────── */
+  P._addLink = function (fromKey, toKey) {
+    // Caso especial: audiencia -> campana persiste persona_id en BD.
+    if (fromKey.startsWith('aud:') && toKey.startsWith('camp:')) {
+      this._connectCampaignToPersona(toKey.slice(5), fromKey.slice(4));
+      return;
+    }
+    // Link libre (visual). Evitar duplicado en cualquier direccion.
+    this._loadLinks();
+    const dup = this._links.some((l) => (l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey));
+    if (!dup) { this._links.push({ from: fromKey, to: toKey }); this._saveLinks(); }
+    this._renderCanvas();
+  };
+
+  P._removeLink = function (fromKey, toKey) {
+    if (fromKey.startsWith('aud:') && toKey.startsWith('camp:')) {
+      this._disconnectCampaign(toKey.slice(5));
+      return;
+    }
+    this._loadLinks();
+    this._links = this._links.filter((l) => !((l.from === fromKey && l.to === toKey) || (l.from === toKey && l.to === fromKey)));
+    this._saveLinks();
+    this._renderCanvas();
   };
 
   // ------------------------------------------------------------------
