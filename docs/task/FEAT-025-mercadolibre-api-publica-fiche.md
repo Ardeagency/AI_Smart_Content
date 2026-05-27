@@ -1,8 +1,19 @@
-# FEAT-025 — Cablear API publica de Mercado Libre para URL flow de ficha
+# FEAT-025 — Cablear API de Mercado Libre para URL flow de ficha
 
-**Estado**: pendiente
+**Estado**: BLOQUEADA-EXTERNO (premisa original obsoleta).
 **Creado**: 2026-05-21
 **Contexto**: descubierto durante FEAT del URL flow de Adjuntar Producto (commits dea32cad → eecaf3dd).
+
+> **AVISO 2026-05-27**: la premisa de "API publica sin auth" YA NO APLICA. Verificado
+> hoy: `GET https://api.mercadolibre.com/items/{id}` y hasta `GET /sites/MCO` devuelven
+> **403 `PA_UNAUTHORIZED_RESULT_FROM_POLICIES`** (PolicyAgent). ML cerro el acceso anonimo
+> a su API. Para usarla ahora hay que **registrar una app en ML + OAuth access token**
+> (decision + credenciales externas). Ya no es un task "solo codigo".
+>
+> Opciones reales: (A) registrar app ML y manejar OAuth+refresh por tenant o global;
+> (B) seguir con el scrape HTML actual + headless render para hidratar la galeria;
+> (C) descartar ML como caso especial. El plan de abajo queda como referencia historica
+> de la estructura del response, NO como ruta ejecutable tal cual.
 
 ## Problema
 
