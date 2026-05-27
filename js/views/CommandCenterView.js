@@ -32,6 +32,8 @@ class CommandCenterView extends BaseView {
     this._onCanvas        = new Set();  // ids de campanas reales puestas en el canvas
     this._expandedReal    = new Set();  // ids de campanas reales expandidas (ver ads)
     this._adData          = {};         // cache de conjuntos/ads por campaign_id
+    this._libOpen         = new Set(['campaigns']); // secciones abiertas en el sidebar
+    this._libCache        = {};         // cache de items por seccion lazy
   }
 
   /* ── Redirect legacy ──────────────────────────────────────────────── */
@@ -141,27 +143,21 @@ class CommandCenterView extends BaseView {
           <p>Sin audiencias ni campanas todavia. Crea una audiencia o conecta una integracion (Meta, Google).</p>
         </div>
 
-        <!-- Panel flotante dentro del canvas (glass-black, colapsable) ── -->
+        <!-- Panel flotante = biblioteca de entidades conectables. glass-black,
+             colapsable a una barra de iconos (rail). Secciones pobladas por el
+             mixin (_renderLibrary). -->
         <aside class="cc-floating-panel glass-black" id="ccSidebar">
-          <div class="cc-fp-head">
-            <span class="cc-fp-title"><i class="fas fa-sliders"></i> Panel</span>
-            <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Colapsar panel" aria-label="Colapsar panel">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-          <div class="cc-fp-body" id="ccPanelBody">
-            <div class="cc-mini-stats" id="ccMiniStats"></div>
-            <section class="cc-mini-section">
-              <div class="cc-mini-section-head">
-                <h4 class="cc-mini-section-title">Campanas reales</h4>
-                <span class="cc-mini-section-count" id="ccCampCount">0</span>
-              </div>
-              <div class="cc-list" id="ccCampList"></div>
-              <div class="cc-empty cc-empty--compact" id="ccCampEmpty" style="display:none;">
-                <i class="fas fa-bullhorn"></i>
-                <span>Sin campanas sincronizadas. Conecta una integracion (Meta, Google, etc.).</span>
-              </div>
-            </section>
+          <!-- Rail de iconos: visible en estado colapsado -->
+          <div class="cc-fp-rail" id="ccPanelRail"></div>
+          <!-- Contenido completo: visible en estado expandido -->
+          <div class="cc-fp-main">
+            <div class="cc-fp-head">
+              <span class="cc-fp-title"><i class="fas fa-sliders"></i> Biblioteca</span>
+              <button class="cc-fp-toggle" id="ccPanelToggle" type="button" title="Colapsar panel" aria-label="Colapsar panel">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div class="cc-fp-body" id="ccPanelBody"></div>
           </div>
         </aside>
       </div>
@@ -845,11 +841,11 @@ class CommandCenterView extends BaseView {
   /* ── Error state ──────────────────────────────────────────────────── */
   _setError(msg) {
     const twoCol = document.getElementById('ccTwoCol');
-    const empty  = document.getElementById('ccCampEmpty');
-    if (twoCol) twoCol.style.display = 'none';
+    const empty  = document.getElementById('ccCanvasEmpty');
+    if (twoCol) twoCol.style.display = '';
     if (empty) {
       empty.style.display = 'flex';
-      empty.innerHTML = `<i class="fas fa-exclamation-triangle"></i><p>${this.escapeHtml(msg)}</p>`;
+      empty.innerHTML = `<i class="fas fa-triangle-exclamation"></i><p>${this.escapeHtml(msg)}</p>`;
     }
   }
 }

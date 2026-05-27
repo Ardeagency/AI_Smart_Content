@@ -674,8 +674,21 @@
       canvas.addEventListener('keydown', this._canvasTagKey);
     }
 
+    // Acordeon + rail de la biblioteca (delegado en el panel).
+    const panel = document.getElementById('ccSidebar');
+    if (panel && !this._panelClick) {
+      this._panelClick = (e) => {
+        const secToggle = e.target.closest('[data-sec-toggle]');
+        if (secToggle) { this._toggleLibSection(secToggle.getAttribute('data-sec-toggle')); return; }
+        const railSec = e.target.closest('[data-rail-sec]');
+        if (railSec) { this._togglePanel(false); this._toggleLibSection(railSec.getAttribute('data-rail-sec'), true); return; }
+        if (e.target.closest('[data-rail-expand]')) { this._togglePanel(false); return; }
+      };
+      panel.addEventListener('click', this._panelClick);
+    }
+
     // Drag-and-drop: campana real del sidebar → canvas (como Segmind).
-    const list = document.getElementById('ccCampList');
+    const list = document.getElementById('ccPanelBody');
     if (list && !this._campDragStart) {
       this._campDragStart = (e) => {
         const row = e.target.closest('[data-camp-id]');
@@ -1008,85 +1021,168 @@
   };
 
   // ------------------------------------------------------------------
-  // Mini-dashboard (stats + conteos)
+  // Biblioteca del sidebar: secciones de TODO lo conectable (audiencias,
+  // campanas, conceptuales, productos, servicios, lugares, flows, briefs).
+  // Colapsado = rail de iconos. Drag al canvas: solo campanas reales por
+  // ahora persiste; el resto es visual (semantica pendiente).
   // ------------------------------------------------------------------
-  P._renderMiniDash = function () {
-    const statsEl = document.getElementById('ccMiniStats');
-    const camps = Array.isArray(this._campaigns) ? this._campaigns : [];
-    const auds  = Array.isArray(this._audiences) ? this._audiences : [];
-    const real    = camps.filter((c) => c.last_synced_at).length;
-    const concept = camps.length - real;
-    const linked  = camps.filter((c) => c.persona_id).length;
-    const unlinked = camps.length - linked;
+  P._renderMiniDash = function () { /* stats eliminados; la biblioteca lo reemplaza */ };
 
-    if (statsEl) {
-      const stat = (n, label, cls) => `
-        <div class="cc-mini-stat ${cls || ''}">
-          <span class="cc-mini-stat-num">${n}</span>
-          <span class="cc-mini-stat-label">${label}</span>
-        </div>`;
-      statsEl.innerHTML =
-        stat(auds.length, 'Audiencias') +
-        stat(real, 'Reales') +
-        stat(concept, 'Conceptuales') +
-        stat(linked, 'Vinculadas') +
-        (unlinked > 0 ? stat(unlinked, 'Sin vincular', 'cc-mini-stat--warn') : '');
+  /** Definicion de secciones (orden + icono + label). */
+  P._librarySections = function () {
+    return [
+      { key: 'audiences', label: 'Audiencias',          icon: 'fa-users' },
+      { key: 'campaigns', label: 'Campanas reales',     icon: 'fa-bullhorn' },
+      { key: 'concepts',  label: 'Conceptualizaciones', icon: 'fa-lightbulb' },
+      { key: 'products',  label: 'Productos',           icon: 'fa-box' },
+      { key: 'services',  label: 'Servicios',           icon: 'fa-tag' },
+      { key: 'places',    label: 'Lugares',             icon: 'fa-map-pin' },
+      { key: 'flows',     label: 'My Flows',            icon: 'fa-diagram-project' },
+      { key: 'briefs',    label: 'Briefs',              icon: 'fa-file-lines' },
+    ];
+  };
+  P._libIcon = function (key) { return (this._librarySections().find((s) => s.key === key) || {}).icon || 'fa-circle'; };
+
+  /** Items de una seccion. Locales (sincronos) o lazy (cache; undefined = sin cargar). */
+  P._libItemsFor = function (key) {
+    if (key === 'audiences') {
+      return (this._audiences || []).map((a) => ({ id: a.id, name: a.name || 'Audiencia', sub: a.is_active === false ? 'apagada' : '' }));
     }
-
-    // El contador del header (ccCampCount) lo maneja _renderCampaigns
-    // (refleja las campanas reales que estan FUERA del canvas).
+    if (key === 'campaigns') {
+      this._loadOnCanvas();
+      return (this._campaigns || []).filter((c) => c.last_synced_at && !this._realOnCanvas(c))
+        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campana', sub: c.status || '', camp: true }));
+    }
+    if (key === 'concepts') {
+      return (this._campaigns || []).filter((c) => !c.last_synced_at)
+        .map((c) => ({ id: c.id, name: c.nombre_campana || 'Campana', sub: c.status || '' }));
+    }
+    return this._libCache[key]; // lazy: undefined si no se ha cargado
   };
 
-  // ------------------------------------------------------------------
-  // Campanas reales: sidebar (fuera del canvas) + drag-and-drop al lienzo
-  // ------------------------------------------------------------------
-  /** Sidebar: lista de campanas reales que NO estan en el canvas, arrastrables. */
-  P._renderCampaigns = function () {
-    const list  = document.getElementById('ccCampList');
-    const empty = document.getElementById('ccCampEmpty');
-    const count = document.getElementById('ccCampCount');
-    if (!list) return;
-    this._loadOnCanvas();
-    const reals = (this._campaigns || []).filter((c) => c.last_synced_at);
-    const rows  = reals.filter((c) => !this._realOnCanvas(c));
-    if (count) count.textContent = String(rows.length);
+  P._renderLibrary = function () {
+    const rail = document.getElementById('ccPanelRail');
+    const body = document.getElementById('ccPanelBody');
+    if (!body) return;
+    if (!this._libOpen) this._libOpen = new Set(['campaigns']);
+    const secs = this._librarySections();
 
-    if (!rows.length) {
-      list.innerHTML = '';
-      if (empty) {
-        empty.style.display = 'flex';
-        empty.innerHTML = reals.length === 0
-          ? '<i class="fas fa-bullhorn"></i><span>Sin campanas sincronizadas. Conecta una integracion (Meta, Google, etc.).</span>'
-          : '<i class="fas fa-circle-check"></i><span>Todas las campanas reales estan en el canvas. Quitalas desde el nodo para traerlas aqui.</span>';
-      }
-      return;
+    if (rail) {
+      rail.innerHTML =
+        `<button class="cc-rail-expand" data-rail-expand title="Expandir panel" aria-label="Expandir panel"><i class="fas fa-chevron-left"></i></button>` +
+        secs.map((s) => `<button class="cc-rail-btn ${this._libOpen.has(s.key) ? 'is-active' : ''}" data-rail-sec="${s.key}" title="${this.escapeHtml(s.label)}" aria-label="${this.escapeHtml(s.label)}"><i class="fas ${s.icon}"></i></button>`).join('');
     }
-    if (empty) empty.style.display = 'none';
 
-    const platformLabel = { meta_instagram: 'Instagram', meta_facebook: 'Facebook', google_ads: 'Google Ads', tiktok_ads: 'TikTok', linkedin_ads: 'LinkedIn', pinterest_ads: 'Pinterest', organic: 'Organico', internal: 'Interno' };
-    const fmt = (v) => { const n = Number(v); return Number.isFinite(n) ? (n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n.toLocaleString('es-ES')) : '0'; };
-    const fmtDate = (d) => { if (!d) return '—'; const t = new Date(d); return Number.isFinite(t.getTime()) ? t.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; };
-
-    list.innerHTML = rows.map((c) => {
-      const plat = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : '');
+    body.innerHTML = secs.map((s) => {
+      const open = this._libOpen.has(s.key);
+      const items = this._libItemsFor(s.key);
+      const count = Array.isArray(items) ? items.length : '';
       return `
-      <div class="cc-camp-row" draggable="true" data-camp-id="${this.escapeHtml(String(c.id))}" title="Arrastra al canvas para conectarla">
-        <div class="cc-camp-row-head">
-          <span class="cc-camp-name">${this.escapeHtml(c.nombre_campana || 'Campana')}</span>
-          <div class="cc-camp-badges">
-            <span class="cc-badge cc-badge--yellow">${this.escapeHtml(c.status || 'draft')}</span>
-            ${plat ? `<span class="cc-badge cc-badge--platform">${this.escapeHtml(plat)}</span>` : ''}
-          </div>
-        </div>
-        <dl class="cc-camp-stats">
-          <div class="cc-camp-stat"><dt>Publicada</dt><dd>${this.escapeHtml(fmtDate(c.starts_at || c.created_at))}</dd></div>
-          <div class="cc-camp-stat"><dt>Resultados</dt><dd>${fmt(c.cached_conversions)}</dd></div>
-          <div class="cc-camp-stat"><dt>Gastos</dt><dd>${fmt(c.cached_spend)} ${this.escapeHtml(c.budget_currency || '')}</dd></div>
-        </dl>
-        <span class="cc-camp-drag-hint"><i class="fas fa-arrows-up-down-left-right"></i> Arrastrar al canvas</span>
-      </div>`;
+      <section class="cc-lib-sec ${open ? 'is-open' : ''}" data-sec="${s.key}">
+        <button type="button" class="cc-lib-sec-head" data-sec-toggle="${s.key}">
+          <i class="fas ${s.icon} cc-lib-sec-icon"></i>
+          <span class="cc-lib-sec-label">${this.escapeHtml(s.label)}</span>
+          <span class="cc-lib-sec-count">${count}</span>
+          <i class="fas fa-chevron-${open ? 'up' : 'down'} cc-lib-sec-chev"></i>
+        </button>
+        <div class="cc-lib-sec-body" data-sec-body="${s.key}" ${open ? '' : 'style="display:none;"'}>${open ? this._libBodyHTML(s.key) : ''}</div>
+      </section>`;
     }).join('');
+
+    // Dispara fetch de secciones lazy abiertas sin cache.
+    secs.forEach((s) => { if (this._libOpen.has(s.key) && this._libItemsFor(s.key) === undefined) this._fetchLibrary(s.key); });
   };
+
+  P._libBodyHTML = function (key) {
+    const items = this._libItemsFor(key);
+    if (items === undefined) return '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
+    if (!items.length) return '<div class="cc-lib-empty">Sin elementos.</div>';
+    const icon = this._libIcon(key);
+    return items.map((it) => `
+      <div class="cc-lib-item" draggable="true" data-lib-type="${key}" data-lib-id="${this.escapeHtml(String(it.id))}" ${it.camp ? `data-camp-id="${this.escapeHtml(String(it.id))}"` : ''} title="${this.escapeHtml(it.name)}${it.camp ? ' — arrastra al canvas' : ''}">
+        <i class="fas ${icon} cc-lib-item-ic"></i>
+        <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
+        ${it.sub ? `<span class="cc-lib-item-sub">${this.escapeHtml(it.sub)}</span>` : ''}
+      </div>`).join('');
+  };
+
+  /** Abre/cierra una seccion del acordeon (lazy-fetch al abrir). */
+  P._toggleLibSection = function (key, forceOpen) {
+    if (!this._libOpen) this._libOpen = new Set();
+    const isOpen = this._libOpen.has(key);
+    const open = (typeof forceOpen === 'boolean') ? forceOpen : !isOpen;
+    if (open) this._libOpen.add(key); else this._libOpen.delete(key);
+
+    const sec  = document.querySelector(`.cc-lib-sec[data-sec="${cssEsc(key)}"]`);
+    const bodyEl = document.querySelector(`.cc-lib-sec-body[data-sec-body="${cssEsc(key)}"]`);
+    const chev = sec ? sec.querySelector('.cc-lib-sec-chev') : null;
+    const railBtn = document.querySelector(`.cc-rail-btn[data-rail-sec="${cssEsc(key)}"]`);
+    if (sec) sec.classList.toggle('is-open', open);
+    if (chev) chev.className = `fas fa-chevron-${open ? 'up' : 'down'} cc-lib-sec-chev`;
+    if (railBtn) railBtn.classList.toggle('is-active', open);
+    if (!bodyEl) return;
+    bodyEl.style.display = open ? '' : 'none';
+    if (!open) return;
+    bodyEl.innerHTML = this._libBodyHTML(key);
+    if (this._libItemsFor(key) === undefined) this._fetchLibrary(key);
+  };
+
+  /** Carga lazy de una seccion (productos/servicios/lugares/flows/briefs). */
+  P._fetchLibrary = async function (key) {
+    if (this._libCache[key] || this._libFetching?.[key]) return;
+    if (!this._supabase) { this._libCache[key] = []; this._fillLibSection(key); return; }
+    if (!this._libFetching) this._libFetching = {};
+    this._libFetching[key] = true;
+    const org = this._organizationId;
+    const bid = this._containerRow?.id;
+    try {
+      let items = [];
+      if (key === 'products') {
+        const { data } = await this._supabase.from('products').select('id, nombre_producto').eq('organization_id', org).limit(200);
+        items = (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || 'Producto' }));
+      } else if (key === 'services') {
+        const { data } = await this._supabase.from('services').select('id, nombre_servicio').eq('organization_id', org).limit(200);
+        items = (data || []).map((r) => ({ id: r.id, name: r.nombre_servicio || 'Servicio' }));
+      } else if (key === 'places') {
+        const { data: ents } = await this._supabase.from('brand_entities').select('id').eq('organization_id', org);
+        const ids = (ents || []).map((e) => e.id);
+        if (ids.length) {
+          const { data } = await this._supabase.from('brand_places').select('id, nombre_lugar, city').in('entity_id', ids).limit(200);
+          items = (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || 'Lugar', sub: r.city || '' }));
+        }
+      } else if (key === 'flows') {
+        const { data: { user } } = await this._supabase.auth.getUser();
+        if (user?.id) {
+          const { data } = await this._supabase.from('content_flows').select('id, name, output_type').eq('owner_id', user.id).limit(200);
+          items = (data || []).map((r) => ({ id: r.id, name: r.name || 'Flow', sub: r.output_type || '' }));
+        }
+      } else if (key === 'briefs') {
+        const { data } = await this._supabase.from('campaign_briefs').select('id, nombre').eq('brand_container_id', bid).limit(200);
+        items = (data || []).map((r) => ({ id: r.id, name: r.nombre || 'Brief' }));
+      }
+      this._libCache[key] = items;
+    } catch (e) {
+      console.warn('CommandCenter fetchLibrary', key, e?.message);
+      this._libCache[key] = [];
+    } finally {
+      if (this._libFetching) this._libFetching[key] = false;
+      this._fillLibSection(key);
+    }
+  };
+
+  /** Rellena el body de una seccion ya abierta tras el fetch + actualiza conteo. */
+  P._fillLibSection = function (key) {
+    if (!this._libOpen.has(key)) return;
+    const bodyEl = document.querySelector(`.cc-lib-sec-body[data-sec-body="${cssEsc(key)}"]`);
+    if (bodyEl) bodyEl.innerHTML = this._libBodyHTML(key);
+    const sec = document.querySelector(`.cc-lib-sec[data-sec="${cssEsc(key)}"]`);
+    const count = sec ? sec.querySelector('.cc-lib-sec-count') : null;
+    const items = this._libItemsFor(key);
+    if (count && Array.isArray(items)) count.textContent = String(items.length);
+  };
+
+  /** Compat: el flujo de carga/mutaciones llama _renderCampaigns. */
+  P._renderCampaigns = function () { this._renderLibrary(); };
 
   /** Coordenadas de mundo a partir de un punto en pantalla (invierte transform). */
   P._worldPointFromClient = function (clientX, clientY) {
@@ -1274,7 +1370,8 @@
   const _origDestroy = P.destroy;
   P.destroy = function () {
     const canvas = document.getElementById('ccCanvas');
-    const list   = document.getElementById('ccCampList');
+    const list   = document.getElementById('ccPanelBody');
+    const panel  = document.getElementById('ccSidebar');
     if (this._edgesRaf) { cancelAnimationFrame(this._edgesRaf); this._edgesRaf = null; }
     if (this._canvasResizeObs) { try { this._canvasResizeObs.disconnect(); } catch (_) {} this._canvasResizeObs = null; }
     if (canvas && this._canvasWheel)     { canvas.removeEventListener('wheel', this._canvasWheel); this._canvasWheel = null; }
@@ -1284,6 +1381,7 @@
     if (canvas && this._canvasTagKey)    { canvas.removeEventListener('keydown', this._canvasTagKey); this._canvasTagKey = null; }
     if (canvas && this._canvasDragOver)  { canvas.removeEventListener('dragover', this._canvasDragOver); canvas.removeEventListener('dragleave', this._canvasDragLeave); canvas.removeEventListener('drop', this._canvasDrop); this._canvasDragOver = null; }
     if (list && this._campDragStart)     { list.removeEventListener('dragstart', this._campDragStart); list.removeEventListener('dragend', this._campDragEnd); this._campDragStart = null; }
+    if (panel && this._panelClick)       { panel.removeEventListener('click', this._panelClick); this._panelClick = null; }
     if (typeof _origDestroy === 'function') _origDestroy.call(this);
   };
 

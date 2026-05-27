@@ -1487,13 +1487,72 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 .cc-fp-toggle:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
-.cc-fp-body { padding: 14px 14px 16px; overflow-y: auto; min-height: 0; }
+.cc-fp-main { display: flex; flex-direction: column; min-height: 0; }
+.cc-fp-body { padding: 10px; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 
-/* Colapsado: el panel se reduce a la cabecera (pill con el toggle). */
+/* Rail de iconos: oculto al estar expandido, visible al colapsar. */
+.cc-fp-rail { display: none; }
 .cc-floating-panel--collapsed { width: auto; }
-.cc-floating-panel--collapsed .cc-fp-body { display: none; }
-.cc-floating-panel--collapsed .cc-fp-head { border-bottom: none; }
-.cc-floating-panel--collapsed .cc-fp-title { display: none; }
+.cc-floating-panel--collapsed .cc-fp-main { display: none; }
+.cc-floating-panel--collapsed .cc-fp-rail {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px;
+}
+.cc-rail-expand, .cc-rail-btn {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer; font-size: 0.82rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.cc-rail-expand { margin-bottom: 4px; }
+.cc-rail-btn:hover, .cc-rail-expand:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.cc-rail-btn.is-active { background: rgba(255, 255, 255, 0.14); color: #fff; border-color: rgba(255, 255, 255, 0.28); }
+
+/* ── Acordeon de secciones (biblioteca) ────────────────────────────── */
+.cc-lib-sec { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; overflow: hidden; }
+.cc-lib-sec-head {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%;
+  padding: 9px 11px;
+  border: none; background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  cursor: pointer; text-align: left;
+  font-size: 0.78rem; font-weight: 600;
+  transition: background 0.15s ease;
+}
+.cc-lib-sec-head:hover { background: rgba(255, 255, 255, 0.06); }
+.cc-lib-sec.is-open .cc-lib-sec-head { color: var(--text-primary, #fff); }
+.cc-lib-sec-icon { font-size: 0.78rem; color: var(--text-muted); width: 16px; text-align: center; }
+.cc-lib-sec-label { flex: 1; min-width: 0; }
+.cc-lib-sec-count {
+  font-size: 0.66rem; font-weight: 700;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary);
+}
+.cc-lib-sec-chev { font-size: 0.6rem; color: var(--text-muted); }
+.cc-lib-sec-body { padding: 8px; display: flex; flex-direction: column; gap: 5px; max-height: 280px; overflow-y: auto; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.cc-lib-loading, .cc-lib-empty { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 7px; padding: 4px 2px; }
+
+.cc-lib-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: grab;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.cc-lib-item:hover { border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.06); }
+.cc-lib-item:active { cursor: grabbing; }
+.cc-lib-item.cc-camp-row--dragging { opacity: 0.5; }
+.cc-lib-item-ic { font-size: 0.72rem; color: var(--text-muted); flex: 0 0 auto; }
+.cc-lib-item-name { flex: 1; min-width: 0; font-size: 0.76rem; color: var(--text-primary, #fff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-lib-item-sub { font-size: 0.62rem; color: var(--text-muted); white-space: nowrap; }
 
 .cc-mini-stats {
   display: grid;
