@@ -7,6 +7,7 @@ class DevLeadInputSchemasView extends DevBaseView {
     super();
     this.supabase = null;
     this.templates = [];
+    this._modalClose = null;
   }
 
   async onEnter() {
@@ -56,64 +57,58 @@ class DevLeadInputSchemasView extends DevBaseView {
           </div>
         </section>
       </div>
+    `;
+  }
 
-      <div class="modal dev-lead-modal dev-lead-modal-wide" id="inputSchemaModal" hidden>
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="inputSchemaModalTitle">Nuevo input</h3>
-            <button type="button" class="modal-close" id="inputSchemaModalClose">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="inputSchemaId" value="">
-            <div class="form-group">
-              <label for="inputSchemaName">Nombre *</label>
-              <input type="text" id="inputSchemaName" placeholder="Ej. short_text" required>
-            </div>
-            <div class="form-group">
-              <label for="inputSchemaDescription">Descripción</label>
-              <textarea id="inputSchemaDescription" rows="2" placeholder="Opcional"></textarea>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="inputSchemaCategory">Categoría</label>
-                <select id="inputSchemaCategory">
-                  <option value="basic">basic</option>
-                  <option value="advanced">advanced</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="inputSchemaIcon">Icono (nombre)</label>
-                <input type="text" id="inputSchemaIcon" placeholder="Ej. ph-textbox">
-              </div>
-              <div class="form-group">
-                <label for="inputSchemaOrder">Orden</label>
-                <input type="number" id="inputSchemaOrder" min="0" value="0">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="toggle-label">
-                <input type="checkbox" id="inputSchemaActive" checked>
-                <span>Activo</span>
-              </label>
-            </div>
-            <div class="form-group">
-              <label for="inputSchemaBaseSchema">base_schema (JSON) *</label>
-              <textarea id="inputSchemaBaseSchema" rows="6" placeholder='{"type":"text","key":"field_key",...}'></textarea>
-              <span class="field-help">JSON válido. Define el esquema del campo en el Builder.</span>
-            </div>
-            <div class="form-group">
-              <label for="inputSchemaDefaultUiConfig">default_ui_config (JSON)</label>
-              <textarea id="inputSchemaDefaultUiConfig" rows="4" placeholder='{}'></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="inputSchemaModalCancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="inputSchemaModalSave">
-              <i class="fas fa-save"></i> Guardar
-            </button>
-          </div>
+  // FEAT-028: cuerpo del modal migrado a window.Modal (mismos IDs de campo).
+  _modalBodyHtml() {
+    return `
+      <input type="hidden" id="inputSchemaId" value="">
+      <div class="form-group">
+        <label for="inputSchemaName">Nombre *</label>
+        <input type="text" id="inputSchemaName" placeholder="Ej. short_text" required>
+      </div>
+      <div class="form-group">
+        <label for="inputSchemaDescription">Descripción</label>
+        <textarea id="inputSchemaDescription" rows="2" placeholder="Opcional"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inputSchemaCategory">Categoría</label>
+          <select id="inputSchemaCategory">
+            <option value="basic">basic</option>
+            <option value="advanced">advanced</option>
+          </select>
         </div>
+        <div class="form-group">
+          <label for="inputSchemaIcon">Icono (nombre)</label>
+          <input type="text" id="inputSchemaIcon" placeholder="Ej. ph-textbox">
+        </div>
+        <div class="form-group">
+          <label for="inputSchemaOrder">Orden</label>
+          <input type="number" id="inputSchemaOrder" min="0" value="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="toggle-label">
+          <input type="checkbox" id="inputSchemaActive" checked>
+          <span>Activo</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="inputSchemaBaseSchema">base_schema (JSON) *</label>
+        <textarea id="inputSchemaBaseSchema" rows="6" placeholder='{"type":"text","key":"field_key",...}'></textarea>
+        <span class="field-help">JSON válido. Define el esquema del campo en el Builder.</span>
+      </div>
+      <div class="form-group">
+        <label for="inputSchemaDefaultUiConfig">default_ui_config (JSON)</label>
+        <textarea id="inputSchemaDefaultUiConfig" rows="4" placeholder='{}'></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="inputSchemaModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="inputSchemaModalSave">
+          <i class="fas fa-save"></i> Guardar
+        </button>
       </div>
     `;
   }
@@ -123,7 +118,6 @@ class DevLeadInputSchemasView extends DevBaseView {
     if (!this.supabase) return;
     await this.loadTemplates();
     document.getElementById('addInputSchemaBtn')?.addEventListener('click', () => this.openModal(null));
-    this.setupModalHandlers();
   }
 
   async loadTemplates() {
@@ -175,16 +169,26 @@ class DevLeadInputSchemasView extends DevBaseView {
     });
   }
 
-  setupModalHandlers() {
-    const modal = document.getElementById('inputSchemaModal');
-    document.getElementById('inputSchemaModalClose')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    document.getElementById('inputSchemaModalCancel')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    modal?.querySelector('.modal-overlay')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    document.getElementById('inputSchemaModalSave')?.addEventListener('click', () => this.saveTemplate());
+  // FEAT-028: abre el modal via window.Modal y cablea Cancel/Save.
+  _openModal(title) {
+    const { modal, close } = window.Modal.show({
+      title,
+      body: this._modalBodyHtml(),
+      className: 'dev-lead-modal-wide-content',
+      onClose: () => { this._modalClose = null; }
+    });
+    this._modalClose = close;
+    modal.querySelector('#inputSchemaModalCancel')?.addEventListener('click', () => this.closeModal());
+    modal.querySelector('#inputSchemaModalSave')?.addEventListener('click', () => this.saveTemplate());
+  }
+
+  closeModal() {
+    if (this._modalClose) this._modalClose();
   }
 
   openModal(id) {
-    const titleEl = document.getElementById('inputSchemaModalTitle');
+    // Mostrar primero (inyecta el body), luego poblar campos.
+    this._openModal(id ? 'Editar input' : 'Nuevo input');
     document.getElementById('inputSchemaId').value = id || '';
     document.getElementById('inputSchemaName').value = '';
     document.getElementById('inputSchemaDescription').value = '';
@@ -198,7 +202,6 @@ class DevLeadInputSchemasView extends DevBaseView {
     if (id) {
       const t = this.templates.find(x => x.id === id);
       if (t) {
-        if (titleEl) titleEl.textContent = 'Editar input';
         document.getElementById('inputSchemaName').value = t.name || '';
         document.getElementById('inputSchemaDescription').value = t.description || '';
         document.getElementById('inputSchemaCategory').value = t.category || 'basic';
@@ -210,11 +213,7 @@ class DevLeadInputSchemasView extends DevBaseView {
         document.getElementById('inputSchemaDefaultUiConfig').value = typeof t.default_ui_config === 'object'
           ? JSON.stringify(t.default_ui_config, null, 2) : (t.default_ui_config || '{}');
       }
-    } else {
-      if (titleEl) titleEl.textContent = 'Nuevo input';
     }
-    const m = document.getElementById('inputSchemaModal');
-    if (m) { m.style.display = 'flex'; m.classList.add('is-open'); }
   }
 
   parseJson(value, fieldName) {
@@ -285,8 +284,7 @@ class DevLeadInputSchemasView extends DevBaseView {
         return;
       }
     }
-    const m = document.getElementById('inputSchemaModal');
-    if (m) { m.style.display = 'none'; m.classList.remove('is-open'); }
+    this.closeModal();
     await this.loadTemplates();
   }
 

@@ -16,6 +16,7 @@ class DevLeadOrgsView extends DevBaseView {
     this.userId = null;
     this.orgs = [];
     this._editingId = null;
+    this._modalClose = null;
     this._loading = false;
   }
 
@@ -57,54 +58,57 @@ class DevLeadOrgsView extends DevBaseView {
             </table>
           </div>
         </section>
-
-        <div class="modal dev-lead-modal" id="orgsModal" hidden>
-          <div class="modal-overlay"></div>
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3 id="orgsModalTitle">Nueva organizacion</h3>
-              <button type="button" class="modal-close" id="orgsModalClose">&times;</button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <label for="orgFieldName">Nombre <span class="form-required">*</span></label>
-                <input type="text" id="orgFieldName" class="form-control" maxlength="120" required>
-              </div>
-              <div class="form-group">
-                <label for="orgFieldBrandName">Brand name oficial</label>
-                <input type="text" id="orgFieldBrandName" class="form-control" maxlength="120">
-              </div>
-              <div class="form-group">
-                <label for="orgFieldSlogan">Slogan</label>
-                <input type="text" id="orgFieldSlogan" class="form-control" maxlength="200">
-              </div>
-              <div class="form-group">
-                <label for="orgFieldLogoUrl">Logo URL</label>
-                <input type="url" id="orgFieldLogoUrl" class="form-control" placeholder="https://...">
-              </div>
-              <div class="form-group" id="orgFieldOwnerGroup">
-                <label for="orgFieldOwner">Owner user_id</label>
-                <input type="text" id="orgFieldOwner" class="form-control" placeholder="UUID del usuario propietario">
-                <p class="form-hint">Si lo dejas vacio, se asigna a tu user_id actual.</p>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" id="orgsModalCancel">Cancelar</button>
-              <button type="button" class="btn btn-primary" id="orgsModalSave"><i class="fas fa-check"></i> Guardar</button>
-            </div>
-          </div>
-        </div>
       </div>
     `;
+  }
+
+  // Cuerpo del modal de org (FEAT-028: migrado a window.Modal). Mantiene los
+  // mismos IDs de campos para no tocar setFormValues/saveOrg.
+  _modalBodyHtml(showOwner) {
+    return `
+      <div class="form-group">
+        <label for="orgFieldName">Nombre <span class="form-required">*</span></label>
+        <input type="text" id="orgFieldName" class="form-control" maxlength="120" required>
+      </div>
+      <div class="form-group">
+        <label for="orgFieldBrandName">Brand name oficial</label>
+        <input type="text" id="orgFieldBrandName" class="form-control" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="orgFieldSlogan">Slogan</label>
+        <input type="text" id="orgFieldSlogan" class="form-control" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label for="orgFieldLogoUrl">Logo URL</label>
+        <input type="url" id="orgFieldLogoUrl" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group" id="orgFieldOwnerGroup"${showOwner ? '' : ' style="display:none"'}>
+        <label for="orgFieldOwner">Owner user_id</label>
+        <input type="text" id="orgFieldOwner" class="form-control" placeholder="UUID del usuario propietario">
+        <p class="form-hint">Si lo dejas vacio, se asigna a tu user_id actual.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="orgsModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="orgsModalSave"><i class="fas fa-check"></i> Guardar</button>
+      </div>
+    `;
+  }
+
+  _openModal(title, showOwner) {
+    const { modal, close } = window.Modal.show({
+      title,
+      body: this._modalBodyHtml(showOwner),
+      className: 'dev-lead-modal-content',
+      onClose: () => { this._modalClose = null; this._editingId = null; }
+    });
+    this._modalClose = close;
+    modal.querySelector('#orgsModalCancel')?.addEventListener('click', () => this.closeModal());
+    modal.querySelector('#orgsModalSave')?.addEventListener('click', () => this.saveOrg());
   }
 
   async init() {
     document.getElementById('orgsRefresh')?.addEventListener('click', () => this.loadOrgs());
     document.getElementById('orgsCreate')?.addEventListener('click', () => this.openCreateModal());
-    document.getElementById('orgsModalClose')?.addEventListener('click', () => this.closeModal());
-    document.getElementById('orgsModalCancel')?.addEventListener('click', () => this.closeModal());
-    document.getElementById('orgsModalSave')?.addEventListener('click', () => this.saveOrg());
-    document.querySelector('#orgsModal .modal-overlay')?.addEventListener('click', () => this.closeModal());
 
     document.getElementById('orgsSearch')?.addEventListener('input', (e) => {
       this.renderRows((e.target?.value || '').trim().toLowerCase());
@@ -227,39 +231,21 @@ class DevLeadOrgsView extends DevBaseView {
 
   openCreateModal() {
     this._editingId = null;
-    const modal = document.getElementById('orgsModal');
-    const title = document.getElementById('orgsModalTitle');
-    const ownerGroup = document.getElementById('orgFieldOwnerGroup');
-    if (title) title.textContent = 'Nueva organizacion';
-    if (ownerGroup) ownerGroup.style.display = '';
+    this._openModal('Nueva organizacion', true);
     this.setFormValues({});
-    if (modal) {
-      modal.hidden = false;
-      modal.style.display = 'flex';
-      modal.classList.add('is-open');
-    }
   }
 
   openEditModal(id) {
     const org = this.orgs.find(o => o.id === id);
     if (!org) return;
     this._editingId = id;
-    const modal = document.getElementById('orgsModal');
-    const title = document.getElementById('orgsModalTitle');
-    const ownerGroup = document.getElementById('orgFieldOwnerGroup');
-    if (title) title.textContent = `Editar: ${org.name || ''}`;
-    if (ownerGroup) ownerGroup.style.display = 'none';
+    this._openModal(`Editar: ${org.name || ''}`, false);
     this.setFormValues({
       name: org.name || '',
       brand_name_oficial: org.brand_name_oficial || '',
       brand_slogan: org.brand_slogan || '',
       logo_url: org.logo_url || ''
     });
-    if (modal) {
-      modal.hidden = false;
-      modal.style.display = 'flex';
-      modal.classList.add('is-open');
-    }
   }
 
   setFormValues(v) {
@@ -272,11 +258,7 @@ class DevLeadOrgsView extends DevBaseView {
   }
 
   closeModal() {
-    const modal = document.getElementById('orgsModal');
-    if (!modal) return;
-    modal.hidden = true;
-    modal.style.display = 'none';
-    modal.classList.remove('is-open');
+    if (this._modalClose) this._modalClose();
     this._editingId = null;
   }
 

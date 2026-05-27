@@ -12,6 +12,7 @@ class DevLeadVeraKnowledgeView extends DevBaseView {
     this.supabase = null;
     this.items = [];
     this._loading = false;
+    this._modalClose = null;
   }
 
   async onEnter() {
@@ -43,17 +44,6 @@ class DevLeadVeraKnowledgeView extends DevBaseView {
             </div>
           </div>
         </section>
-
-        <div class="modal dev-lead-modal" id="veraKnowledgeDetailModal" hidden>
-          <div class="modal-overlay"></div>
-          <div class="modal-content modal-lg">
-            <div class="modal-header">
-              <h3 id="veraDetailTitle">Detalle</h3>
-              <button type="button" class="modal-close" id="veraDetailClose">&times;</button>
-            </div>
-            <div class="modal-body" id="veraDetailBody"></div>
-          </div>
-        </div>
       </div>
     `;
   }
@@ -63,8 +53,6 @@ class DevLeadVeraKnowledgeView extends DevBaseView {
     document.getElementById('veraKnowledgeSearch')?.addEventListener('input', (e) => {
       this.renderBubbles((e.target?.value || '').trim().toLowerCase());
     });
-    document.getElementById('veraDetailClose')?.addEventListener('click', () => this.closeDetail());
-    document.querySelector('#veraKnowledgeDetailModal .modal-overlay')?.addEventListener('click', () => this.closeDetail());
 
     document.getElementById('veraKnowledgeBubbles')?.addEventListener('click', (e) => {
       const bubble = e.target.closest('.vera-bubble');
@@ -207,12 +195,7 @@ class DevLeadVeraKnowledgeView extends DevBaseView {
     const groups = this.groupBySource();
     const group = groups.find(g => g.key === key);
     if (!group) return;
-    const modal = document.getElementById('veraKnowledgeDetailModal');
-    const title = document.getElementById('veraDetailTitle');
-    const body = document.getElementById('veraDetailBody');
-    if (!modal || !body) return;
-    if (title) title.textContent = group.title;
-    body.innerHTML = `
+    const body = `
       <div class="vera-detail-meta">
         <span><strong>Tipo:</strong> ${this.escapeHtml(group.source_type)}</span>
         <span><strong>Fuente:</strong> ${this.escapeHtml(group.source_path || '—')}</span>
@@ -230,17 +213,13 @@ class DevLeadVeraKnowledgeView extends DevBaseView {
           `).join('')}
       </div>
     `;
-    modal.hidden = false;
-    modal.style.display = 'flex';
-    modal.classList.add('is-open');
+    // FEAT-028: migrado a window.Modal.
+    const { close } = window.Modal.show({ title: group.title, body, className: 'modal-lg', onClose: () => { this._modalClose = null; } });
+    this._modalClose = close;
   }
 
   closeDetail() {
-    const modal = document.getElementById('veraKnowledgeDetailModal');
-    if (!modal) return;
-    modal.hidden = true;
-    modal.style.display = 'none';
-    modal.classList.remove('is-open');
+    if (this._modalClose) this._modalClose();
   }
 
   renderError(message) {
