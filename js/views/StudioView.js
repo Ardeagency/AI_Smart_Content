@@ -68,25 +68,50 @@ class StudioView extends BaseView {
    */
   _pollActiveRunOutputs(runId, attempt = 0) {
     if (this._activeRunId !== runId) return; // el usuario cambio de run; abortar
-    if (this._activeRunHasOutputs(runId)) return; // ya llegó el output; nada que esperar
     const burst = [4000, 6000, 8000, 10000, 15000];
     const TAIL_MS = 20000;        // cola sostenida cada 20s
     const MAX_ATTEMPTS = 90;      // ~ burst (43s) + 85·20s ≈ 29 min de espera máxima
-    if (attempt >= MAX_ATTEMPTS) {
-      // Se agotó la espera sin output: tratamos el run como fallido y avisamos
-      // al usuario en el canvas (sin popup).
-      if (!this._activeRunHasOutputs(runId)) this._renderRunErrorState(runId);
-      return;
-    }
     const delay = attempt < burst.length ? burst[attempt] : TAIL_MS;
     setTimeout(async () => {
       if (this._activeRunId !== runId || !this.livingManager) return;
-      try { await this.livingManager.setActiveRun(runId); } catch (_) {}
-      if (this._activeRunHasOutputs(runId)) return; // output ya visible → no seguir
+      // Verdad de BD (no del DOM): ¿ya existe el output de este run en runs_outputs?
+      // Antes dependíamos de re-renderizar solo flowOutputs y de detectar la card en
+      // el DOM; eso dejaba el skeleton pegado aunque el output ya estuviera en BD.
+      if (await this._runHasOutputInDb(runId)) {
+        // Replicar lo que hace un refresh manual: recargar TODAS las fuentes del
+        // historial (flow_runs + runs_outputs + latest + system_ai) y re-scopear al
+        // run. Así el canvas pasa del skeleton al output sin que el usuario refresque.
+        try {
+          if (typeof this.livingManager.loadMoreHistorySources === 'function') {
+            await this.livingManager.loadMoreHistorySources({ reset: true });
+          }
+          await this.livingManager.setActiveRun(runId);
+        } catch (_) {}
+        return; // output cargado → fin del poll
+      }
       // ¿El backend marcó el run como fallido? Avisar ya, sin esperar el tope.
       if (await this._isRunFailed(runId)) { this._renderRunErrorState(runId); return; }
+      if (attempt + 1 >= MAX_ATTEMPTS) {
+        // Se agotó la espera sin output: tratamos el run como fallido (sin popup).
+        this._renderRunErrorState(runId);
+        return;
+      }
       this._pollActiveRunOutputs(runId, attempt + 1);
     }, delay);
+  }
+
+  /** ¿Ya hay al menos un output en runs_outputs para este run? (verdad de BD). */
+  async _runHasOutputInDb(runId) {
+    if (!runId || !this.supabase || this._activeRunId !== runId) return false;
+    try {
+      const { count } = await this.supabase
+        .from('runs_outputs')
+        .select('id', { count: 'exact', head: true })
+        .eq('run_id', runId);
+      return (count || 0) > 0;
+    } catch (_) {
+      return false;
+    }
   }
 
   /** ¿El backend marcó este run como fallido? (status 'failed'/'error' en flow_runs). */
