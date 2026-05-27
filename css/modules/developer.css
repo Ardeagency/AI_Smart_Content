@@ -195,11 +195,33 @@
 .dev-test-container,
 .dev-webhooks-container,
 .dev-lead-container {
-  padding: 24px;
+  padding: 28px 32px;
   max-width: 1400px;
   margin: 0 auto;
   background: var(--living-bg-deep, var(--bg-primary));
   min-height: 100vh;
+  position: relative;
+  z-index: 0;
+}
+
+/* Velo cinematográfico: gradiente de marca (DEVELOPER LEGEND rainbow) muy
+   atenuado, fijo al viewport, full-bleed detrás del contenido. Mismo lenguaje
+   que el dashboard de org/, adaptado al portal dev. */
+.dev-dashboard-container::before,
+.dev-flows-container::before,
+.dev-logs-container::before,
+.dev-test-container::before,
+.dev-webhooks-container::before,
+.dev-lead-container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, 0.04) 0%, transparent 55%),
+    var(--brand-gradient-dynamic, var(--brand-gradient));
+  opacity: 0.06;
 }
 
 /* Todas las vistas dev: acento sobrio (Organization-like) */
@@ -241,10 +263,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .dev-header-title i {
@@ -252,7 +275,9 @@
 }
 
 .dev-header-subtitle {
-  color: var(--text-secondary);
+  color: var(--text-muted, var(--text-secondary));
+  font-size: 0.95rem;
+  line-height: 1.5;
   margin: 0;
 }
 
@@ -604,11 +629,12 @@
    Reemplaza los 3 sistemas previos (.dev-runs-table, .dev-lead-table, .webhooks-table)
    ========================================== */
 .dev-table-container {
-  background: var(--dev-bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
   border-radius: var(--radius-md);
   overflow: hidden;
   overflow-x: auto;
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
 }
 
 .dev-table {
@@ -619,19 +645,19 @@
 
 .dev-table th,
 .dev-table td {
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-divider, #242424);
   vertical-align: middle;
 }
 
 .dev-table th {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: var(--bg-secondary);
+  letter-spacing: 0.06em;
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .dev-table td {
@@ -642,8 +668,12 @@
   border-bottom: none;
 }
 
+.dev-table tbody tr {
+  transition: background 0.15s ease;
+}
+
 .dev-table tbody tr:hover td {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .dev-run-status {
@@ -6993,10 +7023,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: var(--font-size-2xl);
+  font-size: 2rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
 }
 
 .dev-lead-header .dev-header-title i {
@@ -7009,10 +7040,11 @@
 }
 
 .dev-lead-content {
-  background: var(--dev-bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: var(--radius-md);
   padding: 24px;
+  box-shadow: var(--dev-shell-shadow, 0 2px 12px rgba(0, 0, 0, 0.35));
 }
 
 .dev-lead-placeholder {
