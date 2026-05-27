@@ -32,30 +32,20 @@ class DevFlowsView extends DevBaseView {
   renderHTML() {
     return `
       <div class="dev-flows-container">
-        <!-- Header -->
-        <header class="dev-flows-header">
-          <div class="dev-header-content">
-            <h1 class="dev-header-title">
-              <i class="fas fa-diagram-project"></i>
-              Mis Flujos de IA
-            </h1>
-            <p class="dev-header-subtitle">Gestiona y monitorea tus flujos de contenido</p>
-          </div>
-          <div class="dev-header-actions">
-            <button class="btn btn-primary" id="createFlowBtn">
-              <i class="fas fa-plus"></i>
-              Nuevo Flujo
+        <!-- Barra superior: toggle de alcance (solo Lead) + crear flujo -->
+        <div class="dev-flows-topbar">
+          <!-- Toggle de alcance (solo Lead): Mis flujos / Todos los flujos -->
+          <div class="dev-flows-scope-toggle" id="devFlowsScopeToggle" hidden>
+            <button type="button" class="dev-scope-btn active" data-scope="mine">
+              <i class="fas fa-user"></i> Mis flujos
+            </button>
+            <button type="button" class="dev-scope-btn" data-scope="all">
+              <i class="fas fa-project-diagram"></i> Todos los flujos
             </button>
           </div>
-        </header>
-
-        <!-- Toggle de alcance (solo Lead): Mis flujos / Todos los flujos -->
-        <div class="dev-flows-scope-toggle" id="devFlowsScopeToggle" hidden>
-          <button type="button" class="dev-scope-btn active" data-scope="mine">
-            <i class="fas fa-user"></i> Mis flujos
-          </button>
-          <button type="button" class="dev-scope-btn" data-scope="all">
-            <i class="fas fa-project-diagram"></i> Todos los flujos
+          <button class="btn btn-primary dev-flows-create-btn" id="createFlowBtn">
+            <i class="fas fa-plus"></i>
+            Nuevo Flujo
           </button>
         </div>
 

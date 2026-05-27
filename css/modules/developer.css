@@ -771,12 +771,25 @@
   color: var(--text-primary);
 }
 
+/* Barra superior de My Flows: toggle de alcance + crear flujo */
+.dev-flows-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* El botón crear siempre a la derecha, aunque el toggle esté oculto */
+.dev-flows-topbar .dev-flows-create-btn {
+  margin-left: auto;
+}
+
 /* Toggle de alcance (Lead): Mis flujos / Todos los flujos — control segmentado */
 .dev-flows-scope-toggle {
   display: inline-flex;
   gap: 4px;
   padding: 4px;
-  margin-bottom: 20px;
   background: var(--dev-bg-card, #141517);
   border: 1px solid var(--border-divider, #242424);
   border-radius: var(--radius-md);
