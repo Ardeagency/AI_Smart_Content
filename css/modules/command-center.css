@@ -1233,6 +1233,17 @@
 .cc-canvas--focusing .cc-edge { opacity: 0.12; }
 .cc-canvas--focusing .cc-edge--in-focus { opacity: 1; }
 
+/* Performance: oculta los edges durante el pan (se redibujan al asentar). */
+.cc-canvas--panning .cc-canvas-edges { visibility: hidden; }
+
+/* Level-of-detail: al alejar (zoom < 0.58) se simplifican los nodos
+   (sin glow ni cuerpo) para no saturar ni penalizar el paint. */
+.cc-canvas--far .cc-node::before { display: none; }
+.cc-canvas--far .cc-node-body,
+.cc-canvas--far .cc-node-actions { display: none; }
+.cc-canvas--far .cc-node-head { border-bottom: none; cursor: grab; }
+.cc-canvas--far .cc-node { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4); }
+
 .cc-node--readonly { width: 248px; }
 .cc-node--identity { width: 208px; }
 .cc-node--readonly.cc-node--expanded { width: 340px; z-index: 4; }

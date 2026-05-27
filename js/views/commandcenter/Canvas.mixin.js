@@ -419,6 +419,40 @@
     const p = this._canvasPan || { x: 0, y: 0 };
     world.style.transform = `translate(${p.x}px, ${p.y}px) scale(${s})`;
     world.style.transformOrigin = '0 0';
+    this._updateLOD();
+    this._cullNodes();
+  };
+
+  /** Level-of-detail: al alejar, oculta glow + cuerpo de los nodos (solo header)
+      para que el lienzo no se sature ni penalice el paint. */
+  P._updateLOD = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    canvas.classList.toggle('cc-canvas--far', (this._canvasScale || 1) < 0.58);
+  };
+
+  /** Viewport culling (patron tldraw): oculta nodos fuera de vista via display,
+      sin re-render. Calcula desde posiciones en mundo (sin getBoundingClientRect
+      por nodo). Nunca oculta el seleccionado / en focus / arrastrando. */
+  P._cullNodes = function () {
+    const canvas = document.getElementById('ccCanvas');
+    const world  = document.getElementById('ccCanvasWorld');
+    if (!canvas || !world) return;
+    const r = canvas.getBoundingClientRect();
+    const s = this._canvasScale || 1;
+    const p = this._canvasPan || { x: 0, y: 0 };
+    const MARGIN = 320, NW = 360, NH = 760;
+    const vx0 = (-p.x) / s - MARGIN, vy0 = (-p.y) / s - MARGIN;
+    const vx1 = (r.width - p.x) / s + MARGIN, vy1 = (r.height - p.y) / s + MARGIN;
+    world.querySelectorAll('.cc-node').forEach((n) => {
+      const key = n.getAttribute('data-node-key');
+      const pos = this._positions[key];
+      if (!pos) { n.style.display = ''; return; }
+      const visible = pos.x < vx1 && pos.x + NW > vx0 && pos.y < vy1 && pos.y + NH > vy0;
+      const keep = visible || key === this._selectedKey ||
+        (this._focusSet && this._focusSet.has(key)) || n.classList.contains('cc-node--dragging');
+      n.style.display = keep ? '' : 'none';
+    });
   };
 
   P._setZoom = function (scale, anchor) {
@@ -454,10 +488,40 @@
     const canvas = document.getElementById('ccCanvas');
     const node = document.querySelector(`.cc-node[data-node-key="${cssEsc(nodeKey)}"]`);
     if (!canvas || !node) return null;
+    if (node.style.display === 'none' || node.offsetParent === null) return null; // nodo culled
     const port = node.querySelector(portSel) || node;
     const cr = canvas.getBoundingClientRect();
     const pr = port.getBoundingClientRect();
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
+  };
+
+  /** Zoom-to-fit: encuadra todos los nodos del canvas con padding. */
+  P._zoomToFit = function () {
+    const canvas = document.getElementById('ccCanvas');
+    const nodes = this._canvasNodes();
+    if (!canvas || !nodes.length) { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); this._renderEdges(); return; }
+    this._loadPositions();
+    const NW = 268, NH = 220;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    let i = 0;
+    nodes.forEach((n) => {
+      const pos = this._positions[n.key] || { x: 0, y: i * 150 };
+      i++;
+      x0 = Math.min(x0, pos.x); y0 = Math.min(y0, pos.y);
+      x1 = Math.max(x1, pos.x + NW); y1 = Math.max(y1, pos.y + NH);
+    });
+    const r = canvas.getBoundingClientRect();
+    const pad = 80;
+    const sx = (r.width - pad * 2) / Math.max(1, x1 - x0);
+    const sy = (r.height - pad * 2) / Math.max(1, y1 - y0);
+    const s = Math.min(2, Math.max(0.3, Math.min(sx, sy)));
+    this._canvasScale = s;
+    this._canvasPan = {
+      x: (r.width - (x1 - x0) * s) / 2 - x0 * s,
+      y: (r.height - (y1 - y0) * s) / 2 - y0 * s,
+    };
+    this._applyCanvasTransform();
+    this._renderEdges();
   };
 
   /** Redibujo agrupado a un frame. Durante arrastre/paneo solo actualiza la
@@ -621,7 +685,7 @@
     // Toolbar zoom + relayout + crear
     document.getElementById('ccBtnZoomIn') ?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) + 0.15));
     document.getElementById('ccBtnZoomOut')?.addEventListener('click', () => this._setZoom((this._canvasScale || 1) - 0.15));
-    document.getElementById('ccBtnZoomReset')?.addEventListener('click', () => { this._canvasScale = 1; this._canvasPan = { x: 0, y: 0 }; this._applyCanvasTransform(); this._renderEdges(); });
+    document.getElementById('ccBtnZoomReset')?.addEventListener('click', () => this._zoomToFit());
     document.getElementById('ccBtnRelayout')?.addEventListener('click', () => this._relayout());
 
     // Restaura la seccion activa del sidebar (si habia una abierta).
@@ -679,7 +743,7 @@
 
     // Re-pintar aristas si cambia el tamano del canvas
     if (!this._canvasResizeObs && typeof ResizeObserver !== 'undefined') {
-      this._canvasResizeObs = new ResizeObserver(() => this._renderEdges());
+      this._canvasResizeObs = new ResizeObserver(() => { this._cullNodes(); this._renderEdges(); });
       this._canvasResizeObs.observe(canvas);
     }
 
@@ -1088,13 +1152,14 @@
     const onMove = (ev) => {
       if (Math.abs(ev.clientX - start.x) > 3 || Math.abs(ev.clientY - start.y) > 3) this._didPan = true;
       this._canvasPan = { x: p0.x + (ev.clientX - start.x), y: p0.y + (ev.clientY - start.y) };
+      // Durante el pan: solo transform + culling (edges ocultos por CSS, sin recalcular).
       this._applyCanvasTransform();
-      this._scheduleEdges();
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       canvas?.classList.remove('cc-canvas--panning');
+      this._renderEdges(); // redibuja edges (saltando nodos culled) al asentar
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -1123,6 +1188,15 @@
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       nodeEl.classList.remove('cc-node--dragging');
+      // Snap-to-grid (16px) al soltar.
+      const pos = this._positions[key];
+      if (pos) {
+        pos.x = Math.round(pos.x / 16) * 16;
+        pos.y = Math.round(pos.y / 16) * 16;
+        nodeEl.style.left = `${pos.x}px`;
+        nodeEl.style.top = `${pos.y}px`;
+        this._scheduleEdges();
+      }
       this._savePositions();
       // reset flag tras el ciclo de click
       setTimeout(() => { this._didDrag = false; }, 0);
