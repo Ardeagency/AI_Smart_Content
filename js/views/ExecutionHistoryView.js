@@ -91,16 +91,17 @@ class ExecutionHistoryView extends BaseView {
   }
 
   /**
-   * Run_ids de produccion MANUAL: runs_inputs.metadata->>'captured_from' = 'studio_ui'
-   * (lo escribe StudioView.producir). Es el marcador inverso al de Tasks/autopilot.
+   * Run_ids de AUTOPILOT (captured_from='autopilot_ingest'). Sessions = produccion
+   * manual = TODO lo que NO es autopilot, asi que estos se EXCLUYEN. Es el inverso
+   * simetrico del filtro de Tasks (que muestra solo estos).
    */
-  async _manualRunIds() {
+  async _autopilotRunIds() {
     if (!this.supabase) return [];
     try {
       let q = this.supabase
         .from('runs_inputs')
         .select('run_id')
-        .eq('metadata->>captured_from', 'studio_ui')
+        .eq('metadata->>captured_from', 'autopilot_ingest')
         .order('created_at', { ascending: false })
         .limit(500);
       if (this.organizationId) q = q.eq('organization_id', this.organizationId);
@@ -108,28 +109,27 @@ class ExecutionHistoryView extends BaseView {
       if (error) throw error;
       return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
     } catch (e) {
-      console.error('ExecutionHistoryView _manualRunIds:', e);
+      console.error('ExecutionHistoryView _autopilotRunIds:', e);
       return [];
     }
   }
 
   /**
-   * Carga los runs MANUALES (captured_from='studio_ui') de la org actual + hidrata
-   * nombre del flow, cover (ultimo output imagen) y conteo de outputs por run.
+   * Carga los runs de produccion manual (TODOS los de la org EXCEPTO autopilot) +
+   * hidrata nombre del flow, imagenes (para el carrusel) y conteo de outputs.
    */
   async loadRuns() {
     if (!this.supabase) return [];
     try {
-      const manualIds = await this._manualRunIds();
-      if (!manualIds.length) return [];
+      const autopilotIds = await this._autopilotRunIds();
       let q = this.supabase
         .from('flow_runs')
         .select('id, flow_id, status, created_at, tokens_consumed')
-        .in('id', manualIds)
         .order('created_at', { ascending: false })
         .limit(this.pageSize);
       if (this.organizationId) q = q.eq('organization_id', this.organizationId);
       else if (this.userId) q = q.eq('user_id', this.userId);
+      if (autopilotIds.length) q = q.not('id', 'in', `(${autopilotIds.join(',')})`);
       const { data: runs, error } = await q;
       if (error) throw error;
       const list = runs || [];
