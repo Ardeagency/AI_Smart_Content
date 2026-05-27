@@ -1383,10 +1383,155 @@ class FlowCatalogView extends BaseView {
       </section>`;
   }
 
+  // ── "Continua produciendo": ultimas sesiones de produccion (estilo Record/
+  //    ExecutionHistoryView) como primer rail del home, con "Ver todo" → Record.
+  getExecPath() {
+    if (!this.organizationId) return '/execution-history';
+    const prefix = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+    return prefix ? `${prefix}/execution-history` : '/execution-history';
+  }
+
+  async _autopilotRunIds() {
+    if (!this.supabase) return [];
+    try {
+      const { data } = await this.supabase.from('runs_inputs').select('run_id').eq('captured_from', 'autopilot_ingest');
+      return [...new Set((data || []).map(r => r.run_id).filter(Boolean))];
+    } catch (_) { return []; }
+  }
+
+  // Sesiones manuales recientes con sus outputs (mismo modelo que Record).
+  async loadRecentProductions(limit = 12) {
+    if (!this.supabase) return [];
+    try {
+      const autopilotIds = await this._autopilotRunIds();
+      let q = this.supabase.from('flow_runs')
+        .select('id, flow_id, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (this.organizationId) q = q.eq('organization_id', this.organizationId);
+      else if (this.userId) q = q.eq('user_id', this.userId);
+      if (autopilotIds.length) q = q.not('id', 'in', `(${autopilotIds.join(',')})`);
+      const { data: runs, error } = await q;
+      if (error || !Array.isArray(runs) || !runs.length) return [];
+      const flowIds = [...new Set(runs.map(r => r.flow_id).filter(Boolean))];
+      const runIds = runs.map(r => r.id);
+      const [flowsRes, outsRes] = await Promise.all([
+        flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : Promise.resolve({ data: [] }),
+        this.supabase.from('runs_outputs').select('run_id, output_type, storage_path, storage_object_id, created_at').in('run_id', runIds).order('created_at', { ascending: false })
+      ]);
+      const flowMap = (flowsRes.data || []).reduce((a, f) => { a[f.id] = f; return a; }, {});
+      const byRun = {};
+      (outsRes.data || []).forEach(o => { (byRun[o.run_id] = byRun[o.run_id] || []).push(o); });
+      const MAX = 8;
+      return runs.map(r => {
+        const flow = flowMap[r.flow_id] || null;
+        const outs = byRun[r.id] || [];
+        const images = [];
+        for (const o of outs) {
+          if ((o.output_type || '').toLowerCase() === 'text') continue;
+          const url = this.getPublicUrlFromStorage('production-outputs', o.storage_path)
+            || this.getPublicUrlFromStorage('outputs', o.storage_path)
+            || this.getPublicUrlFromStorage('production-outputs', o.storage_object_id);
+          if (url && !images.includes(url)) images.push(url);
+          if (images.length >= MAX) break;
+        }
+        if (!images.length && flow?.flow_image_url) images.push(flow.flow_image_url);
+        return { ...r, flow_name: flow?.name || 'Flujo eliminado', flow_slug: flow ? this.flowNameToSlug(flow.name) : '', images, output_count: outs.length };
+      });
+    } catch (e) { console.warn('loadRecentProductions:', e); return []; }
+  }
+
+  renderExecCard(r) {
+    const status = (r.status || '').toLowerCase();
+    const statusClass = status === 'completed' ? 'task-card-badge-active'
+      : (status === 'failed' || status === 'error') ? 'task-card-badge-danger'
+      : (status === 'running' || status === 'in_progress') ? 'task-card-badge-running'
+      : 'task-card-badge-paused';
+    const statusLabel = status === 'completed' ? 'Completado'
+      : (status === 'failed' || status === 'error') ? 'Error'
+      : (status === 'running' || status === 'in_progress') ? 'En curso'
+      : (status ? status.charAt(0).toUpperCase() + status.slice(1) : '—');
+    const images = Array.isArray(r.images) ? r.images : [];
+    const count = r.output_count || 0;
+    const disabled = !r.flow_slug;
+    const multi = images.length > 1;
+    const media = images.length
+      ? images.map((url, i) => `<img class="exec-card-img${i === 0 ? ' is-visible' : ''}" src="${this.escapeHtml(url)}" alt="" loading="lazy">`).join('')
+      : `<div class="exec-card-placeholder"><i class="fas fa-wand-magic-sparkles"></i></div>`;
+    const dots = multi ? `<div class="exec-card-dots" aria-hidden="true">${images.map((_, i) => `<span class="exec-card-dot${i === 0 ? ' is-active' : ''}"></span>`).join('')}</div>` : '';
+    return `
+      <button type="button" class="exec-card${disabled ? ' exec-card--disabled' : ''}"${multi ? ' data-carousel="1"' : ''} data-run-id="${this.escapeHtml(r.id)}" data-flow-slug="${this.escapeHtml(r.flow_slug)}"${disabled ? ' disabled' : ''}>
+        <div class="exec-card-media">
+          ${media}
+          <div class="exec-card-gradient" aria-hidden="true"></div>
+          <span class="exec-card-count"><i class="fas fa-layer-group"></i> ${count}</span>
+          <span class="task-card-badge ${statusClass} exec-card-status"><span class="task-card-badge-dot"></span>${this.escapeHtml(statusLabel)}</span>
+          ${dots}
+          <div class="exec-card-info">
+            <h3 class="exec-card-flow">${this.escapeHtml(r.flow_name)}</h3>
+            <span class="exec-card-when">${this.escapeHtml(this.relativeTime(r.created_at))}</span>
+            <span class="exec-card-resume"><i class="fas fa-arrow-right"></i> Continuar sesion</span>
+          </div>
+        </div>
+      </button>`;
+  }
+
+  _bindExecCarousels(container) {
+    container.querySelectorAll('.exec-card[data-carousel]').forEach(card => {
+      const imgs = Array.from(card.querySelectorAll('.exec-card-img'));
+      const dots = Array.from(card.querySelectorAll('.exec-card-dot'));
+      if (imgs.length < 2) return;
+      let idx = 0, timer = null;
+      const show = (n) => {
+        imgs[idx]?.classList.remove('is-visible'); dots[idx]?.classList.remove('is-active');
+        idx = (n + imgs.length) % imgs.length;
+        imgs[idx]?.classList.add('is-visible'); dots[idx]?.classList.add('is-active');
+      };
+      card.addEventListener('mouseenter', () => { if (!timer) timer = setInterval(() => show(idx + 1), 900); });
+      card.addEventListener('mouseleave', () => { if (timer) { clearInterval(timer); timer = null; } show(0); });
+    });
+  }
+
+  async populateContinueProducing() {
+    const host = document.getElementById('flowContinueRail');
+    if (!host) return;
+    const prods = await this.loadRecentProductions(12);
+    if (!document.body.contains(host)) return;
+    if (!prods.length) { host.remove(); return; }
+    const execUrl = this.getExecPath();
+    host.innerHTML = `
+      <section class="flow-catalog-row-section">
+        <div class="flow-rail-head">
+          <h2 class="flow-catalog-row-title">Continua produciendo</h2>
+          <a class="flow-rail-seeall" href="${execUrl}" data-exec-link>Ver todo <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="flow-catalog-row-scroll flow-continue-rail">${prods.map(r => this.renderExecCard(r)).join('')}</div>
+      </section>`;
+    host.querySelector('[data-exec-link]')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.router) window.router.navigate(execUrl); else window.location.href = execUrl;
+    });
+    const scroll = host.querySelector('.flow-continue-rail');
+    if (scroll) {
+      this.attachRowArrows(scroll);
+      scroll.querySelectorAll('.exec-card').forEach(card => {
+        if (card.disabled) return;
+        card.addEventListener('click', () => {
+          const runId = card.getAttribute('data-run-id');
+          const slug = card.getAttribute('data-flow-slug');
+          if (!runId || !slug) return;
+          const url = `${this.getStudioPath()}/${encodeURIComponent(slug)}?run=${encodeURIComponent(runId)}`;
+          if (window.router) window.router.navigate(url); else window.location.href = url;
+        });
+      });
+      this._bindExecCarousels(scroll);
+    }
+  }
+
   renderPersonalRails() {
     const host = document.getElementById('flowCatalogRails');
     if (!host) return;
-    const parts = [];
+    const parts = ['<div id="flowContinueRail"></div>'];
     // Dedupe inteligente: cada rail secundario solo aparece si aporta >= minNew
     // flows que NO se han mostrado arriba. Asi no se repite todo en cada columna
     // y en catalogos chicos simplemente salen menos rails (se ocultan solos).
@@ -1429,6 +1574,9 @@ class FlowCatalogView extends BaseView {
       feat.addEventListener('click', (e) => { if (!e.target.closest('button')) this.openFlowDetail(fid); });
       feat.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.openFlowDetail(fid); } });
     }
+
+    // Primer rail: "Continua produciendo" (sesiones recientes, async).
+    this.populateContinueProducing();
   }
 
   renderRecentInCategory() {

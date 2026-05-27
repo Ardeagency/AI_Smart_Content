@@ -1841,3 +1841,34 @@ body.production-filters-in-header .app-header .header-production-slot .flow-cata
 @media (max-width: 640px) {
   .flow-featured-body { max-width: 100%; }
 }
+
+/* "Continua produciendo": cabecera con titulo + "Ver todo" a la derecha; las
+   exec-cards (estilo Record) toman ancho fijo dentro del rail horizontal. */
+.flow-rail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.flow-rail-head .flow-catalog-row-title {
+  margin-bottom: 1rem;
+}
+.flow-rail-seeall {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+.flow-rail-seeall:hover { color: #ffffff; }
+.flow-rail-seeall i { font-size: 0.62rem; }
+.flow-continue-rail .exec-card {
+  flex: 0 0 240px;
+  width: 240px;
+  scroll-snap-align: start;
+}
