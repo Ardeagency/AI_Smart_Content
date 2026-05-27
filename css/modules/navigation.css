@@ -446,14 +446,16 @@ body.sidebar-collapsed .main-header,
     display: none;
 }
 
-/* Brand Storage colapsado: ocultar el chevron secundario y dejar la fila como un solo cuadrado (evita que el icono de la carpeta se recorte por desbordamiento). */
-.side-navigation.collapsed .nav-brand-storage-expand-btn {
+/* Brand Storage / Flows colapsado: ocultar el chevron secundario y dejar la fila como un solo cuadrado (evita que el icono se recorte por desbordamiento). */
+.side-navigation.collapsed .nav-brand-storage-expand-btn,
+.side-navigation.collapsed .nav-flows-expand-btn {
     display: none;
 }
 
-/* Brand Storage colapsado: el head queda como un único item siguiendo el
+/* Brand Storage / Flows colapsado: el head queda como un único item siguiendo el
    contrato unificado (sin tamaños forzados; hereda min-height del page-link). */
-.side-navigation.collapsed .nav-brand-storage-head {
+.side-navigation.collapsed .nav-brand-storage-head,
+.side-navigation.collapsed .nav-flows-head {
     width: 100%;
     min-width: 0;
     margin: 0;
@@ -3028,7 +3030,8 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 /* Brand Storage: fila enlace a página + chevron para desplegar sub-marcas.
    El chevron NO lleva .nav-link (a diferencia de Flows); sin reglas explícitas el <button>
    hereda el aspecto nativo del navegador (fondo claro), de ahí el bloque gris. */
-.nav-brand-storage-head {
+.nav-brand-storage-head,
+.nav-flows-head {
     display: flex;
     align-items: center;
     gap: 0;
@@ -3037,13 +3040,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     overflow: hidden;
 }
 
-.nav-brand-storage-head .nav-brand-storage-page {
+.nav-brand-storage-head .nav-brand-storage-page,
+.nav-flows-head .nav-flows-page {
     flex: 1;
     min-width: 0;
     width: auto;
 }
 
-.nav-mode-user .nav-brand-storage-expand-btn {
+.nav-mode-user .nav-brand-storage-expand-btn,
+.nav-mode-user .nav-flows-expand-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3063,42 +3068,51 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     transition: background 0.12s ease, color 0.12s ease;
 }
 
-.nav-mode-user .nav-brand-storage-expand-btn:hover {
+.nav-mode-user .nav-brand-storage-expand-btn:hover,
+.nav-mode-user .nav-flows-expand-btn:hover {
     background: var(--sidebar-hover);
     color: var(--sidebar-text-primary);
 }
 
-.nav-mode-user .nav-brand-storage-expand-btn .nav-chevron {
+.nav-mode-user .nav-brand-storage-expand-btn .nav-chevron,
+.nav-mode-user .nav-flows-expand-btn .nav-chevron {
     color: var(--text-muted);
 }
 
-.nav-mode-user .nav-brand-storage-expand-btn:hover .nav-chevron {
+.nav-mode-user .nav-brand-storage-expand-btn:hover .nav-chevron,
+.nav-mode-user .nav-flows-expand-btn:hover .nav-chevron {
     color: var(--sidebar-text-primary);
 }
 
-/* Fila unificada cuando la ruta de Brand Storage está activa */
-.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-head {
+/* Fila unificada cuando la ruta de Brand Storage / Flows está activa */
+.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-head,
+.nav-mode-user .nav-flows-wrap:has(.nav-flows-page.active) .nav-flows-head {
     background: var(--sidebar-active);
 }
 
-.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-page {
+.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-page,
+.nav-mode-user .nav-flows-wrap:has(.nav-flows-page.active) .nav-flows-page {
     background: transparent;
 }
 
-.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-expand-btn {
+.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-expand-btn,
+.nav-mode-user .nav-flows-wrap:has(.nav-flows-page.active) .nav-flows-expand-btn {
     background: transparent;
     color: var(--sidebar-text-primary);
 }
 
-.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-expand-btn .nav-chevron {
+.nav-mode-user .nav-brand-storage-wrap:has(.nav-brand-storage-page.active) .nav-brand-storage-expand-btn .nav-chevron,
+.nav-mode-user .nav-flows-wrap:has(.nav-flows-page.active) .nav-flows-expand-btn .nav-chevron {
     color: var(--sidebar-text-secondary);
 }
 
-.nav-brand-storage-expand-btn .nav-text {
+.nav-brand-storage-expand-btn .nav-text,
+.nav-flows-expand-btn .nav-text {
     display: none;
 }
 
-.nav-item.has-submenu.nav-brand-storage-wrap.submenu-open .nav-submenu {
+.nav-item.has-submenu.nav-brand-storage-wrap.submenu-open .nav-submenu,
+.nav-item.has-submenu.nav-flows-wrap.submenu-open .nav-submenu {
     max-height: 480px;
 }
 

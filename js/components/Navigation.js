@@ -87,14 +87,12 @@ const SIDEBAR_USER_CONFIG = {
     },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video', requireCap: 'video.create' },
     {
-      // Item unico: "Flows" navega directo al catalogo (studio/flows = "All").
-      // Antes era un container desplegable con un solo hijo "All"; se fusionaron.
-      type: 'page',
+      type: 'container',
       id: 'catalog',
       label: 'Flows',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
-      route: 'studio/flows',
+      children: [], // Se rellenan con content_categories (schema 218-224) en render
       requireCap: 'studio.create'
     }
   ],
@@ -380,6 +378,10 @@ class Navigation {
     this.currentBrandId = config.brandId;
     if (config.mode !== 'user') {
       this._stopCreditsRefreshInterval();
+    }
+
+    if (config.mode === 'user') {
+      await this.loadCatalogCategories();
     }
 
     // Renderizar según el modo
@@ -1509,6 +1511,37 @@ class Navigation {
           </a>
         </div>`;
       }
+      if (item.id === 'catalog') {
+        // Flows sigue el contrato unificado de Brand Storage: el item padre es a la
+        // vez el link a "All" (studio/flows) y el toggle de la sección. Clic en el
+        // label → navega a All y, vía updateActiveLink, despliega las categorías.
+        const catalogHref = full('studio/flows');
+        const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
+        const catChildren = cats
+          .map((c) => {
+            const route = full(`studio/flows/${c.id}`);
+            return `
+            <a href="${route}" class="nav-submenu-link" data-route="${route}" data-tooltip="${_escapeHtml(c.name)}">
+              <span>${_escapeHtml(c.name)}</span>
+            </a>`;
+          })
+          .join('');
+        return `
+        <div class="nav-item has-submenu nav-flows-wrap ${isOpen ? 'submenu-open' : ''}" data-container-id="catalog">
+          <div class="nav-flows-head">
+            <a href="${catalogHref}" class="nav-link nav-main-link nav-flows-page" data-route="${catalogHref}" data-tooltip="${item.label}">
+              ${iconHTML(item)}
+              <span class="nav-text">${item.label}</span>
+            </a>
+            <button type="button" class="nav-submenu-toggle nav-flows-expand-btn" data-tooltip="${item.label}" aria-expanded="${isOpen}" aria-controls="nav-sub-catalog">
+              <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="nav-submenu" id="nav-sub-catalog" role="group" aria-label="${item.label}">
+            ${catChildren}
+          </div>
+        </div>`;
+      }
       let childItems = item.children || [];
       const children = childItems
         .map(
@@ -2245,7 +2278,7 @@ class Navigation {
     /* Brand Storage en colapsado: el chevron está oculto, así que el page link
        (icono de carpeta) también dispara el flyout para que se comporte como Flows. */
     const hoverTriggers = document.querySelectorAll(
-      '.nav-submenu-toggle:not([data-hover-bound]), .nav-brand-storage-page:not([data-hover-bound])'
+      '.nav-submenu-toggle:not([data-hover-bound]), .nav-brand-storage-page:not([data-hover-bound]), .nav-flows-page:not([data-hover-bound])'
     );
     hoverTriggers.forEach((trigger) => {
       trigger.setAttribute('data-hover-bound', '1');
