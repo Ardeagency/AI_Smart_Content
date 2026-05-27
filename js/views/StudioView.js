@@ -192,8 +192,9 @@ class StudioView extends BaseView {
   _enterStageWait(runId, order) {
     const mods = (this._seq && this._seq.modules) || [];
     const mod = mods.find(m => m.step_order === order);
-    this._renderStageSkeleton(order, order === 1 ? 'Generando guion…' : `Encolando ${mod ? mod.name : 'etapa ' + order}…`);
-    if (order >= 2) { // Fase 1: Imagenes/Video aun no conectadas
+    const label = order === 1 ? 'Generando guion…' : (order === 2 ? 'Generando imagen…' : `Encolando ${mod ? mod.name : 'etapa ' + order}…`);
+    this._renderStageSkeleton(order, label);
+    if (order >= 3) { // Fase 3: Video aun no conectado
       setTimeout(() => this._renderStageStub(order, mod), 1000);
       return;
     }
@@ -208,8 +209,8 @@ class StudioView extends BaseView {
         ${this._renderStageIndicator(order)}
         <div class="studio-stage-body">
           <div class="studio-skeleton">
-            <p class="studio-skeleton-label">Guion aprobado ✓ — el run avanzó a “${this.escapeHtmlSafe(mod ? mod.name : 'la siguiente etapa')}”.</p>
-            <p class="studio-skeleton-hint">Esta etapa todavía no está conectada (Fase 2 — migración a KIE+Supabase en construcción).</p>
+            <p class="studio-skeleton-label">Imagen aprobada ✓ — el run avanzó a “${this.escapeHtmlSafe(mod ? mod.name : 'Video')}”.</p>
+            <p class="studio-skeleton-hint">La etapa de Video todavía no está conectada (Fase 3 — migración a KIE+Supabase en construcción).</p>
           </div>
         </div>
       </div>`;
@@ -221,7 +222,7 @@ class StudioView extends BaseView {
     try {
       const { data } = await this.supabase
         .from('runs_outputs')
-        .select('id, metadata, created_at')
+        .select('id, output_type, storage_path, metadata, created_at')
         .eq('run_id', runId)
         .order('created_at', { ascending: false })
         .limit(8);
@@ -245,40 +246,56 @@ class StudioView extends BaseView {
     }, delay);
   }
 
-  /** Render de la card de aprobacion del GUION: 3 variantes seleccionables + ajustes. */
+  /** Render de la card de aprobacion de una etapa: guion (variantes) o imagen. */
   _renderStageApproval(order, output) {
     const host = this._stageHost();
     if (!host) return;
     const payload = (output && output.metadata && output.metadata.stage_payload) || {};
-    const variantes = Array.isArray(payload.variantes) ? payload.variantes : [];
-    this._stageApprovalState = { order, outputId: output.id, variantes };
-    const cards = variantes.map((v, i) => {
-      const escenas = Array.isArray(v.escenas) ? v.escenas.map(e =>
-        `<li><b>${this.escapeHtmlSafe(e.n)}.</b> ${this.escapeHtmlSafe(e.descripcion_visual || '')}${e.voz_en_off ? ` — <i>“${this.escapeHtmlSafe(e.voz_en_off)}”</i>` : ''}${e.texto_en_pantalla ? ` <span class="stage-onscreen">[${this.escapeHtmlSafe(e.texto_en_pantalla)}]</span>` : ''}</li>`
-      ).join('') : '';
-      return `
-        <label class="stage-variant" data-variant="${i}">
-          <input type="radio" name="guionVariant" value="${i}"${i === 0 ? ' checked' : ''}>
-          <div class="stage-variant-head"><b>${this.escapeHtmlSafe(v.titulo || ('Variante ' + (i + 1)))}</b>${v.tono ? ` · <span>${this.escapeHtmlSafe(v.tono)}</span>` : ''}</div>
-          ${v.gancho ? `<div class="stage-variant-hook">Gancho: ${this.escapeHtmlSafe(v.gancho)}</div>` : ''}
-          <ol class="stage-variant-scenes">${escenas}</ol>
-        </label>`;
-    }).join('');
+    const kind = (output.output_type === 'image' || payload.output_type === 'image' || payload.storage_path) ? 'image' : 'guion';
+    let inner;
+    if (kind === 'image') {
+      const path = payload.storage_path || output.storage_path || '';
+      let url = '';
+      try { url = path ? this.supabase.storage.from('production-outputs').getPublicUrl(path).data.publicUrl : ''; } catch (_) {}
+      this._stageApprovalState = { order, outputId: output.id, kind };
+      inner = `
+        <p class="stage-approval-title">Revisa la imagen y aprueba para continuar</p>
+        <div class="stage-image-wrap">${url ? `<img class="stage-image" src="${this.escapeHtmlSafe(url)}" alt="Imagen generada">` : '<p class="studio-skeleton-hint">La imagen no tiene URL resolvible.</p>'}</div>
+        <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa…"></textarea>
+        <div class="stage-actions">
+          <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
+          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar imagen</button>
+        </div>
+        <p class="stage-approval-msg" aria-live="polite"></p>`;
+    } else {
+      const variantes = Array.isArray(payload.variantes) ? payload.variantes : [];
+      this._stageApprovalState = { order, outputId: output.id, kind, variantes };
+      const cards = variantes.map((v, i) => {
+        const escenas = Array.isArray(v.escenas) ? v.escenas.map(e =>
+          `<li><b>${this.escapeHtmlSafe(e.n)}.</b> ${this.escapeHtmlSafe(e.descripcion_visual || '')}${e.voz_en_off ? ` — <i>“${this.escapeHtmlSafe(e.voz_en_off)}”</i>` : ''}${e.texto_en_pantalla ? ` <span class="stage-onscreen">[${this.escapeHtmlSafe(e.texto_en_pantalla)}]</span>` : ''}</li>`
+        ).join('') : '';
+        return `
+          <label class="stage-variant" data-variant="${i}">
+            <input type="radio" name="guionVariant" value="${i}"${i === 0 ? ' checked' : ''}>
+            <div class="stage-variant-head"><b>${this.escapeHtmlSafe(v.titulo || ('Variante ' + (i + 1)))}</b>${v.tono ? ` · <span>${this.escapeHtmlSafe(v.tono)}</span>` : ''}</div>
+            ${v.gancho ? `<div class="stage-variant-hook">Gancho: ${this.escapeHtmlSafe(v.gancho)}</div>` : ''}
+            <ol class="stage-variant-scenes">${escenas}</ol>
+          </label>`;
+      }).join('');
+      inner = `
+        <p class="stage-approval-title">Elige la variante de guion para continuar</p>
+        <div class="stage-variants">${cards || '<p class="studio-skeleton-hint">El guion no devolvió variantes legibles.</p>'}</div>
+        <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa (ej: enfatiza el producto en la escena 2)…"></textarea>
+        <div class="stage-actions">
+          <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
+          <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar guion</button>
+        </div>
+        <p class="stage-approval-msg" aria-live="polite"></p>`;
+    }
     host.innerHTML = `
       <div class="studio-stage" data-stage="${order}">
         ${this._renderStageIndicator(order)}
-        <div class="studio-stage-body">
-          <div class="stage-approval">
-            <p class="stage-approval-title">Elige la variante de guion para continuar</p>
-            <div class="stage-variants">${cards || '<p class="studio-skeleton-hint">El guion no devolvió variantes legibles.</p>'}</div>
-            <textarea class="stage-ajustes" rows="2" placeholder="Ajustes opcionales para la siguiente etapa (ej: enfatiza el producto en la escena 2)…"></textarea>
-            <div class="stage-actions">
-              <button type="button" class="studio-btn-producir" data-stage-action="approve">Aprobar y continuar</button>
-              <button type="button" class="pmodal-toolpill" data-stage-action="regenerate">Regenerar guion</button>
-            </div>
-            <p class="stage-approval-msg" aria-live="polite"></p>
-          </div>
-        </div>
+        <div class="studio-stage-body"><div class="stage-approval">${inner}</div></div>
       </div>`;
     this._bindStageApproval(host);
   }
@@ -314,18 +331,20 @@ class StudioView extends BaseView {
     try {
       const token = await this._studioAccessToken();
       if (!token) { setMsg('No hay sesión activa.'); btns.forEach(b => b.disabled = false); return; }
-      const variante = (st.variantes || [])[sel.idx] || null;
+      const edits = st.kind === 'image'
+        ? { approved: true, ajustes: sel.ajustes }
+        : { variante_elegida: sel.idx, variante: (st.variantes || [])[sel.idx] || null, ajustes: sel.ajustes };
       const bodyReq = {
         organization_id: this.organizationId,
         run_id: seq.runId,
         from_order: st.order,
         action,
         approved_output_id: st.outputId,
-        edits: { variante_elegida: sel.idx, variante, ajustes: sel.ajustes },
+        edits,
         context: seq.contextBody,
         cost: (this.selectedFlow && this.selectedFlow.token_cost) || 5
       };
-      setMsg(action === 'regenerate' ? 'Regenerando guion…' : 'Aprobando…');
+      setMsg(action === 'regenerate' ? 'Regenerando…' : 'Aprobando…');
       const res = await fetch('/.netlify/functions/api-flow-stage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

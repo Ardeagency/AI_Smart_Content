@@ -172,6 +172,8 @@
 .stage-variant-scenes li { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .stage-onscreen { color: var(--text-muted); }
 .stage-ajustes { width: 100%; background: var(--bg-card, #141517); border: 1px solid var(--border-divider, #242424); border-radius: var(--radius-sm, 6px); color: var(--text-primary); padding: 10px; font: inherit; font-size: var(--font-size-base); resize: vertical; }
+.stage-image-wrap { border: 1px solid var(--border-divider, #242424); border-radius: var(--radius-md, 10px); overflow: hidden; background: var(--bg-card, #141517); max-width: 640px; }
+.stage-image { display: block; width: 100%; height: auto; }
 .stage-actions { display: flex; gap: 10px; align-items: center; }
 .stage-actions [data-stage-action]:disabled { opacity: 0.5; pointer-events: none; }
 .stage-approval-msg { font-size: var(--font-size-sm); color: var(--text-muted); margin: 0; min-height: 1em; }
