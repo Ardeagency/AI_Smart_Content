@@ -122,11 +122,11 @@ class CommandCenterView extends BaseView {
         </div>
         <div class="cc-canvas-toolbar-group">
           <button class="cc-canvas-btn" id="ccBtnRelayout" type="button" title="Reorganizar nodos">
-            <i class="fas fa-table-cells"></i><span>Reorganizar</span>
+            <i class="fas fa-th"></i><span>Reorganizar</span>
           </button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="Alejar" aria-label="Alejar"><i class="fas fa-minus"></i></button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="Centrar" aria-label="Centrar zoom"><i class="fas fa-compress"></i></button>
-          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="Acercar" aria-label="Acercar"><i class="fas fa-plus"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomOut" type="button" title="Alejar" aria-label="Alejar"><span class="cc-zoom-glyph">&minus;</span></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomReset" type="button" title="Centrar" aria-label="Centrar zoom"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
+          <button class="cc-canvas-btn cc-canvas-btn--icon" id="ccBtnZoomIn" type="button" title="Acercar" aria-label="Acercar"><span class="cc-zoom-glyph">+</span></button>
         </div>
       </div>
 
@@ -162,15 +162,6 @@ class CommandCenterView extends BaseView {
           </div>
         </section>
 
-        <section class="cc-mini-section">
-          <h4 class="cc-mini-section-title">Leyenda</h4>
-          <ul class="cc-mini-legend">
-            <li><span class="cc-legend-dot cc-legend-dot--aud"></span> Audiencia</li>
-            <li><span class="cc-legend-dot cc-legend-dot--concept"></span> Campana conceptual</li>
-            <li><span class="cc-legend-dot cc-legend-dot--real"></span> Campana real (Meta/Google)</li>
-            <li><span class="cc-legend-line"></span> Vinculo audiencia → campana</li>
-          </ul>
-        </section>
       </div>
     </aside>
   </div>

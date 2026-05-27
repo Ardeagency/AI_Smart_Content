@@ -1254,8 +1254,10 @@
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .cc-canvas-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.cc-canvas-btn i { font-size: 0.78rem; }
-.cc-canvas-btn--icon { padding: 0; width: 34px; justify-content: center; }
+.cc-canvas-btn i { font-size: 0.9rem; color: var(--text-primary, #fff); }
+.cc-canvas-btn--icon { padding: 0; width: 34px; justify-content: center; color: var(--text-primary, #fff); }
+.cc-canvas-btn--icon i { font-size: 0.85rem; }
+.cc-zoom-glyph { font-size: 1.2rem; font-weight: 700; line-height: 1; color: var(--text-primary, #fff); }
 .cc-canvas-btn--primary {
   border-color: rgba(224, 160, 69, 0.4);
   background: rgba(224, 160, 69, 0.12);
@@ -1264,17 +1266,18 @@
 .cc-canvas-btn--primary:hover { background: rgba(224, 160, 69, 0.2); color: #fff; }
 
 /* ── Canvas viewport ───────────────────────────────────────────────── */
+/* Sin color de fondo ni borde (igual que el canvas de Studio): solo el grid
+   de puntitos sobre el fondo de la pagina. */
 .cc-canvas {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border-radius: 16px;
-  border: 1px solid var(--border-divider, #242424);
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1.4px) 0 0 / 22px 22px,
-    var(--bg-primary, #0b0b0b);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
   cursor: grab;
   user-select: none;
 }
@@ -1417,10 +1420,10 @@
 /* ── Aristas ───────────────────────────────────────────────────────── */
 .cc-edge-path {
   stroke: var(--cc-aud);
-  stroke-width: 2;
-  opacity: 0.85;
+  stroke-width: 1.25;
+  opacity: 0.7;
 }
-.cc-edge-path--preview { stroke-dasharray: 5 4; opacity: 0.7; pointer-events: none; }
+.cc-edge-path--preview { stroke-width: 1.25; stroke-dasharray: 4 4; opacity: 0.6; pointer-events: none; }
 .cc-edge-hit { stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: pointer; }
 .cc-edge-arrow-head { fill: var(--cc-aud); }
 .cc-edge { pointer-events: auto; }
@@ -1492,14 +1495,6 @@
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 10px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);
 }
-.cc-mini-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.cc-mini-legend li { display: flex; align-items: center; gap: 9px; font-size: 0.78rem; color: var(--text-secondary); }
-.cc-legend-dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
-.cc-legend-dot--aud     { background: var(--cc-aud); }
-.cc-legend-dot--concept { background: var(--cc-concept); }
-.cc-legend-dot--real    { background: var(--cc-real); }
-.cc-legend-line { width: 18px; height: 2px; flex: 0 0 auto; background: var(--cc-aud); border-radius: 2px; }
-
 @media (max-width: 1100px) {
   .cc-cc-layout { flex-direction: column; }
   .cc-mini-dash { width: 100%; flex: 0 0 auto; max-height: 320px; }
