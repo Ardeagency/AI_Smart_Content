@@ -1708,10 +1708,10 @@
   flex: 0 0 auto;
 }
 .builder-config-section--cover #flowDescription {
-  min-height: 56px;
-  max-height: 84px;
+  min-height: 110px;
+  max-height: 160px;
   flex: 0 0 auto;
-  resize: none;
+  resize: vertical;
 }
 
 /* Modelo de cobro: bloque al pie de la columna derecha. */

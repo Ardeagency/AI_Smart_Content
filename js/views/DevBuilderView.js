@@ -186,7 +186,7 @@ class DevBuilderView extends DevBaseView {
                 </div>
                 <div class="settings-field settings-field--description">
                   <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Una línea: qué hace este flujo" rows="2" maxlength="140"></textarea>
+                  <textarea id="flowDescription" placeholder="Una línea: qué hace este flujo" rows="4" maxlength="140"></textarea>
                 </div>
               </div>
               <!-- Derecha: catálogo, versión, tipo de flujo, categoría, subcategoría, output, modelo de cobro -->
@@ -1084,7 +1084,9 @@ class DevBuilderView extends DevBaseView {
     const executionLabel = this.getExecutionModeLabel(this.flowData.execution_mode);
 
     const img = this.flowData.flow_image_url
-      ? `<img src="${this.escapeHtml(this.flowData.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
+      ? (/\.(mp4|webm|mov)(\?|$)/i.test(this.flowData.flow_image_url)
+          ? `<video src="${this.escapeHtml(this.flowData.flow_image_url)}" class="flow-card-img" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(this.flowData.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`)
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(this.flowData.output_type)}"></i></div>`;
 
     return `
@@ -1274,9 +1276,9 @@ class DevBuilderView extends DevBaseView {
     
     if (preview) {
       if (url) {
-        const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
+        const isVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || url.includes('video');
         if (isVideo) {
-          preview.innerHTML = `<video src="${url}" alt="Portada del flujo" muted playsinline></video>`;
+          preview.innerHTML = `<video src="${url}" muted loop playsinline autoplay preload="metadata"></video>`;
         } else {
           preview.innerHTML = `<img src="${url}" alt="Portada del flujo">`;
         }
