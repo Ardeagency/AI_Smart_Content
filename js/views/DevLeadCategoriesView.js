@@ -9,6 +9,7 @@ class DevLeadCategoriesView extends DevBaseView {
     this.categories = [];
     this.subcategories = [];
     this.activeTab = 'categories'; // 'categories' | 'subcategories'
+    this._modalClose = null;
   }
 
   async onEnter() {
@@ -94,83 +95,69 @@ class DevLeadCategoriesView extends DevBaseView {
         </section>
       </div>
 
-      <!-- Modal categoría -->
-      <div class="modal dev-lead-modal" id="categoryModal" hidden>
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="categoryModalTitle">Nueva categoría</h3>
-            <button type="button" class="modal-close" id="categoryModalClose">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="categoryId" value="">
-            <div class="form-group">
-              <label for="categoryName">Nombre *</label>
-              <input type="text" id="categoryName" placeholder="Ej. Marketing" required>
-            </div>
-            <div class="form-group">
-              <label for="categoryDescription">Descripción</label>
-              <textarea id="categoryDescription" rows="2" placeholder="Opcional"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="categoryOrder">Orden</label>
-              <input type="number" id="categoryOrder" min="0" value="0" placeholder="0">
-            </div>
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input type="checkbox" id="categoryIsVisible" checked>
-                <span>Visible en catálogo de flows</span>
-              </label>
-              <span class="field-help">Si está desmarcada, la categoría no aparecerá en el catálogo ni en el menú de flows.</span>
-            </div>
-            <div class="form-group">
-              <label>Portada (imagen o video)</label>
-              <div class="dev-lead-cover-preview" id="categoryCoverPreview"></div>
-              <input type="file" id="categoryCoverFile" accept="image/*,video/*">
-              <small class="form-hint">Se usará como hero visual en el catálogo de flujos.</small>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="categoryModalCancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="categoryModalSave">
-              <i class="fas fa-save"></i> Guardar
-            </button>
-          </div>
-        </div>
-      </div>
+    `;
+  }
 
-      <!-- Modal subcategoría -->
-      <div class="modal dev-lead-modal" id="subcategoryModal" hidden>
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 id="subcategoryModalTitle">Nueva subcategoría</h3>
-            <button type="button" class="modal-close" id="subcategoryModalClose">&times;</button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="subcategoryId" value="">
-            <div class="form-group">
-              <label for="subcategoryName">Nombre *</label>
-              <input type="text" id="subcategoryName" placeholder="Ej. Redes sociales" required>
-            </div>
-            <div class="form-group">
-              <label for="subcategoryDescription">Descripción</label>
-              <textarea id="subcategoryDescription" rows="2" placeholder="Opcional"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="subcategoryOrder">Orden</label>
-              <input type="number" id="subcategoryOrder" min="0" value="0" placeholder="0">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="subcategoryModalCancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="subcategoryModalSave">
-              <i class="fas fa-save"></i> Guardar
-            </button>
-          </div>
-        </div>
+  // FEAT-028: cuerpos de modal migrados a window.Modal (mismos IDs de campo).
+  _categoryBody() {
+    return `
+      <input type="hidden" id="categoryId" value="">
+      <div class="form-group">
+        <label for="categoryName">Nombre *</label>
+        <input type="text" id="categoryName" placeholder="Ej. Marketing" required>
+      </div>
+      <div class="form-group">
+        <label for="categoryDescription">Descripción</label>
+        <textarea id="categoryDescription" rows="2" placeholder="Opcional"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="categoryOrder">Orden</label>
+        <input type="number" id="categoryOrder" min="0" value="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="categoryIsVisible" checked>
+          <span>Visible en catálogo de flows</span>
+        </label>
+        <span class="field-help">Si está desmarcada, la categoría no aparecerá en el catálogo ni en el menú de flows.</span>
+      </div>
+      <div class="form-group">
+        <label>Portada (imagen o video)</label>
+        <div class="dev-lead-cover-preview" id="categoryCoverPreview"></div>
+        <input type="file" id="categoryCoverFile" accept="image/*,video/*">
+        <small class="form-hint">Se usará como hero visual en el catálogo de flujos.</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="categoryModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="categoryModalSave"><i class="fas fa-save"></i> Guardar</button>
       </div>
     `;
+  }
+
+  _subcategoryBody() {
+    return `
+      <input type="hidden" id="subcategoryId" value="">
+      <div class="form-group">
+        <label for="subcategoryName">Nombre *</label>
+        <input type="text" id="subcategoryName" placeholder="Ej. Redes sociales" required>
+      </div>
+      <div class="form-group">
+        <label for="subcategoryDescription">Descripción</label>
+        <textarea id="subcategoryDescription" rows="2" placeholder="Opcional"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="subcategoryOrder">Orden</label>
+        <input type="number" id="subcategoryOrder" min="0" value="0" placeholder="0">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="subcategoryModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="subcategoryModalSave"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    `;
+  }
+
+  closeModal() {
+    if (this._modalClose) this._modalClose();
   }
 
   async init() {
@@ -312,36 +299,19 @@ class DevLeadCategoriesView extends DevBaseView {
   setupCategoryHandlers() {
     const addBtn = document.getElementById('addCategoryBtn');
     if (addBtn) addBtn.addEventListener('click', () => this.openCategoryModal(null));
-    const modal = document.getElementById('categoryModal');
-    const closeBtn = document.getElementById('categoryModalClose');
-    const cancelBtn = document.getElementById('categoryModalCancel');
-    const saveBtn = document.getElementById('categoryModalSave');
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    if (modal && modal.querySelector('.modal-overlay')) {
-      modal.querySelector('.modal-overlay').addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    }
-    if (saveBtn) saveBtn.addEventListener('click', () => this.saveCategory());
   }
 
   setupSubcategoryHandlers() {
     const addBtn = document.getElementById('addSubcategoryBtn');
     if (addBtn) addBtn.addEventListener('click', () => this.openSubcategoryModal(null));
-    const modal = document.getElementById('subcategoryModal');
-    const closeBtn = document.getElementById('subcategoryModalClose');
-    const cancelBtn = document.getElementById('subcategoryModalCancel');
-    const saveBtn = document.getElementById('subcategoryModalSave');
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    if (modal && modal.querySelector('.modal-overlay')) {
-      modal.querySelector('.modal-overlay').addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
-    }
-    if (saveBtn) saveBtn.addEventListener('click', () => this.saveSubcategory());
   }
 
   openCategoryModal(id) {
-    const modal = document.getElementById('categoryModal');
-    const titleEl = document.getElementById('categoryModalTitle');
+    // FEAT-028: mostrar primero (inyecta el body), luego poblar campos.
+    const { modal, close } = window.Modal.show({ title: id ? 'Editar categoría' : 'Nueva categoría', body: this._categoryBody(), className: 'dev-lead-modal-content' });
+    this._modalClose = close;
+    modal.querySelector('#categoryModalCancel')?.addEventListener('click', () => close());
+    modal.querySelector('#categoryModalSave')?.addEventListener('click', () => this.saveCategory());
     document.getElementById('categoryId').value = id || '';
     document.getElementById('categoryName').value = '';
     document.getElementById('categoryDescription').value = '';
@@ -355,7 +325,6 @@ class DevLeadCategoriesView extends DevBaseView {
     if (id) {
       const c = this.categories.find(x => x.id === id);
       if (c) {
-        if (titleEl) titleEl.textContent = 'Editar categoría';
         document.getElementById('categoryName').value = c.name || '';
         document.getElementById('categoryDescription').value = c.description || '';
         document.getElementById('categoryOrder').value = c.order_index != null ? c.order_index : 0;
@@ -374,12 +343,10 @@ class DevLeadCategoriesView extends DevBaseView {
         }
       }
     } else {
-      if (titleEl) titleEl.textContent = 'Nueva categoría';
       if (coverPreview) {
         coverPreview.innerHTML = '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">Sin portada</span>';
       }
     }
-    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
 
   async saveCategory() {
@@ -492,7 +459,7 @@ class DevLeadCategoriesView extends DevBaseView {
         }
       }
     }
-    document.getElementById('categoryModal').style.display = 'none';
+    this.closeModal();
     await this.loadCategories();
   }
 
@@ -515,8 +482,11 @@ class DevLeadCategoriesView extends DevBaseView {
   }
 
   openSubcategoryModal(id) {
-    const modal = document.getElementById('subcategoryModal');
-    const titleEl = document.getElementById('subcategoryModalTitle');
+    // FEAT-028: mostrar primero, luego poblar.
+    const { modal, close } = window.Modal.show({ title: id ? 'Editar subcategoría' : 'Nueva subcategoría', body: this._subcategoryBody(), className: 'dev-lead-modal-content' });
+    this._modalClose = close;
+    modal.querySelector('#subcategoryModalCancel')?.addEventListener('click', () => close());
+    modal.querySelector('#subcategoryModalSave')?.addEventListener('click', () => this.saveSubcategory());
     document.getElementById('subcategoryId').value = id || '';
     document.getElementById('subcategoryName').value = '';
     document.getElementById('subcategoryDescription').value = '';
@@ -524,15 +494,11 @@ class DevLeadCategoriesView extends DevBaseView {
     if (id) {
       const s = this.subcategories.find(x => x.id === id);
       if (s) {
-        if (titleEl) titleEl.textContent = 'Editar subcategoría';
         document.getElementById('subcategoryName').value = s.name || '';
         document.getElementById('subcategoryDescription').value = s.description || '';
         document.getElementById('subcategoryOrder').value = s.order_index != null ? s.order_index : 0;
       }
-    } else {
-      if (titleEl) titleEl.textContent = 'Nueva subcategoría';
     }
-    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
 
   async saveSubcategory() {
@@ -565,8 +531,7 @@ class DevLeadCategoriesView extends DevBaseView {
         return;
       }
     }
-    const subModal = document.getElementById('subcategoryModal');
-    if (subModal) { subModal.style.display = 'none'; subModal.classList.remove('is-open'); }
+    this.closeModal();
     await this.loadSubcategories();
   }
 
