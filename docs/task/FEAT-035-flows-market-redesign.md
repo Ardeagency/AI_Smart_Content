@@ -61,11 +61,13 @@ Solo CSS + render, sin schema nuevo. Usa datos ya existentes.
 - Deep-link `?flow=<id>` abre el modal y se limpia al cerrar. HECHO.
 - Reusa `window.Modal.show` (focus-trap/ESC/portal/a11y) con scope `flow-detail-modal`. toggleLike/toggleSave ahora refrescan cards + modal por flowId.
 
-### Fase 3 — Search + filtros + orden (marketplace)
-- Buscador (nombre + descripcion, client-side sobre flows cargados; server-side si crece).
-- Dropdown de orden: Trending / Nuevos / Mas usados / A-Z.
-- Filtros por output_type y execution_mode.
-- Barra sticky superior con search + controles.
+### Fase 3 — Search + filtros + orden (marketplace) ← HECHA
+- Buscador (nombre + descripcion, client-side sobre this.flows, debounce 160ms). HECHO.
+- Dropdown de orden: Trending / Nuevos / Mas usados / A-Z. HECHO.
+- Filtros por output_type y execution_mode. HECHO.
+- Barra sticky superior (offset --app-header-height) con search + controles. HECHO.
+- Al activar busqueda/filtro/orden: grid plana de resultados responsiva; sin actividad vuelve al browse editorial. Solo en home (categorias usan su subnav).
+- Pendiente opcional: search server-side si el catalogo crece; search dentro de vista categoria.
 
 ### Fase 4 — Hover-expand card + previews en movimiento (firma Netflix)
 - Card crece en hover (delay ~400ms), revela preview en movimiento (video si existe) + acciones rapidas (Ejecutar / Guardar / Detalle).
