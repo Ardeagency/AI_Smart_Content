@@ -396,52 +396,43 @@ class MonitoringView extends BaseView {
       ...containers.map(c => `<option value="${this._esc(c.id)}"${c.id === e.brand_container_id ? ' selected' : ''}>${this._esc(c.nombre_marca)}</option>`),
     ].join('');
 
-    const html = `
-      <div class="mn-modal-overlay" id="mnModal">
-        <div class="mn-modal">
-          <header class="mn-modal-head">
-            <h3>${isEdit ? 'Editar perfil' : 'Nuevo perfil'}</h3>
-            <button class="mn-modal-close" data-action="close-modal"><i class="fas fa-times"></i></button>
-          </header>
-          <form class="mn-form" id="mnEntityForm">
-            <label>Nombre
-              <input name="name" required value="${this._esc(e.name || '')}" placeholder="Ej. Red Bull">
-            </label>
-            <label>Identificador
-              <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@redbull, meta:1234, ga4:5678…">
-              <small>Handle social, meta page id, ga4 property, etc.</small>
-            </label>
-            <div class="mn-form-grid">
-              <label>Tipo<select name="tipo">${tipoOpts}</select></label>
-              <label>Plataforma<select name="platform">${platOpts}</select></label>
-            </div>
-            <div class="mn-form-grid">
-              <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
-              <label>Dominio
-                <select name="domain">
-                  <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>social</option>
-                  <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>analytics</option>
-                  <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>web</option>
-                </select>
-              </label>
-            </div>
-            <label class="mn-checkbox">
-              <input type="checkbox" name="is_active" ${e.is_active === false ? '' : 'checked'}>
-              Activo
-            </label>
-            <footer class="mn-modal-foot">
-              <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-              <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear perfil'}</button>
-            </footer>
-          </form>
+    // FEAT-028: migrado a window.Modal (ESC/focus-trap/focus-return); se conservan
+    // las clases mn-form/mn-btn para que el form se vea igual.
+    const body = `
+      <form class="mn-form" id="mnEntityForm">
+        <label>Nombre
+          <input name="name" required value="${this._esc(e.name || '')}" placeholder="Ej. Red Bull">
+        </label>
+        <label>Identificador
+          <input name="target_identifier" value="${this._esc(e.target_identifier || '')}" placeholder="@redbull, meta:1234, ga4:5678…">
+          <small>Handle social, meta page id, ga4 property, etc.</small>
+        </label>
+        <div class="mn-form-grid">
+          <label>Tipo<select name="tipo">${tipoOpts}</select></label>
+          <label>Plataforma<select name="platform">${platOpts}</select></label>
         </div>
-      </div>`;
+        <div class="mn-form-grid">
+          <label>Marca asociada<select name="brand_container_id">${containerOpts}</select></label>
+          <label>Dominio
+            <select name="domain">
+              <option value="social"    ${e.domain === 'social'    ? 'selected' : ''}>social</option>
+              <option value="analytics" ${e.domain === 'analytics' ? 'selected' : ''}>analytics</option>
+              <option value="web"       ${e.domain === 'web'       ? 'selected' : ''}>web</option>
+            </select>
+          </label>
+        </div>
+        <label class="mn-checkbox">
+          <input type="checkbox" name="is_active" ${e.is_active === false ? '' : 'checked'}>
+          Activo
+        </label>
+        <footer class="mn-modal-foot">
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear perfil'}</button>
+        </footer>
+      </form>`;
 
-    document.body.insertAdjacentHTML('beforeend', html);
-    const modal = document.getElementById('mnModal');
-    modal.addEventListener('click', ev => {
-      if (ev.target === modal || ev.target.closest('[data-action="close-modal"]')) modal.remove();
-    });
+    const { modal, close } = window.Modal.show({ title: isEdit ? 'Editar perfil' : 'Nuevo perfil', body, className: 'mn-modal-content' });
+    modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnEntityForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const fd = new FormData(ev.target);
@@ -458,7 +449,7 @@ class MonitoringView extends BaseView {
         ? await this._service.updateEntity(id, payload)
         : await this._service.createEntity(payload);
       if (error) { alert('Error: ' + error.message); return; }
-      modal.remove();
+      close();
       await this._refresh();
     });
   }
@@ -627,38 +618,28 @@ class MonitoringView extends BaseView {
     const isEdit = !!id;
     const w = isEdit ? (this._data.watchers.data || []).find(x => x.id === id) : {};
 
-    const html = `
-      <div class="mn-modal-overlay" id="mnModal">
-        <div class="mn-modal">
-          <header class="mn-modal-head">
-            <h3>${isEdit ? 'Editar URL vigilada' : 'Nueva URL vigilada'}</h3>
-            <button class="mn-modal-close" data-action="close-modal"><i class="fas fa-times"></i></button>
-          </header>
-          <form class="mn-form" id="mnWatcherForm">
-            <label>URL
-              <input name="url" type="url" required value="${this._esc(w.url || '')}" placeholder="https://ejemplo.com/pagina-a-vigilar">
-              <small>Detectamos cambios comparando el hash del contenido en cada revisión.</small>
-            </label>
-            <label>Etiqueta (opcional)
-              <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Página de pricing de Competidor X">
-            </label>
-            <label class="mn-checkbox">
-              <input type="checkbox" name="is_active" ${w.is_active === false ? '' : 'checked'}>
-              Activa
-            </label>
-            <footer class="mn-modal-foot">
-              <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
-              <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear watcher'}</button>
-            </footer>
-          </form>
-        </div>
-      </div>`;
+    // FEAT-028: migrado a window.Modal (se conservan clases mn-form/mn-btn).
+    const body = `
+      <form class="mn-form" id="mnWatcherForm">
+        <label>URL
+          <input name="url" type="url" required value="${this._esc(w.url || '')}" placeholder="https://ejemplo.com/pagina-a-vigilar">
+          <small>Detectamos cambios comparando el hash del contenido en cada revisión.</small>
+        </label>
+        <label>Etiqueta (opcional)
+          <input name="label" value="${this._esc(w.label || '')}" placeholder="Ej. Página de pricing de Competidor X">
+        </label>
+        <label class="mn-checkbox">
+          <input type="checkbox" name="is_active" ${w.is_active === false ? '' : 'checked'}>
+          Activa
+        </label>
+        <footer class="mn-modal-foot">
+          <button type="button" class="mn-btn-secondary" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="mn-btn-primary">${isEdit ? 'Guardar cambios' : 'Crear watcher'}</button>
+        </footer>
+      </form>`;
 
-    document.body.insertAdjacentHTML('beforeend', html);
-    const modal = document.getElementById('mnModal');
-    modal.addEventListener('click', ev => {
-      if (ev.target === modal || ev.target.closest('[data-action="close-modal"]')) modal.remove();
-    });
+    const { modal, close } = window.Modal.show({ title: isEdit ? 'Editar URL vigilada' : 'Nueva URL vigilada', body, className: 'mn-modal-content' });
+    modal.querySelector('[data-action="close-modal"]')?.addEventListener('click', () => close());
     modal.querySelector('#mnWatcherForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const fd = new FormData(ev.target);
@@ -672,7 +653,7 @@ class MonitoringView extends BaseView {
         ? await this._service.updateWatcher(id, payload)
         : await this._service.createWatcher(payload);
       if (error) { alert('Error: ' + error.message); return; }
-      modal.remove();
+      close();
       await this._refresh();
     });
   }

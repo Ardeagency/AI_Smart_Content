@@ -1356,9 +1356,6 @@ class TasksView extends BaseView {
 
   openEditModal(task) {
     Promise.all([this.loadEntities(), this.loadCampaigns(), this.loadAudiences()]).then(() => {
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay task-modal-overlay';
-      modal.id = 'taskEditModal';
       const taskEntityId = Array.isArray(task.entity_ids) ? task.entity_ids[0] : task.entity_ids;
       const entityOpts = this.entities.map(e => `<option value="${e.id}" ${e.id === taskEntityId ? 'selected' : ''}>${this.escapeHtml(e.name)}${e.entity_type ? ' (' + this.escapeHtml(e.entity_type) + ')' : ''}</option>`).join('');
       const taskFirstCampaignId = Array.isArray(task.campaign_ids) ? task.campaign_ids[0] : task.campaign_ids;
@@ -1366,46 +1363,38 @@ class TasksView extends BaseView {
       const taskFirstAudienceId = Array.isArray(task.audience_ids) ? task.audience_ids[0] : task.audience_ids;
       const audienceOpts = this.audiences.map(a => `<option value="${a.id}" ${a.id === taskFirstAudienceId ? 'selected' : ''}>${this.escapeHtml(a.name)}</option>`).join('');
       const aspectOpts = this.ASPECT_RATIOS.map(ar => `<option value="${ar}" ${ar === (task.aspect_ratio || '1:1') ? 'selected' : ''}>${ar}</option>`).join('');
-      modal.innerHTML = `
-        <div class="modal task-modal">
-          <div class="modal-header">
-            <h3>Configurar tarea</h3>
-            <button type="button" class="modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="modal-body">
-            <label>Entidad</label>
-            <select id="taskEditEntity" class="task-edit-select">
-              <option value="">Ninguna</option>
-              ${entityOpts}
-            </select>
-            <label>Campaña</label>
-            <select id="taskEditCampaign" class="task-edit-select">
-              <option value="">Ninguna</option>
-              ${campaignOpts}
-            </select>
-            <label>Audiencia</label>
-            <select id="taskEditAudience" class="task-edit-select">
-              <option value="">Ninguna</option>
-              ${audienceOpts}
-            </select>
-            <label>Relación de aspecto</label>
-            <select id="taskEditAspectRatio" class="task-edit-select">
-              ${aspectOpts}
-            </select>
-            <label>Nº producciones por ejecución</label>
-            <input type="number" id="taskEditProductionCount" min="1" value="${task.production_count ?? 1}" />
-            <label>Activa</label>
-            <input type="checkbox" id="taskEditIsActive" ${task.is_active ? 'checked' : ''} />
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-ghost modal-cancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="taskEditSubmit">Guardar</button>
-          </div>
+      // FEAT-028: migrado a window.Modal (mismos IDs de campo, misma logica de update).
+      const body = `
+        <label>Entidad</label>
+        <select id="taskEditEntity" class="task-edit-select">
+          <option value="">Ninguna</option>
+          ${entityOpts}
+        </select>
+        <label>Campaña</label>
+        <select id="taskEditCampaign" class="task-edit-select">
+          <option value="">Ninguna</option>
+          ${campaignOpts}
+        </select>
+        <label>Audiencia</label>
+        <select id="taskEditAudience" class="task-edit-select">
+          <option value="">Ninguna</option>
+          ${audienceOpts}
+        </select>
+        <label>Relación de aspecto</label>
+        <select id="taskEditAspectRatio" class="task-edit-select">
+          ${aspectOpts}
+        </select>
+        <label>Nº producciones por ejecución</label>
+        <input type="number" id="taskEditProductionCount" min="1" value="${task.production_count ?? 1}" />
+        <label>Activa</label>
+        <input type="checkbox" id="taskEditIsActive" ${task.is_active ? 'checked' : ''} />
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost modal-cancel">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="taskEditSubmit">Guardar</button>
         </div>
       `;
-      document.body.appendChild(modal);
-      modal.querySelector('.modal-close').onclick = () => modal.remove();
-      modal.querySelector('.modal-cancel').onclick = () => modal.remove();
+      const { modal, close } = window.Modal.show({ title: 'Configurar tarea', body, className: 'task-modal' });
+      modal.querySelector('.modal-cancel').onclick = () => close();
       modal.querySelector('#taskEditSubmit').onclick = async () => {
         const entityId = document.getElementById('taskEditEntity').value || null;
         const campaignId = document.getElementById('taskEditCampaign').value || null;
@@ -1428,7 +1417,7 @@ class TasksView extends BaseView {
           })
           .eq('id', task.id)
           .eq('user_id', this.userId);
-        modal.remove();
+        close();
         await this.renderTaskDetail();
       };
     });

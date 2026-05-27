@@ -780,66 +780,27 @@ if (typeof window.ProductsManager === 'undefined') {
 
 
     showNewProductModal() {
-        // Crear modal para nuevo producto
-        const modal = document.createElement('div');
-        modal.className = 'new-product-modal';
-        modal.id = 'newProductModal';
-        modal.innerHTML = `
-            <div class="modal-overlay" id="newProductOverlay"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Nuevo Producto</h2>
-                    <button class="modal-close" id="closeNewProductModal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body" id="newProductFormContainer">
-                    <!-- Form will be inserted here -->
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        // Mostrar formulario
+        // FEAT-028: modal de nuevo producto migrado a window.Modal (a11y centralizada).
         this.currentProduct = null;
-        const formContainer = document.getElementById('newProductFormContainer');
-        formContainer.innerHTML = this.getProductFormHTML(null);
+        const { modal, close } = window.Modal.show({
+            title: 'Nuevo Producto',
+            body: this.getProductFormHTML(null),
+            className: 'new-product-modal-content'
+        });
+        this._modalClose = close;
 
-        // Event listeners
-        document.getElementById('newProductOverlay').addEventListener('click', () => {
-            this.closeNewProductModal();
-        });
-        document.getElementById('closeNewProductModal').addEventListener('click', () => {
-            this.closeNewProductModal();
-        });
-        const form = document.getElementById('new_productForm');
+        const form = modal.querySelector('#new_productForm');
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveProductFromModal();
             });
         }
-        const cancelBtn = document.getElementById('new_cancelBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
-                this.closeNewProductModal();
-            });
-        }
-
-        // Mostrar modal
-        setTimeout(() => {
-            modal.classList.add('active');
-        }, 10);
+        modal.querySelector('#new_cancelBtn')?.addEventListener('click', () => this.closeNewProductModal());
     }
 
     closeNewProductModal() {
-        const modal = document.getElementById('newProductModal');
-        if (modal) {
-            modal.classList.remove('active');
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
+        if (this._modalClose) { this._modalClose(); this._modalClose = null; }
     }
 
     async saveProductFromModal() {
