@@ -27,6 +27,11 @@ class CommandCenterView extends BaseView {
     this._canvasScale     = 1;
     this._canvasPan       = { x: 0, y: 0 };
     this._positions       = {};   // { 'aud:<id>'|'camp:<id>': {x,y} }
+    this._collapsed       = new Set();  // node keys colapsados
+    this._fieldSaveTimers = {};   // debounce por id:field
+    this._onCanvas        = new Set();  // ids de campanas reales puestas en el canvas
+    this._expandedReal    = new Set();  // ids de campanas reales expandidas (ver ads)
+    this._adData          = {};         // cache de conjuntos/ads por campaign_id
   }
 
   /* ── Redirect legacy ──────────────────────────────────────────────── */
