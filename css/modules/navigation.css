@@ -2910,24 +2910,17 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-mode-developer .nav-link.active,
 .nav-mode-developer .nav-main-link.active {
-    background: color-mix(in srgb, var(--dev-rank-accent, var(--sidebar-active)) 12%, var(--sidebar-active));
+    /* Tint del rango sobre el bg oscuro — mismo lenguaje que org/, sin barra lateral */
+    background: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 24%, transparent);
     color: var(--sidebar-text-primary);
     opacity: 1;
 }
 
-/* Dev: barra lateral del rango como indicador de selección (Linear/Vercel style) */
+/* Dev: sin barra lateral en items activos — solo tint de fondo (igual que org/) */
 .nav-mode-developer .nav-link.active::before,
 .nav-mode-developer .nav-main-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 6px;
-    bottom: 6px;
-    width: 2px;
-    border-radius: 0 2px 2px 0;
-    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, var(--dev-rank-accent, rgba(255,255,255,0.25))));
-    opacity: 0.95;
-    display: block;
+    display: none !important;
+    content: none !important;
 }
 
 .nav-mode-developer .nav-icon {
