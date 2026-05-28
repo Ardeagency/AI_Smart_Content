@@ -12468,8 +12468,14 @@
   border-color: var(--text-secondary, #6a6a6a);
 }
 .pricing-mode-btn.is-active {
-  border-color: var(--dev-rank-accent, #4f9eff);
-  background: color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 8%, transparent);
+  /* Borde-degradado dinamico: muestra el gradiente del rango como contorno */
+  border-color: transparent;
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 10%, var(--bg-card, #141517)),
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 10%, var(--bg-card, #141517))
+    ) padding-box,
+    var(--dev-gradient-dynamic, linear-gradient(135deg, #4f9eff, #4f9eff)) border-box;
 }
 .pricing-mode-btn > i {
   font-size: 18px;
@@ -12556,8 +12562,14 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 35%, transparent);
+  /* Borde-degradado dinamico + interior tintado del rango */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 14%, #0b0b0b),
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 14%, #0b0b0b)
+    ) padding-box,
+    var(--dev-gradient-dynamic, linear-gradient(135deg, #4f9eff, #4f9eff)) border-box;
   border-radius: 8px;
   color: var(--dev-rank-accent, #4f9eff);
   font-size: 12px;
@@ -12565,9 +12577,15 @@
   cursor: pointer;
   align-self: flex-start;
   font-family: inherit;
+  transition: background 0.15s ease;
 }
 .pricing-observed-apply:hover {
-  background: color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 20%, transparent);
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 22%, #0b0b0b),
+      color-mix(in srgb, var(--dev-rank-accent, #4f9eff) 22%, #0b0b0b)
+    ) padding-box,
+    var(--dev-gradient-dynamic, linear-gradient(135deg, #4f9eff, #4f9eff)) border-box;
 }
 @media (max-width: 720px) {
   .pricing-mode-toggle,
