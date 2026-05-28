@@ -2910,8 +2910,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-mode-developer .nav-link.active,
 .nav-mode-developer .nav-main-link.active {
-    /* Tint del rango sobre el bg oscuro — mismo lenguaje que org/, sin barra lateral */
-    background: color-mix(in srgb, var(--dev-rank-accent, var(--accent-warm)) 24%, transparent);
+    /* Tint del rango sobre el bg oscuro — mismo lenguaje que org/, sin barra lateral.
+       Fallback hex visible (#e09145) por si DevRankTheme aun no aplico:
+       --accent-warm es #87868B (gris) globalmente. */
+    background: color-mix(in srgb, var(--dev-rank-accent, #e09145) 24%, transparent);
     color: var(--sidebar-text-primary);
     opacity: 1;
 }
