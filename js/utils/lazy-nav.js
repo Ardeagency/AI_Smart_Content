@@ -24,6 +24,9 @@
     // Componentes que las vistas usan dentro del shell auth.
     '/js/components/MatchBars.js',
     '/js/components/AudienceMap.js',
+    // Mejoras del sidebar dev (Cmd+K palette + status bar). Carga global tras
+    // auth: el palette se autogatea a /dev/* y el statusbar al modo developer.
+    '/js/components/DevSidebarEnhancements.js',
   ];
 
   // Build ID: el comando `[build]` de netlify.toml reemplaza __BUILD_ID__ por

@@ -10,7 +10,7 @@
   # los `?v=...` de index.html, css/bundle.css y js/app.js, sin intervención manual.
   # COMMIT_REF lo expone Netlify; en local sin build, el placeholder permanece y
   # js/app.js cae a Date.now() en runtime para que tampoco haya cache stale en dev.
-  command = "sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js sw.js"
+  command = "sed -i \"s/__BUILD_ID__/$COMMIT_REF/g\" index.html css/bundle.css js/app.js js/utils/lazy-nav.js js/components/DevSidebarEnhancements.js sw.js"
   publish = "."
 
 [functions]
