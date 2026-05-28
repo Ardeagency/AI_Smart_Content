@@ -2868,9 +2868,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 0.58;
 }
 
-/* Dev visual parity with org sidebar (non-navigation behavior). */
+/* Dev: items con curva de animacion Linear/Vercel + micro-lift en hover */
 .nav-mode-developer .nav-link,
 .nav-mode-developer .nav-main-link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -2882,18 +2883,23 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     font-size: 12px;
     font-weight: 500;
     text-transform: none;
-    transition: background 0.12s ease, color 0.12s ease, opacity 0.15s ease;
+    transition:
+        background 0.18s cubic-bezier(0.2, 0, 0, 1),
+        color 0.18s cubic-bezier(0.2, 0, 0, 1),
+        opacity 0.18s ease,
+        transform 0.18s cubic-bezier(0.2, 0, 0, 1);
     cursor: pointer;
     border: none;
     background: none;
     width: 100%;
     text-align: left;
-    opacity: 0.58;
+    opacity: 0.62;
 }
 
 .nav-mode-developer .nav-link:hover:not(.active),
 .nav-mode-developer .nav-main-link:hover:not(.active) {
-    opacity: 0.82;
+    opacity: 0.92;
+    transform: translateX(2px);
 }
 
 .nav-mode-developer .nav-link:hover,
@@ -2904,15 +2910,24 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-mode-developer .nav-link.active,
 .nav-mode-developer .nav-main-link.active {
-    background: var(--sidebar-active);
+    background: color-mix(in srgb, var(--dev-rank-accent, var(--sidebar-active)) 12%, var(--sidebar-active));
     color: var(--sidebar-text-primary);
     opacity: 1;
 }
 
-/* Dev: sin línea lateral en items seleccionados */
+/* Dev: barra lateral del rango como indicador de selección (Linear/Vercel style) */
 .nav-mode-developer .nav-link.active::before,
 .nav-mode-developer .nav-main-link.active::before {
-    display: none;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 0 2px 2px 0;
+    background: var(--dev-gradient-dynamic-vertical, var(--dev-gradient-dynamic, var(--dev-rank-accent, rgba(255,255,255,0.25))));
+    opacity: 0.95;
+    display: block;
 }
 
 .nav-mode-developer .nav-icon {
@@ -3484,6 +3499,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     user-select: none;
 }
 
+/* Dev: section labels mas refinados (mas aire arriba, tracking abierto) */
+.nav-mode-developer .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 22px 14px 6px;
+}
+
 /* En modos no-user (developer) el section-label sí se oculta del todo.
    Para nav-mode-user, el bloque "COLAPSADO USER" más arriba lo convierte
    en línea divisoria sin perder altura. */
@@ -3880,33 +3904,34 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   border-bottom: 1px solid #242424;
   overflow: hidden;
 }
+/* "DEVELOPER" = pre-label sobrio (pequeno, tracking abierto, color muted) */
 .nav-mode-developer .nav-dev-title {
   position: absolute;
   left: 0;
   right: 0;
-  top: 10px;
-  height: 24px;
+  top: 12px;
+  height: 14px;
   margin: 0;
   text-align: center;
   text-transform: uppercase;
   font-family: var(--font-family);
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 24px;
-  letter-spacing: 3px;
-  color: #FFFDFD;
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.32em;
+  color: rgba(255, 255, 255, 0.50);
   white-space: nowrap;
   overflow: hidden;
   z-index: 2;
 }
 
-/* Rank value: solo el rango, grande y centrado bajo DEVELOPER */
+/* RANK = el heroe de la identidad dev (gradient text-fill del rango) */
 .nav-mode-developer .nav-dev-rank-block {
   position: absolute;
   left: 0;
   right: 0;
-  top: 36px;
-  height: 18px;
+  top: 30px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3917,20 +3942,20 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 18px;
+  line-height: 24px;
 }
 .nav-mode-developer .nav-dev-rank-value {
   font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 3px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #ffffff;
-  line-height: 16px;
-  background: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
-  -webkit-text-fill-color: #ffffff;
+  line-height: 24px;
+  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #ffffff, #ffffff)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 .nav-mode-developer .nav-dev-rank-label,
 .nav-mode-developer .nav-dev-rank-bar {
@@ -3988,8 +4013,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   height: 30px;
   min-height: 30px;
   padding: 0 10px;
-  background: #141517 !important;
-  border: 1px solid #242424 !important;
+  /* Borde-gradiente del rango (padding-box interior + border-box gradient) */
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(#141517, #141517) padding-box,
+    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #242424, #242424))) border-box !important;
   border-radius: 8px !important;
   color: #D9D9D9 !important;
   font-size: 11px !important;
@@ -4003,12 +4031,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   justify-content: center;
   gap: 6px;
   overflow: hidden;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.18s cubic-bezier(0.2, 0, 0, 1), transform 0.18s cubic-bezier(0.2, 0, 0, 1);
 }
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link:hover,
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-main-link:hover {
-  background: #1a1c20 !important;
-  border-color: #2e2e2e !important;
+  background:
+    linear-gradient(#1a1c20, #1a1c20) padding-box,
+    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, linear-gradient(90deg, #2e2e2e, #2e2e2e))) border-box !important;
+  transform: translateY(-1px);
 }
 /* Sin arco gradient bajo cada pill — limpio para mantener el foco en el header */
 .side-navigation:not(.collapsed).nav-mode-developer .nav-item--primary .nav-link::after,
@@ -4095,18 +4125,21 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
   position: relative;
   display: block;
 }
-/* Rectangle 96 del Figma — blur rainbow exacto: top:55, bottom:-9, blur 12.5, radius 20 */
+/* Velo cinematografico del rango: glow ancho que respira bajo el rank
+   (mas visible que el "shelf" Figma original, sin overpower). */
 .nav-mode-developer .nav-dev-workspace-header::after {
   content: '';
   position: absolute;
-  left: 13px;
-  right: 13px;
-  top: 55px;
-  bottom: -9px;
-  background: var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
-  filter: blur(12.5px);
-  border-radius: 20px;
-  opacity: 1;
+  left: -8%;
+  right: -8%;
+  top: 28px;
+  bottom: -22px;
+  background:
+    radial-gradient(50% 70% at 50% 100%, rgba(255, 255, 255, 0.05), transparent 65%),
+    var(--dev-gradient-dynamic-horizontal, var(--dev-gradient-dynamic, transparent));
+  filter: blur(18px);
+  border-radius: 50%;
+  opacity: 0.62;
   pointer-events: none;
   z-index: 1;
 }
