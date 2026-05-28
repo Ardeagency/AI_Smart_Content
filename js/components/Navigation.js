@@ -168,14 +168,12 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     ]
   },
   {
-    type: 'container',
-    id: 'llm',
-    label: 'LLM',
+    type: 'page',
+    id: 'llm-training',
+    label: 'Entrenamiento',
     icon: 'fa-brain',
     iconSrc: '/recursos/icons/memory.svg',
-    children: [
-      { label: 'Entrenamiento', route: '/dev/lead/vera-training' }
-    ]
+    route: '/dev/lead/vera-training'
   },
   { type: 'section', label: 'Admin', role_required: 'lead' },
   {
