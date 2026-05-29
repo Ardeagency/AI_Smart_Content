@@ -346,7 +346,7 @@ class CommandCenterView extends BaseView {
     const twoCol = document.getElementById('ccTwoCol');
     if (twoCol) twoCol.style.display = '';
 
-    this._renderVeraInbox();
+    /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
     this._renderCampaigns();    // alimenta la lista compacta del mini-dashboard
     this._renderCanvas();       // (mixin Canvas) nodos + aristas
     this._renderMiniDash();     // (mixin Canvas) stats + conteos
@@ -475,7 +475,7 @@ class CommandCenterView extends BaseView {
       }
       // Quitar localmente y re-renderizar
       this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
-      this._renderVeraInbox();
+      /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
     } catch (e) {
       console.error('approve action:', e);
     }
@@ -500,7 +500,7 @@ class CommandCenterView extends BaseView {
         return;
       }
       this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
-      this._renderVeraInbox();
+      /* this._renderVeraInbox(); */ // Sprint 2: reemplazado por Dashboard sidebar
     } catch (e) {
       console.error('reject action:', e);
     }

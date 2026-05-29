@@ -3955,23 +3955,48 @@
           <p class="cc-dash-soon">Vera te avisa cuando detecte una oportunidad.</p>
         </div>`;
       }
-      const rows = insights.map((it) => {
+      const cards = insights.map((it) => {
         const confidence = Math.round((Number(it.vera_confidence) || 0) * 100);
         const actionLabel = labels[it.action_type] || it.action_type;
         const icon = icons[it.action_type] || 'fa-bolt';
         const created = it.created_at ? this._humanDelta(it.created_at) : '';
         const priority = it.priority || 0;
-        const prClass = priority >= 8 ? ' cc-dash-row--high' : '';
-        return `<button type="button" class="cc-dash-row${prClass}" data-dash-focus="${this.escapeHtml(String(it.id))}">
-          <span class="cc-dash-icon"><i class="fas ${icon}"></i></span>
-          <span class="cc-dash-text">
-            <span class="cc-dash-action">${this.escapeHtml(actionLabel)}</span>
-            <span class="cc-dash-meta">${confidence}% confianza · ${this.escapeHtml(created)}</span>
-          </span>
-          <i class="fas fa-arrow-right cc-dash-arrow"></i>
-        </button>`;
+        const prClass = priority >= 8 ? ' cc-dash-card--high' : '';
+        // expires_at
+        let expiresLabel = '';
+        if (it.expires_at) {
+          const ms = new Date(it.expires_at).getTime() - Date.now();
+          if (ms > 0) {
+            const h = Math.floor(ms / 36e5);
+            expiresLabel = h < 24 ? `${h}h restantes` : `${Math.floor(h / 24)}d restantes`;
+          } else expiresLabel = 'vencido';
+        }
+        const impacts = it.impact_estimate && typeof it.impact_estimate === 'object'
+          ? Object.entries(it.impact_estimate).slice(0, 3).map(([k, v]) =>
+              `<span class="cc-dash-impact">${this.escapeHtml(k)}: <strong>${this.escapeHtml(String(v))}</strong></span>`).join('')
+          : '';
+        const reasoning = this.escapeHtml(String(it.vera_reasoning || ''));
+        return `<div class="cc-dash-card${prClass}" data-dash-focus="${this.escapeHtml(String(it.id))}">
+          <div class="cc-dash-card-head">
+            <span class="cc-dash-icon"><i class="fas ${icon}"></i></span>
+            <div class="cc-dash-card-title">
+              <span class="cc-dash-tag">VERA PROPONE</span>
+              <span class="cc-dash-action">${this.escapeHtml(actionLabel)}</span>
+            </div>
+            <span class="cc-dash-conf" title="Confianza">${confidence}%</span>
+          </div>
+          <p class="cc-dash-reasoning">${reasoning}</p>
+          ${impacts ? `<div class="cc-dash-impacts">${impacts}</div>` : ''}
+          <div class="cc-dash-card-foot">
+            <span class="cc-dash-meta">${this.escapeHtml(created)}${expiresLabel ? ` · ${this.escapeHtml(expiresLabel)}` : ''}</span>
+            <div class="cc-dash-actions">
+              <button type="button" class="cc-dash-btn cc-dash-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(it.id))}" title="Descartar"><i class="fas fa-xmark"></i> Descartar</button>
+              <button type="button" class="cc-dash-btn cc-dash-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(it.id))}" title="Aprobar"><i class="fas fa-check"></i> Aprobar</button>
+            </div>
+          </div>
+        </div>`;
       }).join('');
-      return header + `<div class="cc-dash-list">${rows}</div>`;
+      return header + `<div class="cc-dash-list">${cards}</div>`;
     }
     return '<div class="cc-lib-empty">Sin elementos.</div>';
   };
@@ -4012,27 +4037,43 @@
       };
       body.addEventListener('click', this._ccLibSearchClear);
     }
-    // Sprint 2: handler Dashboard — focus al insight en canvas
+    // Sprint 2: handler Dashboard — botones Aprobar/Rechazar.
+    // Si la insight referencia a un nodo del canvas (target_table+target_id),
+    // click en el cuerpo de la card centra el viewport en ese nodo.
     if (!this._ccDashClick) {
       this._ccDashClick = (e) => {
-        const row = e.target.closest('[data-dash-focus]');
-        if (!row) return;
+        const btn = e.target.closest('[data-vera-action]');
+        if (btn) {
+          e.preventDefault(); e.stopPropagation();
+          const action = btn.getAttribute('data-vera-action');
+          const id = btn.getAttribute('data-vera-id');
+          if (!id) return;
+          if (action === 'approve') this._approveVeraInsight(id);
+          else if (action === 'reject') this._rejectVeraInsight(id);
+          return;
+        }
+        const card = e.target.closest('[data-dash-focus]');
+        if (!card) return;
         e.preventDefault(); e.stopPropagation();
-        const id = row.getAttribute('data-dash-focus');
-        const el = document.querySelector(`.cc-vera-insight[data-insight-id="${ccCssEsc(id)}"]`);
+        const id = card.getAttribute('data-dash-focus');
+        const it = (this._veraInsights || []).find((x) => String(x.id) === String(id));
+        if (!it) return;
+        const targetKey = this._veraInsightTargetKey(it);
+        if (!targetKey) return;
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(targetKey)}"]`);
         if (!el) return;
         const r = el.getBoundingClientRect();
         const canvas = document.getElementById('ccCanvas');
         if (!canvas) return;
         const cr = canvas.getBoundingClientRect();
-        // Centrar la pantalla en el insight
         const dx = (cr.width / 2) - (r.left - cr.left + r.width / 2);
         const dy = (cr.height / 2) - (r.top - cr.top + r.height / 2);
         this._canvasPan = { x: (this._canvasPan?.x || 0) + dx, y: (this._canvasPan?.y || 0) + dy };
         if (typeof this._applyCanvasTransform === 'function') this._applyCanvasTransform();
         if (typeof this._renderEdges === 'function') this._renderEdges();
-        el.classList.add('cc-vera-insight--flash');
-        setTimeout(() => el.classList.remove('cc-vera-insight--flash'), 1200);
+        // Flash sobre el nodo target
+        el.classList.add('cc-node--flash');
+        setTimeout(() => el.classList.remove('cc-node--flash'), 1200);
       };
       body.addEventListener('click', this._ccDashClick);
     }
