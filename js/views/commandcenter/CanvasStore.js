@@ -1756,85 +1756,75 @@
       return s.length > 10 ? '…' + s.slice(-8) : s;
     };
 
-    const NS = 'http://www.w3.org/2000/svg';
+    // FASE 1: posicionar los DIVS en world coords (siguen el viewport
+    // transform automaticamente porque viven en #ccCanvasWorld).
+    // FASE 2: medir el DOM via getBoundingClientRect para calcular las
+    // posiciones SCREEN de los paths bezier (igual que _updateEdgeGeometry).
+    // Esto sincroniza divs (world) y lineas (screen) bajo cualquier pan/zoom.
+    const linkages = []; // [{ from: HTMLEl, to: HTMLEl }]
     idsToRender.forEach((campId) => {
       const data = this._adData[String(campId)];
       if (!data || !Array.isArray(data.adsets) || data.adsets.length === 0) return;
       const parentKey = `camp:${campId}`;
       const pos = this._positions[parentKey];
       if (!pos) return;
-      const PARENT_W = 280;
-      const PARENT_H = 140;
+      const parentEl = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(parentKey)}"]`);
+      if (!parentEl) return;
+
+      const PARENT_W = 280, PARENT_H = 140;
       const ADSET_W = 220, ADSET_H = 56, ADSET_GAP = 28;
-      const AD_W    = 220, AD_H    = 200, AD_GAP    = 24; // card preview vertical
+      const AD_W    = 220, AD_H    = 200, AD_GAP    = 24;
       const ROW1_Y  = pos.y + PARENT_H + 60;
       const ROW2_Y  = ROW1_Y + ADSET_H + 60;
 
       const adsets = data.adsets.slice(0, 6);
       const totalAdsetsW = adsets.length * ADSET_W + (adsets.length - 1) * ADSET_GAP;
       const adsetsStartX = pos.x + PARENT_W / 2 - totalAdsetsW / 2;
-      const parentBottomX = pos.x + PARENT_W / 2;
-      const parentBottomY = pos.y + PARENT_H;
 
       adsets.forEach((aset, i) => {
         const aX = adsetsStartX + i * (ADSET_W + ADSET_GAP);
         const aY = ROW1_Y;
-        const aCenterX = aX + ADSET_W / 2;
-
-        // Satelite Conjunto de anuncios
-        const div = document.createElement('div');
-        div.className = 'cc-satellite cc-satellite--adset';
-        div.setAttribute('data-satellite-parent', String(campId));
-        div.setAttribute('data-satellite-type', 'adset');
-        div.setAttribute('data-satellite-id', String(aset.id));
-        div.style.left = `${aX}px`;
-        div.style.top  = `${aY}px`;
-        div.style.width  = `${ADSET_W}px`;
-        div.style.height = `${ADSET_H}px`;
+        const adsetDiv = document.createElement('div');
+        adsetDiv.className = 'cc-satellite cc-satellite--adset';
+        adsetDiv.setAttribute('data-satellite-parent', String(campId));
+        adsetDiv.setAttribute('data-satellite-type', 'adset');
+        adsetDiv.setAttribute('data-satellite-id', String(aset.id));
+        adsetDiv.style.left = `${aX}px`;
+        adsetDiv.style.top  = `${aY}px`;
+        adsetDiv.style.width  = `${ADSET_W}px`;
+        adsetDiv.style.height = `${ADSET_H}px`;
         const asetName = (aset.name && String(aset.name).trim()) || '';
         const asetTitle = asetName || `${fmt(aset.impr)} impresiones`;
-        div.innerHTML = `
+        adsetDiv.innerHTML = `
           <span class="cc-satellite-icon"><i class="fas fa-layer-group"></i></span>
           <div class="cc-satellite-text">
             <span class="cc-satellite-type">Conjunto de anuncios</span>
             <span class="cc-satellite-name" title="${this.escapeHtml(asetTitle)}">${this.escapeHtml(asetTitle)}</span>
             <span class="cc-satellite-sub">${fmt(aset.impr)} impr · ${fmt(aset.conv)} conv</span>
           </div>`;
-        world.appendChild(div);
+        world.appendChild(adsetDiv);
+        linkages.push({ from: parentEl, to: adsetDiv });
 
-        // Edge padre → conjunto
-        const path1 = document.createElementNS(NS, 'path');
-        path1.setAttribute('class', 'cc-satellite-edge');
-        const dy = aY - parentBottomY;
-        const cy1 = parentBottomY + dy * 0.45;
-        const cy2 = aY - dy * 0.45;
-        path1.setAttribute('d', `M ${parentBottomX} ${parentBottomY} C ${parentBottomX} ${cy1}, ${aCenterX} ${cy2}, ${aCenterX} ${aY}`);
-        svg.appendChild(path1);
-
-        // Anuncios del conjunto (tope 3 cards preview por conjunto)
         const ads = Array.isArray(aset.ads) ? aset.ads.slice(0, 3) : [];
         if (!ads.length) return;
+        const aCenterX = aX + ADSET_W / 2;
         const totalAdsW = ads.length * AD_W + (ads.length - 1) * AD_GAP;
         const adsStartX = aCenterX - totalAdsW / 2;
-        const adsetBottomX = aCenterX;
-        const adsetBottomY = aY + ADSET_H;
         ads.forEach((ad, j) => {
           const adX = adsStartX + j * (AD_W + AD_GAP);
           const adY = ROW2_Y;
-          const adCenterX = adX + AD_W / 2;
-          const adv = document.createElement('div');
-          adv.className = 'cc-satellite cc-satellite--ad';
-          adv.setAttribute('data-satellite-parent', String(campId));
-          adv.setAttribute('data-satellite-type', 'ad');
-          adv.setAttribute('data-satellite-id', String(ad.id));
-          adv.style.left = `${adX}px`;
-          adv.style.top  = `${adY}px`;
-          adv.style.width  = `${AD_W}px`;
-          adv.style.height = `${AD_H}px`;
-          // Texto del anuncio: title (headline) || body || generated_copy
+          const adDiv = document.createElement('div');
+          adDiv.className = 'cc-satellite cc-satellite--ad';
+          adDiv.setAttribute('data-satellite-parent', String(campId));
+          adDiv.setAttribute('data-satellite-type', 'ad');
+          adDiv.setAttribute('data-satellite-id', String(ad.id));
+          adDiv.style.left = `${adX}px`;
+          adDiv.style.top  = `${adY}px`;
+          adDiv.style.width  = `${AD_W}px`;
+          adDiv.style.height = `${AD_H}px`;
           const headline = ad.title || ad.body || ad.copy || '';
           const adName = (ad.name && String(ad.name).trim()) || 'Sin nombre';
-          adv.innerHTML = `
+          adDiv.innerHTML = `
             <div class="cc-satellite-thumb"><i class="fas fa-image"></i></div>
             <div class="cc-satellite-body">
               <span class="cc-satellite-type">Anuncio</span>
@@ -1843,18 +1833,32 @@
               <span class="cc-satellite-cta"><i class="fas fa-arrow-up-right-from-square"></i>&nbsp;Mas info</span>
               <span class="cc-satellite-sub" style="margin-top:2px;">${fmt(ad.impr)} impr</span>
             </div>`;
-          world.appendChild(adv);
-
-          // Edge conjunto → anuncio
-          const path2 = document.createElementNS(NS, 'path');
-          path2.setAttribute('class', 'cc-satellite-edge');
-          const ddy = adY - adsetBottomY;
-          const ccy1 = adsetBottomY + ddy * 0.45;
-          const ccy2 = adY - ddy * 0.45;
-          path2.setAttribute('d', `M ${adsetBottomX} ${adsetBottomY} C ${adsetBottomX} ${ccy1}, ${adCenterX} ${ccy2}, ${adCenterX} ${adY}`);
-          svg.appendChild(path2);
+          world.appendChild(adDiv);
+          linkages.push({ from: adsetDiv, to: adDiv });
         });
       });
+    });
+
+    // FASE 2: medir DOM y dibujar paths en screen coords (relative al canvas)
+    if (!linkages.length) return;
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const NS = 'http://www.w3.org/2000/svg';
+    linkages.forEach((link) => {
+      const fr = link.from.getBoundingClientRect();
+      const tr = link.to.getBoundingClientRect();
+      const fromX = (fr.left + fr.width / 2) - canvasRect.left;
+      const fromY = fr.bottom - canvasRect.top;
+      const toX   = (tr.left + tr.width / 2) - canvasRect.left;
+      const toY   = tr.top - canvasRect.top;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('class', 'cc-satellite-edge');
+      const dy = toY - fromY;
+      const cy1 = fromY + dy * 0.45;
+      const cy2 = toY - dy * 0.45;
+      path.setAttribute('d', `M ${fromX} ${fromY} C ${fromX} ${cy1}, ${toX} ${cy2}, ${toX} ${toY}`);
+      svg.appendChild(path);
     });
   };
 
