@@ -1732,8 +1732,35 @@
 .cc-strategy-create i { font-size: 0.7rem; }
 
 /* Items de la seccion Nodos (catalogo) */
-.cc-nodo-item { cursor: default; }
+.cc-nodo-item { cursor: pointer; position: relative; }
 .cc-nodo-item:hover { background: rgba(255, 255, 255, 0.04); }
+.cc-nodo-item.is-expanded { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.18); }
+.cc-nodo-chevron {
+  margin-left: 4px;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+}
+.cc-nodo-item.is-expanded .cc-nodo-chevron { color: var(--text-primary, #fff); }
+
+/* Sub-lista expandida con items dragables */
+.cc-nodo-sublist {
+  margin: -2px 0 6px 14px;
+  padding: 6px 0 6px 10px;
+  display: flex; flex-direction: column; gap: 4px;
+  border-left: 1px solid var(--border-divider, #242424);
+}
+.cc-nodo-sub-item {
+  padding: 6px 8px !important;
+  font-size: 0.72rem;
+}
+.cc-nodo-sub-item .cc-lib-item-ic { font-size: 0.65rem; }
+.cc-nodo-empty {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  font-style: italic;
+  text-align: center;
+}
 
 /* Placeholder del Dashboard */
 .cc-dash-placeholder {

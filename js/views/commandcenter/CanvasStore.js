@@ -2866,6 +2866,67 @@
     return [];
   };
 
+  /** Renderiza la lista de INSTANCIAS dragables de un tipo de nodo. */
+  P._nodosInstancesHTML = function (catalogItem) {
+    const t = catalogItem.type;
+    let instances = [];
+    let dragHint = '';
+
+    if (t === 'audience') {
+      instances = (this._audiences || []).map((a) => ({
+        id: a.id, name: a.name || 'Sin nombre',
+        sub: a.is_active === false ? 'apagada' : '',
+        libType: 'audiences',
+      }));
+      dragHint = ' — arrastra al canvas';
+    } else if (t === 'concept') {
+      instances = (this._campaigns || []).filter((c) => !c.last_synced_at).map((c) => ({
+        id: c.id, name: c.nombre_campana || 'Sin nombre',
+        sub: c.status || '', libType: 'concepts',
+      }));
+      dragHint = ' — arrastra al canvas';
+    } else if (t === 'campaign-real') {
+      // Solo las reales que NO esten ya en el canvas
+      instances = (this._campaigns || []).filter((c) => c.last_synced_at && !(typeof this._realOnCanvas === 'function' && this._realOnCanvas(c))).map((c) => ({
+        id: c.id, name: c.nombre_campana || 'Sin nombre',
+        sub: c.platform || '', libType: 'campaigns', camp: true,
+      }));
+      dragHint = ' — arrastra al canvas';
+    } else if (['product', 'service', 'place', 'flow', 'brief'].includes(t)) {
+      const libKey = ({ product: 'products', service: 'services', place: 'places', flow: 'flows', brief: 'briefs' })[t];
+      const cached = this._libCache && this._libCache[libKey];
+      if (cached === undefined) {
+        // fetch lazy fire-and-forget; el next render lo recoge
+        if (typeof this._fetchLibrary === 'function') {
+          this._fetchLibrary(libKey).then(() => {
+            // re-render del body si Nodos sigue activo
+            if (this._activeSection === 'nodos') {
+              const b = document.getElementById('ccPanelBody');
+              if (b) b.innerHTML = this._libBodyHTML('nodos');
+            }
+          }).catch(() => {});
+        }
+        return '<div class="cc-nodo-sublist"><div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div></div>';
+      }
+      instances = (cached || []).map((it) => ({ ...it, libType: libKey }));
+      dragHint = ' — arrastra al canvas';
+    } else if (t === 'sticky' || t === 'group') {
+      return '<div class="cc-nodo-sublist"><div class="cc-nodo-empty">Se crean desde el lienzo (clic derecho).</div></div>';
+    }
+
+    if (!instances.length) {
+      return '<div class="cc-nodo-sublist"><div class="cc-nodo-empty">Sin elementos.</div></div>';
+    }
+    const icon = catalogItem.icon;
+    const itemsHTML = instances.map((it) => `
+      <div class="cc-lib-item cc-nodo-sub-item" draggable="true" data-lib-type="${this.escapeHtml(it.libType)}" data-lib-id="${this.escapeHtml(String(it.id))}" ${it.camp ? `data-camp-id="${this.escapeHtml(String(it.id))}"` : ''} title="${this.escapeHtml(it.name)}${dragHint}">
+        <i class="fas ${this.escapeHtml(icon)} cc-lib-item-ic"></i>
+        <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
+        ${it.sub ? `<span class="cc-lib-item-sub">${this.escapeHtml(it.sub)}</span>` : ''}
+      </div>`).join('');
+    return `<div class="cc-nodo-sublist">${itemsHTML}</div>`;
+  };
+
   /** Tipos de nodo disponibles (catalogo agrupado). */
   P._nodosCatalog = function () {
     const cAud  = (this._audiences || []).length;
@@ -2908,22 +2969,27 @@
     }
     if (key === 'nodos') {
       const items = this._nodosCatalog();
-      // Agrupar por group
       const groups = new Map();
       items.forEach((it) => {
         if (!groups.has(it.group)) groups.set(it.group, []);
         groups.get(it.group).push(it);
       });
+      const expanded = this._nodosExpanded || new Set();
       const html = [];
       groups.forEach((arr, gname) => {
         html.push(`<div class="cc-lib-group">${this.escapeHtml(gname)}</div>`);
         arr.forEach((it) => {
+          const isExpanded = expanded.has(it.id);
           const count = Number.isFinite(it.count) ? `<span class="cc-lib-item-sub">${it.count}</span>` : '';
-          html.push(`<div class="cc-lib-item cc-nodo-item" data-nodo-type="${this.escapeHtml(it.type)}" title="${this.escapeHtml(it.name)}">
+          html.push(`<div class="cc-lib-item cc-nodo-item ${isExpanded ? 'is-expanded' : ''}" data-nodo-type="${this.escapeHtml(it.type)}" data-nodo-id="${this.escapeHtml(it.id)}" title="${this.escapeHtml(it.name)}">
             <i class="fas ${this.escapeHtml(it.icon)} cc-lib-item-ic"></i>
             <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
             ${count}
+            <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} cc-nodo-chevron"></i>
           </div>`);
+          if (isExpanded) {
+            html.push(this._nodosInstancesHTML(it));
+          }
         });
       });
       return html.join('');
@@ -2973,6 +3039,24 @@
         if (input) input.focus();
       };
       body.addEventListener('click', this._ccLibSearchClear);
+    }
+    // F2: handler para Nodos (toggle expand de cada tipo)
+    if (!this._ccNodosClick) {
+      this._ccNodosClick = (e) => {
+        const item = e.target.closest('.cc-nodo-item[data-nodo-id]');
+        if (!item) return;
+        e.preventDefault(); e.stopPropagation();
+        const id = item.getAttribute('data-nodo-id');
+        if (!this._nodosExpanded) this._nodosExpanded = new Set();
+        if (this._nodosExpanded.has(id)) this._nodosExpanded.delete(id);
+        else this._nodosExpanded.add(id);
+        // Re-render body si Nodos sigue activo
+        if (this._activeSection === 'nodos') {
+          const b = document.getElementById('ccPanelBody');
+          if (b) b.innerHTML = this._libBodyHTML('nodos');
+        }
+      };
+      body.addEventListener('click', this._ccNodosClick);
     }
     // F2: handlers para Estrategias (switch + create)
     if (!this._ccStrategyClick) {
