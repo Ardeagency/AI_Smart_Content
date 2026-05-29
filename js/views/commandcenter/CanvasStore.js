@@ -1579,6 +1579,8 @@
       this._hydrateRemoteView();
       // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
       this._installLibSearch();
+      // F1.9: context menu (right-click) sobre canvas
+      this._installCanvasContextMenu();
       return r;
     };
   }
@@ -1876,6 +1878,196 @@
     }
   };
 
+  // ------------------------------------------------------------------
+  // F1.9: context menu (right-click)
+  //
+  // contextmenu sobre nodo:
+  //   - si el nodo NO esta en selectionSet → single-seleccionarlo primero
+  //   - menu: Duplicar / Copiar / Colapsar (single) / Quitar del lienzo
+  //     (identity+real) / Borrar / Propiedades (disabled F1.12)
+  // contextmenu sobre canvas vacio:
+  //   - menu: Pegar (disabled si clipboard vacio) / Agregar nota (disabled
+  //     F1.10) / Agregar grupo (disabled F1.11)
+  // Cierre: click fuera, Esc, o click en un item.
+  // ------------------------------------------------------------------
+
+  P._installCanvasContextMenu = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    if (!this._ccCtxHandler) {
+      this._ccCtxHandler = (e) => {
+        // Skip si el target son inputs / panel flotante / inside del propio menu
+        if (e.target.closest('input, textarea, select, .cc-floating-panel, .cc-ctx-menu')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this._openCanvasContextMenu(e);
+      };
+      canvas.addEventListener('contextmenu', this._ccCtxHandler);
+    }
+    if (!this._ccCtxOutside) {
+      this._ccCtxOutside = (e) => {
+        if (!this._ccCtxOpen) return;
+        if (e.target.closest('.cc-ctx-menu')) return;
+        this._closeCanvasContextMenu();
+      };
+      // capture-phase para ganar antes que cualquier otro handler de click
+      document.addEventListener('mousedown', this._ccCtxOutside, true);
+    }
+    if (!this._ccCtxEsc) {
+      this._ccCtxEsc = (e) => {
+        if (this._ccCtxOpen && (e.key === 'Escape' || e.key === 'Esc')) {
+          this._closeCanvasContextMenu();
+        }
+      };
+      document.addEventListener('keydown', this._ccCtxEsc, true);
+    }
+  };
+
+  P._closeCanvasContextMenu = function () {
+    const m = this._ccCtxOpen;
+    if (!m) return;
+    try { m.remove(); } catch (_) {}
+    this._ccCtxOpen = null;
+  };
+
+  P._openCanvasContextMenu = function (e) {
+    this._ensureStore();
+    this._closeCanvasContextMenu();
+    const nodeEl = e.target.closest('.cc-node');
+    const isMac = /Mac|iP(hone|ad|od)/.test(navigator.platform);
+    const M = isMac ? '⌘' : 'Ctrl+';
+
+    // Si right-click sobre un nodo NO seleccionado, single-seleccionarlo
+    // primero (UX estandar). Si esta dentro del set actual, mantenerlo.
+    if (nodeEl) {
+      const key = nodeEl.getAttribute('data-node-key');
+      if (!this._store.selectionSet.has(key)) {
+        const desc = {
+          type: nodeEl.getAttribute('data-type'),
+          id: nodeEl.getAttribute('data-id'),
+          key,
+        };
+        if (desc.type === 'identity') desc.type = nodeEl.getAttribute('data-identity-type');
+        this._store.setSelection({ key, descriptor: desc });
+        this._selectedKey = key;
+        this._selected = desc;
+        this._renderSelection();
+        if (typeof this._focusFlow === 'function') this._focusFlow(key);
+      }
+    }
+
+    const m = document.createElement('div');
+    m.className = 'cc-ctx-menu';
+    m.setAttribute('role', 'menu');
+    m.style.left = e.clientX + 'px';
+    m.style.top  = e.clientY + 'px';
+
+    const items = nodeEl
+      ? this._ccCtxItemsForNode(nodeEl, M)
+      : this._ccCtxItemsForCanvas(e, M);
+    m.innerHTML = items.map((it) => {
+      if (it.sep) return '<div class="cc-ctx-sep"></div>';
+      const danger = it.danger ? ' cc-ctx-item--danger' : '';
+      const dis = it.disabled ? ' disabled' : '';
+      const soon = it.soon ? `<span class="cc-ctx-soon">${this.escapeHtml(it.soon)}</span>` : '';
+      const kbd = it.kbd ? `<kbd>${this.escapeHtml(it.kbd)}</kbd>` : '';
+      return `<button type="button" class="cc-ctx-item${danger}" data-ctx-action="${this.escapeHtml(it.action)}"${dis} role="menuitem">
+        <i class="fas ${this.escapeHtml(it.icon)}"></i>
+        <span class="cc-ctx-label">${this.escapeHtml(it.label)}</span>
+        ${soon}${kbd}
+      </button>`;
+    }).join('');
+
+    document.body.appendChild(m);
+    this._ccCtxOpen = m;
+
+    // Reposicionar si se sale del viewport
+    const r = m.getBoundingClientRect();
+    if (r.right > window.innerWidth) m.style.left = Math.max(4, window.innerWidth - r.width - 4) + 'px';
+    if (r.bottom > window.innerHeight) m.style.top = Math.max(4, window.innerHeight - r.height - 4) + 'px';
+
+    // Click en item
+    m.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.cc-ctx-item[data-ctx-action]');
+      if (!btn || btn.hasAttribute('disabled')) return;
+      const action = btn.getAttribute('data-ctx-action');
+      this._closeCanvasContextMenu();
+      this._dispatchCtxAction(action, nodeEl, e);
+    });
+  };
+
+  /** Lista de items para context menu sobre un nodo (selection-aware). */
+  P._ccCtxItemsForNode = function (nodeEl, M) {
+    const set = this._store.selectionSet;
+    const size = set ? set.size : 0;
+    const key = nodeEl.getAttribute('data-node-key');
+    const type = nodeEl.getAttribute('data-type');
+    const isCollapsed = this._collapsed && this._collapsed.has(key);
+    // canvas-only types: identity (cualquier subtipo) + campana real
+    const canvasOnly = type === 'identity' || type === 'campaign-real';
+    const items = [
+      { action: 'duplicate', icon: 'fa-clone',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
+      { action: 'copy',      icon: 'fa-copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
+    ];
+    if (size <= 1) {
+      items.push({ action: 'collapse', icon: isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
+    }
+    if (canvasOnly) {
+      items.push({ action: 'uncanvas', icon: 'fa-eye-slash', label: size > 1 ? 'Quitar del lienzo' : 'Quitar del lienzo' });
+    }
+    items.push({ sep: true });
+    items.push({ action: 'delete', icon: 'fa-trash', label: size > 1 ? 'Borrar seleccion' : 'Borrar', kbd: 'Del', danger: true });
+    items.push({ sep: true });
+    items.push({ action: 'props',  icon: 'fa-sliders', label: 'Propiedades', soon: 'F1.12', disabled: true });
+    return items;
+  };
+
+  /** Lista de items para context menu sobre canvas vacio. */
+  P._ccCtxItemsForCanvas = function (e, M) {
+    const hasClip = !!(this._ccClipboard && this._ccClipboard.items && this._ccClipboard.items.length);
+    return [
+      { action: 'paste',  icon: 'fa-paste',        label: 'Pegar',        kbd: M + 'V', disabled: !hasClip },
+      { sep: true },
+      { action: 'sticky', icon: 'fa-note-sticky',  label: 'Agregar nota', soon: 'F1.10', disabled: true },
+      { action: 'group',  icon: 'fa-object-group', label: 'Agregar grupo', soon: 'F1.11', disabled: true },
+    ];
+  };
+
+  /** Despacha la accion seleccionada del menu. */
+  P._dispatchCtxAction = function (action, nodeEl /*, e */) {
+    switch (action) {
+      case 'duplicate': this._ccDuplicate(); return;
+      case 'copy':      this._ccCopyToClipboard(); return;
+      case 'paste':     this._ccPasteFromClipboard(); return;
+      case 'delete':    this._ccDeleteSelection(); return;
+      case 'collapse':
+        if (nodeEl) this._toggleCollapse(nodeEl.getAttribute('data-node-key'), nodeEl);
+        return;
+      case 'uncanvas':
+        // Reutiliza la logica de Del: identity → uncanvas; campaign real → uncanvas
+        // (NO toca audiencias / campanas conceptuales).
+        if (this._store.selectionSet && this._store.selectionSet.size > 0) {
+          const keys = [...this._store.selectionSet];
+          keys.forEach((key) => {
+            if (key.startsWith('camp:')) {
+              const id = key.slice(5);
+              const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
+              if (row && row.last_synced_at) this._removeRealFromCanvas(id);
+            } else if (!key.startsWith('aud:')) {
+              const colon = key.indexOf(':');
+              if (colon > 0) this._removeIdentityFromCanvas(key.slice(0, colon), key.slice(colon + 1));
+            }
+          });
+        }
+        return;
+      case 'props':
+      case 'sticky':
+      case 'group':
+        // Stubs (F1.10/F1.11/F1.12)
+        return;
+    }
+  };
+
   /** Instala listeners de input/click sobre ccPanelBody (1 vez por vista). */
   P._installLibSearch = function () {
     const body = document.getElementById('ccPanelBody');
@@ -2020,6 +2212,20 @@
     if (panelBody && this._ccLibSearchClear) {
       panelBody.removeEventListener('click', this._ccLibSearchClear);
       this._ccLibSearchClear = null;
+    }
+    // F1.9: cerrar context menu pendiente + desmontar listeners
+    if (this._ccCtxOpen) { try { this._ccCtxOpen.remove(); } catch (_) {} this._ccCtxOpen = null; }
+    if (canvas && this._ccCtxHandler) {
+      canvas.removeEventListener('contextmenu', this._ccCtxHandler);
+      this._ccCtxHandler = null;
+    }
+    if (this._ccCtxOutside) {
+      document.removeEventListener('mousedown', this._ccCtxOutside, true);
+      this._ccCtxOutside = null;
+    }
+    if (this._ccCtxEsc) {
+      document.removeEventListener('keydown', this._ccCtxEsc, true);
+      this._ccCtxEsc = null;
     }
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
