@@ -161,8 +161,8 @@ class AuthService {
           // Campos para arquitectura MPA + SPA
           default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
           is_developer: !!profile.is_developer,
-          dev_role: profile.dev_role || 'contributor', // 'contributor' | 'lead'
-          dev_rank: profile.dev_rank || 'novice'
+          dev_role: profile.dev_role || 'contributor', // lead | senior | contributor | viewer
+          dev_rank: profile.dev_rank || 'rookie' // rookie | junior | builder | expert | master | legend
         };
 
         this.userMode = this.currentUser.default_view_mode;
