@@ -42,22 +42,22 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   USER_TYPES = [
     {
-      key: 'consumer',
-      label: 'Consumer',
+      key: 'member_org',
+      label: 'Member Org',
       icon: 'fa-user',
-      hint: 'Usuario final con acceso a una organizacion'
+      hint: 'Se afilia a una organizacion existente con un rol asignado'
+    },
+    {
+      key: 'owner_org',
+      label: 'Owner Org',
+      icon: 'fa-crown',
+      hint: 'Crea una organizacion nueva y queda como owner'
     },
     {
       key: 'developer',
       label: 'Developer',
       icon: 'fa-code',
       hint: 'Acceso al portal /dev'
-    },
-    {
-      key: 'admin',
-      label: 'Admin',
-      icon: 'fa-user-shield',
-      hint: 'Gestiona la organizacion'
     }
   ];
 
@@ -65,15 +65,14 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   getStepLabel(step) {
     if (step.key !== 'final') return step.label;
-    if (this.userType === 'consumer')  return 'Afiliar';
-    if (this.userType === 'admin')     return 'Crear org';
-    if (this.userType === 'developer') return 'Permisos';
+    if (this.userType === 'member_org') return 'Afiliar';
+    if (this.userType === 'owner_org')  return 'Crear org';
+    if (this.userType === 'developer')  return 'Permisos';
     return 'Configurar';
   }
 
   platformRoleFor(t) {
     if (t === 'developer') return 'dev';
-    if (t === 'admin')     return 'admin';
     return 'user';
   }
 
