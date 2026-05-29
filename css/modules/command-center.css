@@ -2010,12 +2010,57 @@
    sobre sus border-radius, asi que el clipping interno se preserva. */
 .cc-node { overflow: visible !important; }
 
-/* F2: productos, servicios y lugares NO reciben input.
-   Son recursos que pueden ser usados como input por otros nodos.
-   Ocultamos el puerto de entrada (left side). */
+/* F2: logica de puertos segun el modelo BD real
+   ─────────────────────────────────────────────────────────────────
+
+   RECURSOS (solo OUTPUT):
+     Producto/Servicio/Lugar (brand_entities polimorfico) — consumidos
+       por brief (campaign_brief_entities), flow (flow_runs.entity_id),
+       campana (runs_outputs.entity_id). NO reciben nada.
+     Objetivo de Audiencia (audience_personas) — datos manuales del
+       usuario (dolores, deseos, etc.) + derivados ad_insights externos.
+       Consumido por campaigns.persona_id, flow_runs.persona_id,
+       runs_outputs.persona_id. NO recibe de otro nodo.
+
+   PROCESOS (input + output):
+     Brief (campaign_briefs) — IN: entities via campaign_brief_entities
+       + Obj.Audiencia opcional (no hay FK directa pero conceptualmente).
+       OUT: flow_runs.brief_id, runs_outputs.brief_id, campaigns.brief_id.
+     Flow (content_flows + flow_runs) — IN: brief_id + persona_id +
+       entity_id (campos de flow_runs). OUT: runs_outputs[] (assets).
+     Objetivo de Campana (campaigns con last_synced_at IS NULL) — IN:
+       brief, persona, entities como contexto del plan conceptual.
+       OUT: el row "real" cuando le llega sync de Meta/Google.
+
+   DESTINO FINAL (solo INPUT):
+     Campana (campaigns con last_synced_at NOT NULL) — recibe
+       runs_outputs.campaign_id (assets publicados) + persona_id.
+       Produce metricas (cached_*, ad_insights_daily) por LECTURA
+       externa, no por flujo de canvas.
+
+   ANOTACIONES (sin ports):
+     Nota (canvas_stickies), Grupo (canvas_groups) — visual del usuario,
+       sin relacion BD con otros nodos. */
+
+/* Recursos: ocultar port-IN */
 .cc-node--identity[data-identity-type="products"] .cc-node-port--in,
 .cc-node--identity[data-identity-type="services"] .cc-node-port--in,
-.cc-node--identity[data-identity-type="places"] .cc-node-port--in {
+.cc-node--identity[data-identity-type="places"]   .cc-node-port--in,
+.cc-node--audience                                .cc-node-port--in {
+  display: none !important;
+}
+
+/* Destino final: ocultar port-OUT */
+.cc-node--campaign.cc-node--readonly .cc-node-port--out,
+.cc-node[data-type="campaign-real"]  .cc-node-port--out {
+  display: none !important;
+}
+
+/* Anotaciones: ocultar ambos ports (defensivo; el HTML que genera
+   _nodeStickyHTML / _nodeGroupHTML no los incluye, pero por si algun
+   render legacy los inyecta) */
+.cc-node[data-type="sticky"] .cc-node-port,
+.cc-node[data-type="group"]  .cc-node-port {
   display: none !important;
 }
 
