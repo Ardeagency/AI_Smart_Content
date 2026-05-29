@@ -13766,6 +13766,11 @@
   animation: team-modal-overlay-in 0.18s ease;
 }
 
+/* hidden attr override (sino el display:flex de arriba lo gana) */
+.team-modal-overlay[hidden] {
+  display: none !important;
+}
+
 @keyframes team-modal-overlay-in {
   from { opacity: 0; }
   to   { opacity: 1; }
