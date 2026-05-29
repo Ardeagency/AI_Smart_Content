@@ -1697,6 +1697,163 @@
   }
 
   // ------------------------------------------------------------------
+  // F2: satelites de conjuntos+anuncios bajo el nodo Campana
+  //
+  // Cuando una campana real esta expanded (this._expandedReal.has(id)) y
+  // sus datos de adsets/ads ya estan cacheados en this._adData[id], spawn-
+  // eamos nodos satelite tipo pill alrededor del padre + edges bezier
+  // dashed. Los satelites NO se persisten ni son interactivos en v1.
+  // Sus posiciones se recalculan en cada render/_scheduleEdges para que
+  // viajen con el padre durante drag/pan/zoom.
+  // ------------------------------------------------------------------
+
+  P._renderCampaignSatellites = function () {
+    const world = document.getElementById('ccCanvasWorld');
+    const svg   = document.getElementById('ccCanvasEdges');
+    if (!world || !svg) return;
+    // Limpia satelites + edges previas
+    world.querySelectorAll('.cc-satellite').forEach((el) => el.remove());
+    svg.querySelectorAll('.cc-satellite-edge').forEach((el) => el.remove());
+    if (!this._expandedReal || this._expandedReal.size === 0) return;
+    if (!this._adData) return;
+
+    const fmt = (v) => {
+      const x = Number(v);
+      if (!Number.isFinite(x)) return '0';
+      if (x >= 1e6) return (x / 1e6).toFixed(1) + 'M';
+      if (x >= 1e3) return (x / 1e3).toFixed(1) + 'K';
+      return Math.round(x).toLocaleString('es-ES');
+    };
+    const shortId = (id) => {
+      const s = String(id || '');
+      return s.length > 10 ? '…' + s.slice(-8) : s;
+    };
+
+    const NS = 'http://www.w3.org/2000/svg';
+    this._expandedReal.forEach((campId) => {
+      const data = this._adData[String(campId)];
+      if (!data || !Array.isArray(data.adsets) || data.adsets.length === 0) return;
+      const parentKey = `camp:${campId}`;
+      const pos = this._positions[parentKey];
+      if (!pos) return;
+      const PARENT_W = 280;
+      const PARENT_H = 140;
+      const ADSET_W = 180, ADSET_H = 44, ADSET_GAP = 24;
+      const AD_W    = 140, AD_H    = 40, AD_GAP    = 18;
+      const ROW1_Y  = pos.y + PARENT_H + 60;  // distancia padre→adset
+      const ROW2_Y  = ROW1_Y + ADSET_H + 60;  // distancia adset→ad
+
+      const adsets = data.adsets.slice(0, 6); // tope de 6 visibles
+      const totalAdsetsW = adsets.length * ADSET_W + (adsets.length - 1) * ADSET_GAP;
+      const adsetsStartX = pos.x + PARENT_W / 2 - totalAdsetsW / 2;
+      const parentBottomX = pos.x + PARENT_W / 2;
+      const parentBottomY = pos.y + PARENT_H;
+
+      adsets.forEach((aset, i) => {
+        const aX = adsetsStartX + i * (ADSET_W + ADSET_GAP);
+        const aY = ROW1_Y;
+        const aCenterX = aX + ADSET_W / 2;
+
+        // Satelite adset
+        const div = document.createElement('div');
+        div.className = 'cc-satellite cc-satellite--adset';
+        div.setAttribute('data-satellite-parent', String(campId));
+        div.setAttribute('data-satellite-type', 'adset');
+        div.setAttribute('data-satellite-id', String(aset.id));
+        div.style.left = `${aX}px`;
+        div.style.top  = `${aY}px`;
+        div.style.width  = `${ADSET_W}px`;
+        div.style.height = `${ADSET_H}px`;
+        div.innerHTML = `
+          <i class="fas fa-layer-group"></i>
+          <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+            <span class="cc-satellite-name" title="${this.escapeHtml(aset.name || shortId(aset.id))}">${this.escapeHtml(aset.name || 'Conjunto ' + shortId(aset.id))}</span>
+            <span class="cc-satellite-sub">${fmt(aset.impr)} impr · ${fmt(aset.conv)} conv</span>
+          </div>`;
+        world.appendChild(div);
+
+        // Edge padre → adset
+        const path1 = document.createElementNS(NS, 'path');
+        path1.setAttribute('class', 'cc-satellite-edge');
+        const dy = aY - parentBottomY;
+        const cy1 = parentBottomY + dy * 0.45;
+        const cy2 = aY - dy * 0.45;
+        path1.setAttribute('d', `M ${parentBottomX} ${parentBottomY} C ${parentBottomX} ${cy1}, ${aCenterX} ${cy2}, ${aCenterX} ${aY}`);
+        svg.appendChild(path1);
+
+        // Ads del adset (tope 5 visibles)
+        const ads = Array.isArray(aset.ads) ? aset.ads.slice(0, 5) : [];
+        if (!ads.length) return;
+        const totalAdsW = ads.length * AD_W + (ads.length - 1) * AD_GAP;
+        const adsStartX = aCenterX - totalAdsW / 2;
+        const adsetBottomX = aCenterX;
+        const adsetBottomY = aY + ADSET_H;
+        ads.forEach((ad, j) => {
+          const adX = adsStartX + j * (AD_W + AD_GAP);
+          const adY = ROW2_Y;
+          const adCenterX = adX + AD_W / 2;
+          const adv = document.createElement('div');
+          adv.className = 'cc-satellite cc-satellite--ad';
+          adv.setAttribute('data-satellite-parent', String(campId));
+          adv.setAttribute('data-satellite-type', 'ad');
+          adv.setAttribute('data-satellite-id', String(ad.id));
+          adv.style.left = `${adX}px`;
+          adv.style.top  = `${adY}px`;
+          adv.style.width  = `${AD_W}px`;
+          adv.style.height = `${AD_H}px`;
+          adv.innerHTML = `
+            <i class="fas fa-image"></i>
+            <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+              <span class="cc-satellite-name" title="${this.escapeHtml(ad.title || ad.name || shortId(ad.id))}">${this.escapeHtml(ad.title || ad.name || 'Ad ' + shortId(ad.id))}</span>
+              <span class="cc-satellite-sub">${fmt(ad.impr)} impr</span>
+            </div>`;
+          world.appendChild(adv);
+
+          // Edge adset → ad
+          const path2 = document.createElementNS(NS, 'path');
+          path2.setAttribute('class', 'cc-satellite-edge');
+          const ddy = adY - adsetBottomY;
+          const ccy1 = adsetBottomY + ddy * 0.45;
+          const ccy2 = adY - ddy * 0.45;
+          path2.setAttribute('d', `M ${adsetBottomX} ${adsetBottomY} C ${adsetBottomX} ${ccy1}, ${adCenterX} ${ccy2}, ${adCenterX} ${adY}`);
+          svg.appendChild(path2);
+        });
+      });
+    });
+  };
+
+  // Wrap _renderCanvas para tambien renderear satelites despues del paint
+  const _f12RenderCanvas = P._renderCanvas;
+  if (typeof _f12RenderCanvas === 'function') {
+    P._renderCanvas = function () {
+      const r = _f12RenderCanvas.apply(this, arguments);
+      this._renderCampaignSatellites();
+      return r;
+    };
+  }
+
+  // Wrap _scheduleEdges/_updateEdgeGeometry: cuando se actualizan edges
+  // (drag/pan), re-rendereamos satelites para que viajen con el padre.
+  const _f12UpdateEdgeGeometry = P._updateEdgeGeometry;
+  if (typeof _f12UpdateEdgeGeometry === 'function') {
+    P._updateEdgeGeometry = function () {
+      const r = _f12UpdateEdgeGeometry.apply(this, arguments);
+      this._renderCampaignSatellites();
+      return r;
+    };
+  }
+
+  // Wrap _renderEdges: tras un re-render completo de edges, tambien los satelites
+  const _f12RenderEdges = P._renderEdges;
+  if (typeof _f12RenderEdges === 'function') {
+    P._renderEdges = function () {
+      const r = _f12RenderEdges.apply(this, arguments);
+      this._renderCampaignSatellites();
+      return r;
+    };
+  }
+
+  // ------------------------------------------------------------------
   // F2-prep: gestion de estrategias (n8n-flow-like containers)
   // ------------------------------------------------------------------
 

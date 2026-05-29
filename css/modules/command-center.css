@@ -1672,6 +1672,51 @@
   padding: 6px 2px; text-align: center; font-style: italic;
 }
 
+/* F2: satelites de conjuntos+anuncios bajo el nodo Campana
+   No interactivos en v1 (no drag, no select, puro visual derivado).
+   Posicionados en world coords dentro de #ccCanvasWorld; viajan con el
+   padre porque sus posiciones se recalculan en cada render/_scheduleEdges. */
+.cc-satellite {
+  position: absolute;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 999px;
+  background: var(--bg-card, #141517);
+  color: var(--text-primary, #fff);
+  font-size: 0.72rem;
+  pointer-events: auto;
+  user-select: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+.cc-satellite i { font-size: 0.7rem; color: var(--text-muted); flex: 0 0 auto; }
+.cc-satellite-name {
+  font-weight: 600; max-width: 120px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.cc-satellite-sub {
+  font-size: 0.62rem; color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.cc-satellite--adset {
+  min-width: 180px;
+  border-radius: 12px;
+}
+.cc-satellite--adset i { color: #b9d5ff; }
+.cc-satellite--ad {
+  min-width: 140px;
+  border-radius: 12px;
+}
+.cc-satellite--ad i { color: #b6f0e0; }
+.cc-satellite-edge {
+  fill: none;
+  stroke: var(--border-divider, #2a2a30);
+  stroke-width: 1.4;
+  stroke-dasharray: 4 4;
+}
+
 /* F2: ANCLA — Objetivo de Campana como nodo padre/trigger de la estrategia.
    Visual distintivo: icono diana en cuadrado de accent + ring sutil. Todos
    los demas nodos pueden conectarse a este (es el centro de la estrategia). */
