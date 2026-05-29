@@ -3930,9 +3930,12 @@
         create_brief: 'Crear Brief',
         create_campaign: 'Crear Campana',
         pause_campaign: 'Pausar Campana',
+        resume_campaign: 'Reactivar Campana',
+        launch_campaign: 'Lanzar Campana',
         iterate_creative: 'Iterar Creativo',
         link_brief_to_campaign: 'Vincular Brief',
         publish_post: 'Publicar Post',
+        modify_segment: 'Modificar Segmento',
       };
       const icons = {
         update_persona: 'fa-users-gear',
@@ -3940,29 +3943,46 @@
         create_brief: 'fa-file-circle-plus',
         create_campaign: 'fa-bullhorn',
         pause_campaign: 'fa-pause',
+        resume_campaign: 'fa-play',
+        launch_campaign: 'fa-rocket',
         iterate_creative: 'fa-rotate',
         link_brief_to_campaign: 'fa-link',
         publish_post: 'fa-paper-plane',
+        modify_segment: 'fa-bullseye',
       };
+      // AUTONOMIA PARCIAL: Vera puede HACER cualquier cosa dentro de la
+      // plataforma (BD, generacion de assets) sin pedir aprobacion.
+      // SOLO pide aprobacion cuando va a TOCAR EL MUNDO EXTERIOR
+      // (plataformas, dinero, publicaciones publicas).
+      const EXTERNAL_ACTIONS = new Set([
+        'pause_campaign', 'resume_campaign', 'launch_campaign',
+        'publish_post', 'modify_segment',
+      ]);
+
+      // Solo lo EXTERNO aparece aqui. Lo interno Vera lo ejecuta sola y el
+      // usuario lo ve via el pulse del nodo en el canvas, no como tarjeta.
+      const external = insights.filter((it) => EXTERNAL_ACTIONS.has(it.action_type));
+
       const header = `<div class="cc-dash-header">
-        <span class="cc-dash-count">${insights.length}</span>
-        <span class="cc-dash-label">propuestas de Vera pendientes</span>
+        <span class="cc-dash-count">${external.length}</span>
+        <span class="cc-dash-label">acciones esperan tu aprobacion</span>
       </div>`;
-      if (!insights.length) {
+
+      if (external.length === 0) {
         return header + `<div class="cc-dash-empty">
           <i class="fas fa-check-circle"></i>
-          <p>Sin propuestas pendientes.</p>
-          <p class="cc-dash-soon">Vera te avisa cuando detecte una oportunidad.</p>
+          <p>Sin acciones pendientes.</p>
+          <p class="cc-dash-soon">Vera te avisa solo si necesita aprobacion para publicar, pausar o lanzar algo fuera de la plataforma.</p>
         </div>`;
       }
-      const cards = insights.map((it) => {
+
+      const cards = external.map((it) => {
         const confidence = Math.round((Number(it.vera_confidence) || 0) * 100);
         const actionLabel = labels[it.action_type] || it.action_type;
         const icon = icons[it.action_type] || 'fa-bolt';
         const created = it.created_at ? this._humanDelta(it.created_at) : '';
         const priority = it.priority || 0;
         const prClass = priority >= 8 ? ' cc-dash-card--high' : '';
-        // expires_at
         let expiresLabel = '';
         if (it.expires_at) {
           const ms = new Date(it.expires_at).getTime() - Date.now();
@@ -3990,8 +4010,8 @@
           <div class="cc-dash-card-foot">
             <span class="cc-dash-meta">${this.escapeHtml(created)}${expiresLabel ? ` · ${this.escapeHtml(expiresLabel)}` : ''}</span>
             <div class="cc-dash-actions">
-              <button type="button" class="cc-dash-btn cc-dash-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(it.id))}" title="Descartar"><i class="fas fa-xmark"></i> Descartar</button>
-              <button type="button" class="cc-dash-btn cc-dash-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(it.id))}" title="Aprobar"><i class="fas fa-check"></i> Aprobar</button>
+              <button type="button" class="cc-dash-btn cc-dash-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="fas fa-xmark"></i> Descartar</button>
+              <button type="button" class="cc-dash-btn cc-dash-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(it.id))}"><i class="fas fa-check"></i> Aprobar</button>
             </div>
           </div>
         </div>`;
