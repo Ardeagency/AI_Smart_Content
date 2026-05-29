@@ -1969,6 +1969,9 @@
         this._installRealtimeSubs();
         // Sprint 1.4: helper para simular Vera desde consola (dev)
         this._installVeraSimulator();
+        // Sprint 2: Vera Insights — cards de pending_actions en el canvas
+        this._hydrateVeraInsights();
+        this._installVeraInsightListeners();
       });
       // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
       this._installLibSearch();
@@ -2151,7 +2154,7 @@
     });
   };
 
-  // Wrap _renderCanvas para tambien renderear satelites + aplicar vera_states
+  // Wrap _renderCanvas para tambien renderear satelites + vera_states + Vera Insights
   const _f12RenderCanvas = P._renderCanvas;
   if (typeof _f12RenderCanvas === 'function') {
     P._renderCanvas = function () {
@@ -2159,6 +2162,8 @@
       this._renderCampaignSatellites();
       // Sprint 1: aplicar vera_state al DOM (las clases se pierden en re-render)
       this._applyAllVeraStates();
+      // Sprint 2: render de Vera Insights (cards en columna izquierda)
+      if (typeof this._renderVeraInsights === 'function') this._renderVeraInsights();
       return r;
     };
   }
@@ -2513,6 +2518,215 @@
   // distinto al previo dispara una clase CSS pulse en el nodo.
   // ------------------------------------------------------------------
 
+  // ------------------------------------------------------------------
+  // Sprint 2: Vera Insight nodes (vera_pending_actions visible en canvas)
+  //
+  // Fetch de pending_actions del brand activo + render como cards premium
+  // en una columna a la izquierda. Botones inline Aprobar/Rechazar
+  // disparan UPDATE BD; Realtime sync los hace desaparecer en vivo.
+  //
+  // Estos nodos NO son placements (no estan en canvas_node_placements);
+  // son ephemerals derivados de vera_pending_actions y se rendean
+  // directamente al world. Sus posiciones se recalculan cada render.
+  // ------------------------------------------------------------------
+
+  P._hydrateVeraInsights = async function () {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (this._ccVeraInsightsHydratedFor === this._containerRow.id) return;
+    this._ccVeraInsightsHydratedFor = this._containerRow.id;
+    try {
+      const { data: rows, error } = await this._supabase
+        .from('vera_pending_actions')
+        .select('id, action_type, target_table, target_id, status, vera_confidence, vera_reasoning, impact_estimate, priority, expires_at, created_at')
+        .eq('brand_container_id', this._containerRow.id)
+        .eq('status', 'pending')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) {
+        console.warn('[CC] hydrate vera insights:', error.message || error);
+        this._ccVeraInsightsHydratedFor = null;
+        return;
+      }
+      this._veraInsights = rows || [];
+      this._renderCanvas();
+    } catch (e) {
+      console.warn('[CC] hydrate vera insights exception:', e);
+      this._ccVeraInsightsHydratedFor = null;
+    }
+  };
+
+  P._renderVeraInsights = function () {
+    const world = document.getElementById('ccCanvasWorld');
+    const svg   = document.getElementById('ccCanvasEdges');
+    if (!world || !svg) return;
+    // Limpiar previos
+    world.querySelectorAll('.cc-vera-insight').forEach((el) => el.remove());
+    svg.querySelectorAll('.cc-vera-edge').forEach((el) => el.remove());
+    const insights = this._veraInsights || [];
+    if (!insights.length) return;
+
+    // Layout: columna izquierda del canvas, en cascada
+    const CARD_W = 280, CARD_H = 200, CARD_GAP = 24;
+    const startX = -350;
+    const startY = 0;
+
+    const labels = {
+      update_persona: 'Actualizar Audiencia',
+      create_audience: 'Crear Audiencia',
+      create_brief: 'Crear Brief',
+      create_campaign: 'Crear Campana',
+      pause_campaign: 'Pausar Campana',
+      iterate_creative: 'Iterar Creativo',
+      link_brief_to_campaign: 'Vincular Brief',
+      publish_post: 'Publicar Post',
+    };
+    const icons = {
+      update_persona: 'fa-users-gear',
+      create_audience: 'fa-users',
+      create_brief: 'fa-file-circle-plus',
+      create_campaign: 'fa-bullhorn',
+      pause_campaign: 'fa-pause',
+      iterate_creative: 'fa-rotate',
+      link_brief_to_campaign: 'fa-link',
+      publish_post: 'fa-paper-plane',
+    };
+
+    insights.forEach((insight, i) => {
+      const x = startX;
+      const y = startY + i * (CARD_H + CARD_GAP);
+      const confidence = Math.round((Number(insight.vera_confidence) || 0) * 100);
+      const actionLabel = labels[insight.action_type] || insight.action_type;
+      const icon = icons[insight.action_type] || 'fa-bolt';
+      const reasoning = String(insight.vera_reasoning || '').slice(0, 200);
+      const reasoningTrunc = (insight.vera_reasoning || '').length > 200 ? '…' : '';
+      // expires_at relativo
+      let expiresLabel = '';
+      if (insight.expires_at) {
+        const ms = new Date(insight.expires_at).getTime() - Date.now();
+        if (ms > 0) {
+          const h = Math.floor(ms / 36e5);
+          expiresLabel = h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`;
+        } else {
+          expiresLabel = 'vencido';
+        }
+      }
+      const impactItems = insight.impact_estimate && typeof insight.impact_estimate === 'object'
+        ? Object.entries(insight.impact_estimate).slice(0, 2).map(([k, v]) =>
+            `<span class="cc-vera-impact">${this.escapeHtml(k)}: <strong>${this.escapeHtml(String(v))}</strong></span>`
+          ).join('')
+        : '';
+
+      const div = document.createElement('div');
+      div.className = 'cc-vera-insight';
+      div.setAttribute('data-insight-id', String(insight.id));
+      div.style.left = `${x}px`;
+      div.style.top  = `${y}px`;
+      div.style.width  = `${CARD_W}px`;
+      div.innerHTML = `
+        <div class="cc-vera-head">
+          <span class="cc-vera-icon"><i class="fas ${icon}"></i></span>
+          <div class="cc-vera-head-text">
+            <span class="cc-vera-tag">VERA PROPONE</span>
+            <span class="cc-vera-title">${this.escapeHtml(actionLabel)}</span>
+          </div>
+          <span class="cc-vera-conf" title="Confianza de Vera">${confidence}%</span>
+        </div>
+        <div class="cc-vera-body">
+          <p class="cc-vera-reasoning">${this.escapeHtml(reasoning)}${reasoningTrunc}</p>
+          ${impactItems ? `<div class="cc-vera-impacts">${impactItems}</div>` : ''}
+        </div>
+        <div class="cc-vera-foot">
+          ${expiresLabel ? `<span class="cc-vera-expires" title="Tiempo restante"><i class="fas fa-clock"></i> ${expiresLabel}</span>` : '<span></span>'}
+          <div class="cc-vera-actions">
+            <button type="button" class="cc-vera-btn cc-vera-btn--reject" data-vera-action="reject" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Rechazar"><i class="fas fa-xmark"></i></button>
+            <button type="button" class="cc-vera-btn cc-vera-btn--approve" data-vera-action="approve" data-vera-id="${this.escapeHtml(String(insight.id))}" title="Aprobar"><i class="fas fa-check"></i> Aprobar</button>
+          </div>
+        </div>
+      `;
+      world.appendChild(div);
+    });
+
+    // Conexion bezier al target si existe en placements
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const NS = 'http://www.w3.org/2000/svg';
+    insights.forEach((insight) => {
+      const targetKey = this._veraInsightTargetKey(insight);
+      if (!targetKey) return;
+      const targetEl = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(targetKey)}"]`);
+      const sourceEl = document.querySelector(`.cc-vera-insight[data-insight-id="${ccCssEsc(String(insight.id))}"]`);
+      if (!targetEl || !sourceEl) return;
+      const sr = sourceEl.getBoundingClientRect();
+      const tr = targetEl.getBoundingClientRect();
+      const fromX = (sr.right) - canvasRect.left;
+      const fromY = (sr.top + sr.height / 2) - canvasRect.top;
+      const toX   = (tr.left) - canvasRect.left;
+      const toY   = (tr.top + tr.height / 2) - canvasRect.top;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('class', 'cc-vera-edge');
+      const dx = toX - fromX;
+      const cx1 = fromX + dx * 0.5;
+      const cx2 = toX - dx * 0.5;
+      path.setAttribute('d', `M ${fromX} ${fromY} C ${cx1} ${fromY}, ${cx2} ${toY}, ${toX} ${toY}`);
+      svg.appendChild(path);
+    });
+  };
+
+  P._veraInsightTargetKey = function (insight) {
+    if (!insight || !insight.target_table || !insight.target_id) return null;
+    const map = { audience_personas: 'aud', campaigns: 'camp', products: 'products', services: 'services', brand_places: 'places', content_flows: 'flows', campaign_briefs: 'briefs' };
+    const prefix = map[insight.target_table];
+    if (!prefix) return null;
+    return `${prefix}:${insight.target_id}`;
+  };
+
+  P._approveVeraInsight = async function (insightId) {
+    if (!this._supabase) return;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const { error } = await this._supabase
+        .from('vera_pending_actions')
+        .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id || null })
+        .eq('id', insightId);
+      if (error) { console.warn('[CC] approve vera:', error.message); return; }
+      // Quitar local + re-render (realtime tambien lo hara, pero damos feedback instantaneo)
+      this._veraInsights = (this._veraInsights || []).filter((x) => String(x.id) !== String(insightId));
+      this._renderCanvas();
+    } catch (e) { console.warn('[CC] approve exception:', e); }
+  };
+
+  P._rejectVeraInsight = async function (insightId) {
+    if (!this._supabase) return;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const { error } = await this._supabase
+        .from('vera_pending_actions')
+        .update({ status: 'rejected', rejected_at: new Date().toISOString(), rejected_by: user?.id || null })
+        .eq('id', insightId);
+      if (error) { console.warn('[CC] reject vera:', error.message); return; }
+      this._veraInsights = (this._veraInsights || []).filter((x) => String(x.id) !== String(insightId));
+      this._renderCanvas();
+    } catch (e) { console.warn('[CC] reject exception:', e); }
+  };
+
+  P._installVeraInsightListeners = function () {
+    const world = document.getElementById('ccCanvasWorld');
+    if (!world || this._ccVeraInsightClick) return;
+    this._ccVeraInsightClick = (e) => {
+      const btn = e.target.closest('[data-vera-action]');
+      if (!btn) return;
+      e.preventDefault(); e.stopPropagation();
+      const action = btn.getAttribute('data-vera-action');
+      const id = btn.getAttribute('data-vera-id');
+      if (!id) return;
+      if (action === 'approve') this._approveVeraInsight(id);
+      else if (action === 'reject') this._rejectVeraInsight(id);
+    };
+    world.addEventListener('click', this._ccVeraInsightClick);
+  };
+
   /** Test helper expuesto en window.veraCC.* para simular Vera desde consola.
       No es para produccion — solo dev/QA del canvas vivo. */
   P._installVeraSimulator = function () {
@@ -2578,6 +2792,9 @@
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'canvas_groups', filter: `strategy_id=eq.${sid}` },
         (payload) => this._onRealtimeGroupChange(payload))
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'vera_pending_actions', filter: `brand_container_id=eq.${this._containerRow?.id}` },
+        (payload) => this._onRealtimeVeraInsightChange(payload))
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') console.info('[CC] Realtime subscribed:', sid);
       });
@@ -2726,6 +2943,32 @@
       this._stickies = this._stickies.filter((s) => String(s.id) !== String(r.id));
       delete this._positions[`sticky:${r.id}`];
       this._renderCanvas();
+    }
+  };
+
+  P._onRealtimeVeraInsightChange = function (payload) {
+    const { eventType, new: row, old: oldRow } = payload;
+    if (!this._veraInsights) this._veraInsights = [];
+    if (eventType === 'INSERT' && row && row.status === 'pending') {
+      this._veraInsights.unshift(row);
+      this._renderCanvas();
+      if (this._activeSection === 'dashboard') this._renderLibrary?.();
+    } else if (eventType === 'UPDATE' && row) {
+      if (row.status !== 'pending') {
+        // Vera ejecuto / humano aprobo / rechazo / expiro → quitar del canvas
+        this._veraInsights = this._veraInsights.filter((x) => String(x.id) !== String(row.id));
+      } else {
+        // Actualizo metadata (razonamiento, confianza) — replace in place
+        const idx = this._veraInsights.findIndex((x) => String(x.id) === String(row.id));
+        if (idx >= 0) this._veraInsights[idx] = row;
+        else this._veraInsights.unshift(row);
+      }
+      this._renderCanvas();
+      if (this._activeSection === 'dashboard') this._renderLibrary?.();
+    } else if (eventType === 'DELETE' && oldRow) {
+      this._veraInsights = this._veraInsights.filter((x) => String(x.id) !== String(oldRow.id));
+      this._renderCanvas();
+      if (this._activeSection === 'dashboard') this._renderLibrary?.();
     }
   };
 
@@ -3382,9 +3625,10 @@
     if (key === 'estrategias') {
       return Array.isArray(this._strategies) ? this._strategies : [];
     }
-    // Para 'nodos' y 'dashboard' devolvemos [] para que el rail no muestre
-    // badge con un numero arbitrario. El body se calcula directamente en
-    // _libBodyHTML segun la seccion.
+    if (key === 'dashboard') {
+      // Cuenta de pending insights se muestra como badge en el rail
+      return Array.isArray(this._veraInsights) ? this._veraInsights : [];
+    }
     return [];
   };
 
@@ -3498,6 +3742,16 @@
       }
     };
   }
+
+  /** Convierte un timestamp ISO en string relativo "hace X". */
+  P._humanDelta = function (iso) {
+    if (!iso) return '';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 60e3) return 'hace segundos';
+    if (ms < 36e5) return `hace ${Math.floor(ms / 60e3)}m`;
+    if (ms < 864e5) return `hace ${Math.floor(ms / 36e5)}h`;
+    return `hace ${Math.floor(ms / 864e5)}d`;
+  };
 
   /** Renderiza la lista de INSTANCIAS dragables de un tipo de nodo. */
   P._nodosInstancesHTML = function (catalogItem) {
@@ -3669,11 +3923,55 @@
       return html.join('');
     }
     if (key === 'dashboard') {
-      return `<div class="cc-dash-placeholder">
-        <i class="fas fa-chart-pie"></i>
-        <p>Dashboard de la estrategia activa.</p>
-        <p class="cc-dash-soon">Pronto: analisis que Vera produce desde los nodos conectados (audiencias alineadas, performance de campanas, hipotesis de productos, etc).</p>
+      const insights = this._veraInsights || [];
+      const labels = {
+        update_persona: 'Actualizar Audiencia',
+        create_audience: 'Crear Audiencia',
+        create_brief: 'Crear Brief',
+        create_campaign: 'Crear Campana',
+        pause_campaign: 'Pausar Campana',
+        iterate_creative: 'Iterar Creativo',
+        link_brief_to_campaign: 'Vincular Brief',
+        publish_post: 'Publicar Post',
+      };
+      const icons = {
+        update_persona: 'fa-users-gear',
+        create_audience: 'fa-users',
+        create_brief: 'fa-file-circle-plus',
+        create_campaign: 'fa-bullhorn',
+        pause_campaign: 'fa-pause',
+        iterate_creative: 'fa-rotate',
+        link_brief_to_campaign: 'fa-link',
+        publish_post: 'fa-paper-plane',
+      };
+      const header = `<div class="cc-dash-header">
+        <span class="cc-dash-count">${insights.length}</span>
+        <span class="cc-dash-label">propuestas de Vera pendientes</span>
       </div>`;
+      if (!insights.length) {
+        return header + `<div class="cc-dash-empty">
+          <i class="fas fa-check-circle"></i>
+          <p>Sin propuestas pendientes.</p>
+          <p class="cc-dash-soon">Vera te avisa cuando detecte una oportunidad.</p>
+        </div>`;
+      }
+      const rows = insights.map((it) => {
+        const confidence = Math.round((Number(it.vera_confidence) || 0) * 100);
+        const actionLabel = labels[it.action_type] || it.action_type;
+        const icon = icons[it.action_type] || 'fa-bolt';
+        const created = it.created_at ? this._humanDelta(it.created_at) : '';
+        const priority = it.priority || 0;
+        const prClass = priority >= 8 ? ' cc-dash-row--high' : '';
+        return `<button type="button" class="cc-dash-row${prClass}" data-dash-focus="${this.escapeHtml(String(it.id))}">
+          <span class="cc-dash-icon"><i class="fas ${icon}"></i></span>
+          <span class="cc-dash-text">
+            <span class="cc-dash-action">${this.escapeHtml(actionLabel)}</span>
+            <span class="cc-dash-meta">${confidence}% confianza · ${this.escapeHtml(created)}</span>
+          </span>
+          <i class="fas fa-arrow-right cc-dash-arrow"></i>
+        </button>`;
+      }).join('');
+      return header + `<div class="cc-dash-list">${rows}</div>`;
     }
     return '<div class="cc-lib-empty">Sin elementos.</div>';
   };
@@ -3714,6 +4012,31 @@
       };
       body.addEventListener('click', this._ccLibSearchClear);
     }
+    // Sprint 2: handler Dashboard — focus al insight en canvas
+    if (!this._ccDashClick) {
+      this._ccDashClick = (e) => {
+        const row = e.target.closest('[data-dash-focus]');
+        if (!row) return;
+        e.preventDefault(); e.stopPropagation();
+        const id = row.getAttribute('data-dash-focus');
+        const el = document.querySelector(`.cc-vera-insight[data-insight-id="${ccCssEsc(id)}"]`);
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const canvas = document.getElementById('ccCanvas');
+        if (!canvas) return;
+        const cr = canvas.getBoundingClientRect();
+        // Centrar la pantalla en el insight
+        const dx = (cr.width / 2) - (r.left - cr.left + r.width / 2);
+        const dy = (cr.height / 2) - (r.top - cr.top + r.height / 2);
+        this._canvasPan = { x: (this._canvasPan?.x || 0) + dx, y: (this._canvasPan?.y || 0) + dy };
+        if (typeof this._applyCanvasTransform === 'function') this._applyCanvasTransform();
+        if (typeof this._renderEdges === 'function') this._renderEdges();
+        el.classList.add('cc-vera-insight--flash');
+        setTimeout(() => el.classList.remove('cc-vera-insight--flash'), 1200);
+      };
+      body.addEventListener('click', this._ccDashClick);
+    }
+
     // F2: handler para Nodos drill-down (vista A → vista B)
     if (!this._ccNodosClick) {
       this._ccNodosClick = (e) => {

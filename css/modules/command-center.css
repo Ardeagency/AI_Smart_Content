@@ -2010,6 +2010,224 @@
    sobre sus border-radius, asi que el clipping interno se preserva. */
 .cc-node { overflow: visible !important; }
 
+/* Sprint 2: Vera Insight cards en el canvas (cola de pending_actions) */
+.cc-vera-insight {
+  position: absolute;
+  display: flex; flex-direction: column;
+  background: var(--bg-card, #141517);
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.30), 0 16px 36px rgba(0,0,0,0.20);
+  color: var(--text-primary, #fff);
+  user-select: none;
+  z-index: 3;
+  animation: ccVeraInsightAppear 0.3s ease-out;
+}
+@keyframes ccVeraInsightAppear {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.cc-vera-insight--flash {
+  animation: ccVeraInsightFlash 1.2s ease-in-out;
+}
+@keyframes ccVeraInsightFlash {
+  0%, 100% { box-shadow: 0 2px 6px rgba(0,0,0,0.30), 0 16px 36px rgba(0,0,0,0.20); }
+  50%      { box-shadow: 0 0 0 3px rgba(255,255,255,0.40), 0 16px 36px rgba(0,0,0,0.20); }
+}
+.cc-vera-head {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border-divider, #242424);
+}
+.cc-vera-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary, #d4d1d8);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.92rem;
+}
+.cc-vera-head-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cc-vera-tag {
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cc-vera-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-vera-conf {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary, #fff);
+}
+.cc-vera-body {
+  padding: 10px 14px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cc-vera-reasoning {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--text-secondary, #d4d1d8);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cc-vera-impacts {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding-top: 2px;
+}
+.cc-vera-impact {
+  font-size: 0.58rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+}
+.cc-vera-impact strong { color: var(--text-primary, #fff); font-weight: 600; }
+.cc-vera-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-divider, #242424);
+}
+.cc-vera-expires {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.cc-vera-expires i { font-size: 0.55rem; }
+.cc-vera-actions { display: flex; gap: 6px; }
+.cc-vera-btn {
+  appearance: none;
+  border: 1px solid var(--border-divider, #242424);
+  background: transparent;
+  color: var(--text-primary, #fff);
+  font-size: 0.66rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-vera-btn--reject {
+  width: 26px; padding: 0; justify-content: center; height: 26px;
+  background: rgba(255,255,255,0.03);
+}
+.cc-vera-btn--reject:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); }
+.cc-vera-btn--approve { background: rgba(255,255,255,0.08); }
+.cc-vera-btn--approve:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.40); }
+
+/* Edge dashed entre Vera Insight y su target */
+.cc-vera-edge {
+  fill: none;
+  stroke: rgba(255,255,255,0.30);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 4;
+}
+
+/* Sprint 2: sidebar Dashboard real */
+.cc-dash-header {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 4px 12px;
+  border-bottom: 1px solid var(--border-divider, #242424);
+  margin-bottom: 8px;
+}
+.cc-dash-count {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.02em;
+}
+.cc-dash-label {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.cc-dash-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cc-dash-row {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 28px 1fr 14px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.02);
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-dash-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); }
+.cc-dash-row--high { border-color: rgba(255,255,255,0.22); }
+.cc-dash-row--high::before {
+  content: '';
+  position: absolute;
+  margin-left: -11px;
+  width: 3px; height: 22px;
+  background: #fff;
+  border-radius: 2px;
+}
+.cc-dash-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary, #d4d1d8);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.78rem;
+}
+.cc-dash-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cc-dash-action {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-dash-meta {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+.cc-dash-arrow { font-size: 0.68rem; color: var(--text-muted); }
+.cc-dash-empty {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  padding: 32px 14px;
+  border: 1px dashed var(--border-divider, #242424);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  text-align: center;
+}
+.cc-dash-empty > i {
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.cc-dash-empty p { margin: 0; font-size: 0.76rem; color: var(--text-primary, #fff); }
+.cc-dash-empty .cc-dash-soon {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  font-style: italic;
+}
+
 /* Sprint 1: el "canvas vivo" — pulse / ring segun lo que Vera esta haciendo en cada nodo.
    El backend setea canvas_node_placements.vera_state via Realtime; el frontend
    recibe el evento y aplica la clase cc-node--vera-<estado> al .cc-node.
