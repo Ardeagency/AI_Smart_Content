@@ -365,12 +365,8 @@
         <div class="cc-node-pills">
           ${platLabel ? `<span class="cc-node-pill cc-node-pill--plat">${this.escapeHtml(platLabel)}</span>` : ''}
           ${c.status ? `<span class="cc-node-pill cc-node-pill--status cc-node-pill--${this.escapeHtml(c.status)}">${this.escapeHtml(c.status)}</span>` : ''}
-          ${linkedName ? `<span class="cc-node-pill cc-node-pill--linked" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}
+          ${linkedName ? `<span class="cc-node-pill cc-node-pill--linked" title="Objetivo de Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}
         </div>
-        <button type="button" class="cc-node-expand-btn cc-node-expand-btn--v2" data-expand-id="${this.escapeHtml(String(n.id))}">
-          <span>Conjuntos y anuncios</span>
-          <i class="fas fa-chevron-${expanded ? 'up' : 'down'}"></i>
-        </button>
       </div>
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;

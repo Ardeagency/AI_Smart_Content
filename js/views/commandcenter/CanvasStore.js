@@ -1714,8 +1714,35 @@
     // Limpia satelites + edges previas
     world.querySelectorAll('.cc-satellite').forEach((el) => el.remove());
     svg.querySelectorAll('.cc-satellite-edge').forEach((el) => el.remove());
-    if (!this._expandedReal || this._expandedReal.size === 0) return;
-    if (!this._adData) return;
+    if (!this._adData) this._adData = {};
+
+    // F2: ya no dependemos del expandible. Iteramos TODAS las campanas reales
+    // que esten en el canvas, auto-fetcheamos sus adsets/ads y rendeamos
+    // satelites cuando hay data. El fetch se dispara una sola vez por campId
+    // gracias a _fetchCampaignAds (cache en this._adData[campId]).
+    const realCampaigns = (this._campaigns || [])
+      .filter((c) => c && c.last_synced_at && (typeof this._realOnCanvas === 'function' ? this._realOnCanvas(c) : true));
+
+    // Set virtual de las que vamos a renderear este pase (las que tienen data)
+    const idsToRender = new Set();
+    realCampaigns.forEach((c) => {
+      const id = String(c.id);
+      const data = this._adData[id];
+      if (!data) {
+        // Kick off fetch en background; al resolver, re-renderea satelites
+        if (typeof this._fetchCampaignAds === 'function' && !this._ccPendingAdFetch?.has?.(id)) {
+          if (!this._ccPendingAdFetch) this._ccPendingAdFetch = new Set();
+          this._ccPendingAdFetch.add(id);
+          this._fetchCampaignAds(id).then(() => {
+            this._ccPendingAdFetch?.delete?.(id);
+            this._renderCampaignSatellites();
+          }).catch(() => { this._ccPendingAdFetch?.delete?.(id); });
+        }
+        return;
+      }
+      idsToRender.add(id);
+    });
+    if (idsToRender.size === 0) return;
 
     const fmt = (v) => {
       const x = Number(v);
@@ -1730,7 +1757,7 @@
     };
 
     const NS = 'http://www.w3.org/2000/svg';
-    this._expandedReal.forEach((campId) => {
+    idsToRender.forEach((campId) => {
       const data = this._adData[String(campId)];
       if (!data || !Array.isArray(data.adsets) || data.adsets.length === 0) return;
       const parentKey = `camp:${campId}`;
