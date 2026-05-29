@@ -2935,16 +2935,16 @@
     const cStk  = (this._stickies || []).length;
     const cGrp  = (this._groups || []).length;
     return [
-      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept' },
-      { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience' },
-      { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real' },
-      { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product' },
-      { id: 'servicio',           name: 'Servicio',              icon: 'fa-tag',             group: 'Identidades',                type: 'service' },
-      { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place' },
-      { id: 'flow',               name: 'Flow',                  icon: 'fa-diagram-project', group: 'Identidades',                type: 'flow' },
-      { id: 'brief',              name: 'Brief',                 icon: 'fa-file-lines',      group: 'Identidades',                type: 'brief' },
-      { id: 'sticky',             name: 'Nota',                  icon: 'fa-note-sticky',     group: 'Anotaciones',  count: cStk,  type: 'sticky' },
-      { id: 'grupo',              name: 'Grupo',                 icon: 'fa-object-group',    group: 'Anotaciones',  count: cGrp,  type: 'group' },
+      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept',       desc: 'Ancla de la estrategia; define el proposito al que apunta todo el flujo' },
+      { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience',      desc: 'El segmento humano que esta estrategia quiere alcanzar' },
+      { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real', desc: 'Campanas sincronizadas desde Meta, Google u otra plataforma' },
+      { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product',       desc: 'Productos del catalogo de la marca' },
+      { id: 'servicio',           name: 'Servicio',              icon: 'fa-tag',             group: 'Identidades',                type: 'service',       desc: 'Servicios que ofrece la marca' },
+      { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place',         desc: 'Locaciones fisicas de la marca' },
+      { id: 'flow',               name: 'Flow',                  icon: 'fa-diagram-project', group: 'Identidades',                type: 'flow',          desc: 'Flujos de contenido del Studio' },
+      { id: 'brief',              name: 'Brief',                 icon: 'fa-file-lines',      group: 'Identidades',                type: 'brief',         desc: 'Briefs creativos guardados' },
+      { id: 'sticky',             name: 'Nota',                  icon: 'fa-note-sticky',     group: 'Anotaciones',  count: cStk,  type: 'sticky',        desc: 'Anotaciones libres del lienzo (clic derecho en el canvas)' },
+      { id: 'grupo',              name: 'Grupo',                 icon: 'fa-object-group',    group: 'Anotaciones',  count: cGrp,  type: 'group',         desc: 'Frames para agrupar nodos por tematica (clic derecho en el canvas)' },
     ];
   };
 
@@ -2968,28 +2968,38 @@
         </button>`;
     }
     if (key === 'nodos') {
+      // Drill-down style (n8n): vista A = catalogo de tipos como cards;
+      // click en uno → vista B = lista de instancias + boton back arriba.
+      const drillId = this._nodosDrillType || null;
       const items = this._nodosCatalog();
+      if (drillId) {
+        const cur = items.find((it) => it.id === drillId);
+        if (!cur) { this._nodosDrillType = null; return this._libBodyHTML('nodos'); }
+        const back = `<button type="button" class="cc-nodo-back" data-nodo-back>
+          <i class="fas fa-arrow-left"></i>
+          <span>${this.escapeHtml(cur.name)}</span>
+        </button>`;
+        return back + this._nodosInstancesHTML(cur);
+      }
+      // Vista A: catalogo agrupado, cada item card grande con descripcion
       const groups = new Map();
       items.forEach((it) => {
         if (!groups.has(it.group)) groups.set(it.group, []);
         groups.get(it.group).push(it);
       });
-      const expanded = this._nodosExpanded || new Set();
       const html = [];
       groups.forEach((arr, gname) => {
         html.push(`<div class="cc-lib-group">${this.escapeHtml(gname)}</div>`);
         arr.forEach((it) => {
-          const isExpanded = expanded.has(it.id);
-          const count = Number.isFinite(it.count) ? `<span class="cc-lib-item-sub">${it.count}</span>` : '';
-          html.push(`<div class="cc-lib-item cc-nodo-item ${isExpanded ? 'is-expanded' : ''}" data-nodo-type="${this.escapeHtml(it.type)}" data-nodo-id="${this.escapeHtml(it.id)}" title="${this.escapeHtml(it.name)}">
-            <i class="fas ${this.escapeHtml(it.icon)} cc-lib-item-ic"></i>
-            <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
-            ${count}
-            <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} cc-nodo-chevron"></i>
-          </div>`);
-          if (isExpanded) {
-            html.push(this._nodosInstancesHTML(it));
-          }
+          const count = Number.isFinite(it.count) ? `<span class="cc-nodo-card-count">${it.count}</span>` : '';
+          html.push(`<button type="button" class="cc-nodo-card" data-nodo-drill="${this.escapeHtml(it.id)}" title="${this.escapeHtml(it.name)}">
+            <span class="cc-nodo-card-icon"><i class="fas ${this.escapeHtml(it.icon)}"></i></span>
+            <span class="cc-nodo-card-text">
+              <span class="cc-nodo-card-title">${this.escapeHtml(it.name)}${count}</span>
+              <span class="cc-nodo-card-desc">${this.escapeHtml(it.desc || '')}</span>
+            </span>
+            <i class="fas fa-arrow-right cc-nodo-card-arrow"></i>
+          </button>`);
         });
       });
       return html.join('');
@@ -3040,20 +3050,29 @@
       };
       body.addEventListener('click', this._ccLibSearchClear);
     }
-    // F2: handler para Nodos (toggle expand de cada tipo)
+    // F2: handler para Nodos drill-down (vista A → vista B)
     if (!this._ccNodosClick) {
       this._ccNodosClick = (e) => {
-        const item = e.target.closest('.cc-nodo-item[data-nodo-id]');
-        if (!item) return;
-        e.preventDefault(); e.stopPropagation();
-        const id = item.getAttribute('data-nodo-id');
-        if (!this._nodosExpanded) this._nodosExpanded = new Set();
-        if (this._nodosExpanded.has(id)) this._nodosExpanded.delete(id);
-        else this._nodosExpanded.add(id);
-        // Re-render body si Nodos sigue activo
-        if (this._activeSection === 'nodos') {
-          const b = document.getElementById('ccPanelBody');
-          if (b) b.innerHTML = this._libBodyHTML('nodos');
+        // Back: vuelve a vista A
+        const back = e.target.closest('[data-nodo-back]');
+        if (back) {
+          e.preventDefault(); e.stopPropagation();
+          this._nodosDrillType = null;
+          if (this._activeSection === 'nodos') {
+            const b = document.getElementById('ccPanelBody');
+            if (b) b.innerHTML = this._libBodyHTML('nodos');
+          }
+          return;
+        }
+        // Drill: entra a vista B
+        const drill = e.target.closest('[data-nodo-drill]');
+        if (drill) {
+          e.preventDefault(); e.stopPropagation();
+          this._nodosDrillType = drill.getAttribute('data-nodo-drill');
+          if (this._activeSection === 'nodos') {
+            const b = document.getElementById('ccPanelBody');
+            if (b) b.innerHTML = this._libBodyHTML('nodos');
+          }
         }
       };
       body.addEventListener('click', this._ccNodosClick);
