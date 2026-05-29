@@ -1965,6 +1965,10 @@
         this._hydrateRemoteStickies();
         // F1.11: hidrata groups + escucha edits del title input
         this._hydrateRemoteGroups();
+        // Sprint 1: realtime — canvas vivo reaccionando a Vera
+        this._installRealtimeSubs();
+        // Sprint 1.4: helper para simular Vera desde consola (dev)
+        this._installVeraSimulator();
       });
       // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
       this._installLibSearch();
@@ -2147,12 +2151,14 @@
     });
   };
 
-  // Wrap _renderCanvas para tambien renderear satelites despues del paint
+  // Wrap _renderCanvas para tambien renderear satelites + aplicar vera_states
   const _f12RenderCanvas = P._renderCanvas;
   if (typeof _f12RenderCanvas === 'function') {
     P._renderCanvas = function () {
       const r = _f12RenderCanvas.apply(this, arguments);
       this._renderCampaignSatellites();
+      // Sprint 1: aplicar vera_state al DOM (las clases se pierden en re-render)
+      this._applyAllVeraStates();
       return r;
     };
   }
@@ -2276,6 +2282,8 @@
     await this._hydrateRemoteView();
     await this._hydrateRemoteStickies();
     await this._hydrateRemoteGroups();
+    // Sprint 1: re-subscribe realtime para la nueva strategy
+    this._installRealtimeSubs();
     // Re-render del sidebar (Estrategias section debe reflejar nueva activa)
     if (typeof this._renderLibrary === 'function') this._renderLibrary();
     this._renderCanvas();
@@ -2326,7 +2334,7 @@
 
       const { data: rows, error } = await this._supabase
         .from('canvas_node_placements')
-        .select('id, node_type, node_id, position_x, position_y, is_collapsed')
+        .select('id, node_type, node_id, position_x, position_y, is_collapsed, vera_state, vera_reasoning')
         .eq('strategy_id', strategyId);
       if (error) {
         console.warn('[CC] hydrate placements:', error.message || error);
@@ -2341,6 +2349,8 @@
           x: Number(r.position_x) || 0,
           y: Number(r.position_y) || 0,
           is_collapsed: !!r.is_collapsed,
+          vera_state: r.vera_state || 'idle',
+          vera_reasoning: r.vera_reasoning || null,
         });
       });
       this._canvasNodePlacements = map;
@@ -2489,6 +2499,290 @@
       console.warn('[CC] delete placement exception:', e);
       return false;
     }
+  };
+
+  // ------------------------------------------------------------------
+  // Sprint 1: Supabase Realtime — el canvas vivo
+  //
+  // Subs a postgres_changes para canvas_node_placements, canvas_edges,
+  // canvas_stickies, canvas_groups filtrados por strategy_id activa.
+  // Cualquier INSERT/UPDATE/DELETE que Vera (u otro usuario en la misma
+  // estrategia) haga aparece en el canvas SIN refrescar.
+  //
+  // Para vera_state especificamente: UPDATE de placement con vera_state
+  // distinto al previo dispara una clase CSS pulse en el nodo.
+  // ------------------------------------------------------------------
+
+  /** Test helper expuesto en window.veraCC.* para simular Vera desde consola.
+      No es para produccion — solo dev/QA del canvas vivo. */
+  P._installVeraSimulator = function () {
+    if (typeof window === 'undefined' || window.veraCC) return;
+    const view = this;
+    window.veraCC = {
+      /** Cambia vera_state de un nodo en BD → realtime → pulse en frontend.
+          Uso: veraCC.simulate('aud:abc', 'analizando') */
+      simulate: async (nodeKey, estado) => {
+        if (!view._supabase || !view._strategyId) return console.warn('no strategy');
+        const ti = view._typeAndIdFromKey(nodeKey);
+        if (!ti) return console.warn('key invalida:', nodeKey);
+        const valid = ['idle','analizando','creando','iterando','publicando','midiendo','esperando_aprobacion'];
+        if (!valid.includes(estado)) return console.warn('estado invalido. validos:', valid);
+        const { error } = await view._supabase
+          .from('canvas_node_placements')
+          .update({ vera_state: estado })
+          .eq('strategy_id', view._strategyId)
+          .eq('node_type', ti.node_type)
+          .eq('node_id', ti.node_id);
+        if (error) return console.warn('error:', error.message);
+        console.info(`[veraCC] ${nodeKey} → ${estado}`);
+      },
+      /** Pasa el nodo a idle. Uso: veraCC.reset('aud:abc') */
+      reset: (nodeKey) => window.veraCC.simulate(nodeKey, 'idle'),
+      /** Lista los placements actuales con su vera_state */
+      list: () => {
+        if (!view._canvasNodePlacements) return [];
+        const out = [];
+        view._canvasNodePlacements.forEach((entry, key) => {
+          out.push({ key, vera_state: entry.vera_state, x: entry.x, y: entry.y });
+        });
+        console.table(out);
+        return out;
+      },
+      /** Pone TODOS los nodos al mismo estado. Uso: veraCC.all('creando') */
+      all: async (estado) => {
+        if (!view._canvasNodePlacements) return;
+        const keys = [...view._canvasNodePlacements.keys()];
+        for (const k of keys) await window.veraCC.simulate(k, estado);
+      },
+    };
+    console.info('[CC] Vera simulator: window.veraCC.{simulate, reset, list, all}');
+  };
+
+  P._installRealtimeSubs = function () {
+    if (!this._supabase || !this._strategyId) return;
+    if (this._ccRealtimeChannel && this._ccRealtimeFor === this._strategyId) return;
+    // Cleanup canal previo si cambio de strategy
+    this._tearDownRealtimeSubs();
+    this._ccRealtimeFor = this._strategyId;
+    const sid = this._strategyId;
+    const channel = this._supabase.channel(`cc-strategy-${sid}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'canvas_node_placements', filter: `strategy_id=eq.${sid}` },
+        (payload) => this._onRealtimePlacementChange(payload))
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'canvas_edges', filter: `strategy_id=eq.${sid}` },
+        (payload) => this._onRealtimeEdgeChange(payload))
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'canvas_stickies', filter: `strategy_id=eq.${sid}` },
+        (payload) => this._onRealtimeStickyChange(payload))
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'canvas_groups', filter: `strategy_id=eq.${sid}` },
+        (payload) => this._onRealtimeGroupChange(payload))
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.info('[CC] Realtime subscribed:', sid);
+      });
+    this._ccRealtimeChannel = channel;
+  };
+
+  P._tearDownRealtimeSubs = function () {
+    if (this._ccRealtimeChannel && this._supabase) {
+      try { this._supabase.removeChannel(this._ccRealtimeChannel); } catch (_) {}
+    }
+    this._ccRealtimeChannel = null;
+    this._ccRealtimeFor = null;
+  };
+
+  /** Handler: cambio en canvas_node_placements (Vera crea/mueve/cambia estado). */
+  P._onRealtimePlacementChange = function (payload) {
+    const { eventType, new: row, old: oldRow } = payload;
+    if (!this._canvasNodePlacements) this._canvasNodePlacements = new Map();
+    if (eventType === 'INSERT') {
+      const r = row;
+      const key = this._keyFromPlacement(r.node_type, r.node_id);
+      const entry = {
+        id: r.id,
+        x: Number(r.position_x) || 0,
+        y: Number(r.position_y) || 0,
+        is_collapsed: !!r.is_collapsed,
+        vera_state: r.vera_state || 'idle',
+        vera_reasoning: r.vera_reasoning || null,
+      };
+      this._canvasNodePlacements.set(key, entry);
+      this._ccSuspendPlacementWrite = true;
+      this._store.setNodePosition(key, entry.x, entry.y);
+      if (entry.is_collapsed) this._store.setCollapsed(key, true);
+      // Reconstituir onCanvas / placed (para que aparezca en _canvasNodes)
+      if (key.startsWith('camp:')) {
+        const id = key.slice(5);
+        const c = (this._campaigns || []).find((x) => String(x.id) === id);
+        if (c && c.last_synced_at) this._store.nodes.onCanvas.add(id);
+      } else if (!key.startsWith('aud:')) {
+        const colon = key.indexOf(':');
+        if (colon > 0) {
+          const type = key.slice(0, colon);
+          const id = key.slice(colon + 1);
+          if (!(this._placed || []).some((p) => p.type === type && String(p.id) === id)) {
+            this._placed.push({ type, id });
+          }
+        }
+      }
+      this._ccSuspendPlacementWrite = false;
+      this._renderCanvas();
+    } else if (eventType === 'UPDATE') {
+      const r = row;
+      const key = this._keyFromPlacement(r.node_type, r.node_id);
+      const existing = this._canvasNodePlacements.get(key);
+      const newVeraState = r.vera_state || 'idle';
+      const positionChanged = !existing || existing.x !== Number(r.position_x) || existing.y !== Number(r.position_y);
+      const veraStateChanged = !existing || existing.vera_state !== newVeraState;
+      if (existing) {
+        existing.x = Number(r.position_x) || 0;
+        existing.y = Number(r.position_y) || 0;
+        existing.is_collapsed = !!r.is_collapsed;
+        existing.vera_state = newVeraState;
+        existing.vera_reasoning = r.vera_reasoning || null;
+      }
+      if (positionChanged) {
+        this._ccSuspendPlacementWrite = true;
+        this._store.setNodePosition(key, Number(r.position_x) || 0, Number(r.position_y) || 0);
+        this._ccSuspendPlacementWrite = false;
+      }
+      // Aplicar vera_state al DOM en-place (sin re-render full)
+      if (veraStateChanged) this._applyVeraStateToNode(key, newVeraState);
+      // Si position cambio, re-render para mover (el sticky/group/identity actual ya esta)
+      if (positionChanged) this._scheduleEdges?.();
+    } else if (eventType === 'DELETE') {
+      const r = oldRow;
+      if (!r) return;
+      const key = this._keyFromPlacement(r.node_type, r.node_id);
+      this._canvasNodePlacements.delete(key);
+      // Quitar de onCanvas/_placed si aplica
+      if (key.startsWith('camp:')) this._store.nodes.onCanvas.delete(r.node_id);
+      else if (!key.startsWith('aud:')) {
+        const colon = key.indexOf(':');
+        if (colon > 0) {
+          const type = key.slice(0, colon);
+          this._placed = (this._placed || []).filter((p) => !(p.type === type && String(p.id) === String(r.node_id)));
+          if (this._store && this._store.persistPlaced) this._store.persistPlaced();
+        }
+      }
+      delete this._positions[key];
+      this._renderCanvas();
+    }
+  };
+
+  P._onRealtimeEdgeChange = function (payload) {
+    const { eventType, new: row, old: oldRow } = payload;
+    if (eventType === 'INSERT') {
+      const r = row;
+      const from = `${r.source_type}:${r.source_id}`;
+      const to   = `${r.target_type}:${r.target_id}`;
+      this._ccSuspendRemoteEdges = true;
+      this._store.addFreeLink(from, to);
+      this._ccSuspendRemoteEdges = false;
+      this._renderCanvas();
+    } else if (eventType === 'DELETE') {
+      const r = oldRow;
+      if (!r) return;
+      const from = `${r.source_type}:${r.source_id}`;
+      const to   = `${r.target_type}:${r.target_id}`;
+      this._ccSuspendRemoteEdges = true;
+      this._store.removeFreeLink(from, to);
+      this._ccSuspendRemoteEdges = false;
+      this._renderCanvas();
+    }
+  };
+
+  P._onRealtimeStickyChange = function (payload) {
+    const { eventType, new: row, old: oldRow } = payload;
+    if (!this._stickies) this._stickies = [];
+    if (eventType === 'INSERT') {
+      const r = row;
+      if (this._stickies.some((s) => String(s.id) === String(r.id))) return;
+      this._stickies.push({
+        id: r.id, content: r.content || '', color: r.color || 'yellow',
+        width: r.width || 220, height: r.height || 140,
+      });
+      this._ccSuspendStickyPos = true;
+      this._store.setNodePosition(`sticky:${r.id}`, r.position_x, r.position_y);
+      this._ccSuspendStickyPos = false;
+      this._renderCanvas();
+    } else if (eventType === 'UPDATE') {
+      const r = row;
+      const local = this._stickies.find((s) => String(s.id) === String(r.id));
+      if (local) {
+        local.content = r.content || '';
+        local.color = r.color || 'yellow';
+        local.width = r.width || local.width;
+        local.height = r.height || local.height;
+        this._ccSuspendStickyPos = true;
+        this._store.setNodePosition(`sticky:${r.id}`, r.position_x, r.position_y);
+        this._ccSuspendStickyPos = false;
+        this._renderCanvas();
+      }
+    } else if (eventType === 'DELETE') {
+      const r = oldRow;
+      if (!r) return;
+      this._stickies = this._stickies.filter((s) => String(s.id) !== String(r.id));
+      delete this._positions[`sticky:${r.id}`];
+      this._renderCanvas();
+    }
+  };
+
+  P._onRealtimeGroupChange = function (payload) {
+    const { eventType, new: row, old: oldRow } = payload;
+    if (!this._groups) this._groups = [];
+    if (eventType === 'INSERT') {
+      const r = row;
+      if (this._groups.some((g) => String(g.id) === String(r.id))) return;
+      this._groups.push({
+        id: r.id, title: r.title || '', color: r.color || 'blue',
+        width: r.width || 400, height: r.height || 300,
+      });
+      this._ccSuspendGroupPos = true;
+      this._store.setNodePosition(`group:${r.id}`, r.position_x, r.position_y);
+      this._ccSuspendGroupPos = false;
+      this._renderCanvas();
+    } else if (eventType === 'UPDATE') {
+      const r = row;
+      const local = this._groups.find((g) => String(g.id) === String(r.id));
+      if (local) {
+        local.title = r.title || '';
+        local.color = r.color || local.color;
+        local.width = r.width || local.width;
+        local.height = r.height || local.height;
+        this._ccSuspendGroupPos = true;
+        this._store.setNodePosition(`group:${r.id}`, r.position_x, r.position_y);
+        this._ccSuspendGroupPos = false;
+        this._renderCanvas();
+      }
+    } else if (eventType === 'DELETE') {
+      const r = oldRow;
+      if (!r) return;
+      this._groups = this._groups.filter((g) => String(g.id) !== String(r.id));
+      delete this._positions[`group:${r.id}`];
+      this._renderCanvas();
+    }
+  };
+
+  /** Aplica la clase .cc-node--vera-<estado> al DOM del nodo. */
+  P._applyVeraStateToNode = function (key, state) {
+    const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(key)}"]`);
+    if (!el) return;
+    ['idle','analizando','creando','iterando','publicando','midiendo','esperando_aprobacion']
+      .forEach((s) => el.classList.remove(`cc-node--vera-${s}`));
+    if (state && state !== 'idle') el.classList.add(`cc-node--vera-${state}`);
+  };
+
+  /** Itera todos los placements y aplica sus vera_state al DOM.
+      Se llama tras cada _renderCanvas (los nodos se rebuilden y pierden la clase). */
+  P._applyAllVeraStates = function () {
+    if (!this._canvasNodePlacements) return;
+    this._canvasNodePlacements.forEach((entry, key) => {
+      if (entry.vera_state && entry.vera_state !== 'idle') {
+        this._applyVeraStateToNode(key, entry.vera_state);
+      }
+    });
   };
 
   /** F2-prep.3: 1 vez por brand, migra cc:canvas:pos|oncanvas|placed:<brand>
@@ -4590,6 +4884,8 @@
     }
     this._ccPlacementsHydratedFor = null;
     this._canvasNodePlacements = null;
+    // Sprint 1: tear down Realtime channel
+    if (typeof this._tearDownRealtimeSubs === 'function') this._tearDownRealtimeSubs();
     // F2-prep.1: cleanup strategies state
     this._ccStrategiesHydratedFor = null;
     this._strategies = null;

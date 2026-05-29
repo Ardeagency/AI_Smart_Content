@@ -2010,6 +2010,71 @@
    sobre sus border-radius, asi que el clipping interno se preserva. */
 .cc-node { overflow: visible !important; }
 
+/* Sprint 1: el "canvas vivo" — pulse / ring segun lo que Vera esta haciendo en cada nodo.
+   El backend setea canvas_node_placements.vera_state via Realtime; el frontend
+   recibe el evento y aplica la clase cc-node--vera-<estado> al .cc-node.
+   Estados (BD enum):
+     idle                  : sin animacion (estado default)
+     analizando            : pulso lento, sutil — Vera esta leyendo datos
+     creando               : pulso medio, ring blanco — Vera esta produciendo
+     iterando              : pulso ritmico — Vera esta refinando
+     publicando            : ring solido, sin pulse — Vera esta enviando
+     midiendo              : ring punteado lento — Vera esta esperando metricas
+     esperando_aprobacion  : ring intermitente — el humano debe decidir */
+
+@keyframes ccVeraPulseSlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.0), 0 2px 6px rgba(0,0,0,0.25); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.25); }
+}
+@keyframes ccVeraPulseMed {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.0), 0 2px 6px rgba(0,0,0,0.25); }
+  50%      { box-shadow: 0 0 0 4px rgba(255,255,255,0.15), 0 2px 8px rgba(0,0,0,0.30); }
+}
+@keyframes ccVeraPulseSharp {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.22), 0 2px 6px rgba(0,0,0,0.25); }
+  60%  { box-shadow: 0 0 0 8px rgba(255,255,255,0.00), 0 2px 6px rgba(0,0,0,0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.00), 0 2px 6px rgba(0,0,0,0.25); }
+}
+@keyframes ccVeraRingBlink {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255,255,255,0.50), 0 2px 6px rgba(0,0,0,0.25); }
+  50%      { box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 2px 6px rgba(0,0,0,0.25); }
+}
+
+.cc-node--vera-analizando {
+  animation: ccVeraPulseSlow 2.4s ease-in-out infinite;
+}
+.cc-node--vera-creando {
+  animation: ccVeraPulseMed 1.4s ease-in-out infinite;
+}
+.cc-node--vera-iterando {
+  animation: ccVeraPulseSharp 1s ease-out infinite;
+}
+.cc-node--vera-publicando {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55), 0 2px 8px rgba(0,0,0,0.30) !important;
+}
+.cc-node--vera-midiendo {
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25), 0 2px 8px rgba(0,0,0,0.30) !important;
+  /* punteado solo se logra bien con outline */
+  outline: 1px dashed rgba(255,255,255,0.18);
+  outline-offset: 3px;
+}
+.cc-node--vera-esperando_aprobacion {
+  animation: ccVeraRingBlink 1.6s ease-in-out infinite;
+}
+
+/* Indicador textual sutil arriba a la derecha cuando hay un vera_state */
+.cc-node[class*="cc-node--vera-"]:not(.cc-node--vera-idle)::after {
+  content: '';
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.6);
+  z-index: 4;
+  pointer-events: none;
+}
+
 /* F2: logica de puertos segun el modelo BD real
    ─────────────────────────────────────────────────────────────────
 
