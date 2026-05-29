@@ -27,8 +27,9 @@ class DevLeadCreateOrgView extends DevBaseView {
       name: '',
       brand_name_oficial: '',
       brand_slogan: '',
-      logo_url: '',
-      brand_docs: [],            // File[] (in-memory, no upload aun)
+      logo_file: null,           // File (in-memory, no upload aun)
+      logo_preview: '',          // dataURL para previsualizar el circulo
+      brand_docs: [],            // File[] (in-memory)
       timezone: 'America/Bogota',
       locale: 'es',
       level_of_autonomy: 'parcial',
@@ -132,6 +133,21 @@ class DevLeadCreateOrgView extends DevBaseView {
         </header>
 
         <form id="createOrgIdentityForm" class="createorg-form-grid" novalidate>
+          <div class="provision-field createorg-field-full createorg-logo-wrap">
+            <label class="createorg-logo-circle" for="orgLogoFile" id="orgLogoCircle">
+              <input type="file" id="orgLogoFile" accept="image/*" hidden>
+              ${f.logo_preview
+                ? `<img src="${this.escapeHtml(f.logo_preview)}" alt="Logo" class="createorg-logo-img">
+                   <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="fas fa-times"></i></button>`
+                : `<span class="createorg-logo-placeholder"><i class="fas fa-camera"></i></span>`}
+            </label>
+            <span class="createorg-logo-caption">
+              ${f.logo_file
+                ? this.escapeHtml(f.logo_file.name) + ' · ' + this.formatSize(f.logo_file.size)
+                : 'Adjuntar logo'}
+            </span>
+            <small class="createorg-logo-hint">PNG · JPG · SVG. Click en el circulo para subir.</small>
+          </div>
           <div class="provision-field">
             <label for="orgName">Nombre <span style="color:#ef4444">*</span></label>
             <input id="orgName" name="name" type="text" placeholder="Ej. ACME Corp" maxlength="120" value="${this.escapeHtml(f.name)}" required>
@@ -145,11 +161,6 @@ class DevLeadCreateOrgView extends DevBaseView {
           <div class="provision-field createorg-field-full">
             <label for="orgSlogan">Slogan</label>
             <input id="orgSlogan" name="brand_slogan" type="text" placeholder="Frase de marca" maxlength="200" value="${this.escapeHtml(f.brand_slogan)}">
-          </div>
-          <div class="provision-field createorg-field-full">
-            <label for="orgLogo">Logo URL</label>
-            <input id="orgLogo" name="logo_url" type="url" placeholder="https://..." value="${this.escapeHtml(f.logo_url)}">
-            <small>PNG/JPG/SVG publica. La subida directa estara en Brand.</small>
           </div>
           <div class="provision-field createorg-field-full">
             <label>Documentacion de marca</label>
@@ -276,7 +287,7 @@ class DevLeadCreateOrgView extends DevBaseView {
             ${this.tile('Slogan', f.brand_slogan || '—')}
             ${this.tile('Zona horaria', f.timezone)}
             ${this.tile('Idioma', this.LOCALES.find(l=>l.v===f.locale)?.label || f.locale)}
-            ${this.tile('Logo', f.logo_url ? 'URL adjunta' : '—')}
+            ${this.tile('Logo', f.logo_file ? f.logo_file.name : '—')}
             ${this.tile('Documentacion', `${f.brand_docs.length} archivo(s)`)}
           </div>
         </div>
@@ -363,7 +374,7 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   wireAll() {
     // Inputs Identidad
-    ['orgName', 'orgBrandName', 'orgSlogan', 'orgLogo'].forEach((id) => {
+    ['orgName', 'orgBrandName', 'orgSlogan'].forEach((id) => {
       const el = this.container.querySelector('#' + id);
       if (el) this.addEventListener(el, 'input', () => this.syncForm());
     });
@@ -371,6 +382,18 @@ class DevLeadCreateOrgView extends DevBaseView {
       const el = this.container.querySelector('#' + id);
       if (el) this.addEventListener(el, 'change', () => this.syncForm());
     });
+
+    // Logo circle (single file)
+    const logoInput = this.container.querySelector('#orgLogoFile');
+    if (logoInput) this.addEventListener(logoInput, 'change', (e) => this.handleLogoFile(e));
+    const logoRemove = this.container.querySelector('[data-action="logo-remove"]');
+    if (logoRemove) {
+      this.addEventListener(logoRemove, 'click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.removeLogo();
+      });
+    }
 
     // Brand docs file input
     const fileInput = this.container.querySelector('#orgBrandDocs');
@@ -400,7 +423,6 @@ class DevLeadCreateOrgView extends DevBaseView {
       f.name = get('orgName');
       f.brand_name_oficial = get('orgBrandName');
       f.brand_slogan = get('orgSlogan');
-      f.logo_url = get('orgLogo');
       f.timezone = get('orgTimezone') || 'UTC';
       f.locale = get('orgLocale') || 'es';
     }
@@ -408,6 +430,63 @@ class DevLeadCreateOrgView extends DevBaseView {
       const radio = this.container.querySelector('input[name="level_of_autonomy"]:checked');
       f.level_of_autonomy = radio?.value || 'parcial';
       f.mfa_required = !!this.container.querySelector('#orgMfaRequired')?.checked;
+    }
+  }
+
+  handleLogoFile(e) {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.setStatus('El logo debe ser una imagen (PNG/JPG/SVG).', 'error');
+      e.target.value = '';
+      return;
+    }
+    this.form.logo_file = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      this.form.logo_preview = ev.target?.result || '';
+      this.refreshLogoCircle();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // permite re-seleccionar el mismo archivo si lo borran
+  }
+
+  removeLogo() {
+    this.form.logo_file = null;
+    this.form.logo_preview = '';
+    this.refreshLogoCircle();
+  }
+
+  refreshLogoCircle() {
+    const wrap = this.container.querySelector('.createorg-logo-wrap');
+    if (!wrap) return;
+    const f = this.form;
+    const circleHTML = f.logo_preview
+      ? `<img src="${this.escapeHtml(f.logo_preview)}" alt="Logo" class="createorg-logo-img">
+         <button type="button" class="createorg-logo-remove" data-action="logo-remove" aria-label="Quitar logo"><i class="fas fa-times"></i></button>`
+      : `<span class="createorg-logo-placeholder"><i class="fas fa-camera"></i></span>`;
+    const circle = wrap.querySelector('#orgLogoCircle');
+    if (circle) {
+      // Mantener el input file vivo, solo cambiar el contenido visual
+      const input = circle.querySelector('#orgLogoFile');
+      circle.innerHTML = '';
+      if (input) circle.appendChild(input);
+      circle.insertAdjacentHTML('beforeend', circleHTML);
+    }
+    const caption = wrap.querySelector('.createorg-logo-caption');
+    if (caption) {
+      caption.textContent = f.logo_file
+        ? `${f.logo_file.name} · ${this.formatSize(f.logo_file.size)}`
+        : 'Adjuntar logo';
+    }
+    // Re-wire del remove button (innerHTML lo recreo)
+    const newRemove = wrap.querySelector('[data-action="logo-remove"]');
+    if (newRemove) {
+      this.addEventListener(newRemove, 'click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.removeLogo();
+      });
     }
   }
 
