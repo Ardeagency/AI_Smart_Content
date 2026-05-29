@@ -12825,8 +12825,11 @@
 /* ============================================================
    /dev/provisioning/users — Flujo creacion usuario (2026-05-29)
    Layout: progress bar arriba + cards centradas vertical+horizontal
+   Fondo: grid de puntos estilo n8n (mismo que Studio / Command Center)
    ============================================================ */
 .provision-page {
+  position: relative;
+  isolation: isolate;
   min-height: calc(100vh - 48px);
   width: 100%;
   max-width: 1100px;
@@ -12834,6 +12837,24 @@
   padding: calc(48px + var(--spacing-lg)) var(--spacing-xl) var(--spacing-xl);
   display: flex;
   flex-direction: column;
+}
+
+/* Grid de puntos (dot canvas) detras del contenido. Mismo patron que
+   Studio / Command Center / Video: dos radial-gradients offset por 11px
+   con mask radial que concentra al centro y desvanece a los bordes. */
+.provision-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1.2px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  -webkit-mask-image: radial-gradient(circle at 50% 55%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 70%);
+  mask-image: radial-gradient(circle at 50% 55%, #000 0%, rgba(0, 0, 0, 0.55) 35%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ───── Progress bar (estilo: caret + circulo + linea conectora) ───── */
