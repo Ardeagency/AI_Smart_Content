@@ -88,12 +88,19 @@ una latencia simulada ni una compra de creditos suelta. Mejor para tiers altos,
 - UI muestra posicion de cola / ETA real.
 
 ## Pendientes para cerrar la deuda
-- [ ] Fase 1: migracion `SQL/feat-036-kie-rate-governor.sql` aplicada via Management API.
-- [ ] Fase 1: 6 call-sites cableados + desplegados.
-- [ ] Fase 1: Path B (dispatcher) llamando la misma RPC.
-- [ ] (Diagnostico) Medir cuantos 429 devuelve KIE hoy (logs dispatcher + kie-task-finalize)
-      para cuantificar el dolor y validar el headroom.
-- [ ] Fases 2-4 segun roadmap.
+- [x] Fase 1: migracion `SQL/feat-036-kie-rate-governor.sql` aplicada via Management API
+      (proyecto tsdpbqcwjckbfsdqacam, 2026-05-29). Validado: 22 llamadas -> 18 pasan,
+      4 bloqueadas con retry_after_ms ~556.
+- [x] Fase 1: 6 call-sites cableados + desplegados (commit 6463f55a, push a main).
+- [x] (Diagnostico) 429 medidos: Path B = 0 en 7 dias (serializado, no rafaguea);
+      Path A = no medible server-side (cae en logs Netlify, CLI sin login, no se
+      persiste). Balance KIE sano (8430). Riesgo hoy bajo (uso bajo) pero latente.
+- [ ] **Fase 1 — Path B (dispatcher content-flows) llamando la misma RPC** antes de
+      disparar nodos KIE_* (hoy comparte cupo sin gobernarlo). SIGUIENTE.
+- [ ] Mejora observabilidad: loggear eventos de throttle (acquired=false) para por
+      fin ver el burst de Path A que hoy es invisible.
+- [ ] Fases 2-4 segun roadmap (foreground>background, cola unificada con prioridad
+      por plan, turbo por plan).
 
 ## Refs
 - Topologia y limites: memoria `project_kie_consumer_topology`.
