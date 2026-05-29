@@ -426,6 +426,7 @@ class App {
     const veraTrainingLoader = this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js']);
     r.register('/dev/lead/vera-training', veraTrainingLoader, auth);
     r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
+    r.register('/dev/lead/billing', this._lazy('DevLeadBillingView', [...devBase, '/js/views/DevLeadBillingView.js']), auth);
 
     // ── 404 ──
     // El 404 de la plataforma vive en la landing (aismartcontent.io/404).

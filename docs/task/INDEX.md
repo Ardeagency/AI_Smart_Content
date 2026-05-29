@@ -44,6 +44,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | ID | Que falta EXACTAMENTE |
 |---|---|
 | [FEAT-034](./FEAT-034-dev-flows-test-button.md) | `DevFlowsView.js:396` `testFlow()` es stub (console.log + toast "en desarrollo"); cablear corrida real en modo test (coordinar con FEAT-033). |
+| [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Org Credits grant/debit via RPC `grant_credits_admin`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~17 modales custom restantes a `window.Modal` (1 migrado + validado). 3-5 por sesion. |
 | [FEAT-029](./FEAT-029-brand-creative-brief-rebalance.md) | Fase 1 cerrada (caps + IGNIS limpiado). Falta Fase 2b (validacion server-side de hard caps en `InfoPanel.mixin.js` saveBrandContainerFieldById + generador de brief con LLM cheap) y Fase 3 (schema redesign formal). No urgente. |
 | [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | **BLOQUEADA-EXTERNO** (verificado 2026-05-27): la API de ML ya no es publica, devuelve 403 `PA_UNAUTHORIZED` sin token. Requiere registrar app ML + OAuth, o seguir con scrape HTML + headless. Decision de producto pendiente. |
@@ -74,6 +75,7 @@ conservan como referencia, no se ejecutan directamente.
 
 - [AUDIT-003](./AUDIT-003-enterprise-readiness-2026-05-12.md) — gap analysis enterprise readiness (roadmap/decisiones).
 - [AUDIT-004](./AUDIT-004-premium-saas-tier1-brands-2026-05-13.md) — premium SaaS Tier-1 (Fase A/B/C + costos).
+- [AUDIT-005](./AUDIT-005-db-architecture-tech-debt-2026-05-29.md) — deuda DB schema (56 fn definer sin search_path, 23 vistas sin security_invoker, 15 indices duplicados, ~17 no usados, ~98 FKs sin indice, 4 backups). DOCUMENTADO, no aplicado; re-auditar antes de corregir. Queries reproducibles incluidas.
 - [FEAT-032-DISCOVERY-PFA-vs-SAUL](./FEAT-032-DISCOVERY-PFA-vs-SAUL.md) — discovery PFA vs workflow Saul (soporte de FEAT-032).
 - [FEAT-032-INFORME-DIRECTOR-CREATIVO](./FEAT-032-INFORME-DIRECTOR-CREATIVO.md) — diagnostico de 14 obstaculos ComfyUI (soporte de FEAT-032/033).
 

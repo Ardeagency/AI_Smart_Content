@@ -221,6 +221,15 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     role_required: 'lead',
     route: '/dev/lead/lexicon'
   },
+  {
+    type: 'page',
+    id: 'admin-billing',
+    label: 'Billing',
+    icon: 'fa-credit-card',
+    iconSrc: '/recursos/icons/credits.svg',
+    role_required: 'lead',
+    route: '/dev/lead/billing'
+  },
 ];
 
 /**
