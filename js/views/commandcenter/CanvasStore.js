@@ -684,6 +684,8 @@
       this._store = new CanvasStore(scope);
     } else if (this._store.scope !== String(scope)) {
       this._store.rescope(scope);
+      // re-scope cambia de marca → la hidratacion remota debe correr de nuevo
+      this._ccRemoteHydratedFor = null;
     }
     // refs compartidas: el codigo existente sigue funcionando
     this._positions = this._store.nodes.positions;
@@ -695,6 +697,21 @@
     if (!this._commands || this._commandsStore !== this._store) {
       this._commands = CanvasCommands(this._store);
       this._commandsStore = this._store;
+    }
+    // F1.6: write-through BD para free-links. Suscribimos 1 vez por vista
+    // a los eventos del store; los handlers leen this._containerRow/_organizationId/_supabase
+    // al disparar (auto-adapt en re-scope).
+    if (!this._ccEdgeSubs) {
+      this._ccEdgeSubs = [
+        this._store.on('mutated:free-link-add', (p) => {
+          if (this._ccSuspendRemoteEdges) return;
+          this._insertEdgeRemote(p && p.from, p && p.to);
+        }),
+        this._store.on('mutated:free-link-remove', (p) => {
+          if (this._ccSuspendRemoteEdges) return;
+          this._deleteEdgeRemote(p && p.from, p && p.to);
+        }),
+      ];
     }
     return this._store;
   };
@@ -1536,8 +1553,8 @@
     return data;
   };
 
-  // Wrap _setupCanvasListeners para instalar atajos + multi-select despues
-  // del setup original.
+  // Wrap _setupCanvasListeners para instalar atajos + multi-select + hidratar
+  // edges desde BD despues del setup original.
   const _origSetupCanvasListeners = P._setupCanvasListeners;
   if (typeof _origSetupCanvasListeners === 'function') {
     P._setupCanvasListeners = function () {
@@ -1545,9 +1562,136 @@
       this._ensureStore();
       this._installCanvasShortcuts();
       this._installMultiSelect();
+      // F1.6: fire-and-forget hidratacion remota. Si la marca ya se hidrato
+      // antes en esta misma vista, _hydrateRemoteEdges se sale solo.
+      this._hydrateRemoteEdges();
       return r;
     };
   }
+
+  // ------------------------------------------------------------------
+  // F1.6: persistencia BD de free-links via tabla canvas_edges
+  //
+  // Modelo: write-through. localStorage sigue siendo cache instantanea;
+  // BD es source-of-truth en cada carga. En el primer load por marca,
+  // si BD esta vacia y localStorage tiene entries, hacemos backfill.
+  //
+  // Las mutaciones disparan inserts/deletes async (fire-and-forget) via
+  // los listeners on('mutated:free-link-{add,remove}') instalados en
+  // _ensureStore. Errores se loguean pero no rompen la UX.
+  // ------------------------------------------------------------------
+
+  function ccParseKey(k) {
+    if (!k || typeof k !== 'string') return null;
+    const colon = k.indexOf(':');
+    if (colon <= 0 || colon === k.length - 1) return null;
+    return { type: k.slice(0, colon), id: k.slice(colon + 1) };
+  }
+
+  P._hydrateRemoteEdges = async function () {
+    this._ensureStore();
+    const brandId = this._containerRow?.id;
+    const orgId = this._organizationId;
+    if (!this._supabase || !brandId || !orgId) return;
+    if (this._ccRemoteHydratedFor === brandId) return; // idempotente por marca
+    this._ccRemoteHydratedFor = brandId;
+    try {
+      const { data: rows, error } = await this._supabase
+        .from('canvas_edges')
+        .select('source_type, source_id, target_type, target_id')
+        .eq('brand_container_id', brandId)
+        .eq('edge_kind', 'free');
+      if (error) {
+        console.warn('[CC] hydrate canvas_edges error (cache local intacta):', error.message || error);
+        this._ccRemoteHydratedFor = null; // permitir retry
+        return;
+      }
+      const bdEdges = (rows || []).map((r) => ({
+        from: `${r.source_type}:${r.source_id}`,
+        to:   `${r.target_type}:${r.target_id}`,
+      }));
+      const localCount = (this._store.edges.freeLinks || []).length;
+
+      if (bdEdges.length === 0 && localCount > 0) {
+        // Backfill: BD vacia + local tiene → empujar local a BD.
+        // Suspender los handlers de eventos para no duplicar inserts.
+        console.info(`[CC] canvas_edges backfill: ${localCount} edges → BD`);
+        const localCopy = [...this._store.edges.freeLinks];
+        for (const e of localCopy) await this._insertEdgeRemote(e.from, e.to);
+        return;
+      }
+
+      if (bdEdges.length > 0) {
+        // BD es la fuente de verdad: reemplazar local con BD.
+        // Suspender los handlers para que el replace no dispare inserts/deletes BD.
+        this._ccSuspendRemoteEdges = true;
+        this._store.edges.freeLinks.length = 0;
+        const seen = new Set();
+        bdEdges.forEach((e) => {
+          // dedup defensivo en ambas direcciones (UNIQUE en BD ya bloquea exact, pero el cliente trata A→B == B→A)
+          const k1 = `${e.from}->${e.to}`, k2 = `${e.to}->${e.from}`;
+          if (seen.has(k1) || seen.has(k2)) return;
+          seen.add(k1);
+          this._store.edges.freeLinks.push(e);
+        });
+        this._store.persistFreeLinks();
+        this._ccSuspendRemoteEdges = false;
+        // Refrescar si cambio el count vs local previo
+        if (this._store.edges.freeLinks.length !== localCount) {
+          this._renderCanvas();
+        }
+      }
+    } catch (e) {
+      console.warn('[CC] hydrate canvas_edges exception:', e);
+      this._ccRemoteHydratedFor = null;
+    } finally {
+      this._ccSuspendRemoteEdges = false;
+    }
+  };
+
+  P._insertEdgeRemote = async function (fromKey, toKey) {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    const f = ccParseKey(fromKey), t = ccParseKey(toKey);
+    if (!f || !t) return;
+    try {
+      const { error } = await this._supabase.from('canvas_edges').insert({
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        source_type: f.type, source_id: f.id,
+        target_type: t.type, target_id: t.id,
+        edge_kind: 'free',
+      });
+      // 23505 = unique violation (ya existe). Silenciar.
+      if (error && error.code !== '23505') {
+        console.warn('[CC] insert canvas_edge:', error.message || error);
+      }
+    } catch (e) {
+      console.warn('[CC] insert canvas_edge exception:', e);
+    }
+  };
+
+  P._deleteEdgeRemote = async function (fromKey, toKey) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    const f = ccParseKey(fromKey), t = ccParseKey(toKey);
+    if (!f || !t) return;
+    try {
+      // Borrar ambas direcciones — nuestro dedup cliente trata A→B == B→A
+      const filter = [
+        `and(source_type.eq.${f.type},source_id.eq.${f.id},target_type.eq.${t.type},target_id.eq.${t.id})`,
+        `and(source_type.eq.${t.type},source_id.eq.${t.id},target_type.eq.${f.type},target_id.eq.${f.id})`,
+      ].join(',');
+      const { error } = await this._supabase.from('canvas_edges')
+        .delete()
+        .eq('brand_container_id', this._containerRow.id)
+        .eq('edge_kind', 'free')
+        .or(filter);
+      if (error) {
+        console.warn('[CC] delete canvas_edge:', error.message || error);
+      }
+    } catch (e) {
+      console.warn('[CC] delete canvas_edge exception:', e);
+    }
+  };
 
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
   // que F1.7 pueda persistirlo en canvas_views sin re-cablear todo. No
@@ -1600,6 +1744,12 @@
       canvas.removeEventListener('mousedown', this._ccMultiMouseDown, true);
       this._ccMultiMouseDown = null;
     }
+    // F1.6: unsubscribe de los events del store por write-through edges
+    if (Array.isArray(this._ccEdgeSubs)) {
+      this._ccEdgeSubs.forEach((off) => { try { typeof off === 'function' && off(); } catch (_) {} });
+      this._ccEdgeSubs = null;
+    }
+    this._ccRemoteHydratedFor = null;
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.
