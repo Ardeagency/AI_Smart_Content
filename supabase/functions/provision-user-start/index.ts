@@ -62,15 +62,29 @@ Deno.serve(async (req) => {
     }
     const authUserId = created.user.id;
 
-    // 2) Generar link de signup. Esto dispara el envío del email vía SMTP del proyecto.
-    const { error: linkErr } = await service.auth.admin.generateLink({
-      type: "signup",
-      email,
-      password,
-    });
-    if (linkErr) {
-      // No es fatal: el usuario quedó creado. El Lead puede reintentar el envío.
-      console.warn("generateLink failed:", linkErr.message);
+    // 2) Disparar el email de confirmacion. createUser con email_confirm:false
+    // NO envia automaticamente, y generateLink({type:'signup'}) tampoco para
+    // users recien creados. La forma confiable es el endpoint /auth/v1/resend
+    // que usa GoTrue para "reenviar confirmacion" — esto si llama al SMTP.
+    const supaUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    try {
+      const resendRes = await fetch(`${supaUrl}/auth/v1/resend`, {
+        method: "POST",
+        headers: {
+          "apikey": anonKey,
+          "Authorization": `Bearer ${anonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ type: "signup", email }),
+      });
+      if (!resendRes.ok) {
+        const txt = await resendRes.text();
+        console.warn(`auth/v1/resend HTTP ${resendRes.status}: ${txt}`);
+      }
+    } catch (e) {
+      // No es fatal: el user quedo creado. El Lead puede reintentar el envio.
+      console.warn("resend email failed:", (e as Error).message);
     }
 
     // 3) Insertar el job.
