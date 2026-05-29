@@ -1994,6 +1994,16 @@
   stroke-dasharray: 4 4;
 }
 
+/* F2: elimina degradados y glows de TODOS los nodos
+   Las vars --cc-glow-1/2/3 + --cc-grad-end pintan inset shadows en
+   el ::before y un gradient en el background segun el tipo de nodo.
+   Para el lenguaje premium dejamos paleta gris-card uniforme. */
+.cc-node {
+  background: var(--bg-card, #141517) !important;
+  background-image: none !important;
+}
+.cc-node::before { display: none !important; }
+
 /* F2: lenguaje "premium" — para nodos rediseñados (products, flows).
    Sin gradientes, sin glow rojo, paleta gris-card + acentos sutiles. */
 .cc-node--prem {
