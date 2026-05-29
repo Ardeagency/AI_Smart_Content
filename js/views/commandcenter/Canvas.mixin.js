@@ -340,36 +340,37 @@
     const linkedName = linked ? ((this._audiences || []).find((a) => String(a.id) === String(c.persona_id))?.name || 'Audiencia vinculada') : '';
 
     if (isReal) {
-      // Read-only: espejo de Meta/Google. Metricas + conjuntos/ads expandibles.
+      // Rediseno F2: card limpio, sin metricas in-card. Metricas en el inspector.
+      // Al expandir, los conjuntos+anuncios spawn como nodos satelite externos
+      // (renderizados por _renderCampaignSatellites tras _renderCanvas).
       const platLabel = platformLabel[c.platform] || (c.platform ? c.platform.replace(/_/g, ' ') : '');
-      const fmt = (v) => { const x = Number(v); return Number.isFinite(x) ? (x >= 1e6 ? (x/1e6).toFixed(1)+'M' : x >= 1e3 ? (x/1e3).toFixed(1)+'K' : x.toLocaleString('es-ES')) : '0'; };
       const expanded = this._expandedReal && this._expandedReal.has(String(n.id));
+      const synced = c.metrics_cached_at || c.last_synced_at;
+      const syncTitle = synced ? `Sincronizado: ${new Date(synced).toLocaleString('es-ES')}` : 'Pendiente sync';
       return `
-    <div class="cc-node cc-node--campaign cc-node--readonly ${expanded ? 'cc-node--expanded' : ''}" data-node-key="${n.key}" data-type="campaign-real" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+    <div class="cc-node cc-node--campaign cc-node--readonly cc-node--campaign-v2 ${expanded ? 'cc-node--expanded' : ''}" data-node-key="${n.key}" data-type="campaign-real" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia objetivo"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--camp"><i class="fas fa-bullhorn"></i></span>
-        <span class="cc-node-title">Campana real</span>
+        <span class="cc-node-icon cc-node-icon--camp cc-node-icon--hero"><i class="fas fa-bullhorn"></i></span>
+        <div class="cc-node-head-text">
+          <span class="cc-node-title">Campana</span>
+          <span class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Sin nombre')}</span>
+        </div>
         <div class="cc-node-actions">
+          <span class="cc-node-sync ${synced ? 'is-synced' : ''}" title="${this.escapeHtml(syncTitle)}"><i class="fas fa-arrows-rotate"></i></span>
           <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
         </div>
       </div>
-      <div class="cc-node-body">
-        <div class="cc-node-realname" title="${this.escapeHtml(c.nombre_campana || 'Campana')}">${this.escapeHtml(c.nombre_campana || 'Campana')}</div>
-        <div class="cc-node-badges">${platLabel ? `<span class="cc-node-badge cc-node-badge--plat">${this.escapeHtml(platLabel)}</span>` : ''}${c.status ? `<span class="cc-node-badge">${this.escapeHtml(c.status)}</span>` : ''}</div>
-        <dl class="cc-node-stats">
-          <div><dt>Resultados</dt><dd>${fmt(c.cached_conversions)}</dd></div>
-          <div><dt>Gasto</dt><dd>${fmt(c.cached_spend)} ${this.escapeHtml(c.budget_currency || '')}</dd></div>
-          <div><dt>Impresiones</dt><dd>${fmt(c.cached_impressions)}</dd></div>
-        </dl>
-        ${linkedName ? `<span class="cc-node-meta"><i class="fas fa-link"></i> ${this.escapeHtml(linkedName)}</span>` : ''}
-        <button type="button" class="cc-node-expand-btn" data-expand-id="${this.escapeHtml(String(n.id))}">
-          <i class="fas fa-chevron-${expanded ? 'up' : 'down'}"></i>
-          <span>${expanded ? 'Ocultar conjuntos y ads' : 'Ver conjuntos y ads'}</span>
-        </button>
-        <div class="cc-node-ads" data-ads-for="${this.escapeHtml(String(n.id))}" style="${expanded ? '' : 'display:none;'}">
-          ${expanded ? (this._adsHTML(n.id) || '<div class="cc-ads-loading"><i class="fas fa-spinner fa-spin"></i> Cargando ads…</div>') : ''}
+      <div class="cc-node-body cc-node-body--lean">
+        <div class="cc-node-pills">
+          ${platLabel ? `<span class="cc-node-pill cc-node-pill--plat">${this.escapeHtml(platLabel)}</span>` : ''}
+          ${c.status ? `<span class="cc-node-pill cc-node-pill--status cc-node-pill--${this.escapeHtml(c.status)}">${this.escapeHtml(c.status)}</span>` : ''}
+          ${linkedName ? `<span class="cc-node-pill cc-node-pill--linked" title="Audiencia: ${this.escapeHtml(linkedName)}"><i class="fas fa-link"></i></span>` : ''}
         </div>
+        <button type="button" class="cc-node-expand-btn cc-node-expand-btn--v2" data-expand-id="${this.escapeHtml(String(n.id))}">
+          <span>Conjuntos y anuncios</span>
+          <i class="fas fa-chevron-${expanded ? 'up' : 'down'}"></i>
+        </button>
       </div>
       <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
     </div>`;
@@ -1309,7 +1310,7 @@
   P._librarySections = function () {
     return [
       { key: 'audiences', label: 'Audiencias',          icon: 'fa-users' },
-      { key: 'campaigns', label: 'Campanas reales',     icon: 'fa-bullhorn' },
+      { key: 'campaigns', label: 'Campanas',            icon: 'fa-bullhorn' },
       { key: 'concepts',  label: 'Conceptualizaciones', icon: 'fa-lightbulb' },
       { key: 'products',  label: 'Productos',           icon: 'fa-box' },
       { key: 'services',  label: 'Servicios',           icon: 'fa-tag' },

@@ -1672,6 +1672,131 @@
   padding: 6px 2px; text-align: center; font-style: italic;
 }
 
+/* F2: rediseno nodo Campana — card limpio sin metricas inline.
+   Metricas viven en el inspector (F1.12). Conjuntos+ads spawn como
+   satelites tipo n8n al expandir (F2 next chunk).
+   Reemplaza por completo el styling del .cc-node--readonly cuando
+   tambien tiene .cc-node--campaign-v2. */
+.cc-node--campaign-v2 {
+  width: 280px !important;
+  border: 1px solid var(--border-divider, #242424) !important;
+  background: var(--bg-card, #141517) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.22), 0 12px 28px rgba(0,0,0,0.18);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.cc-node--campaign-v2.cc-node--expanded {
+  width: 280px !important; /* no se ensancha; los detalles van fuera */
+}
+.cc-node--campaign-v2.cc-node--selected { box-shadow: 0 0 0 2px #6aa3ff, 0 12px 30px rgba(0,0,0,0.30); }
+.cc-node--campaign-v2 .cc-node-head {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 12px 10px;
+  background: transparent;
+}
+.cc-node--campaign-v2 .cc-node-icon--hero {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(225, 87, 96, 0.14);
+  color: #e15760;
+  font-size: 1.1rem;
+}
+.cc-node--campaign-v2 .cc-node-head-text {
+  display: flex; flex-direction: column;
+  gap: 2px; min-width: 0;
+}
+.cc-node--campaign-v2 .cc-node-head-text .cc-node-title {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cc-node--campaign-v2 .cc-node-head-text .cc-node-realname {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.25;
+}
+.cc-node--campaign-v2 .cc-node-actions {
+  display: flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.cc-node--campaign-v2 .cc-node-sync {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.62rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+}
+.cc-node--campaign-v2 .cc-node-sync.is-synced { color: #5fe0c0; }
+.cc-node--campaign-v2 .cc-node-uncanvas {
+  width: 22px; height: 22px;
+  border: none; background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.62rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.cc-node--campaign-v2 .cc-node-uncanvas:hover { background: rgba(255,255,255,0.12); color: var(--text-primary, #fff); }
+.cc-node--campaign-v2 .cc-node-body--lean {
+  padding: 0 12px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.cc-node--campaign-v2 .cc-node-pills {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.cc-node--campaign-v2 .cc-node-pill {
+  font-size: 0.6rem;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.cc-node--campaign-v2 .cc-node-pill--plat { background: rgba(106, 163, 255, 0.14); color: #b9d5ff; text-transform: none; }
+.cc-node--campaign-v2 .cc-node-pill--status { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+.cc-node--campaign-v2 .cc-node-pill--active { background: rgba(95, 224, 192, 0.16); color: #b6f0e0; }
+.cc-node--campaign-v2 .cc-node-pill--paused { background: rgba(224, 160, 69, 0.14); color: #f3cfa1; }
+.cc-node--campaign-v2 .cc-node-pill--ended,
+.cc-node--campaign-v2 .cc-node-pill--archived { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+.cc-node--campaign-v2 .cc-node-pill--linked {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(95, 224, 192, 0.16);
+  color: #b6f0e0;
+  padding: 3px 6px;
+}
+.cc-node--campaign-v2 .cc-node-expand-btn--v2 {
+  appearance: none;
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.02);
+  color: var(--text-primary, #fff);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cc-node--campaign-v2 .cc-node-expand-btn--v2 i { font-size: 0.62rem; color: var(--text-muted); }
+.cc-node--campaign-v2 .cc-node-expand-btn--v2:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); }
+.cc-node--campaign-v2 .cc-node-expand-btn--v2:hover i { color: var(--text-primary, #fff); }
+.cc-node--campaign-v2 .cc-node-ads,
+.cc-node--campaign-v2 .cc-node-realname[title] { /* legado oculto */ }
+
 /* F1.12: side-panel inspector derecho */
 .cc-inspector {
   position: fixed;

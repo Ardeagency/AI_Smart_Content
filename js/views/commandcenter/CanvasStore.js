@@ -3066,7 +3066,7 @@
       const conv = Number(row.cached_conversions) || 0;
       const roas = Number(row.cached_roas);
       return {
-        title: `<i class="fas fa-bullhorn"></i> ${this.escapeHtml(row.nombre_campana || 'Campana real')}`,
+        title: `<i class="fas fa-bullhorn"></i> ${this.escapeHtml(row.nombre_campana || 'Campana')}`,
         body: `
           <div class="cc-insp-section">
             <span class="cc-insp-label">Plataforma</span>
