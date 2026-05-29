@@ -1097,8 +1097,15 @@
     }
   };
 
-  // F1.2: atajos de teclado (Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z o Ctrl/Cmd+Y redo).
-  // Ignora si el target es un input/textarea/contenteditable (no robar al usuario).
+  // F1.2 + F1.4: atajos de teclado.
+  // - Ctrl/Cmd+Z       → undo
+  // - Ctrl/Cmd+Shift+Z → redo
+  // - Ctrl/Cmd+Y       → redo (alt)
+  // - Ctrl/Cmd+C       → copy seleccion al clipboard interno (snapshot)
+  // - Ctrl/Cmd+V       → paste con BD-clones de audiencias / campanas concept;
+  //                       identities/campanas reales del clipboard se ignoran
+  // - Ctrl/Cmd+D       → duplicar = copy + paste en una sola pulsacion
+  // Ignora si el target es input/textarea/contenteditable (no robar al usuario).
   P._installCanvasShortcuts = function () {
     if (this._ccKeyHandler) return;
     this._ccKeyHandler = (e) => {
@@ -1112,12 +1119,239 @@
         e.preventDefault();
         if (e.shiftKey) { if (this._store.redo()) this._renderCanvas(); }
         else            { if (this._store.undo()) this._renderCanvas(); }
-      } else if (k === 'y') {
+        return;
+      }
+      if (k === 'y') {
         e.preventDefault();
         if (this._store.redo()) this._renderCanvas();
+        return;
+      }
+      if (k === 'c') {
+        e.preventDefault();
+        this._ccCopyToClipboard();
+        return;
+      }
+      if (k === 'v') {
+        e.preventDefault();
+        this._ccPasteFromClipboard();
+        return;
+      }
+      if (k === 'd') {
+        e.preventDefault();
+        this._ccDuplicate();
+        return;
       }
     };
     document.addEventListener('keydown', this._ccKeyHandler);
+  };
+
+  // ------------------------------------------------------------------
+  // F1.4: copy / paste / duplicate
+  //
+  // Clipboard en memoria (no OS clipboard) en this._ccClipboard:
+  //   { items: [{kind, originalKey, originalId, position, snapshot}], edges: [{from,to}], capturedAt, pastedCount }
+  //
+  // Copy snapshot solo audiencias y campanas conceptuales (BD clonable).
+  // Identities (producto/servicio/...) y campanas reales se ignoran porque
+  // son referencias a entidades unicas; duplicar visualmente no tiene
+  // semantica clara en F1.4. Free edges donde ambos endpoints estan en la
+  // seleccion tambien se capturan para recrear entre los nuevos clones.
+  //
+  // Paste corre BD inserts secuenciales (no batch). Las posiciones se
+  // desplazan por +24px * pastedCount (acumulado por cada paste sin un
+  // copy nuevo). Las inserciones BD NO entran al undo stack (consistente
+  // con persona_id en F1.2): el usuario revierte borrando manualmente
+  // desde la biblioteca de audiencias/campanas.
+  // ------------------------------------------------------------------
+
+  P._ccCopyToClipboard = function () {
+    this._ensureStore();
+    const set = this._store.selectionSet;
+    if (!set || set.size === 0) {
+      console.info('[CC] copy: seleccion vacia');
+      return;
+    }
+    const items = [];
+    const edges = [];
+    set.forEach((key) => {
+      const cur = this._positions[key];
+      const position = cur ? { x: cur.x, y: cur.y } : null;
+      if (key.startsWith('aud:')) {
+        const id = key.slice(4);
+        const row = (this._audiences || []).find((a) => String(a.id) === String(id));
+        if (row) items.push({ kind: 'audience', originalKey: key, originalId: id, position, snapshot: { ...row } });
+      } else if (key.startsWith('camp:')) {
+        const id = key.slice(5);
+        const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
+        if (!row) return;
+        if (row.last_synced_at) return; // campana real: no clonable
+        items.push({ kind: 'campaign-concept', originalKey: key, originalId: id, position, snapshot: { ...row } });
+      }
+      // identities / real campaigns: ignore
+    });
+    const keySet = new Set([...set]);
+    (this._store.edges.freeLinks || []).forEach((l) => {
+      if (keySet.has(l.from) && keySet.has(l.to)) edges.push({ from: l.from, to: l.to });
+    });
+    this._ccClipboard = { items, edges, capturedAt: Date.now(), pastedCount: 0 };
+    console.info(`[CC] copy: ${items.length} nodos + ${edges.length} conexiones`);
+  };
+
+  P._ccPasteFromClipboard = async function () {
+    if (!this._ccClipboard || !Array.isArray(this._ccClipboard.items) || !this._ccClipboard.items.length) {
+      console.info('[CC] paste: clipboard vacio');
+      return;
+    }
+    if (!this._supabase) {
+      console.warn('[CC] paste: sin conexion supabase');
+      return;
+    }
+    if (this._ccPasteInFlight) {
+      console.info('[CC] paste: paste anterior en curso');
+      return;
+    }
+    this._ccPasteInFlight = true;
+    this._ensureStore();
+
+    this._ccClipboard.pastedCount = (this._ccClipboard.pastedCount || 0) + 1;
+    const offset = 24 * this._ccClipboard.pastedCount;
+
+    // Usuario actual: para sobreescribir created_by del clone (RLS + semantica:
+    // el clon es del que clona, no del autor del original).
+    let currentUserId = null;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      currentUserId = user?.id || null;
+    } catch (_) { /* noop */ }
+
+    const newKeysByOld = new Map();
+    const newDescs = new Map();
+
+    try {
+      for (const item of this._ccClipboard.items) {
+        try {
+          let cloneRow = null;
+          if (item.kind === 'audience') {
+            cloneRow = await this._cloneAudienceRow(item.snapshot, currentUserId);
+            if (cloneRow) {
+              this._audiences.push(cloneRow);
+              const newKey = `aud:${cloneRow.id}`;
+              newKeysByOld.set(item.originalKey, newKey);
+              newDescs.set(newKey, { type: 'audience', id: String(cloneRow.id), key: newKey });
+              if (item.position) {
+                this._store.setNodePosition(newKey, item.position.x + offset, item.position.y + offset);
+              }
+            }
+          } else if (item.kind === 'campaign-concept') {
+            cloneRow = await this._cloneCampaignConceptRow(item.snapshot, currentUserId);
+            if (cloneRow) {
+              this._campaigns.push(cloneRow);
+              const newKey = `camp:${cloneRow.id}`;
+              newKeysByOld.set(item.originalKey, newKey);
+              newDescs.set(newKey, { type: 'campaign-concept', id: String(cloneRow.id), key: newKey });
+              if (item.position) {
+                this._store.setNodePosition(newKey, item.position.x + offset, item.position.y + offset);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[CC] paste clone error:', e);
+        }
+      }
+      // Recrear free edges entre los nuevos keys (solo si ambos endpoints clonaron)
+      this._ccClipboard.edges.forEach((edge) => {
+        const nf = newKeysByOld.get(edge.from);
+        const nt = newKeysByOld.get(edge.to);
+        if (nf && nt) this._store.addFreeLink(nf, nt);
+      });
+      // Seleccionar los clones recien pegados
+      const newKeys = Array.from(newKeysByOld.values());
+      if (newKeys.length) {
+        this._store.selectMulti(newKeys, newKeys[0], newDescs);
+        this._selectedKey = newKeys[0];
+        this._selected = newDescs.get(newKeys[0]);
+      }
+      console.info(`[CC] paste: ${newKeys.length} clones creados`);
+    } finally {
+      this._ccPasteInFlight = false;
+      this._renderCanvas();
+      this._renderSelection();
+      if (typeof this._renderCampaigns === 'function') this._renderCampaigns();
+      if (typeof this._renderMiniDash === 'function') this._renderMiniDash();
+    }
+  };
+
+  P._ccDuplicate = async function () {
+    this._ccCopyToClipboard();
+    await this._ccPasteFromClipboard();
+  };
+
+  /**
+   * Clona una fila de audience_personas. Strip: id/timestamps/computed.
+   * Rename: name = "X (copia)". Sobreescribe created_by con el currentUserId
+   * (RLS + semantica del clon). Devuelve la fila creada con su nuevo id.
+   */
+  P._cloneAudienceRow = async function (src, currentUserId) {
+    const stripCols = new Set([
+      'id', 'created_at', 'updated_at',
+      'alignment_score', 'alignment_analyzed_at',
+      'top_converting_segment',
+      'real_age_distribution', 'real_gender_distribution',
+      'real_location_distribution', 'real_interests',
+    ]);
+    const insert = {};
+    Object.keys(src || {}).forEach((k) => {
+      if (stripCols.has(k)) return;
+      insert[k] = src[k];
+    });
+    insert.name = `${src.name || 'Sin nombre'} (copia)`;
+    if (currentUserId && 'created_by' in (src || {})) insert.created_by = currentUserId;
+    const { data, error } = await this._supabase
+      .from('audience_personas')
+      .insert(insert)
+      .select()
+      .single();
+    if (error) {
+      console.error('[CC] clone audience error:', error.message || error);
+      return null;
+    }
+    return data;
+  };
+
+  /**
+   * Clona una fila de campaigns (solo conceptuales — sin last_synced_at).
+   * Strip: id/timestamps/cached metrics/external refs. Rename: nombre_campana
+   * = "X (copia)". Fuerza source=internal y created_via=manual; sobreescribe
+   * created_by con el currentUserId si esta presente.
+   */
+  P._cloneCampaignConceptRow = async function (src, currentUserId) {
+    const stripCols = new Set([
+      'id', 'created_at', 'updated_at',
+      'cached_impressions', 'cached_clicks', 'cached_spend',
+      'cached_conversions', 'cached_roas', 'cached_ctr',
+      'match_scores', 'last_synced_at',
+      'external_campaign_id', 'external_adset_id', 'external_account_id',
+      'platform', 'integration_id',
+    ]);
+    const insert = {};
+    Object.keys(src || {}).forEach((k) => {
+      if (stripCols.has(k)) return;
+      insert[k] = src[k];
+    });
+    insert.nombre_campana = `${src.nombre_campana || 'Sin nombre'} (copia)`;
+    insert.source = 'internal';
+    insert.created_via = 'manual';
+    if (currentUserId && 'created_by' in (src || {})) insert.created_by = currentUserId;
+    const { data, error } = await this._supabase
+      .from('campaigns')
+      .insert(insert)
+      .select()
+      .single();
+    if (error) {
+      console.error('[CC] clone campaign error:', error.message || error);
+      return null;
+    }
+    return data;
   };
 
   // Wrap _setupCanvasListeners para instalar atajos + multi-select despues
