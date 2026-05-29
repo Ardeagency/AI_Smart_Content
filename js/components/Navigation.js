@@ -222,15 +222,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     role_required: 'lead',
     route: '/dev/lead/lexicon'
   },
-  {
-    type: 'page',
-    id: 'admin-provisioning',
-    label: 'Registrar Usuario',
-    icon: 'fa-user-plus',
-    iconSrc: '/recursos/icons/organization.svg',
-    role_required: 'lead',
-    route: '/dev/provisioning/users'
-  },
 ];
 
 /**
@@ -2477,8 +2468,7 @@ class Navigation {
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/categories': 'CATEGORÍAS',
-      '/dev/lead/input-schemas': 'INPUT SCHEMAS',
-      '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA'
+      '/dev/lead/input-schemas': 'INPUT SCHEMAS'
     };
 
     for (const [route, title] of Object.entries(titles)) {
