@@ -57,19 +57,31 @@ class DevLeadCreateOrgView extends DevBaseView {
       level_of_autonomy: 'parcial',
       mfa_required: false
     };
+    // Scraping state (Step 2 con method=url o docs)
+    this.scrapeJobId = null;
+    this.scrapeStatus = null;       // {status, stage, progress, brand_payload, error, ...}
+    this.scrapePollTimer = null;
+    this.scrapeError = null;
+    this.scraped_brand = false;     // true cuando un scrape exitoso pre-poblo form
   }
 
   async onEnter() {
     await super.onEnter({ requireLead: true });
   }
 
-  // Steps activos dependen de method: si manual hay un step extra 'brand'
+  async destroy() {
+    this.stopScrapePolling();
+    super.destroy?.();
+  }
+
+  // Steps activos dependen de method: si manual o si el scrape pre-llenó datos
+  // se incluye un step 'brand' para revisar/editar la info detectada.
   getActiveSteps() {
     const out = [
       { key: 'identidad', label: 'Identidad' },
       { key: 'metodo',    label: 'Metodo' }
     ];
-    if (this.form.method === 'manual') {
+    if (this.form.method === 'manual' || this.scraped_brand) {
       out.push({ key: 'brand', label: 'Marca' });
     }
     out.push(
@@ -266,6 +278,8 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   renderMethodForm() {
+    if (this.scrapeJobId) return this.renderScrapeProgress();
+    if (this.scrapeError)  return this.renderScrapeError();
     const m = this.form.method;
     if (!m) {
       return `
@@ -279,6 +293,53 @@ class DevLeadCreateOrgView extends DevBaseView {
     if (m === 'url')    return this.renderMethodUrl();
     if (m === 'docs')   return this.renderMethodDocs();
     return '';
+  }
+
+  renderScrapeProgress() {
+    const s = this.scrapeStatus || {};
+    const prog = s.progress || {};
+    const stageMap = {
+      queued:        { label: 'En cola',                  pct: 5 },
+      crawling:      { label: 'Descubriendo rutas',       pct: 25 },
+      extracting:    { label: 'Analizando paginas',       pct: 55 },
+      consolidating: { label: 'Consultando Vera (gpt-4o)', pct: 80 },
+      done:          { label: 'Listo',                    pct: 100 },
+      failed:        { label: 'Fallo',                    pct: 0 },
+    };
+    const cur = stageMap[s.status] || stageMap.queued;
+    const stageText = s.stage || cur.label;
+
+    const detailLines = [];
+    if (prog.pages_crawled !== undefined) {
+      detailLines.push(`${prog.pages_crawled} paginas crawleadas${prog.queue_remaining ? ` · ${prog.queue_remaining} pendientes` : ''}`);
+    }
+    if (prog.colors_found !== undefined) {
+      detailLines.push(`${prog.colors_found} colores · ${prog.products_found || 0} productos · ${prog.services_found || 0} servicios`);
+    }
+    if (prog.llm_cost_usd !== undefined) {
+      detailLines.push(`gpt-4o ~$${Number(prog.llm_cost_usd).toFixed(3)}`);
+    }
+
+    return `
+      <div class="createorg-scrape-progress">
+        <div class="createorg-scrape-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <strong class="createorg-scrape-stage">${this.escapeHtml(stageText)}</strong>
+        <div class="createorg-scrape-bar"><span style="width:${cur.pct}%"></span></div>
+        ${detailLines.map((l) => `<small>${this.escapeHtml(l)}</small>`).join('')}
+        <p class="createorg-scrape-note">Esto tarda 1-4 minutos segun el tamano del sitio. Puedes esperar aqui.</p>
+      </div>
+    `;
+  }
+
+  renderScrapeError() {
+    return `
+      <div class="createorg-method-empty">
+        <i class="fas fa-triangle-exclamation" style="color:#ef4444"></i>
+        <strong>Error al analizar la fuente</strong>
+        <small style="display:block;margin-top:4px">${this.escapeHtml(this.scrapeError || 'Error desconocido')}</small>
+        <button type="button" class="provision-back-btn" style="margin-top:12px" data-action="scrape-reset">Reintentar</button>
+      </div>
+    `;
   }
 
   renderMethodManual() {
@@ -322,12 +383,16 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderStepBrand() {
     const f = this.form;
+    const isScraped = this.scraped_brand;
+    const detectedBadge = '<span class="createorg-detected-badge" title="Detectado por el scraper"><i class="fas fa-magic-wand-sparkles"></i> auto</span>';
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
           <span class="provision-form-eyebrow">Paso 3 · Marca</span>
-          <h2>Detalles del brand container</h2>
-          <p>Llena lo que sepas. El resto se completa luego desde Brand. Los campos siguen el JSON model de verbal_dna + visual_dna.</p>
+          <h2>${isScraped ? 'Revisa lo que detectamos' : 'Detalles del brand container'}</h2>
+          <p>${isScraped
+            ? 'Vera analizo tu sitio y prellena los campos. Edita lo que necesites antes de continuar.'
+            : 'Llena lo que sepas. El resto se completa luego desde Brand.'}</p>
         </header>
 
         <form id="createOrgBrandForm" class="createorg-form-grid" novalidate>
@@ -900,7 +965,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.goToStep(steps[idx - 1].key);
   }
 
-  handleNext() {
+  async handleNext() {
     const steps = this.getActiveSteps();
     const idx = steps.findIndex((s) => s.key === this.currentStep);
     if (idx === steps.length - 1) return; // ultimo paso, sin next
@@ -910,7 +975,140 @@ class DevLeadCreateOrgView extends DevBaseView {
       return;
     }
     this.setStatus('', '');
+
+    // Step 2 con method=url o docs: gatillar el scrape antes de avanzar
+    if (this.currentStep === 'metodo' && (this.form.method === 'url' || this.form.method === 'docs')) {
+      const ok = await this.startBrandScrape();
+      if (!ok) return; // error ya mostrado en pane
+      return; // polling se encarga de avanzar cuando termine
+    }
+
     this.goToStep(steps[idx + 1].key);
+  }
+
+  async startBrandScrape() {
+    if (this.form.method === 'url' && !this.form.brand_url) {
+      this.scrapeError = 'Falta la URL del sitio.';
+      this.refreshMethodPane();
+      return false;
+    }
+    if (this.form.method === 'docs' && (!this.form.brand_docs || this.form.brand_docs.length === 0)) {
+      this.scrapeError = 'Adjunta al menos un archivo.';
+      this.refreshMethodPane();
+      return false;
+    }
+    if (this.form.method === 'docs') {
+      this.scrapeError = 'Scraping desde documentos aun no esta implementado. Usa URL o Manual por ahora.';
+      this.refreshMethodPane();
+      return false;
+    }
+
+    this.scrapeError = null;
+    try {
+      const res = await fetch('/api/brand-scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: this.form.brand_url })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.job_id) {
+        this.scrapeError = data?.error || `HTTP ${res.status}`;
+        this.refreshMethodPane();
+        return false;
+      }
+      this.scrapeJobId = data.job_id;
+      this.scrapeStatus = { status: 'queued', stage: 'En cola' };
+      this.refreshMethodPane();
+      this.startScrapePolling();
+      return true;
+    } catch (e) {
+      this.scrapeError = e.message || String(e);
+      this.refreshMethodPane();
+      return false;
+    }
+  }
+
+  refreshMethodPane() {
+    const host = this.container.querySelector('#createOrgMethodContent');
+    if (host) host.innerHTML = this.renderMethodForm();
+    // Re-wire reset button si esta visible
+    const resetBtn = this.container.querySelector('[data-action="scrape-reset"]');
+    if (resetBtn) {
+      this.addEventListener(resetBtn, 'click', () => {
+        this.scrapeError = null;
+        this.scrapeJobId = null;
+        this.scrapeStatus = null;
+        this.refreshMethodPane();
+      });
+    }
+  }
+
+  startScrapePolling() {
+    this.stopScrapePolling();
+    this.scrapePollTimer = setInterval(() => this.pollScrape(), 2500);
+  }
+
+  stopScrapePolling() {
+    if (this.scrapePollTimer) { clearInterval(this.scrapePollTimer); this.scrapePollTimer = null; }
+  }
+
+  async pollScrape() {
+    if (!this.scrapeJobId) return;
+    try {
+      const res = await fetch(`/api/brand-scrape?job_id=${encodeURIComponent(this.scrapeJobId)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        this.scrapeError = data?.error || `HTTP ${res.status}`;
+        this.stopScrapePolling();
+        this.scrapeJobId = null;
+        this.refreshMethodPane();
+        return;
+      }
+      this.scrapeStatus = data;
+      this.refreshMethodPane();
+
+      if (data.status === 'done') {
+        this.stopScrapePolling();
+        this.applyScrapedPayload(data.brand_payload || {});
+      } else if (data.status === 'failed' || data.status === 'cancelled') {
+        this.stopScrapePolling();
+        this.scrapeError = data.error || `Job ${data.status}`;
+        this.scrapeJobId = null;
+        this.refreshMethodPane();
+      }
+    } catch (e) {
+      // dejar el polling reintentar en el siguiente tick
+    }
+  }
+
+  applyScrapedPayload(payload) {
+    const f = this.form;
+    // Verbal
+    if (payload.tono_de_voz) f.tone_of_voice = payload.tono_de_voz;
+    if (payload.tagline) f.tagline = payload.tagline;
+    if (Array.isArray(payload.pilares) && payload.pilares.length) f.pilares = payload.pilares;
+    if (Array.isArray(payload.palabras_clave) && payload.palabras_clave.length) f.palabras_clave = payload.palabras_clave;
+    if (Array.isArray(payload.palabras_prohibidas) && payload.palabras_prohibidas.length) f.palabras_prohibidas = payload.palabras_prohibidas;
+    if (payload.propuesta_valor) f.propuesta_valor = payload.propuesta_valor;
+    if (payload.mision_vision) f.mision_vision = payload.mision_vision;
+    // Visual
+    if (payload.primary_color) f.primary_color = payload.primary_color;
+    if (payload.secondary_color) f.secondary_color = payload.secondary_color;
+    if (payload.typography_primary) f.typography_primary = payload.typography_primary;
+    if (payload.typography_secondary) f.typography_secondary = payload.typography_secondary;
+    if (payload.estetica) f.estetica = payload.estetica;
+    if (Array.isArray(payload.temas) && payload.temas.length) f.temas = payload.temas;
+    // Region
+    if (payload.timezone) f.timezone = payload.timezone;
+    if (payload.locale) f.locale = payload.locale;
+    if (Array.isArray(payload.idiomas_contenido) && payload.idiomas_contenido.length) f.idiomas_contenido = payload.idiomas_contenido;
+    if (Array.isArray(payload.mercado_objetivo) && payload.mercado_objetivo.length) f.mercado_objetivo = payload.mercado_objetivo;
+    // Marca el form como scraped → Step 'brand' aparece en getActiveSteps
+    this.scraped_brand = true;
+    this.scrapeJobId = null;
+    this.scrapeStatus = null;
+    // Avanza al Step Brand
+    this.goToStep('brand');
   }
 
   validateStep(key) {
