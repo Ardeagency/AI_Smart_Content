@@ -2382,8 +2382,6 @@ class Navigation {
     links.forEach(link => {
       const route = link.dataset.route;
       if (!route || !currentPath.startsWith(route)) return;
-      // Las acciones primarias (+FLOW, +USER) son botones de accion, no de pagina actual.
-      if (link.classList.contains('nav-link--primary')) return;
       const after = currentPath.slice(route.length);
       if (after !== '' && after !== '/' && !after.startsWith('/')) return;
       if (route.length > bestLength) {
@@ -2403,6 +2401,13 @@ class Navigation {
         if (toggle) toggle.classList.add('active');
       }
     }
+  }
+
+  /** Forzar re-evaluacion del item activo (invalida cache). Usado cuando data-route
+   *  de los links cambia despues del primer render (ej: DevRankTheme reescribe URLs canonicas). */
+  resyncActiveLink() {
+    this._lastActivePath = null;
+    this.updateActiveLink();
   }
 
   /**

@@ -2818,6 +2818,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     --text-secondary: rgba(255, 255, 255, 0.85);
     --text-muted: rgba(255, 255, 255, 0.7);
 }
+
+/* Dev: override hover/active con vars del rank (--dev-sidebar-* las setea DevRankTheme).
+   Mismo lenguaje que org/ que usa --brand-primary-brillo*, pero scopeado para no chocar
+   en transiciones rapidas dev <-> org. Fallback brown-vino si el rank aun no aplico. */
+.side-navigation.nav-mode-developer {
+    --sidebar-hover: var(--dev-sidebar-hover, rgba(224, 145, 69, 0.12));
+    --sidebar-active: var(--dev-sidebar-active, rgba(224, 145, 69, 0.20));
+}
 .side-navigation::before {
     content: '';
     position: absolute;
@@ -2910,10 +2918,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 
 .nav-mode-developer .nav-link.active,
 .nav-mode-developer .nav-main-link.active {
-    /* Tint del rango sobre el bg oscuro — mismo lenguaje que org/, sin barra lateral.
-       Fallback hex visible (#e09145) por si DevRankTheme aun no aplico:
-       --accent-warm es #87868B (gris) globalmente. */
-    background: color-mix(in srgb, var(--dev-rank-accent, #e09145) 24%, transparent);
+    /* Tint dinamico del rango (rgba 20% del color secundario del rank). Espejo del
+       patron org/ que usa --sidebar-active = --brand-primary-brillo-strong. Las vars
+       --dev-sidebar-active vienen de DevRankTheme; fallback brown-vino si no aplico aun. */
+    background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
     opacity: 1;
 }
@@ -3211,13 +3219,13 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .side-navigation:not(.nav-mode-user) .nav-submenu-link:hover {
-    background: var(--bg-hover);
-    color: var(--text-secondary);
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
 }
 
-/* Dev: item activo en submenu hereda el tint del rango (igual que los top-level), no se confunde con hover. */
+/* Dev: item activo en submenu hereda el tint dinamico del rango via --sidebar-active. */
 .side-navigation:not(.nav-mode-user) .nav-submenu-link.active {
-    background: color-mix(in srgb, var(--dev-rank-accent, #e09145) 24%, transparent);
+    background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
 }
 
@@ -3281,10 +3289,12 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     box-shadow: none !important;
 }
 
+/* Cuando estas en /dev/provisioning/users o /dev/builder el boton primario es
+   "donde estoy". Tint dinamico del rango como el resto, mas el borde acento del rank. */
 .nav-mode-developer .nav-dev-primary-actions .nav-link.active,
 .nav-mode-developer .nav-dev-primary-actions .nav-main-link.active {
-    background: #1a1c20 !important;
-    border-color: #3a3a3a !important;
+    background: var(--sidebar-active) !important;
+    border-color: var(--dev-rank-accent, #3a3a3a) !important;
     box-shadow: none !important;
 }
 

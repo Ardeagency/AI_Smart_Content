@@ -116,6 +116,8 @@
     root.style.removeProperty('--dev-rank-label');
     root.style.removeProperty('--dev-rank-accent');
     root.style.removeProperty('--dev-rank-accent-2');
+    root.style.removeProperty('--dev-sidebar-hover');
+    root.style.removeProperty('--dev-sidebar-active');
     root.style.removeProperty('--dev-gradient-app-container');
     document.body.classList.remove('dev-rank-context');
     // Limpiar clases granulares
@@ -143,6 +145,11 @@
     if (pal) {
       root.style.setProperty('--dev-rank-accent', pal.secondary);
       root.style.setProperty('--dev-rank-accent-2', pal.primary);
+      // Tints rgba escalados para hover/active del sidebar dev. Espejo del patron
+      // org (--brand-primary-brillo*). Vars dedicadas para no chocar con org theme
+      // si ambos servicios setean :root en transiciones rapidas.
+      root.style.setProperty('--dev-sidebar-hover', _hexToRgba(pal.secondary, 0.12));
+      root.style.setProperty('--dev-sidebar-active', _hexToRgba(pal.secondary, 0.20));
     }
     // App-container edge gradient: 4 esquinas rainbow para el modo developer (visible vía #brand-bg-overlay)
     const corners = RANK_CORNERS[canonical];
@@ -204,6 +211,11 @@
       a.setAttribute('href', newHref);
       a.setAttribute('data-route', newHref);
     });
+    // Tras reescribir data-route, los matches de updateActiveLink quedaron obsoletos.
+    // Invalidar el cache de _lastActivePath y re-evaluar para que el item correcto reciba .active.
+    if (window.appNavigation && typeof window.appNavigation.resyncActiveLink === 'function') {
+      window.appNavigation.resyncActiveLink();
+    }
   }
 
   /** Devuelve el rank actual aplicado (sin tocar BD). */
