@@ -1577,6 +1577,8 @@
       this._hydrateRemoteEdges();
       // F1.7: hidrata viewport per-usuario despues del setup. Tambien idempotente.
       this._hydrateRemoteView();
+      // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
+      this._installLibSearch();
       return r;
     };
   }
@@ -1775,6 +1777,143 @@
     }, 1500);
   };
 
+  // ------------------------------------------------------------------
+  // F1.8: search en sidebar por seccion
+  //
+  // Inyecta un input arriba del body del panel cuando una seccion esta
+  // activa. La query vive en this._libSearchQuery por seccion (se preserva
+  // al cambiar entre secciones). Filtrado es in-place via class toggle
+  // (.cc-lib-item--hidden) — no re-renderea el body, asi preserva scroll.
+  // Debounce 200ms en input event para no thrashear con cada tecla.
+  // ------------------------------------------------------------------
+
+  const _origLibBodyHTML = P._libBodyHTML;
+  P._libBodyHTML = function (key) {
+    const items = this._libItemsFor(key);
+    const query = (this._libSearchQuery && this._libSearchQuery[key]) || '';
+    const qEsc = this.escapeHtml(query);
+    const kEsc = this.escapeHtml(key);
+    const clearBtn = query
+      ? `<button type="button" class="cc-lib-search-clear" data-cc-search-clear="${kEsc}" aria-label="Limpiar busqueda"><i class="fas fa-times"></i></button>`
+      : '';
+    const searchHTML = `<div class="cc-lib-search" data-cc-search-zone="${kEsc}">
+      <i class="fas fa-magnifying-glass cc-lib-search-ic"></i>
+      <input type="text" class="cc-lib-search-input" data-cc-search-key="${kEsc}" placeholder="Buscar..." value="${qEsc}" autocomplete="off" spellcheck="false" />
+      ${clearBtn}
+    </div>`;
+
+    // Estados que no listan items: mostrar search + el estado.
+    if (items === undefined) return searchHTML + '<div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>';
+    if (!items.length) return searchHTML + '<div class="cc-lib-empty">Sin elementos.</div>';
+
+    // Pre-filtrar en HTML para que el initial render coincida con la query
+    // guardada (no flash de items que luego se ocultan).
+    const q = query.trim().toLowerCase();
+    const icon = this._libIcon(key);
+    let visibleCount = 0;
+    const itemsHTML = items.map((it) => {
+      const matches = !q
+        || String(it.name || '').toLowerCase().includes(q)
+        || String(it.sub  || '').toLowerCase().includes(q);
+      if (matches) visibleCount++;
+      const hiddenClass = matches ? '' : ' cc-lib-item--hidden';
+      const subHTML = it.sub ? `<span class="cc-lib-item-sub">${this.escapeHtml(it.sub)}</span>` : '';
+      return `<div class="cc-lib-item${hiddenClass}" draggable="true" data-lib-type="${kEsc}" data-lib-id="${this.escapeHtml(String(it.id))}" ${it.camp ? `data-camp-id="${this.escapeHtml(String(it.id))}"` : ''} title="${this.escapeHtml(it.name)}${it.camp ? ' — arrastra al canvas' : ''}">
+        <i class="fas ${icon} cc-lib-item-ic"></i>
+        <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
+        ${subHTML}
+      </div>`;
+    }).join('');
+    const noresults = (q && visibleCount === 0)
+      ? '<div class="cc-lib-noresults">Sin resultados</div>'
+      : '';
+    return searchHTML + itemsHTML + noresults;
+  };
+
+  /**
+   * Aplica el filtro in-place: toggle .cc-lib-item--hidden + clear button +
+   * "Sin resultados". NO re-renderea el body (preserva scroll).
+   */
+  P._applyLibSearchFilter = function (key) {
+    const body = document.getElementById('ccPanelBody');
+    if (!body || this._activeSection !== key) return;
+    const q = ((this._libSearchQuery && this._libSearchQuery[key]) || '').trim().toLowerCase();
+    let visible = 0;
+    body.querySelectorAll('.cc-lib-item').forEach((el) => {
+      const name = (el.querySelector('.cc-lib-item-name')?.textContent || '').toLowerCase();
+      const sub  = (el.querySelector('.cc-lib-item-sub')?.textContent  || '').toLowerCase();
+      const matches = !q || name.includes(q) || sub.includes(q);
+      el.classList.toggle('cc-lib-item--hidden', !matches);
+      if (matches) visible++;
+    });
+    // Clear button: aparece cuando hay query
+    const zone = body.querySelector('.cc-lib-search');
+    if (zone) {
+      const existing = zone.querySelector('.cc-lib-search-clear');
+      if (q && !existing) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cc-lib-search-clear';
+        btn.setAttribute('data-cc-search-clear', key);
+        btn.setAttribute('aria-label', 'Limpiar busqueda');
+        btn.innerHTML = '<i class="fas fa-times"></i>';
+        zone.appendChild(btn);
+      } else if (!q && existing) {
+        existing.remove();
+      }
+    }
+    // No-results placeholder
+    let noresEl = body.querySelector('.cc-lib-noresults');
+    if (q && visible === 0) {
+      if (!noresEl) {
+        noresEl = document.createElement('div');
+        noresEl.className = 'cc-lib-noresults';
+        noresEl.textContent = 'Sin resultados';
+        body.appendChild(noresEl);
+      }
+    } else if (noresEl) {
+      noresEl.remove();
+    }
+  };
+
+  /** Instala listeners de input/click sobre ccPanelBody (1 vez por vista). */
+  P._installLibSearch = function () {
+    const body = document.getElementById('ccPanelBody');
+    if (!body) return;
+    if (!this._ccLibSearchInput) {
+      this._ccLibSearchInput = (e) => {
+        const input = e.target.closest('.cc-lib-search-input');
+        if (!input) return;
+        const key = input.getAttribute('data-cc-search-key');
+        if (!key) return;
+        if (!this._libSearchQuery) this._libSearchQuery = {};
+        if (this._libSearchTimer) clearTimeout(this._libSearchTimer);
+        const val = input.value;
+        this._libSearchTimer = setTimeout(() => {
+          this._libSearchTimer = null;
+          this._libSearchQuery[key] = val;
+          this._applyLibSearchFilter(key);
+        }, 200);
+      };
+      body.addEventListener('input', this._ccLibSearchInput);
+    }
+    if (!this._ccLibSearchClear) {
+      this._ccLibSearchClear = (e) => {
+        const clear = e.target.closest('.cc-lib-search-clear');
+        if (!clear) return;
+        e.preventDefault(); e.stopPropagation();
+        const key = clear.getAttribute('data-cc-search-clear');
+        if (!key) return;
+        if (this._libSearchQuery) this._libSearchQuery[key] = '';
+        const input = body.querySelector(`.cc-lib-search-input[data-cc-search-key="${ccCssEsc(key)}"]`);
+        if (input) input.value = '';
+        this._applyLibSearchFilter(key);
+        if (input) input.focus();
+      };
+      body.addEventListener('click', this._ccLibSearchClear);
+    }
+  };
+
   P._flushRemoteView = async function () {
     if (!this._supabase || !this._containerRow?.id || !this._store) return;
     if (this._ccViewFlushInFlight) return; // simple throttle
@@ -1871,6 +2010,17 @@
       this._ccViewportSub = null;
     }
     this._ccViewHydratedFor = null;
+    // F1.8: limpiar timers + listeners de search sidebar
+    if (this._libSearchTimer) { clearTimeout(this._libSearchTimer); this._libSearchTimer = null; }
+    const panelBody = document.getElementById('ccPanelBody');
+    if (panelBody && this._ccLibSearchInput) {
+      panelBody.removeEventListener('input', this._ccLibSearchInput);
+      this._ccLibSearchInput = null;
+    }
+    if (panelBody && this._ccLibSearchClear) {
+      panelBody.removeEventListener('click', this._ccLibSearchClear);
+      this._ccLibSearchClear = null;
+    }
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.
