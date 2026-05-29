@@ -154,7 +154,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
   { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', iconSrc: '/recursos/icons/dashboard.svg', route: '/dev/dashboard' },
   { type: 'section', label: 'Code' },
   { type: 'page', id: 'flows', label: 'My Flows', icon: 'fa-th-large', iconSrc: '/recursos/icons/flows.svg', route: '/dev/flows' },
-  { type: 'page', id: 'builder', label: 'Builder', icon: 'fa-hammer', iconSrc: '/recursos/icons/coding.svg', route: '/dev/builder' },
   {
     type: 'container',
     id: 'operations',
