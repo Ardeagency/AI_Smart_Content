@@ -994,38 +994,85 @@
     };
   }
 
-  // F2: override _nodeIdentityHTML para mostrar PREVIEW de imagen en nodos
-  // de products y flows. Otros tipos siguen con el render legacy.
+  // F2: override _nodeIdentityHTML con design premium minimalista.
+  // - Products: card con imagen como pieza visual principal + caption sutil
+  // - Flows: card oscuro con ports tipados + form preview (placeholders)
+  // - Otros tipos: legacy
   const _f2IdentityHTML = P._nodeIdentityHTML;
   if (typeof _f2IdentityHTML === 'function') {
     P._nodeIdentityHTML = function (n, pos) {
       const t = n.identityType;
       const r = n.row || {};
-      const hasPreview = (t === 'products' || t === 'flows') && r.imageUrl;
-      if (!hasPreview) return _f2IdentityHTML.apply(this, arguments);
-      const labels = { products: 'Producto', flows: 'Flow' };
-      const icons  = { products: 'fa-box', flows: 'fa-diagram-project' };
-      return `
-      <div class="cc-node cc-node--identity cc-node--identity-v2" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
-        <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
-        <div class="cc-node-head" data-drag-handle>
-          <span class="cc-node-icon"><i class="fas ${icons[t]}"></i></span>
-          <span class="cc-node-title">${labels[t]}</span>
-          <div class="cc-node-actions">
-            <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
-          </div>
-        </div>
-        <div class="cc-identity-preview">
-          <img src="${this.escapeHtml(r.imageUrl)}" alt="" loading="lazy" />
-        </div>
-        <div class="cc-node-body">
-          <div class="cc-node-realname" title="${this.escapeHtml(r.name || '')}">${this.escapeHtml(r.name || labels[t])}</div>
-          ${r.sub ? `<span class="cc-node-meta">${this.escapeHtml(r.sub)}</span>` : ''}
-        </div>
-        <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
-      </div>`;
+      if (t === 'products') return this._renderProductNode(n, pos, r);
+      if (t === 'flows')    return this._renderFlowNode(n, pos, r);
+      return _f2IdentityHTML.apply(this, arguments);
     };
   }
+
+  P._renderProductNode = function (n, pos, r) {
+    const name = r.name || 'Producto';
+    const sub  = r.sub || '';
+    const img  = r.imageUrl
+      ? `<img src="${this.escapeHtml(r.imageUrl)}" alt="" loading="lazy" />`
+      : '<div class="cc-prem-placeholder"><i class="fas fa-image"></i></div>';
+    return `
+    <div class="cc-node cc-node--identity cc-node--prem cc-node--prem-product" data-node-key="${n.key}" data-type="identity" data-identity-type="products" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <div class="cc-prem-toolbar" data-drag-handle>
+        <span class="cc-prem-tag">PRODUCTO</span>
+        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="cc-prem-image">${img}</div>
+      <div class="cc-prem-caption">
+        <span class="cc-prem-name" title="${this.escapeHtml(name)}">${this.escapeHtml(name)}</span>
+        ${sub ? `<span class="cc-prem-sub">${this.escapeHtml(sub)}</span>` : ''}
+      </div>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
+    </div>`;
+  };
+
+  P._renderFlowNode = function (n, pos, r) {
+    const name = r.name || 'Flow';
+    const sub  = r.sub || '';
+    // Ports tipados visuales (placeholder estatico para v1; el schema real
+    // vive en flow_modules y se incorporara en una iteracion posterior)
+    const inputPorts = [
+      { id: 'input',  color: '#e3c64a', label: 'input' },
+      { id: 'config', color: '#5fe0a8', label: 'config' },
+      { id: 'brief',  color: '#e57186', label: 'brief' },
+    ];
+    const outputPorts = [
+      { id: 'output', color: '#6aa3ff', label: sub || 'output' },
+    ];
+    const fields = [
+      { label: 'Output', value: sub || '—' },
+      { label: 'Modelo', value: 'Auto' },
+      { label: 'Calidad', value: 'Alta' },
+    ];
+    return `
+    <div class="cc-node cc-node--identity cc-node--prem cc-node--prem-flow" data-node-key="${n.key}" data-type="identity" data-identity-type="flows" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+      <div class="cc-prem-toolbar" data-drag-handle>
+        <span class="cc-prem-dot"></span>
+        <span class="cc-prem-title">${this.escapeHtml(name)}</span>
+        <button type="button" class="cc-prem-x cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="cc-prem-inner">
+        <div class="cc-prem-ports">
+          <div class="cc-prem-ports-col">
+            ${inputPorts.map((p) => `<div class="cc-prem-port-row"><span class="cc-prem-port-dot" style="background:${p.color}"></span><span class="cc-prem-port-label">${this.escapeHtml(p.label)}</span></div>`).join('')}
+          </div>
+          <div class="cc-prem-ports-col cc-prem-ports-col--right">
+            ${outputPorts.map((p) => `<div class="cc-prem-port-row"><span class="cc-prem-port-label">${this.escapeHtml(p.label)}</span><span class="cc-prem-port-dot" style="background:${p.color}"></span></div>`).join('')}
+          </div>
+        </div>
+        <div class="cc-prem-form">
+          ${fields.map((f) => `<div class="cc-prem-field"><span class="cc-prem-field-label">${this.escapeHtml(f.label)}</span><span class="cc-prem-field-value">${this.escapeHtml(f.value)}</span></div>`).join('')}
+        </div>
+      </div>
+      <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
+    </div>`;
+  };
   const _f2pRemoveIdentityFromCanvas = P._removeIdentityFromCanvas;
   if (typeof _f2pRemoveIdentityFromCanvas === 'function') {
     P._removeIdentityFromCanvas = function (type, id) {

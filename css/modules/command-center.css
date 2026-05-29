@@ -1994,29 +1994,157 @@
   stroke-dasharray: 4 4;
 }
 
-/* F2: nodo Identity con preview de imagen (products / flows).
-   Override del cc-node--identity legacy cuando hay imageUrl. */
-.cc-node--identity-v2 {
-  width: 240px !important;
-  background-image: none !important;
+/* F2: lenguaje "premium" — para nodos rediseñados (products, flows).
+   Sin gradientes, sin glow rojo, paleta gris-card + acentos sutiles. */
+.cc-node--prem {
   background: var(--bg-card, #141517) !important;
-}
-.cc-node--identity-v2::before { display: none !important; }
-.cc-node--identity-v2 .cc-identity-preview {
-  width: 100%;
-  height: 130px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid var(--border-divider, #242424);
-  display: flex; align-items: center; justify-content: center;
+  background-image: none !important;
+  border: 1px solid var(--border-divider, #242424) !important;
+  border-radius: 18px !important;
   overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.30), 0 16px 36px rgba(0,0,0,0.18);
+  --cc-grad-end: var(--bg-card, #141517);
+  --cc-glow-1: transparent;
+  --cc-glow-2: transparent;
+  --cc-glow-3: transparent;
+  --cc-accent: var(--text-muted);
 }
-.cc-node--identity-v2 .cc-identity-preview img {
+.cc-node--prem::before { display: none !important; }
+.cc-node--prem.cc-node--selected {
+  box-shadow: 0 0 0 2px #ffffff, 0 16px 36px rgba(0,0,0,0.25) !important;
+}
+
+/* Toolbar superior (icono / tag tipo + acciones) */
+.cc-prem-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  cursor: grab;
+  user-select: none;
+}
+.cc-prem-toolbar:active { cursor: grabbing; }
+.cc-prem-tag {
+  flex: 1;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cc-prem-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #d4d1d8;
+  box-shadow: 0 0 6px rgba(255,255,255,0.5);
+  flex: 0 0 auto;
+}
+.cc-prem-title {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-prem-x {
+  width: 22px; height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.6rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.cc-prem-x:hover { background: rgba(255,255,255,0.12); color: var(--text-primary, #fff); }
+
+/* ── Producto premium: imagen prominente ────────────────────────────── */
+.cc-node--prem-product { width: 260px !important; }
+.cc-prem-image {
+  margin: 0 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-divider, #242424);
+  aspect-ratio: 4 / 5;
+  display: flex; align-items: center; justify-content: center;
+}
+.cc-prem-image img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
 }
-.cc-node--identity-v2 .cc-node-body {
-  padding: 10px 12px;
+.cc-prem-placeholder {
+  color: rgba(255,255,255,0.15);
+  font-size: 2.2rem;
+}
+.cc-prem-caption {
+  padding: 10px 14px 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cc-prem-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-prem-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+/* ── Flow premium: ports tipados + form rows ────────────────────────── */
+.cc-node--prem-flow { width: 280px !important; }
+.cc-prem-inner {
+  margin: 0 12px 12px;
+  padding: 12px;
+  border: 1px solid var(--border-divider, #242424);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.18);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.cc-prem-ports {
+  display: flex; justify-content: space-between; gap: 12px;
+}
+.cc-prem-ports-col {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cc-prem-ports-col--right { align-items: flex-end; }
+.cc-prem-port-row {
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.cc-prem-port-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.cc-prem-port-label {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.cc-prem-form {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-divider, #242424);
+}
+.cc-prem-field {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border-divider, #242424);
+}
+.cc-prem-field-label {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+.cc-prem-field-value {
+  font-size: 0.7rem;
+  color: var(--text-primary, #fff);
+  font-weight: 500;
 }
 
 /* F2: ANCLA — Objetivo de Campana como nodo padre/trigger de la estrategia.
