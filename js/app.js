@@ -417,6 +417,7 @@ class App {
 
     // ── Dev Lead ──
     r.register('/dev/provisioning/users', this._lazy('DevLeadUserProvisioningView', [...devBase, '/js/views/DevLeadUserProvisioningView.js']), auth);
+    r.register('/dev/provisioning/create-org', this._lazy('DevLeadCreateOrgView', [...devBase, '/js/views/DevLeadCreateOrgView.js']), auth);
     r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js']), auth);
     r.register('/dev/lead/orgs', this._lazy('DevLeadOrgsView', [...devBase, '/js/views/DevLeadOrgsView.js']), auth);
     r.register('/dev/lead/categories', this._lazy('DevLeadCategoriesView', [...devBase, '/js/views/DevLeadCategoriesView.js']), auth);

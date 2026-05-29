@@ -739,6 +739,13 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
       if (['email_confirmed', 'finalizing', 'completed'].includes(job.status)) {
         this.stopPolling();
+        // owner_org tiene su pagina dedicada (crear org es un flow largo)
+        if (this.userType === 'owner_org') {
+          const target = '/dev/provisioning/create-org?job=' + encodeURIComponent(this.activeJob.id);
+          if (window.router) window.router.navigate(target);
+          else window.location.href = target;
+          return;
+        }
         this.goToStep('final');
         return;
       }
