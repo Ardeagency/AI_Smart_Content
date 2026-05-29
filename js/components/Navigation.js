@@ -163,7 +163,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     iconSrc: '/recursos/icons/video.svg',
     children: [
       { label: 'Flow Tests', route: '/dev/test' },
-      { label: 'Runs (alias /dev/test)', route: '/dev/runs' },
       { label: 'Logs', route: '/dev/logs' },
       { label: 'Webhooks', route: '/dev/webhooks' },
       { label: 'Web Vitals', route: '/dev/web-vitals' }
@@ -231,24 +230,6 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     iconSrc: '/recursos/icons/organization.svg',
     role_required: 'lead',
     route: '/dev/provisioning/users'
-  },
-  {
-    type: 'page',
-    id: 'admin-lead-flows',
-    label: 'Todos los Flujos (alias /dev/flows)',
-    icon: 'fa-layer-group',
-    iconSrc: '/recursos/icons/flows.svg',
-    role_required: 'lead',
-    route: '/dev/lead/flows'
-  },
-  {
-    type: 'page',
-    id: 'admin-vera-knowledge',
-    label: 'Vera Knowledge (alias legacy)',
-    icon: 'fa-database',
-    iconSrc: '/recursos/icons/memory.svg',
-    role_required: 'lead',
-    route: '/dev/lead/vera-knowledge'
   },
 ];
 
@@ -2494,7 +2475,6 @@ class Navigation {
       '/dev/webhooks': 'WEBHOOKS',
       '/dev/web-vitals': 'WEB VITALS',
       '/dev/provisioning/users': 'REGISTRAR USUARIO',
-      '/dev/lead/flows': 'TODOS LOS FLUJOS',
       '/dev/lead/team': 'EQUIPO',
       '/dev/lead/categories': 'CATEGORÍAS',
       '/dev/lead/input-schemas': 'INPUT SCHEMAS',

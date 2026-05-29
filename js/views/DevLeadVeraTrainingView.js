@@ -201,10 +201,9 @@ class DevLeadVeraTrainingView extends DevBaseView {
       if (key) this.openDetail(key);
     });
 
-    // Permite abrir directo en Conocimientos via ?tab=knowledge o ruta legacy.
-    const path = (window.location && window.location.pathname) || '';
+    // Permite abrir directo en Conocimientos via ?tab=knowledge.
     const params = new URLSearchParams(window.location.search || '');
-    if (params.get('tab') === 'knowledge' || path.includes('vera-knowledge')) {
+    if (params.get('tab') === 'knowledge') {
       this.setTab('knowledge');
     }
   }

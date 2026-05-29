@@ -125,10 +125,7 @@ class DevFlowsView extends DevBaseView {
     this.setupScopeToggle();
   }
 
-  /**
-   * Habilita el toggle "Mis flujos / Todos los flujos" solo para Lead y lo cablea.
-   * Si se llegó por la ruta legacy /dev/lead/flows, arranca en alcance 'all'.
-   */
+  /** Habilita el toggle "Mis flujos / Todos los flujos" solo para Lead y lo cablea. */
   setupScopeToggle() {
     if (!this.isLead()) return;
     const toggle = document.getElementById('devFlowsScopeToggle');
@@ -141,10 +138,6 @@ class DevFlowsView extends DevBaseView {
 
     const refreshBtn = document.getElementById('refreshAllFlowsBtn');
     if (refreshBtn) refreshBtn.addEventListener('click', () => this.loadAllFlows(true));
-
-    // Ruta legacy: /dev/lead/flows entra directo a "Todos los flujos".
-    const path = (window.location && window.location.pathname) || '';
-    if (path.includes('/dev/lead/flows')) this.setScope('all');
   }
 
   /** Cambia el panel visible y carga la data del alcance bajo demanda. */

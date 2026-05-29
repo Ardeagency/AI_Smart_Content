@@ -411,7 +411,6 @@ class App {
     r.register('/dev/builder/:flowId', devBuilderLoader, auth);
     const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js']);
     r.register('/dev/test', devTestLoader, auth);
-    r.register('/dev/runs', devTestLoader, auth);
     r.register('/dev/test/:flowId', devTestLoader, auth);
     r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js']), auth);
     r.register('/dev/web-vitals', this._lazy('DevWebVitalsView', [...devBase, '/js/views/DevWebVitalsView.js']), auth);
@@ -425,11 +424,6 @@ class App {
     // "Entrenamiento" (LLM): vista unificada con pestañas Entrenar + Conocimientos.
     const veraTrainingLoader = this._lazy('DevLeadVeraTrainingView', [...devBase, '/js/views/DevLeadVeraTrainingView.js']);
     r.register('/dev/lead/vera-training', veraTrainingLoader, auth);
-    // Ruta legacy: vera-knowledge abre la misma vista en la pestaña Conocimientos.
-    r.register('/dev/lead/vera-knowledge', veraTrainingLoader, auth);
-    // "Todos los flujos" (lead) ahora vive como sección dentro de /dev/flows (DevFlowsView).
-    // Se mantiene el redirect para no romper enlaces antiguos a /dev/lead/flows.
-    r.register('/dev/lead/flows', devFlowsLoader, auth);
     r.register('/dev/lead/lexicon', this._lazy('DevLeadLexiconView', [...devBase, '/js/views/DevLeadLexiconView.js']), auth);
 
     // ── 404 ──

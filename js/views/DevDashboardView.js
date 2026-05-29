@@ -802,10 +802,8 @@ class DevDashboardView extends DevBaseView {
     const link = document.getElementById('devTopFlowsLink');
     if (!this.isLead) {
       if (ownerCol) ownerCol.style.display = 'none';
-      if (link) link.href = '/dev/flows';
-    } else if (link) {
-      link.href = '/dev/lead/flows';
     }
+    if (link) link.href = '/dev/flows';
 
     const data = await this.tryRpc('dev_dashboard_top_flows', { p_hours: 24, p_limit: 10 });
     if (data) {
