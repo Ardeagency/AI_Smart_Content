@@ -748,6 +748,13 @@
         this._persistGroupPosition(p.key.slice(6));
       });
     }
+    // F1.12: side-panel inspector reacciona a cambios de seleccion.
+    // Re-render cierra automaticamente cuando selectionSet != 1.
+    if (!this._ccInspectorSub) {
+      this._ccInspectorSub = this._store.on('mutated:selection', () => {
+        this._renderInspector();
+      });
+    }
     return this._store;
   };
 
@@ -1641,6 +1648,9 @@
       // F1.11: hidrata groups + escucha edits del title input
       this._hydrateRemoteGroups();
       this._installGroupTitleListener();
+      // F1.12: monta el side-panel inspector + render inicial
+      this._installInspector();
+      this._renderInspector();
       return r;
     };
   }
@@ -2078,7 +2088,9 @@
     items.push({ sep: true });
     items.push({ action: 'delete', icon: 'fa-trash', label: size > 1 ? 'Borrar seleccion' : 'Borrar', kbd: 'Del', danger: true });
     items.push({ sep: true });
-    items.push({ action: 'props',  icon: 'fa-sliders', label: 'Propiedades', soon: 'F1.12', disabled: true });
+    if (size <= 1) {
+      items.push({ action: 'props', icon: 'fa-sliders', label: 'Propiedades' });
+    }
     return items;
   };
 
@@ -2133,7 +2145,10 @@
         }
         return;
       case 'props':
-        // Stub F1.12
+        // F1.12: el inspector ya esta abierto si hay single-selection
+        // (el right-click sobre el nodo lo selecciona). Forzamos render
+        // por si la seleccion vino de otro flujo.
+        this._renderInspector();
         return;
     }
   };
@@ -2757,6 +2772,373 @@
     document.addEventListener('mouseup', onUp);
   };
 
+  // ------------------------------------------------------------------
+  // F1.12: side-panel inspector derecho
+  //
+  // Aside fijo a la derecha que abre cuando hay seleccion single y muestra
+  // props profundas / no-inline. Para sticky/group expone color (group) +
+  // size (W/H). Para audiencias/campanas muestra resumen + campos clave no
+  // disponibles inline. Multi-select o vacio → cierra (slide-out).
+  //
+  // Sub a mutated:selection del store dispara re-render automatico.
+  // Cierre: boton X o Esc (que limpia seleccion → emit → close).
+  // Convive con el sidebar izquierdo sin solaparse.
+  // ------------------------------------------------------------------
+
+  P._installInspector = function () {
+    if (document.getElementById('ccInspector')) return;
+    const aside = document.createElement('aside');
+    aside.id = 'ccInspector';
+    aside.className = 'cc-inspector';
+    aside.setAttribute('role', 'complementary');
+    aside.setAttribute('aria-hidden', 'true');
+    aside.innerHTML = `
+      <header class="cc-inspector-head">
+        <span class="cc-inspector-title">Inspector</span>
+        <button type="button" class="cc-inspector-close" aria-label="Cerrar inspector"><i class="fas fa-times"></i></button>
+      </header>
+      <div class="cc-inspector-body"></div>
+    `;
+    document.body.appendChild(aside);
+
+    // X: limpia seleccion (que ya cierra el inspector via emit)
+    aside.querySelector('.cc-inspector-close').addEventListener('click', () => {
+      this._ensureStore();
+      this._store.clearSelection();
+      this._selectedKey = null; this._selected = null;
+      this._renderSelection();
+      if (this._focusSet) this._clearFocus();
+      this._renderInspector();
+    });
+
+    // Delegacion: clicks color + inputs size/text
+    aside.addEventListener('click', (e) => {
+      const colorBtn = e.target.closest('.cc-insp-color-btn[data-color]');
+      if (colorBtn) {
+        const color = colorBtn.getAttribute('data-color');
+        const gid = colorBtn.getAttribute('data-target-id');
+        if (gid && color) this._setGroupColor(gid, color);
+      }
+    });
+    aside.addEventListener('input', (e) => {
+      const inp = e.target.closest('.cc-insp-input[data-insp-field]');
+      if (!inp) return;
+      const field = inp.getAttribute('data-insp-field');
+      const tType = inp.getAttribute('data-target-type');
+      const tId   = inp.getAttribute('data-target-id');
+      if (!field || !tType || !tId) return;
+      this._scheduleInspectorSave(tType, tId, field, inp.value);
+    });
+  };
+
+  P._closeInspectorVisually = function () {
+    const aside = document.getElementById('ccInspector');
+    if (!aside) return;
+    aside.classList.remove('is-open');
+    aside.setAttribute('aria-hidden', 'true');
+  };
+
+  /** Lee store.selection y decide open + contenido. */
+  P._renderInspector = function () {
+    const aside = document.getElementById('ccInspector');
+    if (!aside) return;
+    this._ensureStore();
+    const set = this._store.selectionSet;
+    const sel = this._store.selection;
+    if (!sel || set.size !== 1) { this._closeInspectorVisually(); return; }
+    const titleEl = aside.querySelector('.cc-inspector-title');
+    const bodyEl  = aside.querySelector('.cc-inspector-body');
+    const built = this._buildInspectorContent(sel.key, sel.descriptor || {});
+    if (!built) { this._closeInspectorVisually(); return; }
+    if (titleEl) titleEl.innerHTML = built.title;
+    if (bodyEl)  bodyEl.innerHTML  = built.body;
+    aside.classList.add('is-open');
+    aside.setAttribute('aria-hidden', 'false');
+  };
+
+  P._buildInspectorContent = function (key, desc) {
+    if (!key) return null;
+    if (key.startsWith('aud:'))    return this._inspectorAudience(key.slice(4));
+    if (key.startsWith('camp:'))   return this._inspectorCampaign(key.slice(5));
+    if (key.startsWith('sticky:')) return this._inspectorSticky(key.slice(7));
+    if (key.startsWith('group:'))  return this._inspectorGroup(key.slice(6));
+    const colon = key.indexOf(':');
+    if (colon > 0) return this._inspectorIdentity(key.slice(0, colon), key.slice(colon + 1));
+    return null;
+  };
+
+  // ── Inspector: audiencia ─────────────────────────────────────────────
+  P._inspectorAudience = function (id) {
+    const row = (this._audiences || []).find((a) => String(a.id) === String(id));
+    if (!row) return { title: '<i class="fas fa-users"></i> Audiencia', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    const align = Number.isFinite(Number(row.alignment_score))
+      ? `${(Number(row.alignment_score) * 100).toFixed(0)}%`
+      : '—';
+    const awareness = row.awareness_level || '—';
+    const flags = [];
+    if (row.is_liked) flags.push('Me gusta');
+    if (row.is_featured) flags.push('Destacada');
+    if (row.is_active === false) flags.push('Apagada');
+    return {
+      title: `<i class="fas fa-users"></i> ${this.escapeHtml(row.name || 'Audiencia')}`,
+      body: `
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Descripcion</span>
+          <textarea class="cc-insp-input" rows="3" data-insp-field="description" data-target-type="audience" data-target-id="${this.escapeHtml(String(id))}" placeholder="Sin descripcion">${this.escapeHtml(row.description || '')}</textarea>
+        </div>
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Nivel de conciencia</span>
+          <span class="cc-insp-value">${this.escapeHtml(awareness)}</span>
+        </div>
+        <div class="cc-insp-meta">
+          <span class="cc-insp-label">Alineamiento</span>
+          <span class="cc-insp-value">${align}</span>
+        </div>
+        <div class="cc-insp-meta">
+          <span class="cc-insp-label">Flags</span>
+          <span class="cc-insp-value">${flags.length ? flags.map((f) => this.escapeHtml(f)).join(' · ') : '—'}</span>
+        </div>
+        <div class="cc-insp-hint">Mas campos editables inline en el nodo.</div>
+      `,
+    };
+  };
+
+  // ── Inspector: campana (real o conceptual) ───────────────────────────
+  P._inspectorCampaign = function (id) {
+    const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
+    if (!row) return { title: '<i class="fas fa-bullhorn"></i> Campana', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    const isReal = !!row.last_synced_at;
+    const status = row.status || '—';
+    const objetivo = row.objetivo_comercial || '';
+    const persona = row.persona_id ? '✓ vinculada' : 'Sin audiencia';
+    if (isReal) {
+      const imp  = Number(row.cached_impressions) || 0;
+      const clk  = Number(row.cached_clicks) || 0;
+      const conv = Number(row.cached_conversions) || 0;
+      const roas = Number(row.cached_roas);
+      return {
+        title: `<i class="fas fa-bullhorn"></i> ${this.escapeHtml(row.nombre_campana || 'Campana real')}`,
+        body: `
+          <div class="cc-insp-section">
+            <span class="cc-insp-label">Plataforma</span>
+            <span class="cc-insp-value">${this.escapeHtml(row.platform || '—')}</span>
+          </div>
+          <div class="cc-insp-section">
+            <span class="cc-insp-label">Estado</span>
+            <span class="cc-insp-value">${this.escapeHtml(status)}</span>
+          </div>
+          <div class="cc-insp-meta">
+            <span class="cc-insp-label">Impresiones</span>
+            <span class="cc-insp-value">${imp.toLocaleString()}</span>
+          </div>
+          <div class="cc-insp-meta">
+            <span class="cc-insp-label">Clicks</span>
+            <span class="cc-insp-value">${clk.toLocaleString()}</span>
+          </div>
+          <div class="cc-insp-meta">
+            <span class="cc-insp-label">Conversiones</span>
+            <span class="cc-insp-value">${conv.toLocaleString()}</span>
+          </div>
+          ${Number.isFinite(roas) ? `<div class="cc-insp-meta">
+            <span class="cc-insp-label">ROAS</span>
+            <span class="cc-insp-value">${roas.toFixed(2)}x</span>
+          </div>` : ''}
+          <div class="cc-insp-meta">
+            <span class="cc-insp-label">Audiencia</span>
+            <span class="cc-insp-value">${persona}</span>
+          </div>
+          <div class="cc-insp-hint">Lectura desde la plataforma; no editable.</div>
+        `,
+      };
+    }
+    return {
+      title: `<i class="fas fa-lightbulb"></i> ${this.escapeHtml(row.nombre_campana || 'Conceptualizacion')}`,
+      body: `
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Objetivo comercial</span>
+          <textarea class="cc-insp-input" rows="3" data-insp-field="objetivo_comercial" data-target-type="campaign" data-target-id="${this.escapeHtml(String(id))}" placeholder="Define el objetivo...">${this.escapeHtml(objetivo)}</textarea>
+        </div>
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Estado</span>
+          <span class="cc-insp-value">${this.escapeHtml(status)}</span>
+        </div>
+        <div class="cc-insp-meta">
+          <span class="cc-insp-label">Audiencia</span>
+          <span class="cc-insp-value">${persona}</span>
+        </div>
+        <div class="cc-insp-hint">Mas campos editables inline en el nodo.</div>
+      `,
+    };
+  };
+
+  P._inspectorSticky = function (id) {
+    const s = (this._stickies || []).find((x) => String(x.id) === String(id));
+    if (!s) return { title: '<i class="fas fa-note-sticky"></i> Nota', body: '<div class="cc-insp-empty">No encontrada.</div>' };
+    return {
+      title: `<i class="fas fa-note-sticky"></i> Nota`,
+      body: `
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Tamano (px)</span>
+          <div class="cc-insp-row">
+            <input class="cc-insp-input" type="number" min="80" step="10" data-insp-field="width"  data-target-type="sticky" data-target-id="${this.escapeHtml(String(id))}" value="${Number(s.width)  || 220}" />
+            <span class="cc-insp-row-sep">×</span>
+            <input class="cc-insp-input" type="number" min="60" step="10" data-insp-field="height" data-target-type="sticky" data-target-id="${this.escapeHtml(String(id))}" value="${Number(s.height) || 140}" />
+          </div>
+        </div>
+        <div class="cc-insp-hint">El contenido se edita directamente sobre la nota.</div>
+      `,
+    };
+  };
+
+  P._inspectorGroup = function (id) {
+    const g = (this._groups || []).find((x) => String(x.id) === String(id));
+    if (!g) return { title: '<i class="fas fa-object-group"></i> Grupo', body: '<div class="cc-insp-empty">No encontrado.</div>' };
+    const cur = g.color || 'blue';
+    const colors = ['blue','green','purple','orange','red','gray'];
+    const colorBtns = colors.map((c) => {
+      const on = c === cur ? ' is-on' : '';
+      return `<button type="button" class="cc-insp-color-btn cc-insp-color-btn--${c}${on}" data-color="${c}" data-target-id="${this.escapeHtml(String(id))}" aria-label="${c}"></button>`;
+    }).join('');
+    return {
+      title: `<i class="fas fa-object-group"></i> ${this.escapeHtml(g.title || 'Grupo')}`,
+      body: `
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Color</span>
+          <div class="cc-insp-colors">${colorBtns}</div>
+        </div>
+        <div class="cc-insp-section">
+          <span class="cc-insp-label">Tamano (px)</span>
+          <div class="cc-insp-row">
+            <input class="cc-insp-input" type="number" min="100" step="20" data-insp-field="width"  data-target-type="group" data-target-id="${this.escapeHtml(String(id))}" value="${Number(g.width)  || 400}" />
+            <span class="cc-insp-row-sep">×</span>
+            <input class="cc-insp-input" type="number" min="80"  step="20" data-insp-field="height" data-target-type="group" data-target-id="${this.escapeHtml(String(id))}" value="${Number(g.height) || 300}" />
+          </div>
+        </div>
+        <div class="cc-insp-hint">El titulo se edita en la cabecera del grupo.</div>
+      `,
+    };
+  };
+
+  P._inspectorIdentity = function (type, id) {
+    const labels = { products: 'Producto', services: 'Servicio', places: 'Lugar', flows: 'Flow', briefs: 'Brief' };
+    const icons  = { products: 'fa-box', services: 'fa-tag', places: 'fa-map-pin', flows: 'fa-diagram-project', briefs: 'fa-file-lines' };
+    const placed = (this._placed || []).find((p) => p.type === type && String(p.id) === String(id));
+    const name = (placed && placed.name) || labels[type] || 'Identidad';
+    const sub  = (placed && placed.sub)  || '';
+    return {
+      title: `<i class="fas ${icons[type] || 'fa-circle'}"></i> ${this.escapeHtml(name)}`,
+      body: `
+        <div class="cc-insp-meta">
+          <span class="cc-insp-label">Tipo</span>
+          <span class="cc-insp-value">${this.escapeHtml(labels[type] || type)}</span>
+        </div>
+        ${sub ? `<div class="cc-insp-meta">
+          <span class="cc-insp-label">Detalle</span>
+          <span class="cc-insp-value">${this.escapeHtml(sub)}</span>
+        </div>` : ''}
+        <div class="cc-insp-hint">Referencia al recurso. La ficha completa se edita en su seccion (Productos, Servicios, etc.).</div>
+      `,
+    };
+  };
+
+  // ── Set group color (BD + DOM class in-place + local) ────────────────
+  P._setGroupColor = async function (groupId, color) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    const colors = ['blue','green','purple','orange','red','gray'];
+    if (!colors.includes(color)) return;
+    const local = (this._groups || []).find((g) => String(g.id) === String(groupId));
+    if (!local) return;
+    const prev = local.color || 'blue';
+    if (prev === color) return;
+    local.color = color;
+    const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(`group:${groupId}`)}"]`);
+    if (el) {
+      colors.forEach((c) => el.classList.remove(`cc-group--${c}`));
+      el.classList.add(`cc-group--${color}`);
+    }
+    document.querySelectorAll(`.cc-insp-color-btn[data-target-id="${ccCssEsc(String(groupId))}"]`).forEach((b) => {
+      b.classList.toggle('is-on', b.getAttribute('data-color') === color);
+    });
+    try {
+      const { error } = await this._supabase
+        .from('canvas_groups')
+        .update({ color })
+        .eq('id', groupId)
+        .eq('brand_container_id', this._containerRow.id);
+      if (error) {
+        console.warn('[CC] update group color:', error.message || error);
+        local.color = prev;
+        if (el) {
+          el.classList.remove(`cc-group--${color}`);
+          el.classList.add(`cc-group--${prev}`);
+        }
+      }
+    } catch (e) {
+      console.warn('[CC] update group color exception:', e);
+    }
+  };
+
+  // ── Inspector input save (debounced) ─────────────────────────────────
+  P._scheduleInspectorSave = function (targetType, targetId, field, value) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._ccInspSaveTimers) this._ccInspSaveTimers = {};
+    const tkey = `${targetType}:${targetId}:${field}`;
+    if (this._ccInspSaveTimers[tkey]) clearTimeout(this._ccInspSaveTimers[tkey]);
+    this._ccInspSaveTimers[tkey] = setTimeout(async () => {
+      delete this._ccInspSaveTimers[tkey];
+      await this._flushInspectorSave(targetType, targetId, field, value);
+    }, 800);
+  };
+
+  P._flushInspectorSave = async function (targetType, targetId, field, value) {
+    let table = null, val = value;
+    if (targetType === 'sticky') {
+      table = 'canvas_stickies';
+      if (field === 'width' || field === 'height') {
+        val = Number(value);
+        if (!Number.isFinite(val)) return;
+        if (field === 'width'  && val < 80) val = 80;
+        if (field === 'height' && val < 60) val = 60;
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(`sticky:${targetId}`)}"]`);
+        if (el) el.style[field] = `${val}px`;
+        const local = (this._stickies || []).find((x) => String(x.id) === String(targetId));
+        if (local) local[field] = val;
+      }
+    } else if (targetType === 'group') {
+      table = 'canvas_groups';
+      if (field === 'width' || field === 'height') {
+        val = Number(value);
+        if (!Number.isFinite(val)) return;
+        if (field === 'width'  && val < 100) val = 100;
+        if (field === 'height' && val < 80)  val = 80;
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(`group:${targetId}`)}"]`);
+        if (el) el.style[field] = `${val}px`;
+        const local = (this._groups || []).find((x) => String(x.id) === String(targetId));
+        if (local) local[field] = val;
+      }
+    } else if (targetType === 'audience') {
+      table = 'audience_personas';
+      const local = (this._audiences || []).find((x) => String(x.id) === String(targetId));
+      if (local) local[field] = val;
+    } else if (targetType === 'campaign') {
+      table = 'campaigns';
+      const local = (this._campaigns || []).find((x) => String(x.id) === String(targetId));
+      if (local) local[field] = val;
+    }
+    if (!table) return;
+    try {
+      const payload = {};
+      payload[field] = val;
+      const q = this._supabase.from(table).update(payload).eq('id', targetId);
+      // canvas_stickies/groups tienen brand_container_id; audience_personas/campaigns no necesitan
+      // pero podemos sumar como guard defensivo (el RLS ya valida)
+      const { error } = await q;
+      if (error) console.warn(`[CC] update ${table}.${field}:`, error.message || error);
+    } catch (e) {
+      console.warn(`[CC] update ${table}.${field} exception:`, e);
+    }
+  };
+
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
   // que F1.7 pueda persistirlo en canvas_views sin re-cablear todo. No
   // cambia comportamiento existente; solo añade un observador delgado.
@@ -2887,6 +3269,17 @@
       this._ccGroupPosSub = null;
     }
     this._ccGroupsHydratedFor = null;
+    // F1.12: cleanup inspector — timers + sub + remover DOM
+    if (this._ccInspSaveTimers) {
+      Object.values(this._ccInspSaveTimers).forEach((t) => clearTimeout(t));
+      this._ccInspSaveTimers = null;
+    }
+    if (typeof this._ccInspectorSub === 'function') {
+      try { this._ccInspectorSub(); } catch (_) {}
+      this._ccInspectorSub = null;
+    }
+    const insp = document.getElementById('ccInspector');
+    if (insp) insp.remove();
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.
