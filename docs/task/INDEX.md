@@ -44,7 +44,7 @@ BUG-004, SPRINT-FRONTEND-100)
 | ID | Que falta EXACTAMENTE |
 |---|---|
 | [FEAT-034](./FEAT-034-dev-flows-test-button.md) | `DevFlowsView.js:396` `testFlow()` es stub (console.log + toast "en desarrollo"); cablear corrida real en modo test (coordinar con FEAT-033). |
-| [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Org Credits grant/debit via RPC `grant_credits_admin`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
+| [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Credit Packages CRUD completo sobre `credit_packages`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~17 modales custom restantes a `window.Modal` (1 migrado + validado). 3-5 por sesion. |
 | [FEAT-029](./FEAT-029-brand-creative-brief-rebalance.md) | Fase 1 cerrada (caps + IGNIS limpiado). Falta Fase 2b (validacion server-side de hard caps en `InfoPanel.mixin.js` saveBrandContainerFieldById + generador de brief con LLM cheap) y Fase 3 (schema redesign formal). No urgente. |
 | [FEAT-025](./FEAT-025-mercadolibre-api-publica-fiche.md) | **BLOQUEADA-EXTERNO** (verificado 2026-05-27): la API de ML ya no es publica, devuelve 403 `PA_UNAUTHORIZED` sin token. Requiere registrar app ML + OAuth, o seguir con scrape HTML + headless. Decision de producto pendiente. |

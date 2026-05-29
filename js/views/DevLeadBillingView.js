@@ -2,13 +2,15 @@
  * DevLeadBillingView — Console de billing (solo Lead).
  *
  * Tabs:
- *  - Plans: CRUD sobre tabla plans (BD). Auto-sync Stripe/Wompi pendiente Fase 3.
- *  - Org Credits: buscar org y otorgar/descontar creditos con razon. RPC grant_credits_admin.
+ *  - Plans: CRUD sobre tabla plans (subs mensuales: Creator, Team, Agency).
+ *  - Credit Packages: CRUD sobre tabla credit_packages (compras puntuales que
+ *    pinta CreditsShopView). Mini/Standard/Plus/Mega etc.
  *  - Subscriptions: placeholder Fase 2.
  *  - Usage: placeholder Fase 2.
  *
- * 1 credito = $1 USD (modelo decimal interno). El frontend muestra FLOOR via v_org_credits_display
- * en otras vistas, pero aqui usamos el numerico crudo de organization_credits para precision admin.
+ * 1 credito = $1 USD a tasa interna; los packages venden creditos a descuento
+ * (ej. Standard Pack = $159 por 1500 creditos = $0.106/credito, ~9.4x mejor que 1:1).
+ * Auto-sync Stripe/Wompi pendiente Fase 3.
  */
 class DevLeadBillingView extends DevBaseView {
   constructor() {
@@ -16,10 +18,10 @@ class DevLeadBillingView extends DevBaseView {
     this.supabase = null;
     this.activeTab = 'plans';
     this.plans = [];
-    this.orgsBalance = [];
+    this.packages = [];
     this._editingPlanId = null;
-    this._grantOrgId = null;
-    this._grantOrgName = null;
+    this._editingPackId = null;
+    this._creatingPack = false;
     this._modalClose = null;
   }
 
@@ -38,13 +40,13 @@ class DevLeadBillingView extends DevBaseView {
         <header class="dev-lead-header">
           <div class="dev-header-content">
             <h1 class="dev-header-title"><i class="fas fa-credit-card"></i> Billing</h1>
-            <p class="dev-header-subtitle">Edita planes, ajusta creditos por organizacion y administra suscripciones.</p>
+            <p class="dev-header-subtitle">Edita planes y paquetes de creditos del catalogo de la plataforma.</p>
           </div>
         </header>
 
         <div class="dev-lead-tabs">
           <button type="button" class="dev-lead-tab active" data-tab="plans"><i class="fas fa-tags"></i> Plans</button>
-          <button type="button" class="dev-lead-tab" data-tab="credits"><i class="fas fa-coins"></i> Org Credits</button>
+          <button type="button" class="dev-lead-tab" data-tab="packages"><i class="fas fa-coins"></i> Credit Packages</button>
           <button type="button" class="dev-lead-tab" data-tab="subscriptions"><i class="fas fa-file-invoice-dollar"></i> Subscriptions</button>
           <button type="button" class="dev-lead-tab" data-tab="usage"><i class="fas fa-chart-line"></i> Usage</button>
         </div>
@@ -73,23 +75,28 @@ class DevLeadBillingView extends DevBaseView {
           </div>
         </section>
 
-        <section class="dev-lead-content" id="tabPaneCredits" style="display:none">
+        <section class="dev-lead-content" id="tabPanePackages" style="display:none">
           <div class="dev-lead-toolbar">
-            <input type="search" id="creditsSearch" class="form-control" placeholder="Buscar org por nombre..." autocomplete="off">
-            <button type="button" class="btn btn-secondary" id="creditsRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
+            <button type="button" class="btn btn-primary" id="packagesCreate"><i class="fas fa-plus"></i> Nuevo paquete</button>
+            <button type="button" class="btn btn-secondary" id="packagesRefresh" title="Refrescar"><i class="fas fa-sync-alt"></i></button>
+            <span class="dev-lead-hint"><i class="fas fa-info-circle"></i> Estos son los packs one-shot que el cliente compra en /credits (CreditsShopView). Editar precio aqui no resincroniza Stripe/Wompi.</span>
           </div>
           <div class="dev-table-container">
-            <table class="dev-table" id="creditsTable">
+            <table class="dev-table" id="packagesTable">
               <thead>
                 <tr>
-                  <th>Organizacion</th>
-                  <th>Disponibles</th>
-                  <th>Total otorgado</th>
-                  <th>Actualizado</th>
+                  <th>Orden</th>
+                  <th>Paquete</th>
+                  <th>Creditos</th>
+                  <th>Bonus</th>
+                  <th>Precio USD</th>
+                  <th>$/credito efectivo</th>
+                  <th>Activo</th>
+                  <th>Popular</th>
                   <th class="dev-lead-actions">Acciones</th>
                 </tr>
               </thead>
-              <tbody id="creditsBody"><tr><td colspan="5" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr></tbody>
+              <tbody id="packagesBody"><tr><td colspan="9" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr></tbody>
             </table>
           </div>
         </section>
@@ -118,24 +125,25 @@ class DevLeadBillingView extends DevBaseView {
       t.addEventListener('click', () => this.switchTab(t.getAttribute('data-tab')));
     });
     document.getElementById('plansRefresh')?.addEventListener('click', () => this.loadPlans());
-    document.getElementById('creditsRefresh')?.addEventListener('click', () => this.loadOrgCredits());
-    document.getElementById('creditsSearch')?.addEventListener('input', (e) => {
-      this.renderCreditsRows((e.target?.value || '').trim().toLowerCase());
-    });
+    document.getElementById('packagesRefresh')?.addEventListener('click', () => this.loadPackages());
+    document.getElementById('packagesCreate')?.addEventListener('click', () => this.openCreatePackageModal());
+
     document.getElementById('plansBody')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.getAttribute('data-id');
       const action = btn.getAttribute('data-action');
       if (action === 'edit-plan') this.openEditPlanModal(id);
-      else if (action === 'toggle-active') this.togglePlanActive(id);
+      else if (action === 'toggle-plan-active') this.togglePlanActive(id);
     });
-    document.getElementById('creditsBody')?.addEventListener('click', (e) => {
+    document.getElementById('packagesBody')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.getAttribute('data-id');
-      const name = btn.getAttribute('data-name') || '';
-      if (btn.getAttribute('data-action') === 'grant') this.openGrantModal(id, name);
+      const action = btn.getAttribute('data-action');
+      if (action === 'edit-pack') this.openEditPackageModal(id);
+      else if (action === 'toggle-pack-active') this.togglePackageActive(id);
+      else if (action === 'delete-pack') this.deletePackage(id);
     });
     await this.loadPlans();
   }
@@ -146,11 +154,11 @@ class DevLeadBillingView extends DevBaseView {
     document.querySelectorAll('.dev-lead-tab').forEach(t => {
       t.classList.toggle('active', t.getAttribute('data-tab') === tab);
     });
-    ['plans', 'credits', 'subscriptions', 'usage'].forEach(t => {
+    ['plans', 'packages', 'subscriptions', 'usage'].forEach(t => {
       const pane = document.getElementById('tabPane' + t.charAt(0).toUpperCase() + t.slice(1));
       if (pane) pane.style.display = (t === tab) ? '' : 'none';
     });
-    if (tab === 'credits' && this.orgsBalance.length === 0) this.loadOrgCredits();
+    if (tab === 'packages' && this.packages.length === 0) this.loadPackages();
   }
 
   // ─── Plans tab ─────────────────────────────────────────────────────
@@ -195,7 +203,7 @@ class DevLeadBillingView extends DevBaseView {
         <td>${p.is_popular ? '<i class="fas fa-star" style="color:var(--accent-warm,#e09145)"></i>' : ''}</td>
         <td class="dev-lead-actions">
           <button type="button" class="btn btn-xs btn-secondary" data-action="edit-plan" data-id="${this._escape(p.id)}" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn btn-xs" data-action="toggle-active" data-id="${this._escape(p.id)}" title="${p.is_active ? 'Desactivar' : 'Activar'}">
+          <button type="button" class="btn btn-xs" data-action="toggle-plan-active" data-id="${this._escape(p.id)}" title="${p.is_active ? 'Desactivar' : 'Activar'}">
             <i class="fas fa-${p.is_active ? 'toggle-on' : 'toggle-off'}"></i>
           </button>
         </td>
@@ -207,7 +215,7 @@ class DevLeadBillingView extends DevBaseView {
     return `
       <div class="form-group">
         <label for="planFieldId">ID (slug)</label>
-        <input type="text" id="planFieldId" class="form-control" readonly placeholder="creator | team | agency...">
+        <input type="text" id="planFieldId" class="form-control" readonly>
         <p class="form-hint">El ID es la primary key y no se puede editar (referenciado por subscriptions).</p>
       </div>
       <div class="form-row">
@@ -313,8 +321,8 @@ class DevLeadBillingView extends DevBaseView {
   closeModal() {
     if (this._modalClose) this._modalClose();
     this._editingPlanId = null;
-    this._grantOrgId = null;
-    this._grantOrgName = null;
+    this._editingPackId = null;
+    this._creatingPack = false;
   }
 
   async savePlan() {
@@ -383,129 +391,237 @@ class DevLeadBillingView extends DevBaseView {
     }
   }
 
-  // ─── Org Credits tab ───────────────────────────────────────────────
+  // ─── Credit Packages tab ───────────────────────────────────────────
 
-  async loadOrgCredits() {
-    const tbody = document.getElementById('creditsBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+  async loadPackages() {
+    const tbody = document.getElementById('packagesBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="dev-lead-empty-cell"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
     try {
       const supabase = await this.getSupabase();
-      // Join organizations + organization_credits para mostrar todas las orgs (incluso las que no tienen fila de credits).
       const { data, error } = await supabase
-        .from('organizations')
-        .select('id, name, organization_credits(credits_available, credits_total, updated_at)')
-        .is('deleted_at', null)
-        .order('name', { ascending: true })
-        .limit(200);
+        .from('credit_packages')
+        .select('id, name, credits, price_usd, bonus_credits, is_active, is_popular, display_order, stripe_price_id, wompi_amount_cents')
+        .order('display_order', { ascending: true })
+        .order('name');
       if (error) throw error;
-      this.orgsBalance = (data || []).map(o => {
-        const c = Array.isArray(o.organization_credits) ? o.organization_credits[0] : o.organization_credits;
-        return {
-          id: o.id,
-          name: o.name,
-          credits_available: c?.credits_available ?? 0,
-          credits_total: c?.credits_total ?? 0,
-          updated_at: c?.updated_at || null
-        };
-      });
-      this.renderCreditsRows('');
+      this.packages = data || [];
+      this.renderPackagesRows();
     } catch (err) {
-      console.error('loadOrgCredits:', err);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="dev-lead-empty-cell">Error: ${this._escape(err?.message || 'fallo al cargar')}</td></tr>`;
+      console.error('loadPackages:', err);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="dev-lead-empty-cell">Error: ${this._escape(err?.message || 'fallo al cargar')}</td></tr>`;
     }
   }
 
-  renderCreditsRows(filter) {
-    const tbody = document.getElementById('creditsBody');
+  renderPackagesRows() {
+    const tbody = document.getElementById('packagesBody');
     if (!tbody) return;
-    const rows = filter
-      ? this.orgsBalance.filter(o => (o.name || '').toLowerCase().includes(filter))
-      : this.orgsBalance;
-    if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="dev-lead-empty-cell">Sin resultados</td></tr>';
+    if (this.packages.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="dev-lead-empty-cell">Sin paquetes</td></tr>';
       return;
     }
-    tbody.innerHTML = rows.map(o => `
+    tbody.innerHTML = this.packages.map(p => {
+      const total = p.credits + (p.bonus_credits || 0);
+      const perCred = total > 0 ? (Number(p.price_usd) / total) : 0;
+      return `
       <tr>
+        <td>${p.display_order}</td>
         <td>
-          <strong>${this._escape(o.name)}</strong>
-          <div class="dev-lead-row-sub">${this._escape(o.id)}</div>
+          <strong>${this._escape(p.name)}</strong>
+          <div class="dev-lead-row-sub">${this._escape(p.id)}</div>
         </td>
-        <td><strong>${Number(o.credits_available).toFixed(2)}</strong></td>
-        <td>${Number(o.credits_total).toFixed(2)}</td>
-        <td>${o.updated_at ? new Date(o.updated_at).toLocaleString() : '—'}</td>
+        <td>${p.credits.toLocaleString('en-US')}</td>
+        <td>${p.bonus_credits > 0 ? `+${p.bonus_credits.toLocaleString('en-US')}` : '—'}</td>
+        <td>$${Number(p.price_usd).toFixed(2)}</td>
+        <td>$${perCred.toFixed(3)}</td>
+        <td>${this._badge(p.is_active, 'Activo', 'Inactivo')}</td>
+        <td>${p.is_popular ? '<i class="fas fa-star" style="color:var(--accent-warm,#e09145)"></i>' : ''}</td>
         <td class="dev-lead-actions">
-          <button type="button" class="btn btn-xs btn-primary" data-action="grant" data-id="${this._escape(o.id)}" data-name="${this._escape(o.name)}" title="Otorgar / descontar creditos">
-            <i class="fas fa-plus-minus"></i> Ajustar
+          <button type="button" class="btn btn-xs btn-secondary" data-action="edit-pack" data-id="${this._escape(p.id)}" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" class="btn btn-xs" data-action="toggle-pack-active" data-id="${this._escape(p.id)}" title="${p.is_active ? 'Desactivar' : 'Activar'}">
+            <i class="fas fa-${p.is_active ? 'toggle-on' : 'toggle-off'}"></i>
           </button>
+          <button type="button" class="btn btn-xs btn-danger" data-action="delete-pack" data-id="${this._escape(p.id)}" title="Borrar"><i class="fas fa-trash"></i></button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
   }
 
-  _grantModalBody() {
+  _packageModalBody(isCreate) {
     return `
-      <div class="form-group">
-        <label>Organizacion</label>
-        <input type="text" class="form-control" id="grantOrgName" readonly>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="packFieldId">ID (slug) <span class="form-required">*</span></label>
+          <input type="text" id="packFieldId" class="form-control" maxlength="60" ${isCreate ? '' : 'readonly'} pattern="^[a-z0-9_-]+$" placeholder="pack_mini">
+          ${isCreate ? '<p class="form-hint">Lowercase, sin espacios. Slug del paquete (inmutable).</p>' : '<p class="form-hint">PK inmutable.</p>'}
+        </div>
+        <div class="form-group">
+          <label for="packFieldOrder">Display order</label>
+          <input type="number" id="packFieldOrder" class="form-control" min="0" max="100" value="0">
+        </div>
       </div>
       <div class="form-group">
-        <label for="grantAmount">Monto (creditos) <span class="form-required">*</span></label>
-        <input type="number" id="grantAmount" class="form-control" step="0.01" placeholder="Positivo = otorgar, negativo = descontar" required>
-        <p class="form-hint">1 credito = $1 USD. Decimales permitidos (ej: 12.50). Negativos descuentan.</p>
+        <label for="packFieldName">Nombre <span class="form-required">*</span></label>
+        <input type="text" id="packFieldName" class="form-control" maxlength="80" required placeholder="Standard Pack">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="packFieldCredits">Creditos <span class="form-required">*</span></label>
+          <input type="number" id="packFieldCredits" class="form-control" min="1" required>
+        </div>
+        <div class="form-group">
+          <label for="packFieldBonus">Bonus creditos</label>
+          <input type="number" id="packFieldBonus" class="form-control" min="0" value="0">
+          <p class="form-hint">Extra credits sumados al total (badge "+X gratis").</p>
+        </div>
+        <div class="form-group">
+          <label for="packFieldPrice">Precio USD <span class="form-required">*</span></label>
+          <input type="number" id="packFieldPrice" class="form-control" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group form-check">
+          <label><input type="checkbox" id="packFieldActive" checked> Activo (visible en catalogo)</label>
+        </div>
+        <div class="form-group form-check">
+          <label><input type="checkbox" id="packFieldPopular"> Popular (badge destacado)</label>
+        </div>
       </div>
       <div class="form-group">
-        <label for="grantReason">Razon <span class="form-required">*</span></label>
-        <textarea id="grantReason" class="form-control" rows="3" maxlength="500" placeholder="Ej: refund por bug X, comp credits beta, ajuste manual ticket ZD-1234..." required></textarea>
-        <p class="form-hint">Queda en audit log (credit_usage.metadata.reason). Min 4 chars.</p>
+        <label for="packFieldStripe">Stripe price ID</label>
+        <input type="text" id="packFieldStripe" class="form-control" placeholder="price_xxx">
+      </div>
+      <div class="form-group">
+        <label for="packFieldWompi">Wompi monto centavos COP</label>
+        <input type="number" id="packFieldWompi" class="form-control" min="0" placeholder="ej: 35000000 = $350.000 COP">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="grantModalCancel">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="grantModalSave"><i class="fas fa-check"></i> Aplicar</button>
+        <button type="button" class="btn btn-secondary" id="packModalCancel">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="packModalSave"><i class="fas fa-check"></i> ${isCreate ? 'Crear' : 'Guardar'}</button>
       </div>
     `;
   }
 
-  openGrantModal(orgId, orgName) {
-    this._grantOrgId = orgId;
-    this._grantOrgName = orgName;
+  openCreatePackageModal() {
+    this._creatingPack = true;
+    this._editingPackId = null;
     const { modal, close } = window.Modal.show({
-      title: 'Ajustar creditos',
-      body: this._grantModalBody(),
-      className: 'dev-lead-modal-content',
-      onClose: () => { this._modalClose = null; this._grantOrgId = null; this._grantOrgName = null; }
+      title: 'Nuevo paquete de creditos',
+      body: this._packageModalBody(true),
+      className: 'dev-lead-modal-content dev-lead-modal-billing',
+      onClose: () => { this._modalClose = null; this._creatingPack = false; }
     });
     this._modalClose = close;
-    modal.querySelector('#grantOrgName').value = orgName;
-    modal.querySelector('#grantModalCancel')?.addEventListener('click', () => this.closeModal());
-    modal.querySelector('#grantModalSave')?.addEventListener('click', () => this.submitGrant());
+    modal.querySelector('#packModalCancel')?.addEventListener('click', () => this.closeModal());
+    modal.querySelector('#packModalSave')?.addEventListener('click', () => this.savePackage());
   }
 
-  async submitGrant() {
-    if (!this._grantOrgId) return;
-    const amount = Number(document.getElementById('grantAmount')?.value || 0);
-    const reason = (document.getElementById('grantReason')?.value || '').trim();
-    if (!amount || amount === 0) { this.showNotification('Monto invalido', 'warning'); return; }
-    if (reason.length < 4) { this.showNotification('Razon: minimo 4 caracteres', 'warning'); return; }
-    const btn = document.getElementById('grantModalSave');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aplicando...'; }
+  openEditPackageModal(id) {
+    const pack = this.packages.find(p => p.id === id);
+    if (!pack) return;
+    this._editingPackId = id;
+    this._creatingPack = false;
+    const { modal, close } = window.Modal.show({
+      title: `Editar paquete: ${pack.name}`,
+      body: this._packageModalBody(false),
+      className: 'dev-lead-modal-content dev-lead-modal-billing',
+      onClose: () => { this._modalClose = null; this._editingPackId = null; }
+    });
+    this._modalClose = close;
+    modal.querySelector('#packFieldId').value = pack.id;
+    modal.querySelector('#packFieldName').value = pack.name || '';
+    modal.querySelector('#packFieldOrder').value = pack.display_order ?? 0;
+    modal.querySelector('#packFieldCredits').value = pack.credits ?? 0;
+    modal.querySelector('#packFieldBonus').value = pack.bonus_credits ?? 0;
+    modal.querySelector('#packFieldPrice').value = pack.price_usd ?? 0;
+    modal.querySelector('#packFieldActive').checked = !!pack.is_active;
+    modal.querySelector('#packFieldPopular').checked = !!pack.is_popular;
+    modal.querySelector('#packFieldStripe').value = pack.stripe_price_id || '';
+    modal.querySelector('#packFieldWompi').value = pack.wompi_amount_cents ?? '';
+    modal.querySelector('#packModalCancel')?.addEventListener('click', () => this.closeModal());
+    modal.querySelector('#packModalSave')?.addEventListener('click', () => this.savePackage());
+  }
+
+  async savePackage() {
+    const id = (document.getElementById('packFieldId')?.value || '').trim();
+    const name = (document.getElementById('packFieldName')?.value || '').trim();
+    if (!id || !/^[a-z0-9_-]+$/.test(id)) { this.showNotification('ID invalido: usar lowercase, numeros, _ o -', 'warning'); return; }
+    if (!name) { this.showNotification('El nombre es obligatorio', 'warning'); return; }
+    const credits = parseInt(document.getElementById('packFieldCredits')?.value || '0', 10);
+    if (credits <= 0) { this.showNotification('Creditos debe ser > 0', 'warning'); return; }
+    const price = Number(document.getElementById('packFieldPrice')?.value || 0);
+    if (price < 0) { this.showNotification('Precio no puede ser negativo', 'warning'); return; }
+
+    const payload = {
+      id,
+      name,
+      credits,
+      bonus_credits: parseInt(document.getElementById('packFieldBonus')?.value || '0', 10),
+      price_usd: price,
+      display_order: parseInt(document.getElementById('packFieldOrder')?.value || '0', 10),
+      is_active: !!document.getElementById('packFieldActive')?.checked,
+      is_popular: !!document.getElementById('packFieldPopular')?.checked,
+      stripe_price_id: (document.getElementById('packFieldStripe')?.value || '').trim() || null,
+      wompi_amount_cents: document.getElementById('packFieldWompi')?.value
+        ? parseInt(document.getElementById('packFieldWompi').value, 10)
+        : null
+    };
+
+    const btn = document.getElementById('packModalSave');
+    const wasCreate = this._creatingPack;
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${wasCreate ? 'Creando...' : 'Guardando...'}`; }
     try {
       const supabase = await this.getSupabase();
-      const { data, error } = await supabase.rpc('grant_credits_admin', {
-        p_org_id: this._grantOrgId,
-        p_amount: amount,
-        p_reason: reason
-      });
-      if (error) throw error;
-      const newAvail = data?.credits_available;
-      this.showNotification(`Aplicado: ${amount > 0 ? '+' : ''}${amount} creditos. Nuevo saldo: ${Number(newAvail).toFixed(2)}`, 'success');
+      if (wasCreate) {
+        const { error } = await supabase.from('credit_packages').insert(payload);
+        if (error) throw error;
+        this.showNotification(`Paquete "${name}" creado.`, 'success');
+      } else {
+        const { id: _omit, ...updatePayload } = payload;
+        const { error } = await supabase.from('credit_packages').update(updatePayload).eq('id', this._editingPackId);
+        if (error) throw error;
+        this.showNotification(`Paquete "${name}" actualizado.`, 'success');
+      }
       this.closeModal();
-      await this.loadOrgCredits();
+      await this.loadPackages();
     } catch (err) {
-      console.error('submitGrant:', err);
-      this.showNotification('Error: ' + (err?.message || 'fallo al aplicar'), 'error');
+      console.error('savePackage:', err);
+      this.showNotification('Error: ' + (err?.message || 'fallo al guardar'), 'error');
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Aplicar'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-check"></i> ${wasCreate ? 'Crear' : 'Guardar'}`; }
+    }
+  }
+
+  async togglePackageActive(id) {
+    const pack = this.packages.find(p => p.id === id);
+    if (!pack) return;
+    const next = !pack.is_active;
+    if (!confirm(`${next ? 'Activar' : 'Desactivar'} el paquete "${pack.name}"?`)) return;
+    try {
+      const supabase = await this.getSupabase();
+      const { error } = await supabase.from('credit_packages').update({ is_active: next }).eq('id', id);
+      if (error) throw error;
+      pack.is_active = next;
+      this.renderPackagesRows();
+      this.showNotification(`Paquete ${next ? 'activado' : 'desactivado'}.`, 'success');
+    } catch (err) {
+      console.error('togglePackageActive:', err);
+      this.showNotification('Error: ' + (err?.message || 'fallo al togglear'), 'error');
+    }
+  }
+
+  async deletePackage(id) {
+    const pack = this.packages.find(p => p.id === id);
+    if (!pack) return;
+    if (!confirm(`Borrar definitivamente "${pack.name}"?\n\nSi tiene compras historicas referenciadas, fallara por FK. En ese caso desactivalo en vez de borrar.`)) return;
+    try {
+      const supabase = await this.getSupabase();
+      const { error } = await supabase.from('credit_packages').delete().eq('id', id);
+      if (error) throw error;
+      this.showNotification(`Paquete "${pack.name}" borrado.`, 'success');
+      await this.loadPackages();
+    } catch (err) {
+      console.error('deletePackage:', err);
+      this.showNotification('Error: ' + (err?.message || 'fallo al borrar'), 'error');
     }
   }
 
