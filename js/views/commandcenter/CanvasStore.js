@@ -97,7 +97,16 @@
       };
       this.edges = { freeLinks: [] };
       this.viewport = { x: 0, y: 0, scale: 1 };
+      // Seleccion (F1.3 multi-select):
+      //   selection        = {key, descriptor} | null   — primary
+      //   selectionSet     = Set<key>                   — todos los seleccionados
+      //   selectionDescriptors = Map<key, descriptor>   — info por key
+      // Convencion: si selectionSet.size === 1, selection.key === el unico.
+      // Si === 0, selection === null. Si > 1, selection.key es el primary
+      // (usado para focus flow / inspector / informes).
       this.selection = null;
+      this.selectionSet = new Set();
+      this.selectionDescriptors = new Map();
       // F1.2: pila de undo/redo. Los commands viven en memoria (no se
       // persisten cross-session: cerrar el navegador limpia el historial).
       this.history = { past: [], future: [], limit: 200 };
@@ -257,16 +266,112 @@
     }
 
     /* ── Mutaciones: seleccion ────────────────────────────────────────── */
+    /**
+     * Seleccion single (click plano): vacia el set y deja un solo elemento
+     * (o ninguno si sel es null/undefined).
+     */
     setSelection(sel) {
       const prev = this.selection;
       if (!sel) {
-        if (!prev) return false;
+        if (!prev && this.selectionSet.size === 0) return false;
         this.selection = null;
-      } else {
-        if (prev && prev.key === sel.key) return false;
-        this.selection = { key: String(sel.key), descriptor: sel.descriptor || null };
+        this.selectionSet.clear();
+        this.selectionDescriptors.clear();
+        this._emitMutation('selection', { prev, next: null, set: [] });
+        return true;
       }
-      this._emitMutation('selection', { prev, next: this.selection });
+      const k = String(sel.key);
+      if (prev && prev.key === k && this.selectionSet.size === 1) return false;
+      this.selection = { key: k, descriptor: sel.descriptor || null };
+      this.selectionSet.clear();
+      this.selectionSet.add(k);
+      this.selectionDescriptors.clear();
+      this.selectionDescriptors.set(k, sel.descriptor || null);
+      this._emitMutation('selection', { prev, next: this.selection, set: [k] });
+      return true;
+    }
+
+    /**
+     * Toggle de un elemento en el set (shift+click).
+     * - Si estaba: lo quita; si era primary, primary salta a otro del set o null.
+     * - Si no estaba: lo agrega; si no habia primary, este se vuelve primary.
+     */
+    toggleSelection(key, descriptor) {
+      const k = String(key);
+      if (this.selectionSet.has(k)) {
+        this.selectionSet.delete(k);
+        this.selectionDescriptors.delete(k);
+        if (this.selection && this.selection.key === k) {
+          const next = this.selectionSet.values().next().value;
+          this.selection = next
+            ? { key: next, descriptor: this.selectionDescriptors.get(next) || null }
+            : null;
+        }
+      } else {
+        this.selectionSet.add(k);
+        this.selectionDescriptors.set(k, descriptor || null);
+        if (!this.selection) this.selection = { key: k, descriptor: descriptor || null };
+      }
+      this._emitMutation('selection', { next: this.selection, set: [...this.selectionSet] });
+      return true;
+    }
+
+    /** Agrega al set sin tocar primary salvo que no exista. */
+    addToSelection(key, descriptor) {
+      const k = String(key);
+      if (this.selectionSet.has(k)) return false;
+      this.selectionSet.add(k);
+      this.selectionDescriptors.set(k, descriptor || null);
+      if (!this.selection) this.selection = { key: k, descriptor: descriptor || null };
+      this._emitMutation('selection', { next: this.selection, set: [...this.selectionSet] });
+      return true;
+    }
+
+    removeFromSelection(key) {
+      const k = String(key);
+      if (!this.selectionSet.has(k)) return false;
+      this.selectionSet.delete(k);
+      this.selectionDescriptors.delete(k);
+      if (this.selection && this.selection.key === k) {
+        const next = this.selectionSet.values().next().value;
+        this.selection = next
+          ? { key: next, descriptor: this.selectionDescriptors.get(next) || null }
+          : null;
+      }
+      this._emitMutation('selection', { next: this.selection, set: [...this.selectionSet] });
+      return true;
+    }
+
+    /** Reemplaza el set completo (marquee). primary opcional; si no esta en keys, usa el primero. */
+    selectMulti(keys, primary, descMap) {
+      this.selectionSet.clear();
+      this.selectionDescriptors.clear();
+      (keys || []).forEach((k) => {
+        const ks = String(k);
+        this.selectionSet.add(ks);
+        if (descMap && typeof descMap.get === 'function') {
+          const d = descMap.get(k);
+          if (d) this.selectionDescriptors.set(ks, d);
+        }
+      });
+      let p = primary && this.selectionSet.has(String(primary)) ? String(primary) : null;
+      if (!p) {
+        const first = this.selectionSet.values().next().value;
+        p = first || null;
+      }
+      this.selection = p
+        ? { key: p, descriptor: this.selectionDescriptors.get(p) || null }
+        : null;
+      this._emitMutation('selection', { next: this.selection, set: [...this.selectionSet] });
+      return true;
+    }
+
+    clearSelection() {
+      if (!this.selection && this.selectionSet.size === 0) return false;
+      this.selection = null;
+      this.selectionSet.clear();
+      this.selectionDescriptors.clear();
+      this._emitMutation('selection', { next: null, set: [] });
       return true;
     }
 
@@ -283,6 +388,8 @@
       this.edges.freeLinks.length = 0;
       this.viewport.x = 0; this.viewport.y = 0; this.viewport.scale = 1;
       this.selection = null;
+      this.selectionSet.clear();
+      this.selectionDescriptors.clear();
       // Historial pertenece al scope; cambiar de marca tira undo/redo.
       this.history.past.length = 0;
       this.history.future.length = 0;
@@ -518,6 +625,26 @@
           undo() { store.setCollapsed(key, prev); },
         };
       },
+
+      /**
+       * moveNodes (F1.3): batch move N nodos como una sola entrada de undo.
+       * baseByKey y finalByKey son Maps<key, {x,y}>. Cloneamos para protegerlos.
+       */
+      moveNodes(baseByKey, finalByKey) {
+        const fromCopy = new Map();
+        const toCopy = new Map();
+        baseByKey.forEach((v, k) => fromCopy.set(k, { x: v.x, y: v.y }));
+        finalByKey.forEach((v, k) => toCopy.set(k, { x: v.x, y: v.y }));
+        return {
+          kind: 'move-nodes', label: 'Mover seleccion',
+          do() {
+            toCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
+          },
+          undo() {
+            fromCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
+          },
+        };
+      },
     };
   }
   window.CommandCenterCanvasCommands = CanvasCommands;
@@ -683,21 +810,89 @@
     this._renderEdges();
   };
 
-  // F1.2: wrap _beginNodeDrag. onMove mantiene update visual directo (sin
-  // pasar por store por performance). onUp captura from/to y dispatchea
-  // un move-node command (mergeable: drags consecutivos del mismo nodo
-  // colapsan en 1 entrada de undo).
+  // F1.2 + F1.3: wrap _beginNodeDrag con soporte para group-drag.
+  //
+  // - Si el nodo arrastrado esta en el selectionSet del store y la
+  //   seleccion tiene >1 elementos → group drag: aplicamos el mismo
+  //   delta a todos. mouseup dispatchea un command `move-nodes` (1 entrada
+  //   de undo para todo el grupo).
+  // - Si no, comportamiento single-drag F1.2 con mergeable move-node.
   P._beginNodeDrag = function (e, nodeEl) {
     e.preventDefault(); e.stopPropagation();
     this._ensureStore();
     this._didDrag = false;
     const key = nodeEl.getAttribute('data-node-key');
+    const s = this._canvasScale || 1;
+    const startMouse = { x: e.clientX, y: e.clientY };
+
+    // ── Camino A: group drag ─────────────────────────────────────────
+    const set = this._store.selectionSet;
+    if (set && set.size > 1 && set.has(key)) {
+      const baseByKey = new Map();
+      set.forEach((k) => {
+        const p = this._positions[k];
+        if (p) baseByKey.set(k, { x: p.x, y: p.y });
+        // si por algun motivo no hay pos, lo saltamos (el node se quedara fijo)
+      });
+      // marcar todos los miembros como dragging
+      const draggingEls = [];
+      set.forEach((k) => {
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+        if (el) { el.classList.add('cc-node--dragging'); draggingEls.push(el); }
+      });
+
+      const onMove = (ev) => {
+        const dx = (ev.clientX - startMouse.x) / s;
+        const dy = (ev.clientY - startMouse.y) / s;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this._didDrag = true;
+        baseByKey.forEach((base, k) => {
+          const nx = base.x + dx, ny = base.y + dy;
+          const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+          if (el) { el.style.left = `${nx}px`; el.style.top = `${ny}px`; }
+          if (this._positions[k]) { this._positions[k].x = nx; this._positions[k].y = ny; }
+          else this._positions[k] = { x: nx, y: ny };
+        });
+        this._scheduleEdges();
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        draggingEls.forEach((el) => el.classList.remove('cc-node--dragging'));
+        // snap cada nodo a grid 16 + collect deltas
+        const finalByKey = new Map();
+        let anyChange = false;
+        baseByKey.forEach((base, k) => {
+          const p = this._positions[k];
+          if (!p) return;
+          const fx = Math.round(p.x / 16) * 16;
+          const fy = Math.round(p.y / 16) * 16;
+          p.x = fx; p.y = fy;
+          const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+          if (el) { el.style.left = `${fx}px`; el.style.top = `${fy}px`; }
+          finalByKey.set(k, { x: fx, y: fy });
+          if (fx !== base.x || fy !== base.y) anyChange = true;
+        });
+        this._scheduleEdges();
+        if (anyChange) {
+          this._store.dispatch(this._commands.moveNodes(baseByKey, finalByKey));
+        } else {
+          this._store.persistPositions();
+        }
+        this._drawMinimap();
+        setTimeout(() => { this._didDrag = false; }, 0);
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      return;
+    }
+
+    // ── Camino B: single drag (F1.2) ────────────────────────────────
     const cur = this._positions[key];
     const base = cur
       ? { x: cur.x, y: cur.y }
       : { x: parseFloat(nodeEl.style.left) || 0, y: parseFloat(nodeEl.style.top) || 0 };
-    const startMouse = { x: e.clientX, y: e.clientY };
-    const s = this._canvasScale || 1;
     nodeEl.classList.add('cc-node--dragging');
     const onMove = (ev) => {
       const dx = (ev.clientX - startMouse.x) / s;
@@ -706,7 +901,6 @@
       const nx = base.x + dx, ny = base.y + dy;
       nodeEl.style.left = `${nx}px`;
       nodeEl.style.top  = `${ny}px`;
-      // mutacion in place sin emit/persist: visual durante drag
       if (this._positions[key]) { this._positions[key].x = nx; this._positions[key].y = ny; }
       else this._positions[key] = { x: nx, y: ny };
       this._scheduleEdges();
@@ -717,7 +911,6 @@
       nodeEl.classList.remove('cc-node--dragging');
       const pos = this._positions[key];
       if (pos) {
-        // snap-to-grid 16px al soltar
         pos.x = Math.round(pos.x / 16) * 16;
         pos.y = Math.round(pos.y / 16) * 16;
         nodeEl.style.left = `${pos.x}px`;
@@ -727,10 +920,8 @@
       const toX = pos ? pos.x : base.x;
       const toY = pos ? pos.y : base.y;
       if (toX !== base.x || toY !== base.y) {
-        // dispatch: do() re-aplica la misma posicion (no-op visual), undo() vuelve a base
         this._store.dispatch(this._commands.moveNode(key, base.x, base.y, toX, toY));
       } else {
-        // sin movimiento neto: persistir lo actual igual (defensivo)
         this._store.persistPositions();
       }
       this._drawMinimap();
@@ -738,6 +929,172 @@
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
+  };
+
+  // ------------------------------------------------------------------
+  // F1.3: multi-seleccion (shift+click + marquee + group-drag)
+  // ------------------------------------------------------------------
+  function ccCssEsc(v) {
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(v);
+    return String(v).replace(/["\\\]]/g, '\\$&');
+  }
+
+  P._renderSelection = function () {
+    if (!this._store) return;
+    const set = this._store.selectionSet;
+    document.querySelectorAll('.cc-node').forEach((n) => {
+      const k = n.getAttribute('data-node-key');
+      n.classList.toggle('cc-node--selected', !!(set && set.has(k)));
+    });
+  };
+
+  /** Toggle in/out del set y re-render selection. Mantiene focus solo en single. */
+  P._toggleSelectionAndRender = function (nodeEl) {
+    this._ensureStore();
+    const key = nodeEl.getAttribute('data-node-key');
+    const desc = {
+      type: nodeEl.getAttribute('data-type'),
+      id: nodeEl.getAttribute('data-id'),
+      key,
+    };
+    if (desc.type === 'identity') desc.type = nodeEl.getAttribute('data-identity-type');
+    this._store.toggleSelection(key, desc);
+    this._renderSelection();
+    // sync legacy refs
+    this._selectedKey = this._store.selection?.key || null;
+    this._selected    = this._store.selection?.descriptor || null;
+    // focus flow solo si el set es exactamente uno
+    if (this._store.selectionSet.size === 1 && this._store.selection) {
+      this._focusFlow(this._store.selection.key);
+    } else if (this._focusSet) {
+      this._clearFocus();
+    }
+  };
+
+  /** Marquee: overlay div en screen coords; al soltar agrega los nodos intersectados al set. */
+  P._beginMarquee = function (e) {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+    const cr = canvas.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const m = document.createElement('div');
+    m.className = 'cc-marquee';
+    m.style.cssText = [
+      'position:absolute',
+      'pointer-events:none',
+      'border:1px dashed rgba(200,200,200,0.85)',
+      'background:rgba(200,200,200,0.10)',
+      'z-index:60',
+      `left:${sx - cr.left}px`,
+      `top:${sy - cr.top}px`,
+      'width:0px',
+      'height:0px',
+    ].join(';');
+    canvas.appendChild(m);
+
+    const onMove = (ev) => {
+      const x = Math.min(sx, ev.clientX) - cr.left;
+      const y = Math.min(sy, ev.clientY) - cr.top;
+      const w = Math.abs(ev.clientX - sx);
+      const h = Math.abs(ev.clientY - sy);
+      m.style.left = `${x}px`;
+      m.style.top = `${y}px`;
+      m.style.width = `${w}px`;
+      m.style.height = `${h}px`;
+    };
+
+    const onUp = (ev) => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      const rect = m.getBoundingClientRect();
+      m.remove();
+      const minW = 3; // marquee con tamano > 3px (descarta clicks accidentales)
+      if (rect.width < minW && rect.height < minW) return;
+      const keys = [];
+      const descMap = new Map();
+      document.querySelectorAll('.cc-node').forEach((n) => {
+        const nr = n.getBoundingClientRect();
+        const intersects = !(nr.right < rect.left || nr.left > rect.right
+                          || nr.bottom < rect.top || nr.top > rect.bottom);
+        if (!intersects) return;
+        const key = n.getAttribute('data-node-key');
+        keys.push(key);
+        const d = { type: n.getAttribute('data-type'), id: n.getAttribute('data-id'), key };
+        if (d.type === 'identity') d.type = n.getAttribute('data-identity-type');
+        descMap.set(key, d);
+      });
+      if (!keys.length) return;
+      this._ensureStore();
+      // shift+marquee: agregar al set existente (no reemplazar)
+      keys.forEach((k) => this._store.addToSelection(k, descMap.get(k)));
+      this._renderSelection();
+      this._selectedKey = this._store.selection?.key || null;
+      this._selected    = this._store.selection?.descriptor || null;
+      // multi-select borra focus single
+      if (this._store.selectionSet.size > 1 && this._focusSet) this._clearFocus();
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
+  /**
+   * Capture-phase listeners para shift+click (toggle) y shift+drag empty (marquee).
+   * Corren ANTES del click/mousedown handlers del mixin gracias a useCapture=true,
+   * y usan stopPropagation cuando manejan el evento para evitar pan/select duplicado.
+   */
+  P._installMultiSelect = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas) return;
+
+    if (!this._ccMultiClick) {
+      this._ccMultiClick = (e) => {
+        const nodeEl = e.target.closest('.cc-node');
+        if (e.shiftKey) {
+          if (!nodeEl) { e.stopPropagation(); return; } // shift+empty click: NO clear
+          if (e.target.closest('input, textarea, select, .cc-node-port, .cc-node-act, .cc-tag-x, .cc-edge')) return;
+          e.preventDefault(); e.stopPropagation();
+          this._toggleSelectionAndRender(nodeEl);
+          return;
+        }
+        // Click plano sobre nodo perteneciente a multi-set:
+        // → pasar a single-seleccionar ese mismo nodo. Pre-limpiamos el set y
+        //   forzamos _selectedKey=null para que el toggle-off del mixin
+        //   (cuando _selectedKey === k) NO se dispare por error.
+        if (nodeEl && this._store && this._store.selectionSet.size > 1) {
+          const k = nodeEl.getAttribute('data-node-key');
+          if (this._store.selectionSet.has(k)) {
+            this._store.selectionSet.clear();
+            this._store.selectionDescriptors.clear();
+            this._store.selection = null;
+            this._selectedKey = null;
+            this._selected = null;
+            // dejamos que bubble-phase _selectNode siga, agregue clase y
+            // setee _selectedKey=k; nuestro F1.1 wrap espeja al store.
+          }
+        }
+        // Click plano en vacio con multi-set previo: limpiar el set.
+        // OJO: si veniamos de un pan, _didPan=true y NO debemos tocar seleccion.
+        if (!nodeEl && this._store && this._store.selectionSet.size > 0) {
+          if (this._didPan) return;
+          this._store.clearSelection();
+          this._renderSelection();
+          // bubble-phase original tambien hara su limpieza de single-state
+        }
+      };
+      canvas.addEventListener('click', this._ccMultiClick, true);
+    }
+
+    if (!this._ccMultiMouseDown) {
+      this._ccMultiMouseDown = (e) => {
+        if (e.button !== 0 || !e.shiftKey) return;
+        // ignorar si cae sobre algo "no vacio"
+        if (e.target.closest('.cc-node-port--out, .cc-node, .cc-edge, .cc-floating-panel, input, textarea, select')) return;
+        e.preventDefault(); e.stopPropagation();
+        this._beginMarquee(e);
+      };
+      canvas.addEventListener('mousedown', this._ccMultiMouseDown, true);
+    }
   };
 
   // F1.2: atajos de teclado (Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z o Ctrl/Cmd+Y redo).
@@ -763,13 +1120,15 @@
     document.addEventListener('keydown', this._ccKeyHandler);
   };
 
-  // Wrap _setupCanvasListeners para instalar atajos despues del setup original.
+  // Wrap _setupCanvasListeners para instalar atajos + multi-select despues
+  // del setup original.
   const _origSetupCanvasListeners = P._setupCanvasListeners;
   if (typeof _origSetupCanvasListeners === 'function') {
     P._setupCanvasListeners = function () {
       const r = _origSetupCanvasListeners.apply(this, arguments);
       this._ensureStore();
       this._installCanvasShortcuts();
+      this._installMultiSelect();
       return r;
     };
   }
@@ -790,8 +1149,9 @@
     };
   }
 
-  // Sync seleccion: espejo desde _selectNode al store. Util para F1.3
-  // (multi-select) y F1.12 (side-panel inspector) sin tocar render hoy.
+  // Sync seleccion: espejo desde _selectNode al store. F1.3: tambien
+  // re-renderiza el set multi (en caso de venir de un multi-set previo
+  // que el mixin no conoce, manteniendo el class en sync).
   const _origSelectNode = P._selectNode;
   if (typeof _origSelectNode === 'function') {
     P._selectNode = function (nodeEl) {
@@ -802,16 +1162,27 @@
       } else {
         this._store.setSelection(null);
       }
+      this._renderSelection();
       return r;
     };
   }
 
-  // Cleanup: liberar listeners del store + atajos de teclado al destruir la vista.
+  // Cleanup: liberar listeners del store + atajos de teclado + multi-select
+  // capture-phase al destruir la vista.
   const _origDestroy = P.destroy;
   P.destroy = function () {
     if (this._ccKeyHandler) {
       document.removeEventListener('keydown', this._ccKeyHandler);
       this._ccKeyHandler = null;
+    }
+    const canvas = document.getElementById('ccCanvas');
+    if (canvas && this._ccMultiClick) {
+      canvas.removeEventListener('click', this._ccMultiClick, true);
+      this._ccMultiClick = null;
+    }
+    if (canvas && this._ccMultiMouseDown) {
+      canvas.removeEventListener('mousedown', this._ccMultiMouseDown, true);
+      this._ccMultiMouseDown = null;
     }
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
