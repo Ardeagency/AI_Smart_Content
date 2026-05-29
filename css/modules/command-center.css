@@ -2004,6 +2004,12 @@
 }
 .cc-node::before { display: none !important; }
 
+/* F2: permitir que los puertos (left/right absolute negativos) salgan
+   del card sin ser clippeados por overflow:hidden del card root.
+   Las imagenes y preview areas internas tienen su propio overflow:hidden
+   sobre sus border-radius, asi que el clipping interno se preserva. */
+.cc-node { overflow: visible !important; }
+
 /* F2: productos, servicios y lugares NO reciben input.
    Son recursos que pueden ser usados como input por otros nodos.
    Ocultamos el puerto de entrada (left side). */
