@@ -2866,6 +2866,54 @@
     return [];
   };
 
+  // F2: wrap _fetchLibrary para que el fetch de 'products' tambien traiga
+  // imagen + tipo de producto. Items resultantes con extras { imageUrl, sub }
+  // que el render del sidebar utiliza.
+  const _f2OrigFetchLibrary = P._fetchLibrary;
+  if (typeof _f2OrigFetchLibrary === 'function') {
+    P._fetchLibrary = async function (key) {
+      if (key !== 'products') return _f2OrigFetchLibrary.apply(this, arguments);
+      if (this._libCache[key] || (this._libFetching && this._libFetching[key])) return;
+      if (!this._supabase) { this._libCache[key] = []; if (typeof this._fillLibSection === 'function') this._fillLibSection(key); return; }
+      if (!this._libFetching) this._libFetching = {};
+      this._libFetching[key] = true;
+      const org = this._organizationId;
+      try {
+        const { data: prods, error: pErr } = await this._supabase
+          .from('products')
+          .select('id, nombre_producto, tipo_producto')
+          .eq('organization_id', org)
+          .limit(200);
+        if (pErr) throw pErr;
+        const ids = (prods || []).map((p) => p.id);
+        const imageMap = {};
+        if (ids.length) {
+          const { data: imgs } = await this._supabase
+            .from('product_images')
+            .select('product_id, image_url')
+            .in('product_id', ids);
+          (imgs || []).forEach((img) => {
+            if (img.product_id && img.image_url && !imageMap[img.product_id]) {
+              imageMap[img.product_id] = img.image_url;
+            }
+          });
+        }
+        this._libCache[key] = (prods || []).map((r) => ({
+          id: r.id,
+          name: r.nombre_producto || 'Producto',
+          sub: r.tipo_producto || '',
+          imageUrl: imageMap[r.id] || '',
+        }));
+      } catch (e) {
+        console.warn('[CC] fetchLibrary products:', e?.message || e);
+        this._libCache[key] = [];
+      } finally {
+        this._libFetching[key] = false;
+        if (typeof this._fillLibSection === 'function') this._fillLibSection(key);
+      }
+    };
+  }
+
   /** Renderiza la lista de INSTANCIAS dragables de un tipo de nodo. */
   P._nodosInstancesHTML = function (catalogItem) {
     const t = catalogItem.type;
@@ -2896,10 +2944,8 @@
       const libKey = ({ product: 'products', service: 'services', place: 'places', flow: 'flows', brief: 'briefs' })[t];
       const cached = this._libCache && this._libCache[libKey];
       if (cached === undefined) {
-        // fetch lazy fire-and-forget; el next render lo recoge
         if (typeof this._fetchLibrary === 'function') {
           this._fetchLibrary(libKey).then(() => {
-            // re-render del body si Nodos sigue activo
             if (this._activeSection === 'nodos') {
               const b = document.getElementById('ccPanelBody');
               if (b) b.innerHTML = this._libBodyHTML('nodos');
@@ -2909,6 +2955,25 @@
         return '<div class="cc-nodo-sublist"><div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div></div>';
       }
       instances = (cached || []).map((it) => ({ ...it, libType: libKey }));
+      // Render especial para products: thumbnail + nombre + tipo_producto
+      if (t === 'product') {
+        if (!instances.length) {
+          return '<div class="cc-nodo-sublist"><div class="cc-nodo-empty">Sin productos.</div></div>';
+        }
+        const itemsHTML = instances.map((it) => {
+          const thumb = it.imageUrl
+            ? `<img src="${this.escapeHtml(it.imageUrl)}" alt="" loading="lazy" />`
+            : `<i class="fas fa-box"></i>`;
+          return `<div class="cc-lib-item cc-nodo-product-item" draggable="true" data-lib-type="${this.escapeHtml(it.libType)}" data-lib-id="${this.escapeHtml(String(it.id))}" title="${this.escapeHtml(it.name)} — arrastra al canvas">
+            <span class="cc-nodo-product-thumb">${thumb}</span>
+            <span class="cc-nodo-product-text">
+              <span class="cc-nodo-product-name">${this.escapeHtml(it.name)}</span>
+              ${it.sub ? `<span class="cc-nodo-product-type">${this.escapeHtml(it.sub)}</span>` : ''}
+            </span>
+          </div>`;
+        }).join('');
+        return `<div class="cc-nodo-sublist">${itemsHTML}</div>`;
+      }
       dragHint = ' — arrastra al canvas';
     } else if (t === 'sticky' || t === 'group') {
       return '<div class="cc-nodo-sublist"><div class="cc-nodo-empty">Se crean desde el lienzo (clic derecho).</div></div>';
