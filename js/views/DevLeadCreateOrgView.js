@@ -24,21 +24,22 @@ class DevLeadCreateOrgView extends DevBaseView {
     this.currentStep = 'identidad';
 
     this.form = {
-      // Step 1 - Fuente
+      // Step 1 - Identidad basica
       name: '',
-      logo_file: null,           // File (in-memory)
-      logo_preview: '',          // dataURL para preview del circulo
-      brand_url: '',             // URL que alimentara el scraper
-      brand_docs: [],            // File[] (in-memory)
-      // Step 2 - Identidad detectada (editable)
       slogan: '',
-      description: '',
+      logo_file: null,
+      logo_preview: '',
+      // Step 2 - Metodo + datos
+      method: '',                // 'manual' | 'url' | 'docs'
+      brand_url: '',             // si method=url
+      brand_docs: [],            // si method=docs
+      description: '',           // si method=manual
       tone_of_voice: '',
       primary_color: '#000000',
       secondary_color: '#ffffff',
+      // Step 3 - Operacion
       timezone: 'America/Bogota',
       locale: 'es',
-      // Step 3 - Operacion
       level_of_autonomy: 'parcial',
       mfa_required: false
     };
@@ -49,10 +50,16 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   STEPS = [
-    { key: 'fuente',    label: 'Fuente' },
     { key: 'identidad', label: 'Identidad' },
+    { key: 'metodo',    label: 'Metodo' },
     { key: 'operacion', label: 'Operacion' },
     { key: 'revisar',   label: 'Revisar' }
+  ];
+
+  METHODS = [
+    { v: 'manual', icon: 'fa-pen-to-square',   label: 'Manual',     hint: 'Lleno los datos a mano (descripcion, tono, paleta)' },
+    { v: 'url',    icon: 'fa-magic-wand-sparkles', label: 'Investigacion inteligente', hint: 'Vera escrapea una URL y detecta la identidad' },
+    { v: 'docs',   icon: 'fa-file-lines',      label: 'Documentacion oficial', hint: 'Subo brief, brandbook o presentaciones' }
   ];
 
   TONES = [
@@ -137,44 +144,25 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderCurrentStep() {
     switch (this.currentStep) {
-      case 'fuente':    return this.renderStepFuente();
       case 'identidad': return this.renderStepIdentidad();
+      case 'metodo':    return this.renderStepMetodo();
       case 'operacion': return this.renderStepOperacion();
       case 'revisar':   return this.renderStepRevisar();
       default:          return '';
     }
   }
 
-  renderStepFuente() {
+  renderStepIdentidad() {
     const f = this.form;
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 1 · Fuente</span>
-          <h2>De donde sacamos la informacion</h2>
-          <p>Vera analizara la URL o documentos para auto-detectar la identidad de la marca. En el paso siguiente revisas y editas todo lo detectado.</p>
+          <span class="provision-form-eyebrow">Paso 1 · Identidad</span>
+          <h2>Identidad basica de la marca</h2>
+          <p>Logo, nombre y slogan. Lo demas (descripcion, tono, paleta) se llena en el siguiente paso segun el metodo que elijas.</p>
         </header>
 
-        <form id="createOrgSourceForm" class="createorg-form-grid" novalidate>
-          <div class="provision-field createorg-field-full">
-            <label for="orgBrandUrl">URL del sitio o redes</label>
-            <input id="orgBrandUrl" name="brand_url" type="url" placeholder="https://acme.com" value="${this.escapeHtml(f.brand_url)}">
-            <small>Sitio web, instagram, linkedin. Vera escrapeara para inferir tono, paleta, slogan, descripcion.</small>
-          </div>
-
-          <div class="provision-field createorg-field-full">
-            <label>Documentacion (opcional)</label>
-            <label class="createorg-dropzone" for="orgBrandDocs">
-              <input type="file" id="orgBrandDocs" multiple accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx" hidden>
-              <i class="fas fa-cloud-upload-alt"></i>
-              <strong>Adjuntar archivos</strong>
-              <small>Brief, brandbook, presentaciones. PDF · DOCX · PPT · imagenes</small>
-            </label>
-            <ul class="createorg-files-list" id="orgFilesList"></ul>
-          </div>
-
-          <h3 class="createorg-subhead createorg-field-full">Identidad basica</h3>
-
+        <form id="createOrgIdentityForm" class="createorg-form-grid" novalidate>
           <div class="provision-field createorg-field-full createorg-logo-wrap">
             <label class="createorg-logo-circle" for="orgLogoFile" id="orgLogoCircle">
               <input type="file" id="orgLogoFile" accept="image/*" hidden>
@@ -188,93 +176,21 @@ class DevLeadCreateOrgView extends DevBaseView {
                 ? this.escapeHtml(f.logo_file.name) + ' · ' + this.formatSize(f.logo_file.size)
                 : 'Adjuntar logo'}
             </span>
-            <small class="createorg-logo-hint">PNG · JPG · SVG. Click en el circulo.</small>
+            <small class="createorg-logo-hint">PNG · JPG · SVG. Click en el circulo para subir.</small>
           </div>
+
           <div class="provision-field createorg-field-full">
             <label for="orgName">Nombre <span style="color:#ef4444">*</span></label>
             <input id="orgName" name="name" type="text" placeholder="Ej. ACME Corp" maxlength="120" value="${this.escapeHtml(f.name)}" required>
-            <small>El nombre operativo de la org. El brand_container hereda este mismo nombre automaticamente.</small>
+            <small>El brand_container hereda este mismo nombre automaticamente.</small>
           </div>
 
-          <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <footer class="provision-page-actions">
-        <button type="button" class="provision-back-btn" data-action="back">Back</button>
-        <button type="button" class="provision-next-btn" data-action="next" aria-label="Analizar y siguiente">
-          <i class="fas fa-arrow-right"></i>
-        </button>
-      </footer>
-    `;
-  }
-
-  renderStepIdentidad() {
-    const f = this.form;
-    return `
-      <section class="provision-form-card createorg-card-wide">
-        <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 2 · Identidad</span>
-          <h2>Confirma lo detectado</h2>
-          <p>Esto es la identidad inferida de la fuente. Edita lo que necesites — todo es modificable despues tambien desde Brand.</p>
-        </header>
-
-        <div class="createorg-detected-note">
-          <i class="fas fa-magic-wand-sparkles"></i>
-          Auto-fill del scraper pendiente de implementacion — completa manualmente por ahora.
-        </div>
-
-        <form id="createOrgIdentityForm" class="createorg-form-grid" novalidate>
           <div class="provision-field createorg-field-full">
             <label for="orgSlogan">Slogan</label>
             <input id="orgSlogan" name="slogan" type="text" placeholder="Frase de marca" maxlength="200" value="${this.escapeHtml(f.slogan)}">
           </div>
 
-          <div class="provision-field createorg-field-full">
-            <label for="orgDescription">Descripcion</label>
-            <textarea id="orgDescription" name="description" rows="3" placeholder="A que se dedica la marca, su mision y propuesta de valor.">${this.escapeHtml(f.description)}</textarea>
-          </div>
-
-          <div class="provision-field">
-            <label for="orgTone">Tono de voz</label>
-            <select id="orgTone" name="tone_of_voice">
-              ${this.TONES.map((t) =>
-                `<option value="${t.v}" ${t.v === f.tone_of_voice ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`
-              ).join('')}
-            </select>
-          </div>
-
-          <div class="provision-field">
-            <label>Paleta de colores</label>
-            <div class="createorg-palette-row">
-              <label class="createorg-color-chip">
-                <input id="orgPrimaryColor" type="color" value="${this.escapeHtml(f.primary_color)}">
-                <span class="createorg-color-label">Primario</span>
-              </label>
-              <label class="createorg-color-chip">
-                <input id="orgSecondaryColor" type="color" value="${this.escapeHtml(f.secondary_color)}">
-                <span class="createorg-color-label">Secundario</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="provision-field">
-            <label for="orgTimezone">Zona horaria</label>
-            <select id="orgTimezone" name="timezone" required>
-              ${this.TIMEZONES.map((tz) =>
-                `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${this.escapeHtml(tz)}</option>`
-              ).join('')}
-            </select>
-          </div>
-
-          <div class="provision-field">
-            <label for="orgLocale">Idioma</label>
-            <select id="orgLocale" name="locale" required>
-              ${this.LOCALES.map((l) =>
-                `<option value="${l.v}" ${l.v === f.locale ? 'selected' : ''}>${this.escapeHtml(l.label)}</option>`
-              ).join('')}
-            </select>
-          </div>
+          <p class="provision-form-status createorg-field-full" id="createOrgStatus" role="status" aria-live="polite"></p>
         </form>
       </section>
 
@@ -287,15 +203,159 @@ class DevLeadCreateOrgView extends DevBaseView {
     `;
   }
 
+  renderStepMetodo() {
+    const f = this.form;
+    return `
+      <section class="provision-form-card createorg-card-wide">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 2 · Metodo</span>
+          <h2>Como llenamos el brand_container</h2>
+          <p>Elige una via: manual, escrape de URL, o subiendo documentos. Tambien puedes saltar este paso y completar despues desde Brand.</p>
+        </header>
+
+        <div class="createorg-method-grid" role="radiogroup" aria-label="Metodo">
+          ${this.METHODS.map((m) => `
+            <label class="createorg-method-option">
+              <input type="radio" name="method" value="${m.v}" ${m.v === f.method ? 'checked' : ''}>
+              <span class="createorg-method-card">
+                <span class="createorg-method-icon"><i class="fas ${m.icon}"></i></span>
+                <strong>${this.escapeHtml(m.label)}</strong>
+                <small>${this.escapeHtml(m.hint)}</small>
+              </span>
+            </label>
+          `).join('')}
+        </div>
+
+        <div class="createorg-method-content" id="createOrgMethodContent">
+          ${this.renderMethodForm()}
+        </div>
+      </section>
+
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back">Back</button>
+        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </footer>
+    `;
+  }
+
+  renderMethodForm() {
+    const m = this.form.method;
+    if (!m) {
+      return `
+        <div class="createorg-method-empty">
+          <i class="fas fa-arrow-up"></i>
+          Elige un metodo arriba para continuar.
+        </div>
+      `;
+    }
+    if (m === 'manual') return this.renderMethodManual();
+    if (m === 'url')    return this.renderMethodUrl();
+    if (m === 'docs')   return this.renderMethodDocs();
+    return '';
+  }
+
+  renderMethodManual() {
+    const f = this.form;
+    return `
+      <form id="createOrgManualForm" class="createorg-form-grid" novalidate>
+        <div class="provision-field createorg-field-full">
+          <label for="orgDescription">Descripcion</label>
+          <textarea id="orgDescription" name="description" rows="3" placeholder="A que se dedica la marca, mision, propuesta de valor.">${this.escapeHtml(f.description)}</textarea>
+        </div>
+        <div class="provision-field">
+          <label for="orgTone">Tono de voz</label>
+          <select id="orgTone" name="tone_of_voice">
+            ${this.TONES.map((t) =>
+              `<option value="${t.v}" ${t.v === f.tone_of_voice ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="provision-field">
+          <label>Paleta de colores</label>
+          <div class="createorg-palette-row">
+            <label class="createorg-color-chip">
+              <input id="orgPrimaryColor" type="color" value="${this.escapeHtml(f.primary_color)}">
+              <span class="createorg-color-label">Primario</span>
+            </label>
+            <label class="createorg-color-chip">
+              <input id="orgSecondaryColor" type="color" value="${this.escapeHtml(f.secondary_color)}">
+              <span class="createorg-color-label">Secundario</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    `;
+  }
+
+  renderMethodUrl() {
+    const f = this.form;
+    return `
+      <form id="createOrgUrlForm" class="createorg-form-grid" novalidate>
+        <div class="provision-field createorg-field-full">
+          <label for="orgBrandUrl">URL del sitio o redes</label>
+          <input id="orgBrandUrl" name="brand_url" type="url" placeholder="https://acme.com" value="${this.escapeHtml(f.brand_url)}">
+          <small>Vera escrapeara para inferir descripcion, tono, paleta y mas. Sitio web, Instagram, LinkedIn — funciona con cualquiera de esos.</small>
+        </div>
+        <div class="createorg-method-hint createorg-field-full">
+          <i class="fas fa-magic-wand-sparkles"></i>
+          Auto-fill del scraper pendiente de implementacion. Por ahora solo guardamos la URL.
+        </div>
+      </form>
+    `;
+  }
+
+  renderMethodDocs() {
+    return `
+      <form id="createOrgDocsForm" class="createorg-form-grid" novalidate>
+        <div class="provision-field createorg-field-full">
+          <label>Documentacion oficial</label>
+          <label class="createorg-dropzone" for="orgBrandDocs">
+            <input type="file" id="orgBrandDocs" multiple accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx" hidden>
+            <i class="fas fa-cloud-upload-alt"></i>
+            <strong>Adjuntar archivos</strong>
+            <small>Brief, brandbook, presentaciones. PDF · DOCX · PPT · imagenes</small>
+          </label>
+          <ul class="createorg-files-list" id="orgFilesList"></ul>
+        </div>
+        <div class="createorg-method-hint createorg-field-full">
+          <i class="fas fa-magic-wand-sparkles"></i>
+          Auto-fill del scraper pendiente. Por ahora guardamos los archivos para procesarlos despues.
+        </div>
+      </form>
+    `;
+  }
+
   renderStepOperacion() {
     const f = this.form;
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
           <span class="provision-form-eyebrow">Paso 3 · Operacion</span>
-          <h2>Autonomia y seguridad</h2>
-          <p>Cuanto puede actuar Vera sin aprobacion humana, y si MFA es obligatorio para entrar a la org.</p>
+          <h2>Region, autonomia y seguridad</h2>
+          <p>Zona horaria + idioma de la org, cuanto puede actuar Vera sin aprobacion humana, y si MFA es obligatorio para entrar.</p>
         </header>
+
+        <h3 class="createorg-subhead">Region</h3>
+        <div class="createorg-form-grid" style="margin-bottom: var(--spacing-md);">
+          <div class="provision-field">
+            <label for="orgTimezone">Zona horaria</label>
+            <select id="orgTimezone" name="timezone" required>
+              ${this.TIMEZONES.map((tz) =>
+                `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${this.escapeHtml(tz)}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="provision-field">
+            <label for="orgLocale">Idioma</label>
+            <select id="orgLocale" name="locale" required>
+              ${this.LOCALES.map((l) =>
+                `<option value="${l.v}" ${l.v === f.locale ? 'selected' : ''}>${this.escapeHtml(l.label)}</option>`
+              ).join('')}
+            </select>
+          </div>
+        </div>
 
         <h3 class="createorg-subhead">Nivel de autonomia</h3>
         <div class="createorg-autonomy" role="radiogroup" aria-label="Nivel de autonomia">
@@ -366,30 +426,31 @@ class DevLeadCreateOrgView extends DevBaseView {
         </div>
 
         <div class="createorg-review-section">
-          <h3 class="createorg-subhead">Fuente</h3>
+          <h3 class="createorg-subhead">Identidad basica</h3>
           <div class="createorg-review-grid">
             ${this.tile('Nombre', f.name || '—')}
-            ${this.tile('URL fuente', f.brand_url || '—')}
+            ${this.tile('Slogan', f.slogan || '—')}
             ${this.tile('Logo', f.logo_file ? f.logo_file.name : '—')}
-            ${this.tile('Documentacion', `${f.brand_docs.length} archivo(s)`)}
           </div>
         </div>
 
         <div class="createorg-review-section">
-          <h3 class="createorg-subhead">Identidad</h3>
+          <h3 class="createorg-subhead">Metodo brand_container</h3>
           <div class="createorg-review-grid">
-            ${this.tile('Slogan', f.slogan || '—')}
-            ${this.tile('Tono', f.tone_of_voice || '—')}
-            ${this.tile('Paleta', `${f.primary_color} · ${f.secondary_color}`)}
-            ${this.tile('Zona horaria', f.timezone)}
-            ${this.tile('Idioma', this.LOCALES.find(l=>l.v===f.locale)?.label || f.locale)}
-            ${this.tile('Descripcion', f.description ? (f.description.slice(0,60) + (f.description.length > 60 ? '...' : '')) : '—')}
+            ${this.tile('Metodo', f.method ? (this.METHODS.find(m=>m.v===f.method)?.label || f.method) : 'Sin elegir')}
+            ${f.method === 'url' ? this.tile('URL fuente', f.brand_url || '—') : ''}
+            ${f.method === 'docs' ? this.tile('Archivos', `${f.brand_docs.length} archivo(s)`) : ''}
+            ${f.method === 'manual' ? this.tile('Tono', f.tone_of_voice || '—') : ''}
+            ${f.method === 'manual' ? this.tile('Paleta', `${f.primary_color} · ${f.secondary_color}`) : ''}
+            ${f.method === 'manual' ? this.tile('Descripcion', f.description ? (f.description.slice(0,60) + (f.description.length > 60 ? '...' : '')) : '—') : ''}
           </div>
         </div>
 
         <div class="createorg-review-section">
           <h3 class="createorg-subhead">Operacion</h3>
           <div class="createorg-review-grid">
+            ${this.tile('Zona horaria', f.timezone)}
+            ${this.tile('Idioma', this.LOCALES.find(l=>l.v===f.locale)?.label || f.locale)}
             ${this.tile('Autonomia', f.level_of_autonomy)}
             ${this.tile('MFA', f.mfa_required ? 'Obligatorio' : 'Opcional')}
           </div>
@@ -468,18 +529,20 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   wireAll() {
-    // Step 1 - Fuente
-    ['orgBrandUrl', 'orgName'].forEach((id) => {
+    // Step 1 - Identidad basica
+    ['orgName', 'orgSlogan'].forEach((id) => {
       const el = this.container.querySelector('#' + id);
       if (el) this.addEventListener(el, 'input', () => this.syncForm());
     });
 
-    // Step 2 - Identidad (editable)
-    ['orgSlogan', 'orgDescription'].forEach((id) => {
-      const el = this.container.querySelector('#' + id);
-      if (el) this.addEventListener(el, 'input', () => this.syncForm());
+    // Step 2 - Metodo: radios + dynamic form
+    this.container.querySelectorAll('input[name="method"]').forEach((r) => {
+      this.addEventListener(r, 'change', () => this.handleMethodChange(r.value));
     });
-    ['orgTone', 'orgTimezone', 'orgLocale', 'orgPrimaryColor', 'orgSecondaryColor'].forEach((id) => {
+    this.wireMethodFormInputs();
+
+    // Step 3 - Operacion: region selects
+    ['orgTimezone', 'orgLocale'].forEach((id) => {
       const el = this.container.querySelector('#' + id);
       if (el) this.addEventListener(el, 'change', () => this.syncForm());
     });
@@ -520,23 +583,65 @@ class DevLeadCreateOrgView extends DevBaseView {
   syncForm() {
     const f = this.form;
     const get = (id) => (this.container.querySelector('#' + id)?.value || '').trim();
-    if (this.currentStep === 'fuente') {
-      f.name = get('orgName');
-      f.brand_url = get('orgBrandUrl');
-    }
     if (this.currentStep === 'identidad') {
+      f.name = get('orgName');
       f.slogan = get('orgSlogan');
-      f.description = this.container.querySelector('#orgDescription')?.value || '';
-      f.tone_of_voice = get('orgTone');
-      f.primary_color = get('orgPrimaryColor') || '#000000';
-      f.secondary_color = get('orgSecondaryColor') || '#ffffff';
-      f.timezone = get('orgTimezone') || 'UTC';
-      f.locale = get('orgLocale') || 'es';
+    }
+    if (this.currentStep === 'metodo') {
+      // method radio
+      const radio = this.container.querySelector('input[name="method"]:checked');
+      f.method = radio?.value || '';
+      // dynamic form fields
+      if (f.method === 'manual') {
+        f.description = this.container.querySelector('#orgDescription')?.value || '';
+        f.tone_of_voice = get('orgTone');
+        f.primary_color = get('orgPrimaryColor') || '#000000';
+        f.secondary_color = get('orgSecondaryColor') || '#ffffff';
+      }
+      if (f.method === 'url') {
+        f.brand_url = get('orgBrandUrl');
+      }
     }
     if (this.currentStep === 'operacion') {
+      f.timezone = get('orgTimezone') || 'UTC';
+      f.locale = get('orgLocale') || 'es';
       const radio = this.container.querySelector('input[name="level_of_autonomy"]:checked');
       f.level_of_autonomy = radio?.value || 'parcial';
       f.mfa_required = !!this.container.querySelector('#orgMfaRequired')?.checked;
+    }
+  }
+
+  // ─── Step 2: Metodo (radio + dynamic form) ───────────────────────────
+
+  handleMethodChange(value) {
+    this.form.method = value;
+    // Re-renderiza solo el contenido del metodo, preservando el resto
+    const host = this.container.querySelector('#createOrgMethodContent');
+    if (host) host.innerHTML = this.renderMethodForm();
+    // Highlight de la card activa (radios ya se actualizan solos)
+    this.container.querySelectorAll('.createorg-method-option').forEach((opt) => {
+      const checked = opt.querySelector('input[type="radio"]')?.checked;
+      opt.classList.toggle('is-active', !!checked);
+    });
+    this.wireMethodFormInputs();
+  }
+
+  wireMethodFormInputs() {
+    // Manual: description (textarea), tone, palette
+    const desc = this.container.querySelector('#orgDescription');
+    if (desc) this.addEventListener(desc, 'input', () => this.syncForm());
+    ['orgTone', 'orgPrimaryColor', 'orgSecondaryColor'].forEach((id) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) this.addEventListener(el, 'change', () => this.syncForm());
+    });
+    // URL: brand_url
+    const url = this.container.querySelector('#orgBrandUrl');
+    if (url) this.addEventListener(url, 'input', () => this.syncForm());
+    // Docs: dropzone (file input)
+    const docsInput = this.container.querySelector('#orgBrandDocs');
+    if (docsInput) {
+      this.addEventListener(docsInput, 'change', (e) => this.handleFiles(e));
+      this.renderFiles();
     }
   }
 
@@ -660,7 +765,7 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   validateStep(key) {
-    if (key === 'fuente') {
+    if (key === 'identidad') {
       if (!this.form.name) return 'El nombre es obligatorio.';
     }
     return null;
