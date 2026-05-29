@@ -1765,12 +1765,12 @@
       if (!pos) return;
       const PARENT_W = 280;
       const PARENT_H = 140;
-      const ADSET_W = 180, ADSET_H = 44, ADSET_GAP = 24;
-      const AD_W    = 140, AD_H    = 40, AD_GAP    = 18;
-      const ROW1_Y  = pos.y + PARENT_H + 60;  // distancia padre→adset
-      const ROW2_Y  = ROW1_Y + ADSET_H + 60;  // distancia adset→ad
+      const ADSET_W = 220, ADSET_H = 56, ADSET_GAP = 28;
+      const AD_W    = 220, AD_H    = 200, AD_GAP    = 24; // card preview vertical
+      const ROW1_Y  = pos.y + PARENT_H + 60;
+      const ROW2_Y  = ROW1_Y + ADSET_H + 60;
 
-      const adsets = data.adsets.slice(0, 6); // tope de 6 visibles
+      const adsets = data.adsets.slice(0, 6);
       const totalAdsetsW = adsets.length * ADSET_W + (adsets.length - 1) * ADSET_GAP;
       const adsetsStartX = pos.x + PARENT_W / 2 - totalAdsetsW / 2;
       const parentBottomX = pos.x + PARENT_W / 2;
@@ -1781,7 +1781,7 @@
         const aY = ROW1_Y;
         const aCenterX = aX + ADSET_W / 2;
 
-        // Satelite adset
+        // Satelite Conjunto de anuncios
         const div = document.createElement('div');
         div.className = 'cc-satellite cc-satellite--adset';
         div.setAttribute('data-satellite-parent', String(campId));
@@ -1791,15 +1791,18 @@
         div.style.top  = `${aY}px`;
         div.style.width  = `${ADSET_W}px`;
         div.style.height = `${ADSET_H}px`;
+        const asetName = (aset.name && String(aset.name).trim()) || '';
+        const asetTitle = asetName || `${fmt(aset.impr)} impresiones`;
         div.innerHTML = `
-          <i class="fas fa-layer-group"></i>
-          <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
-            <span class="cc-satellite-name" title="${this.escapeHtml(aset.name || shortId(aset.id))}">${this.escapeHtml(aset.name || 'Conjunto ' + shortId(aset.id))}</span>
+          <span class="cc-satellite-icon"><i class="fas fa-layer-group"></i></span>
+          <div class="cc-satellite-text">
+            <span class="cc-satellite-type">Conjunto de anuncios</span>
+            <span class="cc-satellite-name" title="${this.escapeHtml(asetTitle)}">${this.escapeHtml(asetTitle)}</span>
             <span class="cc-satellite-sub">${fmt(aset.impr)} impr · ${fmt(aset.conv)} conv</span>
           </div>`;
         world.appendChild(div);
 
-        // Edge padre → adset
+        // Edge padre → conjunto
         const path1 = document.createElementNS(NS, 'path');
         path1.setAttribute('class', 'cc-satellite-edge');
         const dy = aY - parentBottomY;
@@ -1808,8 +1811,8 @@
         path1.setAttribute('d', `M ${parentBottomX} ${parentBottomY} C ${parentBottomX} ${cy1}, ${aCenterX} ${cy2}, ${aCenterX} ${aY}`);
         svg.appendChild(path1);
 
-        // Ads del adset (tope 5 visibles)
-        const ads = Array.isArray(aset.ads) ? aset.ads.slice(0, 5) : [];
+        // Anuncios del conjunto (tope 3 cards preview por conjunto)
+        const ads = Array.isArray(aset.ads) ? aset.ads.slice(0, 3) : [];
         if (!ads.length) return;
         const totalAdsW = ads.length * AD_W + (ads.length - 1) * AD_GAP;
         const adsStartX = aCenterX - totalAdsW / 2;
@@ -1828,15 +1831,21 @@
           adv.style.top  = `${adY}px`;
           adv.style.width  = `${AD_W}px`;
           adv.style.height = `${AD_H}px`;
+          // Texto del anuncio: title (headline) || body || generated_copy
+          const headline = ad.title || ad.body || ad.copy || '';
+          const adName = (ad.name && String(ad.name).trim()) || 'Sin nombre';
           adv.innerHTML = `
-            <i class="fas fa-image"></i>
-            <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
-              <span class="cc-satellite-name" title="${this.escapeHtml(ad.title || ad.name || shortId(ad.id))}">${this.escapeHtml(ad.title || ad.name || 'Ad ' + shortId(ad.id))}</span>
-              <span class="cc-satellite-sub">${fmt(ad.impr)} impr</span>
+            <div class="cc-satellite-thumb"><i class="fas fa-image"></i></div>
+            <div class="cc-satellite-body">
+              <span class="cc-satellite-type">Anuncio</span>
+              <span class="cc-satellite-name" title="${this.escapeHtml(adName)}">${this.escapeHtml(adName)}</span>
+              ${headline ? `<span class="cc-satellite-headline">${this.escapeHtml(headline)}</span>` : ''}
+              <span class="cc-satellite-cta"><i class="fas fa-arrow-up-right-from-square"></i>&nbsp;Mas info</span>
+              <span class="cc-satellite-sub" style="margin-top:2px;">${fmt(ad.impr)} impr</span>
             </div>`;
           world.appendChild(adv);
 
-          // Edge adset → ad
+          // Edge conjunto → anuncio
           const path2 = document.createElementNS(NS, 'path');
           path2.setAttribute('class', 'cc-satellite-edge');
           const ddy = adY - adsetBottomY;
