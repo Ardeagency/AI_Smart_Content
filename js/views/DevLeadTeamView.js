@@ -12,6 +12,8 @@ class DevLeadTeamView extends DevBaseView {
     this.supabase = null;
     this.team = [];
     this.pendingJobs = [];
+    this.editing = null;     // profile en edicion
+    this.savingEdit = false;
   }
 
   async onEnter() {
@@ -19,6 +21,8 @@ class DevLeadTeamView extends DevBaseView {
   }
 
   RANK_ORDER = ['legend', 'master', 'expert', 'builder', 'junior', 'rookie'];
+  RANKS = ['rookie', 'junior', 'builder', 'expert', 'master', 'legend'];
+  ROLES = ['viewer', 'contributor', 'senior', 'lead'];
   ROLE_LABEL = {
     lead:        { label: 'Lead',        desc: 'Todo + provisioning' },
     senior:      { label: 'Senior',      desc: 'Admin + lexicon' },
@@ -54,6 +58,8 @@ class DevLeadTeamView extends DevBaseView {
             <div class="team-list" id="teamList"></div>
           </section>
         </div>
+
+        <div class="team-modal-overlay" id="teamEditOverlay" hidden></div>
       </div>
     `;
   }
@@ -120,6 +126,9 @@ class DevLeadTeamView extends DevBaseView {
     }
 
     host.innerHTML = this.team.map((m) => this.renderMemberCard(m)).join('');
+    host.querySelectorAll('[data-edit-id]').forEach((card) => {
+      this.addEventListener(card, 'click', () => this.openEdit(card.getAttribute('data-edit-id')));
+    });
   }
 
   renderMemberCard(m) {
@@ -129,7 +138,8 @@ class DevLeadTeamView extends DevBaseView {
       .split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
     const created = m.created_at ? new Date(m.created_at).toLocaleDateString() : '';
     return `
-      <article class="team-card" data-rank="${this.escapeHtml(rank)}">
+      <article class="team-card" data-rank="${this.escapeHtml(rank)}" data-edit-id="${this.escapeHtml(m.id)}" tabindex="0" role="button" aria-label="Editar ${this.escapeHtml(m.full_name || m.email)}">
+        <span class="team-card-edit"><i class="fas fa-pen"></i></span>
         <header class="team-card-head">
           <div class="team-avatar" data-rank="${this.escapeHtml(rank)}">${this.escapeHtml(initials)}</div>
           <div class="team-identity">
@@ -151,6 +161,184 @@ class DevLeadTeamView extends DevBaseView {
         </footer>
       </article>
     `;
+  }
+
+  // ─── Modal de edicion ────────────────────────────────────────────────
+
+  openEdit(profileId) {
+    const m = this.team.find((p) => p.id === profileId);
+    if (!m) return;
+    this.editing = { ...m };
+    this.renderEditModal();
+  }
+
+  closeEdit() {
+    this.editing = null;
+    const overlay = this.container.querySelector('#teamEditOverlay');
+    if (overlay) {
+      overlay.innerHTML = '';
+      overlay.hidden = true;
+    }
+  }
+
+  renderEditModal() {
+    const overlay = this.container.querySelector('#teamEditOverlay');
+    if (!overlay || !this.editing) return;
+    const m = this.editing;
+    const rank = m.dev_rank || 'rookie';
+    const initials = (m.full_name || m.email || '?')
+      .split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+
+    const roleOpts = this.ROLES.map((r) => {
+      const meta = this.ROLE_LABEL[r];
+      const sel = r === m.dev_role ? 'selected' : '';
+      return `<option value="${r}" ${sel}>${meta.label} — ${meta.desc}</option>`;
+    }).join('');
+
+    const rankOpts = this.RANKS.map((r) => {
+      const sel = r === rank ? 'selected' : '';
+      return `<option value="${r}" ${sel}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`;
+    }).join('');
+
+    overlay.hidden = false;
+    overlay.innerHTML = `
+      <div class="team-modal" role="dialog" aria-modal="true" aria-labelledby="teamEditTitle">
+        <header class="team-modal-head">
+          <div class="team-avatar" data-rank="${this.escapeHtml(rank)}">${this.escapeHtml(initials)}</div>
+          <div class="team-modal-identity">
+            <h3 id="teamEditTitle">${this.escapeHtml(m.full_name || '(sin nombre)')}</h3>
+            <span>${this.escapeHtml(m.email)}</span>
+          </div>
+          <button type="button" class="team-modal-close" data-action="close" aria-label="Cerrar">
+            <i class="fas fa-times"></i>
+          </button>
+        </header>
+
+        <form id="teamEditForm" class="team-modal-body" novalidate>
+          <div class="provision-field">
+            <label for="teamEditRole">Rol developer</label>
+            <select id="teamEditRole" name="dev_role" required>${roleOpts}</select>
+          </div>
+          <div class="provision-field">
+            <label for="teamEditRank">Rango</label>
+            <select id="teamEditRank" name="dev_rank" required>${rankOpts}</select>
+          </div>
+          <p class="provision-form-status" id="teamEditStatus" role="status" aria-live="polite"></p>
+        </form>
+
+        <footer class="team-modal-foot">
+          <button type="button" class="team-modal-btn-danger" data-action="ban">
+            <i class="fas fa-user-slash"></i> Quitar acceso developer
+          </button>
+          <div class="team-modal-spacer"></div>
+          <button type="button" class="provision-back-btn" data-action="close">Cancelar</button>
+          <button type="submit" form="teamEditForm" class="team-modal-btn-save">
+            <i class="fas fa-check"></i> Guardar
+          </button>
+        </footer>
+      </div>
+    `;
+
+    this.wireEditModal();
+  }
+
+  wireEditModal() {
+    const overlay = this.container.querySelector('#teamEditOverlay');
+    const form = overlay.querySelector('#teamEditForm');
+    if (form) this.addEventListener(form, 'submit', (e) => this.handleEditSave(e));
+
+    overlay.querySelectorAll('[data-action="close"]').forEach((btn) => {
+      this.addEventListener(btn, 'click', () => this.closeEdit());
+    });
+    const banBtn = overlay.querySelector('[data-action="ban"]');
+    if (banBtn) this.addEventListener(banBtn, 'click', () => this.handleEditBan());
+
+    // Click fuera del modal cierra
+    this.addEventListener(overlay, 'click', (e) => {
+      if (e.target === overlay) this.closeEdit();
+    });
+  }
+
+  async handleEditSave(e) {
+    e.preventDefault();
+    if (this.savingEdit || !this.editing) return;
+    const fd = new FormData(e.target);
+    const dev_role = (fd.get('dev_role') || '').toString();
+    const dev_rank = (fd.get('dev_rank') || '').toString();
+    if (!this.ROLES.includes(dev_role)) return this.setEditStatus('Rol invalido.', 'error');
+    if (!this.RANKS.includes(dev_rank)) return this.setEditStatus('Rango invalido.', 'error');
+
+    // Evitar que un lead se quite a si mismo (lock-out)
+    const self = window.authService?.currentUser?.id;
+    if (self && self === this.editing.id && this.editing.dev_role === 'lead' && dev_role !== 'lead') {
+      return this.setEditStatus('No puedes quitar tu propio rol de Lead.', 'error');
+    }
+
+    this.savingEdit = true;
+    this.setEditStatus('Guardando...', '');
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ dev_role, dev_rank })
+        .eq('id', this.editing.id);
+      if (error) throw error;
+
+      this.showNotification('Cambios guardados.', 'success');
+      this.closeEdit();
+      await this.loadTeam();
+      this.renderTeam();
+    } catch (err) {
+      this.savingEdit = false;
+      this.setEditStatus(err.message || String(err), 'error');
+      return;
+    }
+    this.savingEdit = false;
+  }
+
+  async handleEditBan() {
+    if (!this.editing) return;
+    const self = window.authService?.currentUser?.id;
+    if (self && self === this.editing.id) {
+      this.setEditStatus('No puedes quitarte tu propio acceso developer.', 'error');
+      return;
+    }
+    const ok = confirm(
+      `Quitar acceso developer a ${this.editing.full_name || this.editing.email}?\n\n` +
+      `Pierde el portal /dev pero su cuenta y login siguen activos.`
+    );
+    if (!ok) return;
+
+    this.savingEdit = true;
+    this.setEditStatus('Quitando acceso...', '');
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({
+          is_developer: false,
+          dev_role: null,
+          dev_rank: null,
+          role: 'user',
+          default_view_mode: 'user'
+        })
+        .eq('id', this.editing.id);
+      if (error) throw error;
+      this.showNotification('Acceso developer quitado.', 'success');
+      this.closeEdit();
+      await this.loadTeam();
+      this.renderTeam();
+    } catch (err) {
+      this.savingEdit = false;
+      this.setEditStatus(err.message || String(err), 'error');
+    }
+  }
+
+  setEditStatus(text, type) {
+    const el = this.container.querySelector('#teamEditStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'provision-form-status';
+    if (type === 'error') el.classList.add('is-error');
+    if (type === 'success') el.classList.add('is-success');
   }
 
   renderPending() {

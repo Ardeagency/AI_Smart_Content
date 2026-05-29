@@ -13713,3 +13713,200 @@
   margin: 0;
   font-size: 0.875rem;
 }
+
+/* ───── Card editable (cursor + icono lapiz) ───── */
+.team-card[data-edit-id] {
+  position: relative;
+  cursor: pointer;
+}
+
+.team-card[data-edit-id]:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.team-card-edit {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  pointer-events: none;
+}
+
+.team-card[data-edit-id]:hover .team-card-edit,
+.team-card[data-edit-id]:focus-visible .team-card-edit {
+  opacity: 1;
+  color: var(--accent-warm);
+  border-color: var(--accent-warm);
+}
+
+/* ───── Modal de edicion ───── */
+.team-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: team-modal-overlay-in 0.18s ease;
+}
+
+@keyframes team-modal-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.team-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: team-modal-in 0.22s ease;
+}
+
+@keyframes team-modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.team-modal-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.team-modal-identity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.team-modal-identity h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-modal-identity span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-modal-close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.team-modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-divider);
+}
+
+.team-modal-body {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.team-modal-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-divider);
+}
+
+.team-modal-spacer { flex: 1; }
+
+.team-modal-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
+  border-radius: 999px;
+  color: #ef4444;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.team-modal-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.team-modal-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.55rem 1.1rem;
+  background: var(--dev-gradient-dynamic,
+              var(--brand-gradient-dynamic,
+              linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.team-modal-btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.team-modal-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
