@@ -802,13 +802,7 @@
         this._persistGroupPosition(p.key.slice(6));
       });
     }
-    // F1.12: side-panel inspector reacciona a cambios de seleccion.
-    // Re-render cierra automaticamente cuando selectionSet != 1.
-    if (!this._ccInspectorSub) {
-      this._ccInspectorSub = this._store.on('mutated:selection', () => {
-        this._renderInspector();
-      });
-    }
+    // F1.12 eliminado: ya no nos suscribimos a mutated:selection para el inspector.
     return this._store;
   };
 
@@ -1695,9 +1689,9 @@
       this._installStickyContentListener();
       // F1.11: listener de title de group (delegado, no depende de strategy)
       this._installGroupTitleListener();
-      // F1.12: monta el side-panel inspector + render inicial
-      this._installInspector();
-      this._renderInspector();
+      // F1.12 eliminado por decision del usuario (2026-05-29) — sidebar
+      // derecho del inspector retirado del UX. Codigo de _installInspector
+      // / _renderInspector queda dormido (no se invoca).
       return r;
     };
   }

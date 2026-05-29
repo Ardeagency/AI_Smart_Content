@@ -1709,19 +1709,32 @@
 .cc-canvas-btn--anchor:hover { background: rgba(106, 163, 255, 0.22) !important; }
 .cc-canvas-btn--anchor i { color: #b9d5ff; }
 
-/* F2: rediseno nodo Campana — card limpio sin metricas inline.
-   Metricas viven en el inspector (F1.12). Conjuntos+ads spawn como
-   satelites tipo n8n al expandir (F2 next chunk).
-   Reemplaza por completo el styling del .cc-node--readonly cuando
-   tambien tiene .cc-node--campaign-v2. */
+/* F2: rediseno nodo Campana — n8n-style limpio con la paleta de la
+   plataforma (bg-card #141517 + border-divider #212126/#242424). Sin
+   glow rojo, sin gradient, sin tintes por tipo. Override completo
+   sobre las vars heredadas de .cc-node--readonly. */
 .cc-node--campaign-v2 {
   width: 280px !important;
   border: 1px solid var(--border-divider, #242424) !important;
   background: var(--bg-card, #141517) !important;
+  background-image: none !important;
   border-radius: 14px !important;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0,0,0,0.22), 0 12px 28px rgba(0,0,0,0.18);
   transition: box-shadow 0.18s ease, transform 0.18s ease;
+  /* Anular vars heredadas que pintan el cuerpo de rojo */
+  --cc-grad-end: var(--bg-card, #141517);
+  --cc-glow-1: transparent;
+  --cc-glow-2: transparent;
+  --cc-glow-3: transparent;
+  --cc-accent: var(--text-muted);
+}
+/* Matar el ::before que aplica los glows inset (origen del tinte rojo) */
+.cc-node--campaign-v2::before { display: none !important; }
+/* Icono hero neutro (sin rojo) */
+.cc-node--campaign-v2 .cc-node-icon--hero {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-secondary, #d4d1d8) !important;
 }
 .cc-node--campaign-v2.cc-node--expanded {
   width: 280px !important; /* no se ensancha; los detalles van fuera */
@@ -1739,9 +1752,10 @@
   width: 44px; height: 44px;
   border-radius: 10px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(225, 87, 96, 0.14);
-  color: #e15760;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary, #d4d1d8);
   font-size: 1.1rem;
+  border: 1px solid var(--border-divider, #242424);
 }
 .cc-node--campaign-v2 .cc-node-head-text {
   display: flex; flex-direction: column;
