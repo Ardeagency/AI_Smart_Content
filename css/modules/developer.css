@@ -13225,6 +13225,38 @@
   cursor: not-allowed;
 }
 
+/* Selects (step 4: Afiliar, Permisos) — mismo look que inputs */
+.provision-field select {
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.9375rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23a8a8a8' d='M6 8L0 0h12z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.provision-field select:focus {
+  outline: none;
+  border-color: var(--accent-warm);
+  background-color: var(--bg-card);
+}
+.provision-field select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.provision-field select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
 .provision-field small {
   font-size: 0.6875rem;
   color: var(--text-muted);

@@ -4,13 +4,17 @@
  * /dev/provisioning/users — flujo de creacion de usuario (rebuild 2026-05-29).
  *
  * Pasos:
- *   1. Tipo            — Consumer / Developer / Admin (cards)
- *   2. Datos           — Sign-up real: name/email/password → provision-user-start
- *   3. Verificacion    — espera email confirm, polling cada 3s
- *   4. Final (dinamico)— Afiliar (consumer) / Crear org (admin) / Permisos (developer)
+ *   1. Tipo         — Member Org / Owner Org / Developer (cards)
+ *   2. Datos        — Sign-up real: name/email/password → provision-user-start
+ *   3. Verificacion — espera email confirm, polling cada 3s
+ *   4. Final        — form dinamico:
+ *                       Member Org → Afiliar (selector org + rol)
+ *                       Owner Org  → Crear org (form de marca)
+ *                       Developer  → Permisos (dev_role + dev_rank)
+ *                     submit → provision-user-finalize
  *
  * Layout: progress bar arriba + contenido centrado vertical+horizontal sobre
- * dot canvas estilo n8n. Step 4 aun no implementado.
+ * dot canvas estilo n8n.
  */
 class DevLeadUserProvisioningView extends DevBaseView {
   constructor() {
@@ -18,10 +22,15 @@ class DevLeadUserProvisioningView extends DevBaseView {
     this.supabase = null;
     this.userType = null;
     this.currentStep = 'type';
-    this.activeJob = null; // { id, auth_user_id, email, status }
+    this.activeJob = null;          // { id, auth_user_id, email, status }
     this.pollTimer = null;
     this.POLL_INTERVAL_MS = 3000;
     this._submitting = false;
+    // Step 4 state
+    this.orgsList = [];             // cache para member_org
+    this.finalizing = false;
+    this.finalized = false;
+    this.finalizedResult = null;    // { auth_user_id, organization_id, user_type }
   }
 
   async onEnter() {
@@ -108,12 +117,18 @@ class DevLeadUserProvisioningView extends DevBaseView {
 
   renderProgress() {
     const idx = this.STEPS.findIndex((s) => s.key === this.currentStep);
+    // Cuando finalized: todos los steps quedan is-done (no hay current)
+    const allDone = this.finalized;
     this.container?.style.setProperty('--provision-step-count', String(this.STEPS.length));
     return `
       <ol class="provision-progress" style="--provision-step-count: ${this.STEPS.length}" aria-label="Progreso del flujo">
         ${this.STEPS.map((s, i) => {
-          const state = i < idx ? 'is-done' : i === idx ? 'is-current' : 'is-pending';
-          const marker = i < idx ? '<i class="fas fa-check"></i>' : String(i + 1);
+          let state;
+          if (allDone) state = 'is-done';
+          else if (i < idx) state = 'is-done';
+          else if (i === idx) state = 'is-current';
+          else state = 'is-pending';
+          const marker = (state === 'is-done') ? '<i class="fas fa-check"></i>' : String(i + 1);
           return `
             <li class="provision-progress-item ${state}" data-step="${s.key}">
               <span class="provision-progress-caret" aria-hidden="true">
@@ -238,18 +253,186 @@ class DevLeadUserProvisioningView extends DevBaseView {
   }
 
   renderStepFinal() {
+    if (this.finalized)  return this.renderStepFinalDone();
+    if (this.finalizing) return this.renderStepFinalSubmitting();
+
+    switch (this.userType) {
+      case 'member_org': return this.renderStepMemberOrg();
+      case 'owner_org':  return this.renderStepOwnerOrg();
+      case 'developer':  return this.renderStepDeveloper();
+      default:           return '';
+    }
+  }
+
+  renderStepMemberOrg() {
+    const orgOpts = this.orgsList.length === 0
+      ? '<option value="" disabled selected>Cargando organizaciones...</option>'
+      : '<option value="" disabled selected>Selecciona una organizacion</option>' +
+        this.orgsList.map((o) =>
+          `<option value="${o.id}">${this.escapeHtml(o.name || o.id)}</option>`
+        ).join('');
+
+    const roleOpts = [
+      { v: 'viewer',    label: 'Viewer — solo lectura' },
+      { v: 'vera_user', label: 'Vera User — chat con Vera y consumo' },
+      { v: 'creator',   label: 'Creator — crea contenido (Studio/Video/Production)' },
+      { v: 'editor',    label: 'Editor — crea contenido + edita brand + insights' },
+      { v: 'admin',     label: 'Admin — todo menos transferir/eliminar org' }
+    ].map((r) =>
+      `<option value="${r.v}">${this.escapeHtml(r.label)}</option>`
+    ).join('');
+
+    return `
+      <section class="provision-form-card">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 4 · Afiliar</span>
+          <h2>Asignar a una organizacion</h2>
+          <p>Elige a que organizacion entra este usuario y con que rol.</p>
+        </header>
+        <form id="provisionFinalForm" class="provision-form" novalidate>
+          <div class="provision-field">
+            <label for="provisionOrgSelect">Organizacion</label>
+            <select id="provisionOrgSelect" name="organization_id" required>
+              ${orgOpts}
+            </select>
+          </div>
+          <div class="provision-field">
+            <label for="provisionMemberRole">Rol en la organizacion</label>
+            <select id="provisionMemberRole" name="role" required>
+              ${roleOpts}
+            </select>
+            <small>Las capacidades se asignan automaticamente segun el rol. El rol 'owner' solo se crea con Owner Org.</small>
+          </div>
+          <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Afiliar">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </footer>
+    `;
+  }
+
+  renderStepOwnerOrg() {
+    return `
+      <section class="provision-form-card">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 4 · Crear org</span>
+          <h2>Nueva organizacion</h2>
+          <p>El usuario queda como owner. Los demas datos (plan, autonomia, integraciones) se editan despues.</p>
+        </header>
+        <form id="provisionFinalForm" class="provision-form" novalidate>
+          <div class="provision-field">
+            <label for="provisionOrgName">Nombre <span style="color:#ef4444">*</span></label>
+            <input id="provisionOrgName" name="name" type="text" placeholder="Ej. ACME Corp" maxlength="120" required>
+          </div>
+          <div class="provision-field">
+            <label for="provisionOrgBrandName">Nombre oficial de marca</label>
+            <input id="provisionOrgBrandName" name="brand_name_oficial" type="text" placeholder="Ej. ACME Brand SAS" maxlength="120">
+          </div>
+          <div class="provision-field">
+            <label for="provisionOrgSlogan">Slogan</label>
+            <input id="provisionOrgSlogan" name="brand_slogan" type="text" placeholder="Frase de marca" maxlength="200">
+          </div>
+          <div class="provision-field">
+            <label for="provisionOrgLogo">Logo URL</label>
+            <input id="provisionOrgLogo" name="logo_url" type="url" placeholder="https://...">
+            <small>PNG/JPG/SVG via URL publica. Tambien se puede subir despues desde Brand.</small>
+          </div>
+          <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Crear org">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </footer>
+    `;
+  }
+
+  renderStepDeveloper() {
+    const roleOpts = [
+      { v: 'viewer',      label: 'Viewer — solo lectura' },
+      { v: 'contributor', label: 'Contributor — colabora en flows + builder' },
+      { v: 'senior',      label: 'Senior — todo lo de contributor + admin/lexicon' },
+      { v: 'lead',        label: 'Lead — todo + provisioning de usuarios' }
+    ].map((r) =>
+      `<option value="${r.v}" ${r.v === 'contributor' ? 'selected' : ''}>${this.escapeHtml(r.label)}</option>`
+    ).join('');
+
+    const rankOpts = [
+      { v: 'rookie',  label: 'Rookie' },
+      { v: 'junior',  label: 'Junior' },
+      { v: 'builder', label: 'Builder' },
+      { v: 'expert',  label: 'Expert' },
+      { v: 'master',  label: 'Master' },
+      { v: 'legend',  label: 'Legend' }
+    ].map((r) =>
+      `<option value="${r.v}" ${r.v === 'rookie' ? 'selected' : ''}>${this.escapeHtml(r.label)}</option>`
+    ).join('');
+
+    return `
+      <section class="provision-form-card">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 4 · Permisos</span>
+          <h2>Rango y rol developer</h2>
+          <p>El rango determina el tema visual del portal /dev. El rol determina que puede tocar.</p>
+        </header>
+        <form id="provisionFinalForm" class="provision-form" novalidate>
+          <div class="provision-field">
+            <label for="provisionDevRole">Rol developer</label>
+            <select id="provisionDevRole" name="dev_role" required>
+              ${roleOpts}
+            </select>
+          </div>
+          <div class="provision-field">
+            <label for="provisionDevRank">Rango</label>
+            <select id="provisionDevRank" name="dev_rank" required>
+              ${rankOpts}
+            </select>
+            <small>El rango es publico (gradient en /dev). El rol es funcional (permisos).</small>
+          </div>
+          <p class="provision-form-status" role="status" aria-live="polite" id="provisionFinalStatus"></p>
+        </form>
+      </section>
+      <footer class="provision-page-actions">
+        <button type="submit" form="provisionFinalForm" class="provision-next-btn" data-action="next" aria-label="Asignar permisos">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </footer>
+    `;
+  }
+
+  renderStepFinalSubmitting() {
+    return `
+      <section class="provision-verify-card">
+        <div class="provision-verify-spinner"><i class="fas fa-circle-notch fa-spin"></i></div>
+        <h2>Finalizando...</h2>
+        <p>Guardando perfil, organizacion y permisos.</p>
+      </section>
+    `;
+  }
+
+  renderStepFinalDone() {
     const email = this.activeJob?.email || '';
-    const nextLabel = this.getStepLabel(this.STEPS.find((s) => s.key === 'final'));
+    const r = this.finalizedResult || {};
+    let detail = '';
+    if (r.user_type === 'member_org') {
+      detail = 'Afiliado a la organizacion seleccionada.';
+    } else if (r.user_type === 'owner_org') {
+      detail = `Organizacion creada (id ${r.organization_id ? r.organization_id.slice(0,8) : '...'}). El usuario es owner.`;
+    } else if (r.user_type === 'developer') {
+      detail = 'Permisos developer asignados. Ya puede entrar al portal /dev.';
+    }
     return `
       <section class="provision-verify-card provision-final-card">
         <span class="provision-verify-icon provision-verify-icon--success">
           <i class="fas fa-check"></i>
         </span>
-        <h2>Email verificado</h2>
-        <p><strong>${this.escapeHtml(email)}</strong> confirmo su correo y ya puede iniciar sesion.</p>
-        <p class="provision-verify-meta">
-          Siguiente paso (${this.escapeHtml(nextLabel)}) pendiente de implementar.
-        </p>
+        <h2>Usuario creado</h2>
+        <p><strong>${this.escapeHtml(email)}</strong> ya puede iniciar sesion.</p>
+        <p class="provision-verify-meta">${this.escapeHtml(detail)}</p>
       </section>
       <footer class="provision-page-actions">
         <button type="button" class="provision-back-btn" data-action="back">Crear otro</button>
@@ -277,8 +460,38 @@ class DevLeadUserProvisioningView extends DevBaseView {
       <div class="provision-page-center">${this.renderCurrentStep()}</div>
     `;
     this.wireAll();
+
     if (stepKey === 'verify') this.startPolling();
     else this.stopPolling();
+
+    // Entrada al step final: cargar orgs si es member_org
+    if (stepKey === 'final' && this.userType === 'member_org' && this.orgsList.length === 0) {
+      this.loadOrganizations().then(() => {
+        // Re-render del center para refrescar el <select>
+        if (this.currentStep === 'final' && !this.finalizing && !this.finalized) {
+          const center = this.container.querySelector('.provision-page-center');
+          if (center) {
+            center.innerHTML = this.renderCurrentStep();
+            this.wireAll();
+          }
+        }
+      });
+    }
+  }
+
+  async loadOrganizations() {
+    try {
+      const { data, error } = await this.supabase
+        .from('organizations')
+        .select('id, name')
+        .is('deleted_at', null)
+        .order('name', { ascending: true });
+      if (error) throw error;
+      this.orgsList = Array.isArray(data) ? data : [];
+    } catch (err) {
+      this.showNotification(`No se pudo cargar orgs: ${err.message}`, 'error');
+      this.orgsList = [];
+    }
   }
 
   wireAll() {
@@ -287,18 +500,19 @@ class DevLeadUserProvisioningView extends DevBaseView {
       this.addEventListener(card, 'click', () => this.selectUserType(card.getAttribute('data-user-type')));
     });
 
-    // Form submit (step data)
-    const form = this.container.querySelector('#provisionDataForm');
-    if (form) {
-      this.addEventListener(form, 'submit', (e) => this.handleDataSubmit(e));
-    }
+    // Forms: data (step 2) y final (step 4) tienen submit
+    const dataForm = this.container.querySelector('#provisionDataForm');
+    if (dataForm) this.addEventListener(dataForm, 'submit', (e) => this.handleDataSubmit(e));
+
+    const finalForm = this.container.querySelector('#provisionFinalForm');
+    if (finalForm) this.addEventListener(finalForm, 'submit', (e) => this.handleFinalSubmit(e));
 
     // Back
     const backBtn = this.container.querySelector('[data-action="back"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
 
-    // Next solo en step 'type' (en otros pasos es submit del form o no existe)
-    if (!form) {
+    // Next: solo en step 'type' (en steps con form, el submit lo maneja el form)
+    if (!dataForm && !finalForm) {
       const nextBtn = this.container.querySelector('[data-action="next"]');
       if (nextBtn) this.addEventListener(nextBtn, 'click', () => this.handleNext());
     }
@@ -338,10 +552,87 @@ class DevLeadUserProvisioningView extends DevBaseView {
       return;
     }
     if (this.currentStep === 'final') {
+      // Reset completo para crear otro
       this.activeJob = null;
       this.userType = null;
+      this.finalized = false;
+      this.finalizing = false;
+      this.finalizedResult = null;
       this.goToStep('type');
     }
+  }
+
+  // ─── Step 4: finalize backend ────────────────────────────────────────
+
+  async handleFinalSubmit(e) {
+    e.preventDefault();
+    if (this.finalizing) return;
+
+    const fd = new FormData(e.target);
+    const payload = { job_id: this.activeJob?.id, user_type: this.userType };
+
+    if (this.userType === 'member_org') {
+      const organization_id = (fd.get('organization_id') || '').toString();
+      const role = (fd.get('role') || 'viewer').toString();
+      if (!organization_id) return this.setFinalStatus('Selecciona una organizacion.', 'error');
+      payload.member_org = { organization_id, role };
+    } else if (this.userType === 'owner_org') {
+      const name = (fd.get('name') || '').toString().trim();
+      if (!name) return this.setFinalStatus('El nombre de la organizacion es obligatorio.', 'error');
+      payload.owner_org = {
+        name,
+        brand_name_oficial: (fd.get('brand_name_oficial') || '').toString().trim() || null,
+        brand_slogan: (fd.get('brand_slogan') || '').toString().trim() || null,
+        logo_url: (fd.get('logo_url') || '').toString().trim() || null
+      };
+    } else if (this.userType === 'developer') {
+      const dev_role = (fd.get('dev_role') || '').toString();
+      const dev_rank = (fd.get('dev_rank') || '').toString();
+      if (!dev_role) return this.setFinalStatus('Elige un rol developer.', 'error');
+      if (!dev_rank) return this.setFinalStatus('Elige un rango.', 'error');
+      payload.developer = { dev_role, dev_rank };
+    }
+
+    this.finalizing = true;
+    // Re-render: muestra spinner submitting
+    const center = this.container.querySelector('.provision-page-center');
+    if (center) center.innerHTML = this.renderCurrentStep();
+
+    try {
+      const { data, error } = await this.supabase.functions.invoke('provision-user-finalize', { body: payload });
+      if (error || !data) throw new Error(error?.message || 'Error al finalizar');
+
+      this.finalizing = false;
+      this.finalized = true;
+      this.finalizedResult = {
+        auth_user_id: data.auth_user_id,
+        organization_id: data.organization_id,
+        user_type: data.user_type
+      };
+      // Re-render: progress (todos done) + center (done card)
+      const progress = this.container.querySelector('.provision-page-progress');
+      if (progress) progress.innerHTML = this.renderProgress();
+      if (center) {
+        center.innerHTML = this.renderCurrentStep();
+        this.wireAll();
+      }
+    } catch (err) {
+      this.finalizing = false;
+      if (center) {
+        center.innerHTML = this.renderCurrentStep();
+        this.wireAll();
+      }
+      this.setFinalStatus(err?.message || String(err), 'error');
+    }
+  }
+
+  setFinalStatus(text, type) {
+    const el = this.container.querySelector('#provisionFinalStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'provision-form-status';
+    if (type === 'error') el.classList.add('is-error');
+    if (type === 'success') el.classList.add('is-success');
   }
 
   handleNext() {

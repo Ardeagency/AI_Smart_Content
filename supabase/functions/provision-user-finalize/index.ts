@@ -1,7 +1,8 @@
 // provision-user-finalize
-// Solo corre cuando el job está en status='email_confirmed'.
-// Inserta profiles, organizaciones, organization_members según payload.
-// Marca el job como 'completed' o 'failed' con el error.
+// Llamado cuando job.status='email_confirmed' (post step 3 verificacion).
+// Recibe los datos del step 4 (Afiliar / Crear org / Permisos) segun user_type,
+// hace upsert de profiles + inserts en organizations/organization_members,
+// y cierra el job como 'completed' o 'failed'.
 
 import {
   corsHeaders,
@@ -10,42 +11,34 @@ import {
   requireLead,
 } from "../_shared/lead-auth.ts";
 
-interface JobPayload {
-  account: {
-    full_name: string;
-    email: string;
-    role?: string;
-    default_view_mode?: string;
-    is_developer?: boolean;
-    dev_role?: string | null;
-  };
-  organization?: {
-    mode: "none" | "existing" | "create";
-    organization_id?: string | null;
-    new_organization_name?: string | null;
-    organization_role?: string | null;
-    capabilities?: Record<string, boolean>;
-  };
+// Whitelists alineadas con los enums de BD (FEAT-035, 2026-05-29).
+const VALID_MEMBER_ROLES = new Set(["admin", "editor", "creator", "vera_user", "viewer"]);
+const VALID_DEV_ROLES    = new Set(["lead", "senior", "contributor", "viewer"]);
+const VALID_DEV_RANKS    = new Set(["rookie", "junior", "builder", "expert", "master", "legend"]);
+
+interface Step4MemberOrg {
+  organization_id: string;
+  role?: string;
 }
 
-// Whitelist de capabilities válidas. Mantener en sync con js/utils/capabilities.js.
-const VALID_CAPABILITIES = new Set([
-  "studio.create", "video.create", "production.create", "references.manage",
-  "vera.chat", "vera.actions.approve",
-  "brand.identity.edit", "brand.storage.manage", "monitoring.view",
-  "insights.view",
-  "org.team.manage", "org.integrations.manage", "org.billing.manage", "org.settings.edit",
-]);
+interface Step4OwnerOrg {
+  name: string;
+  brand_name_oficial?: string | null;
+  brand_slogan?: string | null;
+  logo_url?: string | null;
+}
 
-const VALID_ROLES = new Set(["owner", "admin", "editor", "creator", "vera_user", "viewer"]);
+interface Step4Developer {
+  dev_role: string;
+  dev_rank: string;
+}
 
-function sanitizeCapabilities(input: Record<string, boolean> | undefined): Record<string, boolean> {
-  const out: Record<string, boolean> = {};
-  if (!input) return out;
-  for (const key of VALID_CAPABILITIES) {
-    out[key] = input[key] === true;
-  }
-  return out;
+interface Payload {
+  job_id: string;
+  user_type: "member_org" | "owner_org" | "developer";
+  member_org?: Step4MemberOrg;
+  owner_org?: Step4OwnerOrg;
+  developer?: Step4Developer;
 }
 
 Deno.serve(async (req) => {
@@ -54,99 +47,130 @@ Deno.serve(async (req) => {
 
   try {
     const { userId: leadId, service } = await requireLead(req);
-    const { job_id } = await req.json();
-    if (!job_id) return errorResponse("job_id is required", 400);
+    const body = (await req.json()) as Payload;
+
+    if (!body?.job_id) return errorResponse("job_id is required", 400);
+    if (!body?.user_type) return errorResponse("user_type is required", 400);
+    if (!["member_org", "owner_org", "developer"].includes(body.user_type)) {
+      return errorResponse(`user_type invalido: ${body.user_type}`, 400);
+    }
 
     const { data: job, error: jobErr } = await service
       .from("provisioning_jobs")
       .select("id, auth_user_id, status, payload")
-      .eq("id", job_id)
+      .eq("id", body.job_id)
       .maybeSingle();
 
     if (jobErr) return errorResponse(jobErr.message, 500);
     if (!job) return errorResponse("job not found", 404);
     if (job.status !== "email_confirmed") {
       return errorResponse(
-        `job no está listo para finalizar (status=${job.status})`,
+        `job no esta listo para finalizar (status=${job.status})`,
         409,
       );
     }
     if (!job.auth_user_id) return errorResponse("auth_user_id missing", 500);
 
-    // Marcar 'finalizing' para evitar dobles ejecuciones.
+    // Marcar 'finalizing' para evitar dobles ejecuciones concurrentes.
     await service
       .from("provisioning_jobs")
       .update({ status: "finalizing" })
       .eq("id", job.id);
 
-    const payload = job.payload as JobPayload;
-    const account = payload?.account ?? ({} as JobPayload["account"]);
-    const org = payload?.organization ?? { mode: "none" };
+    // Datos del step 2 (account) viven en job.payload.
+    const account = (job.payload?.account ?? {}) as {
+      full_name?: string;
+      email?: string;
+    };
 
     try {
-      // 1) Profile (upsert por si ya existe).
+      const isDev = body.user_type === "developer";
+
+      // Validaciones step 4 por tipo
+      let validDevRole: string | null = null;
+      let validDevRank: string | null = null;
+      if (isDev) {
+        const dr = body.developer?.dev_role;
+        const dk = body.developer?.dev_rank;
+        if (!dr || !VALID_DEV_ROLES.has(dr)) {
+          throw new Error(`developer.dev_role invalido: ${dr}`);
+        }
+        if (!dk || !VALID_DEV_RANKS.has(dk)) {
+          throw new Error(`developer.dev_rank invalido: ${dk}`);
+        }
+        validDevRole = dr;
+        validDevRank = dk;
+      }
+
+      // 1) profile upsert con campos derivados de user_type
       const profileRow = {
         id: job.auth_user_id,
         email: account.email,
         full_name: account.full_name ?? null,
-        role: account.role || "user",
-        default_view_mode: account.default_view_mode || "user",
-        is_developer: !!account.is_developer || account.dev_role === "lead" || account.dev_role === "contributor",
-        dev_role: account.dev_role || null,
+        role: isDev ? "dev" : "user",
+        default_view_mode: isDev ? "developer" : "user",
+        is_developer: isDev,
+        dev_role: validDevRole,
+        dev_rank: validDevRank,
       };
 
-      const { error: profileErr } = await service
+      const { error: profErr } = await service
         .from("profiles")
         .upsert(profileRow, { onConflict: "id" });
-      if (profileErr) throw new Error(`profiles upsert: ${profileErr.message}`);
+      if (profErr) throw new Error(`profiles upsert: ${profErr.message}`);
 
-      // 2) Organización.
+      // 2) Acciones especificas por tipo
       let organizationId: string | null = null;
 
-      if (org.mode === "create" && org.new_organization_name) {
+      if (body.user_type === "member_org") {
+        const orgId = body.member_org?.organization_id;
+        if (!orgId) throw new Error("member_org.organization_id requerido");
+
+        const rawRole = (body.member_org?.role || "viewer").toLowerCase();
+        const memberRole = VALID_MEMBER_ROLES.has(rawRole) ? rawRole : "viewer";
+
+        const { error } = await service
+          .from("organization_members")
+          .upsert({
+            organization_id: orgId,
+            user_id: job.auth_user_id,
+            role: memberRole,
+          }, { onConflict: "organization_id,user_id" });
+        if (error) throw new Error(`organization_members upsert: ${error.message}`);
+
+        organizationId = orgId;
+      } else if (body.user_type === "owner_org") {
+        const name = (body.owner_org?.name || "").trim();
+        if (!name) throw new Error("owner_org.name requerido");
+
         const { data: newOrg, error: orgErr } = await service
           .from("organizations")
           .insert({
-            name: org.new_organization_name.trim(),
+            name,
             owner_user_id: job.auth_user_id,
+            brand_name_oficial: body.owner_org?.brand_name_oficial?.trim() || null,
+            brand_slogan: body.owner_org?.brand_slogan?.trim() || null,
+            logo_url: body.owner_org?.logo_url?.trim() || null,
           })
           .select("id")
           .single();
         if (orgErr || !newOrg) {
-          throw new Error(`org insert: ${orgErr?.message ?? "unknown"}`);
+          throw new Error(`organizations insert: ${orgErr?.message ?? "unknown"}`);
         }
         organizationId = newOrg.id;
-      } else if (org.mode === "existing" && org.organization_id) {
-        organizationId = org.organization_id;
-      }
 
-      // 3) Membership (si aplica).
-      if (organizationId) {
-        const rawRole = (org.organization_role || "viewer").toLowerCase();
-        // Si crea la org, el usuario se vuelve owner por organizations.owner_user_id;
-        // organization_members.role se setea a 'admin' como fallback (owner es implícito por la FK).
-        const memberRole =
-          org.mode === "create"
-            ? "admin"
-            : (VALID_ROLES.has(rawRole) ? rawRole : "viewer");
-
-        const capabilities = sanitizeCapabilities(org.capabilities);
-
-        const { error: memberErr } = await service
+        const { error: memErr } = await service
           .from("organization_members")
-          .upsert(
-            {
-              organization_id: organizationId,
-              user_id: job.auth_user_id,
-              role: memberRole,
-              permissions: capabilities,
-            },
-            { onConflict: "organization_id,user_id" },
-          );
-        if (memberErr) throw new Error(`member upsert: ${memberErr.message}`);
+          .insert({
+            organization_id: newOrg.id,
+            user_id: job.auth_user_id,
+            role: "owner",
+          });
+        if (memErr) throw new Error(`owner member insert: ${memErr.message}`);
       }
+      // developer: no requiere org_member ni organization insert
 
-      // 4) Cerrar job.
+      // 3) Cerrar job
       const { error: doneErr } = await service
         .from("provisioning_jobs")
         .update({
@@ -162,13 +186,17 @@ Deno.serve(async (req) => {
         job_id: job.id,
         auth_user_id: job.auth_user_id,
         organization_id: organizationId,
+        user_type: body.user_type,
         status: "completed",
         finalized_by: leadId,
       });
     } catch (innerError) {
       await service
         .from("provisioning_jobs")
-        .update({ status: "failed", error: (innerError as Error).message })
+        .update({
+          status: "failed",
+          error: (innerError as Error).message,
+        })
         .eq("id", job.id);
       return errorResponse((innerError as Error).message, 500);
     }
