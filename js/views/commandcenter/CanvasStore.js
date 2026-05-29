@@ -1387,24 +1387,9 @@
       }
     });
 
-    // Confirmar SOLO si hay BD destructivo (audiencias / campanas concept / stickies / groups)
-    if (bdItems.length || stickyItems.length || groupItems.length) {
-      const audCount    = bdItems.filter((x) => x.type === 'audience').length;
-      const campCount   = bdItems.filter((x) => x.type === 'campaign-concept').length;
-      const stickyCount = stickyItems.length;
-      const groupCount  = groupItems.length;
-      const parts = [];
-      if (audCount)    parts.push(`${audCount} audiencia${audCount > 1 ? 's' : ''}`);
-      if (campCount)   parts.push(`${campCount} campana${campCount > 1 ? 's' : ''} conceptual${campCount > 1 ? 'es' : ''}`);
-      if (stickyCount) parts.push(`${stickyCount} nota${stickyCount > 1 ? 's' : ''}`);
-      if (groupCount)  parts.push(`${groupCount} grupo${groupCount > 1 ? 's' : ''}`);
-      const bdSummary = parts.length ? parts.join(' y ') + ' permanentemente' : '';
-      const canvasSummary = canvasItems.length
-        ? `${bdSummary ? ' y ' : ''}quitar ${canvasItems.length} nodo${canvasItems.length > 1 ? 's' : ''} mas del lienzo`
-        : '';
-      const msg = `Vas a eliminar ${bdSummary}${canvasSummary}. ¿Continuar?`;
-      if (!window.confirm(msg)) return;
-    }
+    // Sin confirm: borrado directo (la seleccion es accion deliberada del usuario,
+    // Cmd+Z cubre los items canvas-only; BD destructivo es responsabilidad
+    // explicita del Del/Backspace).
 
     // Canvas-only primero (sincrono / instant)
     canvasItems.forEach((item) => {

@@ -652,12 +652,11 @@
         .eq('id', campaignId);
       if (error) throw error;
     } catch (e) {
-      console.error('CommandCenter connect:', e);
+      console.error('CommandCenter connect:', e?.message || e);
       c.persona_id = prev;              // rollback
       this._renderCanvas();
       this._renderMiniDash();
       this._renderCampaigns();
-      window.alert(`No se pudo vincular: ${e?.message || 'error desconocido'}`);
     }
   };
 
@@ -676,12 +675,11 @@
         .eq('id', campaignId);
       if (error) throw error;
     } catch (e) {
-      console.error('CommandCenter disconnect:', e);
+      console.error('CommandCenter disconnect:', e?.message || e);
       c.persona_id = prev;              // rollback
       this._renderCanvas();
       this._renderMiniDash();
       this._renderCampaigns();
-      window.alert(`No se pudo desvincular: ${e?.message || 'error desconocido'}`);
     }
   };
 
@@ -1835,13 +1833,13 @@
     // Resolver seleccion para los scopes que la requieren.
     let selected = null;
     if (scope === 'campaign') {
-      if (!this._selected || !String(this._selected.type).startsWith('campaign')) { window.alert('Selecciona una campana en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      if (!this._selected || !String(this._selected.type).startsWith('campaign')) { console.warn('[CC] generar informe: requiere campana seleccionada'); return; }
       selected = { type: this._selected.type, id: this._selected.id };
     } else if (scope === 'audience') {
-      if (!this._selected || this._selected.type !== 'audience') { window.alert('Selecciona una audiencia en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      if (!this._selected || this._selected.type !== 'audience') { console.warn('[CC] generar informe: requiere audiencia seleccionada'); return; }
       selected = { type: 'audience', id: this._selected.id };
     } else if (scope === 'selection') {
-      if (!this._selected) { window.alert('Selecciona un elemento en el canvas (haz click en su nodo) y vuelve a intentar.'); return; }
+      if (!this._selected) { console.warn('[CC] generar informe: requiere seleccion'); return; }
       selected = { type: this._selected.type, id: this._selected.id };
     }
 

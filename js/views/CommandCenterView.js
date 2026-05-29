@@ -470,7 +470,7 @@ class CommandCenterView extends BaseView {
       });
       if (!res.ok) {
         const err = await res.text().catch(() => '');
-        alert(`No se pudo aprobar: ${err.slice(0, 120)}`);
+        console.error('approve action failed:', err.slice(0, 200));
         return;
       }
       // Quitar localmente y re-renderizar
@@ -483,7 +483,7 @@ class CommandCenterView extends BaseView {
 
   async _rejectPendingAction(actionId) {
     if (!actionId) return;
-    const reason = window.prompt('¿Por qué descartas esta sugerencia? (opcional)') || '';
+    // Sin prompt de razon (UX silenciosa). Reason vacio.
     try {
       const { data: { session } } = await this._supabase.auth.getSession();
       const token = session?.access_token;
@@ -492,11 +492,11 @@ class CommandCenterView extends BaseView {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: '' }),
       });
       if (!res.ok) {
         const err = await res.text().catch(() => '');
-        alert(`No se pudo descartar: ${err.slice(0, 120)}`);
+        console.error('reject action failed:', err.slice(0, 200));
         return;
       }
       this._pendingActions = this._pendingActions.filter((a) => a.id !== actionId);
@@ -817,8 +817,7 @@ class CommandCenterView extends BaseView {
       // El nodo queda creado con nombre por defecto. El flujo de edicion
       // (renombrar / completar campos) se definira aparte.
     } catch (e) {
-      console.error('CommandCenterView create:', e);
-      window.alert(`No se pudo crear: ${e?.message || 'error desconocido'}`);
+      console.error('CommandCenterView create:', e?.message || e);
     }
   }
 
@@ -831,19 +830,9 @@ class CommandCenterView extends BaseView {
     const isAudience = entityType === 'audience';
     const isConcept  = entityType === 'campaign-concept';
 
-    let warning;
-    if (isAudience) {
-      const linkedCount = (this._campaigns || []).filter(c => String(c.persona_id) === String(entityId)).length;
-      warning = `¿Eliminar esta audiencia?\n\nADVERTENCIA: ${linkedCount > 0
-        ? `${linkedCount} campaña${linkedCount === 1 ? '' : 's'} quedarán sin mercado objetivo y la IA no podrá cerrar el circuito con ellas.`
-        : 'No tiene campañas vinculadas, pero perderás el perfil completo (dolores, deseos, objeciones, gatillos).'}\n\nEsta acción no se puede deshacer.`;
-    } else if (isConcept) {
-      warning = '¿Eliminar esta campaña conceptual?\n\nADVERTENCIA: Se perderá el plan, sus vínculos con la audiencia y cualquier configuración de presupuesto y objetivos.\n\nEsta acción no se puede deshacer.';
-    } else {
-      return;
-    }
+    if (!isAudience && !isConcept) return;
 
-    if (!window.confirm(warning)) return;
+    // Sin confirm: borrado directo (la accion viene del trash button = intent claro)
 
     // Deshabilita el botón mientras se procesa
     const btn = cardEl?.querySelector('.cc-gallery-delete-btn');
@@ -867,8 +856,7 @@ class CommandCenterView extends BaseView {
       this._renderCanvas();
       this._renderMiniDash();
     } catch (e) {
-      console.error('CommandCenterView delete:', e);
-      window.alert(`No se pudo eliminar: ${e?.message || 'error desconocido'}`);
+      console.error('CommandCenterView delete:', e?.message || e);
       if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     }
   }
