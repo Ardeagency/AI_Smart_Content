@@ -1385,6 +1385,13 @@ class Navigation {
           <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Credits</span>
         </a>
+        ${window.SwitchUserController?.hasImpersonation?.() ? `
+        <div class="user-dropdown-divider"></div>
+        <button class="user-dropdown-item user-dropdown-item--accent" id="returnLeadBtn">
+          <i class="fas fa-arrow-left"></i>
+          <span>Volver a mi cuenta de Lead</span>
+        </button>
+        ` : ''}
         ${window.SwitchUserController?.isLead?.() ? `
         <div class="user-dropdown-divider"></div>
         <button class="user-dropdown-item" id="switchUserBtn">
@@ -2122,8 +2129,13 @@ class Navigation {
       });
     }
 
-    // Banner de impersonacion: render si hay sesion guardada en localStorage
-    window.SwitchUserController?.setupBanner?.();
+    // Volver a cuenta de Lead (visible solo si hay impersonacion activa)
+    const returnLeadBtn = document.getElementById('returnLeadBtn');
+    if (returnLeadBtn) {
+      returnLeadBtn.addEventListener('click', () => {
+        window.SwitchUserController?.returnToLead?.();
+      });
+    }
 
     // Settings en modal (no navegación de ruta)
     const settingsBtn = document.getElementById('userDropdownSettingsLink');

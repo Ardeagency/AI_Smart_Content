@@ -206,49 +206,17 @@
     }
   }
 
-  // ─── Banner + return ───────────────────────────────────────────────────
-
-  function setupBanner() {
-    if (!hasImpersonation()) {
-      removeBanner();
-      return;
-    }
+  // ─── Return a la cuenta del lead ───────────────────────────────────────
+  // Self-cleanup: si por alguna razon la sesion activa ya es la del lead
+  // (ej. usuario volvio via login normal), limpia el origin guardado.
+  function autoCleanup() {
+    if (!hasImpersonation()) return;
     const me = window.authService?.currentUser;
     if (!me) return;
     const origin = readOrigin();
-    if (!origin) return;
-    // Si la sesion activa es la del lead (volvio), limpiar
-    if (origin.lead?.id === me.id) {
+    if (origin && origin.lead?.id === me.id) {
       clearOrigin();
-      removeBanner();
-      return;
     }
-
-    let banner = document.getElementById('switchUserBanner');
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.id = 'switchUserBanner';
-      banner.className = 'switchuser-banner';
-      document.body.prepend(banner);
-    }
-    banner.innerHTML = `
-      <span class="switchuser-banner-text">
-        <i class="fas fa-eye"></i>
-        Viendo como <strong>${escapeHtml(me.full_name || me.email)}</strong>.
-        Tu cuenta de Lead (${escapeHtml(origin.lead?.email || '')}) esta guardada.
-      </span>
-      <button type="button" class="switchuser-banner-btn" id="switchUserBannerBtn">
-        <i class="fas fa-arrow-left"></i> Volver a mi cuenta
-      </button>
-    `;
-    document.body.classList.add('has-switchuser-banner');
-    document.getElementById('switchUserBannerBtn')
-      ?.addEventListener('click', returnToLead);
-  }
-
-  function removeBanner() {
-    document.getElementById('switchUserBanner')?.remove();
-    document.body.classList.remove('has-switchuser-banner');
   }
 
   async function returnToLead() {
@@ -276,10 +244,6 @@
       window.location.href = '/dev/dashboard';
     } catch (err) {
       showToast(`Error al volver: ${err.message}`, 'error');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-arrow-left"></i> Volver a mi cuenta';
-      }
     }
   }
 
@@ -296,10 +260,14 @@
 
   // ─── Export ────────────────────────────────────────────────────────────
 
+  // Cleanup on load: si la sesion ya es la del lead, drop el origin
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', autoCleanup);
+  }
+
   window.SwitchUserController = {
     open,
     close,
-    setupBanner,
     returnToLead,
     isLead,
     hasImpersonation

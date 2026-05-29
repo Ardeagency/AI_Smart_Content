@@ -13917,59 +13917,21 @@
 }
 
 /* ============================================================
-   SwitchUserController — modal de impersonacion + banner sticky
+   SwitchUserController — modal de impersonacion
    ============================================================ */
 
-/* ── Banner sticky (cuando hay impersonacion activa) ── */
-.switchuser-banner {
-  position: sticky;
-  top: 0;
-  z-index: 1500;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  padding: 10px 18px;
-  background: linear-gradient(90deg, #b35900, #e07b00);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+/* Item destacado en el dropdown del header: 'Volver a mi cuenta de Lead'
+   visible solo cuando hay sesion guardada de un lead impersonando. */
+.user-dropdown-item--accent {
+  color: #e07b00 !important;
 }
-
-.switchuser-banner-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
+.user-dropdown-item--accent:hover {
+  background: rgba(224, 123, 0, 0.1) !important;
+  color: #e07b00 !important;
 }
-
-.switchuser-banner-text strong {
-  font-weight: 700;
+.user-dropdown-item--accent i {
+  color: #e07b00;
 }
-
-.switchuser-banner-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  color: #fff;
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-.switchuser-banner-btn:hover { background: rgba(0, 0, 0, 0.5); }
-.switchuser-banner-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* Empuja la app debajo del banner */
-body.has-switchuser-banner .app-header,
-body.has-switchuser-banner #app-container { margin-top: 0; }
 
 /* ── Modal overlay ── */
 .switchuser-modal-overlay {
