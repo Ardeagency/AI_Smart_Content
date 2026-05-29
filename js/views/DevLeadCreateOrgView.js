@@ -29,17 +29,31 @@ class DevLeadCreateOrgView extends DevBaseView {
       slogan: '',
       logo_file: null,
       logo_preview: '',
-      // Step 2 - Metodo + datos
+      // Step 2 - Metodo + region (region solo si manual; URL/docs lo detecta scraper)
       method: '',                // 'manual' | 'url' | 'docs'
       brand_url: '',             // si method=url
       brand_docs: [],            // si method=docs
-      description: '',           // si method=manual
-      tone_of_voice: '',
-      primary_color: '#000000',
-      secondary_color: '#ffffff',
-      // Step 3 - Operacion
       timezone: 'America/Bogota',
       locale: 'es',
+      idiomas_contenido: [],     // text[]: ['es','en']
+      mercado_objetivo: [],      // text[]: ['CO','MX']
+      // Step 3 - Detalles de marca (solo si method=manual)
+      // Verbal
+      tone_of_voice: '',
+      tagline: '',
+      pilares: [],               // text[]
+      palabras_clave: [],        // text[]
+      palabras_prohibidas: [],   // text[]
+      propuesta_valor: '',       // text
+      mision_vision: '',         // text
+      // Visual
+      primary_color: '#000000',
+      secondary_color: '#ffffff',
+      typography_primary: '',
+      typography_secondary: '',
+      estetica: '',              // text
+      temas: [],                 // text[] (sub_nichos)
+      // Step 4 - Operacion
       level_of_autonomy: 'parcial',
       mfa_required: false
     };
@@ -49,12 +63,21 @@ class DevLeadCreateOrgView extends DevBaseView {
     await super.onEnter({ requireLead: true });
   }
 
-  STEPS = [
-    { key: 'identidad', label: 'Identidad' },
-    { key: 'metodo',    label: 'Metodo' },
-    { key: 'operacion', label: 'Operacion' },
-    { key: 'revisar',   label: 'Revisar' }
-  ];
+  // Steps activos dependen de method: si manual hay un step extra 'brand'
+  getActiveSteps() {
+    const out = [
+      { key: 'identidad', label: 'Identidad' },
+      { key: 'metodo',    label: 'Metodo' }
+    ];
+    if (this.form.method === 'manual') {
+      out.push({ key: 'brand', label: 'Marca' });
+    }
+    out.push(
+      { key: 'operacion', label: 'Operacion' },
+      { key: 'revisar',   label: 'Revisar' }
+    );
+    return out;
+  }
 
   METHODS = [
     { v: 'manual', icon: 'fa-pen-to-square',   label: 'Manual',     hint: 'Lleno los datos a mano (descripcion, tono, paleta)' },
@@ -119,10 +142,11 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   renderProgress() {
-    const idx = this.STEPS.findIndex((s) => s.key === this.currentStep);
+    const steps = this.getActiveSteps();
+    const idx = steps.findIndex((s) => s.key === this.currentStep);
     return `
-      <ol class="provision-progress" style="--provision-step-count: ${this.STEPS.length}" aria-label="Progreso del flujo">
-        ${this.STEPS.map((s, i) => {
+      <ol class="provision-progress" style="--provision-step-count: ${steps.length}" aria-label="Progreso del flujo">
+        ${steps.map((s, i) => {
           let state;
           if (i < idx) state = 'is-done';
           else if (i === idx) state = 'is-current';
@@ -146,6 +170,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     switch (this.currentStep) {
       case 'identidad': return this.renderStepIdentidad();
       case 'metodo':    return this.renderStepMetodo();
+      case 'brand':     return this.renderStepBrand();
       case 'operacion': return this.renderStepOperacion();
       case 'revisar':   return this.renderStepRevisar();
       default:          return '';
@@ -260,32 +285,127 @@ class DevLeadCreateOrgView extends DevBaseView {
     const f = this.form;
     return `
       <form id="createOrgManualForm" class="createorg-form-grid" novalidate>
-        <div class="provision-field createorg-field-full">
-          <label for="orgDescription">Descripcion</label>
-          <textarea id="orgDescription" name="description" rows="3" placeholder="A que se dedica la marca, mision, propuesta de valor.">${this.escapeHtml(f.description)}</textarea>
-        </div>
+        <h4 class="createorg-subhead createorg-field-full" style="margin-top:0">Region y mercado</h4>
         <div class="provision-field">
-          <label for="orgTone">Tono de voz</label>
-          <select id="orgTone" name="tone_of_voice">
-            ${this.TONES.map((t) =>
-              `<option value="${t.v}" ${t.v === f.tone_of_voice ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`
+          <label for="orgTimezone">Zona horaria</label>
+          <select id="orgTimezone" name="timezone" required>
+            ${this.TIMEZONES.map((tz) =>
+              `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${this.escapeHtml(tz)}</option>`
             ).join('')}
           </select>
         </div>
         <div class="provision-field">
-          <label>Paleta de colores</label>
-          <div class="createorg-palette-row">
-            <label class="createorg-color-chip">
-              <input id="orgPrimaryColor" type="color" value="${this.escapeHtml(f.primary_color)}">
-              <span class="createorg-color-label">Primario</span>
-            </label>
-            <label class="createorg-color-chip">
-              <input id="orgSecondaryColor" type="color" value="${this.escapeHtml(f.secondary_color)}">
-              <span class="createorg-color-label">Secundario</span>
-            </label>
-          </div>
+          <label for="orgLocale">Idioma principal</label>
+          <select id="orgLocale" name="locale" required>
+            ${this.LOCALES.map((l) =>
+              `<option value="${l.v}" ${l.v === f.locale ? 'selected' : ''}>${this.escapeHtml(l.label)}</option>`
+            ).join('')}
+          </select>
         </div>
+        <div class="provision-field createorg-field-full">
+          <label for="orgIdiomasContenido">Idiomas de contenido</label>
+          <input id="orgIdiomasContenido" name="idiomas_contenido" type="text" placeholder="es, en, pt" value="${this.escapeHtml((f.idiomas_contenido || []).join(', '))}">
+          <small>Codigos ISO separados por coma. Si no aplica, deja vacio.</small>
+        </div>
+        <div class="provision-field createorg-field-full">
+          <label for="orgMercado">Mercados objetivo</label>
+          <input id="orgMercado" name="mercado_objetivo" type="text" placeholder="CO, MX, US" value="${this.escapeHtml((f.mercado_objetivo || []).join(', '))}">
+          <small>Codigos ISO de pais separados por coma.</small>
+        </div>
+        <p class="createorg-method-hint createorg-field-full" style="margin-top:6px">
+          <i class="fas fa-circle-info"></i>
+          En el siguiente paso configuras todos los detalles de la marca (colores, tipografia, tono, temas, palabras).
+        </p>
       </form>
+    `;
+  }
+
+  renderStepBrand() {
+    const f = this.form;
+    return `
+      <section class="provision-form-card createorg-card-wide">
+        <header class="provision-form-head">
+          <span class="provision-form-eyebrow">Paso 3 · Marca</span>
+          <h2>Detalles del brand container</h2>
+          <p>Llena lo que sepas. El resto se completa luego desde Brand. Los campos siguen el JSON model de verbal_dna + visual_dna.</p>
+        </header>
+
+        <form id="createOrgBrandForm" class="createorg-form-grid" novalidate>
+          <h4 class="createorg-subhead createorg-field-full" style="margin-top:0">Verbal</h4>
+          <div class="provision-field">
+            <label for="brandTone">Tono de voz</label>
+            <select id="brandTone" name="tone_of_voice">
+              ${this.TONES.map((t) =>
+                `<option value="${t.v}" ${t.v === f.tone_of_voice ? 'selected' : ''}>${this.escapeHtml(t.label)}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="provision-field">
+            <label for="brandTagline">Tagline</label>
+            <input id="brandTagline" name="tagline" type="text" placeholder="Frase corta de marca" maxlength="200" value="${this.escapeHtml(f.tagline)}">
+          </div>
+          <div class="provision-field createorg-field-full">
+            <label for="brandPilares">Pilares de marca</label>
+            <input id="brandPilares" name="pilares" type="text" placeholder="autenticidad, innovacion, comunidad" value="${this.escapeHtml((f.pilares || []).join(', '))}">
+            <small>Separados por coma.</small>
+          </div>
+          <div class="provision-field">
+            <label for="brandPalabras">Palabras clave</label>
+            <input id="brandPalabras" name="palabras_clave" type="text" placeholder="sostenible, premium" value="${this.escapeHtml((f.palabras_clave || []).join(', '))}">
+          </div>
+          <div class="provision-field">
+            <label for="brandProhibidas">Palabras prohibidas</label>
+            <input id="brandProhibidas" name="palabras_prohibidas" type="text" placeholder="barato, mediocre" value="${this.escapeHtml((f.palabras_prohibidas || []).join(', '))}">
+          </div>
+          <div class="provision-field createorg-field-full">
+            <label for="brandValor">Propuesta de valor</label>
+            <textarea id="brandValor" name="propuesta_valor" rows="2" placeholder="Lo que la marca ofrece y por que importa">${this.escapeHtml(f.propuesta_valor)}</textarea>
+          </div>
+          <div class="provision-field createorg-field-full">
+            <label for="brandMision">Mision / vision</label>
+            <textarea id="brandMision" name="mision_vision" rows="2" placeholder="A donde va la marca a largo plazo">${this.escapeHtml(f.mision_vision)}</textarea>
+          </div>
+
+          <h4 class="createorg-subhead createorg-field-full">Visual</h4>
+          <div class="provision-field">
+            <label>Paleta de colores</label>
+            <div class="createorg-palette-row">
+              <label class="createorg-color-chip">
+                <input id="brandPrimary" type="color" value="${this.escapeHtml(f.primary_color)}">
+                <span class="createorg-color-label">Primario</span>
+              </label>
+              <label class="createorg-color-chip">
+                <input id="brandSecondary" type="color" value="${this.escapeHtml(f.secondary_color)}">
+                <span class="createorg-color-label">Secundario</span>
+              </label>
+            </div>
+          </div>
+          <div class="provision-field">
+            <label for="brandEstetica">Estetica</label>
+            <input id="brandEstetica" name="estetica" type="text" placeholder="minimalista, lujosa, retro..." maxlength="80" value="${this.escapeHtml(f.estetica)}">
+          </div>
+          <div class="provision-field">
+            <label for="brandTypoPrimary">Tipografia primaria</label>
+            <input id="brandTypoPrimary" name="typography_primary" type="text" placeholder="Inter, Helvetica, etc." value="${this.escapeHtml(f.typography_primary)}">
+          </div>
+          <div class="provision-field">
+            <label for="brandTypoSecondary">Tipografia secundaria</label>
+            <input id="brandTypoSecondary" name="typography_secondary" type="text" placeholder="Playfair, Georgia, etc." value="${this.escapeHtml(f.typography_secondary)}">
+          </div>
+          <div class="provision-field createorg-field-full">
+            <label for="brandTemas">Temas / sub-nichos</label>
+            <input id="brandTemas" name="temas" type="text" placeholder="moda, fitness, tech" value="${this.escapeHtml((f.temas || []).join(', '))}">
+            <small>Separados por coma.</small>
+          </div>
+        </form>
+      </section>
+
+      <footer class="provision-page-actions">
+        <button type="button" class="provision-back-btn" data-action="back">Back</button>
+        <button type="button" class="provision-next-btn" data-action="next" aria-label="Siguiente">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </footer>
     `;
   }
 
@@ -329,33 +449,15 @@ class DevLeadCreateOrgView extends DevBaseView {
 
   renderStepOperacion() {
     const f = this.form;
+    const isManual = f.method === 'manual';
+    const stepNum = isManual ? '4' : '3';
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 3 · Operacion</span>
-          <h2>Region, autonomia y seguridad</h2>
-          <p>Zona horaria + idioma de la org, cuanto puede actuar Vera sin aprobacion humana, y si MFA es obligatorio para entrar.</p>
+          <span class="provision-form-eyebrow">Paso ${stepNum} · Operacion</span>
+          <h2>Autonomia y seguridad</h2>
+          <p>Cuanto puede actuar Vera sin aprobacion humana, y si MFA es obligatorio para entrar a la org. ${isManual ? '' : 'La region (idioma, timezone) se autodetectara de la fuente.'}</p>
         </header>
-
-        <h3 class="createorg-subhead">Region</h3>
-        <div class="createorg-form-grid" style="margin-bottom: var(--spacing-md);">
-          <div class="provision-field">
-            <label for="orgTimezone">Zona horaria</label>
-            <select id="orgTimezone" name="timezone" required>
-              ${this.TIMEZONES.map((tz) =>
-                `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${this.escapeHtml(tz)}</option>`
-              ).join('')}
-            </select>
-          </div>
-          <div class="provision-field">
-            <label for="orgLocale">Idioma</label>
-            <select id="orgLocale" name="locale" required>
-              ${this.LOCALES.map((l) =>
-                `<option value="${l.v}" ${l.v === f.locale ? 'selected' : ''}>${this.escapeHtml(l.label)}</option>`
-              ).join('')}
-            </select>
-          </div>
-        </div>
 
         <h3 class="createorg-subhead">Nivel de autonomia</h3>
         <div class="createorg-autonomy" role="radiogroup" aria-label="Nivel de autonomia">
@@ -415,7 +517,7 @@ class DevLeadCreateOrgView extends DevBaseView {
     return `
       <section class="provision-form-card createorg-card-wide">
         <header class="provision-form-head">
-          <span class="provision-form-eyebrow">Paso 4 · Revisar</span>
+          <span class="provision-form-eyebrow">Paso ${this.form.method === 'manual' ? '5' : '4'} · Revisar</span>
           <h2>Confirmar y crear</h2>
           <p>Esto es lo que se va a crear. Si algo falta, regresa con Back.</p>
         </header>
@@ -438,19 +540,41 @@ class DevLeadCreateOrgView extends DevBaseView {
           <h3 class="createorg-subhead">Metodo brand_container</h3>
           <div class="createorg-review-grid">
             ${this.tile('Metodo', f.method ? (this.METHODS.find(m=>m.v===f.method)?.label || f.method) : 'Sin elegir')}
-            ${f.method === 'url' ? this.tile('URL fuente', f.brand_url || '—') : ''}
+            ${f.method === 'url'  ? this.tile('URL fuente', f.brand_url || '—') : ''}
             ${f.method === 'docs' ? this.tile('Archivos', `${f.brand_docs.length} archivo(s)`) : ''}
-            ${f.method === 'manual' ? this.tile('Tono', f.tone_of_voice || '—') : ''}
-            ${f.method === 'manual' ? this.tile('Paleta', `${f.primary_color} · ${f.secondary_color}`) : ''}
-            ${f.method === 'manual' ? this.tile('Descripcion', f.description ? (f.description.slice(0,60) + (f.description.length > 60 ? '...' : '')) : '—') : ''}
+            ${f.method === 'manual' ? this.tile('Zona horaria', f.timezone) : ''}
+            ${f.method === 'manual' ? this.tile('Idioma principal', this.LOCALES.find(l=>l.v===f.locale)?.label || f.locale) : ''}
+            ${f.method === 'manual' ? this.tile('Idiomas contenido', (f.idiomas_contenido||[]).join(', ') || '—') : ''}
+            ${f.method === 'manual' ? this.tile('Mercados', (f.mercado_objetivo||[]).join(', ') || '—') : ''}
           </div>
         </div>
+
+        ${f.method === 'manual' ? `
+        <div class="createorg-review-section">
+          <h3 class="createorg-subhead">Marca (verbal)</h3>
+          <div class="createorg-review-grid">
+            ${this.tile('Tono', f.tone_of_voice || '—')}
+            ${this.tile('Tagline', f.tagline || '—')}
+            ${this.tile('Pilares', (f.pilares||[]).join(', ') || '—')}
+            ${this.tile('Palabras clave', (f.palabras_clave||[]).join(', ') || '—')}
+            ${this.tile('Palabras prohibidas', (f.palabras_prohibidas||[]).join(', ') || '—')}
+            ${this.tile('Propuesta valor', f.propuesta_valor ? (f.propuesta_valor.slice(0,60) + (f.propuesta_valor.length>60?'...':'')) : '—')}
+          </div>
+        </div>
+        <div class="createorg-review-section">
+          <h3 class="createorg-subhead">Marca (visual)</h3>
+          <div class="createorg-review-grid">
+            ${this.tile('Paleta', `${f.primary_color} · ${f.secondary_color}`)}
+            ${this.tile('Estetica', f.estetica || '—')}
+            ${this.tile('Tipografia 1', f.typography_primary || '—')}
+            ${this.tile('Tipografia 2', f.typography_secondary || '—')}
+            ${this.tile('Temas', (f.temas||[]).join(', ') || '—')}
+          </div>
+        </div>` : ''}
 
         <div class="createorg-review-section">
           <h3 class="createorg-subhead">Operacion</h3>
           <div class="createorg-review-grid">
-            ${this.tile('Zona horaria', f.timezone)}
-            ${this.tile('Idioma', this.LOCALES.find(l=>l.v===f.locale)?.label || f.locale)}
             ${this.tile('Autonomia', f.level_of_autonomy)}
             ${this.tile('MFA', f.mfa_required ? 'Obligatorio' : 'Opcional')}
           </div>
@@ -541,11 +665,8 @@ class DevLeadCreateOrgView extends DevBaseView {
     });
     this.wireMethodFormInputs();
 
-    // Step 3 - Operacion: region selects
-    ['orgTimezone', 'orgLocale'].forEach((id) => {
-      const el = this.container.querySelector('#' + id);
-      if (el) this.addEventListener(el, 'change', () => this.syncForm());
-    });
+    // Step 3 - Brand details (solo si manual)
+    if (this.currentStep === 'brand') this.wireBrandStepInputs();
 
     // Logo circle (single file)
     const logoInput = this.container.querySelector('#orgLogoFile');
@@ -583,28 +704,40 @@ class DevLeadCreateOrgView extends DevBaseView {
   syncForm() {
     const f = this.form;
     const get = (id) => (this.container.querySelector('#' + id)?.value || '').trim();
+    const csv = (s) => s.split(',').map((x) => x.trim()).filter(Boolean);
     if (this.currentStep === 'identidad') {
       f.name = get('orgName');
       f.slogan = get('orgSlogan');
     }
     if (this.currentStep === 'metodo') {
-      // method radio
       const radio = this.container.querySelector('input[name="method"]:checked');
       f.method = radio?.value || '';
-      // dynamic form fields
       if (f.method === 'manual') {
-        f.description = this.container.querySelector('#orgDescription')?.value || '';
-        f.tone_of_voice = get('orgTone');
-        f.primary_color = get('orgPrimaryColor') || '#000000';
-        f.secondary_color = get('orgSecondaryColor') || '#ffffff';
+        f.timezone = get('orgTimezone') || 'UTC';
+        f.locale = get('orgLocale') || 'es';
+        f.idiomas_contenido = csv(get('orgIdiomasContenido'));
+        f.mercado_objetivo = csv(get('orgMercado'));
       }
       if (f.method === 'url') {
         f.brand_url = get('orgBrandUrl');
       }
     }
+    if (this.currentStep === 'brand') {
+      f.tone_of_voice = get('brandTone');
+      f.tagline = get('brandTagline');
+      f.pilares = csv(get('brandPilares'));
+      f.palabras_clave = csv(get('brandPalabras'));
+      f.palabras_prohibidas = csv(get('brandProhibidas'));
+      f.propuesta_valor = this.container.querySelector('#brandValor')?.value || '';
+      f.mision_vision = this.container.querySelector('#brandMision')?.value || '';
+      f.primary_color = get('brandPrimary') || '#000000';
+      f.secondary_color = get('brandSecondary') || '#ffffff';
+      f.estetica = get('brandEstetica');
+      f.typography_primary = get('brandTypoPrimary');
+      f.typography_secondary = get('brandTypoSecondary');
+      f.temas = csv(get('brandTemas'));
+    }
     if (this.currentStep === 'operacion') {
-      f.timezone = get('orgTimezone') || 'UTC';
-      f.locale = get('orgLocale') || 'es';
       const radio = this.container.querySelector('input[name="level_of_autonomy"]:checked');
       f.level_of_autonomy = radio?.value || 'parcial';
       f.mfa_required = !!this.container.querySelector('#orgMfaRequired')?.checked;
@@ -627,12 +760,14 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   wireMethodFormInputs() {
-    // Manual: description (textarea), tone, palette
-    const desc = this.container.querySelector('#orgDescription');
-    if (desc) this.addEventListener(desc, 'input', () => this.syncForm());
-    ['orgTone', 'orgPrimaryColor', 'orgSecondaryColor'].forEach((id) => {
+    // Manual: region (timezone, locale) + idiomas + mercado
+    ['orgTimezone', 'orgLocale'].forEach((id) => {
       const el = this.container.querySelector('#' + id);
       if (el) this.addEventListener(el, 'change', () => this.syncForm());
+    });
+    ['orgIdiomasContenido', 'orgMercado'].forEach((id) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) this.addEventListener(el, 'input', () => this.syncForm());
     });
     // URL: brand_url
     const url = this.container.querySelector('#orgBrandUrl');
@@ -643,6 +778,18 @@ class DevLeadCreateOrgView extends DevBaseView {
       this.addEventListener(docsInput, 'change', (e) => this.handleFiles(e));
       this.renderFiles();
     }
+  }
+
+  wireBrandStepInputs() {
+    // Step 3 - Brand details
+    ['brandTagline', 'brandPilares', 'brandPalabras', 'brandProhibidas', 'brandValor', 'brandMision', 'brandEstetica', 'brandTypoPrimary', 'brandTypoSecondary', 'brandTemas'].forEach((id) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) this.addEventListener(el, 'input', () => this.syncForm());
+    });
+    ['brandTone', 'brandPrimary', 'brandSecondary'].forEach((id) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) this.addEventListener(el, 'change', () => this.syncForm());
+    });
   }
 
   handleLogoFile(e) {
@@ -742,26 +889,28 @@ class DevLeadCreateOrgView extends DevBaseView {
   }
 
   handleBack() {
-    const idx = this.STEPS.findIndex((s) => s.key === this.currentStep);
+    const steps = this.getActiveSteps();
+    const idx = steps.findIndex((s) => s.key === this.currentStep);
     if (idx <= 0) {
       // Primer paso → volver al wizard de provisioning
       if (window.router) window.router.navigate('/dev/provisioning/users');
       else window.location.href = '/dev/provisioning/users';
       return;
     }
-    this.goToStep(this.STEPS[idx - 1].key);
+    this.goToStep(steps[idx - 1].key);
   }
 
   handleNext() {
-    const idx = this.STEPS.findIndex((s) => s.key === this.currentStep);
-    if (idx === this.STEPS.length - 1) return; // ultimo paso, sin next
+    const steps = this.getActiveSteps();
+    const idx = steps.findIndex((s) => s.key === this.currentStep);
+    if (idx === steps.length - 1) return; // ultimo paso, sin next
     const err = this.validateStep(this.currentStep);
     if (err) {
       this.setStatus(err, 'error');
       return;
     }
     this.setStatus('', '');
-    this.goToStep(this.STEPS[idx + 1].key);
+    this.goToStep(steps[idx + 1].key);
   }
 
   validateStep(key) {
