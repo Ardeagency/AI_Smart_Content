@@ -97,6 +97,11 @@
       };
       this.edges = { freeLinks: [] };
       this.viewport = { x: 0, y: 0, scale: 1 };
+      // F2-prep: estrategia activa (n8n-flow-like container). this.scope sigue
+      // siendo brand_container_id por compat de localStorage; this.strategyId
+      // es lo que filtra las queries BD de F1.6/F1.7/F1.10/F1.11.
+      this.strategyId = null;
+      this.strategy   = null;
       // Seleccion (F1.3 multi-select):
       //   selection        = {key, descriptor} | null   — primary
       //   selectionSet     = Set<key>                   — todos los seleccionados
@@ -375,6 +380,35 @@
       return true;
     }
 
+    /* ── Cambio de estrategia activa (F2-prep) ─────────────────────────── */
+    setStrategy(strategyId, strategy) {
+      const next = strategyId ? String(strategyId) : null;
+      if (next === this.strategyId) return false;
+      const prev = this.strategyId;
+      this.strategyId = next;
+      this.strategy = strategy || null;
+      // Cambio de estrategia → invalida estado canvas-derivado.
+      // Las refs (edges, etc.) las vuelve a hidratar el bridge desde BD.
+      this.edges.freeLinks.length = 0;
+      this.persistFreeLinks();
+      Object.keys(this.nodes.positions).forEach((k) => delete this.nodes.positions[k]);
+      this.persistPositions();
+      this.nodes.collapsed.clear();
+      this.nodes.onCanvas.clear();
+      this.persistOnCanvas();
+      this.nodes.placed.length = 0;
+      this.persistPlaced();
+      this.viewport.x = 0; this.viewport.y = 0; this.viewport.scale = 1;
+      this.selection = null;
+      this.selectionSet.clear();
+      this.selectionDescriptors.clear();
+      // Historial pertenece a la estrategia tambien
+      this.history.past.length = 0;
+      this.history.future.length = 0;
+      this._emitMutation('strategy-changed', { prev, next, strategy: this.strategy });
+      return true;
+    }
+
     /* ── Re-scope (cambio de brand_container) ─────────────────────────── */
     rescope(newScopeId) {
       const next = String(newScopeId || 'unknown');
@@ -390,6 +424,9 @@
       this.selection = null;
       this.selectionSet.clear();
       this.selectionDescriptors.clear();
+      // F2-prep: cambio de brand tambien tira estrategia activa
+      this.strategyId = null;
+      this.strategy = null;
       // Historial pertenece al scope; cambiar de marca tira undo/redo.
       this.history.past.length = 0;
       this.history.future.length = 0;
@@ -689,7 +726,24 @@
       this._ccViewHydratedFor = null;
       this._ccStickiesHydratedFor = null;
       this._ccGroupsHydratedFor = null;
+      this._ccStrategiesHydratedFor = null;
       // estado pertenece al scope anterior; resetear local caches
+      this._stickies = null;
+      this._groups = null;
+      this._strategies = null;
+      this._strategyId = null;
+      this._strategy = null;
+    }
+    // F2-prep: propagar la estrategia activa de la vista al store. Si la vista
+    // tiene un strategyId distinto al del store, el store se resetea (que
+    // dispara re-hydrate via los caches invalidados abajo).
+    if (this._strategyId && this._store.strategyId !== String(this._strategyId)) {
+      this._store.setStrategy(this._strategyId, this._strategy);
+      // todos los caches de hidratacion se atan a strategy_id ahora
+      this._ccRemoteHydratedFor = null;
+      this._ccViewHydratedFor = null;
+      this._ccStickiesHydratedFor = null;
+      this._ccGroupsHydratedFor = null;
       this._stickies = null;
       this._groups = null;
     }
@@ -1633,20 +1687,28 @@
       this._ensureStore();
       this._installCanvasShortcuts();
       this._installMultiSelect();
-      // F1.6: fire-and-forget hidratacion remota. Si la marca ya se hidrato
-      // antes en esta misma vista, _hydrateRemoteEdges se sale solo.
-      this._hydrateRemoteEdges();
-      // F1.7: hidrata viewport per-usuario despues del setup. Tambien idempotente.
-      this._hydrateRemoteView();
+      // F2-prep: ANTES de cualquier hydrate de canvas state, asegurar que
+      // la estrategia activa esta resuelta. Si es primera vez del brand,
+      // _hydrateStrategies trae la lista + setea this._strategyId a la default.
+      // Los demas hydrates leen this._strategyId, asi que esto debe ir primero.
+      this._hydrateStrategies().then(() => {
+        // F1.6: fire-and-forget hidratacion remota. Si la marca ya se hidrato
+        // antes en esta misma vista, _hydrateRemoteEdges se sale solo.
+        this._hydrateRemoteEdges();
+        // F1.7: hidrata viewport per-usuario despues del setup. Tambien idempotente.
+        this._hydrateRemoteView();
+        // F1.10: hidrata stickies + escucha edits en textareas
+        this._hydrateRemoteStickies();
+        // F1.11: hidrata groups + escucha edits del title input
+        this._hydrateRemoteGroups();
+      });
       // F1.8: search en sidebar (input+clear listeners en ccPanelBody)
       this._installLibSearch();
       // F1.9: context menu (right-click) sobre canvas
       this._installCanvasContextMenu();
-      // F1.10: hidrata stickies + escucha edits en textareas
-      this._hydrateRemoteStickies();
+      // F1.10: listener de texto en stickies (delegado, no depende de strategy)
       this._installStickyContentListener();
-      // F1.11: hidrata groups + escucha edits del title input
-      this._hydrateRemoteGroups();
+      // F1.11: listener de title de group (delegado, no depende de strategy)
       this._installGroupTitleListener();
       // F1.12: monta el side-panel inspector + render inicial
       this._installInspector();
@@ -1654,6 +1716,104 @@
       return r;
     };
   }
+
+  // ------------------------------------------------------------------
+  // F2-prep: gestion de estrategias (n8n-flow-like containers)
+  // ------------------------------------------------------------------
+
+  /**
+   * Trae la lista de estrategias del brand activo. Idempotente por brand
+   * via _ccStrategiesHydratedFor. Si no hay estrategias (brand nuevo),
+   * crea la default automaticamente. Setea this._strategyId a la default
+   * (o la primera en orden de creacion si no hay default marcada).
+   */
+  P._hydrateStrategies = async function () {
+    this._ensureStore();
+    const brandId = this._containerRow?.id;
+    if (!this._supabase || !brandId) return;
+    if (this._ccStrategiesHydratedFor === brandId && this._strategyId) return;
+    this._ccStrategiesHydratedFor = brandId;
+    try {
+      const { data: rows, error } = await this._supabase
+        .from('canvas_strategies')
+        .select('id, name, description, color, icon, is_default, created_at')
+        .eq('brand_container_id', brandId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        console.warn('[CC] hydrate strategies:', error.message || error);
+        this._ccStrategiesHydratedFor = null;
+        return;
+      }
+      let list = rows || [];
+      // Brand nuevo sin estrategias: crear la default
+      if (!list.length) {
+        const created = await this._ensureDefaultStrategy(brandId);
+        if (created) list = [created];
+      }
+      this._strategies = list;
+      // Active = la default, o la primera si no hay default marcada
+      const active = list.find((s) => s.is_default) || list[0] || null;
+      if (active) {
+        this._strategyId = active.id;
+        this._strategy = active;
+        this._store.setStrategy(active.id, active);
+      }
+    } catch (e) {
+      console.warn('[CC] hydrate strategies exception:', e);
+      this._ccStrategiesHydratedFor = null;
+    }
+  };
+
+  /** Crea la "Estrategia general" default para un brand sin estrategias. */
+  P._ensureDefaultStrategy = async function (brandId) {
+    if (!this._supabase || !brandId || !this._organizationId) return null;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const insert = {
+        organization_id: this._organizationId,
+        brand_container_id: brandId,
+        name: 'Estrategia general',
+        description: 'Estrategia creada automaticamente al introducir el modelo de estrategias',
+        color: 'blue',
+        icon: 'fa-diagram-project',
+        is_default: true,
+      };
+      if (user?.id) insert.created_by = user.id;
+      const { data: row, error } = await this._supabase
+        .from('canvas_strategies')
+        .insert(insert)
+        .select()
+        .single();
+      if (error) { console.warn('[CC] ensure default strategy:', error.message || error); return null; }
+      return row;
+    } catch (e) {
+      console.warn('[CC] ensure default strategy exception:', e);
+      return null;
+    }
+  };
+
+  /** Cambia la estrategia activa y re-hydrata todo el canvas. */
+  P._switchStrategy = async function (strategyId) {
+    if (!strategyId || strategyId === this._strategyId) return;
+    const next = (this._strategies || []).find((s) => String(s.id) === String(strategyId));
+    if (!next) return;
+    this._strategyId = next.id;
+    this._strategy = next;
+    this._store.setStrategy(next.id, next);
+    // invalidar caches → la proxima llamada hidrata para la nueva strategy
+    this._ccRemoteHydratedFor = null;
+    this._ccViewHydratedFor = null;
+    this._ccStickiesHydratedFor = null;
+    this._ccGroupsHydratedFor = null;
+    this._stickies = null;
+    this._groups = null;
+    // Re-hydrate
+    await this._hydrateRemoteEdges();
+    await this._hydrateRemoteView();
+    await this._hydrateRemoteStickies();
+    await this._hydrateRemoteGroups();
+    this._renderCanvas();
+  };
 
   // ------------------------------------------------------------------
   // F1.6: persistencia BD de free-links via tabla canvas_edges
@@ -1676,16 +1836,16 @@
 
   P._hydrateRemoteEdges = async function () {
     this._ensureStore();
-    const brandId = this._containerRow?.id;
+    const strategyId = this._strategyId;
     const orgId = this._organizationId;
-    if (!this._supabase || !brandId || !orgId) return;
-    if (this._ccRemoteHydratedFor === brandId) return; // idempotente por marca
-    this._ccRemoteHydratedFor = brandId;
+    if (!this._supabase || !strategyId || !orgId) return;
+    if (this._ccRemoteHydratedFor === strategyId) return; // idempotente por strategy
+    this._ccRemoteHydratedFor = strategyId;
     try {
       const { data: rows, error } = await this._supabase
         .from('canvas_edges')
         .select('source_type, source_id, target_type, target_id')
-        .eq('brand_container_id', brandId)
+        .eq('strategy_id', strategyId)
         .eq('edge_kind', 'free');
       if (error) {
         console.warn('[CC] hydrate canvas_edges error (cache local intacta):', error.message || error);
@@ -1736,13 +1896,14 @@
   };
 
   P._insertEdgeRemote = async function (fromKey, toKey) {
-    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId || !this._strategyId) return;
     const f = ccParseKey(fromKey), t = ccParseKey(toKey);
     if (!f || !t) return;
     try {
       const { error } = await this._supabase.from('canvas_edges').insert({
         organization_id: this._organizationId,
         brand_container_id: this._containerRow.id,
+        strategy_id: this._strategyId,
         source_type: f.type, source_id: f.id,
         target_type: t.type, target_id: t.id,
         edge_kind: 'free',
@@ -1757,7 +1918,7 @@
   };
 
   P._deleteEdgeRemote = async function (fromKey, toKey) {
-    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._supabase || !this._strategyId) return;
     const f = ccParseKey(fromKey), t = ccParseKey(toKey);
     if (!f || !t) return;
     try {
@@ -1768,7 +1929,7 @@
       ].join(',');
       const { error } = await this._supabase.from('canvas_edges')
         .delete()
-        .eq('brand_container_id', this._containerRow.id)
+        .eq('strategy_id', this._strategyId)
         .eq('edge_kind', 'free')
         .or(filter);
       if (error) {
@@ -1794,10 +1955,10 @@
 
   P._hydrateRemoteView = async function () {
     this._ensureStore();
-    const brandId = this._containerRow?.id;
-    if (!this._supabase || !brandId) return;
-    if (this._ccViewHydratedFor === brandId) return;
-    this._ccViewHydratedFor = brandId;
+    const strategyId = this._strategyId;
+    if (!this._supabase || !strategyId) return;
+    if (this._ccViewHydratedFor === strategyId) return;
+    this._ccViewHydratedFor = strategyId;
     try {
       const { data: { user } } = await this._supabase.auth.getUser();
       if (!user?.id) return;
@@ -1805,7 +1966,7 @@
         .from('canvas_views')
         .select('viewport_x, viewport_y, zoom, theme')
         .eq('user_id', user.id)
-        .eq('brand_container_id', brandId)
+        .eq('strategy_id', strategyId)
         .maybeSingle();
       if (error) {
         console.warn('[CC] hydrate canvas_view:', error.message || error);
@@ -2192,7 +2353,7 @@
   };
 
   P._flushRemoteView = async function () {
-    if (!this._supabase || !this._containerRow?.id || !this._store) return;
+    if (!this._supabase || !this._containerRow?.id || !this._strategyId || !this._store) return;
     if (this._ccViewFlushInFlight) return; // simple throttle
     this._ccViewFlushInFlight = true;
     try {
@@ -2202,6 +2363,7 @@
       const payload = {
         user_id: user.id,
         brand_container_id: this._containerRow.id,
+        strategy_id: this._strategyId,
         viewport_x: Number.isFinite(v.x) ? v.x : 0,
         viewport_y: Number.isFinite(v.y) ? v.y : 0,
         zoom:       Number.isFinite(v.scale) && v.scale > 0 ? v.scale : 1,
@@ -2209,7 +2371,7 @@
       };
       const { error } = await this._supabase
         .from('canvas_views')
-        .upsert(payload, { onConflict: 'user_id,brand_container_id' });
+        .upsert(payload, { onConflict: 'user_id,strategy_id' });
       if (error) console.warn('[CC] upsert canvas_view:', error.message || error);
     } catch (e) {
       console.warn('[CC] upsert canvas_view exception:', e);
@@ -2271,15 +2433,15 @@
   // ── Hydration BD ────────────────────────────────────────────────────
   P._hydrateRemoteStickies = async function () {
     this._ensureStore();
-    const brandId = this._containerRow?.id;
-    if (!this._supabase || !brandId) return;
-    if (this._ccStickiesHydratedFor === brandId) return;
-    this._ccStickiesHydratedFor = brandId;
+    const strategyId = this._strategyId;
+    if (!this._supabase || !strategyId) return;
+    if (this._ccStickiesHydratedFor === strategyId) return;
+    this._ccStickiesHydratedFor = strategyId;
     try {
       const { data: rows, error } = await this._supabase
         .from('canvas_stickies')
         .select('id, content, color, position_x, position_y, width, height')
-        .eq('brand_container_id', brandId);
+        .eq('strategy_id', strategyId);
       if (error) {
         console.warn('[CC] hydrate canvas_stickies:', error.message || error);
         this._ccStickiesHydratedFor = null;
@@ -2313,7 +2475,7 @@
 
   // ── Create sticky (BD insert + push local + select) ─────────────────
   P._createStickyAt = async function (clientX, clientY) {
-    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId || !this._strategyId) return;
     if (!this._stickies) this._stickies = [];
     try {
       const w = this._worldPointFromClient(clientX, clientY);
@@ -2322,6 +2484,7 @@
       const insert = {
         organization_id: this._organizationId,
         brand_container_id: this._containerRow.id,
+        strategy_id: this._strategyId,
         content: '',
         color: 'yellow',
         position_x: px, position_y: py,
@@ -2487,15 +2650,15 @@
   // ── Hydration BD ────────────────────────────────────────────────────
   P._hydrateRemoteGroups = async function () {
     this._ensureStore();
-    const brandId = this._containerRow?.id;
-    if (!this._supabase || !brandId) return;
-    if (this._ccGroupsHydratedFor === brandId) return;
-    this._ccGroupsHydratedFor = brandId;
+    const strategyId = this._strategyId;
+    if (!this._supabase || !strategyId) return;
+    if (this._ccGroupsHydratedFor === strategyId) return;
+    this._ccGroupsHydratedFor = strategyId;
     try {
       const { data: rows, error } = await this._supabase
         .from('canvas_groups')
         .select('id, title, color, position_x, position_y, width, height')
-        .eq('brand_container_id', brandId);
+        .eq('strategy_id', strategyId);
       if (error) {
         console.warn('[CC] hydrate canvas_groups:', error.message || error);
         this._ccGroupsHydratedFor = null;
@@ -2528,7 +2691,7 @@
 
   // ── Create group (BD insert + push local + select) ──────────────────
   P._createGroupAt = async function (clientX, clientY) {
-    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId || !this._strategyId) return;
     if (!this._groups) this._groups = [];
     try {
       const w = this._worldPointFromClient(clientX, clientY);
@@ -2537,6 +2700,7 @@
       const insert = {
         organization_id: this._organizationId,
         brand_container_id: this._containerRow.id,
+        strategy_id: this._strategyId,
         title: '',
         color: 'blue',
         position_x: px, position_y: py,
@@ -3269,6 +3433,11 @@
       this._ccGroupPosSub = null;
     }
     this._ccGroupsHydratedFor = null;
+    // F2-prep.1: cleanup strategies state
+    this._ccStrategiesHydratedFor = null;
+    this._strategies = null;
+    this._strategyId = null;
+    this._strategy = null;
     // F1.12: cleanup inspector — timers + sub + remover DOM
     if (this._ccInspSaveTimers) {
       Object.values(this._ccInspSaveTimers).forEach((t) => clearTimeout(t));
