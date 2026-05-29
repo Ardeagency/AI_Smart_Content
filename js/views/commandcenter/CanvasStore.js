@@ -627,8 +627,10 @@
       },
 
       /**
-       * moveNodes (F1.3): batch move N nodos como una sola entrada de undo.
-       * baseByKey y finalByKey son Maps<key, {x,y}>. Cloneamos para protegerlos.
+       * moveNodes (F1.3 + F1.5 mergeable): batch move N nodos como 1 sola
+       * entrada de undo. mergeWith verifica que las claves coincidan y que
+       * el final de this == base de other (cadena consecutiva, util para
+       * arrow-key presses repetidos sobre la misma seleccion).
        */
       moveNodes(baseByKey, finalByKey) {
         const fromCopy = new Map();
@@ -637,11 +639,27 @@
         finalByKey.forEach((v, k) => toCopy.set(k, { x: v.x, y: v.y }));
         return {
           kind: 'move-nodes', label: 'Mover seleccion',
+          _fromCopy: fromCopy,
+          _toCopy:   toCopy,
           do() {
-            toCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
+            this._toCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
           },
           undo() {
-            fromCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
+            this._fromCopy.forEach((p, k) => store.setNodePosition(k, p.x, p.y));
+          },
+          mergeable: true,
+          mergeWith(other) {
+            if (other.kind !== 'move-nodes') return false;
+            if (this._toCopy.size !== other._fromCopy.size) return false;
+            // cada key debe estar en ambos y final-de-this debe igualar base-de-other
+            for (const [k, finalPos] of this._toCopy) {
+              const otherBase = other._fromCopy.get(k);
+              if (!otherBase) return false;
+              if (otherBase.x !== finalPos.x || otherBase.y !== finalPos.y) return false;
+            }
+            // adoptar el final de other; el base (fromCopy) original se preserva
+            this._toCopy = other._toCopy;
+            return true;
           },
         };
       },
@@ -1097,24 +1115,65 @@
     }
   };
 
-  // F1.2 + F1.4: atajos de teclado.
-  // - Ctrl/Cmd+Z       → undo
-  // - Ctrl/Cmd+Shift+Z → redo
-  // - Ctrl/Cmd+Y       → redo (alt)
-  // - Ctrl/Cmd+C       → copy seleccion al clipboard interno (snapshot)
-  // - Ctrl/Cmd+V       → paste con BD-clones de audiencias / campanas concept;
-  //                       identities/campanas reales del clipboard se ignoran
-  // - Ctrl/Cmd+D       → duplicar = copy + paste en una sola pulsacion
-  // Ignora si el target es input/textarea/contenteditable (no robar al usuario).
+  // F1.2 + F1.4 + F1.5: atajos de teclado power-user.
+  //
+  // Sin modificador:
+  // - Esc                 → limpia seleccion + focus
+  // - Del / Backspace     → borra la seleccion (BD destructivo + canvas-only;
+  //                          confirm si hay audiencias / campanas conceptuales)
+  // - Flechas             → mueve la seleccion 1px (10px con Shift); dispatch
+  //                          moveNodes mergeable (presses repetidos = 1 entrada)
+  //
+  // Con Ctrl/Cmd:
+  // - Z                   → undo
+  // - Shift+Z / Y         → redo
+  // - C                   → copy
+  // - V                   → paste (BD-clones)
+  // - D                   → duplicate
+  // - K                   → command palette stub (F1.x)
+  //
+  // Siempre ignora si el target es input / textarea / contenteditable.
   P._installCanvasShortcuts = function () {
     if (this._ccKeyHandler) return;
     this._ccKeyHandler = (e) => {
       if (!this._store) return;
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
       const k = (e.key || '').toLowerCase();
+      const mod = e.metaKey || e.ctrlKey;
+
+      // ── No-mod shortcuts ────────────────────────────────────────
+      if (!mod) {
+        if (k === 'escape') {
+          if (this._store.selectionSet.size > 0 || this._selectedKey) {
+            e.preventDefault();
+            this._store.clearSelection();
+            this._renderSelection();
+            this._selectedKey = null;
+            this._selected = null;
+            if (this._focusSet) this._clearFocus();
+          }
+          return;
+        }
+        if (k === 'delete' || k === 'backspace') {
+          if (this._store.selectionSet.size === 0) return;
+          e.preventDefault();
+          this._ccDeleteSelection();
+          return;
+        }
+        if (k === 'arrowup' || k === 'arrowdown' || k === 'arrowleft' || k === 'arrowright') {
+          if (this._store.selectionSet.size === 0) return;
+          e.preventDefault();
+          const step = e.shiftKey ? 10 : 1;
+          const dx = k === 'arrowleft' ? -step : k === 'arrowright' ? step : 0;
+          const dy = k === 'arrowup'   ? -step : k === 'arrowdown'  ? step : 0;
+          this._ccMoveSelection(dx, dy);
+          return;
+        }
+        return;
+      }
+
+      // ── Con Ctrl/Cmd ────────────────────────────────────────────
       if (k === 'z') {
         e.preventDefault();
         if (e.shiftKey) { if (this._store.redo()) this._renderCanvas(); }
@@ -1126,23 +1185,146 @@
         if (this._store.redo()) this._renderCanvas();
         return;
       }
-      if (k === 'c') {
+      if (k === 'c') { e.preventDefault(); this._ccCopyToClipboard(); return; }
+      if (k === 'v') { e.preventDefault(); this._ccPasteFromClipboard(); return; }
+      if (k === 'd') { e.preventDefault(); this._ccDuplicate(); return; }
+      if (k === 'k') {
         e.preventDefault();
-        this._ccCopyToClipboard();
-        return;
-      }
-      if (k === 'v') {
-        e.preventDefault();
-        this._ccPasteFromClipboard();
-        return;
-      }
-      if (k === 'd') {
-        e.preventDefault();
-        this._ccDuplicate();
+        console.info('[CC] Command palette: stub (F1.5; full UI en F1.x)');
         return;
       }
     };
     document.addEventListener('keydown', this._ccKeyHandler);
+  };
+
+  // ------------------------------------------------------------------
+  // F1.5: helpers de keyboard ops (Del + flechas)
+  // ------------------------------------------------------------------
+
+  /**
+   * Mueve la seleccion completa dx/dy en world coords. Dispatchea un
+   * moveNodes mergeable: presses consecutivos en la misma direccion sobre
+   * el mismo set colapsan en 1 entrada de undo.
+   */
+  P._ccMoveSelection = function (dx, dy) {
+    this._ensureStore();
+    const set = this._store.selectionSet;
+    if (!set || set.size === 0) return;
+    if (dx === 0 && dy === 0) return;
+    const baseByKey = new Map();
+    const finalByKey = new Map();
+    set.forEach((key) => {
+      const p = this._positions[key];
+      if (!p) return;
+      baseByKey.set(key, { x: p.x, y: p.y });
+      finalByKey.set(key, { x: p.x + dx, y: p.y + dy });
+    });
+    if (!baseByKey.size) return;
+    this._store.dispatch(this._commands.moveNodes(baseByKey, finalByKey));
+    // DOM update directo (sin re-render completo, preserva foco/edicion)
+    finalByKey.forEach((p, key) => {
+      const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(key)}"]`);
+      if (el) { el.style.left = `${p.x}px`; el.style.top = `${p.y}px`; }
+    });
+    this._scheduleEdges();
+  };
+
+  /**
+   * Borra los nodos seleccionados. Diferencia entre:
+   *   - canvas-only (identity / real campaign): _removeIdentityFromCanvas /
+   *     _removeRealFromCanvas (visual; sin tocar BD del producto/servicio/etc)
+   *   - BD destructivo (audience / campaign conceptual): DELETE en supabase
+   *     con un solo window.confirm que resume el total
+   * Las free-edges tocando a un nodo borrado se quitan via el path correspondiente.
+   * Al final limpia seleccion y re-renderiza.
+   */
+  P._ccDeleteSelection = async function () {
+    this._ensureStore();
+    const set = this._store.selectionSet;
+    if (!set || set.size === 0) return;
+
+    const keys = [...set];
+    const bdItems = [];     // {type, id, key, name}
+    const canvasItems = []; // {type, identityType?, id, key}
+
+    keys.forEach((key) => {
+      if (key.startsWith('aud:')) {
+        const id = key.slice(4);
+        const row = (this._audiences || []).find((a) => String(a.id) === String(id));
+        if (row) bdItems.push({ type: 'audience', id, key, name: row.name || 'Sin nombre' });
+      } else if (key.startsWith('camp:')) {
+        const id = key.slice(5);
+        const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
+        if (!row) return;
+        if (row.last_synced_at) canvasItems.push({ type: 'campaign-real', id, key });
+        else bdItems.push({ type: 'campaign-concept', id, key, name: row.nombre_campana || 'Sin nombre' });
+      } else {
+        const colon = key.indexOf(':');
+        if (colon > 0) {
+          const t = key.slice(0, colon);
+          const id = key.slice(colon + 1);
+          canvasItems.push({ type: 'identity', identityType: t, id, key });
+        }
+      }
+    });
+
+    // Confirmar SOLO si hay BD destructivo
+    if (bdItems.length) {
+      const audCount  = bdItems.filter((x) => x.type === 'audience').length;
+      const campCount = bdItems.filter((x) => x.type === 'campaign-concept').length;
+      const parts = [];
+      if (audCount)  parts.push(`${audCount} audiencia${audCount > 1 ? 's' : ''}`);
+      if (campCount) parts.push(`${campCount} campana${campCount > 1 ? 's' : ''} conceptual${campCount > 1 ? 'es' : ''}`);
+      const bdSummary = parts.join(' y ') + ' permanentemente';
+      const canvasSummary = canvasItems.length
+        ? ` y quitar ${canvasItems.length} nodo${canvasItems.length > 1 ? 's' : ''} mas del lienzo`
+        : '';
+      const msg = `Vas a eliminar ${bdSummary}${canvasSummary}. ¿Continuar?`;
+      if (!window.confirm(msg)) return;
+    }
+
+    // Canvas-only primero (sincrono / instant)
+    canvasItems.forEach((item) => {
+      try {
+        if (item.type === 'identity') this._removeIdentityFromCanvas(item.identityType, item.id);
+        else if (item.type === 'campaign-real') this._removeRealFromCanvas(item.id);
+      } catch (e) { console.error('[CC] canvas remove error:', e); }
+    });
+
+    // BD destructivo: DELETE en supabase + limpieza local
+    for (const item of bdItems) {
+      try {
+        const table = item.type === 'audience' ? 'audience_personas' : 'campaigns';
+        const { error } = await this._supabase.from(table).delete().eq('id', item.id);
+        if (error) {
+          console.error('[CC] BD delete error:', error.message || error);
+          continue;
+        }
+        if (item.type === 'audience') {
+          this._audiences = (this._audiences || []).filter((a) => String(a.id) !== String(item.id));
+        } else {
+          this._campaigns = (this._campaigns || []).filter((c) => String(c.id) !== String(item.id));
+        }
+        // limpiar posicion + free-edges tocando al nodo borrado
+        delete this._positions[item.key];
+        // tambien limpiar onCanvas / placed (no aplica a aud/camp-concept, pero defensivo)
+        this._store.removeOnCanvas(item.id);
+        const touchingLinks = (this._store.edges.freeLinks || [])
+          .filter((l) => l.from === item.key || l.to === item.key)
+          .map((l) => ({ from: l.from, to: l.to }));
+        touchingLinks.forEach((l) => this._store.removeFreeLink(l.from, l.to));
+      } catch (e) {
+        console.error('[CC] BD delete exception:', e);
+      }
+    }
+    this._store.persistPositions();
+    this._store.clearSelection();
+    this._selectedKey = null;
+    this._selected = null;
+    this._renderCanvas();
+    this._renderSelection();
+    if (typeof this._renderCampaigns === 'function') this._renderCampaigns();
+    if (typeof this._renderMiniDash === 'function') this._renderMiniDash();
   };
 
   // ------------------------------------------------------------------
