@@ -802,6 +802,18 @@
         this._persistGroupPosition(p.key.slice(6));
       });
     }
+    // F2-prep.2: write-through de positions para placements (audiencias,
+    // campanas, identities). Stickies y groups van por otras tablas; los
+    // filtra _typeAndIdFromKey returning null para ellos.
+    if (!this._ccPlacementPosSub) {
+      this._ccPlacementPosSub = this._store.on('mutated:node-position', (p) => {
+        if (this._ccSuspendPlacementWrite) return;
+        if (!p || !p.key) return;
+        const ti = this._typeAndIdFromKey(p.key);
+        if (!ti) return; // sticky/group manejados aparte
+        this._persistPlacementPosition(p.key);
+      });
+    }
     // F1.12 eliminado: ya no nos suscribimos a mutated:selection para el inspector.
     return this._store;
   };
@@ -934,6 +946,47 @@
     }
     this._renderEdges();
   };
+
+  // F2-prep.2: wraps de add/remove para INSERT/DELETE canvas_node_placements
+  // en la estrategia activa. Encadenados sobre los wraps de F1.2 que ya
+  // gestionan localStorage + commands. Stickies y groups no entran aqui;
+  // tienen sus propias tablas.
+  const _f2pAddRealToCanvas = P._addRealToCanvas;
+  if (typeof _f2pAddRealToCanvas === 'function') {
+    P._addRealToCanvas = function (campId /*, clientX, clientY */) {
+      const r = _f2pAddRealToCanvas.apply(this, arguments);
+      const pos = this._positions[`camp:${campId}`];
+      if (pos) this._insertPlacement('campaign', campId, pos.x, pos.y);
+      return r;
+    };
+  }
+  const _f2pRemoveRealFromCanvas = P._removeRealFromCanvas;
+  if (typeof _f2pRemoveRealFromCanvas === 'function') {
+    P._removeRealFromCanvas = function (campId) {
+      this._deletePlacement('campaign', campId);
+      return _f2pRemoveRealFromCanvas.apply(this, arguments);
+    };
+  }
+  const _f2pAddIdentityToCanvas = P._addIdentityToCanvas;
+  if (typeof _f2pAddIdentityToCanvas === 'function') {
+    P._addIdentityToCanvas = function (lib /*, clientX, clientY */) {
+      const r = _f2pAddIdentityToCanvas.apply(this, arguments);
+      if (lib && lib.type && lib.id != null) {
+        const pos = this._positions[`${lib.type}:${lib.id}`];
+        const singular = ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
+        if (pos) this._insertPlacement(singular, lib.id, pos.x, pos.y);
+      }
+      return r;
+    };
+  }
+  const _f2pRemoveIdentityFromCanvas = P._removeIdentityFromCanvas;
+  if (typeof _f2pRemoveIdentityFromCanvas === 'function') {
+    P._removeIdentityFromCanvas = function (type, id) {
+      const singular = ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[type] || type;
+      this._deletePlacement(singular, id);
+      return _f2pRemoveIdentityFromCanvas.apply(this, arguments);
+    };
+  }
 
   // F1.2 + F1.3: wrap _beginNodeDrag con soporte para group-drag.
   //
@@ -1671,6 +1724,10 @@
       // _hydrateStrategies trae la lista + setea this._strategyId a la default.
       // Los demas hydrates leen this._strategyId, asi que esto debe ir primero.
       this._hydrateStrategies().then(() => {
+        // F2-prep.2: placements ANTES de los demas hydrates (necesita
+        // la strategy activa pero deben aplicarse positions antes de
+        // que _renderCanvas corra)
+        this._hydrateNodePlacements();
         // F1.6: fire-and-forget hidratacion remota. Si la marca ya se hidrato
         // antes en esta misma vista, _hydrateRemoteEdges se sale solo.
         this._hydrateRemoteEdges();
@@ -1981,14 +2038,297 @@
     this._ccViewHydratedFor = null;
     this._ccStickiesHydratedFor = null;
     this._ccGroupsHydratedFor = null;
+    this._ccPlacementsHydratedFor = null;
+    this._canvasNodePlacements = null;
     this._stickies = null;
     this._groups = null;
     // Re-hydrate
+    await this._hydrateNodePlacements();
     await this._hydrateRemoteEdges();
     await this._hydrateRemoteView();
     await this._hydrateRemoteStickies();
     await this._hydrateRemoteGroups();
+    // Re-render del sidebar (Estrategias section debe reflejar nueva activa)
+    if (typeof this._renderLibrary === 'function') this._renderLibrary();
     this._renderCanvas();
+  };
+
+  // ------------------------------------------------------------------
+  // F2-prep.2 + F2-prep.3: canvas_node_placements write-through + migracion
+  //
+  // canvas_node_placements(strategy_id, node_type, node_id, position_x/y,
+  //                        is_collapsed). Reemplaza el localStorage
+  //                        cc:canvas:pos|oncanvas|placed:<brand> con un
+  //                        modelo BD per-strategy.
+  //
+  // Tipos en BD: 'audience' | 'campaign' | 'product' | 'service' | 'place'
+  //              | 'flow' | 'brief'. Keys frontend (aud:/camp:/products:/
+  //              services:/places:/flows:/briefs:) se mapean en
+  //              _keyFromPlacement / _typeAndIdFromKey.
+  //
+  // Stickies y groups tienen sus propias tablas y siguen con sus writes
+  // directos a canvas_stickies / canvas_groups (F1.10 / F1.11).
+  // ------------------------------------------------------------------
+
+  // Mapping bidireccional entre key-prefix frontend y node_type BD
+  P._keyFromPlacement = function (type, id) {
+    const map = { audience: 'aud', campaign: 'camp', product: 'products', service: 'services', place: 'places', flow: 'flows', brief: 'briefs' };
+    return `${map[type] || type}:${id}`;
+  };
+  P._typeAndIdFromKey = function (key) {
+    if (!key) return null;
+    const colon = key.indexOf(':');
+    if (colon < 0) return null;
+    const prefix = key.slice(0, colon);
+    const id = key.slice(colon + 1);
+    const map = { aud: 'audience', camp: 'campaign', products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' };
+    if (!map[prefix]) return null; // sticky/group/group:... van por otras tablas
+    return { node_type: map[prefix], node_id: id };
+  };
+
+  P._hydrateNodePlacements = async function () {
+    this._ensureStore();
+    const strategyId = this._strategyId;
+    if (!this._supabase || !strategyId) return;
+    if (this._ccPlacementsHydratedFor === strategyId) return;
+    this._ccPlacementsHydratedFor = strategyId;
+    try {
+      // Antes del hydrate, intentar migrar localStorage la primera vez
+      await this._migrateLocalStorageToPlacements();
+
+      const { data: rows, error } = await this._supabase
+        .from('canvas_node_placements')
+        .select('id, node_type, node_id, position_x, position_y, is_collapsed')
+        .eq('strategy_id', strategyId);
+      if (error) {
+        console.warn('[CC] hydrate placements:', error.message || error);
+        this._ccPlacementsHydratedFor = null;
+        return;
+      }
+      const map = new Map();
+      (rows || []).forEach((r) => {
+        const key = this._keyFromPlacement(r.node_type, r.node_id);
+        map.set(key, {
+          id: r.id,
+          x: Number(r.position_x) || 0,
+          y: Number(r.position_y) || 0,
+          is_collapsed: !!r.is_collapsed,
+        });
+      });
+      this._canvasNodePlacements = map;
+
+      // Aplicar positions al store + reconstruir onCanvas/_placed desde BD
+      // Suspender el write-through durante el apply para no disparar UPDATEs.
+      this._ccSuspendPlacementWrite = true;
+      const onCanvas = this._store.nodes.onCanvas;
+      const placed = this._store.nodes.placed;
+      onCanvas.clear();
+      placed.length = 0;
+
+      map.forEach((p, key) => {
+        this._store.setNodePosition(key, p.x, p.y);
+        if (p.is_collapsed) this._store.setCollapsed(key, true);
+        if (key.startsWith('camp:')) {
+          const id = key.slice(5);
+          const c = (this._campaigns || []).find((x) => String(x.id) === id);
+          if (c && c.last_synced_at) onCanvas.add(id);
+        } else if (!key.startsWith('aud:') && !key.startsWith('sticky:') && !key.startsWith('group:')) {
+          // identity prefix
+          const colon = key.indexOf(':');
+          if (colon > 0) {
+            const type = key.slice(0, colon);
+            const id = key.slice(colon + 1);
+            // Enriquecer con name/sub si existe en lib cache o local data
+            const lib = (this._libCache && this._libCache[type]) || [];
+            const found = lib.find((it) => String(it.id) === id);
+            const entry = { type, id };
+            if (found) { if (found.name) entry.name = found.name; if (found.sub) entry.sub = found.sub; }
+            placed.push(entry);
+          }
+        }
+      });
+      this._store.persistOnCanvas();
+      this._store.persistPlaced();
+      this._ccSuspendPlacementWrite = false;
+
+      this._renderCanvas();
+    } catch (e) {
+      console.warn('[CC] hydrate placements exception:', e);
+      this._ccPlacementsHydratedFor = null;
+    } finally {
+      this._ccSuspendPlacementWrite = false;
+    }
+  };
+
+  /** UPSERT per-key debounced. */
+  P._persistPlacementPosition = function (key) {
+    if (this._ccSuspendPlacementWrite) return;
+    if (!this._supabase || !this._strategyId) return;
+    const ti = this._typeAndIdFromKey(key);
+    if (!ti) return;
+    if (!this._canvasNodePlacements) this._canvasNodePlacements = new Map();
+    if (!this._ccPlacementPosTimers) this._ccPlacementPosTimers = {};
+    if (this._ccPlacementPosTimers[key]) clearTimeout(this._ccPlacementPosTimers[key]);
+    this._ccPlacementPosTimers[key] = setTimeout(async () => {
+      delete this._ccPlacementPosTimers[key];
+      const pos = this._positions[key];
+      if (!pos) return;
+      const existing = this._canvasNodePlacements.get(key);
+      try {
+        if (existing && existing.id) {
+          const { error } = await this._supabase
+            .from('canvas_node_placements')
+            .update({ position_x: pos.x, position_y: pos.y })
+            .eq('id', existing.id);
+          if (error) console.warn('[CC] update placement pos:', error.message || error);
+          else { existing.x = pos.x; existing.y = pos.y; }
+        } else {
+          const insertData = {
+            strategy_id: this._strategyId,
+            node_type: ti.node_type,
+            node_id: ti.node_id,
+            position_x: pos.x,
+            position_y: pos.y,
+          };
+          const { data: { user } } = await this._supabase.auth.getUser();
+          if (user?.id) insertData.created_by = user.id;
+          const { data: row, error } = await this._supabase
+            .from('canvas_node_placements')
+            .insert(insertData)
+            .select()
+            .single();
+          if (error && error.code !== '23505') {
+            console.warn('[CC] insert placement (via pos):', error.message || error);
+          } else if (row) {
+            this._canvasNodePlacements.set(key, { id: row.id, x: row.position_x, y: row.position_y, is_collapsed: !!row.is_collapsed });
+          }
+        }
+      } catch (e) {
+        console.warn('[CC] persist placement pos exception:', e);
+      }
+    }, 800);
+  };
+
+  P._insertPlacement = async function (type, id, x, y) {
+    if (!this._supabase || !this._strategyId) return null;
+    const key = this._keyFromPlacement(type, id);
+    if (!this._canvasNodePlacements) this._canvasNodePlacements = new Map();
+    if (this._canvasNodePlacements.has(key)) return this._canvasNodePlacements.get(key);
+    try {
+      const insertData = {
+        strategy_id: this._strategyId,
+        node_type: type,
+        node_id: String(id),
+        position_x: Number(x) || 0,
+        position_y: Number(y) || 0,
+      };
+      const { data: { user } } = await this._supabase.auth.getUser();
+      if (user?.id) insertData.created_by = user.id;
+      const { data: row, error } = await this._supabase
+        .from('canvas_node_placements')
+        .insert(insertData)
+        .select()
+        .single();
+      if (error) {
+        if (error.code === '23505') return null; // race; placement ya existe
+        console.warn('[CC] insert placement:', error.message || error);
+        return null;
+      }
+      const entry = { id: row.id, x: row.position_x, y: row.position_y, is_collapsed: !!row.is_collapsed };
+      this._canvasNodePlacements.set(key, entry);
+      return entry;
+    } catch (e) {
+      console.warn('[CC] insert placement exception:', e);
+      return null;
+    }
+  };
+
+  P._deletePlacement = async function (type, id) {
+    if (!this._supabase || !this._strategyId) return false;
+    const key = this._keyFromPlacement(type, id);
+    if (!this._canvasNodePlacements) return false;
+    const entry = this._canvasNodePlacements.get(key);
+    if (!entry || !entry.id) { this._canvasNodePlacements.delete(key); return false; }
+    try {
+      const { error } = await this._supabase
+        .from('canvas_node_placements')
+        .delete()
+        .eq('id', entry.id);
+      if (error) { console.warn('[CC] delete placement:', error.message || error); return false; }
+      this._canvasNodePlacements.delete(key);
+      return true;
+    } catch (e) {
+      console.warn('[CC] delete placement exception:', e);
+      return false;
+    }
+  };
+
+  /** F2-prep.3: 1 vez por brand, migra cc:canvas:pos|oncanvas|placed:<brand>
+      al BD como placements en la default strategy. */
+  P._migrateLocalStorageToPlacements = async function () {
+    if (!this._supabase || !this._containerRow?.id) return;
+    const brandId = this._containerRow.id;
+    const flagKey = `cc:canvas:migrated:${brandId}`;
+    if (localStorage.getItem(flagKey) === '1') return;
+    // Buscar la default strategy del brand
+    const defaultStrategy = (this._strategies || []).find((s) => s.is_default) || (this._strategies || [])[0];
+    if (!defaultStrategy) return;
+    const sid = defaultStrategy.id;
+    try {
+      const positions = (() => {
+        try { return JSON.parse(localStorage.getItem(`cc:canvas:pos:${brandId}`)) || {}; } catch (_) { return {}; }
+      })();
+      const onCanvas = (() => {
+        try { return JSON.parse(localStorage.getItem(`cc:canvas:oncanvas:${brandId}`)) || []; } catch (_) { return []; }
+      })();
+      const placed = (() => {
+        try { return JSON.parse(localStorage.getItem(`cc:canvas:placed:${brandId}`)) || []; } catch (_) { return []; }
+      })();
+      const rowsToUpsert = [];
+      Object.keys(positions).forEach((key) => {
+        const ti = this._typeAndIdFromKey(key);
+        if (!ti) return; // sticky/group ya tienen sus tablas
+        const pos = positions[key];
+        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+        rowsToUpsert.push({
+          strategy_id: sid,
+          node_type: ti.node_type,
+          node_id: ti.node_id,
+          position_x: pos.x,
+          position_y: pos.y,
+        });
+      });
+      // onCanvas: campanas reales sin position guardada → placement con pos 0,0
+      onCanvas.forEach((id) => {
+        const key = `camp:${id}`;
+        if (!positions[key]) {
+          rowsToUpsert.push({ strategy_id: sid, node_type: 'campaign', node_id: String(id), position_x: 0, position_y: 0 });
+        }
+      });
+      // placed identities sin position guardada → placement con pos 0,0
+      placed.forEach((p) => {
+        if (!p || !p.type || p.id == null) return;
+        const key = `${p.type}:${p.id}`;
+        if (!positions[key]) {
+          const ti = this._typeAndIdFromKey(key);
+          if (!ti) return;
+          rowsToUpsert.push({ strategy_id: sid, node_type: ti.node_type, node_id: ti.node_id, position_x: 0, position_y: 0 });
+        }
+      });
+      if (rowsToUpsert.length) {
+        const { error } = await this._supabase
+          .from('canvas_node_placements')
+          .upsert(rowsToUpsert, { onConflict: 'strategy_id,node_type,node_id' });
+        if (error) {
+          console.warn('[CC] migrate localStorage placements:', error.message || error);
+          return; // no marcar como migrated; retry next time
+        }
+        console.info(`[CC] migrated ${rowsToUpsert.length} placements from localStorage to BD`);
+      }
+      localStorage.setItem(flagKey, '1');
+    } catch (e) {
+      console.warn('[CC] migrate placements exception:', e);
+    }
   };
 
   // ------------------------------------------------------------------
@@ -3766,6 +4106,17 @@
       this._ccGroupPosSub = null;
     }
     this._ccGroupsHydratedFor = null;
+    // F2-prep.2: cleanup placements state
+    if (this._ccPlacementPosTimers) {
+      Object.values(this._ccPlacementPosTimers).forEach((t) => clearTimeout(t));
+      this._ccPlacementPosTimers = null;
+    }
+    if (typeof this._ccPlacementPosSub === 'function') {
+      try { this._ccPlacementPosSub(); } catch (_) {}
+      this._ccPlacementPosSub = null;
+    }
+    this._ccPlacementsHydratedFor = null;
+    this._canvasNodePlacements = null;
     // F2-prep.1: cleanup strategies state
     this._ccStrategiesHydratedFor = null;
     this._strategies = null;
