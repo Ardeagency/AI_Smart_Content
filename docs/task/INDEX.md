@@ -24,6 +24,12 @@ BUG-004, SPRINT-FRONTEND-100)
 
 ---
 
+## 🔴 Critical — falta construir
+
+| ID | Que falta EXACTAMENTE |
+|---|---|
+| [FEAT-036](./FEAT-036-kie-rate-governor-and-queue.md) | Governor de tasa KIE: limite real 20 createTask/10s POR CUENTA y 429 NO encola (= job perdido en picos). Fase 1 (token bucket Postgres + helper `acquireKieSlot` fail-open + 6 call-sites Netlify cableados) lista en codigo; **falta aplicar `SQL/feat-036-kie-rate-governor.sql` via Management API + deploy + gobernar Path B (dispatcher)**. Fases 2-4: foreground>background, cola unificada con prioridad por plan, turbo por plan. |
+
 ## 🟠 High — falta construir
 
 | ID | Que falta EXACTAMENTE |

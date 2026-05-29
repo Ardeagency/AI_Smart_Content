@@ -27,7 +27,8 @@ const {
   requireAuth,
   checkBodySize,
   validateExternalUrl,
-  ensureBalanceAtLeast
+  ensureBalanceAtLeast,
+  acquireKieSlot
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -248,6 +249,10 @@ exports.handler = async (event) => {
   } catch (e) {
     return fail(event, 502, `OpenAI no pudo generar el prompt: ${e.message}`);
   }
+
+  // FEAT-036: governor de tasa KIE (20 createTask/10s POR CUENTA; 429 = job perdido).
+  const slot = await acquireKieSlot({ env });
+  if (!slot.ok) return fail(event, 429, 'KIE saturado, reintenta en unos segundos', { retryAfterMs: slot.retryAfterMs });
 
   let kieTaskId;
   try {

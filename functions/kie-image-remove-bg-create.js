@@ -18,7 +18,8 @@ const {
   requireAuth,
   checkBodySize,
   validateExternalUrl,
-  ensureBalanceAtLeast
+  ensureBalanceAtLeast,
+  acquireKieSlot
 } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
@@ -127,6 +128,8 @@ exports.handler = async (event) => {
 
   let kieTaskId;
   try {
+    const slot = await acquireKieSlot({ env }); // FEAT-036: governor tasa KIE (429 = job perdido)
+    if (!slot.ok) return fail(event, 429, 'KIE saturado, reintenta en unos segundos', { retryAfterMs: slot.retryAfterMs });
     kieTaskId = await createKieTask({ headers: kieHeaders, imageUrl });
   } catch (e) {
     return fail(event, e.httpStatus || 502, `KIE: ${e.message}`, { kieBody: e.kieBody });

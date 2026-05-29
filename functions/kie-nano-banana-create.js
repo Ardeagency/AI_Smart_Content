@@ -4,7 +4,7 @@
  * Doc: modelo nano-banana-pro, input.prompt + input.image_input (URLs).
  */
 
-const { requireAuth } = require('./lib/ai-shared');
+const { requireAuth, getSupabaseEnv, acquireKieSlot } = require('./lib/ai-shared');
 
 const KIE_BASE = (process.env.KIE_API_BASE_URL || 'https://api.kie.ai').replace(/\/$/, '');
 const CREATE_PATH = '/api/v1/jobs/createTask';
@@ -155,6 +155,14 @@ exports.handler = async (event) => {
     const callBackUrl = process.env.KIE_NANO_CALLBACK_URL || process.env.KIE_VIDEO_CALLBACK_URL;
     if (callBackUrl && typeof callBackUrl === 'string' && callBackUrl.startsWith('http')) {
       kiePayload.callBackUrl = callBackUrl.trim();
+    }
+
+    // FEAT-036: governor de tasa KIE (20 createTask/10s POR CUENTA; 429 = job perdido).
+    let kieEnv = null;
+    try { kieEnv = getSupabaseEnv(); } catch (_) { /* fail-open */ }
+    const slot = await acquireKieSlot({ env: kieEnv });
+    if (!slot.ok) {
+      return { statusCode: 429, headers: c, body: JSON.stringify({ error: 'KIE saturado, reintenta en unos segundos', retryAfterMs: slot.retryAfterMs }) };
     }
 
     const createUrl = `${KIE_BASE}${CREATE_PATH}`;

@@ -296,6 +296,54 @@ async function ensureBalanceAtLeast({ env, organizationId, minCredits }) {
   return { ok: true, balance };
 }
 
+/**
+ * Governor de tasa KIE (FEAT-036). KIE limita a 20 createTask / 10s POR CUENTA y un
+ * 429 NO encola (= job perdido). Este helper consume 1 token de un bucket Postgres
+ * compartido por todos los consumidores (RPC kie_rate_acquire) y hace wait-retry
+ * server-side para convertir un burst en una pequeña espera en vez de un job perdido.
+ *
+ * Fail-open: si la RPC no existe (migracion no aplicada) o falla, devuelve ok:true
+ * para no romper produccion. Asi el codigo se puede desplegar ANTES del DDL; la
+ * migracion activa el governor.
+ *
+ * @param {{ env: {url:string, serviceKey:string}, cost?: number, maxWaitMs?: number }} opts
+ * @returns {Promise<{ ok: boolean, waitedMs: number, reason?: string, retryAfterMs?: number }>}
+ */
+async function acquireKieSlot({ env, cost = 1, maxWaitMs = 8000 } = {}) {
+  if (!env?.url || !env?.serviceKey) return { ok: true, waitedMs: 0, reason: 'no env — fail-open' };
+  const deadline = Date.now() + maxWaitMs;
+  let waitedMs = 0;
+  while (true) {
+    let data = null;
+    try {
+      const res = await fetch(`${env.url}/rest/v1/rpc/kie_rate_acquire`, {
+        method: 'POST',
+        headers: {
+          apikey: env.serviceKey,
+          Authorization: `Bearer ${env.serviceKey}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ p_provider: 'kie', p_cost: cost })
+      });
+      if (!res.ok) {
+        // RPC no disponible (404) o error: fail-open para no romper produccion.
+        return { ok: true, waitedMs, reason: `governor unavailable (HTTP ${res.status}) — fail-open` };
+      }
+      data = await res.json().catch(() => null);
+    } catch (e) {
+      return { ok: true, waitedMs, reason: `governor error (${e.message}) — fail-open` };
+    }
+    if (data && data.acquired) return { ok: true, waitedMs };
+    const retry = Math.min(Math.max(Number(data?.retry_after_ms) || 250, 100), 1500);
+    if (Date.now() + retry > deadline) {
+      return { ok: false, waitedMs, reason: 'KIE rate limit busy', retryAfterMs: retry };
+    }
+    await new Promise(r => setTimeout(r, retry));
+    waitedMs += retry;
+  }
+}
+
 module.exports = {
   corsHeaders,
   getSupabaseEnv,
@@ -307,6 +355,7 @@ module.exports = {
   checkBodySize,
   logUserAudit,
   validateExternalUrl,
-  ensureBalanceAtLeast
+  ensureBalanceAtLeast,
+  acquireKieSlot
 };
 

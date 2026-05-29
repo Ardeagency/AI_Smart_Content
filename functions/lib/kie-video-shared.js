@@ -9,7 +9,7 @@ const CREATE_PATH = '/api/v1/jobs/createTask';
 const RECORD_INFO_PATH = '/api/v1/jobs/recordInfo';
 
 // Reutilizamos la allow-list centralizada en ai-shared (antes esto era `*`).
-const { corsHeaders } = require('./ai-shared');
+const { corsHeaders, getSupabaseEnv, acquireKieSlot } = require('./ai-shared');
 
 function getKieAuthHeaders() {
   const apiKey = process.env.KIE_API_KEY;
@@ -146,6 +146,14 @@ async function handleCreate(body, headers, event) {
     } catch (_) {
       return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'input no debe ser string; debe ser objeto' }) };
     }
+  }
+
+  // FEAT-036: governor de tasa KIE (20 createTask/10s POR CUENTA; 429 = job perdido).
+  let kieEnv = null;
+  try { kieEnv = getSupabaseEnv(); } catch (_) { /* fail-open */ }
+  const slot = await acquireKieSlot({ env: kieEnv });
+  if (!slot.ok) {
+    return { statusCode: 429, headers: c, body: JSON.stringify({ error: 'KIE saturado, reintenta en unos segundos', retryAfterMs: slot.retryAfterMs }) };
   }
 
   const createUrl = `${KIE_BASE}${CREATE_PATH}`;
