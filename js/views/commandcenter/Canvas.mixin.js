@@ -279,7 +279,7 @@
     <div class="cc-node cc-node--audience ${collapsed ? 'cc-node--collapsed' : ''} ${off ? 'cc-node--off' : ''} ${featured ? 'cc-node--featured' : ''}" data-node-key="${n.key}" data-type="audience" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
       <div class="cc-node-head" data-drag-handle>
         <span class="cc-node-icon"><i class="fas fa-users"></i></span>
-        <span class="cc-node-title">Audiencia</span>
+        <span class="cc-node-title">Objetivo de Audiencia</span>
         <div class="cc-node-actions">
           <button type="button" class="cc-node-act cc-node-toggle cc-toggle-like ${liked ? 'is-on' : ''}" data-toggle="is_liked" title="Me gusta esta audiencia"><i class="fas fa-heart"></i></button>
           <button type="button" class="cc-node-act cc-node-toggle cc-toggle-feature ${featured ? 'is-on' : ''}" data-toggle="is_featured" title="Destacar audiencia"><i class="fas fa-star"></i></button>
@@ -376,13 +376,15 @@
     </div>`;
     }
 
-    // Conceptual: editable.
+    // Objetivo de Campana: ANCLA editable. Es el nodo padre/trigger de la
+    // estrategia — todos los demas (audiencias, productos, servicios, campanas
+    // reales) se conectan a este. Visual distintivo: icono diana + accent ring.
     return `
-    <div class="cc-node cc-node--campaign ${collapsed ? 'cc-node--collapsed' : ''}" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
-      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Audiencia objetivo"></span>
+    <div class="cc-node cc-node--campaign cc-node--anchor ${collapsed ? 'cc-node--collapsed' : ''}" data-node-key="${n.key}" data-type="campaign-concept" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+      <span class="cc-node-port cc-node-port--in ${linked ? 'cc-node-port--linked' : ''}" data-port="in" title="Conectar entrada"></span>
       <div class="cc-node-head" data-drag-handle>
-        <span class="cc-node-icon cc-node-icon--camp"><i class="fas fa-bullhorn"></i></span>
-        <span class="cc-node-title">Campana conceptual</span>
+        <span class="cc-node-icon cc-node-icon--anchor"><i class="fas fa-bullseye"></i></span>
+        <span class="cc-node-title">Objetivo de Campana</span>
         ${this._nodeActionsHTML(collapsed)}
       </div>
       <div class="cc-node-body">
@@ -1309,9 +1311,9 @@
   /** Definicion de secciones (orden + icono + label). */
   P._librarySections = function () {
     return [
-      { key: 'audiences', label: 'Audiencias',          icon: 'fa-users' },
-      { key: 'campaigns', label: 'Campanas',            icon: 'fa-bullhorn' },
-      { key: 'concepts',  label: 'Conceptualizaciones', icon: 'fa-lightbulb' },
+      { key: 'audiences', label: 'Objetivos de Audiencia', icon: 'fa-users' },
+      { key: 'campaigns', label: 'Campanas',               icon: 'fa-bullhorn' },
+      { key: 'concepts',  label: 'Objetivos de Campana',   icon: 'fa-lightbulb' },
       { key: 'products',  label: 'Productos',           icon: 'fa-box' },
       { key: 'services',  label: 'Servicios',           icon: 'fa-tag' },
       { key: 'places',    label: 'Lugares',             icon: 'fa-map-pin' },
@@ -1324,7 +1326,7 @@
   /** Items de una seccion. Locales (sincronos) o lazy (cache; undefined = sin cargar). */
   P._libItemsFor = function (key) {
     if (key === 'audiences') {
-      return (this._audiences || []).map((a) => ({ id: a.id, name: a.name || 'Audiencia', sub: a.is_active === false ? 'apagada' : '' }));
+      return (this._audiences || []).map((a) => ({ id: a.id, name: a.name || 'Objetivo de Audiencia', sub: a.is_active === false ? 'apagada' : '' }));
     }
     if (key === 'campaigns') {
       this._loadOnCanvas();

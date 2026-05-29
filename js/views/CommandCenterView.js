@@ -118,11 +118,11 @@ class CommandCenterView extends BaseView {
     <div class="cc-canvas-wrap">
       <div class="cc-canvas-toolbar">
         <div class="cc-canvas-toolbar-group">
-          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="Crear audiencia">
-            <i class="fas fa-user-plus"></i><span>Audiencia</span>
+          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateAudience" type="button" title="Crear Objetivo de Audiencia">
+            <i class="fas fa-user-plus"></i><span>Objetivo de Audiencia</span>
           </button>
-          <button class="cc-canvas-btn cc-canvas-btn--primary" id="ccBtnCreateCampaign" type="button" title="Crear campana">
-            <i class="fas fa-bullhorn"></i><span>Campana</span>
+          <button class="cc-canvas-btn cc-canvas-btn--primary cc-canvas-btn--anchor" id="ccBtnCreateCampaign" type="button" title="Crear Objetivo de Campana (ancla de la estrategia)">
+            <i class="fas fa-bullseye"></i><span>Objetivo de Campana</span>
           </button>
           <div class="cc-report-dd" id="ccReportDD">
             <button class="cc-canvas-btn" id="ccBtnReport" type="button" title="Crear informe con Vera (Claude)">

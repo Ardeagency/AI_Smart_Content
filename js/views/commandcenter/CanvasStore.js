@@ -3029,7 +3029,7 @@
     if (row.is_featured) flags.push('Destacada');
     if (row.is_active === false) flags.push('Apagada');
     return {
-      title: `<i class="fas fa-users"></i> ${this.escapeHtml(row.name || 'Audiencia')}`,
+      title: `<i class="fas fa-users"></i> ${this.escapeHtml(row.name || 'Objetivo de Audiencia')}`,
       body: `
         <div class="cc-insp-section">
           <span class="cc-insp-label">Descripcion</span>
@@ -3093,7 +3093,7 @@
             <span class="cc-insp-value">${roas.toFixed(2)}x</span>
           </div>` : ''}
           <div class="cc-insp-meta">
-            <span class="cc-insp-label">Audiencia</span>
+            <span class="cc-insp-label">Objetivo de Audiencia</span>
             <span class="cc-insp-value">${persona}</span>
           </div>
           <div class="cc-insp-hint">Lectura desde la plataforma; no editable.</div>
@@ -3101,7 +3101,7 @@
       };
     }
     return {
-      title: `<i class="fas fa-lightbulb"></i> ${this.escapeHtml(row.nombre_campana || 'Conceptualizacion')}`,
+      title: `<i class="fas fa-lightbulb"></i> ${this.escapeHtml(row.nombre_campana || 'Objetivo de Campana')}`,
       body: `
         <div class="cc-insp-section">
           <span class="cc-insp-label">Objetivo comercial</span>

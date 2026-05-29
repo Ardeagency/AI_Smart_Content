@@ -1672,6 +1672,43 @@
   padding: 6px 2px; text-align: center; font-style: italic;
 }
 
+/* F2: ANCLA — Objetivo de Campana como nodo padre/trigger de la estrategia.
+   Visual distintivo: icono diana en cuadrado de accent + ring sutil. Todos
+   los demas nodos pueden conectarse a este (es el centro de la estrategia). */
+.cc-node--anchor {
+  border-color: rgba(106, 163, 255, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(106, 163, 255, 0.18), 0 2px 6px rgba(0,0,0,0.25), 0 12px 28px rgba(0,0,0,0.18);
+}
+.cc-node--anchor.cc-node--selected {
+  box-shadow: 0 0 0 2px #6aa3ff, 0 0 0 6px rgba(106, 163, 255, 0.18), 0 12px 28px rgba(0,0,0,0.30);
+}
+.cc-node--anchor .cc-node-head {
+  background: rgba(106, 163, 255, 0.10);
+}
+.cc-node--anchor .cc-node-icon--anchor {
+  background: rgba(106, 163, 255, 0.20);
+  color: #b9d5ff;
+  border-radius: 8px;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.78rem;
+  flex: 0 0 auto;
+}
+.cc-node--anchor .cc-node-title {
+  color: #d8e4fc;
+  font-weight: 700;
+}
+
+/* Boton toolbar del ancla (Objetivo de Campana) con tinte azul para senalar
+   que ese boton crea el nodo PADRE de la estrategia. */
+.cc-canvas-btn--anchor {
+  background: rgba(106, 163, 255, 0.14) !important;
+  color: #b9d5ff !important;
+  border: 1px solid rgba(106, 163, 255, 0.32) !important;
+}
+.cc-canvas-btn--anchor:hover { background: rgba(106, 163, 255, 0.22) !important; }
+.cc-canvas-btn--anchor i { color: #b9d5ff; }
+
 /* F2: rediseno nodo Campana — card limpio sin metricas inline.
    Metricas viven en el inspector (F1.12). Conjuntos+ads spawn como
    satelites tipo n8n al expandir (F2 next chunk).
