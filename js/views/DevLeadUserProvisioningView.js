@@ -74,7 +74,9 @@ class DevLeadUserProvisioningView extends DevBaseView {
           </div>
 
           <footer class="provision-page-actions">
-            <button type="button" class="provision-back-btn" data-action="back">Back</button>
+            ${this.currentStep !== this.STEPS[0].key ? `
+              <button type="button" class="provision-back-btn" data-action="back">Back</button>
+            ` : ''}
             <button
               type="button"
               class="provision-next-btn"
@@ -132,6 +134,10 @@ class DevLeadUserProvisioningView extends DevBaseView {
     const nextBtn = this.container.querySelector('[data-action="next"]');
     if (backBtn) this.addEventListener(backBtn, 'click', () => this.handleBack());
     if (nextBtn) this.addEventListener(nextBtn, 'click', () => this.handleNext());
+  }
+
+  isFirstStep() {
+    return this.currentStep === this.STEPS[0].key;
   }
 
   selectUserType(key) {

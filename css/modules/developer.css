@@ -12857,6 +12857,7 @@
 
 .provision-progress-item {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12883,14 +12884,15 @@
   color: var(--text-primary);
 }
 
-/* Linea conectora entre items: la pinta el item con el ::before, alineada al centro vertical del marker */
+/* Linea conectora entre items: la pinta el item con el ::before, alineada al centro vertical del marker.
+   Empieza al borde derecho del marker anterior y termina al borde izquierdo del marker actual
+   (left: -50% + 16px, width: 100% - 32px) para que NO se cuele bajo los markers. */
 .provision-progress-item:not(:first-child)::before {
   content: '';
   position: absolute;
-  top: calc(14px + 14px); /* padding-top + radio del marker (28/2) */
-  right: 50%;
-  left: auto;
-  width: 100%;
+  top: calc(14px + 13px); /* padding-top + (marker_height/2 - line_height/2) */
+  left: calc(-50% + 16px);
+  width: calc(100% - 32px);
   height: 2px;
   background: var(--border-divider);
   z-index: 0;
@@ -12928,7 +12930,7 @@
               linear-gradient(135deg, var(--accent-warm), var(--accent-warm))));
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
 }
 
 .provision-progress-label {
