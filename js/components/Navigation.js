@@ -1385,6 +1385,13 @@ class Navigation {
           <img src="/recursos/icons/Credits.svg" class="user-dropdown-item-icon" alt="" width="16" height="16">
           <span>Credits</span>
         </a>
+        ${window.SwitchUserController?.isLead?.() ? `
+        <div class="user-dropdown-divider"></div>
+        <button class="user-dropdown-item" id="switchUserBtn">
+          <i class="fas fa-user-tag"></i>
+          <span>Cambiar usuario</span>
+        </button>
+        ` : ''}
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
           <span>Sign out</span>
@@ -2106,6 +2113,17 @@ class Navigation {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
+
+    // Cambiar usuario (impersonacion temporal, solo lead)
+    const switchBtn = document.getElementById('switchUserBtn');
+    if (switchBtn) {
+      switchBtn.addEventListener('click', () => {
+        window.SwitchUserController?.open?.();
+      });
+    }
+
+    // Banner de impersonacion: render si hay sesion guardada en localStorage
+    window.SwitchUserController?.setupBanner?.();
 
     // Settings en modal (no navegación de ruta)
     const settingsBtn = document.getElementById('userDropdownSettingsLink');

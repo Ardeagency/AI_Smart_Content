@@ -13915,3 +13915,274 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ============================================================
+   SwitchUserController — modal de impersonacion + banner sticky
+   ============================================================ */
+
+/* ── Banner sticky (cuando hay impersonacion activa) ── */
+.switchuser-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: 10px 18px;
+  background: linear-gradient(90deg, #b35900, #e07b00);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.switchuser-banner-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.switchuser-banner-text strong {
+  font-weight: 700;
+}
+
+.switchuser-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.switchuser-banner-btn:hover { background: rgba(0, 0, 0, 0.5); }
+.switchuser-banner-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Empuja la app debajo del banner */
+body.has-switchuser-banner .app-header,
+body.has-switchuser-banner #app-container { margin-top: 0; }
+
+/* ── Modal overlay ── */
+.switchuser-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.switchuser-modal-overlay[hidden] { display: none !important; }
+
+.switchuser-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 4rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: team-modal-in 0.22s ease;
+}
+
+.switchuser-modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.switchuser-modal-head > div { flex: 1; }
+.switchuser-modal-head h3 {
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.switchuser-modal-head p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.switchuser-modal-close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.switchuser-modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-divider);
+}
+
+.switchuser-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.switchuser-loading,
+.switchuser-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.switchuser-empty i {
+  display: block;
+  font-size: 1.5rem;
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+/* ── Row clickable de cada dev ── */
+.switchuser-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  width: 100%;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.switchuser-row:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-divider);
+}
+
+.switchuser-row:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.switchuser-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.switchuser-avatar[data-rank="legend"]  { background: linear-gradient(135deg, #900090, #ff0000); color: #fff; border-color: transparent; }
+.switchuser-avatar[data-rank="master"]  { background: linear-gradient(135deg, #5b00ea, #900090); color: #fff; border-color: transparent; }
+.switchuser-avatar[data-rank="expert"]  { background: linear-gradient(135deg, #0018ee, #5b00ea); color: #fff; border-color: transparent; }
+.switchuser-avatar[data-rank="builder"] { background: linear-gradient(135deg, #00e7ff, #0018ee); color: #fff; border-color: transparent; }
+.switchuser-avatar[data-rank="junior"]  { background: linear-gradient(135deg, #00d614, #00e7ff); color: #fff; border-color: transparent; }
+.switchuser-avatar[data-rank="rookie"]  { background: linear-gradient(135deg, #9acc00, #00d614); color: #fff; border-color: transparent; }
+
+.switchuser-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.switchuser-info strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.switchuser-info span {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.switchuser-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.switchuser-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.switchuser-tag[data-rank="legend"]  { color: #ff0000; border-color: rgba(255, 0, 0, 0.35); }
+.switchuser-tag[data-rank="master"]  { color: #9d6dff; border-color: rgba(157, 109, 255, 0.35); }
+.switchuser-tag[data-rank="expert"]  { color: #5b8cff; border-color: rgba(91, 140, 255, 0.35); }
+.switchuser-tag[data-rank="builder"] { color: #00e7ff; border-color: rgba(0, 231, 255, 0.35); }
+.switchuser-tag[data-rank="junior"]  { color: #00d614; border-color: rgba(0, 214, 20, 0.35); }
+.switchuser-tag[data-rank="rookie"]  { color: #9acc00; border-color: rgba(154, 204, 0, 0.35); }
+
+.switchuser-arrow {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-left: 4px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.switchuser-row:hover .switchuser-arrow {
+  color: var(--accent-warm);
+  transform: translateX(2px);
+}
+
+.switchuser-modal-foot {
+  padding: 8px var(--spacing-lg);
+  border-top: 1px solid var(--border-divider);
+  background: var(--bg-secondary);
+}
+.switchuser-modal-status {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-height: 1em;
+}
+.switchuser-modal-status.is-error { color: #ef4444; }
