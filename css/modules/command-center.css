@@ -1672,6 +1672,52 @@
   padding: 6px 2px; text-align: center; font-style: italic;
 }
 
+/* F1.11: groups/frames — agrupador por contencion espacial */
+.cc-node--group {
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  /* z-index gestionado por orden DOM: groups van primero en _canvasNodes
+     y por ende renderean primero (detras de nodos) */
+}
+.cc-node--group .cc-group-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  cursor: grab;
+  user-select: none;
+}
+.cc-node--group .cc-group-head:active { cursor: grabbing; }
+.cc-node--group .cc-group-head i { font-size: 0.78rem; flex: 0 0 auto; }
+.cc-node--group .cc-group-title {
+  flex: 1; min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0;
+}
+.cc-node--group .cc-group-title::placeholder { opacity: 0.5; }
+.cc-node--group .cc-group-area { flex: 1; min-height: 0; pointer-events: none; }
+.cc-node--group.cc-node--selected { box-shadow: 0 0 0 2px #6aa3ff, 0 8px 24px rgba(0,0,0,0.18); }
+.cc-node--group.cc-node--dragging { opacity: 0.95; }
+
+/* Variantes de color: bg translucido + border + head tint */
+.cc-group--blue   { background: rgba(106, 163, 255, 0.07); border: 1.5px solid rgba(106, 163, 255, 0.42); }
+.cc-group--blue   .cc-group-head { background: rgba(106, 163, 255, 0.18); color: #b9d5ff; }
+.cc-group--green  { background: rgba(95, 224, 192, 0.07); border: 1.5px solid rgba(95, 224, 192, 0.42); }
+.cc-group--green  .cc-group-head { background: rgba(95, 224, 192, 0.18); color: #b6f0e0; }
+.cc-group--purple { background: rgba(176, 124, 244, 0.07); border: 1.5px solid rgba(176, 124, 244, 0.42); }
+.cc-group--purple .cc-group-head { background: rgba(176, 124, 244, 0.18); color: #dac5fb; }
+.cc-group--orange { background: rgba(224, 160, 69, 0.07); border: 1.5px solid rgba(224, 160, 69, 0.42); }
+.cc-group--orange .cc-group-head { background: rgba(224, 160, 69, 0.18); color: #f3cfa1; }
+.cc-group--red    { background: rgba(225, 87, 96, 0.07); border: 1.5px solid rgba(225, 87, 96, 0.42); }
+.cc-group--red    .cc-group-head { background: rgba(225, 87, 96, 0.18); color: #f6b5b9; }
+.cc-group--gray   { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(255, 255, 255, 0.16); }
+.cc-group--gray   .cc-group-head { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.85); }
+
 /* F1.10: sticky notes — nodo de primera clase */
 .cc-node--sticky {
   border: 1px solid rgba(0, 0, 0, 0.18) !important;

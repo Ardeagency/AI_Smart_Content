@@ -688,8 +688,10 @@
       this._ccRemoteHydratedFor = null;
       this._ccViewHydratedFor = null;
       this._ccStickiesHydratedFor = null;
-      // estado de stickies pertenece al scope anterior; resetear local cache
+      this._ccGroupsHydratedFor = null;
+      // estado pertenece al scope anterior; resetear local caches
       this._stickies = null;
+      this._groups = null;
     }
     // refs compartidas: el codigo existente sigue funcionando
     this._positions = this._store.nodes.positions;
@@ -734,6 +736,16 @@
         if (this._ccSuspendStickyPos) return;
         if (!p || !p.key || !p.key.startsWith('sticky:')) return;
         this._persistStickyPosition(p.key.slice(7));
+      });
+    }
+    // F1.11: write-through para posicion de groups. Group drag (con children)
+    // dispatchea moveNodes que emite por cada key incluido (group + children).
+    // Aqui solo filtramos las group: y delegamos a su debounce.
+    if (!this._ccGroupPosSub) {
+      this._ccGroupPosSub = this._store.on('mutated:node-position', (p) => {
+        if (this._ccSuspendGroupPos) return;
+        if (!p || !p.key || !p.key.startsWith('group:')) return;
+        this._persistGroupPosition(p.key.slice(6));
       });
     }
     return this._store;
@@ -1288,6 +1300,7 @@
     const canvasItems = []; // {type, identityType?, id, key}
 
     const stickyItems = []; // {id, key} — borrado en BD (canvas_stickies)
+    const groupItems = [];  // {id, key} — borrado en BD (canvas_groups; NO afecta children)
     keys.forEach((key) => {
       if (key.startsWith('aud:')) {
         const id = key.slice(4);
@@ -1301,6 +1314,8 @@
         else bdItems.push({ type: 'campaign-concept', id, key, name: row.nombre_campana || 'Sin nombre' });
       } else if (key.startsWith('sticky:')) {
         stickyItems.push({ id: key.slice(7), key });
+      } else if (key.startsWith('group:')) {
+        groupItems.push({ id: key.slice(6), key });
       } else {
         const colon = key.indexOf(':');
         if (colon > 0) {
@@ -1311,15 +1326,17 @@
       }
     });
 
-    // Confirmar SOLO si hay BD destructivo (audiencias / campanas concept / stickies)
-    if (bdItems.length || stickyItems.length) {
-      const audCount  = bdItems.filter((x) => x.type === 'audience').length;
-      const campCount = bdItems.filter((x) => x.type === 'campaign-concept').length;
+    // Confirmar SOLO si hay BD destructivo (audiencias / campanas concept / stickies / groups)
+    if (bdItems.length || stickyItems.length || groupItems.length) {
+      const audCount    = bdItems.filter((x) => x.type === 'audience').length;
+      const campCount   = bdItems.filter((x) => x.type === 'campaign-concept').length;
       const stickyCount = stickyItems.length;
+      const groupCount  = groupItems.length;
       const parts = [];
       if (audCount)    parts.push(`${audCount} audiencia${audCount > 1 ? 's' : ''}`);
       if (campCount)   parts.push(`${campCount} campana${campCount > 1 ? 's' : ''} conceptual${campCount > 1 ? 'es' : ''}`);
       if (stickyCount) parts.push(`${stickyCount} nota${stickyCount > 1 ? 's' : ''}`);
+      if (groupCount)  parts.push(`${groupCount} grupo${groupCount > 1 ? 's' : ''}`);
       const bdSummary = parts.length ? parts.join(' y ') + ' permanentemente' : '';
       const canvasSummary = canvasItems.length
         ? `${bdSummary ? ' y ' : ''}quitar ${canvasItems.length} nodo${canvasItems.length > 1 ? 's' : ''} mas del lienzo`
@@ -1347,6 +1364,12 @@
           .map((l) => ({ from: l.from, to: l.to }));
         touchingLinks.forEach((l) => this._store.removeFreeLink(l.from, l.to));
       } catch (e) { console.error('[CC] sticky delete error:', e); }
+    }
+    // Group: BD delete + cleanup local. NO afecta children (siguen en su sitio)
+    for (const item of groupItems) {
+      try {
+        await this._deleteGroupRemote(item.id);
+      } catch (e) { console.error('[CC] group delete error:', e); }
     }
 
     // BD destructivo: DELETE en supabase + limpieza local
@@ -1615,6 +1638,9 @@
       // F1.10: hidrata stickies + escucha edits en textareas
       this._hydrateRemoteStickies();
       this._installStickyContentListener();
+      // F1.11: hidrata groups + escucha edits del title input
+      this._hydrateRemoteGroups();
+      this._installGroupTitleListener();
       return r;
     };
   }
@@ -2043,7 +2069,7 @@
       { action: 'duplicate', icon: 'fa-clone',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
       { action: 'copy',      icon: 'fa-copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
     ];
-    if (size <= 1 && type !== 'sticky') {
+    if (size <= 1 && type !== 'sticky' && type !== 'group') {
       items.push({ action: 'collapse', icon: isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
     }
     if (canvasOnly) {
@@ -2063,7 +2089,7 @@
       { action: 'paste',  icon: 'fa-paste',        label: 'Pegar',        kbd: M + 'V', disabled: !hasClip },
       { sep: true },
       { action: 'sticky', icon: 'fa-note-sticky',  label: 'Agregar nota' },
-      { action: 'group',  icon: 'fa-object-group', label: 'Agregar grupo', soon: 'F1.11', disabled: true },
+      { action: 'group',  icon: 'fa-object-group', label: 'Agregar grupo' },
     ];
   };
 
@@ -2100,9 +2126,14 @@
           this._createStickyAt(e.clientX, e.clientY);
         }
         return;
-      case 'props':
       case 'group':
-        // Stubs (F1.11/F1.12)
+        // F1.11: crear group en el punto del right-click
+        if (e && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)) {
+          this._createGroupAt(e.clientX, e.clientY);
+        }
+        return;
+      case 'props':
+        // Stub F1.12
         return;
     }
   };
@@ -2390,6 +2421,342 @@
     canvas.addEventListener('input', this._ccStickyInput);
   };
 
+  // ------------------------------------------------------------------
+  // F1.11: groups / frames — agrupador por contencion espacial
+  //
+  // canvas_groups(id, org+brand_container_id, title, color enum, position_x/y,
+  //               width/height + CHECKs, created_at/by, updated_at).
+  // Group se renderiza como .cc-node con .cc-node--group + variante de color.
+  // Children NO viven en BD: al arrastrar el grupo, recalculamos espacialmente
+  // que nodos tienen su CENTRO dentro del rect del grupo y los movemos juntos.
+  // Asi, mover un nodo manualmente lo "saca" del grupo sin schema cambios.
+  // Groups van PRIMERO en _canvasNodes → renderean detras de nodos.
+  // ------------------------------------------------------------------
+
+  // Wrap _canvasNodes para prepend groups (sobre el wrap F1.10)
+  const _f10CanvasNodes = P._canvasNodes;
+  if (typeof _f10CanvasNodes === 'function') {
+    P._canvasNodes = function () {
+      const lst = _f10CanvasNodes.apply(this, arguments);
+      if (!this._groups || !this._groups.length) return lst;
+      const groups = this._groups.map((g) => ({ key: `group:${g.id}`, type: 'group', id: g.id, row: g }));
+      return groups.concat(lst); // groups primero → renderean detras
+    };
+  }
+
+  // Wrap _nodeCampaignHTML para enrutar group → _nodeGroupHTML (chained sobre F1.10)
+  const _f10NodeCampaignHTML = P._nodeCampaignHTML;
+  if (typeof _f10NodeCampaignHTML === 'function') {
+    P._nodeCampaignHTML = function (n, pos) {
+      if (n && n.type === 'group') return this._nodeGroupHTML(n, pos);
+      return _f10NodeCampaignHTML.apply(this, arguments);
+    };
+  }
+
+  P._nodeGroupHTML = function (n, pos) {
+    const g = n.row || {};
+    const w = Number.isFinite(g.width)  && g.width  > 80 ? g.width  : 400;
+    const h = Number.isFinite(g.height) && g.height > 60 ? g.height : 300;
+    const title = g.title || '';
+    const color = ['blue','green','purple','orange','red','gray'].includes(g.color) ? g.color : 'blue';
+    const escId = this.escapeHtml(String(n.id));
+    return `<div class="cc-node cc-node--group cc-group--${color}" data-node-key="${this.escapeHtml(n.key)}" data-type="group" data-id="${escId}" style="left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;">
+      <div class="cc-group-head" data-drag-handle>
+        <i class="fas fa-object-group"></i>
+        <input type="text" class="cc-group-title" data-cc-group-title="${escId}" placeholder="Sin titulo" value="${this.escapeHtml(title)}" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="cc-group-area"></div>
+    </div>`;
+  };
+
+  // ── Hydration BD ────────────────────────────────────────────────────
+  P._hydrateRemoteGroups = async function () {
+    this._ensureStore();
+    const brandId = this._containerRow?.id;
+    if (!this._supabase || !brandId) return;
+    if (this._ccGroupsHydratedFor === brandId) return;
+    this._ccGroupsHydratedFor = brandId;
+    try {
+      const { data: rows, error } = await this._supabase
+        .from('canvas_groups')
+        .select('id, title, color, position_x, position_y, width, height')
+        .eq('brand_container_id', brandId);
+      if (error) {
+        console.warn('[CC] hydrate canvas_groups:', error.message || error);
+        this._ccGroupsHydratedFor = null;
+        return;
+      }
+      this._groups = (rows || []).map((r) => ({
+        id: r.id,
+        title: r.title || '',
+        color: r.color || 'blue',
+        width:  Number.isFinite(r.width)  && r.width  > 80 ? r.width  : 400,
+        height: Number.isFinite(r.height) && r.height > 60 ? r.height : 300,
+      }));
+      this._ccSuspendGroupPos = true;
+      this._groups.forEach((g, idx) => {
+        const r = rows[idx];
+        const x = Number(r.position_x), y = Number(r.position_y);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          this._store.setNodePosition(`group:${g.id}`, x, y);
+        }
+      });
+      this._ccSuspendGroupPos = false;
+      this._renderCanvas();
+    } catch (e) {
+      console.warn('[CC] hydrate groups exception:', e);
+      this._ccGroupsHydratedFor = null;
+    } finally {
+      this._ccSuspendGroupPos = false;
+    }
+  };
+
+  // ── Create group (BD insert + push local + select) ──────────────────
+  P._createGroupAt = async function (clientX, clientY) {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    if (!this._groups) this._groups = [];
+    try {
+      const w = this._worldPointFromClient(clientX, clientY);
+      const px = Math.max(0, w.x - 200), py = Math.max(0, w.y - 150);
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const insert = {
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        title: '',
+        color: 'blue',
+        position_x: px, position_y: py,
+        width: 400, height: 300,
+      };
+      if (user?.id) insert.created_by = user.id;
+      const { data: row, error } = await this._supabase
+        .from('canvas_groups')
+        .insert(insert)
+        .select()
+        .single();
+      if (error) { console.error('[CC] create group:', error.message || error); return; }
+      this._groups.push({
+        id: row.id, title: row.title || '', color: row.color || 'blue',
+        width: row.width || 400, height: row.height || 300,
+      });
+      const key = `group:${row.id}`;
+      this._ccSuspendGroupPos = true;
+      this._store.setNodePosition(key, row.position_x, row.position_y);
+      this._ccSuspendGroupPos = false;
+      this._renderCanvas();
+      this._store.setSelection({ key, descriptor: { type: 'group', id: String(row.id), key } });
+      this._selectedKey = key; this._selected = { type: 'group', id: String(row.id), key };
+      this._renderSelection();
+      requestAnimationFrame(() => {
+        const inp = document.querySelector(`input[data-cc-group-title="${ccCssEsc(String(row.id))}"]`);
+        if (inp) inp.focus();
+      });
+    } catch (e) {
+      console.error('[CC] create group exception:', e);
+    }
+  };
+
+  // ── Position write-through (debounced) ──────────────────────────────
+  P._persistGroupPosition = function (groupId) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._ccGroupPosTimers) this._ccGroupPosTimers = {};
+    if (this._ccGroupPosTimers[groupId]) clearTimeout(this._ccGroupPosTimers[groupId]);
+    this._ccGroupPosTimers[groupId] = setTimeout(async () => {
+      delete this._ccGroupPosTimers[groupId];
+      const pos = this._positions[`group:${groupId}`];
+      if (!pos) return;
+      try {
+        const { error } = await this._supabase
+          .from('canvas_groups')
+          .update({ position_x: pos.x, position_y: pos.y })
+          .eq('id', groupId)
+          .eq('brand_container_id', this._containerRow.id);
+        if (error) console.warn('[CC] update group pos:', error.message || error);
+      } catch (e) {
+        console.warn('[CC] update group pos exception:', e);
+      }
+    }, 800);
+  };
+
+  // ── Title edit (debounced upsert) ───────────────────────────────────
+  P._scheduleGroupTitleSave = function (groupId, title) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._ccGroupTitleTimers) this._ccGroupTitleTimers = {};
+    if (this._ccGroupTitleTimers[groupId]) clearTimeout(this._ccGroupTitleTimers[groupId]);
+    const local = (this._groups || []).find((g) => String(g.id) === String(groupId));
+    if (local) local.title = title;
+    this._ccGroupTitleTimers[groupId] = setTimeout(async () => {
+      delete this._ccGroupTitleTimers[groupId];
+      try {
+        const { error } = await this._supabase
+          .from('canvas_groups')
+          .update({ title })
+          .eq('id', groupId)
+          .eq('brand_container_id', this._containerRow.id);
+        if (error) console.warn('[CC] update group title:', error.message || error);
+      } catch (e) {
+        console.warn('[CC] update group title exception:', e);
+      }
+    }, 800);
+  };
+
+  // ── Delete group (BD + local; NO borra children) ────────────────────
+  P._deleteGroupRemote = async function (groupId) {
+    if (!this._supabase || !this._containerRow?.id) return false;
+    try {
+      const { error } = await this._supabase
+        .from('canvas_groups')
+        .delete()
+        .eq('id', groupId)
+        .eq('brand_container_id', this._containerRow.id);
+      if (error) { console.error('[CC] delete group:', error.message || error); return false; }
+      this._groups = (this._groups || []).filter((g) => String(g.id) !== String(groupId));
+      delete this._positions[`group:${groupId}`];
+      this._store.persistPositions();
+      return true;
+    } catch (e) {
+      console.error('[CC] delete group exception:', e);
+      return false;
+    }
+  };
+
+  // ── Install: title input listener (delegado en canvas) ──────────────
+  P._installGroupTitleListener = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas || this._ccGroupInput) return;
+    this._ccGroupInput = (e) => {
+      const inp = e.target.closest('input[data-cc-group-title]');
+      if (!inp) return;
+      const id = inp.getAttribute('data-cc-group-title');
+      if (!id) return;
+      this._scheduleGroupTitleSave(id, inp.value);
+    };
+    canvas.addEventListener('input', this._ccGroupInput);
+  };
+
+  // ── Group drag con children por contencion espacial ─────────────────
+  // Wrap _beginNodeDrag (sobre el wrap F1.2+F1.3+F1.10 si lo hay) para
+  // detectar type=group y delegar al group-drag con captura espacial.
+  const _f10BeginNodeDrag = P._beginNodeDrag;
+  if (typeof _f10BeginNodeDrag === 'function') {
+    P._beginNodeDrag = function (e, nodeEl) {
+      const type = nodeEl && nodeEl.getAttribute('data-type');
+      if (type === 'group') { this._beginGroupDrag(e, nodeEl); return; }
+      return _f10BeginNodeDrag.apply(this, arguments);
+    };
+  }
+
+  P._beginGroupDrag = function (e, nodeEl) {
+    e.preventDefault(); e.stopPropagation();
+    this._ensureStore();
+    this._didDrag = false;
+    const groupKey = nodeEl.getAttribute('data-node-key');
+    const groupId = nodeEl.getAttribute('data-id');
+    const group = (this._groups || []).find((g) => String(g.id) === String(groupId));
+    if (!group) return;
+    const s = this._canvasScale || 1;
+    const startMouse = { x: e.clientX, y: e.clientY };
+
+    // Group base
+    const gp = this._positions[groupKey];
+    const groupBase = gp
+      ? { x: gp.x, y: gp.y }
+      : { x: parseFloat(nodeEl.style.left) || 0, y: parseFloat(nodeEl.style.top) || 0 };
+    const gw = Number(group.width)  || 400;
+    const gh = Number(group.height) || 300;
+
+    // Children: nodos cuyo centro caen DENTRO del rect del grupo AHORA.
+    // Excluye otros grupos (no anidamos en v1).
+    const childBases = new Map();
+    document.querySelectorAll('.cc-node').forEach((n) => {
+      const k = n.getAttribute('data-node-key');
+      if (k === groupKey) return;
+      if (k && k.startsWith('group:')) return;
+      const cp = this._positions[k];
+      if (!cp) return;
+      const nw = n.offsetWidth  || 244;
+      const nh = n.offsetHeight || 120;
+      const cx = cp.x + nw / 2, cy = cp.y + nh / 2;
+      if (cx >= groupBase.x && cx <= groupBase.x + gw &&
+          cy >= groupBase.y && cy <= groupBase.y + gh) {
+        childBases.set(k, { x: cp.x, y: cp.y });
+      }
+    });
+
+    nodeEl.classList.add('cc-node--dragging');
+    const childEls = [];
+    childBases.forEach((_, k) => {
+      const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+      if (el) { el.classList.add('cc-node--dragging'); childEls.push(el); }
+    });
+
+    const onMove = (ev) => {
+      const dx = (ev.clientX - startMouse.x) / s;
+      const dy = (ev.clientY - startMouse.y) / s;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this._didDrag = true;
+      const gx = groupBase.x + dx, gy = groupBase.y + dy;
+      nodeEl.style.left = `${gx}px`;
+      nodeEl.style.top  = `${gy}px`;
+      if (this._positions[groupKey]) { this._positions[groupKey].x = gx; this._positions[groupKey].y = gy; }
+      else this._positions[groupKey] = { x: gx, y: gy };
+      childBases.forEach((base, k) => {
+        const nx = base.x + dx, ny = base.y + dy;
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+        if (el) { el.style.left = `${nx}px`; el.style.top = `${ny}px`; }
+        if (this._positions[k]) { this._positions[k].x = nx; this._positions[k].y = ny; }
+        else this._positions[k] = { x: nx, y: ny };
+      });
+      this._scheduleEdges();
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      nodeEl.classList.remove('cc-node--dragging');
+      childEls.forEach((el) => el.classList.remove('cc-node--dragging'));
+      // snap to grid 16
+      const baseByKey = new Map();
+      const finalByKey = new Map();
+      // group
+      baseByKey.set(groupKey, groupBase);
+      const gpos = this._positions[groupKey];
+      if (gpos) {
+        gpos.x = Math.round(gpos.x / 16) * 16;
+        gpos.y = Math.round(gpos.y / 16) * 16;
+        nodeEl.style.left = `${gpos.x}px`;
+        nodeEl.style.top  = `${gpos.y}px`;
+        finalByKey.set(groupKey, { x: gpos.x, y: gpos.y });
+      }
+      // children
+      childBases.forEach((base, k) => {
+        baseByKey.set(k, base);
+        const cp = this._positions[k];
+        if (!cp) return;
+        cp.x = Math.round(cp.x / 16) * 16;
+        cp.y = Math.round(cp.y / 16) * 16;
+        const el = document.querySelector(`.cc-node[data-node-key="${ccCssEsc(k)}"]`);
+        if (el) { el.style.left = `${cp.x}px`; el.style.top = `${cp.y}px`; }
+        finalByKey.set(k, { x: cp.x, y: cp.y });
+      });
+      this._scheduleEdges();
+      // Dispatch composite move (group + children) como 1 entrada de undo
+      let anyChange = false;
+      finalByKey.forEach((p, k) => {
+        const b = baseByKey.get(k);
+        if (b && (p.x !== b.x || p.y !== b.y)) { anyChange = true; }
+      });
+      if (anyChange) {
+        this._store.dispatch(this._commands.moveNodes(baseByKey, finalByKey));
+      } else {
+        this._store.persistPositions();
+      }
+      this._drawMinimap();
+      setTimeout(() => { this._didDrag = false; }, 0);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
   // que F1.7 pueda persistirlo en canvas_views sin re-cablear todo. No
   // cambia comportamiento existente; solo añade un observador delgado.
@@ -2502,6 +2869,24 @@
       this._ccStickyPosSub = null;
     }
     this._ccStickiesHydratedFor = null;
+    // F1.11: cleanup groups
+    if (canvas && this._ccGroupInput) {
+      canvas.removeEventListener('input', this._ccGroupInput);
+      this._ccGroupInput = null;
+    }
+    if (this._ccGroupPosTimers) {
+      Object.values(this._ccGroupPosTimers).forEach((t) => clearTimeout(t));
+      this._ccGroupPosTimers = null;
+    }
+    if (this._ccGroupTitleTimers) {
+      Object.values(this._ccGroupTitleTimers).forEach((t) => clearTimeout(t));
+      this._ccGroupTitleTimers = null;
+    }
+    if (typeof this._ccGroupPosSub === 'function') {
+      try { this._ccGroupPosSub(); } catch (_) {}
+      this._ccGroupPosSub = null;
+    }
+    this._ccGroupsHydratedFor = null;
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.
