@@ -2004,6 +2004,15 @@
 }
 .cc-node::before { display: none !important; }
 
+/* F2: productos, servicios y lugares NO reciben input.
+   Son recursos que pueden ser usados como input por otros nodos.
+   Ocultamos el puerto de entrada (left side). */
+.cc-node--identity[data-identity-type="products"] .cc-node-port--in,
+.cc-node--identity[data-identity-type="services"] .cc-node-port--in,
+.cc-node--identity[data-identity-type="places"] .cc-node-port--in {
+  display: none !important;
+}
+
 /* F2: monochromatico — sin acentos de color en ningun nodo.
    Mantenemos diferenciacion via tipografia, iconos, bordes y estructura.
    Selection ring es BLANCO (para que se vea sobre el gris). */
