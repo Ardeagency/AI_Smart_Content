@@ -402,6 +402,26 @@ class BrandOrganizationView extends BaseView {
         this.brandContainers = [];
       }
 
+      // brand_integrations: alimenta la seccion "En la web" del panel INFO
+      // (Google/Meta/Shopify). Sin esto getIntegrationsForContainer devuelve []
+      // y todas las integraciones salen como "Conectar" aunque esten activas.
+      try {
+        const containerIds = (this.brandContainers || []).map((row) => row.id).filter(Boolean);
+        if (containerIds.length) {
+          const { data: integrationRows } = await this.supabase
+            .from('brand_integrations')
+            .select('id, brand_container_id, platform, external_account_name, is_active, token_expires_at, metadata, last_sync_at, updated_at')
+            .in('brand_container_id', containerIds)
+            .order('platform', { ascending: true });
+          this.brandIntegrations = integrationRows || [];
+        } else {
+          this.brandIntegrations = [];
+        }
+      } catch (e) {
+        console.warn('BrandOrganizationView: brand_integrations', e);
+        this.brandIntegrations = [];
+      }
+
       this.brandColors = await this._queryBrandColorsRows();
       this.brandFonts = await this._queryBrandFontsRows();
     } catch (error) {
