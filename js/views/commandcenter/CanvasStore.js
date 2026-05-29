@@ -684,9 +684,12 @@
       this._store = new CanvasStore(scope);
     } else if (this._store.scope !== String(scope)) {
       this._store.rescope(scope);
-      // re-scope cambia de marca → la hidratacion remota debe correr de nuevo
+      // re-scope cambia de marca → las hidrataciones remotas deben correr de nuevo
       this._ccRemoteHydratedFor = null;
       this._ccViewHydratedFor = null;
+      this._ccStickiesHydratedFor = null;
+      // estado de stickies pertenece al scope anterior; resetear local cache
+      this._stickies = null;
     }
     // refs compartidas: el codigo existente sigue funcionando
     this._positions = this._store.nodes.positions;
@@ -721,6 +724,16 @@
       this._ccViewportSub = this._store.on('mutated:viewport', () => {
         if (this._ccSuspendRemoteView) return;
         this._persistRemoteView();
+      });
+    }
+    // F1.10: write-through BD para posicion de sticky (sub a mutated:node-position
+    // filtrado por keys 'sticky:*'). Se dispara desde dispatch de moveNode/
+    // moveNodes (drag, arrows) y hydrate (suspendido). Debounce en _persistStickyPosition.
+    if (!this._ccStickyPosSub) {
+      this._ccStickyPosSub = this._store.on('mutated:node-position', (p) => {
+        if (this._ccSuspendStickyPos) return;
+        if (!p || !p.key || !p.key.startsWith('sticky:')) return;
+        this._persistStickyPosition(p.key.slice(7));
       });
     }
     return this._store;
@@ -1274,6 +1287,7 @@
     const bdItems = [];     // {type, id, key, name}
     const canvasItems = []; // {type, identityType?, id, key}
 
+    const stickyItems = []; // {id, key} — borrado en BD (canvas_stickies)
     keys.forEach((key) => {
       if (key.startsWith('aud:')) {
         const id = key.slice(4);
@@ -1285,6 +1299,8 @@
         if (!row) return;
         if (row.last_synced_at) canvasItems.push({ type: 'campaign-real', id, key });
         else bdItems.push({ type: 'campaign-concept', id, key, name: row.nombre_campana || 'Sin nombre' });
+      } else if (key.startsWith('sticky:')) {
+        stickyItems.push({ id: key.slice(7), key });
       } else {
         const colon = key.indexOf(':');
         if (colon > 0) {
@@ -1295,16 +1311,18 @@
       }
     });
 
-    // Confirmar SOLO si hay BD destructivo
-    if (bdItems.length) {
+    // Confirmar SOLO si hay BD destructivo (audiencias / campanas concept / stickies)
+    if (bdItems.length || stickyItems.length) {
       const audCount  = bdItems.filter((x) => x.type === 'audience').length;
       const campCount = bdItems.filter((x) => x.type === 'campaign-concept').length;
+      const stickyCount = stickyItems.length;
       const parts = [];
-      if (audCount)  parts.push(`${audCount} audiencia${audCount > 1 ? 's' : ''}`);
-      if (campCount) parts.push(`${campCount} campana${campCount > 1 ? 's' : ''} conceptual${campCount > 1 ? 'es' : ''}`);
-      const bdSummary = parts.join(' y ') + ' permanentemente';
+      if (audCount)    parts.push(`${audCount} audiencia${audCount > 1 ? 's' : ''}`);
+      if (campCount)   parts.push(`${campCount} campana${campCount > 1 ? 's' : ''} conceptual${campCount > 1 ? 'es' : ''}`);
+      if (stickyCount) parts.push(`${stickyCount} nota${stickyCount > 1 ? 's' : ''}`);
+      const bdSummary = parts.length ? parts.join(' y ') + ' permanentemente' : '';
       const canvasSummary = canvasItems.length
-        ? ` y quitar ${canvasItems.length} nodo${canvasItems.length > 1 ? 's' : ''} mas del lienzo`
+        ? `${bdSummary ? ' y ' : ''}quitar ${canvasItems.length} nodo${canvasItems.length > 1 ? 's' : ''} mas del lienzo`
         : '';
       const msg = `Vas a eliminar ${bdSummary}${canvasSummary}. ¿Continuar?`;
       if (!window.confirm(msg)) return;
@@ -1317,6 +1335,19 @@
         else if (item.type === 'campaign-real') this._removeRealFromCanvas(item.id);
       } catch (e) { console.error('[CC] canvas remove error:', e); }
     });
+
+    // Sticky: BD delete + limpieza local + free-links tocando
+    for (const item of stickyItems) {
+      try {
+        const ok = await this._deleteStickyRemote(item.id);
+        if (!ok) continue;
+        // links libres tocando este sticky
+        const touchingLinks = (this._store.edges.freeLinks || [])
+          .filter((l) => l.from === item.key || l.to === item.key)
+          .map((l) => ({ from: l.from, to: l.to }));
+        touchingLinks.forEach((l) => this._store.removeFreeLink(l.from, l.to));
+      } catch (e) { console.error('[CC] sticky delete error:', e); }
+    }
 
     // BD destructivo: DELETE en supabase + limpieza local
     for (const item of bdItems) {
@@ -1581,6 +1612,9 @@
       this._installLibSearch();
       // F1.9: context menu (right-click) sobre canvas
       this._installCanvasContextMenu();
+      // F1.10: hidrata stickies + escucha edits en textareas
+      this._hydrateRemoteStickies();
+      this._installStickyContentListener();
       return r;
     };
   }
@@ -2009,7 +2043,7 @@
       { action: 'duplicate', icon: 'fa-clone',           label: size > 1 ? 'Duplicar seleccion' : 'Duplicar', kbd: M + 'D' },
       { action: 'copy',      icon: 'fa-copy',            label: size > 1 ? 'Copiar seleccion'   : 'Copiar',   kbd: M + 'C' },
     ];
-    if (size <= 1) {
+    if (size <= 1 && type !== 'sticky') {
       items.push({ action: 'collapse', icon: isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up', label: isCollapsed ? 'Expandir' : 'Colapsar' });
     }
     if (canvasOnly) {
@@ -2028,13 +2062,13 @@
     return [
       { action: 'paste',  icon: 'fa-paste',        label: 'Pegar',        kbd: M + 'V', disabled: !hasClip },
       { sep: true },
-      { action: 'sticky', icon: 'fa-note-sticky',  label: 'Agregar nota', soon: 'F1.10', disabled: true },
+      { action: 'sticky', icon: 'fa-note-sticky',  label: 'Agregar nota' },
       { action: 'group',  icon: 'fa-object-group', label: 'Agregar grupo', soon: 'F1.11', disabled: true },
     ];
   };
 
   /** Despacha la accion seleccionada del menu. */
-  P._dispatchCtxAction = function (action, nodeEl /*, e */) {
+  P._dispatchCtxAction = function (action, nodeEl, e) {
     switch (action) {
       case 'duplicate': this._ccDuplicate(); return;
       case 'copy':      this._ccCopyToClipboard(); return;
@@ -2053,17 +2087,22 @@
               const id = key.slice(5);
               const row = (this._campaigns || []).find((c) => String(c.id) === String(id));
               if (row && row.last_synced_at) this._removeRealFromCanvas(id);
-            } else if (!key.startsWith('aud:')) {
+            } else if (!key.startsWith('aud:') && !key.startsWith('sticky:')) {
               const colon = key.indexOf(':');
               if (colon > 0) this._removeIdentityFromCanvas(key.slice(0, colon), key.slice(colon + 1));
             }
           });
         }
         return;
-      case 'props':
       case 'sticky':
+        // F1.10: crear sticky en el punto del right-click (clientX/Y del evento)
+        if (e && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)) {
+          this._createStickyAt(e.clientX, e.clientY);
+        }
+        return;
+      case 'props':
       case 'group':
-        // Stubs (F1.10/F1.11/F1.12)
+        // Stubs (F1.11/F1.12)
         return;
     }
   };
@@ -2131,6 +2170,224 @@
     } finally {
       this._ccViewFlushInFlight = false;
     }
+  };
+
+  // ------------------------------------------------------------------
+  // F1.10: sticky notes — nodo de primera clase, per-brand en BD
+  //
+  // canvas_stickies(id, organization_id+brand_container_id, content, color,
+  //                 position_x/y, width, height, created_at/by, updated_at).
+  // Cada sticky se renderiza como .cc-node con sub-clase .cc-node--sticky
+  // para reutilizar drag/select/multi/marquee del chasis. Su body es un
+  // <textarea> con data-cc-sticky-content (el guard input/textarea del
+  // F1.5 deja el typing fluir sin interferir con atajos de canvas).
+  // Drag handle: la cabecera (.cc-sticky-head con data-drag-handle).
+  // ------------------------------------------------------------------
+
+  // Wrap _canvasNodes para incluir stickies en el listado base
+  const _origCanvasNodes = P._canvasNodes;
+  if (typeof _origCanvasNodes === 'function') {
+    P._canvasNodes = function () {
+      const base = _origCanvasNodes.apply(this, arguments);
+      const stickies = (this._stickies || []).map((s) => ({
+        key: `sticky:${s.id}`, type: 'sticky', id: s.id, row: s,
+      }));
+      return base.concat(stickies);
+    };
+  }
+
+  // Wrap _nodeCampaignHTML: el render itera nodos y delega los tipos no-
+  // audience/no-identity a _nodeCampaignHTML como fallback. Interceptamos
+  // ese fallback y enrutamos sticky a su propio renderer.
+  const _origNodeCampaignHTML = P._nodeCampaignHTML;
+  if (typeof _origNodeCampaignHTML === 'function') {
+    P._nodeCampaignHTML = function (n, pos) {
+      if (n && n.type === 'sticky') return this._nodeStickyHTML(n, pos);
+      return _origNodeCampaignHTML.apply(this, arguments);
+    };
+  }
+
+  P._nodeStickyHTML = function (n, pos) {
+    const s = n.row || {};
+    const w = Number.isFinite(s.width) && s.width > 60 ? s.width : 220;
+    const h = Number.isFinite(s.height) && s.height > 40 ? s.height : 140;
+    const content = s.content || '';
+    const escId = this.escapeHtml(String(n.id));
+    return `<div class="cc-node cc-node--sticky" data-node-key="${this.escapeHtml(n.key)}" data-type="sticky" data-id="${escId}" style="left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;">
+      <div class="cc-sticky-head" data-drag-handle>
+        <i class="fas fa-note-sticky"></i>
+        <span>Nota</span>
+      </div>
+      <textarea class="cc-sticky-body" data-cc-sticky-content="${escId}" placeholder="Escribe una nota...">${this.escapeHtml(content)}</textarea>
+    </div>`;
+  };
+
+  // ── Hydration BD ────────────────────────────────────────────────────
+  P._hydrateRemoteStickies = async function () {
+    this._ensureStore();
+    const brandId = this._containerRow?.id;
+    if (!this._supabase || !brandId) return;
+    if (this._ccStickiesHydratedFor === brandId) return;
+    this._ccStickiesHydratedFor = brandId;
+    try {
+      const { data: rows, error } = await this._supabase
+        .from('canvas_stickies')
+        .select('id, content, color, position_x, position_y, width, height')
+        .eq('brand_container_id', brandId);
+      if (error) {
+        console.warn('[CC] hydrate canvas_stickies:', error.message || error);
+        this._ccStickiesHydratedFor = null;
+        return;
+      }
+      this._stickies = (rows || []).map((r) => ({
+        id: r.id,
+        content: r.content || '',
+        color: r.color || 'yellow',
+        width:  Number.isFinite(r.width)  && r.width  > 60 ? r.width  : 220,
+        height: Number.isFinite(r.height) && r.height > 40 ? r.height : 140,
+      }));
+      // Posiciones: aplicarlas al store sin disparar el write-through
+      this._ccSuspendStickyPos = true;
+      this._stickies.forEach((s, idx) => {
+        const r = rows[idx];
+        const x = Number(r.position_x), y = Number(r.position_y);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          this._store.setNodePosition(`sticky:${s.id}`, x, y);
+        }
+      });
+      this._ccSuspendStickyPos = false;
+      this._renderCanvas();
+    } catch (e) {
+      console.warn('[CC] hydrate stickies exception:', e);
+      this._ccStickiesHydratedFor = null;
+    } finally {
+      this._ccSuspendStickyPos = false;
+    }
+  };
+
+  // ── Create sticky (BD insert + push local + select) ─────────────────
+  P._createStickyAt = async function (clientX, clientY) {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    if (!this._stickies) this._stickies = [];
+    try {
+      const w = this._worldPointFromClient(clientX, clientY);
+      const px = Math.max(0, w.x - 110), py = Math.max(0, w.y - 20);
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const insert = {
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        content: '',
+        color: 'yellow',
+        position_x: px, position_y: py,
+        width: 220, height: 140,
+      };
+      if (user?.id) insert.created_by = user.id;
+      const { data: row, error } = await this._supabase
+        .from('canvas_stickies')
+        .insert(insert)
+        .select()
+        .single();
+      if (error) { console.error('[CC] create sticky:', error.message || error); return; }
+      this._stickies.push({
+        id: row.id, content: row.content || '', color: row.color || 'yellow',
+        width: row.width || 220, height: row.height || 140,
+      });
+      const key = `sticky:${row.id}`;
+      this._ccSuspendStickyPos = true;
+      this._store.setNodePosition(key, row.position_x, row.position_y);
+      this._ccSuspendStickyPos = false;
+      this._renderCanvas();
+      // Seleccionar la nueva sticky y darle foco al textarea
+      this._store.setSelection({ key, descriptor: { type: 'sticky', id: String(row.id), key } });
+      this._selectedKey = key; this._selected = { type: 'sticky', id: String(row.id), key };
+      this._renderSelection();
+      // foco a la textarea recien renderizada
+      requestAnimationFrame(() => {
+        const ta = document.querySelector(`textarea[data-cc-sticky-content="${ccCssEsc(String(row.id))}"]`);
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      });
+    } catch (e) {
+      console.error('[CC] create sticky exception:', e);
+    }
+  };
+
+  // ── Position write-through (debounced) ──────────────────────────────
+  P._persistStickyPosition = function (stickyId) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._ccStickyPosTimers) this._ccStickyPosTimers = {};
+    if (this._ccStickyPosTimers[stickyId]) clearTimeout(this._ccStickyPosTimers[stickyId]);
+    this._ccStickyPosTimers[stickyId] = setTimeout(async () => {
+      delete this._ccStickyPosTimers[stickyId];
+      const pos = this._positions[`sticky:${stickyId}`];
+      if (!pos) return;
+      try {
+        const { error } = await this._supabase
+          .from('canvas_stickies')
+          .update({ position_x: pos.x, position_y: pos.y })
+          .eq('id', stickyId)
+          .eq('brand_container_id', this._containerRow.id);
+        if (error) console.warn('[CC] update sticky pos:', error.message || error);
+      } catch (e) {
+        console.warn('[CC] update sticky pos exception:', e);
+      }
+    }, 800);
+  };
+
+  // ── Content edit (debounced upsert) ─────────────────────────────────
+  P._scheduleStickyContentSave = function (stickyId, content) {
+    if (!this._supabase || !this._containerRow?.id) return;
+    if (!this._ccStickyContentTimers) this._ccStickyContentTimers = {};
+    if (this._ccStickyContentTimers[stickyId]) clearTimeout(this._ccStickyContentTimers[stickyId]);
+    // Actualizar local in-memory inmediato (para que un re-render no reverta)
+    const local = (this._stickies || []).find((x) => String(x.id) === String(stickyId));
+    if (local) local.content = content;
+    this._ccStickyContentTimers[stickyId] = setTimeout(async () => {
+      delete this._ccStickyContentTimers[stickyId];
+      try {
+        const { error } = await this._supabase
+          .from('canvas_stickies')
+          .update({ content })
+          .eq('id', stickyId)
+          .eq('brand_container_id', this._containerRow.id);
+        if (error) console.warn('[CC] update sticky content:', error.message || error);
+      } catch (e) {
+        console.warn('[CC] update sticky content exception:', e);
+      }
+    }, 800);
+  };
+
+  // ── Delete sticky (BD + local) ──────────────────────────────────────
+  P._deleteStickyRemote = async function (stickyId) {
+    if (!this._supabase || !this._containerRow?.id) return false;
+    try {
+      const { error } = await this._supabase
+        .from('canvas_stickies')
+        .delete()
+        .eq('id', stickyId)
+        .eq('brand_container_id', this._containerRow.id);
+      if (error) { console.error('[CC] delete sticky:', error.message || error); return false; }
+      this._stickies = (this._stickies || []).filter((s) => String(s.id) !== String(stickyId));
+      delete this._positions[`sticky:${stickyId}`];
+      this._store.persistPositions();
+      return true;
+    } catch (e) {
+      console.error('[CC] delete sticky exception:', e);
+      return false;
+    }
+  };
+
+  // ── Install: textarea input listener (delegado en world) ────────────
+  P._installStickyContentListener = function () {
+    const canvas = document.getElementById('ccCanvas');
+    if (!canvas || this._ccStickyInput) return;
+    this._ccStickyInput = (e) => {
+      const ta = e.target.closest('textarea[data-cc-sticky-content]');
+      if (!ta) return;
+      const id = ta.getAttribute('data-cc-sticky-content');
+      if (!id) return;
+      this._scheduleStickyContentSave(id, ta.value);
+    };
+    canvas.addEventListener('input', this._ccStickyInput);
   };
 
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
@@ -2227,6 +2484,24 @@
       document.removeEventListener('keydown', this._ccCtxEsc, true);
       this._ccCtxEsc = null;
     }
+    // F1.10: cleanup stickies — listener + timers + flush pendientes
+    if (canvas && this._ccStickyInput) {
+      canvas.removeEventListener('input', this._ccStickyInput);
+      this._ccStickyInput = null;
+    }
+    if (this._ccStickyPosTimers) {
+      Object.values(this._ccStickyPosTimers).forEach((t) => clearTimeout(t));
+      this._ccStickyPosTimers = null;
+    }
+    if (this._ccStickyContentTimers) {
+      Object.values(this._ccStickyContentTimers).forEach((t) => clearTimeout(t));
+      this._ccStickyContentTimers = null;
+    }
+    if (typeof this._ccStickyPosSub === 'function') {
+      try { this._ccStickyPosSub(); } catch (_) {}
+      this._ccStickyPosSub = null;
+    }
+    this._ccStickiesHydratedFor = null;
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.

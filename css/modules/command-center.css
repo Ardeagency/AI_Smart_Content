@@ -1672,6 +1672,47 @@
   padding: 6px 2px; text-align: center; font-style: italic;
 }
 
+/* F1.10: sticky notes — nodo de primera clase */
+.cc-node--sticky {
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
+  border-radius: 10px;
+  background: #f4e07a !important;
+  color: #2a2510 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cc-node--sticky .cc-sticky-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(42, 37, 16, 0.78);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: grab;
+  user-select: none;
+}
+.cc-node--sticky .cc-sticky-head:active { cursor: grabbing; }
+.cc-node--sticky .cc-sticky-head i { font-size: 0.7rem; opacity: 0.75; }
+.cc-node--sticky .cc-sticky-body {
+  flex: 1; min-height: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  resize: none;
+  overflow: auto;
+}
+.cc-node--sticky .cc-sticky-body::placeholder { color: rgba(42, 37, 16, 0.40); }
+.cc-node--sticky.cc-node--selected { box-shadow: 0 0 0 2px #6aa3ff, 0 8px 24px rgba(0,0,0,0.18); }
+.cc-node--sticky.cc-node--dragging { opacity: 0.85; }
+
 /* F1.9: context menu (right-click) */
 .cc-ctx-menu {
   position: fixed;
