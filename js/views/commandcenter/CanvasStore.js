@@ -970,13 +970,60 @@
   const _f2pAddIdentityToCanvas = P._addIdentityToCanvas;
   if (typeof _f2pAddIdentityToCanvas === 'function') {
     P._addIdentityToCanvas = function (lib /*, clientX, clientY */) {
+      // F2: enriquecer lib con imageUrl desde libCache (si existe) para que
+      // el nodo en canvas tenga el preview visual (products/flows).
+      if (lib && lib.type && lib.id && this._libCache && this._libCache[lib.type]) {
+        const found = this._libCache[lib.type].find((it) => String(it.id) === String(lib.id));
+        if (found && found.imageUrl && !lib.imageUrl) lib.imageUrl = found.imageUrl;
+      }
       const r = _f2pAddIdentityToCanvas.apply(this, arguments);
+      // Post: anadir imageUrl al placed entry para que sobreviva re-renders
+      if (lib && lib.imageUrl) {
+        const entry = (this._placed || []).find((p) => p.type === lib.type && String(p.id) === String(lib.id));
+        if (entry && !entry.imageUrl) {
+          entry.imageUrl = lib.imageUrl;
+          if (this._store && typeof this._store.persistPlaced === 'function') this._store.persistPlaced();
+        }
+      }
       if (lib && lib.type && lib.id != null) {
         const pos = this._positions[`${lib.type}:${lib.id}`];
         const singular = ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[lib.type] || lib.type;
         if (pos) this._insertPlacement(singular, lib.id, pos.x, pos.y);
       }
       return r;
+    };
+  }
+
+  // F2: override _nodeIdentityHTML para mostrar PREVIEW de imagen en nodos
+  // de products y flows. Otros tipos siguen con el render legacy.
+  const _f2IdentityHTML = P._nodeIdentityHTML;
+  if (typeof _f2IdentityHTML === 'function') {
+    P._nodeIdentityHTML = function (n, pos) {
+      const t = n.identityType;
+      const r = n.row || {};
+      const hasPreview = (t === 'products' || t === 'flows') && r.imageUrl;
+      if (!hasPreview) return _f2IdentityHTML.apply(this, arguments);
+      const labels = { products: 'Producto', flows: 'Flow' };
+      const icons  = { products: 'fa-box', flows: 'fa-diagram-project' };
+      return `
+      <div class="cc-node cc-node--identity cc-node--identity-v2" data-node-key="${n.key}" data-type="identity" data-identity-type="${this.escapeHtml(t)}" data-id="${this.escapeHtml(String(n.id))}" style="left:${pos.x}px;top:${pos.y}px;">
+        <span class="cc-node-port cc-node-port--in" data-port="in" title="Entrada"></span>
+        <div class="cc-node-head" data-drag-handle>
+          <span class="cc-node-icon"><i class="fas ${icons[t]}"></i></span>
+          <span class="cc-node-title">${labels[t]}</span>
+          <div class="cc-node-actions">
+            <button type="button" class="cc-node-act cc-node-uncanvas" title="Quitar del canvas"><i class="fas fa-eye-slash"></i></button>
+          </div>
+        </div>
+        <div class="cc-identity-preview">
+          <img src="${this.escapeHtml(r.imageUrl)}" alt="" loading="lazy" />
+        </div>
+        <div class="cc-node-body">
+          <div class="cc-node-realname" title="${this.escapeHtml(r.name || '')}">${this.escapeHtml(r.name || labels[t])}</div>
+          ${r.sub ? `<span class="cc-node-meta">${this.escapeHtml(r.sub)}</span>` : ''}
+        </div>
+        <span class="cc-node-port cc-node-port--out" data-port="out" title="Arrastra para conectar"></span>
+      </div>`;
     };
   }
   const _f2pRemoveIdentityFromCanvas = P._removeIdentityFromCanvas;
@@ -2954,13 +3001,14 @@
           if (user?.id) {
             const { data } = await this._supabase
               .from('content_flows')
-              .select('id, name, output_type, status, is_active')
+              .select('id, name, output_type, status, is_active, flow_image_url')
               .eq('owner_id', user.id)
               .eq('is_active', true)
               .limit(200);
             this._libCache[key] = (data || []).map((r) => ({
               id: r.id, name: r.name || 'Flow',
-              sub: r.output_type || '', imageUrl: '',
+              sub: r.output_type || '',
+              imageUrl: r.flow_image_url || '',
             }));
           } else {
             this._libCache[key] = [];
