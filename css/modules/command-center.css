@@ -1521,10 +1521,17 @@
   z-index: 8;
   display: flex;            /* fila: rail | panel */
   align-items: stretch;
+  border: 1px solid var(--border-divider, #242424);
   border-radius: 14px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  background: var(--bg-card, #141517);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
+  /* Sin glass: paleta consistente con las cards de los nodos */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
+.cc-fp-rail { border-left-color: var(--border-divider, #242424) !important; }
+.cc-fp-head { border-bottom-color: var(--border-divider, #242424) !important; }
 
 /* Rail de navegacion (fijo a la derecha, full height, solo iconos). */
 .cc-fp-rail {
@@ -1670,6 +1677,89 @@
 .cc-lib-noresults {
   font-size: 0.7rem; color: var(--text-muted);
   padding: 6px 2px; text-align: center; font-style: italic;
+}
+
+/* F2: sidebar — header de grupo dentro del body (para Nodos) */
+.cc-lib-group {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 2px 2px;
+  margin-top: 4px;
+}
+.cc-lib-group:first-child { margin-top: 0; }
+
+/* Items de la seccion Estrategias */
+.cc-strategy-item {
+  appearance: none;
+  position: relative;
+  text-align: left;
+  cursor: pointer;
+}
+.cc-strategy-item.is-active {
+  background: rgba(106, 163, 255, 0.10);
+  border-color: rgba(106, 163, 255, 0.42);
+}
+.cc-strategy-item.is-active .cc-lib-item-name { color: #d8e4fc; }
+.cc-strategy-check {
+  position: absolute;
+  right: 9px; top: 50%;
+  transform: translateY(-50%);
+  color: #b9d5ff;
+  font-size: 0.68rem;
+}
+.cc-strategy-create {
+  appearance: none;
+  margin-top: 8px;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px dashed var(--border-divider, #242424);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.cc-strategy-create:hover {
+  background: rgba(106, 163, 255, 0.08);
+  border-color: rgba(106, 163, 255, 0.42);
+  color: #d8e4fc;
+}
+.cc-strategy-create i { font-size: 0.7rem; }
+
+/* Items de la seccion Nodos (catalogo) */
+.cc-nodo-item { cursor: default; }
+.cc-nodo-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+/* Placeholder del Dashboard */
+.cc-dash-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  padding: 28px 14px;
+  border: 1px dashed var(--border-divider, #242424);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+.cc-dash-placeholder > i {
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.cc-dash-placeholder p {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-primary, #fff);
+}
+.cc-dash-placeholder .cc-dash-soon {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  font-style: italic;
 }
 
 /* F2: satelites de conjuntos+anuncios bajo el nodo Campana

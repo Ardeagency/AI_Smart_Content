@@ -165,7 +165,7 @@ class CommandCenterView extends BaseView {
              una seccion. Colapsado por defecto = solo el rail. -->
         <!-- El rail queda fijo a la derecha; el panel de datos abre a su
              izquierda. Orden DOM: panel (izq) primero, rail (der) ultimo. -->
-        <aside class="cc-floating-panel glass-black" id="ccSidebar">
+        <aside class="cc-floating-panel" id="ccSidebar">
           <!-- Panel de datos de la seccion activa (abre a la izquierda) -->
           <div class="cc-fp-panel" role="tabpanel" aria-labelledby="ccPanelTitle">
             <div class="cc-fp-head">

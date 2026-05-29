@@ -2490,6 +2490,114 @@
     }
   };
 
+  // ------------------------------------------------------------------
+  // F2: rediseno sidebar — 3 secciones (Estrategias, Nodos, Dashboard)
+  //
+  // Reemplaza las 8 secciones por entidad (audiencias/campanas/concepts/
+  // products/services/places/flows/briefs) por una arquitectura mas
+  // semantica: las estrategias se cambian, los tipos de nodos se listan
+  // como una paleta unificada, y el dashboard muestra el analisis vivo
+  // de la estrategia activa.
+  //
+  // Sin tocar Canvas.mixin.js: overrideo _librarySections, _libItemsFor,
+  // _libBodyHTML, _libIcon. El render del rail + body sigue funcionando
+  // tal cual con las nuevas secciones.
+  // ------------------------------------------------------------------
+
+  P._librarySections = function () {
+    return [
+      { key: 'estrategias', label: 'Estrategias', icon: 'fa-layer-group' },
+      { key: 'nodos',       label: 'Nodos',       icon: 'fa-circle-nodes' },
+      { key: 'dashboard',   label: 'Dashboard',   icon: 'fa-chart-pie' },
+    ];
+  };
+
+  P._libIcon = function (key) {
+    return (this._librarySections().find((s) => s.key === key) || {}).icon || 'fa-circle';
+  };
+
+  P._libItemsFor = function (key) {
+    if (key === 'estrategias') {
+      return Array.isArray(this._strategies) ? this._strategies : [];
+    }
+    // Para 'nodos' y 'dashboard' devolvemos [] para que el rail no muestre
+    // badge con un numero arbitrario. El body se calcula directamente en
+    // _libBodyHTML segun la seccion.
+    return [];
+  };
+
+  /** Tipos de nodo disponibles (catalogo agrupado). */
+  P._nodosCatalog = function () {
+    const cAud  = (this._audiences || []).length;
+    const cCamp = (this._campaigns || []).filter((c) => c.last_synced_at).length;
+    const cConc = (this._campaigns || []).filter((c) => !c.last_synced_at).length;
+    const cStk  = (this._stickies || []).length;
+    const cGrp  = (this._groups || []).length;
+    return [
+      { id: 'objetivo-campana',   name: 'Objetivo de Campana',   icon: 'fa-bullseye',        group: 'Objetivos',    count: cConc, type: 'concept' },
+      { id: 'objetivo-audiencia', name: 'Objetivo de Audiencia', icon: 'fa-users',           group: 'Objetivos',    count: cAud,  type: 'audience' },
+      { id: 'campana-real',       name: 'Campana',               icon: 'fa-bullhorn',        group: 'Realidad',     count: cCamp, type: 'campaign-real' },
+      { id: 'producto',           name: 'Producto',              icon: 'fa-box',             group: 'Identidades',                type: 'product' },
+      { id: 'servicio',           name: 'Servicio',              icon: 'fa-tag',             group: 'Identidades',                type: 'service' },
+      { id: 'lugar',              name: 'Lugar',                 icon: 'fa-map-pin',         group: 'Identidades',                type: 'place' },
+      { id: 'flow',               name: 'Flow',                  icon: 'fa-diagram-project', group: 'Identidades',                type: 'flow' },
+      { id: 'brief',              name: 'Brief',                 icon: 'fa-file-lines',      group: 'Identidades',                type: 'brief' },
+      { id: 'sticky',             name: 'Nota',                  icon: 'fa-note-sticky',     group: 'Anotaciones',  count: cStk,  type: 'sticky' },
+      { id: 'grupo',              name: 'Grupo',                 icon: 'fa-object-group',    group: 'Anotaciones',  count: cGrp,  type: 'group' },
+    ];
+  };
+
+  P._libBodyHTML = function (key) {
+    if (key === 'estrategias') {
+      const items = Array.isArray(this._strategies) ? this._strategies : [];
+      const active = this._strategyId;
+      if (!items.length) return '<div class="cc-lib-empty">Sin estrategias todavia.</div>';
+      const rows = items.map((s) => {
+        const isActive = String(s.id) === String(active);
+        return `<button type="button" class="cc-lib-item cc-strategy-item ${isActive ? 'is-active' : ''}" data-strategy-id="${this.escapeHtml(String(s.id))}" title="${this.escapeHtml(s.name)}">
+          <i class="fas ${this.escapeHtml(s.icon || 'fa-diagram-project')} cc-lib-item-ic"></i>
+          <span class="cc-lib-item-name">${this.escapeHtml(s.name)}</span>
+          ${s.is_default ? '<span class="cc-lib-item-sub">default</span>' : ''}
+          ${isActive ? '<i class="fas fa-check cc-strategy-check"></i>' : ''}
+        </button>`;
+      }).join('');
+      return `${rows}
+        <button type="button" class="cc-strategy-create" data-strategy-action="create">
+          <i class="fas fa-plus"></i> Nueva estrategia
+        </button>`;
+    }
+    if (key === 'nodos') {
+      const items = this._nodosCatalog();
+      // Agrupar por group
+      const groups = new Map();
+      items.forEach((it) => {
+        if (!groups.has(it.group)) groups.set(it.group, []);
+        groups.get(it.group).push(it);
+      });
+      const html = [];
+      groups.forEach((arr, gname) => {
+        html.push(`<div class="cc-lib-group">${this.escapeHtml(gname)}</div>`);
+        arr.forEach((it) => {
+          const count = Number.isFinite(it.count) ? `<span class="cc-lib-item-sub">${it.count}</span>` : '';
+          html.push(`<div class="cc-lib-item cc-nodo-item" data-nodo-type="${this.escapeHtml(it.type)}" title="${this.escapeHtml(it.name)}">
+            <i class="fas ${this.escapeHtml(it.icon)} cc-lib-item-ic"></i>
+            <span class="cc-lib-item-name">${this.escapeHtml(it.name)}</span>
+            ${count}
+          </div>`);
+        });
+      });
+      return html.join('');
+    }
+    if (key === 'dashboard') {
+      return `<div class="cc-dash-placeholder">
+        <i class="fas fa-chart-pie"></i>
+        <p>Dashboard de la estrategia activa.</p>
+        <p class="cc-dash-soon">Pronto: analisis que Vera produce desde los nodos conectados (audiencias alineadas, performance de campanas, hipotesis de productos, etc).</p>
+      </div>`;
+    }
+    return '<div class="cc-lib-empty">Sin elementos.</div>';
+  };
+
   /** Instala listeners de input/click sobre ccPanelBody (1 vez por vista). */
   P._installLibSearch = function () {
     const body = document.getElementById('ccPanelBody');
@@ -2525,6 +2633,55 @@
         if (input) input.focus();
       };
       body.addEventListener('click', this._ccLibSearchClear);
+    }
+    // F2: handlers para Estrategias (switch + create)
+    if (!this._ccStrategyClick) {
+      this._ccStrategyClick = (e) => {
+        const item = e.target.closest('.cc-strategy-item[data-strategy-id]');
+        if (item) {
+          e.preventDefault(); e.stopPropagation();
+          const id = item.getAttribute('data-strategy-id');
+          if (id && id !== this._strategyId) this._switchStrategy(id);
+          return;
+        }
+        const create = e.target.closest('.cc-strategy-create');
+        if (create) {
+          e.preventDefault(); e.stopPropagation();
+          this._createStrategyQuick();
+        }
+      };
+      body.addEventListener('click', this._ccStrategyClick);
+    }
+  };
+
+  /** Crea una nueva estrategia con nombre incremental + la activa. */
+  P._createStrategyQuick = async function () {
+    if (!this._supabase || !this._containerRow?.id || !this._organizationId) return;
+    try {
+      const existing = (this._strategies || []).filter((s) => /^Estrategia\s+\d+$/i.test(s.name || ''));
+      const nextN = existing.length + 2; // "Estrategia general" cuenta como 1
+      const { data: { user } } = await this._supabase.auth.getUser();
+      const insert = {
+        organization_id: this._organizationId,
+        brand_container_id: this._containerRow.id,
+        name: `Estrategia ${nextN}`,
+        color: 'blue',
+        icon: 'fa-diagram-project',
+        is_default: false,
+      };
+      if (user?.id) insert.created_by = user.id;
+      const { data: row, error } = await this._supabase
+        .from('canvas_strategies')
+        .insert(insert)
+        .select()
+        .single();
+      if (error) { console.error('[CC] create strategy:', error.message || error); return; }
+      this._strategies = [...(this._strategies || []), row];
+      // re-render sidebar + switch
+      if (typeof this._renderLibrary === 'function') this._renderLibrary();
+      await this._switchStrategy(row.id);
+    } catch (e) {
+      console.error('[CC] create strategy exception:', e);
     }
   };
 
