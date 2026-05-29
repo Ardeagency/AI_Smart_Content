@@ -386,12 +386,14 @@ class BrandOrganizationView extends BaseView {
         this.brandAssets = assets || [];
       }
 
-      // Sub-marcas (brand_containers): solo se consume `length` (card INFO) y la
-      // primera fila (`id`, `nombre_marca`) cuando hay una sola sub-marca.
+      // Sub-marcas (brand_containers): se consume `length` (card INFO) y, cuando
+      // hay una sola sub-marca, su fila completa alimenta el panel INFO de
+      // organizacion (renderBrandReadonlySchema lee los campos del schema). Hay
+      // que traer todas las columnas del schema o el panel sale vacio.
       try {
         const { data: containerRows } = await this.supabase
           .from('brand_containers')
-          .select('id, nombre_marca')
+          .select('id, nombre_marca, creative_brief, idiomas_contenido, mercado_objetivo, nicho_core, sub_nichos, arquetipo, propuesta_valor, mision_vision, verbal_dna, visual_dna, palabras_clave, palabras_prohibidas, objetivos_estrategicos, updated_at, created_at')
           .eq('organization_id', orgId)
           .order('created_at', { ascending: false });
         this.brandContainers = containerRows || [];
