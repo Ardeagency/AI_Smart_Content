@@ -686,6 +686,7 @@
       this._store.rescope(scope);
       // re-scope cambia de marca → la hidratacion remota debe correr de nuevo
       this._ccRemoteHydratedFor = null;
+      this._ccViewHydratedFor = null;
     }
     // refs compartidas: el codigo existente sigue funcionando
     this._positions = this._store.nodes.positions;
@@ -712,6 +713,15 @@
           this._deleteEdgeRemote(p && p.from, p && p.to);
         }),
       ];
+    }
+    // F1.7: write-through BD para viewport (per-user-per-brand). Debounced
+    // upsert via _persistRemoteView, lo dispara cualquier cambio en el store
+    // (que ya espeja _canvasPan/_canvasScale via wrap de _applyCanvasTransform).
+    if (!this._ccViewportSub) {
+      this._ccViewportSub = this._store.on('mutated:viewport', () => {
+        if (this._ccSuspendRemoteView) return;
+        this._persistRemoteView();
+      });
     }
     return this._store;
   };
@@ -1565,6 +1575,8 @@
       // F1.6: fire-and-forget hidratacion remota. Si la marca ya se hidrato
       // antes en esta misma vista, _hydrateRemoteEdges se sale solo.
       this._hydrateRemoteEdges();
+      // F1.7: hidrata viewport per-usuario despues del setup. Tambien idempotente.
+      this._hydrateRemoteView();
       return r;
     };
   }
@@ -1693,6 +1705,103 @@
     }
   };
 
+  // ------------------------------------------------------------------
+  // F1.7: persistencia BD del viewport (zoom + pan) per-usuario-per-brand
+  //
+  // canvas_views(user_id, brand_container_id, viewport_x, viewport_y, zoom,
+  //              theme, last_opened_at) PK compuesta (user_id, brand_container_id).
+  // Cada usuario tiene SU propio viewport por marca (zoom y pan personal);
+  // el resto del canvas (nodos, edges) sigue siendo per-brand.
+  //
+  // Hidratacion: idempotente por brand_container_id (_ccViewHydratedFor).
+  // Write-through: debounced 1500ms desde mutated:viewport del store, que
+  // se emite via wrap de _applyCanvasTransform en F1.1.
+  // ------------------------------------------------------------------
+
+  P._hydrateRemoteView = async function () {
+    this._ensureStore();
+    const brandId = this._containerRow?.id;
+    if (!this._supabase || !brandId) return;
+    if (this._ccViewHydratedFor === brandId) return;
+    this._ccViewHydratedFor = brandId;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      if (!user?.id) return;
+      const { data: row, error } = await this._supabase
+        .from('canvas_views')
+        .select('viewport_x, viewport_y, zoom, theme')
+        .eq('user_id', user.id)
+        .eq('brand_container_id', brandId)
+        .maybeSingle();
+      if (error) {
+        console.warn('[CC] hydrate canvas_view:', error.message || error);
+        this._ccViewHydratedFor = null; // permitir retry
+        return;
+      }
+      if (!row) return; // no hay viewport guardado todavia; deja el default
+      const x = Number(row.viewport_x), y = Number(row.viewport_y), z = Number(row.zoom);
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z) || z <= 0) return;
+      // Si el usuario ya tocó el viewport mientras estabamos fetcheando
+      // (pan/zoom durante el async), respetar su estado y no pisar.
+      const cur = this._store.viewport;
+      const isDefault = cur.x === 0 && cur.y === 0 && cur.scale === 1;
+      if (!isDefault) return;
+      // Suspender el listener para que el setViewport no dispare otro upsert
+      this._ccSuspendRemoteView = true;
+      this._store.setViewport({ x, y, scale: z });
+      this._canvasPan = { x, y };
+      this._canvasScale = z;
+      if (typeof this._applyCanvasTransform === 'function') this._applyCanvasTransform();
+      if (typeof this._renderEdges === 'function') this._renderEdges();
+      if (typeof this._drawMinimap === 'function') this._drawMinimap();
+      this._ccSuspendRemoteView = false;
+    } catch (e) {
+      console.warn('[CC] hydrate canvas_view exception:', e);
+      this._ccViewHydratedFor = null;
+    } finally {
+      this._ccSuspendRemoteView = false;
+    }
+  };
+
+  /**
+   * Debounce 1500ms: pan/zoom dispara muchos eventos, solo persistimos cuando
+   * el usuario se queda quieto. Throttle defensivo en flush.
+   */
+  P._persistRemoteView = function () {
+    if (this._ccViewWriteTimer) clearTimeout(this._ccViewWriteTimer);
+    this._ccViewWriteTimer = setTimeout(() => {
+      this._ccViewWriteTimer = null;
+      this._flushRemoteView();
+    }, 1500);
+  };
+
+  P._flushRemoteView = async function () {
+    if (!this._supabase || !this._containerRow?.id || !this._store) return;
+    if (this._ccViewFlushInFlight) return; // simple throttle
+    this._ccViewFlushInFlight = true;
+    try {
+      const { data: { user } } = await this._supabase.auth.getUser();
+      if (!user?.id) return;
+      const v = this._store.viewport;
+      const payload = {
+        user_id: user.id,
+        brand_container_id: this._containerRow.id,
+        viewport_x: Number.isFinite(v.x) ? v.x : 0,
+        viewport_y: Number.isFinite(v.y) ? v.y : 0,
+        zoom:       Number.isFinite(v.scale) && v.scale > 0 ? v.scale : 1,
+        last_opened_at: new Date().toISOString(),
+      };
+      const { error } = await this._supabase
+        .from('canvas_views')
+        .upsert(payload, { onConflict: 'user_id,brand_container_id' });
+      if (error) console.warn('[CC] upsert canvas_view:', error.message || error);
+    } catch (e) {
+      console.warn('[CC] upsert canvas_view exception:', e);
+    } finally {
+      this._ccViewFlushInFlight = false;
+    }
+  };
+
   // Sync viewport: cuando el view setea zoom/pan, espejar al store para
   // que F1.7 pueda persistirlo en canvas_views sin re-cablear todo. No
   // cambia comportamiento existente; solo añade un observador delgado.
@@ -1750,6 +1859,18 @@
       this._ccEdgeSubs = null;
     }
     this._ccRemoteHydratedFor = null;
+    // F1.7: flush pendiente + unsubscribe del viewport
+    if (this._ccViewWriteTimer) {
+      clearTimeout(this._ccViewWriteTimer);
+      this._ccViewWriteTimer = null;
+      // intentar flush sincrono final si quedo algo pendiente (fire-and-forget)
+      try { this._flushRemoteView(); } catch (_) {}
+    }
+    if (typeof this._ccViewportSub === 'function') {
+      try { this._ccViewportSub(); } catch (_) {}
+      this._ccViewportSub = null;
+    }
+    this._ccViewHydratedFor = null;
     if (this._store) {
       // dejamos el store en su sitio (la vista se descarta), pero limpiamos
       // listeners por si alguien externo se suscribio durante el ciclo.
