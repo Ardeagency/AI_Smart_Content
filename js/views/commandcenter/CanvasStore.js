@@ -2866,46 +2866,108 @@
     return [];
   };
 
-  // F2: wrap _fetchLibrary para que el fetch de 'products' tambien traiga
-  // imagen + tipo de producto. Items resultantes con extras { imageUrl, sub }
-  // que el render del sidebar utiliza.
+  // F2: wrap _fetchLibrary para enriquecer products/services/places/flows
+  // con datos visuales (imagen + tipo) usados por _nodosInstancesHTML.
   const _f2OrigFetchLibrary = P._fetchLibrary;
   if (typeof _f2OrigFetchLibrary === 'function') {
     P._fetchLibrary = async function (key) {
-      if (key !== 'products') return _f2OrigFetchLibrary.apply(this, arguments);
+      if (!['products', 'services', 'places', 'flows'].includes(key)) {
+        return _f2OrigFetchLibrary.apply(this, arguments);
+      }
       if (this._libCache[key] || (this._libFetching && this._libFetching[key])) return;
       if (!this._supabase) { this._libCache[key] = []; if (typeof this._fillLibSection === 'function') this._fillLibSection(key); return; }
       if (!this._libFetching) this._libFetching = {};
       this._libFetching[key] = true;
       const org = this._organizationId;
       try {
-        const { data: prods, error: pErr } = await this._supabase
-          .from('products')
-          .select('id, nombre_producto, tipo_producto')
-          .eq('organization_id', org)
-          .limit(200);
-        if (pErr) throw pErr;
-        const ids = (prods || []).map((p) => p.id);
-        const imageMap = {};
-        if (ids.length) {
-          const { data: imgs } = await this._supabase
-            .from('product_images')
-            .select('product_id, image_url')
-            .in('product_id', ids);
-          (imgs || []).forEach((img) => {
-            if (img.product_id && img.image_url && !imageMap[img.product_id]) {
-              imageMap[img.product_id] = img.image_url;
+        if (key === 'products') {
+          const { data: prods } = await this._supabase
+            .from('products')
+            .select('id, nombre_producto, tipo_producto')
+            .eq('organization_id', org)
+            .limit(200);
+          const ids = (prods || []).map((p) => p.id);
+          const imageMap = {};
+          if (ids.length) {
+            const { data: imgs } = await this._supabase
+              .from('product_images')
+              .select('product_id, image_url')
+              .in('product_id', ids);
+            (imgs || []).forEach((img) => {
+              if (img.product_id && img.image_url && !imageMap[img.product_id]) imageMap[img.product_id] = img.image_url;
+            });
+          }
+          this._libCache[key] = (prods || []).map((r) => ({
+            id: r.id, name: r.nombre_producto || 'Producto',
+            sub: r.tipo_producto || '', imageUrl: imageMap[r.id] || '',
+          }));
+        } else if (key === 'services') {
+          // Services no tiene image table ni tipo; sub = duracion_estimada
+          const { data } = await this._supabase
+            .from('services')
+            .select('id, nombre_servicio, duracion_estimada, precio_base, moneda')
+            .eq('organization_id', org)
+            .limit(200);
+          this._libCache[key] = (data || []).map((r) => ({
+            id: r.id, name: r.nombre_servicio || 'Servicio',
+            sub: r.duracion_estimada
+              ? String(r.duracion_estimada)
+              : (r.precio_base ? `${r.precio_base} ${r.moneda || ''}`.trim() : ''),
+            imageUrl: '',
+          }));
+        } else if (key === 'places') {
+          // brand_places se filtra via entity_id → brand_entities con organization_id
+          const { data: ents } = await this._supabase
+            .from('brand_entities')
+            .select('id')
+            .eq('organization_id', org);
+          const eids = (ents || []).map((e) => e.id);
+          if (eids.length) {
+            const { data: places } = await this._supabase
+              .from('brand_places')
+              .select('id, nombre_lugar, place_type, city')
+              .in('entity_id', eids)
+              .limit(200);
+            const pids = (places || []).map((p) => p.id);
+            const imageMap = {};
+            if (pids.length) {
+              const { data: imgs } = await this._supabase
+                .from('place_images')
+                .select('place_id, image_url, image_order')
+                .in('place_id', pids)
+                .order('image_order', { ascending: true });
+              (imgs || []).forEach((img) => {
+                if (img.place_id && img.image_url && !imageMap[img.place_id]) imageMap[img.place_id] = img.image_url;
+              });
             }
-          });
+            this._libCache[key] = (places || []).map((r) => ({
+              id: r.id, name: r.nombre_lugar || 'Lugar',
+              sub: [r.place_type, r.city].filter(Boolean).join(' · '),
+              imageUrl: imageMap[r.id] || '',
+            }));
+          } else {
+            this._libCache[key] = [];
+          }
+        } else if (key === 'flows') {
+          // Solo flujos guardados (is_active = true) del usuario actual
+          const { data: { user } } = await this._supabase.auth.getUser();
+          if (user?.id) {
+            const { data } = await this._supabase
+              .from('content_flows')
+              .select('id, name, output_type, status, is_active')
+              .eq('owner_id', user.id)
+              .eq('is_active', true)
+              .limit(200);
+            this._libCache[key] = (data || []).map((r) => ({
+              id: r.id, name: r.name || 'Flow',
+              sub: r.output_type || '', imageUrl: '',
+            }));
+          } else {
+            this._libCache[key] = [];
+          }
         }
-        this._libCache[key] = (prods || []).map((r) => ({
-          id: r.id,
-          name: r.nombre_producto || 'Producto',
-          sub: r.tipo_producto || '',
-          imageUrl: imageMap[r.id] || '',
-        }));
       } catch (e) {
-        console.warn('[CC] fetchLibrary products:', e?.message || e);
+        console.warn(`[CC] fetchLibrary ${key}:`, e?.message || e);
         this._libCache[key] = [];
       } finally {
         this._libFetching[key] = false;
@@ -2955,15 +3017,29 @@
         return '<div class="cc-nodo-sublist"><div class="cc-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div></div>';
       }
       instances = (cached || []).map((it) => ({ ...it, libType: libKey }));
-      // Render especial para products: thumbnail + nombre + tipo_producto
-      if (t === 'product') {
+      // Render especial: thumbnail + nombre + tipo. Aplica a productos y
+      // lugares (que tienen imagenes), tambien a servicios y flows que
+      // usan icono de fallback (sin tabla de imagenes).
+      if (['product', 'place', 'service', 'flow'].includes(t)) {
         if (!instances.length) {
-          return '<div class="cc-nodo-sublist"><div class="cc-nodo-empty">Sin productos.</div></div>';
+          const emptyMsg = ({
+            product: 'Sin productos.',
+            service: 'Sin servicios.',
+            place: 'Sin lugares.',
+            flow: 'Sin flujos guardados.',
+          })[t];
+          return `<div class="cc-nodo-sublist"><div class="cc-nodo-empty">${this.escapeHtml(emptyMsg)}</div></div>`;
         }
+        const fallbackIcon = ({
+          product: 'fa-box',
+          service: 'fa-tag',
+          place: 'fa-map-pin',
+          flow: 'fa-diagram-project',
+        })[t];
         const itemsHTML = instances.map((it) => {
           const thumb = it.imageUrl
             ? `<img src="${this.escapeHtml(it.imageUrl)}" alt="" loading="lazy" />`
-            : `<i class="fas fa-box"></i>`;
+            : `<i class="fas ${fallbackIcon}"></i>`;
           return `<div class="cc-lib-item cc-nodo-product-item" draggable="true" data-lib-type="${this.escapeHtml(it.libType)}" data-lib-id="${this.escapeHtml(String(it.id))}" title="${this.escapeHtml(it.name)} — arrastra al canvas">
             <span class="cc-nodo-product-thumb">${thumb}</span>
             <span class="cc-nodo-product-text">
