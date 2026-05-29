@@ -1009,9 +1009,54 @@
     };
   }
 
+  /**
+   * Enriquece un placed entry (n.row) con imageUrl, name, sub desde el
+   * libCache del tipo correspondiente. Si libCache no esta cargado, dispara
+   * _fetchLibrary fire-and-forget + re-renderea al completar. Idempotente
+   * via flag _enrichLockedFor para evitar fetches paralelos del mismo type.
+   */
+  P._enrichPlacedFromLibCache = function (placedEntry, libKey) {
+    if (!placedEntry || placedEntry.imageUrl) return;
+    const cached = this._libCache && this._libCache[libKey];
+    if (cached === undefined) {
+      if (!this._enrichLockedFor) this._enrichLockedFor = new Set();
+      if (this._enrichLockedFor.has(libKey)) return; // ya hay fetch en vuelo
+      this._enrichLockedFor.add(libKey);
+      if (typeof this._fetchLibrary === 'function') {
+        this._fetchLibrary(libKey).then(() => {
+          this._enrichLockedFor.delete(libKey);
+          // Aplicar a TODOS los placements de ese tipo en una sola pasada
+          let anyUpdated = false;
+          (this._placed || []).forEach((p) => {
+            if (p.type !== libKey || p.imageUrl) return;
+            const found = (this._libCache[libKey] || []).find((it) => String(it.id) === String(p.id));
+            if (found && found.imageUrl) { p.imageUrl = found.imageUrl; anyUpdated = true; }
+          });
+          if (anyUpdated) {
+            if (this._store && typeof this._store.persistPlaced === 'function') this._store.persistPlaced();
+            this._renderCanvas();
+          }
+        }).catch(() => { this._enrichLockedFor.delete(libKey); });
+      }
+      return;
+    }
+    // Cache presente: enriquecer in-place sin re-render (el render actual ya
+    // esta corriendo y vera la imageUrl en el HTML que devolvemos abajo)
+    const found = (cached || []).find((it) => String(it.id) === String(placedEntry.id));
+    if (found && found.imageUrl) {
+      placedEntry.imageUrl = found.imageUrl;
+      if (this._store && typeof this._store.persistPlaced === 'function') this._store.persistPlaced();
+    }
+  };
+
   P._renderProductNode = function (n, pos, r) {
     const name = r.name || 'Producto';
     const sub  = r.sub || '';
+    // F2: enriquecer placement existente sin imageUrl desde libCache.products
+    // (corre solo cuando hace falta, kickoff fetch lazy si libCache vacio)
+    if (!r.imageUrl && r.type === 'products' && r.id != null) {
+      this._enrichPlacedFromLibCache(r, 'products');
+    }
     const img  = r.imageUrl
       ? `<img src="${this.escapeHtml(r.imageUrl)}" alt="" loading="lazy" />`
       : '<div class="cc-prem-placeholder"><i class="fas fa-image"></i></div>';
@@ -1034,6 +1079,10 @@
   P._renderFlowNode = function (n, pos, r) {
     const name = r.name || 'Flow';
     const sub  = r.sub || '';
+    // F2: enriquecer placement existente sin imageUrl desde libCache.flows
+    if (!r.imageUrl && r.type === 'flows' && r.id != null) {
+      this._enrichPlacedFromLibCache(r, 'flows');
+    }
     // Ports tipados visuales (placeholder estatico para v1; el schema real
     // vive en flow_modules y se incorporara en una iteracion posterior)
     const inputPorts = [

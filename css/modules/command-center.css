@@ -2004,6 +2004,112 @@
 }
 .cc-node::before { display: none !important; }
 
+/* F2: monochromatico — sin acentos de color en ningun nodo.
+   Mantenemos diferenciacion via tipografia, iconos, bordes y estructura.
+   Selection ring es BLANCO (para que se vea sobre el gris). */
+
+/* Sticky: fondo gris en vez de amarillo */
+.cc-node--sticky {
+  background: var(--bg-card, #141517) !important;
+  color: var(--text-primary, #fff) !important;
+  border: 1px solid var(--border-divider, #242424) !important;
+}
+.cc-node--sticky .cc-sticky-head {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+}
+.cc-node--sticky .cc-sticky-body { color: var(--text-primary, #fff); }
+.cc-node--sticky .cc-sticky-body::placeholder { color: var(--text-muted); }
+
+/* Groups: todas las variantes a gris uniforme */
+.cc-group--blue, .cc-group--green, .cc-group--purple,
+.cc-group--orange, .cc-group--red, .cc-group--gray {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1.5px solid var(--border-divider, #2a2a30) !important;
+}
+.cc-group--blue .cc-group-head, .cc-group--green .cc-group-head,
+.cc-group--purple .cc-group-head, .cc-group--orange .cc-group-head,
+.cc-group--red .cc-group-head, .cc-group--gray .cc-group-head {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text-primary, #fff) !important;
+}
+
+/* Objetivo de Campana (anchor) → borde gris, sin tinte azul */
+.cc-node--anchor {
+  border-color: var(--border-divider, #242424) !important;
+  box-shadow: none !important;
+}
+.cc-node--anchor.cc-node--selected {
+  box-shadow: 0 0 0 2px #fff, 0 12px 28px rgba(0,0,0,0.30) !important;
+}
+.cc-node--anchor .cc-node-head { background: transparent !important; }
+.cc-node--anchor .cc-node-icon--anchor {
+  background: rgba(255,255,255,0.06) !important;
+  color: var(--text-secondary, #d4d1d8) !important;
+  border: 1px solid var(--border-divider, #242424);
+}
+.cc-node--anchor .cc-node-title { color: var(--text-primary, #fff) !important; font-weight: 600; }
+
+/* Boton toolbar "Objetivo de Campana" → neutro */
+.cc-canvas-btn--anchor {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text-primary, #fff) !important;
+  border: 1px solid var(--border-divider, #242424) !important;
+}
+.cc-canvas-btn--anchor:hover { background: rgba(255,255,255,0.08) !important; }
+.cc-canvas-btn--anchor i { color: var(--text-secondary, #d4d1d8) !important; }
+
+/* Campana v2 pills → todas gris muted */
+.cc-node--campaign-v2 .cc-node-pill,
+.cc-node--campaign-v2 .cc-node-pill--plat,
+.cc-node--campaign-v2 .cc-node-pill--status,
+.cc-node--campaign-v2 .cc-node-pill--active,
+.cc-node--campaign-v2 .cc-node-pill--paused,
+.cc-node--campaign-v2 .cc-node-pill--ended,
+.cc-node--campaign-v2 .cc-node-pill--archived,
+.cc-node--campaign-v2 .cc-node-pill--linked {
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--text-muted) !important;
+}
+.cc-node--campaign-v2 .cc-node-sync.is-synced { color: var(--text-secondary, #d4d1d8) !important; }
+.cc-node--campaign-v2.cc-node--selected {
+  box-shadow: 0 0 0 2px #fff, 0 12px 30px rgba(0,0,0,0.30) !important;
+}
+
+/* Flow premium ports → todos blancos/muted */
+.cc-prem-port-dot { background: var(--text-secondary, #d4d1d8) !important; }
+.cc-prem-dot { background: var(--text-primary, #fff); box-shadow: none !important; }
+
+/* Strategy active en sidebar → neutro (sin azul) */
+.cc-strategy-item.is-active {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+}
+.cc-strategy-item.is-active .cc-lib-item-name { color: var(--text-primary, #fff) !important; }
+.cc-strategy-check { color: var(--text-primary, #fff) !important; }
+.cc-strategy-create:hover {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+  color: var(--text-primary, #fff) !important;
+}
+
+/* Delete hover y context menu danger → sin rojo */
+.cc-node-delete:hover { background: rgba(255,255,255,0.10) !important; color: var(--text-primary, #fff) !important; }
+.cc-edge-disconnect:hover {
+  background: rgba(255,255,255,0.10) !important;
+  color: var(--text-primary, #fff) !important;
+  border-color: var(--border-divider, #242424) !important;
+}
+.cc-ctx-item--danger:hover:not([disabled]) {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--text-primary, #fff) !important;
+}
+.cc-ctx-item--danger:hover:not([disabled]) > i { color: var(--text-primary, #fff) !important; }
+
+/* Inspector color buttons groups → mantener tinte minimo pero apagado.
+   En realidad: ocultar la fila completa o hacerla neutra; lo dejamos
+   pero apagada para que el usuario aun pueda elegir si quiere mas tarde. */
+
 /* F2: lenguaje "premium" — para nodos rediseñados (products, flows).
    Sin gradientes, sin glow rojo, paleta gris-card + acentos sutiles. */
 .cc-node--prem {
