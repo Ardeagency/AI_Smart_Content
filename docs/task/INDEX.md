@@ -28,7 +28,7 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
-| [FEAT-036](./FEAT-036-kie-rate-governor-and-queue.md) | Governor de tasa KIE: limite real 20 createTask/10s POR CUENTA y 429 NO encola (= job perdido en picos). **Fase 1 DESPLEGADA 2026-05-29** (token bucket Postgres aplicado + helper `acquireKieSlot` fail-open + 6 call-sites Netlify, commit 6463f55a). **Falta: gobernar Path B (dispatcher) con la misma RPC** + observabilidad de throttle. Fases 2-4: foreground>background, cola unificada con prioridad por plan, turbo por plan. |
+| [FEAT-036](./FEAT-036-kie-rate-governor-and-queue.md) | Governor de tasa KIE: limite real 20 createTask/10s POR CUENTA y 429 NO encola (= job perdido en picos). **Fase 1 CERRADA 2026-05-29**: token bucket Postgres + Path A (6 funciones Netlify, commit 6463f55a) + Path B (comfy-flow-runner cuenta nodos KIE_* y reserva tokens). Riesgo confirmado real (1 flow = 6 nodos KIE × 5 concurrentes = 30 > 20). Pendiente: observabilidad de throttle + Fases 2-4 (foreground>background, cola unificada con prioridad por plan, turbo por plan). |
 
 ## 🟠 High — falta construir
 
