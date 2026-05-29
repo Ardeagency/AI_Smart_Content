@@ -3210,10 +3210,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     transition: var(--transition);
 }
 
-.side-navigation:not(.nav-mode-user) .nav-submenu-link:hover,
-.side-navigation:not(.nav-mode-user) .nav-submenu-link.active {
+.side-navigation:not(.nav-mode-user) .nav-submenu-link:hover {
     background: var(--bg-hover);
     color: var(--text-secondary);
+}
+
+/* Dev: item activo en submenu hereda el tint del rango (igual que los top-level), no se confunde con hover. */
+.side-navigation:not(.nav-mode-user) .nav-submenu-link.active {
+    background: color-mix(in srgb, var(--dev-rank-accent, #e09145) 24%, transparent);
+    color: var(--sidebar-text-primary);
 }
 
 /* Lead: gobernanza, diferenciación visual (spacing superior, acento sutil) */

@@ -173,6 +173,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
     label: 'Entrenamiento',
     icon: 'fa-brain',
     iconSrc: '/recursos/icons/memory.svg',
+    role_required: 'lead',
     route: '/dev/lead/vera-training'
   },
   { type: 'section', label: 'Admin', role_required: 'lead' },
@@ -2371,12 +2372,18 @@ class Navigation {
       link.removeAttribute('aria-current');
     });
     toggles.forEach(t => t.classList.remove('active'));
+    // Limpiar submenu-open en dev: si navegas fuera de un hijo, el container se debe replegar.
+    // En user mode el estado lo gobierna setupSubmenus + localStorage; no tocar.
+    document.querySelectorAll('.side-navigation.nav-mode-developer .nav-item.has-submenu.submenu-open')
+      .forEach(el => el.classList.remove('submenu-open'));
 
     let bestMatch = null;
     let bestLength = 0;
     links.forEach(link => {
       const route = link.dataset.route;
       if (!route || !currentPath.startsWith(route)) return;
+      // Las acciones primarias (+FLOW, +USER) son botones de accion, no de pagina actual.
+      if (link.classList.contains('nav-link--primary')) return;
       const after = currentPath.slice(route.length);
       if (after !== '' && after !== '/' && !after.startsWith('/')) return;
       if (route.length > bestLength) {
