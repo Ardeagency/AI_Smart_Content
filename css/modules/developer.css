@@ -14150,146 +14150,138 @@
 .switchuser-modal-status.is-error { color: #ef4444; }
 
 /* ============================================================
-   /dev/provisioning/create-org — pagina larga de Crear org
-   Misma estetica que el wizard (dot canvas + cards bg-card).
-   Submit es el ultimo paso, queda disabled hasta que se cablee.
+   /dev/provisioning/create-org — wizard de Crear org (3 pasos)
+   Reusa toda la base del wizard de provisioning: .provision-page,
+   .provision-page-progress, .provision-page-center, .provision-form-card,
+   .provision-page-actions, .provision-back-btn, .provision-next-btn.
+   Solo agregamos modificaciones para el contenido especifico de cada paso.
    ============================================================ */
-.createorg-page {
-  position: relative;
-  isolation: isolate;
-  min-height: calc(100vh - 48px);
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: calc(48px + var(--spacing-lg)) var(--spacing-xl) var(--spacing-xl);
-}
 
-.createorg-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.10) 1px, transparent 1.2px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1.2px);
-  background-size: 22px 22px, 22px 22px;
-  background-position: 0 0, 11px 11px;
-  -webkit-mask-image: radial-gradient(circle at 50% 25%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
-  mask-image: radial-gradient(circle at 50% 25%, #000 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.createorg-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: var(--spacing-xl);
-}
-
-.createorg-breadcrumb {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  margin-bottom: 4px;
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.createorg-breadcrumb:hover {
-  color: var(--text-primary);
-  border-color: var(--border-divider);
-}
-
-.createorg-page-title {
-  margin: 0;
-  font-size: var(--font-size-3xl, 2rem);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.createorg-page-subtitle {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
+/* Card mas ancha (para form de Identidad con grid 2 col) */
+.createorg-card-wide {
   max-width: 640px;
 }
 
-/* ───── Grid: form + preview ───── */
-.createorg-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--spacing-xl);
-  align-items: start;
-}
-
-@media (max-width: 980px) {
-  .createorg-grid {
-    grid-template-columns: 1fr;
-  }
-  .createorg-preview-col { position: static !important; }
-}
-
-.createorg-form-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-}
-
-/* ───── Sections ───── */
-.createorg-section {
-  padding: var(--spacing-lg);
-  background: var(--bg-card);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-md);
-}
-
-.createorg-section-head {
-  margin-bottom: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--border-divider);
-}
-
-.createorg-section-eyebrow {
-  display: inline-block;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent-warm);
-  margin-bottom: 4px;
-}
-
-.createorg-section-head h2 {
-  margin: 0 0 4px;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.createorg-section-head p {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
-}
-
-.createorg-form {
+/* Grid 2-col para el form de Identidad */
+.createorg-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md) var(--spacing-lg);
 }
 
-@media (max-width: 720px) {
-  .createorg-form { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .createorg-form-grid { grid-template-columns: 1fr; }
 }
 
-.createorg-form .provision-field:nth-child(1),
-.createorg-form .provision-field:nth-child(4) {
-  grid-column: 1 / -1;
+.createorg-field-full { grid-column: 1 / -1; }
+
+/* Subtitulo dentro de un step (separadores logicos en Operacion) */
+.createorg-subhead {
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.createorg-subhead:first-of-type {
+  margin-top: 0;
+}
+
+/* ───── Dropzone de documentacion ───── */
+.createorg-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border: 1.5px dashed var(--border-divider);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.createorg-dropzone:hover {
+  border-color: var(--accent-warm);
+  background: var(--bg-card);
+}
+
+.createorg-dropzone i {
+  font-size: 1.5rem;
+  color: var(--accent-warm);
+  margin-bottom: 4px;
+}
+
+.createorg-dropzone strong {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.createorg-dropzone small {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.createorg-files-list {
+  list-style: none;
+  margin: var(--spacing-sm) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.createorg-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+}
+
+.createorg-file-item > i {
+  color: var(--accent-warm);
+  font-size: 0.85rem;
+}
+
+.createorg-file-name {
+  flex: 1;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.createorg-file-size {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.createorg-file-remove {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.createorg-file-remove:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }
 
 /* ───── Owner card ───── */
@@ -14490,109 +14482,69 @@
   line-height: 1.45;
 }
 
-/* ───── Preview lateral ───── */
-.createorg-preview-col {
-  position: sticky;
-  top: calc(48px + var(--spacing-lg));
+/* ───── Step Revisar: secciones, tiles, owner card ───── */
+.createorg-review-section {
+  margin-bottom: var(--spacing-lg);
 }
 
-.createorg-preview-card {
+.createorg-review-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.createorg-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.createorg-review-tile {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xl) var(--spacing-lg);
-  background: var(--bg-card);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-.createorg-preview-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 96px;
-  height: 96px;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--bg-secondary);
   border: 1px solid var(--border-divider);
-  border-radius: 50%;
-  overflow: hidden;
-  color: var(--accent-warm);
-  font-size: 2rem;
-  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-sm);
 }
 
-.createorg-preview-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.createorg-review-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.createorg-preview-name {
-  font-size: 1.0625rem;
-  font-weight: 700;
+.createorg-review-tile strong {
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--text-primary);
   word-break: break-word;
 }
-.createorg-preview-name.is-empty {
-  color: var(--text-muted);
-  font-weight: 500;
-  font-style: italic;
-}
 
-.createorg-preview-brand {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.createorg-preview-slogan {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  line-height: 1.45;
-  font-style: italic;
-}
-.createorg-preview-slogan.is-empty { color: var(--text-muted); }
-
-.createorg-preview-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--border-divider);
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  width: 100%;
-  text-align: left;
-}
-
-.createorg-preview-meta span { display: inline-flex; align-items: center; gap: 6px; }
-.createorg-preview-meta i { opacity: 0.7; width: 12px; text-align: center; }
-
-/* ───── Footer (Cancel + Crear disabled) ───── */
-.createorg-page-footer {
+.createorg-review-owner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-divider);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm);
 }
 
-.createorg-footer-pending {
+/* Nota naranja "paso final pendiente" en Step 3 */
+.createorg-pending-note {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  margin-top: var(--spacing-lg);
+  padding: 8px 14px;
   background: rgba(224, 123, 0, 0.1);
   border: 1px solid rgba(224, 123, 0, 0.3);
   border-radius: 999px;
   color: #e07b00;
   font-size: 0.75rem;
+  align-self: flex-start;
 }
 
 .createorg-submit-btn {
