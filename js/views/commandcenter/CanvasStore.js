@@ -947,6 +947,91 @@
     this._renderEdges();
   };
 
+  // ------------------------------------------------------------------
+  // F2: reglas de conexion entre tipos de nodo (validacion al free-link)
+  //
+  // Modelo BD que justifica cada regla:
+  //   product/service/place (brand_entities polimorfico):
+  //     consumidos por brief (campaign_brief_entities.entity_id), flow
+  //     (flow_runs.entity_id) y campaign-concept (planificacion).
+  //   audience (audience_personas):
+  //     consumida por flow (flow_runs.persona_id), campaign-concept y
+  //     campaign-real (campaigns.persona_id).
+  //   brief (campaign_briefs):
+  //     usado por flow (flow_runs.brief_id) y campaigns (brief_id).
+  //   flow (content_flows + flow_runs):
+  //     produce runs_outputs; el output puede asociarse a una campaign
+  //     (runs_outputs.campaign_id).
+  //   campaign-concept: ancla del plan; converge en campaign-real (mismo row).
+  //   campaign-real: destino final; recibe pero no fluye al canvas.
+  //   sticky/group: anotaciones puras; no participan del grafo de datos.
+  //
+  // Las reglas son bidireccionales (si A→B esta permitido, B→A tambien)
+  // — el usuario no deberia memorizar direccionalidad del drag.
+  // ------------------------------------------------------------------
+
+  const CC_CONNECTION_RULES = {
+    product:            ['brief', 'flow', 'campaign-concept'],
+    service:            ['brief', 'flow', 'campaign-concept'],
+    place:              ['brief', 'flow', 'campaign-concept'],
+    audience:           ['flow', 'campaign-concept', 'campaign-real'],
+    brief:              ['flow', 'campaign-concept', 'campaign-real'],
+    flow:               ['campaign-concept', 'campaign-real'],
+    'campaign-concept': ['campaign-real'],
+    'campaign-real':    [],
+    sticky:             [],
+    group:              [],
+  };
+
+  P._typeFromKey = function (key) {
+    if (!key) return null;
+    if (key.startsWith('aud:'))    return 'audience';
+    if (key.startsWith('sticky:')) return 'sticky';
+    if (key.startsWith('group:'))  return 'group';
+    if (key.startsWith('camp:')) {
+      const id = key.slice(5);
+      const c = (this._campaigns || []).find((x) => String(x.id) === String(id));
+      return (c && c.last_synced_at) ? 'campaign-real' : 'campaign-concept';
+    }
+    const colon = key.indexOf(':');
+    if (colon > 0) {
+      const t = key.slice(0, colon);
+      return ({ products: 'product', services: 'service', places: 'place', flows: 'flow', briefs: 'brief' })[t] || null;
+    }
+    return null;
+  };
+
+  /** Bidireccional: A→B esta OK si CC_CONNECTION_RULES[A] contiene B
+      o CC_CONNECTION_RULES[B] contiene A. */
+  P._canConnect = function (fromKey, toKey) {
+    if (!fromKey || !toKey || fromKey === toKey) return false;
+    const a = this._typeFromKey(fromKey);
+    const b = this._typeFromKey(toKey);
+    if (!a || !b) return false;
+    if (a === b) return false; // mismo tipo no se conecta entre si
+    const allowedFromA = CC_CONNECTION_RULES[a] || [];
+    const allowedFromB = CC_CONNECTION_RULES[b] || [];
+    return allowedFromA.includes(b) || allowedFromB.includes(a);
+  };
+
+  // Override _addLink: bloquea silenciosamente si la conexion no es valida.
+  // _connectCampaignToPersona (persona_id en BD) sigue siendo el unico caso
+  // hardcoded del mixin — ese link aud→camp YA esta en CC_CONNECTION_RULES
+  // (audience → campaign-concept / campaign-real), asi que no necesita
+  // excepcion. Si el usuario arrastra al reves (camp→aud), tambien pasa
+  // porque la regla es bidireccional.
+  const _f2RulesAddLink = P._addLink;
+  if (typeof _f2RulesAddLink === 'function') {
+    P._addLink = function (fromKey, toKey) {
+      if (!this._canConnect(fromKey, toKey)) {
+        console.info('[CC] conexion bloqueada:', fromKey, '→', toKey,
+          '(regla:', this._typeFromKey(fromKey), '→', this._typeFromKey(toKey), 'no permitida)');
+        return;
+      }
+      return _f2RulesAddLink.apply(this, arguments);
+    };
+  }
+
   // F2-prep.2: wraps de add/remove para INSERT/DELETE canvas_node_placements
   // en la estrategia activa. Encadenados sobre los wraps de F1.2 que ya
   // gestionan localStorage + commands. Stickies y groups no entran aqui;
