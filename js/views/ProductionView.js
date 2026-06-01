@@ -63,7 +63,7 @@ class ProductionView extends BaseView {
                     </div>
                 </header>
                 <div class="living-history-content living-history-masonry" id="livingHistoryContent">
-                    ${this.skeletonGrid(8, 'lg')}
+                    ${this._historySkeleton()}
                 </div>
             </section>
         </div>
@@ -309,6 +309,18 @@ class ProductionView extends BaseView {
       window.appState.set('selectedOrganizationId', this.orgId, true);
     }
     localStorage.setItem('selectedOrganizationId', this.orgId);
+  }
+
+  /**
+   * Skeleton de carga del historial. DEBE producir el MISMO markup masonry que
+   * LivingManager.renderHistorySkeletons() (living.js): .living-masonry-grid con
+   * items .living-masonry-item > .living-history-skeleton. Antes se usaba
+   * skeletonGrid() (grid uniforme 4-col) y al iniciar LivingManager repintaba su
+   * propio skeleton masonry -> dos layouts distintos = el "salto" visible al recargar.
+   */
+  _historySkeleton() {
+    const item = '<div class="living-masonry-item"><div class="living-history-skeleton"></div></div>';
+    return `<div class="living-masonry-grid living-history-masonry">${item.repeat(12)}</div>`;
   }
 
   /**
