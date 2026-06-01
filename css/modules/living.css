@@ -499,6 +499,26 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: var(--media-container-bg-fill);
 }
 
+/* Carga PREMIUM: la imagen arranca invisible y aparece YA formada (fade) al cargar,
+   en vez del render progresivo "por pedazos". El slot ya esta reservado (aspect-ratio
+   del item) + bg placeholder, asi que no hay layout shift. .is-loaded lo agrega
+   app-loader.js al evento load Y error (un img siempre dispara uno de los dos -> nunca
+   queda invisible). Sin timer: un safety por tiempo revelaria imagenes lazy del fondo
+   antes de que carguen al scrollear tarde. */
+.living-masonry-grid .living-masonry-item img {
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-out, ease);
+}
+.living-masonry-grid .living-masonry-item img.is-loaded {
+    opacity: 1;
+    animation: none; /* usa solo la transition; anula el imgFadeIn generico de bundle.css */
+}
+/* Los <video> NO se ocultan: no disparan `load` confiable (usan loadeddata/canplay)
+   y quedarian invisibles. El render "por pedazos" es de imagenes, no de video. */
+@media (prefers-reduced-motion: reduce) {
+    .living-masonry-grid .living-masonry-item img { opacity: 1; transition: none; animation: none; }
+}
+
 /* Wrapper especifico del thumbnail de video (compat con codigo de hover). */
 .history-video-card-thumbnail-wrap {
     position: absolute;

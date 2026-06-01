@@ -446,12 +446,13 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 @keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Fade-in suave de imagenes de contenido al cargar. FAILSAFE: la clase la agrega
-   JS al evento load (app-loader.js), NUNCA hay opacity:0 por defecto -> una imagen
-   jamas queda invisible si el listener no corre. Solo es una animacion aditiva. */
+/* Carga premium de imagenes. El JS (app-loader) agrega .is-loaded al evento load/error.
+   GENERICO (no-galeria): fade aditivo, NUNCA opacity:0 por defecto -> jamas invisible.
+   La galeria masonry hace ademas opacity:0-hasta-load (ver living.css) para evitar el
+   render progresivo "por pedazos"; ese override gana por especificidad. */
 @keyframes imgFadeIn { from { opacity: 0; } to { opacity: 1; } }
-.img-faded-in { animation: imgFadeIn 0.45s var(--ease-out, ease); }
-@media (prefers-reduced-motion: reduce) { .img-faded-in { animation: none; } }
+img.is-loaded { animation: imgFadeIn 0.45s var(--ease-out, ease); }
+@media (prefers-reduced-motion: reduce) { img.is-loaded { animation: none; } }
 .modal-content {
     position: relative;
     z-index: 1;

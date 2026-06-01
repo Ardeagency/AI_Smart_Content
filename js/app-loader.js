@@ -297,14 +297,17 @@
     // defecto, asi ninguna imagen puede quedar invisible. Catch async-inserted.
     // Scope: salta chrome del nav/header e iconos/avatares chicos (<120px) para
     // no "parpadear" la UI; solo imagenes de contenido (galerias, brand, productos).
-    document.addEventListener('load', function (e) {
+    function _revealImg(e) {
         const img = e.target;
-        if (!img || img.tagName !== 'IMG' || img.dataset.faded) return;
-        if (img.closest('#navigation-container, .app-header, .main-header')) return;
-        if ((img.naturalWidth || 0) < 120) return;
+        if (!img || (img.tagName !== 'IMG' && img.tagName !== 'VIDEO') || img.dataset.faded) return;
+        if (img.closest && img.closest('#navigation-container, .app-header, .main-header')) return;
+        // En load saltamos chrome/iconos chicos; en error revelamos SIEMPRE (no dejar invisible).
+        if (e.type === 'load' && img.tagName === 'IMG' && (img.naturalWidth || 0) < 120) return;
         img.dataset.faded = '1';
-        img.classList.add('img-faded-in');
-    }, true);
+        img.classList.add('is-loaded');
+    }
+    document.addEventListener('load', _revealImg, true);
+    document.addEventListener('error', _revealImg, true);
 
     // ===== BARRA DE PROGRESO DE NAVEGACION (no-bloqueante) =====
     // El router la dispara en cambios de ruta en vez del spinner full-screen.
