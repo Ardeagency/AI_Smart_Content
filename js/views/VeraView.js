@@ -1875,9 +1875,10 @@ class VeraView extends (window.BaseView || class {}) {
     try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) {}
   }
 
-  /* Controlador del widget [CLARIFY]: navegacion por teclado (↑↓ entre opciones,
-     ←→ entre paginas), pager "n de N", "Algo más" (foca el composer), "Omitir"
-     y cerrar. El envio al elegir lo maneja la delegacion data-vera-send. */
+  /* Controlador del widget [CLARIFY]: pager "n de N", teclado (↑↓ opciones,
+     ←→ paginas), modos multi (toggle + Confirmar) y rank (drag + Confirmar),
+     "Algo más" (foca el composer), "Omitir"/cerrar. El envio en modo single lo
+     maneja la delegacion data-vera-send. */
   _initClarifyWidgets() {
     const widgets = document.querySelectorAll('.vera-clarify:not(.__init)');
     widgets.forEach((w) => {
@@ -1886,10 +1887,27 @@ class VeraView extends (window.BaseView || class {}) {
       const total = pagesEls.length;
       const qEl = w.querySelector('.vera-clarify-q');
       const countEl = w.querySelector('.vera-clarify-count');
+      const confirmBtn = w.querySelector('[data-vera-confirm]');
       let page = 0;
       let focusIdx = -1;
 
-      const currentOpts = () => Array.from(pagesEls[page].querySelectorAll('.vera-opt'));
+      const currentPage = () => pagesEls[page];
+      const currentMode = () => currentPage()?.getAttribute('data-mode') || 'single';
+      const currentOpts = () => Array.from(currentPage().querySelectorAll('.vera-opt'));
+
+      const refreshConfirm = () => {
+        if (!confirmBtn) return;
+        const mode = currentMode();
+        if (mode === 'single') { confirmBtn.hidden = true; return; }
+        confirmBtn.hidden = false;
+        if (mode === 'multi') {
+          const any = currentPage().querySelector('.vera-opt--check.checked');
+          confirmBtn.disabled = !any;
+        } else {
+          confirmBtn.disabled = false; // rank: siempre hay un orden valido
+        }
+      };
+
       const clearFocus = () => currentOpts().forEach((o) => o.classList.remove('is-focused'));
       const setFocus = (i) => {
         const opts = currentOpts();
@@ -1903,17 +1921,52 @@ class VeraView extends (window.BaseView || class {}) {
         if (total < 1) return;
         page = (i + total) % total;
         pagesEls.forEach((p, idx) => { p.hidden = idx !== page; });
-        if (qEl) qEl.textContent = pagesEls[page].getAttribute('data-q') || '';
+        if (qEl) qEl.textContent = currentPage().getAttribute('data-q') || '';
         if (countEl) countEl.textContent = `${page + 1} de ${total}`;
         focusIdx = -1;
         clearFocus();
+        refreshConfirm();
       };
+
       // Cerrar (X) / Omitir descartan la pregunta sin enviar y desmontan el dock.
       const dismiss = () => {
         const dock = w.closest('#veraDock');
         w.classList.add('answered', 'dismissed');
         if (dock) dock.remove();
       };
+      const submit = (value) => {
+        const v = String(value || '').trim();
+        if (!v) return;
+        w.classList.add('answered');
+        this._undockQuestion();
+        this.sendMessage(v);
+      };
+
+      // Toggle de checkboxes (modo multi)
+      w.addEventListener('click', (e) => {
+        const chk = e.target.closest('.vera-opt--check');
+        if (!chk || !w.contains(chk)) return;
+        chk.classList.toggle('checked');
+        chk.setAttribute('aria-pressed', chk.classList.contains('checked') ? 'true' : 'false');
+        refreshConfirm();
+      });
+
+      // Confirmar (multi / rank): reune la seleccion de la pagina activa y envia.
+      confirmBtn?.addEventListener('click', () => {
+        const mode = currentMode();
+        if (mode === 'multi') {
+          const sel = Array.from(currentPage().querySelectorAll('.vera-opt--check.checked'))
+            .map((el) => el.getAttribute('data-vera-value') || '').filter(Boolean);
+          if (sel.length) submit(sel.join(', '));
+        } else if (mode === 'rank') {
+          const order = Array.from(currentPage().querySelectorAll('.vera-opt--rank'))
+            .map((el) => el.getAttribute('data-vera-value') || '').filter(Boolean);
+          if (order.length) submit(order.join(' > '));
+        }
+      });
+
+      // Drag para reordenar (modo rank)
+      this._bindRankDrag(w, refreshConfirm);
 
       w.querySelector('.vera-clarify-prev')?.addEventListener('click', () => showPage(page - 1));
       w.querySelector('.vera-clarify-next')?.addEventListener('click', () => showPage(page + 1));
@@ -1926,7 +1979,39 @@ class VeraView extends (window.BaseView || class {}) {
         else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(focusIdx - 1); }
         else if (e.key === 'ArrowRight' && total > 1) { e.preventDefault(); showPage(page + 1); }
         else if (e.key === 'ArrowLeft' && total > 1) { e.preventDefault(); showPage(page - 1); }
-        // Enter sobre la opcion enfocada dispara su click nativo → delegacion envia.
+        // En modo single, Enter sobre la opcion enfocada dispara su click → envia.
+      });
+
+      refreshConfirm();
+    });
+  }
+
+  /* Drag-and-drop minimo para opciones rank: reordena por posicion y renumera. */
+  _bindRankDrag(w, onChange) {
+    const renumber = (list) => list.querySelectorAll('.vera-opt-rank-num')
+      .forEach((n, i) => { n.textContent = i + 1; });
+
+    w.querySelectorAll('.vera-opt-list').forEach((list) => {
+      if (!list.querySelector('.vera-opt--rank')) return;
+
+      list.addEventListener('dragstart', (e) => {
+        const li = e.target.closest('.vera-opt--rank');
+        if (li) li.classList.add('dragging');
+      });
+      list.addEventListener('dragend', (e) => {
+        const li = e.target.closest('.vera-opt--rank');
+        if (li) li.classList.remove('dragging');
+        renumber(list);
+        if (typeof onChange === 'function') onChange();
+      });
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const dragging = list.querySelector('.vera-opt--rank.dragging');
+        if (!dragging) return;
+        const after = Array.from(list.querySelectorAll('.vera-opt--rank:not(.dragging)'))
+          .find((el) => e.clientY < el.getBoundingClientRect().top + el.offsetHeight / 2);
+        if (after) list.insertBefore(dragging, after);
+        else list.appendChild(dragging);
       });
     });
   }
@@ -2081,15 +2166,22 @@ class VeraView extends (window.BaseView || class {}) {
       const id = `vb_${blocks.length}`;
       const lines = content.trim().split('\n').filter(Boolean);
       let question = '';
+      let mode = 'single'; // single | multi | rank
       const cards = [];
       lines.forEach(line => {
         if (line.startsWith('PREGUNTA:')) question = line.replace('PREGUNTA:', '').trim();
+        else if (line.startsWith('TIPO:') || line.startsWith('TYPE:')) {
+          const v = line.replace(/^(TIPO:|TYPE:)/, '').trim().toLowerCase();
+          if (v.startsWith('multi')) mode = 'multi';
+          else if (v.startsWith('rank') || v.startsWith('orden') || v.startsWith('prior')) mode = 'rank';
+          else mode = 'single';
+        }
         else if (line.startsWith('- CARD |')) {
           const parts = line.replace('- CARD |', '').split('|').map(s => s.trim());
           cards.push({ icon: parts[0], title: parts[1], desc: parts[2] || '' });
         }
       });
-      blocks.push({ id, type: 'clarify', question, cards });
+      blocks.push({ id, type: 'clarify', question, mode, cards });
       return `\n\n{{${id}}}\n\n`;
     });
 
@@ -2161,7 +2253,7 @@ class VeraView extends (window.BaseView || class {}) {
     const clarifyIdx = blocks.reduce((acc, b, i) => (b.type === 'clarify' ? (acc.push(i), acc) : acc), []);
     if (clarifyIdx.length > 1) {
       const first = clarifyIdx[0];
-      blocks[first].pages = clarifyIdx.map((i) => ({ question: blocks[i].question, cards: blocks[i].cards }));
+      blocks[first].pages = clarifyIdx.map((i) => ({ question: blocks[i].question, cards: blocks[i].cards, mode: blocks[i].mode || 'single' }));
       clarifyIdx.slice(1).forEach((i) => {
         const id = blocks[i].id;
         blocks[i].type = 'skip';
@@ -2222,27 +2314,46 @@ class VeraView extends (window.BaseView || class {}) {
     const esc = escapeHtml;
     switch (block.type) {
       case 'clarify': {
-        // Widget de opciones seleccionables INLINE (estilo Claude): cabecera con
-        // pregunta + pager "1 de N" + cerrar, paginas, opciones numeradas, fila
-        // "Algo más" (foca el composer) y "Omitir". Al elegir una opcion se ENVIA
-        // (delegacion data-vera-send). El composer sigue libre para texto propio.
+        // Widget anclado al composer (estilo Claude). Soporta 3 modos por pagina:
+        //  - single: click envia de inmediato (data-vera-send).
+        //  - multi : checkboxes; "Confirmar" envia la seleccion unida por comas.
+        //  - rank  : reordenar arrastrando; "Confirmar" envia el orden con " > ".
+        // El composer sigue libre para texto propio.
         const attr = (s) => esc(s).replace(/"/g, '&quot;');
-        const pages = (block.pages && block.pages.length) ? block.pages : [{ question: block.question, cards: block.cards }];
-        const multi = pages.length > 1;
+        const pages = (block.pages && block.pages.length)
+          ? block.pages
+          : [{ question: block.question, cards: block.cards, mode: block.mode || 'single' }];
+        const multiPage = pages.length > 1;
+
+        const renderOpt = (c, i, mode) => {
+          const val = attr(c.title);
+          const body = `${c.icon ? `<span class="vera-opt-icon">${esc(c.icon)}</span>` : ''}
+            <span class="vera-opt-body">
+              <span class="vera-opt-title">${esc(c.title)}</span>
+              ${c.desc ? `<span class="vera-opt-desc">${esc(c.desc)}</span>` : ''}
+            </span>`;
+          if (mode === 'multi') {
+            return `<button type="button" class="vera-opt vera-opt--check" data-vera-value="${val}" aria-pressed="false">
+              <span class="vera-opt-check"><i class="fas fa-check"></i></span>${body}
+            </button>`;
+          }
+          if (mode === 'rank') {
+            return `<div class="vera-opt vera-opt--rank" draggable="true" data-vera-value="${val}">
+              <span class="vera-opt-num vera-opt-rank-num">${i + 1}</span>${body}
+              <span class="vera-opt-grip" aria-hidden="true"><i class="fas fa-bars"></i></span>
+            </div>`;
+          }
+          return `<button type="button" class="vera-opt" role="option" data-vera-send="${val}" data-idx="${i}">
+            <span class="vera-opt-num">${i + 1}</span>${body}
+            <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
+          </button>`;
+        };
 
         const pagesHtml = pages.map((pg, pi) => {
-          const opts = (pg.cards || []).map((c, i) => `
-            <button type="button" class="vera-opt" role="option" data-vera-send="${attr(c.title)}" data-idx="${i}">
-              <span class="vera-opt-num">${i + 1}</span>
-              ${c.icon ? `<span class="vera-opt-icon">${esc(c.icon)}</span>` : ''}
-              <span class="vera-opt-body">
-                <span class="vera-opt-title">${esc(c.title)}</span>
-                ${c.desc ? `<span class="vera-opt-desc">${esc(c.desc)}</span>` : ''}
-              </span>
-              <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
-            </button>`).join('');
-          return `<div class="vera-clarify-page" data-page="${pi}" data-q="${attr(pg.question || '')}"${pi === 0 ? '' : ' hidden'}>
-            <div class="vera-opt-list" role="listbox">${opts}</div>
+          const mode = pg.mode || 'single';
+          const opts = (pg.cards || []).map((c, i) => renderOpt(c, i, mode)).join('');
+          return `<div class="vera-clarify-page" data-page="${pi}" data-mode="${mode}" data-q="${attr(pg.question || '')}"${pi === 0 ? '' : ' hidden'}>
+            <div class="vera-opt-list">${opts}</div>
           </div>`;
         }).join('');
 
@@ -2251,7 +2362,7 @@ class VeraView extends (window.BaseView || class {}) {
           <div class="vera-clarify-head">
             <p class="vera-clarify-q">${esc(firstQ)}</p>
             <div class="vera-clarify-tools">
-              ${multi ? `<div class="vera-clarify-pager">
+              ${multiPage ? `<div class="vera-clarify-pager">
                 <button type="button" class="vera-clarify-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
                 <span class="vera-clarify-count">1 de ${pages.length}</span>
                 <button type="button" class="vera-clarify-next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
@@ -2265,12 +2376,11 @@ class VeraView extends (window.BaseView || class {}) {
               <span class="vera-opt-num vera-opt-num--pencil"><i class="fas fa-pen"></i></span>
               <span class="vera-clarify-more-text">Algo más</span>
             </button>
-            <button type="button" class="vera-clarify-skip" data-vera-skip>Omitir</button>
+            <div class="vera-clarify-actions">
+              <button type="button" class="vera-clarify-skip" data-vera-skip>Omitir</button>
+              <button type="button" class="vera-clarify-confirm" data-vera-confirm hidden disabled>Confirmar</button>
+            </div>
           </div>
-          <p class="vera-clarify-hints">
-            <kbd>↑</kbd><kbd>↓</kbd> para navegar <span class="vera-clarify-dot">·</span>
-            <kbd>Enter</kbd> para seleccionar <span class="vera-clarify-dot">·</span> o escribe abajo
-          </p>
         </div>`;
       }
       case 'skip': return '';

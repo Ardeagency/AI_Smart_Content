@@ -3140,6 +3140,7 @@
 }
 .vera-clarify-morebtn:hover { background: var(--white-5); }
 .vera-clarify-more-text { font-size: 15px; }
+.vera-clarify-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
 .vera-clarify-skip {
   flex: 0 0 auto;
   padding: 8px 18px;
@@ -3154,27 +3155,52 @@
 }
 .vera-clarify-skip:hover { background: var(--white-8); }
 
-/* Atajos de teclado */
-.vera-clarify-hints {
-  margin: 12px 2px 0;
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-  opacity: .85;
-}
-.vera-clarify-hints kbd {
-  display: inline-block;
-  min-width: 16px;
-  padding: 1px 5px;
-  margin: 0 1px;
-  border: 1px solid var(--white-10);
-  border-radius: 5px;
-  background: var(--white-5);
+/* Boton Confirmar (modos multi / rank) */
+.vera-clarify-confirm {
+  flex: 0 0 auto;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--text-primary);
+  color: var(--bg-primary, #0b0b0b);
+  font-size: 13px;
+  font-weight: 600;
   font-family: inherit;
-  font-size: 11px;
-  line-height: 1.4;
+  cursor: pointer;
+  transition: opacity .14s ease, transform .14s ease;
 }
-.vera-clarify-dot { margin: 0 6px; opacity: .55; }
+.vera-clarify-confirm:hover:not(:disabled) { opacity: .9; }
+.vera-clarify-confirm:active:not(:disabled) { transform: scale(0.98); }
+.vera-clarify-confirm:disabled { opacity: .4; cursor: default; }
+.vera-clarify-confirm[hidden] { display: none; }
+
+/* Modo MULTI — checkbox a la izquierda */
+.vera-opt--check .vera-opt-check {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1.5px solid var(--white-10);
+  background: transparent;
+  color: transparent;
+  font-size: 11px;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+.vera-opt--check.checked .vera-opt-check {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-primary, #0b0b0b);
+}
+.vera-opt--check.checked { background: var(--white-5); }
+
+/* Modo RANK — fila arrastrable con grip */
+.vera-opt--rank { cursor: grab; }
+.vera-opt--rank.dragging { opacity: .5; background: var(--white-8); cursor: grabbing; }
+.vera-opt-grip { flex: 0 0 auto; color: var(--text-muted); font-size: 13px; opacity: .5; cursor: grab; }
+.vera-opt--rank:hover .vera-opt-grip { opacity: .85; }
 
 .vera-interactive-hint {
   margin: 10px 2px 0;
