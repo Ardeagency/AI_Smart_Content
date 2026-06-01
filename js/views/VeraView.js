@@ -1745,6 +1745,40 @@ class VeraView extends (window.BaseView || class {}) {
     }, 1200);
   }
 
+  /* Genera el titulo de una conversacion recien creada con OpenAI (Netlify fn
+     api-name-conversation), a partir del primer mensaje del usuario. Best-effort,
+     una sola vez por conversacion; al exito repinta el rail con el titulo nuevo. */
+  _nameConversationSoon(convId) {
+    if (!convId) return;
+    this._namedConvs = this._namedConvs || new Set();
+    if (this._namedConvs.has(convId)) return;
+    this._namedConvs.add(convId);
+    setTimeout(async () => {
+      try {
+        const token = this.supabase
+          ? (await this.supabase.auth.getSession())?.data?.session?.access_token
+          : null;
+        const res = await fetch('/.netlify/functions/api-name-conversation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            conversation_id: convId,
+            organization_id: this.aiState.organization_id
+          })
+        });
+        if (!res.ok) return;
+        const json = await res.json().catch(() => null);
+        if (json?.title) {
+          await this.loadConversations();
+          this.renderHistory();
+        }
+      } catch (_) { /* best-effort: si falla, queda "Nueva conversación" */ }
+    }, 1500);
+  }
+
   /* ── Messages ────────────────────────────────────────── */
   async loadMessages() {
     if (!this.supabase || !this.aiState.active_conversation_id) {
@@ -3187,8 +3221,11 @@ class VeraView extends (window.BaseView || class {}) {
       // Guardar conversation_id si es nuevo
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
-        // Conversación recién creada: refresca el rail para que aparezca.
+        // Conversación recién creada: refresca el rail para que aparezca y
+        // genera un título con OpenAI a partir del primer mensaje del usuario
+        // (evita que todo el historial diga "Nueva conversación").
         this._refreshHistorySoon();
+        this._nameConversationSoon(json.conversation_id);
       }
 
       const convId = json?.conversation_id || this.aiState.active_conversation_id;
