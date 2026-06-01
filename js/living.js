@@ -468,9 +468,15 @@ class LivingManager {
      */
     async deleteOutput(outputId) {
         if (!this.supabase || !outputId) return false;
+        // Los outputs vienen de 2 tablas: runs_outputs (flows) y system_ai_outputs
+        // (generacion directa de modelo). Borrar de la equivocada devolvia 0 filas
+        // SIN error -> la card desaparecia optimista pero reaparecia al recargar.
+        const table = (this.systemAiOutputs || []).some(o => o?.id === outputId)
+            ? 'system_ai_outputs'
+            : 'runs_outputs';
         try {
             const { error } = await this.supabase
-                .from('runs_outputs')
+                .from(table)
                 .delete()
                 .eq('id', outputId);
             if (error) throw error;
@@ -492,12 +498,20 @@ class LivingManager {
      */
     async bulkDeleteOutputs(outputIds) {
         if (!this.supabase || !Array.isArray(outputIds) || !outputIds.length) return 0;
+        // Separar por tabla de origen (runs_outputs vs system_ai_outputs) y borrar
+        // de cada una; antes todo iba a runs_outputs y los system_ai no se borraban.
+        const sysIds = new Set((this.systemAiOutputs || []).map(o => o?.id).filter(Boolean));
+        const fromSystem = outputIds.filter(id => sysIds.has(id));
+        const fromRuns = outputIds.filter(id => !sysIds.has(id));
         try {
-            const { error } = await this.supabase
-                .from('runs_outputs')
-                .delete()
-                .in('id', outputIds);
-            if (error) throw error;
+            if (fromRuns.length) {
+                const { error } = await this.supabase.from('runs_outputs').delete().in('id', fromRuns);
+                if (error) throw error;
+            }
+            if (fromSystem.length) {
+                const { error } = await this.supabase.from('system_ai_outputs').delete().in('id', fromSystem);
+                if (error) throw error;
+            }
             const idSet = new Set(outputIds);
             this.flowOutputs = (this.flowOutputs || []).filter(o => !idSet.has(o?.id));
             this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => !idSet.has(o?.id));
