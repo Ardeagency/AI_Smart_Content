@@ -2279,16 +2279,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 14px 14px 8px;
+  padding: 16px 14px 12px 16px;
 }
 .vera-history-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: .72rem;
   font-weight: 600;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
 }
+.vera-history-title i { font-size: .78rem; opacity: .8; }
+
 .vera-history-collapse,
 .vera-history-open {
   display: inline-flex;
@@ -2297,11 +2302,11 @@
   width: 30px;
   height: 30px;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: .82rem;
+  font-size: .8rem;
   transition: background .15s ease, color .15s ease;
 }
 .vera-history-collapse:hover,
@@ -2312,58 +2317,84 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 12px 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-divider);
-  border-radius: 10px;
-  background: transparent;
+  margin: 0 12px 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border-radius: 11px;
+  background: var(--white-5);
   color: var(--text-primary);
   font-size: .875rem;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .15s ease, border-color .15s ease;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
 }
-.vera-history-new:hover { background: var(--white-8); border-color: var(--white-10); }
-.vera-history-new i { font-size: .9rem; color: var(--text-muted); }
+.vera-history-new:hover {
+  background: var(--white-8);
+  border-color: var(--white-10);
+}
+.vera-history-new:active { transform: scale(0.99); }
+.vera-history-new i { font-size: .82rem; color: var(--text-muted); }
 
 .vera-history-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 8px 16px;
+  padding: 6px 8px 16px;
+  border-top: 1px solid var(--glass-black-border, var(--border-divider));
   scrollbar-width: thin;
   scrollbar-color: var(--white-10) transparent;
 }
 .vera-history-list::-webkit-scrollbar { width: 5px; }
 .vera-history-list::-webkit-scrollbar-track { background: transparent; }
 .vera-history-list::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 3px; }
+.vera-history-list:hover { scrollbar-color: var(--white-10) transparent; }
 
 .vera-history-group {
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .04em;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 12px 8px 4px;
+  opacity: .85;
+  padding: 14px 8px 5px;
   white-space: nowrap;
 }
+.vera-history-group:first-child { padding-top: 8px; }
+
 .vera-history-item {
+  position: relative;
   display: block;
   width: 100%;
   text-align: left;
   border: none;
   background: transparent;
   color: var(--text-primary);
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 9px 11px;
+  border-radius: 9px;
   cursor: pointer;
   font-size: .85rem;
-  transition: background .14s ease;
+  line-height: 1.3;
+  transition: background .14s ease, color .14s ease;
 }
-.vera-history-item:hover { background: var(--white-8); }
-.vera-history-item.active { background: var(--white-10); }
+.vera-history-item:hover { background: var(--white-5); }
+.vera-history-item.active {
+  background: var(--white-8);
+  font-weight: 500;
+}
+/* Acento de marca en la conversación activa */
+.vera-history-item.active::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--brand-gradient-dynamic-vertical, var(--brand-primary, #c0392b));
+}
 .vera-history-item-title {
   display: block;
   white-space: nowrap;
@@ -2373,8 +2404,8 @@
 .vera-history-empty {
   color: var(--text-muted);
   font-size: .82rem;
-  line-height: 1.5;
-  padding: 28px 14px;
+  line-height: 1.55;
+  padding: 32px 16px;
   text-align: center;
 }
 

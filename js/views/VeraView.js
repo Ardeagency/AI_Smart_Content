@@ -1424,18 +1424,18 @@ class VeraView extends (window.BaseView || class {}) {
       <div id="chatcontainer" class="gpt-layout">
         <aside class="vera-history" id="veraHistory" aria-label="Historial de conversaciones">
           <div class="vera-history-head">
-            <span class="vera-history-title">Conversaciones</span>
+            <span class="vera-history-title"><i class="fas fa-clock-rotate-left"></i>Conversaciones</span>
             <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar historial" aria-label="Ocultar historial">
-              <i class="fas fa-angles-right"></i>
+              <i class="fas fa-chevron-right"></i>
             </button>
           </div>
           <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
-            <i class="fas fa-pen-to-square"></i><span>Nueva conversación</span>
+            <i class="fas fa-pen"></i><span>Nueva conversación</span>
           </button>
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
-          <i class="fas fa-bars-staggered"></i>
+          <i class="fas fa-clock-rotate-left"></i>
         </button>
         <div class="vera-history-scrim" id="veraHistoryScrim"></div>
         <div class="gpt-main" id="gptMain">
