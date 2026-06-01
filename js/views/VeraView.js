@@ -1841,6 +1841,30 @@ class VeraView extends (window.BaseView || class {}) {
     });
   }
 
+  /* Opciones interactivas [CLARIFY]/[PILLS]: click en una opcion la ENVIA como
+     respuesta del usuario. Delegacion idempotente sobre la lista de mensajes. */
+  _bindInteractiveOptions() {
+    const root = document.getElementById('veraMessageList');
+    if (!root || root.__veraInteractiveBound) return;
+    root.__veraInteractiveBound = true;
+
+    root.addEventListener('click', (e) => {
+      const btn = e.target?.closest?.('[data-vera-send]');
+      if (!btn) return;
+      const block = btn.closest('.vera-interactive');
+      if (block && block.classList.contains('answered')) return;
+      if (this.aiState.isLoading) return;
+      const value = btn.getAttribute('data-vera-send') || '';
+      if (!value.trim()) return;
+      // Bloquea reenvio y marca la opcion elegida.
+      if (block) {
+        block.classList.add('answered');
+        btn.classList.add('selected');
+      }
+      this.sendMessage(value.trim());
+    });
+  }
+
   async renderMessages() {
     const list = document.getElementById('veraMessageList');
     const scroll = document.getElementById('veraMessagesWrap');
@@ -1870,6 +1894,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
+    this._bindInteractiveOptions();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
@@ -2071,34 +2096,33 @@ class VeraView extends (window.BaseView || class {}) {
     const esc = escapeHtml;
     switch (block.type) {
       case 'clarify': {
-        // Las cards van al input-area (no al bubble). El bubble solo muestra
-        // la pregunta como texto, las opciones aparecen reemplazando el textarea.
-        setTimeout(() => {
-          this._showInputOptions(block.question, block.cards);
-        }, 100);
-        const cardsHtml = block.cards.map(c => `
-          <div class="vera-clarify-card" onclick="this.closest('.vera-clarify-cards').querySelectorAll('.vera-clarify-card').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">
-            <span class="vera-clarify-icon">${esc(c.icon)}</span>
-            <span class="vera-clarify-title">${esc(c.title)}</span>
-            ${c.desc ? `<span class="vera-clarify-desc">${esc(c.desc)}</span>` : ''}
-          </div>`).join('');
-        return `<div class="vera-clarify-block">
-          ${block.question ? `<p class="vera-clarify-question">${esc(block.question)}</p>` : ''}
-          <div class="vera-clarify-cards">${cardsHtml}</div>
+        // Opciones seleccionables INLINE en el mensaje. Al hacer click se ENVIA
+        // la opcion como respuesta del usuario (delegacion via data-vera-send).
+        // El composer sigue disponible para escribir una respuesta libre.
+        const attr = (s) => esc(s).replace(/"/g, '&quot;');
+        const cardsHtml = block.cards.map((c, i) => `
+          <button type="button" class="vera-opt" data-vera-send="${attr(c.title)}">
+            <span class="vera-opt-num">${i + 1}</span>
+            ${c.icon ? `<span class="vera-opt-icon">${esc(c.icon)}</span>` : ''}
+            <span class="vera-opt-body">
+              <span class="vera-opt-title">${esc(c.title)}</span>
+              ${c.desc ? `<span class="vera-opt-desc">${esc(c.desc)}</span>` : ''}
+            </span>
+            <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
+          </button>`).join('');
+        return `<div class="vera-interactive">
+          ${block.question ? `<p class="vera-interactive-q">${esc(block.question)}</p>` : ''}
+          <div class="vera-opt-list">${cardsHtml}</div>
+          <p class="vera-interactive-hint">Elige una opción o responde abajo en el chat.</p>
         </div>`;
       }
       case 'pills': {
-        setTimeout(() => {
-          this._showInputOptions(
-            block.label,
-            (block.options || []).map((o) => ({ title: o, icon: '', desc: '' }))
-          );
-        }, 100);
+        const attr = (s) => esc(s).replace(/"/g, '&quot;');
         const pillsHtml = block.options.map(o => `
-          <span class="vera-pill" onclick="this.closest('.vera-pills-row').querySelectorAll('.vera-pill').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')">${esc(o)}</span>`).join('');
-        return `<div class="vera-pills-block">
-          ${block.label ? `<p class="vera-pills-label">${esc(block.label)}</p>` : ''}
-          <div class="vera-pills-row">${pillsHtml}</div>
+          <button type="button" class="vera-chip" data-vera-send="${attr(o)}">${esc(o)}</button>`).join('');
+        return `<div class="vera-interactive">
+          ${block.label ? `<p class="vera-interactive-q">${esc(block.label)}</p>` : ''}
+          <div class="vera-chip-row">${pillsHtml}</div>
         </div>`;
       }
       case 'steps': {
@@ -2347,6 +2371,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
+    this._bindInteractiveOptions();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
