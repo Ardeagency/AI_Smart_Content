@@ -1432,6 +1432,9 @@ class VeraView extends (window.BaseView || class {}) {
           <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
             <i class="fas fa-pen"></i><span>Nueva conversación</span>
           </button>
+          <button class="vera-history-attach" id="veraAttachLibrary" title="Adjuntar datos de la biblioteca a Vera">
+            <i class="fas fa-layer-group"></i><span>Adjuntar de biblioteca</span>
+          </button>
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
@@ -1725,9 +1728,237 @@ class VeraView extends (window.BaseView || class {}) {
       if (el && !el.__veraBound) { el.__veraBound = true; el.addEventListener('click', fn); }
     };
     wire('veraNewChat', () => this.startNewConversation());
+    wire('veraAttachLibrary', () => this._openLibraryPicker());
     wire('veraHistoryCollapse', () => this.toggleHistory(true));
     wire('veraHistoryOpen', () => this.toggleHistory(false));
     wire('veraHistoryScrim', () => this.toggleHistory(true));
+  }
+
+  /* ── Adjuntar de biblioteca ──────────────────────────────
+     Permite adjuntar productos, campañas, audiencias y marcas de la
+     plataforma como contexto para Vera. Se anexan como referencias compactas
+     (tipo + nombre + id) al mensaje; Vera las lee y puede profundizar con sus
+     herramientas. En el chat se muestran como chips, no como texto crudo. */
+
+  _libKindLabel(kind) {
+    return ({ product: 'Producto', campaign: 'Campaña', audience: 'Audiencia', brand: 'Marca' })[kind] || 'Dato';
+  }
+  _libKindIcon(kind) {
+    return ({ product: 'fa-box', campaign: 'fa-bullhorn', audience: 'fa-users', brand: 'fa-gem' })[kind] || 'fa-layer-group';
+  }
+
+  // Tabs del picker: cada uno define tabla, columnas y mapeo a {id, name, meta}.
+  _libTabs() {
+    const orgId = this.aiState.organization_id;
+    return [
+      {
+        key: 'product', label: 'Productos', icon: 'fa-box',
+        load: async () => {
+          const { data } = await this.supabase.from('products')
+            .select('id, nombre_producto, tipo_producto')
+            .eq('organization_id', orgId).order('nombre_producto', { ascending: true }).limit(200);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || 'Producto sin nombre', meta: r.tipo_producto || '' }));
+        }
+      },
+      {
+        key: 'campaign', label: 'Campañas', icon: 'fa-bullhorn',
+        load: async () => {
+          const { data } = await this.supabase.from('campaigns')
+            .select('id, nombre_campana, status')
+            .eq('organization_id', orgId).order('created_at', { ascending: false }).limit(200);
+          const st = { conceptual: 'Conceptual', active: 'Activa', paused: 'Pausada', draft: 'Borrador', ended: 'Finalizada' };
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Campaña sin nombre', meta: st[r.status] || r.status || '' }));
+        }
+      },
+      {
+        key: 'audience', label: 'Audiencias', icon: 'fa-users',
+        load: async () => {
+          const { data } = await this.supabase.from('audience_personas')
+            .select('id, name, awareness_level')
+            .eq('organization_id', orgId).order('name', { ascending: true }).limit(200);
+          return (data || []).map((r) => ({ id: r.id, name: r.name || 'Audiencia sin nombre', meta: r.awareness_level || '' }));
+        }
+      },
+      {
+        key: 'brand', label: 'Marcas', icon: 'fa-gem',
+        load: async () => {
+          const { data } = await this.supabase.from('brand_containers')
+            .select('id, nombre_marca, nicho_core')
+            .eq('organization_id', orgId).order('created_at', { ascending: true }).limit(100);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_marca || 'Marca sin nombre', meta: r.nicho_core || '' }));
+        }
+      }
+    ];
+  }
+
+  _openLibraryPicker() {
+    if (document.getElementById('veraLibModal')) return;
+    if (!this.supabase || !this.aiState.organization_id) return;
+
+    const tabs = this._libTabs();
+    this._libCache = this._libCache || {};
+    // Selección actual ya adjuntada (para marcar checks).
+    const attachedIds = new Set(
+      this.aiState.pendingAttachments.filter((a) => a.type === 'library').map((a) => a.refId)
+    );
+    const selected = new Map(); // refId -> {kind, id, name}
+    this.aiState.pendingAttachments
+      .filter((a) => a.type === 'library')
+      .forEach((a) => selected.set(a.refId, { kind: a.kind, id: a.refId, name: a.name }));
+
+    const overlay = document.createElement('div');
+    overlay.id = 'veraLibModal';
+    overlay.className = 'vera-lib-modal';
+    overlay.innerHTML = `
+      <div class="vera-lib-scrim" data-lib-close></div>
+      <div class="vera-lib-panel" role="dialog" aria-label="Adjuntar de biblioteca">
+        <div class="vera-lib-head">
+          <span class="vera-lib-title"><i class="fas fa-layer-group"></i> Adjuntar de biblioteca</span>
+          <button class="vera-lib-x" data-lib-close aria-label="Cerrar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="vera-lib-tabs">
+          ${tabs.map((t, i) => `<button class="vera-lib-tab${i === 0 ? ' active' : ''}" data-lib-tab="${t.key}"><i class="fas ${t.icon}"></i>${t.label}</button>`).join('')}
+        </div>
+        <input type="text" class="vera-lib-search" id="veraLibSearch" placeholder="Buscar…" />
+        <div class="vera-lib-list" id="veraLibList"></div>
+        <div class="vera-lib-foot">
+          <span class="vera-lib-count" id="veraLibCount">0 seleccionados</span>
+          <div class="vera-lib-foot-actions">
+            <button class="vera-lib-cancel" data-lib-close>Cancelar</button>
+            <button class="vera-lib-confirm" id="veraLibConfirm" disabled>Adjuntar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    let activeKey = tabs[0].key;
+    const listEl = overlay.querySelector('#veraLibList');
+    const searchEl = overlay.querySelector('#veraLibSearch');
+    const countEl = overlay.querySelector('#veraLibCount');
+    const confirmBtn = overlay.querySelector('#veraLibConfirm');
+
+    const updateFoot = () => {
+      countEl.textContent = `${selected.size} seleccionado${selected.size === 1 ? '' : 's'}`;
+      confirmBtn.disabled = selected.size === 0;
+    };
+
+    const renderList = (items) => {
+      const q = (searchEl.value || '').trim().toLowerCase();
+      const filtered = q ? items.filter((it) => it.name.toLowerCase().includes(q)) : items;
+      if (!filtered.length) {
+        listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? 'Sin resultados.' : 'No hay elementos en esta categoría.'}</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map((it) => {
+        const checked = selected.has(it.id) ? ' checked' : '';
+        return `<label class="vera-lib-item">
+          <input type="checkbox" data-lib-id="${escapeHtml(it.id)}"${checked} />
+          <span class="vera-lib-item-body">
+            <span class="vera-lib-item-name">${escapeHtml(it.name)}</span>
+            ${it.meta ? `<span class="vera-lib-item-meta">${escapeHtml(it.meta)}</span>` : ''}
+          </span>
+        </label>`;
+      }).join('');
+    };
+
+    const loadTab = async (key) => {
+      activeKey = key;
+      overlay.querySelectorAll('.vera-lib-tab').forEach((b) => b.classList.toggle('active', b.getAttribute('data-lib-tab') === key));
+      const tab = tabs.find((t) => t.key === key);
+      if (!this._libCache[key]) {
+        listEl.innerHTML = `<div class="vera-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>`;
+        try { this._libCache[key] = await tab.load(); }
+        catch (_) { this._libCache[key] = []; }
+      }
+      renderList(this._libCache[key]);
+    };
+
+    // Eventos
+    overlay.addEventListener('click', (e) => {
+      if (e.target.closest('[data-lib-close]')) { overlay.remove(); return; }
+      const tabBtn = e.target.closest('[data-lib-tab]');
+      if (tabBtn) { loadTab(tabBtn.getAttribute('data-lib-tab')); return; }
+    });
+    listEl.addEventListener('change', (e) => {
+      const cb = e.target.closest('input[data-lib-id]');
+      if (!cb) return;
+      const id = cb.getAttribute('data-lib-id');
+      const items = this._libCache[activeKey] || [];
+      const it = items.find((x) => x.id === id);
+      if (!it) return;
+      if (cb.checked) selected.set(id, { kind: activeKey, id, name: it.name });
+      else selected.delete(id);
+      updateFoot();
+    });
+    searchEl.addEventListener('input', () => renderList(this._libCache[activeKey] || []));
+    confirmBtn.addEventListener('click', () => {
+      this._addLibraryAttachments(Array.from(selected.values()));
+      overlay.remove();
+    });
+    overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.remove(); });
+
+    updateFoot();
+    loadTab(activeKey);
+    setTimeout(() => searchEl.focus(), 50);
+  }
+
+  _addLibraryAttachments(items) {
+    const existing = new Set(this.aiState.pendingAttachments.filter((a) => a.type === 'library').map((a) => a.refId));
+    // Quita los de biblioteca que ya no estén seleccionados y agrega los nuevos.
+    const keepIds = new Set(items.map((i) => i.id));
+    this.aiState.pendingAttachments = this.aiState.pendingAttachments.filter(
+      (a) => a.type !== 'library' || keepIds.has(a.refId)
+    );
+    items.forEach((i) => {
+      if (existing.has(i.id)) return;
+      this.aiState.pendingAttachments.push({
+        id: `lib-${i.kind}-${i.id}`,
+        type: 'library',
+        kind: i.kind,
+        refId: i.id,
+        name: i.name,
+        status: 'ready'
+      });
+    });
+    this._renderAttachChips();
+    this._syncSendBtn?.();
+    const input = document.getElementById('veraInput');
+    if (input) requestAnimationFrame(() => input.focus());
+  }
+
+  // Bloque de contexto que se ANEXA al mensaje enviado a Vera (no al display).
+  _buildLibraryContext(libItems) {
+    if (!libItems || !libItems.length) return '';
+    const lines = libItems.map((a) => {
+      const name = String(a.name || '').replace(/[|\n\r]/g, ' ').trim();
+      return `- ${this._libKindLabel(a.kind)} | ${name} | ${a.refId}`;
+    });
+    return `\n\n<<DATOS_BIBLIOTECA>>\n${lines.join('\n')}\n<</DATOS_BIBLIOTECA>>\nEl usuario adjuntó estos elementos de la biblioteca de la plataforma como foco; úsalos y, si necesitas más detalle, amplíalos con tus herramientas.`;
+  }
+
+  // Separa el bloque <<DATOS_BIBLIOTECA>> del texto visible y lo parsea a chips.
+  _parseLibraryContext(content) {
+    const raw = String(content || '');
+    const m = raw.match(/<<DATOS_BIBLIOTECA>>\n([\s\S]*?)\n<<\/DATOS_BIBLIOTECA>>/);
+    if (!m) return { text: raw, refs: [] };
+    const labelToKind = { Producto: 'product', Campaña: 'campaign', Audiencia: 'audience', Marca: 'brand' };
+    const refs = m[1].split('\n').map((line) => {
+      const p = line.replace(/^-\s*/, '').split('|').map((s) => s.trim());
+      return { kind: labelToKind[p[0]] || 'data', name: p[1] || '', id: p[2] || '' };
+    }).filter((r) => r.name);
+    const text = raw.replace(/\n*<<DATOS_BIBLIOTECA>>[\s\S]*$/, '').trim();
+    return { text, refs };
+  }
+
+  _renderLibraryRefs(refs) {
+    const list = Array.isArray(refs) ? refs : [];
+    if (!list.length) return '';
+    const items = list.map((r) => `
+      <span class="gpt-msg-att gpt-msg-att--lib" title="${escapeHtml(this._libKindLabel(r.kind))}">
+        <i class="fas ${this._libKindIcon(r.kind)}"></i>
+        <span>${escapeHtml(r.name)}</span>
+      </span>`).join('');
+    return `<div class="gpt-msg-attachments gpt-msg-attachments--lib">${items}</div>`;
   }
 
   _isMobile() {
@@ -2721,9 +2952,13 @@ class VeraView extends (window.BaseView || class {}) {
     const isError = m.role === 'error';
 
     if (isUser) {
-      const attHTML = this._renderUserAttachments(m.attachments);
-      const bubble = m.content
-        ? `<div class="gpt-msg-bubble">${escapeHtml(m.content).replace(/\n/g, '<br>')}</div>`
+      // Separa el bloque de datos de biblioteca del texto visible. En vivo,
+      // m.libraryRefs trae las refs; al recargar se parsean del content.
+      const parsed = this._parseLibraryContext(m.content);
+      const refs = (m.libraryRefs && m.libraryRefs.length) ? m.libraryRefs : parsed.refs;
+      const attHTML = this._renderUserAttachments(m.attachments) + this._renderLibraryRefs(refs);
+      const bubble = parsed.text
+        ? `<div class="gpt-msg-bubble">${escapeHtml(parsed.text).replace(/\n/g, '<br>')}</div>`
         : '';
       return `
         <div class="gpt-msg gpt-msg--user" data-message-id="${id}">
@@ -3110,7 +3345,8 @@ class VeraView extends (window.BaseView || class {}) {
       video: 'fa-file-video',
       word: 'fa-file-word',
       spreadsheet: 'fa-file-excel',
-      text: 'fa-file-lines'
+      text: 'fa-file-lines',
+      library: 'fa-layer-group'
     })[type] || 'fa-file';
   }
 
@@ -3176,7 +3412,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list.length) { wrap.hidden = true; wrap.innerHTML = ''; return; }
     wrap.hidden = false;
     wrap.innerHTML = list.map(a => {
-      const icon = this._attachmentIconClass(a.type);
+      const icon = a.type === 'library' ? this._libKindIcon(a.kind) : this._attachmentIconClass(a.type);
       const stateClass = a.status === 'error' ? ' gpt-attach-chip--error'
                         : a.status === 'uploading' ? ' gpt-attach-chip--uploading' : '';
       const spinner = a.status === 'uploading' ? '<i class="fas fa-spinner fa-spin"></i>' : '';
@@ -3224,10 +3460,16 @@ class VeraView extends (window.BaseView || class {}) {
 
     // Tomamos snapshot de adjuntos listos y limpiamos pendientes antes de enviar.
     const ready = this.aiState.pendingAttachments.filter(a => a.status === 'ready');
-    if (!text && !ready.length) return;
-    const attachments = ready.map(a => ({
+    const libItems = ready.filter(a => a.type === 'library');
+    const fileReady = ready.filter(a => a.type !== 'library');
+    if (!text && !fileReady.length && !libItems.length) return;
+    const attachments = fileReady.map(a => ({
       url: a.url, type: a.type, name: a.name, mime: a.mime
     }));
+    // Referencias de biblioteca para mostrar como chips en el mensaje del usuario.
+    const libraryRefs = libItems.map(a => ({ kind: a.kind, id: a.refId, name: a.name }));
+    // Mensaje que recibe Vera: texto + bloque de contexto de biblioteca.
+    const messageToSend = `${text || ''}${this._buildLibraryContext(libItems)}`;
     if (!opts.confirmedHighCost) {
       // Solo limpiamos los adjuntos en el primer intento — si llega
       // confirmación y reenviamos, ya no hay attachments para mostrar como chips.
@@ -3247,8 +3489,9 @@ class VeraView extends (window.BaseView || class {}) {
       userMsg = {
         id: `local-user-${Date.now()}`,
         role: 'user',
-        content: text,
+        content: text, // display limpio; el contexto de biblioteca va aparte
         attachments,
+        libraryRefs,
         created_at: new Date().toISOString()
       };
       this.aiState.messages.push(userMsg);
@@ -3273,7 +3516,7 @@ class VeraView extends (window.BaseView || class {}) {
         body: JSON.stringify({
           organization_id: this.aiState.organization_id,
           conversation_id: this.aiState.active_conversation_id || undefined,
-          message: text,
+          message: messageToSend,
           attachments,
           confirmed_high_cost: opts.confirmedHighCost === true,
           simplify_request: opts.simplifyRequest === true,
