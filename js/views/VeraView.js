@@ -1500,11 +1500,21 @@ class VeraView extends (window.BaseView || class {}) {
       }, 250);
     };
 
-    await this.loadActiveConversation();
-
-    if (this.aiState.active_conversation_id) {
+    // Por defecto Vera abre en "nueva conversación". Solo si la URL apunta a
+    // una conversación concreta (?c=<id>) la cargamos — así un refresh mantiene
+    // al usuario en la misma conversación (deep-link).
+    const urlConvId = this._getUrlConversationId();
+    if (urlConvId) {
+      this.aiState.active_conversation_id = urlConvId;
       await this.loadMessages();
-      this.renderMessages();
+      if (this.aiState.messages.length) {
+        this.renderMessages();
+      } else {
+        // id inválido / ajeno / sin mensajes → nueva conversación limpia.
+        this.aiState.active_conversation_id = null;
+        this._setConversationUrl(null);
+        this.renderWelcome();
+      }
     } else {
       this.renderWelcome();
     }
@@ -1514,6 +1524,12 @@ class VeraView extends (window.BaseView || class {}) {
     this._applyHistoryCollapsed();
     await this.loadConversations();
     this.renderHistory();
+
+    // Si entramos por deep-link, completa el slug del título en la URL.
+    if (this.aiState.active_conversation_id) {
+      const c = (this.aiState.conversations || []).find((x) => x.id === this.aiState.active_conversation_id);
+      this._setConversationUrl(this.aiState.active_conversation_id, c?.title);
+    }
 
     // Prefill desde ?q=<prompt> (usado por Monitoring → cards de perfiles).
     // Precarga el textarea sin enviar, deja la URL limpia y enfoca.
@@ -1581,6 +1597,36 @@ class VeraView extends (window.BaseView || class {}) {
       .limit(1)
       .maybeSingle();
     if (data?.id) this.aiState.active_conversation_id = data.id;
+  }
+
+  /* ── Deep-link de conversación (?c=<id>&t=<slug>) ────── */
+
+  _getUrlConversationId() {
+    try { return new URLSearchParams(window.location.search || '').get('c') || ''; }
+    catch (_) { return ''; }
+  }
+
+  _slugify(s) {
+    return String(s || '')
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60);
+  }
+
+  // Sincroniza la URL con la conversación activa (replaceState: no ensucia el
+  // history). id null/'' → limpia los params (vuelve a /vera = nueva conversación).
+  _setConversationUrl(id, title) {
+    try {
+      const base = window.location.pathname || '/vera';
+      if (!id) { window.history.replaceState(null, '', base); return; }
+      const params = new URLSearchParams();
+      params.set('c', id);
+      const slug = this._slugify(title);
+      if (slug) params.set('t', slug);
+      window.history.replaceState(null, '', `${base}?${params.toString()}`);
+    } catch (_) { /* no-op */ }
   }
 
   /* ── Historial de conversaciones (rail izquierdo) ────── */
@@ -1721,6 +1767,8 @@ class VeraView extends (window.BaseView || class {}) {
       await this.loadMessages();
       this.renderMessages();
       this.renderHistory();
+      const c = (this.aiState.conversations || []).find((x) => x.id === id);
+      this._setConversationUrl(id, c?.title);
     }
     if (this._isMobile()) this.toggleHistory(true);
   }
@@ -1728,6 +1776,7 @@ class VeraView extends (window.BaseView || class {}) {
   startNewConversation() {
     this.aiState.active_conversation_id = null;
     this.aiState.messages = [];
+    this._setConversationUrl(null); // vuelve a /vera (nueva conversación)
     this.renderWelcome();
     this.renderHistory();
     const input = document.getElementById('veraInput');
@@ -1774,6 +1823,11 @@ class VeraView extends (window.BaseView || class {}) {
         if (json?.title) {
           await this.loadConversations();
           this.renderHistory();
+          // Si esta conversación sigue siendo la activa, refleja el título
+          // nuevo en el slug de la URL.
+          if (this.aiState.active_conversation_id === convId) {
+            this._setConversationUrl(convId, json.title);
+          }
         }
       } catch (_) { /* best-effort: si falla, queda "Nueva conversación" */ }
     }, 1500);
@@ -3221,6 +3275,8 @@ class VeraView extends (window.BaseView || class {}) {
       // Guardar conversation_id si es nuevo
       if (json?.conversation_id && !this.aiState.active_conversation_id) {
         this.aiState.active_conversation_id = json.conversation_id;
+        // Deep-link: fija ?c=<id> para que un refresh mantenga la conversación.
+        this._setConversationUrl(json.conversation_id);
         // Conversación recién creada: refresca el rail para que aparezca y
         // genera un título con OpenAI a partir del primer mensaje del usuario
         // (evita que todo el historial diga "Nueva conversación").
