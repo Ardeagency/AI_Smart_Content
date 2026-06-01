@@ -45,7 +45,7 @@ class PlacesView extends BaseView {
         <span class="products-list-section-count" id="placesListCount">0</span>
       </div>
     </div>
-    <div class="products-list-masonry" id="placesListMasonry">${this.skeletonGrid(8, 'lg')}</div>
+    <div class="products-list-masonry" id="placesListMasonry">${this.masonrySkeleton(12, 'products-list-masonry-grid')}</div>
   </section>
 
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">

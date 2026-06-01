@@ -418,6 +418,19 @@ class BaseView {
     const items = Array.from({ length: count }, () => BaseView.skeletonCard(cardSize)).join('');
     return `<div class="skeleton-grid skeleton-grid--${cols}">${items}</div>`;
   }
+  /**
+   * Skeleton para galerias masonry/justified (.living-masonry-grid + applyJustifiedLayout).
+   * IMPORTANTE: usar este, NO skeletonGrid(), en contenedores masonry. skeletonGrid
+   * produce un grid uniforme de columnas; el contenido real es flex-wrap justified ->
+   * el mismatch causa que el skeleton "salte" al cargar. Esto replica el markup real
+   * (.living-masonry-item > .living-history-skeleton) para una transicion sin salto.
+   * @param {number} count    — items a mostrar
+   * @param {string} gridClass — clase extra del grid (ej. 'products-list-masonry-grid', 'living-history-masonry')
+   */
+  static masonrySkeleton(count = 12, gridClass = '') {
+    const item = '<div class="living-masonry-item"><div class="living-history-skeleton"></div></div>';
+    return `<div class="living-masonry-grid ${gridClass}">${item.repeat(count)}</div>`;
+  }
   static skeletonRows(count = 3) {
     const row = `<div class="skeleton-row">${BaseView.skeletonCircle('sm')}<div style="flex:1 1 auto;">
       <span class="skeleton skeleton-text skeleton-text--w75"></span>
@@ -431,6 +444,7 @@ class BaseView {
   skeletonCard(m)       { return BaseView.skeletonCard(m); }
   skeletonCircle(s)     { return BaseView.skeletonCircle(s); }
   skeletonGrid(c, s)    { return BaseView.skeletonGrid(c, s); }
+  masonrySkeleton(c, g) { return BaseView.masonrySkeleton(c, g); }
   skeletonRows(c)       { return BaseView.skeletonRows(c); }
 
   /**

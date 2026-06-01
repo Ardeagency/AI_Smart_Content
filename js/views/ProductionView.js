@@ -319,8 +319,7 @@ class ProductionView extends BaseView {
    * propio skeleton masonry -> dos layouts distintos = el "salto" visible al recargar.
    */
   _historySkeleton() {
-    const item = '<div class="living-masonry-item"><div class="living-history-skeleton"></div></div>';
-    return `<div class="living-masonry-grid living-history-masonry">${item.repeat(12)}</div>`;
+    return this.masonrySkeleton(12, 'living-history-masonry');
   }
 
   /**
