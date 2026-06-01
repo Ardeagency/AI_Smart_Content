@@ -220,6 +220,10 @@
     --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
     --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     --transition-slow: color 0.5s ease, background-color 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
+    /* Curvas de easing canonicas (antes habia 8 sueltas). Usar estas para coherencia. */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);  /* la dominante (Material) */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);      /* ease-out expo, entradas */
+    --ease-route: cubic-bezier(0.33, 0, 0.2, 1);    /* transiciones de ruta */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
@@ -341,6 +345,9 @@ body {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
 }
+/* Feedback de "press" al click: micro-scale. Da sensacion tactil a TODOS los
+   botones de la app (.btn no tenia :active). transform es compositable (0 layout). */
+.btn:active:not(:disabled):not([disabled]) { transform: scale(0.97); }
 .btn:disabled, .btn[disabled] {
     opacity: 0.45;
     pointer-events: none;
@@ -433,7 +440,11 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     backdrop-filter: var(--overlay-blur);
     -webkit-backdrop-filter: var(--overlay-blur);
     z-index: 0;
+    /* Fade-in del backdrop sincronizado con el panel (modalIn). Antes el oscurecido
+       aparecia de golpe mientras el panel se deslizaba suave (desincronia). */
+    animation: overlayFadeIn 0.22s var(--ease-standard) both;
 }
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal-content {
     position: relative;
     z-index: 1;

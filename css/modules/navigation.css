@@ -2805,7 +2805,10 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
        cuando el sidebar pasa a ancho colapsado, en vez de tener que ocultarlos
        con display:none por item (patrón shadcn/Linear). */
     overflow-x: hidden;
-    transition: width 0.2s ease, color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    /* width 0.3s (antes 0.2s) para sincronizar con el margin-left/left 0.3s del
+       contenido y headers al colapsar/expandir — antes terminaban en momentos
+       distintos y se veia un "escalon". */
+    transition: width 0.3s ease, color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     /* Colores para legibilidad sobre glass-black */
     --sidebar-text-primary: var(--glass-black-text);
     --sidebar-text-secondary: rgba(255, 255, 255, 0.85);
