@@ -1865,6 +1865,64 @@ class VeraView extends (window.BaseView || class {}) {
     });
   }
 
+  _focusComposer() {
+    const input = document.getElementById('veraInput');
+    if (!input) return;
+    input.focus();
+    try { input.selectionStart = input.selectionEnd = input.value.length; } catch (_) {}
+  }
+
+  /* Controlador del widget [CLARIFY]: navegacion por teclado (↑↓ entre opciones,
+     ←→ entre paginas), pager "n de N", "Algo más" (foca el composer), "Omitir"
+     y cerrar. El envio al elegir lo maneja la delegacion data-vera-send. */
+  _initClarifyWidgets() {
+    const widgets = document.querySelectorAll('.vera-clarify:not(.__init)');
+    widgets.forEach((w) => {
+      w.classList.add('__init');
+      const pagesEls = Array.from(w.querySelectorAll('.vera-clarify-page'));
+      const total = pagesEls.length;
+      const qEl = w.querySelector('.vera-clarify-q');
+      const countEl = w.querySelector('.vera-clarify-count');
+      let page = 0;
+      let focusIdx = -1;
+
+      const currentOpts = () => Array.from(pagesEls[page].querySelectorAll('.vera-opt'));
+      const clearFocus = () => currentOpts().forEach((o) => o.classList.remove('is-focused'));
+      const setFocus = (i) => {
+        const opts = currentOpts();
+        if (!opts.length) return;
+        clearFocus();
+        focusIdx = (i + opts.length) % opts.length;
+        opts[focusIdx].classList.add('is-focused');
+        opts[focusIdx].focus({ preventScroll: true });
+      };
+      const showPage = (i) => {
+        if (total < 1) return;
+        page = (i + total) % total;
+        pagesEls.forEach((p, idx) => { p.hidden = idx !== page; });
+        if (qEl) qEl.textContent = pagesEls[page].getAttribute('data-q') || '';
+        if (countEl) countEl.textContent = `${page + 1} de ${total}`;
+        focusIdx = -1;
+        clearFocus();
+      };
+      const dismiss = () => { w.classList.add('answered', 'dismissed'); };
+
+      w.querySelector('.vera-clarify-prev')?.addEventListener('click', () => showPage(page - 1));
+      w.querySelector('.vera-clarify-next')?.addEventListener('click', () => showPage(page + 1));
+      w.querySelector('.vera-clarify-close')?.addEventListener('click', dismiss);
+      w.querySelector('[data-vera-skip]')?.addEventListener('click', dismiss);
+      w.querySelector('[data-vera-more]')?.addEventListener('click', () => this._focusComposer());
+
+      w.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(focusIdx + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(focusIdx - 1); }
+        else if (e.key === 'ArrowRight' && total > 1) { e.preventDefault(); showPage(page + 1); }
+        else if (e.key === 'ArrowLeft' && total > 1) { e.preventDefault(); showPage(page - 1); }
+        // Enter sobre la opcion enfocada dispara su click nativo → delegacion envia.
+      });
+    });
+  }
+
   async renderMessages() {
     const list = document.getElementById('veraMessageList');
     const scroll = document.getElementById('veraMessagesWrap');
@@ -1895,6 +1953,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
     this._bindInteractiveOptions();
+    this._initClarifyWidgets();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
@@ -2043,6 +2102,19 @@ class VeraView extends (window.BaseView || class {}) {
       return `\n\n{{${id}}}\n\n`;
     });
 
+    // Agrupa varios [CLARIFY] del mismo mensaje en un solo carrusel (paginas
+    // "1 de N"). El primero se vuelve contenedor con .pages; los demas se vacian.
+    const clarifyIdx = blocks.reduce((acc, b, i) => (b.type === 'clarify' ? (acc.push(i), acc) : acc), []);
+    if (clarifyIdx.length > 1) {
+      const first = clarifyIdx[0];
+      blocks[first].pages = clarifyIdx.map((i) => ({ question: blocks[i].question, cards: blocks[i].cards }));
+      clarifyIdx.slice(1).forEach((i) => {
+        const id = blocks[i].id;
+        blocks[i].type = 'skip';
+        processed = processed.replace(new RegExp(`\\{\\{${id}\\}\\}`, 'g'), '');
+      });
+    }
+
     return { processed, blocks };
   }
 
@@ -2096,26 +2168,58 @@ class VeraView extends (window.BaseView || class {}) {
     const esc = escapeHtml;
     switch (block.type) {
       case 'clarify': {
-        // Opciones seleccionables INLINE en el mensaje. Al hacer click se ENVIA
-        // la opcion como respuesta del usuario (delegacion via data-vera-send).
-        // El composer sigue disponible para escribir una respuesta libre.
+        // Widget de opciones seleccionables INLINE (estilo Claude): cabecera con
+        // pregunta + pager "1 de N" + cerrar, paginas, opciones numeradas, fila
+        // "Algo más" (foca el composer) y "Omitir". Al elegir una opcion se ENVIA
+        // (delegacion data-vera-send). El composer sigue libre para texto propio.
         const attr = (s) => esc(s).replace(/"/g, '&quot;');
-        const cardsHtml = block.cards.map((c, i) => `
-          <button type="button" class="vera-opt" data-vera-send="${attr(c.title)}">
-            <span class="vera-opt-num">${i + 1}</span>
-            ${c.icon ? `<span class="vera-opt-icon">${esc(c.icon)}</span>` : ''}
-            <span class="vera-opt-body">
-              <span class="vera-opt-title">${esc(c.title)}</span>
-              ${c.desc ? `<span class="vera-opt-desc">${esc(c.desc)}</span>` : ''}
-            </span>
-            <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
-          </button>`).join('');
-        return `<div class="vera-interactive">
-          ${block.question ? `<p class="vera-interactive-q">${esc(block.question)}</p>` : ''}
-          <div class="vera-opt-list">${cardsHtml}</div>
-          <p class="vera-interactive-hint">Elige una opción o responde abajo en el chat.</p>
+        const pages = (block.pages && block.pages.length) ? block.pages : [{ question: block.question, cards: block.cards }];
+        const multi = pages.length > 1;
+
+        const pagesHtml = pages.map((pg, pi) => {
+          const opts = (pg.cards || []).map((c, i) => `
+            <button type="button" class="vera-opt" role="option" data-vera-send="${attr(c.title)}" data-idx="${i}">
+              <span class="vera-opt-num">${i + 1}</span>
+              ${c.icon ? `<span class="vera-opt-icon">${esc(c.icon)}</span>` : ''}
+              <span class="vera-opt-body">
+                <span class="vera-opt-title">${esc(c.title)}</span>
+                ${c.desc ? `<span class="vera-opt-desc">${esc(c.desc)}</span>` : ''}
+              </span>
+              <span class="vera-opt-arrow"><i class="fas fa-arrow-right"></i></span>
+            </button>`).join('');
+          return `<div class="vera-clarify-page" data-page="${pi}" data-q="${attr(pg.question || '')}"${pi === 0 ? '' : ' hidden'}>
+            <div class="vera-opt-list" role="listbox">${opts}</div>
+          </div>`;
+        }).join('');
+
+        const firstQ = pages[0]?.question || '';
+        return `<div class="vera-interactive vera-clarify" data-pages="${pages.length}" data-page="0">
+          <div class="vera-clarify-head">
+            <p class="vera-clarify-q">${esc(firstQ)}</p>
+            <div class="vera-clarify-tools">
+              ${multi ? `<div class="vera-clarify-pager">
+                <button type="button" class="vera-clarify-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                <span class="vera-clarify-count">1 de ${pages.length}</span>
+                <button type="button" class="vera-clarify-next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+              </div>` : ''}
+              <button type="button" class="vera-clarify-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+          <div class="vera-clarify-pages">${pagesHtml}</div>
+          <div class="vera-clarify-more">
+            <button type="button" class="vera-clarify-morebtn" data-vera-more>
+              <span class="vera-opt-num vera-opt-num--pencil"><i class="fas fa-pen"></i></span>
+              <span class="vera-clarify-more-text">Algo más</span>
+            </button>
+            <button type="button" class="vera-clarify-skip" data-vera-skip>Omitir</button>
+          </div>
+          <p class="vera-clarify-hints">
+            <kbd>↑</kbd><kbd>↓</kbd> para navegar <span class="vera-clarify-dot">·</span>
+            <kbd>Enter</kbd> para seleccionar <span class="vera-clarify-dot">·</span> o escribe abajo
+          </p>
         </div>`;
       }
+      case 'skip': return '';
       case 'pills': {
         const attr = (s) => esc(s).replace(/"/g, '&quot;');
         const pillsHtml = block.options.map(o => `
@@ -2372,6 +2476,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
     this._bindInteractiveOptions();
+    this._initClarifyWidgets();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
