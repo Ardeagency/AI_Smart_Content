@@ -268,8 +268,8 @@ class CreditsShopView extends BaseView {
         </header>
 
         <div class="credits-top-row">
-          <section class="credits-card credits-balance-card" id="creditsBalanceCard"></section>
-          <section class="credits-card credits-plan-card" id="creditsPlanCard"></section>
+          <section class="credits-card credits-balance-card" id="creditsBalanceCard">${this.skeletonText('45%','lg')}${this.skeletonText('70%')}${this.skeletonText('55%')}</section>
+          <section class="credits-card credits-plan-card" id="creditsPlanCard">${this.skeletonText('40%','lg')}${this.skeletonText('65%')}${this.skeletonText('50%')}</section>
         </div>
 
         <section class="credits-card credits-chart-card">
@@ -281,7 +281,7 @@ class CreditsShopView extends BaseView {
               <button type="button" class="credits-range-btn" data-range="90">90d</button>
             </div>
           </div>
-          <div id="creditsChart"></div>
+          <div id="creditsChart">${this.skeletonCard('lg')}</div>
         </section>
 
         <section class="credits-card credits-prefs-card">
@@ -291,7 +291,7 @@ class CreditsShopView extends BaseView {
               <i class="fas fa-info-circle"></i> Auto-recarga: pendiente conectar Stripe
             </span>
           </div>
-          <div id="creditsPrefs"></div>
+          <div id="creditsPrefs">${this.skeletonRows(2)}</div>
         </section>
 
         <section class="credits-card">
@@ -301,7 +301,7 @@ class CreditsShopView extends BaseView {
               <i class="fas fa-file-csv"></i> Exportar CSV
             </button>
           </div>
-          <div id="creditsByMember"></div>
+          <div id="creditsByMember">${this.skeletonRows(3)}</div>
         </section>
 
         <section class="credits-card">

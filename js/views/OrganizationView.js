@@ -571,6 +571,12 @@ class OrganizationView extends BaseView {
     if (!this.supabase || !this.orgId) return;
     try {
       await this._loadOrg();
+      // Pintar YA el tab por defecto (General) + estado del header: solo dependen de
+      // _loadOrg (1 query). Antes esperaban a las 17 queries del Promise.all -> la
+      // pagina se sentia "pesada"/congelada. El render del batch de abajo los repite
+      // (idempotente) para re-aplicar canEdit cuando canManageMembers ya este resuelto.
+      this._renderHeaderStatus();
+      this._renderGeneral();
       await Promise.all([
         this._loadMembers(),
         this._loadInvitations(),

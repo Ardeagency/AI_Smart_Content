@@ -90,9 +90,27 @@ class MonitoringView extends BaseView {
     this._service = new window.MonitoringDataService().init(this._supabase, this._orgId);
   }
 
+  /** Carga inicial / revisita: usa cache SWR para pintar al instante al volver
+      a Monitoreo (antes re-consultaba todo desde cero en cada navegacion). El
+      skeleton cubre la primera carga; en revisitas devuelve lo cacheado al toque
+      y revalida en background. */
+  async _loadInitial() {
+    if (!this._service) return;
+    const key = `monitoring:${this._orgId}`;
+    this._data = window.apiClient
+      ? await window.apiClient.query(key, () => this._service.loadAll(), { ttl: 60000, staleWhileRevalidate: true })
+      : await this._service.loadAll();
+    this._renderTab(this._activeTab);
+  }
+
+  /** Post-mutacion (CRUD): SIEMPRE fresco. force:true ignora el cache y ademas lo
+      repuebla, asi la proxima visita ve los cambios sin quedar stale. */
   async _refresh() {
     if (!this._service) return;
-    this._data = await this._service.loadAll();
+    const key = `monitoring:${this._orgId}`;
+    this._data = window.apiClient
+      ? await window.apiClient.query(key, () => this._service.loadAll(), { force: true })
+      : await this._service.loadAll();
     this._renderTab(this._activeTab);
   }
 
@@ -105,7 +123,7 @@ class MonitoringView extends BaseView {
     this._setupTabs();
 
     await this._ensureService();
-    await this._refresh();
+    await this._loadInitial();
   }
 
   renderHTML() {
