@@ -32,14 +32,14 @@ class ServicesView extends BaseView {
     </div>
   </div>
 
-  <section class="services-section" id="servicesSection" style="display:none;">
+  <section class="services-section" id="servicesSection">
     <div class="services-section-head">
       <div class="services-section-head-main">
         <h2 class="services-section-title">Catálogo</h2>
         <span class="services-section-count" id="servicesCount">0</span>
       </div>
     </div>
-    <div class="services-grid" id="servicesGrid"></div>
+    <div class="services-grid" id="servicesGrid">${this.skeletonGrid(8, 'lg')}</div>
   </section>
 
   <div class="services-empty" id="servicesEmpty" style="display:none;">

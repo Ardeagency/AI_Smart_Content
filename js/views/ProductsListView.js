@@ -33,14 +33,14 @@ class ProductsListView extends BaseView {
     </div>
   </div>
 
-  <section class="products-list-section" id="productsListSection" style="display:none;">
+  <section class="products-list-section" id="productsListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
         <h2 class="products-list-section-title">Catálogo</h2>
         <span class="products-list-section-count" id="productsListCount">0</span>
       </div>
     </div>
-    <div class="products-list-masonry" id="productsListMasonry"></div>
+    <div class="products-list-masonry" id="productsListMasonry">${this.skeletonGrid(8, 'lg')}</div>
   </section>
 
   <div class="products-list-empty" id="productsListEmpty" style="display:none;">

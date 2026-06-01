@@ -38,14 +38,14 @@ class PlacesView extends BaseView {
     </div>
   </div>
 
-  <section class="products-list-section" id="placesListSection" style="display:none;">
+  <section class="products-list-section" id="placesListSection">
     <div class="products-list-section-head">
       <div class="products-list-section-head-main">
         <h2 class="products-list-section-title">Catalogo</h2>
         <span class="products-list-section-count" id="placesListCount">0</span>
       </div>
     </div>
-    <div class="products-list-masonry" id="placesListMasonry"></div>
+    <div class="products-list-masonry" id="placesListMasonry">${this.skeletonGrid(8, 'lg')}</div>
   </section>
 
   <div class="products-list-empty" id="placesListEmpty" style="display:none;">
