@@ -170,7 +170,7 @@ class DevLeadBillingView extends DevBaseView {
       const supabase = await this.getSupabase();
       const { data, error } = await supabase
         .from('plans')
-        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, is_active, display_order, stripe_price_id_month, stripe_price_id_year, wompi_amount_cents_month')
+        .select('id, name, description, price_usd_month, price_usd_year, credits_monthly, max_handles, storage_mb, features, is_popular, is_active, display_order, stripe_price_id_month, stripe_price_id_year, wompi_amount_cents_month, scraping_cadence_hours, scraping_daily_cap, cache_ttl_hours, trends_cadence_days, apify_credit_markup')
         .order('display_order', { ascending: true })
         .order('name');
       if (error) throw error;
@@ -256,6 +256,31 @@ class DevLeadBillingView extends DevBaseView {
           <input type="number" id="planFieldHandles" class="form-control" min="0">
         </div>
       </div>
+      <div class="form-group"><label style="font-weight:600;opacity:.85;">Scraping y costo (por plan)</label></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="planFieldScrapeCadence">Cadencia scraping (horas)</label>
+          <input type="number" id="planFieldScrapeCadence" class="form-control" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label for="planFieldScrapeCap">Cap diario scraping (runs)</label>
+          <input type="number" id="planFieldScrapeCap" class="form-control" min="0" step="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="planFieldCacheTtl">Cache TTL (horas)</label>
+          <input type="number" id="planFieldCacheTtl" class="form-control" min="0" step="1">
+        </div>
+        <div class="form-group">
+          <label for="planFieldTrendsCadence">Cadencia tendencias (dias)</label>
+          <input type="number" id="planFieldTrendsCadence" class="form-control" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label for="planFieldMarkup">Markup Apify ($1 = N creditos)</label>
+          <input type="number" id="planFieldMarkup" class="form-control" min="0.1" step="0.1" placeholder="2 = $1 cuesta 2 cr">
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group form-check">
           <label><input type="checkbox" id="planFieldActive"> Activo (visible en catalogo)</label>
@@ -308,6 +333,11 @@ class DevLeadBillingView extends DevBaseView {
     modal.querySelector('#planFieldCredits').value = plan.credits_monthly ?? 0;
     modal.querySelector('#planFieldStorage').value = plan.storage_mb ?? 0;
     modal.querySelector('#planFieldHandles').value = plan.max_handles ?? 0;
+    modal.querySelector('#planFieldScrapeCadence').value = plan.scraping_cadence_hours ?? '';
+    modal.querySelector('#planFieldScrapeCap').value = plan.scraping_daily_cap ?? '';
+    modal.querySelector('#planFieldCacheTtl').value = plan.cache_ttl_hours ?? '';
+    modal.querySelector('#planFieldTrendsCadence').value = plan.trends_cadence_days ?? '';
+    modal.querySelector('#planFieldMarkup').value = plan.apify_credit_markup ?? '';
     modal.querySelector('#planFieldActive').checked = !!plan.is_active;
     modal.querySelector('#planFieldPopular').checked = !!plan.is_popular;
     modal.querySelector('#planFieldStripeMonth').value = plan.stripe_price_id_month || '';
@@ -347,6 +377,11 @@ class DevLeadBillingView extends DevBaseView {
       credits_monthly: parseInt(document.getElementById('planFieldCredits')?.value || '0', 10),
       storage_mb: parseInt(document.getElementById('planFieldStorage')?.value || '0', 10),
       max_handles: parseInt(document.getElementById('planFieldHandles')?.value || '0', 10),
+      scraping_cadence_hours: document.getElementById('planFieldScrapeCadence')?.value ? parseInt(document.getElementById('planFieldScrapeCadence').value, 10) : null,
+      scraping_daily_cap: document.getElementById('planFieldScrapeCap')?.value ? parseInt(document.getElementById('planFieldScrapeCap').value, 10) : null,
+      cache_ttl_hours: document.getElementById('planFieldCacheTtl')?.value ? parseInt(document.getElementById('planFieldCacheTtl').value, 10) : null,
+      trends_cadence_days: document.getElementById('planFieldTrendsCadence')?.value ? parseInt(document.getElementById('planFieldTrendsCadence').value, 10) : null,
+      apify_credit_markup: document.getElementById('planFieldMarkup')?.value ? Number(document.getElementById('planFieldMarkup').value) : null,
       is_active: !!document.getElementById('planFieldActive')?.checked,
       is_popular: !!document.getElementById('planFieldPopular')?.checked,
       stripe_price_id_month: (document.getElementById('planFieldStripeMonth')?.value || '').trim() || null,
