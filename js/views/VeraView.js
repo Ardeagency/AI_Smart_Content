@@ -1461,9 +1461,14 @@ class VeraView extends (window.BaseView || class {}) {
                       <button class="vera-plus-item" id="veraMenuFiles" role="menuitem">
                         <i class="fas fa-paperclip"></i><span>Agregar archivos o fotos</span>
                       </button>
-                      <button class="vera-plus-item" id="veraMenuLibrary" role="menuitem">
-                        <i class="fas fa-layer-group"></i><span>Adjuntar de biblioteca</span>
-                      </button>
+                      <div class="vera-plus-sep"></div>
+                      <button class="vera-plus-item" data-lib-type="product" role="menuitem"><i class="fas fa-box"></i><span>Producto</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign" role="menuitem"><i class="fas fa-bullhorn"></i><span>Campaña</span></button>
+                      <button class="vera-plus-item" data-lib-type="campaign_objective" role="menuitem"><i class="fas fa-bullseye"></i><span>Objetivo de campaña</span></button>
+                      <button class="vera-plus-item" data-lib-type="audience_objective" role="menuitem"><i class="fas fa-users"></i><span>Objetivo de audiencia</span></button>
+                      <button class="vera-plus-item" data-lib-type="brief" role="menuitem"><i class="fas fa-clipboard"></i><span>Brief</span></button>
+                      <button class="vera-plus-item" data-lib-type="service" role="menuitem"><i class="fas fa-briefcase"></i><span>Servicios</span></button>
+                      <button class="vera-plus-item" data-lib-type="place" role="menuitem"><i class="fas fa-map-pin"></i><span>Lugares</span></button>
                     </div>
                   </div>
                 </div>
@@ -1746,84 +1751,122 @@ class VeraView extends (window.BaseView || class {}) {
      (tipo + nombre + id) al mensaje; Vera las lee y puede profundizar con sus
      herramientas. En el chat se muestran como chips, no como texto crudo. */
 
-  _libKindLabel(kind) {
-    return ({ product: 'Producto', campaign: 'Campaña', audience: 'Audiencia', brand: 'Marca' })[kind] || 'Dato';
-  }
-  _libKindIcon(kind) {
-    return ({ product: 'fa-box', campaign: 'fa-bullhorn', audience: 'fa-users', brand: 'fa-gem' })[kind] || 'fa-layer-group';
-  }
-
-  // Tabs del picker: cada uno define tabla, columnas y mapeo a {id, name, meta}.
-  _libTabs() {
+  // Tipos adjuntables. kind === key. Cada uno define label, icono y un loader
+  // que devuelve [{id, name, meta}].
+  _libTypeDef(kind) {
     const orgId = this.aiState.organization_id;
-    return [
-      {
-        key: 'product', label: 'Productos', icon: 'fa-box',
+    const sb = () => this.supabase;
+    const defs = {
+      product: {
+        label: 'Producto', icon: 'fa-box',
         load: async () => {
-          const { data } = await this.supabase.from('products')
+          const { data } = await sb().from('products')
             .select('id, nombre_producto, tipo_producto')
-            .eq('organization_id', orgId).order('nombre_producto', { ascending: true }).limit(200);
+            .eq('organization_id', orgId).order('nombre_producto', { ascending: true }).limit(300);
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_producto || 'Producto sin nombre', meta: r.tipo_producto || '' }));
         }
       },
-      {
-        key: 'campaign', label: 'Campañas', icon: 'fa-bullhorn',
+      campaign: {
+        label: 'Campaña', icon: 'fa-bullhorn',
         load: async () => {
-          const { data } = await this.supabase.from('campaigns')
+          const { data } = await sb().from('campaigns')
             .select('id, nombre_campana, status')
-            .eq('organization_id', orgId).order('created_at', { ascending: false }).limit(200);
-          const st = { conceptual: 'Conceptual', active: 'Activa', paused: 'Pausada', draft: 'Borrador', ended: 'Finalizada' };
+            .eq('organization_id', orgId).neq('status', 'conceptual')
+            .order('created_at', { ascending: false }).limit(300);
+          const st = { active: 'Activa', paused: 'Pausada', draft: 'Borrador', ended: 'Finalizada', archived: 'Archivada' };
           return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Campaña sin nombre', meta: st[r.status] || r.status || '' }));
         }
       },
-      {
-        key: 'audience', label: 'Audiencias', icon: 'fa-users',
+      campaign_objective: {
+        label: 'Objetivo de campaña', icon: 'fa-bullseye',
         load: async () => {
-          const { data } = await this.supabase.from('audience_personas')
+          const { data } = await sb().from('campaigns')
+            .select('id, nombre_campana')
+            .eq('organization_id', orgId).eq('status', 'conceptual')
+            .order('created_at', { ascending: false }).limit(300);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_campana || 'Objetivo sin nombre', meta: 'Conceptual' }));
+        }
+      },
+      audience_objective: {
+        label: 'Objetivo de audiencia', icon: 'fa-users',
+        load: async () => {
+          const { data } = await sb().from('audience_personas')
             .select('id, name, awareness_level')
-            .eq('organization_id', orgId).order('name', { ascending: true }).limit(200);
+            .eq('organization_id', orgId).order('name', { ascending: true }).limit(300);
           return (data || []).map((r) => ({ id: r.id, name: r.name || 'Audiencia sin nombre', meta: r.awareness_level || '' }));
         }
       },
-      {
-        key: 'brand', label: 'Marcas', icon: 'fa-gem',
+      brief: {
+        label: 'Brief', icon: 'fa-clipboard',
         load: async () => {
-          const { data } = await this.supabase.from('brand_containers')
-            .select('id, nombre_marca, nicho_core')
+          const { data } = await sb().from('brand_containers')
+            .select('id, nombre_marca, creative_brief')
             .eq('organization_id', orgId).order('created_at', { ascending: true }).limit(100);
-          return (data || []).map((r) => ({ id: r.id, name: r.nombre_marca || 'Marca sin nombre', meta: r.nicho_core || '' }));
+          return (data || [])
+            .filter((r) => r.creative_brief && String(r.creative_brief).trim())
+            .map((r) => ({ id: r.id, name: `Brief — ${r.nombre_marca || 'Marca'}`, meta: '' }));
+        }
+      },
+      service: {
+        label: 'Servicio', icon: 'fa-briefcase',
+        load: async () => {
+          const { data } = await sb().from('services')
+            .select('id, nombre_servicio')
+            .eq('organization_id', orgId).order('nombre_servicio', { ascending: true }).limit(300);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_servicio || 'Servicio sin nombre', meta: '' }));
+        }
+      },
+      place: {
+        label: 'Lugar', icon: 'fa-map-pin',
+        load: async () => {
+          // brand_places no tiene organization_id → se filtra por entity_id de la org.
+          const { data: ents } = await sb().from('brand_entities')
+            .select('id').eq('organization_id', orgId).limit(500);
+          const ids = (ents || []).map((e) => e.id);
+          if (!ids.length) return [];
+          const { data } = await sb().from('brand_places')
+            .select('id, nombre_lugar').in('entity_id', ids).limit(300);
+          return (data || []).map((r) => ({ id: r.id, name: r.nombre_lugar || 'Lugar sin nombre', meta: '' }));
         }
       }
-    ];
+    };
+    return defs[kind] || null;
   }
 
-  _openLibraryPicker() {
+  _libKindLabel(kind) {
+    const d = this._libTypeDef(kind);
+    return d ? d.label : 'Dato';
+  }
+  _libKindIcon(kind) {
+    return ({
+      product: 'fa-box', campaign: 'fa-bullhorn', campaign_objective: 'fa-bullseye',
+      audience_objective: 'fa-users', brief: 'fa-clipboard', service: 'fa-briefcase', place: 'fa-map-pin'
+    })[kind] || 'fa-layer-group';
+  }
+
+  // Picker de UN tipo (Producto, Campaña, etc.). La selección se acumula con la
+  // de otros tipos ya adjuntados; al confirmar solo se reemplazan los de ESTE tipo.
+  _openLibraryPicker(typeKey) {
     if (document.getElementById('veraLibModal')) return;
     if (!this.supabase || !this.aiState.organization_id) return;
+    const def = this._libTypeDef(typeKey);
+    if (!def) return;
 
-    const tabs = this._libTabs();
     this._libCache = this._libCache || {};
-    // Selección actual ya adjuntada (para marcar checks).
-    const attachedIds = new Set(
-      this.aiState.pendingAttachments.filter((a) => a.type === 'library').map((a) => a.refId)
-    );
-    const selected = new Map(); // refId -> {kind, id, name}
+    const selected = new Map(); // id -> {kind, id, name}
     this.aiState.pendingAttachments
-      .filter((a) => a.type === 'library')
-      .forEach((a) => selected.set(a.refId, { kind: a.kind, id: a.refId, name: a.name }));
+      .filter((a) => a.type === 'library' && a.kind === typeKey)
+      .forEach((a) => selected.set(a.refId, { kind: typeKey, id: a.refId, name: a.name }));
 
     const overlay = document.createElement('div');
     overlay.id = 'veraLibModal';
     overlay.className = 'vera-lib-modal';
     overlay.innerHTML = `
       <div class="vera-lib-scrim" data-lib-close></div>
-      <div class="vera-lib-panel" role="dialog" aria-label="Adjuntar de biblioteca">
+      <div class="vera-lib-panel" role="dialog" aria-label="Adjuntar ${escapeHtml(def.label)}">
         <div class="vera-lib-head">
-          <span class="vera-lib-title"><i class="fas fa-layer-group"></i> Adjuntar de biblioteca</span>
+          <span class="vera-lib-title"><i class="fas ${def.icon}"></i> Adjuntar ${escapeHtml(def.label)}</span>
           <button class="vera-lib-x" data-lib-close aria-label="Cerrar"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="vera-lib-tabs">
-          ${tabs.map((t, i) => `<button class="vera-lib-tab${i === 0 ? ' active' : ''}" data-lib-tab="${t.key}"><i class="fas ${t.icon}"></i>${t.label}</button>`).join('')}
         </div>
         <input type="text" class="vera-lib-search" id="veraLibSearch" placeholder="Buscar…" />
         <div class="vera-lib-list" id="veraLibList"></div>
@@ -1831,13 +1874,12 @@ class VeraView extends (window.BaseView || class {}) {
           <span class="vera-lib-count" id="veraLibCount">0 seleccionados</span>
           <div class="vera-lib-foot-actions">
             <button class="vera-lib-cancel" data-lib-close>Cancelar</button>
-            <button class="vera-lib-confirm" id="veraLibConfirm" disabled>Adjuntar</button>
+            <button class="vera-lib-confirm" id="veraLibConfirm">Adjuntar</button>
           </div>
         </div>
       </div>`;
     document.body.appendChild(overlay);
 
-    let activeKey = tabs[0].key;
     const listEl = overlay.querySelector('#veraLibList');
     const searchEl = overlay.querySelector('#veraLibSearch');
     const countEl = overlay.querySelector('#veraLibCount');
@@ -1845,85 +1887,74 @@ class VeraView extends (window.BaseView || class {}) {
 
     const updateFoot = () => {
       countEl.textContent = `${selected.size} seleccionado${selected.size === 1 ? '' : 's'}`;
-      confirmBtn.disabled = selected.size === 0;
     };
 
     const renderList = (items) => {
       const q = (searchEl.value || '').trim().toLowerCase();
       const filtered = q ? items.filter((it) => it.name.toLowerCase().includes(q)) : items;
       if (!filtered.length) {
-        listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? 'Sin resultados.' : 'No hay elementos en esta categoría.'}</div>`;
+        listEl.innerHTML = `<div class="vera-lib-empty">${items.length ? 'Sin resultados.' : `No hay ${def.label.toLowerCase()}s disponibles.`}</div>`;
         return;
       }
-      listEl.innerHTML = filtered.map((it) => {
-        const checked = selected.has(it.id) ? ' checked' : '';
-        return `<label class="vera-lib-item">
-          <input type="checkbox" data-lib-id="${escapeHtml(it.id)}"${checked} />
+      listEl.innerHTML = filtered.map((it) => `
+        <label class="vera-lib-item">
+          <input type="checkbox" data-lib-id="${escapeHtml(it.id)}"${selected.has(it.id) ? ' checked' : ''} />
           <span class="vera-lib-item-body">
             <span class="vera-lib-item-name">${escapeHtml(it.name)}</span>
             ${it.meta ? `<span class="vera-lib-item-meta">${escapeHtml(it.meta)}</span>` : ''}
           </span>
-        </label>`;
-      }).join('');
+        </label>`).join('');
     };
 
-    const loadTab = async (key) => {
-      activeKey = key;
-      overlay.querySelectorAll('.vera-lib-tab').forEach((b) => b.classList.toggle('active', b.getAttribute('data-lib-tab') === key));
-      const tab = tabs.find((t) => t.key === key);
-      if (!this._libCache[key]) {
+    const load = async () => {
+      if (!this._libCache[typeKey]) {
         listEl.innerHTML = `<div class="vera-lib-loading"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>`;
-        try { this._libCache[key] = await tab.load(); }
-        catch (_) { this._libCache[key] = []; }
+        try { this._libCache[typeKey] = await def.load(); }
+        catch (_) { this._libCache[typeKey] = []; }
       }
-      renderList(this._libCache[key]);
+      renderList(this._libCache[typeKey]);
     };
 
-    // Eventos
     overlay.addEventListener('click', (e) => {
-      if (e.target.closest('[data-lib-close]')) { overlay.remove(); return; }
-      const tabBtn = e.target.closest('[data-lib-tab]');
-      if (tabBtn) { loadTab(tabBtn.getAttribute('data-lib-tab')); return; }
+      if (e.target.closest('[data-lib-close]')) overlay.remove();
     });
     listEl.addEventListener('change', (e) => {
       const cb = e.target.closest('input[data-lib-id]');
       if (!cb) return;
       const id = cb.getAttribute('data-lib-id');
-      const items = this._libCache[activeKey] || [];
-      const it = items.find((x) => x.id === id);
+      const it = (this._libCache[typeKey] || []).find((x) => x.id === id);
       if (!it) return;
-      if (cb.checked) selected.set(id, { kind: activeKey, id, name: it.name });
+      if (cb.checked) selected.set(id, { kind: typeKey, id, name: it.name });
       else selected.delete(id);
       updateFoot();
     });
-    searchEl.addEventListener('input', () => renderList(this._libCache[activeKey] || []));
+    searchEl.addEventListener('input', () => renderList(this._libCache[typeKey] || []));
     confirmBtn.addEventListener('click', () => {
-      this._addLibraryAttachments(Array.from(selected.values()));
+      this._setLibraryAttachmentsForType(typeKey, Array.from(selected.values()));
       overlay.remove();
     });
     overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.remove(); });
 
     updateFoot();
-    loadTab(activeKey);
+    load();
     setTimeout(() => searchEl.focus(), 50);
   }
 
-  _addLibraryAttachments(items) {
-    const existing = new Set(this.aiState.pendingAttachments.filter((a) => a.type === 'library').map((a) => a.refId));
-    // Quita los de biblioteca que ya no estén seleccionados y agrega los nuevos.
+  // Reemplaza los adjuntos de biblioteca de UN tipo por la selección dada,
+  // conservando los de otros tipos.
+  _setLibraryAttachmentsForType(typeKey, items) {
     const keepIds = new Set(items.map((i) => i.id));
     this.aiState.pendingAttachments = this.aiState.pendingAttachments.filter(
-      (a) => a.type !== 'library' || keepIds.has(a.refId)
+      (a) => a.type !== 'library' || a.kind !== typeKey || keepIds.has(a.refId)
+    );
+    const existing = new Set(
+      this.aiState.pendingAttachments.filter((a) => a.type === 'library' && a.kind === typeKey).map((a) => a.refId)
     );
     items.forEach((i) => {
       if (existing.has(i.id)) return;
       this.aiState.pendingAttachments.push({
-        id: `lib-${i.kind}-${i.id}`,
-        type: 'library',
-        kind: i.kind,
-        refId: i.id,
-        name: i.name,
-        status: 'ready'
+        id: `lib-${typeKey}-${i.id}`, type: 'library', kind: typeKey,
+        refId: i.id, name: i.name, status: 'ready'
       });
     });
     this._renderAttachChips();
@@ -1947,7 +1978,10 @@ class VeraView extends (window.BaseView || class {}) {
     const raw = String(content || '');
     const m = raw.match(/<<DATOS_BIBLIOTECA>>\n([\s\S]*?)\n<<\/DATOS_BIBLIOTECA>>/);
     if (!m) return { text: raw, refs: [] };
-    const labelToKind = { Producto: 'product', Campaña: 'campaign', Audiencia: 'audience', Marca: 'brand' };
+    const labelToKind = {
+      'Producto': 'product', 'Campaña': 'campaign', 'Objetivo de campaña': 'campaign_objective',
+      'Objetivo de audiencia': 'audience_objective', 'Brief': 'brief', 'Servicio': 'service', 'Lugar': 'place'
+    };
     const refs = m[1].split('\n').map((line) => {
       const p = line.replace(/^-\s*/, '').split('|').map((s) => s.trim());
       return { kind: labelToKind[p[0]] || 'data', name: p[1] || '', id: p[2] || '' };
@@ -3341,9 +3375,14 @@ class VeraView extends (window.BaseView || class {}) {
     if (filesItem && fileInput) {
       this.addEventListener(filesItem, 'click', () => { closeMenu(); fileInput.click(); });
     }
-    const libItem = document.getElementById('veraMenuLibrary');
-    if (libItem) {
-      this.addEventListener(libItem, 'click', () => { closeMenu(); this._openLibraryPicker(); });
+    // Items de tipo de biblioteca (Producto, Campaña, etc.) → picker de ese tipo.
+    if (plusMenu) {
+      this.addEventListener(plusMenu, 'click', (e) => {
+        const it = e.target.closest('[data-lib-type]');
+        if (!it) return;
+        closeMenu();
+        this._openLibraryPicker(it.getAttribute('data-lib-type'));
+      });
     }
     if (fileInput) {
       this.addEventListener(fileInput, 'change', (e) => {

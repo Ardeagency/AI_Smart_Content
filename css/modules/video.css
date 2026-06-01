@@ -3818,9 +3818,16 @@
   border: 1px solid var(--glass-black-border, var(--border-divider));
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--white-10) transparent;
   animation: veraPlusIn 160ms cubic-bezier(0.33, 0, 0.2, 1) both;
 }
+.vera-plus-menu::-webkit-scrollbar { width: 6px; }
+.vera-plus-menu::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 3px; }
 .vera-plus-menu[hidden] { display: none; }
+.vera-plus-sep { height: 1px; margin: 6px 8px; background: var(--glass-black-border, var(--border-divider)); }
 @keyframes veraPlusIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .vera-plus-menu { animation: none; } }
 .vera-plus-item {
