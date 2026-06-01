@@ -396,12 +396,17 @@ body.production-filters-in-header .living-container > .living-history-section {
    y su ancho se ajusta proporcional al ratio para llenar exactamente la fila.
    El layout lo calcula applyJustifiedLayout() en JS (necesita conocer el ratio
    de cada media). */
+/* Grid uniforme responsive (como estaba antes del refactor justified/Flickr).
+   Cards cuadradas de tamano igual; columnas 2/3/4/5 segun ancho. */
 .living-masonry-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     overflow-x: hidden;
 }
+@media (min-width: 768px)  { .living-masonry-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1280px) { .living-masonry-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1800px) { .living-masonry-grid { grid-template-columns: repeat(5, 1fr); } }
 
 /* Skeletons de carga para History/Community — llenan el slot cuadrado del grid */
 .living-history-skeleton {
@@ -442,11 +447,10 @@ body.production-filters-in-header .living-container > .living-history-section {
    `content-visibility: hidden` toggleado por JS via IntersectionObserver
    en lugar de `auto`, que respeta el backdrop. */
 .living-masonry-grid .living-masonry-item {
-    flex: 0 0 auto;
     position: relative;
     overflow: hidden;
     min-height: 0;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1;
     border-radius: var(--media-container-radius);
     background: var(--media-container-bg);
     transition: box-shadow 0.3s ease, transform 0.3s ease;
@@ -487,6 +491,17 @@ body.production-filters-in-header .living-container > .living-history-section {
     height: 100%;
     border-radius: inherit;
     overflow: hidden;
+}
+
+/* Products/Places: la card es un <article class="product-list-card"> hijo del item
+   (a diferencia de Production, donde el item ES el article). Debe llenar la celda
+   cuadrada del grid; antes el ancho/alto lo ponia justified-layout en JS. La img y
+   los overlays (acciones, nombre) ya se anclan a este article posicionado. */
+.living-masonry-grid .living-masonry-item > .product-list-card {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .living-masonry-grid .living-masonry-item img,

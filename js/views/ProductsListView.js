@@ -263,13 +263,8 @@ class ProductsListView extends BaseView {
 
     const itemHtmls = this.products.map((p, i) => this._renderProductCard(p, i));
 
-    // Justified rows layout (mismo patrón que Production via window.applyJustifiedLayout).
+    // Grid uniforme via CSS (sin justified-layout): cards cuadradas e iguales.
     container.innerHTML = `<div class="living-masonry-grid products-list-masonry-grid">${itemHtmls.join('')}</div>`;
-
-    const grid = container.querySelector('.living-masonry-grid');
-    if (grid && window.applyJustifiedLayout) {
-      window.applyJustifiedLayout(grid, { targetHeight: 260 });
-    }
 
     container.querySelectorAll('.product-list-card').forEach((card) => {
       const productId = card.getAttribute('data-product-id');
