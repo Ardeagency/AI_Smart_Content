@@ -291,6 +291,21 @@
         }
     }
     
+    // ===== FADE-IN DE IMAGENES DE CONTENIDO AL CARGAR =====
+    // Un solo listener global en captura (el evento `load` de <img> no burbujea).
+    // Failsafe: solo AGREGA una animacion al cargar; nunca pone opacity:0 por
+    // defecto, asi ninguna imagen puede quedar invisible. Catch async-inserted.
+    // Scope: salta chrome del nav/header e iconos/avatares chicos (<120px) para
+    // no "parpadear" la UI; solo imagenes de contenido (galerias, brand, productos).
+    document.addEventListener('load', function (e) {
+        const img = e.target;
+        if (!img || img.tagName !== 'IMG' || img.dataset.faded) return;
+        if (img.closest('#navigation-container, .app-header, .main-header')) return;
+        if ((img.naturalWidth || 0) < 120) return;
+        img.dataset.faded = '1';
+        img.classList.add('img-faded-in');
+    }, true);
+
     // ===== BARRA DE PROGRESO DE NAVEGACION (no-bloqueante) =====
     // El router la dispara en cambios de ruta en vez del spinner full-screen.
     // Min-display 400ms: si la navegacion termina antes de que la barra alcance
