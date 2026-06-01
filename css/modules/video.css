@@ -3805,6 +3805,43 @@
   gap: 2px;
 }
 
+/* Menú "+" del composer (archivos / biblioteca), popover hacia arriba */
+.vera-plus-wrap { position: relative; display: inline-flex; }
+.vera-plus-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  min-width: 232px;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  animation: veraPlusIn 160ms cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+.vera-plus-menu[hidden] { display: none; }
+@keyframes veraPlusIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .vera-plus-menu { animation: none; } }
+.vera-plus-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: .9rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease;
+}
+.vera-plus-item:hover { background: var(--white-8); }
+.vera-plus-item i { width: 18px; text-align: center; color: var(--text-muted); font-size: .9rem; }
+
 .gpt-composer-icon {
   width: 34px;
   height: 34px;

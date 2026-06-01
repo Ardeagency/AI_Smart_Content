@@ -1432,9 +1432,6 @@ class VeraView extends (window.BaseView || class {}) {
           <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
             <i class="fas fa-pen"></i><span>Nueva conversación</span>
           </button>
-          <button class="vera-history-attach" id="veraAttachLibrary" title="Adjuntar datos de la biblioteca a Vera">
-            <i class="fas fa-layer-group"></i><span>Adjuntar de biblioteca</span>
-          </button>
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
@@ -1456,9 +1453,19 @@ class VeraView extends (window.BaseView || class {}) {
               ></textarea>
               <div class="gpt-composer-row">
                 <div class="gpt-composer-btns">
-                  <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar">
-                    <i class="fas fa-paperclip"></i>
-                  </button>
+                  <div class="vera-plus-wrap">
+                    <button class="gpt-composer-icon" id="veraPlus" title="Adjuntar" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="vera-plus-menu" id="veraPlusMenu" hidden role="menu">
+                      <button class="vera-plus-item" id="veraMenuFiles" role="menuitem">
+                        <i class="fas fa-paperclip"></i><span>Agregar archivos o fotos</span>
+                      </button>
+                      <button class="vera-plus-item" id="veraMenuLibrary" role="menuitem">
+                        <i class="fas fa-layer-group"></i><span>Adjuntar de biblioteca</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <button class="gpt-send-btn" id="veraSend" title="Enviar" disabled>
                   <i class="fas fa-arrow-up"></i>
@@ -1728,7 +1735,6 @@ class VeraView extends (window.BaseView || class {}) {
       if (el && !el.__veraBound) { el.__veraBound = true; el.addEventListener('click', fn); }
     };
     wire('veraNewChat', () => this.startNewConversation());
-    wire('veraAttachLibrary', () => this._openLibraryPicker());
     wire('veraHistoryCollapse', () => this.toggleHistory(true));
     wire('veraHistoryOpen', () => this.toggleHistory(false));
     wire('veraHistoryScrim', () => this.toggleHistory(true));
@@ -3302,14 +3308,44 @@ class VeraView extends (window.BaseView || class {}) {
 
     if (sendBtn) this.addEventListener(sendBtn, 'click', send);
 
-    // Adjuntos: paperclip → file picker
+    // Menú "+" del composer: archivos/fotos o biblioteca.
     const plusBtn = document.getElementById('veraPlus');
+    const plusMenu = document.getElementById('veraPlusMenu');
     const fileInput = document.getElementById('veraFileInput');
-    if (plusBtn && fileInput) {
-      this.addEventListener(plusBtn, 'click', () => {
+    const closeMenu = () => {
+      if (!plusMenu) return;
+      plusMenu.hidden = true;
+      plusBtn?.setAttribute('aria-expanded', 'false');
+    };
+    this._closeComposerMenu = closeMenu;
+
+    if (plusBtn && plusMenu) {
+      this.addEventListener(plusBtn, 'click', (e) => {
+        e.stopPropagation();
         if (this.aiState.isLoading) return;
-        fileInput.click();
+        const open = plusMenu.hidden;
+        plusMenu.hidden = !open;
+        plusBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       });
+      // Cierra al hacer click fuera o con Escape.
+      this.addEventListener(document, 'click', (e) => {
+        if (plusMenu.hidden) return;
+        if (!e.target.closest?.('.vera-plus-wrap')) closeMenu();
+      });
+      this.addEventListener(document, 'keydown', (e) => {
+        if (e.key === 'Escape') closeMenu();
+      });
+    }
+
+    const filesItem = document.getElementById('veraMenuFiles');
+    if (filesItem && fileInput) {
+      this.addEventListener(filesItem, 'click', () => { closeMenu(); fileInput.click(); });
+    }
+    const libItem = document.getElementById('veraMenuLibrary');
+    if (libItem) {
+      this.addEventListener(libItem, 'click', () => { closeMenu(); this._openLibraryPicker(); });
+    }
+    if (fileInput) {
       this.addEventListener(fileInput, 'change', (e) => {
         const files = Array.from(e.target.files || []);
         e.target.value = '';
