@@ -3660,6 +3660,17 @@
   /* Bordes redondeados en los nodos del diagrama, vía estilizado del SVG */
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
+/* Fallback cuando mermaid no logra renderizar (queda el codigo a la vista) */
+.gpt-msg-content .gpt-md-mermaid-fallback {
+  text-align: left;
+  margin: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
 /* Mejor estilo a los rect/path internos del diagrama */
 .gpt-msg-content .gpt-md-mermaid svg .node rect,
 .gpt-msg-content .gpt-md-mermaid svg .node polygon,

@@ -2456,19 +2456,22 @@ class VeraView extends (window.BaseView || class {}) {
     //    DOMPurify — se inyectan crudos en un iframe sandbox null-origin
     //    (sandbox="allow-scripts allow-forms allow-modals" SIN allow-same-origin
     //    → el iframe no puede tocar localStorage/cookies del parent).
+    // Placeholders en formato {{...}} (NO __x__): el doble guion bajo lo
+    // interpreta marked como **bold** y rompe la restauracion (dejaba "legacy_N"
+    // en negrita en vez del chart). Las llaves no son sintaxis markdown.
     const htmlBlocks = [];
     let safeText = processed.replace(/```(html|artifact)\n?([\s\S]*?)```/g, (_, type, code) => {
-      const id = `__hb_${htmlBlocks.length}__`;
+      const id = `{{hb_${htmlBlocks.length}}}`;
       htmlBlocks.push({ id, type: type.toLowerCase(), code: code.trim() });
       return `\n\n${id}\n\n`;
     });
 
-    // 3. Protege bloques legacy (chart/buttons) para que marked no los toque
+    // 3. Protege bloques legacy (chart/buttons/mermaid) para que marked no los toque
     const legacyPlaceholders = [];
-    safeText = safeText.replace(/```(chart|vera-chart|viz|buttons|quickreplies|quick-replies|actions)([\s\S]*?)```/g, (match, lang, content) => {
-      const pid = `__legacy_${legacyPlaceholders.length}__`;
+    safeText = safeText.replace(/```(chart|vera-chart|viz|buttons|quickreplies|quick-replies|actions|mermaid)([\s\S]*?)```/g, (match, lang, content) => {
+      const pid = `{{legacy_${legacyPlaceholders.length}}}`;
       legacyPlaceholders.push({ pid, lang: lang.toLowerCase(), content: content.replace(/^\n/, '') });
-      return pid;
+      return `\n\n${pid}\n\n`;
     });
 
     // 4. marked convierte markdown estándar
@@ -2488,10 +2491,21 @@ class VeraView extends (window.BaseView || class {}) {
         legacyHtml = renderChartBlock(content);
       } else if (['buttons', 'quickreplies', 'quick-replies', 'actions'].includes(lang)) {
         legacyHtml = renderButtonsBlock(content);
+      } else if (lang === 'mermaid') {
+        // _processChatRichContent() busca .gpt-md-mermaid[data-mermaid] y lo
+        // renderiza a SVG con mermaid.js (lee el atributo, no el innerHTML).
+        // El <pre> interno es fallback: si mermaid falla, queda el codigo a la
+        // vista; si renderiza, mermaid sobreescribe el innerHTML con el SVG.
+        const trimmed = String(content || '').trim();
+        const safe = trimmed
+          .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        legacyHtml = `<div class="gpt-md-mermaid" data-mermaid="${safe}"><pre class="gpt-md-mermaid-fallback"><code>${escapeHtml(trimmed)}</code></pre></div>`;
       } else {
         legacyHtml = `<pre><code>${escapeHtml(content)}</code></pre>`;
       }
-      html = html.replace(pid, legacyHtml);
+      // marked puede dejar el placeholder solo o envuelto en <p>. Cubrimos ambos.
+      html = html.replace(`<p>${pid}</p>`, legacyHtml).split(pid).join(legacyHtml);
     });
 
     // 7. Restaura bloques html/artifact como iframes sandboxed null-origin.
