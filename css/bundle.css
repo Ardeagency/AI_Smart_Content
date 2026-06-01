@@ -34,8 +34,8 @@
 @import url('modules/developer.css?v=__BUILD_ID__');
 @import url('modules/payment-modal.css?v=__BUILD_ID__');
 @import url('modules/video.css?v=__BUILD_ID__');
-@import url('modules/insight.css?v=__BUILD_ID__');
-@import url('modules/monitoring.css?v=__BUILD_ID__');
+/* insight.css: route-split via app.js _loadCss (dashboardLoader + monitoringLoader). */
+/* monitoring.css: route-split via app.js _loadCss (monitoringLoader). */
 @import url('modules/public.css?v=__BUILD_ID__');
 @import url('modules/planes.css?v=__BUILD_ID__');
 @import url('modules/credits.css?v=__BUILD_ID__');

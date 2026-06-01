@@ -42,13 +42,21 @@ paint del glass/animaciones, (3) unos pocos bugs de runtime concretos.
   estan COMPLETED porque esos services "rinden". Es falso: estaban huerfanos. Esta
   limpieza lo corrige. `CampanasDataService` SI se usa (MyBrands.mixin.js:115) — se mantiene.
 
-### CSS route-split (infra + primer modulo)
+### CSS route-split (infra + modulos namespaced)
 - Nuevo `App._loadCss(href)` en `js/app.js`: inyecta `<link>` del modulo ANTES del
   `<link>` de bundle.css (preserva la cascada: modulos antes que reglas propias) y
   resuelve en `onload` (evita FOUC). `_lazy(global, deps, cssHrefs)` carga CSS+JS en paralelo.
-- `command-center.css` (108KB) sacado del `@import` global; se carga solo en
-  `/command-center` via `commandCenterLoader`. Verificado SEGURO (clases `.cc-*`
-  namespaced, sin colision con modulos globales).
+- Route-split aplicado (todos namespaced, verificados SEGURO, sin riesgo de cascada):
+  - `command-center.css` (108KB) -> `/command-center`.
+  - `insight.css` (80KB) -> dashboardLoader + monitoringLoader.
+  - `monitoring.css` (24KB) -> monitoringLoader.
+  Total ~212KB fuera del bundle global para rutas que no los usan.
+
+### Navegacion: barra de progreso en vez de overlay full-screen
+- `bundle.css` `.route-progress` (barra NProgress fina arriba) + `index.html` `#routeProgress`
+  + `app-loader.js` showProgress/hideProgress (min-display 400ms) + `router.js` usa
+  progress en navegacion (umbral 180ms). El overlay full-screen queda solo para boot/ops largas.
+  Patron pro SaaS: la vista anterior sigue visible, la navegacion se percibe instantanea.
 
 ---
 
@@ -67,14 +75,26 @@ cascada exacta y elimina la capa de serializacion del `@import`. Despues, cada m
 route-split se omite del set global y se inyecta via `_loadCss`.
 
 ### Mapa de inyeccion verificado (que modulo va en que loader)
-- **developer.css (351KB)** -> todos los `/dev/*` loaders. PRE-REQ: mover a modulos
-  globales las clases filtradas que usa codigo no-dev:
-  - `switchuser-*` (familia completa) + `user-dropdown-item--accent` -> `navigation.css`
-    (las disparan `SwitchUserController.js` y `Navigation.js`, ambos globales).
-  - `input-stepper-*`, `modern-input`, `input-dropdown-wrap/select`, `image-selector-*`
-    -> `studio.css` (las usa `StudioView.js`).
-  - `btn-link` -> bundle.css o ui-primitives.css (las usa `OrganizationView.js`).
-  Mayor win: rutas `/dev/*` estan role-gated; los usuarios de org nunca las ven.
+- **developer.css (351KB)** -> todos los `/dev/*` loaders. EL MAS DELICADO (NO hacer a
+  ciegas): NO esta namespaced — redefine genericas (`.btn`, `.app-header`, `.actions-cell`,
+  `.btn-primary`...). Dos requisitos:
+  1. **Preservar posicion de cascada**: hoy es `@import` #14 (gana a modulos #1-13, pierde
+     contra #15-24 + reglas propias de bundle). Si se inyecta antes de bundle.css pierde
+     contra TODOS -> inversion que cambia el estilo de botones en /dev. Solucion: hacer
+     primero el `@import`->`<link>` y route-loadearlo con `_loadCss` posicionando el `<link>`
+     ANTES de `payment-modal.css` (su vecino #15 original). Requiere generalizar `_loadCss`
+     a aceptar un selector ancla.
+  2. **Mover clases filtradas que usa codigo NO-dev** (sino rompen fuera de /dev). Rangos
+     exactos en `css/modules/developer.css`:
+     - `switchuser-*` (bloque contiguo lineas **13987-14200**) + `user-dropdown-item--accent`
+       (**13975-13984**) -> `navigation.css`. Las disparan SwitchUserController.js + Navigation.js (globales).
+     - `image-selector-*` (**3461-3641**), `input-dropdown-wrap` (**3084-3120**), `input-stepper-*`
+       (**5179-5219**) -> `studio.css`. Las usa StudioView.js.
+     - `btn-link` (**7965-7975**) -> bundle.css. La usa OrganizationView.js.
+     - OJO: `modern-input` NO tiene definicion standalone en developer.css (solo compuestos
+       `select.modern-input`); su base esta en otro modulo. Verificar antes de mover.
+  QA obligatorio en preview: portal `/dev/*` completo (botones, headers, builder) + widgets
+  de Studio (stepper numerico, carrusel image-selector, dropdowns). Mayor win: rutas role-gated.
 - **video.css (169KB)** -> esta MAL NOMBRADO: contiene toda la UI de chat de VeraView
   (`.vera-*`, `.gpt-*`). Partir en `video.css` (-> `/video`) + `vera.css` (-> `/vera`).
 - **living.css (72KB)** -> extraer `living-masonry-*` + `living-filter*` a un mini-modulo

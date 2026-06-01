@@ -256,7 +256,7 @@ class App {
       '/js/views/dashboard/Competence.mixin.js',
       '/js/views/dashboard/Tendencies.mixin.js',
       '/js/views/dashboard/Strategy.mixin.js',
-    ]);
+    ], ['/css/modules/insight.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/dashboard', dashboardLoader, auth);
     r.register('/dashboard', dashboardLoader, auth);
 
@@ -266,7 +266,8 @@ class App {
     r.register('/production', productionLoader, auth);
 
     // ── Org: Monitoring (centro de monitoreo: perfiles + sensores + url watchers) ──
-    const monitoringLoader = this._lazy('MonitoringView', ['/js/views/MonitoringView.js']);
+    // insight.css + monitoring.css route-split (clases .mb-/.insight-/.dash- namespaced, verificado SEGURO).
+    const monitoringLoader = this._lazy('MonitoringView', ['/js/views/MonitoringView.js'], ['/css/modules/insight.css', '/css/modules/monitoring.css']);
     r.register('/org/:orgIdShort/:orgNameSlug/monitoring', monitoringLoader, auth);
     r.register('/monitoring', monitoringLoader, auth);
 
