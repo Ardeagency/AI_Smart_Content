@@ -29,7 +29,7 @@
 @import url('modules/products.css?v=__BUILD_ID__');
 @import url('modules/products-list.css?v=__BUILD_ID__');
 @import url('modules/services.css?v=__BUILD_ID__');
-@import url('modules/command-center.css?v=__BUILD_ID__');
+/* command-center.css: route-split — se carga via app.js _loadCss solo en /command-center (ver commandCenterLoader). */
 @import url('modules/organization.css?v=__BUILD_ID__');
 @import url('modules/developer.css?v=__BUILD_ID__');
 @import url('modules/payment-modal.css?v=__BUILD_ID__');
@@ -185,10 +185,11 @@
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-radius: 14px;
-    /* glass-blur: receta EXACTA validada en el card de login (auth.css).
-       blur(24px) + saturate(140%) — equilibrio entre frosted real y
-       performance, sin oversaturar como blur(70px). */
-    --glass-blur: blur(24px) saturate(140%);
+    /* glass-blur: blur(14px) + saturate(120%). Reducido desde blur(24px)/sat(140%)
+       por costo de repaint: backdrop-filter se aplica en 240+ sitios y el radio de
+       blur domina el costo de la convolucion. 14px sigue leyendose como frosted
+       real y baja sensiblemente el paint en scroll/hover de listas y cards. */
+    --glass-blur: blur(14px) saturate(120%);
     --glass-padding: 8px 24px;
     /* glass-black: ~50% opacidad; textos blancos y mismo borde que glass normal */
     /* glass-black-bg: receta del card de login. rgba(11,11,11,0.55) usa el
@@ -213,7 +214,10 @@
     --media-container-bg-fill: var(--bg-card);
     --media-container-radius: 2px;
     --grid-color: rgba(212, 209, 216, 0.03);
-    --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    /* --transition: sin box-shadow. Animar box-shadow es paint puro (no compositable)
+       y este token se usa en 115+ sitios incluido .card. Quien necesite transicion de
+       sombra al hover la declara explicitamente. */
+    --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
     --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     --transition-slow: color 0.5s ease, background-color 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
     --spacing-xs: 0.25rem;
@@ -979,6 +983,10 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
     animation: loader-gradient-cycle 6s linear infinite;
 }
 @keyframes loader-gradient-cycle { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+/* El loader global anima background-position (paint en cada frame). Cuando el
+   overlay esta oculto/gone NO debe seguir repintando en background. */
+.loader-overlay--hidden .loader-line,
+.loader-overlay--gone .loader-line { animation: none; }
 
 .app-notification {
     position: fixed;

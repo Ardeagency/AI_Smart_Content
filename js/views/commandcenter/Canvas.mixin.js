@@ -483,14 +483,17 @@
     return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
   };
 
-  /** Centro de un puerto en coords relativas al viewport del canvas. */
-  P._portCenter = function (nodeKey, portSel) {
-    const canvas = document.getElementById('ccCanvas');
+  /** Centro de un puerto en coords relativas al viewport del canvas.
+      canvasRect: rect del canvas ya leido (cache por frame). Si se omite, se lee
+      aqui — pero en el loop de aristas SIEMPRE se pasa para evitar leer el mismo
+      getBoundingClientRect una vez por arista (layout thrashing). */
+  P._portCenter = function (nodeKey, portSel, canvasRect) {
     const node = document.querySelector(`.cc-node[data-node-key="${cssEsc(nodeKey)}"]`);
-    if (!canvas || !node) return null;
+    if (!node) return null;
     if (node.style.display === 'none' || node.offsetParent === null) return null; // nodo culled
+    const cr = canvasRect || document.getElementById('ccCanvas')?.getBoundingClientRect();
+    if (!cr) return null;
     const port = node.querySelector(portSel) || node;
-    const cr = canvas.getBoundingClientRect();
     const pr = port.getBoundingClientRect();
     return { x: pr.left + pr.width / 2 - cr.left, y: pr.top + pr.height / 2 - cr.top };
   };
@@ -547,16 +550,29 @@
     if (!svg) return;
     const groups = svg.querySelectorAll('.cc-edge');
     if (!groups.length) return;
+    // Cache del rect del canvas una sola vez por frame (no por arista).
+    const cr = document.getElementById('ccCanvas')?.getBoundingClientRect();
+    if (!cr) return;
+    // Fase 1 — LECTURA: calcular geometria de todas las aristas sin escribir nada.
+    // Fase 2 — ESCRITURA: aplicar todos los setAttribute juntos. Separar lectura
+    // de escritura evita el forced synchronous layout (reflow) por-arista que
+    // generaba jank en arrastre/paneo con muchos nodos conectados.
+    const updates = [];
     groups.forEach((g) => {
-      const fromKey = g.getAttribute('data-edge-from');
-      const toKey   = g.getAttribute('data-edge-to');
-      const from = this._portCenter(fromKey, '.cc-node-port--out');
-      const to   = this._portCenter(toKey, '.cc-node-port--in');
+      const from = this._portCenter(g.getAttribute('data-edge-from'), '.cc-node-port--out', cr);
+      const to   = this._portCenter(g.getAttribute('data-edge-to'), '.cc-node-port--in', cr);
       if (!from || !to) return;
-      const d = this._bezier(from.x, from.y, to.x, to.y);
+      updates.push({
+        g,
+        d: this._bezier(from.x, from.y, to.x, to.y),
+        mx: (from.x + to.x) / 2 - 12,
+        my: (from.y + to.y) / 2 - 12,
+      });
+    });
+    updates.forEach(({ g, d, mx, my }) => {
       g.querySelectorAll('path').forEach((p) => p.setAttribute('d', d));
       const fo = g.querySelector('.cc-edge-action');
-      if (fo) { fo.setAttribute('x', String((from.x + to.x) / 2 - 12)); fo.setAttribute('y', String((from.y + to.y) / 2 - 12)); }
+      if (fo) { fo.setAttribute('x', String(mx)); fo.setAttribute('y', String(my)); }
     });
   };
 

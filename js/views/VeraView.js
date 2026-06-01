@@ -1652,6 +1652,9 @@ class VeraView extends (window.BaseView || class {}) {
   // Al salir de Vera (router.onLeave) restauramos el sidebar global.
   onLeave() {
     try { window.appNavigation?.restoreFromImmersive?.(); } catch (_) {}
+    // Matar cualquier espera async en vuelo (ticker + polling 6s + realtime) para
+    // que no siga golpeando Supabase en background tras salir de Vera.
+    try { this._cancelAsyncWait?.(); } catch (_) {}
   }
 
   /**
@@ -3778,7 +3781,24 @@ class VeraView extends (window.BaseView || class {}) {
       let lastStatusAt = Date.now();
       let tickInterval = null;
       let pollInterval = null;
+      let firstPollTimeout = null;
       let channel      = null;
+
+      // Cancelacion al navegar fuera de Vera: el router llama onLeave(), que
+      // invoca este cierre para matar ticker + polling (6s) + canal realtime.
+      // Sin esto, mandar un mensaje y navegar dejaba estos timers golpeando
+      // Supabase en background hasta MAX_WAIT_MS (12 min). Las closures capturan
+      // las variables por referencia, asi que leen el valor ya asignado.
+      this._cancelAsyncWait = () => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(tickInterval);
+        clearInterval(pollInterval);
+        clearTimeout(firstPollTimeout);
+        try { channel?.unsubscribe(); } catch (_) {}
+        this._cancelAsyncWait = null;
+        resolve();
+      };
 
       // ── Cierra la espera y muestra el mensaje ─────────────────────────────
       const finish = (msg) => {
@@ -3786,6 +3806,8 @@ class VeraView extends (window.BaseView || class {}) {
         resolved = true;
         clearInterval(tickInterval);
         clearInterval(pollInterval);
+        clearTimeout(firstPollTimeout);
+        this._cancelAsyncWait = null;
         try { channel?.unsubscribe(); } catch (_) {}
         this.hideTypingIndicator();
 
@@ -3857,8 +3879,10 @@ class VeraView extends (window.BaseView || class {}) {
         if (elapsed >= MAX_WAIT_MS) {
           clearInterval(tickInterval);
           clearInterval(pollInterval);
+          clearTimeout(firstPollTimeout);
           if (!resolved) {
             resolved = true;
+            this._cancelAsyncWait = null;
             try { channel?.unsubscribe(); } catch (_) {}
             this.hideTypingIndicator();
             const timeoutMsg = {
@@ -3881,7 +3905,7 @@ class VeraView extends (window.BaseView || class {}) {
       }, TICK_MS);
 
       // Primer poll a los 5s, luego cada 6s — cubre casos donde Realtime no entrega
-      setTimeout(() => { doPoll(); pollInterval = setInterval(doPoll, POLL_INTERVAL_MS); }, POLL_FIRST_MS);
+      firstPollTimeout = setTimeout(() => { doPoll(); pollInterval = setInterval(doPoll, POLL_INTERVAL_MS); }, POLL_FIRST_MS);
 
       // ── Supabase Realtime — entrega instantánea ───────────────────────────
       if (!this.supabase) {

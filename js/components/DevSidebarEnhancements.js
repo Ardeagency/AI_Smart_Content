@@ -253,12 +253,19 @@
   if (document.readyState !== 'loading') ensureStatusBar();
   else document.addEventListener('DOMContentLoaded', ensureStatusBar);
 
-  // Re-inyectar tras re-renders de Navigation (cambio de modo, etc.)
+  // Re-inyectar tras re-renders de Navigation (cambio de modo, etc.).
+  // OJO performance: observamos SOLO #navigation-container, no document.body.
+  // El sidebar dev vive aqui y solo muta en cambios de modo; observar el body
+  // entero disparaba este callback (con querySelector) en CADA mutacion de
+  // cualquier vista (cada innerHTML = de cualquier render de la app).
   if (window.MutationObserver) {
-    const obs = new MutationObserver(() => {
-      const sb = document.querySelector('.side-navigation.nav-mode-developer');
-      if (sb && !sb.querySelector('.nav-dev-statusbar')) injectStatusBar();
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
+    const navRoot = document.getElementById('navigation-container');
+    if (navRoot) {
+      const obs = new MutationObserver(() => {
+        const sb = navRoot.querySelector('.side-navigation.nav-mode-developer');
+        if (sb && !sb.querySelector('.nav-dev-statusbar')) injectStatusBar();
+      });
+      obs.observe(navRoot, { childList: true, subtree: true });
+    }
   }
 })();

@@ -43,6 +43,7 @@ BUG-004, SPRINT-FRONTEND-100)
 
 | ID | Que falta EXACTAMENTE |
 |---|---|
+| [PERF-001](./PERF-001-cleanup-optimization.md) | Limpieza+optimizacion. HECHO en rama `perf/cleanup-optimization` (perf glass/animaciones, 3 bugs runtime, -825 lineas muertas, command-center.css route-split + infra `_loadCss`). PENDIENTE QA visual: route-split del resto del CSS (developer.css 351KB con class-moves + mapa de inyeccion verificado), consolidar escapeHtml (seguridad), `.card` glass->solido, keyframes, z-index tokens, dividir monolitos. |
 | [FEAT-034](./FEAT-034-dev-flows-test-button.md) | `DevFlowsView.js:396` `testFlow()` es stub (console.log + toast "en desarrollo"); cablear corrida real en modo test (coordinar con FEAT-033). |
 | [FEAT-036](./FEAT-036-billing-console.md) | Billing console `/dev/lead/billing`. Fase 1 cerrada (Plans CRUD BD + Credit Packages CRUD completo sobre `credit_packages`). Pendiente Fase 2 (Subscriptions + Usage history) y Fase 3 (auto-sync Stripe/Wompi al editar precio). |
 | [FEAT-028](./FEAT-028-modal-migration.md) | Migrar ~17 modales custom restantes a `window.Modal` (1 migrado + validado). 3-5 por sesion. |

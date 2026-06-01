@@ -56,10 +56,47 @@ class App {
     for (const src of srcs) await this._loadScript(src);
   }
 
-  _lazy(globalName, deps) {
+  /**
+   * Carga un modulo CSS por ruta (route-split). Modulos pesados y exclusivos de
+   * una vista (ej. command-center.css) ya NO viajan en bundle.css; se inyectan
+   * solo cuando el usuario entra a esa ruta.
+   *
+   * Cascada: el <link> se inserta ANTES del <link> de bundle.css para preservar
+   * el invariante original (los modulos van antes que las reglas propias de
+   * bundle.css, que deben seguir ganando a igual especificidad). Antes vivian
+   * como @import al tope de bundle.css; insertar aqui mantiene ese orden.
+   *
+   * FOUC: la promesa resuelve en onload del <link>, asi el router no pinta la
+   * vista hasta tener su CSS (mismo patron que con los <script>).
+   */
+  _loadCss(href) {
+    const url = `${href}?v=${APP_LAZY_SCRIPT_VER}`;
+    if (this._loadedCss && this._loadedCss.has(url)) return this._loadedCss.get(url);
+    if (!this._loadedCss) this._loadedCss = new Map();
+    const promise = new Promise((resolve) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      // onload/onerror: no bloqueamos la vista si el CSS falla (degradado > pantalla en blanco).
+      link.onload = () => resolve();
+      link.onerror = () => { this._loadedCss.delete(url); resolve(); };
+      const bundleLink = document.querySelector('link[rel="stylesheet"][href*="css/bundle.css"]');
+      if (bundleLink && bundleLink.parentNode) bundleLink.parentNode.insertBefore(link, bundleLink);
+      else document.head.appendChild(link);
+    });
+    this._loadedCss.set(url, promise);
+    return promise;
+  }
+
+  _lazy(globalName, deps, cssHrefs) {
     const self = this;
     return async function() {
+      // CSS (si lo hay) y JS en paralelo: la red baja ambos a la vez; await junta.
+      const cssPromise = (cssHrefs && cssHrefs.length)
+        ? Promise.all(cssHrefs.map((h) => self._loadCss(h)))
+        : null;
       if (deps && deps.length) await self._loadScripts(deps);
+      if (cssPromise) await cssPromise;
       if (!window[globalName]) throw new Error(`${globalName} not found after loading`);
       return window[globalName];
     };
@@ -214,7 +251,6 @@ class App {
     // deben ir DESPUÉS de DashboardView.js. El orden secuencial está garantizado
     // por _loadScripts (await por cada src).
     const dashboardLoader = this._lazy('DashboardView', [
-      '/js/services/TendenciasDataService.js',
       '/js/views/DashboardView.js',
       '/js/views/dashboard/MyBrands.mixin.js',
       '/js/views/dashboard/Competence.mixin.js',
@@ -289,7 +325,9 @@ class App {
     r.register('/brandstorage', brandStorageViewLoader, auth);
 
     // El mixin Canvas debe ir DESPUÉS de CommandCenterView.js (extiende su prototype).
-    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js', '/js/views/commandcenter/Canvas.mixin.js', '/js/views/commandcenter/CanvasStore.js']);
+    // command-center.css (108KB) sale del bundle global y se carga solo aqui:
+    // sus clases .cc-* estan namespaced y verificadas sin colision con modulos globales.
+    const commandCenterLoader = this._lazy('CommandCenterView', ['/js/views/CommandCenterView.js', '/js/views/commandcenter/Canvas.mixin.js', '/js/views/commandcenter/CanvasStore.js'], ['/css/modules/command-center.css']);
     // Canónico: shortId del brand_container + slug del nombre (mismo patrón que /org/...).
     // El shortId garantiza unicidad incluso si dos sub-marcas comparten nombre.
     r.register('/org/:orgIdShort/:orgNameSlug/command-center/:subBrandShortId/:subBrandSlug', commandCenterLoader, auth);
