@@ -1844,7 +1844,9 @@ class VeraView extends (window.BaseView || class {}) {
   /* Opciones interactivas [CLARIFY]/[PILLS]: click en una opcion la ENVIA como
      respuesta del usuario. Delegacion idempotente sobre la lista de mensajes. */
   _bindInteractiveOptions() {
-    const root = document.getElementById('veraMessageList');
+    // Se enlaza en #chatcontainer (no en la lista de mensajes) para cubrir tanto
+    // las opciones inline como el widget DOCKEADO sobre el composer.
+    const root = document.getElementById('chatcontainer');
     if (!root || root.__veraInteractiveBound) return;
     root.__veraInteractiveBound = true;
 
@@ -1861,6 +1863,7 @@ class VeraView extends (window.BaseView || class {}) {
         block.classList.add('answered');
         btn.classList.add('selected');
       }
+      this._undockQuestion();
       this.sendMessage(value.trim());
     });
   }
@@ -1905,7 +1908,12 @@ class VeraView extends (window.BaseView || class {}) {
         focusIdx = -1;
         clearFocus();
       };
-      const dismiss = () => { w.classList.add('answered', 'dismissed'); };
+      // Cerrar (X) / Omitir descartan la pregunta sin enviar y desmontan el dock.
+      const dismiss = () => {
+        const dock = w.closest('#veraDock');
+        w.classList.add('answered', 'dismissed');
+        if (dock) dock.remove();
+      };
 
       w.querySelector('.vera-clarify-prev')?.addEventListener('click', () => showPage(page - 1));
       w.querySelector('.vera-clarify-next')?.addEventListener('click', () => showPage(page + 1));
@@ -1921,6 +1929,50 @@ class VeraView extends (window.BaseView || class {}) {
         // Enter sobre la opcion enfocada dispara su click nativo → delegacion envia.
       });
     });
+  }
+
+  /* Ancla la pregunta activa (el [CLARIFY] del ultimo turno de Vera) como parte
+     del contenedor del input: la mueve a un dock encima del composer. El textarea
+     sigue usable debajo. Las preguntas de turnos previos quedan inline como
+     registro estatico (.answered). */
+  _dockActiveClarify() {
+    const list = document.getElementById('veraMessageList');
+    const overlay = document.getElementById('chatInputOverlay');
+    if (!list || !overlay) return;
+
+    // Si ya hay una pregunta anclada y sigue vigente, no la toques (evita que un
+    // re-render intermedio la pierda).
+    const existing = document.querySelector('#veraDock .vera-clarify');
+    if (existing && !existing.classList.contains('answered') && !existing.classList.contains('dismissed')) {
+      return;
+    }
+    this._undockQuestion();
+
+    // Solo se ancla la pregunta del ULTIMO mensaje (turno mas reciente).
+    const lastMsg = list.lastElementChild;
+    const active = lastMsg ? lastMsg.querySelector('.vera-clarify:not(.answered):not(.dismissed)') : null;
+
+    // Preguntas historicas → registro estatico inline.
+    list.querySelectorAll('.vera-clarify').forEach((w) => { if (w !== active) w.classList.add('answered'); });
+
+    if (!active) return;
+
+    const dock = document.createElement('div');
+    dock.id = 'veraDock';
+    dock.className = 'vera-dock';
+    overlay.insertBefore(dock, overlay.firstChild);
+    active.classList.add('is-docked');
+    dock.appendChild(active);
+
+    // Si la burbuja fuente quedo sin texto (solo era la pregunta), la ocultamos.
+    const srcContent = lastMsg.querySelector?.('.gpt-msg-content');
+    if (srcContent && !srcContent.textContent.trim() && !srcContent.querySelector('img,video,iframe,table')) {
+      lastMsg.style.display = 'none';
+    }
+  }
+
+  _undockQuestion() {
+    document.getElementById('veraDock')?.remove();
   }
 
   async renderMessages() {
@@ -1948,12 +2000,14 @@ class VeraView extends (window.BaseView || class {}) {
       return m;
     }));
 
+    this._undockQuestion();
     list.innerHTML = prepared.map(m => this._msgHTML(m)).join('');
     this._bindMediaHover();
     this._bindTaskEvents();
     this._bindQuickReplyButtons();
     this._bindInteractiveOptions();
     this._initClarifyWidgets();
+    this._dockActiveClarify();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
@@ -2477,6 +2531,7 @@ class VeraView extends (window.BaseView || class {}) {
     this._bindQuickReplyButtons();
     this._bindInteractiveOptions();
     this._initClarifyWidgets();
+    this._dockActiveClarify();
     this._processChatRichContent(list);
     if (scroll) setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 20);
 
@@ -2916,6 +2971,9 @@ class VeraView extends (window.BaseView || class {}) {
      advertencia de costo y queremos que el backend salte el pre-check. */
   async sendMessage(text, opts = {}) {
     if (!this.aiState.organization_id || this.aiState.isLoading) return;
+
+    // Al enviar (opcion o texto libre) se retira la pregunta anclada al composer.
+    if (!opts.confirmedHighCost) this._undockQuestion();
 
     // Tomamos snapshot de adjuntos listos y limpiamos pendientes antes de enviar.
     const ready = this.aiState.pendingAttachments.filter(a => a.status === 'ready');

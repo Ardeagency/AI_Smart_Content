@@ -2986,6 +2986,33 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ── Pregunta ANCLADA al composer (forma parte del contenedor del input) ──
+   Se monta dentro de .gpt-composer-wrap, encima del .gpt-composer. Mismo ancho
+   y superficie que el composer para leerse como una sola unidad. */
+.vera-dock {
+  width: 100%;
+  max-width: 768px;
+  display: flex;
+  flex-direction: column;
+}
+.vera-dock .vera-clarify.is-docked {
+  margin: 0;
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light, #212126);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+/* Solo la lista de opciones scrollea; cabecera y pie quedan fijos */
+.vera-dock .vera-clarify-pages {
+  max-height: 38vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--white-10) transparent;
+}
+.vera-dock .vera-clarify-pages::-webkit-scrollbar { width: 5px; }
+.vera-dock .vera-clarify-pages::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 3px; }
+
 /* Cabecera: pregunta + pager "n de N" + cerrar */
 .vera-clarify-head {
   display: flex;
