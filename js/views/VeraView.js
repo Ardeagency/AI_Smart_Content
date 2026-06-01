@@ -2484,6 +2484,14 @@ class VeraView extends (window.BaseView || class {}) {
       ADD_ATTR: ['class', 'onclick', 'target', 'rel']
     });
 
+    // 5b. marked emite <table> SIN clase; el estilo de la app vive en
+    //     .gpt-md-table (+ wrap para scroll horizontal). Lo añadimos aquí. Las
+    //     tablas de charts se inyectan después (paso 6) con su propio markup,
+    //     así que este reemplazo solo toca tablas de markdown.
+    html = html
+      .replace(/<table>/g, '<div class="gpt-md-table-wrap"><table class="gpt-md-table">')
+      .replace(/<\/table>/g, '</table></div>');
+
     // 6. Restaura bloques legacy con sus renders originales
     legacyPlaceholders.forEach(({ pid, lang, content }) => {
       let legacyHtml = '';
