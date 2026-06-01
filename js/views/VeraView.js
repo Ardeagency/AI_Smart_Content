@@ -1426,7 +1426,7 @@ class VeraView extends (window.BaseView || class {}) {
           <div class="vera-history-head">
             <span class="vera-history-title">Conversaciones</span>
             <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar historial" aria-label="Ocultar historial">
-              <i class="fas fa-angles-left"></i>
+              <i class="fas fa-angles-right"></i>
             </button>
           </div>
           <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
