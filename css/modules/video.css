@@ -2544,6 +2544,25 @@
   .gpt-welcome--hero .gpt-welcome-title { font-size: 2rem; }
 }
 
+/* ── Estado "nuevo chat": saludo + composer centrados verticalmente (estilo
+   Claude). Con mensajes, .gpt-main pierde .is-welcome y el composer vuelve
+   a anclarse abajo. ── */
+.gpt-main.is-welcome {
+  justify-content: center;
+}
+.gpt-main.is-welcome .gpt-messages-scroll {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+.gpt-main.is-welcome .gpt-welcome,
+.gpt-main.is-welcome .gpt-welcome--hero {
+  min-height: 0;
+  padding: 0 20px 6px;
+}
+.gpt-main.is-welcome .gpt-composer-wrap {
+  padding-top: 4px;
+}
+
 .gpt-quick-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

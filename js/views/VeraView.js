@@ -1866,9 +1866,17 @@ class VeraView extends (window.BaseView || class {}) {
     return '';
   }
 
+  // Estado "nuevo chat": el composer se centra verticalmente junto al saludo.
+  // Con mensajes vuelve a su sitio (anclado abajo).
+  _setWelcomeMode(on) {
+    const main = document.getElementById('gptMain');
+    if (main) main.classList.toggle('is-welcome', !!on);
+  }
+
   renderWelcome() {
     const list = document.getElementById('veraMessageList');
     if (!list) return;
+    this._setWelcomeMode(true);
     const name = this._greetingName();
     const greeting = name ? `Hola, ${escapeHtml(name)}` : 'Hola';
     list.innerHTML = `
@@ -2174,6 +2182,7 @@ class VeraView extends (window.BaseView || class {}) {
       this.renderWelcome();
       return;
     }
+    this._setWelcomeMode(false);
 
     // Pre-render asíncrono: para cada mensaje del asistente convertimos markdown
     // a HTML antes de pintar (los del usuario se escapan dentro de _msgHTML).
@@ -2745,6 +2754,7 @@ class VeraView extends (window.BaseView || class {}) {
     if (!list) return;
     const welcome = list.querySelector('.gpt-welcome');
     if (welcome) welcome.remove();
+    this._setWelcomeMode(false);
 
     // Pre-render del markdown para mensajes de VERA (asistente/error).
     // Los mensajes del usuario se escapan dentro de _msgHTML (no markdown).
