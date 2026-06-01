@@ -291,6 +291,37 @@
         }
     }
     
+    // ===== BARRA DE PROGRESO DE NAVEGACION (no-bloqueante) =====
+    // El router la dispara en cambios de ruta en vez del spinner full-screen.
+    // Min-display 400ms: si la navegacion termina antes de que la barra alcance
+    // ese tiempo visible, la sostenemos hasta cumplirlo para que no parpadee
+    // (un flash <300ms se percibe como glitch — NN/g).
+    let progressShownAt = 0;
+    let progressHideTimer = null;
+    const PROGRESS_MIN_MS = 400;
+
+    function showProgress() {
+        const el = document.getElementById('routeProgress');
+        if (!el) return;
+        if (progressHideTimer) { clearTimeout(progressHideTimer); progressHideTimer = null; }
+        if (!el.classList.contains('route-progress--active')) {
+            progressShownAt = Date.now();
+            el.classList.add('route-progress--active');
+        }
+    }
+
+    function hideProgress() {
+        const el = document.getElementById('routeProgress');
+        if (!el) return;
+        const elapsed = Date.now() - progressShownAt;
+        const remaining = Math.max(0, PROGRESS_MIN_MS - elapsed);
+        if (progressHideTimer) clearTimeout(progressHideTimer);
+        progressHideTimer = setTimeout(() => {
+            el.classList.remove('route-progress--active');
+            progressHideTimer = null;
+        }, remaining);
+    }
+
     // ===== API PÚBLICA =====
     window.appLoader = {
         // Estado
@@ -305,6 +336,10 @@
         // Spinner global único (ref-count: varias llamadas a showSpinner requieren otras tantas a hideSpinner)
         showSpinner: showSpinner,
         hideSpinner: hideSpinner,
+
+        // Barra de progreso de navegacion (no-bloqueante; la usa el router en cambios de ruta)
+        showProgress: showProgress,
+        hideProgress: hideProgress,
         
         // Re-inicializar (útil para retry manual)
         reload: () => loadSupabaseConfig(1)

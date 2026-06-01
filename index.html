@@ -171,7 +171,13 @@
          recibe focus (Tab desde el inicio). -->
     <a href="#app-container" class="skip-to-content">Saltar al contenido</a>
 
-    <!-- Loader global: visible solo cuando algún proceso lo solicita explícitamente vía appLoader.showSpinner -->
+    <!-- Barra de progreso de navegacion (estilo NProgress): feedback no-bloqueante
+         en cambios de ruta. La vista anterior sigue visible debajo. La controla el
+         router via appLoader.showProgress/hideProgress. -->
+    <div class="route-progress" id="routeProgress" aria-hidden="true"></div>
+
+    <!-- Loader global FULL-SCREEN: solo para boot inicial y operaciones largas
+         explicitas (no para navegacion). Lo solicita appLoader.showSpinner. -->
     <div class="loader-overlay loader-overlay--hidden loader-overlay--gone" id="globalSpinner" aria-hidden="true">
         <div class="loader">
             <div class="loader-line"></div>

@@ -155,15 +155,17 @@ class Router {
     }
     this._handlingRoute = true;
 
-    // Delayed spinner: si la navegación tarda >250ms, mostrar el spinner
-    // global (asset lazy lento, fetch de datos, etc.). En navegaciones
-    // rápidas (cache hit del SW, vista cacheada en bfCache) el spinner
-    // nunca aparece — evita parpadeo molesto. Se limpia en el finally.
+    // Feedback de navegacion: barra de progreso fina arriba (estilo NProgress),
+    // NO overlay full-screen. La vista anterior sigue visible debajo mientras
+    // carga la nueva — patron pro SaaS (GitHub/Linear/Vercel): un spinner que
+    // tapa todo "se siente lento". Umbral 180ms: la barra no bloquea, asi que
+    // damos feedback temprano de que el click registro; en navegaciones rapidas
+    // (cache hit) nunca llega a mostrarse. Se limpia en el finally.
     const spinnerTimer = setTimeout(() => {
-      if (window.appLoader && typeof window.appLoader.showSpinner === 'function') {
-        try { window.appLoader.showSpinner(); } catch (_) {}
+      if (window.appLoader && typeof window.appLoader.showProgress === 'function') {
+        try { window.appLoader.showProgress(); } catch (_) {}
       }
-    }, 250);
+    }, 180);
 
     try {
       let path = window.location.pathname || '/';
@@ -525,8 +527,8 @@ class Router {
       }
     } finally {
       clearTimeout(spinnerTimer);
-      if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
-        window.appLoader.hideSpinner();
+      if (window.appLoader && typeof window.appLoader.hideProgress === 'function') {
+        window.appLoader.hideProgress();
       }
       this._handlingRoute = false;
       if (this._pendingRoute) {

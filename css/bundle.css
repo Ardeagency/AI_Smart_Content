@@ -960,6 +960,44 @@ body.route-landing #app-container { background: transparent; padding-top: 0; }
   }
 }
 
+/* ========== BARRA DE PROGRESO DE NAVEGACION (estilo NProgress) ==========
+   Patron pro SaaS (GitHub/Linear/Vercel): en cambios de ruta NO se tapa la
+   pantalla con un overlay full-screen (se siente lento). Una barra fina arriba
+   da feedback no-bloqueante mientras la vista anterior sigue visible debajo.
+   El overlay full-screen (.loader-overlay) queda solo para el boot y ops largas. */
+.route-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    z-index: 4000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 160ms ease;
+    overflow: hidden;
+}
+.route-progress.route-progress--active { opacity: 1; }
+.route-progress::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 45%;
+    background: var(--brand-gradient, linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.9), rgba(255,255,255,0.2)));
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+    /* animation-play-state pausado por defecto: solo corre cuando --active (abajo).
+       Asi la barra no repinta en background cuando esta oculta. */
+    animation: route-progress-slide 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation-play-state: paused;
+}
+.route-progress.route-progress--active::before { animation-play-state: running; }
+@keyframes route-progress-slide {
+    0%   { transform: translateX(-110%) scaleX(0.5); }
+    55%  { transform: translateX(120%)  scaleX(1); }
+    100% { transform: translateX(330%)  scaleX(0.5); }
+}
+
 .loader-overlay {
     position: fixed;
     inset: 0;
