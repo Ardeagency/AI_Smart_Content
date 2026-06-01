@@ -1852,15 +1852,32 @@ class VeraView extends (window.BaseView || class {}) {
     }
   }
 
+  // Nombre para el saludo: primero el nombre real del usuario, si no la org.
+  _greetingName() {
+    const user = (window.authService?.getCurrentUser?.()) || {};
+    const emailPrefix = String(user.email || '').split('@')[0];
+    const fn = String(user.full_name || '').trim();
+    // full_name puede ser el prefijo del email (fallback de AuthService) → lo ignoramos.
+    if (fn && fn.toLowerCase() !== emailPrefix.toLowerCase() && fn !== 'Demo visitor') {
+      return fn.split(/\s+/)[0];
+    }
+    const org = (this.organizationName || '').trim();
+    if (org && org !== 'Organización') return org;
+    return '';
+  }
+
   renderWelcome() {
     const list = document.getElementById('veraMessageList');
     if (!list) return;
+    const name = this._greetingName();
+    const greeting = name ? `Hola, ${escapeHtml(name)}` : 'Hola';
     list.innerHTML = `
-      <div class="gpt-welcome">
-        <h1 class="gpt-welcome-title">Vera está lista.</h1>
-        <p class="gpt-welcome-subtitle" style="margin: 8px 0 0; color: var(--text-muted, rgba(212,209,216,0.6));">
-          Escribe tu mensaje para comenzar.
-        </p>
+      <div class="gpt-welcome gpt-welcome--hero">
+        <div class="gpt-welcome-mark">
+          <img src="${VERA_AVATAR_SRC}" alt="Vera" width="60" height="60" decoding="async" />
+        </div>
+        <h1 class="gpt-welcome-title">${greeting}</h1>
+        <p class="gpt-welcome-subtitle">¿En qué puedo ayudarte hoy?</p>
       </div>
     `;
   }
