@@ -1422,16 +1422,19 @@ class VeraView extends (window.BaseView || class {}) {
   renderHTML() {
     return `
       <div id="chatcontainer" class="gpt-layout">
-        <aside class="vera-history" id="veraHistory" aria-label="Historial de conversaciones">
+        <aside class="vera-history" id="veraHistory" aria-label="Conversaciones recientes">
           <div class="vera-history-head">
-            <span class="vera-history-title"><i class="fas fa-clock-rotate-left"></i>Conversaciones</span>
-            <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar historial" aria-label="Ocultar historial">
+            <button class="vera-history-new" id="veraNewChat" title="Nuevo chat">
+              <i class="fas fa-pen"></i><span>Nuevo chat</span>
+            </button>
+            <button class="vera-history-collapse" id="veraHistoryCollapse" title="Ocultar" aria-label="Ocultar">
               <i class="fas fa-chevron-right"></i>
             </button>
           </div>
-          <button class="vera-history-new" id="veraNewChat" title="Nueva conversación">
-            <i class="fas fa-pen"></i><span>Nueva conversación</span>
+          <button class="vera-history-search" id="veraHistorySearchBtn" title="Buscar chats">
+            <i class="fas fa-magnifying-glass"></i><span>Buscar chats</span>
           </button>
+          <input type="text" class="vera-history-search-input" id="veraHistorySearchInput" placeholder="Buscar…" hidden />
           <div class="vera-history-list" id="veraHistoryList"></div>
         </aside>
         <button class="vera-history-open" id="veraHistoryOpen" title="Mostrar conversaciones" aria-label="Mostrar conversaciones">
@@ -1697,29 +1700,23 @@ class VeraView extends (window.BaseView || class {}) {
   renderHistory() {
     const list = document.getElementById('veraHistoryList');
     if (!list) return;
-    const convs = this.aiState.conversations || [];
+    let convs = this.aiState.conversations || [];
+    const q = (this._historySearch || '').trim().toLowerCase();
+    if (q) convs = convs.filter((c) => this._convTitle(c).toLowerCase().includes(q));
+
     if (!convs.length) {
-      list.innerHTML = `<div class="vera-history-empty">Aún no tienes conversaciones.<br>Escribe abajo para empezar.</div>`;
+      list.innerHTML = `<div class="vera-history-empty">${q ? 'Sin resultados.' : 'Aún no tienes chats.<br>Escribe abajo para empezar.'}</div>`;
       return;
     }
-    const order = ['Hoy', 'Ayer', 'Últimos 7 días', 'Últimos 30 días', 'Anteriores'];
-    const groups = {};
-    for (const c of convs) {
-      const b = this._historyBucket(c.updated_at);
-      (groups[b] = groups[b] || []).push(c);
-    }
+    // Lista plana "Recientes" (ya viene ordenada por updated_at desc).
     const active = this.aiState.active_conversation_id;
-    let html = '';
-    for (const g of order) {
-      if (!groups[g]) continue;
-      html += `<div class="vera-history-group">${g}</div>`;
-      for (const c of groups[g]) {
-        const title = this._convTitle(c);
-        const safe = escapeHtml(title);
-        const attr = safe.replace(/"/g, '&quot;');
-        const cls = c.id === active ? 'vera-history-item active' : 'vera-history-item';
-        html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span></button>`;
-      }
+    let html = `<div class="vera-history-group">Recientes</div>`;
+    for (const c of convs) {
+      const title = this._convTitle(c);
+      const safe = escapeHtml(title);
+      const attr = safe.replace(/"/g, '&quot;');
+      const cls = c.id === active ? 'vera-history-item active' : 'vera-history-item';
+      html += `<button class="${cls}" data-conv-id="${c.id}" title="${attr}"><span class="vera-history-item-title">${safe}</span></button>`;
     }
     list.innerHTML = html;
   }
@@ -1743,6 +1740,32 @@ class VeraView extends (window.BaseView || class {}) {
     wire('veraHistoryCollapse', () => this.toggleHistory(true));
     wire('veraHistoryOpen', () => this.toggleHistory(false));
     wire('veraHistoryScrim', () => this.toggleHistory(true));
+
+    // Buscar chats: toggle del input + filtro en vivo.
+    const searchBtn = document.getElementById('veraHistorySearchBtn');
+    const searchInput = document.getElementById('veraHistorySearchInput');
+    if (searchBtn && searchInput && !searchBtn.__veraBound) {
+      searchBtn.__veraBound = true;
+      searchBtn.addEventListener('click', () => {
+        const show = searchInput.hidden;
+        searchInput.hidden = !show;
+        searchBtn.classList.toggle('active', show);
+        if (show) {
+          requestAnimationFrame(() => searchInput.focus());
+        } else {
+          searchInput.value = '';
+          this._historySearch = '';
+          this.renderHistory();
+        }
+      });
+    }
+    if (searchInput && !searchInput.__veraBound) {
+      searchInput.__veraBound = true;
+      searchInput.addEventListener('input', () => {
+        this._historySearch = searchInput.value;
+        this.renderHistory();
+      });
+    }
   }
 
   /* ── Adjuntar de biblioteca ──────────────────────────────

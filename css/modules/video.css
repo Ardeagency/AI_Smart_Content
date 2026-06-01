@@ -2277,9 +2277,8 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 16px 14px 12px 16px;
+  gap: 6px;
+  padding: 12px 10px 4px;
 }
 .vera-history-title {
   display: inline-flex;
@@ -2313,30 +2312,66 @@
 .vera-history-open:hover { background: var(--white-8); color: var(--text-primary); }
 
 .vera-history-new {
-  flex: 0 0 auto;
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 12px 12px;
-  padding: 11px 14px;
-  border: 1px solid var(--glass-black-border, var(--border-divider));
-  border-radius: 11px;
-  background: var(--white-5);
+  gap: 11px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
   color: var(--text-primary);
-  font-size: .875rem;
+  font-size: .9rem;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+  transition: background .14s ease;
 }
-.vera-history-new:hover {
-  background: var(--white-8);
-  border-color: var(--white-10);
-}
+.vera-history-new:hover { background: var(--white-8); }
 .vera-history-new:active { transform: scale(0.99); }
-.vera-history-new i { font-size: .82rem; color: var(--text-muted); }
+.vera-history-new i { font-size: .9rem; color: var(--text-muted); width: 16px; text-align: center; }
 
-/* Botón "Adjuntar de biblioteca" (debajo de Nueva conversación) */
+/* Fila "Buscar chats" */
+.vera-history-search {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 10px 4px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: .9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .14s ease, color .14s ease;
+}
+.vera-history-search:hover,
+.vera-history-search.active { background: var(--white-8); }
+.vera-history-search i { font-size: .9rem; color: var(--text-muted); width: 16px; text-align: center; }
+
+.vera-history-search-input {
+  flex: 0 0 auto;
+  margin: 0 12px 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--glass-black-border, var(--border-divider));
+  border-radius: 10px;
+  background: var(--white-5);
+  color: var(--text-primary);
+  font-size: .85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .14s ease;
+}
+.vera-history-search-input[hidden] { display: none; }
+.vera-history-search-input:focus { border-color: var(--white-10); }
+.vera-history-search-input::placeholder { color: var(--text-muted); }
+
+/* (CSS legacy del botón del rail — el adjuntar vive ahora en el menú "+") */
 .vera-history-attach {
   flex: 0 0 auto;
   display: flex;
@@ -2377,16 +2412,15 @@
 .vera-history-list:hover { scrollbar-color: var(--white-10) transparent; }
 
 .vera-history-group {
-  font-size: .66rem;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--text-muted);
-  opacity: .85;
-  padding: 14px 8px 5px;
+  padding: 10px 10px 6px;
   white-space: nowrap;
 }
-.vera-history-group:first-child { padding-top: 8px; }
+.vera-history-group:first-child { padding-top: 4px; }
 
 .vera-history-item {
   position: relative;
@@ -2396,11 +2430,11 @@
   border: none;
   background: transparent;
   color: var(--text-primary);
-  padding: 9px 11px;
+  padding: 10px 10px;
   border-radius: 9px;
   cursor: pointer;
-  font-size: .85rem;
-  line-height: 1.3;
+  font-size: .9rem;
+  line-height: 1.35;
   transition: background .14s ease, color .14s ease;
 }
 .vera-history-item:hover { background: var(--white-5); }
